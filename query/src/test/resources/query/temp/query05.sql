@@ -1,0 +1,1 @@
+select * from test_kylin_fact where cal_dt = date'2013-12-26'

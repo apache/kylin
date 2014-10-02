@@ -1,0 +1,116 @@
+/*
+ * Copyright 2013-2014 eBay Software Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.kylinolap.rest.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.kylinolap.common.persistence.AclEntity;
+import com.kylinolap.rest.security.AclPermission;
+import com.kylinolap.rest.security.AclPermissionFactory;
+import org.junit.Assert;
+import org.junit.Test;
+import org.quartz.SchedulerException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.acls.domain.PrincipalSid;
+import org.springframework.security.acls.model.AccessControlEntry;
+import org.springframework.security.acls.model.Acl;
+import org.springframework.security.acls.model.Sid;
+
+/**
+ * @author xduo
+ */
+public class AccessServiceTest extends TestBase {
+
+    @Autowired
+    AccessService accessService;
+
+    @Test
+    public void testBasics() throws JsonProcessingException, SchedulerException {
+        Sid adminSid = accessService.getSid("ADMIN", true);
+        Assert.assertNotNull(adminSid);
+        Assert.assertNotNull(AclPermissionFactory.getPermissions());
+
+        AclEntity ae = new MockAclEntity("test-domain-object");
+
+        // test getAcl
+        Acl acl = accessService.getAcl(ae);
+        Assert.assertNull(acl);
+
+        // test init
+        acl = accessService.init(ae, AclPermission.ADMINISTRATION);
+        Assert.assertTrue(((PrincipalSid) acl.getOwner()).getPrincipal().equals("ADMIN"));
+        Assert.assertTrue(accessService.generateAceResponses(acl).size() == 1);
+
+        // test grant
+        Sid modeler = accessService.getSid("MODELER", true);
+        acl = accessService.grant(ae, AclPermission.ADMINISTRATION, modeler);
+        Assert.assertTrue(accessService.generateAceResponses(acl).size() == 2);
+
+        Long modelerEntryId = null;
+        for (AccessControlEntry ace : acl.getEntries()) {
+            PrincipalSid sid = (PrincipalSid) ace.getSid();
+
+            if (sid.getPrincipal().equals("MODELER")) {
+                modelerEntryId = (Long) ace.getId();
+                Assert.assertTrue(ace.getPermission() == AclPermission.ADMINISTRATION);
+            }
+        }
+
+        // test update
+        acl = accessService.update(ae, modelerEntryId, AclPermission.READ);
+
+        Assert.assertTrue(accessService.generateAceResponses(acl).size() == 2);
+
+        for (AccessControlEntry ace : acl.getEntries()) {
+            PrincipalSid sid = (PrincipalSid) ace.getSid();
+
+            if (sid.getPrincipal().equals("MODELER")) {
+                modelerEntryId = (Long) ace.getId();
+                Assert.assertTrue(ace.getPermission() == AclPermission.READ);
+            }
+        }
+
+        AclEntity attachedEntity = new MockAclEntity("attached-domain-object");
+        accessService.inherit(attachedEntity, ae);
+
+        // test revoke
+        acl = accessService.revoke(ae, modelerEntryId);
+        Assert.assertTrue(accessService.generateAceResponses(acl).size() == 1);
+
+        // test clean 
+        accessService.clean(ae, true);
+        acl = accessService.getAcl(ae);
+        Assert.assertNull(acl);
+    }
+
+    public class MockAclEntity implements AclEntity {
+
+        private String id;
+
+        /**
+         * @param id
+         */
+        public MockAclEntity(String id) {
+            super();
+            this.id = id;
+        }
+
+        @Override
+        public String getId() {
+            return id;
+        }
+    }
+}

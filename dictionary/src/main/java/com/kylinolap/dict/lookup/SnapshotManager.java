@@ -1,0 +1,136 @@
+/*
+ * Copyright 2013-2014 eBay Software Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.kylinolap.dict.lookup;
+
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.persistence.ResourceStore;
+import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.schema.TableDesc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * @author yangli9
+ */
+public class SnapshotManager {
+
+    private static final Logger logger = LoggerFactory.getLogger(SnapshotManager.class);
+
+    // static cached instances
+    private static final ConcurrentHashMap<KylinConfig, SnapshotManager> SERVICE_CACHE =
+            new ConcurrentHashMap<KylinConfig, SnapshotManager>();
+
+    public static SnapshotManager getInstance(KylinConfig config) {
+        SnapshotManager r = SERVICE_CACHE.get(config);
+        if (r == null) {
+            r = new SnapshotManager(config);
+            SERVICE_CACHE.put(config, r);
+        }
+        return r;
+    }
+
+    // ============================================================================
+
+    private KylinConfig config;
+    private ConcurrentHashMap<String, SnapshotTable> snapshotCache; // resource path ==> SnapshotTable
+
+    private SnapshotManager(KylinConfig config) {
+        this.config = config;
+        snapshotCache = new ConcurrentHashMap<String, SnapshotTable>();
+    }
+
+    public void wipeoutCache() {
+        snapshotCache.clear();
+    }
+
+    public SnapshotTable getSnapshotTable(String resourcePath) throws IOException {
+        SnapshotTable r = snapshotCache.get(resourcePath);
+        if (r == null) {
+            r = load(resourcePath, true);
+            snapshotCache.put(resourcePath, r);
+        }
+        return r;
+    }
+
+    public void removeSnapshot(String resourcePath) throws IOException {
+        ResourceStore store = MetadataManager.getInstance(this.config).getStore();
+        store.deleteResource(resourcePath);
+        snapshotCache.remove(resourcePath);
+    }
+
+    public SnapshotTable buildSnapshot(ReadableTable table, TableDesc tableDesc, boolean reuseExisting)
+            throws IOException {
+        SnapshotTable snapshot = new SnapshotTable(table);
+        snapshot.updateRandomUuid();
+
+        if (reuseExisting) {
+            String dup = checkDup(snapshot);
+            if (dup != null) {
+                logger.info("Identical input " + table.getSignature() + ", reuse existing snapshot at " + dup);
+                return getSnapshotTable(dup);
+            }
+        }
+
+        snapshot.takeSnapshot(table, tableDesc);
+
+        save(snapshot);
+
+        snapshotCache.put(snapshot.getResourcePath(), snapshot);
+        return snapshot;
+    }
+
+    private String checkDup(SnapshotTable snapshot) throws IOException {
+        ResourceStore store = MetadataManager.getInstance(this.config).getStore();
+        String resourceDir = snapshot.getResourceDir();
+        ArrayList<String> existings = store.listResources(resourceDir);
+        if (existings == null)
+            return null;
+
+        TableSignature sig = snapshot.getSignature();
+        for (String existing : existings) {
+            SnapshotTable existingTable = load(existing, false); // skip cache, direct load from store
+            if (sig.equals(existingTable.getSignature()))
+                return existing;
+        }
+
+        return null;
+    }
+
+    private void save(SnapshotTable snapshot) throws IOException {
+        ResourceStore store = MetadataManager.getInstance(this.config).getStore();
+        String path = snapshot.getResourcePath();
+        store.putResource(path, snapshot, SnapshotTableSerializer.FULL_SERIALIZER);
+    }
+
+    private SnapshotTable load(String resourcePath, boolean loadData) throws IOException {
+        ResourceStore store = MetadataManager.getInstance(this.config).getStore();
+
+        SnapshotTable table =
+                store.getResource(resourcePath, SnapshotTable.class, loadData
+                        ? SnapshotTableSerializer.FULL_SERIALIZER : SnapshotTableSerializer.INFO_SERIALIZER);
+
+        if (loadData)
+            logger.debug("Loaded snapshot at " + resourcePath);
+
+        return table;
+    }
+
+}
