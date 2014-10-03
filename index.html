@@ -1,51 +1,168 @@
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Kylin by KylinOLAP</title>
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script src="javascripts/respond.js"></script>
-    <!--[if lt IE 9]>
-      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-    <!--[if lt IE 8]>
-    <link rel="stylesheet" href="stylesheets/ie.css">
-    <![endif]-->
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport"    content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="author"      content="Plotline">
+<title>Kylin</title>
+<link rel="shortcut icon" href="assets/images/fav.png">
 
-  </head>
-  <body>
-      <div id="header">
-        <nav>
-          <li class="fork"><a href="https://github.com/KylinOLAP/Kylin">View On GitHub</a></li>
-          <li class="downloads"><a href="https://github.com/KylinOLAP/Kylin/zipball/master">ZIP</a></li>
-          <li class="downloads"><a href="https://github.com/KylinOLAP/Kylin/tarball/master">TAR</a></li>
-          <li class="title">DOWNLOADS</li>
-        </nav>
-      </div><!-- end header -->
+<link rel="stylesheet" href="assets/css/animate.css">
+<!-- Bootstrap -->
+<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+<!-- Icons -->
 
-    <div class="wrapper">
+<!-- Custom styles -->
+<link rel="stylesheet" href="assets/css/styles.css">
 
-      <section>
-        <div id="title">
-          <h1>Kylin</h1>
-          <p>Kylin, OLAP</p>
-          <hr>
-          <span class="credits left">Project maintained by <a href="https://github.com/KylinOLAP">KylinOLAP</a></span>
-          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
-        </div>
+<!--[if lt IE 9]> <script src="assets/js/html5shiv.js"></script> <![endif]-->
 
-        <h1>
-<a name="kylin" class="anchor" href="#kylin"><span class="octicon octicon-link"></span></a>Kylin</h1>
-
-<p>Core Repo for Kylin OLAP Engine</p>
-      </section>
-
-    </div>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+</head>
+<body class="home">
+<header id="header" >
+  <div id="head" class="parallax" parallax-speed="2" >
+    <div id="logo" class="text-center"> 
+    <img class="img-circle" id="circlelogo" src="assets/images/kylin_logo.jpg" >
+    <span class="title" >Kylin OLAP</span> <span class="tagline">Extreme OLAP Engine for Big Data<br>
     
-  </body>
+  
+      </span> 
+    </div>
+  </div>
+  <nav class="navbar navbar-default navbar-sticky">
+    <div class="container-fluid">
+      <div class="navbar-header"> </div>
+      <div class="navbar-collapse collapse">
+         <ul class="nav navbar-nav">
+					<li class="active"><a href="#"><b>Home</b></a></li>
+					<li><a href="about.html">Community</a></li>
+					<li><a href="blog.html">Documents</a></li>
+				</ul>
+      </div>
+      <!--/.nav-collapse --> 
+    </div>
+  </nav>
+</header>
+<main id="main" >
+  <div class="container" >
+    <div id="zero" class=" main" >
+    
+     <header style=" padding:2em 0 4em 0">
+      <div class="container" >
+        <h4 class="section-title"><span>Kylin Overview</span></h4>
+        <div class="row" style="margin-top:-20px;">
+          <div class="col-sm-12 col-md-12">
+            <p> An open source distributed Analytical Engine from eBay to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop to support TB to PB size analysis.</p>
+             <img src="assets/images/kylin_diagram.png">
+          </div>
+        </div>
+      </div>
+      <!-- /container --> 
+      
+    </header>
+    
+ 
+     
+    </div>
+    <!-- / section --> 
+  </div>
+  <!-- /container --> 
+  
+  <!-- second -->
+  <section id="first" class="main">
+    <header style="background-color:#efefef;">
+      <div class="container" >
+        <h4 class="section-title"><span>Ecosystem</span></h4>
+        <div class="row">
+          <div class="col-sm-12 col-md-12"> 
+           <p> </p>
+           <ul>
+             <p><b>Kylin Core:</b> fundamental framework of Kylin OLAP Engine, including metadata engine, query engine, job engine, storage engine to run the entire stack, also with REST Server to run as service to serve client requests.</p>
+           </ul>
+
+           <ul>
+            <p><b>Extension:</b> plugin to add addtional functions or replace with specified feature to support different use cases.
+            </p>
+           </ul>
+           <ul><p><b>Integration:</b> interactive with other application, system to support end to end solution, like scheduling system, ETL, monitoring and alert.</p></ul>
+           <ul><p><b>Interface:</b> User interface to enhance experience, bring more advanced features and plugin of other application.</p></ul>
+           <ul><p><b>Driver:</b> ODBC and JDBC driver to support different clients espcially Business Intelligence tool, for example Tableau.</p></ul>
+           
+        </div>
+      
+      </div>
+      <!-- /container --> 
+      
+    </header>
+  </section>
+  
+ <section id="second" class="main">
+    <header >
+      <div class="container" >
+        <h4 class="section-title"><span> What Kylin can do and can't do</span></h4>
+         <!-- second-->
+  <div class="row">
+          <div class="col-sm-12 col-md-12">
+            
+            <p>Kylin is design to resolve query latency on Hadoop and offer an ASNI-SQL Interface to enable BI tool to interactive with data on Hadoop. Kylin should be interactive from Business Intelligence Tool, for example: Tableau, MicroStrategy and Excel, even 3rd party web application. </p>
+            <br/>
+            <div align="left">
+            <span><b>What Kylin can do:</b></span>
+            <li>ANSI-SQL on Hadoop: Kylin support most of ANSI-SQL query functions.</li>
+            <li>Interactive Query: User can get more better performance when query same Hive Query which covered by Kylin Cubes.</li>
+            <li>Pre-Build Data Model: User can define a data model and pre-build in Kylin with more than 10+B raw rows.</li> 
+            </div>
+            <br/>
+            <div align="left">
+            <b><span>What Kylin can't do:</span></b>
+            <li>ETL, Kylin will not cover ETL process.</li>
+            <li>Data Dump: Do not pull large data to client from Kylin in one single query. For example, one single query to get millions records to client will raise exception.</li>
+            <li>Data Mining: Kylin is not design for data mining relative work.</li> 
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /container --> 
+      
+    </header>
+  </section>
+  
+  <!-- fifth-->
+  <section id="fifth" class="main">
+    <header style="background-color:#efefef;" >
+      <div class="container" >
+        <h4 class="section-title"><span>For Developers</span></h4>
+        <div class="row">
+          <div class="col-sm-12 col-md-12"> </div>
+          <p>Source Code: <a href="https://github.com/KylinOLAP/Kylin" target="_blank">Fork me on GitHub</a></p>
+          <p>Google Group: <a href="https://groups.google.com/forum/#!forum/kylin-olap" target="_blank">Kylin OLAP Group</a></p>
+          <p>Developer Mail: <a href="mailto:kylin-olap@googlegroups.com" target="_blank">kylin-olap@googlegroups.com</a></p>
+        </div>
+      </div>
+      <!-- /container --> 
+      
+    </header>
+  </section>
+</main>
+
+
+
+<footer id="underfooter">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12 widget" >
+        <div class="widget-body" >
+          <p style="text-align:center" > kylin.io | 2014 | <a href="#">back to top</a><br>
+          </p>
+        </div>
+      </div>
+    </div>
+    <!-- /row of widgets --> 
+  </div>
+</footer>
+<script src="assets/js/jquery-1.9.1.min.js"></script> 
+<script src="assets/js/jquery.colorbox.js"></script> 
+<script src="assets/js/main.js"></script> 
+</body>
 </html>
