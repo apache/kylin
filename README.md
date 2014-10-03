@@ -65,8 +65,8 @@ To run Kylin, deploy geneated war file into J2EE application server like Tomcat,
 
 ### Resources ###
 
-* Google Group:  [Kylin OLAP Group](https://groups.google.com/forum/#!forum/kylin-dev)
+* Google Group:  [Kylin OLAP Group](https://groups.google.com/forum/#!forum/kylin-olap)
 
-* Mail list: [kylin-dev@googlegroups.com](mailto:kylin-dev@googlegroups.com)
+* Developer Mail: <kylin-olap@googlegroups.com>
 
 
