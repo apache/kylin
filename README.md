@@ -6,7 +6,12 @@ Overview
 ------------
 > Extreme OLAP Engine for Big Data
 
-An open source distributed Analytical Engine from eBay GDI team to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop to support TB to PB size analysis.
+An open source distributed Analytical Engine from eBay to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop to support TB to PB size analysis.
+
+Architecture
+------------
+
+
 
 Getting Started 
 ---------------
@@ -50,6 +55,10 @@ To run Kylin, deploy geneated war file into J2EE application server like Tomcat,
 [http://\<localhost>:\<port>/\<application name>]
 
 
+### Resources ###
 
+* Google Group:  [Kylin OLAP Group](https://groups.google.com/forum/#!forum/kylin-dev)
+
+* Mail list: [kylin-dev@googlegroups.com](mailto:kylin-dev@googlegroups.com)
 
 
