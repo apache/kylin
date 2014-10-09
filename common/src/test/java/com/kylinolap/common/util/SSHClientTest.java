@@ -16,19 +16,21 @@
 
 package com.kylinolap.common.util;
 
-import com.kylinolap.common.KylinConfig;
+import static org.junit.Assert.*;
+
+import java.io.File;
+import java.io.IOException;
+
 import org.apache.hadoop.fs.FileUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
-
-import static org.junit.Assert.assertEquals;
+import com.kylinolap.common.KylinConfig;
 
 /**
  * @author ysong1
+ *
  */
 public class SSHClientTest extends LocalFileMetadataTestCase {
 

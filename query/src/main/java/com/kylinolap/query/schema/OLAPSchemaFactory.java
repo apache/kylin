@@ -15,22 +15,24 @@
  */
 package com.kylinolap.query.schema;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.cube.project.ProjectInstance;
-import com.kylinolap.cube.project.ProjectManager;
-import com.kylinolap.metadata.model.schema.DatabaseDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
-import net.hydromatic.optiq.Schema;
-import net.hydromatic.optiq.SchemaFactory;
-import net.hydromatic.optiq.SchemaPlus;
-import org.eigenbase.util14.ConversionUtil;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import net.hydromatic.optiq.Schema;
+import net.hydromatic.optiq.SchemaFactory;
+import net.hydromatic.optiq.SchemaPlus;
+
+import org.eigenbase.util14.ConversionUtil;
+
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.cube.project.ProjectInstance;
+import com.kylinolap.cube.project.ProjectManager;
+import com.kylinolap.metadata.model.schema.DatabaseDesc;
+import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
  * @author xjiang

@@ -16,15 +16,17 @@
 
 package com.kylinolap.job.hadoop.dict;
 
+import org.apache.commons.cli.Options;
+import org.apache.hadoop.util.ToolRunner;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import org.apache.commons.cli.Options;
-import org.apache.hadoop.util.ToolRunner;
 
 /**
  * @author ysong1
+ *
  */
 public class CreateInvertedIndexDictionaryJob extends AbstractHadoopJob {
 

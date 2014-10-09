@@ -16,14 +16,16 @@
 
 package com.kylinolap.dict.lookup;
 
-import com.kylinolap.common.util.ByteArray;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import java.io.IOException;
+
 import org.apache.hadoop.hbase.util.Bytes;
 
-import java.io.IOException;
+import com.kylinolap.common.util.ByteArray;
+import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
  * @author yangli9
+ *
  */
 public class LookupBytesTable extends LookupTable<ByteArray> {
 

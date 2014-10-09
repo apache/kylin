@@ -16,23 +16,30 @@
 
 package com.kylinolap.query.relnode;
 
-import com.google.common.base.Preconditions;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.storage.StorageContext;
 import net.hydromatic.optiq.rules.java.EnumerableConvention;
 import net.hydromatic.optiq.rules.java.EnumerableRel;
 import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
 import net.hydromatic.optiq.rules.java.JavaRules.EnumerableSortRel;
+
 import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelFieldCollation;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.SortRel;
-import org.eigenbase.relopt.*;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelTrait;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
+
+import com.google.common.base.Preconditions;
+import com.kylinolap.metadata.model.cube.MeasureDesc;
+import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.storage.StorageContext;
 
 /**
  * @author xjiang
+ *
  */
 public class OLAPSortRel extends SortRel implements EnumerableRel, OLAPRel {
 
@@ -40,7 +47,7 @@ public class OLAPSortRel extends SortRel implements EnumerableRel, OLAPRel {
     private OLAPContext context;
 
     public OLAPSortRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, RelCollation collation,
-                       RexNode offset, RexNode fetch) {
+            RexNode offset, RexNode fetch) {
         super(cluster, traitSet, child, collation, offset, fetch);
         Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
         Preconditions.checkArgument(getConvention() == child.getConvention());
@@ -48,7 +55,7 @@ public class OLAPSortRel extends SortRel implements EnumerableRel, OLAPRel {
 
     @Override
     public OLAPSortRel copy(RelTraitSet traitSet, RelNode newInput, RelCollation newCollation,
-                            RexNode offset, RexNode fetch) {
+            RexNode offset, RexNode fetch) {
         return new OLAPSortRel(getCluster(), traitSet, newInput, newCollation, offset, fetch);
     }
 
@@ -110,8 +117,8 @@ public class OLAPSortRel extends SortRel implements EnumerableRel, OLAPRel {
 
     /**
      * NOTE: We can't use EnumerableSortRel directly since it will check the convention of child.
-     * We have to copy the code from EnumerableSortRel.implement().
-     * So, We need to check the code during upgrade.
+     *       We have to copy the code from EnumerableSortRel.implement(). 
+     *       So, We need to check the code during upgrade.
      */
     @Override
     public Result implement(EnumerableRelImplementor implementor, Prefer pref) {

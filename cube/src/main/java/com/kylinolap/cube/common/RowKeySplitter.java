@@ -15,16 +15,18 @@
  */
 package com.kylinolap.cube.common;
 
+import org.apache.hadoop.hbase.util.Bytes;
+
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowConstants;
 import com.kylinolap.cube.kv.RowKeyColumnIO;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.TblColRef;
-import org.apache.hadoop.hbase.util.Bytes;
 
 /**
  * @author George Song (ysong1)
+ * 
  */
 public class RowKeySplitter {
 

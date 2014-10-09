@@ -16,11 +16,6 @@
 
 package com.kylinolap.dict.lookup;
 
-import com.google.common.collect.Sets;
-import com.kylinolap.common.util.Array;
-import com.kylinolap.metadata.model.schema.TableDesc;
-import org.apache.hadoop.hbase.util.Pair;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,10 +23,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.hadoop.hbase.util.Pair;
+
+import com.google.common.collect.Sets;
+import com.kylinolap.common.util.Array;
+import com.kylinolap.metadata.model.schema.TableDesc;
+
 /**
  * An in-memory lookup table, in which each cell is an object of type T.
  * The table is indexed by specified PK for fast lookup.
- *
+ * 
  * @author yangli9
  */
 abstract public class LookupTable<T extends Comparable<T>> {

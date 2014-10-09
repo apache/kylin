@@ -16,6 +16,12 @@
 
 package com.kylinolap.query.enumerator;
 
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
+import net.hydromatic.linq4j.Enumerator;
+
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.dict.lookup.LookupStringTable;
@@ -24,14 +30,10 @@ import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.query.relnode.OLAPContext;
 import com.kylinolap.query.schema.OLAPTable;
 import com.kylinolap.storage.tuple.Tuple;
-import net.hydromatic.linq4j.Enumerator;
-
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * @author yangli9
+ *
  */
 public class LookupTableEnumerator implements Enumerator<Object[]> {
 
@@ -51,7 +53,7 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
         CubeInstance cube = olapContext.cubeInstance;
         CubeManager cubeMgr = CubeManager.getInstance(cube.getConfig());
         //CubeSegment seg = cube.getTheOnlySegment();
-        LookupStringTable table = cubeMgr.getLookupTable(cube.getLatestSegment(), dim);
+        LookupStringTable table = cubeMgr.getLookupTable(cube.getLatestReadySegment(), dim);
         this.allRows = table.getAllRows();
 
         OLAPTable olapTable = (OLAPTable) olapContext.firstTableScan.getOlapTable();

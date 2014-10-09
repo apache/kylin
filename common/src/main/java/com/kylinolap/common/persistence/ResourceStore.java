@@ -15,16 +15,20 @@
  */
 package com.kylinolap.common.persistence;
 
-import com.google.common.collect.Lists;
-import com.kylinolap.common.KylinConfig;
-import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.restclient.RestClient;
+import com.sun.jndi.toolkit.url.Uri;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
+import sun.reflect.annotation.ExceptionProxy;
 
 abstract public class ResourceStore {
 
@@ -114,7 +118,7 @@ abstract public class ResourceStore {
      * read a resource, return null in case of not found
      */
     final public <T extends RootPersistentEntity> T getResource(String resPath, Class<T> clz,
-                                                                Serializer<T> serializer) throws IOException {
+            Serializer<T> serializer) throws IOException {
         resPath = norm(resPath);
         InputStream in = getResourceImpl(resPath);
         if (in == null)
@@ -158,7 +162,7 @@ abstract public class ResourceStore {
      * check & set, overwrite a resource
      */
     final public <T extends RootPersistentEntity> void putResource(String resPath, T obj,
-                                                                   Serializer<T> serializer) throws IOException {
+            Serializer<T> serializer) throws IOException {
         resPath = norm(resPath);
         logger.debug("Saving resource " + resPath + " (Store " + kylinConfig.getMetadataUrl() + ")");
 

@@ -15,20 +15,20 @@
  */
 package com.kylinolap.dict;
 
-import com.kylinolap.common.util.JsonUtil;
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import static org.junit.Assert.*;
+
+import java.util.HashSet;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.HashSet;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import com.kylinolap.common.util.JsonUtil;
+import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.cube.CubeDesc;
+import com.kylinolap.metadata.model.cube.TblColRef;
 
 public class DictionaryManagerTest extends LocalFileMetadataTestCase {
 

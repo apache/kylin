@@ -16,16 +16,16 @@
 
 package com.kylinolap.cube;
 
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+
 import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.metadata.model.cube.CubePartitionDesc.CubePartitionType;
 import com.kylinolap.metadata.model.cube.DimensionDesc;
 import com.kylinolap.metadata.model.cube.TblColRef;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
 
 /**
  * @author xduo
@@ -36,19 +36,19 @@ public class CubeSegmentValidator {
     }
 
     public static CubeSegmentValidator getCubeSegmentValidator(CubeBuildTypeEnum buildType,
-                                                               CubePartitionType partitionType) {
+            CubePartitionType partitionType) {
         switch (buildType) {
-            case MERGE:
-                return new CubeSegmentValidator().new MergeOperationValidator();
-            case BUILD:
-                switch (partitionType) {
-                    case APPEND:
-                        return new CubeSegmentValidator().new IncrementalBuildOperationValidator();
-                    case UPDATE_INSERT:
-                        return new CubeSegmentValidator().new UpdateBuildOperationValidator();
-                }
-            default:
-                return new CubeSegmentValidator();
+        case MERGE:
+            return new CubeSegmentValidator().new MergeOperationValidator();
+        case BUILD:
+            switch (partitionType) {
+            case APPEND:
+                return new CubeSegmentValidator().new IncrementalBuildOperationValidator();
+            case UPDATE_INSERT:
+                return new CubeSegmentValidator().new UpdateBuildOperationValidator();
+            }
+        default:
+            return new CubeSegmentValidator();
         }
     }
 
@@ -97,11 +97,10 @@ public class CubeSegmentValidator {
                     try {
                         if (cubeSeg.getCubeDesc().getRowkey().isUseDictionary(col)
                                 && !cube.getDescriptor()
-                                .getFactTable()
-                                .equalsIgnoreCase(
-                                        (String) dictMgr.decideSourceData(cube.getDescriptor(), col,
-                                                null)[0]
-                                )) {
+                                        .getFactTable()
+                                        .equalsIgnoreCase(
+                                                (String) dictMgr.decideSourceData(cube.getDescriptor(), col,
+                                                        null)[0])) {
                             cols.add(col);
                         }
                     } catch (IOException e) {
@@ -245,7 +244,7 @@ public class CubeSegmentValidator {
 
                 if (newSegments.size() == 2
                         && newSegments.get(newSegments.size() - 1).getDateRangeEnd() < matchSeg
-                        .getDateRangeEnd()) {
+                                .getDateRangeEnd()) {
                     throw new CubeIntegrityException("Invalid date range.");
                 }
             }

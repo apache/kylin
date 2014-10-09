@@ -15,13 +15,6 @@
  */
 package com.kylinolap.query.test;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -32,11 +25,19 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.schema.ColumnDesc;
+import com.kylinolap.metadata.model.schema.TableDesc;
+
 public class H2Database {
     private static final Logger logger = LoggerFactory.getLogger(H2Database.class);
 
-    private static final String[] ALL_TABLES = new String[]{"test_cal_dt", "test_category_groupings",
-            "test_kylin_fact", "test_seller_type_dim", "test_sites"};
+    private static final String[] ALL_TABLES = new String[] { "test_cal_dt", "test_category_groupings",
+            "test_kylin_fact", "test_seller_type_dim", "test_sites" };
     private static final Map<String, String> javaToH2DataTypeMapping = new HashMap<String, String>();
 
     static {

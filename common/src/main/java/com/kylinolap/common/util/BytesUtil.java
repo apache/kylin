@@ -15,13 +15,13 @@
  */
 package com.kylinolap.common.util;
 
-import org.apache.hadoop.io.Writable;
-
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+
+import org.apache.hadoop.io.Writable;
 
 public class BytesUtil {
 
@@ -72,9 +72,7 @@ public class BytesUtil {
         return integer;
     }
 
-    /**
-     * No. bytes needed to store a value as big as the given
-     */
+    /** No. bytes needed to store a value as big as the given */
     public static int sizeForValue(int maxValue) {
         int size = 0;
         while (maxValue > 0) {
@@ -197,6 +195,10 @@ public class BytesUtil {
     }
 
     public static void writeAsciiString(String str, ByteBuffer out) {
+        if (str == null) {
+            BytesUtil.writeVInt(-1, out);
+            return;
+        }
         int len = str.length();
         BytesUtil.writeVInt(len, out);
         for (int i = 0; i < len; i++) {
@@ -206,6 +208,9 @@ public class BytesUtil {
 
     public static String readAsciiString(ByteBuffer in) {
         int len = BytesUtil.readVInt(in);
+        if (len < 0) {
+            return null;
+        }
         String result;
         try {
             if (in.hasArray()) {
@@ -276,7 +281,7 @@ public class BytesUtil {
         return sb.toString();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
     }
 
 }

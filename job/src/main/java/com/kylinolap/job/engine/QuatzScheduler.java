@@ -16,6 +16,24 @@
 
 package com.kylinolap.job.engine;
 
+import java.io.IOException;
+import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.quartz.JobBuilder;
+import org.quartz.JobDetail;
+import org.quartz.JobKey;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.SimpleScheduleBuilder;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
+import org.quartz.UnableToInterruptJobException;
+import org.quartz.impl.StdSchedulerFactory;
+import org.quartz.impl.matchers.GroupMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.JobInstance.JobStep;
 import com.kylinolap.job.cmd.IJobCommand;
@@ -23,18 +41,10 @@ import com.kylinolap.job.constant.JobConstants;
 import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.flow.JobFlow;
 import com.kylinolap.job.flow.JobFlowListener;
-import org.quartz.*;
-import org.quartz.impl.StdSchedulerFactory;
-import org.quartz.impl.matchers.GroupMatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author xduo
+ *
  */
 public class QuatzScheduler {
 
@@ -102,8 +112,7 @@ public class QuatzScheduler {
                         .startNow()
                         .withSchedule(
                                 SimpleScheduleBuilder.simpleSchedule()
-                                        .withIntervalInSeconds(intervalInSeconds).repeatForever()
-                        ).build();
+                                        .withIntervalInSeconds(intervalInSeconds).repeatForever()).build();
 
         try {
             this.scheduler.scheduleJob(job, trigger);

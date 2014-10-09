@@ -16,15 +16,16 @@
 
 package com.kylinolap.dict;
 
-import com.kylinolap.common.persistence.Serializer;
-import com.kylinolap.common.util.JsonUtil;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import com.kylinolap.common.persistence.Serializer;
+import com.kylinolap.common.util.JsonUtil;
+
 /**
  * @author yangli9
+ *
  */
 public class DictionaryInfoSerializer implements Serializer<DictionaryInfo> {
 
@@ -33,7 +34,11 @@ public class DictionaryInfoSerializer implements Serializer<DictionaryInfo> {
 
     private boolean infoOnly;
 
-    DictionaryInfoSerializer(boolean infoOnly) {
+    public DictionaryInfoSerializer() {
+        this(false);
+    }
+
+    public DictionaryInfoSerializer(boolean infoOnly) {
         this.infoOnly = infoOnly;
     }
 

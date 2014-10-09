@@ -15,6 +15,15 @@
  */
 package com.kylinolap.storage.hbase;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.hbase.util.Pair;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.kylinolap.common.util.BytesUtil;
@@ -27,18 +36,16 @@ import com.kylinolap.cube.kv.RowConstants;
 import com.kylinolap.dict.DateStrDictionary;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.TblColRef;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.hbase.util.Pair;
-
-import java.util.*;
 
 /**
+ * 
  * @author xjiang
+ * 
  */
 public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
 
     private static final int FUZZY_VALUE_CAP = 20;
-    private static final byte[] ZERO_TAIL_BYTES = new byte[]{0};
+    private static final byte[] ZERO_TAIL_BYTES = new byte[] { 0 };
 
     private final CubeSegment cubeSeg;
     private final Cuboid cuboid;
@@ -56,8 +63,8 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
     private long partitionColumnEndDate = Long.MAX_VALUE;
 
     public HBaseKeyRange(CubeSegment cubeSeg, Cuboid cuboid, byte[] startKey, byte[] stopKey,
-                         List<Pair<byte[], byte[]>> fuzzyKeys, List<Collection<ColumnValueRange>> flatColumnValueFilter,
-                         long partitionColumnStartDate, long partitionColumnEndDate) {
+            List<Pair<byte[], byte[]>> fuzzyKeys, List<Collection<ColumnValueRange>> flatColumnValueFilter,
+            long partitionColumnStartDate, long partitionColumnEndDate) {
         this.cubeSeg = cubeSeg;
         this.cuboid = cuboid;
         this.startKey = startKey;
@@ -70,7 +77,7 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
     }
 
     public HBaseKeyRange(Collection<TblColRef> dimensionColumns,
-                         Collection<ColumnValueRange> andDimensionRanges, CubeSegment cubeSeg, CubeDesc cubeDesc) {
+            Collection<ColumnValueRange> andDimensionRanges, CubeSegment cubeSeg, CubeDesc cubeDesc) {
         this.cubeSeg = cubeSeg;
         long cuboidId = this.calculateCuboidID(cubeDesc, dimensionColumns);
         this.cuboid = Cuboid.findById(cubeDesc, cuboidId);

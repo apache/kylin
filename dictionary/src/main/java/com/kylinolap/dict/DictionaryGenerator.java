@@ -16,14 +16,6 @@
 
 package com.kylinolap.dict;
 
-import com.google.common.collect.Lists;
-import com.kylinolap.common.util.JsonUtil;
-import com.kylinolap.dict.lookup.ReadableTable;
-import com.kylinolap.dict.lookup.TableReader;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -32,28 +24,41 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.hadoop.hbase.util.Bytes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
+import com.kylinolap.common.util.JsonUtil;
+import com.kylinolap.dict.lookup.ReadableTable;
+import com.kylinolap.dict.lookup.TableReader;
+import com.kylinolap.metadata.model.schema.DataType;
+
 /**
  * @author yangli9
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class DictionaryGenerator {
 
     private static final Logger logger = LoggerFactory.getLogger(DictionaryGenerator.class);
 
-    private static final String[] DATE_PATTERNS = new String[]{"yyyy-MM-dd"};
+    private static final String[] DATE_PATTERNS = new String[] { "yyyy-MM-dd" };
 
     public static Dictionary<?> buildDictionaryFromValueList(DictionaryInfo info, List<byte[]> values) {
         info.setCardinality(values.size());
 
-        // build dict, case by data type
         Dictionary dict = null;
         int baseId = 0; // always 0 for now
         int nSamples = 5;
         ArrayList samples = new ArrayList();
 
-        // try detect if the strings are dates
-        dict = buildDateStrDict(values, baseId, nSamples, samples);
-        if (dict == null)
+        // build dict, case by data type
+        DataType dataType = DataType.getInstance(info.getDataType());
+        if (dataType.isDateTimeFamily())
+            dict = buildDateStrDict(values, baseId, nSamples, samples);
+        else if (dataType.isNumberFamily())
+            dict = buildNumberDict(values, baseId, nSamples, samples);
+        else
             dict = buildStringDict(values, baseId, nSamples, samples);
 
         // log a few samples
@@ -108,7 +113,7 @@ public class DictionaryGenerator {
     }
 
     private static Dictionary buildDateStrDict(List<byte[]> values, int baseId, int nSamples,
-                                               ArrayList samples) {
+            ArrayList samples) {
         String matchPattern = null;
         for (String ptn : DATE_PATTERNS) {
             matchPattern = ptn; // be optimistic
@@ -128,13 +133,22 @@ public class DictionaryGenerator {
             if (matchPattern != null)
                 return new DateStrDictionary(matchPattern, baseId);
         }
-        samples.clear();
-        return null;
+        throw new IllegalStateException("Unrecognized datetime values: " + samples);
     }
 
-    private static Dictionary buildStringDict(List<byte[]> values, int baseId, int nSamples,
-                                              ArrayList samples) {
+    private static Dictionary buildStringDict(List<byte[]> values, int baseId, int nSamples, ArrayList samples) {
         TrieDictionaryBuilder builder = new TrieDictionaryBuilder(new StringBytesConverter());
+        for (byte[] value : values) {
+            String v = Bytes.toString(value);
+            builder.addValue(v);
+            if (samples.size() < nSamples && samples.contains(v) == false)
+                samples.add(v);
+        }
+        return builder.build(baseId);
+    }
+
+    private static Dictionary buildNumberDict(List<byte[]> values, int baseId, int nSamples, ArrayList samples) {
+        NumberDictionaryBuilder builder = new NumberDictionaryBuilder(new StringBytesConverter());
         for (byte[] value : values) {
             String v = Bytes.toString(value);
             builder.addValue(v);

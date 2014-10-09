@@ -15,6 +15,14 @@
  */
 package com.kylinolap.job.hadoop.cube;
 
+import java.io.IOException;
+import java.util.Collection;
+
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
@@ -27,16 +35,10 @@ import com.kylinolap.cube.cuboid.CuboidScheduler;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.metadata.model.cube.CubeDesc;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.Collection;
 
 /**
  * @author George Song (ysong1)
+ * 
  */
 public class NDCuboidMapper extends Mapper<Text, Text, Text, Text> {
 

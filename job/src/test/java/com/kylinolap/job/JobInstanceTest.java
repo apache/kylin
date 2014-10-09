@@ -16,6 +16,12 @@
 
 package com.kylinolap.job;
 
+import static org.junit.Assert.*;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeBuildTypeEnum;
@@ -23,14 +29,10 @@ import com.kylinolap.job.JobInstance.JobStep;
 import com.kylinolap.job.constant.JobStatusEnum;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author ysong1
+ *
  */
 public class JobInstanceTest extends LocalFileMetadataTestCase {
     @Before

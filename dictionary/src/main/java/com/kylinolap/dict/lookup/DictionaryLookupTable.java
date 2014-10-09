@@ -16,15 +16,15 @@
 
 package com.kylinolap.dict.lookup;
 
+import java.io.IOException;
+
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.metadata.model.schema.TableDesc;
-
-import java.io.IOException;
 
 /**
  * An in-memory lookup table indexed by a dictionary column.
  * The column value must be unique within the table.
- *
+ * 
  * @author yangli9
  */
 public class DictionaryLookupTable {

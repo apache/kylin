@@ -15,6 +15,36 @@
  */
 package com.kylinolap.rest.service;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.sql.DataSource;
+
+import net.hydromatic.avatica.ColumnMetaData.Rep;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.core.PreparedStatementSetter;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.cuboid.Cuboid;
@@ -30,19 +60,6 @@ import com.kylinolap.rest.request.SQLRequest;
 import com.kylinolap.rest.response.GeneralResponse;
 import com.kylinolap.rest.response.SQLResponse;
 import com.kylinolap.rest.util.QueryUtil;
-import net.hydromatic.avatica.ColumnMetaData.Rep;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.core.PreparedStatementSetter;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
-
-import javax.sql.DataSource;
-import java.sql.*;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.Date;
 
 /**
  * @author xduo
@@ -85,12 +102,11 @@ public class QueryService extends BasicService {
                                 ps.setString(5, description);
                                 ps.setTimestamp(6, new java.sql.Timestamp(new Date().getTime()));
                             }
-                        }
-                );
+                        });
     }
 
     public void removeQuery(final String id) {
-        jdbcTemplate.update("DELETE FROM queries WHERE id = ?", new Object[]{id});
+        jdbcTemplate.update("DELETE FROM queries WHERE id = ?", new Object[] { id });
     }
 
     public List<GeneralResponse> getQueries(final String creator) {
@@ -98,7 +114,7 @@ public class QueryService extends BasicService {
 
         List<Map<String, Object>> rows =
                 jdbcTemplate
-                        .queryForList("SELECT * FROM queries WHERE creator = ?", new Object[]{creator});
+                        .queryForList("SELECT * FROM queries WHERE creator = ?", new Object[] { creator });
 
         for (Map<String, Object> row : rows) {
             GeneralResponse generalResponse = new GeneralResponse();
@@ -120,7 +136,7 @@ public class QueryService extends BasicService {
     }
 
     public void logQuery(final SQLRequest request, final SQLResponse response, final Date startTime,
-                         final Date endTime) {
+            final Date endTime) {
         final String user = SecurityContextHolder.getContext().getAuthentication().getName();
         final Set<String> cubeNames = new HashSet<String>();
         final Set<Long> cuboidIds = new HashSet<Long>();
@@ -172,7 +188,7 @@ public class QueryService extends BasicService {
 
     /**
      * @param sql
-     * @throws SQLException
+     * @throws SQLException 
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
             + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')"
@@ -258,7 +274,7 @@ public class QueryService extends BasicService {
 
                 if (!cubedOnly
                         || getProjectManager().isExposedColumn(project, colmnMeta.getTABLE_NAME(),
-                        colmnMeta.getCOLUMN_NAME())) {
+                                colmnMeta.getCOLUMN_NAME())) {
                     tableMap.get(colmnMeta.getTABLE_SCHEM() + "#" + colmnMeta.getTABLE_NAME()).addColumn(
                             colmnMeta);
                 }
@@ -275,7 +291,7 @@ public class QueryService extends BasicService {
      * @param sql
      * @param project
      * @return
-     * @throws Exception
+     * @throws Exception 
      */
     private SQLResponse execute(String sql, SQLRequest sqlRequest) throws Exception {
         Connection conn = null;
@@ -350,7 +366,7 @@ public class QueryService extends BasicService {
     /**
      * @param preparedState
      * @param param
-     * @throws SQLException
+     * @throws SQLException 
      */
     private void setParam(PreparedStatement preparedState, int index, StateParam param) throws SQLException {
         boolean isNull = (null == param.getValue());
@@ -365,51 +381,51 @@ public class QueryService extends BasicService {
         Rep rep = Rep.of(clazz);
 
         switch (rep) {
-            case PRIMITIVE_CHAR:
-            case CHARACTER:
-            case STRING:
-                preparedState.setString(index, isNull ? null : String.valueOf(param.getValue()));
-                break;
-            case PRIMITIVE_INT:
-            case INTEGER:
-                preparedState.setInt(index, isNull ? null : Integer.valueOf(param.getValue()));
-                break;
-            case PRIMITIVE_SHORT:
-            case SHORT:
-                preparedState.setShort(index, isNull ? null : Short.valueOf(param.getValue()));
-                break;
-            case PRIMITIVE_LONG:
-            case LONG:
-                preparedState.setLong(index, isNull ? null : Long.valueOf(param.getValue()));
-                break;
-            case PRIMITIVE_FLOAT:
-            case FLOAT:
-                preparedState.setFloat(index, isNull ? null : Float.valueOf(param.getValue()));
-                break;
-            case PRIMITIVE_DOUBLE:
-            case DOUBLE:
-                preparedState.setDouble(index, isNull ? null : Double.valueOf(param.getValue()));
-                break;
-            case PRIMITIVE_BOOLEAN:
-            case BOOLEAN:
-                preparedState.setBoolean(index, isNull ? null : Boolean.parseBoolean(param.getValue()));
-                break;
-            case PRIMITIVE_BYTE:
-            case BYTE:
-                preparedState.setByte(index, isNull ? null : Byte.valueOf(param.getValue()));
-                break;
-            case JAVA_UTIL_DATE:
-            case JAVA_SQL_DATE:
-                preparedState.setDate(index, isNull ? null : java.sql.Date.valueOf(param.getValue()));
-                break;
-            case JAVA_SQL_TIME:
-                preparedState.setTime(index, isNull ? null : Time.valueOf(param.getValue()));
-                break;
-            case JAVA_SQL_TIMESTAMP:
-                preparedState.setTimestamp(index, isNull ? null : Timestamp.valueOf(param.getValue()));
-                break;
-            default:
-                preparedState.setObject(index, isNull ? null : param.getValue());
+        case PRIMITIVE_CHAR:
+        case CHARACTER:
+        case STRING:
+            preparedState.setString(index, isNull ? null : String.valueOf(param.getValue()));
+            break;
+        case PRIMITIVE_INT:
+        case INTEGER:
+            preparedState.setInt(index, isNull ? null : Integer.valueOf(param.getValue()));
+            break;
+        case PRIMITIVE_SHORT:
+        case SHORT:
+            preparedState.setShort(index, isNull ? null : Short.valueOf(param.getValue()));
+            break;
+        case PRIMITIVE_LONG:
+        case LONG:
+            preparedState.setLong(index, isNull ? null : Long.valueOf(param.getValue()));
+            break;
+        case PRIMITIVE_FLOAT:
+        case FLOAT:
+            preparedState.setFloat(index, isNull ? null : Float.valueOf(param.getValue()));
+            break;
+        case PRIMITIVE_DOUBLE:
+        case DOUBLE:
+            preparedState.setDouble(index, isNull ? null : Double.valueOf(param.getValue()));
+            break;
+        case PRIMITIVE_BOOLEAN:
+        case BOOLEAN:
+            preparedState.setBoolean(index, isNull ? null : Boolean.parseBoolean(param.getValue()));
+            break;
+        case PRIMITIVE_BYTE:
+        case BYTE:
+            preparedState.setByte(index, isNull ? null : Byte.valueOf(param.getValue()));
+            break;
+        case JAVA_UTIL_DATE:
+        case JAVA_SQL_DATE:
+            preparedState.setDate(index, isNull ? null : java.sql.Date.valueOf(param.getValue()));
+            break;
+        case JAVA_SQL_TIME:
+            preparedState.setTime(index, isNull ? null : Time.valueOf(param.getValue()));
+            break;
+        case JAVA_SQL_TIMESTAMP:
+            preparedState.setTimestamp(index, isNull ? null : Timestamp.valueOf(param.getValue()));
+            break;
+        default:
+            preparedState.setObject(index, isNull ? null : param.getValue());
         }
     }
 

@@ -15,12 +15,10 @@
  */
 package com.kylinolap.query.relnode;
 
-import com.google.common.base.Preconditions;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.query.optrule.*;
-import com.kylinolap.query.schema.OLAPSchema;
-import com.kylinolap.query.schema.OLAPTable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import net.hydromatic.linq4j.expressions.Blocks;
 import net.hydromatic.linq4j.expressions.Expressions;
 import net.hydromatic.linq4j.expressions.Primitive;
@@ -28,6 +26,7 @@ import net.hydromatic.optiq.rules.java.EnumerableRel;
 import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
 import net.hydromatic.optiq.rules.java.PhysType;
 import net.hydromatic.optiq.rules.java.PhysTypeImpl;
+
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.RelWriter;
 import org.eigenbase.rel.TableAccessRelBase;
@@ -35,17 +34,33 @@ import org.eigenbase.rel.rules.PushFilterPastJoinRule;
 import org.eigenbase.rel.rules.PushJoinThroughJoinRule;
 import org.eigenbase.rel.rules.RemoveDistinctAggregateRule;
 import org.eigenbase.rel.rules.SwapJoinRule;
-import org.eigenbase.relopt.*;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelOptTable;
+import org.eigenbase.relopt.RelTrait;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import com.google.common.base.Preconditions;
+import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.schema.ColumnDesc;
+import com.kylinolap.query.optrule.OLAPAggregateRule;
+import com.kylinolap.query.optrule.OLAPFilterRule;
+import com.kylinolap.query.optrule.OLAPJoinRule;
+import com.kylinolap.query.optrule.OLAPLimitRule;
+import com.kylinolap.query.optrule.OLAPProjectRule;
+import com.kylinolap.query.optrule.OLAPSortRule;
+import com.kylinolap.query.optrule.OLAPToEnumerableConverterRule;
+import com.kylinolap.query.schema.OLAPSchema;
+import com.kylinolap.query.schema.OLAPTable;
 
 /**
+ * 
  * @author xjiang
+ *
  */
 public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, EnumerableRel {
 
@@ -198,9 +213,7 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
         return columnRowType;
     }
 
-    /**
-     * Because OLAPTableScan is reused for the same table, we can't use this.context and have to use parent context *
-     */
+    /** Because OLAPTableScan is reused for the same table, we can't use this.context and have to use parent context **/
     @Override
     public void implementRewrite(RewriteImplementor implementor) {
         Map<String, RelDataType> rewriteFields = this.context.rewriteFields;

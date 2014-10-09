@@ -16,17 +16,19 @@
 
 package com.kylinolap.storage.filter;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.Test;
+
 import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
 import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
-import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author xjiang
+ *
  */
 public class FilterSerializeTest extends FilterBaseTest {
 

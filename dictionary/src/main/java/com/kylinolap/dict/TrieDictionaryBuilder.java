@@ -15,23 +15,26 @@
  */
 package com.kylinolap.dict;
 
-import com.kylinolap.common.util.BytesUtil;
+import static com.kylinolap.common.util.BytesUtil.*;
+import static com.kylinolap.dict.TrieDictionary.*;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.LinkedList;
 
-import static com.kylinolap.common.util.BytesUtil.compareByteUnsigned;
-import static com.kylinolap.common.util.BytesUtil.subarray;
-import static com.kylinolap.dict.TrieDictionary.*;
+import com.kylinolap.common.util.BytesUtil;
 
 /**
  * Builds a dictionary using Trie structure. All values are taken in byte[] form
  * and organized in a Trie with ordering. Then numeric IDs are assigned in
  * sequence.
- *
+ * 
  * @author yangli9
  */
 public class TrieDictionaryBuilder<T> {
@@ -235,9 +238,7 @@ public class TrieDictionaryBuilder<T> {
         }
     }
 
-    /**
-     * out print some statistics of the trie and the dictionary built from it
-     */
+    /** out print some statistics of the trie and the dictionary built from it */
     public Stats stats() {
         // calculate nEndValueBeneath
         traversePostOrder(new Visitor() {
@@ -295,7 +296,7 @@ public class TrieDictionaryBuilder<T> {
             int t =
                     s.obpn_nNodes
                             * (s.obpn_sizeValue + s.obpn_sizeNoValuesBeneath + s.obpn_sizeChildCount
-                            + s.obpn_sizeChildOffset - 1);
+                                    + s.obpn_sizeChildOffset - 1);
             if (BytesUtil.sizeForValue(t * 2) <= s.obpn_sizeChildOffset - 1) { // *2 because MSB of offset is used for isEndOfValue flag
                 s.obpn_sizeChildOffset--;
                 s.obpn_footprint = t;
@@ -326,9 +327,7 @@ public class TrieDictionaryBuilder<T> {
         return s;
     }
 
-    /**
-     * out print trie for debug
-     */
+    /** out print trie for debug */
     public void print() {
         print(System.out);
     }
@@ -408,14 +407,14 @@ public class TrieDictionaryBuilder<T> {
         completeParts.withdraw(node.part.length);
     }
 
-    /**
+    /** 
      * Flatten the trie into a byte array for a minimized memory footprint.
      * Lookup remains fast. Cost is inflexibility to modify (becomes immutable).
-     * <p/>
+     * 
      * Flattened node structure is HEAD + NODEs, for each node:
      * - o byte, offset to child node, o = stats.mbpn_sizeChildOffset
-     * - 1 bit, isLastChild flag, the 1st MSB of o
-     * - 1 bit, isEndOfValue flag, the 2nd MSB of o
+     *    - 1 bit, isLastChild flag, the 1st MSB of o
+     *    - 1 bit, isEndOfValue flag, the 2nd MSB of o
      * - c byte, number of values beneath, c = stats.mbpn_sizeNoValueBeneath
      * - 1 byte, number of value bytes
      * - n byte, value bytes
@@ -485,14 +484,14 @@ public class TrieDictionaryBuilder<T> {
     }
 
     private void build_overwriteChildOffset(int parentOffset, int childOffset, int sizeChildOffset,
-                                            byte[] trieBytes) {
+            byte[] trieBytes) {
         int flags = (int) trieBytes[parentOffset] & (BIT_IS_LAST_CHILD | BIT_IS_END_OF_VALUE);
         BytesUtil.writeUnsigned(childOffset, trieBytes, parentOffset, sizeChildOffset);
         trieBytes[parentOffset] |= flags;
     }
 
     private int build_writeNode(Node n, int offset, boolean isLastChild, int sizeNoValuesBeneath,
-                                int sizeChildOffset, byte[] trieBytes) {
+            int sizeChildOffset, byte[] trieBytes) {
         int o = offset;
 
         // childOffset

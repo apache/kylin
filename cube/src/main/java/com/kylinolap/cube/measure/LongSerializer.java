@@ -16,14 +16,16 @@
 
 package com.kylinolap.cube.measure;
 
-import com.kylinolap.common.util.BytesUtil;
+import java.nio.ByteBuffer;
+
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
 
-import java.nio.ByteBuffer;
+import com.kylinolap.common.util.BytesUtil;
 
 /**
  * @author yangli9
+ *
  */
 public class LongSerializer extends MeasureSerializer<LongWritable> {
 

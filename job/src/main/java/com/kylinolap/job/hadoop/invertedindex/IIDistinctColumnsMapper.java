@@ -15,15 +15,16 @@
  */
 package com.kylinolap.job.hadoop.invertedindex;
 
-import com.kylinolap.cube.common.BytesSplitter;
-import com.kylinolap.cube.common.SplittedBytes;
-import com.kylinolap.job.constant.BatchConstants;
+import java.io.IOException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-import java.io.IOException;
+import com.kylinolap.cube.common.BytesSplitter;
+import com.kylinolap.cube.common.SplittedBytes;
+import com.kylinolap.job.constant.BatchConstants;
 
 /**
  * @author yangli9

@@ -15,6 +15,18 @@
  */
 package com.kylinolap.job.hadoop.cube;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.List;
+
+import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.KeyValue.Type;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Mapper;
+
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeManager;
@@ -26,20 +38,10 @@ import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.HBaseColumnDesc;
 import com.kylinolap.metadata.model.cube.HBaseColumnFamilyDesc;
 import com.kylinolap.metadata.model.cube.MeasureDesc;
-import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.KeyValue.Type;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * @author George Song (ysong1)
+ * 
  */
 public class CubeHFileMapper extends Mapper<Text, Text, ImmutableBytesWritable, KeyValue> {
 

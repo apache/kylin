@@ -15,14 +15,19 @@
  */
 package com.kylinolap.storage.filter;
 
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.hbase.util.Pair;
+
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.storage.tuple.Tuple;
-import org.apache.commons.lang3.Validate;
-
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.util.*;
+import com.kylinolap.storage.tuple.ITuple;
 
 /**
  * @author xjiang
@@ -33,15 +38,19 @@ public class CompareTupleFilter extends TupleFilter {
     private Collection<String> conditionValues;
     private String firstCondValue;
     private Map<String, String> dynamicVariables;
+    private String nullString;
 
     public CompareTupleFilter(FilterOperatorEnum op) {
         super(new ArrayList<TupleFilter>(2), op);
         this.conditionValues = new HashSet<String>();
         this.dynamicVariables = new HashMap<String, String>();
-        Validate.isTrue(op == FilterOperatorEnum.EQ || op == FilterOperatorEnum.NEQ
-                || op == FilterOperatorEnum.LT || op == FilterOperatorEnum.LTE || op == FilterOperatorEnum.GT
-                || op == FilterOperatorEnum.GTE || op == FilterOperatorEnum.IN
-                || op == FilterOperatorEnum.ISNULL || op == FilterOperatorEnum.ISNOTNULL);
+        boolean opGood =
+                (op == FilterOperatorEnum.EQ || op == FilterOperatorEnum.NEQ || op == FilterOperatorEnum.LT
+                        || op == FilterOperatorEnum.LTE || op == FilterOperatorEnum.GT
+                        || op == FilterOperatorEnum.GTE || op == FilterOperatorEnum.IN
+                        || op == FilterOperatorEnum.ISNULL || op == FilterOperatorEnum.ISNOTNULL);
+        if (opGood == false)
+            throw new IllegalArgumentException("Unsupported operator " + op);
     }
 
     private CompareTupleFilter(CompareTupleFilter another) {
@@ -85,6 +94,20 @@ public class CompareTupleFilter extends TupleFilter {
                 || operator == FilterOperatorEnum.LTE || operator == FilterOperatorEnum.GTE;
     }
 
+    public Pair<ColumnTupleFilter, ConstantTupleFilter> getColumnAndConstant() {
+        ColumnTupleFilter colf = null;
+        ConstantTupleFilter constf = null;
+        for (TupleFilter child : this.getChildren()) {
+            if (child instanceof ColumnTupleFilter) {
+                colf = (ColumnTupleFilter) child;
+            }
+            if (child instanceof ConstantTupleFilter) {
+                constf = (ConstantTupleFilter) child;
+            }
+        }
+        return new Pair<ColumnTupleFilter, ConstantTupleFilter>(colf, constf);
+    }
+
     @Override
     public Collection<String> getValues() {
         return conditionValues;
@@ -104,6 +127,14 @@ public class CompareTupleFilter extends TupleFilter {
         this.firstCondValue = this.conditionValues.iterator().next();
     }
 
+    public String getNullString() {
+        return nullString;
+    }
+
+    public void setNullString(String nullString) {
+        this.nullString = nullString;
+    }
+
     @Override
     public TupleFilter copy() {
         return new CompareTupleFilter(this);
@@ -118,60 +149,65 @@ public class CompareTupleFilter extends TupleFilter {
 
     @Override
     public String toString() {
-        return "CompareFilter [operator=" + operator + ", column=" + column + ", values=" + conditionValues
-                + ", children=" + children + "]";
+        return "CompareFilter [" + column + " " + operator + " " + conditionValues + ", children=" + children
+                + "]";
     }
 
     @Override
-    public boolean evaluate(Tuple tuple) {
+    public boolean evaluate(ITuple tuple) {
         // extract tuple value 
-        Object tupleValue = null;
+        String tupleValue = null;
         for (TupleFilter filter : this.children) {
             if (!(filter instanceof ConstantTupleFilter)) {
                 filter.evaluate(tuple);
                 tupleValue = filter.getValues().iterator().next();
             }
         }
-        // compare tuple value with condition value
-        boolean result = false;
-        switch (this.operator) {
-            case EQ:
-                result = tupleValue.equals(firstCondValue);
-                break;
-            case NEQ:
-                result = !tupleValue.equals(firstCondValue);
-                break;
-            case LT:
-                Number tv = (Number) tupleValue;
-                Number fv = Double.valueOf(firstCondValue);
-                result = tv.doubleValue() < fv.doubleValue();
-                break;
-            case LTE:
-                tv = (Number) tupleValue;
-                fv = Double.valueOf(firstCondValue);
-                result = tv.doubleValue() < fv.doubleValue();
-                break;
-            case GT:
-                tv = (Number) tupleValue;
-                fv = Double.valueOf(firstCondValue);
-                result = tv.doubleValue() > fv.doubleValue();
-                break;
-            case GTE:
-                tv = (Number) tupleValue;
-                fv = Double.valueOf(firstCondValue);
-                result = tv.doubleValue() >= fv.doubleValue();
-                break;
-            case ISNULL:
-                result = tupleValue == null;
-                break;
-            case ISNOTNULL:
-                result = tupleValue != null;
-                break;
-            case IN:
-                conditionValues.contains(tupleValue);
-                break;
-            default:
+
+        // consider null string
+        if (nullString != null && nullString.equals(tupleValue)) {
+            tupleValue = null;
+        }
+        if (tupleValue == null) {
+            if (operator == FilterOperatorEnum.ISNULL)
+                return true;
+            else
                 return false;
+        }
+
+        // always false if compare to null
+        if (firstCondValue.equals(nullString))
+            return false;
+
+        // tricky here -- order is ensured by string compare (even for number columns)
+        // because it's row key ID (not real value) being compared
+        int comp = tupleValue.compareTo(firstCondValue);
+
+        boolean result;
+        switch (operator) {
+        case EQ:
+            result = comp == 0;
+            break;
+        case NEQ:
+            result = comp != 0;
+            break;
+        case LT:
+            result = comp < 0;
+            break;
+        case LTE:
+            result = comp <= 0;
+            break;
+        case GT:
+            result = comp > 0;
+            break;
+        case GTE:
+            result = comp >= 0;
+            break;
+        case IN:
+            result = conditionValues.contains(tupleValue);
+            break;
+        default:
+            result = false;
         }
         return result;
     }
@@ -187,9 +223,10 @@ public class CompareTupleFilter extends TupleFilter {
         int size = this.dynamicVariables.size();
         BytesUtil.writeVInt(size, buffer);
         for (Map.Entry<String, String> entry : this.dynamicVariables.entrySet()) {
-            BytesUtil.writeByteArray(entry.getKey().getBytes(Charset.forName("utf-8")), buffer);
-            BytesUtil.writeByteArray(entry.getValue().getBytes(Charset.forName("utf-8")), buffer);
+            BytesUtil.writeByteArray(Bytes.toBytes(entry.getKey()), buffer);
+            BytesUtil.writeByteArray(Bytes.toBytes(entry.getValue()), buffer);
         }
+        BytesUtil.writeAsciiString(nullString, buffer);
         byte[] result = new byte[buffer.position()];
         System.arraycopy(buffer.array(), 0, result, 0, buffer.position());
         return result;
@@ -202,11 +239,12 @@ public class CompareTupleFilter extends TupleFilter {
         int size = BytesUtil.readVInt(buffer);
         for (int i = 0; i < size; i++) {
             byte[] nameBytes = BytesUtil.readByteArray(buffer);
-            String nameString = new String(nameBytes, Charset.forName("utf-8"));
+            String nameString = Bytes.toString(nameBytes);
             byte[] valueBytes = BytesUtil.readByteArray(buffer);
-            String valueString = new String(valueBytes, Charset.forName("utf-8"));
+            String valueString = Bytes.toString(valueBytes);
             bindVariable(nameString, valueString);
         }
+        this.nullString = BytesUtil.readAsciiString(buffer);
     }
 
 }

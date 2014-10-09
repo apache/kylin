@@ -16,16 +16,18 @@
 
 package com.kylinolap.cube.measure;
 
-import com.kylinolap.metadata.model.cube.MeasureDesc;
-import org.apache.hadoop.io.Text;
-
 import java.nio.ByteBuffer;
 import java.util.Collection;
 
+import org.apache.hadoop.io.Text;
+
+import com.kylinolap.metadata.model.cube.MeasureDesc;
+
 /**
  * @author yangli9
+ *
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class MeasureCodec {
 
     int nMeasures;

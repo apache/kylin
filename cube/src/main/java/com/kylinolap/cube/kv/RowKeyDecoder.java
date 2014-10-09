@@ -15,6 +15,11 @@
  */
 package com.kylinolap.cube.kv;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.common.RowKeySplitter;
 import com.kylinolap.cube.common.SplittedBytes;
@@ -22,13 +27,10 @@ import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.TblColRef;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 /**
+ * 
  * @author xjiang
+ * 
  */
 public class RowKeyDecoder {
 

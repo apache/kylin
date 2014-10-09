@@ -15,6 +15,10 @@
  */
 package com.kylinolap.storage.tuple;
 
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+
 import com.kylinolap.common.util.Array;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
@@ -23,14 +27,10 @@ import com.kylinolap.dict.lookup.LookupStringTable;
 import com.kylinolap.metadata.model.cube.CubeDesc.DeriveInfo;
 import com.kylinolap.metadata.model.cube.TblColRef;
 
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-
 /**
  * @author xjiang
  */
-public class Tuple {
+public class Tuple implements ITuple {
 
     private final TupleInfo info;
     private final Object[] values;
@@ -60,8 +60,13 @@ public class Tuple {
         return info.getColumn(fieldName);
     }
 
-    public Object getFieldValue(String fieldName) {
+    public Object getValue(String fieldName) {
         int index = info.getFieldIndex(fieldName);
+        return values[index];
+    }
+
+    public Object getValue(TblColRef col) {
+        int index = info.getColumnIndex(col);
         return values[index];
     }
 
@@ -95,7 +100,7 @@ public class Tuple {
         for (String field : info.getAllFields()) {
             sb.append(field);
             sb.append("=");
-            sb.append(getFieldValue(field));
+            sb.append(getValue(field));
             sb.append(",");
         }
         return sb.toString();
@@ -135,8 +140,8 @@ public class Tuple {
     // ============================================================================
 
     public static IDerivedColumnFiller newDerivedColumnFiller(List<TblColRef> rowColumns,
-                                                              TblColRef[] hostCols, DeriveInfo deriveInfo, TupleInfo tupleInfo, CubeManager cubeMgr,
-                                                              CubeSegment cubeSegment) {
+            TblColRef[] hostCols, DeriveInfo deriveInfo, TupleInfo tupleInfo, CubeManager cubeMgr,
+            CubeSegment cubeSegment) {
 
         int[] hostIndex = new int[hostCols.length];
         for (int i = 0; i < hostCols.length; i++) {
@@ -148,14 +153,14 @@ public class Tuple {
         }
 
         switch (deriveInfo.type) {
-            case LOOKUP:
-                LookupStringTable lookupTable = cubeMgr.getLookupTable(cubeSegment, deriveInfo.dimension);
-                return new LookupFiller(hostIndex, lookupTable, deriveInfo, derivedFieldNames);
-            case PK_FK:
-                // composite key are split, see CubeDesc.initDimensionColumns()
-                return new PKFKFiller(hostIndex[0], derivedFieldNames[0]);
-            default:
-                throw new IllegalArgumentException();
+        case LOOKUP:
+            LookupStringTable lookupTable = cubeMgr.getLookupTable(cubeSegment, deriveInfo.dimension);
+            return new LookupFiller(hostIndex, lookupTable, deriveInfo, derivedFieldNames);
+        case PK_FK:
+            // composite key are split, see CubeDesc.initDimensionColumns()
+            return new PKFKFiller(hostIndex[0], derivedFieldNames[0]);
+        default:
+            throw new IllegalArgumentException();
         }
     }
 
@@ -190,7 +195,7 @@ public class Tuple {
         final String[] derivedFieldNames;
 
         public LookupFiller(int[] hostIndex, LookupStringTable lookupTable, DeriveInfo deriveInfo,
-                            String[] derivedFieldNames) {
+                String[] derivedFieldNames) {
             this.hostIndex = hostIndex;
             this.hostLen = hostIndex.length;
             this.lookupKey = new Array<String>(new String[hostLen]);

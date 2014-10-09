@@ -16,6 +16,16 @@
 
 package com.kylinolap.metadata.validation.rule;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import org.apache.commons.lang.ArrayUtils;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.DimensionDesc;
@@ -23,17 +33,14 @@ import com.kylinolap.metadata.model.cube.HierarchyDesc;
 import com.kylinolap.metadata.validation.IValidatorRule;
 import com.kylinolap.metadata.validation.ResultLevel;
 import com.kylinolap.metadata.validation.ValidateContext;
-import org.apache.commons.lang.ArrayUtils;
-
-import java.util.*;
-import java.util.Map.Entry;
 
 /**
  * Rule to validate:
  * 1. The aggregationGroup size must be less than 20
  * 2. hierarchy column must NOT across aggregation group
- *
+ * 
  * @author jianliu
+ *
  */
 public class AggregationGroupSizeRule implements IValidatorRule<CubeDesc> {
 
@@ -81,7 +88,7 @@ public class AggregationGroupSizeRule implements IValidatorRule<CubeDesc> {
 
     /**
      * Only validate "hierarchy dimensions not across aggregation groups".
-     *
+     * 
      * @param set
      * @param existingHier
      * @param context

@@ -25,26 +25,30 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.kylinolap.metadata.model.cube.TblColRef.InnerDataTypeEnum;
+
 /**
  * @author yangli9
+ *
  */
 public class DataType {
 
     public static final String VALID_TYPES_STRING =
             "any|char|varchar|boolean|integer|tinyint|smallint|bigint|decimal|numeric|float|real|double"
-                    + "|date|time|datetime|timestamp|byte|int|short|long|string|hllc";
+                    + "|date|time|datetime|timestamp|byte|int|short|long|string|hllc" //
+                    + "|" + InnerDataTypeEnum.LITERAL.getDataType() //
+                    + "|" + InnerDataTypeEnum.DERIVED.getDataType();
 
     private static final Pattern TYPE_PATTERN = Pattern.compile(
-            // standard sql types, ref: http://www.w3schools.com/sql/sql_datatypes_general.asp
+    // standard sql types, ref: http://www.w3schools.com/sql/sql_datatypes_general.asp
             "(" + VALID_TYPES_STRING + ")" + "\\s*" //
-                    + "(?:" + "[(]" + "([\\d\\s,]+)" + "[)]" + ")?", Pattern.CASE_INSENSITIVE
-    );
+                    + "(?:" + "[(]" + "([\\d\\s,]+)" + "[)]" + ")?", Pattern.CASE_INSENSITIVE);
 
     public static final Set<String> INTEGER_FAMILY = new HashSet<String>();
     public static final Set<String> NUMBER_FAMILY = new HashSet<String>();
+    public static final Set<String> DATETIME_FAMILY = new HashSet<String>();
     private static final Set<Integer> HLLC_PRECISIONS = new HashSet<Integer>();
     private static final Map<String, String> LEGACY_TYPE_MAP = new HashMap<String, String>();
-
     static {
         INTEGER_FAMILY.add("tinyint");
         INTEGER_FAMILY.add("smallint");
@@ -57,6 +61,11 @@ public class DataType {
         NUMBER_FAMILY.add("decimal");
         NUMBER_FAMILY.add("real");
         NUMBER_FAMILY.add("numeric");
+
+        DATETIME_FAMILY.add("date");
+        DATETIME_FAMILY.add("time");
+        DATETIME_FAMILY.add("datetime");
+        DATETIME_FAMILY.add("timestamp");
 
         LEGACY_TYPE_MAP.put("byte", "tinyint");
         LEGACY_TYPE_MAP.put("int", "integer");
@@ -77,6 +86,9 @@ public class DataType {
             new ConcurrentHashMap<DataType, DataType>();
 
     public static DataType getInstance(String type) {
+        if (type == null)
+            return null;
+
         DataType dataType = new DataType(type);
         DataType cached = CACHE.get(dataType);
         if (cached == null) {
@@ -177,6 +189,10 @@ public class DataType {
 
     public boolean isNumberFamily() {
         return NUMBER_FAMILY.contains(name);
+    }
+
+    public boolean isDateTimeFamily() {
+        return DATETIME_FAMILY.contains(name);
     }
 
     public boolean isTinyInt() {

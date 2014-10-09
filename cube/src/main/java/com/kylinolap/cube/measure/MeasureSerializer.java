@@ -16,18 +16,18 @@
 
 package com.kylinolap.cube.measure;
 
+import java.util.HashMap;
+
 import com.kylinolap.common.util.BytesSerializer;
 import com.kylinolap.metadata.model.schema.DataType;
 
-import java.util.HashMap;
-
 /**
  * @author yangli9
+ *
  */
 abstract public class MeasureSerializer<T> implements BytesSerializer<T> {
 
     final static HashMap<String, Class<?>> implementations = new HashMap<String, Class<?>>();
-
     static {
         implementations.put("decimal", BigDecimalSerializer.class);
         implementations.put("double", DoubleSerializer.class);

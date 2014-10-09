@@ -1,12 +1,13 @@
 package com.kylinolap.cube;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.estimation.CubeSizeEstimationCLI;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.cube.CubeDesc;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 /**
  * Created by honma on 9/1/14.
@@ -26,7 +27,7 @@ public class CubeSizeEstimationCLITest extends LocalFileMetadataTestCase {
         CubeManager cubeManager = CubeManager.getInstance(getTestConfig());
         CubeInstance cubeInstance = cubeManager.getCube(cubeName);
         cubeDesc = cubeInstance.getDescriptor();
-        cardinality = new long[]{100, 100, 100, 10000, 1000, 100, 100, 100, 100};
+        cardinality = new long[] { 100, 100, 100, 10000, 1000, 100, 100, 100, 100 };
 
     }
 
@@ -37,7 +38,7 @@ public class CubeSizeEstimationCLITest extends LocalFileMetadataTestCase {
 
     @Test
     public void test() {
-        long[] x = new long[]{5, 8, 5, 115, 122, 127, 137, 236, 101};
+        long[] x = new long[] { 5, 8, 5, 115, 122, 127, 137, 236, 101 };
         CubeSizeEstimationCLI.estimatedCubeSize(cubeName, x);
     }
 

@@ -15,6 +15,21 @@
  */
 package com.kylinolap.dict;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.commons.compress.utils.IOUtils;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.util.HadoopUtil;
@@ -25,20 +40,6 @@ import com.kylinolap.dict.lookup.TableSignature;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.TblColRef;
-import org.apache.commons.compress.utils.IOUtils;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class DictionaryManager {
 
@@ -185,7 +186,7 @@ public class DictionaryManager {
             srcColIdx = col.getColumn().getZeroBasedIndex();
             int nColumns = metaMgr.getTableDesc(col.getTable()).getColumnCount();
             table = new FileTable(factColumnsPath + "/" + col.getName(), nColumns);
-            return new Object[]{srcTable, srcCol, srcColIdx, table};
+            return new Object[] { srcTable, srcCol, srcColIdx, table };
         }
 
         // Decide source data of dictionary:
@@ -198,7 +199,8 @@ public class DictionaryManager {
         String useDict = cube.getRowkey().getDictionary(col);
 
         // normal case, source from lookup table
-        if ("true".equals(useDict) || "string".equals(useDict) || "any".equals(useDict)) {
+        if ("true".equals(useDict) || "string".equals(useDict) || "number".equals(useDict)
+                || "any".equals(useDict)) {
             // FK on fact table, use PK from lookup instead
             if (cube.isFactTable(col.getTable())) {
                 TblColRef pkCol = cube.findPKByFK(col);
@@ -215,9 +217,9 @@ public class DictionaryManager {
             }
         }
         // otherwise could refer to a data set, e.g. common_indicators.txt
+        // (LEGACY PATH, since distinct values are collected from fact table)
         else {
-            String dictDataSetPath =
-                    unpackDataSet(this.config.getTempHDFSDir(), useDict);
+            String dictDataSetPath = unpackDataSet(this.config.getTempHDFSDir(), useDict);
             if (dictDataSetPath == null)
                 throw new IllegalArgumentException("Unknown dictionary data set '" + useDict
                         + "', referred from " + col);
@@ -227,7 +229,7 @@ public class DictionaryManager {
             table = new FileTable(dictDataSetPath, -1);
         }
 
-        return new Object[]{srcTable, srcCol, srcColIdx, table};
+        return new Object[] { srcTable, srcCol, srcColIdx, table };
     }
 
     private String unpackDataSet(String tempHDFSDir, String dataSetName) throws IOException {

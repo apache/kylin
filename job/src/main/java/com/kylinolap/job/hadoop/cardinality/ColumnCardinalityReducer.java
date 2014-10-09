@@ -16,19 +16,26 @@
 
 package com.kylinolap.job.hadoop.cardinality;
 
-import com.kylinolap.common.hll.HyperLogLogPlusCounter;
-import com.kylinolap.cube.kv.RowConstants;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Reducer;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.*;
+import com.kylinolap.common.hll.HyperLogLogPlusCounter;
+import com.kylinolap.cube.kv.RowConstants;
 
 /**
  * @author Jack
+ *
  */
 public class ColumnCardinalityReducer extends Reducer<IntWritable, BytesWritable, IntWritable, LongWritable> {
 

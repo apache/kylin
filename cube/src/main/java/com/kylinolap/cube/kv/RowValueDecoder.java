@@ -15,23 +15,26 @@
  */
 package com.kylinolap.cube.kv;
 
-import com.kylinolap.cube.measure.MeasureCodec;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.HBaseColumnDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
-import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.FloatWritable;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
-
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.FloatWritable;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+
+import com.kylinolap.cube.measure.MeasureCodec;
+import com.kylinolap.metadata.model.cube.FunctionDesc;
+import com.kylinolap.metadata.model.cube.HBaseColumnDesc;
+import com.kylinolap.metadata.model.cube.MeasureDesc;
+
 /**
+ * 
  * @author xjiang
+ * 
  */
 public class RowValueDecoder implements Cloneable {
 

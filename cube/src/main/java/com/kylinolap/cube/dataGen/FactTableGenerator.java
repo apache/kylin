@@ -1,17 +1,38 @@
 package com.kylinolap.cube.dataGen;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.util.Array;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.*;
+import com.kylinolap.metadata.model.cube.CubeDesc;
+import com.kylinolap.metadata.model.cube.DimensionDesc;
+import com.kylinolap.metadata.model.cube.JoinDesc;
+import com.kylinolap.metadata.model.cube.MeasureDesc;
+import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
-
-import java.io.*;
-import java.text.SimpleDateFormat;
-import java.util.*;
 
 /**
  * Created by hongbin on 5/20/14.
@@ -46,7 +67,7 @@ public class FactTableGenerator {
             new HashMap<String, HashSet<Array<String>>>();
 
     private void init(String cubeName, int rowCount, double conflictRaio, double linkableRatio,
-                      long randomSeed) {
+            long randomSeed) {
         this.rowCount = rowCount;
         this.conflictRatio = conflictRaio;
         this.cubeName = cubeName;
@@ -82,7 +103,7 @@ public class FactTableGenerator {
     }
 
     private void loadLookupTableValues(String lookupTableName, LinkedList<String> columnNames,
-                                       int distinctRowCount) throws Exception {
+            int distinctRowCount) throws Exception {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
 
         //only deal with composite keys
@@ -246,7 +267,6 @@ public class FactTableGenerator {
 
     /**
      * Generate the fact table and put it into a temp file
-     *
      * @return
      * @throws Exception
      */
@@ -429,7 +449,7 @@ public class FactTableGenerator {
     }
 
     private void printColumnMappings(HashMap<String, String> factTableCol2LookupCol,
-                                     HashSet<String> usedCols, HashSet<String> defaultColumns) {
+            HashSet<String> usedCols, HashSet<String> defaultColumns) {
 
         System.out.println("=======================================================================");
         System.out.format("%-30s %s", "FACT_TABLE_COLUMN", "MAPPING");
@@ -466,7 +486,7 @@ public class FactTableGenerator {
     //for single-column joins the generated row is guaranteed to have a match in lookup table
     //for composite keys we'll need an extra check
     private boolean matchAllCompositeKeys(HashMap<String, String> lookupCol2FactTableCol,
-                                          LinkedList<String> columnValues) {
+            LinkedList<String> columnValues) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
 
         for (String lookupTable : lookupTableKeys.keySet()) {
@@ -528,7 +548,7 @@ public class FactTableGenerator {
     }
 
     private LinkedList<String> createRow(HashMap<String, String> factTableCol2LookupCol,
-                                         HashSet<String> usedCols, HashSet<String> defaultColumns) throws Exception {
+            HashSet<String> usedCols, HashSet<String> defaultColumns) throws Exception {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         LinkedList<String> columnValues = new LinkedList<String>();
 
@@ -559,13 +579,13 @@ public class FactTableGenerator {
     }
 
     private String createTable(int rowCount, HashMap<String, String> factTableCol2LookupCol,
-                               HashMap<String, String> lookupCol2FactTableCol, HashSet<String> usedCols) throws Exception {
+            HashMap<String, String> lookupCol2FactTableCol, HashSet<String> usedCols) throws Exception {
         try {
             File tempFile = File.createTempFile("ftg", ".tmp");
             BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
             HashSet<String> defaultColumns = new HashSet<String>();
 
-            for (int i = 0; i < rowCount; ) {
+            for (int i = 0; i < rowCount;) {
 
                 LinkedList<String> columnValues = createRow(factTableCol2LookupCol, usedCols, defaultColumns);
 
@@ -611,7 +631,7 @@ public class FactTableGenerator {
      * @param randomSeed    random seed
      */
     public static void generate(String cubeName, String rowCount, String linkableRatio, String randomSeed,
-                                String joinType) throws Exception {
+            String joinType) throws Exception {
 
         if (cubeName == null)
             cubeName = "test_kylin_cube_with_slr_ready";

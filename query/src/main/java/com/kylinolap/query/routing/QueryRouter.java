@@ -15,16 +15,29 @@
  */
 package com.kylinolap.query.routing;
 
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.project.ProjectManager;
-import com.kylinolap.metadata.model.cube.*;
-import com.kylinolap.query.relnode.OLAPContext;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import org.eigenbase.reltype.RelDataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.project.ProjectManager;
+import com.kylinolap.metadata.model.cube.CubeDesc;
+import com.kylinolap.metadata.model.cube.DimensionDesc;
+import com.kylinolap.metadata.model.cube.FunctionDesc;
+import com.kylinolap.metadata.model.cube.JoinDesc;
+import com.kylinolap.metadata.model.cube.ParameterDesc;
+import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.query.relnode.OLAPContext;
 
 /**
  * @author xjiang
@@ -63,7 +76,7 @@ public class QueryRouter {
     }
 
     private static CubeInstance findCubeWithMostDimensions(ProjectManager projectManager,
-                                                           OLAPContext olapContext) {
+            OLAPContext olapContext) {
         List<CubeInstance> candidates =
                 projectManager.getOnlineCubesByFactTable(olapContext.olapSchema.getProjectName(),
                         olapContext.firstTableScan.getCubeTable());
@@ -79,7 +92,7 @@ public class QueryRouter {
 
             if ((currentDimCount > maxDimCount)
                     || ((currentDimCount == maxDimCount) && (instance.getCost() < cubeWithMostColumns
-                    .getCost())))
+                            .getCost())))
                 cubeWithMostColumns = instance;
         }
         return cubeWithMostColumns;
@@ -121,7 +134,7 @@ public class QueryRouter {
     }
 
     static List<CubeInstance> findMatchCubesForTableScanQuery(CubeManager cubeMgr, String factTableName,
-                                                              Collection<TblColRef> dimensionColumns, Collection<FunctionDesc> functions)
+            Collection<TblColRef> dimensionColumns, Collection<FunctionDesc> functions)
             throws CubeNotFoundException {
         return null;
     }
@@ -178,17 +191,17 @@ public class QueryRouter {
             }
         }
 
+        //normal case:
         if (!candidates.isEmpty()) {
-            //normal case:
             return getCheapestCube(candidates);
-        } else {
-            if (!backups.isEmpty()) {
-                CubeInstance cube = getCheapestCube(backups);
-                //Using backup cubes indicates that previous judgement on dimensions/metrics is incorrect
-                adjustOLAPContext(dimensionColumns, functions, metricsColumns, cube, rewriteFields);
-                logger.info("Use weak matched cube " + cube.getName());
-                return cube;
-            }
+        }
+        //consider backup
+        else if (!backups.isEmpty()) {
+            CubeInstance cube = getCheapestCube(backups);
+            //Using backup cubes indicates that previous judgment on dimensions/metrics is incorrect
+            adjustOLAPContext(dimensionColumns, functions, metricsColumns, cube, rewriteFields, olapContext);
+            logger.info("Use weak matched cube " + cube.getName());
+            return cube;
         }
         return null;
     }
@@ -253,7 +266,7 @@ public class QueryRouter {
     }
 
     private static boolean isWeaklyMatchedWithAggregations(Collection<FunctionDesc> aggregations,
-                                                           Collection<TblColRef> metricColumns, CubeInstance cube) {
+            Collection<TblColRef> metricColumns, CubeInstance cube) {
         CubeDesc cubeDesc = cube.getDescriptor();
         Collection<FunctionDesc> cubeFuncs = cubeDesc.listAllFunctions();
 
@@ -279,8 +292,8 @@ public class QueryRouter {
     }
 
     private static void adjustOLAPContext(Collection<TblColRef> dimensionColumns,
-                                          Collection<FunctionDesc> aggregations, Collection<TblColRef> metricColumns, CubeInstance cube,
-                                          Map<String, RelDataType> rewriteFields) {
+            Collection<FunctionDesc> aggregations, Collection<TblColRef> metricColumns, CubeInstance cube,
+            Map<String, RelDataType> rewriteFields, OLAPContext olapContext) {
         CubeDesc cubeDesc = cube.getDescriptor();
         Collection<FunctionDesc> cubeFuncs = cubeDesc.listAllFunctions();
 
@@ -294,6 +307,7 @@ public class QueryRouter {
                 rewriteFields.remove(functionDesc.getRewriteFieldName());
                 metricColumns.remove(col);
                 dimensionColumns.add(col);
+                olapContext.storageContext.mandateColumn(col);
                 logger.info("Adjust OLAPContext for " + functionDesc);
             }
         }

@@ -16,20 +16,25 @@
 
 package com.kylinolap.storage.filter;
 
-import com.kylinolap.common.util.BytesUtil;
-import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
-
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
+import com.kylinolap.common.util.BytesUtil;
+import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
+
 /**
  * http://eli.thegreenplace.net/2011/09/29/an-interesting-tree-serialization-algorithm-from-dwarf
- *
+ * 
  * @author xjiang
+ *
  */
 public class TupleFilterSerializer {
+
+    public static interface Decorator {
+        TupleFilter onSerialize(TupleFilter filter);
+    }
 
     private static final int BUFFER_SIZE = 65536;
     private static final Map<Integer, FilterOperatorEnum> ID_OP_MAP =
@@ -42,34 +47,42 @@ public class TupleFilterSerializer {
     }
 
     public static byte[] serialize(TupleFilter rootFilter) {
+        return serialize(rootFilter, null);
+    }
+
+    public static byte[] serialize(TupleFilter rootFilter, Decorator decorator) {
         ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
-        internalSerialize(rootFilter, buffer);
+        internalSerialize(rootFilter, decorator, buffer);
         byte[] result = new byte[buffer.position()];
         System.arraycopy(buffer.array(), 0, result, 0, buffer.position());
         return result;
     }
 
-    private static void internalSerialize(TupleFilter filter, ByteBuffer buffer) {
+    private static void internalSerialize(TupleFilter filter, Decorator decorator, ByteBuffer buffer) {
+        if (decorator != null) { // give decorator a chance to manipulate the output filter
+            filter = decorator.onSerialize(filter);
+        }
+
         if (filter == null) {
             return;
         }
 
         if (filter.hasChildren()) {
             // serialize filter+true
-            serializeFilter(1, filter, buffer);
+            serializeFilter(1, filter, decorator, buffer);
             // serialize children
             for (TupleFilter child : filter.getChildren()) {
-                internalSerialize(child, buffer);
+                internalSerialize(child, decorator, buffer);
             }
             // serialize none
-            serializeFilter(-1, filter, buffer);
+            serializeFilter(-1, filter, decorator, buffer);
         } else {
             // serialize filter+false
-            serializeFilter(0, filter, buffer);
+            serializeFilter(0, filter, decorator, buffer);
         }
     }
 
-    private static void serializeFilter(int flag, TupleFilter filter, ByteBuffer buffer) {
+    private static void serializeFilter(int flag, TupleFilter filter, Decorator decorator, ByteBuffer buffer) {
         if (flag < 0) {
             BytesUtil.writeVInt(-1, buffer);
         } else {
@@ -127,39 +140,39 @@ public class TupleFilterSerializer {
         }
         TupleFilter filter = null;
         switch (op) {
-            case AND:
-            case OR:
-            case NOT:
-                filter = new LogicalTupleFilter(op);
-                break;
-            case EQ:
-            case NEQ:
-            case LT:
-            case LTE:
-            case GT:
-            case GTE:
-            case IN:
-            case ISNULL:
-            case ISNOTNULL:
-                filter = new CompareTupleFilter(op);
-                break;
-            case EXTRACT:
-                filter = new ExtractTupleFilter(op);
-                break;
-            case CASE:
-                filter = new CaseTupleFilter();
-                break;
-            case COLUMN:
-                filter = new ColumnTupleFilter(null);
-                break;
-            case CONSTANT:
-                filter = new ConstantTupleFilter();
-                break;
-            case DYNAMIC:
-                filter = new DynamicTupleFilter(null);
-                break;
-            default:
-                throw new IllegalStateException("Error FilterOperatorEnum: " + op.getValue());
+        case AND:
+        case OR:
+        case NOT:
+            filter = new LogicalTupleFilter(op);
+            break;
+        case EQ:
+        case NEQ:
+        case LT:
+        case LTE:
+        case GT:
+        case GTE:
+        case IN:
+        case ISNULL:
+        case ISNOTNULL:
+            filter = new CompareTupleFilter(op);
+            break;
+        case EXTRACT:
+            filter = new ExtractTupleFilter(op);
+            break;
+        case CASE:
+            filter = new CaseTupleFilter();
+            break;
+        case COLUMN:
+            filter = new ColumnTupleFilter(null);
+            break;
+        case CONSTANT:
+            filter = new ConstantTupleFilter();
+            break;
+        case DYNAMIC:
+            filter = new DynamicTupleFilter(null);
+            break;
+        default:
+            throw new IllegalStateException("Error FilterOperatorEnum: " + op.getValue());
         }
 
         return filter;

@@ -15,18 +15,22 @@
  */
 package com.kylinolap.job;
 
-import com.fasterxml.jackson.annotation.*;
+import java.util.Iterator;
+import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.cube.CubeBuildTypeEnum;
 import com.kylinolap.job.constant.JobStatusEnum;
 import com.kylinolap.job.constant.JobStepCmdTypeEnum;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
-
-import java.util.Iterator;
-import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class JobInstance extends RootPersistentEntity {

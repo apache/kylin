@@ -20,6 +20,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 
 /**
  * @author yangli9
+ *
  */
 public class NumberDictionary<T> extends TrieDictionary<T> {
 
@@ -75,7 +76,7 @@ public class NumberDictionary<T> extends TrieDictionary<T> {
             }
 
             // consider negative
-            if (value[offset] == '-') {
+            if (negative) {
                 buf[--start] = '-';
                 for (int i = start + 1; i < buf.length; i++) {
                     int c = buf[i];
@@ -169,6 +170,7 @@ public class NumberDictionary<T> extends TrieDictionary<T> {
     @Override
     protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) {
         NumberBytesCodec codec = getCodec();
+        codec.bufOffset = 0;
         codec.bufLen = super.getValueBytesFromIdImpl(id, codec.buf, 0);
         return codec.decodeNumber(returnValue, offset);
     }

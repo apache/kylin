@@ -15,16 +15,19 @@
  */
 package com.kylinolap.query.optrule;
 
-import com.kylinolap.query.relnode.OLAPLimitRel;
-import com.kylinolap.query.relnode.OLAPRel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.SortRel;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelTraitSet;
 
+import com.kylinolap.query.relnode.OLAPLimitRel;
+import com.kylinolap.query.relnode.OLAPRel;
+
 /**
+ * 
  * @author xjiang
+ *
  */
 public class OLAPLimitRule extends RelOptRule {
 

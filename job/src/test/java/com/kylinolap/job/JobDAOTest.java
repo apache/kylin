@@ -15,22 +15,24 @@
  */
 package com.kylinolap.job;
 
+import static org.junit.Assert.*;
+
+import java.io.IOException;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeBuildTypeEnum;
 import com.kylinolap.job.exception.InvalidJobInstanceException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
-import java.io.IOException;
-
-import static org.junit.Assert.*;
-
-/**
- * @author George Song (ysong1)
- */
+/** 
+* @author George Song (ysong1)
+* 
+*/
 public class JobDAOTest extends LocalFileMetadataTestCase {
 
     @Before

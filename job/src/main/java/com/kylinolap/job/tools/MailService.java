@@ -16,15 +16,16 @@
 
 package com.kylinolap.job.tools;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
 
-import java.io.IOException;
-import java.util.List;
-
 /**
  * @author xduo
+ *
  */
 public class MailService {
 

@@ -16,16 +16,6 @@
 
 package com.kylinolap.storage.hbase.coprocessor;
 
-import com.google.common.collect.Maps;
-import com.kylinolap.cube.measure.MeasureAggregator;
-import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hbase.HRegionInfo;
-import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.KeyValue.Type;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.regionserver.RegionScanner;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
@@ -33,31 +23,41 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 
+import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hbase.HRegionInfo;
+import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.KeyValue.Type;
+import org.apache.hadoop.hbase.regionserver.RegionScanner;
+
+import com.google.common.collect.Maps;
+import com.kylinolap.cube.measure.MeasureAggregator;
+import com.kylinolap.storage.hbase.coprocessor.SRowProjector.AggrKey;
+
 /**
- * TODO - add memory management that control the total usage and block large request
+ * @author yangli9
  *
- * @author xjiang
  */
 @SuppressWarnings("rawtypes")
 public class AggregationCache {
 
     static final int MEMORY_USAGE_CAP = 500 * 1024 * 1024; // 500 MB
 
-    private final SortedMap<ImmutableBytesWritable, MeasureAggregator[]> aggBufMap;
-    private final RowAggregators aggregators;
+    private final SortedMap<AggrKey, MeasureAggregator[]> aggBufMap;
+    private final SRowAggregators aggregators;
 
     transient int rowMemBytes;
 
-    public AggregationCache(RowAggregators aggregators, int estSize) {
+    public AggregationCache(SRowAggregators aggregators, int estSize) {
         this.aggregators = aggregators;
         this.aggBufMap = Maps.newTreeMap();
     }
 
-    public MeasureAggregator[] getBuffer(ImmutableBytesWritable aggkey) {
+    public MeasureAggregator[] getBuffer(AggrKey aggkey) {
         MeasureAggregator[] aggBuf = aggBufMap.get(aggkey);
         if (aggBuf == null) {
             aggBuf = aggregators.createBuffer();
-            aggBufMap.put(aggkey, aggBuf);
+            aggBufMap.put(aggkey.copy(), aggBuf);
         }
         return aggBuf;
     }
@@ -92,7 +92,7 @@ public class AggregationCache {
     private class AggregationRegionScanner implements RegionScanner {
 
         private final RegionScanner innerScanner;
-        private final Iterator<Entry<ImmutableBytesWritable, MeasureAggregator[]>> iterator;
+        private final Iterator<Entry<AggrKey, MeasureAggregator[]>> iterator;
 
         public AggregationRegionScanner(RegionScanner innerScanner) {
             this.innerScanner = innerScanner;
@@ -104,7 +104,7 @@ public class AggregationCache {
             //            AggregateRegionObserver.LOG.info("Kylin Scanner next()");
             boolean hasMore = false;
             if (iterator.hasNext()) {
-                Entry<ImmutableBytesWritable, MeasureAggregator[]> entry = iterator.next();
+                Entry<AggrKey, MeasureAggregator[]> entry = iterator.next();
                 makeCells(entry, results);
                 hasMore = iterator.hasNext();
             }
@@ -112,17 +112,17 @@ public class AggregationCache {
             return hasMore;
         }
 
-        private void makeCells(Entry<ImmutableBytesWritable, MeasureAggregator[]> entry, List<Cell> results) {
+        private void makeCells(Entry<AggrKey, MeasureAggregator[]> entry, List<Cell> results) {
             byte[][] families = aggregators.getHColFamilies();
             byte[][] qualifiers = aggregators.getHColQualifiers();
             int nHCols = aggregators.getHColsNum();
 
-            ImmutableBytesWritable rowKey = entry.getKey();
+            AggrKey rowKey = entry.getKey();
             MeasureAggregator[] aggBuf = entry.getValue();
             ByteBuffer[] rowValues = aggregators.getHColValues(aggBuf);
 
             if (nHCols == 0) {
-                Cell keyValue = new KeyValue(rowKey.get(), rowKey.getOffset(), rowKey.getLength(), //
+                Cell keyValue = new KeyValue(rowKey.get(), rowKey.offset(), rowKey.length(), //
                         null, 0, 0, //
                         null, 0, 0, //
                         HConstants.LATEST_TIMESTAMP, Type.Put, //
@@ -130,7 +130,7 @@ public class AggregationCache {
                 results.add(keyValue);
             } else {
                 for (int i = 0; i < nHCols; i++) {
-                    Cell keyValue = new KeyValue(rowKey.get(), rowKey.getOffset(), rowKey.getLength(), //
+                    Cell keyValue = new KeyValue(rowKey.get(), rowKey.offset(), rowKey.length(), //
                             families[i], 0, families[i].length, //
                             qualifiers[i], 0, qualifiers[i].length, //
                             HConstants.LATEST_TIMESTAMP, Type.Put, //

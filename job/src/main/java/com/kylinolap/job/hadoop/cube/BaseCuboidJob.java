@@ -19,6 +19,7 @@ import org.apache.hadoop.util.ToolRunner;
 
 /**
  * @author honma
+ * 
  */
 
 public class BaseCuboidJob extends CuboidJob {

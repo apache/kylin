@@ -16,15 +16,16 @@
 
 package com.kylinolap.storage.filter;
 
-import com.kylinolap.storage.tuple.Tuple;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import com.kylinolap.storage.tuple.ITuple;
+
 /**
  * @author xjiang
+ *
  */
 public class CaseTupleFilter extends TupleFilter {
 
@@ -61,7 +62,7 @@ public class CaseTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(Tuple tuple) {
+    public boolean evaluate(ITuple tuple) {
         if (whenFilters.size() != thenFilters.size()) {
             elseFilter = whenFilters.remove(whenFilters.size() - 1);
         }

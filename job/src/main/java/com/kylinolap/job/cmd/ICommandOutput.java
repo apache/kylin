@@ -20,6 +20,7 @@ import com.kylinolap.job.constant.JobStepStatusEnum;
 
 /**
  * @author xjiang
+ *
  */
 public interface ICommandOutput {
 

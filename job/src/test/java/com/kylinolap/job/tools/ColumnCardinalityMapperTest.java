@@ -16,9 +16,15 @@
 
 package com.kylinolap.job.tools;
 
-import com.kylinolap.common.hll.HyperLogLogPlusCounter;
-import com.kylinolap.job.hadoop.cardinality.ColumnCardinalityMapper;
-import com.kylinolap.job.hadoop.cardinality.HiveColumnCardinalityJob;
+import static org.junit.Assert.*;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.List;
+
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
@@ -29,18 +35,13 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import com.kylinolap.common.hll.HyperLogLogPlusCounter;
+import com.kylinolap.job.hadoop.cardinality.ColumnCardinalityMapper;
+import com.kylinolap.job.hadoop.cardinality.HiveColumnCardinalityJob;
 
 /**
  * @author ysong1
+ *
  */
 public class ColumnCardinalityMapperTest {
 
@@ -48,7 +49,7 @@ public class ColumnCardinalityMapperTest {
     MapDriver mapDriver;
     String localTempDir = System.getProperty("java.io.tmpdir") + File.separator;
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Before
     public void setUp() {
         ColumnCardinalityMapper mapper = new ColumnCardinalityMapper();
@@ -57,7 +58,7 @@ public class ColumnCardinalityMapperTest {
 
     public final static String strArr = "abc,tests,test,test,as,sts,test,tss,sets";
 
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({ "unchecked" })
     @Test
     @Ignore
     public void testMapperOn177() throws IOException {

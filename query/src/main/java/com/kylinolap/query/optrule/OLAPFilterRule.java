@@ -15,15 +15,18 @@
  */
 package com.kylinolap.query.optrule;
 
-import com.kylinolap.query.relnode.OLAPFilterRel;
-import com.kylinolap.query.relnode.OLAPRel;
 import org.eigenbase.rel.FilterRel;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelTraitSet;
 
+import com.kylinolap.query.relnode.OLAPFilterRel;
+import com.kylinolap.query.relnode.OLAPRel;
+
 /**
+ * 
  * @author xjiang
+ *
  */
 
 public class OLAPFilterRule extends RelOptRule {

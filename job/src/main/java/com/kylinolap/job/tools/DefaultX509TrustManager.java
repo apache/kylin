@@ -16,32 +16,33 @@
 
 package com.kylinolap.job.tools;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * @author xduo
+ *
  */
 public class DefaultX509TrustManager implements X509TrustManager {
 
-    /**
-     * Log object for this class.
-     */
+    /** Log object for this class. */
     private static Logger LOG = LoggerFactory.getLogger(DefaultX509TrustManager.class);
     private X509TrustManager standardTrustManager = null;
 
     /**
      * Constructor for DefaultX509TrustManager.
+     *
      */
     public DefaultX509TrustManager(KeyStore keystore) throws NoSuchAlgorithmException, KeyStoreException {
         super();

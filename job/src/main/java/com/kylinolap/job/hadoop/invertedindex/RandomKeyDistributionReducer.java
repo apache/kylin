@@ -16,19 +16,21 @@
 
 package com.kylinolap.job.hadoop.invertedindex;
 
-import com.kylinolap.job.constant.BatchConstants;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import com.kylinolap.job.constant.BatchConstants;
 
 /**
  * @author ysong1
+ *
  */
 public class RandomKeyDistributionReducer<KEY extends Writable> extends
         Reducer<KEY, NullWritable, KEY, NullWritable> {

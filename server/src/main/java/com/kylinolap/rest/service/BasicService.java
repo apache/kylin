@@ -15,29 +15,6 @@
  */
 package com.kylinolap.rest.service;
 
-import com.google.common.io.Files;
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.project.ProjectInstance;
-import com.kylinolap.cube.project.ProjectManager;
-import com.kylinolap.job.JobManager;
-import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job.exception.JobException;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.query.enumerator.OLAPQuery;
-import com.kylinolap.query.relnode.OLAPContext;
-import com.kylinolap.query.schema.OLAPSchemaFactory;
-import com.kylinolap.rest.controller.QueryController;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Caching;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
-
-import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -51,6 +28,31 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import javax.sql.DataSource;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+
+import com.google.common.io.Files;
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.project.ProjectInstance;
+import com.kylinolap.cube.project.ProjectManager;
+import com.kylinolap.job.JobManager;
+import com.kylinolap.job.engine.JobEngineConfig;
+import com.kylinolap.job.exception.JobException;
+import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.query.enumerator.OLAPQuery;
+import com.kylinolap.query.relnode.OLAPContext;
+import com.kylinolap.query.schema.OLAPSchemaFactory;
+import com.kylinolap.rest.controller.QueryController;
 
 public abstract class BasicService {
 
@@ -123,8 +125,8 @@ public abstract class BasicService {
      * @param name
      * @throws IOException
      */
-    @Caching(evict = {@CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true),
-            @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true)})
+    @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true),
+            @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
     public void cleanDataCache() {
         CubeManager.removeInstance(getConfig());
         ProjectManager.removeInstance(getConfig());

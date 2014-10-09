@@ -16,8 +16,6 @@
 
 package com.kylinolap.job.hadoop.invertedindex;
 
-import com.kylinolap.job.constant.BatchConstants;
-import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -31,8 +29,12 @@ import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.kylinolap.job.constant.BatchConstants;
+import com.kylinolap.job.hadoop.AbstractHadoopJob;
+
 /**
  * @author ysong1
+ *
  */
 @SuppressWarnings("static-access")
 public class RandomKeyDistributionJob extends AbstractHadoopJob {

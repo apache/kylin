@@ -16,14 +16,15 @@
 
 package com.kylinolap.job.hadoop.cube;
 
+import java.io.IOException;
+
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
-import java.io.IOException;
-
 /**
  * @author ysong1
+ *
  */
 public class RowKeyDistributionCheckerReducer extends Reducer<Text, LongWritable, Text, LongWritable> {
 

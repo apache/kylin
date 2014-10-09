@@ -16,6 +16,12 @@
 
 package com.kylinolap.dict;
 
+import static org.junit.Assert.*;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.dict.lookup.HiveTable;
 import com.kylinolap.dict.lookup.SnapshotManager;
@@ -23,15 +29,10 @@ import com.kylinolap.dict.lookup.SnapshotTable;
 import com.kylinolap.dict.lookup.TableReader;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.schema.TableDesc;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author yangli9
+ *
  */
 public class SnapshotManagerTest extends LocalFileMetadataTestCase {
 

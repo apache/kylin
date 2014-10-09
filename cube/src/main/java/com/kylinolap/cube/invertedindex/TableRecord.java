@@ -16,15 +16,17 @@
 
 package com.kylinolap.cube.invertedindex;
 
+import java.util.Arrays;
+
+import org.apache.hadoop.hbase.util.Bytes;
+
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.dict.DateStrDictionary;
 import com.kylinolap.dict.Dictionary;
-import org.apache.hadoop.hbase.util.Bytes;
-
-import java.util.Arrays;
 
 /**
  * @author yangli9
+ *
  */
 public class TableRecord implements Cloneable {
 

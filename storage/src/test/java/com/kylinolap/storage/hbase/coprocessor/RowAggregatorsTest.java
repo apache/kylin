@@ -16,28 +16,30 @@
 
 package com.kylinolap.storage.hbase.coprocessor;
 
-import com.kylinolap.storage.hbase.coprocessor.RowAggregators.HCol;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.assertTrue;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.junit.Test;
+
+import com.kylinolap.storage.hbase.coprocessor.SRowAggregators.HCol;
 
 /**
  * @author yangli9
+ *
  */
 public class RowAggregatorsTest {
 
     @Test
     public void testSerialize() {
-        HCol[] hcols = new HCol[]{ //
-                newHCol("f", "c1", new String[]{"SUM", "COUNT"}, new String[]{"decimal", "long"}), //
-                newHCol("f", "c2", new String[]{"SUM", "SUM"}, new String[]{"long", "long"})};
-        RowAggregators sample = new RowAggregators(hcols);
+        HCol[] hcols = new HCol[] { //
+                newHCol("f", "c1", new String[] { "SUM", "COUNT" }, new String[] { "decimal", "long" }), //
+                        newHCol("f", "c2", new String[] { "SUM", "SUM" }, new String[] { "long", "long" }) };
+        SRowAggregators sample = new SRowAggregators(hcols);
 
-        byte[] bytes = RowAggregators.serialize(sample);
-        RowAggregators copy = RowAggregators.deserialize(bytes);
+        byte[] bytes = SRowAggregators.serialize(sample);
+        SRowAggregators copy = SRowAggregators.deserialize(bytes);
 
         assertTrue(sample.nHCols == copy.nHCols);
         assertTrue(sample.nTotalMeasures == copy.nTotalMeasures);

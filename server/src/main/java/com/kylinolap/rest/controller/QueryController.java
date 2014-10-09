@@ -19,6 +19,35 @@
  */
 package com.kylinolap.rest.controller;
 
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletResponse;
+
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.supercsv.io.CsvListWriter;
+import org.supercsv.io.ICsvListWriter;
+import org.supercsv.prefs.CsvPreference;
+
 import com.codahale.metrics.annotation.Timed;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeInstance;
@@ -33,28 +62,6 @@ import com.kylinolap.rest.request.SaveSqlRequest;
 import com.kylinolap.rest.response.GeneralResponse;
 import com.kylinolap.rest.response.SQLResponse;
 import com.kylinolap.rest.service.QueryService;
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
-import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-import org.supercsv.io.CsvListWriter;
-import org.supercsv.io.ICsvListWriter;
-import org.supercsv.prefs.CsvPreference;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Handle query requests.
@@ -164,7 +171,7 @@ public class QueryController extends BasicController {
     @ResponseBody
     @Timed(name = "downloadResult")
     public void downloadQueryResult(@PathVariable String format, SQLRequest sqlRequest,
-                                    HttpServletResponse response) {
+            HttpServletResponse response) {
         SQLResponse result = doQuery(sqlRequest);
         response.setContentType("text/" + format + ";charset=utf-8");
         response.setHeader("Content-Disposition", "attachment; filename=\"result." + format + "\"");

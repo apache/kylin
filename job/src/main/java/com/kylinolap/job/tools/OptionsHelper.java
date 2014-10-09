@@ -15,12 +15,19 @@
  */
 package com.kylinolap.job.tools;
 
-import org.apache.commons.cli.*;
-
 import java.io.File;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 
 /**
  * @author George Song (ysong1)
+ * 
  */
 public class OptionsHelper {
     private CommandLine commandLine;

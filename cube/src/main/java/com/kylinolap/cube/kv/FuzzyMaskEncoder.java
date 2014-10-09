@@ -15,14 +15,16 @@
  */
 package com.kylinolap.cube.kv;
 
+import java.util.Arrays;
+
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.metadata.model.cube.TblColRef;
 
-import java.util.Arrays;
-
 /**
+ * 
  * @author xjiang
+ * 
  */
 public class FuzzyMaskEncoder extends RowKeyEncoder {
 
@@ -41,7 +43,7 @@ public class FuzzyMaskEncoder extends RowKeyEncoder {
 
     @Override
     protected void fillColumnValue(TblColRef column, int columnLen, byte[] value, int valueLen,
-                                   byte[] outputValue, int outputValueOffset) {
+            byte[] outputValue, int outputValueOffset) {
         if (value == null) {
             Arrays.fill(outputValue, outputValueOffset, outputValueOffset + columnLen,
                     RowConstants.FUZZY_MASK_ONE);

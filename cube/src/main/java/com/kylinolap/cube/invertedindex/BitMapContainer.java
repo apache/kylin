@@ -16,10 +16,7 @@
 
 package com.kylinolap.cube.invertedindex;
 
-import com.kylinolap.common.util.BytesUtil;
-import com.kylinolap.dict.Dictionary;
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -27,8 +24,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+
+import com.kylinolap.common.util.BytesUtil;
+import com.kylinolap.dict.Dictionary;
+
 /**
  * @author yangli9
+ * 
  */
 public class BitMapContainer implements ColumnValueContainer {
 

@@ -39,7 +39,7 @@ public class HdfsOpsTest extends LocalFileMetadataTestCase {
         Path newFile = new Path(coprocessorDir, "test_file");
         newFile = newFile.makeQualified(fileSystem.getUri(), null);
         FSDataOutputStream stream = fileSystem.create(newFile);
-        stream.write(new byte[]{0, 1, 2});
+        stream.write(new byte[] { 0, 1, 2 });
         stream.close();
     }
 

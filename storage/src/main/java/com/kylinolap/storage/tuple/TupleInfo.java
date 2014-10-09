@@ -15,16 +15,18 @@
  */
 package com.kylinolap.storage.tuple;
 
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.storage.tuple.Tuple.IDerivedColumnFiller;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.storage.tuple.Tuple.IDerivedColumnFiller;
+
 /**
+ * 
  * @author xjiang
+ *
  */
 public class TupleInfo {
 
@@ -47,6 +49,10 @@ public class TupleInfo {
     public TblColRef getColumn(String fieldName) {
         int idx = getFieldIndex(fieldName);
         return columns.get(idx);
+    }
+
+    public int getColumnIndex(TblColRef col) {
+        return columnMap.get(col);
     }
 
     public String getDataType(String fieldName) {
@@ -107,4 +113,5 @@ public class TupleInfo {
     public List<IDerivedColumnFiller> getDerivedColumnFillers() {
         return derivedColumnFillers;
     }
+
 }

@@ -16,20 +16,30 @@
 
 package com.kylinolap.job.cmd;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.exception.JobException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.*;
-import java.util.concurrent.*;
 
 /**
  * @author xjiang
+ *
  */
 public class ShellCmd implements IJobCommand {
 
@@ -45,7 +55,7 @@ public class ShellCmd implements IJobCommand {
     private FutureTask<Integer> future;
 
     protected ShellCmd(String executeCmd, ICommandOutput out, String host, String user, String password,
-                       boolean async) {
+            boolean async) {
         this.executeCommand = executeCmd;
         this.output = out;
         this.remoteHost = host;

@@ -16,6 +16,18 @@
 
 package com.kylinolap.rest.service;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Component;
+
 import com.kylinolap.cube.CubeBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
@@ -28,20 +40,10 @@ import com.kylinolap.rest.constant.Constant;
 import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.request.MetricsRequest;
 import com.kylinolap.rest.response.MetricsResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
 
 /**
  * @author ysong1
+ *
  */
 @Component("jobService")
 public class JobService extends BasicService {
@@ -52,7 +54,7 @@ public class JobService extends BasicService {
     private AccessService permissionService;
 
     public List<JobInstance> listAllJobs(final String cubeName, final String projectName,
-                                         final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue)
+            final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue)
             throws IOException, JobException {
         Integer limit = (null == limitValue) ? 30 : limitValue;
         Integer offset = (null == offsetValue) ? 0 : offsetValue;
@@ -120,7 +122,7 @@ public class JobService extends BasicService {
                 permissionService.inherit(job, cube);
             }
         } catch (CubeIntegrityException e) {
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
 
         return uuid;

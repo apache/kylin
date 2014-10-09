@@ -48,7 +48,7 @@ public class DictionaryInfo extends RootPersistentEntity {
     }
 
     public DictionaryInfo(String sourceTable, String sourceColumn, int sourceColumnIndex, String dataType,
-                          TableSignature input, String inputDelimeter) {
+            TableSignature input, String inputDelimeter) {
 
         this.updateRandomUuid();
 

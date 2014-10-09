@@ -16,13 +16,14 @@
 
 package com.kylinolap.cube.measure;
 
+import java.nio.ByteBuffer;
+
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.DoubleWritable;
 
-import java.nio.ByteBuffer;
-
 /**
  * @author yangli9
+ *
  */
 public class DoubleSerializer extends MeasureSerializer<DoubleWritable> {
 

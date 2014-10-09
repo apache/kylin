@@ -20,6 +20,7 @@ import com.kylinolap.job.exception.JobException;
 
 /**
  * @author xjiang
+ *
  */
 public interface IJobCommand {
 

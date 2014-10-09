@@ -16,16 +16,18 @@
 
 package com.kylinolap.query.optrule;
 
-import com.kylinolap.query.relnode.OLAPRel;
-import com.kylinolap.query.relnode.OLAPSortRel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.SortRel;
 import org.eigenbase.rel.convert.ConverterRule;
 import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelTraitSet;
 
+import com.kylinolap.query.relnode.OLAPRel;
+import com.kylinolap.query.relnode.OLAPSortRel;
+
 /**
  * @author xjiang
+ *
  */
 public class OLAPSortRule extends ConverterRule {
 
@@ -45,8 +47,7 @@ public class OLAPSortRule extends ConverterRule {
         final RelNode input = sort.getChild();
         return new OLAPSortRel(rel.getCluster(), traitSet, convert(input,
                 input.getTraitSet().replace(OLAPRel.CONVENTION)), sort.getCollation(), sort.offset,
-                sort.fetch
-        );
+                sort.fetch);
     }
 
 }

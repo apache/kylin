@@ -15,6 +15,10 @@
  */
 package com.kylinolap.cube;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -26,10 +30,6 @@ import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeInstance extends RootPersistentEntity {
@@ -296,9 +296,17 @@ public class CubeInstance extends RootPersistentEntity {
         }
     }
 
-    public CubeSegment getLatestSegment() {
-        Collections.sort(segments);
-        return segments.get(segments.size() - 1);
+    public CubeSegment getLatestReadySegment() {
+        CubeSegment latest = null;
+        for (int i = segments.size() - 1; i >= 0; i--) {
+            CubeSegment seg = segments.get(i);
+            if (seg.getStatus() != CubeSegmentStatusEnum.READY)
+                continue;
+            if (latest == null || latest.getDateRangeEnd() < seg.getDateRangeEnd()) {
+                latest = seg;
+            }
+        }
+        return latest;
     }
 
     public List<CubeSegment> getSegments() {

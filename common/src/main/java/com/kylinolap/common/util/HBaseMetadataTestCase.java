@@ -16,11 +16,11 @@
 
 package com.kylinolap.common.util;
 
+import java.io.IOException;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.ResourceTool;
-
-import java.io.IOException;
 
 /**
  * @author ysong1
@@ -33,7 +33,7 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
      */
     @Override
     public void createTestMetadata() {
-
+        
         KylinConfig.destoryInstance();
 
         if (System.getProperty(KylinConfig.KYLIN_CONF) == null

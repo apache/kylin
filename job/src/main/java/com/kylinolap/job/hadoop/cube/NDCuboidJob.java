@@ -19,6 +19,7 @@ import org.apache.hadoop.util.ToolRunner;
 
 /**
  * @author George Song (ysong1)
+ * 
  */
 
 public class NDCuboidJob extends CuboidJob {

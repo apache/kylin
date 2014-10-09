@@ -15,14 +15,15 @@
  */
 package com.kylinolap.metadata.model.cube;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.hadoop.util.StringUtils;
-
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
+
+import org.apache.hadoop.util.StringUtils;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Created with IntelliJ IDEA.

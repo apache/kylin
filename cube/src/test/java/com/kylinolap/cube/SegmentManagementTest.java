@@ -16,17 +16,7 @@
 
 package com.kylinolap.cube;
 
-import com.kylinolap.common.persistence.ResourceStore;
-import com.kylinolap.common.util.JsonUtil;
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.cube.exception.CubeIntegrityException;
-import com.kylinolap.cube.project.ProjectInstance;
-import com.kylinolap.cube.project.ProjectManager;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -34,11 +24,22 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.TimeZone;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import com.kylinolap.cube.project.ProjectManager;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.kylinolap.common.persistence.ResourceStore;
+import com.kylinolap.common.util.JsonUtil;
+import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.cube.exception.CubeIntegrityException;
+import com.kylinolap.cube.project.ProjectInstance;
+import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.cube.CubeDesc;
 
 /**
  * @author ysong1
+ *
  */
 public class SegmentManagementTest extends LocalFileMetadataTestCase {
 

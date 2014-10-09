@@ -16,11 +16,11 @@
 
 package com.kylinolap.common.persistence;
 
-import com.kylinolap.common.util.JsonUtil;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+
+import com.kylinolap.common.util.JsonUtil;
 
 /**
  * @author yangli9

@@ -16,10 +16,10 @@
 
 package com.kylinolap.common.util;
 
-import org.apache.commons.io.IOUtils;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+
+import org.apache.commons.io.IOUtils;
 
 /**
  * @author yangli9

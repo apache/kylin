@@ -1,7 +1,5 @@
 package com.kylinolap.common.util;
-
 import org.junit.Ignore;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -23,7 +21,7 @@ public class InstallJarIntoMavenTest {
         for (File file : folder.listFiles()) {
             String name = file.getName();
 
-            if (!name.endsWith(".jar"))
+            if(!name.endsWith(".jar"))
                 continue;
 
             int firstSlash = name.indexOf('-');

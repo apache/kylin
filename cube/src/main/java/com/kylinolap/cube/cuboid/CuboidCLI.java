@@ -16,19 +16,20 @@
 
 package com.kylinolap.cube.cuboid;
 
+import java.io.IOException;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.TreeSet;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.RowKeyDesc.AggrGroupMask;
 import com.kylinolap.metadata.model.cube.RowKeyDesc.HierarchyMask;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.TreeSet;
-
 /**
  * @author yangli9
+ *
  */
 public class CuboidCLI {
 

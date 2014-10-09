@@ -1,6 +1,14 @@
 package com.kylinolap.job.hadoop.cardinality;
 
-import com.kylinolap.job.hadoop.AbstractHadoopJob;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -23,9 +31,7 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.ToolRunner;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 public class HiveColumnCardinalityJob extends AbstractHadoopJob {
     public static final String JOB_TITLE = "Kylin Hive Column Cardinality Job";
@@ -205,8 +211,8 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
         String jarPath = "/usr/lib/kylin/kylin-index-latest.jar";
 
         args =
-                new String[]{"-input", location, "-output", "/tmp/cardinality/" + tempName, "-iformat",
-                        inputFormat, "-idelim", delim};
+                new String[] { "-input", location, "-output", "/tmp/cardinality/" + tempName, "-iformat",
+                        inputFormat, "-idelim", delim };
         HiveColumnCardinalityJob job = new HiveColumnCardinalityJob(jarPath, "/tmp/krb5cc_882");
         try {
             ToolRunner.run(job, args);

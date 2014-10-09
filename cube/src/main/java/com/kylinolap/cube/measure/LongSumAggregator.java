@@ -20,6 +20,7 @@ import org.apache.hadoop.io.LongWritable;
 
 /**
  * @author yangli9
+ *
  */
 public class LongSumAggregator extends MeasureAggregator<LongWritable> {
 

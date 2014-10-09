@@ -16,20 +16,22 @@
 
 package com.kylinolap.rest.service;
 
-import com.kylinolap.cube.project.ProjectInstance;
-import com.kylinolap.job.exception.JobException;
-import com.kylinolap.rest.request.SQLRequest;
-import com.kylinolap.rest.response.SQLResponse;
-import org.junit.Assert;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Date;
 
+import org.junit.Assert;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.kylinolap.cube.project.ProjectInstance;
+import com.kylinolap.job.exception.JobException;
+import com.kylinolap.rest.request.SQLRequest;
+import com.kylinolap.rest.response.SQLResponse;
+
 /**
  * @author xduo
+ *
  */
 public class QueryServiceTest extends TestBase {
 

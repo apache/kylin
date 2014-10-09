@@ -15,14 +15,14 @@
  */
 package com.kylinolap.metadata.model.schema;
 
+import java.util.Arrays;
+import java.util.Comparator;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
-
-import java.util.Arrays;
-import java.util.Comparator;
 
 /**
  * Table Metadata from Source.  All name should be uppercase.

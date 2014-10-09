@@ -15,21 +15,25 @@
  */
 package com.kylinolap.query.schema;
 
-import com.kylinolap.cube.project.ProjectManager;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
-import com.kylinolap.query.enumerator.OLAPQuery;
-import com.kylinolap.query.enumerator.OLAPQuery.EnumeratorTypeEnum;
-import com.kylinolap.query.relnode.OLAPTableScan;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+
 import net.hydromatic.linq4j.Enumerable;
 import net.hydromatic.linq4j.Enumerator;
 import net.hydromatic.linq4j.QueryProvider;
 import net.hydromatic.linq4j.Queryable;
-import net.hydromatic.optiq.*;
+import net.hydromatic.optiq.DataContext;
+import net.hydromatic.optiq.SchemaPlus;
+import net.hydromatic.optiq.Statistic;
+import net.hydromatic.optiq.Statistics;
+import net.hydromatic.optiq.TranslatableTable;
 import net.hydromatic.optiq.impl.AbstractTableQueryable;
 import net.hydromatic.optiq.impl.java.AbstractQueryableTable;
+
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.relopt.RelOptTable.ToRelContext;
@@ -38,10 +42,19 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.type.SqlTypeUtil;
 
-import java.util.*;
+import com.kylinolap.cube.project.ProjectManager;
+import com.kylinolap.metadata.model.cube.FunctionDesc;
+import com.kylinolap.metadata.model.cube.MeasureDesc;
+import com.kylinolap.metadata.model.schema.ColumnDesc;
+import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.query.enumerator.OLAPQuery;
+import com.kylinolap.query.enumerator.OLAPQuery.EnumeratorTypeEnum;
+import com.kylinolap.query.relnode.OLAPTableScan;
 
 /**
+ * 
  * @author xjiang
+ *
  */
 public class OLAPTable extends AbstractQueryableTable implements TranslatableTable {
 

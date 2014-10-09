@@ -16,17 +16,18 @@
 
 package com.kylinolap.cube.measure;
 
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.kylinolap.metadata.model.cube.FunctionDesc;
+import com.kylinolap.metadata.model.cube.MeasureDesc;
+
 /**
  * @author yangli9
+ *
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class MeasureAggregators {
 
     private MeasureDesc[] descs;

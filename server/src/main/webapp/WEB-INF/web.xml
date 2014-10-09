@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app xmlns="http://java.sun.com/xml/ns/javaee"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
 		  http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
-         version="2.5">
+           version="2.5">
 
     <display-name>Kylin RESt Service</display-name>
 
@@ -18,10 +18,10 @@
     <context-param>
         <param-name>contextConfigLocation</param-name>
         <param-value>
-            classpath:applicationContext.xml
-            classpath:kylinSecurity.xml
-            classpath*:kylin-*-plugin.xml
-        </param-value>
+        	classpath:applicationContext.xml
+			classpath:kylinSecurity.xml
+			classpath*:kylin-*-plugin.xml
+		</param-value>
     </context-param>
 
     <listener>
@@ -31,33 +31,33 @@
     <listener>
         <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
     </listener>
-
+    
     <listener>
-        <listener-class>com.ryantenney.metrics.spring.servlets.MetricsServletsContextListener</listener-class>
+    	<listener-class>com.ryantenney.metrics.spring.servlets.MetricsServletsContextListener</listener-class>
     </listener>
     <listener>
-        <listener-class>com.kylinolap.rest.metrics.KylinInstrumentedFilterContextListener</listener-class>
+    	<listener-class>com.kylinolap.rest.metrics.KylinInstrumentedFilterContextListener</listener-class>
     </listener>
 
-    <listener>
-        <listener-class>
-            org.springframework.security.web.session.HttpSessionEventPublisher
-        </listener-class>
-    </listener>
-
-    <filter>
-        <filter-name>crossDomainFilter</filter-name>
-        <filter-class>com.kylinolap.rest.security.CrossDomainFilter</filter-class>
-    </filter>
-    <filter-mapping>
-        <filter-name>crossDomainFilter</filter-name>
-        <url-pattern>/*</url-pattern>
-    </filter-mapping>
-
-    <!--
-        Apply Spring Security Filter to all Requests
-     -->
-    <filter>
+	<listener>
+		<listener-class>
+			org.springframework.security.web.session.HttpSessionEventPublisher
+		</listener-class>
+	</listener>
+	
+	<filter>
+	    <filter-name>crossDomainFilter</filter-name>
+	    <filter-class>com.kylinolap.rest.security.CrossDomainFilter</filter-class>
+	</filter>
+	<filter-mapping>
+	    <filter-name>crossDomainFilter</filter-name>
+	    <url-pattern>/*</url-pattern>
+	</filter-mapping>
+	
+	<!--
+		Apply Spring Security Filter to all Requests 
+	 -->
+	<filter>
         <filter-name>springSecurityFilterChain</filter-name>
         <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
     </filter>
@@ -66,15 +66,15 @@
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 
-    <filter>
-        <filter-name>instrumentedFilter</filter-name>
-        <filter-class>com.codahale.metrics.servlet.InstrumentedFilter</filter-class>
-    </filter>
-    <filter-mapping>
-        <filter-name>instrumentedFilter</filter-name>
-        <url-pattern>/*</url-pattern>
-    </filter-mapping>
-
+	<filter>
+	    <filter-name>instrumentedFilter</filter-name>
+	    <filter-class>com.codahale.metrics.servlet.InstrumentedFilter</filter-class>
+	</filter>
+	<filter-mapping>
+	    <filter-name>instrumentedFilter</filter-name>
+	    <url-pattern>/*</url-pattern>
+	</filter-mapping>
+	
     <servlet>
         <servlet-name>kylin</servlet-name>
         <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
@@ -93,7 +93,7 @@
         <servlet-name>metricsservlet</servlet-name>
         <url-pattern>/metrics/*</url-pattern>
     </servlet-mapping>
-
+    
     <servlet>
         <servlet-name>metricsadminservlet</servlet-name>
         <servlet-class>com.codahale.metrics.servlets.AdminServlet</servlet-class>
@@ -103,9 +103,9 @@
         <servlet-name>metricsadminservlet</servlet-name>
         <url-pattern>/metricsadmin/*</url-pattern>
     </servlet-mapping>
-
-    <!--
-    <servlet>
+    
+	<!-- 
+	<servlet>
         <servlet-name>matricsadmin</servlet-name>
         <servlet-class>com.codahale.metrics.servlets.MetricsServlet</servlet-class>
         <load-on-startup>1</load-on-startup>

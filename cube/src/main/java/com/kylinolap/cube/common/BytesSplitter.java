@@ -15,14 +15,14 @@
  */
 package com.kylinolap.cube.common;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author xjiang
@@ -30,8 +30,8 @@ import java.util.List;
 public class BytesSplitter {
     private static final Logger logger = LoggerFactory.getLogger(BytesSplitter.class);
 
-    private static final int[] COMMON_DELIMS = new int[]{"\177".codePointAt(0), "|".codePointAt(0),
-            "\t".codePointAt(0), ",".codePointAt(0)};
+    private static final int[] COMMON_DELIMS = new int[] { "\177".codePointAt(0), "|".codePointAt(0),
+            "\t".codePointAt(0), ",".codePointAt(0) };
 
     private SplittedBytes[] splitBuffers;
     private int bufferSize;

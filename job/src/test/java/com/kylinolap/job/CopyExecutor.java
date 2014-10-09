@@ -20,12 +20,11 @@ package com.kylinolap.job;
  * @author ysong1
  *
  */
-
-import com.kylinolap.common.util.SSHClient;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+
+import com.kylinolap.common.util.SSHClient;
 
 public class CopyExecutor {
 

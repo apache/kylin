@@ -16,6 +16,15 @@
 
 package com.kylinolap.storage.hbase.coprocessor;
 
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+
+import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.util.Bytes;
+
 import com.kylinolap.common.util.BytesSerializer;
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.cube.kv.RowConstants;
@@ -24,22 +33,15 @@ import com.kylinolap.cube.measure.MeasureAggregator;
 import com.kylinolap.cube.measure.MeasureCodec;
 import com.kylinolap.metadata.model.cube.HBaseColumnDesc;
 import com.kylinolap.metadata.model.cube.MeasureDesc;
-import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.util.Bytes;
-
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
 
 /**
  * @author yangli9
+ *
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
-public class RowAggregators {
+@SuppressWarnings({ "rawtypes", "unchecked" })
+public class SRowAggregators {
 
-    public static RowAggregators fromValuDecoders(Collection<RowValueDecoder> rowValueDecoders) {
+    public static SRowAggregators fromValuDecoders(Collection<RowValueDecoder> rowValueDecoders) {
 
         // each decoder represents one HBase column
         HCol[] hcols = new HCol[rowValueDecoders.size()];
@@ -48,7 +50,7 @@ public class RowAggregators {
             hcols[i++] = buildHCol(rowValueDecoder);
         }
 
-        RowAggregators aggrs = new RowAggregators(hcols);
+        SRowAggregators aggrs = new SRowAggregators(hcols);
         return aggrs;
 
     }
@@ -70,7 +72,7 @@ public class RowAggregators {
         return new HCol(family, qualifier, funcNames, dataTypes);
     }
 
-    public static byte[] serialize(RowAggregators o) {
+    public static byte[] serialize(SRowAggregators o) {
         ByteBuffer buf = ByteBuffer.allocate(CoprocessorEnabler.SERIALIZE_BUFFER_SIZE);
         serializer.serialize(o, buf);
         byte[] result = new byte[buf.position()];
@@ -78,16 +80,16 @@ public class RowAggregators {
         return result;
     }
 
-    public static RowAggregators deserialize(byte[] bytes) {
+    public static SRowAggregators deserialize(byte[] bytes) {
         return serializer.deserialize(ByteBuffer.wrap(bytes));
     }
 
     private static final Serializer serializer = new Serializer();
 
-    private static class Serializer implements BytesSerializer<RowAggregators> {
+    private static class Serializer implements BytesSerializer<SRowAggregators> {
 
         @Override
-        public void serialize(RowAggregators value, ByteBuffer out) {
+        public void serialize(SRowAggregators value, ByteBuffer out) {
             BytesUtil.writeVInt(value.nHCols, out);
             for (int i = 0; i < value.nHCols; i++) {
                 HCol col = value.hcols[i];
@@ -99,7 +101,7 @@ public class RowAggregators {
         }
 
         @Override
-        public RowAggregators deserialize(ByteBuffer in) {
+        public SRowAggregators deserialize(ByteBuffer in) {
             int nHCols = BytesUtil.readVInt(in);
             HCol[] hcols = new HCol[nHCols];
             for (int i = 0; i < nHCols; i++) {
@@ -109,7 +111,7 @@ public class RowAggregators {
                 String[] dataTypes = BytesUtil.readAsciiStringArray(in);
                 hcols[i] = new HCol(family, qualifier, funcNames, dataTypes);
             }
-            return new RowAggregators(hcols);
+            return new SRowAggregators(hcols);
         }
 
     }
@@ -121,7 +123,7 @@ public class RowAggregators {
     final ByteBuffer[] hColValues;
     final int nTotalMeasures;
 
-    public RowAggregators(HCol[] _hcols) {
+    public SRowAggregators(HCol[] _hcols) {
         this.hcols = sort(_hcols);
         this.nHCols = hcols.length;
         this.hColValues = new ByteBuffer[nHCols];
@@ -192,7 +194,7 @@ public class RowAggregators {
         return Bytes.compareTo(col.family, 0, col.family.length, cell.getFamilyArray(),
                 cell.getFamilyOffset(), cell.getFamilyLength()) == 0
                 && Bytes.compareTo(col.qualifier, 0, col.qualifier.length, cell.getQualifierArray(),
-                cell.getQualifierOffset(), cell.getQualifierLength()) == 0;
+                        cell.getQualifierOffset(), cell.getQualifierLength()) == 0;
     }
 
     public int getHColsNum() {

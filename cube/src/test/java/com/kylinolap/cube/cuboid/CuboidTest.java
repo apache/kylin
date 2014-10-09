@@ -15,15 +15,15 @@
  */
 package com.kylinolap.cube.cuboid;
 
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
+import static org.junit.Assert.*;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.cube.CubeDesc;
 
 /**
  * @author yangli9

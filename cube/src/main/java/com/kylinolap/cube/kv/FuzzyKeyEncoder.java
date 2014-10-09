@@ -15,13 +15,15 @@
  */
 package com.kylinolap.cube.kv;
 
+import java.util.Arrays;
+
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
 
-import java.util.Arrays;
-
 /**
+ * 
  * @author xjiang
+ * 
  */
 public class FuzzyKeyEncoder extends RowKeyEncoder {
 

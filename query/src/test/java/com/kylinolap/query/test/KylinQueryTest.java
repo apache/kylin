@@ -15,12 +15,12 @@
  */
 package com.kylinolap.query.test;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.project.ProjectInstance;
-import com.kylinolap.query.enumerator.OLAPQuery;
-import com.kylinolap.query.schema.OLAPSchemaFactory;
-import com.kylinolap.storage.hbase.coprocessor.CoprocessorEnabler;
+import java.io.File;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Properties;
+
 import org.apache.commons.lang3.StringUtils;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
@@ -29,11 +29,12 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.File;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Properties;
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.project.ProjectInstance;
+import com.kylinolap.query.enumerator.OLAPQuery;
+import com.kylinolap.query.schema.OLAPSchemaFactory;
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorEnabler;
 
 public class KylinQueryTest extends KylinTestBase {
 
@@ -149,7 +150,7 @@ public class KylinQueryTest extends KylinTestBase {
 
         //        String queryFileName = "src/test/resources/query/sql_tableau/query22.sql.disabled";
 
-        String queryFileName = "src/test/resources/query/sql/query55.sql";
+        String queryFileName = "src/test/resources/query/sql/query67.sql";
 
         File sqlFile = new File(queryFileName);
         runSQL(sqlFile, true, false);

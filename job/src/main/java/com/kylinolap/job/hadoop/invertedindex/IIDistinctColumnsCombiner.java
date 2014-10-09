@@ -15,14 +15,15 @@
  */
 package com.kylinolap.job.hadoop.invertedindex;
 
-import com.kylinolap.common.util.ByteArray;
+import java.io.IOException;
+import java.util.HashSet;
+
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
-import java.io.IOException;
-import java.util.HashSet;
+import com.kylinolap.common.util.ByteArray;
 
 /**
  * @author yangli9

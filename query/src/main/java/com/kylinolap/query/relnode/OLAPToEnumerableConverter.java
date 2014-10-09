@@ -15,6 +15,25 @@
  */
 package com.kylinolap.query.relnode;
 
+import java.util.List;
+
+import net.hydromatic.linq4j.expressions.Blocks;
+import net.hydromatic.linq4j.expressions.Expressions;
+import net.hydromatic.optiq.rules.java.EnumerableRel;
+import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
+import net.hydromatic.optiq.rules.java.PhysType;
+import net.hydromatic.optiq.rules.java.PhysTypeImpl;
+
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.convert.ConverterRelImpl;
+import org.eigenbase.relopt.ConventionTraitDef;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelOptTable;
+import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.reltype.RelDataType;
+
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.query.relnode.OLAPRel.JavaImplementor;
 import com.kylinolap.query.relnode.OLAPRel.OLAPImplementor;
@@ -22,18 +41,6 @@ import com.kylinolap.query.relnode.OLAPRel.RewriteImplementor;
 import com.kylinolap.query.routing.CubeNotFoundException;
 import com.kylinolap.query.routing.QueryRouter;
 import com.kylinolap.query.schema.OLAPTable;
-import net.hydromatic.linq4j.expressions.Blocks;
-import net.hydromatic.linq4j.expressions.Expressions;
-import net.hydromatic.optiq.rules.java.EnumerableRel;
-import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
-import net.hydromatic.optiq.rules.java.PhysType;
-import net.hydromatic.optiq.rules.java.PhysTypeImpl;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.convert.ConverterRelImpl;
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
-
-import java.util.List;
 
 /**
  * @author xjiang

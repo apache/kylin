@@ -15,17 +15,22 @@
  */
 package com.kylinolap.storage.filter;
 
-import com.kylinolap.storage.tuple.Tuple;
-import org.apache.commons.lang3.Validate;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
-import java.util.*;
+import com.kylinolap.storage.tuple.ITuple;
 
 public class LogicalTupleFilter extends TupleFilter {
 
     public LogicalTupleFilter(FilterOperatorEnum op) {
         super(new ArrayList<TupleFilter>(2), op);
-        Validate.isTrue(op == FilterOperatorEnum.AND || op == FilterOperatorEnum.OR
-                || op == FilterOperatorEnum.NOT);
+        boolean opGood =
+                (op == FilterOperatorEnum.AND || op == FilterOperatorEnum.OR || op == FilterOperatorEnum.NOT);
+        if (opGood == false)
+            throw new IllegalArgumentException("Unsupported operator " + op);
     }
 
     private LogicalTupleFilter(List<TupleFilter> filters, FilterOperatorEnum op) {
@@ -42,18 +47,18 @@ public class LogicalTupleFilter extends TupleFilter {
     @Override
     public TupleFilter reverse() {
         switch (operator) {
-            case NOT:
-                Validate.isTrue(children.size() == 1);
-                return children.get(0);
-            case AND:
-            case OR:
-                LogicalTupleFilter reverse = new LogicalTupleFilter(REVERSE_OP_MAP.get(operator));
-                for (TupleFilter child : children) {
-                    reverse.addChild(child.reverse());
-                }
-                return reverse;
-            default:
-                throw new IllegalStateException();
+        case NOT:
+            assert (children.size() == 1);
+            return children.get(0);
+        case AND:
+        case OR:
+            LogicalTupleFilter reverse = new LogicalTupleFilter(REVERSE_OP_MAP.get(operator));
+            for (TupleFilter child : children) {
+                reverse.addChild(child.reverse());
+            }
+            return reverse;
+        default:
+            throw new IllegalStateException();
         }
     }
 
@@ -63,20 +68,20 @@ public class LogicalTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(Tuple tuple) {
+    public boolean evaluate(ITuple tuple) {
         switch (this.operator) {
-            case AND:
-                return evalAnd(tuple);
-            case OR:
-                return evalOr(tuple);
-            case NOT:
-                return evalNot(tuple);
-            default:
-                return false;
+        case AND:
+            return evalAnd(tuple);
+        case OR:
+            return evalOr(tuple);
+        case NOT:
+            return evalNot(tuple);
+        default:
+            return false;
         }
     }
 
-    private boolean evalAnd(Tuple tuple) {
+    private boolean evalAnd(ITuple tuple) {
         for (TupleFilter filter : this.children) {
             if (!filter.evaluate(tuple)) {
                 return false;
@@ -85,7 +90,7 @@ public class LogicalTupleFilter extends TupleFilter {
         return true;
     }
 
-    private boolean evalOr(Tuple tuple) {
+    private boolean evalOr(ITuple tuple) {
         for (TupleFilter filter : this.children) {
             if (filter.evaluate(tuple)) {
                 return true;
@@ -94,7 +99,7 @@ public class LogicalTupleFilter extends TupleFilter {
         return false;
     }
 
-    private boolean evalNot(Tuple tuple) {
+    private boolean evalNot(ITuple tuple) {
         return !this.children.get(0).evaluate(tuple);
     }
 
@@ -105,7 +110,7 @@ public class LogicalTupleFilter extends TupleFilter {
 
     @Override
     public boolean isEvaluable() {
-        return false;
+        return true;
     }
 
     @Override

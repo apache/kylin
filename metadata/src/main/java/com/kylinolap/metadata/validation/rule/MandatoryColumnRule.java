@@ -16,20 +16,22 @@
 
 package com.kylinolap.metadata.validation.rule;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import org.apache.commons.lang.ArrayUtils;
+
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.RowKeyColDesc;
 import com.kylinolap.metadata.validation.IValidatorRule;
 import com.kylinolap.metadata.validation.ResultLevel;
 import com.kylinolap.metadata.validation.ValidateContext;
-import org.apache.commons.lang.ArrayUtils;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Validate that mandatory column must NOT appear in aggregation group.
- *
+ * 
  * @author jianliu
+ *
  */
 public class MandatoryColumnRule implements IValidatorRule<CubeDesc> {
 

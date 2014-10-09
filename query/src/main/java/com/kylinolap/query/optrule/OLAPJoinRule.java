@@ -15,8 +15,6 @@
  */
 package com.kylinolap.query.optrule;
 
-import com.kylinolap.query.relnode.OLAPJoinRel;
-import com.kylinolap.query.relnode.OLAPRel;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.JoinRel;
 import org.eigenbase.rel.RelNode;
@@ -24,8 +22,13 @@ import org.eigenbase.rel.convert.ConverterRule;
 import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelTraitSet;
 
+import com.kylinolap.query.relnode.OLAPJoinRel;
+import com.kylinolap.query.relnode.OLAPRel;
+
 /**
+ * 
  * @author xjiang
+ *
  */
 public class OLAPJoinRule extends ConverterRule {
 
@@ -44,8 +47,7 @@ public class OLAPJoinRule extends ConverterRule {
         try {
             return new OLAPJoinRel(joinRel.getCluster(), traitSet, convert(leftRel, traitSet), convert(
                     rightRel, traitSet), joinRel.getCondition(), joinRel.getJoinType(),
-                    joinRel.getVariablesStopped()
-            );
+                    joinRel.getVariablesStopped());
         } catch (InvalidRelException e) {
             // Semantic error not possible. Must be a bug. Convert to
             // internal error.

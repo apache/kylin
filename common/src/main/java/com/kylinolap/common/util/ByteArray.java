@@ -16,9 +16,9 @@
 
 package com.kylinolap.common.util;
 
-import org.apache.hadoop.hbase.util.Bytes;
-
 import java.util.Arrays;
+
+import org.apache.hadoop.hbase.util.Bytes;
 
 /**
  * @author yangli9

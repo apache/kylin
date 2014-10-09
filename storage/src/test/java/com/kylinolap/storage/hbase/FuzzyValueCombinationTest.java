@@ -16,28 +16,32 @@
 
 package com.kylinolap.storage.hbase;
 
+import static org.junit.Assert.*;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.junit.Test;
+
 import com.google.common.collect.Maps;
 import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
-import org.junit.Test;
-
-import java.util.*;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author yangli9
+ *
  */
 public class FuzzyValueCombinationTest {
 
     static final TableDesc table = new TableDesc();
-
     static {
         table.setName("table");
         table.setDatabase("default");
     }
-
     static final TblColRef col1 = col(1, table);
     static final TblColRef col2 = col(2, table);
     static final TblColRef col3 = col(3, table);

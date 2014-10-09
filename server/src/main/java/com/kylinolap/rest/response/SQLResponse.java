@@ -15,10 +15,10 @@
  */
 package com.kylinolap.rest.response;
 
-import com.kylinolap.rest.model.SelectedColumnMeta;
-
 import java.io.Serializable;
 import java.util.List;
+
+import com.kylinolap.rest.model.SelectedColumnMeta;
 
 public class SQLResponse implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -54,7 +54,7 @@ public class SQLResponse implements Serializable {
     }
 
     public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results,
-                       int affectedRowCount, boolean isException, String exceptionMessage) {
+            int affectedRowCount, boolean isException, String exceptionMessage) {
         this.columnMetas = columnMetas;
         this.results = results;
         this.affectedRowCount = affectedRowCount;
@@ -63,7 +63,7 @@ public class SQLResponse implements Serializable {
     }
 
     public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube,
-                       int affectedRowCount, boolean isException, String exceptionMessage) {
+            int affectedRowCount, boolean isException, String exceptionMessage) {
         this.columnMetas = columnMetas;
         this.results = results;
         this.cube = cube;
@@ -73,7 +73,7 @@ public class SQLResponse implements Serializable {
     }
 
     public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube,
-                       int affectedRowCount, boolean isException, String exceptionMessage, boolean isPartial) {
+            int affectedRowCount, boolean isException, String exceptionMessage, boolean isPartial) {
         this.columnMetas = columnMetas;
         this.results = results;
         this.cube = cube;

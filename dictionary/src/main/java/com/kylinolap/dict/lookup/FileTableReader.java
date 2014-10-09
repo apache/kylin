@@ -16,8 +16,12 @@
 
 package com.kylinolap.dict.lookup;
 
-import com.kylinolap.common.util.HadoopUtil;
-import com.kylinolap.common.util.StringSplitter;
+import java.io.BufferedReader;
+import java.io.Closeable;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -32,18 +36,19 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import com.kylinolap.common.util.HadoopUtil;
+import com.kylinolap.common.util.StringSplitter;
 
 /**
  * Tables are typically CSV or SEQ file.
- *
+ * 
  * @author yangli9
  */
 public class FileTableReader implements TableReader {
 
     private static final Logger logger = LoggerFactory.getLogger(FileTableReader.class);
     private static final char CSV_QUOTE = '"';
-    private static final String[] DETECT_DELIMS = new String[]{"\177", "|", "\t", ","};
+    private static final String[] DETECT_DELIMS = new String[] { "\177", "|", "\t", "," };
 
     private String filePath;
     private String delim;
@@ -104,7 +109,7 @@ public class FileTableReader implements TableReader {
                 delim = autoDetectDelim(curLine);
 
             if (delim == null)
-                curColumns = new String[]{curLine};
+                curColumns = new String[] { curLine };
             else
                 curColumns = split(curLine, delim);
         }

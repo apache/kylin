@@ -16,16 +16,24 @@
 
 package com.kylinolap.storage.hbase;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.kylinolap.metadata.model.cube.TblColRef;
 
-import java.util.*;
-import java.util.Map.Entry;
-
 /**
  * @author yangli9
+ *
  */
 public class FuzzyValueCombination {
 
@@ -35,7 +43,6 @@ public class FuzzyValueCombination {
     }
 
     private static final Set<String> SINGLE_NULL_SET = Sets.newHashSet();
-
     static {
         SINGLE_NULL_SET.add(null);
     }

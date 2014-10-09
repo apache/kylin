@@ -15,14 +15,17 @@
  */
 package com.kylinolap.query.enumerator;
 
-import com.kylinolap.query.relnode.OLAPContext;
 import net.hydromatic.linq4j.AbstractEnumerable;
 import net.hydromatic.linq4j.Enumerable;
 import net.hydromatic.linq4j.Enumerator;
 import net.hydromatic.optiq.DataContext;
 
+import com.kylinolap.query.relnode.OLAPContext;
+
 /**
+ * 
  * @author xjiang
+ *
  */
 public class OLAPQuery extends AbstractEnumerable<Object[]> implements Enumerable<Object[]> {
 
@@ -49,14 +52,14 @@ public class OLAPQuery extends AbstractEnumerable<Object[]> implements Enumerabl
     public Enumerator<Object[]> enumerator() {
         OLAPContext olapContext = OLAPContext.getThreadLocalContextById(contextId);
         switch (type) {
-            case CUBE:
-                return new CubeEnumerator(olapContext, optiqContext);
-            case LOOKUP_TABLE:
-                return new LookupTableEnumerator(olapContext);
-            case HIVE:
-                return new HiveEnumerator(olapContext);
-            default:
-                throw new IllegalArgumentException("Wrong type " + type + "!");
+        case CUBE:
+            return new CubeEnumerator(olapContext, optiqContext);
+        case LOOKUP_TABLE:
+            return new LookupTableEnumerator(olapContext);
+        case HIVE:
+            return new HiveEnumerator(olapContext);
+        default:
+            throw new IllegalArgumentException("Wrong type " + type + "!");
         }
     }
 }

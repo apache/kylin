@@ -17,6 +17,7 @@ package com.kylinolap.job.constant;
 
 /**
  * @author George Song (ysong1)
+ * 
  */
 public interface BatchConstants {
 

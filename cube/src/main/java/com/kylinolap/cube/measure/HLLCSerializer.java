@@ -16,13 +16,14 @@
 
 package com.kylinolap.cube.measure;
 
-import com.kylinolap.common.hll.HyperLogLogPlusCounter;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import com.kylinolap.common.hll.HyperLogLogPlusCounter;
+
 /**
  * @author yangli9
+ *
  */
 public class HLLCSerializer extends MeasureSerializer<HyperLogLogPlusCounter> {
 

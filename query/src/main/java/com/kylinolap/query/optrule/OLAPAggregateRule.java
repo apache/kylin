@@ -15,8 +15,6 @@
  */
 package com.kylinolap.query.optrule;
 
-import com.kylinolap.query.relnode.OLAPAggregateRel;
-import com.kylinolap.query.relnode.OLAPRel;
 import org.eigenbase.rel.AggregateRel;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
@@ -24,8 +22,13 @@ import org.eigenbase.rel.convert.ConverterRule;
 import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelTraitSet;
 
+import com.kylinolap.query.relnode.OLAPAggregateRel;
+import com.kylinolap.query.relnode.OLAPRel;
+
 /**
+ * 
  * @author xjiang
+ *
  */
 public class OLAPAggregateRule extends ConverterRule {
 

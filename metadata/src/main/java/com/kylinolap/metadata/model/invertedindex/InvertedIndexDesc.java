@@ -1,5 +1,8 @@
 package com.kylinolap.metadata.model.invertedindex;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.hadoop.hbase.util.Bytes;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -10,8 +13,6 @@ import com.kylinolap.common.util.StringUtil;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.hadoop.hbase.util.Bytes;
 
 /**
  * @author yangli9

@@ -20,13 +20,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  * Class to wrap backend exception
- *
  * @author jianliu
+ *
  */
 @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)
 public class InternalErrorException extends RuntimeException {
     /**
-     *
+     * 
      */
     private static final long serialVersionUID = -6798154278095441848L;
 
@@ -35,7 +35,7 @@ public class InternalErrorException extends RuntimeException {
     }
 
     /**
-     *
+     * 
      */
     public InternalErrorException() {
         super();

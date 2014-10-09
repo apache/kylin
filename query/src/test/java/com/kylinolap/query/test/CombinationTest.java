@@ -1,14 +1,15 @@
 package com.kylinolap.query.test;
 
-import com.kylinolap.storage.hbase.coprocessor.CoprocessorEnabler;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collection;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Collection;
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorEnabler;
 
 /**
  * Created by honma on 7/2/14.
@@ -32,8 +33,8 @@ public class CombinationTest extends KylinQueryTest {
      */
     @Parameterized.Parameters
     public static Collection<Object[]> configs() {
-        return Arrays.asList(new Object[][]{{"inner", "unset"}, {"left", "unset"}, {"inner", "off"},
-                {"left", "off"}, {"inner", "on"}, {"left", "on"},});
+        return Arrays.asList(new Object[][] { { "inner", "unset" }, { "left", "unset" }, { "inner", "off" },
+                { "left", "off" }, { "inner", "on" }, { "left", "on" }, });
     }
 
 

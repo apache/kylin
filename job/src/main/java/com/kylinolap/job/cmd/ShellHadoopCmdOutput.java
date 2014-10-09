@@ -16,6 +16,10 @@
 
 package com.kylinolap.job.cmd;
 
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.job.JobDAO;
 import com.kylinolap.job.JobInstance;
@@ -24,12 +28,9 @@ import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.tools.HadoopStatusChecker;
 
-import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /**
  * @author xjiang
+ *
  */
 public class ShellHadoopCmdOutput extends ShellCmdOutput {
 

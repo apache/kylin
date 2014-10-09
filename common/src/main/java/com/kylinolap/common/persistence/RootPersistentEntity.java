@@ -15,23 +15,24 @@
  */
 package com.kylinolap.common.persistence;
 
+import java.util.UUID;
+
+import org.apache.commons.lang.time.FastDateFormat;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.commons.lang.time.FastDateFormat;
-
-import java.util.UUID;
 
 /**
  * Marks the root entity of JSON persistence.
  * Unit of read, write, cache, and refresh.
- * <p/>
+ * 
  * - CubeInstance
  * - CubeDesc
  * - SourceTable
  * - JobMeta
  * - Dictionary (not JSON but also top level persistence)
- *
+ * 
  * @author yangli9
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)

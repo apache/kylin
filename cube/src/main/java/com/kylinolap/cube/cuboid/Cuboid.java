@@ -15,16 +15,23 @@
  */
 package com.kylinolap.cube.cuboid;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.hadoop.hbase.util.Bytes;
+
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.RowKeyColDesc;
 import com.kylinolap.metadata.model.cube.RowKeyDesc;
 import com.kylinolap.metadata.model.cube.RowKeyDesc.AggrGroupMask;
 import com.kylinolap.metadata.model.cube.RowKeyDesc.HierarchyMask;
 import com.kylinolap.metadata.model.cube.TblColRef;
-import org.apache.hadoop.hbase.util.Bytes;
-
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author George Song (ysong1)
@@ -161,8 +168,7 @@ public class Cuboid implements Comparable<Cuboid> {
             return true;
         }
 
-        hier:
-        for (HierarchyMask hierarchyMasks : hierarchyMaskList) {
+        hier: for (HierarchyMask hierarchyMasks : hierarchyMaskList) {
             long result = cuboidID & hierarchyMasks.fullMask;
             if (result > 0) {
                 // if match one of the hierarchy constrains, return true;

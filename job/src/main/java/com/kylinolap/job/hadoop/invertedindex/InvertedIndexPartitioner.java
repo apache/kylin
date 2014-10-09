@@ -16,15 +16,17 @@
 
 package com.kylinolap.job.hadoop.invertedindex;
 
-import com.kylinolap.job.constant.BatchConstants;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Partitioner;
 
+import com.kylinolap.job.constant.BatchConstants;
+
 /**
  * @author yangli9
+ *
  */
 public class InvertedIndexPartitioner extends Partitioner<LongWritable, ImmutableBytesWritable> implements
         Configurable {

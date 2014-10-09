@@ -15,17 +15,17 @@
  */
 package com.kylinolap.job.hadoop.hive;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.FunctionDesc;
 import com.kylinolap.metadata.model.cube.MeasureDesc;
 import com.kylinolap.metadata.model.cube.TblColRef;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author George Song (ysong1)

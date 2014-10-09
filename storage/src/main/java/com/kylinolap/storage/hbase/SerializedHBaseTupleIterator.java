@@ -16,6 +16,14 @@
 
 package com.kylinolap.storage.hbase;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.hadoop.hbase.client.HConnection;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.kylinolap.cube.CubeInstance;
@@ -24,16 +32,14 @@ import com.kylinolap.cube.kv.RowValueDecoder;
 import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.TupleFilter;
-import com.kylinolap.storage.tuple.Tuple;
-import com.kylinolap.storage.tuple.TupleIterator;
-import org.apache.hadoop.hbase.client.HConnection;
-
-import java.util.*;
+import com.kylinolap.storage.tuple.ITuple;
+import com.kylinolap.storage.tuple.ITupleIterator;
 
 /**
  * @author xjiang
+ *
  */
-public class SerializedHBaseTupleIterator implements TupleIterator {
+public class SerializedHBaseTupleIterator implements ITupleIterator {
 
     private static final int PARTIAL_DEFAULT_LIMIT = 10000;
 
@@ -42,13 +48,13 @@ public class SerializedHBaseTupleIterator implements TupleIterator {
     private final List<CubeSegmentTupleIterator> segmentIteratorList;
     private final Iterator<CubeSegmentTupleIterator> segmentIteratorIterator;
 
-    private TupleIterator segmentIterator;
+    private ITupleIterator segmentIterator;
     private int scanCount;
 
     public SerializedHBaseTupleIterator(HConnection conn, List<HBaseKeyRange> segmentKeyRanges,
-                                        CubeInstance cube, Collection<TblColRef> dimensionColumns, TupleFilter filter,
-                                        Collection<TblColRef> groupByColumns, Collection<RowValueDecoder> rowValueDecoders,
-                                        StorageContext context) {
+            CubeInstance cube, Collection<TblColRef> dimensions, TupleFilter filter,
+            Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders,
+            StorageContext context) {
 
         this.context = context;
         int limit = context.getLimit();
@@ -59,8 +65,8 @@ public class SerializedHBaseTupleIterator implements TupleIterator {
         for (CubeSegment cubeSeg : rangesMap.keySet()) {
             List<HBaseKeyRange> keyRanges = rangesMap.get(cubeSeg);
             CubeSegmentTupleIterator segIter =
-                    new CubeSegmentTupleIterator(cubeSeg, keyRanges, conn, dimensionColumns, filter,
-                            groupByColumns, rowValueDecoders, context);
+                    new CubeSegmentTupleIterator(cubeSeg, keyRanges, conn, dimensions, filter, groupBy,
+                            rowValueDecoders, context);
             this.segmentIteratorList.add(segIter);
         }
 
@@ -106,8 +112,8 @@ public class SerializedHBaseTupleIterator implements TupleIterator {
     }
 
     @Override
-    public Tuple next() {
-        Tuple t = null;
+    public ITuple next() {
+        ITuple t = null;
         while (hasNext()) {
             if (segmentIterator.hasNext()) {
                 t = segmentIterator.next();

@@ -16,6 +16,16 @@
 
 package com.kylinolap.query.relnode;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import org.eigenbase.reltype.RelDataType;
+
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.FunctionDesc;
@@ -24,12 +34,10 @@ import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.query.schema.OLAPSchema;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.TupleFilter;
-import org.eigenbase.reltype.RelDataType;
-
-import java.util.*;
 
 /**
  * @author xjiang
+ *
  */
 public class OLAPContext {
 

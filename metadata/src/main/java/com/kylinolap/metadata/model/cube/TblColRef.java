@@ -15,9 +15,11 @@
  */
 package com.kylinolap.metadata.model.cube;
 
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
 import org.apache.commons.lang.StringUtils;
+
+import com.kylinolap.metadata.model.schema.ColumnDesc;
+import com.kylinolap.metadata.model.schema.DataType;
+import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
  * Created with IntelliJ IDEA.
@@ -92,6 +94,10 @@ public class TblColRef {
         return column.getDatatype();
     }
 
+    public DataType getType() {
+        return column.getType();
+    }
+
     public void markInnerColumn(InnerDataTypeEnum dataType) {
         this.column.setDatatype(dataType.getDataType());
         this.column.getTable().setName(INNER_TABLE_NAME);
@@ -133,8 +139,6 @@ public class TblColRef {
 
     @Override
     public String toString() {
-        return "ColumnRef [name=" + column.getName() + ",table="
-                + (column.getTable() == null ? null : column.getTable().getName()) + ",type="
-                + column.getDatatype() + "]";
+        return (column.getTable() == null ? null : column.getTable().getName()) + "." + column.getName();
     }
 }

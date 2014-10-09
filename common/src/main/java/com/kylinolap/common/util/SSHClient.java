@@ -15,19 +15,23 @@
  */
 package com.kylinolap.common.util;
 
-/**
+/** 
  * @author George Song (ysong1)
- *
+ * 
  */
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.*;
 
 public class SSHClient {
     protected static final Logger logger = LoggerFactory.getLogger(SSHClient.class);

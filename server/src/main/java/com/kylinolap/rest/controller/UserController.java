@@ -16,7 +16,8 @@
 
 package com.kylinolap.rest.controller;
 
-import com.kylinolap.rest.service.UserService;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,12 +26,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import java.util.List;
+import com.kylinolap.rest.service.UserService;
 
 /**
  * Handle user authentication request to protected kylin rest resources by spring security.
- *
+ * 
  * @author xduo
+ *
  */
 @Controller
 @RequestMapping(value = "/user")

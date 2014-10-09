@@ -16,22 +16,29 @@
 
 package com.kylinolap.job.engine;
 
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.quartz.Job;
+import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.kylinolap.common.util.StringSplitter;
 import com.kylinolap.job.JobDAO;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.constant.JobConstants;
 import com.kylinolap.job.constant.JobStatusEnum;
 import com.kylinolap.job.flow.JobFlow;
-import org.quartz.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author ysong1, xduo
+ *
  */
 public class JobFetcher implements Job {
 

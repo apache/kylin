@@ -16,6 +16,8 @@
 
 package com.kylinolap.cube.invertedindex;
 
+import java.io.IOException;
+
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryManager;
@@ -24,10 +26,9 @@ import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
 
-import java.io.IOException;
-
 /**
  * @author yangli9
+ *
  */
 public class TableRecordInfo {
 

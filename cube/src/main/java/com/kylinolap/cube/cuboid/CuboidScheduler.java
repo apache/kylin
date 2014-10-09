@@ -15,17 +15,20 @@
  */
 package com.kylinolap.cube.cuboid;
 
-/**
+/** 
  * @author George Song (ysong1)
- *
+ * 
  */
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.RowKeyDesc;
 import com.kylinolap.metadata.model.cube.RowKeyDesc.AggrGroupMask;
-
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class CuboidScheduler {
 
@@ -157,7 +160,7 @@ public class CuboidScheduler {
     }
 
     private void combination(long cuboid, Collection<Long> siblings, long[] bitMasks, int offset,
-                             long bitValue, int k) {
+            long bitValue, int k) {
         if (k == 0) {
             if (Cuboid.isValid(cubeDef, bitValue)) {
                 siblings.add(bitValue);

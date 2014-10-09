@@ -15,6 +15,18 @@
  */
 package com.kylinolap.cube.kv;
 
+import static org.junit.Assert.*;
+
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.List;
+
+import org.apache.hadoop.io.LongWritable;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.measure.MeasureCodec;
@@ -23,20 +35,10 @@ import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.FunctionDesc;
 import com.kylinolap.metadata.model.cube.HBaseColumnDesc;
 import com.kylinolap.metadata.model.cube.MeasureDesc;
-import org.apache.hadoop.io.LongWritable;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.math.BigDecimal;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author George Song (ysong1)
+ * 
  */
 public class RowValueDecoderTest extends LocalFileMetadataTestCase {
 
@@ -64,7 +66,7 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
         BigDecimal max = new BigDecimal("333.1999999");
         LongWritable count = new LongWritable(2);
         ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-        codec.encode(new Object[]{sum, min, max, count}, buf);
+        codec.encode(new Object[] { sum, min, max, count }, buf);
 
         buf.flip();
         byte[] valueBytes = new byte[buf.limit()];

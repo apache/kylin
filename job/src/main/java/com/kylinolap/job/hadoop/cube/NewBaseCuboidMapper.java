@@ -15,6 +15,23 @@
 */
 package com.kylinolap.job.hadoop.cube;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.hbase.util.Pair;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.eclipse.jdt.internal.core.Assert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.Array;
 import com.kylinolap.common.util.ByteArray;
@@ -33,19 +50,14 @@ import com.kylinolap.dict.lookup.LookupBytesTable;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.*;
+import com.kylinolap.metadata.model.cube.CubeDesc;
+import com.kylinolap.metadata.model.cube.DimensionDesc;
+import com.kylinolap.metadata.model.cube.FunctionDesc;
+import com.kylinolap.metadata.model.cube.JoinDesc;
+import com.kylinolap.metadata.model.cube.MeasureDesc;
+import com.kylinolap.metadata.model.cube.ParameterDesc;
+import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.metadata.model.schema.TableDesc;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.hbase.util.Pair;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.eclipse.jdt.internal.core.Assert;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.*;
 
 /**
  * @author George Song (ysong1),honma
@@ -95,7 +107,7 @@ public class NewBaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> 
         public LinkedList<Pair<Integer, Integer>> dimTblColAsRowKey;
 
         private TableJoin(String joinType, LinkedList<Integer> fkIndice, String lookupTableName,
-                          LinkedList<Pair<Integer, Integer>> dimTblColAsRowKey) {
+                LinkedList<Pair<Integer, Integer>> dimTblColAsRowKey) {
             this.joinType = joinType;
             this.fkIndice = fkIndice;
             this.lookupTableName = lookupTableName;
@@ -131,7 +143,7 @@ public class NewBaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> 
 
         bytesSplitter = new BytesSplitter(factTableDesc.getColumns().length, 4096);
 
-        nullValue = new byte[]{(byte) '\\', (byte) 'N'};//As in Hive, null value is represented by \N
+        nullValue = new byte[] { (byte) '\\', (byte) 'N' };//As in Hive, null value is represented by \N
 
         prepareJoins();
         prepareMetrics();

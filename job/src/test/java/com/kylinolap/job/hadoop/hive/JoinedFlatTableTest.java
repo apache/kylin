@@ -15,6 +15,14 @@
  */
 package com.kylinolap.job.hadoop.hive;
 
+import static org.junit.Assert.*;
+
+import java.io.IOException;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeInstance;
@@ -22,16 +30,10 @@ import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.job.JoinedFlatTable;
 import com.kylinolap.job.engine.JobEngineConfig;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.io.IOException;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author George Song (ysong1)
+ * 
  */
 public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
 

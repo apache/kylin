@@ -20,6 +20,7 @@ import java.util.Properties;
 
 /**
  * @author xduo
+ *
  */
 public class GeneralResponse extends Properties {
 

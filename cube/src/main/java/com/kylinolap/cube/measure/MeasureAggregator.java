@@ -21,6 +21,7 @@ import com.kylinolap.metadata.model.schema.DataType;
 
 /**
  * @author yangli9
+ *
  */
 abstract public class MeasureAggregator<V> {
 
@@ -73,17 +74,17 @@ abstract public class MeasureAggregator<V> {
 
     public static int guessBigDecimalMemBytes() {
         return 4 // ref
-                + 20; // guess of BigDecimal
+        + 20; // guess of BigDecimal
     }
 
     public static int guessDoubleMemBytes() {
         return 4 // ref
-                + 8;
+        + 8;
     }
 
     public static int guessLongMemBytes() {
         return 4 // ref
-                + 8;
+        + 8;
     }
 
     // ============================================================================

@@ -16,7 +16,11 @@
 
 package com.kylinolap.job.tools;
 
-import com.kylinolap.job.hadoop.cardinality.HiveColumnCardinalityJob;
+import static org.junit.Assert.*;
+
+import java.io.File;
+import java.io.IOException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.util.ToolRunner;
@@ -24,13 +28,11 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
-
-import static org.junit.Assert.assertEquals;
+import com.kylinolap.job.hadoop.cardinality.HiveColumnCardinalityJob;
 
 /**
  * @author ysong1
+ *
  */
 public class ColumnCardinalityJobTest {
 
@@ -51,7 +53,7 @@ public class ColumnCardinalityJobTest {
 
         FileUtil.fullyDelete(new File(output));
 
-        String[] args = {"-input", input, "-output", output, "-cols", "1,2,3,4,5,6,9,0"};
+        String[] args = { "-input", input, "-output", output, "-cols", "1,2,3,4,5,6,9,0" };
         assertEquals("Job failed", 0, ToolRunner.run(new HiveColumnCardinalityJob(), args));
     }
 

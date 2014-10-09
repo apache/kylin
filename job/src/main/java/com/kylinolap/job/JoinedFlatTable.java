@@ -15,6 +15,23 @@
  */
 package com.kylinolap.job;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TimeZone;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import com.kylinolap.common.util.StringUtil;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc;
@@ -24,33 +41,20 @@ import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.DimensionDesc;
 import com.kylinolap.metadata.model.cube.JoinDesc;
 import com.kylinolap.metadata.model.cube.TblColRef;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.TimeZone;
 
 /**
  * @author George Song (ysong1)
+ * 
  */
 public class JoinedFlatTable {
 
     public static String getTableDir(JoinedFlatTableDesc intermediateTableDesc, String storageDfsDir,
-                                     String jobUUID) {
+            String jobUUID) {
         return storageDfsDir + "/" + intermediateTableDesc.getTableName(jobUUID);
     }
 
     public static String generateCreateTableStatement(JoinedFlatTableDesc intermediateTableDesc,
-                                                      String storageDfsDir, String jobUUID) {
+            String storageDfsDir, String jobUUID) {
         StringBuilder ddl = new StringBuilder();
 
         ddl.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + intermediateTableDesc.getTableName(jobUUID)
@@ -82,7 +86,7 @@ public class JoinedFlatTable {
     }
 
     public static String generateInsertDataStatement(JoinedFlatTableDesc intermediateTableDesc,
-                                                     String jobUUID, JobEngineConfig engineConfig) throws IOException {
+            String jobUUID, JobEngineConfig engineConfig) throws IOException {
         StringBuilder sql = new StringBuilder();
 
         File hadoopPropertiesFile =
@@ -193,15 +197,14 @@ public class JoinedFlatTable {
             if (!(dateStart == 0 && dateEnd == 0)) {
                 String partitionColumnName = cubeDesc.getCubePartitionDesc().getPartitionDateColumn();
 
-                SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                f.setTimeZone(TimeZone.getTimeZone("GMT"));
-
                 whereBuilder.append(hasCondition ? " AND (" : " (");
                 if (dateStart > 0) {
-                    whereBuilder.append(partitionColumnName + " >= '" + f.format(new Date(dateStart)) + "' ");
+                    whereBuilder.append(partitionColumnName + " >= '"
+                            + formatDateTimeInWhereClause(dateStart) + "' ");
                     whereBuilder.append("AND ");
                 }
-                whereBuilder.append(partitionColumnName + " < '" + f.format(new Date(dateEnd)) + "'");
+                whereBuilder
+                        .append(partitionColumnName + " < '" + formatDateTimeInWhereClause(dateEnd) + "'");
                 whereBuilder.append(")\n");
                 hasCondition = true;
             }
@@ -210,5 +213,14 @@ public class JoinedFlatTable {
         if (hasCondition) {
             sql.append(whereBuilder.toString());
         }
+    }
+
+    private static String formatDateTimeInWhereClause(long datetime) {
+        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        f.setTimeZone(TimeZone.getTimeZone("GMT"));
+        Date date = new Date(datetime);
+        String str = f.format(date);
+        // note "2014-10-01" >= "2014-10-01 00:00:00" is FALSE
+        return StringUtil.dropSuffix(str, " 00:00:00");
     }
 }

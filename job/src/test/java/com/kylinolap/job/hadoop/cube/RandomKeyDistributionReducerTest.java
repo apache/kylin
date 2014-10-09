@@ -16,8 +16,12 @@
 
 package com.kylinolap.job.hadoop.cube;
 
-import com.kylinolap.job.constant.BatchConstants;
-import com.kylinolap.job.hadoop.invertedindex.RandomKeyDistributionReducer;
+import static org.junit.Assert.*;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.ReduceDriver;
@@ -25,14 +29,12 @@ import org.apache.hadoop.mrunit.types.Pair;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
+import com.kylinolap.job.constant.BatchConstants;
+import com.kylinolap.job.hadoop.invertedindex.RandomKeyDistributionReducer;
 
 /**
  * @author ysong1
+ *
  */
 public class RandomKeyDistributionReducerTest {
     ReduceDriver<Text, LongWritable, Text, LongWritable> reduceDriver;

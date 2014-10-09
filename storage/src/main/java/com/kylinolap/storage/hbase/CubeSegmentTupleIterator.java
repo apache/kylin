@@ -16,6 +16,31 @@
 
 package com.kylinolap.storage.hbase;
 
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.metrics.ScanMetrics;
+import org.apache.hadoop.hbase.filter.Filter;
+import org.apache.hadoop.hbase.filter.FilterList;
+import org.apache.hadoop.hbase.filter.FuzzyRowFilter;
+import org.apache.hadoop.hbase.protobuf.ProtobufUtil;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.hbase.util.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.kylinolap.common.persistence.StorageException;
 import com.kylinolap.common.util.Array;
 import com.kylinolap.cube.CubeInstance;
@@ -31,36 +56,22 @@ import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorEnabler;
+import com.kylinolap.storage.tuple.ITupleIterator;
 import com.kylinolap.storage.tuple.Tuple;
 import com.kylinolap.storage.tuple.Tuple.IDerivedColumnFiller;
 import com.kylinolap.storage.tuple.TupleInfo;
-import com.kylinolap.storage.tuple.TupleIterator;
-import org.apache.hadoop.hbase.client.*;
-import org.apache.hadoop.hbase.client.metrics.ScanMetrics;
-import org.apache.hadoop.hbase.filter.Filter;
-import org.apache.hadoop.hbase.filter.FilterList;
-import org.apache.hadoop.hbase.filter.FuzzyRowFilter;
-import org.apache.hadoop.hbase.protobuf.ProtobufUtil;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.hbase.util.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.*;
-import java.util.Map.Entry;
 
 /**
  * @author xjiang
+ *
  */
-public class CubeSegmentTupleIterator implements TupleIterator {
+public class CubeSegmentTupleIterator implements ITupleIterator {
 
     public static final Logger logger = LoggerFactory.getLogger(CubeSegmentTupleIterator.class);
 
     public static final int SCAN_CACHE = 1024;
 
-    public static final TupleIterator EMPTY_TUPLE_ITERATOR = new TupleIterator() {
+    public static final ITupleIterator EMPTY_TUPLE_ITERATOR = new ITupleIterator() {
         @Override
         public boolean hasNext() {
             return false;
@@ -78,9 +89,9 @@ public class CubeSegmentTupleIterator implements TupleIterator {
 
     private final CubeInstance cube;
     private final CubeSegment cubeSeg;
-    private final Collection<TblColRef> dimensionColumns;
+    private final Collection<TblColRef> dimensions;
     private final TupleFilter filter;
-    private final Collection<TblColRef> groupByColumns;
+    private final Collection<TblColRef> groupBy;
     private final Collection<RowValueDecoder> rowValueDecoders;
     private final StorageContext context;
     private final String tableName;
@@ -96,14 +107,14 @@ public class CubeSegmentTupleIterator implements TupleIterator {
     private int scanCount;
 
     public CubeSegmentTupleIterator(CubeSegment cubeSeg, Collection<HBaseKeyRange> keyRanges,
-                                    HConnection conn, Collection<TblColRef> dimensionColumns, TupleFilter filter,
-                                    Collection<TblColRef> groupByColumns, Collection<RowValueDecoder> rowValueDecoders,
-                                    StorageContext context) {
+            HConnection conn, Collection<TblColRef> dimensions, TupleFilter filter,
+            Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders,
+            StorageContext context) {
         this.cube = cubeSeg.getCubeInstance();
         this.cubeSeg = cubeSeg;
-        this.dimensionColumns = dimensionColumns;
+        this.dimensions = dimensions;
         this.filter = filter;
-        this.groupByColumns = groupByColumns;
+        this.groupBy = groupBy;
         this.rowValueDecoders = rowValueDecoders;
         this.context = context;
         this.tableName = cubeSeg.getStorageLocationIdentifier();
@@ -134,12 +145,11 @@ public class CubeSegmentTupleIterator implements TupleIterator {
                 logger.debug(
                         "HBase Metrics: "
                                 + "count={}, ms={}, bytes={}, remote_bytes={}, regions={}, not_serving_region={}, rpc={}, rpc_retries={}, remote_rpc={}, remote_rpc_retries={}",
-                        new Object[]{scanCount, scanMetrics.sumOfMillisSecBetweenNexts,
+                        new Object[] { scanCount, scanMetrics.sumOfMillisSecBetweenNexts,
                                 scanMetrics.countOfBytesInResults, scanMetrics.countOfBytesInRemoteResults,
                                 scanMetrics.countOfRegions, scanMetrics.countOfNSRE,
                                 scanMetrics.countOfRPCcalls, scanMetrics.countOfRPCRetries,
-                                scanMetrics.countOfRemoteRPCcalls, scanMetrics.countOfRemoteRPCRetries}
-                );
+                                scanMetrics.countOfRemoteRPCcalls, scanMetrics.countOfRemoteRPCRetries });
             }
         }
         try {
@@ -201,7 +211,7 @@ public class CubeSegmentTupleIterator implements TupleIterator {
 
             this.resultIterator = doScan(keyRange);
         } else {
-            this.resultIterator = Collections.<Result>emptyList().iterator();
+            this.resultIterator = Collections.<Result> emptyList().iterator();
         }
     }
 
@@ -214,8 +224,8 @@ public class CubeSegmentTupleIterator implements TupleIterator {
             logScan(keyRange);
 
             scanner =
-                    CoprocessorEnabler.scanWithCoprocessorIfBeneficial(cubeSeg, keyRange.getCuboid(),
-                            dimensionColumns, rowValueDecoders, keyRange, context, table, scan);
+                    CoprocessorEnabler.scanWithCoprocessorIfBeneficial(cubeSeg, keyRange.getCuboid(), filter,
+                            groupBy, rowValueDecoders, context, table, scan);
 
             iter = scanner.iterator();
         } catch (Throwable t) {
@@ -296,7 +306,7 @@ public class CubeSegmentTupleIterator implements TupleIterator {
         List<String> colNames = rowKeyDecoder.getNames(context.getAliasMap());
         for (int i = 0; i < rowColumns.size(); i++) {
             TblColRef column = rowColumns.get(i);
-            if (!dimensionColumns.contains(column)) {
+            if (!dimensions.contains(column)) {
                 continue;
             }
             // add normal column

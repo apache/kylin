@@ -16,10 +16,7 @@
 
 package com.kylinolap.dict;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -27,11 +24,15 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.junit.Test;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * @author yangli9
+ *
  */
 public class NumberDictionaryTest {
 

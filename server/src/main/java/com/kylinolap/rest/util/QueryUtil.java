@@ -16,9 +16,6 @@
 
 package com.kylinolap.rest.util;
 
-import com.kylinolap.rest.model.SelectedColumnMeta;
-import com.kylinolap.rest.response.SQLResponse;
-
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -27,8 +24,12 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.kylinolap.rest.model.SelectedColumnMeta;
+import com.kylinolap.rest.response.SQLResponse;
+
 /**
  * @author xduo
+ *
  */
 public class QueryUtil {
 
@@ -38,9 +39,8 @@ public class QueryUtil {
     private static final Pattern PTN_GROUP_BY = Pattern.compile(S1 + "GROUP" + SM + "BY" + S1,
             Pattern.CASE_INSENSITIVE);
     private static final Pattern PTN_HAVING_COUNT_GREATER_THAN_ZERO = Pattern.compile(S1 + "HAVING" + SM
-                    + "[(]?" + S0 + "COUNT" + S0 + "[(]" + S0 + "1" + S0 + "[)]" + S0 + ">" + S0 + "0" + S0 + "[)]?",
-            Pattern.CASE_INSENSITIVE
-    );
+            + "[(]?" + S0 + "COUNT" + S0 + "[(]" + S0 + "1" + S0 + "[)]" + S0 + ">" + S0 + "0" + S0 + "[)]?",
+            Pattern.CASE_INSENSITIVE);
     private static final Pattern PTN_SUM_1 = Pattern.compile(S1 + "SUM" + S0 + "[(]" + S0 + "[1]" + S0
             + "[)]" + S1, Pattern.CASE_INSENSITIVE);
 
@@ -49,7 +49,7 @@ public class QueryUtil {
             Pattern.CASE_INSENSITIVE);
 
     private static String[] tableauTestQueries =
-            new String[]{
+            new String[] {
                     "SELECT 1",//
                     "CREATE LOCAL TEMPORARY TABLE \"XTableau_B_Connect\" ( \"COL\" INTEGER ) ON COMMIT PRESERVE ROWS",//
                     "DROP TABLE \"XTableau_B_Connect\"",//
@@ -60,7 +60,7 @@ public class QueryUtil {
                     "SELECT \"SUBCOL\" AS \"COL\" FROM (   SELECT 1 AS \"SUBCOL\" ) \"SUBQUERY\" GROUP BY 2",
                     "INSERT INTO \"XTableau_C_Connect\" SELECT * FROM (SELECT 1 AS COL) AS CHECKTEMP LIMIT 1",
                     "DROP TABLE \"XTableau_C_Connect\"",
-                    "INSERT INTO \"XTableau_B_Connect\" SELECT * FROM (SELECT 1 AS COL) AS CHECKTEMP LIMIT 1"};
+                    "INSERT INTO \"XTableau_B_Connect\" SELECT * FROM (SELECT 1 AS COL) AS CHECKTEMP LIMIT 1" };
 
     private static SQLResponse temp = new SQLResponse(new LinkedList<SelectedColumnMeta>() {
         private static final long serialVersionUID = -8086728462624901359L;
@@ -83,7 +83,7 @@ public class QueryUtil {
         }
     }, 0, false, null);
 
-    private static SQLResponse[] fakeResponses = new SQLResponse[]{
+    private static SQLResponse[] fakeResponses = new SQLResponse[] {
             temp,
             new SQLResponse(null, null, 0, false, null), //
             new SQLResponse(null, null, 0, false, null), //
@@ -94,7 +94,7 @@ public class QueryUtil {
             new SQLResponse(null, null, 0, true, "group by 2????"), //
             new SQLResponse(null, null, 0, true, "XTableau_C_Connect not exist"), //
             new SQLResponse(null, null, 0, true, "XTableau_C_Connect not exist"),
-            new SQLResponse(null, null, 0, true, "XTableau_B_Connect not exist"),};
+            new SQLResponse(null, null, 0, true, "XTableau_B_Connect not exist"), };
 
     private static ArrayList<HashSet<String>> tableauTestQueriesInToken = new ArrayList<HashSet<String>>();
 

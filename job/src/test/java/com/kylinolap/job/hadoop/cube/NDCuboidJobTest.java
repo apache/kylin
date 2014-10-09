@@ -15,7 +15,10 @@
  */
 package com.kylinolap.job.hadoop.cube;
 
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import static org.junit.Assert.*;
+
+import java.io.File;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.util.ToolRunner;
@@ -23,12 +26,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
-
-import static org.junit.Assert.assertEquals;
+import com.kylinolap.common.util.LocalFileMetadataTestCase;
 
 /**
  * @author George Song (ysong1)
+ * 
  */
 public class NDCuboidJobTest extends LocalFileMetadataTestCase {
 
@@ -63,8 +65,8 @@ public class NDCuboidJobTest extends LocalFileMetadataTestCase {
         FileUtil.fullyDelete(new File(output));
 
         String[] args =
-                {"-input", input, "-cubename", cubeName, "-segmentname", segmentName, "-output", output,
-                        "-jobname", jobname, "-level", level};
+                { "-input", input, "-cubename", cubeName, "-segmentname", segmentName, "-output", output,
+                        "-jobname", jobname, "-level", level };
         assertEquals("Job failed", 0, ToolRunner.run(conf, new NDCuboidJob(), args));
     }
 
@@ -80,8 +82,8 @@ public class NDCuboidJobTest extends LocalFileMetadataTestCase {
         FileUtil.fullyDelete(new File(output));
 
         String[] args =
-                {"-input", input, "-cubename", cubeName, "-segmentname", segmentName, "-output", output,
-                        "-jobname", jobname, "-level", level};
+                { "-input", input, "-cubename", cubeName, "-segmentname", segmentName, "-output", output,
+                        "-jobname", jobname, "-level", level };
         assertEquals("Job failed", 0, ToolRunner.run(conf, new NDCuboidJob(), args));
     }
 }

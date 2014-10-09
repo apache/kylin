@@ -16,19 +16,24 @@
 
 package com.kylinolap.rest.bean;
 
-import org.junit.Assert;
-
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.lang.reflect.*;
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.junit.Assert;
+
 /**
  * @author xduo
+ *
  */
 public class BeanValidator {
 
@@ -116,7 +121,7 @@ public class BeanValidator {
         } else if (clazz.isEnum()) {
             return clazz.getEnumConstants()[0];
         } else if (clazz.isInterface()) {
-            return Proxy.newProxyInstance(clazz.getClassLoader(), new java.lang.Class[]{clazz},
+            return Proxy.newProxyInstance(clazz.getClassLoader(), new java.lang.Class[] { clazz },
                     new java.lang.reflect.InvocationHandler() {
                         @Override
                         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -133,8 +138,7 @@ public class BeanValidator {
                             return null;
                         }
 
-                    }
-            );
+                    });
         } else {
             System.err
                     .println("Unable to build an instance of class " + clazz.getName()

@@ -15,23 +15,26 @@
  */
 package com.kylinolap.storage.filter;
 
-import com.kylinolap.common.util.BytesUtil;
-import com.kylinolap.storage.tuple.Tuple;
-
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.apache.hadoop.hbase.util.Bytes;
+
+import com.kylinolap.common.util.BytesUtil;
+import com.kylinolap.storage.tuple.ITuple;
+
 /**
+ * 
  * @author xjiang
+ *
  */
 public class DynamicTupleFilter extends TupleFilter {
 
     private String variableName;
 
     public DynamicTupleFilter(String name) {
-        super(Collections.<TupleFilter>emptyList(), FilterOperatorEnum.DYNAMIC);
+        super(Collections.<TupleFilter> emptyList(), FilterOperatorEnum.DYNAMIC);
         this.variableName = name;
     }
 
@@ -50,7 +53,7 @@ public class DynamicTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(Tuple tuple) {
+    public boolean evaluate(ITuple tuple) {
         return true;
     }
 
@@ -67,7 +70,7 @@ public class DynamicTupleFilter extends TupleFilter {
     @Override
     public byte[] serialize() {
         ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
-        BytesUtil.writeByteArray(variableName.getBytes(Charset.forName("utf-8")), buffer);
+        BytesUtil.writeByteArray(Bytes.toBytes(variableName), buffer);
         byte[] result = new byte[buffer.position()];
         System.arraycopy(buffer.array(), 0, result, 0, buffer.position());
         return result;
@@ -77,7 +80,7 @@ public class DynamicTupleFilter extends TupleFilter {
     public void deserialize(byte[] bytes) {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         byte[] strBytes = BytesUtil.readByteArray(buffer);
-        this.variableName = new String(strBytes, Charset.forName("utf-8"));
+        this.variableName = Bytes.toString(strBytes);
     }
 
 }

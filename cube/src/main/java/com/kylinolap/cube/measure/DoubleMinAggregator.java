@@ -20,6 +20,7 @@ import org.apache.hadoop.io.DoubleWritable;
 
 /**
  * @author yangli9
+ *
  */
 public class DoubleMinAggregator extends MeasureAggregator<DoubleWritable> {
 

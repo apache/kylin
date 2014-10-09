@@ -15,14 +15,15 @@
  */
 package com.kylinolap.rest;
 
-import com.kylinolap.rest.util.ClasspathUtil;
+import java.io.File;
+
 import org.apache.catalina.Context;
 import org.apache.catalina.core.AprLifecycleListener;
 import org.apache.catalina.core.StandardServer;
 import org.apache.catalina.deploy.ErrorPage;
 import org.apache.catalina.startup.Tomcat;
 
-import java.io.File;
+import com.kylinolap.rest.util.ClasspathUtil;
 
 public class DebugTomcat {
 

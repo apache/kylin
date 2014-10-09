@@ -15,11 +15,11 @@
  */
 package com.kylinolap.metadata.model.cube;
 
+import java.util.Arrays;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.Arrays;
 
 /**
  * Created with IntelliJ IDEA.

@@ -20,6 +20,7 @@ import java.util.List;
 
 /**
  * @author George Song (ysong1)
+ * 
  */
 public class StringSplitter {
     public static String[] split(String str, String delimiter) {

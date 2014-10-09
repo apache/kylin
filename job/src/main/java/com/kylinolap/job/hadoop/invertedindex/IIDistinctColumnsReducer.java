@@ -15,8 +15,9 @@
  */
 package com.kylinolap.job.hadoop.invertedindex;
 
-import com.kylinolap.common.util.ByteArray;
-import com.kylinolap.job.constant.BatchConstants;
+import java.io.IOException;
+import java.util.HashSet;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -27,8 +28,8 @@ import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
-import java.io.IOException;
-import java.util.HashSet;
+import com.kylinolap.common.util.ByteArray;
+import com.kylinolap.job.constant.BatchConstants;
 
 /**
  * @author yangli9

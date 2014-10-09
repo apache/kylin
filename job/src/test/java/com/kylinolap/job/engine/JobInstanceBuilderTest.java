@@ -15,6 +15,17 @@
  */
 package com.kylinolap.job.engine;
 
+import static org.junit.Assert.*;
+
+import java.text.SimpleDateFormat;
+import java.util.TimeZone;
+
+import com.kylinolap.cube.project.ProjectManager;
+import com.kylinolap.dict.DictionaryManager;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
@@ -22,26 +33,16 @@ import com.kylinolap.cube.CubeBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.project.ProjectManager;
-import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.JobInstance.JobStep;
 import com.kylinolap.job.JobManager;
 import com.kylinolap.job.constant.JobStepCmdTypeEnum;
 import com.kylinolap.metadata.MetadataManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
-import java.text.SimpleDateFormat;
-import java.util.TimeZone;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-/**
- * @author George Song (ysong1)
- */
+/** 
+* @author George Song (ysong1)
+* 
+*/
 public class JobInstanceBuilderTest extends LocalFileMetadataTestCase {
 
     @Before

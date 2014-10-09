@@ -57,6 +57,13 @@ public class StringUtil {
         }
     }
 
+    public static String dropSuffix(String str, String suffix) {
+        if (str.endsWith(suffix))
+            return str.substring(0, str.length() - suffix.length());
+        else
+            return str;
+    }
+
     public static String min(Collection<String> strs) {
         String min = null;
         for (String s : strs) {

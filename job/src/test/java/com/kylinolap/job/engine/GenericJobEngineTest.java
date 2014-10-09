@@ -16,10 +16,27 @@
 
 package com.kylinolap.job.engine;
 
+import static org.junit.Assert.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.io.FileUtils;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.common.util.SSHClient;
-import com.kylinolap.cube.*;
+import com.kylinolap.cube.CubeBuildTypeEnum;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.cube.CubeSegmentStatusEnum;
 import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.project.ProjectManager;
 import com.kylinolap.job.JobDAO;
@@ -32,22 +49,10 @@ import com.kylinolap.job.constant.JobStepCmdTypeEnum;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.exception.InvalidJobInstanceException;
 import com.kylinolap.metadata.MetadataManager;
-import org.apache.commons.io.FileUtils;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author ysong1
+ *
  */
 public class GenericJobEngineTest {
     private static String cubeName = "test_kylin_cube_with_slr_empty";
@@ -118,7 +123,7 @@ public class GenericJobEngineTest {
         // deploy files to hdfs
         SSHClient hadoopCli =
                 new SSHClient(getHadoopCliHostname(), getHadoopCliUsername(), getHadoopCliPassword(), null);
-        scpFilesToHdfs(hadoopCli, new String[]{"src/test/resources/json/dummy_jobinstance.json"},
+        scpFilesToHdfs(hadoopCli, new String[] { "src/test/resources/json/dummy_jobinstance.json" },
                 mrInputDir);
         // deploy sample java jar
         hadoopCli.scpFileToRemote("src/test/resources/jarfile/SampleJavaProgram.jarfile", "/tmp");

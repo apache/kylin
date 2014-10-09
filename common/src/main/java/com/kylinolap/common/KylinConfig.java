@@ -16,8 +16,13 @@
 
 package com.kylinolap.common;
 
-import com.kylinolap.common.restclient.RestClient;
-import com.kylinolap.common.util.OSCommandExecutor;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.io.IOUtils;
@@ -25,7 +30,8 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import com.kylinolap.common.restclient.RestClient;
+import com.kylinolap.common.util.OSCommandExecutor;
 
 /**
  * @author yangli9

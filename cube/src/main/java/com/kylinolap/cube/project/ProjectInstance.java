@@ -15,14 +15,14 @@
  */
 package com.kylinolap.cube.project;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Project is a concept in Kylin similar to schema in DBMS
@@ -57,7 +57,8 @@ public class ProjectInstance extends RootPersistentEntity {
         return concatResourcePath(name);
     }
 
-    public static String concatResourcePath(String projectName) {
+    public static String concatResourcePath(String projectName)
+    {
         return ResourceStore.PROJECT_RESOURCE_ROOT + "/" + projectName + ".json";
     }
 

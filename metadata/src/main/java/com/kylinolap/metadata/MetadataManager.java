@@ -15,6 +15,19 @@
  */
 package com.kylinolap.metadata;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
@@ -29,18 +42,6 @@ import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
 import com.kylinolap.metadata.validation.CubeMetadataValidator;
 import com.kylinolap.metadata.validation.ValidateContext;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Serves (and caches) cube metadata for Kylin instance.
@@ -274,7 +275,7 @@ public class MetadataManager {
      * return table name
      */
     public static String loadSourceTableExd(ResourceStore store, String path,
-                                            Map<String, String> attrContainer) throws IOException {
+            Map<String, String> attrContainer) throws IOException {
 
         logger.debug("Loading SourceTable exd " + path);
         InputStream is = store.getResource(path);

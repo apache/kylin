@@ -16,21 +16,23 @@
 
 package com.kylinolap.rest.security;
 
+import java.util.Properties;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
-import java.util.Properties;
-
 /**
  * @author xduo
+ *
  */
 public class PasswordPlaceholderConfigurer extends PropertyPlaceholderConfigurer {
 
-    private static byte[] key = {0x74, 0x68, 0x69, 0x73, 0x49, 0x73, 0x41, 0x53, 0x65, 0x63, 0x72, 0x65,
-            0x74, 0x4b, 0x65, 0x79};
+    private static byte[] key = { 0x74, 0x68, 0x69, 0x73, 0x49, 0x73, 0x41, 0x53, 0x65, 0x63, 0x72, 0x65,
+            0x74, 0x4b, 0x65, 0x79 };
 
     public static String encrypt(String strToEncrypt) {
         try {

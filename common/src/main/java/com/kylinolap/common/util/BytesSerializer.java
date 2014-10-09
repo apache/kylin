@@ -20,6 +20,7 @@ import java.nio.ByteBuffer;
 
 /**
  * @author yangli9
+ *
  */
 public interface BytesSerializer<T> {
 

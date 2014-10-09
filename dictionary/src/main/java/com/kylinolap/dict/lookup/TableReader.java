@@ -21,7 +21,7 @@ import java.io.IOException;
 
 /**
  * Tables are typically CSV or SEQ file.
- *
+ * 
  * @author yangli9
  */
 public interface TableReader extends Closeable {

@@ -15,13 +15,12 @@
  */
 package com.kylinolap.job.hadoop.cube;
 
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.kv.RowKeyDecoder;
-import com.kylinolap.cube.measure.MeasureCodec;
-import com.kylinolap.job.constant.BatchConstants;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
+import static org.junit.Assert.*;
+
+import java.io.File;
+import java.math.BigDecimal;
+import java.util.List;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
@@ -32,15 +31,17 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
-import java.math.BigDecimal;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.kv.RowKeyDecoder;
+import com.kylinolap.cube.measure.MeasureCodec;
+import com.kylinolap.job.constant.BatchConstants;
+import com.kylinolap.metadata.model.cube.MeasureDesc;
 
 /**
  * @author George Song (ysong1)
+ *
  */
 public class BaseCuboidMapperTest extends LocalFileMetadataTestCase {
 
@@ -101,7 +102,7 @@ public class BaseCuboidMapperTest extends LocalFileMetadataTestCase {
     }
 
     private void verifyMeasures(List<MeasureDesc> measures, Text valueBytes, String m1, String m2, String m3,
-                                long m4) {
+            long m4) {
         MeasureCodec codec = new MeasureCodec(measures);
         Object[] values = new Object[measures.size()];
         codec.decode(valueBytes, values);

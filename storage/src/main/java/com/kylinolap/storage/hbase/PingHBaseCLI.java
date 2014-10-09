@@ -16,18 +16,25 @@
 
 package com.kylinolap.storage.hbase;
 
-import com.kylinolap.common.util.HadoopUtil;
+import java.io.IOException;
+
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.HConnectionManager;
+import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.security.User;
 import org.apache.hadoop.hbase.security.token.TokenUtil;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.security.UserGroupInformation;
 
-import java.io.IOException;
+import com.kylinolap.common.util.HadoopUtil;
 
 /**
  * @author yangli9
+ *
  */
 public class PingHBaseCLI {
 

@@ -16,30 +16,32 @@
 
 package com.kylinolap.cube.measure;
 
-import com.kylinolap.common.hll.HyperLogLogPlusCounter;
-import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
-import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import static org.junit.Assert.assertTrue;
+import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.junit.Test;
+
+import com.kylinolap.common.hll.HyperLogLogPlusCounter;
+import com.kylinolap.cube.kv.RowConstants;
+import com.kylinolap.metadata.model.cube.FunctionDesc;
+import com.kylinolap.metadata.model.cube.MeasureDesc;
 
 /**
  * @author yangli9
+ *
  */
 public class MeasureCodecTest {
 
     @Test
     public void basicTest() {
         MeasureDesc descs[] =
-                new MeasureDesc[]{measure("double"), measure("long"), measure("decimal"),
-                        measure("HLLC16"), measure("HLLC16")};
+                new MeasureDesc[] { measure("double"), measure("long"), measure("decimal"),
+                        measure("HLLC16"), measure("HLLC16") };
         MeasureCodec codec = new MeasureCodec(descs);
 
         DoubleWritable d = new DoubleWritable(1.0);
@@ -51,7 +53,7 @@ public class MeasureCodecTest {
         HyperLogLogPlusCounter hllc2 = new HyperLogLogPlusCounter(16);
         hllc.add("1234567");
         hllc.add("abcdefg");
-        Object values[] = new Object[]{d, l, b, hllc, hllc2};
+        Object values[] = new Object[] { d, l, b, hllc, hllc2 };
 
         ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
 

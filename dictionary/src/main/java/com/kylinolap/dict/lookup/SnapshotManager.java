@@ -16,19 +16,21 @@
 
 package com.kylinolap.dict.lookup;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.persistence.ResourceStore;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.schema.TableDesc;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.persistence.ResourceStore;
+import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.schema.TableDesc;
+
 /**
  * @author yangli9
+ *
  */
 public class SnapshotManager {
 

@@ -20,6 +20,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 
 /**
  * @author yangli9
+ *
  */
 public class NumberDictionaryBuilder<T> extends TrieDictionaryBuilder<T> {
 

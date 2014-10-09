@@ -16,17 +16,19 @@
 
 package com.kylinolap.storage.filter;
 
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.storage.tuple.Tuple;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.util.Collection;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+
+import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.storage.tuple.Tuple;
 
 /**
  * @author xjiang
+ *
  */
 public class FilterEvaluateTest extends FilterBaseTest {
 
@@ -39,7 +41,7 @@ public class FilterEvaluateTest extends FilterBaseTest {
         TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
         int number = 10000;
-        int[] matcheCounts = new int[]{0, 0, 0};
+        int[] matcheCounts = new int[] { 0, 0, 0 };
         Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
         int match = evaluateTuples(tuples, newFilter);
 
@@ -55,7 +57,7 @@ public class FilterEvaluateTest extends FilterBaseTest {
         TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
         int number = 10000;
-        int[] matcheCounts = new int[]{0, 0, 0};
+        int[] matcheCounts = new int[] { 0, 0, 0 };
         Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
         int match = evaluateTuples(tuples, newFilter);
 
@@ -71,7 +73,7 @@ public class FilterEvaluateTest extends FilterBaseTest {
         TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
         int number = 10000;
-        int[] matcheCounts = new int[]{0, 0, 0};
+        int[] matcheCounts = new int[] { 0, 0, 0 };
         Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
         int match = evaluateTuples(tuples, newFilter);
 
@@ -87,7 +89,7 @@ public class FilterEvaluateTest extends FilterBaseTest {
         TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
         int number = 10000;
-        int[] matcheCounts = new int[]{0, 0, 0};
+        int[] matcheCounts = new int[] { 0, 0, 0 };
         Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
         int match = evaluateTuples(tuples, newFilter);
 
@@ -103,7 +105,7 @@ public class FilterEvaluateTest extends FilterBaseTest {
         TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
         int number = 10000;
-        int[] matcheCounts = new int[]{0, 0, 0};
+        int[] matcheCounts = new int[] { 0, 0, 0 };
         Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
         int match = evaluateTuples(tuples, newFilter);
 
@@ -119,7 +121,7 @@ public class FilterEvaluateTest extends FilterBaseTest {
         TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
         int number = 10000;
-        int[] matcheCounts = new int[]{0, 0, 0};
+        int[] matcheCounts = new int[] { 0, 0, 0 };
         Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
         int match = evaluateTuples(tuples, newFilter);
 
@@ -135,7 +137,7 @@ public class FilterEvaluateTest extends FilterBaseTest {
         TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
         int number = 1;
-        int[] matcheCounts = new int[]{0, 0, 0};
+        int[] matcheCounts = new int[] { 0, 0, 0 };
         Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
         int match = evaluateTuples(tuples, newFilter);
 
@@ -151,7 +153,7 @@ public class FilterEvaluateTest extends FilterBaseTest {
         TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
         int number = 10000;
-        int[] matcheCounts = new int[]{0, 0, 0};
+        int[] matcheCounts = new int[] { 0, 0, 0 };
         Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
         int match = evaluateTuples(tuples, newFilter);
 
@@ -167,7 +169,7 @@ public class FilterEvaluateTest extends FilterBaseTest {
         TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
         int number = 10000;
-        int[] matcheCounts = new int[]{0, 0, 0};
+        int[] matcheCounts = new int[] { 0, 0, 0 };
         Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
         int match = evaluateTuples(tuples, newFilter);
 

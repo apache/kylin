@@ -15,15 +15,19 @@
  */
 package com.kylinolap.query.optrule;
 
-import com.kylinolap.query.relnode.OLAPRel;
-import com.kylinolap.query.relnode.OLAPToEnumerableConverter;
 import net.hydromatic.optiq.rules.java.EnumerableConvention;
+
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.convert.ConverterRule;
 import org.eigenbase.relopt.RelTraitSet;
 
+import com.kylinolap.query.relnode.OLAPRel;
+import com.kylinolap.query.relnode.OLAPToEnumerableConverter;
+
 /**
+ * 
  * @author xjiang
+ *
  */
 public class OLAPToEnumerableConverterRule extends ConverterRule {
 

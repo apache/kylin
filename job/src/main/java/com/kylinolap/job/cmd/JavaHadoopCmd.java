@@ -16,16 +16,18 @@
 
 package com.kylinolap.job.cmd;
 
-import com.kylinolap.job.constant.JobStepStatusEnum;
-import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job.exception.JobException;
-import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.kylinolap.job.constant.JobStepStatusEnum;
+import com.kylinolap.job.engine.JobEngineConfig;
+import com.kylinolap.job.exception.JobException;
+import com.kylinolap.job.hadoop.AbstractHadoopJob;
+
 /**
  * @author xduo
+ *
  */
 public class JavaHadoopCmd implements IJobCommand {
     protected static final Logger log = LoggerFactory.getLogger(JavaHadoopCmd.class);
@@ -35,7 +37,7 @@ public class JavaHadoopCmd implements IJobCommand {
     private final AbstractHadoopJob job;
 
     public JavaHadoopCmd(String executeCommand, String jobInstanceID, int jobStepID,
-                         JobEngineConfig engineConfig, AbstractHadoopJob job, boolean isAsync) {
+            JobEngineConfig engineConfig, AbstractHadoopJob job, boolean isAsync) {
         super();
         this.executeCommand = executeCommand;
         this.job = job;

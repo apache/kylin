@@ -15,16 +15,23 @@
  */
 package com.kylinolap.query.enumerator;
 
-import com.kylinolap.query.relnode.OLAPContext;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 import net.hydromatic.linq4j.Enumerator;
+
 import org.eigenbase.reltype.RelDataTypeField;
 
-import java.sql.*;
+import com.kylinolap.query.relnode.OLAPContext;
 
 /**
  * Hive Query Result Enumerator
- *
+ * 
  * @author xjiang
+ * 
  */
 public class HiveEnumerator implements Enumerator<Object[]> {
 

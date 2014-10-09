@@ -15,8 +15,11 @@
  */
 package com.kylinolap.query.relnode;
 
+import java.util.Stack;
+
 import net.hydromatic.optiq.rules.java.EnumerableRel;
 import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
+
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelTrait;
@@ -24,10 +27,10 @@ import org.eigenbase.relopt.RelTraitSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Stack;
-
 /**
+ * 
  * @author xjiang
+ *
  */
 public interface OLAPRel extends RelNode {
 
@@ -36,14 +39,14 @@ public interface OLAPRel extends RelNode {
     // Calling convention for relational operations that occur in OLAP. 
     public static final Convention CONVENTION = new Convention.Impl("OLAP", OLAPRel.class);
 
-    /**
+    /** 
      * get olap context
      */
     public OLAPContext getContext();
 
     /**
-     * get the row type of ColumnDesc
-     *
+     * get the row type of ColumnDesc 
+     * 
      * @return
      */
     public ColumnRowType getColumnRowType();
@@ -97,7 +100,7 @@ public interface OLAPRel extends RelNode {
     public void implementOLAP(OLAPImplementor implementor);
 
     /**
-     * visitor pattern for query rewrite
+     * visitor pattern for query rewrite 
      */
 
     public static class RewriteImplementor {
@@ -143,7 +146,7 @@ public interface OLAPRel extends RelNode {
 
         @Override
         public EnumerableRel.Result visitChild(EnumerableRel parent, int ordinal, EnumerableRel child,
-                                               EnumerableRel.Prefer prefer) {
+                EnumerableRel.Prefer prefer) {
             if (parent instanceof OLAPRel) {
                 OLAPRel olapRel = (OLAPRel) parent;
                 this.parentContext = olapRel.getContext();

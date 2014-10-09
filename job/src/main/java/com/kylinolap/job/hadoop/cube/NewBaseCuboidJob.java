@@ -18,8 +18,9 @@ package com.kylinolap.job.hadoop.cube;
 import org.apache.hadoop.util.ToolRunner;
 
 /**
- * @author George Song (ysong1)
- */
+* @author George Song (ysong1)
+*
+*/
 
 public class NewBaseCuboidJob extends CuboidJob {
     public NewBaseCuboidJob() {
