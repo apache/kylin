@@ -16,14 +16,15 @@
 
 package com.kylinolap.rest.response;
 
+import java.io.Serializable;
+
 import org.springframework.security.acls.model.Permission;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.util.Assert;
 
-import java.io.Serializable;
-
 /**
  * @author xduo
+ *
  */
 public class AccessEntryResponse {
 

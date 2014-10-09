@@ -22,6 +22,7 @@ import com.kylinolap.cube.CubeInstance;
 
 /**
  * @author xduo
+ *
  */
 public class ProjectTable {
 

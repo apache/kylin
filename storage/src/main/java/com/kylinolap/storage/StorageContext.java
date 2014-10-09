@@ -15,16 +15,17 @@
  */
 package com.kylinolap.storage;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.metadata.model.cube.MeasureDesc;
 import com.kylinolap.metadata.model.cube.TblColRef;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
 
 /**
  * @author xjiang
@@ -47,15 +48,17 @@ public class StorageContext {
     private boolean acceptPartialResult;
     private BiMap<TblColRef, String> aliasMap;
 
-    private long totalScanCount;
-    private Collection<Cuboid> cuboids;
-    private boolean enableLimit;
-    private boolean partialResultReturned;
     // If cuboid dimensions matches group by exactly, there's no derived or any other form of post aggregation needed.
     // In case of exactAggregation, holistic count distinct can be used and coprocessor is not beneficial.
     private boolean exactAggregation;
     // To hint records shall be returned at most granular level, avoid aggregation (coprocessor) wherever possible. 
     private boolean avoidAggregation;
+    private Set<TblColRef> mandatoryColumns;
+
+    private long totalScanCount;
+    private Collection<Cuboid> cuboids;
+    private boolean enableLimit;
+    private boolean partialResultReturned;
 
     public StorageContext() {
         this.threshold = DEFAULT_THRESHOLD;
@@ -67,11 +70,13 @@ public class StorageContext {
         this.sortOrders = new ArrayList<OrderEnum>();
         this.sortMeasures = new ArrayList<MeasureDesc>();
 
+        this.exactAggregation = false;
+        this.avoidAggregation = false;
+        this.mandatoryColumns = new HashSet<TblColRef>();
+
         this.enableLimit = false;
         this.acceptPartialResult = false;
         this.partialResultReturned = false;
-        this.exactAggregation = false;
-        this.avoidAggregation = false;
     }
 
     public String getConnUrl() {
@@ -193,5 +198,13 @@ public class StorageContext {
 
     public void markAvoidAggregation() {
         this.avoidAggregation = true;
+    }
+
+    public void mandateColumn(TblColRef col) {
+        this.mandatoryColumns.add(col);
+    }
+
+    public Set<TblColRef> getMandatoryColumns() {
+        return this.mandatoryColumns;
     }
 }

@@ -16,19 +16,21 @@
 
 package com.kylinolap.cube;
 
-import com.kylinolap.common.persistence.ResourceStore;
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import static org.junit.Assert.*;
+
 import com.kylinolap.cube.project.ProjectManager;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import com.kylinolap.common.persistence.ResourceStore;
+import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.cube.CubeDesc;
 
 /**
  * @author yangli9
+ *
  */
 public class CubeManagerCacheTest extends LocalFileMetadataTestCase {
 

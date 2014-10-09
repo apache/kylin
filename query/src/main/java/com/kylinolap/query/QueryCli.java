@@ -15,12 +15,22 @@
  */
 package com.kylinolap.query;
 
+import java.io.File;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.Statement;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.query.schema.OLAPSchemaFactory;
-import org.apache.commons.cli.*;
-
-import java.io.File;
-import java.sql.*;
 
 public class QueryCli {
 

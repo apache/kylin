@@ -16,10 +16,15 @@
 
 package com.kylinolap.job.tools;
 
-import com.kylinolap.common.hll.HyperLogLogPlusCounter;
-import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.job.hadoop.cardinality.ColumnCardinalityMapper;
-import com.kylinolap.job.hadoop.cardinality.ColumnCardinalityReducer;
+import static org.junit.Assert.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
@@ -29,18 +34,14 @@ import org.apache.hadoop.mrunit.types.Pair;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringTokenizer;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import com.kylinolap.common.hll.HyperLogLogPlusCounter;
+import com.kylinolap.cube.kv.RowConstants;
+import com.kylinolap.job.hadoop.cardinality.ColumnCardinalityMapper;
+import com.kylinolap.job.hadoop.cardinality.ColumnCardinalityReducer;
 
 /**
  * @author ysong1
+ * 
  */
 public class ColumnCardinalityReducerTest {
 

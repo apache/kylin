@@ -15,18 +15,19 @@
  */
 package com.kylinolap.query.schema;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import net.hydromatic.optiq.Table;
+import net.hydromatic.optiq.impl.AbstractSchema;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.cube.project.ProjectManager;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.schema.TableDesc;
-import net.hydromatic.optiq.Table;
-import net.hydromatic.optiq.impl.AbstractSchema;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author xjiang

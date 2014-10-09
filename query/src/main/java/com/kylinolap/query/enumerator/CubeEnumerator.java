@@ -15,6 +15,22 @@
  */
 package com.kylinolap.query.enumerator;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
+import net.hydromatic.linq4j.Enumerator;
+import net.hydromatic.optiq.DataContext;
+import net.hydromatic.optiq.jdbc.OptiqConnection;
+
+import org.eigenbase.reltype.RelDataTypeField;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.collect.Sets;
 import com.kylinolap.metadata.model.cube.CubeDesc.DeriveInfo;
 import com.kylinolap.metadata.model.cube.DimensionDesc;
@@ -28,16 +44,8 @@ import com.kylinolap.storage.filter.CompareTupleFilter;
 import com.kylinolap.storage.filter.LogicalTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
-import com.kylinolap.storage.tuple.Tuple;
-import com.kylinolap.storage.tuple.TupleIterator;
-import net.hydromatic.linq4j.Enumerator;
-import net.hydromatic.optiq.DataContext;
-import net.hydromatic.optiq.jdbc.OptiqConnection;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.*;
+import com.kylinolap.storage.tuple.ITuple;
+import com.kylinolap.storage.tuple.ITupleIterator;
 
 /**
  * @author xjiang
@@ -49,7 +57,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
     private final OLAPContext olapContext;
     private final DataContext optiqContext;
     private final Object[] current;
-    private TupleIterator cursor;
+    private ITupleIterator cursor;
     private int[] fieldIndexes;
 
     public CubeEnumerator(OLAPContext olapContext, DataContext optiqContext) {
@@ -75,7 +83,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
             return false;
         }
 
-        Tuple tuple = cursor.next();
+        ITuple tuple = cursor.next();
         if (tuple == null) {
             return false;
         }
@@ -96,7 +104,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
         }
     }
 
-    private Object[] convertCurrentRow(Tuple tuple) {
+    private Object[] convertCurrentRow(ITuple tuple) {
 
         // build field index map
         if (this.fieldIndexes == null) {
@@ -127,7 +135,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
         return current;
     }
 
-    private TupleIterator queryStorage() {
+    private ITupleIterator queryStorage() {
         logger.debug("query storage...");
 
         // set connection properties
@@ -143,7 +151,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
 
         // query storage engine
         IStorageEngine storageEngine = StorageEngineFactory.getStorageEngine(olapContext.cubeInstance);
-        TupleIterator iterator =
+        ITupleIterator iterator =
                 storageEngine.search(dimensions, olapContext.filter, olapContext.groupByColumns, metrics,
                         olapContext.storageContext);
         if (logger.isDebugEnabled()) {

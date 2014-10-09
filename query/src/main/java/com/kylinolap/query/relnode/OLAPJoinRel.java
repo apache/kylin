@@ -15,20 +15,30 @@
  */
 package com.kylinolap.query.relnode;
 
-import com.google.common.base.Preconditions;
-import com.kylinolap.metadata.model.cube.JoinDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.query.schema.OLAPTable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import net.hydromatic.linq4j.expressions.Blocks;
 import net.hydromatic.linq4j.expressions.Expressions;
 import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
 import net.hydromatic.optiq.rules.java.JavaRules.EnumerableJoinRel;
 import net.hydromatic.optiq.rules.java.PhysType;
 import net.hydromatic.optiq.rules.java.PhysTypeImpl;
+
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.JoinRelType;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.*;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelOptTable;
+import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.RelTrait;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory.FieldInfoBuilder;
 import org.eigenbase.reltype.RelDataTypeField;
@@ -38,7 +48,10 @@ import org.eigenbase.rex.RexInputRef;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.SqlKind;
 
-import java.util.*;
+import com.google.common.base.Preconditions;
+import com.kylinolap.metadata.model.cube.JoinDesc;
+import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.query.schema.OLAPTable;
 
 /**
  * @author xjiang
@@ -53,7 +66,7 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
     private boolean hasSubQuery;
 
     public OLAPJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right,
-                       RexNode condition, JoinRelType joinType, Set<String> variablesStopped) throws InvalidRelException {
+            RexNode condition, JoinRelType joinType, Set<String> variablesStopped) throws InvalidRelException {
         super(cluster, traits, left, right, condition, joinType, variablesStopped);
         Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
         this.rowType = getRowType();
@@ -68,7 +81,7 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
 
     @Override
     public EnumerableJoinRel copy(RelTraitSet traitSet, RexNode conditionExpr, RelNode left, RelNode right,
-                                  JoinRelType joinType) {
+            JoinRelType joinType) {
         try {
             return new OLAPJoinRel(getCluster(), traitSet, left, right, conditionExpr, joinType,
                     variablesStopped);

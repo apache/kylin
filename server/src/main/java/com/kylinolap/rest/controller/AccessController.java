@@ -16,23 +16,29 @@
 
 package com.kylinolap.rest.controller;
 
-import com.kylinolap.common.persistence.AclEntity;
-import com.kylinolap.rest.request.AccessRequest;
-import com.kylinolap.rest.response.AccessEntryResponse;
-import com.kylinolap.rest.security.AclPermissionFactory;
-import com.kylinolap.rest.service.AccessService;
+import java.io.IOException;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.Permission;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.io.IOException;
-import java.util.List;
+import com.kylinolap.common.persistence.AclEntity;
+import com.kylinolap.rest.request.AccessRequest;
+import com.kylinolap.rest.response.AccessEntryResponse;
+import com.kylinolap.rest.security.AclPermissionFactory;
+import com.kylinolap.rest.service.AccessService;
 
 /**
  * @author xduo
+ *
  */
 @Controller
 @RequestMapping(value = "/access")
@@ -43,12 +49,12 @@ public class AccessController extends BasicController {
 
     /**
      * Get access entry list of a domain object
-     *
+     * 
      * @param uuid
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{type}/{uuid}", method = {RequestMethod.GET})
+    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.GET })
     @ResponseBody
     public List<AccessEntryResponse> getAccessEntities(@PathVariable String type, @PathVariable String uuid) {
         AclEntity ae = accessService.getAclEntity(type, uuid);
@@ -59,13 +65,13 @@ public class AccessController extends BasicController {
 
     /**
      * Grant a new access on a domain object to a user/role
-     *
+     * 
      * @param accessRequest
      */
-    @RequestMapping(value = "/{type}/{uuid}", method = {RequestMethod.POST})
+    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.POST })
     @ResponseBody
     public List<AccessEntryResponse> grant(@PathVariable String type, @PathVariable String uuid,
-                                           @RequestBody AccessRequest accessRequest) {
+            @RequestBody AccessRequest accessRequest) {
         AclEntity ae = accessService.getAclEntity(type, uuid);
         Sid sid = accessService.getSid(accessRequest.getSid(), accessRequest.isPrincipal());
         Permission permission = AclPermissionFactory.getPermission(accessRequest.getPermission());
@@ -76,13 +82,13 @@ public class AccessController extends BasicController {
 
     /**
      * Update a access on a domain object
-     *
+     * 
      * @param accessRequest
      */
-    @RequestMapping(value = "/{type}/{uuid}", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.PUT })
     @ResponseBody
     public List<AccessEntryResponse> update(@PathVariable String type, @PathVariable String uuid,
-                                            @RequestBody AccessRequest accessRequest) {
+            @RequestBody AccessRequest accessRequest) {
         AclEntity ae = accessService.getAclEntity(type, uuid);
         Permission permission = AclPermissionFactory.getPermission(accessRequest.getPermission());
         Acl acl = accessService.update(ae, accessRequest.getAccessEntryId(), permission);
@@ -92,12 +98,12 @@ public class AccessController extends BasicController {
 
     /**
      * Revoke access on a domain object from a user/role
-     *
+     * 
      * @param AccessRequest
      */
-    @RequestMapping(value = "/{type}/{uuid}", method = {RequestMethod.DELETE})
+    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.DELETE })
     public List<AccessEntryResponse> revoke(@PathVariable String type, @PathVariable String uuid,
-                                            AccessRequest accessRequest) {
+            AccessRequest accessRequest) {
         AclEntity ae = accessService.getAclEntity(type, uuid);
         Acl acl = accessService.revoke(ae, accessRequest.getAccessEntryId());
 

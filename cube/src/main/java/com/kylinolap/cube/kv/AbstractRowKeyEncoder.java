@@ -15,19 +15,22 @@
  */
 package com.kylinolap.cube.kv;
 
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.cuboid.Cuboid;
-import com.kylinolap.dict.Dictionary;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.cube.cuboid.Cuboid;
+import com.kylinolap.dict.Dictionary;
+import com.kylinolap.metadata.model.cube.TblColRef;
+
 /**
+ * 
  * @author xjiang
+ * 
  */
 public abstract class AbstractRowKeyEncoder {
 

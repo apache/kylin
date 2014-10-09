@@ -16,14 +16,16 @@
 
 package com.kylinolap.job.hadoop.dict;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.cube.cli.DictionaryGeneratorCLI;
-import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.util.ToolRunner;
 
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.cube.cli.DictionaryGeneratorCLI;
+import com.kylinolap.job.hadoop.AbstractHadoopJob;
+
 /**
  * @author ysong1
+ *
  */
 
 public class CreateDictionaryJob extends AbstractHadoopJob {

@@ -37,6 +37,7 @@ import java.util.Date;
 
 /**
  * @author xduo
+ *
  */
 public class HadoopStatusChecker {
 
@@ -75,34 +76,34 @@ public class HadoopStatusChecker {
                     + " - State of Hadoop job: " + mrJobID + ":" + state + " - " + finalStatus + "\n");
 
             switch (finalStatus) {
-                case SUCCEEDED:
-                    status = JobStepStatusEnum.FINISHED;
+            case SUCCEEDED:
+                status = JobStepStatusEnum.FINISHED;
+                break;
+            case FAILED:
+                status = JobStepStatusEnum.ERROR;
+                break;
+            case KILLED:
+                status = JobStepStatusEnum.ERROR;
+                break;
+            case UNDEFINED:
+                switch (state) {
+                case NEW:
+                case NEW_SAVING:
+                case SUBMITTED:
+                case ACCEPTED:
+                    status = JobStepStatusEnum.WAITING;
                     break;
+                case RUNNING:
+                    status = JobStepStatusEnum.RUNNING;
+                    break;
+                case FINAL_SAVING:
+                case FINISHING:
+                case FINISHED:
                 case FAILED:
-                    status = JobStepStatusEnum.ERROR;
-                    break;
+                case KILLING:
                 case KILLED:
-                    status = JobStepStatusEnum.ERROR;
-                    break;
-                case UNDEFINED:
-                    switch (state) {
-                        case NEW:
-                        case NEW_SAVING:
-                        case SUBMITTED:
-                        case ACCEPTED:
-                            status = JobStepStatusEnum.WAITING;
-                            break;
-                        case RUNNING:
-                            status = JobStepStatusEnum.RUNNING;
-                            break;
-                        case FINAL_SAVING:
-                        case FINISHING:
-                        case FINISHED:
-                        case FAILED:
-                        case KILLING:
-                        case KILLED:
-                    }
-                    break;
+                }
+                break;
             }
 
         } catch (Exception e) {
@@ -171,23 +172,23 @@ public class HadoopStatusChecker {
     public JobStepStatusEnum calculateStatus(JobStatus jobStatus) {
         JobStepStatusEnum status;
         switch (jobStatus.getState()) {
-            case RUNNING:
-                status = JobStepStatusEnum.RUNNING;
-                break;
-            case SUCCEEDED:
-                status = JobStepStatusEnum.FINISHED;
-                break;
-            case FAILED:
-                status = JobStepStatusEnum.ERROR;
-                break;
-            case PREP:
-                status = JobStepStatusEnum.WAITING;
-                break;
-            case KILLED:
-                status = JobStepStatusEnum.ERROR;
-                break;
-            default:
-                status = JobStepStatusEnum.ERROR;
+        case RUNNING:
+            status = JobStepStatusEnum.RUNNING;
+            break;
+        case SUCCEEDED:
+            status = JobStepStatusEnum.FINISHED;
+            break;
+        case FAILED:
+            status = JobStepStatusEnum.ERROR;
+            break;
+        case PREP:
+            status = JobStepStatusEnum.WAITING;
+            break;
+        case KILLED:
+            status = JobStepStatusEnum.ERROR;
+            break;
+        default:
+            status = JobStepStatusEnum.ERROR;
         }
 
         return status;

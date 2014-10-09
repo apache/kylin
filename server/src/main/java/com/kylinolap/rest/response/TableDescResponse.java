@@ -16,16 +16,17 @@
 
 package com.kylinolap.rest.response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.kylinolap.metadata.model.schema.TableDesc;
-
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kylinolap.metadata.model.schema.TableDesc;
+
 /**
  * A response class to wrap TableDesc
- *
+ * 
  * @author jianliu
+ *
  */
 public class TableDescResponse extends TableDesc {
     @JsonProperty("exd")

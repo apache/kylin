@@ -16,9 +16,16 @@
 
 package com.kylinolap.storage.hbase.coprocessor;
 
-import com.google.common.collect.Lists;
-import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.storage.hbase.coprocessor.RowAggregators.HCol;
+import static org.junit.Assert.*;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.HRegionInfo;
@@ -30,16 +37,12 @@ import org.apache.hadoop.io.LongWritable;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import com.google.common.collect.Lists;
+import com.kylinolap.cube.kv.RowConstants;
+import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.schema.ColumnDesc;
+import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.storage.hbase.coprocessor.SRowAggregators.HCol;
 
 /**
  * @author yangli9
@@ -47,11 +50,11 @@ import static org.junit.Assert.fail;
 public class AggregateRegionObserverTest {
     ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
 
-    byte[] mask = new byte[]{(byte) 0xff, (byte) 0xff, 0, 0};
-    byte[] k1 = new byte[]{0x01, 0x01, 0, 0x01};
-    byte[] k2 = new byte[]{0x01, 0x01, 0, 0x02};
-    byte[] k3 = new byte[]{0x02, 0x02, 0, 0x03};
-    byte[] k4 = new byte[]{0x02, 0x02, 0, 0x04};
+    byte[] mask = new byte[] { (byte) 0xff, (byte) 0xff, 0, 0 };
+    byte[] k1 = new byte[] { 0x01, 0x01, 0, 0x01 };
+    byte[] k2 = new byte[] { 0x01, 0x01, 0, 0x02 };
+    byte[] k3 = new byte[] { 0x02, 0x02, 0, 0x03 };
+    byte[] k4 = new byte[] { 0x02, 0x02, 0, 0x04 };
 
     ArrayList<Cell> cellsInput = Lists.newArrayList();
 
@@ -59,8 +62,8 @@ public class AggregateRegionObserverTest {
     byte[] q1 = Bytes.toBytes("q1");
     byte[] q2 = Bytes.toBytes("q2");
 
-    HCol c1 = new HCol(family, q1, new String[]{"SUM", "COUNT"}, new String[]{"decimal", "long"});
-    HCol c2 = new HCol(family, q2, new String[]{"SUM"}, new String[]{"decimal"});
+    HCol c1 = new HCol(family, q1, new String[] { "SUM", "COUNT" }, new String[] { "decimal", "long" });
+    HCol c2 = new HCol(family, q2, new String[] { "SUM" }, new String[] { "decimal" });
 
     @Before
     public void setup() {
@@ -82,8 +85,8 @@ public class AggregateRegionObserverTest {
 
     private Cell newCell(byte[] key, HCol col, String decimal, int number) {
         Object[] values = number == Integer.MIN_VALUE ? //
-                new Object[]{new BigDecimal(decimal)} //
-                : new Object[]{new BigDecimal(decimal), new LongWritable(number)};
+                new Object[] { new BigDecimal(decimal) } //
+                : new Object[] { new BigDecimal(decimal), new LongWritable(number) };
         buf.clear();
         col.measureCodec.encode(values, buf);
 
@@ -99,9 +102,10 @@ public class AggregateRegionObserverTest {
     @Test
     public void test() throws IOException {
 
-        RowProjector projector = new RowProjector(mask);
-        RowAggregators aggregators = new RowAggregators(new HCol[]{c1, c2});
-        RowFilter filter = RowFilter.deserialize(null); // a default, always-true, filter
+        SRowType rowType = newRowType();
+        SRowProjector projector = new SRowProjector(mask);
+        SRowAggregators aggregators = new SRowAggregators(new HCol[] { c1, c2 });
+        SRowFilter filter = SRowFilter.deserialize(null); // a default, always-true, filter
         HashSet<String> expectedResult = new HashSet<String>();
 
         expectedResult.add("\\x02\\x02\\x00\\x00, f:q1, [26.0, 7]");
@@ -111,7 +115,8 @@ public class AggregateRegionObserverTest {
 
         MockupRegionScanner innerScanner = new MockupRegionScanner(cellsInput);
 
-        RegionScanner aggrScanner = new AggregationFilter(null, filter, projector, aggregators, innerScanner);
+        RegionScanner aggrScanner =
+                new AggregationScanner(rowType, filter, projector, aggregators, innerScanner);
         ArrayList<Cell> result = Lists.newArrayList();
         boolean hasMore = true;
         while (hasMore) {
@@ -122,9 +127,9 @@ public class AggregateRegionObserverTest {
 
             Cell cell = result.get(0);
             HCol hcol = null;
-            if (RowAggregators.match(c1, cell)) {
+            if (SRowAggregators.match(c1, cell)) {
                 hcol = c1;
-            } else if (RowAggregators.match(c2, cell)) {
+            } else if (SRowAggregators.match(c2, cell)) {
                 hcol = c2;
             } else
                 fail();
@@ -133,8 +138,7 @@ public class AggregateRegionObserverTest {
                     ByteBuffer.wrap(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength()),
                     hcol.measureValues);
 
-            String rowKey =
-                    Bytes.toStringBinary(cell.getRowArray(), cell.getRowOffset(), cell.getRowLength());
+            String rowKey = toString(cell.getRowArray(), cell.getRowOffset(), cell.getRowLength(), mask);
             String col = Bytes.toString(hcol.family) + ":" + Bytes.toString(hcol.qualifier);
             String values = Arrays.toString(hcol.measureValues);
 
@@ -150,9 +154,10 @@ public class AggregateRegionObserverTest {
     @Test
     public void testNoMeasure() throws IOException {
 
-        RowProjector projector = new RowProjector(mask);
-        RowAggregators aggregators = new RowAggregators(new HCol[]{});
-        RowFilter filter = RowFilter.deserialize(null); // a default, always-true, filter
+        SRowType rowType = newRowType();
+        SRowProjector projector = new SRowProjector(mask);
+        SRowAggregators aggregators = new SRowAggregators(new HCol[] {});
+        SRowFilter filter = SRowFilter.deserialize(null); // a default, always-true, filter
         HashSet<String> expectedResult = new HashSet<String>();
 
         expectedResult.add("\\x02\\x02\\x00\\x00");
@@ -160,7 +165,8 @@ public class AggregateRegionObserverTest {
 
         MockupRegionScanner innerScanner = new MockupRegionScanner(cellsInput);
 
-        RegionScanner aggrScanner = new AggregationFilter(null, filter, projector, aggregators, innerScanner);
+        RegionScanner aggrScanner =
+                new AggregationScanner(rowType, filter, projector, aggregators, innerScanner);
         ArrayList<Cell> result = Lists.newArrayList();
         boolean hasMore = true;
         while (hasMore) {
@@ -171,12 +177,35 @@ public class AggregateRegionObserverTest {
 
             Cell cell = result.get(0);
 
-            String rowKey =
-                    Bytes.toStringBinary(cell.getRowArray(), cell.getRowOffset(), cell.getRowLength());
+            String rowKey = toString(cell.getRowArray(), cell.getRowOffset(), cell.getRowLength(), mask);
 
             assertTrue(expectedResult.contains(rowKey));
         }
         aggrScanner.close();
+    }
+
+    private String toString(byte[] array, int offset, short length, byte[] mask) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            int ch = array[offset + i] & 0xFF & mask[i];
+            result.append(String.format("\\x%02X", ch));
+        }
+        return result.toString();
+    }
+
+    private SRowType newRowType() {
+        TableDesc t = new TableDesc();
+        t.setName("TABLE");
+        TblColRef[] cols = new TblColRef[] { newCol("A", t), newCol("B", t), newCol("C", t), newCol("D", t) };
+        int[] sizes = new int[] { 1, 1, 1, 1 };
+        return new SRowType(cols, sizes);
+    }
+
+    private TblColRef newCol(String name, TableDesc t) {
+        ColumnDesc col = new ColumnDesc();
+        col.setName(name);
+        col.setTable(t);
+        return new TblColRef(col);
     }
 
     public static class MockupRegionScanner implements RegionScanner {

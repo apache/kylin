@@ -16,12 +16,14 @@
 
 package com.kylinolap.job.cmd;
 
-import com.kylinolap.job.constant.JobStepStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.kylinolap.job.constant.JobStepStatusEnum;
+
 /**
  * @author xjiang
+ *
  */
 public class ShellCmdOutput implements ICommandOutput {
 

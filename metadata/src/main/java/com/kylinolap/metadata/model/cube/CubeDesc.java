@@ -15,6 +15,24 @@
  */
 package com.kylinolap.metadata.model.cube;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.net.util.Base64;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,13 +49,6 @@ import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.metadata.model.schema.DataType;
 import com.kylinolap.metadata.model.schema.TableDesc;
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.net.util.Base64;
-
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.*;
-import java.util.Map.Entry;
 
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 9/24/13 Time: 10:40 AM To
@@ -253,7 +264,7 @@ public class CubeDesc extends RootPersistentEntity {
     }
 
     public Map<Array<TblColRef>, List<DeriveInfo>> getHostToDerivedInfo(List<TblColRef> rowCols,
-                                                                        Collection<TblColRef> wantedCols) {
+            Collection<TblColRef> wantedCols) {
         Map<Array<TblColRef>, List<DeriveInfo>> result = new HashMap<Array<TblColRef>, List<DeriveInfo>>();
         for (Entry<Array<TblColRef>, List<DeriveInfo>> entry : hostToDerivedMap.entrySet()) {
             Array<TblColRef> hostCols = entry.getKey();
@@ -576,16 +587,16 @@ public class CubeDesc extends RootPersistentEntity {
                 extra[i] = "";
             }
         }
-        return new String[][]{cols, extra};
+        return new String[][] { cols, extra };
     }
 
     private void initDerivedMap(TblColRef hostCol, DeriveType type, DimensionDesc dimension,
-                                TblColRef derivedCol) {
-        initDerivedMap(new TblColRef[]{hostCol}, type, dimension, new TblColRef[]{derivedCol}, null);
+            TblColRef derivedCol) {
+        initDerivedMap(new TblColRef[] { hostCol }, type, dimension, new TblColRef[] { derivedCol }, null);
     }
 
     private void initDerivedMap(TblColRef[] hostCols, DeriveType type, DimensionDesc dimension,
-                                TblColRef[] derivedCols, String[] extra) {
+            TblColRef[] derivedCols, String[] extra) {
         if (hostCols.length == 0 || derivedCols.length == 0)
             throw new IllegalStateException("host/derived columns must not be empty");
 

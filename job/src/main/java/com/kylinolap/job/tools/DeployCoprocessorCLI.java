@@ -16,12 +16,16 @@
 
 package com.kylinolap.job.tools;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.HadoopUtil;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.CubeSegmentStatusEnum;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -39,11 +43,12 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.*;
-import java.util.regex.Matcher;
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.HadoopUtil;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.cube.CubeSegmentStatusEnum;
 
 /**
  * @author yangli9
@@ -109,7 +114,7 @@ public class DeployCoprocessorCLI {
     }
 
     private static List<String> resetCoprocessorOnHTables(HBaseAdmin hbaseAdmin, Path hdfsCoprocessorJar,
-                                                          List<String> tableNames) throws IOException {
+            List<String> tableNames) throws IOException {
         List<String> processed = new ArrayList<String>();
 
         for (String tableName : tableNames) {
@@ -145,7 +150,7 @@ public class DeployCoprocessorCLI {
     }
 
     public static Path uploadCoprocessorJar(String localCoprocessorJar, FileSystem fileSystem,
-                                            Set<String> oldJarPaths) throws IOException {
+            Set<String> oldJarPaths) throws IOException {
         Path uploadPath = null;
         File localCoprocessorFile = new File(localCoprocessorJar);
 

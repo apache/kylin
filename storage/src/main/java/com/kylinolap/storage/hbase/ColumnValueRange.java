@@ -15,51 +15,53 @@
  */
 package com.kylinolap.storage.hbase;
 
-import com.google.common.collect.Sets;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.kylinolap.common.util.StringUtil.max;
-import static com.kylinolap.common.util.StringUtil.min;
+import com.google.common.collect.Sets;
+import com.kylinolap.cube.kv.RowKeyColumnOrder;
+import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
 
 /**
+ * 
  * @author xjiang
+ *
  */
 public class ColumnValueRange {
     private TblColRef column;
+    private RowKeyColumnOrder order;
     private String beginValue;
     private String endValue;
     private Set<String> equalValues;
 
     public ColumnValueRange(TblColRef column, Collection<String> values, FilterOperatorEnum op) {
         this.column = column;
+        this.order = RowKeyColumnOrder.getInstance(column.getType());
 
         switch (op) {
-            case EQ:
-            case IN:
-                equalValues = new HashSet<String>(values);
-                refreshBeginEndFromEquals();
-                break;
-            case LT:
-            case LTE:
-                endValue = max(values);
-                break;
-            case GT:
-            case GTE:
-                beginValue = min(values);
-                break;
-            case NEQ:
-            case NOTIN:
-            case ISNULL: // TODO ISNULL worth pass down as a special equal value
-            case ISNOTNULL:
-                // let Optiq filter it!
-                break;
-            default:
-                throw new UnsupportedOperationException(op.name());
+        case EQ:
+        case IN:
+            equalValues = new HashSet<String>(values);
+            refreshBeginEndFromEquals();
+            break;
+        case LT:
+        case LTE:
+            endValue = order.max(values);
+            break;
+        case GT:
+        case GTE:
+            beginValue = order.min(values);
+            break;
+        case NEQ:
+        case NOTIN:
+        case ISNULL: // TODO ISNULL worth pass down as a special equal value
+        case ISNOTNULL:
+            // let Optiq filter it!
+            break;
+        default:
+            throw new UnsupportedOperationException(op.name());
         }
     }
 
@@ -69,6 +71,7 @@ public class ColumnValueRange {
 
     void copy(TblColRef column, String beginValue, String endValue, Set<String> equalValues) {
         this.column = column;
+        this.order = RowKeyColumnOrder.getInstance(column.getType());
         this.beginValue = beginValue;
         this.endValue = endValue;
         this.equalValues = equalValues;
@@ -91,8 +94,8 @@ public class ColumnValueRange {
     }
 
     private void refreshBeginEndFromEquals() {
-        this.beginValue = min(this.equalValues);
-        this.endValue = max(this.equalValues);
+        this.beginValue = order.min(this.equalValues);
+        this.endValue = order.max(this.equalValues);
     }
 
     public boolean satisfyAll() {
@@ -103,7 +106,7 @@ public class ColumnValueRange {
         if (equalValues != null) {
             return equalValues.isEmpty();
         } else if (beginValue != null && endValue != null) {
-            return beginValue.compareTo(endValue) > 0;
+            return order.compare(beginValue, endValue) > 0;
         } else {
             return false;
         }
@@ -139,11 +142,11 @@ public class ColumnValueRange {
             return;
         }
 
-        this.beginValue = max(this.beginValue, another.beginValue);
-        this.endValue = min(this.endValue, another.endValue);
+        this.beginValue = order.max(this.beginValue, another.beginValue);
+        this.endValue = order.min(this.endValue, another.endValue);
     }
 
-    private static Set<String> filter(Set<String> equalValues, String beginValue, String endValue) {
+    private Set<String> filter(Set<String> equalValues, String beginValue, String endValue) {
         Set<String> result = Sets.newHashSetWithExpectedSize(equalValues.size());
         for (String v : equalValues) {
             if (between(v, beginValue, endValue)) {
@@ -153,9 +156,9 @@ public class ColumnValueRange {
         return equalValues;
     }
 
-    private static boolean between(String v, String beginValue, String endValue) {
-        return (beginValue == null || beginValue.compareTo(v) <= 0)
-                && (endValue == null || v.compareTo(endValue) <= 0);
+    private boolean between(String v, String beginValue, String endValue) {
+        return (beginValue == null || order.compare(beginValue, v) <= 0)
+                && (endValue == null || order.compare(v, endValue) <= 0);
     }
 
     public String toString() {

@@ -16,12 +16,13 @@
 
 package com.kylinolap.common.restclient;
 
-import com.google.common.collect.HashMultimap;
-
 import java.util.Set;
+
+import com.google.common.collect.HashMultimap;
 
 /**
  * @author xjiang
+ *
  */
 public class MultiValueCache<K, V> extends AbstractRestCache<K, V> {
 

@@ -1,9 +1,10 @@
 package com.kylinolap.job.hadoop.estimation;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.util.ToolRunner;
+
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**
  * Created by honma on 9/1/14.

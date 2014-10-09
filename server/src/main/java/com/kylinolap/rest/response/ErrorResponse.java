@@ -18,6 +18,7 @@ package com.kylinolap.rest.response;
 
 /**
  * @author xduo
+ *
  */
 public class ErrorResponse {
 

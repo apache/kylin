@@ -16,18 +16,20 @@
 
 package com.kylinolap.metadata.validation.rule;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.RowKeyColDesc;
 import com.kylinolap.metadata.model.cube.RowKeyDesc;
 import com.kylinolap.metadata.validation.IValidatorRule;
 import com.kylinolap.metadata.validation.ResultLevel;
 import com.kylinolap.metadata.validation.ValidateContext;
-import org.apache.commons.lang.StringUtils;
 
 /**
  * Validate that only one of "length" and "dictionary" appears on rowkey_column
- *
+ * 
  * @author jianliu
+ *
  */
 public class RowKeyAttrRule implements IValidatorRule<CubeDesc> {
 

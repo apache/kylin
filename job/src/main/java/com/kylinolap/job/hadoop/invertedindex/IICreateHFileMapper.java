@@ -16,18 +16,18 @@
 
 package com.kylinolap.job.hadoop.invertedindex;
 
+import static com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc.*;
+
+import java.io.IOException;
+
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValue.Type;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 
-import java.io.IOException;
-
-import static com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc.HBASE_FAMILY_BYTES;
-import static com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc.HBASE_QUALIFIER_BYTES;
-
 /**
  * @author yangli9
+ *
  */
 public class IICreateHFileMapper extends
         Mapper<ImmutableBytesWritable, ImmutableBytesWritable, ImmutableBytesWritable, KeyValue> {

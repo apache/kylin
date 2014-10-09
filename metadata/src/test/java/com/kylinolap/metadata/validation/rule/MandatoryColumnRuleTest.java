@@ -16,17 +16,19 @@
 
 package com.kylinolap.metadata.validation.rule;
 
+import static org.junit.Assert.*;
+
+import org.junit.Before;
+import org.junit.Test;
+
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.validation.IValidatorRule;
 import com.kylinolap.metadata.validation.ValidateContext;
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author jianliu
+ *
  */
 public class MandatoryColumnRuleTest {
 

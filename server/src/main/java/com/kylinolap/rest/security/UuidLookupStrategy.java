@@ -16,25 +16,51 @@
 
 package com.kylinolap.rest.security;
 
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementSetter;
-import org.springframework.jdbc.core.ResultSetExtractor;
-import org.springframework.security.acls.domain.*;
-import org.springframework.security.acls.jdbc.LookupStrategy;
-import org.springframework.security.acls.model.*;
-import org.springframework.security.util.FieldUtils;
-import org.springframework.util.Assert;
-
-import javax.sql.DataSource;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.sql.DataSource;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementSetter;
+import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.security.acls.domain.AccessControlEntryImpl;
+import org.springframework.security.acls.domain.AclAuthorizationStrategy;
+import org.springframework.security.acls.domain.AclImpl;
+import org.springframework.security.acls.domain.AuditLogger;
+import org.springframework.security.acls.domain.DefaultPermissionFactory;
+import org.springframework.security.acls.domain.DefaultPermissionGrantingStrategy;
+import org.springframework.security.acls.domain.GrantedAuthoritySid;
+import org.springframework.security.acls.domain.ObjectIdentityImpl;
+import org.springframework.security.acls.domain.PermissionFactory;
+import org.springframework.security.acls.domain.PrincipalSid;
+import org.springframework.security.acls.jdbc.LookupStrategy;
+import org.springframework.security.acls.model.AccessControlEntry;
+import org.springframework.security.acls.model.Acl;
+import org.springframework.security.acls.model.AclCache;
+import org.springframework.security.acls.model.MutableAcl;
+import org.springframework.security.acls.model.NotFoundException;
+import org.springframework.security.acls.model.ObjectIdentity;
+import org.springframework.security.acls.model.Permission;
+import org.springframework.security.acls.model.PermissionGrantingStrategy;
+import org.springframework.security.acls.model.Sid;
+import org.springframework.security.acls.model.UnloadedSidException;
+import org.springframework.security.util.FieldUtils;
+import org.springframework.util.Assert;
 
 /**
  * @author xduo
+ *
  */
 public class UuidLookupStrategy implements LookupStrategy {
 
@@ -80,13 +106,13 @@ public class UuidLookupStrategy implements LookupStrategy {
     //~ Constructors ===================================================================================================
 
     public UuidLookupStrategy(DataSource dataSource, AclCache aclCache,
-                              AclAuthorizationStrategy aclAuthorizationStrategy, AuditLogger auditLogger) {
+            AclAuthorizationStrategy aclAuthorizationStrategy, AuditLogger auditLogger) {
         this(dataSource, aclCache, aclAuthorizationStrategy, new DefaultPermissionGrantingStrategy(
                 auditLogger));
     }
 
     public UuidLookupStrategy(DataSource dataSource, AclCache aclCache,
-                              AclAuthorizationStrategy aclAuthorizationStrategy, PermissionGrantingStrategy grantingStrategy) {
+            AclAuthorizationStrategy aclAuthorizationStrategy, PermissionGrantingStrategy grantingStrategy) {
         Assert.notNull(dataSource, "DataSource required");
         Assert.notNull(aclCache, "AclCache required");
         Assert.notNull(aclAuthorizationStrategy, "AclAuthorizationStrategy required");
@@ -156,12 +182,12 @@ public class UuidLookupStrategy implements LookupStrategy {
      * Locates the primary key IDs specified in "findNow", adding AclImpl instances with StubAclParents to the
      * "acls" Map.
      *
-     * @param acls    the AclImpls (with StubAclParents)
+     * @param acls the AclImpls (with StubAclParents)
      * @param findNow Long-based primary keys to retrieve
      * @param sids
      */
     private void lookupPrimaryKeys(final Map<Serializable, Acl> acls, final Set<Long> findNow,
-                                   final List<Sid> sids) {
+            final List<Sid> sids) {
         Assert.notNull(acls, "ACLs are required");
         Assert.notEmpty(findNow, "Items to find now required");
 
@@ -186,20 +212,21 @@ public class UuidLookupStrategy implements LookupStrategy {
 
     /**
      * The main method.
-     * <p/>
+     * <p>
      * WARNING: This implementation completely disregards the "sids" argument! Every item in the cache is expected to
      * contain all SIDs. If you have serious performance needs (e.g. a very large number of
      * SIDs per object identity), you'll probably want to develop a custom {@link LookupStrategy} implementation
      * instead.
-     * <p/>
+     * <p>
      * The implementation works in batch sizes specified by {@link #batchSize}.
      *
      * @param objects the identities to lookup (required)
-     * @param sids    the SIDs for which identities are required (ignored by this implementation)
+     * @param sids the SIDs for which identities are required (ignored by this implementation)
+     *
      * @return a <tt>Map</tt> where keys represent the {@link ObjectIdentity} of the located {@link Acl} and values
-     * are the located {@link Acl} (never <tt>null</tt> although some entries may be missing; this method
-     * should not throw {@link NotFoundException}, as a chain of {@link LookupStrategy}s may be used
-     * to automatically create entries if required)
+     *         are the located {@link Acl} (never <tt>null</tt> although some entries may be missing; this method
+     *         should not throw {@link NotFoundException}, as a chain of {@link LookupStrategy}s may be used
+     *         to automatically create entries if required)
      */
     public Map<ObjectIdentity, Acl> readAclsById(List<ObjectIdentity> objects, List<Sid> sids) {
         Assert.isTrue(batchSize >= 1, "BatchSize must be >= 1");
@@ -232,8 +259,7 @@ public class UuidLookupStrategy implements LookupStrategy {
                     } else {
                         throw new IllegalStateException(
                                 "Error: SID-filtered element detected when implementation does not perform SID filtering "
-                                        + "- have you added something to the cache manually?"
-                        );
+                                        + "- have you added something to the cache manually?");
                     }
                 }
             }
@@ -267,12 +293,13 @@ public class UuidLookupStrategy implements LookupStrategy {
 
     /**
      * Looks up a batch of <code>ObjectIdentity</code>s directly from the database.
-     * <p/>
+     * <p>
      * The caller is responsible for optimization issues, such as selecting the identities to lookup, ensuring the
      * cache doesn't contain them already, and adding the returned elements to the cache etc.
-     * <p/>
+     * <p>
      * This subclass is required to return fully valid <code>Acl</code>s, including properly-configured
      * parent ACLs.
+     *
      */
     private Map<ObjectIdentity, Acl> lookupObjectIdentities(
             final Collection<ObjectIdentity> objectIdentities, List<Sid> sids) {
@@ -325,8 +352,9 @@ public class UuidLookupStrategy implements LookupStrategy {
      * The final phase of converting the <code>Map</code> of <code>AclImpl</code> instances which contain
      * <code>StubAclParent</code>s into proper, valid <code>AclImpl</code>s with correct ACL parents.
      *
-     * @param inputMap        the unconverted <code>AclImpl</code>s
+     * @param inputMap the unconverted <code>AclImpl</code>s
      * @param currentIdentity the current<code>Acl</code> that we wish to convert (this may be
+     *
      */
     private AclImpl convert(Map<Serializable, Acl> inputMap, Long currentIdentity) {
         Assert.notEmpty(inputMap, "InputMap required");
@@ -435,7 +463,6 @@ public class UuidLookupStrategy implements LookupStrategy {
          * ensures it is in member field <tt>acls</tt>.  Any {@link Acl} with
          * a parent will have the parents id returned in a set.  The returned
          * set of ids may requires further processing.
-         *
          * @param rs The {@link ResultSet} to be processed
          * @return a list of parent IDs remaining to be looked up (may be empty, but never <tt>null</tt>)
          * @throws SQLException
@@ -478,7 +505,8 @@ public class UuidLookupStrategy implements LookupStrategy {
          * contains a <code>StubAclParent</code>
          *
          * @param acls the Map we should add the converted Acl to
-         * @param rs   the ResultSet focused on a current row
+         * @param rs the ResultSet focused on a current row
+         *
          * @throws SQLException if something goes wrong converting values
          */
         private void convertCurrentResultIntoObject(Map<Serializable, Acl> acls, ResultSet rs)

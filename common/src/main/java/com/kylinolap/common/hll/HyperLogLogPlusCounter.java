@@ -16,13 +16,6 @@
 
 package com.kylinolap.common.hll;
 
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
-import com.kylinolap.common.util.BytesUtil;
-import com.ning.compress.lzf.LZFDecoder;
-import com.ning.compress.lzf.LZFEncoder;
-import org.apache.commons.compress.utils.IOUtils;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,12 +24,20 @@ import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.commons.compress.utils.IOUtils;
+
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+import com.kylinolap.common.util.BytesUtil;
+import com.ning.compress.lzf.LZFDecoder;
+import com.ning.compress.lzf.LZFEncoder;
+
 /**
  * About compression, test on HLLC data shows
- * <p/>
+ * 
  * - LZF compression ratio is around 65%-80%, fast
  * - GZIP compression ratio is around 41%-46%, very slow
- *
+ * 
  * @author yangli9
  */
 public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter> {
@@ -59,9 +60,7 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
         merge(another);
     }
 
-    /**
-     * The larger p is, the more storage (2^p bytes), the better accuracy
-     */
+    /** The larger p is, the more storage (2^p bytes), the better accuracy */
     private HyperLogLogPlusCounter(int p, HashFunction hashFunc) {
         this.p = p;
         this.m = (int) Math.pow(2, p);

@@ -15,30 +15,52 @@
  */
 package com.kylinolap.query.relnode;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.storage.filter.*;
-import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.LinkedList;
+import java.util.List;
+
 import net.hydromatic.optiq.rules.java.EnumerableConvention;
 import net.hydromatic.optiq.rules.java.EnumerableRel;
 import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
 import net.hydromatic.optiq.rules.java.JavaRules.EnumerableCalcRel;
 import net.hydromatic.optiq.runtime.SqlFunctions;
+
 import org.eigenbase.rel.FilterRelBase;
 import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.*;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelTrait;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.rex.*;
+import org.eigenbase.rex.RexBuilder;
+import org.eigenbase.rex.RexCall;
+import org.eigenbase.rex.RexDynamicParam;
+import org.eigenbase.rex.RexInputRef;
+import org.eigenbase.rex.RexLiteral;
+import org.eigenbase.rex.RexLocalRef;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexProgram;
+import org.eigenbase.rex.RexProgramBuilder;
+import org.eigenbase.rex.RexVisitorImpl;
 import org.eigenbase.sql.SqlKind;
 import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.util.NlsString;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.LinkedList;
-import java.util.List;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.storage.filter.CaseTupleFilter;
+import com.kylinolap.storage.filter.ColumnTupleFilter;
+import com.kylinolap.storage.filter.CompareTupleFilter;
+import com.kylinolap.storage.filter.ConstantTupleFilter;
+import com.kylinolap.storage.filter.DynamicTupleFilter;
+import com.kylinolap.storage.filter.LogicalTupleFilter;
+import com.kylinolap.storage.filter.TupleFilter;
+import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
+import com.kylinolap.storage.filter.ExtractTupleFilter;
 
 /**
  * @author xjiang
@@ -61,55 +83,55 @@ public class OLAPFilterRel extends FilterRelBase implements OLAPRel, EnumerableR
             TupleFilter filter = null;
             SqlOperator op = call.getOperator();
             switch (op.getKind()) {
-                case AND:
-                    filter = new LogicalTupleFilter(FilterOperatorEnum.AND);
-                    break;
-                case OR:
-                    filter = new LogicalTupleFilter(FilterOperatorEnum.OR);
-                    break;
-                case NOT:
-                    filter = new LogicalTupleFilter(FilterOperatorEnum.NOT);
-                    break;
-                case EQUALS:
-                    filter = new CompareTupleFilter(FilterOperatorEnum.EQ);
-                    break;
-                case GREATER_THAN:
-                    filter = new CompareTupleFilter(FilterOperatorEnum.GT);
-                    break;
-                case LESS_THAN:
-                    filter = new CompareTupleFilter(FilterOperatorEnum.LT);
-                    break;
-                case GREATER_THAN_OR_EQUAL:
-                    filter = new CompareTupleFilter(FilterOperatorEnum.GTE);
-                    break;
-                case LESS_THAN_OR_EQUAL:
-                    filter = new CompareTupleFilter(FilterOperatorEnum.LTE);
-                    break;
-                case NOT_EQUALS:
-                    filter = new CompareTupleFilter(FilterOperatorEnum.NEQ);
-                    break;
-                case IS_NULL:
-                    filter = new CompareTupleFilter(FilterOperatorEnum.ISNULL);
-                    break;
-                case IS_NOT_NULL:
-                    filter = new CompareTupleFilter(FilterOperatorEnum.ISNOTNULL);
-                    break;
-                case CAST:
-                case REINTERPRET:
-                    // NOTE: use child directly
-                    break;
-                case CASE:
-                    filter = new CaseTupleFilter();
-                    break;
-                case OTHER:
-                    if (op.getName().equalsIgnoreCase("extract_date")) {
-                        filter = new ExtractTupleFilter(FilterOperatorEnum.EXTRACT);
-                    } else {
-                        throw new UnsupportedOperationException(op.getName());
-                    }
-                    break;
-                default:
+            case AND:
+                filter = new LogicalTupleFilter(FilterOperatorEnum.AND);
+                break;
+            case OR:
+                filter = new LogicalTupleFilter(FilterOperatorEnum.OR);
+                break;
+            case NOT:
+                filter = new LogicalTupleFilter(FilterOperatorEnum.NOT);
+                break;
+            case EQUALS:
+                filter = new CompareTupleFilter(FilterOperatorEnum.EQ);
+                break;
+            case GREATER_THAN:
+                filter = new CompareTupleFilter(FilterOperatorEnum.GT);
+                break;
+            case LESS_THAN:
+                filter = new CompareTupleFilter(FilterOperatorEnum.LT);
+                break;
+            case GREATER_THAN_OR_EQUAL:
+                filter = new CompareTupleFilter(FilterOperatorEnum.GTE);
+                break;
+            case LESS_THAN_OR_EQUAL:
+                filter = new CompareTupleFilter(FilterOperatorEnum.LTE);
+                break;
+            case NOT_EQUALS:
+                filter = new CompareTupleFilter(FilterOperatorEnum.NEQ);
+                break;
+            case IS_NULL:
+                filter = new CompareTupleFilter(FilterOperatorEnum.ISNULL);
+                break;
+            case IS_NOT_NULL:
+                filter = new CompareTupleFilter(FilterOperatorEnum.ISNOTNULL);
+                break;
+            case CAST:
+            case REINTERPRET:
+                // NOTE: use child directly
+                break;
+            case CASE:
+                filter = new CaseTupleFilter();
+                break;
+            case OTHER:
+                if (op.getName().equalsIgnoreCase("extract_date")) {
+                    filter = new ExtractTupleFilter(FilterOperatorEnum.EXTRACT);
+                } else {
                     throw new UnsupportedOperationException(op.getName());
+                }
+                break;
+            default:
+                throw new UnsupportedOperationException(op.getName());
             }
 
             for (RexNode operand : call.operands) {
@@ -270,7 +292,7 @@ public class OLAPFilterRel extends FilterRelBase implements OLAPRel, EnumerableR
 
         EnumerableCalcRel enumCalcRel =
                 new EnumerableCalcRel(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE),
-                        getChild(), this.rowType, program, ImmutableList.<RelCollation>of());
+                        getChild(), this.rowType, program, ImmutableList.<RelCollation> of());
 
         return enumCalcRel.implement(implementor, pref);
     }

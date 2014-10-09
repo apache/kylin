@@ -16,6 +16,14 @@
 
 package com.kylinolap.metadata.validation.rule;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.commons.lang.StringUtils;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.cube.CubeDesc;
@@ -28,19 +36,21 @@ import com.kylinolap.metadata.model.schema.TableDesc;
 import com.kylinolap.metadata.validation.IValidatorRule;
 import com.kylinolap.metadata.validation.ResultLevel;
 import com.kylinolap.metadata.validation.ValidateContext;
-import org.apache.commons.lang.StringUtils;
-
-import java.util.*;
 
 /**
  * Validate function parameter.
- * <p/>
+ * Ticket:
+ * https://github.scm.corp.ebay.com/Kylin/Kylin/issues/268
+ * 
  * if type is column, check values are valid fact table columns
  * if type is constant, the value only can be numberic
- * <p/>
+ * 
  * the return type only can be int/bigint/long/double/decimal
- *
+ * 
+ * 
+ * 
  * @author jianliu
+ *
  */
 public class FunctionRule implements IValidatorRule<CubeDesc> {
 
@@ -62,8 +72,7 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
                 context.addResult(
                         ResultLevel.ERROR,
                         "Must define parameter for function " + func.getExpression() + " in "
-                                + measure.getName()
-                );
+                                + measure.getName());
                 return;
             }
 
@@ -73,24 +82,21 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
                 context.addResult(
                         ResultLevel.ERROR,
                         "Must define type for parameter type " + func.getExpression() + " in "
-                                + measure.getName()
-                );
+                                + measure.getName());
                 return;
             }
             if (StringUtils.isEmpty(value)) {
                 context.addResult(
                         ResultLevel.ERROR,
                         "Must define type for parameter value " + func.getExpression() + " in "
-                                + measure.getName()
-                );
+                                + measure.getName());
                 return;
             }
             if (StringUtils.isEmpty(func.getReturnType())) {
                 context.addResult(
                         ResultLevel.ERROR,
                         "Must define return type for function " + func.getExpression() + " in "
-                                + measure.getName()
-                );
+                                + measure.getName());
                 return;
             }
 
@@ -108,8 +114,7 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
         if (countFuncs.size() != 1) {
             context.addResult(ResultLevel.ERROR,
                     "Must define one and only one count(1) function, but there are " + countFuncs.size()
-                            + " -- " + countFuncs
-            );
+                            + " -- " + countFuncs);
         }
     }
 

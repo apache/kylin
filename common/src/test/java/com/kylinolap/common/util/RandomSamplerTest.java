@@ -16,16 +16,17 @@
 
 package com.kylinolap.common.util;
 
-import org.apache.hadoop.io.Text;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import org.apache.hadoop.io.Text;
+import org.junit.Test;
 
 /**
  * @author ysong1
+ *
  */
 public class RandomSamplerTest {
 

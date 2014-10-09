@@ -16,17 +16,19 @@
 
 package com.kylinolap.job.cmd;
 
+import java.io.IOException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.kylinolap.job.JobDAO;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.exception.JobException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * @author xjiang
+ *
  */
 public class ShellHadoopCmd extends ShellCmd {
     private static Logger log = LoggerFactory.getLogger(ShellHadoopCmd.class);
@@ -36,7 +38,7 @@ public class ShellHadoopCmd extends ShellCmd {
     private final JobEngineConfig engineConfig;
 
     public ShellHadoopCmd(String executeCmd, String host, String user, String password, boolean async,
-                          String instanceID, int stepID, JobEngineConfig engineConfig) {
+            String instanceID, int stepID, JobEngineConfig engineConfig) {
         super(executeCmd, new ShellHadoopCmdOutput(instanceID, stepID, engineConfig), host, user, password,
                 async);
         this.jobInstanceID = instanceID;

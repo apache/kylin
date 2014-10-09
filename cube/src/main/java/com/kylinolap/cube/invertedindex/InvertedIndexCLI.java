@@ -16,10 +16,9 @@
 
 package com.kylinolap.cube.invertedindex;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.HadoopUtil;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
+import java.io.IOException;
+import java.util.Iterator;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -28,11 +27,14 @@ import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.Reader;
 
-import java.io.IOException;
-import java.util.Iterator;
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.HadoopUtil;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.CubeManager;
 
 /**
  * @author yangli9
+ *
  */
 public class InvertedIndexCLI {
 

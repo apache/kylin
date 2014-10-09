@@ -15,12 +15,25 @@
  */
 package com.kylinolap.dict;
 
-import org.junit.Test;
-
-import java.io.*;
-import java.util.*;
-
 import static org.junit.Assert.*;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Random;
+import java.util.TreeSet;
+
+import org.junit.Test;
 
 public class TrieDictionaryTest {
 
@@ -168,7 +181,7 @@ public class TrieDictionaryTest {
     }
 
     private static int benchmark(String msg, TrieDictionary<String> dict, TreeSet<String> set,
-                                 HashMap<String, Integer> map, String[] strArray, byte[][] array) {
+            HashMap<String, Integer> map, String[] strArray, byte[][] array) {
         int n = set.size();
         int times = 10 * 1000 * 1000 / n; // run 10 million lookups
         int keep = 0; // make sure JIT don't OPT OUT function calls under test

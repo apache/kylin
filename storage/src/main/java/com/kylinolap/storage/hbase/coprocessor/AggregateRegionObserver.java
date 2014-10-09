@@ -16,6 +16,8 @@
 
 package com.kylinolap.storage.hbase.coprocessor;
 
+import java.io.IOException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.client.Scan;
@@ -26,8 +28,6 @@ import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionCoprocessorHost;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 
-import java.io.IOException;
-
 /**
  * @author yangli9
  */
@@ -37,13 +37,14 @@ public class AggregateRegionObserver extends BaseRegionObserver {
     static final Log LOG = LogFactory.getLog(AggregateRegionObserver.class);
 
     static final String COPROCESSOR_ENABLE = "_Coprocessor_Enable";
+    static final String TYPE = "_Type";
     static final String PROJECTOR = "_Projector";
     static final String AGGREGATORS = "_Aggregators";
     static final String FILTER = "_Filter";
 
     @Override
     public final RegionScanner postScannerOpen(final ObserverContext<RegionCoprocessorEnvironment> ctxt,
-                                               final Scan scan, final RegionScanner innerScanner) throws IOException {
+            final Scan scan, final RegionScanner innerScanner) throws IOException {
 
         boolean copAbortOnError =
                 ctxt.getEnvironment()
@@ -65,28 +66,31 @@ public class AggregateRegionObserver extends BaseRegionObserver {
     }
 
     private RegionScanner doPostScannerObserver(final ObserverContext<RegionCoprocessorEnvironment> ctxt,
-                                                final Scan scan, final RegionScanner innerScanner) throws IOException {
+            final Scan scan, final RegionScanner innerScanner) throws IOException {
         byte[] coprocessorEnableBytes = scan.getAttribute(COPROCESSOR_ENABLE);
         if (coprocessorEnableBytes == null || coprocessorEnableBytes.length == 0
                 || coprocessorEnableBytes[0] == 0) {
             return innerScanner;
         }
 
+        byte[] typeBytes = scan.getAttribute(TYPE);
+        SRowType type = SRowType.deserialize(typeBytes);
+
         byte[] projectorBytes = scan.getAttribute(PROJECTOR);
-        RowProjector projector = RowProjector.deserialize(projectorBytes);
+        SRowProjector projector = SRowProjector.deserialize(projectorBytes);
 
         byte[] aggregatorBytes = scan.getAttribute(AGGREGATORS);
-        RowAggregators aggregators = RowAggregators.deserialize(aggregatorBytes);
+        SRowAggregators aggregators = SRowAggregators.deserialize(aggregatorBytes);
 
         byte[] filterBytes = scan.getAttribute(FILTER);
-        RowFilter filter = RowFilter.deserialize(filterBytes);
+        SRowFilter filter = SRowFilter.deserialize(filterBytes);
 
         // start/end region operation & sync on scanner is suggested by the javadoc of RegionScanner.nextRaw()
         HRegion region = ctxt.getEnvironment().getRegion();
         region.startRegionOperation();
         try {
             synchronized (innerScanner) {
-                return new AggregationFilter(null, filter, projector, aggregators, innerScanner);
+                return new AggregationScanner(type, filter, projector, aggregators, innerScanner);
             }
         } finally {
             region.closeRegionOperation();

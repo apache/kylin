@@ -16,6 +16,26 @@
 
 package com.kylinolap.rest.controller;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
 import com.codahale.metrics.annotation.Metered;
 import com.kylinolap.metadata.MetadataConstances;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
@@ -23,18 +43,10 @@ import com.kylinolap.metadata.model.schema.TableDesc;
 import com.kylinolap.rest.request.CardinalityRequest;
 import com.kylinolap.rest.response.TableDescResponse;
 import com.kylinolap.rest.service.CubeService;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-
-import java.io.IOException;
-import java.util.*;
 
 /**
  * @author xduo
+ *
  */
 @Controller
 @RequestMapping(value = "/tables")
@@ -50,7 +62,7 @@ public class TableController extends BasicController {
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "", method = {RequestMethod.GET})
+    @RequestMapping(value = "", method = { RequestMethod.GET })
     @ResponseBody
     @Metered(name = "listSourceTables")
     public List<TableDesc> getHiveTables(@RequestParam(value = "ext", required = false) boolean withExt) {
@@ -72,7 +84,7 @@ public class TableController extends BasicController {
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "/{tableName}", method = {RequestMethod.GET})
+    @RequestMapping(value = "/{tableName}", method = { RequestMethod.GET })
     @ResponseBody
     public TableDesc getHiveTable(@PathVariable String tableName) {
         return cubeMgmtService.getMetadataManager().getTableDesc(tableName);
@@ -84,21 +96,21 @@ public class TableController extends BasicController {
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "/{tableName}/exd-map", method = {RequestMethod.GET})
+    @RequestMapping(value = "/{tableName}/exd-map", method = { RequestMethod.GET })
     @ResponseBody
     public Map<String, String> getHiveTableExd(@PathVariable String tableName) {
         Map<String, String> tableExd = cubeMgmtService.getMetadataManager().getTableDescExd(tableName);
         return tableExd;
     }
 
-    @RequestMapping(value = "/reload", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/reload", method = { RequestMethod.PUT })
     @ResponseBody
     public String reloadSourceTable() {
         cubeMgmtService.getMetadataManager().reload();
         return "ok";
     }
 
-    @RequestMapping(value = "/{tables}", method = {RequestMethod.POST})
+    @RequestMapping(value = "/{tables}", method = { RequestMethod.POST })
     @ResponseBody
     public Map<String, String[]> loadHiveTable(@PathVariable String tables) {
         String[] arr = cubeMgmtService.reloadHiveTable(tables);
@@ -109,14 +121,14 @@ public class TableController extends BasicController {
 
     /**
      * Regenerate table cardinality
-     *
+     * 
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "/{tableNames}/cardinality", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{tableNames}/cardinality", method = { RequestMethod.PUT })
     @ResponseBody
     public CardinalityRequest generateCardinality(@PathVariable String tableNames,
-                                                  @RequestBody CardinalityRequest request) {
+            @RequestBody CardinalityRequest request) {
         String[] tables = tableNames.split(",");
         for (String table : tables) {
             cubeMgmtService.generateCardinality(table.trim(), request.getFormat(), request.getDelimiter());

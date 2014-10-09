@@ -18,6 +18,7 @@ package com.kylinolap.job.constant;
 
 /**
  * @author xduo
+ *
  */
 public enum SchedulerTypeEnum {
     QUATZ;

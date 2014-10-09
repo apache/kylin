@@ -16,6 +16,20 @@ package com.kylinolap.metadata.tool;
  * limitations under the License.
  */
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.kylinolap.common.KylinConfig;
@@ -26,9 +40,6 @@ import com.kylinolap.metadata.model.schema.TableDesc;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.*;
-import java.util.*;
 
 /**
  * Management class to sync hive table metadata with command See main method for
@@ -155,7 +166,7 @@ public class HiveSourceTableMgmt {
     }
 
     public void getTables(InputStream is, List<TableDesc> tableDescList,
-                          List<Map<String, String>> tableAttrsList) {
+            List<Map<String, String>> tableAttrsList) {
 
         InputStreamReader reader = new InputStreamReader(is);
         BufferedReader bufferedReader = new BufferedReader(reader);

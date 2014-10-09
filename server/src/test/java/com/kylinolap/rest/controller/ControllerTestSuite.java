@@ -21,10 +21,11 @@ import org.junit.runners.Suite;
 
 /**
  * @author xduo
+ *
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({AccessControllerTest.class, AdminControllerTest.class, BaseControllerTest.class,
+@Suite.SuiteClasses({ AccessControllerTest.class, AdminControllerTest.class, BaseControllerTest.class,
         CubeControllerTest.class, JobControllerTest.class, QueryControllerTest.class,
-        UserControllerTest.class})
+        UserControllerTest.class })
 public class ControllerTestSuite {
 }

@@ -16,7 +16,42 @@
 
 package com.kylinolap.storage.hbase;
 
-import com.google.common.util.concurrent.*;
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.filter.Filter;
+import org.apache.hadoop.hbase.filter.FilterList;
+import org.apache.hadoop.hbase.filter.FuzzyRowFilter;
+import org.apache.hadoop.hbase.filter.InclusiveStopFilter;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.hbase.util.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.StorageException;
 import com.kylinolap.common.util.Array;
@@ -32,32 +67,18 @@ import com.kylinolap.metadata.model.cube.HBaseColumnDesc;
 import com.kylinolap.metadata.model.cube.MeasureDesc;
 import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.storage.StorageContext;
+import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorEnabler;
+import com.kylinolap.storage.tuple.ITupleIterator;
 import com.kylinolap.storage.tuple.Tuple;
 import com.kylinolap.storage.tuple.Tuple.IDerivedColumnFiller;
 import com.kylinolap.storage.tuple.TupleInfo;
-import com.kylinolap.storage.tuple.TupleIterator;
-import org.apache.hadoop.hbase.client.*;
-import org.apache.hadoop.hbase.filter.Filter;
-import org.apache.hadoop.hbase.filter.FilterList;
-import org.apache.hadoop.hbase.filter.FuzzyRowFilter;
-import org.apache.hadoop.hbase.filter.InclusiveStopFilter;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.hbase.util.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author xduo
+ *
  */
-public class ConcurrentHBaseTupleIterator implements TupleIterator {
+public class ConcurrentHBaseTupleIterator implements ITupleIterator {
 
     private static final Logger logger = LoggerFactory.getLogger(ConcurrentHBaseTupleIterator.class);
     public static final int SCAN_CACHE = 1024;
@@ -71,7 +92,9 @@ public class ConcurrentHBaseTupleIterator implements TupleIterator {
     private final boolean isLimitEnable;
     private final int threshold;
     private final boolean acceptPartialResult;
-    private final Collection<TblColRef> dimensionColumns;
+    private final Collection<TblColRef> dimensions;
+    private final TupleFilter filter;
+    private final Collection<TblColRef> groupBy;
     private final Map<TblColRef, String> aliasMap;
     private final Collection<RowValueDecoder> rowValueDecoders;
     private final StorageContext context;
@@ -86,14 +109,17 @@ public class ConcurrentHBaseTupleIterator implements TupleIterator {
     private Tuple next;
 
     public ConcurrentHBaseTupleIterator(HConnection conn,
-                                        Map<CubeSegment, Collection<HBaseKeyRange>> segmentKeyRanges, CubeDesc cubeDesc,
-                                        CubeInstance cube, Collection<TblColRef> dimensionColumns,
-                                        Collection<RowValueDecoder> rowValueDecoders, StorageContext context) {
+            Map<CubeSegment, Collection<HBaseKeyRange>> segmentKeyRanges, CubeDesc cubeDesc,
+            CubeInstance cube, Collection<TblColRef> dimensions, TupleFilter filter,
+            Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders,
+            StorageContext context) {
         this.conn = conn;
         this.segmentKeyRanges = segmentKeyRanges;
         this.cube = cube;
-        this.dimensionColumns = dimensionColumns;
+        this.dimensions = dimensions;
+        this.groupBy = groupBy;
         this.aliasMap = context.getAliasMap();
+        this.filter = filter;
         this.rowValueDecoders = rowValueDecoders;
         this.limit = context.getLimit();
         this.isLimitEnable = context.isLimitEnable();
@@ -196,8 +222,7 @@ public class ConcurrentHBaseTupleIterator implements TupleIterator {
                 throw new ScanOutOfLimitException(
                         "Scan row count exceeded limit: "
                                 + limit
-                                + ", please add filter condition to narrow down backend scan range, like where clause."
-                );
+                                + ", please add filter condition to narrow down backend scan range, like where clause.");
             }
             context.setPartialResultReturned(true);
             return false;
@@ -222,7 +247,7 @@ public class ConcurrentHBaseTupleIterator implements TupleIterator {
         private ResultScanner scanner = null;
 
         public RangeScanCallable(CubeSegment cubeSeg, HBaseKeyRange keyRange,
-                                 Collection<RowValueDecoder> rowValueDecoders) {
+                Collection<RowValueDecoder> rowValueDecoders) {
             super();
             this.cubeSeg = cubeSeg;
             this.keyRange = keyRange;
@@ -274,7 +299,7 @@ public class ConcurrentHBaseTupleIterator implements TupleIterator {
                 applyFuzzyFilter(scan, keyRange);
                 scanner =
                         CoprocessorEnabler.scanWithCoprocessorIfBeneficial(cubeSeg, keyRange.getCuboid(),
-                                dimensionColumns, rowValueDecoders, keyRange, context, table, scan);
+                                filter, groupBy, rowValueDecoders, context, table, scan);
                 iter = scanner.iterator();
             } catch (Throwable t) {
                 String msg =
@@ -350,7 +375,7 @@ public class ConcurrentHBaseTupleIterator implements TupleIterator {
             List<String> colNames = rowKeyDecoder.getNames(aliasMap);
             for (int i = 0; i < rowColumns.size(); i++) {
                 TblColRef column = rowColumns.get(i);
-                if (!dimensionColumns.contains(column)) {
+                if (!dimensions.contains(column)) {
                     continue;
                 }
                 // add normal column

@@ -16,15 +16,16 @@
 
 package com.kylinolap.rest.metrics;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricSet;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * @author xduo
+ *
  */
 public class QueryMetrics implements MetricSet {
 

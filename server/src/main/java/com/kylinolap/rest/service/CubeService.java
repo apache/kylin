@@ -15,6 +15,38 @@
  */
 package com.kylinolap.rest.service;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.UnknownHostException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.TableNotFoundException;
+import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.util.ToolRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.security.access.prepost.PostFilter;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.kylinolap.common.KylinConfig;
@@ -22,7 +54,11 @@ import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.util.HBaseRegionSizeCalculator;
 import com.kylinolap.common.util.HadoopUtil;
 import com.kylinolap.common.util.JsonUtil;
-import com.kylinolap.cube.*;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.cube.CubeSegmentStatusEnum;
+import com.kylinolap.cube.CubeStatusEnum;
 import com.kylinolap.cube.cuboid.CuboidCLI;
 import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.project.ProjectInstance;
@@ -45,28 +81,6 @@ import com.kylinolap.rest.request.MetricsRequest;
 import com.kylinolap.rest.response.HBaseResponse;
 import com.kylinolap.rest.response.MetricsResponse;
 import com.kylinolap.rest.security.AclPermission;
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.TableNotFoundException;
-import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.util.ToolRunner;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Caching;
-import org.springframework.security.access.prepost.PostFilter;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
-
-import java.io.*;
-import java.net.UnknownHostException;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.*;
 
 /**
  * Stateless & lightweight service facade of cube management functions.
@@ -108,7 +122,7 @@ public class CubeService extends BasicService {
     }
 
     public List<CubeInstance> getCubes(final String cubeName, final String projectName, final Integer limit,
-                                       final Integer offset) {
+            final Integer offset) {
         int climit = (null == limit) ? 30 : limit;
         int coffset = (null == offset) ? 0 : offset;
 
@@ -275,8 +289,8 @@ public class CubeService extends BasicService {
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
             + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
-    @Caching(evict = {@CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true),
-            @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true)})
+    @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true),
+            @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
     public CubeInstance disableCube(CubeInstance cube) throws IOException, CubeIntegrityException,
             JobException {
         String cubeName = cube.getName();
@@ -456,11 +470,11 @@ public class CubeService extends BasicService {
         String outPath = HiveColumnCardinalityJob.OUTPUT_PATH + "/" + tableName;
         String[] args = null;
         if (delim == null) {
-            args = new String[]{"-input", location, "-output", outPath, "-iformat", inputFormat};
+            args = new String[] { "-input", location, "-output", outPath, "-iformat", inputFormat };
         } else {
             args =
-                    new String[]{"-input", location, "-output", outPath, "-iformat", inputFormat,
-                            "-idelim", delim};
+                    new String[] { "-input", location, "-output", outPath, "-iformat", inputFormat,
+                            "-idelim", delim };
         }
         HiveColumnCardinalityJob job = new HiveColumnCardinalityJob(jarPath, null);
         int hresult = 0;

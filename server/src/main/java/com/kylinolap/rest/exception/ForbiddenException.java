@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  * @author xduo
+ *
  */
 @ResponseStatus(value = HttpStatus.FORBIDDEN)
 public class ForbiddenException extends RuntimeException {

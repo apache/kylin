@@ -16,18 +16,20 @@
 
 package com.kylinolap.cube.invertedindex;
 
-import com.google.common.collect.Lists;
-import com.kylinolap.common.util.BytesUtil;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.util.Pair;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.util.Pair;
+
+import com.google.common.collect.Lists;
+import com.kylinolap.common.util.BytesUtil;
+
 /**
  * @author yangli9
+ *
  */
 public class IIKeyValueCodec {
 
@@ -57,14 +59,14 @@ public class IIKeyValueCodec {
     }
 
     private void collectKeyValues(TimeSlice slice, int col, CompressedValueContainer container,
-                                  ArrayList<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> result) {
+            ArrayList<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> result) {
         ImmutableBytesWritable key = encodeKey(slice.getTimeParititon(), slice.getSliceNo(), col, -1);
         ImmutableBytesWritable value = container.toBytes();
         result.add(new Pair<ImmutableBytesWritable, ImmutableBytesWritable>(key, value));
     }
 
     private void collectKeyValues(TimeSlice slice, int col, BitMapContainer container,
-                                  ArrayList<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> result) {
+            ArrayList<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> result) {
         List<ImmutableBytesWritable> values = container.toBytes();
         for (int v = 0; v < values.size(); v++) {
             ImmutableBytesWritable key = encodeKey(slice.getTimeParititon(), slice.getSliceNo(), col, v);

@@ -16,6 +16,12 @@
 
 package com.kylinolap.rest.security;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+
+import javax.sql.DataSource;
+
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.ObjectIdentityImpl;
@@ -26,13 +32,9 @@ import org.springframework.security.acls.model.AclCache;
 import org.springframework.security.acls.model.ObjectIdentity;
 import org.springframework.security.acls.model.Sid;
 
-import javax.sql.DataSource;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
-
 /**
  * @author xduo
+ *
  */
 public class AclService extends JdbcMutableAclService {
 
@@ -56,7 +58,7 @@ public class AclService extends JdbcMutableAclService {
 
     @Override
     public List<ObjectIdentity> findChildren(ObjectIdentity parentIdentity) {
-        Object[] args = {parentIdentity.getIdentifier(), parentIdentity.getType()};
+        Object[] args = { parentIdentity.getIdentifier(), parentIdentity.getType() };
         List<ObjectIdentity> objects =
                 jdbcTemplate.query(findChildrenSql, args, new RowMapper<ObjectIdentity>() {
                     public ObjectIdentity mapRow(ResultSet rs, int rowNum) throws SQLException {

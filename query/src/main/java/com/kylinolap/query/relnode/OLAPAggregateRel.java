@@ -15,13 +15,13 @@
  */
 package com.kylinolap.query.relnode;
 
-import com.google.common.base.Preconditions;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.ParameterDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
-import com.kylinolap.query.sqlfunc.HLLDistinctCountAggFunc;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import net.hydromatic.optiq.AggregateFunction;
 import net.hydromatic.optiq.FunctionParameter;
 import net.hydromatic.optiq.impl.AggregateFunctionImpl;
@@ -29,8 +29,17 @@ import net.hydromatic.optiq.rules.java.EnumerableConvention;
 import net.hydromatic.optiq.rules.java.EnumerableRel;
 import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
 import net.hydromatic.optiq.rules.java.JavaRules.EnumerableAggregateRel;
-import org.eigenbase.rel.*;
-import org.eigenbase.relopt.*;
+
+import org.eigenbase.rel.AggregateCall;
+import org.eigenbase.rel.AggregateRelBase;
+import org.eigenbase.rel.Aggregation;
+import org.eigenbase.rel.InvalidRelException;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelTrait;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
@@ -45,7 +54,13 @@ import org.eigenbase.sql.type.SqlTypeFamily;
 import org.eigenbase.sql.validate.SqlUserDefinedAggFunction;
 import org.eigenbase.util.Util;
 
-import java.util.*;
+import com.google.common.base.Preconditions;
+import com.kylinolap.metadata.model.cube.FunctionDesc;
+import com.kylinolap.metadata.model.cube.ParameterDesc;
+import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.schema.ColumnDesc;
+import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.query.sqlfunc.HLLDistinctCountAggFunc;
 
 /**
  * @author xjiang
@@ -84,7 +99,7 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
     private List<FunctionDesc> aggregations;
 
     public OLAPAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, BitSet groupSet,
-                            List<AggregateCall> aggCalls) throws InvalidRelException {
+            List<AggregateCall> aggCalls) throws InvalidRelException {
         super(cluster, traits, child, groupSet, aggCalls);
         Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
         this.afterAggregate = false;
@@ -94,7 +109,7 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
 
     @Override
     public AggregateRelBase copy(RelTraitSet traitSet, RelNode input, BitSet groupSet,
-                                 List<AggregateCall> aggCalls) {
+            List<AggregateCall> aggCalls) {
         try {
             return new OLAPAggregateRel(getCluster(), traitSet, input, groupSet, aggCalls);
         } catch (InvalidRelException e) {
@@ -179,8 +194,8 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
         ColumnRowType inputColumnRowType = ((OLAPRel) getChild()).getColumnRowType();
         this.groups = new ArrayList<TblColRef>();
         for (int i = getGroupSet().nextSetBit(0); i >= 0; i = getGroupSet().nextSetBit(i + 1)) {
-            TblColRef column = inputColumnRowType.getColumnByIndex(i);
-            this.groups.add(column);
+            Set<TblColRef> columns = inputColumnRowType.getSourceColumnsByIndex(i);
+            this.groups.addAll(columns);
         }
     }
 

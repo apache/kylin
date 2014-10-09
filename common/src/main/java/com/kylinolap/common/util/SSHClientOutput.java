@@ -15,8 +15,9 @@
  */
 package com.kylinolap.common.util;
 
-/**
+/** 
  * @author George Song (ysong1)
+ * 
  */
 
 public class SSHClientOutput {

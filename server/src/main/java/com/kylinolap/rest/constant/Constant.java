@@ -18,6 +18,7 @@ package com.kylinolap.rest.constant;
 
 /**
  * @author xduo
+ *
  */
 public class Constant {
 

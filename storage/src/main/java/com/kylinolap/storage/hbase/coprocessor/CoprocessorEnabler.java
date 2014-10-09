@@ -16,13 +16,11 @@
 
 package com.kylinolap.storage.hbase.coprocessor;
 
-import com.google.common.collect.Maps;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.cuboid.Cuboid;
-import com.kylinolap.cube.kv.RowValueDecoder;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.storage.StorageContext;
-import com.kylinolap.storage.hbase.HBaseKeyRange;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
@@ -30,9 +28,14 @@ import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
+import com.google.common.collect.Maps;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.cube.cuboid.Cuboid;
+import com.kylinolap.cube.kv.RowValueDecoder;
+import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.storage.StorageContext;
+import com.kylinolap.storage.filter.TupleFilter;
 
 /**
  * @author yangli9
@@ -47,34 +50,36 @@ public class CoprocessorEnabler {
     static final Map<String, Boolean> CUBE_OVERRIDES = Maps.newConcurrentMap();
 
     public static ResultScanner scanWithCoprocessorIfBeneficial(CubeSegment segment, Cuboid cuboid,
-                                                                Collection<TblColRef> dimensionColumns, Collection<RowValueDecoder> rowValueDecoders,
-                                                                HBaseKeyRange keyRange, StorageContext context, HTableInterface table, Scan scan)
-            throws IOException {
+            TupleFilter tupleFiler, Collection<TblColRef> groupBy,
+            Collection<RowValueDecoder> rowValueDecoders, StorageContext context, HTableInterface table,
+            Scan scan) throws IOException {
 
-        if (!isCoprocessorBeneficial(keyRange, rowValueDecoders, cuboid, context)) {
+        if (!isCoprocessorBeneficial(segment.getCubeInstance(), groupBy, rowValueDecoders, cuboid, context)) {
             return table.getScanner(scan);
         }
 
-        RowProjector projector = RowProjector.fromColumns(segment, cuboid, dimensionColumns);
-        RowAggregators aggrs = RowAggregators.fromValuDecoders(rowValueDecoders);
-        RowFilter filter = RowFilter.fromKeyRange(keyRange);
+        SRowType type = SRowType.fromCuboid(segment, cuboid);
+        SRowFilter filter = SRowFilter.fromFilter(segment, tupleFiler);
+        SRowProjector projector = SRowProjector.fromColumns(segment, cuboid, groupBy);
+        SRowAggregators aggrs = SRowAggregators.fromValuDecoders(rowValueDecoders);
 
         if (DEBUG_LOCAL_COPROCESSOR) {
             RegionScanner innerScanner = new RegionScannerAdapter(table.getScanner(scan));
-            AggregationFilter aggregationFilter =
-                    new AggregationFilter(cuboid, filter, projector, aggrs, innerScanner);
-            return new ResultScannerAdapter(aggregationFilter);
+            AggregationScanner aggrScanner =
+                    new AggregationScanner(type, filter, projector, aggrs, innerScanner);
+            return new ResultScannerAdapter(aggrScanner);
         } else {
-            scan.setAttribute(AggregateRegionObserver.COPROCESSOR_ENABLE, new byte[]{0x01});
-            scan.setAttribute(AggregateRegionObserver.PROJECTOR, RowProjector.serialize(projector));
-            scan.setAttribute(AggregateRegionObserver.AGGREGATORS, RowAggregators.serialize(aggrs));
-            scan.setAttribute(AggregateRegionObserver.FILTER, RowFilter.serialize(filter));
+            scan.setAttribute(AggregateRegionObserver.COPROCESSOR_ENABLE, new byte[] { 0x01 });
+            scan.setAttribute(AggregateRegionObserver.TYPE, SRowType.serialize(type));
+            scan.setAttribute(AggregateRegionObserver.PROJECTOR, SRowProjector.serialize(projector));
+            scan.setAttribute(AggregateRegionObserver.AGGREGATORS, SRowAggregators.serialize(aggrs));
+            scan.setAttribute(AggregateRegionObserver.FILTER, SRowFilter.serialize(filter));
             return table.getScanner(scan);
         }
     }
 
-    private static boolean isCoprocessorBeneficial(HBaseKeyRange keyRange,
-                                                   Collection<RowValueDecoder> rowValueDecoders, Cuboid cuboid, StorageContext context) {
+    private static boolean isCoprocessorBeneficial(CubeInstance cube, Collection<TblColRef> groupBy,
+            Collection<RowValueDecoder> rowValueDecoders, Cuboid cuboid, StorageContext context) {
 
         if (context.isAvoidAggregation()) {
             logger.info("Coprocessor is disabled because context tells to avoid aggregation");
@@ -86,14 +91,9 @@ public class CoprocessorEnabler {
             return Boolean.parseBoolean(forceFlag);
         }
 
-        Boolean cubeOverride = CUBE_OVERRIDES.get(keyRange.getCubeSegment().getCubeInstance().getName());
+        Boolean cubeOverride = CUBE_OVERRIDES.get(cube.getName());
         if (cubeOverride != null) {
             return cubeOverride.booleanValue();
-        }
-
-        if (!cuboid.requirePostAggregation()) {
-            logger.info("Coprocessor is disabled because cuboid is directly hit");
-            return false;
         }
 
         if (RowValueDecoder.hasMemHungryCountDistinct(rowValueDecoders)) {
@@ -101,15 +101,14 @@ public class CoprocessorEnabler {
             return false;
         }
 
-        //        byte[] startKey = keyRange.getStartKey();
-        //        byte[] stopKey = keyRange.getStopKey();
-        //        int bitsToScan = getBitsToScan(startKey, stopKey);
-        //
-        //        if (bitsToScan <= KylinConfig.getInstanceFromEnv().getCoprocessorScanBitsThreshold()) {
-        //            logger.info("Coprocessor is disabled because scan range is small");
-        //            return false;
-        //        }
-        logger.info("Coprocessor is enabled");
+        HashSet<TblColRef> aggrCols = new HashSet<TblColRef>(cuboid.getColumns());
+        aggrCols.removeAll(groupBy);
+        if (aggrCols.isEmpty()) {
+            logger.info("Coprocessor is disabled because cuboid is exactly the scan group by");
+            return false;
+        }
+
+        logger.info("Coprocessor is enabled to aggregate " + aggrCols);
         return true;
     }
 

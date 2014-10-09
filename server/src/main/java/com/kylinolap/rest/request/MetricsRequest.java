@@ -20,6 +20,7 @@ import java.util.Date;
 
 /**
  * @author xduo
+ *
  */
 public class MetricsRequest {
 

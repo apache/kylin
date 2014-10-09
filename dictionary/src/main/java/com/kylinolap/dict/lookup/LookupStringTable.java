@@ -16,12 +16,13 @@
 
 package com.kylinolap.dict.lookup;
 
-import com.kylinolap.metadata.model.schema.TableDesc;
-
 import java.io.IOException;
+
+import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
  * @author yangli9
+ *
  */
 public class LookupStringTable extends LookupTable<String> {
 

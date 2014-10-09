@@ -20,6 +20,7 @@ import com.kylinolap.common.KylinConfig;
 
 /**
  * @author ysong1
+ *
  */
 public abstract class AbstractKylinTestCase {
 

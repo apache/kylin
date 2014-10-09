@@ -16,17 +16,18 @@
 
 package com.kylinolap.cube.kv;
 
+import java.util.Arrays;
+
+import org.apache.hadoop.hbase.util.Bytes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.metadata.model.cube.RowKeyDesc;
 import com.kylinolap.metadata.model.cube.TblColRef;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Arrays;
 
 /**
  * Read/Write column values from/into bytes
@@ -39,7 +40,6 @@ public class RowKeyColumnIO {
     private static final Logger logger = LoggerFactory.getLogger(RowKeyColumnIO.class);
 
     private CubeSegment seg;
-    //private CubeManager cubeMgr;
     private RowKeyDesc rowkeyDesc;
     private boolean forceNoDict = Boolean.getBoolean("forceNoDict");
 
@@ -62,7 +62,12 @@ public class RowKeyColumnIO {
     }
 
     public void writeColumn(TblColRef column, byte[] value, int valueLen, byte dft, byte[] output,
-                            int outputOffset) {
+            int outputOffset) {
+        writeColumn(column, value, valueLen, 0, dft, output, outputOffset);
+    }
+
+    public void writeColumn(TblColRef column, byte[] value, int valueLen, int roundingFlag, byte dft,
+            byte[] output, int outputOffset) {
 
         Dictionary<String> dict = getDictionary(column);
         int columnLen = getColumnLength(column);
@@ -76,14 +81,14 @@ public class RowKeyColumnIO {
 
         // dict value
         try {
-            int id = dict.getIdFromValueBytes(value, 0, valueLen);
+            int id = dict.getIdFromValueBytes(value, 0, valueLen, roundingFlag);
             BytesUtil.writeUnsigned(id, output, outputOffset, dict.getSizeOfId());
         } catch (IllegalArgumentException ex) {
-            // TODO better write the closest lower or upper bound instead of a fixed default
             for (int i = outputOffset; i < outputOffset + columnLen; i++)
                 output[i] = dft;
             logger.error("Can't translate value " + Bytes.toString(value, 0, valueLen)
-                    + " to dictionary ID. Using default value " + String.format("\\x%02X", dft));
+                    + " to dictionary ID, roundingFlag " + roundingFlag + ". Using default value "
+                    + String.format("\\x%02X", dft));
         }
     }
 
@@ -154,12 +159,12 @@ public class RowKeyColumnIO {
         return stripBytes;
     }
 
-    private Dictionary<String> getDictionary(TblColRef col) {
+    public Dictionary<String> getDictionary(TblColRef col) {
         if (forceNoDict)
             return null;
 
-        return (Dictionary<String>) CubeManager.getInstance(seg.getCubeInstance().getConfig())
-                .getDictionary(seg, col);
+        return (Dictionary<String>) CubeManager.getInstance(seg.getCubeInstance().getConfig()).getDictionary(
+                seg, col);
     }
 
 }

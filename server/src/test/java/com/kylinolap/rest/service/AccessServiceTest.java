@@ -16,10 +16,6 @@
 
 package com.kylinolap.rest.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.kylinolap.common.persistence.AclEntity;
-import com.kylinolap.rest.security.AclPermission;
-import com.kylinolap.rest.security.AclPermissionFactory;
 import org.junit.Assert;
 import org.junit.Test;
 import org.quartz.SchedulerException;
@@ -29,8 +25,14 @@ import org.springframework.security.acls.model.AccessControlEntry;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.Sid;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.kylinolap.common.persistence.AclEntity;
+import com.kylinolap.rest.security.AclPermission;
+import com.kylinolap.rest.security.AclPermissionFactory;
+
 /**
  * @author xduo
+ *
  */
 public class AccessServiceTest extends TestBase {
 

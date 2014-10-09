@@ -16,17 +16,18 @@
 
 package com.kylinolap.storage.hbase.coprocessor;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 
-import java.io.IOException;
-import java.util.List;
-
 /**
  * @author yangli9
+ *
  */
 public class RegionScannerAdapter implements RegionScanner {
 

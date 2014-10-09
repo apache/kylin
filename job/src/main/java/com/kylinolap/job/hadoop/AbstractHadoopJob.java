@@ -17,18 +17,15 @@ package com.kylinolap.job.hadoop;
 
 /**
  * @author George Song (ysong1)
- *
+ * 
  */
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.persistence.ResourceStore;
-import com.kylinolap.common.util.StringSplitter;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.job.JobInstance;
-import com.kylinolap.job.exception.JobException;
-import com.kylinolap.job.tools.OptionsHelper;
-import com.kylinolap.metadata.model.schema.TableDesc;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -50,12 +47,15 @@ import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.persistence.ResourceStore;
+import com.kylinolap.common.util.StringSplitter;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.job.JobInstance;
+import com.kylinolap.job.exception.JobException;
+import com.kylinolap.job.tools.OptionsHelper;
+import com.kylinolap.metadata.model.schema.TableDesc;
 
 @SuppressWarnings("static-access")
 public abstract class AbstractHadoopJob extends Configured implements Tool {

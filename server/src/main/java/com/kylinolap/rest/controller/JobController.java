@@ -16,14 +16,14 @@
 
 package com.kylinolap.rest.controller;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.job.JobInstance;
-import com.kylinolap.job.JobManager;
-import com.kylinolap.job.constant.JobStatusEnum;
-import com.kylinolap.rest.constant.Constant;
-import com.kylinolap.rest.exception.InternalErrorException;
-import com.kylinolap.rest.request.JobListRequest;
-import com.kylinolap.rest.service.JobService;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -34,12 +34,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.io.IOException;
-import java.util.*;
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.job.JobInstance;
+import com.kylinolap.job.JobManager;
+import com.kylinolap.job.constant.JobStatusEnum;
+import com.kylinolap.rest.constant.Constant;
+import com.kylinolap.rest.exception.InternalErrorException;
+import com.kylinolap.rest.request.JobListRequest;
+import com.kylinolap.rest.service.JobService;
 
 /**
  * @author ysong1
  * @author Jack
+ *
  */
 @Controller
 @RequestMapping(value = "jobs")
@@ -82,12 +89,12 @@ public class JobController extends BasicController implements InitializingBean {
 
     /**
      * get all cube jobs
-     *
-     * @param cubeName Cube ID
+     * 
+     * @param cubeName    Cube ID
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "", method = {RequestMethod.GET})
+    @RequestMapping(value = "", method = { RequestMethod.GET })
     @ResponseBody
     public List<JobInstance> list(JobListRequest jobRequest) {
 
@@ -113,12 +120,12 @@ public class JobController extends BasicController implements InitializingBean {
 
     /**
      * Get a cube job
-     *
-     * @param cubeName Cube ID
+     * 
+     * @param cubeName    Cube ID
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{jobId}", method = {RequestMethod.GET})
+    @RequestMapping(value = "/{jobId}", method = { RequestMethod.GET })
     @ResponseBody
     public JobInstance get(@PathVariable String jobId) {
         JobInstance jobInstance = null;
@@ -134,12 +141,12 @@ public class JobController extends BasicController implements InitializingBean {
 
     /**
      * Get a job step output
-     *
-     * @param cubeName Cube ID
+     * 
+     * @param cubeName    Cube ID
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{jobId}/steps/{stepId}/output", method = {RequestMethod.GET})
+    @RequestMapping(value = "/{jobId}/steps/{stepId}/output", method = { RequestMethod.GET })
     @ResponseBody
     public Map<String, String> getStepOutput(@PathVariable String jobId, @PathVariable int stepId) {
         Map<String, String> result = new HashMap<String, String>();
@@ -164,12 +171,12 @@ public class JobController extends BasicController implements InitializingBean {
 
     /**
      * Resume a cube job
-     *
-     * @param String Job ID
+     * 
+     * @param String   Job ID
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{jobId}/resume", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{jobId}/resume", method = { RequestMethod.PUT })
     @ResponseBody
     public JobInstance resume(@PathVariable String jobId) {
         JobInstance jobInstance = null;
@@ -187,12 +194,12 @@ public class JobController extends BasicController implements InitializingBean {
 
     /**
      * Cancel a job
-     *
-     * @param String Job ID
+     * 
+     * @param String    Job ID
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{jobId}/cancel", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{jobId}/cancel", method = { RequestMethod.PUT })
     @ResponseBody
     public JobInstance cancel(@PathVariable String jobId) {
 

@@ -16,17 +16,19 @@
 
 package com.kylinolap.dict;
 
-import com.kylinolap.dict.lookup.FileTableReader;
-import com.kylinolap.dict.lookup.ReadableTable;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.util.Arrays;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+
+import com.kylinolap.dict.lookup.FileTableReader;
+import com.kylinolap.dict.lookup.ReadableTable;
 
 /**
  * @author yangli9
+ *
  */
 public class TableReaderTest {
 

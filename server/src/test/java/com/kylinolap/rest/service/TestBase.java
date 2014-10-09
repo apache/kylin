@@ -16,11 +16,8 @@
 
 package com.kylinolap.rest.service;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.project.ProjectManager;
-import com.kylinolap.metadata.MetadataManager;
+import java.io.IOException;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -33,13 +30,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.io.IOException;
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.project.ProjectManager;
+import com.kylinolap.metadata.MetadataManager;
 
 /**
  * @author xduo
+ *
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = {"classpath:applicationContext-test.xml"})
+@ContextConfiguration(locations = { "classpath:applicationContext-test.xml" })
 public class TestBase extends LocalFileMetadataTestCase {
 
     @BeforeClass

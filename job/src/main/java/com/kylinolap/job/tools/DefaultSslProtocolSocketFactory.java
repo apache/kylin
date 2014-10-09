@@ -16,6 +16,14 @@
 
 package com.kylinolap.job.tools;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+
 import org.apache.commons.httpclient.ConnectTimeoutException;
 import org.apache.commons.httpclient.HttpClientError;
 import org.apache.commons.httpclient.params.HttpConnectionParams;
@@ -24,20 +32,12 @@ import org.apache.commons.httpclient.protocol.SecureProtocolSocketFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
-
 /**
  * @author xduo
+ *
  */
 public class DefaultSslProtocolSocketFactory implements SecureProtocolSocketFactory {
-    /**
-     * Log object for this class.
-     */
+    /** Log object for this class. */
     private static Logger LOG = LoggerFactory.getLogger(DefaultSslProtocolSocketFactory.class);
     private SSLContext sslcontext = null;
 
@@ -49,7 +49,7 @@ public class DefaultSslProtocolSocketFactory implements SecureProtocolSocketFact
     }
 
     /**
-     * @see SecureProtocolSocketFactory#createSocket(java.lang.String, int, java.net.InetAddress, int)
+     * @see SecureProtocolSocketFactory#createSocket(java.lang.String,int,java.net.InetAddress,int)
      */
     public Socket createSocket(String host, int port, InetAddress clientHost, int clientPort)
             throws IOException, UnknownHostException {
@@ -58,26 +58,28 @@ public class DefaultSslProtocolSocketFactory implements SecureProtocolSocketFact
 
     /**
      * Attempts to get a new socket connection to the given host within the given time limit.
-     * <p/>
+     * 
      * <p>
      * To circumvent the limitations of older JREs that do not support connect timeout a  controller thread is executed.
      * The controller thread attempts to create a new socket  within the given limit of time. If socket constructor does
      * not return until the  timeout expires, the controller terminates and throws an {@link ConnectTimeoutException}
      * </p>
      *
-     * @param host         the host name/IP
-     * @param port         the port on the host
+     * @param host the host name/IP
+     * @param port the port on the host
      * @param localAddress the local host name/IP to bind the socket to
-     * @param localPort    the port on the local machine
-     * @param params       {@link HttpConnectionParams Http connection parameters}
+     * @param localPort the port on the local machine
+     * @param params {@link HttpConnectionParams Http connection parameters}
+     *
      * @return Socket a new socket
-     * @throws IOException              if an I/O error occurs while creating the socket
-     * @throws UnknownHostException     if the IP address of the host cannot be determined
-     * @throws ConnectTimeoutException  DOCUMENT ME!
+     *
+     * @throws IOException if an I/O error occurs while creating the socket
+     * @throws UnknownHostException if the IP address of the host cannot be determined
+     * @throws ConnectTimeoutException DOCUMENT ME!
      * @throws IllegalArgumentException DOCUMENT ME!
      */
     public Socket createSocket(final String host, final int port, final InetAddress localAddress,
-                               final int localPort, final HttpConnectionParams params) throws IOException, UnknownHostException,
+            final int localPort, final HttpConnectionParams params) throws IOException, UnknownHostException,
             ConnectTimeoutException {
         if (params == null) {
             throw new IllegalArgumentException("Parameters may not be null");
@@ -95,14 +97,14 @@ public class DefaultSslProtocolSocketFactory implements SecureProtocolSocketFact
     }
 
     /**
-     * @see SecureProtocolSocketFactory#createSocket(java.lang.String, int)
+     * @see SecureProtocolSocketFactory#createSocket(java.lang.String,int)
      */
     public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
         return getSSLContext().getSocketFactory().createSocket(host, port);
     }
 
     /**
-     * @see SecureProtocolSocketFactory#createSocket(java.net.Socket, java.lang.String, int, boolean)
+     * @see SecureProtocolSocketFactory#createSocket(java.net.Socket,java.lang.String,int,boolean)
      */
     public Socket createSocket(Socket socket, String host, int port, boolean autoClose) throws IOException,
             UnknownHostException {
@@ -120,7 +122,7 @@ public class DefaultSslProtocolSocketFactory implements SecureProtocolSocketFact
     private static SSLContext createEasySSLContext() {
         try {
             SSLContext context = SSLContext.getInstance("TLS");
-            context.init(null, new TrustManager[]{new DefaultX509TrustManager(null)}, null);
+            context.init(null, new TrustManager[] { new DefaultX509TrustManager(null) }, null);
 
             return context;
         } catch (Exception e) {

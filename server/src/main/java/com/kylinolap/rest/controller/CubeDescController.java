@@ -16,9 +16,8 @@
 
 package com.kylinolap.rest.controller;
 
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.rest.service.CubeService;
+import java.io.IOException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,10 +25,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.io.IOException;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.metadata.model.cube.CubeDesc;
+import com.kylinolap.rest.service.CubeService;
 
 /**
  * @author xduo
+ *
  */
 @Controller
 @RequestMapping(value = "/cube_desc")
@@ -45,13 +47,13 @@ public class CubeDescController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}", method = {RequestMethod.GET})
+    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET })
     @ResponseBody
     public CubeDesc[] getCube(@PathVariable String cubeName) {
         CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
         CubeDesc cSchema = cubeInstance.getDescriptor();
         if (cSchema != null) {
-            return new CubeDesc[]{cSchema};
+            return new CubeDesc[] { cSchema };
         } else {
             return null;
         }

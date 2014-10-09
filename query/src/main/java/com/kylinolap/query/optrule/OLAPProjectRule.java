@@ -15,15 +15,18 @@
  */
 package com.kylinolap.query.optrule;
 
-import com.kylinolap.query.relnode.OLAPProjectRel;
-import com.kylinolap.query.relnode.OLAPRel;
 import org.eigenbase.rel.ProjectRel;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelTraitSet;
 
+import com.kylinolap.query.relnode.OLAPProjectRel;
+import com.kylinolap.query.relnode.OLAPRel;
+
 /**
+ * 
  * @author xjiang
+ *
  */
 public class OLAPProjectRule extends RelOptRule {
 
@@ -41,8 +44,7 @@ public class OLAPProjectRule extends RelOptRule {
         OLAPProjectRel olapProj =
                 new OLAPProjectRel(project.getCluster(), traitSet, convert(project.getChild(), project
                         .getTraitSet().replace(OLAPRel.CONVENTION)), project.getProjects(),
-                        project.getRowType(), project.getFlags()
-                );
+                        project.getRowType(), project.getFlags());
         call.transformTo(olapProj);
     }
 

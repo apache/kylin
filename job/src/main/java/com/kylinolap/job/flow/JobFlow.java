@@ -16,24 +16,26 @@
 
 package com.kylinolap.job.flow;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.job.JobInstance;
-import com.kylinolap.job.JobInstance.JobStep;
-import com.kylinolap.job.constant.JobConstants;
-import com.kylinolap.job.constant.JobStepCmdTypeEnum;
-import com.kylinolap.job.engine.JobEngineConfig;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.job.JobInstance;
+import com.kylinolap.job.JobInstance.JobStep;
+import com.kylinolap.job.constant.JobConstants;
+import com.kylinolap.job.constant.JobStepCmdTypeEnum;
+import com.kylinolap.job.engine.JobEngineConfig;
 
 /**
  * @author xduo
+ *
  */
 public class JobFlow {
 

@@ -23,6 +23,7 @@ import com.kylinolap.common.persistence.RootPersistentEntity;
 
 /**
  * @author ysong1
+ *
  */
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)

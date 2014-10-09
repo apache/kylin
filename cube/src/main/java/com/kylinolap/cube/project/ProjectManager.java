@@ -16,6 +16,17 @@
 
 package com.kylinolap.cube.project;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -29,22 +40,18 @@ import com.kylinolap.common.restclient.SingleValueCache;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.*;
+import com.kylinolap.metadata.model.cube.CubeDesc;
+import com.kylinolap.metadata.model.cube.DimensionDesc;
+import com.kylinolap.metadata.model.cube.FunctionDesc;
+import com.kylinolap.metadata.model.cube.JoinDesc;
+import com.kylinolap.metadata.model.cube.MeasureDesc;
+import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author xduo
+ *
  */
 public class ProjectManager {
     private static final Logger logger = LoggerFactory.getLogger(ProjectManager.class);
@@ -61,7 +68,7 @@ public class ProjectManager {
             new SingleValueCache<String, ProjectInstance>(Broadcaster.TYPE.PROJECT);
     // project name => tables
     private Multimap<String, ProjectTable> projectTables = Multimaps.synchronizedMultimap(HashMultimap
-            .<String, ProjectTable>create());
+            .<String, ProjectTable> create());
 
     public static ProjectManager getInstance(KylinConfig config) {
         ProjectManager r = CACHE.get(config);

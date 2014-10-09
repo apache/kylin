@@ -16,14 +16,9 @@
 
 package com.kylinolap.job.hadoop.cube;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.cuboid.CuboidCLI;
-import com.kylinolap.job.constant.BatchConstants;
-import com.kylinolap.job.exception.JobException;
-import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.model.cube.CubeDesc;
+import java.io.File;
+import java.io.IOException;
+
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -38,8 +33,14 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.cuboid.CuboidCLI;
+import com.kylinolap.job.constant.BatchConstants;
+import com.kylinolap.job.exception.JobException;
+import com.kylinolap.job.hadoop.AbstractHadoopJob;
+import com.kylinolap.metadata.model.cube.CubeDesc;
 
 /**
  * @author ysong1
@@ -80,8 +81,8 @@ public class CuboidJob extends AbstractHadoopJob {
             System.out.println("Starting: " + job.getJobName());
             FileInputFormat.setInputPaths(job, input);
 
-            File JarFile = new File(config.getKylinJobJarPath());
-            if (JarFile.exists()) {
+            File jarFile = new File(config.getKylinJobJarPath());
+            if (jarFile.exists()) {
                 job.setJar(config.getKylinJobJarPath());
             } else {
                 job.setJarByClass(this.getClass());

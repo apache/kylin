@@ -16,7 +16,10 @@
 
 package com.kylinolap.storage.hbase;
 
-import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.Iterator;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.client.HConnection;
@@ -26,12 +29,11 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Pair;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.Iterator;
+import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
  * @author yangli9
+ *
  */
 public class HBaseKeyValueIterator implements Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>>,
         Closeable {

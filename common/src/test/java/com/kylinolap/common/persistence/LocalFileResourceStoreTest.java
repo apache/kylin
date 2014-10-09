@@ -15,19 +15,20 @@
  */
 package com.kylinolap.common.persistence;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import org.apache.commons.lang.StringUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static org.junit.Assert.*;
+import com.kylinolap.common.KylinConfig;
+import org.apache.commons.lang.StringUtils;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.kylinolap.common.util.LocalFileMetadataTestCase;
 
 public class LocalFileResourceStoreTest extends LocalFileMetadataTestCase {
 

@@ -16,16 +16,22 @@
 
 package com.kylinolap.job.engine;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.job.tools.OptionsHelper;
-import com.kylinolap.metadata.model.cube.CubeDesc.CubeCapacity;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.job.tools.OptionsHelper;
+import com.kylinolap.metadata.model.cube.CubeDesc.CubeCapacity;
 
 /**
  * @author ysong1
+ *
  */
 public class JobEngineConfig {
     private static final Logger logger = LoggerFactory.getLogger(JobEngineConfig.class);

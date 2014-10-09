@@ -16,17 +16,23 @@
 
 package com.kylinolap.common.restclient;
 
-import com.kylinolap.common.KylinConfig;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.*;
+import com.kylinolap.common.KylinConfig;
 
 /**
  * Broadcast kylin event out
- *
+ * 
  * @author jianliu
+ *
  */
 public class Broadcaster {
 
@@ -59,7 +65,7 @@ public class Broadcaster {
 
     /**
      * Broadcast the cubedesc event out
-     *
+     * 
      * @param action event action
      */
     public static synchronized void queue(String type, String action, String key) {

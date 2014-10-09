@@ -16,18 +16,21 @@
 
 package com.kylinolap.rest.controller;
 
+import net.sf.ehcache.CacheManager;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.rest.request.MetaRequest;
 import com.kylinolap.rest.request.SQLRequest;
 import com.kylinolap.rest.service.QueryService;
 import com.kylinolap.rest.service.TestBase;
-import net.sf.ehcache.CacheManager;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xduo
+ *
  */
 public class QueryControllerTest extends TestBase {
 

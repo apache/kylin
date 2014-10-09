@@ -18,6 +18,7 @@ package com.kylinolap.job.constant;
 
 /**
  * @author ysong1, xduo
+ *
  */
 public class JobConstants {
 

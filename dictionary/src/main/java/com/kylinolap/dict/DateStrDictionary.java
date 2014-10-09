@@ -15,11 +15,10 @@
  */
 package com.kylinolap.dict;
 
-import org.apache.commons.lang.StringUtils;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -28,12 +27,14 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.lang.StringUtils;
+
 /**
  * A dictionary for date string (date only, no time).
- * <p/>
+ *
  * Dates are numbered from 1970-1-1 -- 0 for 1970-1-1, 1 for 1-2, 2 for 1-3 and so on.
  * With 2 bytes, 65536 states, can express dates up to the year of 2149.
- * <p/>
+ *
  * Note the implementation is not thread-safe.
  *
  * @author yangli9
@@ -212,6 +213,16 @@ public class DateStrDictionary extends Dictionary<String> {
             return false;
         DateStrDictionary that = (DateStrDictionary) o;
         return StringUtils.equals(this.pattern, that.pattern) && this.baseId == that.baseId;
+    }
+
+    @Override
+    public void dump(PrintStream out) {
+        out.println(this.toString());
+    }
+
+    @Override
+    public String toString() {
+        return "DateStrDictionary [pattern=" + pattern + ", baseId=" + baseId + "]";
     }
 
 }

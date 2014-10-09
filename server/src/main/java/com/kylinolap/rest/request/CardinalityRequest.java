@@ -18,6 +18,7 @@ package com.kylinolap.rest.request;
 
 /**
  * @author jianliu
+ *
  */
 public class CardinalityRequest {
     private int delimiter;
@@ -29,14 +30,14 @@ public class CardinalityRequest {
      */
     public String getDelimiter() {
         switch (delimiter) {
-            case 0:
-                return null;
-            case 1:
-                return "177";
-            case 2:
-                return "t";
-            default:
-                return null;
+        case 0:
+            return null;
+        case 1:
+            return "177";
+        case 2:
+            return "t";
+        default:
+            return null;
         }
     }
 
@@ -52,14 +53,14 @@ public class CardinalityRequest {
      */
     public String getFormat() {
         switch (format) {
-            case 0:
-                return null;
-            case 1:
-                return "text";
-            case 2:
-                return "sequence";
-            default:
-                return null;
+        case 0:
+            return null;
+        case 1:
+            return "text";
+        case 2:
+            return "sequence";
+        default:
+            return null;
         }
     }
 

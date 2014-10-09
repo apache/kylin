@@ -15,12 +15,12 @@
  */
 package com.kylinolap.common.persistence;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.StringUtil;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.StringUtil;
 
 public class ResourceTool {
 
@@ -45,7 +45,8 @@ public class ResourceTool {
 
         String cmd = args[0];
         if (cmd.equals("reset"))
-            reset(args[1]);
+            reset(args.length == 1 ? KylinConfig.getInstanceFromEnv() : KylinConfig
+                    .createInstanceFromUri(args[1]));
         else if (cmd.equals("copy"))
             copy(args[1], args[2]);
         else if (cmd.equals("list"))
@@ -120,11 +121,6 @@ public class ResourceTool {
     public static void reset(KylinConfig config) throws IOException {
         ResourceStore store = ResourceStore.getStore(config);
         resetR(store, "/");
-    }
-
-    private static void reset(String metadataUri) throws IOException {
-        KylinConfig config = KylinConfig.createInstanceFromUri(metadataUri);
-        reset(config);
     }
 
     private static void resetR(ResourceStore store, String path) throws IOException {

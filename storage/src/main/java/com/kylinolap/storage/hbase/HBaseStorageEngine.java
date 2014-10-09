@@ -15,8 +15,26 @@
  */
 package com.kylinolap.storage.hbase;
 
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.hbase.util.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.kylinolap.common.persistence.HBaseConnection;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
@@ -25,23 +43,22 @@ import com.kylinolap.cube.CubeSegmentStatusEnum;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowValueDecoder;
 import com.kylinolap.dict.lookup.LookupStringTable;
-import com.kylinolap.metadata.model.cube.*;
+import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.CubeDesc.DeriveInfo;
+import com.kylinolap.metadata.model.cube.FunctionDesc;
+import com.kylinolap.metadata.model.cube.HBaseColumnDesc;
+import com.kylinolap.metadata.model.cube.HBaseMappingDesc;
+import com.kylinolap.metadata.model.cube.MeasureDesc;
+import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.storage.IStorageEngine;
 import com.kylinolap.storage.StorageContext;
+import com.kylinolap.storage.filter.ColumnTupleFilter;
 import com.kylinolap.storage.filter.CompareTupleFilter;
-import com.kylinolap.storage.filter.ExtractTupleFilter;
+import com.kylinolap.storage.filter.ConstantTupleFilter;
 import com.kylinolap.storage.filter.LogicalTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
-import com.kylinolap.storage.tuple.TupleIterator;
-import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.hbase.util.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.*;
+import com.kylinolap.storage.tuple.ITupleIterator;
 
 /**
  * @author xjiang
@@ -62,14 +79,26 @@ public class HBaseStorageEngine implements IStorageEngine {
     }
 
     @Override
-    public TupleIterator search(Collection<TblColRef> dimensions, TupleFilter filter,
-                                Collection<TblColRef> groups, Collection<FunctionDesc> metrics, StorageContext context) {
+    public ITupleIterator search(Collection<TblColRef> dimensions, TupleFilter filter,
+            Collection<TblColRef> groups, Collection<FunctionDesc> metrics, StorageContext context) {
+
+        // The columns returned from storage, can be more than query groups due to
+        // - derived columns on query group by
+        // - columns on filter that is not evaluate-able
+        // - condition gets loosened and all columns in the loosened filter must be returned to optiq
+        // Storage groups is less than dimensions due to
+        // - columns on filter get evaluated inside storage and aggregated away; only representative value returned to pass optiq filter
+        Set<TblColRef> storageGroupBy = Sets.newHashSet(context.getMandatoryColumns());
+        collectGroupBy(groups, storageGroupBy);
+        collectNonEvaluable(filter, storageGroupBy);
+        filter = translateDerived(filter, storageGroupBy);
+        logger.info("Storage returns " + storageGroupBy);
 
         // flatten to OR-AND filter, (A AND B AND ..) OR (C AND D AND ..) OR ..
         TupleFilter flatFilter = flattenToOrAndFilter(filter);
 
         // translate filter into segment scan ranges
-        List<HBaseKeyRange> scans = translateFilter(flatFilter, dimensions);
+        List<HBaseKeyRange> scans = buildScanRanges(flatFilter, dimensions);
 
         // post process filter: remove unused segment & set limit
         postProcessFilter(scans, flatFilter, context);
@@ -81,12 +110,95 @@ public class HBaseStorageEngine implements IStorageEngine {
         setThreshold(dimensions, valueDecoders, context);
 
         HConnection conn = HBaseConnection.get(context.getConnUrl());
-        return new SerializedHBaseTupleIterator(conn, scans, cubeInstance, dimensions, filter, groups,
-                valueDecoders, context);
+        return new SerializedHBaseTupleIterator(conn, scans, cubeInstance, dimensions, filter,
+                storageGroupBy, valueDecoders, context);
+    }
+
+    private void collectGroupBy(Collection<TblColRef> groups, Set<TblColRef> storageGroupBy) {
+        for (TblColRef g : groups) {
+            collectGroupBy(g, storageGroupBy);
+        }
+    }
+
+    private void collectGroupBy(TblColRef col, Set<TblColRef> storageGroupBy) {
+        if (cubeDesc.isDerived(col)) {
+            DeriveInfo hostInfo = cubeDesc.getHostInfo(col);
+            for (TblColRef h : hostInfo.columns)
+                storageGroupBy.add(h);
+        } else {
+            storageGroupBy.add(col);
+        }
+    }
+
+    private void collectNonEvaluable(TupleFilter filter, Set<TblColRef> storageGroupBy) {
+        if (filter == null)
+            return;
+
+        if (filter.isEvaluable()) {
+            for (TupleFilter child : filter.getChildren())
+                collectNonEvaluable(child, storageGroupBy);
+        } else {
+            collectColumnsRecursively(filter, storageGroupBy);
+        }
+    }
+
+    private void collectColumnsRecursively(TupleFilter filter, Set<TblColRef> storageGroupBy) {
+        if (filter instanceof ColumnTupleFilter) {
+            collectGroupBy(((ColumnTupleFilter) filter).getColumn(), storageGroupBy);
+        }
+        for (TupleFilter child : filter.getChildren()) {
+            collectColumnsRecursively(child, storageGroupBy);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private TupleFilter translateDerived(TupleFilter filter, Set<TblColRef> storageGroupBy) {
+        if (filter == null)
+            return filter;
+
+        if (filter instanceof CompareTupleFilter) {
+            return translateDerivedInCompare((CompareTupleFilter) filter, storageGroupBy);
+        }
+
+        List<TupleFilter> children = (List<TupleFilter>) filter.getChildren();
+        for (int i = 0; i < children.size(); i++) {
+            TupleFilter translated = translateDerived(children.get(i), storageGroupBy);
+            if (children.get(i) != translated) {
+                if ((filter instanceof LogicalTupleFilter) == false)
+                    throw new IllegalStateException("Cannot replace derived filter");
+                children.set(i, translated);
+            }
+        }
+        return filter;
+    }
+
+    private TupleFilter translateDerivedInCompare(CompareTupleFilter compf, Set<TblColRef> storageGroupBy) {
+        Pair<ColumnTupleFilter, ConstantTupleFilter> pair = compf.getColumnAndConstant();
+        ColumnTupleFilter colf = pair.getFirst();
+        ConstantTupleFilter constf = pair.getSecond();
+        if (colf == null || constf == null)
+            return compf;
+
+        TblColRef derived = colf.getColumn();
+        if (cubeDesc.isDerived(derived) == false)
+            return compf;
+
+        DeriveInfo hostInfo = cubeDesc.getHostInfo(derived);
+        CubeManager cubeMgr = CubeManager.getInstance(this.cubeInstance.getConfig());
+        CubeSegment seg = cubeInstance.getLatestReadySegment();
+        LookupStringTable lookup = cubeMgr.getLookupTable(seg, hostInfo.dimension);
+        Pair<TupleFilter, Boolean> translated =
+                DerivedFilterTranslator.translate(lookup, hostInfo, compf, colf, constf);
+        TupleFilter translatedFilter = translated.getFirst();
+        boolean loosened = translated.getSecond();
+        if (loosened) {
+            collectColumnsRecursively(compf, storageGroupBy);
+        }
+        return translatedFilter;
     }
 
     private void setThreshold(Collection<TblColRef> dimensions, List<RowValueDecoder> valueDecoders,
-                              StorageContext context) {
+            StorageContext context) {
         if (RowValueDecoder.hasMemHungryCountDistinct(valueDecoders) == false) {
             return;
         }
@@ -106,7 +218,7 @@ public class HBaseStorageEngine implements IStorageEngine {
     }
 
     private List<RowValueDecoder> translateAggregation(HBaseMappingDesc hbaseMapping,
-                                                       Collection<FunctionDesc> aggregations, List<HBaseKeyRange> scans, StorageContext context) {
+            Collection<FunctionDesc> aggregations, List<HBaseKeyRange> scans, StorageContext context) {
         Map<HBaseColumnDesc, RowValueDecoder> codecMap = Maps.newHashMap();
         for (FunctionDesc aggrFunc : aggregations) {
             Collection<HBaseColumnDesc> hbCols = hbaseMapping.findHBaseColumnByFunction(aggrFunc);
@@ -156,7 +268,7 @@ public class HBaseStorageEngine implements IStorageEngine {
         return flatFilter;
     }
 
-    private List<HBaseKeyRange> translateFilter(TupleFilter flatFilter, Collection<TblColRef> dimensionColumns) {
+    private List<HBaseKeyRange> buildScanRanges(TupleFilter flatFilter, Collection<TblColRef> dimensionColumns) {
 
         List<HBaseKeyRange> result = Lists.newArrayList();
 
@@ -186,11 +298,11 @@ public class HBaseStorageEngine implements IStorageEngine {
     }
 
     private List<Collection<ColumnValueRange>> translateToOrAndDimRanges(TupleFilter flatFilter,
-                                                                         CubeSegment cubeSegment) {
+            CubeSegment cubeSegment) {
         List<Collection<ColumnValueRange>> result = Lists.newArrayList();
 
         if (flatFilter == null) {
-            result.add(Collections.<ColumnValueRange>emptyList());
+            result.add(Collections.<ColumnValueRange> emptyList());
             return result;
         }
 
@@ -232,16 +344,16 @@ public class HBaseStorageEngine implements IStorageEngine {
         }
         if (globalAlwaysTrue) {
             orAndRanges.clear();
-            orAndRanges.add(Collections.<ColumnValueRange>emptyList());
+            orAndRanges.add(Collections.<ColumnValueRange> emptyList());
         }
         return orAndRanges;
     }
 
     private Collection<ColumnValueRange> translateToAndDimRanges(List<? extends TupleFilter> andFilters,
-                                                                 CubeSegment cubeSegment) {
+            CubeSegment cubeSegment) {
         Map<TblColRef, ColumnValueRange> rangeMap = new HashMap<TblColRef, ColumnValueRange>();
         for (TupleFilter filter : andFilters) {
-            if (filter instanceof ExtractTupleFilter) {
+            if ((filter instanceof CompareTupleFilter) == false) {
                 continue;
             }
 
@@ -252,16 +364,7 @@ public class HBaseStorageEngine implements IStorageEngine {
 
             ColumnValueRange range =
                     new ColumnValueRange(comp.getColumn(), comp.getValues(), comp.getOperator());
-            TblColRef column = comp.getColumn();
-            if (cubeDesc.isDerived(column)) {
-                DeriveInfo hostInfo = cubeDesc.getHostInfo(column);
-                ColumnValueRange[] hostRanges = mapDerivedToHostRanges(cubeSegment, range, hostInfo);
-                for (ColumnValueRange hostRange : hostRanges) {
-                    andMerge(hostRange, rangeMap);
-                }
-            } else {
-                andMerge(range, rangeMap);
-            }
+            andMerge(range, rangeMap);
 
         }
         return rangeMap.values();
@@ -274,49 +377,6 @@ public class HBaseStorageEngine implements IStorageEngine {
         } else {
             columnRange.andMerge(range);
         }
-    }
-
-    private ColumnValueRange[] mapDerivedToHostRanges(CubeSegment cubeSegment, ColumnValueRange derivedRange,
-                                                      DeriveInfo hostInfo) {
-
-        TblColRef[] hostCols = hostInfo.columns;
-        ColumnValueRange[] result = new ColumnValueRange[hostCols.length];
-
-        switch (hostInfo.type) {
-            case LOOKUP:
-                CubeManager cubeMgr = CubeManager.getInstance(this.cubeInstance.getConfig());
-                LookupStringTable lookup = cubeMgr.getLookupTable(cubeSegment, hostInfo.dimension);
-                TblColRef[] pkCols = hostInfo.dimension.getJoin().getPrimaryKeyColumns();
-                for (int i = 0; i < hostCols.length; i++) {
-                    TblColRef hostCol = hostCols[i];
-                    TblColRef pkCol = pkCols[i];
-                    if (derivedRange.getEqualValues() != null) {
-                        Set<String> values =
-                                lookup.mapValues(derivedRange.getColumn().getName(),
-                                        derivedRange.getEqualValues(), pkCol.getName());
-                        result[i] = new ColumnValueRange(hostCol, values, FilterOperatorEnum.IN);
-                    } else {
-                        Pair<String, String> pair =
-                                lookup.mapRange(derivedRange.getColumn().getName(), derivedRange.getBeginValue(),
-                                        derivedRange.getEndValue(), pkCol.getName());
-                        if (pair == null)
-                            result[i] = new ColumnValueRange(hostCol, "1", "0", null); // always false
-                        else
-                            result[i] = new ColumnValueRange(hostCol, pair.getFirst(), pair.getSecond(), null);
-                    }
-                }
-                break;
-            case PK_FK:
-                assert hostCols.length == 1;
-                result[0] =
-                        new ColumnValueRange(hostCols[0], derivedRange.getBeginValue(),
-                                derivedRange.getEndValue(), derivedRange.getEqualValues());
-                break;
-            default:
-                throw new IllegalArgumentException();
-        }
-
-        return result;
     }
 
     private List<HBaseKeyRange> mergeOverlapRanges(List<HBaseKeyRange> keyRanges) {

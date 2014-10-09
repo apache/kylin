@@ -16,13 +16,15 @@
 package com.kylinolap.storage.tuple;
 
 /**
+ * 
  * @author xjiang
+ *
  */
-public interface TupleIterator {
+public interface ITupleIterator {
 
     public boolean hasNext();
 
-    public Tuple next();
+    public ITuple next();
 
     public void close();
 

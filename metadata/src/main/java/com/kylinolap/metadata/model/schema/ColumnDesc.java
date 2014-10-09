@@ -19,9 +19,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Column Metadata from Source.   All name should be uppercase.
  * <p/>
@@ -46,14 +43,7 @@ public class ColumnDesc {
     private int zeroBasedIndex = -1;
     private boolean isNullable = true;
 
-    public static final Map<String, String> LEGACY_TYPE_MAP = new HashMap<String, String>();
-
-    static {
-        LEGACY_TYPE_MAP.put("byte", "tinyint");
-        LEGACY_TYPE_MAP.put("int", "integer");
-        LEGACY_TYPE_MAP.put("short", "smallint");
-        LEGACY_TYPE_MAP.put("long", "bigint");
-        LEGACY_TYPE_MAP.put("string", "varchar");
+    public ColumnDesc() { // default constructor for Jackson
     }
 
     public int getZeroBasedIndex() {
@@ -66,6 +56,7 @@ public class ColumnDesc {
 
     public void setDatatype(String datatype) {
         this.datatype = datatype;
+        type = DataType.getInstance(datatype);
     }
 
     public String getId() {
@@ -90,6 +81,10 @@ public class ColumnDesc {
 
     public void setTable(TableDesc table) {
         this.table = table;
+    }
+
+    public DataType getType() {
+        return type;
     }
 
     public String getTypeName() {

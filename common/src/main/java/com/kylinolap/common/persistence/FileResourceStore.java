@@ -15,11 +15,16 @@
  */
 package com.kylinolap.common.persistence;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+
 import com.kylinolap.common.KylinConfig;
 import org.apache.commons.io.IOUtils;
-
-import java.io.*;
-import java.util.ArrayList;
 
 public class FileResourceStore extends ResourceStore {
 

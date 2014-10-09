@@ -16,6 +16,16 @@
 
 package com.kylinolap.job.hadoop.cube;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.cube.CubeInstance;
@@ -32,15 +42,6 @@ import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.TblColRef;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * @author ysong1, honma
@@ -71,9 +72,8 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
             ret =
                     cubeDesc.getRowkey().isUseDictionary(col)
                             && cubeDesc.getFactTable().equalsIgnoreCase(
-                            (String) DictionaryManager.getInstance(config).decideSourceData(cubeDesc,
-                                    col, null)[0]
-                    );
+                                    (String) DictionaryManager.getInstance(config).decideSourceData(cubeDesc,
+                                            col, null)[0]);
             dictsNeedMerging.put(col, ret);
             return ret;
         }

@@ -20,6 +20,7 @@ import java.util.Map;
 
 /**
  * @author George Song (ysong1)
+ * 
  */
 public class SqlHiveDataTypeMapping {
 

@@ -15,6 +15,13 @@
  */
 package com.kylinolap.job;
 
+import java.io.IOException;
+
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
@@ -28,12 +35,6 @@ import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc;
 import com.kylinolap.metadata.MetadataManager;
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * @author George Song (ysong1)
@@ -59,12 +60,12 @@ public class JobInstanceBuilder {
     public void buildSteps(JobInstance jobInstance) throws IOException {
         init(jobInstance);
         switch (jobInstance.getType()) {
-            case BUILD:
-                createBuildCubeSegmentSteps(jobInstance);
-                break;
-            case MERGE:
-                createMergeCubeSegmentsSteps(jobInstance);
-                break;
+        case BUILD:
+            createBuildCubeSegmentSteps(jobInstance);
+            break;
+        case MERGE:
+            createMergeCubeSegmentsSteps(jobInstance);
+            break;
         }
     }
 
@@ -114,7 +115,7 @@ public class JobInstanceBuilder {
     }
 
     private String[] getCuboidOutputPaths(String cubeName, int totalRowkeyColumnCount,
-                                          int groupRowkeyColumnsCount) {
+            int groupRowkeyColumnsCount) {
         String[] paths = new String[groupRowkeyColumnsCount + 1];
         for (int i = 0; i <= groupRowkeyColumnsCount; i++) {
             int dimNum = totalRowkeyColumnCount - i;
@@ -271,7 +272,7 @@ public class JobInstanceBuilder {
     }
 
     private void addIntermediateHiveTableStep(JobInstance jobInstance, int stepSeqNum,
-                                              String[] cuboidOutputTempPath) throws IOException {
+            String[] cuboidOutputTempPath) throws IOException {
         JoinedFlatTableDesc intermediateTableDesc =
                 new JoinedFlatTableDesc(cube.getDescriptor(), this.cubeSegment);
         String dropTableHql = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc, jobUUID);
@@ -301,7 +302,7 @@ public class JobInstanceBuilder {
     }
 
     private void addFactDistinctColumnsStep(JobInstance jobInstance, int stepSeqNum,
-                                            String[] cuboidOutputTempPath) throws IOException {
+            String[] cuboidOutputTempPath) throws IOException {
         // base cuboid job
         JobStep factDistinctColumnsStep = new JobStep();
 
@@ -370,7 +371,7 @@ public class JobInstanceBuilder {
     }
 
     private void addNDimensionCuboidStep(JobInstance jobInstance, int stepSeqNum,
-                                         String[] cuboidOutputTempPath, int dimNum, int totalRowkeyColumnCount) throws IOException {
+            String[] cuboidOutputTempPath, int dimNum, int totalRowkeyColumnCount) throws IOException {
         // ND cuboid job
         JobStep ndCuboidStep = new JobStep();
 
@@ -410,8 +411,7 @@ public class JobInstanceBuilder {
         cmd =
                 appendExecCmdParameters(cmd, "jobname",
                         "Kylin_Region_Splits_Calculator_" + jobInstance.getRelatedCube() + "_Step_"
-                                + stepSeqNum
-                );
+                                + stepSeqNum);
         cmd = appendExecCmdParameters(cmd, "cubename", cubeName);
 
         rowkeyDistributionStep.setExecCmd(cmd);

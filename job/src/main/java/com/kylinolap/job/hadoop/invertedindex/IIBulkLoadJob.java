@@ -16,6 +16,13 @@
 
 package com.kylinolap.job.hadoop.invertedindex;
 
+import org.apache.commons.cli.Options;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
+import org.apache.hadoop.util.ToolRunner;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.HadoopUtil;
 import com.kylinolap.cube.CubeInstance;
@@ -24,15 +31,10 @@ import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.CubeSegmentStatusEnum;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
-import org.apache.commons.cli.Options;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
-import org.apache.hadoop.util.ToolRunner;
 
 /**
  * @author ysong1
+ *
  */
 public class IIBulkLoadJob extends AbstractHadoopJob {
 
@@ -55,7 +57,7 @@ public class IIBulkLoadJob extends AbstractHadoopJob {
             fs.setPermission(new Path(input, InvertedIndexDesc.HBASE_FAMILY), permission);
 
             int hbaseExitCode =
-                    ToolRunner.run(new LoadIncrementalHFiles(getConf()), new String[]{input, tableName});
+                    ToolRunner.run(new LoadIncrementalHFiles(getConf()), new String[] { input, tableName });
 
             CubeManager mgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cube = mgr.getCube(cubeName);

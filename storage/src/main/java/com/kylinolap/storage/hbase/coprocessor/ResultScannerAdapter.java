@@ -16,18 +16,20 @@
 
 package com.kylinolap.storage.hbase.coprocessor;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
+import com.google.common.collect.Lists;
 
 /**
  * @author yangli9
+ *
  */
 public class ResultScannerAdapter implements ResultScanner {
 

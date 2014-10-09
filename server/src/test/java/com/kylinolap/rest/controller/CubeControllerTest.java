@@ -16,22 +16,24 @@
 
 package com.kylinolap.rest.controller;
 
+import java.io.IOException;
+import java.io.StringWriter;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.rest.request.CubeRequest;
 import com.kylinolap.rest.service.CubeService;
 import com.kylinolap.rest.service.JobService;
 import com.kylinolap.rest.service.TestBase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.io.IOException;
-import java.io.StringWriter;
 
 /**
  * @author xduo
+ *
  */
 public class CubeControllerTest extends TestBase {
 

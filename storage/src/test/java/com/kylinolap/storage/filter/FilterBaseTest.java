@@ -16,6 +16,11 @@
 
 package com.kylinolap.storage.filter;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Random;
+
 import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
@@ -23,13 +28,9 @@ import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
 import com.kylinolap.storage.tuple.Tuple;
 import com.kylinolap.storage.tuple.TupleInfo;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Random;
-
 /**
  * @author xjiang
+ *
  */
 public class FilterBaseTest {
 
@@ -159,8 +160,8 @@ public class FilterBaseTest {
         }
     }
 
-    private static String[][] SAMPLE_DATA = new String[][]{{"2013-03-10", "2012-01-12", "2014-03-10"},
-            {"ClothinShoes & Accessories", "ABIN", "FP-GTC", "FP-NON-GTC"}};
+    private static String[][] SAMPLE_DATA = new String[][] { { "2013-03-10", "2012-01-12", "2014-03-10" },
+            { "ClothinShoes & Accessories", "ABIN", "FP-GTC", "FP-NON-GTC" } };
 
     protected Collection<Tuple> generateTuple(int number, List<TblColRef> columns, int[] matches) {
 

@@ -16,6 +16,16 @@
 
 package com.kylinolap.storage.hbase;
 
+import java.util.List;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.HConnectionManager;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
@@ -28,18 +38,10 @@ import com.kylinolap.cube.invertedindex.TableRecord;
 import com.kylinolap.cube.invertedindex.TableRecordInfo;
 import com.kylinolap.cube.invertedindex.TimeSlice;
 import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HConnectionManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import java.util.List;
 
 /**
  * @author yangli9
+ *
  */
 @Ignore
 public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {

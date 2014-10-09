@@ -16,6 +16,11 @@
 
 package com.kylinolap.rest.bean;
 
+import java.beans.IntrospectionException;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import com.kylinolap.rest.constant.Constant;
 import com.kylinolap.rest.model.ColumnMeta;
 import com.kylinolap.rest.model.SelectedColumnMeta;
@@ -26,13 +31,10 @@ import com.kylinolap.rest.request.JobListRequest;
 import com.kylinolap.rest.request.SQLRequest;
 import com.kylinolap.rest.response.AccessEntryResponse;
 import com.kylinolap.rest.response.SQLResponse;
-import org.junit.Assert;
-import org.junit.Test;
-
-import java.beans.IntrospectionException;
 
 /**
  * @author xduo
+ *
  */
 public class BeanTest {
 
@@ -67,8 +69,7 @@ public class BeanTest {
         Assert.assertEquals(
                 Constant.ACCESS_POST_FILTER_READ,
                 "hasRole('ROLE_ADMIN') or hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'MANAGEMENT') "
-                        + "or hasPermission(filterObject, 'OPERATION') or hasPermission(filterObject, 'ADMINISTRATION')"
-        );
+                        + "or hasPermission(filterObject, 'OPERATION') or hasPermission(filterObject, 'ADMINISTRATION')");
         Assert.assertEquals(Constant.FakeCatalogName, "defaultCatalog");
         Assert.assertEquals(Constant.FakeSchemaName, "defaultSchema");
         Assert.assertEquals(Constant.IDENTITY_ROLE, "role");

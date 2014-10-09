@@ -16,10 +16,11 @@
 
 package com.kylinolap.rest.service;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.job.hadoop.cube.StorageCleanupJob;
-import com.kylinolap.rest.constant.Constant;
-import com.kylinolap.rest.exception.InternalErrorException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Properties;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.hadoop.util.ToolRunner;
@@ -28,13 +29,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Map;
-import java.util.Properties;
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.job.hadoop.cube.StorageCleanupJob;
+import com.kylinolap.rest.constant.Constant;
+import com.kylinolap.rest.exception.InternalErrorException;
 
 /**
  * @author jianliu
+ *
  */
 @Component("adminService")
 public class AdminService extends BasicService {
@@ -42,7 +44,7 @@ public class AdminService extends BasicService {
 
     /**
      * Get Java Env info as string
-     *
+     * 
      * @return
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
@@ -78,7 +80,7 @@ public class AdminService extends BasicService {
 
     /**
      * Get Java config info as String
-     *
+     * 
      * @return
      */
     //@PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
@@ -95,7 +97,7 @@ public class AdminService extends BasicService {
 
     public void cleanupStorage() {
         StorageCleanupJob job = new StorageCleanupJob();
-        String[] args = new String[]{"-delete", "true"};
+        String[] args = new String[] { "-delete", "true" };
         try {
             ToolRunner.run(job, args);
         } catch (Exception e) {

@@ -16,6 +16,12 @@
 
 package com.kylinolap.job.cmd;
 
+import java.util.Map;
+
+import org.apache.hadoop.mapreduce.TaskCounter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.job.JobDAO;
 import com.kylinolap.job.JobInstance;
@@ -24,14 +30,10 @@ import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.job.tools.HadoopStatusChecker;
-import org.apache.hadoop.mapreduce.TaskCounter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Map;
 
 /**
  * @author xduo
+ *
  */
 public class JavaHadoopCmdOutput implements ICommandOutput {
 
@@ -50,7 +52,7 @@ public class JavaHadoopCmdOutput implements ICommandOutput {
     private boolean isAsync;
 
     public JavaHadoopCmdOutput(String jobInstanceID, int jobStepID, JobEngineConfig engineConfig,
-                               AbstractHadoopJob job, boolean isAsync) {
+            AbstractHadoopJob job, boolean isAsync) {
         super();
         this.config = engineConfig.getConfig();
         this.yarnUrl = engineConfig.getYarnStatusServiceUrl();

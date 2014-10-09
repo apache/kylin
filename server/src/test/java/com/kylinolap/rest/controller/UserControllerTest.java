@@ -16,7 +16,10 @@
 
 package com.kylinolap.rest.controller;
 
-import com.kylinolap.rest.service.TestBase;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -28,12 +31,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import com.kylinolap.rest.service.TestBase;
 
 /**
  * @author xduo
+ *
  */
 public class UserControllerTest extends TestBase {
 

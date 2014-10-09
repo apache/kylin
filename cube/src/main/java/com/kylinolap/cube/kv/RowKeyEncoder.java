@@ -15,15 +15,16 @@
  */
 package com.kylinolap.cube.kv;
 
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.cuboid.Cuboid;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import org.apache.hadoop.hbase.util.Bytes;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.hadoop.hbase.util.Bytes;
+
+import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.cube.cuboid.Cuboid;
+import com.kylinolap.metadata.model.cube.TblColRef;
 
 /**
  * @author George Song (ysong1)
@@ -121,7 +122,7 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder {
     }
 
     protected void fillColumnValue(TblColRef column, int columnLen, byte[] value, int valueLen,
-                                   byte[] outputValue, int outputValueOffset) {
+            byte[] outputValue, int outputValueOffset) {
         // special null value case
         if (value == null) {
             byte[] valueBytes = defaultValue(columnLen);

@@ -1,14 +1,15 @@
 package com.kylinolap.storage.filter;
 
-import com.kylinolap.storage.tuple.Tuple;
-import org.apache.commons.lang3.Validate;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.kylinolap.storage.tuple.ITuple;
+
 /**
+ * 
  * @author xjiang
+ *
  */
 public class ExtractTupleFilter extends TupleFilter {
 
@@ -17,7 +18,7 @@ public class ExtractTupleFilter extends TupleFilter {
 
     public ExtractTupleFilter(FilterOperatorEnum op) {
         super(new ArrayList<TupleFilter>(3), op);
-        Validate.isTrue(op == FilterOperatorEnum.EXTRACT);
+        assert (op == FilterOperatorEnum.EXTRACT);
         this.values = new ArrayList<String>(1);
         this.values.add(null);
         this.date = 0;
@@ -34,7 +35,7 @@ public class ExtractTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(Tuple tuple) {
+    public boolean evaluate(ITuple tuple) {
         // extract tuple value
         String extractType = null;
         String tupleValue = null;

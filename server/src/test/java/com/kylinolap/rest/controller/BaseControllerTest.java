@@ -16,21 +16,23 @@
 
 package com.kylinolap.rest.controller;
 
+import java.io.IOException;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.mock.web.MockHttpServletRequest;
+
 import com.kylinolap.rest.exception.BadRequestException;
 import com.kylinolap.rest.exception.ForbiddenException;
 import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.exception.NotFoundException;
 import com.kylinolap.rest.response.ErrorResponse;
 import com.kylinolap.rest.service.TestBase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.mock.web.MockHttpServletRequest;
-
-import java.io.IOException;
 
 /**
  * @author xduo
+ *
  */
 public class BaseControllerTest extends TestBase {
 

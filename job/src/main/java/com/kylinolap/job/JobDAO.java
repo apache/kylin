@@ -15,6 +15,15 @@
  */
 package com.kylinolap.job;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
@@ -23,17 +32,10 @@ import com.kylinolap.job.JobInstance.JobStep;
 import com.kylinolap.job.constant.JobStatusEnum;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.metadata.MetadataManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author ysong1
+ *
  */
 public class JobDAO {
     private static Logger log = LoggerFactory.getLogger(JobDAO.class);

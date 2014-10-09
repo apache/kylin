@@ -16,18 +16,12 @@
 
 package com.kylinolap.job.hadoop.cube;
 
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.cube.CubeBuildTypeEnum;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.exception.CubeIntegrityException;
-import com.kylinolap.cube.project.ProjectManager;
-import com.kylinolap.dict.*;
-import com.kylinolap.dict.lookup.TableSignature;
-import com.kylinolap.job.constant.BatchConstants;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import java.io.File;
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -38,11 +32,23 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.cube.CubeBuildTypeEnum;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.cube.exception.CubeIntegrityException;
+import com.kylinolap.cube.project.ProjectManager;
+import com.kylinolap.dict.Dictionary;
+import com.kylinolap.dict.DictionaryGenerator;
+import com.kylinolap.dict.DictionaryInfo;
+import com.kylinolap.dict.DictionaryManager;
+import com.kylinolap.dict.TrieDictionary;
+import com.kylinolap.dict.lookup.TableSignature;
+import com.kylinolap.job.constant.BatchConstants;
+import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.cube.TblColRef;
 
 /**
  * @author honma
@@ -69,8 +75,8 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
         DictionaryInfo newDictInfo = new DictionaryInfo("", "", 0, "string", signature, "");
 
         List<byte[]> values = new ArrayList<byte[]>();
-        values.add(new byte[]{101, 101, 101});
-        values.add(new byte[]{102, 102, 102});
+        values.add(new byte[] { 101, 101, 101 });
+        values.add(new byte[] { 102, 102, 102 });
         Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueList(newDictInfo, values);
         dictionaryManager.trySaveNewDict(dict, newDictInfo);
         ((TrieDictionary) dict).dump(System.out);
@@ -119,11 +125,11 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
                             .getZeroBasedIndex(), "string", signature, "");
 
             List<byte[]> values = new ArrayList<byte[]>();
-            values.add(new byte[]{97, 97, 97});
+            values.add(new byte[] { 97, 97, 97 });
             if (isFirstSegment)
-                values.add(new byte[]{99, 99, 99});
+                values.add(new byte[] { 99, 99, 99 });
             else
-                values.add(new byte[]{98, 98, 98});
+                values.add(new byte[] { 98, 98, 98 });
             Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueList(newDictInfo, values);
             dictionaryManager.trySaveNewDict(dict, newDictInfo);
             ((TrieDictionary) dict).dump(System.out);
@@ -170,10 +176,10 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
         mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
         //mapDriver.getConfiguration().set(KylinConfig.KYLIN_METADATA_URL, "../job/meta");
 
-        byte[] key = new byte[]{0, 0, 0, 0, 0, 0, 0, -92, 1, 1, 1};
-        byte[] value = new byte[]{1, 2, 3};
-        byte[] newkey = new byte[]{0, 0, 0, 0, 0, 0, 0, -92, 1, 1, 2};
-        byte[] newvalue = new byte[]{1, 2, 3};
+        byte[] key = new byte[] { 0, 0, 0, 0, 0, 0, 0, -92, 1, 1, 1 };
+        byte[] value = new byte[] { 1, 2, 3 };
+        byte[] newkey = new byte[] { 0, 0, 0, 0, 0, 0, 0, -92, 1, 1, 2 };
+        byte[] newvalue = new byte[] { 1, 2, 3 };
 
         mapDriver.withInput(new Text(key), new Text(value));
         mapDriver.withOutput(new Text(newkey), new Text(newvalue));

@@ -24,8 +24,9 @@ import java.util.List;
 /**
  * Context.
  * Supply all dependent objects for validator
- *
+ * 
  * @author jianliu
+ *
  */
 public class ValidateContext {
     private List<Result> results = new ArrayList<ValidateContext.Result>();
@@ -68,7 +69,6 @@ public class ValidateContext {
 
     /**
      * Get validation result
-     *
      * @return
      */
     public Result[] getResults() {
@@ -78,7 +78,7 @@ public class ValidateContext {
     }
 
     /**
-     *
+     * 
      */
     public void print(PrintStream out) {
         if (results.isEmpty()) {

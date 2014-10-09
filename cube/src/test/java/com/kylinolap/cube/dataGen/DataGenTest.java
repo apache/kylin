@@ -1,10 +1,11 @@
 package com.kylinolap.cube.dataGen;
 
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.metadata.MetadataManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.metadata.MetadataManager;
 
 /**
  * Created by honma on 6/19/14.

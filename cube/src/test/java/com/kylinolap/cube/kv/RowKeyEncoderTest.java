@@ -15,23 +15,25 @@
  */
 package com.kylinolap.cube.kv;
 
+import static org.junit.Assert.*;
+
+import java.util.Arrays;
+
+import org.apache.hadoop.hbase.util.Bytes;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.cube.CubeDesc;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.util.Arrays;
-
-import static org.junit.Assert.*;
 
 /**
  * @author George Song (ysong1)
+ * 
  */
 public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
 
@@ -75,8 +77,8 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
         byte[] cuboidId = Arrays.copyOfRange(encodedKey, 0, 8);
         byte[] rest = Arrays.copyOfRange(encodedKey, 8, encodedKey.length);
         assertEquals(255, Bytes.toLong(cuboidId));
-        assertArrayEquals(new byte[]{11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9,
-                9, 0, 10, 5}, rest);
+        assertArrayEquals(new byte[] { 11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9,
+                9, 0, 10, 5 }, rest);
     }
 
     @Test
@@ -110,8 +112,8 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
         byte[] rest = Arrays.copyOfRange(encodedKey, 26, encodedKey.length);
         assertTrue(Bytes.toString(sellerId).startsWith("123456789"));
         assertEquals(511, Bytes.toLong(cuboidId));
-        assertArrayEquals(new byte[]{11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9,
-                9, 0, 10, 5}, rest);
+        assertArrayEquals(new byte[] { 11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9,
+                9, 0, 10, 5 }, rest);
     }
 
     @Test
@@ -145,7 +147,7 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
         byte[] rest = Arrays.copyOfRange(encodedKey, 26, encodedKey.length);
         assertTrue(Bytes.toString(sellerId).startsWith("123456789"));
         assertEquals(511, Bytes.toLong(cuboidId));
-        assertArrayEquals(new byte[]{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-                -1, -1, -1, -1, -1}, rest);
+        assertArrayEquals(new byte[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                -1, -1, -1, -1, -1 }, rest);
     }
 }

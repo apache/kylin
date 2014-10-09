@@ -16,15 +16,17 @@
 
 package com.kylinolap.query.sqlfunc;
 
-import com.kylinolap.common.hll.HyperLogLogPlusCounter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.kylinolap.common.hll.HyperLogLogPlusCounter;
+
 /**
  * @author xjiang
+ *
  */
 public class HLLDistinctCountAggFunc {
 

@@ -16,16 +16,26 @@
 /** This class will come with HBase 2.0 in package org.apache.hadoop.hbase.util **/
 package com.kylinolap.common.util;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.*;
+import org.apache.hadoop.hbase.ClusterStatus;
+import org.apache.hadoop.hbase.HRegionInfo;
+import org.apache.hadoop.hbase.RegionLoad;
+import org.apache.hadoop.hbase.ServerLoad;
+import org.apache.hadoop.hbase.ServerName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.*;
 
 public class HBaseRegionSizeCalculator {
 
@@ -33,21 +43,19 @@ public class HBaseRegionSizeCalculator {
 
     /**
      * Maps each region to its size in bytes.
-     */
+     **/
     private final Map<byte[], Long> sizeMap = new TreeMap<byte[], Long>(Bytes.BYTES_COMPARATOR);
 
     static final String ENABLE_REGIONSIZECALCULATOR = "hbase.regionsizecalculator.enable";
 
     /**
      * Computes size of each region for table and given column families.
-     */
+     * */
     public HBaseRegionSizeCalculator(HTable table) throws IOException {
         this(table, new HBaseAdmin(table.getConfiguration()));
     }
 
-    /**
-     * Constructor for unit testing
-     */
+    /** Constructor for unit testing */
     HBaseRegionSizeCalculator(HTable table, HBaseAdmin hBaseAdmin) throws IOException {
 
         try {
@@ -98,7 +106,7 @@ public class HBaseRegionSizeCalculator {
 
     /**
      * Returns size of given region in bytes. Returns 0 if region was not found.
-     */
+     **/
     public long getRegionSize(byte[] regionId) {
         Long size = sizeMap.get(regionId);
         if (size == null) {

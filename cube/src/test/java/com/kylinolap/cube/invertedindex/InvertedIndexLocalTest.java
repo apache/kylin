@@ -1,17 +1,6 @@
 package com.kylinolap.cube.invertedindex;
 
-import com.google.common.collect.Lists;
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.dict.Dictionary;
-import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.hbase.util.Pair;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,7 +9,19 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.hbase.util.Pair;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.google.common.collect.Lists;
+import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.dict.Dictionary;
 
 public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
 
@@ -151,7 +152,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
     }
 
     private List<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> encodeKVs(IIKeyValueCodec codec,
-                                                                                 List<TimeSlice> slices) {
+            List<TimeSlice> slices) {
 
         List<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> kvs = Lists.newArrayList();
         for (TimeSlice slice : slices) {
@@ -161,7 +162,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
     }
 
     private List<TimeSlice> decodeKVs(IIKeyValueCodec codec,
-                                      List<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> kvs) {
+            List<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> kvs) {
         List<TimeSlice> slices = Lists.newArrayList();
         for (TimeSlice slice : codec.decodeKeyValue(kvs)) {
             slices.add(slice);

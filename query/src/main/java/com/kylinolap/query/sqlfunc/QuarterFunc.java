@@ -16,13 +16,14 @@
 
 package com.kylinolap.query.sqlfunc;
 
+import java.sql.Date;
+
 import net.hydromatic.optiq.runtime.SqlFunctions;
 import net.hydromatic.optiq.runtime.SqlFunctions.TimeUnitRange;
 
-import java.sql.Date;
-
 /**
  * @author xjiang
+ *
  */
 public class QuarterFunc {
     private QuarterFunc() {

@@ -15,11 +15,9 @@
  */
 package com.kylinolap.job.hadoop.invertedindex;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.BytesUtil;
-import com.kylinolap.common.util.HadoopUtil;
-import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -39,11 +37,15 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.ToolRunner;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.BytesUtil;
+import com.kylinolap.common.util.HadoopUtil;
+import com.kylinolap.job.hadoop.AbstractHadoopJob;
+import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
  * @author George Song (ysong1)
+ * 
  */
 public class IICreateHTableJob extends AbstractHadoopJob {
 

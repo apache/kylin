@@ -16,6 +16,11 @@
 
 package com.kylinolap.dict;
 
+import org.apache.hadoop.hbase.util.Bytes;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.kylinolap.common.util.Array;
 import com.kylinolap.common.util.ByteArray;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
@@ -23,10 +28,6 @@ import com.kylinolap.dict.lookup.FileTable;
 import com.kylinolap.dict.lookup.LookupBytesTable;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.schema.TableDesc;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 /**
  * @author yangli9
@@ -55,14 +56,14 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
         System.out.println("============================================================================");
 
         lookup =
-                new LookupBytesTable(siteTable, new String[]{"SITE_ID"}, new FileTable(this.testDataFolder
+                new LookupBytesTable(siteTable, new String[] { "SITE_ID" }, new FileTable(this.testDataFolder
                         + "/data/TEST_SITES.csv", 10));
         lookup.dump();
 
         System.out.println("============================================================================");
 
         lookup =
-                new LookupBytesTable(categoryTable, new String[]{"leaf_categ_id", "site_id"},
+                new LookupBytesTable(categoryTable, new String[] { "leaf_categ_id", "site_id" },
                         new FileTable(this.testDataFolder + "/data/TEST_CATEGORY_GROUPINGS.csv", 36));
         lookup.dump();
 
@@ -70,7 +71,7 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
 
         ByteArray k1 = new ByteArray(Bytes.toBytes("533"));
         ByteArray k2 = new ByteArray(Bytes.toBytes("0"));
-        Array<ByteArray> key = new Array<ByteArray>(new ByteArray[]{k1, k2});
+        Array<ByteArray> key = new Array<ByteArray>(new ByteArray[] { k1, k2 });
         System.out.println(lookup.getRow(key));
     }
 }

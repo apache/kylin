@@ -16,15 +16,17 @@
 
 package com.kylinolap.dict.lookup;
 
-import com.kylinolap.common.util.HadoopUtil;
+import java.io.IOException;
+
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import java.io.IOException;
+import com.kylinolap.common.util.HadoopUtil;
 
 /**
  * @author yangli9
+ *
  */
 public class FileTable implements ReadableTable {
 

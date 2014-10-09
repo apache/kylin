@@ -15,22 +15,24 @@
  */
 package com.kylinolap.cube.cuboid;
 
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
-import static org.junit.Assert.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.cube.CubeDesc;
 
 /**
  * @author George Song (ysong1)
+ * 
  */
 public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     @Before
@@ -150,22 +152,22 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
 
         // generate 8d
         System.out.println("Spanning for 8D Cuboids");
-        testSpanningAndGetParent(scheduler, cube, new long[]{511});
+        testSpanningAndGetParent(scheduler, cube, new long[] { 511 });
         // generate 7d
         System.out.println("Spanning for 7D Cuboids");
-        testSpanningAndGetParent(scheduler, cube, new long[]{504, 447, 503, 383});
+        testSpanningAndGetParent(scheduler, cube, new long[] { 504, 447, 503, 383 });
         // generate 6d
         System.out.println("Spanning for 6D Cuboids");
-        testSpanningAndGetParent(scheduler, cube, new long[]{440, 496, 376, 439, 487, 319, 375});
+        testSpanningAndGetParent(scheduler, cube, new long[] { 440, 496, 376, 439, 487, 319, 375 });
         // generate 5d
         System.out.println("Spanning for 5D Cuboids");
-        testSpanningAndGetParent(scheduler, cube, new long[]{432, 480, 312, 368, 423, 455, 311, 359});
+        testSpanningAndGetParent(scheduler, cube, new long[] { 432, 480, 312, 368, 423, 455, 311, 359 });
         // generate 4d
         System.out.println("Spanning for 4D Cuboids");
-        testSpanningAndGetParent(scheduler, cube, new long[]{416, 448, 304, 352, 391, 295, 327});
+        testSpanningAndGetParent(scheduler, cube, new long[] { 416, 448, 304, 352, 391, 295, 327 });
         // generate 3d
         System.out.println("Spanning for 3D Cuboids");
-        testSpanningAndGetParent(scheduler, cube, new long[]{384, 288, 320, 263});
+        testSpanningAndGetParent(scheduler, cube, new long[] { 384, 288, 320, 263 });
         // generate 2d
         // generate 1d
         // generate 0d
@@ -177,29 +179,29 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
         CuboidScheduler scheduler = new CuboidScheduler(cube);
 
         long quiz = toLong("01100111");
-        testSpanningAndGetParent(scheduler, cube, new long[]{quiz});
+        testSpanningAndGetParent(scheduler, cube, new long[] { quiz });
 
         // generate 7d
         System.out.println("Spanning for 7D Cuboids");
-        testSpanningAndGetParent(scheduler, cube, new long[]{255});
+        testSpanningAndGetParent(scheduler, cube, new long[] { 255 });
         // generate 6d
         System.out.println("Spanning for 6D Cuboids");
-        testSpanningAndGetParent(scheduler, cube, new long[]{135, 251, 253, 254});
+        testSpanningAndGetParent(scheduler, cube, new long[] { 135, 251, 253, 254 });
         // generate 5d
         System.out.println("Spanning for 5D Cuboids");
-        testSpanningAndGetParent(scheduler, cube, new long[]{131, 133, 134, 249, 250, 252});
+        testSpanningAndGetParent(scheduler, cube, new long[] { 131, 133, 134, 249, 250, 252 });
         // generate 4d
         System.out.println("Spanning for 4D Cuboids");
-        testSpanningAndGetParent(scheduler, cube, new long[]{129, 130, 132, 248});
+        testSpanningAndGetParent(scheduler, cube, new long[] { 129, 130, 132, 248 });
         // generate 3d
         System.out.println("Spanning for 3D Cuboids");
-        testSpanningAndGetParent(scheduler, cube, new long[]{184, 240});
+        testSpanningAndGetParent(scheduler, cube, new long[] { 184, 240 });
         // generate 2d
         System.out.println("Spanning for 2D Cuboids");
-        testSpanningAndGetParent(scheduler, cube, new long[]{176, 224});
+        testSpanningAndGetParent(scheduler, cube, new long[] { 176, 224 });
         // generate 1d
         System.out.println("Spanning for 1D Cuboids");
-        testSpanningAndGetParent(scheduler, cube, new long[]{160, 192});
+        testSpanningAndGetParent(scheduler, cube, new long[] { 160, 192 });
         // generate 0d
     }
 
@@ -272,7 +274,7 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
         CubeDesc cube = getTestKylinCubeWithoutSeller();
         int[] counts = CuboidCLI.calculateAllLevelCount(cube);
         printCount(counts);
-        assertArrayEquals(new int[]{1, 4, 6, 6, 4, 4, 2, 0}, counts);
+        assertArrayEquals(new int[] { 1, 4, 6, 6, 4, 4, 2, 0 }, counts);
     }
 
     @Test
@@ -281,7 +283,7 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
         CuboidCLI.calculateAllLevelCount(cube);
         int[] counts = CuboidCLI.calculateAllLevelCount(cube);
         printCount(counts);
-        assertArrayEquals(new int[]{1, 4, 7, 8, 7, 4}, counts);
+        assertArrayEquals(new int[] { 1, 4, 7, 8, 7, 4 }, counts);
     }
 
     private String sortToString(Collection<Long> longs) {

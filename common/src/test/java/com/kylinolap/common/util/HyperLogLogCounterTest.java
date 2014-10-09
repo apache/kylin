@@ -16,19 +16,21 @@
 
 package com.kylinolap.common.util;
 
-import com.kylinolap.common.hll.HyperLogLogPlusCounter;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
+import org.apache.hadoop.hbase.util.Bytes;
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.kylinolap.common.hll.HyperLogLogPlusCounter;
+
 /**
  * @author yangli9
+ *
  */
 public class HyperLogLogCounterTest {
 

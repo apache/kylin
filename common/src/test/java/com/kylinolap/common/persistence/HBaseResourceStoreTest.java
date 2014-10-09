@@ -15,9 +15,13 @@
  */
 package com.kylinolap.common.persistence;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.HBaseMetadataTestCase;
-import com.kylinolap.common.util.HadoopUtil;
+import static org.junit.Assert.*;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -27,12 +31,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-
-import static org.junit.Assert.*;
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.HBaseMetadataTestCase;
+import com.kylinolap.common.util.HadoopUtil;
 
 public class HBaseResourceStoreTest extends HBaseMetadataTestCase {
 
@@ -71,7 +72,7 @@ public class HBaseResourceStoreTest extends HBaseMetadataTestCase {
             StringEntity t = store.getResource(path, StringEntity.class, StringEntity.serializer);
             assertEquals(content, t);
 
-            Path redirectPath = ((HBaseResourceStore) store).bigCellHDFSPath(path);
+            Path redirectPath = ((HBaseResourceStore)store).bigCellHDFSPath(path);
             Configuration hconf = HadoopUtil.getDefaultConfiguration();
             FileSystem fileSystem = FileSystem.get(hconf);
             assertTrue(fileSystem.exists(redirectPath));

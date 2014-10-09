@@ -15,6 +15,27 @@
  */
 package com.kylinolap.job.flow;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
+import org.quartz.JobListener;
+import org.quartz.SchedulerException;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
@@ -28,25 +49,13 @@ import com.kylinolap.job.constant.JobStatusEnum;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.tools.MailService;
-import org.apache.commons.lang.exception.ExceptionUtils;
-import org.quartz.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-
-/**
+/** 
  * Handle kylin job and cube change update.
- *
- * @author George Song (ysong1), xduo
- */
+ * 
+* @author George Song (ysong1), xduo
+* 
+*/
 public class JobFlowListener implements JobListener {
 
     private static Logger log = LoggerFactory.getLogger(JobFlowListener.class);
@@ -83,26 +92,26 @@ public class JobFlowListener implements JobListener {
 
             log.info(context.getJobDetail().getKey() + " status: " + jobStep.getStatus());
             switch (jobStep.getStatus()) {
-                case FINISHED:
-                    // Ensure we are using the latest metadata
-                    CubeManager.getInstance(config).loadCubeCache(cube);
-                    updateKylinJobOnSuccess(jobInstance, stepSeqID, engineConfig);
-                    updateCubeSegmentInfoOnSucceed(jobInstance, engineConfig);
-                    notifyUsers(jobInstance, engineConfig);
-                    scheduleNextJob(context, jobInstance);
-                    break;
-                case ERROR:
-                    updateKylinJobStatus(jobInstance, stepSeqID, engineConfig);
-                    notifyUsers(jobInstance, engineConfig);
-                    break;
-                case DISCARDED:
-                    // Ensure we are using the latest metadata
-                    CubeManager.getInstance(config).loadCubeCache(cube);
-                    updateCubeSegmentInfoOnDiscard(jobInstance, engineConfig);
-                    notifyUsers(jobInstance, engineConfig);
-                    break;
-                default:
-                    break;
+            case FINISHED:
+                // Ensure we are using the latest metadata
+                CubeManager.getInstance(config).loadCubeCache(cube);
+                updateKylinJobOnSuccess(jobInstance, stepSeqID, engineConfig);
+                updateCubeSegmentInfoOnSucceed(jobInstance, engineConfig);
+                notifyUsers(jobInstance, engineConfig);
+                scheduleNextJob(context, jobInstance);
+                break;
+            case ERROR:
+                updateKylinJobStatus(jobInstance, stepSeqID, engineConfig);
+                notifyUsers(jobInstance, engineConfig);
+                break;
+            case DISCARDED:
+                // Ensure we are using the latest metadata
+                CubeManager.getInstance(config).loadCubeCache(cube);
+                updateCubeSegmentInfoOnDiscard(jobInstance, engineConfig);
+                notifyUsers(jobInstance, engineConfig);
+                break;
+            default:
+                break;
             }
         } catch (Exception e) {
             log.error(e.getMessage(), e);
@@ -169,7 +178,7 @@ public class JobFlowListener implements JobListener {
 
     /**
      * @param jobInstance
-     * @param stepId
+     * @param stepId 
      */
     private void updateKylinJobStatus(JobInstance jobInstance, int stepId, JobEngineConfig engineConfig) {
         validate(jobInstance);
@@ -247,37 +256,37 @@ public class JobFlowListener implements JobListener {
             long sourceCount = 0;
             long sourceSize = 0;
             switch (jobInstance.getType()) {
-                case BUILD:
-                    JobStep baseCuboidStep = jobInstance.findStep(JobConstants.STEP_NAME_BUILD_BASE_CUBOID);
-                    if (null != baseCuboidStep) {
-                        String sourceRecordsCount = baseCuboidStep.getInfo(JobInstance.SOURCE_RECORDS_COUNT);
-                        if (sourceRecordsCount == null || sourceRecordsCount.equals("")) {
-                            throw new RuntimeException("Can't get cube source record count.");
-                        }
-                        sourceCount = Long.parseLong(sourceRecordsCount);
-                    } else {
-                        log.info("No step with name '" + JobConstants.STEP_NAME_BUILD_BASE_CUBOID + "' is found");
+            case BUILD:
+                JobStep baseCuboidStep = jobInstance.findStep(JobConstants.STEP_NAME_BUILD_BASE_CUBOID);
+                if (null != baseCuboidStep) {
+                    String sourceRecordsCount = baseCuboidStep.getInfo(JobInstance.SOURCE_RECORDS_COUNT);
+                    if (sourceRecordsCount == null || sourceRecordsCount.equals("")) {
+                        throw new RuntimeException("Can't get cube source record count.");
                     }
+                    sourceCount = Long.parseLong(sourceRecordsCount);
+                } else {
+                    log.info("No step with name '" + JobConstants.STEP_NAME_BUILD_BASE_CUBOID + "' is found");
+                }
 
-                    JobStep createFlatTableStep =
-                            jobInstance.findStep(JobConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
-                    if (null != createFlatTableStep) {
-                        String sourceRecordsSize = createFlatTableStep.getInfo(JobInstance.SOURCE_RECORDS_SIZE);
-                        if (sourceRecordsSize == null || sourceRecordsSize.equals("")) {
-                            throw new RuntimeException("Can't get cube source record size.");
-                        }
-                        sourceSize = Long.parseLong(sourceRecordsSize);
-                    } else {
-                        log.info("No step with name '" + JobConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE
-                                + "' is found");
+                JobStep createFlatTableStep =
+                        jobInstance.findStep(JobConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
+                if (null != createFlatTableStep) {
+                    String sourceRecordsSize = createFlatTableStep.getInfo(JobInstance.SOURCE_RECORDS_SIZE);
+                    if (sourceRecordsSize == null || sourceRecordsSize.equals("")) {
+                        throw new RuntimeException("Can't get cube source record size.");
                     }
-                    break;
-                case MERGE:
-                    for (CubeSegment seg : cubeInstance.getMergingSegments()) {
-                        sourceCount += seg.getSourceRecords();
-                        sourceSize += seg.getSourceRecordsSize();
-                    }
-                    break;
+                    sourceSize = Long.parseLong(sourceRecordsSize);
+                } else {
+                    log.info("No step with name '" + JobConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE
+                            + "' is found");
+                }
+                break;
+            case MERGE:
+                for (CubeSegment seg : cubeInstance.getMergingSegments()) {
+                    sourceCount += seg.getSourceRecords();
+                    sourceSize += seg.getSourceRecordsSize();
+                }
+                break;
             }
 
             cubeMgr.updateSegmentOnJobSucceed(cubeInstance, jobInstance.getType(),
@@ -294,7 +303,7 @@ public class JobFlowListener implements JobListener {
     }
 
     private void handleException(String jobInstanceUuid, int jobInstanceStepSeqId, KylinConfig config,
-                                 Throwable t) {
+            Throwable t) {
         log.error(t.getLocalizedMessage(), t);
         String exceptionMsg = "Failed with Exception:" + ExceptionUtils.getFullStackTrace(t);
         try {
@@ -327,25 +336,25 @@ public class JobFlowListener implements JobListener {
         String logMsg = "";
 
         switch (jobInstance.getStatus()) {
-            case FINISHED:
-                finalStatus = "SUCCESS";
-                break;
-            case ERROR:
-                for (JobStep step : jobInstance.getSteps()) {
-                    if (step.getStatus() == JobStepStatusEnum.ERROR) {
-                        try {
-                            logMsg = JobDAO.getInstance(config).getJobOutput(step).getOutput();
-                        } catch (IOException e) {
-                            log.error(e.getLocalizedMessage(), e);
-                        }
+        case FINISHED:
+            finalStatus = "SUCCESS";
+            break;
+        case ERROR:
+            for (JobStep step : jobInstance.getSteps()) {
+                if (step.getStatus() == JobStepStatusEnum.ERROR) {
+                    try {
+                        logMsg = JobDAO.getInstance(config).getJobOutput(step).getOutput();
+                    } catch (IOException e) {
+                        log.error(e.getLocalizedMessage(), e);
                     }
                 }
-                finalStatus = "FAILED";
-                break;
-            case DISCARDED:
-                finalStatus = "DISCARDED";
-            default:
-                break;
+            }
+            finalStatus = "FAILED";
+            break;
+        case DISCARDED:
+            finalStatus = "DISCARDED";
+        default:
+            break;
         }
 
         if (null == finalStatus) {

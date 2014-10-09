@@ -16,6 +16,8 @@
 
 package com.kylinolap.job.hadoop.cube;
 
+import java.io.IOException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -29,10 +31,9 @@ import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import java.io.IOException;
-
 /**
  * @author yangli9
+ *
  */
 public class CopySeq {
 

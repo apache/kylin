@@ -15,18 +15,19 @@
  */
 package com.kylinolap.job.hadoop.hbase;
 
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import static org.junit.Assert.*;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import com.kylinolap.common.util.LocalFileMetadataTestCase;
 
 /**
  * @author George Song (ysong1)
+ * 
  */
 public class CreateHTableTest extends LocalFileMetadataTestCase {
 
@@ -55,8 +56,8 @@ public class CreateHTableTest extends LocalFileMetadataTestCase {
         byte[][] splits = c.getSplits(conf, new Path(input));
 
         assertEquals(497, splits.length);
-        assertArrayEquals(new byte[]{0, 0, 0, 0, 0, 0, 15, -1, 11, 51, -45, 2}, splits[0]);
-        assertArrayEquals(new byte[]{0, 0, 0, 0, 0, 3, -1, -1, -54, -61, 109, -44, 1}, splits[496]);
+        assertArrayEquals(new byte[] { 0, 0, 0, 0, 0, 0, 15, -1, 11, 51, -45, 2 }, splits[0]);
+        assertArrayEquals(new byte[] { 0, 0, 0, 0, 0, 3, -1, -1, -54, -61, 109, -44, 1 }, splits[496]);
     }
 
 }

@@ -16,28 +16,40 @@
 
 package com.kylinolap.job.hadoop.cube;
 
-import com.kylinolap.job.constant.BatchConstants;
+import java.io.IOException;
+import java.net.URI;
+
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configuration.IntegerRanges;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.RawComparator;
-import org.apache.hadoop.mapreduce.*;
+import org.apache.hadoop.mapreduce.Counter;
+import org.apache.hadoop.mapreduce.InputFormat;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.JobID;
+import org.apache.hadoop.mapreduce.MapContext;
+import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Mapper.Context;
+import org.apache.hadoop.mapreduce.OutputCommitter;
+import org.apache.hadoop.mapreduce.OutputFormat;
+import org.apache.hadoop.mapreduce.Partitioner;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.lib.map.WrappedMapper;
 import org.apache.hadoop.security.Credentials;
 
-import java.io.IOException;
-import java.net.URI;
+import com.kylinolap.job.constant.BatchConstants;
 
 /**
  * @author yangli9
+ *
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class MockupMapContext {
 
     public static Context create(final Configuration hconf, String metadataUrl, String cubeName,
-                                 final Object[] outKV) {
+            final Object[] outKV) {
 
         hconf.set(BatchConstants.CFG_CUBE_NAME, cubeName);
 

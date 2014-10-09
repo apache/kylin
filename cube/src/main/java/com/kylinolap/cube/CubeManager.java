@@ -16,6 +16,19 @@
 
 package com.kylinolap.cube;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
@@ -38,13 +51,6 @@ import com.kylinolap.metadata.model.cube.DimensionDesc;
 import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author yangli9
@@ -261,7 +267,7 @@ public class CubeManager {
     }
 
     public List<CubeSegment> allocateSegments(CubeInstance cubeInstance, CubeBuildTypeEnum buildType,
-                                              long startDate, long endDate) throws IOException, CubeIntegrityException {
+            long startDate, long endDate) throws IOException, CubeIntegrityException {
         if (cubeInstance.getBuildingSegments().size() > 0) {
             throw new RuntimeException("There is already a allocating segment!");
         }
@@ -328,22 +334,22 @@ public class CubeManager {
     }
 
     public void updateSegmentOnJobSucceed(CubeInstance cubeInstance, CubeBuildTypeEnum buildType,
-                                          String segmentName, String lastBuildJobUuid, long lastBuildTime, long sizeKB,
-                                          long sourceRecordCount, long sourceRecordsSize) throws IOException, CubeIntegrityException {
+            String segmentName, String lastBuildJobUuid, long lastBuildTime, long sizeKB,
+            long sourceRecordCount, long sourceRecordsSize) throws IOException, CubeIntegrityException {
 
         List<CubeSegment> segmentsInNewStatus = cubeInstance.getSegments(CubeSegmentStatusEnum.NEW);
         CubeSegment cubeSegment = cubeInstance.getSegment(segmentName, CubeSegmentStatusEnum.NEW);
 
         switch (buildType) {
-            case BUILD:
-                if (segmentsInNewStatus.size() == 1) {// if this the last segment in status of NEW
-                    // remove all the rebuilding/impacted segments
-                    cubeInstance.getSegments().removeAll(cubeInstance.getRebuildingSegments());
-                }
-                break;
-            case MERGE:
-                cubeInstance.getSegments().removeAll(cubeInstance.getMergingSegments());
-                break;
+        case BUILD:
+            if (segmentsInNewStatus.size() == 1) {// if this the last segment in status of NEW
+                // remove all the rebuilding/impacted segments
+                cubeInstance.getSegments().removeAll(cubeInstance.getRebuildingSegments());
+            }
+            break;
+        case MERGE:
+            cubeInstance.getSegments().removeAll(cubeInstance.getMergingSegments());
+            break;
         }
 
         cubeSegment.setLastBuildJobID(lastBuildJobUuid);
@@ -576,7 +582,7 @@ public class CubeManager {
     /**
      */
     private void validateNewSegments(CubeInstance cubeInstance, CubeBuildTypeEnum buildType,
-                                     List<CubeSegment> newSegments) throws CubeIntegrityException {
+            List<CubeSegment> newSegments) throws CubeIntegrityException {
         if (null == cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateColumn()) {
             // do nothing for non-incremental build
             return;

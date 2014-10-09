@@ -16,19 +16,21 @@
 
 package com.kylinolap.rest.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.project.ProjectInstance;
-import com.kylinolap.job.exception.JobException;
+import java.net.UnknownHostException;
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.net.UnknownHostException;
-import java.util.List;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.project.ProjectInstance;
+import com.kylinolap.job.exception.JobException;
 
 /**
  * @author xduo
+ *
  */
 public class CubeServiceTest extends TestBase {
 

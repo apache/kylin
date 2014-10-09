@@ -16,11 +16,11 @@
 
 package com.kylinolap.job.hadoop.cube;
 
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.cube.measure.MeasureCodec;
-import com.kylinolap.metadata.model.cube.CubeDesc;
+import static org.junit.Assert.*;
+
+import java.io.File;
+import java.nio.ByteBuffer;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.KeyValue;
@@ -32,15 +32,17 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
-import java.nio.ByteBuffer;
-
-import static org.junit.Assert.assertTrue;
+import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.kv.RowConstants;
+import com.kylinolap.cube.measure.MeasureCodec;
+import com.kylinolap.metadata.model.cube.CubeDesc;
 
 /**
  * @author yangli9
+ *
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class CubeHFileMapper2Test extends LocalFileMetadataTestCase {
 
     String cubeName = "test_kylin_cube_with_slr_ready";
@@ -76,7 +78,7 @@ public class CubeHFileMapper2Test extends LocalFileMetadataTestCase {
         mapper.setup(context);
 
         Text key = new Text("not important");
-        Text value = new Text(new byte[]{2, 2, 51, -79, 1});
+        Text value = new Text(new byte[] { 2, 2, 51, -79, 1 });
 
         mapper.map(key, value, context);
 

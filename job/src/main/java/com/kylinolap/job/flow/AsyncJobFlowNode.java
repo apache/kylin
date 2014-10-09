@@ -16,6 +16,18 @@
 
 package com.kylinolap.job.flow;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import org.quartz.DateBuilder;
+import org.quartz.DateBuilder.IntervalUnit;
+import org.quartz.JobDataMap;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
+import org.quartz.SchedulerException;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.job.JobDAO;
 import com.kylinolap.job.JobInstance;
@@ -26,14 +38,10 @@ import com.kylinolap.job.constant.JobConstants;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.exception.JobException;
-import org.quartz.*;
-import org.quartz.DateBuilder.IntervalUnit;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * @author xduo
+ *
  */
 public class AsyncJobFlowNode extends JobFlowNode {
 

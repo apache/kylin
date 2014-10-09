@@ -16,7 +16,13 @@
 
 package com.kylinolap.job.hadoop.cube;
 
-import com.kylinolap.job.constant.BatchConstants;
+import static org.junit.Assert.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.ReduceDriver;
@@ -24,16 +30,11 @@ import org.apache.hadoop.mrunit.types.Pair;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import com.kylinolap.job.constant.BatchConstants;
 
 /**
  * @author ysong1
+ *
  */
 public class RangeKeyDistributionReducerTest {
 
@@ -48,24 +49,24 @@ public class RangeKeyDistributionReducerTest {
 
     @Test
     public void testReducer() throws IOException {
-        Text key1 = new Text(new byte[]{1});
+        Text key1 = new Text(new byte[] { 1 });
         List<LongWritable> values1 = new ArrayList<LongWritable>();
         values1.add(new LongWritable(RangeKeyDistributionReducer.TEN_GIGA_BYTES));
         values1.add(new LongWritable(1));
 
-        Text key2 = new Text(new byte[]{2});
+        Text key2 = new Text(new byte[] { 2 });
         List<LongWritable> values2 = new ArrayList<LongWritable>();
         values2.add(new LongWritable(123));
 
-        Text key3 = new Text(new byte[]{3});
+        Text key3 = new Text(new byte[] { 3 });
         List<LongWritable> values3 = new ArrayList<LongWritable>();
         values3.add(new LongWritable(RangeKeyDistributionReducer.TEN_GIGA_BYTES));
 
-        Text key4 = new Text(new byte[]{4});
+        Text key4 = new Text(new byte[] { 4 });
         List<LongWritable> values4 = new ArrayList<LongWritable>();
         values4.add(new LongWritable(RangeKeyDistributionReducer.TEN_GIGA_BYTES));
 
-        Text key5 = new Text(new byte[]{5});
+        Text key5 = new Text(new byte[] { 5 });
         List<LongWritable> values5 = new ArrayList<LongWritable>();
         values5.add(new LongWritable(1));
 
@@ -83,22 +84,22 @@ public class RangeKeyDistributionReducerTest {
 
         byte[] outputKey1 = result.get(0).getFirst().getBytes();
         LongWritable value1 = result.get(0).getSecond();
-        assertArrayEquals(new byte[]{1}, outputKey1);
+        assertArrayEquals(new byte[] { 1 }, outputKey1);
         assertEquals(10737418241L, value1.get());
 
         byte[] outputKey2 = result.get(1).getFirst().getBytes();
         LongWritable value2 = result.get(1).getSecond();
-        assertArrayEquals(new byte[]{3}, outputKey2);
+        assertArrayEquals(new byte[] { 3 }, outputKey2);
         assertEquals(10737418363L, value2.get());
 
         byte[] outputKey3 = result.get(2).getFirst().getBytes();
         LongWritable value3 = result.get(2).getSecond();
-        assertArrayEquals(new byte[]{4}, outputKey3);
+        assertArrayEquals(new byte[] { 4 }, outputKey3);
         assertEquals(10737418240L, value3.get());
 
         byte[] outputKey4 = result.get(3).getFirst().getBytes();
         LongWritable value4 = result.get(3).getSecond();
-        assertArrayEquals(new byte[]{5}, outputKey4);
+        assertArrayEquals(new byte[] { 5 }, outputKey4);
         assertEquals(1L, value4.get());
     }
 }

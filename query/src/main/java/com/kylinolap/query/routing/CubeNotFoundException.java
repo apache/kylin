@@ -18,6 +18,7 @@ package com.kylinolap.query.routing;
 
 /**
  * @author xjiang
+ *
  */
 public class CubeNotFoundException extends RuntimeException {
 

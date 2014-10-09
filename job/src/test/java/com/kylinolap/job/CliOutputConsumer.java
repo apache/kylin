@@ -20,7 +20,6 @@ package com.kylinolap.job;
  * @author ysong1
  *
  */
-
 import com.kylinolap.common.util.SSHLogger;
 
 public interface CliOutputConsumer extends SSHLogger {

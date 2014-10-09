@@ -16,42 +16,67 @@
 
 package com.kylinolap.storage.hbase.coprocessor;
 
-import com.google.common.collect.Lists;
-import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertTrue;
+import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.junit.Test;
+
+import com.google.common.collect.Lists;
+import com.kylinolap.storage.hbase.coprocessor.SRowProjector.AggrKey;
 
 /**
  * @author yangli9
+ *
  */
 public class RowProjectorTest {
 
-    byte[] mask = new byte[]{0x00, 0x01, 0x7f, (byte) 0xff};
-    RowProjector sample = new RowProjector(mask);
+    byte[] mask = new byte[] { (byte) 0xff, 0x00, 0x00, (byte) 0xff };
+    SRowProjector sample = new SRowProjector(mask);
 
     @Test
     public void testSerialize() {
 
-        byte[] bytes = RowProjector.serialize(sample);
-        RowProjector copy = RowProjector.deserialize(bytes);
+        byte[] bytes = SRowProjector.serialize(sample);
+        SRowProjector copy = SRowProjector.deserialize(bytes);
 
-        assertTrue(Arrays.equals(sample.rowKeyBitMask, copy.rowKeyBitMask));
+        assertTrue(Arrays.equals(sample.groupByMask, copy.groupByMask));
     }
 
     @Test
     public void testProject() {
-        ImmutableBytesWritable rowKey =
-                sample.getRowKey(newCellWithRowKey(new byte[]{(byte) 0xff, (byte) 0xff, (byte) 0xff,
-                        (byte) 0xff}));
-        assertTrue(Bytes.equals(mask, 0, mask.length, rowKey.get(), rowKey.getOffset(), rowKey.getLength()));
+        byte[] bytes1 = new byte[] { -1, -2, -3, -4 };
+        byte[] bytes2 = new byte[] { 1, 2, 3, 4 };
+        byte[] bytes3 = new byte[] { 1, 99, 100, 4 };
+        byte[] bytes4 = new byte[] { 1, 1, 1, 5 };
+
+        AggrKey rowKey = sample.getRowKey(newCellWithRowKey(bytes1));
+        AggrKey rowKey2 = sample.getRowKey(newCellWithRowKey(bytes2));
+        assertTrue(rowKey == rowKey2); // no extra object creation
+        assertTrue(Bytes.equals(rowKey.get(), rowKey.offset(), rowKey.length(), bytes2, 0, bytes2.length));
+
+        rowKey2 = rowKey.copy(); // explicit object creation
+        assertTrue(rowKey != rowKey2);
+
+        rowKey = sample.getRowKey(newCellWithRowKey(bytes1));
+        assertTrue(rowKey.hashCode() != rowKey2.hashCode());
+        assertTrue(rowKey.equals(rowKey2) == false);
+        assertTrue(rowKey.compareTo(rowKey2) > 0); // unsigned compare
+
+        rowKey = sample.getRowKey(newCellWithRowKey(bytes3));
+        assertTrue(rowKey.hashCode() == rowKey2.hashCode());
+        assertTrue(rowKey.equals(rowKey2) == true);
+        assertTrue(rowKey.compareTo(rowKey2) == 0);
+
+        rowKey = sample.getRowKey(newCellWithRowKey(bytes4));
+        assertTrue(rowKey.hashCode() != rowKey2.hashCode());
+        assertTrue(rowKey.equals(rowKey2) == false);
+        assertTrue(rowKey.compareTo(rowKey2) > 0);
     }
 
     private List<Cell> newCellWithRowKey(byte[] rowkey) {

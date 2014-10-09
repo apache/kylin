@@ -16,6 +16,8 @@
 
 package com.kylinolap.job.hadoop.cube;
 
+import java.io.IOException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
@@ -27,12 +29,11 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.IOException;
-
 /**
  * @author yangli9
+ *
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class BaseCuboidMapperPerformanceTest {
 
     String metadataUrl = "hbase:yadesk00:2181:/hbase-unsecure";

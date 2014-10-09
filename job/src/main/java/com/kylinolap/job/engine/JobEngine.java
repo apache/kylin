@@ -15,15 +15,16 @@
  */
 package com.kylinolap.job.engine;
 
-/**
- * @author George Song (ysong1), xduo
- *
- */
+/** 
+* @author George Song (ysong1), xduo
+* 
+*/
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.concurrent.ConcurrentHashMap;
 
-import com.kylinolap.job.JobInstance;
-import com.kylinolap.job.JobInstance.JobStep;
-import com.kylinolap.job.constant.JobConstants;
-import com.kylinolap.job.exception.JobException;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.math.stat.descriptive.rank.Percentile;
 import org.apache.curator.RetryPolicy;
@@ -39,11 +40,10 @@ import org.quartz.Scheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.concurrent.ConcurrentHashMap;
+import com.kylinolap.job.JobInstance;
+import com.kylinolap.job.JobInstance.JobStep;
+import com.kylinolap.job.constant.JobConstants;
+import com.kylinolap.job.exception.JobException;
 
 public class JobEngine implements ConnectionStateListener {
 

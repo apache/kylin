@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * @author xduo
+ *
  */
 @Aspect
 @Component("cacheIntercaptor")

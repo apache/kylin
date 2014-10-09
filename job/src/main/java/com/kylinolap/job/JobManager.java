@@ -16,8 +16,24 @@
 
 package com.kylinolap.job;
 
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
+import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.cube.*;
+import com.kylinolap.cube.CubeBuildTypeEnum;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.cube.CubeSegmentStatusEnum;
 import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.cube.project.ProjectManager;
@@ -31,16 +47,10 @@ import com.kylinolap.job.exception.InvalidJobInstanceException;
 import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc;
 import com.kylinolap.metadata.model.cube.CubeDesc;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.net.UnknownHostException;
-import java.text.SimpleDateFormat;
-import java.util.*;
 
 /**
  * @author xjiang, ysong1
+ * 
  */
 public class JobManager {
 
@@ -135,29 +145,29 @@ public class JobManager {
         CubeInstance cube = CubeManager.getInstance(config).getCube(jobInstance.getRelatedCube());
 
         switch (jobInstance.getStatus()) {
-            case RUNNING:
-                try {
-                    killRunningJob(jobInstance);
-                } finally {
-                    CubeManager.getInstance(config).updateSegmentOnJobDiscard(cube,
-                            jobInstance.getRelatedSegment());
-                }
-                break;
-            case ERROR:
-                try {
-                    for (JobStep jobStep : jobInstance.getSteps()) {
-                        if (jobStep.getStatus() != JobStepStatusEnum.FINISHED) {
-                            jobStep.setStatus(JobStepStatusEnum.DISCARDED);
-                        }
+        case RUNNING:
+            try {
+                killRunningJob(jobInstance);
+            } finally {
+                CubeManager.getInstance(config).updateSegmentOnJobDiscard(cube,
+                        jobInstance.getRelatedSegment());
+            }
+            break;
+        case ERROR:
+            try {
+                for (JobStep jobStep : jobInstance.getSteps()) {
+                    if (jobStep.getStatus() != JobStepStatusEnum.FINISHED) {
+                        jobStep.setStatus(JobStepStatusEnum.DISCARDED);
                     }
-                    jobDAO.updateJobInstance(jobInstance);
-                } finally {
-                    CubeManager.getInstance(config).updateSegmentOnJobDiscard(cube,
-                            jobInstance.getRelatedSegment());
                 }
-                break;
-            default:
-                throw new IllegalStateException("Invalid status to discard : " + jobInstance.getStatus());
+                jobDAO.updateJobInstance(jobInstance);
+            } finally {
+                CubeManager.getInstance(config).updateSegmentOnJobDiscard(cube,
+                        jobInstance.getRelatedSegment());
+            }
+            break;
+        default:
+            throw new IllegalStateException("Invalid status to discard : " + jobInstance.getStatus());
         }
     }
 
@@ -165,7 +175,7 @@ public class JobManager {
      * @param uuid
      * @param jobInstance
      * @throws IOException
-     * @throws JobException
+     * @throws JobException 
      */
     private void killRunningJob(JobInstance jobInstance) throws IOException, JobException {
         // find the running step

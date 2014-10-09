@@ -16,16 +16,18 @@
 
 package com.kylinolap.rest.service;
 
-import com.kylinolap.cube.project.ProjectInstance;
-import com.kylinolap.job.exception.JobException;
+import java.io.IOException;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.IOException;
+import com.kylinolap.cube.project.ProjectInstance;
+import com.kylinolap.job.exception.JobException;
 
 /**
  * @author xduo
+ *
  */
 public class JobServiceTest extends TestBase {
 

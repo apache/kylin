@@ -15,6 +15,16 @@
  */
 package com.kylinolap.storage.test;
 
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.cube.CubeInstance;
@@ -27,20 +37,15 @@ import com.kylinolap.metadata.model.schema.TableDesc;
 import com.kylinolap.storage.IStorageEngine;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.StorageEngineFactory;
-import com.kylinolap.storage.filter.*;
+import com.kylinolap.storage.filter.ColumnTupleFilter;
+import com.kylinolap.storage.filter.CompareTupleFilter;
+import com.kylinolap.storage.filter.ConstantTupleFilter;
+import com.kylinolap.storage.filter.LogicalTupleFilter;
+import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
 import com.kylinolap.storage.hbase.ScanOutOfLimitException;
-import com.kylinolap.storage.tuple.Tuple;
-import com.kylinolap.storage.tuple.TupleIterator;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.assertTrue;
+import com.kylinolap.storage.tuple.ITuple;
+import com.kylinolap.storage.tuple.ITupleIterator;
 
 public class StorageTest extends HBaseMetadataTestCase {
 
@@ -125,13 +130,13 @@ public class StorageTest extends HBaseMetadataTestCase {
     }
 
     private int search(List<TblColRef> groups, List<FunctionDesc> aggregations, TupleFilter filter,
-                       StorageContext context) {
+            StorageContext context) {
         int count = 0;
-        TupleIterator iterator = null;
+        ITupleIterator iterator = null;
         try {
             iterator = storageEngine.search(groups, filter, groups, aggregations, context);
             while (iterator.hasNext()) {
-                Tuple tuple = iterator.next();
+                ITuple tuple = iterator.next();
                 System.out.println("Tuple = " + tuple);
                 count++;
             }
@@ -154,6 +159,7 @@ public class StorageTest extends HBaseMetadataTestCase {
         ColumnDesc c1 = new ColumnDesc();
         c1.setName("CAL_DT");
         c1.setTable(t1);
+        c1.setDatatype("string");
         TblColRef cf1 = new TblColRef(c1);
         groups.add(cf1);
 
@@ -163,6 +169,7 @@ public class StorageTest extends HBaseMetadataTestCase {
         ColumnDesc c2 = new ColumnDesc();
         c2.setName("META_CATEG_NAME");
         c2.setTable(t2);
+        c2.setDatatype("string");
         TblColRef cf2 = new TblColRef(c2);
         groups.add(cf2);
 

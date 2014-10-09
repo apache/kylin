@@ -24,13 +24,14 @@ import com.kylinolap.metadata.validation.rule.RowKeyAttrRule;
 
 /**
  * For cube metadata validator
- *
+ * 
  * @author jianliu
+ *
  */
 public class CubeMetadataValidator {
     @SuppressWarnings("unchecked")
-    private IValidatorRule<CubeDesc>[] rules = new IValidatorRule[]{new FunctionRule(),
-            new AggregationGroupSizeRule(), new MandatoryColumnRule(), new RowKeyAttrRule()};
+    private IValidatorRule<CubeDesc>[] rules = new IValidatorRule[] { new FunctionRule(),
+            new AggregationGroupSizeRule(), new MandatoryColumnRule(), new RowKeyAttrRule() };
 
     public ValidateContext validate(CubeDesc cube) {
         return validate(cube, false);
@@ -38,7 +39,7 @@ public class CubeMetadataValidator {
 
     /**
      * @param cubeDesc
-     * @param inject   inject error into cube desc
+     * @param inject inject error into cube desc
      * @return
      */
     public ValidateContext validate(CubeDesc cube, boolean inject) {
@@ -54,10 +55,10 @@ public class CubeMetadataValidator {
     }
 
     /**
+     * 
      * Inject errors info into cubeDesc
-     *
      * @param cubeDesc
-     * @param context
+     * @param context 
      */
     public void injectResult(CubeDesc cubeDesc, ValidateContext context) {
         Result[] results = context.getResults();

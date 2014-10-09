@@ -15,19 +15,22 @@
  */
 package com.kylinolap.rest.controller;
 
-import com.kylinolap.rest.exception.BadRequestException;
-import com.kylinolap.rest.exception.ForbiddenException;
-import com.kylinolap.rest.exception.InternalErrorException;
-import com.kylinolap.rest.exception.NotFoundException;
-import com.kylinolap.rest.response.ErrorResponse;
-import com.kylinolap.rest.service.MetricsService;
+import javax.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import javax.servlet.http.HttpServletRequest;
+import com.kylinolap.rest.exception.BadRequestException;
+import com.kylinolap.rest.exception.ForbiddenException;
+import com.kylinolap.rest.exception.InternalErrorException;
+import com.kylinolap.rest.exception.NotFoundException;
+import com.kylinolap.rest.response.ErrorResponse;
+import com.kylinolap.rest.service.MetricsService;
 
 /**
  * Created with IntelliJ IDEA.
@@ -38,6 +41,8 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class BasicController {
 
+    private static final Logger logger = LoggerFactory.getLogger(BasicController.class);
+
     @Autowired
     protected MetricsService metricsService;
 
@@ -46,6 +51,7 @@ public class BasicController {
     @ExceptionHandler(InternalErrorException.class)
     @ResponseBody
     ErrorResponse handleInternalError(HttpServletRequest req, Exception ex) {
+        logger.error("Internal error throw out of controller", ex);
         return new ErrorResponse(req.getRequestURL().toString(), ex);
     }
 

@@ -1,11 +1,11 @@
 package com.kylinolap.dict.lookup;
 
-import com.kylinolap.common.persistence.Serializer;
-import com.kylinolap.common.util.JsonUtil;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+
+import com.kylinolap.common.persistence.Serializer;
+import com.kylinolap.common.util.JsonUtil;
 
 /*
  * Copyright 2013-2014 eBay Software Foundation
@@ -25,6 +25,7 @@ import java.io.IOException;
 
 /**
  * @author yangli9
+ *
  */
 public class SnapshotTableSerializer implements Serializer<SnapshotTable> {
 

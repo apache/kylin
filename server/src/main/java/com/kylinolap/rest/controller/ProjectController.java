@@ -16,21 +16,27 @@
 
 package com.kylinolap.rest.controller;
 
+import java.io.IOException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
 import com.codahale.metrics.annotation.Metered;
 import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.request.CreateProjectRequest;
 import com.kylinolap.rest.request.UpdateProjectRequest;
 import com.kylinolap.rest.service.ProjectService;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-
-import java.io.IOException;
-import java.util.List;
 
 /**
  * @author xduo
@@ -49,14 +55,14 @@ public class ProjectController extends BasicController {
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "", method = {RequestMethod.GET})
+    @RequestMapping(value = "", method = { RequestMethod.GET })
     @ResponseBody
     public List<ProjectInstance> getProjects(@RequestParam(value = "limit", required = false) Integer limit,
-                                             @RequestParam(value = "offset", required = false) Integer offset) {
+            @RequestParam(value = "offset", required = false) Integer offset) {
         return projectService.listAllProjects(limit, offset);
     }
 
-    @RequestMapping(value = "", method = {RequestMethod.POST})
+    @RequestMapping(value = "", method = { RequestMethod.POST })
     @ResponseBody
     @Metered(name = "saveProject")
     public ProjectInstance saveProject(@RequestBody CreateProjectRequest projectRequest) {
@@ -75,7 +81,7 @@ public class ProjectController extends BasicController {
         return createdProj;
     }
 
-    @RequestMapping(value = "", method = {RequestMethod.PUT})
+    @RequestMapping(value = "", method = { RequestMethod.PUT })
     @ResponseBody
     @Metered(name = "updateProject")
     public ProjectInstance updateProject(@RequestBody UpdateProjectRequest projectRequest) {
@@ -94,7 +100,7 @@ public class ProjectController extends BasicController {
         return updatedProj;
     }
 
-    @RequestMapping(value = "/{projectName}", method = {RequestMethod.DELETE})
+    @RequestMapping(value = "/{projectName}", method = { RequestMethod.DELETE })
     @ResponseBody
     @Metered(name = "deleteProject")
     public void deleteProject(@PathVariable String projectName) {

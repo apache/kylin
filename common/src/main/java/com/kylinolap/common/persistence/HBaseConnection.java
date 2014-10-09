@@ -16,17 +16,19 @@
 
 package com.kylinolap.common.persistence;
 
-import com.kylinolap.common.util.HadoopUtil;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HConnectionManager;
-
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.HConnectionManager;
+
+import com.kylinolap.common.util.HadoopUtil;
+
 /**
  * @author yangli9
+ *
  */
 public class HBaseConnection {
 

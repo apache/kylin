@@ -16,19 +16,21 @@
 
 package com.kylinolap.rest.controller;
 
-import com.kylinolap.rest.service.AdminService;
-import com.kylinolap.rest.service.CubeService;
-import com.kylinolap.rest.service.TestBase;
-import com.kylinolap.rest.service.UserService;
+import java.io.IOException;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.IOException;
+import com.kylinolap.rest.service.AdminService;
+import com.kylinolap.rest.service.CubeService;
+import com.kylinolap.rest.service.TestBase;
+import com.kylinolap.rest.service.UserService;
 
 /**
  * @author xduo
+ *
  */
 public class AdminControllerTest extends TestBase {
 

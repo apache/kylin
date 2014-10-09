@@ -16,17 +16,19 @@
 
 package com.kylinolap.rest.service;
 
-import com.codahale.metrics.MetricRegistry;
-import com.kylinolap.job.JobManager;
-import com.kylinolap.rest.metrics.JobMetrics;
-import com.kylinolap.rest.metrics.QueryMetrics;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import com.codahale.metrics.MetricRegistry;
+import com.kylinolap.job.JobManager;
+import com.kylinolap.rest.metrics.JobMetrics;
+import com.kylinolap.rest.metrics.QueryMetrics;
+
 /**
  * @author xduo
+ *
  */
 @Component("metricsService")
 public class MetricsService implements InitializingBean {

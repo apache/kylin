@@ -15,7 +15,11 @@
  */
 package com.kylinolap.job.hadoop.cube;
 
-import com.kylinolap.job.constant.BatchConstants;
+import static org.junit.Assert.*;
+
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.Text;
@@ -25,13 +29,11 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
+import com.kylinolap.job.constant.BatchConstants;
 
 /**
  * @author George Song (ysong1)
+ * 
  */
 public class CubeHFileMapperTest {
 
@@ -57,7 +59,7 @@ public class CubeHFileMapperTest {
 
         assertEquals(2, result.size());
 
-        byte[] bytes = {0, 0, 0, 0, 0, 0, 0, 119, 33, 0, 22, 1, 0, 121, 7};
+        byte[] bytes = { 0, 0, 0, 0, 0, 0, 0, 119, 33, 0, 22, 1, 0, 121, 7 };
         ImmutableBytesWritable key = new ImmutableBytesWritable(bytes);
 
         Pair<ImmutableBytesWritable, KeyValue> p1 = result.get(0);

@@ -16,7 +16,6 @@
 
 package com.kylinolap.job.hadoop.cube;
 
-import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -29,8 +28,11 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
 
+import com.kylinolap.job.hadoop.AbstractHadoopJob;
+
 /**
  * @author ysong1
+ *
  */
 public class RowKeyDistributionCheckerJob extends AbstractHadoopJob {
 

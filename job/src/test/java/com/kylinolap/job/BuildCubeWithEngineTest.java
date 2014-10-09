@@ -16,6 +16,32 @@
 
 package com.kylinolap.job;
 
+import static org.junit.Assert.*;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TimeZone;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.quartz.SchedulerException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.ClasspathUtil;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
@@ -34,25 +60,6 @@ import com.kylinolap.job.hadoop.hive.SqlHiveDataTypeMapping;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.quartz.SchedulerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.*;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.TimeZone;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author ysong1
@@ -67,8 +74,8 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
     protected static final String TABLE_SELLER_TYPE_DIM = "test_seller_type_dim";
     protected static final String TABLE_SITES = "test_sites";
 
-    String[] TABLE_NAMES = new String[]{TABLE_CAL_DT, TABLE_CATEGORY_GROUPINGS, TABLE_KYLIN_FACT,
-            TABLE_SELLER_TYPE_DIM, TABLE_SITES};
+    String[] TABLE_NAMES = new String[] { TABLE_CAL_DT, TABLE_CATEGORY_GROUPINGS, TABLE_KYLIN_FACT,
+            TABLE_SELLER_TYPE_DIM, TABLE_SITES };
 
     private JobManager jobManager;
     private JobEngineConfig engineConfig;
@@ -237,8 +244,8 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
     }
 
     private void deployJarToHadoopCli() throws Exception {
-        scpFilesToHadoopCli(new String[]{".." + File.separator + "job" + File.separator + "target"
-                + File.separator + jobJarName}, this.getHadoopCliWorkingDir());
+        scpFilesToHadoopCli(new String[] { ".." + File.separator + "job" + File.separator + "target"
+                + File.separator + jobJarName }, this.getHadoopCliWorkingDir());
     }
 
     private void deployJarToLocalDir() throws IOException {
@@ -253,11 +260,11 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
     }
 
     private void deployConfigFile() throws Exception {
-        scpFilesToHadoopCli(new String[]{
+        scpFilesToHadoopCli(new String[] {
                 ".." + File.separator + "examples" + File.separator + "test_case_data" + File.separator
                         + "kylin.properties",
                 ".." + File.separator + "examples" + File.separator + "test_case_data" + File.separator
-                        + "hadoop_job_conf.xml"}, "/etc/kylin");
+                        + "hadoop_job_conf.xml" }, "/etc/kylin");
     }
 
     private void deployTestData() throws Exception {
@@ -280,7 +287,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
             hbaseDataStream.close();
             localFileStream.close();
 
-            this.scpFilesToHadoopCli(new String[]{localBufferFile.getPath()},
+            this.scpFilesToHadoopCli(new String[] { localBufferFile.getPath() },
                     this.getHadoopCliWorkingDir());
 
             localBufferFile.delete();

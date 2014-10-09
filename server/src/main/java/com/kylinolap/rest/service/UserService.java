@@ -16,20 +16,22 @@
 
 package com.kylinolap.rest.service;
 
-import com.kylinolap.rest.request.MetricsRequest;
-import com.kylinolap.rest.response.MetricsResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementSetter;
-import org.springframework.security.provisioning.JdbcUserDetailsManager;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementSetter;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
+
+import com.kylinolap.rest.request.MetricsRequest;
+import com.kylinolap.rest.response.MetricsResponse;
+
 /**
  * @author xduo
+ *
  */
 public class UserService extends JdbcUserDetailsManager {
 
@@ -44,12 +46,11 @@ public class UserService extends JdbcUserDetailsManager {
                         ps.setString(1, username);
                         ps.setTimestamp(2, new java.sql.Timestamp(new Date().getTime()));
                     }
-                }
-        );
+                });
     }
 
     public List<String> getUserAuthorities() {
-        return jdbcTemplate.queryForList("select distinct authority from authorities", new String[]{},
+        return jdbcTemplate.queryForList("select distinct authority from authorities", new String[] {},
                 String.class);
     }
 
@@ -61,7 +62,7 @@ public class UserService extends JdbcUserDetailsManager {
                 "select count(distinct username) as count from user_hits where hit_time > ? and hit_time < ?";
 
         int userCount =
-                (Integer) jdbcTemplate.queryForObject(userCountSql, new Object[]{startTime, endTime},
+                (Integer) jdbcTemplate.queryForObject(userCountSql, new Object[] { startTime, endTime },
                         Integer.class);
 
         metrics.increase("userCount", (float) userCount);

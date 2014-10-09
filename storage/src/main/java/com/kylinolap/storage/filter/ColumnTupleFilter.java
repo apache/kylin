@@ -15,21 +15,24 @@
  */
 package com.kylinolap.storage.filter;
 
-import com.kylinolap.common.util.BytesUtil;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
-import com.kylinolap.storage.tuple.Tuple;
-
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.hadoop.hbase.util.Bytes;
+
+import com.kylinolap.common.util.BytesUtil;
+import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.schema.ColumnDesc;
+import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.storage.tuple.ITuple;
+
 /**
+ * 
  * @author xjiang
+ *
  */
 public class ColumnTupleFilter extends TupleFilter {
 
@@ -38,7 +41,7 @@ public class ColumnTupleFilter extends TupleFilter {
     private List<String> values;
 
     public ColumnTupleFilter(TblColRef column) {
-        super(Collections.<TupleFilter>emptyList(), FilterOperatorEnum.COLUMN);
+        super(Collections.<TupleFilter> emptyList(), FilterOperatorEnum.COLUMN);
         this.columnRef = column;
         this.values = new ArrayList<String>(1);
         this.values.add(null);
@@ -46,6 +49,10 @@ public class ColumnTupleFilter extends TupleFilter {
 
     public TblColRef getColumn() {
         return columnRef;
+    }
+
+    public void setColumn(TblColRef col) {
+        this.columnRef = col;
     }
 
     @Override
@@ -59,9 +66,8 @@ public class ColumnTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(Tuple tuple) {
-        String fieldName = tuple.getFieldName(columnRef);
-        this.tupleValue = tuple.getFieldValue(fieldName);
+    public boolean evaluate(ITuple tuple) {
+        this.tupleValue = tuple.getValue(columnRef);
         return true;
     }
 
@@ -83,21 +89,21 @@ public class ColumnTupleFilter extends TupleFilter {
         if (table == null) {
             BytesUtil.writeByteArray(new byte[0], buffer);
         } else {
-            BytesUtil.writeByteArray(table.getBytes(Charset.forName("utf-8")), buffer);
+            BytesUtil.writeByteArray(Bytes.toBytes(table), buffer);
         }
 
         String columnName = columnRef.getName();
         if (columnName == null) {
             BytesUtil.writeByteArray(new byte[0], buffer);
         } else {
-            BytesUtil.writeByteArray(columnName.getBytes(Charset.forName("utf-8")), buffer);
+            BytesUtil.writeByteArray(Bytes.toBytes(columnName), buffer);
         }
 
         String dataType = columnRef.getDatatype();
         if (dataType == null) {
             BytesUtil.writeByteArray(new byte[0], buffer);
         } else {
-            BytesUtil.writeByteArray(dataType.getBytes(Charset.forName("utf-8")), buffer);
+            BytesUtil.writeByteArray(Bytes.toBytes(dataType), buffer);
         }
 
         byte[] result = new byte[buffer.position()];
@@ -114,7 +120,7 @@ public class ColumnTupleFilter extends TupleFilter {
         if (tableBytes.length == 0) {
             table.setName(null);
         } else {
-            String tableName = new String(tableBytes, Charset.forName("utf-8"));
+            String tableName = Bytes.toString(tableBytes);
             table.setName(tableName);
         }
 
@@ -125,7 +131,7 @@ public class ColumnTupleFilter extends TupleFilter {
         if (columnBytes.length == 0) {
             column.setName(null);
         } else {
-            String columnName = new String(columnBytes, Charset.forName("utf-8"));
+            String columnName = Bytes.toString(columnBytes);
             column.setName(columnName);
         }
 
@@ -133,7 +139,7 @@ public class ColumnTupleFilter extends TupleFilter {
         if (typeBytes.length == 0) {
             column.setDatatype(null);
         } else {
-            String dataType = new String(typeBytes, Charset.forName("utf-8"));
+            String dataType = Bytes.toString(typeBytes);
             column.setDatatype(dataType);
         }
         this.columnRef = new TblColRef(column);

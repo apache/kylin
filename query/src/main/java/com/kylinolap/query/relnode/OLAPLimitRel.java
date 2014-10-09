@@ -15,22 +15,30 @@
  */
 package com.kylinolap.query.relnode;
 
-import com.google.common.base.Preconditions;
+import java.util.List;
+
 import net.hydromatic.optiq.rules.java.EnumerableConvention;
 import net.hydromatic.optiq.rules.java.EnumerableRel;
 import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
 import net.hydromatic.optiq.rules.java.JavaRules.EnumerableLimitRel;
+
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.RelWriter;
 import org.eigenbase.rel.SingleRel;
-import org.eigenbase.relopt.*;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelTrait;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexLiteral;
 import org.eigenbase.rex.RexNode;
 
-import java.util.List;
+import com.google.common.base.Preconditions;
 
 /**
+ * 
  * @author xjiang
+ *
  */
 public class OLAPLimitRel extends SingleRel implements OLAPRel, EnumerableRel {
 
@@ -40,7 +48,7 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel, EnumerableRel {
     private OLAPContext context;
 
     public OLAPLimitRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, RexNode offset,
-                        RexNode fetch) {
+            RexNode fetch) {
         super(cluster, traitSet, child);
         Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
         Preconditions.checkArgument(getConvention() == child.getConvention());
@@ -92,8 +100,8 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel, EnumerableRel {
 
     /**
      * NOTE: We can't use EnumerableLimitRel directly since it will check the convention of child.
-     * We have to copy the code from EnumerableLimitRel.implement().
-     * So, We need to check the code during upgrade.
+     *       We have to copy the code from EnumerableLimitRel.implement(). 
+     *       So, We need to check the code during upgrade.
      */
     @Override
     public Result implement(EnumerableRelImplementor implementor, Prefer pref) {

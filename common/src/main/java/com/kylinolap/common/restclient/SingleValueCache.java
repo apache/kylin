@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author xjiang
+ *
  */
 public class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
 

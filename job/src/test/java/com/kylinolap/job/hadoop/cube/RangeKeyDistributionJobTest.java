@@ -16,7 +16,10 @@
 
 package com.kylinolap.job.hadoop.cube;
 
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import static org.junit.Assert.*;
+
+import java.io.File;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.util.ToolRunner;
@@ -24,12 +27,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
-
-import static org.junit.Assert.assertEquals;
+import com.kylinolap.common.util.LocalFileMetadataTestCase;
 
 /**
  * @author ysong1
+ *
  */
 public class RangeKeyDistributionJobTest extends LocalFileMetadataTestCase {
 
@@ -60,7 +62,7 @@ public class RangeKeyDistributionJobTest extends LocalFileMetadataTestCase {
 
         FileUtil.fullyDelete(new File(output));
 
-        String[] args = {"-input", input, "-output", output, "-jobname", jobname, "-cubename", cubename};
+        String[] args = { "-input", input, "-output", output, "-jobname", jobname, "-cubename", cubename };
         assertEquals("Job failed", 0, ToolRunner.run(conf, new RangeKeyDistributionJob(), args));
     }
 

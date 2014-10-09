@@ -16,20 +16,22 @@
 
 package com.kylinolap.rest.controller;
 
-import com.kylinolap.rest.request.AccessRequest;
-import com.kylinolap.rest.response.AccessEntryResponse;
-import com.kylinolap.rest.service.AccessService;
-import com.kylinolap.rest.service.TestBase;
+import java.io.IOException;
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.IOException;
-import java.util.List;
+import com.kylinolap.rest.request.AccessRequest;
+import com.kylinolap.rest.response.AccessEntryResponse;
+import com.kylinolap.rest.service.AccessService;
+import com.kylinolap.rest.service.TestBase;
 
 /**
  * @author xduo
+ *
  */
 public class AccessControllerTest extends TestBase {
 

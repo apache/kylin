@@ -15,12 +15,14 @@
  */
 package com.kylinolap.job.hadoop.cube;
 
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.cube.measure.MeasureCodec;
-import com.kylinolap.job.constant.BatchConstants;
-import com.kylinolap.metadata.model.cube.CubeDesc;
+import static org.junit.Assert.*;
+
+import java.io.File;
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -30,17 +32,16 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
-import java.math.BigDecimal;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.kv.RowConstants;
+import com.kylinolap.cube.measure.MeasureCodec;
+import com.kylinolap.job.constant.BatchConstants;
+import com.kylinolap.metadata.model.cube.CubeDesc;
 
 /**
  * @author George Song (ysong1)
+ * 
  */
 public class CubeReducerTest extends LocalFileMetadataTestCase {
 
@@ -115,8 +116,8 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
 
     private Text newValueText(MeasureCodec codec, String sum, String min, String max, int count) {
         Object[] values =
-                new Object[]{new BigDecimal(sum), new BigDecimal(min), new BigDecimal(max),
-                        new LongWritable(count)};
+                new Object[] { new BigDecimal(sum), new BigDecimal(min), new BigDecimal(max),
+                        new LongWritable(count) };
 
         buf.clear();
         codec.encode(values, buf);

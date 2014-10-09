@@ -16,12 +16,10 @@
 
 package com.kylinolap.rest.controller;
 
-import com.kylinolap.job.JobInstance;
-import com.kylinolap.rest.request.JobBuildRequest;
-import com.kylinolap.rest.request.JobListRequest;
-import com.kylinolap.rest.service.CubeService;
-import com.kylinolap.rest.service.JobService;
-import com.kylinolap.rest.service.TestBase;
+import java.io.IOException;
+import java.util.Date;
+import java.util.Map;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -31,12 +29,16 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.io.IOException;
-import java.util.Date;
-import java.util.Map;
+import com.kylinolap.job.JobInstance;
+import com.kylinolap.rest.request.JobBuildRequest;
+import com.kylinolap.rest.request.JobListRequest;
+import com.kylinolap.rest.service.CubeService;
+import com.kylinolap.rest.service.JobService;
+import com.kylinolap.rest.service.TestBase;
 
 /**
  * @author xduo
+ *
  */
 public class JobControllerTest extends TestBase {
 

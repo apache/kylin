@@ -15,13 +15,18 @@
  */
 package com.kylinolap.storage.filter;
 
-import com.kylinolap.storage.tuple.Tuple;
-import org.apache.commons.lang3.Validate;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
-import java.util.*;
+import com.kylinolap.storage.tuple.ITuple;
 
 /**
+ * 
  * @author xjiang
+ *
  */
 public abstract class TupleFilter {
 
@@ -143,7 +148,7 @@ public abstract class TupleFilter {
             }
             flatFilter.addChildren(andChildren);
         } else if (op == FilterOperatorEnum.NOT) {
-            Validate.isTrue(filter.children.size() == 1);
+            assert (filter.children.size() == 1);
             TupleFilter reverse = filter.children.get(0).reverse();
             flatFilter = flattenInternal(reverse);
         } else {
@@ -171,11 +176,25 @@ public abstract class TupleFilter {
 
     public abstract boolean isEvaluable();
 
-    public abstract boolean evaluate(Tuple tuple);
+    public abstract boolean evaluate(ITuple tuple);
 
     public abstract Collection<String> getValues();
 
     public abstract byte[] serialize();
 
     public abstract void deserialize(byte[] bytes);
+
+    public static boolean isEvaluableRecursively(TupleFilter filter) {
+        if (filter == null)
+            return true;
+
+        if (filter.isEvaluable() == false)
+            return false;
+
+        for (TupleFilter child : filter.getChildren()) {
+            if (isEvaluableRecursively(child) == false)
+                return false;
+        }
+        return true;
+    }
 }
