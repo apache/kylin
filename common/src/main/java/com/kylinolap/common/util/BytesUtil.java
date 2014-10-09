@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.Writable;
 
 public class BytesUtil {
@@ -192,6 +193,16 @@ public class BytesUtil {
             shift += 8;
         }
         return integer;
+    }
+
+    public static void writeUTFString(String str, ByteBuffer out) {
+        byte[] bytes = str == null ? null : Bytes.toBytes(str);
+        writeByteArray(bytes, out);
+    }
+
+    public static String readUTFString(ByteBuffer in) {
+        byte[] bytes = readByteArray(in);
+        return bytes == null ? null : Bytes.toString(bytes);
     }
 
     public static void writeAsciiString(String str, ByteBuffer out) {
