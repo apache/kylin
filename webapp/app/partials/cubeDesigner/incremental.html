@@ -1,0 +1,103 @@
+<div class="row">
+    <div class="col-xs-8">
+        <!--Cube Size-->
+        <div class="form-group" ng-show="userService.hasRole('ROLE_ADMIN')">
+            <div class="row">
+                <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Cube Size</b></label>
+                <div class="col-xs-12 col-sm-6">
+                    <select class="form-control" ng-if="state.mode=='edit'"
+                        ng-init="cubeMetaFrame.capacity = dftSelections.cubeCapacity"
+                        chosen ng-model="cubeMetaFrame.capacity" required
+                        ng-options="cc as cc for cc in cubeCapacities">
+                    </select>
+                    <span ng-if="state.mode=='view'">{{cubeMetaFrame.capacity}}</span>
+                </div>
+            </div>
+        </div>
+
+        <!--Query Priority-->
+        <div class="form-group" ng-show="userService.hasRole('ROLE_ADMIN')">
+            <div class="row">
+                <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Query Priority</b></label>
+                <div class="col-xs-12 col-sm-3">
+                    <select class="form-control"
+                        ng-init="cubeMetaFrame.cost = dftSelections.queryPriority.value"
+                        ng-if="state.mode=='edit'"
+                        chosen ng-model="cubeMetaFrame.cost" required
+                        ng-options="qp.value as qp.name for qp in queryPriorities">
+                    </select>
+                    <span ng-if="state.mode=='view'">{{cubeMetaFrame.cost}}</span>
+                </div>
+            </div>
+        </div>
+
+        <!--Cube Partition Type-->
+        <div class="form-group">
+            <div class="row">
+                <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Partition Type</b></label>
+                <div class="col-xs-12 col-sm-6">
+                    <select class="form-control"
+                        ng-init="cubeMetaFrame.cube_partition_desc.cube_partition_type =dftSelections.cubePartitionType"
+                        ng-if="state.mode=='edit'"
+                        chosen ng-model="cubeMetaFrame.cube_partition_desc.cube_partition_type" required
+                        ng-options="ddt as ddt for ddt in cubePartitionTypes">
+                    </select>
+                    <span ng-if="state.mode=='view'">{{cubeMetaFrame.cube_partition_desc.cube_partition_type}}</span>
+                </div>
+            </div>
+        </div>
+
+        <!--Partition Column-->
+        <div class="form-group">
+            <div class="row">
+                <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Partition Column</b></label>
+                <div class="col-xs-12 col-sm-6">
+                    <input type="text" class="form-control"
+                       ng-required="cubeMetaFrame.cube_partition_desc.partition_date_start"
+                       placeholder="e.g. TEST_KYLIN_FACT.CAL_DT"
+                       ng-model="cubeMetaFrame.cube_partition_desc.partition_date_column"
+                       ng-if="state.mode=='edit'">
+                    <span ng-if="state.mode=='view'">
+                        {{!!(cubeMetaFrame.cube_partition_desc.partition_date_column)?
+                        cubeMetaFrame.cube_partition_desc.partition_date_column: 'Undefined'}}</span>
+                </div>
+            </div>
+        </div>
+
+        <!--Data Range Start-->
+        <div class="form-group">
+            <div class="row">
+                <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Start Date</b></label>
+                <div class="col-xs-12 col-sm-6">
+                    <input type="text" class="form-control" datepicker-popup="yyyy-MM-dd"
+                           ng-model="cubeMetaFrame.cube_partition_desc.partition_date_start" ng-if="state.mode=='edit'"
+                           placeholder="Click to choose start date..." is-open="opened" />
+                    <span ng-if="state.mode=='view'">{{
+                        (cubeMetaFrame.cube_partition_desc.partition_date_start |
+                        date:'fullDate') }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xs-4">
+        <div class="box box-solid">
+            <div class="box-header">
+                <h4 class="box-title">Tips</h4>
+            </div>
+            <div class="box-body">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <ol class="text-info">
+                            <li>Please indicate which type for refresh model</li>
+                            <li>Leave as default if this cube always need full build</li>
+                            <li>Please indicate partition column of Fact Table in Hive</li>
+                            <li>Partition column accept expression like: concat(year, '-', month, '-', day)</li>
+                            <li>Please indicate start date to just pull certain data from source</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

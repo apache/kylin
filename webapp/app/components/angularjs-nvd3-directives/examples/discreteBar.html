@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+<head>
+    <title>Angular.js nvd3.js Line Chart Directive</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF8">
+    <script src="js/angular.js"></script>
+    <script src="js/d3.js"></script>
+    <script src="js/nv.d3.js"></script>
+    <script src="../dist/angularjs-nvd3-directives.js"></script>
+    <link rel="stylesheet" href="stylesheets/nv.d3.css"/>
+    <script>
+        var app = angular.module("nvd3TestApp", ['nvd3ChartDirectives']);
+
+        function ExampleCtrl($scope){
+            $scope.exampleData = [
+                {
+                    key: "Cumulative Return",
+                    values: [
+                        ["A", -29.765957771107 ],
+                        ["B" , 0 ],
+                        ["C" , 32.807804682612 ],
+                        ["D" , 196.45946739256 ],
+                        ["E" , 0.19434030906893 ],
+                        ["F" , -98.079782601442 ],
+                        ["G" , -13.925743130903 ],
+                        ["H" , -5.1387322875705 ]
+                    ]
+                }
+            ];
+
+        }
+    </script>
+
+</head>
+<body ng-app='nvd3TestApp'>
+
+<div ng-controller="ExampleCtrl">
+    <nvd3-discrete-bar-chart
+            data="exampleData"
+            showXAxis="true"
+            showYAxis="true"
+            showValues="true"
+            showLegend="true"
+            >
+    </nvd3-discrete-bar-chart>
+</div>
+
+</body>
+</html>
