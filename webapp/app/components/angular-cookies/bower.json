@@ -1,0 +1,8 @@
+{
+  "name": "angular-cookies",
+  "version": "1.2.15-build.2399+sha.ca4ddfa",
+  "main": "./angular-cookies.js",
+  "dependencies": {
+    "angular": "1.2.15-build.2399+sha.ca4ddfa"
+  }
+}
