@@ -76,7 +76,7 @@ public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
                         new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
         System.out.println(sql);
 
-        assertEquals(1519, sql.length());
+        assertEquals(1501, sql.length());
     }
 
 }
