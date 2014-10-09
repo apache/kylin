@@ -125,11 +125,6 @@ echo CATALINA_OPTS=\"-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=t
 echo CLASSPATH=\"${CATALINA_HOME}/lib/*:${KYLIN_HBASE_CLASSPATH}:/etc/kylin\" >> ${CATALINA_HOME}/bin/setenv.sh
 echo "setenv.sh created"
 
-#deploy tomcat-users.xml
-rm -rf ${CATALINA_HOME}/conf/tomcat-users.xml
-cp deploy/tomcat-users.xml ${CATALINA_HOME}/conf/tomcat-users.xml
-echo "tomcat-users.xml copied"
-
 #deploy server.xml
 rm -rf ${CATALINA_HOME}/conf/server.xml
 cp deploy/server.xml ${CATALINA_HOME}/conf/server.xml
