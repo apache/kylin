@@ -69,4 +69,5 @@ To run Kylin, deploy geneated war file into J2EE application server like Tomcat,
 
 * Developer Mail: <kylin-olap@googlegroups.com>
 
+* Presentation: (https://github.com/KylinOLAP/Kylin/blob/master/docs/Kylin_Hadoop_OLAP_Engine_v1.0.pdf)
 
