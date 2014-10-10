@@ -19,68 +19,66 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.apache.hadoop.hbase.util.Bytes;
-
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.storage.tuple.ITuple;
 
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public class DynamicTupleFilter extends TupleFilter {
 
-    private String variableName;
+	private String variableName;
 
-    public DynamicTupleFilter(String name) {
-        super(Collections.<TupleFilter> emptyList(), FilterOperatorEnum.DYNAMIC);
-        this.variableName = name;
-    }
+	public DynamicTupleFilter(String name) {
+		super(Collections.<TupleFilter> emptyList(), FilterOperatorEnum.DYNAMIC);
+		this.variableName = name;
+	}
 
-    public String getVariableName() {
-        return variableName;
-    }
+	public String getVariableName() {
+		return variableName;
+	}
 
-    @Override
-    public void addChild(TupleFilter child) {
-        throw new UnsupportedOperationException("This is " + this + " and child is " + child);
-    }
+	@Override
+	public void addChild(TupleFilter child) {
+		throw new UnsupportedOperationException("This is " + this
+				+ " and child is " + child);
+	}
 
-    @Override
-    public String toString() {
-        return "DynamicFilter [variableName=" + variableName + "]";
-    }
+	@Override
+	public String toString() {
+		return "DynamicFilter [variableName=" + variableName + "]";
+	}
 
-    @Override
-    public boolean evaluate(ITuple tuple) {
-        return true;
-    }
+	@Override
+	public boolean evaluate(ITuple tuple) {
+		return true;
+	}
 
-    @Override
-    public boolean isEvaluable() {
-        return true;
-    }
+	@Override
+	public boolean isEvaluable() {
+		return true;
+	}
 
-    @Override
-    public Collection<String> getValues() {
-        return Collections.emptyList();
-    }
+	@Override
+	public Collection<String> getValues() {
+		return Collections.emptyList();
+	}
 
-    @Override
-    public byte[] serialize() {
-        ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
-        BytesUtil.writeByteArray(Bytes.toBytes(variableName), buffer);
-        byte[] result = new byte[buffer.position()];
-        System.arraycopy(buffer.array(), 0, result, 0, buffer.position());
-        return result;
-    }
+	@Override
+	public byte[] serialize() {
+		ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+		BytesUtil.writeUTFString(variableName, buffer);
+		byte[] result = new byte[buffer.position()];
+		System.arraycopy(buffer.array(), 0, result, 0, buffer.position());
+		return result;
+	}
 
-    @Override
-    public void deserialize(byte[] bytes) {
-        ByteBuffer buffer = ByteBuffer.wrap(bytes);
-        byte[] strBytes = BytesUtil.readByteArray(buffer);
-        this.variableName = Bytes.toString(strBytes);
-    }
+	@Override
+	public void deserialize(byte[] bytes) {
+		ByteBuffer buffer = ByteBuffer.wrap(bytes);
+		this.variableName = BytesUtil.readUTFString(buffer);
+	}
 
 }

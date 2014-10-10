@@ -37,99 +37,104 @@ import com.kylinolap.storage.tuple.ITupleIterator;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class SerializedHBaseTupleIterator implements ITupleIterator {
 
-    private static final int PARTIAL_DEFAULT_LIMIT = 10000;
+	private static final int PARTIAL_DEFAULT_LIMIT = 10000;
 
-    private final StorageContext context;
-    private final int partialResultLimit;
-    private final List<CubeSegmentTupleIterator> segmentIteratorList;
-    private final Iterator<CubeSegmentTupleIterator> segmentIteratorIterator;
+	private final StorageContext context;
+	private final int partialResultLimit;
+	private final List<CubeSegmentTupleIterator> segmentIteratorList;
+	private final Iterator<CubeSegmentTupleIterator> segmentIteratorIterator;
 
-    private ITupleIterator segmentIterator;
-    private int scanCount;
+	private ITupleIterator segmentIterator;
+	private int scanCount;
 
-    public SerializedHBaseTupleIterator(HConnection conn, List<HBaseKeyRange> segmentKeyRanges,
-            CubeInstance cube, Collection<TblColRef> dimensions, TupleFilter filter,
-            Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders,
-            StorageContext context) {
+	public SerializedHBaseTupleIterator(HConnection conn,
+			List<HBaseKeyRange> segmentKeyRanges, CubeInstance cube,
+			Collection<TblColRef> dimensions, TupleFilter filter,
+			Collection<TblColRef> groupBy,
+			Collection<RowValueDecoder> rowValueDecoders, StorageContext context) {
 
-        this.context = context;
-        int limit = context.getLimit();
-        this.partialResultLimit = Math.max(limit, PARTIAL_DEFAULT_LIMIT);
+		this.context = context;
+		int limit = context.getLimit();
+		this.partialResultLimit = Math.max(limit, PARTIAL_DEFAULT_LIMIT);
 
-        this.segmentIteratorList = new ArrayList<CubeSegmentTupleIterator>(segmentKeyRanges.size());
-        Map<CubeSegment, List<HBaseKeyRange>> rangesMap = makeRangesMap(segmentKeyRanges);
-        for (CubeSegment cubeSeg : rangesMap.keySet()) {
-            List<HBaseKeyRange> keyRanges = rangesMap.get(cubeSeg);
-            CubeSegmentTupleIterator segIter =
-                    new CubeSegmentTupleIterator(cubeSeg, keyRanges, conn, dimensions, filter, groupBy,
-                            rowValueDecoders, context);
-            this.segmentIteratorList.add(segIter);
-        }
+		this.segmentIteratorList = new ArrayList<CubeSegmentTupleIterator>(
+				segmentKeyRanges.size());
+		Map<CubeSegment, List<HBaseKeyRange>> rangesMap = makeRangesMap(segmentKeyRanges);
+		for (CubeSegment cubeSeg : rangesMap.keySet()) {
+			List<HBaseKeyRange> keyRanges = rangesMap.get(cubeSeg);
+			CubeSegmentTupleIterator segIter = new CubeSegmentTupleIterator(
+					cubeSeg, keyRanges, conn, dimensions, filter, groupBy,
+					rowValueDecoders, context);
+			this.segmentIteratorList.add(segIter);
+		}
 
-        this.segmentIteratorIterator = this.segmentIteratorList.iterator();
-        if (this.segmentIteratorIterator.hasNext()) {
-            this.segmentIterator = this.segmentIteratorIterator.next();
-        } else {
-            this.segmentIterator = CubeSegmentTupleIterator.EMPTY_TUPLE_ITERATOR;
-        }
-    }
+		this.segmentIteratorIterator = this.segmentIteratorList.iterator();
+		if (this.segmentIteratorIterator.hasNext()) {
+			this.segmentIterator = this.segmentIteratorIterator.next();
+		} else {
+			this.segmentIterator = CubeSegmentTupleIterator.EMPTY_TUPLE_ITERATOR;
+		}
+	}
 
-    private Map<CubeSegment, List<HBaseKeyRange>> makeRangesMap(List<HBaseKeyRange> segmentKeyRanges) {
-        Map<CubeSegment, List<HBaseKeyRange>> map = Maps.newHashMap();
-        for (HBaseKeyRange range : segmentKeyRanges) {
-            List<HBaseKeyRange> list = map.get(range.getCubeSegment());
-            if (list == null) {
-                list = Lists.newArrayList();
-                map.put(range.getCubeSegment(), list);
-            }
-            list.add(range);
-        }
-        return map;
-    }
+	private Map<CubeSegment, List<HBaseKeyRange>> makeRangesMap(
+			List<HBaseKeyRange> segmentKeyRanges) {
+		Map<CubeSegment, List<HBaseKeyRange>> map = Maps.newHashMap();
+		for (HBaseKeyRange range : segmentKeyRanges) {
+			List<HBaseKeyRange> list = map.get(range.getCubeSegment());
+			if (list == null) {
+				list = Lists.newArrayList();
+				map.put(range.getCubeSegment(), list);
+			}
+			list.add(range);
+		}
+		return map;
+	}
 
-    @Override
-    public boolean hasNext() {
-        // 1. check limit 
-        if (context.isLimitEnable() && scanCount >= context.getLimit()) {
-            return false;
-        }
-        // 2. check partial result
-        if (context.isAcceptPartialResult() && scanCount > partialResultLimit) {
-            context.setPartialResultReturned(true);
-            return false;
-        }
-        // 3. check threshold
-        if (scanCount >= context.getThreshold()) {
-            throw new ScanOutOfLimitException("Scan row count exceeded threshold: " + context.getThreshold()
-                    + ", please add filter condition to narrow down backend scan range, like where clause.");
-        }
-        // 4. check cube segments 
-        return segmentIteratorIterator.hasNext() || segmentIterator.hasNext();
-    }
+	@Override
+	public boolean hasNext() {
+		// 1. check limit
+		if (context.isLimitEnable() && scanCount >= context.getLimit()) {
+			return false;
+		}
+		// 2. check partial result
+		if (context.isAcceptPartialResult() && scanCount > partialResultLimit) {
+			context.setPartialResultReturned(true);
+			return false;
+		}
+		// 3. check threshold
+		if (scanCount >= context.getThreshold()) {
+			throw new ScanOutOfLimitException(
+					"Scan row count exceeded threshold: "
+							+ context.getThreshold()
+							+ ", please add filter condition to narrow down backend scan range, like where clause.");
+		}
+		// 4. check cube segments
+		return segmentIteratorIterator.hasNext() || segmentIterator.hasNext();
+	}
 
-    @Override
-    public ITuple next() {
-        ITuple t = null;
-        while (hasNext()) {
-            if (segmentIterator.hasNext()) {
-                t = segmentIterator.next();
-                scanCount++;
-                break;
-            } else {
-                segmentIterator.close();
-                segmentIterator = segmentIteratorIterator.next();
-            }
-        }
-        return t;
-    }
+	@Override
+	public ITuple next() {
+		ITuple t = null;
+		while (hasNext()) {
+			if (segmentIterator.hasNext()) {
+				t = segmentIterator.next();
+				scanCount++;
+				break;
+			} else {
+				segmentIterator.close();
+				segmentIterator = segmentIteratorIterator.next();
+			}
+		}
+		return t;
+	}
 
-    @Override
-    public void close() {
-        context.setTotalScanCount(scanCount);
-        segmentIterator.close();
-    }
+	@Override
+	public void close() {
+		context.setTotalScanCount(scanCount);
+		segmentIterator.close();
+	}
 }

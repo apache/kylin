@@ -31,34 +31,37 @@ import com.kylinolap.rest.response.SQLResponse;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class QueryServiceTest extends TestBase {
 
-    @Autowired
-    QueryService queryService;
+	@Autowired
+	QueryService queryService;
 
-    @Test
-    public void testBasics() throws JobException, IOException, SQLException {
-        Assert.assertNotNull(queryService.getJobManager());
-        Assert.assertNotNull(queryService.getConfig());
-        Assert.assertNotNull(queryService.getKylinConfig());
-        Assert.assertNotNull(queryService.getMetadataManager());
-        Assert.assertNotNull(queryService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
+	@Test
+	public void testBasics() throws JobException, IOException, SQLException {
+		Assert.assertNotNull(queryService.getJobManager());
+		Assert.assertNotNull(queryService.getConfig());
+		Assert.assertNotNull(queryService.getKylinConfig());
+		Assert.assertNotNull(queryService.getMetadataManager());
+		Assert.assertNotNull(queryService
+				.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
 
-        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 1);
+		Assert.assertTrue(queryService.getQueries("ADMIN").size() == 1);
 
-        queryService.saveQuery("test", "test", "select * from test_table", "test");
-        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 2);
+		queryService.saveQuery("test", "test", "select * from test_table",
+				"test");
+		Assert.assertTrue(queryService.getQueries("ADMIN").size() == 2);
 
-        queryService.removeQuery(queryService.getQueries("ADMIN").get(0).getProperty("id"));
-        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 1);
+		queryService.removeQuery(queryService.getQueries("ADMIN").get(0)
+				.getProperty("id"));
+		Assert.assertTrue(queryService.getQueries("ADMIN").size() == 1);
 
-        SQLRequest request = new SQLRequest();
-        request.setSql("select * from test_table");
-        request.setAcceptPartial(true);
-        SQLResponse response = new SQLResponse();
-        response.setHitCache(true);
-        queryService.logQuery(request, response, new Date(), new Date());
-    }
+		SQLRequest request = new SQLRequest();
+		request.setSql("select * from test_table");
+		request.setAcceptPartial(true);
+		SQLResponse response = new SQLResponse();
+		response.setHitCache(true);
+		queryService.logQuery(request, response, new Date(), new Date());
+	}
 }

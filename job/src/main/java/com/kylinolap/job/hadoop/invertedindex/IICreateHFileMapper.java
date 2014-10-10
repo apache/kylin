@@ -16,7 +16,8 @@
 
 package com.kylinolap.job.hadoop.invertedindex;
 
-import static com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc.*;
+import static com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc.HBASE_FAMILY_BYTES;
+import static com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc.HBASE_QUALIFIER_BYTES;
 
 import java.io.IOException;
 
@@ -27,29 +28,32 @@ import org.apache.hadoop.mapreduce.Mapper;
 
 /**
  * @author yangli9
- *
+ * 
  */
-public class IICreateHFileMapper extends
-        Mapper<ImmutableBytesWritable, ImmutableBytesWritable, ImmutableBytesWritable, KeyValue> {
+public class IICreateHFileMapper
+		extends
+		Mapper<ImmutableBytesWritable, ImmutableBytesWritable, ImmutableBytesWritable, KeyValue> {
 
-    long timestamp;
+	long timestamp;
 
-    @Override
-    protected void setup(Context context) throws IOException, InterruptedException {
-        timestamp = System.currentTimeMillis();
-    }
+	@Override
+	protected void setup(Context context) throws IOException,
+			InterruptedException {
+		timestamp = System.currentTimeMillis();
+	}
 
-    @Override
-    protected void map(ImmutableBytesWritable key, ImmutableBytesWritable value, Context context)
-            throws IOException, InterruptedException {
+	@Override
+	protected void map(ImmutableBytesWritable key,
+			ImmutableBytesWritable value, Context context) throws IOException,
+			InterruptedException {
 
-        KeyValue kv = new KeyValue(key.get(), key.getOffset(), key.getLength(), //
-                HBASE_FAMILY_BYTES, 0, HBASE_FAMILY_BYTES.length, //
-                HBASE_QUALIFIER_BYTES, 0, HBASE_QUALIFIER_BYTES.length, //
-                timestamp, Type.Put, //
-                value.get(), value.getOffset(), value.getLength());
+		KeyValue kv = new KeyValue(key.get(), key.getOffset(), key.getLength(), //
+				HBASE_FAMILY_BYTES, 0, HBASE_FAMILY_BYTES.length, //
+				HBASE_QUALIFIER_BYTES, 0, HBASE_QUALIFIER_BYTES.length, //
+				timestamp, Type.Put, //
+				value.get(), value.getOffset(), value.getLength());
 
-        context.write(key, kv);
-    }
+		context.write(key, kv);
+	}
 
 }

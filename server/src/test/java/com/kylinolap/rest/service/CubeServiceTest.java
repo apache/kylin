@@ -30,31 +30,35 @@ import com.kylinolap.job.exception.JobException;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class CubeServiceTest extends TestBase {
 
-    @Autowired
-    CubeService cubeService;
+	@Autowired
+	CubeService cubeService;
 
-    @Test
-    public void testBasics() throws JsonProcessingException, JobException, UnknownHostException {
-        Assert.assertNotNull(cubeService.getJobManager());
-        Assert.assertNotNull(cubeService.getConfig());
-        Assert.assertNotNull(cubeService.getKylinConfig());
-        Assert.assertNotNull(cubeService.getMetadataManager());
-        Assert.assertNotNull(cubeService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
+	@Test
+	public void testBasics() throws JsonProcessingException, JobException,
+			UnknownHostException {
+		Assert.assertNotNull(cubeService.getJobManager());
+		Assert.assertNotNull(cubeService.getConfig());
+		Assert.assertNotNull(cubeService.getKylinConfig());
+		Assert.assertNotNull(cubeService.getMetadataManager());
+		Assert.assertNotNull(cubeService
+				.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
 
-        Assert.assertTrue(CubeService.getCubeDescNameFromCube("testCube").equals("testCube_desc"));
-        Assert.assertTrue(CubeService.getCubeNameFromDesc("testCube_desc").equals("testCube"));
+		Assert.assertTrue(CubeService.getCubeDescNameFromCube("testCube")
+				.equals("testCube_desc"));
+		Assert.assertTrue(CubeService.getCubeNameFromDesc("testCube_desc")
+				.equals("testCube"));
 
-        List<CubeInstance> cubes = cubeService.getCubes(null, null, null, null);
-        Assert.assertNotNull(cubes);
-        CubeInstance cube = cubes.get(0);
-        cubeService.isCubeDescEditable(cube.getDescriptor());
-        cubeService.isCubeEditable(cube);
+		List<CubeInstance> cubes = cubeService.getCubes(null, null, null, null);
+		Assert.assertNotNull(cubes);
+		CubeInstance cube = cubes.get(0);
+		cubeService.isCubeDescEditable(cube.getDescriptor());
+		cubeService.isCubeEditable(cube);
 
-        cubes = cubeService.getCubes(null, null, 1, 0);
-        Assert.assertTrue(cubes.size() == 1);
-    }
+		cubes = cubeService.getCubes(null, null, 1, 0);
+		Assert.assertTrue(cubes.size() == 1);
+	}
 }

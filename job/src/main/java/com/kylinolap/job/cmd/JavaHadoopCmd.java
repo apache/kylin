@@ -27,48 +27,53 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class JavaHadoopCmd implements IJobCommand {
-    protected static final Logger log = LoggerFactory.getLogger(JavaHadoopCmd.class);
+	protected static final Logger log = LoggerFactory
+			.getLogger(JavaHadoopCmd.class);
 
-    private final String executeCommand;
-    private final ICommandOutput output;
-    private final AbstractHadoopJob job;
+	private final String executeCommand;
+	private final ICommandOutput output;
+	private final AbstractHadoopJob job;
 
-    public JavaHadoopCmd(String executeCommand, String jobInstanceID, int jobStepID,
-            JobEngineConfig engineConfig, AbstractHadoopJob job, boolean isAsync) {
-        super();
-        this.executeCommand = executeCommand;
-        this.job = job;
-        this.output = new JavaHadoopCmdOutput(jobInstanceID, jobStepID, engineConfig, job, isAsync);
-    }
+	public JavaHadoopCmd(String executeCommand, String jobInstanceID,
+			int jobStepID, JobEngineConfig engineConfig, AbstractHadoopJob job,
+			boolean isAsync) {
+		super();
+		this.executeCommand = executeCommand;
+		this.job = job;
+		this.output = new JavaHadoopCmdOutput(jobInstanceID, jobStepID,
+				engineConfig, job, isAsync);
+	}
 
-    @Override
-    public ICommandOutput execute() throws JobException {
-        output.appendOutput("Start to execute command: \n" + this.executeCommand);
-        String[] args = executeCommand.trim().split("\\s+");
+	@Override
+	public ICommandOutput execute() throws JobException {
+		output.appendOutput("Start to execute command: \n"
+				+ this.executeCommand);
+		String[] args = executeCommand.trim().split("\\s+");
 
-        try {
-            output.setStatus(JobStepStatusEnum.RUNNING);
-            int exitCode = ToolRunner.run(job, args);
-            output.setExitCode(exitCode);
-        } catch (Exception e) {
-            output.appendOutput(e.getLocalizedMessage());
-            output.setExitCode(-1);
-        }
+		try {
+			output.setStatus(JobStepStatusEnum.RUNNING);
+			int exitCode = ToolRunner.run(job, args);
+			output.setExitCode(exitCode);
+		} catch (Exception e) {
+			output.appendOutput(e.getLocalizedMessage());
+			output.setExitCode(-1);
+		}
 
-        output.appendOutput("Command execute return code " + output.getExitCode());
+		output.appendOutput("Command execute return code "
+				+ output.getExitCode());
 
-        if (output.getExitCode() != 0) {
-            output.setStatus(JobStepStatusEnum.ERROR);
-        }
+		if (output.getExitCode() != 0) {
+			output.setStatus(JobStepStatusEnum.ERROR);
+		}
 
-        return output;
-    }
+		return output;
+	}
 
-    @Override
-    public void cancel() throws JobException {
-        job.kill();
-    }
+	@Override
+	public void cancel() throws JobException {
+		job.kill();
+	}
 }

@@ -23,20 +23,22 @@ import java.net.URLClassLoader;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class ClasspathUtil {
 
-    public static void addClasspath(String path) throws Exception {
-        File file = new File(path);
+	public static void addClasspath(String path) throws Exception {
+		File file = new File(path);
 
-        if (file.exists()) {
-            URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-            Class<URLClassLoader> urlClass = URLClassLoader.class;
-            Method method = urlClass.getDeclaredMethod("addURL", new Class[] { URL.class });
-            method.setAccessible(true);
-            method.invoke(urlClassLoader, new Object[] { file.toURI().toURL() });
-        }
-    }
+		if (file.exists()) {
+			URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader
+					.getSystemClassLoader();
+			Class<URLClassLoader> urlClass = URLClassLoader.class;
+			Method method = urlClass.getDeclaredMethod("addURL",
+					new Class[] { URL.class });
+			method.setAccessible(true);
+			method.invoke(urlClassLoader, new Object[] { file.toURI().toURL() });
+		}
+	}
 
 }

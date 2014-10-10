@@ -30,129 +30,131 @@ import org.slf4j.LoggerFactory;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public interface OLAPRel extends RelNode {
 
-    public static final Logger logger = LoggerFactory.getLogger(OLAPRel.class);
+	public static final Logger logger = LoggerFactory.getLogger(OLAPRel.class);
 
-    // Calling convention for relational operations that occur in OLAP. 
-    public static final Convention CONVENTION = new Convention.Impl("OLAP", OLAPRel.class);
+	// Calling convention for relational operations that occur in OLAP.
+	public static final Convention CONVENTION = new Convention.Impl("OLAP",
+			OLAPRel.class);
 
-    /** 
-     * get olap context
-     */
-    public OLAPContext getContext();
+	/**
+	 * get olap context
+	 */
+	public OLAPContext getContext();
 
-    /**
-     * get the row type of ColumnDesc 
-     * 
-     * @return
-     */
-    public ColumnRowType getColumnRowType();
+	/**
+	 * get the row type of ColumnDesc
+	 * 
+	 * @return
+	 */
+	public ColumnRowType getColumnRowType();
 
-    /**
-     * whether has sub query
-     */
-    public boolean hasSubQuery();
+	/**
+	 * whether has sub query
+	 */
+	public boolean hasSubQuery();
 
-    /**
-     * replace RelTraitSet
-     */
-    public RelTraitSet replaceTraitSet(RelTrait trait);
+	/**
+	 * replace RelTraitSet
+	 */
+	public RelTraitSet replaceTraitSet(RelTrait trait);
 
-    /**
-     * visitor pattern for olap query analysis
-     */
-    public static class OLAPImplementor {
+	/**
+	 * visitor pattern for olap query analysis
+	 */
+	public static class OLAPImplementor {
 
-        private RelNode parentNode = null;
-        private int ctxSeq = 0;
-        private Stack<OLAPContext> ctxStack = new Stack<OLAPContext>();
+		private RelNode parentNode = null;
+		private int ctxSeq = 0;
+		private Stack<OLAPContext> ctxStack = new Stack<OLAPContext>();
 
-        public void visitChild(RelNode input, RelNode parentNode) {
-            this.parentNode = parentNode;
-            ((OLAPRel) input).implementOLAP(this);
-        }
+		public void visitChild(RelNode input, RelNode parentNode) {
+			this.parentNode = parentNode;
+			((OLAPRel) input).implementOLAP(this);
+		}
 
-        public RelNode getParentNode() {
-            return parentNode;
-        }
+		public RelNode getParentNode() {
+			return parentNode;
+		}
 
-        public OLAPContext getContext() {
-            if (ctxStack.isEmpty()) {
-                return null;
-            }
-            return ctxStack.peek();
-        }
+		public OLAPContext getContext() {
+			if (ctxStack.isEmpty()) {
+				return null;
+			}
+			return ctxStack.peek();
+		}
 
-        public void freeContext() {
-            ctxStack.pop();
-        }
+		public void freeContext() {
+			ctxStack.pop();
+		}
 
-        public void allocateContext() {
-            OLAPContext context = new OLAPContext(ctxSeq++);
-            ctxStack.push(context);
-            OLAPContext.registerContext(context);
-        }
-    }
+		public void allocateContext() {
+			OLAPContext context = new OLAPContext(ctxSeq++);
+			ctxStack.push(context);
+			OLAPContext.registerContext(context);
+		}
+	}
 
-    public void implementOLAP(OLAPImplementor implementor);
+	public void implementOLAP(OLAPImplementor implementor);
 
-    /**
-     * visitor pattern for query rewrite 
-     */
+	/**
+	 * visitor pattern for query rewrite
+	 */
 
-    public static class RewriteImplementor {
-        private OLAPContext parentContext;
+	public static class RewriteImplementor {
+		private OLAPContext parentContext;
 
-        public void visitChild(RelNode parent, RelNode child) {
-            if (parent instanceof OLAPRel) {
-                OLAPRel olapRel = (OLAPRel) parent;
-                this.parentContext = olapRel.getContext();
-            }
-            OLAPRel olapChild = (OLAPRel) child;
-            olapChild.implementRewrite(this);
-        }
+		public void visitChild(RelNode parent, RelNode child) {
+			if (parent instanceof OLAPRel) {
+				OLAPRel olapRel = (OLAPRel) parent;
+				this.parentContext = olapRel.getContext();
+			}
+			OLAPRel olapChild = (OLAPRel) child;
+			olapChild.implementRewrite(this);
+		}
 
-        public OLAPContext getParentContext() {
-            return parentContext;
-        }
+		public OLAPContext getParentContext() {
+			return parentContext;
+		}
 
-        public static boolean needRewrite(OLAPContext ctx) {
-            boolean hasFactTable =
-                    ctx.hasJoin || ctx.firstTableScan.getCubeTable().equals(ctx.cubeDesc.getFactTable());
-            boolean hasRewriteFields = !ctx.rewriteFields.isEmpty();
-            return hasRewriteFields && hasFactTable;
-        }
-    }
+		public static boolean needRewrite(OLAPContext ctx) {
+			boolean hasFactTable = ctx.hasJoin
+					|| ctx.firstTableScan.getCubeTable().equals(
+							ctx.cubeDesc.getFactTable());
+			boolean hasRewriteFields = !ctx.rewriteFields.isEmpty();
+			return hasRewriteFields && hasFactTable;
+		}
+	}
 
-    public void implementRewrite(RewriteImplementor rewriter);
+	public void implementRewrite(RewriteImplementor rewriter);
 
-    /**
-     * implementor for java generation
-     */
-    public static class JavaImplementor extends EnumerableRelImplementor {
+	/**
+	 * implementor for java generation
+	 */
+	public static class JavaImplementor extends EnumerableRelImplementor {
 
-        private OLAPContext parentContext;
+		private OLAPContext parentContext;
 
-        public JavaImplementor(EnumerableRelImplementor enumImplementor) {
-            super(enumImplementor.getRexBuilder());
-        }
+		public JavaImplementor(EnumerableRelImplementor enumImplementor) {
+			super(enumImplementor.getRexBuilder());
+		}
 
-        public OLAPContext getParentContext() {
-            return parentContext;
-        }
+		public OLAPContext getParentContext() {
+			return parentContext;
+		}
 
-        @Override
-        public EnumerableRel.Result visitChild(EnumerableRel parent, int ordinal, EnumerableRel child,
-                EnumerableRel.Prefer prefer) {
-            if (parent instanceof OLAPRel) {
-                OLAPRel olapRel = (OLAPRel) parent;
-                this.parentContext = olapRel.getContext();
-            }
-            return super.visitChild(parent, ordinal, child, prefer);
-        }
-    }
+		@Override
+		public EnumerableRel.Result visitChild(EnumerableRel parent,
+				int ordinal, EnumerableRel child, EnumerableRel.Prefer prefer) {
+			if (parent instanceof OLAPRel) {
+				OLAPRel olapRel = (OLAPRel) parent;
+				this.parentContext = olapRel.getContext();
+			}
+			return super.visitChild(parent, ordinal, child, prefer);
+		}
+	}
 
 }

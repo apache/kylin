@@ -16,7 +16,7 @@
 
 package com.kylinolap.job.hadoop.cube;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 
@@ -35,53 +35,62 @@ import com.kylinolap.common.util.LocalFileMetadataTestCase;
  */
 public class MergeCuboidJobTest extends LocalFileMetadataTestCase {
 
-    private Configuration conf;
+	private Configuration conf;
 
-    @Before
-    public void setup() throws Exception {
-        conf = new Configuration();
-        //conf.set("fs.default.name", "file:///");
-        //conf.set("mapred.job.tracker", "local");
+	@Before
+	public void setup() throws Exception {
+		conf = new Configuration();
+		// conf.set("fs.default.name", "file:///");
+		// conf.set("mapred.job.tracker", "local");
 
-        // for local runner out-of-memory issue
-        conf.set("mapreduce.task.io.sort.mb", "10");
-        createTestMetadata();
-    }
+		// for local runner out-of-memory issue
+		conf.set("mapreduce.task.io.sort.mb", "10");
+		createTestMetadata();
+	}
 
-    @After
-    public void after() throws Exception {
-        cleanupTestMetadata();
-    }
+	@After
+	public void after() throws Exception {
+		cleanupTestMetadata();
+	}
 
-    @Test
-    public void test() throws Exception {
-        //String input = "src/test/resources/data/base_cuboid,src/test/resources/data/6d_cuboid";
-        String output = "target/test-output/merged_cuboid";
-        String cubeName = "test_kylin_cube_with_slr_ready";
-        String jobname = "merge_cuboid";
+	@Test
+	public void test() throws Exception {
+		// String input =
+		// "src/test/resources/data/base_cuboid,src/test/resources/data/6d_cuboid";
+		String output = "target/test-output/merged_cuboid";
+		String cubeName = "test_kylin_cube_with_slr_ready";
+		String jobname = "merge_cuboid";
 
-        File baseFolder = File.createTempFile("kylin-f24668f6-dcff-4cb6-a89b-77f1119df8fa-", "base");
-        baseFolder.delete();
-        baseFolder.mkdir();
-        FileUtils.copyDirectory(new File("src/test/resources/data/base_cuboid"), baseFolder);
-        baseFolder.deleteOnExit();
+		File baseFolder = File.createTempFile(
+				"kylin-f24668f6-dcff-4cb6-a89b-77f1119df8fa-", "base");
+		baseFolder.delete();
+		baseFolder.mkdir();
+		FileUtils.copyDirectory(
+				new File("src/test/resources/data/base_cuboid"), baseFolder);
+		baseFolder.deleteOnExit();
 
-        File sixDFolder = File.createTempFile("kylin-f24668f6-dcff-4cb6-a89b-77f1119df8fa-", "6d");
-        sixDFolder.delete();
-        sixDFolder.mkdir();
-        FileUtils.copyDirectory(new File("src/test/resources/data/base_cuboid"), sixDFolder);
-        sixDFolder.deleteOnExit();
+		File sixDFolder = File.createTempFile(
+				"kylin-f24668f6-dcff-4cb6-a89b-77f1119df8fa-", "6d");
+		sixDFolder.delete();
+		sixDFolder.mkdir();
+		FileUtils.copyDirectory(
+				new File("src/test/resources/data/base_cuboid"), sixDFolder);
+		sixDFolder.deleteOnExit();
 
-        FileUtil.fullyDelete(new File(output));
+		FileUtil.fullyDelete(new File(output));
 
-        //CubeManager cubeManager = CubeManager.getInstanceFromEnv(this.getTestConfig());
+		// CubeManager cubeManager =
+		// CubeManager.getInstanceFromEnv(this.getTestConfig());
 
-        String[] args =
-                { "-input", baseFolder.getAbsolutePath() + "," + sixDFolder.getAbsolutePath(), "-cubename",
-                        cubeName, "-segmentname", "20130331080000_20131212080000", "-output", output,
-                        "-jobname", jobname };
-        assertEquals("Job failed", 0, ToolRunner.run(conf, new MergeCuboidJob(), args));
+		String[] args = {
+				"-input",
+				baseFolder.getAbsolutePath() + ","
+						+ sixDFolder.getAbsolutePath(), "-cubename", cubeName,
+				"-segmentname", "20130331080000_20131212080000", "-output",
+				output, "-jobname", jobname };
+		assertEquals("Job failed", 0,
+				ToolRunner.run(conf, new MergeCuboidJob(), args));
 
-    }
+	}
 
 }

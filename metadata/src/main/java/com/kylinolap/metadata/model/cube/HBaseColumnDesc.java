@@ -22,100 +22,100 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Created with IntelliJ IDEA.
- * User: lukhan
- * Date: 9/30/13
- * Time: 10:57 AM
- * To change this template use File | Settings | File Templates.
+ * Created with IntelliJ IDEA. User: lukhan Date: 9/30/13 Time: 10:57 AM To
+ * change this template use File | Settings | File Templates.
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class HBaseColumnDesc {
 
-    @JsonProperty("qualifier")
-    private String qualifier;
-    @JsonProperty("measure_refs")
-    private String[] measureRefs;
+	@JsonProperty("qualifier")
+	private String qualifier;
+	@JsonProperty("measure_refs")
+	private String[] measureRefs;
 
-    //these two will be assemble in runtime.
-    private MeasureDesc[] measures;
-    private String columnFamilyName;
+	// these two will be assemble in runtime.
+	private MeasureDesc[] measures;
+	private String columnFamilyName;
 
-    public String getQualifier() {
-        return qualifier;
-    }
+	public String getQualifier() {
+		return qualifier;
+	}
 
-    public void setQualifier(String qualifier) {
-        this.qualifier = qualifier;
-    }
+	public void setQualifier(String qualifier) {
+		this.qualifier = qualifier;
+	}
 
-    public String[] getMeasureRefs() {
-        return measureRefs;
-    }
+	public String[] getMeasureRefs() {
+		return measureRefs;
+	}
 
-    public void setMeasureRefs(String[] measureRefs) {
-        this.measureRefs = measureRefs;
-    }
+	public void setMeasureRefs(String[] measureRefs) {
+		this.measureRefs = measureRefs;
+	}
 
-    public MeasureDesc[] getMeasures() {
-        return measures;
-    }
+	public MeasureDesc[] getMeasures() {
+		return measures;
+	}
 
-    public int findMeasureIndex(FunctionDesc function) {
-        for (int i = 0; i < measures.length; i++) {
-            if (measures[i].getFunction().equals(function)) {
-                return i;
-            }
-        }
-        return -1;
-    }
+	public int findMeasureIndex(FunctionDesc function) {
+		for (int i = 0; i < measures.length; i++) {
+			if (measures[i].getFunction().equals(function)) {
+				return i;
+			}
+		}
+		return -1;
+	}
 
-    public void setMeasures(MeasureDesc[] measures) {
-        this.measures = measures;
-    }
+	public void setMeasures(MeasureDesc[] measures) {
+		this.measures = measures;
+	}
 
-    public String getColumnFamilyName() {
-        return columnFamilyName;
-    }
+	public String getColumnFamilyName() {
+		return columnFamilyName;
+	}
 
-    public void setColumnFamilyName(String columnFamilyName) {
-        this.columnFamilyName = columnFamilyName;
-    }
+	public void setColumnFamilyName(String columnFamilyName) {
+		this.columnFamilyName = columnFamilyName;
+	}
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((columnFamilyName == null) ? 0 : columnFamilyName.hashCode());
-        result = prime * result + ((qualifier == null) ? 0 : qualifier.hashCode());
-        return result;
-    }
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime
+				* result
+				+ ((columnFamilyName == null) ? 0 : columnFamilyName.hashCode());
+		result = prime * result
+				+ ((qualifier == null) ? 0 : qualifier.hashCode());
+		return result;
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        HBaseColumnDesc other = (HBaseColumnDesc) obj;
-        if (columnFamilyName == null) {
-            if (other.columnFamilyName != null)
-                return false;
-        } else if (!columnFamilyName.equals(other.columnFamilyName))
-            return false;
-        if (qualifier == null) {
-            if (other.qualifier != null)
-                return false;
-        } else if (!qualifier.equals(other.qualifier))
-            return false;
-        return true;
-    }
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		HBaseColumnDesc other = (HBaseColumnDesc) obj;
+		if (columnFamilyName == null) {
+			if (other.columnFamilyName != null)
+				return false;
+		} else if (!columnFamilyName.equals(other.columnFamilyName))
+			return false;
+		if (qualifier == null) {
+			if (other.qualifier != null)
+				return false;
+		} else if (!qualifier.equals(other.qualifier))
+			return false;
+		return true;
+	}
 
-    @Override
-    public String toString() {
-        return "HBaseColumnDesc [qualifier=" + qualifier + ", measureRefs=" + Arrays.toString(measureRefs)
-                + "]";
-    }
+	@Override
+	public String toString() {
+		return "HBaseColumnDesc [qualifier=" + qualifier + ", measureRefs="
+				+ Arrays.toString(measureRefs) + "]";
+	}
 
 }

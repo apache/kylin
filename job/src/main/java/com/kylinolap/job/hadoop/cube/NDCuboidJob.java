@@ -24,13 +24,13 @@ import org.apache.hadoop.util.ToolRunner;
 
 public class NDCuboidJob extends CuboidJob {
 
-    public NDCuboidJob() {
-        this.setMapperClass(NDCuboidMapper.class);
-    }
+	public NDCuboidJob() {
+		this.setMapperClass(NDCuboidMapper.class);
+	}
 
-    public static void main(String[] args) throws Exception {
-        CuboidJob job = new NDCuboidJob();
-        int exitCode = ToolRunner.run(job, args);
-        System.exit(exitCode);
-    }
+	public static void main(String[] args) throws Exception {
+		CuboidJob job = new NDCuboidJob();
+		int exitCode = ToolRunner.run(job, args);
+		System.exit(exitCode);
+	}
 }

@@ -22,7 +22,7 @@ import java.util.Random;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class RandomSampler<T> {
 

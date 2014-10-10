@@ -59,248 +59,283 @@ import com.kylinolap.metadata.model.schema.TableDesc;
 
 @SuppressWarnings("static-access")
 public abstract class AbstractHadoopJob extends Configured implements Tool {
-    protected static final Logger log = LoggerFactory.getLogger(AbstractHadoopJob.class);
+	protected static final Logger log = LoggerFactory
+			.getLogger(AbstractHadoopJob.class);
 
-    protected static final Option OPTION_JOB_NAME = OptionBuilder.withArgName("name").hasArg()
-            .isRequired(true)
-            .withDescription("Job name. For exmaple, Kylin_Cuboid_Builder-clsfd_v2_Step_22-D)")
-            .create("jobname");
-    protected static final Option OPTION_CUBE_NAME = OptionBuilder.withArgName("name").hasArg()
-            .isRequired(true).withDescription("Cube name. For exmaple, flat_item_cube").create("cubename");
-    protected static final Option OPTION_SEGMENT_NAME = OptionBuilder.withArgName("name").hasArg()
-            .isRequired(true).withDescription("Cube segment name)").create("segmentname");
-    protected static final Option OPTION_TABLE_NAME = OptionBuilder.withArgName("name").hasArg()
-            .isRequired(true).withDescription("Hive table name.").create("tablename");
-    protected static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName("path").hasArg()
-            .isRequired(true).withDescription("Input path").create("input");
-    protected static final Option OPTION_INPUT_FORMAT = OptionBuilder.withArgName("inputformat").hasArg()
-            .isRequired(false).withDescription("Input format").create("inputformat");
-    protected static final Option OPTION_INPUT_DELIM = OptionBuilder.withArgName("inputdelim").hasArg()
-            .isRequired(false).withDescription("Input delimeter").create("inputdelim");
-    protected static final Option OPTION_OUTPUT_PATH = OptionBuilder.withArgName("path").hasArg()
-            .isRequired(true).withDescription("Output path").create("output");
-    protected static final Option OPTION_NCUBOID_LEVEL = OptionBuilder.withArgName("level").hasArg()
-            .isRequired(true).withDescription("N-Cuboid build level, e.g. 1, 2, 3...").create("level");
-    protected static final Option OPTION_PARTITION_FILE_PATH = OptionBuilder.withArgName("path").hasArg()
-            .isRequired(true).withDescription("Partition file path.").create("input");
-    protected static final Option OPTION_HTABLE_NAME = OptionBuilder.withArgName("htable name").hasArg()
-            .isRequired(true).withDescription("HTable name").create("htablename");
-    protected static final Option OPTION_KEY_COLUMN_PERCENTAGE = OptionBuilder
-            .withArgName("rowkey column percentage").hasArg().isRequired(true)
-            .withDescription("Percentage of row key columns").create("columnpercentage");
-    protected static final Option OPTION_KEY_SPLIT_NUMBER = OptionBuilder.withArgName("key split number")
-            .hasArg().isRequired(true).withDescription("Number of key split range").create("splitnumber");
+	protected static final Option OPTION_JOB_NAME = OptionBuilder
+			.withArgName("name")
+			.hasArg()
+			.isRequired(true)
+			.withDescription(
+					"Job name. For exmaple, Kylin_Cuboid_Builder-clsfd_v2_Step_22-D)")
+			.create("jobname");
+	protected static final Option OPTION_CUBE_NAME = OptionBuilder
+			.withArgName("name").hasArg().isRequired(true)
+			.withDescription("Cube name. For exmaple, flat_item_cube")
+			.create("cubename");
+	protected static final Option OPTION_SEGMENT_NAME = OptionBuilder
+			.withArgName("name").hasArg().isRequired(true)
+			.withDescription("Cube segment name)").create("segmentname");
+	protected static final Option OPTION_TABLE_NAME = OptionBuilder
+			.withArgName("name").hasArg().isRequired(true)
+			.withDescription("Hive table name.").create("tablename");
+	protected static final Option OPTION_INPUT_PATH = OptionBuilder
+			.withArgName("path").hasArg().isRequired(true)
+			.withDescription("Input path").create("input");
+	protected static final Option OPTION_INPUT_FORMAT = OptionBuilder
+			.withArgName("inputformat").hasArg().isRequired(false)
+			.withDescription("Input format").create("inputformat");
+	protected static final Option OPTION_INPUT_DELIM = OptionBuilder
+			.withArgName("inputdelim").hasArg().isRequired(false)
+			.withDescription("Input delimeter").create("inputdelim");
+	protected static final Option OPTION_OUTPUT_PATH = OptionBuilder
+			.withArgName("path").hasArg().isRequired(true)
+			.withDescription("Output path").create("output");
+	protected static final Option OPTION_NCUBOID_LEVEL = OptionBuilder
+			.withArgName("level").hasArg().isRequired(true)
+			.withDescription("N-Cuboid build level, e.g. 1, 2, 3...")
+			.create("level");
+	protected static final Option OPTION_PARTITION_FILE_PATH = OptionBuilder
+			.withArgName("path").hasArg().isRequired(true)
+			.withDescription("Partition file path.").create("input");
+	protected static final Option OPTION_HTABLE_NAME = OptionBuilder
+			.withArgName("htable name").hasArg().isRequired(true)
+			.withDescription("HTable name").create("htablename");
+	protected static final Option OPTION_KEY_COLUMN_PERCENTAGE = OptionBuilder
+			.withArgName("rowkey column percentage").hasArg().isRequired(true)
+			.withDescription("Percentage of row key columns")
+			.create("columnpercentage");
+	protected static final Option OPTION_KEY_SPLIT_NUMBER = OptionBuilder
+			.withArgName("key split number").hasArg().isRequired(true)
+			.withDescription("Number of key split range").create("splitnumber");
 
-    protected String name;
-    protected String description;
-    protected boolean isAsync = false;
-    protected OptionsHelper optionsHelper = new OptionsHelper();
+	protected String name;
+	protected String description;
+	protected boolean isAsync = false;
+	protected OptionsHelper optionsHelper = new OptionsHelper();
 
-    protected Job job;
+	protected Job job;
 
-    protected void parseOptions(Options options, String[] args) throws ParseException {
-        optionsHelper.parseOptions(options, args);
-    }
+	protected void parseOptions(Options options, String[] args)
+			throws ParseException {
+		optionsHelper.parseOptions(options, args);
+	}
 
-    public void printUsage(Options options) {
-        optionsHelper.printUsage(getClass().getSimpleName(), options);
-    }
+	public void printUsage(Options options) {
+		optionsHelper.printUsage(getClass().getSimpleName(), options);
+	}
 
-    public Option[] getOptions() {
-        return optionsHelper.getOptions();
-    }
+	public Option[] getOptions() {
+		return optionsHelper.getOptions();
+	}
 
-    public String getOptionsAsString() {
-        return optionsHelper.getOptionsAsString();
-    }
+	public String getOptionsAsString() {
+		return optionsHelper.getOptionsAsString();
+	}
 
-    protected String getOptionValue(Option option) {
-        return optionsHelper.getOptionValue(option);
-    }
+	protected String getOptionValue(Option option) {
+		return optionsHelper.getOptionValue(option);
+	}
 
-    protected boolean hasOption(Option option) {
-        return optionsHelper.hasOption(option);
-    }
+	protected boolean hasOption(Option option) {
+		return optionsHelper.hasOption(option);
+	}
 
-    protected int waitForCompletion(Job job) throws IOException, InterruptedException, ClassNotFoundException {
-        int retVal = 0;
-        long start = System.nanoTime();
+	protected int waitForCompletion(Job job) throws IOException,
+			InterruptedException, ClassNotFoundException {
+		int retVal = 0;
+		long start = System.nanoTime();
 
-        if (isAsync) {
-            job.submit();
-        } else {
-            job.waitForCompletion(true);
-            retVal = job.isSuccessful() ? 0 : 1;
-        }
+		if (isAsync) {
+			job.submit();
+		} else {
+			job.waitForCompletion(true);
+			retVal = job.isSuccessful() ? 0 : 1;
+		}
 
-        log.debug("Job '" + job.getJobName() + "' finished "
-                + (job.isSuccessful() ? "successfully in " : "with failures.  Time taken ")
-                + StringUtils.formatTime((System.nanoTime() - start) / 1000000L));
+		log.debug("Job '"
+				+ job.getJobName()
+				+ "' finished "
+				+ (job.isSuccessful() ? "successfully in "
+						: "with failures.  Time taken ")
+				+ StringUtils.formatTime((System.nanoTime() - start) / 1000000L));
 
-        return retVal;
-    }
+		return retVal;
+	}
 
-    protected static void runJob(Tool job, String[] args) {
-        try {
-            int exitCode = ToolRunner.run(job, args);
-            System.exit(exitCode);
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-            System.exit(5);
-        }
-    }
+	protected static void runJob(Tool job, String[] args) {
+		try {
+			int exitCode = ToolRunner.run(job, args);
+			System.exit(exitCode);
+		} catch (Exception e) {
+			e.printStackTrace(System.err);
+			System.exit(5);
+		}
+	}
 
-    public void addInputDirs(String input, Job job) throws IOException {
-        for (String inp : StringSplitter.split(input, ",")) {
-            inp = inp.trim();
-            if (inp.endsWith("/*")) {
-                inp = inp.substring(0, inp.length() - 2);
-                FileSystem fs = FileSystem.get(job.getConfiguration());
-                for (FileStatus stat : fs.listStatus(new Path(inp))) {
-                    if (stat.isDirectory())
-                        addInputDirs(stat.getPath().toString(), job);
-                }
-            } else {
-                System.out.println("Add input " + inp);
-                FileInputFormat.addInputPath(job, new Path(inp));
-            }
-        }
-    }
+	public void addInputDirs(String input, Job job) throws IOException {
+		for (String inp : StringSplitter.split(input, ",")) {
+			inp = inp.trim();
+			if (inp.endsWith("/*")) {
+				inp = inp.substring(0, inp.length() - 2);
+				FileSystem fs = FileSystem.get(job.getConfiguration());
+				for (FileStatus stat : fs.listStatus(new Path(inp))) {
+					if (stat.isDirectory())
+						addInputDirs(stat.getPath().toString(), job);
+				}
+			} else {
+				System.out.println("Add input " + inp);
+				FileInputFormat.addInputPath(job, new Path(inp));
+			}
+		}
+	}
 
-    protected void attachKylinPropsAndMetadata(CubeInstance cube, Configuration conf) throws IOException {
-        File tmp = File.createTempFile("kylin_job_meta", "");
-        tmp.delete(); // we need a directory, so delete the file first
+	protected void attachKylinPropsAndMetadata(CubeInstance cube,
+			Configuration conf) throws IOException {
+		File tmp = File.createTempFile("kylin_job_meta", "");
+		tmp.delete(); // we need a directory, so delete the file first
 
-        File metaDir = new File(tmp, "meta");
-        metaDir.mkdirs();
-        metaDir.getParentFile().deleteOnExit();
+		File metaDir = new File(tmp, "meta");
+		metaDir.mkdirs();
+		metaDir.getParentFile().deleteOnExit();
 
-        // write kylin.properties
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        File kylinPropsFile = new File(metaDir, "kylin.properties");
-        kylinConfig.writeProperties(kylinPropsFile);
+		// write kylin.properties
+		KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+		File kylinPropsFile = new File(metaDir, "kylin.properties");
+		kylinConfig.writeProperties(kylinPropsFile);
 
-        // write cube / cube_desc / dict / table
-        ArrayList<String> dumpList = new ArrayList<String>();
-        dumpList.add(cube.getResourcePath());
-        dumpList.add(cube.getDescriptor().getResourcePath());
-        if (cube.isInvertedIndex()) {
-            dumpList.add(cube.getInvertedIndexDesc().getResourcePath());
-        }
-        for (TableDesc table : cube.getDescriptor().listTables()) {
-            dumpList.add(table.getResourcePath());
-        }
+		// write cube / cube_desc / dict / table
+		ArrayList<String> dumpList = new ArrayList<String>();
+		dumpList.add(cube.getResourcePath());
+		dumpList.add(cube.getDescriptor().getResourcePath());
+		if (cube.isInvertedIndex()) {
+			dumpList.add(cube.getInvertedIndexDesc().getResourcePath());
+		}
+		for (TableDesc table : cube.getDescriptor().listTables()) {
+			dumpList.add(table.getResourcePath());
+		}
 
-        for (CubeSegment segment : cube.getSegments()) {
-            dumpList.addAll(segment.getDictionaryPaths());
-        }
+		for (CubeSegment segment : cube.getSegments()) {
+			dumpList.addAll(segment.getDictionaryPaths());
+		}
 
-        dumpResources(kylinConfig, metaDir, dumpList);
+		dumpResources(kylinConfig, metaDir, dumpList);
 
-        //hadoop distributed cache
-        conf.set("tmpfiles", "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath()));
-    }
+		// hadoop distributed cache
+		conf.set(
+				"tmpfiles",
+				"file:///"
+						+ OptionsHelper.convertToFileURL(metaDir
+								.getAbsolutePath()));
+	}
 
-    private void dumpResources(KylinConfig kylinConfig, File metaDir, ArrayList<String> dumpList)
-            throws IOException {
-        ResourceStore from = ResourceStore.getStore(kylinConfig);
-        KylinConfig localConfig = KylinConfig.createInstanceFromUri(metaDir.getAbsolutePath());
-        ResourceStore to = ResourceStore.getStore(localConfig);
-        for (String path : dumpList) {
-            InputStream in = from.getResource(path);
-            if (in == null)
-                throw new IllegalStateException("No resource found at -- " + path);
-            long ts = from.getResourceTimestamp(path);
-            to.putResource(path, in, ts);
-            log.info("Dumped resource " + path + " to " + metaDir.getAbsolutePath());
-        }
-    }
+	private void dumpResources(KylinConfig kylinConfig, File metaDir,
+			ArrayList<String> dumpList) throws IOException {
+		ResourceStore from = ResourceStore.getStore(kylinConfig);
+		KylinConfig localConfig = KylinConfig.createInstanceFromUri(metaDir
+				.getAbsolutePath());
+		ResourceStore to = ResourceStore.getStore(localConfig);
+		for (String path : dumpList) {
+			InputStream in = from.getResource(path);
+			if (in == null)
+				throw new IllegalStateException("No resource found at -- "
+						+ path);
+			long ts = from.getResourceTimestamp(path);
+			to.putResource(path, in, ts);
+			log.info("Dumped resource " + path + " to "
+					+ metaDir.getAbsolutePath());
+		}
+	}
 
-    protected void deletePath(Configuration conf, Path path) throws IOException {
-        FileSystem fs = FileSystem.get(conf);
-        if (fs.exists(path)) {
-            fs.delete(path, true);
-        }
-    }
+	protected void deletePath(Configuration conf, Path path) throws IOException {
+		FileSystem fs = FileSystem.get(conf);
+		if (fs.exists(path)) {
+			fs.delete(path, true);
+		}
+	}
 
-    protected double getTotalMapInputMB() throws ClassNotFoundException, IOException, InterruptedException,
-            JobException {
-        if (job == null) {
-            throw new JobException("Job is null");
-        }
+	protected double getTotalMapInputMB() throws ClassNotFoundException,
+			IOException, InterruptedException, JobException {
+		if (job == null) {
+			throw new JobException("Job is null");
+		}
 
-        long mapInputBytes = 0;
-        InputFormat<?, ?> input =
-                ReflectionUtils.newInstance(job.getInputFormatClass(), job.getConfiguration());
-        for (InputSplit split : input.getSplits(job)) {
-            mapInputBytes += split.getLength();
-        }
-        if (mapInputBytes == 0) {
-            throw new IllegalArgumentException("Map input splits are 0 bytes, something is wrong!");
-        }
-        double totalMapInputMB = (double) mapInputBytes / 1024 / 1024;
-        return totalMapInputMB;
-    }
+		long mapInputBytes = 0;
+		InputFormat<?, ?> input = ReflectionUtils.newInstance(
+				job.getInputFormatClass(), job.getConfiguration());
+		for (InputSplit split : input.getSplits(job)) {
+			mapInputBytes += split.getLength();
+		}
+		if (mapInputBytes == 0) {
+			throw new IllegalArgumentException(
+					"Map input splits are 0 bytes, something is wrong!");
+		}
+		double totalMapInputMB = (double) mapInputBytes / 1024 / 1024;
+		return totalMapInputMB;
+	}
 
-    protected int getMapInputSplitCount() throws ClassNotFoundException, JobException, IOException,
-            InterruptedException {
-        if (job == null) {
-            throw new JobException("Job is null");
-        }
-        InputFormat<?, ?> input =
-                ReflectionUtils.newInstance(job.getInputFormatClass(), job.getConfiguration());
-        return input.getSplits(job).size();
-    }
+	protected int getMapInputSplitCount() throws ClassNotFoundException,
+			JobException, IOException, InterruptedException {
+		if (job == null) {
+			throw new JobException("Job is null");
+		}
+		InputFormat<?, ?> input = ReflectionUtils.newInstance(
+				job.getInputFormatClass(), job.getConfiguration());
+		return input.getSplits(job).size();
+	}
 
-    public static KylinConfig loadKylinPropsAndMetadata(Configuration conf) throws IOException {
-        File metaDir = new File("meta");
-        System.setProperty(KylinConfig.KYLIN_CONF, metaDir.getAbsolutePath());
-        System.out.println("The absolute path for meta dir is " + metaDir.getAbsolutePath());
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        kylinConfig.setMetadataUrl(metaDir.getCanonicalPath());
-        return kylinConfig;
-    }
+	public static KylinConfig loadKylinPropsAndMetadata(Configuration conf)
+			throws IOException {
+		File metaDir = new File("meta");
+		System.setProperty(KylinConfig.KYLIN_CONF, metaDir.getAbsolutePath());
+		System.out.println("The absolute path for meta dir is "
+				+ metaDir.getAbsolutePath());
+		KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+		kylinConfig.setMetadataUrl(metaDir.getCanonicalPath());
+		return kylinConfig;
+	}
 
-    public void kill() throws JobException {
-        if (job != null) {
-            try {
-                job.killJob();
-            } catch (IOException e) {
-                throw new JobException(e);
-            }
-        }
-    }
+	public void kill() throws JobException {
+		if (job != null) {
+			try {
+				job.killJob();
+			} catch (IOException e) {
+				throw new JobException(e);
+			}
+		}
+	}
 
-    public Map<String, String> getInfo() throws JobException {
-        if (job != null) {
-            Map<String, String> status = new HashMap<String, String>();
-            if (null != job.getJobID()) {
-                status.put(JobInstance.MR_JOB_ID, job.getJobID().toString());
-            }
-            if (null != job.getTrackingURL()) {
-                status.put(JobInstance.YARN_APP_URL, job.getTrackingURL().toString());
-            }
+	public Map<String, String> getInfo() throws JobException {
+		if (job != null) {
+			Map<String, String> status = new HashMap<String, String>();
+			if (null != job.getJobID()) {
+				status.put(JobInstance.MR_JOB_ID, job.getJobID().toString());
+			}
+			if (null != job.getTrackingURL()) {
+				status.put(JobInstance.YARN_APP_URL, job.getTrackingURL()
+						.toString());
+			}
 
-            return status;
-        } else {
-            throw new JobException("Job is null");
-        }
-    }
+			return status;
+		} else {
+			throw new JobException("Job is null");
+		}
+	}
 
-    public Counters getCounters() throws JobException {
-        if (job != null) {
-            try {
-                return job.getCounters();
-            } catch (IOException e) {
-                throw new JobException(e);
-            }
-        } else {
-            throw new JobException("Job is null");
-        }
-    }
+	public Counters getCounters() throws JobException {
+		if (job != null) {
+			try {
+				return job.getCounters();
+			} catch (IOException e) {
+				throw new JobException(e);
+			}
+		} else {
+			throw new JobException("Job is null");
+		}
+	}
 
-    public void setAsync(boolean isAsync) {
-        this.isAsync = isAsync;
-    }
+	public void setAsync(boolean isAsync) {
+		this.isAsync = isAsync;
+	}
 
 }

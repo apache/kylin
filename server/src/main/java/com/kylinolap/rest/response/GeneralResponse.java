@@ -20,10 +20,10 @@ import java.util.Properties;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class GeneralResponse extends Properties {
 
-    private static final long serialVersionUID = -6540990247122312493L;
+	private static final long serialVersionUID = -6540990247122312493L;
 
 }

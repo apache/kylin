@@ -34,104 +34,105 @@ import com.kylinolap.metadata.model.cube.TblColRef;
  */
 public class RowKeyDecoder {
 
-    private final CubeDesc cubeDesc;
-    private final RowKeyColumnIO colIO;
-    private final RowKeySplitter rowKeySplitter;
+	private final CubeDesc cubeDesc;
+	private final RowKeyColumnIO colIO;
+	private final RowKeySplitter rowKeySplitter;
 
-    private Cuboid cuboid;
-    private List<String> names;
-    private List<String> values;
+	private Cuboid cuboid;
+	private List<String> names;
+	private List<String> values;
 
-    public RowKeyDecoder(CubeSegment cubeSegment) {
-        this.cubeDesc = cubeSegment.getCubeDesc();
-        this.rowKeySplitter = new RowKeySplitter(cubeSegment, 65, 255);
-        this.colIO = new RowKeyColumnIO(cubeSegment);
-        this.values = new ArrayList<String>();
-    }
+	public RowKeyDecoder(CubeSegment cubeSegment) {
+		this.cubeDesc = cubeSegment.getCubeDesc();
+		this.rowKeySplitter = new RowKeySplitter(cubeSegment, 65, 255);
+		this.colIO = new RowKeyColumnIO(cubeSegment);
+		this.values = new ArrayList<String>();
+	}
 
-    public long decode(byte[] bytes) throws IOException {
-        this.values.clear();
+	public long decode(byte[] bytes) throws IOException {
+		this.values.clear();
 
-        long cuboidId = rowKeySplitter.split(bytes, bytes.length);
-        initCuboid(cuboidId);
+		long cuboidId = rowKeySplitter.split(bytes, bytes.length);
+		initCuboid(cuboidId);
 
-        SplittedBytes[] splits = rowKeySplitter.getSplitBuffers();
+		SplittedBytes[] splits = rowKeySplitter.getSplitBuffers();
 
-        int offset = 1; // skip cuboid id part
+		int offset = 1; // skip cuboid id part
 
-        for (int i = 0; i < this.cuboid.getColumns().size(); i++) {
-            TblColRef col = this.cuboid.getColumns().get(i);
-            collectValue(col, splits[offset].value, splits[offset].length);
-            offset++;
-        }
+		for (int i = 0; i < this.cuboid.getColumns().size(); i++) {
+			TblColRef col = this.cuboid.getColumns().get(i);
+			collectValue(col, splits[offset].value, splits[offset].length);
+			offset++;
+		}
 
-        return cuboidId;
-    }
+		return cuboidId;
+	}
 
-    private void initCuboid(long cuboidID) {
-        if (this.cuboid != null && this.cuboid.getId() == cuboidID) {
-            return;
-        }
-        this.cuboid = Cuboid.findById(cubeDesc, cuboidID);
-    }
+	private void initCuboid(long cuboidID) {
+		if (this.cuboid != null && this.cuboid.getId() == cuboidID) {
+			return;
+		}
+		this.cuboid = Cuboid.findById(cubeDesc, cuboidID);
+	}
 
-    private void collectValue(TblColRef col, byte[] valueBytes, int length) throws IOException {
-        String strValue = colIO.readColumnString(col, valueBytes, length);
-        values.add(strValue);
-    }
+	private void collectValue(TblColRef col, byte[] valueBytes, int length)
+			throws IOException {
+		String strValue = colIO.readColumnString(col, valueBytes, length);
+		values.add(strValue);
+	}
 
-    public RowKeySplitter getRowKeySplitter() {
-        return rowKeySplitter;
-    }
+	public RowKeySplitter getRowKeySplitter() {
+		return rowKeySplitter;
+	}
 
-    public void setCuboid(Cuboid cuboid) {
-        this.cuboid = cuboid;
-        this.names = null;
-    }
+	public void setCuboid(Cuboid cuboid) {
+		this.cuboid = cuboid;
+		this.names = null;
+	}
 
-    public List<String> getNames(Map<TblColRef, String> aliasMap) {
-        if (names == null) {
-            names = buildNameList(aliasMap);
-        }
-        return names;
-    }
+	public List<String> getNames(Map<TblColRef, String> aliasMap) {
+		if (names == null) {
+			names = buildNameList(aliasMap);
+		}
+		return names;
+	}
 
-    private List<String> buildNameList(Map<TblColRef, String> aliasMap) {
-        List<TblColRef> columnList = getColumns();
-        List<String> result = new ArrayList<String>(columnList.size());
-        for (TblColRef col : columnList)
-            result.add(findName(col, aliasMap));
-        return result;
-    }
+	private List<String> buildNameList(Map<TblColRef, String> aliasMap) {
+		List<TblColRef> columnList = getColumns();
+		List<String> result = new ArrayList<String>(columnList.size());
+		for (TblColRef col : columnList)
+			result.add(findName(col, aliasMap));
+		return result;
+	}
 
-    private String findName(TblColRef column, Map<TblColRef, String> aliasMap) {
-        String name = null;
-        if (aliasMap != null) {
-            name = aliasMap.get(column);
-        }
-        if (name == null) {
-            name = column.getName();
-        }
-        return name;
-    }
+	private String findName(TblColRef column, Map<TblColRef, String> aliasMap) {
+		String name = null;
+		if (aliasMap != null) {
+			name = aliasMap.get(column);
+		}
+		if (name == null) {
+			name = column.getName();
+		}
+		return name;
+	}
 
-    public List<TblColRef> getColumns() {
-        return cuboid.getColumns();
-    }
+	public List<TblColRef> getColumns() {
+		return cuboid.getColumns();
+	}
 
-    public List<String> getValues() {
-        return values;
-    }
+	public List<String> getValues() {
+		return values;
+	}
 
-    @Override
-    public String toString() {
-        StringBuilder buf = new StringBuilder();
-        buf.append(cuboid.getId());
-        for (Object value : values) {
-            buf.append(",");
-            buf.append(value);
-        }
-        return buf.toString();
-    }
+	@Override
+	public String toString() {
+		StringBuilder buf = new StringBuilder();
+		buf.append(cuboid.getId());
+		for (Object value : values) {
+			buf.append(",");
+			buf.append(value);
+		}
+		return buf.toString();
+	}
 
 }

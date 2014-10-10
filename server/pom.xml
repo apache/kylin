@@ -3,7 +3,6 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kylin-server</artifactId>
-    <version>0.6.1-SNAPSHOT</version>
     <packaging>war</packaging>
     <name>Kylin:RESTServer</name>
     <description>Kylin REST Service and RPC Server.</description>

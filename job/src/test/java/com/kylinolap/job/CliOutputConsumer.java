@@ -24,6 +24,6 @@ import com.kylinolap.common.util.SSHLogger;
 
 public interface CliOutputConsumer extends SSHLogger {
 
-    public void consume(String output);
+	public void consume(String output);
 
 }

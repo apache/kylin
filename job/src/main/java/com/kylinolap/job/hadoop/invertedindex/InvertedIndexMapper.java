@@ -38,59 +38,64 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**
  * @author yangli9
- *
+ * 
  */
-public class InvertedIndexMapper<KEYIN> extends Mapper<KEYIN, Text, LongWritable, ImmutableBytesWritable> {
+public class InvertedIndexMapper<KEYIN> extends
+		Mapper<KEYIN, Text, LongWritable, ImmutableBytesWritable> {
 
-    private TableRecordInfo info;
-    private TableRecord rec;
-    private int delim;
-    private BytesSplitter splitter;
+	private TableRecordInfo info;
+	private TableRecord rec;
+	private int delim;
+	private BytesSplitter splitter;
 
-    private LongWritable outputKey;
-    private ImmutableBytesWritable outputValue;
+	private LongWritable outputKey;
+	private ImmutableBytesWritable outputValue;
 
-    @Override
-    protected void setup(Context context) throws IOException {
-        Configuration conf = context.getConfiguration();
-        String inputDelim = conf.get(BatchConstants.INPUT_DELIM);
-        this.delim = inputDelim == null ? -1 : inputDelim.codePointAt(0);
-        this.splitter = new BytesSplitter(200, 4096);
+	@Override
+	protected void setup(Context context) throws IOException {
+		Configuration conf = context.getConfiguration();
+		String inputDelim = conf.get(BatchConstants.INPUT_DELIM);
+		this.delim = inputDelim == null ? -1 : inputDelim.codePointAt(0);
+		this.splitter = new BytesSplitter(200, 4096);
 
-        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
-        CubeManager mgr = CubeManager.getInstance(config);
-        CubeInstance cube = mgr.getCube(conf.get(BatchConstants.CFG_CUBE_NAME));
-        CubeSegment seg =
-                cube.getSegment(conf.get(BatchConstants.CFG_CUBE_SEGMENT_NAME), CubeSegmentStatusEnum.NEW);
-        this.info = new TableRecordInfo(seg);
-        this.rec = new TableRecord(this.info);
+		KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
+		CubeManager mgr = CubeManager.getInstance(config);
+		CubeInstance cube = mgr.getCube(conf.get(BatchConstants.CFG_CUBE_NAME));
+		CubeSegment seg = cube.getSegment(
+				conf.get(BatchConstants.CFG_CUBE_SEGMENT_NAME),
+				CubeSegmentStatusEnum.NEW);
+		this.info = new TableRecordInfo(seg);
+		this.rec = new TableRecord(this.info);
 
-        outputKey = new LongWritable();
-        outputValue = new ImmutableBytesWritable(rec.getBytes());
-    }
+		outputKey = new LongWritable();
+		outputValue = new ImmutableBytesWritable(rec.getBytes());
+	}
 
-    @Override
-    public void map(KEYIN key, Text value, Context context) throws IOException, InterruptedException {
-        if (delim == -1) {
-            delim = splitter.detectDelim(value, info.getColumnCount());
-        }
+	@Override
+	public void map(KEYIN key, Text value, Context context) throws IOException,
+			InterruptedException {
+		if (delim == -1) {
+			delim = splitter.detectDelim(value, info.getColumnCount());
+		}
 
-        int nParts = splitter.split(value.getBytes(), value.getLength(), (byte) delim);
-        SplittedBytes[] parts = splitter.getSplitBuffers();
+		int nParts = splitter.split(value.getBytes(), value.getLength(),
+				(byte) delim);
+		SplittedBytes[] parts = splitter.getSplitBuffers();
 
-        if (nParts != info.getColumnCount()) {
-            throw new RuntimeException("Got " + parts.length + " from -- " + value.toString()
-                    + " -- but only " + info.getColumnCount() + " expected");
-        }
+		if (nParts != info.getColumnCount()) {
+			throw new RuntimeException("Got " + parts.length + " from -- "
+					+ value.toString() + " -- but only "
+					+ info.getColumnCount() + " expected");
+		}
 
-        rec.reset();
-        for (int i = 0; i < nParts; i++) {
-            rec.setValue(i, parts[i].value, 0, parts[i].length);
-        }
+		rec.reset();
+		for (int i = 0; i < nParts; i++) {
+			rec.setValue(i, parts[i].value, 0, parts[i].length);
+		}
 
-        outputKey.set(rec.getTimestamp());
-        // outputValue's backing bytes array is the same as rec
+		outputKey.set(rec.getTimestamp());
+		// outputValue's backing bytes array is the same as rec
 
-        context.write(outputKey, outputValue);
-    }
+		context.write(outputKey, outputValue);
+	}
 }

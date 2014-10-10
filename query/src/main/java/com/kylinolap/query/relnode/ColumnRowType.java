@@ -24,59 +24,62 @@ import com.kylinolap.metadata.model.cube.TblColRef;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public class ColumnRowType {
 
-    private List<TblColRef> columns;
-    // for calculated column, like (CASE LSTG_FORMAT_NAME WHEN 'Auction' THEN '111' ELSE '222' END)
-    // source columns are the contributing physical columns, here the LSTG_FORMAT_NAME 
-    private List<Set<TblColRef>> sourceColumns;
+	private List<TblColRef> columns;
+	// for calculated column, like (CASE LSTG_FORMAT_NAME WHEN 'Auction' THEN
+	// '111' ELSE '222' END)
+	// source columns are the contributing physical columns, here the
+	// LSTG_FORMAT_NAME
+	private List<Set<TblColRef>> sourceColumns;
 
-    public ColumnRowType(List<TblColRef> columns) {
-        this(columns, null);
-    }
+	public ColumnRowType(List<TblColRef> columns) {
+		this(columns, null);
+	}
 
-    public ColumnRowType(List<TblColRef> columns, List<Set<TblColRef>> sourceColumns) {
-        this.columns = columns;
-        this.sourceColumns = sourceColumns;
-    }
+	public ColumnRowType(List<TblColRef> columns,
+			List<Set<TblColRef>> sourceColumns) {
+		this.columns = columns;
+		this.sourceColumns = sourceColumns;
+	}
 
-    public TblColRef getColumnByIndex(int index) {
-        return columns.get(index);
-    }
+	public TblColRef getColumnByIndex(int index) {
+		return columns.get(index);
+	}
 
-    public int getIndexByName(String columnName) {
-        for (int i = 0; i < columns.size(); i++) {
-            if (columns.get(i).getName().equals(columnName)) {
-                return i;
-            }
-        }
-        return -1;
-    }
+	public int getIndexByName(String columnName) {
+		for (int i = 0; i < columns.size(); i++) {
+			if (columns.get(i).getName().equals(columnName)) {
+				return i;
+			}
+		}
+		return -1;
+	}
 
-    public Set<TblColRef> getSourceColumnsByIndex(int i) {
-        Set<TblColRef> result = null;
-        if (sourceColumns != null) {
-            result = sourceColumns.get(i);
-        }
-        if (result == null || result.isEmpty()) {
-            result = Collections.singleton(getColumnByIndex(i));
-        }
-        return result;
-    }
+	public Set<TblColRef> getSourceColumnsByIndex(int i) {
+		Set<TblColRef> result = null;
+		if (sourceColumns != null) {
+			result = sourceColumns.get(i);
+		}
+		if (result == null || result.isEmpty()) {
+			result = Collections.singleton(getColumnByIndex(i));
+		}
+		return result;
+	}
 
-    public List<TblColRef> getAllColumns() {
-        return columns;
-    }
+	public List<TblColRef> getAllColumns() {
+		return columns;
+	}
 
-    public int size() {
-        return columns.size();
-    }
+	public int size() {
+		return columns.size();
+	}
 
-    @Override
-    public String toString() {
-        return "ColumnRowType [" + columns + "]";
-    }
+	@Override
+	public String toString() {
+		return "ColumnRowType [" + columns + "]";
+	}
 
 }

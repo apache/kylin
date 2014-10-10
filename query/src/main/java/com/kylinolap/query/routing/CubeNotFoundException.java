@@ -18,17 +18,17 @@ package com.kylinolap.query.routing;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class CubeNotFoundException extends RuntimeException {
 
-    private static final long serialVersionUID = 4372584597304243555L;
+	private static final long serialVersionUID = 4372584597304243555L;
 
-    public CubeNotFoundException(String message, Throwable t) {
-        super(message, t);
-    }
+	public CubeNotFoundException(String message, Throwable t) {
+		super(message, t);
+	}
 
-    public CubeNotFoundException(String message) {
-        super(message);
-    }
+	public CubeNotFoundException(String message) {
+		super(message);
+	}
 }

@@ -26,29 +26,32 @@ import com.kylinolap.job.constant.BatchConstants;
 
 /**
  * @author yangli9
- *
+ * 
  */
-public class InvertedIndexPartitioner extends Partitioner<LongWritable, ImmutableBytesWritable> implements
-        Configurable {
+public class InvertedIndexPartitioner extends
+		Partitioner<LongWritable, ImmutableBytesWritable> implements
+		Configurable {
 
-    Configuration conf;
-    long timestampGranularity;
+	Configuration conf;
+	long timestampGranularity;
 
-    @Override
-    public int getPartition(LongWritable key, ImmutableBytesWritable value, int numPartitions) {
-        long ts = key.get();
-        return (int) (ts / timestampGranularity) % numPartitions;
-    }
+	@Override
+	public int getPartition(LongWritable key, ImmutableBytesWritable value,
+			int numPartitions) {
+		long ts = key.get();
+		return (int) (ts / timestampGranularity) % numPartitions;
+	}
 
-    @Override
-    public void setConf(Configuration conf) {
-        this.conf = conf;
-        this.timestampGranularity = Long.parseLong(conf.get(BatchConstants.TIMESTAMP_GRANULARITY));
-    }
+	@Override
+	public void setConf(Configuration conf) {
+		this.conf = conf;
+		this.timestampGranularity = Long.parseLong(conf
+				.get(BatchConstants.TIMESTAMP_GRANULARITY));
+	}
 
-    @Override
-    public Configuration getConf() {
-        return conf;
-    }
+	@Override
+	public Configuration getConf() {
+		return conf;
+	}
 
 }

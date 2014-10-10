@@ -24,20 +24,21 @@ import java.util.Map;
  */
 public class SqlHiveDataTypeMapping {
 
-    private static final Map<String, String> sqlToHiveDataTypeMapping = new HashMap<String, String>();
+	private static final Map<String, String> sqlToHiveDataTypeMapping = new HashMap<String, String>();
 
-    static {
-        sqlToHiveDataTypeMapping.put("short", "smallint");
-        sqlToHiveDataTypeMapping.put("long", "bigint");
-        sqlToHiveDataTypeMapping.put("byte", "tinyint");
-        sqlToHiveDataTypeMapping.put("datetime", "date");
-    }
+	static {
+		sqlToHiveDataTypeMapping.put("short", "smallint");
+		sqlToHiveDataTypeMapping.put("long", "bigint");
+		sqlToHiveDataTypeMapping.put("byte", "tinyint");
+		sqlToHiveDataTypeMapping.put("datetime", "date");
+	}
 
-    public static String getHiveDataType(String javaDataType) {
-        String hiveDataType = sqlToHiveDataTypeMapping.get(javaDataType.toLowerCase());
-        if (hiveDataType == null) {
-            hiveDataType = javaDataType;
-        }
-        return hiveDataType.toLowerCase();
-    }
+	public static String getHiveDataType(String javaDataType) {
+		String hiveDataType = sqlToHiveDataTypeMapping.get(javaDataType
+				.toLowerCase());
+		if (hiveDataType == null) {
+			hiveDataType = javaDataType;
+		}
+		return hiveDataType.toLowerCase();
+	}
 }

@@ -31,60 +31,64 @@ import com.kylinolap.rest.service.TestBase;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class AccessControllerTest extends TestBase {
 
-    private AccessController accessController;
+	private AccessController accessController;
 
-    @Autowired
-    AccessService accessService;
+	@Autowired
+	AccessService accessService;
 
-    @Before
-    public void setup() {
-        super.setUp();
+	@Before
+	public void setup() {
+		super.setUp();
 
-        accessController = new AccessController();
-        accessController.setAccessService(accessService);
-    }
+		accessController = new AccessController();
+		accessController.setAccessService(accessService);
+	}
 
-    @Test
-    public void testBasics() throws IOException {
-        Assert.assertNotNull(accessController.getAccessEntities("JobInstance", ""));
+	@Test
+	public void testBasics() throws IOException {
+		Assert.assertNotNull(accessController.getAccessEntities("JobInstance",
+				""));
 
-        List<AccessEntryResponse> aes =
-                accessController.getAccessEntities("CubeInstance", "a24ca905-1fc6-4f67-985c-38fa5aeafd92");
-        Assert.assertTrue(aes.size() == 0);
+		List<AccessEntryResponse> aes = accessController.getAccessEntities(
+				"CubeInstance", "a24ca905-1fc6-4f67-985c-38fa5aeafd92");
+		Assert.assertTrue(aes.size() == 0);
 
-        AccessRequest accessRequest = new AccessRequest();
-        accessRequest.setPermission("ADMINISTRATION");
-        accessRequest.setSid("MODELER");
-        accessRequest.setPrincipal(true);
+		AccessRequest accessRequest = new AccessRequest();
+		accessRequest.setPermission("ADMINISTRATION");
+		accessRequest.setSid("MODELER");
+		accessRequest.setPrincipal(true);
 
-        aes = accessController.grant("CubeInstance", "a24ca905-1fc6-4f67-985c-38fa5aeafd92", accessRequest);
-        Assert.assertTrue(aes.size() == 1);
+		aes = accessController.grant("CubeInstance",
+				"a24ca905-1fc6-4f67-985c-38fa5aeafd92", accessRequest);
+		Assert.assertTrue(aes.size() == 1);
 
-        Long aeId = null;
-        for (AccessEntryResponse ae : aes) {
-            aeId = (Long) ae.getId();
-        }
-        Assert.assertNotNull(aeId);
+		Long aeId = null;
+		for (AccessEntryResponse ae : aes) {
+			aeId = (Long) ae.getId();
+		}
+		Assert.assertNotNull(aeId);
 
-        accessRequest = new AccessRequest();
-        accessRequest.setAccessEntryId(aeId);
-        accessRequest.setPermission("READ");
+		accessRequest = new AccessRequest();
+		accessRequest.setAccessEntryId(aeId);
+		accessRequest.setPermission("READ");
 
-        aes = accessController.update("CubeInstance", "a24ca905-1fc6-4f67-985c-38fa5aeafd92", accessRequest);
-        Assert.assertTrue(aes.size() == 1);
-        for (AccessEntryResponse ae : aes) {
-            aeId = (Long) ae.getId();
-        }
-        Assert.assertNotNull(aeId);
+		aes = accessController.update("CubeInstance",
+				"a24ca905-1fc6-4f67-985c-38fa5aeafd92", accessRequest);
+		Assert.assertTrue(aes.size() == 1);
+		for (AccessEntryResponse ae : aes) {
+			aeId = (Long) ae.getId();
+		}
+		Assert.assertNotNull(aeId);
 
-        accessRequest = new AccessRequest();
-        accessRequest.setAccessEntryId(aeId);
-        accessRequest.setPermission("READ");
-        aes = accessController.revoke("CubeInstance", "a24ca905-1fc6-4f67-985c-38fa5aeafd92", accessRequest);
-        Assert.assertTrue(aes.size() == 0);
-    }
+		accessRequest = new AccessRequest();
+		accessRequest.setAccessEntryId(aeId);
+		accessRequest.setPermission("READ");
+		aes = accessController.revoke("CubeInstance",
+				"a24ca905-1fc6-4f67-985c-38fa5aeafd92", accessRequest);
+		Assert.assertTrue(aes.size() == 0);
+	}
 }

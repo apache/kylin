@@ -34,82 +34,87 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**
  * @author ysong1
- *
+ * 
  */
 @SuppressWarnings("static-access")
 public class RandomKeyDistributionJob extends AbstractHadoopJob {
-    protected static final Logger log = LoggerFactory.getLogger(RandomKeyDistributionJob.class);
+	protected static final Logger log = LoggerFactory
+			.getLogger(RandomKeyDistributionJob.class);
 
-    static final Option OPTION_KEY_CLASS = OptionBuilder.withArgName("keyclass").hasArg().isRequired(true)
-            .withDescription("Key Class").create("keyclass");
-    static final Option OPTION_REGION_MB = OptionBuilder.withArgName("regionmb").hasArg().isRequired(true)
-            .withDescription("GB per Region").create("regionmb");
+	static final Option OPTION_KEY_CLASS = OptionBuilder
+			.withArgName("keyclass").hasArg().isRequired(true)
+			.withDescription("Key Class").create("keyclass");
+	static final Option OPTION_REGION_MB = OptionBuilder
+			.withArgName("regionmb").hasArg().isRequired(true)
+			.withDescription("GB per Region").create("regionmb");
 
-    @Override
-    public int run(String[] args) throws Exception {
-        Options options = new Options();
+	@Override
+	public int run(String[] args) throws Exception {
+		Options options = new Options();
 
-        try {
-            options.addOption(OPTION_INPUT_PATH);
-            options.addOption(OPTION_OUTPUT_PATH);
-            options.addOption(OPTION_JOB_NAME);
-            options.addOption(OPTION_KEY_CLASS);
-            options.addOption(OPTION_REGION_MB);
+		try {
+			options.addOption(OPTION_INPUT_PATH);
+			options.addOption(OPTION_OUTPUT_PATH);
+			options.addOption(OPTION_JOB_NAME);
+			options.addOption(OPTION_KEY_CLASS);
+			options.addOption(OPTION_REGION_MB);
 
-            parseOptions(options, args);
+			parseOptions(options, args);
 
-            // start job
-            String jobName = getOptionValue(OPTION_JOB_NAME);
-            job = Job.getInstance(getConf(), jobName);
+			// start job
+			String jobName = getOptionValue(OPTION_JOB_NAME);
+			job = Job.getInstance(getConf(), jobName);
 
-            job.setJarByClass(this.getClass());
-            addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
+			job.setJarByClass(this.getClass());
+			addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
 
-            Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
-            FileOutputFormat.setOutputPath(job, output);
+			Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
+			FileOutputFormat.setOutputPath(job, output);
 
-            String keyClass = getOptionValue(OPTION_KEY_CLASS);
-            Class<?> keyClz = Class.forName(keyClass);
+			String keyClass = getOptionValue(OPTION_KEY_CLASS);
+			Class<?> keyClz = Class.forName(keyClass);
 
-            int regionMB = Integer.parseInt(getOptionValue(OPTION_REGION_MB));
+			int regionMB = Integer.parseInt(getOptionValue(OPTION_REGION_MB));
 
-            // Mapper
-            job.setInputFormatClass(SequenceFileInputFormat.class);
-            job.setMapperClass(RandomKeyDistributionMapper.class);
-            job.setMapOutputKeyClass(keyClz);
-            job.setMapOutputValueClass(NullWritable.class);
+			// Mapper
+			job.setInputFormatClass(SequenceFileInputFormat.class);
+			job.setMapperClass(RandomKeyDistributionMapper.class);
+			job.setMapOutputKeyClass(keyClz);
+			job.setMapOutputValueClass(NullWritable.class);
 
-            // Reducer - only one
-            job.setReducerClass(RandomKeyDistributionReducer.class);
-            job.setOutputFormatClass(SequenceFileOutputFormat.class);
-            job.setOutputKeyClass(keyClz);
-            job.setOutputValueClass(NullWritable.class);
-            job.setNumReduceTasks(1);
+			// Reducer - only one
+			job.setReducerClass(RandomKeyDistributionReducer.class);
+			job.setOutputFormatClass(SequenceFileOutputFormat.class);
+			job.setOutputKeyClass(keyClz);
+			job.setOutputValueClass(NullWritable.class);
+			job.setNumReduceTasks(1);
 
-            this.deletePath(job.getConfiguration(), output);
+			this.deletePath(job.getConfiguration(), output);
 
-            // total map input MB
-            double totalMapInputMB = this.getTotalMapInputMB();
-            int regionCount = Math.max(1, (int) (totalMapInputMB / regionMB));
-            int mapSampleNumber = 1000;
-            System.out.println("Total Map Input MB: " + totalMapInputMB);
-            System.out.println("Region Count: " + regionCount);
+			// total map input MB
+			double totalMapInputMB = this.getTotalMapInputMB();
+			int regionCount = Math.max(1, (int) (totalMapInputMB / regionMB));
+			int mapSampleNumber = 1000;
+			System.out.println("Total Map Input MB: " + totalMapInputMB);
+			System.out.println("Region Count: " + regionCount);
 
-            // set job configuration
-            job.getConfiguration().set(BatchConstants.MAPPER_SAMPLE_NUMBER, String.valueOf(mapSampleNumber));
-            job.getConfiguration().set(BatchConstants.REGION_NUMBER, String.valueOf(regionCount));
+			// set job configuration
+			job.getConfiguration().set(BatchConstants.MAPPER_SAMPLE_NUMBER,
+					String.valueOf(mapSampleNumber));
+			job.getConfiguration().set(BatchConstants.REGION_NUMBER,
+					String.valueOf(regionCount));
 
-            return waitForCompletion(job);
-        } catch (Exception e) {
-            printUsage(options);
-            log.error(e.getLocalizedMessage(), e);
-            return 2;
-        }
-    }
+			return waitForCompletion(job);
+		} catch (Exception e) {
+			printUsage(options);
+			log.error(e.getLocalizedMessage(), e);
+			return 2;
+		}
+	}
 
-    public static void main(String[] args) throws Exception {
-        int exitCode = ToolRunner.run(new RandomKeyDistributionJob(), args);
-        System.exit(exitCode);
-    }
+	public static void main(String[] args) throws Exception {
+		int exitCode = ToolRunner.run(new RandomKeyDistributionJob(), args);
+		System.exit(exitCode);
+	}
 
 }

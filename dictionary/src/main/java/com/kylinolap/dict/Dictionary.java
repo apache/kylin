@@ -25,9 +25,8 @@ import org.apache.hadoop.io.Writable;
  * significantly reduced.
  * 
  * - IDs are smallest integers possible for the cardinality of a column, for the
- *   purpose of minimal storage space
- * - IDs preserve ordering of values, such that range query can be applied to IDs 
- *   directly
+ * purpose of minimal storage space - IDs preserve ordering of values, such that
+ * range query can be applied to IDs directly
  * 
  * A dictionary once built, is immutable. This allows optimal memory footprint
  * by e.g. flatten the Trie structure into a byte array, replacing node pointers
@@ -37,109 +36,127 @@ import org.apache.hadoop.io.Writable;
  */
 abstract public class Dictionary<T> implements Writable {
 
-    public static final byte NULL = (byte) 0xff;
+	public static final byte NULL = (byte) 0xff;
 
-    // ID with all bit-1 (0xff e.g.) reserved for NULL value
-    public static final int NULL_ID[] = new int[] { 0, 0xff, 0xffff, 0xffffff, 0xffffff };
+	// ID with all bit-1 (0xff e.g.) reserved for NULL value
+	public static final int NULL_ID[] = new int[] { 0, 0xff, 0xffff, 0xffffff,
+			0xffffff };
 
-    abstract public int getMinId();
+	abstract public int getMinId();
 
-    abstract public int getMaxId();
+	abstract public int getMaxId();
 
-    /**
-     * @return the size of an ID in bytes, determined by the cardinality of column
-     */
-    abstract public int getSizeOfId();
+	/**
+	 * @return the size of an ID in bytes, determined by the cardinality of
+	 *         column
+	 */
+	abstract public int getSizeOfId();
 
-    /**
-     * @return the (maximum) size of value in bytes, determined by the longest value of column
-     */
-    abstract public int getSizeOfValue();
+	/**
+	 * @return the (maximum) size of value in bytes, determined by the longest
+	 *         value of column
+	 */
+	abstract public int getSizeOfValue();
 
-    /** 
-     * Convenient form of <code>getIdFromValue(value, 0)</code>
-     */
-    final public int getIdFromValue(T value) {
-        return getIdFromValue(value, 0);
-    }
+	/**
+	 * Convenient form of <code>getIdFromValue(value, 0)</code>
+	 */
+	final public int getIdFromValue(T value) {
+		return getIdFromValue(value, 0);
+	}
 
-    /**
-     * Returns the ID integer of given value. In case of not found
-     * - if roundingFlag=0, throw IllegalArgumentException;
-     * - if roundingFlag<0, the closest smaller ID integer if exist;
-     * - if roundingFlag>0, the closest bigger ID integer if exist.
-     * The implementation often has cache, thus faster than the byte[] version getIdFromValueBytes()
-     * @throws IllegalArgumentException if value is not found in dictionary and rounding is off or failed
-     */
-    final public int getIdFromValue(T value, int roundingFlag) {
-        if (value == null)
-            return nullId();
-        else
-            return getIdFromValueImpl(value, roundingFlag);
-    }
+	/**
+	 * Returns the ID integer of given value. In case of not found - if
+	 * roundingFlag=0, throw IllegalArgumentException; - if roundingFlag<0, the
+	 * closest smaller ID integer if exist; - if roundingFlag>0, the closest
+	 * bigger ID integer if exist. The implementation often has cache, thus
+	 * faster than the byte[] version getIdFromValueBytes()
+	 * 
+	 * @throws IllegalArgumentException
+	 *             if value is not found in dictionary and rounding is off or
+	 *             failed
+	 */
+	final public int getIdFromValue(T value, int roundingFlag) {
+		if (value == null)
+			return nullId();
+		else
+			return getIdFromValueImpl(value, roundingFlag);
+	}
 
-    abstract protected int getIdFromValueImpl(T value, int roundingFlag);
+	abstract protected int getIdFromValueImpl(T value, int roundingFlag);
 
-    /**
-     * @return the value corresponds to the given ID
-     * @throws IllegalArgumentException if ID is not found in dictionary
-     */
-    final public T getValueFromId(int id) {
-        if (isNullId(id))
-            return null;
-        else
-            return getValueFromIdImpl(id);
-    }
+	/**
+	 * @return the value corresponds to the given ID
+	 * @throws IllegalArgumentException
+	 *             if ID is not found in dictionary
+	 */
+	final public T getValueFromId(int id) {
+		if (isNullId(id))
+			return null;
+		else
+			return getValueFromIdImpl(id);
+	}
 
-    abstract protected T getValueFromIdImpl(int id);
+	abstract protected T getValueFromIdImpl(int id);
 
-    /** 
-     * Convenient form of <code>getIdFromValueBytes(value, offset, len, 0)</code>
-     */
-    final public int getIdFromValueBytes(byte[] value, int offset, int len) {
-        return getIdFromValueBytes(value, offset, len, 0);
-    }
+	/**
+	 * Convenient form of
+	 * <code>getIdFromValueBytes(value, offset, len, 0)</code>
+	 */
+	final public int getIdFromValueBytes(byte[] value, int offset, int len) {
+		return getIdFromValueBytes(value, offset, len, 0);
+	}
 
-    /**
-     * A lower level API, return ID integer from raw value bytes. In case of not found
-     * - if roundingFlag=0, throw IllegalArgumentException;
-     * - if roundingFlag<0, the closest smaller ID integer if exist;
-     * - if roundingFlag>0, the closest bigger ID integer if exist.
-     * Bypassing the cache layer, this could be significantly slower than getIdFromValue(T value).
-     * @throws IllegalArgumentException if value is not found in dictionary and rounding is off or failed
-     */
-    final public int getIdFromValueBytes(byte[] value, int offset, int len, int roundingFlag) {
-        if (value == null)
-            return nullId();
-        else
-            return getIdFromValueBytesImpl(value, offset, len, roundingFlag);
-    }
+	/**
+	 * A lower level API, return ID integer from raw value bytes. In case of not
+	 * found - if roundingFlag=0, throw IllegalArgumentException; - if
+	 * roundingFlag<0, the closest smaller ID integer if exist; - if
+	 * roundingFlag>0, the closest bigger ID integer if exist. Bypassing the
+	 * cache layer, this could be significantly slower than getIdFromValue(T
+	 * value).
+	 * 
+	 * @throws IllegalArgumentException
+	 *             if value is not found in dictionary and rounding is off or
+	 *             failed
+	 */
+	final public int getIdFromValueBytes(byte[] value, int offset, int len,
+			int roundingFlag) {
+		if (value == null)
+			return nullId();
+		else
+			return getIdFromValueBytesImpl(value, offset, len, roundingFlag);
+	}
 
-    abstract protected int getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag);
+	abstract protected int getIdFromValueBytesImpl(byte[] value, int offset,
+			int len, int roundingFlag);
 
-    /**
-     * A lower level API, get byte values from ID, return the number of bytes written.
-     * Bypassing the cache layer, this could be significantly slower than getIdFromValue(T value).
-     * @throws IllegalArgumentException if ID is not found in dictionary
-     */
-    final public int getValueBytesFromId(int id, byte[] returnValue, int offset) {
-        if (isNullId(id))
-            return 0;
-        else
-            return getValueBytesFromIdImpl(id, returnValue, offset);
-    }
+	/**
+	 * A lower level API, get byte values from ID, return the number of bytes
+	 * written. Bypassing the cache layer, this could be significantly slower
+	 * than getIdFromValue(T value).
+	 * 
+	 * @throws IllegalArgumentException
+	 *             if ID is not found in dictionary
+	 */
+	final public int getValueBytesFromId(int id, byte[] returnValue, int offset) {
+		if (isNullId(id))
+			return 0;
+		else
+			return getValueBytesFromIdImpl(id, returnValue, offset);
+	}
 
-    abstract protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset);
+	abstract protected int getValueBytesFromIdImpl(int id, byte[] returnValue,
+			int offset);
 
-    abstract public void dump(PrintStream out);
+	abstract public void dump(PrintStream out);
 
-    public int nullId() {
-        return NULL_ID[getSizeOfId()];
-    }
+	public int nullId() {
+		return NULL_ID[getSizeOfId()];
+	}
 
-    public boolean isNullId(int id) {
-        int nullId = NULL_ID[getSizeOfId()];
-        return (nullId & id) == nullId;
-    }
+	public boolean isNullId(int id) {
+		int nullId = NULL_ID[getSizeOfId()];
+		return (nullId & id) == nullId;
+	}
 
 }

@@ -28,31 +28,34 @@ import com.kylinolap.query.relnode.OLAPRel;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public class OLAPJoinRule extends ConverterRule {
 
-    public static final ConverterRule INSTANCE = new OLAPJoinRule();
+	public static final ConverterRule INSTANCE = new OLAPJoinRule();
 
-    public OLAPJoinRule() {
-        super(JoinRel.class, Convention.NONE, OLAPRel.CONVENTION, "OLAPJoinRule");
-    }
+	public OLAPJoinRule() {
+		super(JoinRel.class, Convention.NONE, OLAPRel.CONVENTION,
+				"OLAPJoinRule");
+	}
 
-    @Override
-    public RelNode convert(RelNode rel) {
-        JoinRel joinRel = (JoinRel) rel;
-        RelNode leftRel = joinRel.getInput(0);
-        RelNode rightRel = joinRel.getInput(1);
-        RelTraitSet traitSet = joinRel.getTraitSet().replace(OLAPRel.CONVENTION);
-        try {
-            return new OLAPJoinRel(joinRel.getCluster(), traitSet, convert(leftRel, traitSet), convert(
-                    rightRel, traitSet), joinRel.getCondition(), joinRel.getJoinType(),
-                    joinRel.getVariablesStopped());
-        } catch (InvalidRelException e) {
-            // Semantic error not possible. Must be a bug. Convert to
-            // internal error.
-            throw new AssertionError(e);
-        }
-    }
+	@Override
+	public RelNode convert(RelNode rel) {
+		JoinRel joinRel = (JoinRel) rel;
+		RelNode leftRel = joinRel.getInput(0);
+		RelNode rightRel = joinRel.getInput(1);
+		RelTraitSet traitSet = joinRel.getTraitSet()
+				.replace(OLAPRel.CONVENTION);
+		try {
+			return new OLAPJoinRel(joinRel.getCluster(), traitSet, convert(
+					leftRel, traitSet), convert(rightRel, traitSet),
+					joinRel.getCondition(), joinRel.getJoinType(),
+					joinRel.getVariablesStopped());
+		} catch (InvalidRelException e) {
+			// Semantic error not possible. Must be a bug. Convert to
+			// internal error.
+			throw new AssertionError(e);
+		}
+	}
 
 }

@@ -18,48 +18,48 @@ package com.kylinolap.rest.request;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class AccessRequest {
 
-    private Long accessEntryId;
-    private String permission;
-    private String sid;
-    private boolean principal;
+	private Long accessEntryId;
+	private String permission;
+	private String sid;
+	private boolean principal;
 
-    public AccessRequest() {
-    }
+	public AccessRequest() {
+	}
 
-    public Long getAccessEntryId() {
-        return accessEntryId;
-    }
+	public Long getAccessEntryId() {
+		return accessEntryId;
+	}
 
-    public void setAccessEntryId(Long accessEntryId) {
-        this.accessEntryId = accessEntryId;
-    }
+	public void setAccessEntryId(Long accessEntryId) {
+		this.accessEntryId = accessEntryId;
+	}
 
-    public String getPermission() {
-        return permission;
-    }
+	public String getPermission() {
+		return permission;
+	}
 
-    public void setPermission(String permission) {
-        this.permission = permission;
-    }
+	public void setPermission(String permission) {
+		this.permission = permission;
+	}
 
-    public String getSid() {
-        return sid;
-    }
+	public String getSid() {
+		return sid;
+	}
 
-    public void setSid(String sid) {
-        this.sid = sid;
-    }
+	public void setSid(String sid) {
+		this.sid = sid;
+	}
 
-    public boolean isPrincipal() {
-        return principal;
-    }
+	public boolean isPrincipal() {
+		return principal;
+	}
 
-    public void setPrincipal(boolean principal) {
-        this.principal = principal;
-    }
+	public void setPrincipal(boolean principal) {
+		this.principal = principal;
+	}
 
 }

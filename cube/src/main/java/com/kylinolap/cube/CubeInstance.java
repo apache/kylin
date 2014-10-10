@@ -34,318 +34,329 @@ import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeInstance extends RootPersistentEntity {
 
-    public static CubeInstance create(String cubeName, String projectName, CubeDesc cubeDesc) {
-        CubeInstance cubeInstance = new CubeInstance();
+	public static CubeInstance create(String cubeName, String projectName,
+			CubeDesc cubeDesc) {
+		CubeInstance cubeInstance = new CubeInstance();
 
-        cubeInstance.setConfig(cubeDesc.getConfig());
-        cubeInstance.setName(cubeName);
-        cubeInstance.setDescName(cubeDesc.getName());
-        cubeInstance.setCreateTime(formatTime(System.currentTimeMillis()));
-        cubeInstance.setSegments(new ArrayList<CubeSegment>());
-        cubeInstance.setStatus(CubeStatusEnum.DISABLED);
-        cubeInstance.updateRandomUuid();
+		cubeInstance.setConfig(cubeDesc.getConfig());
+		cubeInstance.setName(cubeName);
+		cubeInstance.setDescName(cubeDesc.getName());
+		cubeInstance.setCreateTime(formatTime(System.currentTimeMillis()));
+		cubeInstance.setSegments(new ArrayList<CubeSegment>());
+		cubeInstance.setStatus(CubeStatusEnum.DISABLED);
+		cubeInstance.updateRandomUuid();
 
-        return cubeInstance;
-    }
+		return cubeInstance;
+	}
 
-    @JsonIgnore
-    private KylinConfig config;
-    @JsonProperty("name")
-    private String name;
-    @JsonProperty("owner")
-    private String owner;
-    @JsonProperty("version")
-    private String version; // user info only, we don't do version control
-    @JsonProperty("descriptor")
-    private String descName;
-    // Mark cube priority for query 
-    @JsonProperty("cost")
-    private int cost = 50;
-    @JsonProperty("status")
-    private CubeStatusEnum status;
+	@JsonIgnore
+	private KylinConfig config;
+	@JsonProperty("name")
+	private String name;
+	@JsonProperty("owner")
+	private String owner;
+	@JsonProperty("version")
+	private String version; // user info only, we don't do version control
+	@JsonProperty("descriptor")
+	private String descName;
+	// Mark cube priority for query
+	@JsonProperty("cost")
+	private int cost = 50;
+	@JsonProperty("status")
+	private CubeStatusEnum status;
 
-    @JsonManagedReference
-    @JsonProperty("segments")
-    private List<CubeSegment> segments = new ArrayList<CubeSegment>();
+	@JsonManagedReference
+	@JsonProperty("segments")
+	private List<CubeSegment> segments = new ArrayList<CubeSegment>();
 
-    @JsonProperty("create_time")
-    private String createTime;
+	@JsonProperty("create_time")
+	private String createTime;
 
-    public List<CubeSegment> getBuildingSegments() {
-        List<CubeSegment> buildingSegments = new ArrayList<CubeSegment>();
-        if (null != segments) {
-            for (CubeSegment segment : segments) {
-                if (CubeSegmentStatusEnum.NEW == segment.getStatus()
-                        || CubeSegmentStatusEnum.READY_PENDING == segment.getStatus()) {
-                    buildingSegments.add(segment);
-                }
-            }
-        }
+	public List<CubeSegment> getBuildingSegments() {
+		List<CubeSegment> buildingSegments = new ArrayList<CubeSegment>();
+		if (null != segments) {
+			for (CubeSegment segment : segments) {
+				if (CubeSegmentStatusEnum.NEW == segment.getStatus()
+						|| CubeSegmentStatusEnum.READY_PENDING == segment
+								.getStatus()) {
+					buildingSegments.add(segment);
+				}
+			}
+		}
 
-        return buildingSegments;
-    }
+		return buildingSegments;
+	}
 
-    public long getAllocatedEndDate() {
-        if (null == segments || segments.size() == 0) {
-            return 0;
-        }
+	public long getAllocatedEndDate() {
+		if (null == segments || segments.size() == 0) {
+			return 0;
+		}
 
-        Collections.sort(segments);
+		Collections.sort(segments);
 
-        return segments.get(segments.size() - 1).getDateRangeEnd();
-    }
+		return segments.get(segments.size() - 1).getDateRangeEnd();
+	}
 
-    public long getAllocatedStartDate() {
-        if (null == segments || segments.size() == 0) {
-            return 0;
-        }
+	public long getAllocatedStartDate() {
+		if (null == segments || segments.size() == 0) {
+			return 0;
+		}
 
-        Collections.sort(segments);
+		Collections.sort(segments);
 
-        return segments.get(0).getDateRangeStart();
-    }
+		return segments.get(0).getDateRangeStart();
+	}
 
-    public List<CubeSegment> getMergingSegments() {
-        return this.getMergingSegments(null);
-    }
+	public List<CubeSegment> getMergingSegments() {
+		return this.getMergingSegments(null);
+	}
 
-    public List<CubeSegment> getMergingSegments(CubeSegment cubeSegment) {
-        CubeSegment buildingSegment;
-        if (cubeSegment == null) {
-            List<CubeSegment> buildingSegments = getBuildingSegments();
-            if (buildingSegments.size() == 0) {
-                return Collections.emptyList();
-            }
-            buildingSegment = buildingSegments.get(0);
-        } else {
-            buildingSegment = cubeSegment;
-        }
+	public List<CubeSegment> getMergingSegments(CubeSegment cubeSegment) {
+		CubeSegment buildingSegment;
+		if (cubeSegment == null) {
+			List<CubeSegment> buildingSegments = getBuildingSegments();
+			if (buildingSegments.size() == 0) {
+				return Collections.emptyList();
+			}
+			buildingSegment = buildingSegments.get(0);
+		} else {
+			buildingSegment = cubeSegment;
+		}
 
-        List<CubeSegment> mergingSegments = new ArrayList<CubeSegment>();
-        if (null != this.segments) {
-            for (CubeSegment segment : this.segments) {
-                if (segment.getStatus() == CubeSegmentStatusEnum.READY) {
-                    if (buildingSegment.getDateRangeStart() <= segment.getDateRangeStart()
-                            && buildingSegment.getDateRangeEnd() >= segment.getDateRangeEnd()) {
-                        mergingSegments.add(segment);
-                    }
-                }
-            }
-        }
-        return mergingSegments;
+		List<CubeSegment> mergingSegments = new ArrayList<CubeSegment>();
+		if (null != this.segments) {
+			for (CubeSegment segment : this.segments) {
+				if (segment.getStatus() == CubeSegmentStatusEnum.READY) {
+					if (buildingSegment.getDateRangeStart() <= segment
+							.getDateRangeStart()
+							&& buildingSegment.getDateRangeEnd() >= segment
+									.getDateRangeEnd()) {
+						mergingSegments.add(segment);
+					}
+				}
+			}
+		}
+		return mergingSegments;
 
-    }
+	}
 
-    public List<CubeSegment> getRebuildingSegments() {
-        List<CubeSegment> buildingSegments = getBuildingSegments();
-        if (buildingSegments.size() == 0) {
-            return Collections.emptyList();
-        } else {
-            List<CubeSegment> rebuildingSegments = new ArrayList<CubeSegment>();
-            if (null != this.segments) {
-                long startDate = buildingSegments.get(0).getDateRangeStart();
-                long endDate = buildingSegments.get(buildingSegments.size() - 1).getDateRangeEnd();
-                for (CubeSegment segment : this.segments) {
-                    if (segment.getStatus() == CubeSegmentStatusEnum.READY) {
-                        if (startDate >= segment.getDateRangeStart() && startDate < segment.getDateRangeEnd()
-                                && segment.getDateRangeEnd() < endDate) {
-                            rebuildingSegments.add(segment);
-                            continue;
-                        }
-                        if (startDate <= segment.getDateRangeStart() && endDate >= segment.getDateRangeEnd()) {
-                            rebuildingSegments.add(segment);
-                            continue;
-                        }
-                    }
-                }
-            }
+	public List<CubeSegment> getRebuildingSegments() {
+		List<CubeSegment> buildingSegments = getBuildingSegments();
+		if (buildingSegments.size() == 0) {
+			return Collections.emptyList();
+		} else {
+			List<CubeSegment> rebuildingSegments = new ArrayList<CubeSegment>();
+			if (null != this.segments) {
+				long startDate = buildingSegments.get(0).getDateRangeStart();
+				long endDate = buildingSegments
+						.get(buildingSegments.size() - 1).getDateRangeEnd();
+				for (CubeSegment segment : this.segments) {
+					if (segment.getStatus() == CubeSegmentStatusEnum.READY) {
+						if (startDate >= segment.getDateRangeStart()
+								&& startDate < segment.getDateRangeEnd()
+								&& segment.getDateRangeEnd() < endDate) {
+							rebuildingSegments.add(segment);
+							continue;
+						}
+						if (startDate <= segment.getDateRangeStart()
+								&& endDate >= segment.getDateRangeEnd()) {
+							rebuildingSegments.add(segment);
+							continue;
+						}
+					}
+				}
+			}
 
-            return rebuildingSegments;
-        }
-    }
+			return rebuildingSegments;
+		}
+	}
 
-    public CubeDesc getDescriptor() {
-        return MetadataManager.getInstance(config).getCubeDesc(descName);
-    }
+	public CubeDesc getDescriptor() {
+		return MetadataManager.getInstance(config).getCubeDesc(descName);
+	}
 
-    public InvertedIndexDesc getInvertedIndexDesc() {
-        return MetadataManager.getInstance(config).getInvertedIndexDesc(name);
-    }
+	public InvertedIndexDesc getInvertedIndexDesc() {
+		return MetadataManager.getInstance(config).getInvertedIndexDesc(name);
+	}
 
-    public boolean isInvertedIndex() {
-        return getInvertedIndexDesc() != null;
-    }
+	public boolean isInvertedIndex() {
+		return getInvertedIndexDesc() != null;
+	}
 
-    public boolean isReady() {
-        return getStatus() == CubeStatusEnum.READY;
-    }
+	public boolean isReady() {
+		return getStatus() == CubeStatusEnum.READY;
+	}
 
-    public String getResourcePath() {
-        return concatResourcePath(name);
-    }
+	public String getResourcePath() {
+		return concatResourcePath(name);
+	}
 
-    public static String concatResourcePath(String cubeName) {
-        return ResourceStore.CUBE_RESOURCE_ROOT + "/" + cubeName + ".json";
-    }
+	public static String concatResourcePath(String cubeName) {
+		return ResourceStore.CUBE_RESOURCE_ROOT + "/" + cubeName + ".json";
+	}
 
-    @Override
-    public String toString() {
-        return "Cube [name=" + name + "]";
-    }
+	@Override
+	public String toString() {
+		return "Cube [name=" + name + "]";
+	}
 
-    // ============================================================================
+	// ============================================================================
 
-    @JsonProperty("size_kb")
-    public long getSizeKB() {
-        long sizeKb = 0L;
+	@JsonProperty("size_kb")
+	public long getSizeKB() {
+		long sizeKb = 0L;
 
-        for (CubeSegment cubeSegment : this.getSegments(CubeSegmentStatusEnum.READY)) {
-            sizeKb += cubeSegment.getSizeKB();
-        }
+		for (CubeSegment cubeSegment : this
+				.getSegments(CubeSegmentStatusEnum.READY)) {
+			sizeKb += cubeSegment.getSizeKB();
+		}
 
-        return sizeKb;
-    }
+		return sizeKb;
+	}
 
-    @JsonProperty("source_records_count")
-    public long getSourceRecordCount() {
-        long sizeRecordCount = 0L;
+	@JsonProperty("source_records_count")
+	public long getSourceRecordCount() {
+		long sizeRecordCount = 0L;
 
-        for (CubeSegment cubeSegment : this.getSegments(CubeSegmentStatusEnum.READY)) {
-            sizeRecordCount += cubeSegment.getSourceRecords();
-        }
+		for (CubeSegment cubeSegment : this
+				.getSegments(CubeSegmentStatusEnum.READY)) {
+			sizeRecordCount += cubeSegment.getSourceRecords();
+		}
 
-        return sizeRecordCount;
-    }
+		return sizeRecordCount;
+	}
 
-    @JsonProperty("source_records_size")
-    public long getSourceRecordSize() {
-        long sizeRecordSize = 0L;
+	@JsonProperty("source_records_size")
+	public long getSourceRecordSize() {
+		long sizeRecordSize = 0L;
 
-        for (CubeSegment cubeSegment : this.getSegments(CubeSegmentStatusEnum.READY)) {
-            sizeRecordSize += cubeSegment.getSourceRecordsSize();
-        }
+		for (CubeSegment cubeSegment : this
+				.getSegments(CubeSegmentStatusEnum.READY)) {
+			sizeRecordSize += cubeSegment.getSourceRecordsSize();
+		}
 
-        return sizeRecordSize;
-    }
+		return sizeRecordSize;
+	}
 
-    public KylinConfig getConfig() {
-        return config;
-    }
+	public KylinConfig getConfig() {
+		return config;
+	}
 
-    public void setConfig(KylinConfig config) {
-        this.config = config;
-    }
+	public void setConfig(KylinConfig config) {
+		this.config = config;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public String getOwner() {
-        return owner;
-    }
+	public String getOwner() {
+		return owner;
+	}
 
-    public void setOwner(String owner) {
-        this.owner = owner;
-    }
+	public void setOwner(String owner) {
+		this.owner = owner;
+	}
 
-    public String getVersion() {
-        return version;
-    }
+	public String getVersion() {
+		return version;
+	}
 
-    public void setVersion(String version) {
-        this.version = version;
-    }
+	public void setVersion(String version) {
+		this.version = version;
+	}
 
-    public String getDescName() {
-        return descName.toUpperCase();
-    }
+	public String getDescName() {
+		return descName.toUpperCase();
+	}
 
-    public String getOriginDescName() {
-        return descName;
-    }
+	public String getOriginDescName() {
+		return descName;
+	}
 
-    public void setDescName(String descName) {
-        this.descName = descName;
-    }
+	public void setDescName(String descName) {
+		this.descName = descName;
+	}
 
-    public int getCost() {
-        return cost;
-    }
+	public int getCost() {
+		return cost;
+	}
 
-    public void setCost(int cost) {
-        this.cost = cost;
-    }
+	public void setCost(int cost) {
+		this.cost = cost;
+	}
 
-    public CubeStatusEnum getStatus() {
-        return status;
-    }
+	public CubeStatusEnum getStatus() {
+		return status;
+	}
 
-    public void setStatus(CubeStatusEnum status) {
-        this.status = status;
-    }
+	public void setStatus(CubeStatusEnum status) {
+		this.status = status;
+	}
 
-    public CubeSegment getFirstSegment() {
-        if (this.segments == null || this.segments.size() == 0) {
-            return null;
-        } else {
-            return this.segments.get(0);
-        }
-    }
+	public CubeSegment getFirstSegment() {
+		if (this.segments == null || this.segments.size() == 0) {
+			return null;
+		} else {
+			return this.segments.get(0);
+		}
+	}
 
-    public CubeSegment getLatestReadySegment() {
-        CubeSegment latest = null;
-        for (int i = segments.size() - 1; i >= 0; i--) {
-            CubeSegment seg = segments.get(i);
-            if (seg.getStatus() != CubeSegmentStatusEnum.READY)
-                continue;
-            if (latest == null || latest.getDateRangeEnd() < seg.getDateRangeEnd()) {
-                latest = seg;
-            }
-        }
-        return latest;
-    }
+	public CubeSegment getLatestReadySegment() {
+		CubeSegment latest = null;
+		for (int i = segments.size() - 1; i >= 0; i--) {
+			CubeSegment seg = segments.get(i);
+			if (seg.getStatus() != CubeSegmentStatusEnum.READY)
+				continue;
+			if (latest == null
+					|| latest.getDateRangeEnd() < seg.getDateRangeEnd()) {
+				latest = seg;
+			}
+		}
+		return latest;
+	}
 
-    public List<CubeSegment> getSegments() {
-        return segments;
-    }
+	public List<CubeSegment> getSegments() {
+		return segments;
+	}
 
-    public List<CubeSegment> getSegments(CubeSegmentStatusEnum status) {
-        List<CubeSegment> segments = new ArrayList<CubeSegment>();
+	public List<CubeSegment> getSegments(CubeSegmentStatusEnum status) {
+		List<CubeSegment> segments = new ArrayList<CubeSegment>();
 
-        for (CubeSegment segment : this.getSegments()) {
-            if (segment.getStatus() == status) {
-                segments.add(segment);
-            }
-        }
+		for (CubeSegment segment : this.getSegments()) {
+			if (segment.getStatus() == status) {
+				segments.add(segment);
+			}
+		}
 
-        return segments;
-    }
+		return segments;
+	}
 
-    public CubeSegment getSegment(String name, CubeSegmentStatusEnum status) {
-        for (CubeSegment segment : this.getSegments()) {
-            if ((null != segment.getName() && segment.getName().equals(name))
-                    && segment.getStatus() == status) {
-                return segment;
-            }
-        }
+	public CubeSegment getSegment(String name, CubeSegmentStatusEnum status) {
+		for (CubeSegment segment : this.getSegments()) {
+			if ((null != segment.getName() && segment.getName().equals(name))
+					&& segment.getStatus() == status) {
+				return segment;
+			}
+		}
 
-        return null;
-    }
+		return null;
+	}
 
-    public void setSegments(List<CubeSegment> segments) {
-        this.segments = segments;
-    }
+	public void setSegments(List<CubeSegment> segments) {
+		this.segments = segments;
+	}
 
-    public String getCreateTime() {
-        return createTime;
-    }
+	public String getCreateTime() {
+		return createTime;
+	}
 
-    public void setCreateTime(String createTime) {
-        this.createTime = createTime;
-    }
+	public void setCreateTime(String createTime) {
+		this.createTime = createTime;
+	}
 
 }

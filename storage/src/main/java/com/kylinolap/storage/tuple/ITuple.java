@@ -21,20 +21,21 @@ import java.util.List;
 import com.kylinolap.metadata.model.cube.TblColRef;
 
 /**
- * Tuple is a record row, contains multiple values being lookup by either field (optiq notion) or column (kylin notion).
+ * Tuple is a record row, contains multiple values being lookup by either field
+ * (optiq notion) or column (kylin notion).
  * 
  * @author yangli9
  */
 public interface ITuple {
 
-    public List<String> getAllFields();
+	public List<String> getAllFields();
 
-    public List<TblColRef> getAllColumns();
+	public List<TblColRef> getAllColumns();
 
-    public Object[] getAllValues();
+	public Object[] getAllValues();
 
-    public Object getValue(TblColRef col);
+	public Object getValue(TblColRef col);
 
-    public Object getValue(String field);
+	public Object getValue(String field);
 
 }

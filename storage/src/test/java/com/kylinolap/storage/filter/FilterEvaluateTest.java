@@ -16,7 +16,7 @@
 
 package com.kylinolap.storage.filter;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Collection;
 import java.util.List;
@@ -28,152 +28,153 @@ import com.kylinolap.storage.tuple.Tuple;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class FilterEvaluateTest extends FilterBaseTest {
 
-    @Test
-    public void testEvaluate00() {
-        List<TblColRef> groups = buildGroups();
-        TupleFilter filter = buildCompareFilter(groups, 0);
+	@Test
+	public void testEvaluate00() {
+		List<TblColRef> groups = buildGroups();
+		TupleFilter filter = buildCompareFilter(groups, 0);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+		byte[] bytes = TupleFilterSerializer.serialize(filter);
+		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-        int number = 10000;
-        int[] matcheCounts = new int[] { 0, 0, 0 };
-        Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
-        int match = evaluateTuples(tuples, newFilter);
+		int number = 10000;
+		int[] matcheCounts = new int[] { 0, 0, 0 };
+		Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
+		int match = evaluateTuples(tuples, newFilter);
 
-        assertEquals(match, matcheCounts[0]);
-    }
+		assertEquals(match, matcheCounts[0]);
+	}
 
-    @Test
-    public void testEvaluate01() {
-        List<TblColRef> groups = buildGroups();
-        TupleFilter filter = buildCompareFilter(groups, 1);
+	@Test
+	public void testEvaluate01() {
+		List<TblColRef> groups = buildGroups();
+		TupleFilter filter = buildCompareFilter(groups, 1);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+		byte[] bytes = TupleFilterSerializer.serialize(filter);
+		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-        int number = 10000;
-        int[] matcheCounts = new int[] { 0, 0, 0 };
-        Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
-        int match = evaluateTuples(tuples, newFilter);
+		int number = 10000;
+		int[] matcheCounts = new int[] { 0, 0, 0 };
+		Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
+		int match = evaluateTuples(tuples, newFilter);
 
-        assertEquals(match, matcheCounts[1]);
-    }
+		assertEquals(match, matcheCounts[1]);
+	}
 
-    @Test
-    public void testEvaluate02() {
-        List<TblColRef> groups = buildGroups();
-        TupleFilter filter = buildOrFilter(groups);
+	@Test
+	public void testEvaluate02() {
+		List<TblColRef> groups = buildGroups();
+		TupleFilter filter = buildOrFilter(groups);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+		byte[] bytes = TupleFilterSerializer.serialize(filter);
+		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-        int number = 10000;
-        int[] matcheCounts = new int[] { 0, 0, 0 };
-        Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
-        int match = evaluateTuples(tuples, newFilter);
+		int number = 10000;
+		int[] matcheCounts = new int[] { 0, 0, 0 };
+		Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
+		int match = evaluateTuples(tuples, newFilter);
 
-        assertEquals(match, matcheCounts[0] + matcheCounts[1] - matcheCounts[2]);
-    }
+		assertEquals(match, matcheCounts[0] + matcheCounts[1] - matcheCounts[2]);
+	}
 
-    @Test
-    public void testEvaluate03() {
-        List<TblColRef> groups = buildGroups();
-        TupleFilter filter = buildAndFilter(groups);
+	@Test
+	public void testEvaluate03() {
+		List<TblColRef> groups = buildGroups();
+		TupleFilter filter = buildAndFilter(groups);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+		byte[] bytes = TupleFilterSerializer.serialize(filter);
+		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-        int number = 10000;
-        int[] matcheCounts = new int[] { 0, 0, 0 };
-        Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
-        int match = evaluateTuples(tuples, newFilter);
+		int number = 10000;
+		int[] matcheCounts = new int[] { 0, 0, 0 };
+		Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
+		int match = evaluateTuples(tuples, newFilter);
 
-        assertEquals(match, matcheCounts[2]);
-    }
+		assertEquals(match, matcheCounts[2]);
+	}
 
-    @Test
-    public void testEvaluate04() {
-        List<TblColRef> groups = buildGroups();
-        TupleFilter filter = buildCompareCaseFilter(groups, "0");
+	@Test
+	public void testEvaluate04() {
+		List<TblColRef> groups = buildGroups();
+		TupleFilter filter = buildCompareCaseFilter(groups, "0");
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+		byte[] bytes = TupleFilterSerializer.serialize(filter);
+		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-        int number = 10000;
-        int[] matcheCounts = new int[] { 0, 0, 0 };
-        Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
-        int match = evaluateTuples(tuples, newFilter);
+		int number = 10000;
+		int[] matcheCounts = new int[] { 0, 0, 0 };
+		Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
+		int match = evaluateTuples(tuples, newFilter);
 
-        assertEquals(match, matcheCounts[2]);
-    }
+		assertEquals(match, matcheCounts[2]);
+	}
 
-    @Test
-    public void testEvaluate05() {
-        List<TblColRef> groups = buildGroups();
-        TupleFilter filter = buildCompareCaseFilter(groups, "1");
+	@Test
+	public void testEvaluate05() {
+		List<TblColRef> groups = buildGroups();
+		TupleFilter filter = buildCompareCaseFilter(groups, "1");
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+		byte[] bytes = TupleFilterSerializer.serialize(filter);
+		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-        int number = 10000;
-        int[] matcheCounts = new int[] { 0, 0, 0 };
-        Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
-        int match = evaluateTuples(tuples, newFilter);
+		int number = 10000;
+		int[] matcheCounts = new int[] { 0, 0, 0 };
+		Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
+		int match = evaluateTuples(tuples, newFilter);
 
-        assertEquals(match, matcheCounts[0] - matcheCounts[2]);
-    }
+		assertEquals(match, matcheCounts[0] - matcheCounts[2]);
+	}
 
-    @Test
-    public void testEvaluate06() {
-        List<TblColRef> groups = buildGroups();
-        TupleFilter filter = buildCompareCaseFilter(groups, "2");
+	@Test
+	public void testEvaluate06() {
+		List<TblColRef> groups = buildGroups();
+		TupleFilter filter = buildCompareCaseFilter(groups, "2");
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+		byte[] bytes = TupleFilterSerializer.serialize(filter);
+		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-        int number = 1;
-        int[] matcheCounts = new int[] { 0, 0, 0 };
-        Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
-        int match = evaluateTuples(tuples, newFilter);
+		int number = 1;
+		int[] matcheCounts = new int[] { 0, 0, 0 };
+		Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
+		int match = evaluateTuples(tuples, newFilter);
 
-        assertEquals(match, matcheCounts[1] - matcheCounts[2]);
-    }
+		assertEquals(match, matcheCounts[1] - matcheCounts[2]);
+	}
 
-    @Test
-    public void testEvaluate07() {
-        List<TblColRef> groups = buildGroups();
-        TupleFilter filter = buildCompareCaseFilter(groups, "3");
+	@Test
+	public void testEvaluate07() {
+		List<TblColRef> groups = buildGroups();
+		TupleFilter filter = buildCompareCaseFilter(groups, "3");
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+		byte[] bytes = TupleFilterSerializer.serialize(filter);
+		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-        int number = 10000;
-        int[] matcheCounts = new int[] { 0, 0, 0 };
-        Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
-        int match = evaluateTuples(tuples, newFilter);
+		int number = 10000;
+		int[] matcheCounts = new int[] { 0, 0, 0 };
+		Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
+		int match = evaluateTuples(tuples, newFilter);
 
-        assertEquals(match, 0);
-    }
+		assertEquals(match, 0);
+	}
 
-    @Test
-    public void testEvaluate08() {
-        List<TblColRef> groups = buildGroups();
-        TupleFilter filter = buildCompareCaseFilter(groups, "4");
+	@Test
+	public void testEvaluate08() {
+		List<TblColRef> groups = buildGroups();
+		TupleFilter filter = buildCompareCaseFilter(groups, "4");
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+		byte[] bytes = TupleFilterSerializer.serialize(filter);
+		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-        int number = 10000;
-        int[] matcheCounts = new int[] { 0, 0, 0 };
-        Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
-        int match = evaluateTuples(tuples, newFilter);
+		int number = 10000;
+		int[] matcheCounts = new int[] { 0, 0, 0 };
+		Collection<Tuple> tuples = generateTuple(number, groups, matcheCounts);
+		int match = evaluateTuples(tuples, newFilter);
 
-        assertEquals(match, number - matcheCounts[0] - matcheCounts[1] + matcheCounts[2]);
-    }
+		assertEquals(match, number - matcheCounts[0] - matcheCounts[1]
+				+ matcheCounts[2]);
+	}
 
 }

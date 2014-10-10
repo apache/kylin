@@ -29,133 +29,141 @@ import com.kylinolap.storage.hbase.coprocessor.SRowProjector.AggrKey;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class AggregationScanner implements RegionScanner {
 
-    private RegionScanner outerScanner;
+	private RegionScanner outerScanner;
 
-    public AggregationScanner(SRowType type, SRowFilter filter, SRowProjector groupBy, SRowAggregators aggrs,
-            RegionScanner innerScanner) throws IOException {
+	public AggregationScanner(SRowType type, SRowFilter filter,
+			SRowProjector groupBy, SRowAggregators aggrs,
+			RegionScanner innerScanner) throws IOException {
 
-        AggregateRegionObserver.LOG.info("Kylin Coprocessor start");
+		AggregateRegionObserver.LOG.info("Kylin Coprocessor start");
 
-        AggregationCache aggCache;
-        Stats stats = new Stats();
+		AggregationCache aggCache;
+		Stats stats = new Stats();
 
-        aggCache = buildAggrCache(innerScanner, type, groupBy, aggrs, filter, stats);
-        stats.countOutputRow(aggCache.getSize());
-        this.outerScanner = aggCache.getScanner(innerScanner);
+		aggCache = buildAggrCache(innerScanner, type, groupBy, aggrs, filter,
+				stats);
+		stats.countOutputRow(aggCache.getSize());
+		this.outerScanner = aggCache.getScanner(innerScanner);
 
-        AggregateRegionObserver.LOG.info("Kylin Coprocessor aggregation done: " + stats);
-    }
+		AggregateRegionObserver.LOG.info("Kylin Coprocessor aggregation done: "
+				+ stats);
+	}
 
-    @SuppressWarnings("rawtypes")
-    AggregationCache buildAggrCache(final RegionScanner innerScanner, SRowType type, SRowProjector projector,
-            SRowAggregators aggregators, SRowFilter filter, Stats stats) throws IOException {
+	@SuppressWarnings("rawtypes")
+	AggregationCache buildAggrCache(final RegionScanner innerScanner,
+			SRowType type, SRowProjector projector,
+			SRowAggregators aggregators, SRowFilter filter, Stats stats)
+			throws IOException {
 
-        AggregationCache aggCache = new AggregationCache(aggregators, 0);
+		AggregationCache aggCache = new AggregationCache(aggregators, 0);
 
-        SRowTuple tuple = new SRowTuple(type);
-        boolean hasMore = true;
-        List<Cell> results = new ArrayList<Cell>();
-        while (hasMore) {
-            results.clear();
-            hasMore = innerScanner.nextRaw(results);
-            if (results.isEmpty())
-                continue;
+		SRowTuple tuple = new SRowTuple(type);
+		boolean hasMore = true;
+		List<Cell> results = new ArrayList<Cell>();
+		while (hasMore) {
+			results.clear();
+			hasMore = innerScanner.nextRaw(results);
+			if (results.isEmpty())
+				continue;
 
-            if (stats != null)
-                stats.countInputRow(results);
+			if (stats != null)
+				stats.countInputRow(results);
 
-            Cell cell = results.get(0);
-            tuple.setUnderlying(cell.getRowArray(), cell.getRowOffset(), cell.getRowLength());
-            if (filter != null && filter.evaluate(tuple) == false)
-                continue;
+			Cell cell = results.get(0);
+			tuple.setUnderlying(cell.getRowArray(), cell.getRowOffset(),
+					cell.getRowLength());
+			if (filter != null && filter.evaluate(tuple) == false)
+				continue;
 
-            AggrKey aggKey = projector.getRowKey(results);
-            MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
-            aggregators.aggregate(bufs, results);
+			AggrKey aggKey = projector.getRowKey(results);
+			MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
+			aggregators.aggregate(bufs, results);
 
-            aggCache.checkMemoryUsage();
-        }
-        return aggCache;
-    }
+			aggCache.checkMemoryUsage();
+		}
+		return aggCache;
+	}
 
-    @Override
-    public boolean next(List<Cell> results) throws IOException {
-        return outerScanner.next(results);
-    }
+	@Override
+	public boolean next(List<Cell> results) throws IOException {
+		return outerScanner.next(results);
+	}
 
-    @Override
-    public boolean next(List<Cell> result, int limit) throws IOException {
-        return outerScanner.next(result, limit);
-    }
+	@Override
+	public boolean next(List<Cell> result, int limit) throws IOException {
+		return outerScanner.next(result, limit);
+	}
 
-    @Override
-    public boolean nextRaw(List<Cell> result) throws IOException {
-        return outerScanner.nextRaw(result);
-    }
+	@Override
+	public boolean nextRaw(List<Cell> result) throws IOException {
+		return outerScanner.nextRaw(result);
+	}
 
-    @Override
-    public boolean nextRaw(List<Cell> result, int limit) throws IOException {
-        return outerScanner.nextRaw(result, limit);
-    }
+	@Override
+	public boolean nextRaw(List<Cell> result, int limit) throws IOException {
+		return outerScanner.nextRaw(result, limit);
+	}
 
-    @Override
-    public void close() throws IOException {
-        outerScanner.close();
-    }
+	@Override
+	public void close() throws IOException {
+		outerScanner.close();
+	}
 
-    @Override
-    public HRegionInfo getRegionInfo() {
-        return outerScanner.getRegionInfo();
-    }
+	@Override
+	public HRegionInfo getRegionInfo() {
+		return outerScanner.getRegionInfo();
+	}
 
-    @Override
-    public boolean isFilterDone() throws IOException {
-        return outerScanner.isFilterDone();
-    }
+	@Override
+	public boolean isFilterDone() throws IOException {
+		return outerScanner.isFilterDone();
+	}
 
-    @Override
-    public boolean reseek(byte[] row) throws IOException {
-        return outerScanner.reseek(row);
-    }
+	@Override
+	public boolean reseek(byte[] row) throws IOException {
+		return outerScanner.reseek(row);
+	}
 
-    @Override
-    public long getMaxResultSize() {
-        return outerScanner.getMaxResultSize();
-    }
+	@Override
+	public long getMaxResultSize() {
+		return outerScanner.getMaxResultSize();
+	}
 
-    @Override
-    public long getMvccReadPoint() {
-        return outerScanner.getMvccReadPoint();
-    }
+	@Override
+	public long getMvccReadPoint() {
+		return outerScanner.getMvccReadPoint();
+	}
 
-    private static class Stats {
-        long inputRows = 0;
-        long inputBytes = 0;
-        long outputRows = 0;
+	private static class Stats {
+		long inputRows = 0;
+		long inputBytes = 0;
+		long outputRows = 0;
 
-        // have no outputBytes because that requires actual serialize all the aggregator buffers
+		// have no outputBytes because that requires actual serialize all the
+		// aggregator buffers
 
-        public void countInputRow(List<Cell> row) {
-            inputRows++;
-            inputBytes += row.get(0).getRowLength();
-            for (int i = 0, n = row.size(); i < n; i++) {
-                inputBytes += row.get(i).getValueLength();
-            }
-        }
+		public void countInputRow(List<Cell> row) {
+			inputRows++;
+			inputBytes += row.get(0).getRowLength();
+			for (int i = 0, n = row.size(); i < n; i++) {
+				inputBytes += row.get(i).getValueLength();
+			}
+		}
 
-        public void countOutputRow(long rowCount) {
-            outputRows += rowCount;
-        }
+		public void countOutputRow(long rowCount) {
+			outputRows += rowCount;
+		}
 
-        public String toString() {
-            double percent = (double) outputRows / inputRows * 100;
-            return Math.round(percent) + "% = " + outputRows + " (out rows) / " + inputRows
-                    + " (in rows); in bytes = " + inputBytes + "; est. out bytes = "
-                    + Math.round(inputBytes * percent / 100);
-        }
-    }
+		public String toString() {
+			double percent = (double) outputRows / inputRows * 100;
+			return Math.round(percent) + "% = " + outputRows + " (out rows) / "
+					+ inputRows + " (in rows); in bytes = " + inputBytes
+					+ "; est. out bytes = "
+					+ Math.round(inputBytes * percent / 100);
+		}
+	}
 }

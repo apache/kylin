@@ -25,56 +25,56 @@ import com.codahale.metrics.MetricSet;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class QueryMetrics implements MetricSet {
 
-    private Map<String, Float> metrics = new HashMap<String, Float>();
+	private Map<String, Float> metrics = new HashMap<String, Float>();
 
-    private QueryMetrics() {
-        // register query metrics
-        this.increase("duration", (float) 0);
-        this.increase("totalScanCount", (float) 0);
-        this.increase("count", (float) 0);
-    }
+	private QueryMetrics() {
+		// register query metrics
+		this.increase("duration", (float) 0);
+		this.increase("totalScanCount", (float) 0);
+		this.increase("count", (float) 0);
+	}
 
-    static class QueryMetricsHolder {
-        static final QueryMetrics INSTANCE = new QueryMetrics();
-    }
+	static class QueryMetricsHolder {
+		static final QueryMetrics INSTANCE = new QueryMetrics();
+	}
 
-    public static QueryMetrics getInstance() {
-        return QueryMetricsHolder.INSTANCE;
-    }
+	public static QueryMetrics getInstance() {
+		return QueryMetricsHolder.INSTANCE;
+	}
 
-    public synchronized void increase(String key, Float value) {
-        if (metrics.containsKey(key)) {
-            metrics.put(key, metrics.get(key) + value);
-        } else {
-            metrics.put(key, value);
-        }
-    }
+	public synchronized void increase(String key, Float value) {
+		if (metrics.containsKey(key)) {
+			metrics.put(key, metrics.get(key) + value);
+		} else {
+			metrics.put(key, value);
+		}
+	}
 
-    public synchronized Float getAndReset(String key) {
-        float value = metrics.get(key);
-        metrics.put(key, (float) 0);
+	public synchronized Float getAndReset(String key) {
+		float value = metrics.get(key);
+		metrics.put(key, (float) 0);
 
-        return value;
-    }
+		return value;
+	}
 
-    public synchronized Map<String, Metric> getMetrics() {
-        Map<String, Metric> metricSet = new HashMap<String, Metric>();
+	public synchronized Map<String, Metric> getMetrics() {
+		Map<String, Metric> metricSet = new HashMap<String, Metric>();
 
-        for (final String key : metrics.keySet()) {
-            metricSet.put(key, new Gauge<Float>() {
-                @Override
-                public Float getValue() {
-                    float value = getAndReset(key);
+		for (final String key : metrics.keySet()) {
+			metricSet.put(key, new Gauge<Float>() {
+				@Override
+				public Float getValue() {
+					float value = getAndReset(key);
 
-                    return value;
-                }
-            });
-        }
+					return value;
+				}
+			});
+		}
 
-        return metricSet;
-    }
+		return metricSet;
+	}
 }

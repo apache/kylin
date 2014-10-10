@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
 
@@ -36,8 +36,7 @@ public class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
     }
 
     public void put(K key, V value) {
-        Broadcaster.EVENT eventType =
-                innerCache.containsKey(key) ? Broadcaster.EVENT.UPDATE : Broadcaster.EVENT.CREATE;
+        Broadcaster.EVENT eventType = innerCache.containsKey(key) ? Broadcaster.EVENT.UPDATE : Broadcaster.EVENT.CREATE;
         innerCache.put(key, value);
         syncRemote(key, eventType);
     }

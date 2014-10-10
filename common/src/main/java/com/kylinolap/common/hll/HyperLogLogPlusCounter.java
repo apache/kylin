@@ -35,8 +35,8 @@ import com.ning.compress.lzf.LZFEncoder;
 /**
  * About compression, test on HLLC data shows
  * 
- * - LZF compression ratio is around 65%-80%, fast
- * - GZIP compression ratio is around 41%-46%, very slow
+ * - LZF compression ratio is around 65%-80%, fast - GZIP compression ratio is
+ * around 41%-46%, very slow
  * 
  * @author yangli9
  */
@@ -123,7 +123,8 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
 
     // ============================================================================
 
-    // a memory efficient snapshot of HLL registers which can yield count estimate later
+    // a memory efficient snapshot of HLL registers which can yield count
+    // estimate later
     public static class HLLCSnapshot {
         byte p;
         double registerSum;
@@ -205,9 +206,19 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
         }
     };
 
-    public static final int COMPRESSION_THRESHOLD = Integer.MAX_VALUE; // bytes, disable due to slowness
+    public static final int COMPRESSION_THRESHOLD = Integer.MAX_VALUE; // bytes,
+                                                                       // disable
+                                                                       // due to
+                                                                       // slowness
     public static final byte COMPRESSION_FLAG = (byte) 0x02;
-    public static final Compressor DEFAULT_COMPRESSOR = GZIP_COMPRESSOR; // LZF lib has a bug at the moment
+    public static final Compressor DEFAULT_COMPRESSOR = GZIP_COMPRESSOR; // LZF
+                                                                         // lib
+                                                                         // has
+                                                                         // a
+                                                                         // bug
+                                                                         // at
+                                                                         // the
+                                                                         // moment
 
     public void writeRegisters(final ByteBuffer out) throws IOException {
         int startPos = out.position();
@@ -265,8 +276,7 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
             clear();
             int size = BytesUtil.readVInt(in);
             if (size > m)
-                throw new IllegalArgumentException("register size (" + size + ") cannot be larger than m ("
-                        + m + ")");
+                throw new IllegalArgumentException("register size (" + size + ") cannot be larger than m (" + m + ")");
             int indexLen = getRegisterIndexSize();
             for (int i = 0; i < size; i++) {
                 int key = BytesUtil.readUnsigned(in, indexLen);
@@ -341,8 +351,7 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
             double er2 = Math.round(rate * 2 * 10000) / 100D;
             double er3 = Math.round(rate * 3 * 10000) / 100D;
             long size = Math.round(Math.pow(2, p));
-            System.out.println("HLLC" + p + ",\t" + size + " bytes,\t68% err<" + er + "%" + ",\t95% err<"
-                    + er2 + "%" + ",\t99.7% err<" + er3 + "%");
+            System.out.println("HLLC" + p + ",\t" + size + " bytes,\t68% err<" + er + "%" + ",\t95% err<" + er2 + "%" + ",\t99.7% err<" + er3 + "%");
         }
     }
 }

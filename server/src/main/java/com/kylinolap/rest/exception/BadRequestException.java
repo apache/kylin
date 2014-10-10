@@ -19,43 +19,40 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
- * Created with IntelliJ IDEA.
- * User: lukhan
- * Date: 9/2/13
- * Time: 2:34 PM
- * To change this template use File | Settings | File Templates.
+ * Created with IntelliJ IDEA. User: lukhan Date: 9/2/13 Time: 2:34 PM To change
+ * this template use File | Settings | File Templates.
  */
 @ResponseStatus(value = HttpStatus.BAD_REQUEST)
 public class BadRequestException extends RuntimeException {
-    /**
+	/**
      * 
      */
-    private static final long serialVersionUID = -6798154278095441848L;
+	private static final long serialVersionUID = -6798154278095441848L;
 
-    public BadRequestException(String s) {
-        super(s);
-    }
+	public BadRequestException(String s) {
+		super(s);
+	}
 
-    /**
+	/**
      * 
      */
-    public BadRequestException() {
-        super();
-    }
+	public BadRequestException() {
+		super();
+	}
 
-    /**
-     * @param arg0
-     * @param arg1
-     */
-    public BadRequestException(String arg0, Throwable arg1) {
-        super(arg0, arg1);
-    }
+	/**
+	 * @param arg0
+	 * @param arg1
+	 */
+	public BadRequestException(String arg0, Throwable arg1) {
+		super(arg0, arg1);
+	}
 
-    /**
-     * @param arg0
-     */
-    public BadRequestException(Throwable arg0) {
-        super(arg0);
-    }
+	/**
+	 * @param arg0
+	 */
+	public BadRequestException(Throwable arg0) {
+		super(arg0);
+	}
 
 }

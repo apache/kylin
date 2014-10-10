@@ -22,7 +22,7 @@ import com.google.common.collect.HashMultimap;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class MultiValueCache<K, V> extends AbstractRestCache<K, V> {
 
@@ -34,8 +34,7 @@ public class MultiValueCache<K, V> extends AbstractRestCache<K, V> {
     }
 
     public void put(K key, V value) {
-        Broadcaster.EVENT eventType =
-                innerCache.containsKey(key) ? Broadcaster.EVENT.UPDATE : Broadcaster.EVENT.CREATE;
+        Broadcaster.EVENT eventType = innerCache.containsKey(key) ? Broadcaster.EVENT.UPDATE : Broadcaster.EVENT.CREATE;
         synchronized (this) {
             innerCache.put(key, value);
         }

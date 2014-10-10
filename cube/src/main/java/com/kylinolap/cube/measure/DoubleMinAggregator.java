@@ -20,33 +20,33 @@ import org.apache.hadoop.io.DoubleWritable;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class DoubleMinAggregator extends MeasureAggregator<DoubleWritable> {
 
-    DoubleWritable min = null;
+	DoubleWritable min = null;
 
-    @Override
-    public void reset() {
-        min = null;
-    }
+	@Override
+	public void reset() {
+		min = null;
+	}
 
-    @Override
-    public void aggregate(DoubleWritable value) {
-        if (min == null)
-            min = new DoubleWritable(value.get());
-        else if (min.get() > value.get())
-            min.set(value.get());
-    }
+	@Override
+	public void aggregate(DoubleWritable value) {
+		if (min == null)
+			min = new DoubleWritable(value.get());
+		else if (min.get() > value.get())
+			min.set(value.get());
+	}
 
-    @Override
-    public DoubleWritable getState() {
-        return min;
-    }
+	@Override
+	public DoubleWritable getState() {
+		return min;
+	}
 
-    @Override
-    public int getMemBytes() {
-        return guessDoubleMemBytes();
-    }
+	@Override
+	public int getMemBytes() {
+		return guessDoubleMemBytes();
+	}
 
 }

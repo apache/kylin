@@ -17,100 +17,104 @@ package com.kylinolap.rest.request;
 
 public class CubeRequest {
 
-    private String uuid;
-    private String cubeName;
-    private String cubeDescData;
-    private boolean successful;
-    private String message;
-    private String cubeDescName;
-    private String project;
+	private String uuid;
+	private String cubeName;
+	private String cubeDescData;
+	private boolean successful;
+	private String message;
+	private String cubeDescName;
+	private String project;
 
-    public String getUuid() {
-        return uuid;
-    }
+	public String getUuid() {
+		return uuid;
+	}
 
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
 
-    /**
-     * @return the cubeDescName
-     */
-    public String getCubeDescName() {
-        return cubeDescName;
-    }
+	/**
+	 * @return the cubeDescName
+	 */
+	public String getCubeDescName() {
+		return cubeDescName;
+	}
 
-    /**
-     * @param cubeDescName the cubeDescName to set
-     */
-    public void setCubeDescName(String cubeDescName) {
-        this.cubeDescName = cubeDescName;
-    }
+	/**
+	 * @param cubeDescName
+	 *            the cubeDescName to set
+	 */
+	public void setCubeDescName(String cubeDescName) {
+		this.cubeDescName = cubeDescName;
+	}
 
-    /**
-     * @return the message
-     */
-    public String getMessage() {
-        return message;
-    }
+	/**
+	 * @return the message
+	 */
+	public String getMessage() {
+		return message;
+	}
 
-    /**
-     * @param message the message to set
-     */
-    public void setMessage(String message) {
-        this.message = message;
-    }
+	/**
+	 * @param message
+	 *            the message to set
+	 */
+	public void setMessage(String message) {
+		this.message = message;
+	}
 
-    /**
-     * @return the status
-     */
-    public boolean getSuccessful() {
-        return successful;
-    }
+	/**
+	 * @return the status
+	 */
+	public boolean getSuccessful() {
+		return successful;
+	}
 
-    /**
-     * @param status the status to set
-     */
-    public void setSuccessful(boolean status) {
-        this.successful = status;
-    }
+	/**
+	 * @param status
+	 *            the status to set
+	 */
+	public void setSuccessful(boolean status) {
+		this.successful = status;
+	}
 
-    public CubeRequest() {
-    }
+	public CubeRequest() {
+	}
 
-    public CubeRequest(long id, String cubeName, String cubeDescData) {
-        this.cubeName = cubeName;
-        this.cubeDescData = cubeDescData;
-    }
+	public CubeRequest(long id, String cubeName, String cubeDescData) {
+		this.cubeName = cubeName;
+		this.cubeDescData = cubeDescData;
+	}
 
-    public String getCubeDescData() {
-        return cubeDescData;
-    }
+	public String getCubeDescData() {
+		return cubeDescData;
+	}
 
-    public void setCubeDescData(String cubeDescData) {
-        this.cubeDescData = cubeDescData;
-    }
+	public void setCubeDescData(String cubeDescData) {
+		this.cubeDescData = cubeDescData;
+	}
 
-    /**
-     * @return the cubeDescName
-     */
-    public String getCubeName() {
-        return cubeName;
-    }
+	/**
+	 * @return the cubeDescName
+	 */
+	public String getCubeName() {
+		return cubeName;
+	}
 
-    /**
-     * @param cubeName the cubeDescName to set
-     */
-    public void setCubeName(String cubeName) {
-        this.cubeName = cubeName;
-    }
+	/**
+	 * @param cubeName
+	 *            the cubeDescName to set
+	 */
+	public void setCubeName(String cubeName) {
+		this.cubeName = cubeName;
+	}
 
-    public String getProject() {
-        return project;
-    }
+	public String getProject() {
+		return project;
+	}
 
-    public void setProject(String project) {
-        this.project = project;
-    }
+	public void setProject(String project) {
+		this.project = project;
+	}
 
 }

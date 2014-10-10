@@ -26,36 +26,36 @@ import com.kylinolap.common.util.BytesUtil;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class BigDecimalSerializer extends MeasureSerializer<BigDecimal> {
 
-    @Override
-    public void serialize(BigDecimal value, ByteBuffer out) {
-        byte[] bytes = value.unscaledValue().toByteArray();
+	@Override
+	public void serialize(BigDecimal value, ByteBuffer out) {
+		byte[] bytes = value.unscaledValue().toByteArray();
 
-        BytesUtil.writeVInt(value.scale(), out);
-        BytesUtil.writeVInt(bytes.length, out);
-        out.put(bytes);
-    }
+		BytesUtil.writeVInt(value.scale(), out);
+		BytesUtil.writeVInt(bytes.length, out);
+		out.put(bytes);
+	}
 
-    @Override
-    public BigDecimal deserialize(ByteBuffer in) {
-        int scale = BytesUtil.readVInt(in);
-        int n = BytesUtil.readVInt(in);
+	@Override
+	public BigDecimal deserialize(ByteBuffer in) {
+		int scale = BytesUtil.readVInt(in);
+		int n = BytesUtil.readVInt(in);
 
-        byte[] bytes = new byte[n];
-        in.get(bytes);
+		byte[] bytes = new byte[n];
+		in.get(bytes);
 
-        return new BigDecimal(new BigInteger(bytes), scale);
-    }
+		return new BigDecimal(new BigInteger(bytes), scale);
+	}
 
-    @Override
-    public BigDecimal valueOf(byte[] value) {
-        if (value == null)
-            return new BigDecimal(0);
-        else
-            return new BigDecimal(Bytes.toString(value));
-    }
+	@Override
+	public BigDecimal valueOf(byte[] value) {
+		if (value == null)
+			return new BigDecimal(0);
+		else
+			return new BigDecimal(Bytes.toString(value));
+	}
 
 }

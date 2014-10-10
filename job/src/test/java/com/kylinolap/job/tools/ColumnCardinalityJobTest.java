@@ -16,7 +16,7 @@
 
 package com.kylinolap.job.tools;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,29 +32,31 @@ import com.kylinolap.job.hadoop.cardinality.HiveColumnCardinalityJob;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class ColumnCardinalityJobTest {
 
-    private Configuration conf;
+	private Configuration conf;
 
-    @Before
-    public void setup() throws IOException {
-        conf = new Configuration();
-        conf.set("fs.default.name", "file:///");
-        conf.set("mapred.job.tracker", "local");
-    }
+	@Before
+	public void setup() throws IOException {
+		conf = new Configuration();
+		conf.set("fs.default.name", "file:///");
+		conf.set("mapred.job.tracker", "local");
+	}
 
-    @Test
-    @Ignore
-    public void testJob() throws Exception {
-        final String input = "src/test/resources/data/test_cal_dt/";
-        final String output = "target/test-output/column-cardinality/";
+	@Test
+	@Ignore
+	public void testJob() throws Exception {
+		final String input = "src/test/resources/data/test_cal_dt/";
+		final String output = "target/test-output/column-cardinality/";
 
-        FileUtil.fullyDelete(new File(output));
+		FileUtil.fullyDelete(new File(output));
 
-        String[] args = { "-input", input, "-output", output, "-cols", "1,2,3,4,5,6,9,0" };
-        assertEquals("Job failed", 0, ToolRunner.run(new HiveColumnCardinalityJob(), args));
-    }
+		String[] args = { "-input", input, "-output", output, "-cols",
+				"1,2,3,4,5,6,9,0" };
+		assertEquals("Job failed", 0,
+				ToolRunner.run(new HiveColumnCardinalityJob(), args));
+	}
 
 }

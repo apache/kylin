@@ -18,7 +18,7 @@ package com.kylinolap.common.persistence;
 
 /**
  * @author xduo
- *
+ * 
  */
 public interface AclEntity {
 

@@ -57,260 +57,284 @@ import com.kylinolap.metadata.model.cube.TblColRef.InnerDataTypeEnum;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
-public class OLAPProjectRel extends ProjectRelBase implements OLAPRel, EnumerableRel {
+public class OLAPProjectRel extends ProjectRelBase implements OLAPRel,
+		EnumerableRel {
 
-    private OLAPContext context;
-    private List<RexNode> rewriteProjects;
-    private boolean rewriting;
-    private ColumnRowType columnRowType;
-    private boolean hasJoin;
-    private boolean afterJoin;
-    private boolean afterAggregate;
+	private OLAPContext context;
+	private List<RexNode> rewriteProjects;
+	private boolean rewriting;
+	private ColumnRowType columnRowType;
+	private boolean hasJoin;
+	private boolean afterJoin;
+	private boolean afterAggregate;
 
-    public OLAPProjectRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, List<RexNode> exps,
-            RelDataType rowType, int flags) {
-        super(cluster, traitSet, child, exps, rowType, flags);
-        Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
-        Preconditions.checkArgument(child.getConvention() == OLAPRel.CONVENTION);
-        this.rewriteProjects = exps;
-        this.hasJoin = false;
-        this.afterJoin = false;
-        this.rowType = getRowType();
-    }
+	public OLAPProjectRel(RelOptCluster cluster, RelTraitSet traitSet,
+			RelNode child, List<RexNode> exps, RelDataType rowType, int flags) {
+		super(cluster, traitSet, child, exps, rowType, flags);
+		Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
+		Preconditions
+				.checkArgument(child.getConvention() == OLAPRel.CONVENTION);
+		this.rewriteProjects = exps;
+		this.hasJoin = false;
+		this.afterJoin = false;
+		this.rowType = getRowType();
+	}
 
-    @Override
-    public List<RexNode> getChildExps() {
-        return rewriteProjects;
-    }
+	@Override
+	public List<RexNode> getChildExps() {
+		return rewriteProjects;
+	}
 
-    @Override
-    public List<RexNode> getProjects() {
-        return rewriteProjects;
-    }
+	@Override
+	public List<RexNode> getProjects() {
+		return rewriteProjects;
+	}
 
-    @Override
-    public RelOptCost computeSelfCost(RelOptPlanner planner) {
-        return super.computeSelfCost(planner).multiplyBy(.05);
-    }
+	@Override
+	public RelOptCost computeSelfCost(RelOptPlanner planner) {
+		return super.computeSelfCost(planner).multiplyBy(.05);
+	}
 
-    @Override
-    public ProjectRelBase copy(RelTraitSet traitSet, RelNode child, List<RexNode> exps, RelDataType rowType) {
-        return new OLAPProjectRel(getCluster(), traitSet, child, exps, rowType, this.flags);
-    }
+	@Override
+	public ProjectRelBase copy(RelTraitSet traitSet, RelNode child,
+			List<RexNode> exps, RelDataType rowType) {
+		return new OLAPProjectRel(getCluster(), traitSet, child, exps, rowType,
+				this.flags);
+	}
 
-    @Override
-    public void implementOLAP(OLAPImplementor implementor) {
-        implementor.visitChild(getChild(), this);
+	@Override
+	public void implementOLAP(OLAPImplementor implementor) {
+		implementor.visitChild(getChild(), this);
 
-        this.context = implementor.getContext();
-        this.hasJoin = context.hasJoin;
-        this.afterJoin = context.afterJoin;
-        this.afterAggregate = context.afterAggregate;
+		this.context = implementor.getContext();
+		this.hasJoin = context.hasJoin;
+		this.afterJoin = context.afterJoin;
+		this.afterAggregate = context.afterAggregate;
 
-        this.columnRowType = buildColumnRowType();
-    }
+		this.columnRowType = buildColumnRowType();
+	}
 
-    private ColumnRowType buildColumnRowType() {
-        List<TblColRef> columns = new ArrayList<TblColRef>();
-        List<Set<TblColRef>> sourceColumns = new ArrayList<Set<TblColRef>>();
-        OLAPRel olapChild = (OLAPRel) getChild();
-        ColumnRowType inputColumnRowType = olapChild.getColumnRowType();
-        for (int i = 0; i < this.rewriteProjects.size(); i++) {
-            RexNode rex = this.rewriteProjects.get(i);
-            RelDataTypeField columnField = this.rowType.getFieldList().get(i);
-            String fieldName = columnField.getName();
-            Set<TblColRef> sourceCollector = new HashSet<TblColRef>();
-            TblColRef column = translateRexNode(rex, inputColumnRowType, fieldName, sourceCollector);
-            columns.add(column);
-            sourceColumns.add(sourceCollector);
-        }
-        return new ColumnRowType(columns, sourceColumns);
-    }
+	private ColumnRowType buildColumnRowType() {
+		List<TblColRef> columns = new ArrayList<TblColRef>();
+		List<Set<TblColRef>> sourceColumns = new ArrayList<Set<TblColRef>>();
+		OLAPRel olapChild = (OLAPRel) getChild();
+		ColumnRowType inputColumnRowType = olapChild.getColumnRowType();
+		for (int i = 0; i < this.rewriteProjects.size(); i++) {
+			RexNode rex = this.rewriteProjects.get(i);
+			RelDataTypeField columnField = this.rowType.getFieldList().get(i);
+			String fieldName = columnField.getName();
+			Set<TblColRef> sourceCollector = new HashSet<TblColRef>();
+			TblColRef column = translateRexNode(rex, inputColumnRowType,
+					fieldName, sourceCollector);
+			columns.add(column);
+			sourceColumns.add(sourceCollector);
+		}
+		return new ColumnRowType(columns, sourceColumns);
+	}
 
-    private TblColRef translateRexNode(RexNode rexNode, ColumnRowType inputColumnRowType, String fieldName,
-            Set<TblColRef> sourceCollector) {
-        TblColRef column = null;
-        if (rexNode instanceof RexInputRef) {
-            RexInputRef inputRef = (RexInputRef) rexNode;
-            column = translateRexInputRef(inputRef, inputColumnRowType, fieldName, sourceCollector);
-        } else if (rexNode instanceof RexLiteral) {
-            RexLiteral literal = (RexLiteral) rexNode;
-            column = translateRexLiteral(literal);
-        } else if (rexNode instanceof RexCall) {
-            RexCall call = (RexCall) rexNode;
-            column = translateRexCall(call, inputColumnRowType, fieldName, sourceCollector);
-        } else {
-            throw new IllegalStateException("Unsupport RexNode " + rexNode);
-        }
-        return column;
-    }
+	private TblColRef translateRexNode(RexNode rexNode,
+			ColumnRowType inputColumnRowType, String fieldName,
+			Set<TblColRef> sourceCollector) {
+		TblColRef column = null;
+		if (rexNode instanceof RexInputRef) {
+			RexInputRef inputRef = (RexInputRef) rexNode;
+			column = translateRexInputRef(inputRef, inputColumnRowType,
+					fieldName, sourceCollector);
+		} else if (rexNode instanceof RexLiteral) {
+			RexLiteral literal = (RexLiteral) rexNode;
+			column = translateRexLiteral(literal);
+		} else if (rexNode instanceof RexCall) {
+			RexCall call = (RexCall) rexNode;
+			column = translateRexCall(call, inputColumnRowType, fieldName,
+					sourceCollector);
+		} else {
+			throw new IllegalStateException("Unsupport RexNode " + rexNode);
+		}
+		return column;
+	}
 
-    private TblColRef translateRexInputRef(RexInputRef inputRef, ColumnRowType inputColumnRowType,
-            String fieldName, Set<TblColRef> sourceCollector) {
-        int index = inputRef.getIndex();
-        // check it for rewrite count
-        if (index < inputColumnRowType.size()) {
-            TblColRef column = inputColumnRowType.getColumnByIndex(index);
-            if (!column.isInnerColumn() && !this.rewriting && !this.afterAggregate) {
-                context.allColumns.add(column);
-                sourceCollector.add(column);
-            }
-            return column;
-        } else {
-            throw new IllegalStateException("Can't find " + inputRef + " from child columnrowtype "
-                    + inputColumnRowType + " with fieldname " + fieldName);
-        }
-    }
+	private TblColRef translateRexInputRef(RexInputRef inputRef,
+			ColumnRowType inputColumnRowType, String fieldName,
+			Set<TblColRef> sourceCollector) {
+		int index = inputRef.getIndex();
+		// check it for rewrite count
+		if (index < inputColumnRowType.size()) {
+			TblColRef column = inputColumnRowType.getColumnByIndex(index);
+			if (!column.isInnerColumn() && !this.rewriting
+					&& !this.afterAggregate) {
+				context.allColumns.add(column);
+				sourceCollector.add(column);
+			}
+			return column;
+		} else {
+			throw new IllegalStateException("Can't find " + inputRef
+					+ " from child columnrowtype " + inputColumnRowType
+					+ " with fieldname " + fieldName);
+		}
+	}
 
-    private TblColRef translateRexLiteral(RexLiteral literal) {
-        if (RexLiteral.isNullLiteral(literal)) {
-            return TblColRef.newInnerColumn("null", InnerDataTypeEnum.LITERAL);
-        } else {
-            return TblColRef.newInnerColumn(literal.getValue().toString(), InnerDataTypeEnum.LITERAL);
-        }
+	private TblColRef translateRexLiteral(RexLiteral literal) {
+		if (RexLiteral.isNullLiteral(literal)) {
+			return TblColRef.newInnerColumn("null", InnerDataTypeEnum.LITERAL);
+		} else {
+			return TblColRef.newInnerColumn(literal.getValue().toString(),
+					InnerDataTypeEnum.LITERAL);
+		}
 
-    }
+	}
 
-    private TblColRef translateRexCall(RexCall call, ColumnRowType inputColumnRowType, String fieldName,
-            Set<TblColRef> sourceCollector) {
-        SqlOperator operator = call.getOperator();
-        if (operator == SqlStdOperatorTable.EXTRACT_DATE) {
-            List<RexNode> extractDateOps = call.getOperands();
-            RexCall reinterpret = (RexCall) extractDateOps.get(1);
-            List<RexNode> reinterpretOps = reinterpret.getOperands();
-            RexInputRef inputRef = (RexInputRef) reinterpretOps.get(0);
-            return translateRexInputRef(inputRef, inputColumnRowType, fieldName, sourceCollector);
-        } else if (operator instanceof SqlUserDefinedFunction) {
-            if (operator.getName().equals("QUARTER")) {
-                List<RexNode> quaterOps = call.getOperands();
-                RexInputRef inputRef = (RexInputRef) quaterOps.get(0);
-                return translateRexInputRef(inputRef, inputColumnRowType, fieldName, sourceCollector);
-            }
-        } else if (operator instanceof SqlCaseOperator) {
-            for (RexNode operand : call.getOperands()) {
-                if (operand instanceof RexInputRef) {
-                    RexInputRef inputRef = (RexInputRef) operand;
-                    return translateRexInputRef(inputRef, inputColumnRowType, fieldName, sourceCollector);
-                }
-            }
-        }
+	private TblColRef translateRexCall(RexCall call,
+			ColumnRowType inputColumnRowType, String fieldName,
+			Set<TblColRef> sourceCollector) {
+		SqlOperator operator = call.getOperator();
+		if (operator == SqlStdOperatorTable.EXTRACT_DATE) {
+			List<RexNode> extractDateOps = call.getOperands();
+			RexCall reinterpret = (RexCall) extractDateOps.get(1);
+			List<RexNode> reinterpretOps = reinterpret.getOperands();
+			RexInputRef inputRef = (RexInputRef) reinterpretOps.get(0);
+			return translateRexInputRef(inputRef, inputColumnRowType,
+					fieldName, sourceCollector);
+		} else if (operator instanceof SqlUserDefinedFunction) {
+			if (operator.getName().equals("QUARTER")) {
+				List<RexNode> quaterOps = call.getOperands();
+				RexInputRef inputRef = (RexInputRef) quaterOps.get(0);
+				return translateRexInputRef(inputRef, inputColumnRowType,
+						fieldName, sourceCollector);
+			}
+		} else if (operator instanceof SqlCaseOperator) {
+			for (RexNode operand : call.getOperands()) {
+				if (operand instanceof RexInputRef) {
+					RexInputRef inputRef = (RexInputRef) operand;
+					return translateRexInputRef(inputRef, inputColumnRowType,
+							fieldName, sourceCollector);
+				}
+			}
+		}
 
-        for (RexNode operand : call.getOperands()) {
-            translateRexNode(operand, inputColumnRowType, fieldName, sourceCollector);
-        }
-        return TblColRef.newInnerColumn(fieldName, InnerDataTypeEnum.LITERAL);
-    }
+		for (RexNode operand : call.getOperands()) {
+			translateRexNode(operand, inputColumnRowType, fieldName,
+					sourceCollector);
+		}
+		return TblColRef.newInnerColumn(fieldName, InnerDataTypeEnum.LITERAL);
+	}
 
-    @Override
-    public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
-        EnumerableCalcRel enumCalcRel;
+	@Override
+	public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
+		EnumerableCalcRel enumCalcRel;
 
-        RelNode child = getChild();
-        if (child instanceof OLAPFilterRel) {
-            // merge project & filter
-            OLAPFilterRel filter = (OLAPFilterRel) getChild();
-            RexProgram program =
-                    RexProgram.create(filter.getChild().getRowType(), this.rewriteProjects,
-                            filter.getCondition(), this.rowType, getCluster().getRexBuilder());
+		RelNode child = getChild();
+		if (child instanceof OLAPFilterRel) {
+			// merge project & filter
+			OLAPFilterRel filter = (OLAPFilterRel) getChild();
+			RexProgram program = RexProgram.create(filter.getChild()
+					.getRowType(), this.rewriteProjects, filter.getCondition(),
+					this.rowType, getCluster().getRexBuilder());
 
-            enumCalcRel =
-                    new EnumerableCalcRel(getCluster(), getCluster()
-                            .traitSetOf(EnumerableConvention.INSTANCE), filter.getChild(), this.rowType,
-                            program, ImmutableList.<RelCollation> of());
-        } else {
-            // keep project for tablescan
-            RexProgram program =
-                    RexProgram.create(child.getRowType(), this.rewriteProjects, null, this.rowType,
-                            getCluster().getRexBuilder());
+			enumCalcRel = new EnumerableCalcRel(getCluster(), getCluster()
+					.traitSetOf(EnumerableConvention.INSTANCE),
+					filter.getChild(), this.rowType, program,
+					ImmutableList.<RelCollation> of());
+		} else {
+			// keep project for tablescan
+			RexProgram program = RexProgram.create(child.getRowType(),
+					this.rewriteProjects, null, this.rowType, getCluster()
+							.getRexBuilder());
 
-            enumCalcRel =
-                    new EnumerableCalcRel(getCluster(), getCluster()
-                            .traitSetOf(EnumerableConvention.INSTANCE), child, this.rowType, program,
-                            ImmutableList.<RelCollation> of());
-        }
+			enumCalcRel = new EnumerableCalcRel(getCluster(), getCluster()
+					.traitSetOf(EnumerableConvention.INSTANCE), child,
+					this.rowType, program, ImmutableList.<RelCollation> of());
+		}
 
-        return enumCalcRel.implement(implementor, pref);
-    }
+		return enumCalcRel.implement(implementor, pref);
+	}
 
-    @Override
-    public ColumnRowType getColumnRowType() {
-        return columnRowType;
-    }
+	@Override
+	public ColumnRowType getColumnRowType() {
+		return columnRowType;
+	}
 
-    @Override
-    public void implementRewrite(RewriteImplementor implementor) {
-        implementor.visitChild(this, getChild());
+	@Override
+	public void implementRewrite(RewriteImplementor implementor) {
+		implementor.visitChild(this, getChild());
 
-        this.rewriting = true;
+		this.rewriting = true;
 
-        // project before join or is just after OLAPToEnumerableConverter
-        if (!RewriteImplementor.needRewrite(this.context) || (this.hasJoin && !this.afterJoin)
-                || this.afterAggregate) {
-            this.columnRowType = this.buildColumnRowType();
-            return;
-        }
+		// project before join or is just after OLAPToEnumerableConverter
+		if (!RewriteImplementor.needRewrite(this.context)
+				|| (this.hasJoin && !this.afterJoin) || this.afterAggregate) {
+			this.columnRowType = this.buildColumnRowType();
+			return;
+		}
 
-        // find missed rewrite fields
-        int paramIndex = this.rowType.getFieldList().size();
-        List<RelDataTypeField> newFieldList = new LinkedList<RelDataTypeField>();
-        List<RexNode> newExpList = new LinkedList<RexNode>();
-        ColumnRowType inputColumnRowType = ((OLAPRel) getChild()).getColumnRowType();
+		// find missed rewrite fields
+		int paramIndex = this.rowType.getFieldList().size();
+		List<RelDataTypeField> newFieldList = new LinkedList<RelDataTypeField>();
+		List<RexNode> newExpList = new LinkedList<RexNode>();
+		ColumnRowType inputColumnRowType = ((OLAPRel) getChild())
+				.getColumnRowType();
 
-        for (Map.Entry<String, RelDataType> rewriteField : this.context.rewriteFields.entrySet()) {
-            String rewriteFieldName = rewriteField.getKey();
-            int rowIndex = this.columnRowType.getIndexByName(rewriteFieldName);
-            if (rowIndex < 0) {
-                int inputIndex = inputColumnRowType.getIndexByName(rewriteFieldName);
-                if (inputIndex >= 0) {
-                    // new field
-                    RelDataType fieldType = rewriteField.getValue();
-                    RelDataTypeField newField =
-                            new RelDataTypeFieldImpl(rewriteFieldName, paramIndex++, fieldType);
-                    newFieldList.add(newField);
-                    // new project
-                    RelDataTypeField inputField = getChild().getRowType().getFieldList().get(inputIndex);
-                    RexInputRef newFieldRef = new RexInputRef(inputField.getIndex(), inputField.getType());
-                    newExpList.add(newFieldRef);
-                }
-            }
-        }
+		for (Map.Entry<String, RelDataType> rewriteField : this.context.rewriteFields
+				.entrySet()) {
+			String rewriteFieldName = rewriteField.getKey();
+			int rowIndex = this.columnRowType.getIndexByName(rewriteFieldName);
+			if (rowIndex < 0) {
+				int inputIndex = inputColumnRowType
+						.getIndexByName(rewriteFieldName);
+				if (inputIndex >= 0) {
+					// new field
+					RelDataType fieldType = rewriteField.getValue();
+					RelDataTypeField newField = new RelDataTypeFieldImpl(
+							rewriteFieldName, paramIndex++, fieldType);
+					newFieldList.add(newField);
+					// new project
+					RelDataTypeField inputField = getChild().getRowType()
+							.getFieldList().get(inputIndex);
+					RexInputRef newFieldRef = new RexInputRef(
+							inputField.getIndex(), inputField.getType());
+					newExpList.add(newFieldRef);
+				}
+			}
+		}
 
-        if (!newFieldList.isEmpty()) {
-            // rebuild projects
-            List<RexNode> newProjects = new ArrayList<RexNode>(this.rewriteProjects);
-            newProjects.addAll(newExpList);
-            this.rewriteProjects = newProjects;
+		if (!newFieldList.isEmpty()) {
+			// rebuild projects
+			List<RexNode> newProjects = new ArrayList<RexNode>(
+					this.rewriteProjects);
+			newProjects.addAll(newExpList);
+			this.rewriteProjects = newProjects;
 
-            // rebuild row type
-            FieldInfoBuilder fieldInfo = getCluster().getTypeFactory().builder();
-            fieldInfo.addAll(this.rowType.getFieldList());
-            fieldInfo.addAll(newFieldList);
-            this.rowType = getCluster().getTypeFactory().createStructType(fieldInfo);
-        }
+			// rebuild row type
+			FieldInfoBuilder fieldInfo = getCluster().getTypeFactory()
+					.builder();
+			fieldInfo.addAll(this.rowType.getFieldList());
+			fieldInfo.addAll(newFieldList);
+			this.rowType = getCluster().getTypeFactory().createStructType(
+					fieldInfo);
+		}
 
-        // rebuild columns
-        this.columnRowType = this.buildColumnRowType();
+		// rebuild columns
+		this.columnRowType = this.buildColumnRowType();
 
-        this.rewriting = false;
-    }
+		this.rewriting = false;
+	}
 
-    @Override
-    public OLAPContext getContext() {
-        return context;
-    }
+	@Override
+	public OLAPContext getContext() {
+		return context;
+	}
 
-    @Override
-    public boolean hasSubQuery() {
-        OLAPRel olapChild = (OLAPRel) getChild();
-        return olapChild.hasSubQuery();
-    }
+	@Override
+	public boolean hasSubQuery() {
+		OLAPRel olapChild = (OLAPRel) getChild();
+		return olapChild.hasSubQuery();
+	}
 
-    @Override
-    public RelTraitSet replaceTraitSet(RelTrait trait) {
-        RelTraitSet oldTraitSet = this.traitSet;
-        this.traitSet = this.traitSet.replace(trait);
-        return oldTraitSet;
-    }
+	@Override
+	public RelTraitSet replaceTraitSet(RelTrait trait) {
+		RelTraitSet oldTraitSet = this.traitSet;
+		this.traitSet = this.traitSet.replace(trait);
+		return oldTraitSet;
+	}
 }

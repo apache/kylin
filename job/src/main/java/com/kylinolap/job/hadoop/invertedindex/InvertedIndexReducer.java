@@ -39,52 +39,58 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 /**
  * @author yangli9
  */
-public class InvertedIndexReducer extends
-        Reducer<LongWritable, ImmutableBytesWritable, ImmutableBytesWritable, ImmutableBytesWritable> {
+public class InvertedIndexReducer
+		extends
+		Reducer<LongWritable, ImmutableBytesWritable, ImmutableBytesWritable, ImmutableBytesWritable> {
 
-    private TableRecordInfo info;
-    private TableRecord rec;
-    private TimeSliceBuilder builder;
-    private IIKeyValueCodec kv;
+	private TableRecordInfo info;
+	private TableRecord rec;
+	private TimeSliceBuilder builder;
+	private IIKeyValueCodec kv;
 
-    @Override
-    protected void setup(Context context) throws IOException {
-        Configuration conf = context.getConfiguration();
-        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
-        CubeManager mgr = CubeManager.getInstance(config);
-        CubeInstance cube = mgr.getCube(conf.get(BatchConstants.CFG_CUBE_NAME));
-        CubeSegment seg =
-                cube.getSegment(conf.get(BatchConstants.CFG_CUBE_SEGMENT_NAME), CubeSegmentStatusEnum.NEW);
-        info = new TableRecordInfo(seg);
-        rec = new TableRecord(info);
-        builder = new TimeSliceBuilder(info);
-        kv = new IIKeyValueCodec(info);
-    }
+	@Override
+	protected void setup(Context context) throws IOException {
+		Configuration conf = context.getConfiguration();
+		KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
+		CubeManager mgr = CubeManager.getInstance(config);
+		CubeInstance cube = mgr.getCube(conf.get(BatchConstants.CFG_CUBE_NAME));
+		CubeSegment seg = cube.getSegment(
+				conf.get(BatchConstants.CFG_CUBE_SEGMENT_NAME),
+				CubeSegmentStatusEnum.NEW);
+		info = new TableRecordInfo(seg);
+		rec = new TableRecord(info);
+		builder = new TimeSliceBuilder(info);
+		kv = new IIKeyValueCodec(info);
+	}
 
-    @Override
-    public void reduce(LongWritable key, Iterable<ImmutableBytesWritable> values, Context context)
-            throws IOException, InterruptedException {
-        for (ImmutableBytesWritable v : values) {
-            rec.setBytes(v.get(), v.getOffset(), v.getLength());
-            TimeSlice slice = builder.append(rec);
-            if (slice != null) {
-                output(slice, context);
-            }
-        }
-    }
+	@Override
+	public void reduce(LongWritable key,
+			Iterable<ImmutableBytesWritable> values, Context context)
+			throws IOException, InterruptedException {
+		for (ImmutableBytesWritable v : values) {
+			rec.setBytes(v.get(), v.getOffset(), v.getLength());
+			TimeSlice slice = builder.append(rec);
+			if (slice != null) {
+				output(slice, context);
+			}
+		}
+	}
 
-    @Override
-    protected void cleanup(Context context) throws IOException, InterruptedException {
-        TimeSlice slice = builder.close();
-        if (slice != null) {
-            output(slice, context);
-        }
-    }
+	@Override
+	protected void cleanup(Context context) throws IOException,
+			InterruptedException {
+		TimeSlice slice = builder.close();
+		if (slice != null) {
+			output(slice, context);
+		}
+	}
 
-    private void output(TimeSlice slice, Context context) throws IOException, InterruptedException {
-        for (Pair<ImmutableBytesWritable, ImmutableBytesWritable> pair : kv.encodeKeyValue(slice)) {
-            context.write(pair.getFirst(), pair.getSecond());
-        }
-    }
+	private void output(TimeSlice slice, Context context) throws IOException,
+			InterruptedException {
+		for (Pair<ImmutableBytesWritable, ImmutableBytesWritable> pair : kv
+				.encodeKeyValue(slice)) {
+			context.write(pair.getFirst(), pair.getSecond());
+		}
+	}
 
 }

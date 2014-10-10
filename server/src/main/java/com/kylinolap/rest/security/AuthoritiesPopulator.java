@@ -27,24 +27,26 @@ import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopul
 
 /**
  * @author xduo
- *
+ * 
  */
 public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
 
-    /**
-     * @param contextSource
-     * @param groupSearchBase
-     */
-    public AuthoritiesPopulator(ContextSource contextSource, String groupSearchBase) {
-        super(contextSource, groupSearchBase);
-    }
+	/**
+	 * @param contextSource
+	 * @param groupSearchBase
+	 */
+	public AuthoritiesPopulator(ContextSource contextSource,
+			String groupSearchBase) {
+		super(contextSource, groupSearchBase);
+	}
 
-    @Override
-    protected Set<GrantedAuthority> getAdditionalRoles(DirContextOperations user, String username) {
-        Set<GrantedAuthority> authorities = new HashSet<GrantedAuthority>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_MODELER"));
-        authorities.add(new SimpleGrantedAuthority("ROLE_ANALYST"));
+	@Override
+	protected Set<GrantedAuthority> getAdditionalRoles(
+			DirContextOperations user, String username) {
+		Set<GrantedAuthority> authorities = new HashSet<GrantedAuthority>();
+		authorities.add(new SimpleGrantedAuthority("ROLE_MODELER"));
+		authorities.add(new SimpleGrantedAuthority("ROLE_ANALYST"));
 
-        return authorities;
-    }
+		return authorities;
+	}
 }

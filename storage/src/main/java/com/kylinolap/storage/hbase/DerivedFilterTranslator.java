@@ -39,175 +39,188 @@ import com.kylinolap.storage.tuple.ITuple;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class DerivedFilterTranslator {
 
-    private static final int IN_THRESHOLD = 5;
+	private static final int IN_THRESHOLD = 5;
 
-    public static Pair<TupleFilter, Boolean> translate(LookupStringTable lookup, DeriveInfo hostInfo,
-            CompareTupleFilter compf, ColumnTupleFilter colf, ConstantTupleFilter constf) {
+	public static Pair<TupleFilter, Boolean> translate(
+			LookupStringTable lookup, DeriveInfo hostInfo,
+			CompareTupleFilter compf, ColumnTupleFilter colf,
+			ConstantTupleFilter constf) {
 
-        TblColRef derivedCol = colf.getColumn();
-        TblColRef[] hostCols = hostInfo.columns;
-        TblColRef[] pkCols = hostInfo.dimension.getJoin().getPrimaryKeyColumns();
+		TblColRef derivedCol = colf.getColumn();
+		TblColRef[] hostCols = hostInfo.columns;
+		TblColRef[] pkCols = hostInfo.dimension.getJoin()
+				.getPrimaryKeyColumns();
 
-        if (hostInfo.type == DeriveType.PK_FK) {
-            assert hostCols.length == 1;
-            colf.setColumn(hostCols[0]);
-            return new Pair<TupleFilter, Boolean>(compf, false);
-        }
+		if (hostInfo.type == DeriveType.PK_FK) {
+			assert hostCols.length == 1;
+			colf.setColumn(hostCols[0]);
+			return new Pair<TupleFilter, Boolean>(compf, false);
+		}
 
-        assert hostInfo.type == DeriveType.LOOKUP;
-        assert hostCols.length == pkCols.length;
+		assert hostInfo.type == DeriveType.LOOKUP;
+		assert hostCols.length == pkCols.length;
 
-        int di = derivedCol.getColumn().getZeroBasedIndex();
-        int[] pi = new int[pkCols.length];
-        int hn = hostCols.length;
-        for (int i = 0; i < hn; i++) {
-            pi[i] = pkCols[i].getColumn().getZeroBasedIndex();
-        }
+		int di = derivedCol.getColumn().getZeroBasedIndex();
+		int[] pi = new int[pkCols.length];
+		int hn = hostCols.length;
+		for (int i = 0; i < hn; i++) {
+			pi[i] = pkCols[i].getColumn().getZeroBasedIndex();
+		}
 
-        Set<Array<String>> satisfyingHostRecords = Sets.newHashSet();
-        SingleColumnTuple tuple = new SingleColumnTuple(derivedCol);
-        for (String[] row : lookup.getAllRows()) {
-            tuple.value = row[di];
-            if (compf.evaluate(tuple)) {
-                collect(row, pi, satisfyingHostRecords);
-            }
-        }
+		Set<Array<String>> satisfyingHostRecords = Sets.newHashSet();
+		SingleColumnTuple tuple = new SingleColumnTuple(derivedCol);
+		for (String[] row : lookup.getAllRows()) {
+			tuple.value = row[di];
+			if (compf.evaluate(tuple)) {
+				collect(row, pi, satisfyingHostRecords);
+			}
+		}
 
-        TupleFilter translated;
-        boolean loosened;
-        if (satisfyingHostRecords.size() > IN_THRESHOLD) {
-            translated = buildRangeFilter(hostCols, satisfyingHostRecords);
-            loosened = true;
-        } else {
-            translated = buildInFilter(hostCols, satisfyingHostRecords);
-            loosened = false;
-        }
+		TupleFilter translated;
+		boolean loosened;
+		if (satisfyingHostRecords.size() > IN_THRESHOLD) {
+			translated = buildRangeFilter(hostCols, satisfyingHostRecords);
+			loosened = true;
+		} else {
+			translated = buildInFilter(hostCols, satisfyingHostRecords);
+			loosened = false;
+		}
 
-        return new Pair<TupleFilter, Boolean>(translated, loosened);
-    }
+		return new Pair<TupleFilter, Boolean>(translated, loosened);
+	}
 
-    private static void collect(String[] row, int[] pi, Set<Array<String>> satisfyingHostRecords) {
-        // TODO when go beyond IN_THRESHOLD, only keep min/max is enough
-        String[] rec = new String[pi.length];
-        for (int i = 0; i < pi.length; i++) {
-            rec[i] = row[pi[i]];
-        }
-        satisfyingHostRecords.add(new Array<String>(rec));
-    }
+	private static void collect(String[] row, int[] pi,
+			Set<Array<String>> satisfyingHostRecords) {
+		// TODO when go beyond IN_THRESHOLD, only keep min/max is enough
+		String[] rec = new String[pi.length];
+		for (int i = 0; i < pi.length; i++) {
+			rec[i] = row[pi[i]];
+		}
+		satisfyingHostRecords.add(new Array<String>(rec));
+	}
 
-    private static TupleFilter buildInFilter(TblColRef[] hostCols, Set<Array<String>> satisfyingHostRecords) {
-        if (satisfyingHostRecords.size() == 0) {
-            return ConstantTupleFilter.FALSE;
-        }
+	private static TupleFilter buildInFilter(TblColRef[] hostCols,
+			Set<Array<String>> satisfyingHostRecords) {
+		if (satisfyingHostRecords.size() == 0) {
+			return ConstantTupleFilter.FALSE;
+		}
 
-        int hn = hostCols.length;
-        if (hn == 1) {
-            CompareTupleFilter in = new CompareTupleFilter(FilterOperatorEnum.IN);
-            in.addChild(new ColumnTupleFilter(hostCols[0]));
-            in.addChild(new ConstantTupleFilter(asValues(satisfyingHostRecords)));
-            return in;
-        } else {
-            LogicalTupleFilter or = new LogicalTupleFilter(FilterOperatorEnum.OR);
-            for (Array<String> rec : satisfyingHostRecords) {
-                LogicalTupleFilter and = new LogicalTupleFilter(FilterOperatorEnum.AND);
-                for (int i = 0; i < hn; i++) {
-                    CompareTupleFilter eq = new CompareTupleFilter(FilterOperatorEnum.EQ);
-                    eq.addChild(new ColumnTupleFilter(hostCols[i]));
-                    eq.addChild(new ConstantTupleFilter(rec.data[i]));
-                    and.addChild(eq);
-                }
-                or.addChild(and);
-            }
-            return or;
-        }
-    }
+		int hn = hostCols.length;
+		if (hn == 1) {
+			CompareTupleFilter in = new CompareTupleFilter(
+					FilterOperatorEnum.IN);
+			in.addChild(new ColumnTupleFilter(hostCols[0]));
+			in.addChild(new ConstantTupleFilter(asValues(satisfyingHostRecords)));
+			return in;
+		} else {
+			LogicalTupleFilter or = new LogicalTupleFilter(
+					FilterOperatorEnum.OR);
+			for (Array<String> rec : satisfyingHostRecords) {
+				LogicalTupleFilter and = new LogicalTupleFilter(
+						FilterOperatorEnum.AND);
+				for (int i = 0; i < hn; i++) {
+					CompareTupleFilter eq = new CompareTupleFilter(
+							FilterOperatorEnum.EQ);
+					eq.addChild(new ColumnTupleFilter(hostCols[i]));
+					eq.addChild(new ConstantTupleFilter(rec.data[i]));
+					and.addChild(eq);
+				}
+				or.addChild(and);
+			}
+			return or;
+		}
+	}
 
-    private static List<String> asValues(Set<Array<String>> satisfyingHostRecords) {
-        List<String> values = Lists.newArrayListWithCapacity(satisfyingHostRecords.size());
-        for (Array<String> rec : satisfyingHostRecords) {
-            values.add(rec.data[0]);
-        }
-        return values;
-    }
+	private static List<String> asValues(
+			Set<Array<String>> satisfyingHostRecords) {
+		List<String> values = Lists
+				.newArrayListWithCapacity(satisfyingHostRecords.size());
+		for (Array<String> rec : satisfyingHostRecords) {
+			values.add(rec.data[0]);
+		}
+		return values;
+	}
 
-    private static LogicalTupleFilter buildRangeFilter(TblColRef[] hostCols,
-            Set<Array<String>> satisfyingHostRecords) {
-        int hn = hostCols.length;
-        String[] min = new String[hn];
-        String[] max = new String[hn];
-        findMinMax(satisfyingHostRecords, hostCols, min, max);
-        LogicalTupleFilter and = new LogicalTupleFilter(FilterOperatorEnum.AND);
-        for (int i = 0; i < hn; i++) {
-            CompareTupleFilter compMin = new CompareTupleFilter(FilterOperatorEnum.GTE);
-            compMin.addChild(new ColumnTupleFilter(hostCols[i]));
-            compMin.addChild(new ConstantTupleFilter(min[i]));
-            and.addChild(compMin);
-            CompareTupleFilter compMax = new CompareTupleFilter(FilterOperatorEnum.LTE);
-            compMax.addChild(new ColumnTupleFilter(hostCols[i]));
-            compMax.addChild(new ConstantTupleFilter(max[i]));
-            and.addChild(compMax);
-        }
-        return and;
-    }
+	private static LogicalTupleFilter buildRangeFilter(TblColRef[] hostCols,
+			Set<Array<String>> satisfyingHostRecords) {
+		int hn = hostCols.length;
+		String[] min = new String[hn];
+		String[] max = new String[hn];
+		findMinMax(satisfyingHostRecords, hostCols, min, max);
+		LogicalTupleFilter and = new LogicalTupleFilter(FilterOperatorEnum.AND);
+		for (int i = 0; i < hn; i++) {
+			CompareTupleFilter compMin = new CompareTupleFilter(
+					FilterOperatorEnum.GTE);
+			compMin.addChild(new ColumnTupleFilter(hostCols[i]));
+			compMin.addChild(new ConstantTupleFilter(min[i]));
+			and.addChild(compMin);
+			CompareTupleFilter compMax = new CompareTupleFilter(
+					FilterOperatorEnum.LTE);
+			compMax.addChild(new ColumnTupleFilter(hostCols[i]));
+			compMax.addChild(new ConstantTupleFilter(max[i]));
+			and.addChild(compMax);
+		}
+		return and;
+	}
 
-    private static void findMinMax(Set<Array<String>> satisfyingHostRecords, TblColRef[] hostCols,
-            String[] min, String[] max) {
+	private static void findMinMax(Set<Array<String>> satisfyingHostRecords,
+			TblColRef[] hostCols, String[] min, String[] max) {
 
-        RowKeyColumnOrder[] orders = new RowKeyColumnOrder[hostCols.length];
-        for (int i = 0; i < hostCols.length; i++) {
-            orders[i] = RowKeyColumnOrder.getInstance(hostCols[i].getType());
-        }
+		RowKeyColumnOrder[] orders = new RowKeyColumnOrder[hostCols.length];
+		for (int i = 0; i < hostCols.length; i++) {
+			orders[i] = RowKeyColumnOrder.getInstance(hostCols[i].getType());
+		}
 
-        for (Array<String> rec : satisfyingHostRecords) {
-            String[] row = rec.data;
-            for (int i = 0; i < row.length; i++) {
-                min[i] = orders[i].min(min[i], row[i]);
-                max[i] = orders[i].max(max[i], row[i]);
-            }
-        }
-    }
+		for (Array<String> rec : satisfyingHostRecords) {
+			String[] row = rec.data;
+			for (int i = 0; i < row.length; i++) {
+				min[i] = orders[i].min(min[i], row[i]);
+				max[i] = orders[i].max(max[i], row[i]);
+			}
+		}
+	}
 
-    private static class SingleColumnTuple implements ITuple {
+	private static class SingleColumnTuple implements ITuple {
 
-        private TblColRef col;
-        private String value;
+		private TblColRef col;
+		private String value;
 
-        SingleColumnTuple(TblColRef col) {
-            this.col = col;
-        }
+		SingleColumnTuple(TblColRef col) {
+			this.col = col;
+		}
 
-        @Override
-        public List<String> getAllFields() {
-            throw new UnsupportedOperationException();
-        }
+		@Override
+		public List<String> getAllFields() {
+			throw new UnsupportedOperationException();
+		}
 
-        @Override
-        public List<TblColRef> getAllColumns() {
-            throw new UnsupportedOperationException();
-        }
+		@Override
+		public List<TblColRef> getAllColumns() {
+			throw new UnsupportedOperationException();
+		}
 
-        @Override
-        public Object[] getAllValues() {
-            throw new UnsupportedOperationException();
-        }
+		@Override
+		public Object[] getAllValues() {
+			throw new UnsupportedOperationException();
+		}
 
-        @Override
-        public Object getValue(TblColRef col) {
-            if (this.col.equals(col))
-                return value;
-            else
-                throw new IllegalArgumentException("unexpected column " + col);
-        }
+		@Override
+		public Object getValue(TblColRef col) {
+			if (this.col.equals(col))
+				return value;
+			else
+				throw new IllegalArgumentException("unexpected column " + col);
+		}
 
-        @Override
-        public Object getValue(String field) {
-            throw new UnsupportedOperationException();
-        }
+		@Override
+		public Object getValue(String field) {
+			throw new UnsupportedOperationException();
+		}
 
-    }
+	}
 
 }

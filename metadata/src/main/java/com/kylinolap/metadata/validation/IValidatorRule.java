@@ -20,9 +20,9 @@ import com.kylinolap.metadata.validation.rule.IKylinValidationConstances;
 
 /**
  * @author jianliu
- *
+ * 
  */
 public interface IValidatorRule<T> extends IKylinValidationConstances {
 
-    public void validate(T element, ValidateContext context);
+	public void validate(T element, ValidateContext context);
 }

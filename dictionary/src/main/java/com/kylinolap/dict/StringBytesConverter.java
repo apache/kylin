@@ -19,14 +19,14 @@ import org.apache.hadoop.hbase.util.Bytes;
 
 public class StringBytesConverter implements BytesConverter<String> {
 
-    @Override
-    public byte[] convertToBytes(String v) {
-        return Bytes.toBytes(v);
-    }
+	@Override
+	public byte[] convertToBytes(String v) {
+		return Bytes.toBytes(v);
+	}
 
-    @Override
-    public String convertFromBytes(byte[] b, int offset, int length) {
-        return Bytes.toString(b, offset, length);
-    }
+	@Override
+	public String convertFromBytes(byte[] b, int offset, int length) {
+		return Bytes.toString(b, offset, length);
+	}
 
 }

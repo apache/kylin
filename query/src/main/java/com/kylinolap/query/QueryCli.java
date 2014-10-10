@@ -34,56 +34,60 @@ import com.kylinolap.query.schema.OLAPSchemaFactory;
 
 public class QueryCli {
 
-    @SuppressWarnings("static-access")
-    private static final Option OPTION_METADATA = OptionBuilder.withArgName("metadata url").hasArg()
-            .isRequired().withDescription("Metadata URL").create("metadata");
+	@SuppressWarnings("static-access")
+	private static final Option OPTION_METADATA = OptionBuilder
+			.withArgName("metadata url").hasArg().isRequired()
+			.withDescription("Metadata URL").create("metadata");
 
-    @SuppressWarnings("static-access")
-    private static final Option OPTION_SQL = OptionBuilder.withArgName("input sql").hasArg().isRequired()
-            .withDescription("SQL").create("sql");
+	@SuppressWarnings("static-access")
+	private static final Option OPTION_SQL = OptionBuilder
+			.withArgName("input sql").hasArg().isRequired()
+			.withDescription("SQL").create("sql");
 
-    public static void main(String[] args) throws Exception {
+	public static void main(String[] args) throws Exception {
 
-        Options options = new Options();
-        options.addOption(OPTION_METADATA);
-        options.addOption(OPTION_SQL);
+		Options options = new Options();
+		options.addOption(OPTION_METADATA);
+		options.addOption(OPTION_SQL);
 
-        CommandLineParser parser = new GnuParser();
-        CommandLine commandLine = parser.parse(options, args);
-        KylinConfig config =
-                KylinConfig.createInstanceFromUri(commandLine.getOptionValue(OPTION_METADATA.getOpt()));
-        String sql = commandLine.getOptionValue(OPTION_SQL.getOpt());
+		CommandLineParser parser = new GnuParser();
+		CommandLine commandLine = parser.parse(options, args);
+		KylinConfig config = KylinConfig.createInstanceFromUri(commandLine
+				.getOptionValue(OPTION_METADATA.getOpt()));
+		String sql = commandLine.getOptionValue(OPTION_SQL.getOpt());
 
-        Class.forName("net.hydromatic.optiq.jdbc.Driver");
-        File olapTmp = OLAPSchemaFactory.createTempOLAPJson(null, config);
+		Class.forName("net.hydromatic.optiq.jdbc.Driver");
+		File olapTmp = OLAPSchemaFactory.createTempOLAPJson(null, config);
 
-        Connection conn = null;
-        Statement stmt = null;
-        ResultSet rs = null;
-        try {
-            conn = DriverManager.getConnection("jdbc:optiq:model=" + olapTmp.getAbsolutePath());
+		Connection conn = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			conn = DriverManager.getConnection("jdbc:optiq:model="
+					+ olapTmp.getAbsolutePath());
 
-            stmt = conn.createStatement();
-            rs = stmt.executeQuery(sql);
-            int n = 0;
-            ResultSetMetaData meta = rs.getMetaData();
-            while (rs.next()) {
-                n++;
-                for (int i = 1; i <= meta.getColumnCount(); i++) {
-                    System.out.println(n + " - " + meta.getColumnLabel(i) + ":\t" + rs.getObject(i));
-                }
-            }
-        } finally {
-            if (rs != null) {
-                rs.close();
-            }
-            if (stmt != null) {
-                stmt.close();
-            }
-            if (conn != null) {
-                conn.close();
-            }
-        }
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(sql);
+			int n = 0;
+			ResultSetMetaData meta = rs.getMetaData();
+			while (rs.next()) {
+				n++;
+				for (int i = 1; i <= meta.getColumnCount(); i++) {
+					System.out.println(n + " - " + meta.getColumnLabel(i)
+							+ ":\t" + rs.getObject(i));
+				}
+			}
+		} finally {
+			if (rs != null) {
+				rs.close();
+			}
+			if (stmt != null) {
+				stmt.close();
+			}
+			if (conn != null) {
+				conn.close();
+			}
+		}
 
-    }
+	}
 }

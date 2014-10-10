@@ -24,50 +24,53 @@ import java.util.List;
  * @author xjiang
  */
 public class DatabaseDesc {
-    private String name;
+	private String name;
 
-    /**
-     * @return the name
-     */
-    public String getName() {
-        return name.toUpperCase();
-    }
+	/**
+	 * @return the name
+	 */
+	public String getName() {
+		return name.toUpperCase();
+	}
 
-    /**
-     * @param name the name to set
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
+	/**
+	 * @param name
+	 *            the name to set
+	 */
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    /* (non-Javadoc)
-     * @see java.lang.Object#toString()
-     */
-    @Override
-    public String toString() {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
 
+		return "DatabaseDesc [name=" + name + "]";
+	}
 
-        return "DatabaseDesc [name=" + name + "]";
-    }
+	public static HashMap<String, Integer> extractDatabaseOccurenceCounts(
+			List<TableDesc> tables) {
+		HashMap<String, Integer> databaseCounts = new HashMap<String, Integer>();
+		for (TableDesc tableDesc : tables) {
+			String databaseName = tableDesc.getDatabase();
+			Integer counter = databaseCounts.get(databaseName);
+			if (counter != null)
+				databaseCounts.put(databaseName, counter + 1);
+			else
+				databaseCounts.put(databaseName, 1);
+		}
+		return databaseCounts;
+	}
 
-    public static HashMap<String, Integer> extractDatabaseOccurenceCounts(List<TableDesc> tables) {
-        HashMap<String, Integer> databaseCounts = new HashMap<String, Integer>();
-        for (TableDesc tableDesc : tables) {
-            String databaseName = tableDesc.getDatabase();
-            Integer counter = databaseCounts.get(databaseName);
-            if (counter != null)
-                databaseCounts.put(databaseName, counter + 1);
-            else
-                databaseCounts.put(databaseName, 1);
-        }
-        return databaseCounts;
-    }
-
-    public static HashSet<String> extractDatabaseNames(List<TableDesc> tables) {
-        HashSet<String> databaseNames = new HashSet<String>();
-        for (TableDesc tableDesc : tables) {
-            databaseNames.add(tableDesc.getDatabase());
-        }
-        return databaseNames;
-    }
+	public static HashSet<String> extractDatabaseNames(List<TableDesc> tables) {
+		HashSet<String> databaseNames = new HashSet<String>();
+		for (TableDesc tableDesc : tables) {
+			databaseNames.add(tableDesc.getDatabase());
+		}
+		return databaseNames;
+	}
 }

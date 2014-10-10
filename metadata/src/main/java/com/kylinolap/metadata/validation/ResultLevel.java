@@ -18,18 +18,19 @@ package com.kylinolap.metadata.validation;
 
 /**
  * Validation result level
+ * 
  * @author jianliu
- *
+ * 
  */
 public enum ResultLevel {
-    ERROR("ERROR"), WARN("WARN");
-    private String level;
+	ERROR("ERROR"), WARN("WARN");
+	private String level;
 
-    ResultLevel(String level) {
-        this.level = level;
-    }
+	ResultLevel(String level) {
+		this.level = level;
+	}
 
-    public String toString() {
-        return level;
-    }
+	public String toString() {
+		return level;
+	}
 }

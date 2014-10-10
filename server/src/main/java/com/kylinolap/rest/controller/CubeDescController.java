@@ -31,36 +31,38 @@ import com.kylinolap.rest.service.CubeService;
 
 /**
  * @author xduo
- *
+ * 
  */
 @Controller
 @RequestMapping(value = "/cube_desc")
 public class CubeDescController {
 
-    @Autowired
-    private CubeService cubeService;
+	@Autowired
+	private CubeService cubeService;
 
-    /**
-     * Get detail information of the "Cube ID"
-     *
-     * @param cubeDescName Cube ID
-     * @return
-     * @throws IOException
-     */
-    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET })
-    @ResponseBody
-    public CubeDesc[] getCube(@PathVariable String cubeName) {
-        CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
-        CubeDesc cSchema = cubeInstance.getDescriptor();
-        if (cSchema != null) {
-            return new CubeDesc[] { cSchema };
-        } else {
-            return null;
-        }
-    }
+	/**
+	 * Get detail information of the "Cube ID"
+	 * 
+	 * @param cubeDescName
+	 *            Cube ID
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET })
+	@ResponseBody
+	public CubeDesc[] getCube(@PathVariable String cubeName) {
+		CubeInstance cubeInstance = cubeService.getCubeManager().getCube(
+				cubeName);
+		CubeDesc cSchema = cubeInstance.getDescriptor();
+		if (cSchema != null) {
+			return new CubeDesc[] { cSchema };
+		} else {
+			return null;
+		}
+	}
 
-    public void setCubeService(CubeService cubeService) {
-        this.cubeService = cubeService;
-    }
+	public void setCubeService(CubeService cubeService) {
+		this.cubeService = cubeService;
+	}
 
 }

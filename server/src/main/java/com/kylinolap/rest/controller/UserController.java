@@ -29,44 +29,47 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.kylinolap.rest.service.UserService;
 
 /**
- * Handle user authentication request to protected kylin rest resources by spring security.
+ * Handle user authentication request to protected kylin rest resources by
+ * spring security.
  * 
  * @author xduo
- *
+ * 
  */
 @Controller
 @RequestMapping(value = "/user")
 public class UserController {
 
-    @Autowired
-    UserService userService;
+	@Autowired
+	UserService userService;
 
-    @RequestMapping(value = "/authentication", method = RequestMethod.POST, produces = "application/json")
-    public UserDetails authenticate() {
-        UserDetails user = authenticatedUser();
+	@RequestMapping(value = "/authentication", method = RequestMethod.POST, produces = "application/json")
+	public UserDetails authenticate() {
+		UserDetails user = authenticatedUser();
 
-        try {
-            userService.hit(user.getUsername());
-        } catch (Exception e) {
-        }
+		try {
+			userService.hit(user.getUsername());
+		} catch (Exception e) {
+		}
 
-        return user;
-    }
+		return user;
+	}
 
-    @RequestMapping(value = "/authentication", method = RequestMethod.GET, produces = "application/json")
-    public UserDetails authenticatedUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+	@RequestMapping(value = "/authentication", method = RequestMethod.GET, produces = "application/json")
+	public UserDetails authenticatedUser() {
+		Authentication authentication = SecurityContextHolder.getContext()
+				.getAuthentication();
 
-        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails)) {
-            return null;
-        }
+		if (authentication == null
+				|| !(authentication.getPrincipal() instanceof UserDetails)) {
+			return null;
+		}
 
-        return (UserDetails) authentication.getPrincipal();
-    }
+		return (UserDetails) authentication.getPrincipal();
+	}
 
-    @RequestMapping(value = "/authentication/authorities", method = RequestMethod.GET, produces = "application/json")
-    public List<String> getAuthorities() {
-        return userService.getUserAuthorities();
-    }
+	@RequestMapping(value = "/authentication/authorities", method = RequestMethod.GET, produces = "application/json")
+	public List<String> getAuthorities() {
+		return userService.getUserAuthorities();
+	}
 
 }

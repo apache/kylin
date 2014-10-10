@@ -20,11 +20,11 @@ import com.kylinolap.job.exception.JobException;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public interface IJobCommand {
 
-    public ICommandOutput execute() throws JobException;
+	public ICommandOutput execute() throws JobException;
 
-    public void cancel() throws JobException;
+	public void cancel() throws JobException;
 }

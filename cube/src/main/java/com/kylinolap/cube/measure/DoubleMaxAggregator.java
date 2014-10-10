@@ -20,33 +20,33 @@ import org.apache.hadoop.io.DoubleWritable;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class DoubleMaxAggregator extends MeasureAggregator<DoubleWritable> {
 
-    DoubleWritable max = null;
+	DoubleWritable max = null;
 
-    @Override
-    public void reset() {
-        max = null;
-    }
+	@Override
+	public void reset() {
+		max = null;
+	}
 
-    @Override
-    public void aggregate(DoubleWritable value) {
-        if (max == null)
-            max = new DoubleWritable(value.get());
-        else if (max.get() < value.get())
-            max.set(value.get());
-    }
+	@Override
+	public void aggregate(DoubleWritable value) {
+		if (max == null)
+			max = new DoubleWritable(value.get());
+		else if (max.get() < value.get())
+			max.set(value.get());
+	}
 
-    @Override
-    public DoubleWritable getState() {
-        return max;
-    }
+	@Override
+	public DoubleWritable getState() {
+		return max;
+	}
 
-    @Override
-    public int getMemBytes() {
-        return guessDoubleMemBytes();
-    }
+	@Override
+	public int getMemBytes() {
+		return guessDoubleMemBytes();
+	}
 
 }

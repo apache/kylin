@@ -38,66 +38,70 @@ import com.kylinolap.rest.service.TestBase;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class JobControllerTest extends TestBase {
 
-    private JobController jobSchedulerController;
-    private CubeController cubeController;
-    @Autowired
-    JobService jobService;
+	private JobController jobSchedulerController;
+	private CubeController cubeController;
+	@Autowired
+	JobService jobService;
 
-    @Autowired
-    CubeService cubeService;
+	@Autowired
+	CubeService cubeService;
 
-    @BeforeClass
-    public static void setupResource() throws Exception {
-        Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", "ROLE_ADMIN");
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-    }
+	@BeforeClass
+	public static void setupResource() throws Exception {
+		Authentication authentication = new TestingAuthenticationToken("ADMIN",
+				"ADMIN", "ROLE_ADMIN");
+		SecurityContextHolder.getContext().setAuthentication(authentication);
+	}
 
-    @Before
-    public void setup() throws Exception {
-        super.setUp();
+	@Before
+	public void setup() throws Exception {
+		super.setUp();
 
-        jobSchedulerController = new JobController();
-        jobSchedulerController.setJobService(jobService);
-        cubeController = new CubeController();
-        cubeController.setJobService(jobService);
-        cubeController.setCubeService(cubeService);
-    }
+		jobSchedulerController = new JobController();
+		jobSchedulerController.setJobService(jobService);
+		cubeController = new CubeController();
+		cubeController.setJobService(jobService);
+		cubeController.setCubeService(cubeService);
+	}
 
-    @Test
-    public void testBasics() throws IOException {
-        JobListRequest jobRequest = new JobListRequest();
-        Assert.assertNotNull(jobSchedulerController.list(jobRequest));
+	@Test
+	public void testBasics() throws IOException {
+		JobListRequest jobRequest = new JobListRequest();
+		Assert.assertNotNull(jobSchedulerController.list(jobRequest));
 
-        JobInstance job = null;
-        try {
-            JobBuildRequest jobBuildRequest = new JobBuildRequest();
-            jobBuildRequest.setBuildType("BUILD");
-            jobBuildRequest.setStartTime(1386806400000L);
-            jobBuildRequest.setEndTime(new Date().getTime());
-            job = cubeController.rebuild("test_kylin_cube_with_slr_ready", jobBuildRequest);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+		JobInstance job = null;
+		try {
+			JobBuildRequest jobBuildRequest = new JobBuildRequest();
+			jobBuildRequest.setBuildType("BUILD");
+			jobBuildRequest.setStartTime(1386806400000L);
+			jobBuildRequest.setEndTime(new Date().getTime());
+			job = cubeController.rebuild("test_kylin_cube_with_slr_ready",
+					jobBuildRequest);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
-        Assert.assertNotNull(jobSchedulerController.get(job.getId()));
-        Map<String, String> output = jobSchedulerController.getStepOutput(job.getId(), 0);
-        Assert.assertNotNull(output);
+		Assert.assertNotNull(jobSchedulerController.get(job.getId()));
+		Map<String, String> output = jobSchedulerController.getStepOutput(
+				job.getId(), 0);
+		Assert.assertNotNull(output);
 
-        //        jobSchedulerController.cancel(job.getId());
-    }
+		// jobSchedulerController.cancel(job.getId());
+	}
 
-    @Test(expected = RuntimeException.class)
-    public void testResume() throws IOException {
-        JobBuildRequest jobBuildRequest = new JobBuildRequest();
-        jobBuildRequest.setBuildType("BUILD");
-        jobBuildRequest.setStartTime(20130331080000L);
-        jobBuildRequest.setEndTime(20131212080000L);
-        JobInstance job = cubeController.rebuild("test_kylin_cube_with_slr_ready", jobBuildRequest);
+	@Test(expected = RuntimeException.class)
+	public void testResume() throws IOException {
+		JobBuildRequest jobBuildRequest = new JobBuildRequest();
+		jobBuildRequest.setBuildType("BUILD");
+		jobBuildRequest.setStartTime(20130331080000L);
+		jobBuildRequest.setEndTime(20131212080000L);
+		JobInstance job = cubeController.rebuild(
+				"test_kylin_cube_with_slr_ready", jobBuildRequest);
 
-        jobSchedulerController.resume(job.getId());
-    }
+		jobSchedulerController.resume(job.getId());
+	}
 }

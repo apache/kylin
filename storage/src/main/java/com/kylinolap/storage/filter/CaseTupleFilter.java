@@ -25,86 +25,86 @@ import com.kylinolap.storage.tuple.ITuple;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class CaseTupleFilter extends TupleFilter {
 
-    private List<TupleFilter> whenFilters;
-    private List<TupleFilter> thenFilters;
-    private TupleFilter elseFilter;
-    private Collection<String> values;
-    private int filterIndex;
+	private List<TupleFilter> whenFilters;
+	private List<TupleFilter> thenFilters;
+	private TupleFilter elseFilter;
+	private Collection<String> values;
+	private int filterIndex;
 
-    public CaseTupleFilter() {
-        super(new ArrayList<TupleFilter>(), FilterOperatorEnum.CASE);
-        this.filterIndex = 0;
-        this.values = Collections.emptyList();
-        this.whenFilters = new ArrayList<TupleFilter>();
-        this.thenFilters = new ArrayList<TupleFilter>();
-        this.elseFilter = null;
-    }
+	public CaseTupleFilter() {
+		super(new ArrayList<TupleFilter>(), FilterOperatorEnum.CASE);
+		this.filterIndex = 0;
+		this.values = Collections.emptyList();
+		this.whenFilters = new ArrayList<TupleFilter>();
+		this.thenFilters = new ArrayList<TupleFilter>();
+		this.elseFilter = null;
+	}
 
-    @Override
-    public void addChild(TupleFilter child) {
-        super.addChild(child);
-        if (this.filterIndex % 2 == 0) {
-            this.whenFilters.add(child);
-        } else {
-            this.thenFilters.add(child);
-        }
-        this.filterIndex++;
-    }
+	@Override
+	public void addChild(TupleFilter child) {
+		super.addChild(child);
+		if (this.filterIndex % 2 == 0) {
+			this.whenFilters.add(child);
+		} else {
+			this.thenFilters.add(child);
+		}
+		this.filterIndex++;
+	}
 
-    @Override
-    public String toString() {
-        return "CaseTupleFilter [when=" + whenFilters + ", then=" + thenFilters + ", else=" + elseFilter
-                + ", children=" + children + "]";
-    }
+	@Override
+	public String toString() {
+		return "CaseTupleFilter [when=" + whenFilters + ", then=" + thenFilters
+				+ ", else=" + elseFilter + ", children=" + children + "]";
+	}
 
-    @Override
-    public boolean evaluate(ITuple tuple) {
-        if (whenFilters.size() != thenFilters.size()) {
-            elseFilter = whenFilters.remove(whenFilters.size() - 1);
-        }
-        boolean matched = false;
-        for (int i = 0; i < whenFilters.size(); i++) {
-            TupleFilter whenFilter = whenFilters.get(i);
-            if (whenFilter.evaluate(tuple)) {
-                TupleFilter thenFilter = thenFilters.get(i);
-                thenFilter.evaluate(tuple);
-                values = thenFilter.getValues();
-                matched = true;
-                break;
-            }
-        }
-        if (!matched) {
-            if (elseFilter != null) {
-                elseFilter.evaluate(tuple);
-                values = elseFilter.getValues();
-            } else {
-                values = Collections.emptyList();
-            }
-        }
+	@Override
+	public boolean evaluate(ITuple tuple) {
+		if (whenFilters.size() != thenFilters.size()) {
+			elseFilter = whenFilters.remove(whenFilters.size() - 1);
+		}
+		boolean matched = false;
+		for (int i = 0; i < whenFilters.size(); i++) {
+			TupleFilter whenFilter = whenFilters.get(i);
+			if (whenFilter.evaluate(tuple)) {
+				TupleFilter thenFilter = thenFilters.get(i);
+				thenFilter.evaluate(tuple);
+				values = thenFilter.getValues();
+				matched = true;
+				break;
+			}
+		}
+		if (!matched) {
+			if (elseFilter != null) {
+				elseFilter.evaluate(tuple);
+				values = elseFilter.getValues();
+			} else {
+				values = Collections.emptyList();
+			}
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    @Override
-    public boolean isEvaluable() {
-        return false;
-    }
+	@Override
+	public boolean isEvaluable() {
+		return false;
+	}
 
-    @Override
-    public Collection<String> getValues() {
-        return this.values;
-    }
+	@Override
+	public Collection<String> getValues() {
+		return this.values;
+	}
 
-    @Override
-    public byte[] serialize() {
-        return new byte[0];
-    }
+	@Override
+	public byte[] serialize() {
+		return new byte[0];
+	}
 
-    @Override
-    public void deserialize(byte[] bytes) {
-    }
+	@Override
+	public void deserialize(byte[] bytes) {
+	}
 }

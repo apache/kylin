@@ -26,85 +26,86 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class TableSignature {
 
-    @JsonProperty("path")
-    private String path;
-    @JsonProperty("size")
-    private long size;
-    @JsonProperty("last_modified_time")
-    private long lastModifiedTime;
+	@JsonProperty("path")
+	private String path;
+	@JsonProperty("size")
+	private long size;
+	@JsonProperty("last_modified_time")
+	private long lastModifiedTime;
 
-    // for JSON serialization
-    public TableSignature() {
-    }
+	// for JSON serialization
+	public TableSignature() {
+	}
 
-    public TableSignature(String path, long size, long lastModifiedTime) {
-        super();
-        this.path = path;
-        this.size = size;
-        this.lastModifiedTime = lastModifiedTime;
-    }
+	public TableSignature(String path, long size, long lastModifiedTime) {
+		super();
+		this.path = path;
+		this.size = size;
+		this.lastModifiedTime = lastModifiedTime;
+	}
 
-    public void setPath(String path) {
-        this.path = path;
-    }
+	public void setPath(String path) {
+		this.path = path;
+	}
 
-    public void setSize(long size) {
-        this.size = size;
-    }
+	public void setSize(long size) {
+		this.size = size;
+	}
 
-    public void setLastModifiedTime(long lastModifiedTime) {
-        this.lastModifiedTime = lastModifiedTime;
-    }
+	public void setLastModifiedTime(long lastModifiedTime) {
+		this.lastModifiedTime = lastModifiedTime;
+	}
 
-    public String getPath() {
-        return path;
-    }
+	public String getPath() {
+		return path;
+	}
 
-    public long getSize() {
-        return size;
-    }
+	public long getSize() {
+		return size;
+	}
 
-    public long getLastModifiedTime() {
-        return lastModifiedTime;
-    }
+	public long getLastModifiedTime() {
+		return lastModifiedTime;
+	}
 
-    // ============================================================================
+	// ============================================================================
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + (int) (lastModifiedTime ^ (lastModifiedTime >>> 32));
-        result = prime * result + ((path == null) ? 0 : path.hashCode());
-        result = prime * result + (int) (size ^ (size >>> 32));
-        return result;
-    }
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ (int) (lastModifiedTime ^ (lastModifiedTime >>> 32));
+		result = prime * result + ((path == null) ? 0 : path.hashCode());
+		result = prime * result + (int) (size ^ (size >>> 32));
+		return result;
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        TableSignature other = (TableSignature) obj;
-        if (lastModifiedTime != other.lastModifiedTime)
-            return false;
-        if (path == null) {
-            if (other.path != null)
-                return false;
-        } else if (!path.equals(other.path))
-            return false;
-        if (size != other.size)
-            return false;
-        return true;
-    }
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		TableSignature other = (TableSignature) obj;
+		if (lastModifiedTime != other.lastModifiedTime)
+			return false;
+		if (path == null) {
+			if (other.path != null)
+				return false;
+		} else if (!path.equals(other.path))
+			return false;
+		if (size != other.size)
+			return false;
+		return true;
+	}
 
-    @Override
-    public String toString() {
-        return "FileSignature [path=" + path + ", size=" + size + ", lastModifiedTime=" + lastModifiedTime
-                + "]";
-    }
+	@Override
+	public String toString() {
+		return "FileSignature [path=" + path + ", size=" + size
+				+ ", lastModifiedTime=" + lastModifiedTime + "]";
+	}
 
 }

@@ -26,92 +26,93 @@ import com.kylinolap.storage.tuple.Tuple.IDerivedColumnFiller;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public class TupleInfo {
 
-    private final Map<String, Integer> fieldMap;
-    private final Map<TblColRef, Integer> columnMap;
-    private final List<String> fields;
-    private final List<TblColRef> columns;
-    private final List<String> dataTypes;
-    private final List<IDerivedColumnFiller> derivedColumnFillers;
+	private final Map<String, Integer> fieldMap;
+	private final Map<TblColRef, Integer> columnMap;
+	private final List<String> fields;
+	private final List<TblColRef> columns;
+	private final List<String> dataTypes;
+	private final List<IDerivedColumnFiller> derivedColumnFillers;
 
-    public TupleInfo() {
-        fieldMap = new HashMap<String, Integer>();
-        columnMap = new HashMap<TblColRef, Integer>();
-        fields = new ArrayList<String>();
-        columns = new ArrayList<TblColRef>();
-        dataTypes = new ArrayList<String>();
-        derivedColumnFillers = new ArrayList<IDerivedColumnFiller>();
-    }
+	public TupleInfo() {
+		fieldMap = new HashMap<String, Integer>();
+		columnMap = new HashMap<TblColRef, Integer>();
+		fields = new ArrayList<String>();
+		columns = new ArrayList<TblColRef>();
+		dataTypes = new ArrayList<String>();
+		derivedColumnFillers = new ArrayList<IDerivedColumnFiller>();
+	}
 
-    public TblColRef getColumn(String fieldName) {
-        int idx = getFieldIndex(fieldName);
-        return columns.get(idx);
-    }
+	public TblColRef getColumn(String fieldName) {
+		int idx = getFieldIndex(fieldName);
+		return columns.get(idx);
+	}
 
-    public int getColumnIndex(TblColRef col) {
-        return columnMap.get(col);
-    }
+	public int getColumnIndex(TblColRef col) {
+		return columnMap.get(col);
+	}
 
-    public String getDataType(String fieldName) {
-        int idx = getFieldIndex(fieldName);
-        return dataTypes.get(idx);
-    }
+	public String getDataType(String fieldName) {
+		int idx = getFieldIndex(fieldName);
+		return dataTypes.get(idx);
+	}
 
-    public int getFieldIndex(String fieldName) {
-        return fieldMap.get(fieldName);
-    }
+	public int getFieldIndex(String fieldName) {
+		return fieldMap.get(fieldName);
+	}
 
-    public String getFieldName(TblColRef col) {
-        int idx = columnMap.get(col);
-        return fields.get(idx);
-    }
+	public String getFieldName(TblColRef col) {
+		int idx = columnMap.get(col);
+		return fields.get(idx);
+	}
 
-    public boolean hasColumn(TblColRef col) {
-        return columnMap.containsKey(col);
-    }
+	public boolean hasColumn(TblColRef col) {
+		return columnMap.containsKey(col);
+	}
 
-    public void setField(String fieldName, TblColRef col, String dataType, int index) {
-        fieldMap.put(fieldName, index);
-        if (col != null)
-            columnMap.put(col, index);
+	public void setField(String fieldName, TblColRef col, String dataType,
+			int index) {
+		fieldMap.put(fieldName, index);
+		if (col != null)
+			columnMap.put(col, index);
 
-        if (fields.size() > index)
-            fields.set(index, fieldName);
-        else
-            fields.add(index, fieldName);
+		if (fields.size() > index)
+			fields.set(index, fieldName);
+		else
+			fields.add(index, fieldName);
 
-        if (columns.size() > index)
-            columns.set(index, col);
-        else
-            columns.add(index, col);
+		if (columns.size() > index)
+			columns.set(index, col);
+		else
+			columns.add(index, col);
 
-        if (dataTypes.size() > index)
-            dataTypes.set(index, dataType);
-        else
-            dataTypes.add(index, dataType);
-    }
+		if (dataTypes.size() > index)
+			dataTypes.set(index, dataType);
+		else
+			dataTypes.add(index, dataType);
+	}
 
-    public int size() {
-        return fields.size();
-    }
+	public int size() {
+		return fields.size();
+	}
 
-    public List<String> getAllFields() {
-        return fields;
-    }
+	public List<String> getAllFields() {
+		return fields;
+	}
 
-    public List<TblColRef> getAllColumns() {
-        return columns;
-    }
+	public List<TblColRef> getAllColumns() {
+		return columns;
+	}
 
-    public void addDerivedColumnFiller(IDerivedColumnFiller derivedColumnFiller) {
-        derivedColumnFillers.add(derivedColumnFiller);
-    }
+	public void addDerivedColumnFiller(IDerivedColumnFiller derivedColumnFiller) {
+		derivedColumnFillers.add(derivedColumnFiller);
+	}
 
-    public List<IDerivedColumnFiller> getDerivedColumnFillers() {
-        return derivedColumnFillers;
-    }
+	public List<IDerivedColumnFiller> getDerivedColumnFillers() {
+		return derivedColumnFillers;
+	}
 
 }

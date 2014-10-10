@@ -17,6 +17,6 @@ package com.kylinolap.cube;
 
 public enum CubeStatusEnum {
 
-    DISABLED, BUILDING, READY, DESCBROKEN
+	DISABLED, BUILDING, READY, DESCBROKEN
 
 }

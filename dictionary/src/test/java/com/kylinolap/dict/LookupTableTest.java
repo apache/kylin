@@ -34,44 +34,45 @@ import com.kylinolap.metadata.model.schema.TableDesc;
  */
 public class LookupTableTest extends LocalFileMetadataTestCase {
 
-    @Before
-    public void setup() throws Exception {
-        createTestMetadata();
-    }
+	@Before
+	public void setup() throws Exception {
+		createTestMetadata();
+	}
 
-    @After
-    public void after() throws Exception {
-        cleanupTestMetadata();
-    }
+	@After
+	public void after() throws Exception {
+		cleanupTestMetadata();
+	}
 
-    @Test
-    public void testBasic() throws Exception {
-        TableDesc siteTable =
-                MetadataManager.getInstance(this.getTestConfig()).getTableDesc("TEST_SITES");
-        TableDesc categoryTable =
-                MetadataManager.getInstance(this.getTestConfig())
-                        .getTableDesc("test_category_groupings");
-        LookupBytesTable lookup;
+	@Test
+	public void testBasic() throws Exception {
+		TableDesc siteTable = MetadataManager.getInstance(this.getTestConfig())
+				.getTableDesc("TEST_SITES");
+		TableDesc categoryTable = MetadataManager.getInstance(
+				this.getTestConfig()).getTableDesc("test_category_groupings");
+		LookupBytesTable lookup;
 
-        System.out.println("============================================================================");
+		System.out
+				.println("============================================================================");
 
-        lookup =
-                new LookupBytesTable(siteTable, new String[] { "SITE_ID" }, new FileTable(this.testDataFolder
-                        + "/data/TEST_SITES.csv", 10));
-        lookup.dump();
+		lookup = new LookupBytesTable(siteTable, new String[] { "SITE_ID" },
+				new FileTable(this.testDataFolder + "/data/TEST_SITES.csv", 10));
+		lookup.dump();
 
-        System.out.println("============================================================================");
+		System.out
+				.println("============================================================================");
 
-        lookup =
-                new LookupBytesTable(categoryTable, new String[] { "leaf_categ_id", "site_id" },
-                        new FileTable(this.testDataFolder + "/data/TEST_CATEGORY_GROUPINGS.csv", 36));
-        lookup.dump();
+		lookup = new LookupBytesTable(categoryTable, new String[] {
+				"leaf_categ_id", "site_id" }, new FileTable(this.testDataFolder
+				+ "/data/TEST_CATEGORY_GROUPINGS.csv", 36));
+		lookup.dump();
 
-        System.out.println("============================================================================");
+		System.out
+				.println("============================================================================");
 
-        ByteArray k1 = new ByteArray(Bytes.toBytes("533"));
-        ByteArray k2 = new ByteArray(Bytes.toBytes("0"));
-        Array<ByteArray> key = new Array<ByteArray>(new ByteArray[] { k1, k2 });
-        System.out.println(lookup.getRow(key));
-    }
+		ByteArray k1 = new ByteArray(Bytes.toBytes("533"));
+		ByteArray k2 = new ByteArray(Bytes.toBytes("0"));
+		Array<ByteArray> key = new Array<ByteArray>(new ByteArray[] { k1, k2 });
+		System.out.println(lookup.getRow(key));
+	}
 }

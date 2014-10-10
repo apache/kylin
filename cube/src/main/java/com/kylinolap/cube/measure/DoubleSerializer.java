@@ -23,31 +23,31 @@ import org.apache.hadoop.io.DoubleWritable;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class DoubleSerializer extends MeasureSerializer<DoubleWritable> {
 
-    // avoid mass object creation
-    DoubleWritable current = new DoubleWritable();
+	// avoid mass object creation
+	DoubleWritable current = new DoubleWritable();
 
-    @Override
-    public void serialize(DoubleWritable value, ByteBuffer out) {
-        out.putDouble(value.get());
-    }
+	@Override
+	public void serialize(DoubleWritable value, ByteBuffer out) {
+		out.putDouble(value.get());
+	}
 
-    @Override
-    public DoubleWritable deserialize(ByteBuffer in) {
-        current.set(in.getDouble());
-        return current;
-    }
+	@Override
+	public DoubleWritable deserialize(ByteBuffer in) {
+		current.set(in.getDouble());
+		return current;
+	}
 
-    @Override
-    public DoubleWritable valueOf(byte[] value) {
-        if (value == null)
-            current.set(0d);
-        else
-            current.set(Double.parseDouble(Bytes.toString(value)));
-        return current;
-    }
+	@Override
+	public DoubleWritable valueOf(byte[] value) {
+		if (value == null)
+			current.set(0d);
+		else
+			current.set(Double.parseDouble(Bytes.toString(value)));
+		return current;
+	}
 
 }

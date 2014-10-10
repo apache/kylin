@@ -20,85 +20,85 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 
-import org.apache.hadoop.hbase.util.Bytes;
-
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.storage.tuple.ITuple;
 
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public class ConstantTupleFilter extends TupleFilter {
 
-    public static final ConstantTupleFilter FALSE = new ConstantTupleFilter();
-    public static final ConstantTupleFilter TRUE = new ConstantTupleFilter("TRUE");
+	public static final ConstantTupleFilter FALSE = new ConstantTupleFilter();
+	public static final ConstantTupleFilter TRUE = new ConstantTupleFilter(
+			"TRUE");
 
-    private Collection<String> constantValues;
+	private Collection<String> constantValues;
 
-    public ConstantTupleFilter() {
-        super(Collections.<TupleFilter> emptyList(), FilterOperatorEnum.CONSTANT);
-        this.constantValues = new HashSet<String>();
-    }
+	public ConstantTupleFilter() {
+		super(Collections.<TupleFilter> emptyList(),
+				FilterOperatorEnum.CONSTANT);
+		this.constantValues = new HashSet<String>();
+	}
 
-    public ConstantTupleFilter(String value) {
-        this();
-        this.constantValues.add(value);
-    }
+	public ConstantTupleFilter(String value) {
+		this();
+		this.constantValues.add(value);
+	}
 
-    public ConstantTupleFilter(Collection<String> values) {
-        this();
-        this.constantValues.addAll(values);
-    }
+	public ConstantTupleFilter(Collection<String> values) {
+		this();
+		this.constantValues.addAll(values);
+	}
 
-    @Override
-    public void addChild(TupleFilter child) {
-        throw new UnsupportedOperationException("This is " + this + " and child is " + child);
-    }
+	@Override
+	public void addChild(TupleFilter child) {
+		throw new UnsupportedOperationException("This is " + this
+				+ " and child is " + child);
+	}
 
-    @Override
-    public String toString() {
-        return "ConstantFilter [constant=" + constantValues + "]";
-    }
+	@Override
+	public String toString() {
+		return "ConstantFilter [constant=" + constantValues + "]";
+	}
 
-    @Override
-    public boolean evaluate(ITuple tuple) {
-        return constantValues.size() > 0;
-    }
+	@Override
+	public boolean evaluate(ITuple tuple) {
+		return constantValues.size() > 0;
+	}
 
-    @Override
-    public boolean isEvaluable() {
-        return true;
-    }
+	@Override
+	public boolean isEvaluable() {
+		return true;
+	}
 
-    @Override
-    public Collection<String> getValues() {
-        return this.constantValues;
-    }
+	@Override
+	public Collection<String> getValues() {
+		return this.constantValues;
+	}
 
-    @Override
-    public byte[] serialize() {
-        ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
-        int size = this.constantValues.size();
-        BytesUtil.writeVInt(size, buffer);
-        for (String val : this.constantValues) {
-            BytesUtil.writeByteArray(Bytes.toBytes(val), buffer);
-        }
-        byte[] result = new byte[buffer.position()];
-        System.arraycopy(buffer.array(), 0, result, 0, buffer.position());
-        return result;
-    }
+	@Override
+	public byte[] serialize() {
+		ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+		int size = this.constantValues.size();
+		BytesUtil.writeVInt(size, buffer);
+		for (String val : this.constantValues) {
+			BytesUtil.writeUTFString(val, buffer);
+		}
+		byte[] result = new byte[buffer.position()];
+		System.arraycopy(buffer.array(), 0, result, 0, buffer.position());
+		return result;
+	}
 
-    @Override
-    public void deserialize(byte[] bytes) {
-        this.constantValues.clear();
-        ByteBuffer buffer = ByteBuffer.wrap(bytes);
-        int size = BytesUtil.readVInt(buffer);
-        for (int i = 0; i < size; i++) {
-            byte[] strBytes = BytesUtil.readByteArray(buffer);
-            this.constantValues.add(Bytes.toString(strBytes));
-        }
-    }
+	@Override
+	public void deserialize(byte[] bytes) {
+		this.constantValues.clear();
+		ByteBuffer buffer = ByteBuffer.wrap(bytes);
+		int size = BytesUtil.readVInt(buffer);
+		for (int i = 0; i < size; i++) {
+			this.constantValues.add(BytesUtil.readUTFString(buffer));
+		}
+	}
 
 }

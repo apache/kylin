@@ -25,67 +25,68 @@ import org.apache.commons.mail.HtmlEmail;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class MailService {
 
-    private String host = "atom.corp.ebay.com";
-    private String username = "_kylin_ldap";
-    private String password;
-    private String sender = "DL-eBay-Kylin@corp.ebay.com";
+	private String host = "atom.corp.ebay.com";
+	private String username = "_kylin_ldap";
+	private String password;
+	private String sender = "DL-eBay-Kylin@corp.ebay.com";
 
-    public String getHost() {
-        return host;
-    }
+	public String getHost() {
+		return host;
+	}
 
-    public void setHost(String host) {
-        this.host = host;
-    }
+	public void setHost(String host) {
+		this.host = host;
+	}
 
-    public String getUsername() {
-        return username;
-    }
+	public String getUsername() {
+		return username;
+	}
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+	public void setUsername(String username) {
+		this.username = username;
+	}
 
-    public String getPassword() {
-        return password;
-    }
+	public String getPassword() {
+		return password;
+	}
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+	public void setPassword(String password) {
+		this.password = password;
+	}
 
-    public String getSender() {
-        return sender;
-    }
+	public String getSender() {
+		return sender;
+	}
 
-    public void setSender(String sender) {
-        this.sender = sender;
-    }
+	public void setSender(String sender) {
+		this.sender = sender;
+	}
 
-    public void sendMail(List<String> receivers, String subject, String content) throws IOException {
+	public void sendMail(List<String> receivers, String subject, String content)
+			throws IOException {
 
-        Email email = new HtmlEmail();
-        email.setHostName(host);
-        email.setDebug(true);
-        try {
-            for (String receiver : receivers) {
-                email.addTo(receiver);
-            }
+		Email email = new HtmlEmail();
+		email.setHostName(host);
+		email.setDebug(true);
+		try {
+			for (String receiver : receivers) {
+				email.addTo(receiver);
+			}
 
-            email.setFrom(sender);
-            email.setSubject(subject);
-            email.setCharset("UTF-8");
-            ((HtmlEmail) email).setHtmlMsg(content);
-            email.send();
-            email.getMailSession();
+			email.setFrom(sender);
+			email.setSubject(subject);
+			email.setCharset("UTF-8");
+			((HtmlEmail) email).setHtmlMsg(content);
+			email.send();
+			email.getMailSession();
 
-            System.out.println("!!");
-        } catch (EmailException e) {
-            e.printStackTrace();
-        }
-    }
+			System.out.println("!!");
+		} catch (EmailException e) {
+			e.printStackTrace();
+		}
+	}
 }

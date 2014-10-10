@@ -38,37 +38,38 @@ import com.kylinolap.metadata.MetadataManager;
 
 /**
  * @author xduo
- *
+ * 
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:applicationContext-test.xml" })
 public class TestBase extends LocalFileMetadataTestCase {
 
-    @BeforeClass
-    public static void setupResource() throws Exception {
-        LocalFileMetadataTestCase baseTestCase = new LocalFileMetadataTestCase();
-        baseTestCase.createTestMetadata();
+	@BeforeClass
+	public static void setupResource() throws Exception {
+		LocalFileMetadataTestCase baseTestCase = new LocalFileMetadataTestCase();
+		baseTestCase.createTestMetadata();
 
-        Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", "ROLE_ADMIN");
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-    }
+		Authentication authentication = new TestingAuthenticationToken("ADMIN",
+				"ADMIN", "ROLE_ADMIN");
+		SecurityContextHolder.getContext().setAuthentication(authentication);
+	}
 
-    @Before
-    public void setUp() {
-        KylinConfig.destoryInstance();
-        this.createTestMetadata();
+	@Before
+	public void setUp() {
+		KylinConfig.destoryInstance();
+		this.createTestMetadata();
 
-        MetadataManager.removeInstance(getTestConfig());
-        CubeManager.removeInstance(this.getTestConfig());
-        ProjectManager.removeInstance(this.getTestConfig());
-    }
+		MetadataManager.removeInstance(getTestConfig());
+		CubeManager.removeInstance(this.getTestConfig());
+		ProjectManager.removeInstance(this.getTestConfig());
+	}
 
-    @After
-    public void after() throws Exception {
-        this.cleanupTestMetadata();
-    }
+	@After
+	public void after() throws Exception {
+		this.cleanupTestMetadata();
+	}
 
-    @Test
-    public void test() throws SchedulerException, IOException {
-    }
+	@Test
+	public void test() throws SchedulerException, IOException {
+	}
 }

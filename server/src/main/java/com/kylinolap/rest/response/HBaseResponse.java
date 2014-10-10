@@ -18,53 +18,56 @@ package com.kylinolap.rest.response;
 import java.io.Serializable;
 
 public class HBaseResponse implements Serializable {
-    private static final long serialVersionUID = 7263557115683263492L;
-    private String tableName;
-    private long tableSize;
-    private int regionCount;
+	private static final long serialVersionUID = 7263557115683263492L;
+	private String tableName;
+	private long tableSize;
+	private int regionCount;
 
-    public HBaseResponse() {
-    }
+	public HBaseResponse() {
+	}
 
-    /**
-     * @return The hbase table name.
-     */
-    public String getTableName() {
-        return tableName;
-    }
+	/**
+	 * @return The hbase table name.
+	 */
+	public String getTableName() {
+		return tableName;
+	}
 
-    /**
-     * @param tableName The hbase table name.
-     */
-    public void setTableName(String tableName) {
-        this.tableName = tableName;
-    }
+	/**
+	 * @param tableName
+	 *            The hbase table name.
+	 */
+	public void setTableName(String tableName) {
+		this.tableName = tableName;
+	}
 
-    /**
-     * @return the tableSize
-     */
-    public long getTableSize() {
-        return tableSize;
-    }
+	/**
+	 * @return the tableSize
+	 */
+	public long getTableSize() {
+		return tableSize;
+	}
 
-    /**
-     * @param tableSize the tableSize to set
-     */
-    public void setTableSize(long tableSize) {
-        this.tableSize = tableSize;
-    }
+	/**
+	 * @param tableSize
+	 *            the tableSize to set
+	 */
+	public void setTableSize(long tableSize) {
+		this.tableSize = tableSize;
+	}
 
-    /**
-     * @return the regionCount
-     */
-    public int getRegionCount() {
-        return regionCount;
-    }
+	/**
+	 * @return the regionCount
+	 */
+	public int getRegionCount() {
+		return regionCount;
+	}
 
-    /**
-     * @param regionCount the regionCount to set
-     */
-    public void setRegionCount(int regionCount) {
-        this.regionCount = regionCount;
-    }
+	/**
+	 * @param regionCount
+	 *            the regionCount to set
+	 */
+	public void setRegionCount(int regionCount) {
+		this.regionCount = regionCount;
+	}
 }

@@ -41,73 +41,78 @@ import com.kylinolap.metadata.model.cube.TblColRef;
 /**
  * @author yangli9
  */
-public class FactDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, Text, ShortWritable, Text> {
+public class FactDistinctColumnsMapper<KEYIN> extends
+		Mapper<KEYIN, Text, ShortWritable, Text> {
 
-    private String cubeName;
-    private CubeInstance cube;
-    private CubeDesc cubeDesc;
-    private int[] factDictCols;
+	private String cubeName;
+	private CubeInstance cube;
+	private CubeDesc cubeDesc;
+	private int[] factDictCols;
 
-    private JoinedFlatTableDesc intermediateTableDesc;
-    private String intermediateTableRowDelimiter;
-    private byte byteRowDelimiter;
-    private BytesSplitter bytesSplitter;
+	private JoinedFlatTableDesc intermediateTableDesc;
+	private String intermediateTableRowDelimiter;
+	private byte byteRowDelimiter;
+	private BytesSplitter bytesSplitter;
 
-    private ShortWritable outputKey = new ShortWritable();
-    private Text outputValue = new Text();
+	private ShortWritable outputKey = new ShortWritable();
+	private Text outputValue = new Text();
 
-    @Override
-    protected void setup(Context context) throws IOException {
-        Configuration conf = context.getConfiguration();
-        intermediateTableRowDelimiter =
-                conf.get(BatchConstants.CFG_CUBE_INTERMEDIATE_TABLE_ROW_DELIMITER,
-                        Character.toString(BatchConstants.INTERMEDIATE_TABLE_ROW_DELIMITER));
-        byteRowDelimiter = intermediateTableRowDelimiter.getBytes("UTF-8")[0];
-        bytesSplitter = new BytesSplitter(200, 4096);
+	@Override
+	protected void setup(Context context) throws IOException {
+		Configuration conf = context.getConfiguration();
+		intermediateTableRowDelimiter = conf
+				.get(BatchConstants.CFG_CUBE_INTERMEDIATE_TABLE_ROW_DELIMITER,
+						Character
+								.toString(BatchConstants.INTERMEDIATE_TABLE_ROW_DELIMITER));
+		byteRowDelimiter = intermediateTableRowDelimiter.getBytes("UTF-8")[0];
+		bytesSplitter = new BytesSplitter(200, 4096);
 
-        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
-        cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
-        cube = CubeManager.getInstance(config).getCube(cubeName);
-        cubeDesc = cube.getDescriptor();
-        intermediateTableDesc = new JoinedFlatTableDesc(cubeDesc, null);
+		KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
+		cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
+		cube = CubeManager.getInstance(config).getCube(cubeName);
+		cubeDesc = cube.getDescriptor();
+		intermediateTableDesc = new JoinedFlatTableDesc(cubeDesc, null);
 
-        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
-        List<TblColRef> columns = baseCuboid.getColumns();
+		long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
+		Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
+		List<TblColRef> columns = baseCuboid.getColumns();
 
-        ArrayList<Integer> factDictCols = new ArrayList<Integer>();
-        RowKeyDesc rowkey = cubeDesc.getRowkey();
-        DictionaryManager dictMgr = DictionaryManager.getInstance(config);
-        for (int i = 0; i < columns.size(); i++) {
-            TblColRef col = columns.get(i);
-            if (rowkey.isUseDictionary(col) == false)
-                continue;
+		ArrayList<Integer> factDictCols = new ArrayList<Integer>();
+		RowKeyDesc rowkey = cubeDesc.getRowkey();
+		DictionaryManager dictMgr = DictionaryManager.getInstance(config);
+		for (int i = 0; i < columns.size(); i++) {
+			TblColRef col = columns.get(i);
+			if (rowkey.isUseDictionary(col) == false)
+				continue;
 
-            String scanTable = (String) dictMgr.decideSourceData(cubeDesc, col, null)[0];
-            if (cubeDesc.isFactTable(scanTable)) {
-                System.out.println(col + " -- " + i);
-                factDictCols.add(i);
-            }
-        }
-        this.factDictCols = new int[factDictCols.size()];
-        for (int i = 0; i < factDictCols.size(); i++)
-            this.factDictCols[i] = factDictCols.get(i);
-    }
+			String scanTable = (String) dictMgr.decideSourceData(cubeDesc, col,
+					null)[0];
+			if (cubeDesc.isFactTable(scanTable)) {
+				System.out.println(col + " -- " + i);
+				factDictCols.add(i);
+			}
+		}
+		this.factDictCols = new int[factDictCols.size()];
+		for (int i = 0; i < factDictCols.size(); i++)
+			this.factDictCols[i] = factDictCols.get(i);
+	}
 
-    @Override
-    public void map(KEYIN key, Text value, Context context) throws IOException, InterruptedException {
+	@Override
+	public void map(KEYIN key, Text value, Context context) throws IOException,
+			InterruptedException {
 
-        bytesSplitter.split(value.getBytes(), value.getLength(), byteRowDelimiter);
-        SplittedBytes[] splitBuffers = bytesSplitter.getSplitBuffers();
+		bytesSplitter.split(value.getBytes(), value.getLength(),
+				byteRowDelimiter);
+		SplittedBytes[] splitBuffers = bytesSplitter.getSplitBuffers();
 
-        int[] flatTableIndexes = intermediateTableDesc.getRowKeyColumnIndexes();
-        for (int i : factDictCols) {
-            outputKey.set((short) i);
-            SplittedBytes bytes = splitBuffers[flatTableIndexes[i]];
-            outputValue.set(bytes.value, 0, bytes.length);
-            System.out.println(i + " -- " + outputValue);
-            context.write(outputKey, outputValue);
-        }
+		int[] flatTableIndexes = intermediateTableDesc.getRowKeyColumnIndexes();
+		for (int i : factDictCols) {
+			outputKey.set((short) i);
+			SplittedBytes bytes = splitBuffers[flatTableIndexes[i]];
+			outputValue.set(bytes.value, 0, bytes.length);
+			System.out.println(i + " -- " + outputValue);
+			context.write(outputKey, outputValue);
+		}
 
-    }
+	}
 }

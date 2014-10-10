@@ -35,75 +35,76 @@ import com.kylinolap.rest.service.UserService;
  * Admin Controller is defined as Restful API entrance for UI.
  * 
  * @author jianliu
- *
+ * 
  */
 @Controller
 @RequestMapping(value = "/admin")
 public class AdminController extends BasicController {
 
-    @Autowired
-    private AdminService adminService;
-    @Autowired
-    private CubeService cubeMgmtService;
-    @Autowired
-    private UserService userService;
+	@Autowired
+	private AdminService adminService;
+	@Autowired
+	private CubeService cubeMgmtService;
+	@Autowired
+	private UserService userService;
 
-    @RequestMapping(value = "/env", method = { RequestMethod.GET })
-    @ResponseBody
-    public GeneralResponse getEnv() {
-        String env = adminService.getEnv();
+	@RequestMapping(value = "/env", method = { RequestMethod.GET })
+	@ResponseBody
+	public GeneralResponse getEnv() {
+		String env = adminService.getEnv();
 
-        GeneralResponse envRes = new GeneralResponse();
-        envRes.put("env", env);
+		GeneralResponse envRes = new GeneralResponse();
+		envRes.put("env", env);
 
-        return envRes;
-    }
+		return envRes;
+	}
 
-    @RequestMapping(value = "/config", method = { RequestMethod.GET })
-    @ResponseBody
-    public GeneralResponse getConfig() {
-        String config = adminService.getConfigAsString();
+	@RequestMapping(value = "/config", method = { RequestMethod.GET })
+	@ResponseBody
+	public GeneralResponse getConfig() {
+		String config = adminService.getConfigAsString();
 
-        GeneralResponse configRes = new GeneralResponse();
-        configRes.put("config", config);
+		GeneralResponse configRes = new GeneralResponse();
+		configRes.put("config", config);
 
-        return configRes;
-    }
+		return configRes;
+	}
 
-    @RequestMapping(value = "/metrics/cubes", method = { RequestMethod.GET })
-    @ResponseBody
-    public MetricsResponse cubeMetrics(MetricsRequest request) {
-        return cubeMgmtService.calculateMetrics(request);
-    }
+	@RequestMapping(value = "/metrics/cubes", method = { RequestMethod.GET })
+	@ResponseBody
+	public MetricsResponse cubeMetrics(MetricsRequest request) {
+		return cubeMgmtService.calculateMetrics(request);
+	}
 
-    @RequestMapping(value = "/metrics/user", method = { RequestMethod.GET })
-    @ResponseBody
-    public MetricsResponse userMetrics(MetricsRequest request) {
-        return userService.calculateMetrics(request);
-    }
+	@RequestMapping(value = "/metrics/user", method = { RequestMethod.GET })
+	@ResponseBody
+	public MetricsResponse userMetrics(MetricsRequest request) {
+		return userService.calculateMetrics(request);
+	}
 
-    @RequestMapping(value = "/storage", method = { RequestMethod.DELETE })
-    @ResponseBody
-    public void cleanupStorage() {
-        adminService.cleanupStorage();
-    }
+	@RequestMapping(value = "/storage", method = { RequestMethod.DELETE })
+	@ResponseBody
+	public void cleanupStorage() {
+		adminService.cleanupStorage();
+	}
 
-    @RequestMapping(value = "/config", method = { RequestMethod.PUT })
-    public void updateKylinConfig(@RequestBody UpdateConfigRequest updateConfigRequest) {
-        KylinConfig.getInstanceFromEnv().setProperty(updateConfigRequest.getKey(),
-                updateConfigRequest.getValue());
-    }
+	@RequestMapping(value = "/config", method = { RequestMethod.PUT })
+	public void updateKylinConfig(
+			@RequestBody UpdateConfigRequest updateConfigRequest) {
+		KylinConfig.getInstanceFromEnv().setProperty(
+				updateConfigRequest.getKey(), updateConfigRequest.getValue());
+	}
 
-    public void setAdminService(AdminService adminService) {
-        this.adminService = adminService;
-    }
+	public void setAdminService(AdminService adminService) {
+		this.adminService = adminService;
+	}
 
-    public void setCubeMgmtService(CubeService cubeMgmtService) {
-        this.cubeMgmtService = cubeMgmtService;
-    }
+	public void setCubeMgmtService(CubeService cubeMgmtService) {
+		this.cubeMgmtService = cubeMgmtService;
+	}
 
-    public void setUserService(UserService userService) {
-        this.userService = userService;
-    }
+	public void setUserService(UserService userService) {
+		this.userService = userService;
+	}
 
 }

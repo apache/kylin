@@ -46,177 +46,187 @@ import com.kylinolap.rest.service.JobService;
 /**
  * @author ysong1
  * @author Jack
- *
+ * 
  */
 @Controller
 @RequestMapping(value = "jobs")
 public class JobController extends BasicController implements InitializingBean {
-    private static final Logger logger = LoggerFactory.getLogger(JobController.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(JobController.class);
 
-    @Autowired
-    private JobService jobService;
+	@Autowired
+	private JobService jobService;
 
-    /* (non-Javadoc)
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        String timeZone = jobService.getKylinConfig().getTimeZone();
-        TimeZone tzone = TimeZone.getTimeZone(timeZone);
-        TimeZone.setDefault(tzone);
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+	 */
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		String timeZone = jobService.getKylinConfig().getTimeZone();
+		TimeZone tzone = TimeZone.getTimeZone(timeZone);
+		TimeZone.setDefault(tzone);
 
-        String serverMode = KylinConfig.getInstanceFromEnv().getServerMode();
+		String serverMode = KylinConfig.getInstanceFromEnv().getServerMode();
 
-        if (Constant.SERVER_MODE_JOB.equals(serverMode.toLowerCase())
-                || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase())) {
-            logger.info("Initializing Job Engine ....");
+		if (Constant.SERVER_MODE_JOB.equals(serverMode.toLowerCase())
+				|| Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase())) {
+			logger.info("Initializing Job Engine ....");
 
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    JobManager jobManager = null;
-                    try {
-                        jobManager = jobService.getJobManager();
-                        jobManager.startJobEngine();
-                        metricsService.registerJobMetrics(jobManager);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }).start();
-        }
-    }
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					JobManager jobManager = null;
+					try {
+						jobManager = jobService.getJobManager();
+						jobManager.startJobEngine();
+						metricsService.registerJobMetrics(jobManager);
+					} catch (Exception e) {
+						throw new RuntimeException(e);
+					}
+				}
+			}).start();
+		}
+	}
 
-    /**
-     * get all cube jobs
-     * 
-     * @param cubeName    Cube ID
-     * @return
-     * @throws IOException
-     */
-    @RequestMapping(value = "", method = { RequestMethod.GET })
-    @ResponseBody
-    public List<JobInstance> list(JobListRequest jobRequest) {
+	/**
+	 * get all cube jobs
+	 * 
+	 * @param cubeName
+	 *            Cube ID
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "", method = { RequestMethod.GET })
+	@ResponseBody
+	public List<JobInstance> list(JobListRequest jobRequest) {
 
-        List<JobInstance> jobInstanceList = Collections.emptyList();
-        List<JobStatusEnum> statusList = new ArrayList<JobStatusEnum>();
+		List<JobInstance> jobInstanceList = Collections.emptyList();
+		List<JobStatusEnum> statusList = new ArrayList<JobStatusEnum>();
 
-        if (null != jobRequest.getStatus()) {
-            for (int status : jobRequest.getStatus()) {
-                statusList.add(JobStatusEnum.getByCode(status));
-            }
-        }
+		if (null != jobRequest.getStatus()) {
+			for (int status : jobRequest.getStatus()) {
+				statusList.add(JobStatusEnum.getByCode(status));
+			}
+		}
 
-        try {
-            jobInstanceList =
-                    jobService.listAllJobs(jobRequest.getCubeName(), jobRequest.getProjectName(), statusList,
-                            jobRequest.getLimit(), jobRequest.getOffset());
-        } catch (Exception e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e);
-        }
-        return jobInstanceList;
-    }
+		try {
+			jobInstanceList = jobService.listAllJobs(jobRequest.getCubeName(),
+					jobRequest.getProjectName(), statusList,
+					jobRequest.getLimit(), jobRequest.getOffset());
+		} catch (Exception e) {
+			logger.error(e.getLocalizedMessage(), e);
+			throw new InternalErrorException(e);
+		}
+		return jobInstanceList;
+	}
 
-    /**
-     * Get a cube job
-     * 
-     * @param cubeName    Cube ID
-     * @return
-     * @throws IOException
-     */
-    @RequestMapping(value = "/{jobId}", method = { RequestMethod.GET })
-    @ResponseBody
-    public JobInstance get(@PathVariable String jobId) {
-        JobInstance jobInstance = null;
-        try {
-            jobInstance = jobService.getJobInstance(jobId);
-        } catch (Exception e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e);
-        }
+	/**
+	 * Get a cube job
+	 * 
+	 * @param cubeName
+	 *            Cube ID
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/{jobId}", method = { RequestMethod.GET })
+	@ResponseBody
+	public JobInstance get(@PathVariable String jobId) {
+		JobInstance jobInstance = null;
+		try {
+			jobInstance = jobService.getJobInstance(jobId);
+		} catch (Exception e) {
+			logger.error(e.getLocalizedMessage(), e);
+			throw new InternalErrorException(e);
+		}
 
-        return jobInstance;
-    }
+		return jobInstance;
+	}
 
-    /**
-     * Get a job step output
-     * 
-     * @param cubeName    Cube ID
-     * @return
-     * @throws IOException
-     */
-    @RequestMapping(value = "/{jobId}/steps/{stepId}/output", method = { RequestMethod.GET })
-    @ResponseBody
-    public Map<String, String> getStepOutput(@PathVariable String jobId, @PathVariable int stepId) {
-        Map<String, String> result = new HashMap<String, String>();
-        result.put("jobId", jobId);
-        result.put("stepId", String.valueOf(stepId));
-        long start = System.currentTimeMillis();
-        String output = "";
+	/**
+	 * Get a job step output
+	 * 
+	 * @param cubeName
+	 *            Cube ID
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/{jobId}/steps/{stepId}/output", method = { RequestMethod.GET })
+	@ResponseBody
+	public Map<String, String> getStepOutput(@PathVariable String jobId,
+			@PathVariable int stepId) {
+		Map<String, String> result = new HashMap<String, String>();
+		result.put("jobId", jobId);
+		result.put("stepId", String.valueOf(stepId));
+		long start = System.currentTimeMillis();
+		String output = "";
 
-        try {
-            output = jobService.getJobManager().getJobStepOutput(jobId, stepId);
-        } catch (Exception e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e);
-        }
+		try {
+			output = jobService.getJobManager().getJobStepOutput(jobId, stepId);
+		} catch (Exception e) {
+			logger.error(e.getLocalizedMessage(), e);
+			throw new InternalErrorException(e);
+		}
 
-        result.put("cmd_output", output);
-        long end = System.currentTimeMillis();
-        logger.info("Complete fetching step " + jobId + ":" + stepId + " output in " + (end - start)
-                + " seconds");
-        return result;
-    }
+		result.put("cmd_output", output);
+		long end = System.currentTimeMillis();
+		logger.info("Complete fetching step " + jobId + ":" + stepId
+				+ " output in " + (end - start) + " seconds");
+		return result;
+	}
 
-    /**
-     * Resume a cube job
-     * 
-     * @param String   Job ID
-     * @return
-     * @throws IOException
-     */
-    @RequestMapping(value = "/{jobId}/resume", method = { RequestMethod.PUT })
-    @ResponseBody
-    public JobInstance resume(@PathVariable String jobId) {
-        JobInstance jobInstance = null;
-        try {
-            jobInstance = jobService.getJobInstance(jobId);
-            jobService.resumeJob(jobInstance);
-            jobInstance = jobService.getJobInstance(jobId);
-        } catch (Exception e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e);
-        }
+	/**
+	 * Resume a cube job
+	 * 
+	 * @param String
+	 *            Job ID
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/{jobId}/resume", method = { RequestMethod.PUT })
+	@ResponseBody
+	public JobInstance resume(@PathVariable String jobId) {
+		JobInstance jobInstance = null;
+		try {
+			jobInstance = jobService.getJobInstance(jobId);
+			jobService.resumeJob(jobInstance);
+			jobInstance = jobService.getJobInstance(jobId);
+		} catch (Exception e) {
+			logger.error(e.getLocalizedMessage(), e);
+			throw new InternalErrorException(e);
+		}
 
-        return jobInstance;
-    }
+		return jobInstance;
+	}
 
-    /**
-     * Cancel a job
-     * 
-     * @param String    Job ID
-     * @return
-     * @throws IOException
-     */
-    @RequestMapping(value = "/{jobId}/cancel", method = { RequestMethod.PUT })
-    @ResponseBody
-    public JobInstance cancel(@PathVariable String jobId) {
+	/**
+	 * Cancel a job
+	 * 
+	 * @param String
+	 *            Job ID
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/{jobId}/cancel", method = { RequestMethod.PUT })
+	@ResponseBody
+	public JobInstance cancel(@PathVariable String jobId) {
 
-        JobInstance jobInstance = null;
-        try {
-            jobInstance = jobService.getJobInstance(jobId);
-            jobService.cancelJob(jobInstance);
-        } catch (Exception e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e);
-        }
+		JobInstance jobInstance = null;
+		try {
+			jobInstance = jobService.getJobInstance(jobId);
+			jobService.cancelJob(jobInstance);
+		} catch (Exception e) {
+			logger.error(e.getLocalizedMessage(), e);
+			throw new InternalErrorException(e);
+		}
 
-        return jobInstance;
-    }
+		return jobInstance;
+	}
 
-    public void setJobService(JobService jobService) {
-        this.jobService = jobService;
-    }
+	public void setJobService(JobService jobService) {
+		this.jobService = jobService;
+	}
 
 }

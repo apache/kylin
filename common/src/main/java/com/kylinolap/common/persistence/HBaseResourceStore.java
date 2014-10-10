@@ -37,7 +37,6 @@ import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
@@ -63,7 +62,6 @@ public class HBaseResourceStore extends ResourceStore {
     private static final byte[] B_COLUMN = Bytes.toBytes(COLUMN);
     private static final String COLUMN_TS = "t";
     private static final byte[] B_COLUMN_TS = Bytes.toBytes(COLUMN_TS);
-
 
     private static final Map<String, String> TABLE_SUFFIX_MAP = new LinkedHashMap<String, String>();
 
@@ -96,7 +94,6 @@ public class HBaseResourceStore extends ResourceStore {
         tableNameBase = cut < 0 ? DEFAULT_TABLE_NAME : metadataUrl.substring(0, cut);
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
 
-
         tableNameMap = new LinkedHashMap<String, String>();
         for (Entry<String, String> entry : TABLE_SUFFIX_MAP.entrySet()) {
             String pathPrefix = entry.getKey();
@@ -106,7 +103,6 @@ public class HBaseResourceStore extends ResourceStore {
         }
 
     }
-
 
     private void createHTableIfNeeded(String tableName) throws IOException {
 
@@ -234,8 +230,7 @@ public class HBaseResourceStore extends ResourceStore {
     }
 
     @Override
-    protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS)
-            throws IOException, IllegalStateException {
+    protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS) throws IOException, IllegalStateException {
         HTableInterface table = getConnection().getTable(getTableName(resPath));
         try {
             byte[] row = Bytes.toBytes(resPath);
@@ -244,8 +239,7 @@ public class HBaseResourceStore extends ResourceStore {
 
             boolean ok = table.checkAndPut(row, B_FAMILY, B_COLUMN_TS, bOldTS, put);
             if (!ok)
-                throw new IllegalStateException("Overwriting conflict " + resPath + ", expect old TS "
-                        + oldTS + ", but it is " + getResourceTimestamp(resPath));
+                throw new IllegalStateException("Overwriting conflict " + resPath + ", expect old TS " + oldTS + ", but it is " + getResourceTimestamp(resPath));
 
             table.flushCommits();
 
@@ -302,8 +296,7 @@ public class HBaseResourceStore extends ResourceStore {
         return endRow;
     }
 
-    private Path writeLargeCellToHdfs(String resPath, byte[] largeColumn, HTableInterface table)
-            throws IOException {
+    private Path writeLargeCellToHdfs(String resPath, byte[] largeColumn, HTableInterface table) throws IOException {
         Path redirectPath = bigCellHDFSPath(resPath);
         Configuration hconf = HadoopUtil.getDefaultConfiguration();
         FileSystem fileSystem = FileSystem.get(hconf);
@@ -323,15 +316,13 @@ public class HBaseResourceStore extends ResourceStore {
         return redirectPath;
     }
 
-
     public Path bigCellHDFSPath(String resPath) {
         String hdfsWorkingDirectory = this.kylinConfig.getHdfsWorkingDirectory();
         Path redirectPath = new Path(hdfsWorkingDirectory, "resources" + resPath);
         return redirectPath;
     }
 
-    private Put buildPut(String resPath, long ts, byte[] row, byte[] content, HTableInterface table)
-            throws IOException {
+    private Put buildPut(String resPath, long ts, byte[] row, byte[] content, HTableInterface table) throws IOException {
         int kvSizeLimit = this.kylinConfig.getHBaseKeyValueSize();
         if (content.length > kvSizeLimit) {
             writeLargeCellToHdfs(resPath, content, table);

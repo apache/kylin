@@ -29,39 +29,50 @@ import com.kylinolap.metadata.validation.ValidateContext;
  * Validate that only one of "length" and "dictionary" appears on rowkey_column
  * 
  * @author jianliu
- *
+ * 
  */
 public class RowKeyAttrRule implements IValidatorRule<CubeDesc> {
 
-    /* (non-Javadoc)
-     * @see com.kylinolap.metadata.validation.IValidatorRule#validate(java.lang.Object, com.kylinolap.metadata.validation.ValidateContext)
-     */
-    @Override
-    public void validate(CubeDesc cube, ValidateContext context) {
-        RowKeyDesc row = cube.getRowkey();
-        if (row == null) {
-            context.addResult(ResultLevel.ERROR, "Rowkey does not exist");
-            return;
-        }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.kylinolap.metadata.validation.IValidatorRule#validate(java.lang.Object
+	 * , com.kylinolap.metadata.validation.ValidateContext)
+	 */
+	@Override
+	public void validate(CubeDesc cube, ValidateContext context) {
+		RowKeyDesc row = cube.getRowkey();
+		if (row == null) {
+			context.addResult(ResultLevel.ERROR, "Rowkey does not exist");
+			return;
+		}
 
-        RowKeyColDesc[] rcd = row.getRowKeyColumns();
-        if (rcd == null || rcd.length == 0) {
-            context.addResult(ResultLevel.ERROR, "Rowkey columns do not exist or is empty");
-            return;
-        }
+		RowKeyColDesc[] rcd = row.getRowKeyColumns();
+		if (rcd == null || rcd.length == 0) {
+			context.addResult(ResultLevel.ERROR,
+					"Rowkey columns do not exist or is empty");
+			return;
+		}
 
-        for (int i = 0; i < rcd.length; i++) {
-            RowKeyColDesc rd = rcd[i];
-            if (rd.getLength() != 0 && !StringUtils.isEmpty(rd.getDictionary())) {
-                context.addResult(ResultLevel.ERROR, "Rowkey column " + rd.getColumn()
-                        + " must not have both 'length' and 'dictionary' attribute");
-            }
-            if (rd.getLength() == 0 && StringUtils.isEmpty(rd.getDictionary())) {
-                context.addResult(ResultLevel.ERROR, "Rowkey column " + rd.getColumn()
-                        + " must not have both 'length' and 'dictionary' empty");
-            }
-        }
+		for (int i = 0; i < rcd.length; i++) {
+			RowKeyColDesc rd = rcd[i];
+			if (rd.getLength() != 0 && !StringUtils.isEmpty(rd.getDictionary())) {
+				context.addResult(
+						ResultLevel.ERROR,
+						"Rowkey column "
+								+ rd.getColumn()
+								+ " must not have both 'length' and 'dictionary' attribute");
+			}
+			if (rd.getLength() == 0 && StringUtils.isEmpty(rd.getDictionary())) {
+				context.addResult(
+						ResultLevel.ERROR,
+						"Rowkey column "
+								+ rd.getColumn()
+								+ " must not have both 'length' and 'dictionary' empty");
+			}
+		}
 
-    }
+	}
 
 }

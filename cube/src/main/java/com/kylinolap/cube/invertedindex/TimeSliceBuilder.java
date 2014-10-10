@@ -20,93 +20,94 @@ import java.io.IOException;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class TimeSliceBuilder {
 
-    TableRecordInfo info;
-    private int nColumns;
-    int nRecordsCap;
+	TableRecordInfo info;
+	private int nColumns;
+	int nRecordsCap;
 
-    long curTimePartition;
-    int curSliceNo;
+	long curTimePartition;
+	int curSliceNo;
 
-    int nRecords;
-    private ColumnValueContainer[] containers;
+	int nRecords;
+	private ColumnValueContainer[] containers;
 
-    public TimeSliceBuilder(TableRecordInfo info) throws IOException {
-        this.info = info;
-        this.nColumns = info.getColumnCount();
-        this.nRecordsCap = Math.max(1, info.getDescriptor().getSliceLength() / maxDictionaryIdSize());
+	public TimeSliceBuilder(TableRecordInfo info) throws IOException {
+		this.info = info;
+		this.nColumns = info.getColumnCount();
+		this.nRecordsCap = Math.max(1, info.getDescriptor().getSliceLength()
+				/ maxDictionaryIdSize());
 
-        this.containers = null;
-        this.curTimePartition = Long.MIN_VALUE;
-        this.curSliceNo = -1;
-        this.nRecords = 0;
-    }
+		this.containers = null;
+		this.curTimePartition = Long.MIN_VALUE;
+		this.curSliceNo = -1;
+		this.nRecords = 0;
+	}
 
-    private int maxDictionaryIdSize() throws IOException {
-        int max = 0;
-        for (int i = 0; i < nColumns; i++) {
-            max = Math.max(max, info.length(i));
-        }
-        return max;
-    }
+	private int maxDictionaryIdSize() throws IOException {
+		int max = 0;
+		for (int i = 0; i < nColumns; i++) {
+			max = Math.max(max, info.length(i));
+		}
+		return max;
+	}
 
-    private TimeSlice doneSlice() {
-        TimeSlice r = null;
-        if (nRecords > 0) {
-            for (int i = 0; i < nColumns; i++) {
-                containers[i].closeForChange();
-            }
-            r = new TimeSlice(info, curTimePartition, curSliceNo, containers);
-        }
+	private TimeSlice doneSlice() {
+		TimeSlice r = null;
+		if (nRecords > 0) {
+			for (int i = 0; i < nColumns; i++) {
+				containers[i].closeForChange();
+			}
+			r = new TimeSlice(info, curTimePartition, curSliceNo, containers);
+		}
 
-        // reset for next slice
-        curSliceNo++;
-        nRecords = 0;
-        containers = new ColumnValueContainer[nColumns];
-        for (int i : info.getDescriptor().getBitmapColumns()) {
-            containers[i] = new BitMapContainer(info, i);
-        }
-        for (int i : info.getDescriptor().getValueColumns()) {
-            containers[i] = new CompressedValueContainer(info, i, nRecordsCap);
-        }
+		// reset for next slice
+		curSliceNo++;
+		nRecords = 0;
+		containers = new ColumnValueContainer[nColumns];
+		for (int i : info.getDescriptor().getBitmapColumns()) {
+			containers[i] = new BitMapContainer(info, i);
+		}
+		for (int i : info.getDescriptor().getValueColumns()) {
+			containers[i] = new CompressedValueContainer(info, i, nRecordsCap);
+		}
 
-        return r;
+		return r;
 
-    }
+	}
 
-    // rec must be appended in time order
-    public TimeSlice append(TableRecord rec) {
-        TimeSlice doneSlice = null;
+	// rec must be appended in time order
+	public TimeSlice append(TableRecord rec) {
+		TimeSlice doneSlice = null;
 
-        if (curTimePartition != rec.getTimePartition()) {
-            doneSlice = doneSlice();
-            curTimePartition = rec.getTimePartition();
-            curSliceNo = 0;
-        } else if (isFull()) {
-            doneSlice = doneSlice();
-        }
+		if (curTimePartition != rec.getTimePartition()) {
+			doneSlice = doneSlice();
+			curTimePartition = rec.getTimePartition();
+			curSliceNo = 0;
+		} else if (isFull()) {
+			doneSlice = doneSlice();
+		}
 
-        nRecords++;
+		nRecords++;
 
-        for (int i = 0; i < nColumns; i++) {
-            containers[i].append(rec.getValueID(i));
-        }
+		for (int i = 0; i < nColumns; i++) {
+			containers[i].append(rec.getValueID(i));
+		}
 
-        return doneSlice;
-    }
+		return doneSlice;
+	}
 
-    public TimeSlice close() {
-        TimeSlice doneSlice = doneSlice();
-        this.curTimePartition = Long.MIN_VALUE;
-        this.curSliceNo = -1;
-        this.nRecords = 0;
-        return doneSlice;
-    }
+	public TimeSlice close() {
+		TimeSlice doneSlice = doneSlice();
+		this.curTimePartition = Long.MIN_VALUE;
+		this.curSliceNo = -1;
+		this.nRecords = 0;
+		return doneSlice;
+	}
 
-    private boolean isFull() {
-        return nRecords >= nRecordsCap;
-    }
+	private boolean isFull() {
+		return nRecords >= nRecordsCap;
+	}
 }

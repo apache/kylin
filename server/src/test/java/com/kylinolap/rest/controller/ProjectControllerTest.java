@@ -21,67 +21,68 @@ import com.kylinolap.rest.service.TestBase;
  */
 public class ProjectControllerTest extends TestBase {
 
-    private ProjectController projectController;
+	private ProjectController projectController;
 
-    @Autowired
-    ProjectService projectService;
+	@Autowired
+	ProjectService projectService;
 
-    @Before
-    public void setup() {
-        super.setUp();
+	@Before
+	public void setup() {
+		super.setUp();
 
-        projectController = new ProjectController();
-        projectController.setProjectService(projectService);
-    }
+		projectController = new ProjectController();
+		projectController.setProjectService(projectService);
+	}
 
-    @Test
-    public void testAddUpdateProject() throws IOException {
+	@Test
+	public void testAddUpdateProject() throws IOException {
 
-        List<ProjectInstance> projects = projectController.getProjects(null, null);
+		List<ProjectInstance> projects = projectController.getProjects(null,
+				null);
 
-        int originalProjectCount = projects.size();
-        CreateProjectRequest request = new CreateProjectRequest();
-        request.setName("new_project");
-        ProjectInstance ret = projectController.saveProject(request);
+		int originalProjectCount = projects.size();
+		CreateProjectRequest request = new CreateProjectRequest();
+		request.setName("new_project");
+		ProjectInstance ret = projectController.saveProject(request);
 
-        Assert.assertEquals(ret.getOwner(), "ADMIN");
-        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size(),
-                originalProjectCount + 1);
+		Assert.assertEquals(ret.getOwner(), "ADMIN");
+		Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig())
+				.listAllProjects().size(), originalProjectCount + 1);
 
-        UpdateProjectRequest updateR = new UpdateProjectRequest();
-        updateR.setFormerProjectName("new_project");
-        updateR.setNewProjectName("new_project_2");
-        projectController.updateProject(updateR);
+		UpdateProjectRequest updateR = new UpdateProjectRequest();
+		updateR.setFormerProjectName("new_project");
+		updateR.setNewProjectName("new_project_2");
+		projectController.updateProject(updateR);
 
-        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size(),
-                originalProjectCount + 1);
-        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project"),
-                null);
+		Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig())
+				.listAllProjects().size(), originalProjectCount + 1);
+		Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig())
+				.getProject("new_project"), null);
 
-        Assert.assertNotEquals(
-                ProjectManager.getInstance(this.getTestConfig()).getProject("new_project_2"), null);
+		Assert.assertNotEquals(ProjectManager.getInstance(this.getTestConfig())
+				.getProject("new_project_2"), null);
 
-        //only update desc:
-        updateR = new UpdateProjectRequest();
-        updateR.setFormerProjectName("new_project_2");
-        updateR.setNewProjectName("new_project_2");
-        updateR.setNewDescription("hello world");
-        projectController.updateProject(updateR);
+		// only update desc:
+		updateR = new UpdateProjectRequest();
+		updateR.setFormerProjectName("new_project_2");
+		updateR.setNewProjectName("new_project_2");
+		updateR.setNewDescription("hello world");
+		projectController.updateProject(updateR);
 
-        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size(),
-                originalProjectCount + 1);
-        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project"),
-                null);
-        Assert.assertNotEquals(
-                ProjectManager.getInstance(this.getTestConfig()).getProject("new_project_2"), null);
-        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project_2")
-                .getDescription(), "hello world");
-    }
+		Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig())
+				.listAllProjects().size(), originalProjectCount + 1);
+		Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig())
+				.getProject("new_project"), null);
+		Assert.assertNotEquals(ProjectManager.getInstance(this.getTestConfig())
+				.getProject("new_project_2"), null);
+		Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig())
+				.getProject("new_project_2").getDescription(), "hello world");
+	}
 
-    @Test(expected = InternalErrorException.class)
-    public void testAddExistingProject() throws IOException {
-        CreateProjectRequest request = new CreateProjectRequest();
-        request.setName("default");
-        projectController.saveProject(request);
-    }
+	@Test(expected = InternalErrorException.class)
+	public void testAddExistingProject() throws IOException {
+		CreateProjectRequest request = new CreateProjectRequest();
+		request.setName("default");
+		projectController.saveProject(request);
+	}
 }

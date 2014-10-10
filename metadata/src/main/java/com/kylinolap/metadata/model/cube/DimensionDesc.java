@@ -25,190 +25,191 @@ import com.kylinolap.common.util.StringUtil;
 import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
- * Created with IntelliJ IDEA.
- * User: lukhan
- * Date: 9/24/13
- * Time: 10:40 AM
- * To change this template use File | Settings | File Templates.
+ * Created with IntelliJ IDEA. User: lukhan Date: 9/24/13 Time: 10:40 AM To
+ * change this template use File | Settings | File Templates.
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class DimensionDesc {
 
-    @JsonProperty("id")
-    private int id;
-    @JsonProperty("name")
-    private String name;
-    @JsonProperty("join")
-    private JoinDesc join;
-    @JsonProperty("hierarchy")
-    private HierarchyDesc[] hierarchy;
-    @JsonProperty("table")
-    private String table;
-    @JsonProperty("column")
-    private String column;
-    @JsonProperty("datatype")
-    private String datatype;
-    @JsonProperty("derived")
-    private String[] derived;
+	@JsonProperty("id")
+	private int id;
+	@JsonProperty("name")
+	private String name;
+	@JsonProperty("join")
+	private JoinDesc join;
+	@JsonProperty("hierarchy")
+	private HierarchyDesc[] hierarchy;
+	@JsonProperty("table")
+	private String table;
+	@JsonProperty("column")
+	private String column;
+	@JsonProperty("datatype")
+	private String datatype;
+	@JsonProperty("derived")
+	private String[] derived;
 
-    // computed
-    private TblColRef[] columnRefs;
-    private TblColRef[] derivedColRefs;
+	// computed
+	private TblColRef[] columnRefs;
+	private TblColRef[] derivedColRefs;
 
-    public boolean isHierarchyColumn(TblColRef col) {
-        if (hierarchy == null)
-            return false;
+	public boolean isHierarchyColumn(TblColRef col) {
+		if (hierarchy == null)
+			return false;
 
-        for (HierarchyDesc hier : hierarchy) {
-            if (hier.getColumnRef().equals(col))
-                return true;
-        }
-        return false;
-    }
+		for (HierarchyDesc hier : hierarchy) {
+			if (hier.getColumnRef().equals(col))
+				return true;
+		}
+		return false;
+	}
 
-    public String getDatatype() {
-        return datatype;
-    }
+	public String getDatatype() {
+		return datatype;
+	}
 
-    public void setDatatype(String datatype) {
-        this.datatype = datatype;
-    }
+	public void setDatatype(String datatype) {
+		this.datatype = datatype;
+	}
 
-    public String getTable() {
-        return table.toUpperCase();
-    }
+	public String getTable() {
+		return table.toUpperCase();
+	}
 
-    public void setTable(String table) {
-        this.table = table;
-    }
+	public void setTable(String table) {
+		this.table = table;
+	}
 
-    public int getId() {
-        return id;
-    }
+	public int getId() {
+		return id;
+	}
 
-    public void setId(int id) {
-        this.id = id;
-    }
+	public void setId(int id) {
+		this.id = id;
+	}
 
-    public JoinDesc getJoin() {
-        return join;
-    }
+	public JoinDesc getJoin() {
+		return join;
+	}
 
-    public void setJoin(JoinDesc join) {
-        this.join = join;
-    }
+	public void setJoin(JoinDesc join) {
+		this.join = join;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public TblColRef[] getColumnRefs() {
-        return this.columnRefs;
-    }
+	public TblColRef[] getColumnRefs() {
+		return this.columnRefs;
+	}
 
-    public void setColumnRefs(TblColRef[] colRefs) {
-        this.columnRefs = colRefs;
-    }
+	public void setColumnRefs(TblColRef[] colRefs) {
+		this.columnRefs = colRefs;
+	}
 
-    public String getColumn() {
-        return this.column;
-    }
+	public String getColumn() {
+		return this.column;
+	}
 
-    public void setColumn(String column) {
-        this.column = column;
-        if (this.column != null)
-            this.column = this.column.toUpperCase();
-    }
+	public void setColumn(String column) {
+		this.column = column;
+		if (this.column != null)
+			this.column = this.column.toUpperCase();
+	}
 
-    public HierarchyDesc[] getHierarchy() {
-        return hierarchy;
-    }
+	public HierarchyDesc[] getHierarchy() {
+		return hierarchy;
+	}
 
-    public void setHierarchy(HierarchyDesc[] hierarchy) {
-        this.hierarchy = hierarchy;
-    }
+	public void setHierarchy(HierarchyDesc[] hierarchy) {
+		this.hierarchy = hierarchy;
+	}
 
-    public String[] getDerived() {
-        return derived;
-    }
+	public String[] getDerived() {
+		return derived;
+	}
 
-    public void setDerived(String[] derived) {
-        this.derived = derived;
-    }
+	public void setDerived(String[] derived) {
+		this.derived = derived;
+	}
 
-    public TblColRef[] getDerivedColRefs() {
-        return derivedColRefs;
-    }
+	public TblColRef[] getDerivedColRefs() {
+		return derivedColRefs;
+	}
 
-    public void setDerivedColRefs(TblColRef[] derivedColRefs) {
-        this.derivedColRefs = derivedColRefs;
-    }
+	public void setDerivedColRefs(TblColRef[] derivedColRefs) {
+		this.derivedColRefs = derivedColRefs;
+	}
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
 
-        DimensionDesc that = (DimensionDesc) o;
+		DimensionDesc that = (DimensionDesc) o;
 
-        if (id != that.id)
-            return false;
-        if (!name.equals(that.name))
-            return false;
+		if (id != that.id)
+			return false;
+		if (!name.equals(that.name))
+			return false;
 
-        return true;
-    }
+		return true;
+	}
 
-    @Override
-    public int hashCode() {
-        int result = id;
-        result = 31 * result + name.hashCode();
-        return result;
-    }
+	@Override
+	public int hashCode() {
+		int result = id;
+		result = 31 * result + name.hashCode();
+		return result;
+	}
 
-    @Override
-    public String toString() {
-        return "DimensionDesc [name=" + name + ", join=" + join + ", hierarchy=" + Arrays.toString(hierarchy)
-                + ", table=" + table + ", column=" + column + ", datatype=" + datatype + ", derived="
-                + Arrays.toString(derived) + "]";
-    }
+	@Override
+	public String toString() {
+		return "DimensionDesc [name=" + name + ", join=" + join
+				+ ", hierarchy=" + Arrays.toString(hierarchy) + ", table="
+				+ table + ", column=" + column + ", datatype=" + datatype
+				+ ", derived=" + Arrays.toString(derived) + "]";
+	}
 
-    public void init(Map<String, TableDesc> tables) {
-        if (name != null)
-            name = name.toUpperCase();
-        if (table != null)
-            table = table.toUpperCase();
-        if (column != null)
-            column = column.toUpperCase();
+	public void init(Map<String, TableDesc> tables) {
+		if (name != null)
+			name = name.toUpperCase();
+		if (table != null)
+			table = table.toUpperCase();
+		if (column != null)
+			column = column.toUpperCase();
 
-        TableDesc tableDesc = tables.get(table);
-        if (tableDesc == null)
-            throw new IllegalStateException("Can't find table " + table + " on dimension " + name);
+		TableDesc tableDesc = tables.get(table);
+		if (tableDesc == null)
+			throw new IllegalStateException("Can't find table " + table
+					+ " on dimension " + name);
 
-        if (hierarchy != null && hierarchy.length == 0)
-            hierarchy = null;
-        if (derived != null && derived.length == 0)
-            derived = null;
+		if (hierarchy != null && hierarchy.length == 0)
+			hierarchy = null;
+		if (derived != null && derived.length == 0)
+			derived = null;
 
-        if (join != null) {
-            StringUtil.toUpperCaseArray(join.getForeignKey(), join.getForeignKey());
-            StringUtil.toUpperCaseArray(join.getPrimaryKey(), join.getPrimaryKey());
-        }
+		if (join != null) {
+			StringUtil.toUpperCaseArray(join.getForeignKey(),
+					join.getForeignKey());
+			StringUtil.toUpperCaseArray(join.getPrimaryKey(),
+					join.getPrimaryKey());
+		}
 
-        if (hierarchy != null) {
-            for (HierarchyDesc h : hierarchy)
-                h.setColumn(h.getColumn().toUpperCase());
-        }
+		if (hierarchy != null) {
+			for (HierarchyDesc h : hierarchy)
+				h.setColumn(h.getColumn().toUpperCase());
+		}
 
-        if (derived != null) {
-            StringUtil.toUpperCaseArray(derived, derived);
-        }
-    }
+		if (derived != null) {
+			StringUtil.toUpperCaseArray(derived, derived);
+		}
+	}
 
 }

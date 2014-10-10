@@ -41,69 +41,70 @@ import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
  * @author yangli9
- *
+ * 
  */
 @Ignore
 public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
 
-    CubeInstance cube;
-    CubeSegment seg;
-    HConnection hconn;
+	CubeInstance cube;
+	CubeSegment seg;
+	HConnection hconn;
 
-    @Before
-    public void setup() throws Exception {
-        this.createTestMetadata();
+	@Before
+	public void setup() throws Exception {
+		this.createTestMetadata();
 
-        this.cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_ii");
-        this.seg = cube.getFirstSegment();
+		this.cube = CubeManager.getInstance(getTestConfig()).getCube(
+				"test_kylin_cube_ii");
+		this.seg = cube.getFirstSegment();
 
-        String hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
-        Configuration hconf = HadoopUtil.newHBaseConfiguration(hbaseUrl);
-        hconn = HConnectionManager.createConnection(hconf);
-    }
+		String hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
+		Configuration hconf = HadoopUtil.newHBaseConfiguration(hbaseUrl);
+		hconn = HConnectionManager.createConnection(hconf);
+	}
 
-    @After
-    public void after() throws Exception {
-        this.cleanupTestMetadata();
-    }
+	@After
+	public void after() throws Exception {
+		this.cleanupTestMetadata();
+	}
 
-    @Test
-    public void testLoad() throws Exception {
+	@Test
+	public void testLoad() throws Exception {
 
-        String tableName = seg.getStorageLocationIdentifier();
-        IIKeyValueCodec codec = new IIKeyValueCodec(new TableRecordInfo(seg));
+		String tableName = seg.getStorageLocationIdentifier();
+		IIKeyValueCodec codec = new IIKeyValueCodec(new TableRecordInfo(seg));
 
-        List<TimeSlice> slices = Lists.newArrayList();
-        HBaseKeyValueIterator kvIterator =
-                new HBaseKeyValueIterator(hconn, tableName, InvertedIndexDesc.HBASE_FAMILY_BYTES,
-                        InvertedIndexDesc.HBASE_QUALIFIER_BYTES);
-        try {
-            for (TimeSlice slice : codec.decodeKeyValue(kvIterator)) {
-                slices.add(slice);
-            }
-        } finally {
-            kvIterator.close();
-        }
+		List<TimeSlice> slices = Lists.newArrayList();
+		HBaseKeyValueIterator kvIterator = new HBaseKeyValueIterator(hconn,
+				tableName, InvertedIndexDesc.HBASE_FAMILY_BYTES,
+				InvertedIndexDesc.HBASE_QUALIFIER_BYTES);
+		try {
+			for (TimeSlice slice : codec.decodeKeyValue(kvIterator)) {
+				slices.add(slice);
+			}
+		} finally {
+			kvIterator.close();
+		}
 
-        List<TableRecord> records = iterateRecords(slices);
-        dump(records);
-        System.out.println(records.size() + " records");
-    }
+		List<TableRecord> records = iterateRecords(slices);
+		dump(records);
+		System.out.println(records.size() + " records");
+	}
 
-    private List<TableRecord> iterateRecords(List<TimeSlice> slices) {
-        List<TableRecord> records = Lists.newArrayList();
-        for (TimeSlice slice : slices) {
-            for (TableRecord rec : slice) {
-                records.add((TableRecord) rec.clone());
-            }
-        }
-        return records;
-    }
+	private List<TableRecord> iterateRecords(List<TimeSlice> slices) {
+		List<TableRecord> records = Lists.newArrayList();
+		for (TimeSlice slice : slices) {
+			for (TableRecord rec : slice) {
+				records.add((TableRecord) rec.clone());
+			}
+		}
+		return records;
+	}
 
-    private void dump(Iterable<TableRecord> records) {
-        for (TableRecord rec : records) {
-            System.out.println(rec.toString());
-        }
-    }
+	private void dump(Iterable<TableRecord> records) {
+		for (TableRecord rec : records) {
+			System.out.println(rec.toString());
+		}
+	}
 
 }

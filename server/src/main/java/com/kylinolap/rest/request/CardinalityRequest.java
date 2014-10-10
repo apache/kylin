@@ -18,56 +18,58 @@ package com.kylinolap.rest.request;
 
 /**
  * @author jianliu
- *
+ * 
  */
 public class CardinalityRequest {
-    private int delimiter;
+	private int delimiter;
 
-    private int format;
+	private int format;
 
-    /**
-     * @return the delimiter
-     */
-    public String getDelimiter() {
-        switch (delimiter) {
-        case 0:
-            return null;
-        case 1:
-            return "177";
-        case 2:
-            return "t";
-        default:
-            return null;
-        }
-    }
+	/**
+	 * @return the delimiter
+	 */
+	public String getDelimiter() {
+		switch (delimiter) {
+		case 0:
+			return null;
+		case 1:
+			return "177";
+		case 2:
+			return "t";
+		default:
+			return null;
+		}
+	}
 
-    /**
-     * @param delimiter the delimiter to set
-     */
-    public void setDelimiter(int delimiter) {
-        this.delimiter = delimiter;
-    }
+	/**
+	 * @param delimiter
+	 *            the delimiter to set
+	 */
+	public void setDelimiter(int delimiter) {
+		this.delimiter = delimiter;
+	}
 
-    /**
-     * @return the format
-     */
-    public String getFormat() {
-        switch (format) {
-        case 0:
-            return null;
-        case 1:
-            return "text";
-        case 2:
-            return "sequence";
-        default:
-            return null;
-        }
-    }
+	/**
+	 * @return the format
+	 */
+	public String getFormat() {
+		switch (format) {
+		case 0:
+			return null;
+		case 1:
+			return "text";
+		case 2:
+			return "sequence";
+		default:
+			return null;
+		}
+	}
 
-    /**
-     * @param format the format to set
-     */
-    public void setFormat(int format) {
-        this.format = format;
-    }
+	/**
+	 * @param format
+	 *            the format to set
+	 */
+	public void setFormat(int format) {
+		this.format = format;
+	}
 }

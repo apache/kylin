@@ -75,8 +75,7 @@ public class HadoopUtil {
         Pattern urlPattern = Pattern.compile("([\\w\\d\\-.]+)[:](\\d+)(?:[:](.*))?");
         Matcher m = urlPattern.matcher(url);
         if (m.matches() == false)
-            throw new IllegalArgumentException("HBase URL '" + url + "' is invalid, expected url is like '"
-                    + "hbase:domain.com:2181:/hbase-unsecure" + "'");
+            throw new IllegalArgumentException("HBase URL '" + url + "' is invalid, expected url is like '" + "hbase:domain.com:2181:/hbase-unsecure" + "'");
 
         logger.debug("Creating hbase conf by parsing -- " + url);
 
@@ -84,8 +83,7 @@ public class HadoopUtil {
         try {
             InetAddress.getByName(quorum);
         } catch (UnknownHostException e) {
-            throw new IllegalArgumentException("Zookeeper quorum is invalid: " + quorum + "; urlString="
-                    + url, e);
+            throw new IllegalArgumentException("Zookeeper quorum is invalid: " + quorum + "; urlString=" + url, e);
         }
         conf.set(HConstants.ZOOKEEPER_QUORUM, quorum);
 
@@ -96,7 +94,10 @@ public class HadoopUtil {
         if (StringUtils.isEmpty(znodePath) == false)
             conf.set("zookeeper.znode.parent", znodePath);
 
-        boolean secured = znodePath.contains("unsecure") == false; // assume "unsecure" naming convention
+        boolean secured = znodePath.contains("unsecure") == false; // assume
+                                                                   // "unsecure"
+                                                                   // naming
+                                                                   // convention
         if (secured)
             conf.set("hbase.security.authentication", "kerberos");
 
@@ -104,7 +105,7 @@ public class HadoopUtil {
         conf.set(HConstants.HBASE_CLIENT_PAUSE, "3000");
         conf.set(HConstants.HBASE_CLIENT_RETRIES_NUMBER, "5");
         conf.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
-        //        conf.set(ScannerCallable.LOG_SCANNER_ACTIVITY, "true");
+        // conf.set(ScannerCallable.LOG_SCANNER_ACTIVITY, "true");
 
         return conf;
     }

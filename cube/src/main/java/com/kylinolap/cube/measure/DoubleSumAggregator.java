@@ -20,30 +20,30 @@ import org.apache.hadoop.io.DoubleWritable;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class DoubleSumAggregator extends MeasureAggregator<DoubleWritable> {
 
-    DoubleWritable sum = new DoubleWritable();
+	DoubleWritable sum = new DoubleWritable();
 
-    @Override
-    public void reset() {
-        sum.set(0.0);
-    }
+	@Override
+	public void reset() {
+		sum.set(0.0);
+	}
 
-    @Override
-    public void aggregate(DoubleWritable value) {
-        sum.set(sum.get() + value.get());
-    }
+	@Override
+	public void aggregate(DoubleWritable value) {
+		sum.set(sum.get() + value.get());
+	}
 
-    @Override
-    public DoubleWritable getState() {
-        return sum;
-    }
+	@Override
+	public DoubleWritable getState() {
+		return sum;
+	}
 
-    @Override
-    public int getMemBytes() {
-        return guessDoubleMemBytes();
-    }
+	@Override
+	public int getMemBytes() {
+		return guessDoubleMemBytes();
+	}
 
 }
