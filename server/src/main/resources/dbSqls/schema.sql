@@ -19,10 +19,11 @@ DROP TABLE IF EXISTS `acl_sid`;
 CREATE TABLE `acl_sid` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `principal` tinyint(1) NOT NULL,
-  `sid` varchar(100) NOT NULL,
+  `sid` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `acl_sid_idx_1` (`sid`,`principal`)
 ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8;
+
 
 -- ----------------------------
 -- Table structure for `acl_object_identity`
@@ -75,29 +76,26 @@ CREATE TABLE `users` (
   PRIMARY KEY (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-
 -- ----------------------------
 -- Table structure for `groups`
 -- ----------------------------
 DROP TABLE IF EXISTS `groups`;
 CREATE TABLE `groups` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `group_name` varchar(50) NOT NULL,
+  `group_name` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 
 -- ----------------------------
 -- Table structure for `authorities`
 -- ----------------------------
 DROP TABLE IF EXISTS `authorities`;
 CREATE TABLE `authorities` (
-  `username` varchar(50) NOT NULL,
-  `authority` varchar(50) NOT NULL,
+  `username` varchar(255) NOT NULL,
+  `authority` varchar(255) NOT NULL,
   UNIQUE KEY `authorities_idx_1` (`username`,`authority`),
   CONSTRAINT `authorities_ibfk_1` FOREIGN KEY (`username`) REFERENCES `users` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 
 -- ----------------------------
 -- Table structure for `group_authorities`
@@ -109,8 +107,6 @@ CREATE TABLE `group_authorities` (
   KEY `group_id` (`group_id`),
   CONSTRAINT `group_authorities_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
 
 -- ----------------------------
 -- Table structure for `group_members`
@@ -138,4 +134,13 @@ CREATE TABLE `queries` (
   `description` varchar(255) DEFAULT NULL,
   `created_date` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Table structure for `user_hits`
+-- ----------------------------
+DROP TABLE IF EXISTS `user_hits`;
+CREATE TABLE `user_hits` (
+  `username` varchar(64) NOT NULL,
+  `hit_time` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
