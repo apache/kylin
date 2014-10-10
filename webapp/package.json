@@ -5,7 +5,7 @@
   "author": "DataHub",
   "repository": {
     "type:": "git",
-    "url": "https://github.scm.corp.ebay.com/DataHub/Client-Base.git"
+    "url": "https://github.com/KylinOLAP/Kylin.git"
   },
   "devDependencies": {
     "grunt": "~0.4.x",

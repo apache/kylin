@@ -19,6 +19,5 @@
       "hadoop": {"name":"hadoop", "link": null},
       "diagnostic": {"name":"diagnostic", "link": null}
   },
-  "contact_mail": "DL-eBay-Kylin@corp.ebay.com",
   "version": "1.0.10"
 }
