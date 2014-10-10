@@ -128,13 +128,6 @@
 
 	<tx:annotation-driven transaction-manager="transactionManager" />
 
-	<bean id="ldapSource"
-		class="org.springframework.security.ldap.DefaultSpringSecurityContextSource">
-		<constructor-arg value="${ldap.server}" />
-		<property name="userDn" value="${ldap.username}" />
-		<property name="password" value="${ldap.password}" />
-	</bean>
-
 	<!-- Cache Config -->
 	<cache:annotation-driven />
 	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager"
@@ -170,7 +163,6 @@
 		</bean>
 		<jdbc:initialize-database data-source="dataSource">
 			<jdbc:script location="classpath:dbSqls/schema.sql" />
-			<jdbc:script location="classpath:dbSqls/data.sql" />
 		</jdbc:initialize-database> 
 	</beans>
 </beans>
