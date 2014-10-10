@@ -81,7 +81,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
                 .listAllCubes(ProjectInstance.DEFAULT_PROJECT_NAME).contains(createdCube));
 
         CubeInstance droppedCube =
-                CubeManager.getInstance(this.getTestConfig()).dropCube("a_whole_new_cube");
+                CubeManager.getInstance(this.getTestConfig()).dropCube("a_whole_new_cube",true);
         assertTrue(createdCube == droppedCube);
 
         assertTrue(!ProjectManager.getInstance(getTestConfig())

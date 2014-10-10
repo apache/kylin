@@ -55,7 +55,7 @@ public class BuildOneCubeTest extends BuildCubeWithEngineTest {
         for (CubeInstance cubeInstance : cubeManager.listAllCubes()) {
             if (!cubeInstance.getName().equalsIgnoreCase("test_kylin_cube_without_slr_empty") &&
                     !cubeInstance.getName().equalsIgnoreCase("test_kylin_cube_with_slr_empty"))
-                cubeManager.dropCube(cubeInstance.getName());
+                cubeManager.dropCube(cubeInstance.getName(),false);
         }
     }
 

@@ -218,7 +218,7 @@ public class CubeManager {
     }
 
     // sync on update
-    public CubeInstance dropCube(String cubeName) throws IOException {
+    public CubeInstance dropCube(String cubeName, boolean deleteDesc) throws IOException {
         logger.info("Dropping cube '" + cubeName + "'");
         // load projects before remove cube from project
         List<ProjectInstance> projects = ProjectManager.getInstance(config).getProjects(cubeName);
@@ -227,8 +227,10 @@ public class CubeManager {
 
         //delete cube instance and cube desc
         CubeInstance cube = getCube(cubeName);
-        if (cube.getDescriptor() != null)
+
+        if (deleteDesc && cube.getDescriptor() != null)
             store.deleteResource(cube.getDescriptor().getResourcePath());
+
         store.deleteResource(cube.getResourcePath());
 
         //delete cube from project
