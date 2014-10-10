@@ -306,7 +306,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         this.execHiveCommand(this.generateLoadDataHql(TABLE_SITES));
     }
 
-    protected void initEnv(boolean deployConfig) throws Exception {
+    protected void initEnv() throws Exception {
         // create log dir
         this.execCommand("mkdir -p /tmp/kylin/logs");
         retrieveJarName();
@@ -324,8 +324,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         deployJarToHadoopCli();
         deployJarToLocalDir();
 
-        if (deployConfig)
-            deployConfigFile();
+        deployConfigFile();
     }
 
     protected void prepareTestData(String joinType) throws Exception {
@@ -347,7 +346,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         ClasspathUtil.addClasspath(new File("../examples/test_case_data/hadoop-site").getAbsolutePath());
         this.createTestMetadata();
 
-        initEnv(true);
+        initEnv();
 
         engineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
         jobManager = new JobManager("Build_Test_Cube_Engine", engineConfig);
