@@ -3,7 +3,7 @@
 	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:task="http://www.springframework.org/schema/task"
 	xmlns:metrics="http://www.ryantenney.com/schema/metrics" xmlns:aop="http://www.springframework.org/schema/aop"
 	xmlns:tx="http://www.springframework.org/schema/tx"  xmlns:cache="http://www.springframework.org/schema/cache"
-	xmlns:p="http://www.springframework.org/schema/p" 
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:jdbc="http://www.springframework.org/schema/jdbc"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans
     http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
     http://www.springframework.org/schema/context
@@ -19,7 +19,9 @@
     http://www.springframework.org/schema/tx
     http://www.springframework.org/schema/tx/spring-tx-3.1.xsd
     http://www.springframework.org/schema/cache
-    http://www.springframework.org/schema/cache/spring-cache.xsd">
+    http://www.springframework.org/schema/cache/spring-cache.xsd
+    http://www.springframework.org/schema/jdbc  
+    http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd">
 
 	<description>Kylin Rest Service</description>
 	<context:annotation-config />
