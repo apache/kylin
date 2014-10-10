@@ -32,82 +32,87 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class DefaultX509TrustManager implements X509TrustManager {
 
-    /** Log object for this class. */
-    private static Logger LOG = LoggerFactory.getLogger(DefaultX509TrustManager.class);
-    private X509TrustManager standardTrustManager = null;
+	/** Log object for this class. */
+	private static Logger LOG = LoggerFactory
+			.getLogger(DefaultX509TrustManager.class);
+	private X509TrustManager standardTrustManager = null;
 
-    /**
-     * Constructor for DefaultX509TrustManager.
-     *
-     */
-    public DefaultX509TrustManager(KeyStore keystore) throws NoSuchAlgorithmException, KeyStoreException {
-        super();
+	/**
+	 * Constructor for DefaultX509TrustManager.
+	 * 
+	 */
+	public DefaultX509TrustManager(KeyStore keystore)
+			throws NoSuchAlgorithmException, KeyStoreException {
+		super();
 
-        TrustManagerFactory factory =
-                TrustManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-        factory.init(keystore);
+		TrustManagerFactory factory = TrustManagerFactory
+				.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+		factory.init(keystore);
 
-        TrustManager[] trustmanagers = factory.getTrustManagers();
+		TrustManager[] trustmanagers = factory.getTrustManagers();
 
-        if (trustmanagers.length == 0) {
-            throw new NoSuchAlgorithmException("SunX509 trust manager not supported");
-        }
+		if (trustmanagers.length == 0) {
+			throw new NoSuchAlgorithmException(
+					"SunX509 trust manager not supported");
+		}
 
-        this.standardTrustManager = (X509TrustManager) trustmanagers[0];
-    }
+		this.standardTrustManager = (X509TrustManager) trustmanagers[0];
+	}
 
-    public X509Certificate[] getAcceptedIssuers() {
-        return this.standardTrustManager.getAcceptedIssuers();
-    }
+	public X509Certificate[] getAcceptedIssuers() {
+		return this.standardTrustManager.getAcceptedIssuers();
+	}
 
-    public boolean isClientTrusted(X509Certificate[] certificates) {
-        return true;
-        //return this.standardTrustManager.isClientTrusted(certificates);
-    }
+	public boolean isClientTrusted(X509Certificate[] certificates) {
+		return true;
+		// return this.standardTrustManager.isClientTrusted(certificates);
+	}
 
-    public boolean isServerTrusted(X509Certificate[] certificates) {
-        if ((certificates != null) && LOG.isDebugEnabled()) {
-            LOG.debug("Server certificate chain:");
+	public boolean isServerTrusted(X509Certificate[] certificates) {
+		if ((certificates != null) && LOG.isDebugEnabled()) {
+			LOG.debug("Server certificate chain:");
 
-            for (int i = 0; i < certificates.length; i++) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("X509Certificate[" + i + "]=" + certificates[i]);
-                }
-            }
-        }
+			for (int i = 0; i < certificates.length; i++) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("X509Certificate[" + i + "]=" + certificates[i]);
+				}
+			}
+		}
 
-        if ((certificates != null) && (certificates.length == 1)) {
-            X509Certificate certificate = certificates[0];
+		if ((certificates != null) && (certificates.length == 1)) {
+			X509Certificate certificate = certificates[0];
 
-            try {
-                certificate.checkValidity();
-            } catch (CertificateException e) {
-                LOG.error(e.toString());
+			try {
+				certificate.checkValidity();
+			} catch (CertificateException e) {
+				LOG.error(e.toString());
 
-                return false;
-            }
+				return false;
+			}
 
-            return true;
-        } else {
-            return true;
-            //     return this.standardTrustManager.isServerTrusted(certificates);
-        }
-    }
+			return true;
+		} else {
+			return true;
+			// return this.standardTrustManager.isServerTrusted(certificates);
+		}
+	}
 
-    @Override
-    public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-        // TODO Auto-generated method stub
+	@Override
+	public void checkClientTrusted(X509Certificate[] chain, String authType)
+			throws CertificateException {
+		// TODO Auto-generated method stub
 
-    }
+	}
 
-    @Override
-    public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-        // TODO Auto-generated method stub
+	@Override
+	public void checkServerTrusted(X509Certificate[] chain, String authType)
+			throws CertificateException {
+		// TODO Auto-generated method stub
 
-    }
+	}
 
 }

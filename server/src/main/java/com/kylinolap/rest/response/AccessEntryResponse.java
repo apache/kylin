@@ -24,45 +24,46 @@ import org.springframework.util.Assert;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class AccessEntryResponse {
 
-    private Permission permission;
-    private Serializable id;
-    private Sid sid;
-    private boolean granting;
+	private Permission permission;
+	private Serializable id;
+	private Sid sid;
+	private boolean granting;
 
-    public AccessEntryResponse() {
-    }
+	public AccessEntryResponse() {
+	}
 
-    public AccessEntryResponse(Serializable id, Sid sid, Permission permission, boolean granting) {
-        Assert.notNull(sid, "Sid required");
-        Assert.notNull(permission, "Permission required");
-        this.id = id;
-        this.sid = sid;
-        this.permission = permission;
-        this.granting = granting;
-    }
+	public AccessEntryResponse(Serializable id, Sid sid, Permission permission,
+			boolean granting) {
+		Assert.notNull(sid, "Sid required");
+		Assert.notNull(permission, "Permission required");
+		this.id = id;
+		this.sid = sid;
+		this.permission = permission;
+		this.granting = granting;
+	}
 
-    public Permission getPermission() {
-        return permission;
-    }
+	public Permission getPermission() {
+		return permission;
+	}
 
-    public void setPermission(Permission permission) {
-        this.permission = permission;
-    }
+	public void setPermission(Permission permission) {
+		this.permission = permission;
+	}
 
-    public Serializable getId() {
-        return id;
-    }
+	public Serializable getId() {
+		return id;
+	}
 
-    public Sid getSid() {
-        return sid;
-    }
+	public Sid getSid() {
+		return sid;
+	}
 
-    public boolean isGranting() {
-        return granting;
-    }
+	public boolean isGranting() {
+		return granting;
+	}
 
 }

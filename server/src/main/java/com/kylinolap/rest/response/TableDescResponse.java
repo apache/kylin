@@ -26,50 +26,52 @@ import com.kylinolap.metadata.model.schema.TableDesc;
  * A response class to wrap TableDesc
  * 
  * @author jianliu
- *
+ * 
  */
 public class TableDescResponse extends TableDesc {
-    @JsonProperty("exd")
-    Map<String, String> descExd = new HashMap<String, String>();
-    @JsonProperty("cardinality")
-    Map<String, Long> cardinality = new HashMap<String, Long>();
+	@JsonProperty("exd")
+	Map<String, String> descExd = new HashMap<String, String>();
+	@JsonProperty("cardinality")
+	Map<String, Long> cardinality = new HashMap<String, Long>();
 
-    /**
-     * @return the cardinality
-     */
-    public Map<String, Long> getCardinality() {
-        return cardinality;
-    }
+	/**
+	 * @return the cardinality
+	 */
+	public Map<String, Long> getCardinality() {
+		return cardinality;
+	}
 
-    /**
-     * @param cardinality the cardinality to set
-     */
-    public void setCardinality(Map<String, Long> cardinality) {
-        this.cardinality = cardinality;
-    }
+	/**
+	 * @param cardinality
+	 *            the cardinality to set
+	 */
+	public void setCardinality(Map<String, Long> cardinality) {
+		this.cardinality = cardinality;
+	}
 
-    /**
-     * @return the descExd
-     */
-    public Map<String, String> getDescExd() {
-        return descExd;
-    }
+	/**
+	 * @return the descExd
+	 */
+	public Map<String, String> getDescExd() {
+		return descExd;
+	}
 
-    /**
-     * @param descExd the descExd to set
-     */
-    public void setDescExd(Map<String, String> descExd) {
-        this.descExd = descExd;
-    }
+	/**
+	 * @param descExd
+	 *            the descExd to set
+	 */
+	public void setDescExd(Map<String, String> descExd) {
+		this.descExd = descExd;
+	}
 
-    /**
-     * @param table
-     */
-    public TableDescResponse(TableDesc table) {
-        this.setColumns(table.getColumns());
-        this.setDatabase(table.getDatabase());
-        this.setName(table.getName());
-        this.setUuid(table.getUuid());
-    }
+	/**
+	 * @param table
+	 */
+	public TableDescResponse(TableDesc table) {
+		this.setColumns(table.getColumns());
+		this.setDatabase(table.getDatabase());
+		this.setName(table.getName());
+		this.setUuid(table.getUuid());
+	}
 
 }

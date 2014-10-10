@@ -25,56 +25,58 @@ import com.kylinolap.metadata.model.cube.MeasureDesc;
 
 /**
  * @author yangli9
- *
+ * 
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class MeasureAggregators {
 
-    private MeasureDesc[] descs;
-    private MeasureAggregator[] aggs;
+	private MeasureDesc[] descs;
+	private MeasureAggregator[] aggs;
 
-    public MeasureAggregators(Collection<MeasureDesc> measureDescs) {
-        this((MeasureDesc[]) measureDescs.toArray(new MeasureDesc[measureDescs.size()]));
-    }
+	public MeasureAggregators(Collection<MeasureDesc> measureDescs) {
+		this((MeasureDesc[]) measureDescs.toArray(new MeasureDesc[measureDescs
+				.size()]));
+	}
 
-    public MeasureAggregators(MeasureDesc... measureDescs) {
-        descs = measureDescs;
-        aggs = new MeasureAggregator[descs.length];
+	public MeasureAggregators(MeasureDesc... measureDescs) {
+		descs = measureDescs;
+		aggs = new MeasureAggregator[descs.length];
 
-        Map<String, Integer> measureIndexMap = new HashMap<String, Integer>();
-        for (int i = 0; i < descs.length; i++) {
-            FunctionDesc func = descs[i].getFunction();
-            aggs[i] = MeasureAggregator.create(func.getExpression(), func.getReturnType());
-            measureIndexMap.put(descs[i].getName(), i);
-        }
-        // fill back dependent aggregator
-        for (int i = 0; i < descs.length; i++) {
-            String depMsrRef = descs[i].getDependentMeasureRef();
-            if (depMsrRef != null) {
-                int index = measureIndexMap.get(depMsrRef);
-                aggs[i].setDependentAggregator(aggs[index]);
-            }
-        }
-    }
+		Map<String, Integer> measureIndexMap = new HashMap<String, Integer>();
+		for (int i = 0; i < descs.length; i++) {
+			FunctionDesc func = descs[i].getFunction();
+			aggs[i] = MeasureAggregator.create(func.getExpression(),
+					func.getReturnType());
+			measureIndexMap.put(descs[i].getName(), i);
+		}
+		// fill back dependent aggregator
+		for (int i = 0; i < descs.length; i++) {
+			String depMsrRef = descs[i].getDependentMeasureRef();
+			if (depMsrRef != null) {
+				int index = measureIndexMap.get(depMsrRef);
+				aggs[i].setDependentAggregator(aggs[index]);
+			}
+		}
+	}
 
-    public void reset() {
-        for (int i = 0; i < aggs.length; i++) {
-            aggs[i].reset();
-        }
-    }
+	public void reset() {
+		for (int i = 0; i < aggs.length; i++) {
+			aggs[i].reset();
+		}
+	}
 
-    public void aggregate(Object[] values) {
-        assert values.length == descs.length;
+	public void aggregate(Object[] values) {
+		assert values.length == descs.length;
 
-        for (int i = 0; i < descs.length; i++) {
-            aggs[i].aggregate(values[i]);
-        }
-    }
+		for (int i = 0; i < descs.length; i++) {
+			aggs[i].aggregate(values[i]);
+		}
+	}
 
-    public void collectStates(Object[] states) {
-        for (int i = 0; i < descs.length; i++) {
-            states[i] = aggs[i].getState();
-        }
-    }
+	public void collectStates(Object[] states) {
+		for (int i = 0; i < descs.length; i++) {
+			states[i] = aggs[i].getState();
+		}
+	}
 
 }

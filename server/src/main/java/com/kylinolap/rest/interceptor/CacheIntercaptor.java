@@ -16,26 +16,28 @@
 
 package com.kylinolap.rest.interceptor;
 
-import com.kylinolap.common.restclient.Broadcaster;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
 
+import com.kylinolap.common.restclient.Broadcaster;
+
 /**
  * @author xduo
- *
+ * 
  */
 @Aspect
 @Component("cacheIntercaptor")
 public class CacheIntercaptor {
 
-    @After("execution(public * com.kylinolap.rest.controller.CubeController.*(..)) || execution(public * com.kylinolap.rest.controller.ProjectController.*(..))")
-    public void flush(JoinPoint joinPoint) {
-        String methodName = joinPoint.getSignature().getName();
+	@After("execution(public * com.kylinolap.rest.controller.CubeController.*(..)) || execution(public * com.kylinolap.rest.controller.ProjectController.*(..))")
+	public void flush(JoinPoint joinPoint) {
+		String methodName = joinPoint.getSignature().getName();
 
-        if (methodName.matches("(update|create|save|disable|enable|delete|drop)")) {
-            Broadcaster.flush();
-        }
-    }
+		if (methodName
+				.matches("(update|create|save|disable|enable|delete|drop)")) {
+			Broadcaster.flush();
+		}
+	}
 }

@@ -31,33 +31,36 @@ import org.junit.Test;
 
 /**
  * @author yangli9
- *
+ * 
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class BaseCuboidMapperPerformanceTest {
 
-    String metadataUrl = "hbase:yadesk00:2181:/hbase-unsecure";
-    String cubeName = "test_kylin_cube_with_slr";
-    Path srcPath = new Path("/download/test_kylin_cube_with_slr_intermediate_table_64mb.seq");
+	String metadataUrl = "hbase:yadesk00:2181:/hbase-unsecure";
+	String cubeName = "test_kylin_cube_with_slr";
+	Path srcPath = new Path(
+			"/download/test_kylin_cube_with_slr_intermediate_table_64mb.seq");
 
-    @Ignore
-    @Test
-    public void test() throws IOException, InterruptedException {
-        Configuration hconf = new Configuration();
-        BaseCuboidMapper mapper = new BaseCuboidMapper();
-        Context context = MockupMapContext.create(hconf, metadataUrl, cubeName, null);
+	@Ignore
+	@Test
+	public void test() throws IOException, InterruptedException {
+		Configuration hconf = new Configuration();
+		BaseCuboidMapper mapper = new BaseCuboidMapper();
+		Context context = MockupMapContext.create(hconf, metadataUrl, cubeName,
+				null);
 
-        mapper.setup(context);
+		mapper.setup(context);
 
-        Reader reader = new Reader(hconf, SequenceFile.Reader.file(srcPath));
-        Writable key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), hconf);
-        Text value = new Text();
+		Reader reader = new Reader(hconf, SequenceFile.Reader.file(srcPath));
+		Writable key = (Writable) ReflectionUtils.newInstance(
+				reader.getKeyClass(), hconf);
+		Text value = new Text();
 
-        while (reader.next(key, value)) {
-            mapper.map(key, value, context);
-        }
+		while (reader.next(key, value)) {
+			mapper.map(key, value, context);
+		}
 
-        reader.close();
-    }
+		reader.close();
+	}
 
 }

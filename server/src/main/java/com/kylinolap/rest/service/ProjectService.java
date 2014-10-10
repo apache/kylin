@@ -36,94 +36,104 @@ import com.kylinolap.rest.security.AclPermission;
 
 /**
  * @author xduo
- *
+ * 
  */
 @Component("projectService")
 public class ProjectService extends BasicService {
 
-    private static final Logger logger = LoggerFactory.getLogger(ProjectService.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(ProjectService.class);
 
-    @Autowired
-    private AccessService accessService;
+	@Autowired
+	private AccessService accessService;
 
-    public ProjectInstance createProject(CreateProjectRequest projectRequest) throws IOException {
-        String projectName = projectRequest.getName();
-        String description = projectRequest.getDescription();
-        ProjectInstance currentProject = getProjectManager().getProject(projectName);
+	public ProjectInstance createProject(CreateProjectRequest projectRequest)
+			throws IOException {
+		String projectName = projectRequest.getName();
+		String description = projectRequest.getDescription();
+		ProjectInstance currentProject = getProjectManager().getProject(
+				projectName);
 
-        if (currentProject != null) {
-            throw new InternalErrorException("The project named " + projectName + " already exists");
-        }
-        String owner = SecurityContextHolder.getContext().getAuthentication().getName();
-        ProjectInstance createdProject = getProjectManager().createProject(projectName, owner, description);
-        accessService.init(createdProject, AclPermission.ADMINISTRATION);
-        logger.debug("New project created.");
+		if (currentProject != null) {
+			throw new InternalErrorException("The project named " + projectName
+					+ " already exists");
+		}
+		String owner = SecurityContextHolder.getContext().getAuthentication()
+				.getName();
+		ProjectInstance createdProject = getProjectManager().createProject(
+				projectName, owner, description);
+		accessService.init(createdProject, AclPermission.ADMINISTRATION);
+		logger.debug("New project created.");
 
-        return createdProject;
-    }
+		return createdProject;
+	}
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public ProjectInstance updateProject(UpdateProjectRequest projectRequest) throws IOException {
-        String formerProjectName = projectRequest.getFormerProjectName();
-        String newProjectName = projectRequest.getNewProjectName();
-        String newDescription = projectRequest.getNewDescription();
+	@PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+			+ " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
+	public ProjectInstance updateProject(UpdateProjectRequest projectRequest)
+			throws IOException {
+		String formerProjectName = projectRequest.getFormerProjectName();
+		String newProjectName = projectRequest.getNewProjectName();
+		String newDescription = projectRequest.getNewDescription();
 
-        ProjectInstance currentProject = getProjectManager().getProject(formerProjectName);
+		ProjectInstance currentProject = getProjectManager().getProject(
+				formerProjectName);
 
-        if (currentProject == null) {
-            throw new InternalErrorException("The project named " + formerProjectName + " does not exists");
-        }
+		if (currentProject == null) {
+			throw new InternalErrorException("The project named "
+					+ formerProjectName + " does not exists");
+		}
 
-        ProjectInstance updatedProject =
-                getProjectManager().updateProject(currentProject, newProjectName, newDescription);
+		ProjectInstance updatedProject = getProjectManager().updateProject(
+				currentProject, newProjectName, newDescription);
 
-        logger.debug("Project updated.");
+		logger.debug("Project updated.");
 
-        return updatedProject;
-    }
+		return updatedProject;
+	}
 
-    public List<ProjectInstance> listAllProjects(final Integer limit, final Integer offset) {
-        List<ProjectInstance> projects = getProjectManager().listAllProjects();
+	public List<ProjectInstance> listAllProjects(final Integer limit,
+			final Integer offset) {
+		List<ProjectInstance> projects = getProjectManager().listAllProjects();
 
-        int climit = (null == limit) ? 30 : limit;
-        int coffset = (null == offset) ? 0 : offset;
+		int climit = (null == limit) ? 30 : limit;
+		int coffset = (null == offset) ? 0 : offset;
 
-        if (projects.size() <= coffset) {
-            return Collections.emptyList();
-        }
+		if (projects.size() <= coffset) {
+			return Collections.emptyList();
+		}
 
-        if ((projects.size() - coffset) < climit) {
-            return projects.subList(coffset, projects.size());
-        }
+		if ((projects.size() - coffset) < climit) {
+			return projects.subList(coffset, projects.size());
+		}
 
-        return projects.subList(coffset, coffset + climit);
-    }
+		return projects.subList(coffset, coffset + climit);
+	}
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public void deleteProject(String projectName) throws IOException {
-        ProjectInstance project = getProjectManager().getProject(projectName);
-        getProjectManager().dropProject(projectName);
+	@PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+			+ " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
+	public void deleteProject(String projectName) throws IOException {
+		ProjectInstance project = getProjectManager().getProject(projectName);
+		getProjectManager().dropProject(projectName);
 
-        accessService.clean(project, true);
-    }
+		accessService.clean(project, true);
+	}
 
-    /**
-     * @param name
-     * @throws IOException 
-     */
-    public void reloadProjectCache(String name) throws IOException {
-        ProjectInstance project = this.getProjectManager().getProject(name);
-        this.getProjectManager().loadProjectCache(project, false);
-    }
+	/**
+	 * @param name
+	 * @throws IOException
+	 */
+	public void reloadProjectCache(String name) throws IOException {
+		ProjectInstance project = this.getProjectManager().getProject(name);
+		this.getProjectManager().loadProjectCache(project, false);
+	}
 
-    /**
-     * @param name
-     */
-    public void removeProjectCache(String name) {
-        ProjectInstance project = this.getProjectManager().getProject(name);
-        this.getProjectManager().removeProjectCache(project);
-    }
+	/**
+	 * @param name
+	 */
+	public void removeProjectCache(String name) {
+		ProjectInstance project = this.getProjectManager().getProject(name);
+		this.getProjectManager().removeProjectCache(project);
+	}
 
 }

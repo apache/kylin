@@ -25,31 +25,31 @@ import com.kylinolap.common.util.BytesUtil;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class LongSerializer extends MeasureSerializer<LongWritable> {
 
-    // avoid mass object creation
-    LongWritable current = new LongWritable();
+	// avoid mass object creation
+	LongWritable current = new LongWritable();
 
-    @Override
-    public void serialize(LongWritable value, ByteBuffer out) {
-        BytesUtil.writeVLong(value.get(), out);
-    }
+	@Override
+	public void serialize(LongWritable value, ByteBuffer out) {
+		BytesUtil.writeVLong(value.get(), out);
+	}
 
-    @Override
-    public LongWritable deserialize(ByteBuffer in) {
-        current.set(BytesUtil.readVLong(in));
-        return current;
-    }
+	@Override
+	public LongWritable deserialize(ByteBuffer in) {
+		current.set(BytesUtil.readVLong(in));
+		return current;
+	}
 
-    @Override
-    public LongWritable valueOf(byte[] value) {
-        if (value == null)
-            current.set(0L);
-        else
-            current.set(Long.parseLong(Bytes.toString(value)));
-        return current;
-    }
+	@Override
+	public LongWritable valueOf(byte[] value) {
+		if (value == null)
+			current.set(0L);
+		else
+			current.set(Long.parseLong(Bytes.toString(value)));
+		return current;
+	}
 
 }

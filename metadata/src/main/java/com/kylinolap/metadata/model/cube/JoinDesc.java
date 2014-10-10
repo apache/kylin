@@ -22,117 +22,117 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Created with IntelliJ IDEA.
- * User: lukhan
- * Date: 10/14/13
- * Time: 2:16 PM
- * To change this template use File | Settings | File Templates.
+ * Created with IntelliJ IDEA. User: lukhan Date: 10/14/13 Time: 2:16 PM To
+ * change this template use File | Settings | File Templates.
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class JoinDesc {
 
-    //inner, left, right, outer...
-    @JsonProperty("type")
-    private String type;
-    @JsonProperty("primary_key")
-    private String[] primaryKey;
-    @JsonProperty("foreign_key")
-    private String[] foreignKey;
+	// inner, left, right, outer...
+	@JsonProperty("type")
+	private String type;
+	@JsonProperty("primary_key")
+	private String[] primaryKey;
+	@JsonProperty("foreign_key")
+	private String[] foreignKey;
 
-    private TblColRef[] primaryKeyColumns;
-    private TblColRef[] foreignKeyColumns;
+	private TblColRef[] primaryKeyColumns;
+	private TblColRef[] foreignKeyColumns;
 
-    public void swapPKFK() {
-        String[] t = primaryKey;
-        primaryKey = foreignKey;
-        foreignKey = t;
+	public void swapPKFK() {
+		String[] t = primaryKey;
+		primaryKey = foreignKey;
+		foreignKey = t;
 
-        TblColRef[] tt = primaryKeyColumns;
-        primaryKeyColumns = foreignKeyColumns;
-        foreignKeyColumns = tt;
-    }
+		TblColRef[] tt = primaryKeyColumns;
+		primaryKeyColumns = foreignKeyColumns;
+		foreignKeyColumns = tt;
+	}
 
-    public String getType() {
-        return type;
-    }
+	public String getType() {
+		return type;
+	}
 
-    public void setType(String type) {
-        this.type = type;
-    }
+	public void setType(String type) {
+		this.type = type;
+	}
 
-    public String[] getPrimaryKey() {
-        return primaryKey;
-    }
+	public String[] getPrimaryKey() {
+		return primaryKey;
+	}
 
-    public void setPrimaryKey(String[] primaryKey) {
-        this.primaryKey = primaryKey;
-    }
+	public void setPrimaryKey(String[] primaryKey) {
+		this.primaryKey = primaryKey;
+	}
 
-    public String[] getForeignKey() {
-        return foreignKey;
-    }
+	public String[] getForeignKey() {
+		return foreignKey;
+	}
 
-    public void setForeignKey(String[] foreignKey) {
-        this.foreignKey = foreignKey;
-    }
+	public void setForeignKey(String[] foreignKey) {
+		this.foreignKey = foreignKey;
+	}
 
-    public TblColRef[] getPrimaryKeyColumns() {
-        return primaryKeyColumns;
-    }
+	public TblColRef[] getPrimaryKeyColumns() {
+		return primaryKeyColumns;
+	}
 
-    public void setPrimaryKeyColumns(TblColRef[] primaryKeyColumns) {
-        this.primaryKeyColumns = primaryKeyColumns;
-    }
+	public void setPrimaryKeyColumns(TblColRef[] primaryKeyColumns) {
+		this.primaryKeyColumns = primaryKeyColumns;
+	}
 
-    public TblColRef[] getForeignKeyColumns() {
-        return foreignKeyColumns;
-    }
+	public TblColRef[] getForeignKeyColumns() {
+		return foreignKeyColumns;
+	}
 
-    public void setForeignKeyColumns(TblColRef[] foreignKeyColumns) {
-        this.foreignKeyColumns = foreignKeyColumns;
-    }
+	public void setForeignKeyColumns(TblColRef[] foreignKeyColumns) {
+		this.foreignKeyColumns = foreignKeyColumns;
+	}
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + Arrays.hashCode(primaryKeyColumns);
-        result = prime * result + Arrays.hashCode(foreignKeyColumns);
-        result = prime * result + this.type.hashCode();
-        return result;
-    }
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(primaryKeyColumns);
+		result = prime * result + Arrays.hashCode(foreignKeyColumns);
+		result = prime * result + this.type.hashCode();
+		return result;
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        JoinDesc other = (JoinDesc) obj;
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		JoinDesc other = (JoinDesc) obj;
 
-        if (!this.columnsEqualIgnoringOrder(foreignKeyColumns, other.foreignKeyColumns))
-            return false;
-        if (!this.columnsEqualIgnoringOrder(primaryKeyColumns, other.primaryKeyColumns))
-            return false;
+		if (!this.columnsEqualIgnoringOrder(foreignKeyColumns,
+				other.foreignKeyColumns))
+			return false;
+		if (!this.columnsEqualIgnoringOrder(primaryKeyColumns,
+				other.primaryKeyColumns))
+			return false;
 
-        if (!this.type.equalsIgnoreCase(other.getType()))
-            return false;
-        return true;
-    }
+		if (!this.type.equalsIgnoreCase(other.getType()))
+			return false;
+		return true;
+	}
 
-    private boolean columnsEqualIgnoringOrder(TblColRef[] a, TblColRef[] b) {
-        if (a.length != b.length)
-            return false;
+	private boolean columnsEqualIgnoringOrder(TblColRef[] a, TblColRef[] b) {
+		if (a.length != b.length)
+			return false;
 
-        return Arrays.asList(a).containsAll(Arrays.asList(b));
-    }
+		return Arrays.asList(a).containsAll(Arrays.asList(b));
+	}
 
-    @Override
-    public String toString() {
-        return "JoinDesc [type=" + type + ", primary_key=" + Arrays.toString(primaryKey) + ", foreign_key="
-                + Arrays.toString(foreignKey) + "]";
-    }
+	@Override
+	public String toString() {
+		return "JoinDesc [type=" + type + ", primary_key="
+				+ Arrays.toString(primaryKey) + ", foreign_key="
+				+ Arrays.toString(foreignKey) + "]";
+	}
 
 }

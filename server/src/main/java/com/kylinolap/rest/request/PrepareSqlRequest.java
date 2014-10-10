@@ -18,45 +18,45 @@ package com.kylinolap.rest.request;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class PrepareSqlRequest extends SQLRequest {
 
-    public PrepareSqlRequest() {
-        super();
-    }
+	public PrepareSqlRequest() {
+		super();
+	}
 
-    private StateParam[] params;
+	private StateParam[] params;
 
-    public StateParam[] getParams() {
-        return params;
-    }
+	public StateParam[] getParams() {
+		return params;
+	}
 
-    public void setParams(StateParam[] params) {
-        this.params = params;
-    }
+	public void setParams(StateParam[] params) {
+		this.params = params;
+	}
 
-    public static class StateParam {
-        private String className;
-        private String value;
+	public static class StateParam {
+		private String className;
+		private String value;
 
-        public StateParam() {
-        }
+		public StateParam() {
+		}
 
-        public String getClassName() {
-            return className;
-        }
+		public String getClassName() {
+			return className;
+		}
 
-        public void setClassName(String className) {
-            this.className = className;
-        }
+		public void setClassName(String className) {
+			this.className = className;
+		}
 
-        public String getValue() {
-            return value;
-        }
+		public String getValue() {
+			return value;
+		}
 
-        public void setValue(String value) {
-            this.value = value;
-        }
-    }
+		public void setValue(String value) {
+			this.value = value;
+		}
+	}
 }

@@ -34,51 +34,54 @@ import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class IIBulkLoadJob extends AbstractHadoopJob {
 
-    @Override
-    public int run(String[] args) throws Exception {
-        Options options = new Options();
+	@Override
+	public int run(String[] args) throws Exception {
+		Options options = new Options();
 
-        try {
-            options.addOption(OPTION_INPUT_PATH);
-            options.addOption(OPTION_HTABLE_NAME);
-            options.addOption(OPTION_CUBE_NAME);
-            parseOptions(options, args);
+		try {
+			options.addOption(OPTION_INPUT_PATH);
+			options.addOption(OPTION_HTABLE_NAME);
+			options.addOption(OPTION_CUBE_NAME);
+			parseOptions(options, args);
 
-            String tableName = getOptionValue(OPTION_HTABLE_NAME);
-            String input = getOptionValue(OPTION_INPUT_PATH);
-            String cubeName = getOptionValue(OPTION_CUBE_NAME);
+			String tableName = getOptionValue(OPTION_HTABLE_NAME);
+			String input = getOptionValue(OPTION_INPUT_PATH);
+			String cubeName = getOptionValue(OPTION_CUBE_NAME);
 
-            FileSystem fs = FileSystem.get(getConf());
-            FsPermission permission = new FsPermission((short) 0777);
-            fs.setPermission(new Path(input, InvertedIndexDesc.HBASE_FAMILY), permission);
+			FileSystem fs = FileSystem.get(getConf());
+			FsPermission permission = new FsPermission((short) 0777);
+			fs.setPermission(new Path(input, InvertedIndexDesc.HBASE_FAMILY),
+					permission);
 
-            int hbaseExitCode =
-                    ToolRunner.run(new LoadIncrementalHFiles(getConf()), new String[] { input, tableName });
+			int hbaseExitCode = ToolRunner.run(new LoadIncrementalHFiles(
+					getConf()), new String[] { input, tableName });
 
-            CubeManager mgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-            CubeInstance cube = mgr.getCube(cubeName);
-            CubeSegment seg = cube.getFirstSegment();
-            seg.setStorageLocationIdentifier(tableName);
-            seg.setStatus(CubeSegmentStatusEnum.READY);
-            mgr.updateCube(cube);
+			CubeManager mgr = CubeManager.getInstance(KylinConfig
+					.getInstanceFromEnv());
+			CubeInstance cube = mgr.getCube(cubeName);
+			CubeSegment seg = cube.getFirstSegment();
+			seg.setStorageLocationIdentifier(tableName);
+			seg.setStatus(CubeSegmentStatusEnum.READY);
+			mgr.updateCube(cube);
 
-            return hbaseExitCode;
+			return hbaseExitCode;
 
-        } catch (Exception e) {
-            printUsage(options);
-            e.printStackTrace(System.err);
-            return 2;
-        }
-    }
+		} catch (Exception e) {
+			printUsage(options);
+			e.printStackTrace(System.err);
+			return 2;
+		}
+	}
 
-    public static void main(String[] args) throws Exception {
-        IIBulkLoadJob job = new IIBulkLoadJob();
-        job.setConf(HadoopUtil.newHBaseConfiguration(KylinConfig.getInstanceFromEnv().getStorageUrl()));
-        int exitCode = ToolRunner.run(job, args);
-        System.exit(exitCode);
-    }
+	public static void main(String[] args) throws Exception {
+		IIBulkLoadJob job = new IIBulkLoadJob();
+		job.setConf(HadoopUtil.newHBaseConfiguration(KylinConfig
+				.getInstanceFromEnv().getStorageUrl()));
+		int exitCode = ToolRunner.run(job, args);
+		System.exit(exitCode);
+	}
 }

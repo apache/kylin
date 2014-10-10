@@ -27,38 +27,39 @@ import com.kylinolap.rest.util.ClasspathUtil;
 
 public class DebugTomcat {
 
-    public static void main(String[] args) throws Exception {
-        if (args.length >= 1) {
-            System.setProperty("kylin.metadata.url", args[0]);
-        }
-        int port = 80;
-        if (args.length >= 2) {
-            port = Integer.parseInt(args[1]);
-        }
+	public static void main(String[] args) throws Exception {
+		if (args.length >= 1) {
+			System.setProperty("kylin.metadata.url", args[0]);
+		}
+		int port = 80;
+		if (args.length >= 2) {
+			port = Integer.parseInt(args[1]);
+		}
 
-        ClasspathUtil.addClasspath(new File("../examples/test_case_data/hadoop-site").getAbsolutePath());
-        String webBase = new File("../webapp/app").getAbsolutePath();
-        String apiBase = new File("src/main/webapp").getAbsolutePath();
+		ClasspathUtil.addClasspath(new File(
+				"../examples/test_case_data/hadoop-site").getAbsolutePath());
+		String webBase = new File("../webapp/app").getAbsolutePath();
+		String apiBase = new File("src/main/webapp").getAbsolutePath();
 
-        Tomcat tomcat = new Tomcat();
-        tomcat.setPort(port);
-        tomcat.setBaseDir(".");
+		Tomcat tomcat = new Tomcat();
+		tomcat.setPort(port);
+		tomcat.setBaseDir(".");
 
-        // Add AprLifecycleListener
-        StandardServer server = (StandardServer) tomcat.getServer();
-        AprLifecycleListener listener = new AprLifecycleListener();
-        server.addLifecycleListener(listener);
+		// Add AprLifecycleListener
+		StandardServer server = (StandardServer) tomcat.getServer();
+		AprLifecycleListener listener = new AprLifecycleListener();
+		server.addLifecycleListener(listener);
 
-        tomcat.addWebapp("/kylin", apiBase);
-        Context webContext = tomcat.addWebapp("/", webBase);
-        ErrorPage notFound = new ErrorPage();
-        notFound.setErrorCode(404);
-        notFound.setLocation("/index.html");
-        webContext.addErrorPage(notFound);
-        webContext.addWelcomeFile("index.html");
+		tomcat.addWebapp("/kylin", apiBase);
+		Context webContext = tomcat.addWebapp("/", webBase);
+		ErrorPage notFound = new ErrorPage();
+		notFound.setErrorCode(404);
+		notFound.setLocation("/index.html");
+		webContext.addErrorPage(notFound);
+		webContext.addWelcomeFile("index.html");
 
-        tomcat.start();
-        tomcat.getServer().await();
-    }
+		tomcat.start();
+		tomcat.getServer().await();
+	}
 
 }

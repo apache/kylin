@@ -18,17 +18,17 @@ package com.kylinolap.cube.invertedindex;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public interface ColumnValueContainer {
 
-    void append(int value);
+	void append(int value);
 
-    void closeForChange();
+	void closeForChange();
 
-    int getSize();
+	int getSize();
 
-    // works only after closeForChange()
-    int getValueAt(int i);
+	// works only after closeForChange()
+	int getValueAt(int i);
 
 }

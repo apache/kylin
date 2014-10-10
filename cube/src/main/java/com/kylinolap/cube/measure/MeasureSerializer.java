@@ -23,38 +23,39 @@ import com.kylinolap.metadata.model.schema.DataType;
 
 /**
  * @author yangli9
- *
+ * 
  */
 abstract public class MeasureSerializer<T> implements BytesSerializer<T> {
 
-    final static HashMap<String, Class<?>> implementations = new HashMap<String, Class<?>>();
-    static {
-        implementations.put("decimal", BigDecimalSerializer.class);
-        implementations.put("double", DoubleSerializer.class);
-        implementations.put("float", DoubleSerializer.class);
-        implementations.put("bigint", LongSerializer.class);
-        implementations.put("long", LongSerializer.class);
-        implementations.put("integer", LongSerializer.class);
-        implementations.put("int", LongSerializer.class);
-    }
+	final static HashMap<String, Class<?>> implementations = new HashMap<String, Class<?>>();
+	static {
+		implementations.put("decimal", BigDecimalSerializer.class);
+		implementations.put("double", DoubleSerializer.class);
+		implementations.put("float", DoubleSerializer.class);
+		implementations.put("bigint", LongSerializer.class);
+		implementations.put("long", LongSerializer.class);
+		implementations.put("integer", LongSerializer.class);
+		implementations.put("int", LongSerializer.class);
+	}
 
-    public static MeasureSerializer<?> create(String dataType) {
-        DataType type = DataType.getInstance(dataType);
-        if (type.isHLLC()) {
-            return new HLLCSerializer(type.getPrecision());
-        }
+	public static MeasureSerializer<?> create(String dataType) {
+		DataType type = DataType.getInstance(dataType);
+		if (type.isHLLC()) {
+			return new HLLCSerializer(type.getPrecision());
+		}
 
-        Class<?> clz = implementations.get(type.getName());
-        if (clz == null)
-            throw new RuntimeException("No MeasureSerializer for type " + dataType);
+		Class<?> clz = implementations.get(type.getName());
+		if (clz == null)
+			throw new RuntimeException("No MeasureSerializer for type "
+					+ dataType);
 
-        try {
-            return (MeasureSerializer<?>) clz.newInstance();
-        } catch (Exception e) {
-            throw new RuntimeException(e); // never happen
-        }
-    }
+		try {
+			return (MeasureSerializer<?>) clz.newInstance();
+		} catch (Exception e) {
+			throw new RuntimeException(e); // never happen
+		}
+	}
 
-    abstract public T valueOf(byte[] value);
+	abstract public T valueOf(byte[] value);
 
 }

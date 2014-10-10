@@ -21,52 +21,53 @@ import java.util.Random;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class Debug {
 
-    public static void main(String[] args) throws IOException {
-        //        MetadataManager mgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-        //        CubeDesc cubeDesc = mgr.getCubeDesc("geox_trans_mtrc_sd_cube_desc");
-        //
-        //        int mathCalcCuboidCount = CuboidCLI.mathCalcCuboidCount(cubeDesc);
-        //        System.out.println(mathCalcCuboidCount);
+	public static void main(String[] args) throws IOException {
+		// MetadataManager mgr =
+		// MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+		// CubeDesc cubeDesc = mgr.getCubeDesc("geox_trans_mtrc_sd_cube_desc");
+		//
+		// int mathCalcCuboidCount = CuboidCLI.mathCalcCuboidCount(cubeDesc);
+		// System.out.println(mathCalcCuboidCount);
 
-        String[] codeSpace = new String[256 * 256 * 256];
+		String[] codeSpace = new String[256 * 256 * 256];
 
-        System.out.println("loading...");
-        byte[] bytes = new byte[3];
-        int p = 0;
-        for (int i = 0; i < 256; i++) {
-            for (int j = 0; j < 256; j++) {
-                for (int k = 0; k < 256; k++) {
-                    bytes[0] = (byte) i;
-                    bytes[1] = (byte) j;
-                    bytes[2] = (byte) k;
-                    codeSpace[p] = new String(bytes, "ISO-8859-1");
-                    if (codeSpace[p].length() != 3)
-                        throw new IllegalStateException();
-                    p++;
-                }
-            }
-        }
+		System.out.println("loading...");
+		byte[] bytes = new byte[3];
+		int p = 0;
+		for (int i = 0; i < 256; i++) {
+			for (int j = 0; j < 256; j++) {
+				for (int k = 0; k < 256; k++) {
+					bytes[0] = (byte) i;
+					bytes[1] = (byte) j;
+					bytes[2] = (byte) k;
+					codeSpace[p] = new String(bytes, "ISO-8859-1");
+					if (codeSpace[p].length() != 3)
+						throw new IllegalStateException();
+					p++;
+				}
+			}
+		}
 
-        System.out.println("testing...");
-        Random rand = new Random();
-        while (true) {
-            int a = rand.nextInt(codeSpace.length);
-            int b = rand.nextInt(codeSpace.length);
-            int comp = codeSpace[a].compareTo(codeSpace[b]);
-            boolean ok;
-            if (a == b)
-                ok = comp == 0;
-            else if (a < b)
-                ok = comp < 0;
-            else
-                ok = comp > 0;
-            if (!ok)
-                throw new IllegalStateException();
-        }
-    }
+		System.out.println("testing...");
+		Random rand = new Random();
+		while (true) {
+			int a = rand.nextInt(codeSpace.length);
+			int b = rand.nextInt(codeSpace.length);
+			int comp = codeSpace[a].compareTo(codeSpace[b]);
+			boolean ok;
+			if (a == b)
+				ok = comp == 0;
+			else if (a < b)
+				ok = comp < 0;
+			else
+				ok = comp > 0;
+			if (!ok)
+				throw new IllegalStateException();
+		}
+	}
 
 }

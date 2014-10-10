@@ -92,7 +92,8 @@ public class SSHClient {
                 }
             }
 
-            // send "C0644 filesize filename", where filename should not include '/'
+            // send "C0644 filesize filename", where filename should not include
+            // '/'
             long filesize = _lfile.length();
             command = "C0644 " + filesize + " ";
             if (localFile.lastIndexOf("/") > 0) {
@@ -116,7 +117,7 @@ public class SSHClient {
                 int len = fis.read(buf, 0, buf.length);
                 if (len <= 0)
                     break;
-                out.write(buf, 0, len); //out.flush();
+                out.write(buf, 0, len); // out.flush();
             }
             fis.close();
             fis = null;
@@ -165,7 +166,7 @@ public class SSHClient {
 
             channel.setInputStream(null);
 
-            //channel.setOutputStream(System.out);
+            // channel.setOutputStream(System.out);
 
             ((ChannelExec) channel).setErrStream(System.err);
 
@@ -204,8 +205,7 @@ public class SSHClient {
                     if (in.available() > 0)
                         continue;
                     exitCode = channel.getExitStatus();
-                    System.out
-                            .println("[" + username + "@" + hostname + "] Command exit-status: " + exitCode);
+                    System.out.println("[" + username + "@" + hostname + "] Command exit-status: " + exitCode);
 
                     break;
                 }
@@ -228,9 +228,9 @@ public class SSHClient {
     private int checkAck(InputStream in) throws IOException {
         int b = in.read();
         // b may be 0 for success,
-        //          1 for error,
-        //          2 for fatal error,
-        //          -1
+        // 1 for error,
+        // 2 for fatal error,
+        // -1
         if (b == 0)
             return b;
         if (b == -1)

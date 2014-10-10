@@ -16,7 +16,7 @@
 
 package com.kylinolap.job;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.After;
 import org.junit.Before;
@@ -32,70 +32,71 @@ import com.kylinolap.job.engine.JobEngineConfig;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class JobInstanceTest extends LocalFileMetadataTestCase {
-    @Before
-    public void before() throws Exception {
-        this.createTestMetadata();
-    }
+	@Before
+	public void before() throws Exception {
+		this.createTestMetadata();
+	}
 
-    @After
-    public void after() throws Exception {
-        this.cleanupTestMetadata();
-    }
+	@After
+	public void after() throws Exception {
+		this.cleanupTestMetadata();
+	}
 
-    @Test
-    public void testJobInstanceStatus() throws Exception {
-        KylinConfig kylinCfg = KylinConfig.getInstanceFromEnv();
-        JobManager jobManager = new JobManager("JobInstanceTest", new JobEngineConfig(kylinCfg));
+	@Test
+	public void testJobInstanceStatus() throws Exception {
+		KylinConfig kylinCfg = KylinConfig.getInstanceFromEnv();
+		JobManager jobManager = new JobManager("JobInstanceTest",
+				new JobEngineConfig(kylinCfg));
 
-        JobInstance jobInstance =
-                jobManager.createJob("test_kylin_cube_with_slr_1_new_segment",
-                        "20130331080000_20131212080000", CubeBuildTypeEnum.BUILD);
-        // initial job status should be PENDING
-        assertEquals(JobStatusEnum.PENDING, jobInstance.getStatus());
+		JobInstance jobInstance = jobManager.createJob(
+				"test_kylin_cube_with_slr_1_new_segment",
+				"20130331080000_20131212080000", CubeBuildTypeEnum.BUILD);
+		// initial job status should be PENDING
+		assertEquals(JobStatusEnum.PENDING, jobInstance.getStatus());
 
-        // if a step fails, job status should be ERROR
-        jobInstance.getSteps().get(3).setStatus(JobStepStatusEnum.ERROR);
-        assertEquals(JobStatusEnum.ERROR, jobInstance.getStatus());
+		// if a step fails, job status should be ERROR
+		jobInstance.getSteps().get(3).setStatus(JobStepStatusEnum.ERROR);
+		assertEquals(JobStatusEnum.ERROR, jobInstance.getStatus());
 
-        // then resume job, job status should be NEW
-        jobInstance.getSteps().get(0).setStatus(JobStepStatusEnum.FINISHED);
-        jobInstance.getSteps().get(1).setStatus(JobStepStatusEnum.FINISHED);
-        jobInstance.getSteps().get(2).setStatus(JobStepStatusEnum.FINISHED);
-        jobInstance.getSteps().get(3).setStatus(JobStepStatusEnum.PENDING);
-        assertEquals(JobStatusEnum.PENDING, jobInstance.getStatus());
+		// then resume job, job status should be NEW
+		jobInstance.getSteps().get(0).setStatus(JobStepStatusEnum.FINISHED);
+		jobInstance.getSteps().get(1).setStatus(JobStepStatusEnum.FINISHED);
+		jobInstance.getSteps().get(2).setStatus(JobStepStatusEnum.FINISHED);
+		jobInstance.getSteps().get(3).setStatus(JobStepStatusEnum.PENDING);
+		assertEquals(JobStatusEnum.PENDING, jobInstance.getStatus());
 
-        // running job
-        jobInstance.getSteps().get(0).setStatus(JobStepStatusEnum.FINISHED);
-        jobInstance.getSteps().get(1).setStatus(JobStepStatusEnum.FINISHED);
-        jobInstance.getSteps().get(2).setStatus(JobStepStatusEnum.FINISHED);
-        jobInstance.getSteps().get(3).setStatus(JobStepStatusEnum.RUNNING);
-        assertEquals(JobStatusEnum.RUNNING, jobInstance.getStatus());
+		// running job
+		jobInstance.getSteps().get(0).setStatus(JobStepStatusEnum.FINISHED);
+		jobInstance.getSteps().get(1).setStatus(JobStepStatusEnum.FINISHED);
+		jobInstance.getSteps().get(2).setStatus(JobStepStatusEnum.FINISHED);
+		jobInstance.getSteps().get(3).setStatus(JobStepStatusEnum.RUNNING);
+		assertEquals(JobStatusEnum.RUNNING, jobInstance.getStatus());
 
-        // kill job
-        jobInstance.getSteps().get(0).setStatus(JobStepStatusEnum.FINISHED);
-        jobInstance.getSteps().get(1).setStatus(JobStepStatusEnum.FINISHED);
-        jobInstance.getSteps().get(2).setStatus(JobStepStatusEnum.FINISHED);
-        jobInstance.getSteps().get(3).setStatus(JobStepStatusEnum.DISCARDED);
-        assertEquals(JobStatusEnum.DISCARDED, jobInstance.getStatus());
+		// kill job
+		jobInstance.getSteps().get(0).setStatus(JobStepStatusEnum.FINISHED);
+		jobInstance.getSteps().get(1).setStatus(JobStepStatusEnum.FINISHED);
+		jobInstance.getSteps().get(2).setStatus(JobStepStatusEnum.FINISHED);
+		jobInstance.getSteps().get(3).setStatus(JobStepStatusEnum.DISCARDED);
+		assertEquals(JobStatusEnum.DISCARDED, jobInstance.getStatus());
 
-        // finish job
-        for (JobStep step : jobInstance.getSteps()) {
-            step.setStatus(JobStepStatusEnum.FINISHED);
-        }
-        assertEquals(JobStatusEnum.FINISHED, jobInstance.getStatus());
+		// finish job
+		for (JobStep step : jobInstance.getSteps()) {
+			step.setStatus(JobStepStatusEnum.FINISHED);
+		}
+		assertEquals(JobStatusEnum.FINISHED, jobInstance.getStatus());
 
-        // finish job
-        for (JobStep step : jobInstance.getSteps()) {
-            step.setStatus(JobStepStatusEnum.NEW);
-        }
-        assertEquals(JobStatusEnum.NEW, jobInstance.getStatus());
+		// finish job
+		for (JobStep step : jobInstance.getSteps()) {
+			step.setStatus(JobStepStatusEnum.NEW);
+		}
+		assertEquals(JobStatusEnum.NEW, jobInstance.getStatus());
 
-        // default
-        jobInstance.getSteps().get(3).setStatus(JobStepStatusEnum.WAITING);
-        assertEquals(JobStatusEnum.RUNNING, jobInstance.getStatus());
-    }
+		// default
+		jobInstance.getSteps().get(3).setStatus(JobStepStatusEnum.WAITING);
+		assertEquals(JobStatusEnum.RUNNING, jobInstance.getStatus());
+	}
 
 }

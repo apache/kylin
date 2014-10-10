@@ -28,28 +28,30 @@ import com.kylinolap.common.util.ByteArray;
 /**
  * @author yangli9
  */
-public class IIDistinctColumnsCombiner extends Reducer<ShortWritable, Text, ShortWritable, Text> {
+public class IIDistinctColumnsCombiner extends
+		Reducer<ShortWritable, Text, ShortWritable, Text> {
 
-    private Text outputValue = new Text();
+	private Text outputValue = new Text();
 
-    @Override
-    protected void setup(Context context) throws IOException {
-    }
+	@Override
+	protected void setup(Context context) throws IOException {
+	}
 
-    @Override
-    public void reduce(ShortWritable key, Iterable<Text> values, Context context) throws IOException,
-            InterruptedException {
+	@Override
+	public void reduce(ShortWritable key, Iterable<Text> values, Context context)
+			throws IOException, InterruptedException {
 
-        HashSet<ByteArray> set = new HashSet<ByteArray>();
-        for (Text textValue : values) {
-            ByteArray value = new ByteArray(Bytes.copy(textValue.getBytes(), 0, textValue.getLength()));
-            set.add(value);
-        }
+		HashSet<ByteArray> set = new HashSet<ByteArray>();
+		for (Text textValue : values) {
+			ByteArray value = new ByteArray(Bytes.copy(textValue.getBytes(), 0,
+					textValue.getLength()));
+			set.add(value);
+		}
 
-        for (ByteArray value : set) {
-            outputValue.set(value.data);
-            context.write(key, outputValue);
-        }
-    }
+		for (ByteArray value : set) {
+			outputValue.set(value.data);
+			context.write(key, outputValue);
+		}
+	}
 
 }

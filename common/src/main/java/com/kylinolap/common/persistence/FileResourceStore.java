@@ -23,8 +23,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-import com.kylinolap.common.KylinConfig;
 import org.apache.commons.io.IOUtils;
+
+import com.kylinolap.common.KylinConfig;
 
 public class FileResourceStore extends ResourceStore {
 
@@ -34,8 +35,7 @@ public class FileResourceStore extends ResourceStore {
         super(kylinConfig);
         root = new File(kylinConfig.getMetadataUrl()).getAbsoluteFile();
         if (root.exists() == false)
-            throw new IllegalArgumentException("File not exist by '" + kylinConfig.getMetadataUrl() + "': "
-                    + root.getAbsolutePath());
+            throw new IllegalArgumentException("File not exist by '" + kylinConfig.getMetadataUrl() + "': " + root.getAbsolutePath());
     }
 
     @Override
@@ -55,7 +55,8 @@ public class FileResourceStore extends ResourceStore {
     @Override
     protected boolean existsImpl(String resPath) throws IOException {
         File f = file(resPath);
-        return f.exists() && f.isFile(); // directory is not considered a resource
+        return f.exists() && f.isFile(); // directory is not considered a
+                                         // resource
     }
 
     @Override
@@ -88,12 +89,10 @@ public class FileResourceStore extends ResourceStore {
     }
 
     @Override
-    protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS)
-            throws IOException, IllegalStateException {
+    protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS) throws IOException, IllegalStateException {
         File f = file(resPath);
         if ((f.exists() && f.lastModified() != oldTS) || (f.exists() == false && oldTS != 0))
-            throw new IllegalStateException("Overwriting conflict " + resPath + ", expect old TS " + oldTS
-                    + ", but found " + f.lastModified());
+            throw new IllegalStateException("Overwriting conflict " + resPath + ", expect old TS " + oldTS + ", but found " + f.lastModified());
 
         putResourceImpl(resPath, new ByteArrayInputStream(content), newTS);
 

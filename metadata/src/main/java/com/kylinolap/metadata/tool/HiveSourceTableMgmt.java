@@ -30,6 +30,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.kylinolap.common.KylinConfig;
@@ -37,376 +41,398 @@ import com.kylinolap.common.persistence.ResourceTool;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Management class to sync hive table metadata with command See main method for
  * how to use the class
- *
+ * 
  * @author jianliu
  */
 public class HiveSourceTableMgmt {
-    private static final Logger logger = LoggerFactory.getLogger(HiveSourceTableMgmt.class);
-    public static final String OUTPUT_SURFIX = "json";
-    public static final String TABLE_FOLDER_NAME = "table";
-    public static final String TABLE_EXD_FOLDER_NAME = "table_exd";
+	private static final Logger logger = LoggerFactory
+			.getLogger(HiveSourceTableMgmt.class);
+	public static final String OUTPUT_SURFIX = "json";
+	public static final String TABLE_FOLDER_NAME = "table";
+	public static final String TABLE_EXD_FOLDER_NAME = "table_exd";
 
+	public static InputStream executeHiveCommand(String command)
+			throws IOException {
 
-    public static InputStream executeHiveCommand(String command) throws IOException {
+		ProcessBuilder pb = new ProcessBuilder("/bin/bash", "-c", "hive -e \""
+				+ command + "\"");
 
-        ProcessBuilder pb = new ProcessBuilder("/bin/bash", "-c", "hive -e \"" + command + "\"");
+		// Run hive
+		pb.redirectErrorStream(true);
+		Process p = pb.start();
+		InputStream is = p.getInputStream();
 
-        //Run hive
-        pb.redirectErrorStream(true);
-        Process p = pb.start();
-        InputStream is = p.getInputStream();
+		return is;
+	}
 
+	private void closeInputStream(InputStream is) {
+		try {
+			if (is != null)
+				is.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException(e);
+		}
+	}
 
-        return is;
-    }
+	public void extractTableDescFromFile(String hiveOutputPath,
+			String tableMetaOutcomeDir) {
+		InputStream is = getHiveOutputStreamFromFile(hiveOutputPath);
+		extractTables(is, tableMetaOutcomeDir);
+		closeInputStream(is);
 
-    private void closeInputStream(InputStream is) {
-        try {
-            if (is != null)
-                is.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new IllegalArgumentException(e);
-        }
-    }
+	}
 
-    public void extractTableDescFromFile(String hiveOutputPath, String tableMetaOutcomeDir) {
-        InputStream is = getHiveOutputStreamFromFile(hiveOutputPath);
-        extractTables(is, tableMetaOutcomeDir);
-        closeInputStream(is);
+	public void extractTableDescWithTablePattern(String tablePattern,
+			String tableMetaOutcomeDir) {
+		InputStream is = getHiveOutputStreamByExec(tablePattern);
+		extractTables(is, tableMetaOutcomeDir);
+		closeInputStream(is);
+	}
 
-    }
+	private void extractTables(InputStream is, String tableMetaOutcomeDir) {
 
-    public void extractTableDescWithTablePattern(String tablePattern, String tableMetaOutcomeDir) {
-        InputStream is = getHiveOutputStreamByExec(tablePattern);
-        extractTables(is, tableMetaOutcomeDir);
-        closeInputStream(is);
-    }
+		List<TableDesc> tableDescList = new ArrayList<TableDesc>();
+		List<Map<String, String>> tableAttrsList = new ArrayList<Map<String, String>>();
+		getTables(is, tableDescList, tableAttrsList);
+		File dir = new File(tableMetaOutcomeDir);
+		if (!dir.exists()) {
+			if (!dir.mkdirs()) {
+				throw new IllegalArgumentException(
+						"Failed to create Output dir : "
+								+ dir.getAbsolutePath());
+			}
+		}
+		File tableDescDir = new File(dir, TABLE_FOLDER_NAME);
+		File tableExdDir = new File(dir, TABLE_EXD_FOLDER_NAME);
+		if (!tableDescDir.exists()) {
+			if (!tableDescDir.mkdirs()) {
+				throw new IllegalArgumentException(
+						"Failed to create Output dir : "
+								+ tableDescDir.getAbsolutePath());
+			}
+		}
+		if (!tableExdDir.exists()) {
+			if (!tableExdDir.mkdirs()) {
+				throw new IllegalArgumentException(
+						"Failed to create Output dir : "
+								+ tableExdDir.getAbsolutePath());
+			}
+		}
 
-    private void extractTables(InputStream is, String tableMetaOutcomeDir) {
+		for (TableDesc table : tableDescList) {
+			File file = new File(tableDescDir, table.getName().toUpperCase()
+					+ "." + OUTPUT_SURFIX);
+			try {
+				JsonUtil.writeValueIndent(new FileOutputStream(file), table);
+			} catch (JsonGenerationException e) {
+				throw new IllegalArgumentException(e);
+			} catch (JsonMappingException e) {
+				throw new IllegalArgumentException(e);
+			} catch (FileNotFoundException e) {
+				throw new IllegalArgumentException(e);
+			} catch (IOException e) {
+				throw new IllegalArgumentException(e);
+			}
+		}
 
-        List<TableDesc> tableDescList = new ArrayList<TableDesc>();
-        List<Map<String, String>> tableAttrsList = new ArrayList<Map<String, String>>();
-        getTables(is, tableDescList, tableAttrsList);
-        File dir = new File(tableMetaOutcomeDir);
-        if (!dir.exists()) {
-            if (!dir.mkdirs()) {
-                throw new IllegalArgumentException("Failed to create Output dir : " + dir.getAbsolutePath());
-            }
-        }
-        File tableDescDir = new File(dir, TABLE_FOLDER_NAME);
-        File tableExdDir = new File(dir, TABLE_EXD_FOLDER_NAME);
-        if (!tableDescDir.exists()) {
-            if (!tableDescDir.mkdirs()) {
-                throw new IllegalArgumentException("Failed to create Output dir : " + tableDescDir.getAbsolutePath());
-            }
-        }
-        if (!tableExdDir.exists()) {
-            if (!tableExdDir.mkdirs()) {
-                throw new IllegalArgumentException("Failed to create Output dir : " + tableExdDir.getAbsolutePath());
-            }
-        }
+		for (Map<String, String> tableAttrs : tableAttrsList) {
+			File file = new File(tableExdDir, tableAttrs.get("tableName")
+					.toUpperCase() + "." + OUTPUT_SURFIX);
+			try {
+				JsonUtil.writeValueIndent(new FileOutputStream(file),
+						tableAttrs);
+			} catch (JsonGenerationException e) {
+				throw new IllegalArgumentException(e);
+			} catch (JsonMappingException e) {
+				throw new IllegalArgumentException(e);
+			} catch (FileNotFoundException e) {
+				throw new IllegalArgumentException(e);
+			} catch (IOException e) {
+				throw new IllegalArgumentException(e);
+			}
+		}
+	}
 
-        for (TableDesc table : tableDescList) {
-            File file = new File(tableDescDir, table.getName().toUpperCase() + "." + OUTPUT_SURFIX);
-            try {
-                JsonUtil.writeValueIndent(new FileOutputStream(file), table);
-            } catch (JsonGenerationException e) {
-                throw new IllegalArgumentException(e);
-            } catch (JsonMappingException e) {
-                throw new IllegalArgumentException(e);
-            } catch (FileNotFoundException e) {
-                throw new IllegalArgumentException(e);
-            } catch (IOException e) {
-                throw new IllegalArgumentException(e);
-            }
-        }
+	public InputStream getHiveOutputStreamFromFile(String hiveOutputPath) {
+		try {
+			return new FileInputStream(new File(hiveOutputPath));
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException(e);
+		}
+	}
 
-        for (Map<String, String> tableAttrs : tableAttrsList) {
-            File file = new File(tableExdDir, tableAttrs.get("tableName").toUpperCase() + "." + OUTPUT_SURFIX);
-            try {
-                JsonUtil.writeValueIndent(new FileOutputStream(file), tableAttrs);
-            } catch (JsonGenerationException e) {
-                throw new IllegalArgumentException(e);
-            } catch (JsonMappingException e) {
-                throw new IllegalArgumentException(e);
-            } catch (FileNotFoundException e) {
-                throw new IllegalArgumentException(e);
-            } catch (IOException e) {
-                throw new IllegalArgumentException(e);
-            }
-        }
-    }
+	public InputStream getHiveOutputStreamByExec(String tablePattern) {
+		try {
+			String query = "show table extended like \\`" + tablePattern
+					+ "\\`";
+			logger.info("Running hive query: " + query);
+			return executeHiveCommand(query);
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException(e);
+		}
+	}
 
-    public InputStream getHiveOutputStreamFromFile(String hiveOutputPath) {
-        try {
-            return new FileInputStream(new File(hiveOutputPath));
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new IllegalArgumentException(e);
-        }
-    }
+	public void getTables(InputStream is, List<TableDesc> tableDescList,
+			List<Map<String, String>> tableAttrsList) {
 
-    public InputStream getHiveOutputStreamByExec(String tablePattern) {
-        try {
-            String query = "show table extended like \\`" + tablePattern + "\\`";
-            logger.info("Running hive query: " + query);
-            return executeHiveCommand(query);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new IllegalArgumentException(e);
-        }
-    }
+		InputStreamReader reader = new InputStreamReader(is);
+		BufferedReader bufferedReader = new BufferedReader(reader);
+		Map<String, String> tableAttrs = new HashMap<String, String>();
+		TableDesc tableDesc = new TableDesc();
+		// mTableList.add(mTable);
+		// sTableList.add(sTable);
+		String line;
+		boolean hit = false;
+		try {
+			line = bufferedReader.readLine();
+			while (line != null) {
+				logger.info(line);
+				int i = line.indexOf(":");
+				if (i == -1) {
+					// System.out.println("Wrong line: " + line);
+					line = bufferedReader.readLine();
+					continue;
+				}
+				String key = line.substring(0, i);
+				String value = line.substring(i + 1, line.length());
+				if (key.equals("tableName")) {// Create a new table object
+					hit = true;
+					tableAttrs = new HashMap<String, String>();
+					tableAttrsList.add(tableAttrs);
+					tableDesc = new TableDesc();
+					tableDescList.add(tableDesc);
+				}
 
-    public void getTables(InputStream is, List<TableDesc> tableDescList,
-            List<Map<String, String>> tableAttrsList) {
+				if (!hit) {
+					line = bufferedReader.readLine();
+					continue;
+				}
 
-        InputStreamReader reader = new InputStreamReader(is);
-        BufferedReader bufferedReader = new BufferedReader(reader);
-        Map<String, String> tableAttrs = new HashMap<String, String>();
-        TableDesc tableDesc = new TableDesc();
-        // mTableList.add(mTable);
-        // sTableList.add(sTable);
-        String line;
-        boolean hit = false;
-        try {
-            line = bufferedReader.readLine();
-            while (line != null) {
-                logger.info(line);
-                int i = line.indexOf(":");
-                if (i == -1) {
-                    // System.out.println("Wrong line: " + line);
-                    line = bufferedReader.readLine();
-                    continue;
-                }
-                String key = line.substring(0, i);
-                String value = line.substring(i + 1, line.length());
-                if (key.equals("tableName")) {// Create a new table object
-                    hit = true;
-                    tableAttrs = new HashMap<String, String>();
-                    tableAttrsList.add(tableAttrs);
-                    tableDesc = new TableDesc();
-                    tableDescList.add(tableDesc);
-                }
+				if (line.startsWith("columns")) {// geneate source table
+					// metadata
+					String tname = tableAttrs.get("tableName");
 
-                if (!hit) {
-                    line = bufferedReader.readLine();
-                    continue;
-                }
+					// TODO, should not assume database to be "default"
+					tableDesc.setDatabase("default".toUpperCase());
+					tableDesc.setName(tname.toUpperCase());
+					tableDesc.setUuid(UUID.randomUUID().toString());
+					addColumns(tableDesc, value);
+				}
+				tableAttrs.put(key, value);
+				if (key.equals("lastUpdateTime")) {
+					hit = false;
+				}
+				line = bufferedReader.readLine();
+			}
+		} catch (IOException e) {
+			throw new IllegalArgumentException(e);
+		}
 
-                if (line.startsWith("columns")) {// geneate source table
-                    // metadata
-                    String tname = tableAttrs.get("tableName");
+	}
 
-                    //TODO, should not assume database to be "default"
-                    tableDesc.setDatabase("default".toUpperCase());
-                    tableDesc.setName(tname.toUpperCase());
-                    tableDesc.setUuid(UUID.randomUUID().toString());
-                    addColumns(tableDesc, value);
-                }
-                tableAttrs.put(key, value);
-                if (key.equals("lastUpdateTime")) {
-                    hit = false;
-                }
-                line = bufferedReader.readLine();
-            }
-        } catch (IOException e) {
-            throw new IllegalArgumentException(e);
-        }
+	private void addColumns(TableDesc sTable, String value) {
+		List<ColumnDesc> columns = new ArrayList<ColumnDesc>();
+		int i1 = value.indexOf("{");
+		int i2 = value.indexOf("}");
+		if (i1 < 0 || i2 < 0 || i1 > i2) {
+			return;
+		}
+		String temp = value.substring(i1 + 1, i2);
+		String[] strArr = temp.split(", ");
+		for (int i = 0; i < strArr.length; i++) {
+			String t1 = strArr[i].trim();
+			int pos = t1.indexOf(" ");
+			String colType = t1.substring(0, pos).trim();
+			String colName = t1.substring(pos).trim();
+			ColumnDesc cdesc = new ColumnDesc();
+			cdesc.setName(colName.toUpperCase());
+			cdesc.setDatatype(convertType(colType));
+			cdesc.setId(String.valueOf(i + 1));
+			columns.add(cdesc);
+		}
+		sTable.setColumns(columns.toArray(new ColumnDesc[0]));
+	}
 
-    }
+	private String convertType(String colType) {
+		if ("i32".equals(colType)) {
+			return "int";
+		} else if ("i64".equals(colType)) {
+			return "bigint";
+		} else if ("i16".equals(colType)) {
+			return "smallint";
+		} else if ("byte".equals(colType)) {
+			return "tinyint";
+		}
+		return colType;
+	}
 
-    private void addColumns(TableDesc sTable, String value) {
-        List<ColumnDesc> columns = new ArrayList<ColumnDesc>();
-        int i1 = value.indexOf("{");
-        int i2 = value.indexOf("}");
-        if (i1 < 0 || i2 < 0 || i1 > i2) {
-            return;
-        }
-        String temp = value.substring(i1 + 1, i2);
-        String[] strArr = temp.split(", ");
-        for (int i = 0; i < strArr.length; i++) {
-            String t1 = strArr[i].trim();
-            int pos = t1.indexOf(" ");
-            String colType = t1.substring(0, pos).trim();
-            String colName = t1.substring(pos).trim();
-            ColumnDesc cdesc = new ColumnDesc();
-            cdesc.setName(colName.toUpperCase());
-            cdesc.setDatatype(convertType(colType));
-            cdesc.setId(String.valueOf(i + 1));
-            columns.add(cdesc);
-        }
-        sTable.setColumns(columns.toArray(new ColumnDesc[0]));
-    }
+	/**
+	 * @param tables
+	 */
+	public static String reloadHiveTable(String tables) {
+		// Rewrite the table string
+		String[] tokens = StringUtils.split(tables, ",");
+		StringBuffer buff = new StringBuffer();
+		for (int i = 0; i < tokens.length; i++) {
+			String token = tokens[i].trim();
+			if (StringUtils.isNotEmpty(token)) {
+				buff.append(";");
+				buff.append("show table extended like " + token);
+			}
+		}
+		String hiveCommand = buff.toString();
+		if (StringUtils.isEmpty(hiveCommand)) {
+			throw new IllegalArgumentException("The required tabes is empty");
+		}
+		// Call shell to generate source tabe
+		String tableMetaDir = "";
+		try {
+			tableMetaDir = callGenerateCommand(hiveCommand);
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException(
+					"Failed to get metadata from upstream, for tables "
+							+ tables, e);
+		}
+		// Update Metadata
+		if (StringUtils.isEmpty(tableMetaDir)) {
+			throw new IllegalArgumentException(
+					"Failed to get metadata from upstream, for tables "
+							+ tables);
+		}
+		File dir = new File(tableMetaDir);
+		if (!dir.exists() || !dir.isDirectory() || dir.list().length == 0) {
+			throw new IllegalArgumentException("Nothing found from path "
+					+ tableMetaDir);
+		}
 
-    private String convertType(String colType) {
-        if ("i32".equals(colType)) {
-            return "int";
-        } else if ("i64".equals(colType)) {
-            return "bigint";
-        } else if ("i16".equals(colType)) {
-            return "smallint";
-        } else if ("byte".equals(colType)) {
-            return "tinyint";
-        }
-        return colType;
-    }
+		copyToMetaTable(tableMetaDir);
 
+		return tableMetaDir;
+	}
 
-    /**
-     * @param tables
-     */
-    public static String reloadHiveTable(String tables) {
-        //Rewrite the table string
-        String[] tokens = StringUtils.split(tables, ",");
-        StringBuffer buff = new StringBuffer();
-        for (int i = 0; i < tokens.length; i++) {
-            String token = tokens[i].trim();
-            if (StringUtils.isNotEmpty(token)) {
-                buff.append(";");
-                buff.append("show table extended like " + token);
-            }
-        }
-        String hiveCommand = buff.toString();
-        if (StringUtils.isEmpty(hiveCommand)) {
-            throw new IllegalArgumentException("The required tabes is empty");
-        }
-        //Call shell to generate source tabe
-        String tableMetaDir = "";
-        try {
-            tableMetaDir = callGenerateCommand(hiveCommand);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new IllegalArgumentException("Failed to get metadata from upstream, for tables " + tables,
-                    e);
-        }
-        //Update Metadata
-        if (StringUtils.isEmpty(tableMetaDir)) {
-            throw new IllegalArgumentException("Failed to get metadata from upstream, for tables " + tables);
-        }
-        File dir = new File(tableMetaDir);
-        if (!dir.exists() || !dir.isDirectory() || dir.list().length == 0) {
-            throw new IllegalArgumentException("Nothing found from path " + tableMetaDir);
-        }
+	/**
+	 * @throws IOException
+	 */
+	private static void copyToMetaTable(String metaPath) {
+		KylinConfig config = KylinConfig.getInstanceFromEnv();
+		try {
+			ResourceTool.copy(KylinConfig.createInstanceFromUri(metaPath),
+					config);
+		} catch (IOException e) {
+			e.printStackTrace();
+			logger.error("Failed to copy resources", e);
+		}
+		logger.info("Successfully Copied metadata from " + metaPath);
 
-        copyToMetaTable(tableMetaDir);
+	}
 
-        return tableMetaDir;
-    }
+	/**
+	 * @param hiveCommd
+	 */
+	private static String callGenerateCommand(String hiveCommd)
+			throws IOException {
+		// Get out put path
+		String tempDir = System.getProperty("java.io.tmpdir");
+		logger.info("OS current temporary directory is " + tempDir);
+		if (StringUtils.isEmpty(tempDir)) {
+			tempDir = "/tmp";
+		}
+		String[] cmd = new String[2];
+		String osName = System.getProperty("os.name");
+		if (osName.startsWith("Windows")) {
+			cmd[0] = "cmd.exe";
+			cmd[1] = "/C";
+		} else {
+			cmd[0] = "/bin/bash";
+			cmd[1] = "-c";
+		}
 
-    /**
-     * @throws IOException
-     */
-    private static void copyToMetaTable(String metaPath) {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        try {
-            ResourceTool.copy(KylinConfig.createInstanceFromUri(metaPath), config);
-        } catch (IOException e) {
-            e.printStackTrace();
-            logger.error("Failed to copy resources", e);
-        }
-        logger.info("Successfully Copied metadata from " + metaPath);
+		// hive command output
+		// String hiveOutputPath = tempDir + File.separator +
+		// "tmp_kylin_output";
+		String hiveOutputPath = File.createTempFile("HiveOutput", null)
+				.getAbsolutePath();
+		// Metadata output
+		File dir = File.createTempFile("meta", null);
+		dir.delete();
+		dir.mkdir();
+		String tableMetaOutcomeDir = dir.getAbsolutePath();
 
-    }
+		ProcessBuilder pb = null;
 
-    /**
-     * @param hiveCommd
-     */
-    private static String callGenerateCommand(String hiveCommd) throws IOException {
-        //Get out put path
-        String tempDir = System.getProperty("java.io.tmpdir");
-        logger.info("OS current temporary directory is " + tempDir);
-        if (StringUtils.isEmpty(tempDir)) {
-            tempDir = "/tmp";
-        }
-        String[] cmd = new String[2];
-        String osName = System.getProperty("os.name");
-        if (osName.startsWith("Windows")) {
-            cmd[0] = "cmd.exe";
-            cmd[1] = "/C";
-        } else {
-            cmd[0] = "/bin/bash";
-            cmd[1] = "-c";
-        }
+		if (osName.startsWith("Windows")) {
+			pb = new ProcessBuilder(cmd[0], cmd[1],
+					"ssh root@sandbox 'hive -e \"" + hiveCommd + "\"' > "
+							+ hiveOutputPath);
+		} else {
+			pb = new ProcessBuilder(cmd[0], cmd[1], "hive -e \"" + hiveCommd
+					+ "\" > " + hiveOutputPath);
+		}
 
-        //hive command output
-        //String hiveOutputPath = tempDir + File.separator + "tmp_kylin_output";
-        String hiveOutputPath = File.createTempFile("HiveOutput", null).getAbsolutePath();
-        //Metadata output
-        File dir = File.createTempFile("meta", null);
-        dir.delete();
-        dir.mkdir();
-        String tableMetaOutcomeDir = dir.getAbsolutePath();
+		// Run hive
+		pb.directory(new File(tempDir));
+		pb.redirectErrorStream(true);
+		Process p = pb.start();
+		InputStream is = p.getInputStream();
+		InputStreamReader isr = new InputStreamReader(is);
+		BufferedReader br = null;
 
-        ProcessBuilder pb = null;
+		try {
+			br = new BufferedReader(isr);
+			String line = null;
+			logger.info("Execute : " + pb.command().get(0));
+			while ((line = br.readLine()) != null) {
+				logger.info(line);
+			}
+		} finally {
+			if (null != br) {
+				br.close();
+			}
+		}
+		logger.info("Hive execution completed!");
 
-        if (osName.startsWith("Windows")) {
-            pb = new ProcessBuilder(cmd[0], cmd[1], "ssh root@sandbox 'hive -e \"" + hiveCommd + "\"' > " + hiveOutputPath);
-        } else {
-            pb = new ProcessBuilder(cmd[0], cmd[1], "hive -e \"" + hiveCommd + "\" > " + hiveOutputPath);
-        }
+		HiveSourceTableMgmt rssMgmt = new HiveSourceTableMgmt();
+		rssMgmt.extractTableDescFromFile(hiveOutputPath, tableMetaOutcomeDir);
+		return tableMetaOutcomeDir;
+	}
 
-        //Run hive
-        pb.directory(new File(tempDir));
-        pb.redirectErrorStream(true);
-        Process p = pb.start();
-        InputStream is = p.getInputStream();
-        InputStreamReader isr = new InputStreamReader(is);
-        BufferedReader br = null;
+	/**
+	 * @param args
+	 *            HiveSourceTableMgmt jdbc:hive2://kylin-local:10000/default,
+	 *            hive, hive, c:\\temp [, name]
+	 */
+	public static void main(String[] args) {
+		if (args.length < 3) {
+			System.out.println("Wrong arguments, example");
+			System.out.println("Get data from command: -c Kylin*, c:\\temp");
+			System.out
+					.println("Get data from outputfile: -f /tmp/hiveout.txt, c:\\temp");
+			System.exit(1);
+		}
+		String mode = args[0];
+		String tableMetaOutcomeDir = args[2];
+		HiveSourceTableMgmt rssMgmt = new HiveSourceTableMgmt();
+		try {
 
-        try {
-            br = new BufferedReader(isr);
-            String line = null;
-            logger.info("Execute : " + pb.command().get(0));
-            while ((line = br.readLine()) != null) {
-                logger.info(line);
-            }
-        } finally {
-            if (null != br) {
-                br.close();
-            }
-        }
-        logger.info("Hive execution completed!");
+			if (mode.equalsIgnoreCase("-c")) {
+				rssMgmt.extractTableDescWithTablePattern(args[1],
+						tableMetaOutcomeDir);
+			}
 
-        HiveSourceTableMgmt rssMgmt = new HiveSourceTableMgmt();
-        rssMgmt.extractTableDescFromFile(hiveOutputPath, tableMetaOutcomeDir);
-        return tableMetaOutcomeDir;
-    }
+			if (mode.equalsIgnoreCase("-f")) {
+				rssMgmt.extractTableDescFromFile(args[1], tableMetaOutcomeDir);
+			}
 
-
-    /**
-     * @param args HiveSourceTableMgmt jdbc:hive2://kylin-local:10000/default,
-     *             hive, hive, c:\\temp [, name]
-     */
-    public static void main(String[] args) {
-        if (args.length < 3) {
-            System.out.println("Wrong arguments, example");
-            System.out.println("Get data from command: -c Kylin*, c:\\temp");
-            System.out.println("Get data from outputfile: -f /tmp/hiveout.txt, c:\\temp");
-            System.exit(1);
-        }
-        String mode = args[0];
-        String tableMetaOutcomeDir = args[2];
-        HiveSourceTableMgmt rssMgmt = new HiveSourceTableMgmt();
-        try {
-
-            if (mode.equalsIgnoreCase("-c")) {
-                rssMgmt.extractTableDescWithTablePattern(args[1], tableMetaOutcomeDir);
-            }
-
-            if (mode.equalsIgnoreCase("-f")) {
-                rssMgmt.extractTableDescFromFile(args[1], tableMetaOutcomeDir);
-            }
-
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        }
-    }
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		}
+	}
 }

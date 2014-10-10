@@ -27,14 +27,14 @@ import com.kylinolap.cube.cuboid.Cuboid;
  */
 public class FuzzyKeyEncoder extends RowKeyEncoder {
 
-    public FuzzyKeyEncoder(CubeSegment seg, Cuboid cuboid) {
-        super(seg, cuboid);
-    }
+	public FuzzyKeyEncoder(CubeSegment seg, Cuboid cuboid) {
+		super(seg, cuboid);
+	}
 
-    @Override
-    protected byte[] defaultValue(int length) {
-        byte[] keyBytes = new byte[length];
-        Arrays.fill(keyBytes, RowConstants.FUZZY_MASK_ZERO);
-        return keyBytes;
-    }
+	@Override
+	protected byte[] defaultValue(int length) {
+		byte[] keyBytes = new byte[length];
+		Arrays.fill(keyBytes, RowConstants.FUZZY_MASK_ZERO);
+		return keyBytes;
+	}
 }

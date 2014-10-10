@@ -30,7 +30,7 @@ import com.kylinolap.common.hll.HyperLogLogPlusCounter;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class HyperLogLogCounterTest {
 

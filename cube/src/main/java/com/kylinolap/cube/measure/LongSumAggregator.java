@@ -20,30 +20,30 @@ import org.apache.hadoop.io.LongWritable;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class LongSumAggregator extends MeasureAggregator<LongWritable> {
 
-    LongWritable sum = new LongWritable();
+	LongWritable sum = new LongWritable();
 
-    @Override
-    public void reset() {
-        sum.set(0);
-    }
+	@Override
+	public void reset() {
+		sum.set(0);
+	}
 
-    @Override
-    public void aggregate(LongWritable value) {
-        sum.set(sum.get() + value.get());
-    }
+	@Override
+	public void aggregate(LongWritable value) {
+		sum.set(sum.get() + value.get());
+	}
 
-    @Override
-    public LongWritable getState() {
-        return sum;
-    }
+	@Override
+	public LongWritable getState() {
+		return sum;
+	}
 
-    @Override
-    public int getMemBytes() {
-        return guessLongMemBytes();
-    }
+	@Override
+	public int getMemBytes() {
+		return guessLongMemBytes();
+	}
 
 }

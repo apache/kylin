@@ -25,101 +25,103 @@ import com.kylinolap.storage.tuple.ITuple;
 
 public class LogicalTupleFilter extends TupleFilter {
 
-    public LogicalTupleFilter(FilterOperatorEnum op) {
-        super(new ArrayList<TupleFilter>(2), op);
-        boolean opGood =
-                (op == FilterOperatorEnum.AND || op == FilterOperatorEnum.OR || op == FilterOperatorEnum.NOT);
-        if (opGood == false)
-            throw new IllegalArgumentException("Unsupported operator " + op);
-    }
+	public LogicalTupleFilter(FilterOperatorEnum op) {
+		super(new ArrayList<TupleFilter>(2), op);
+		boolean opGood = (op == FilterOperatorEnum.AND
+				|| op == FilterOperatorEnum.OR || op == FilterOperatorEnum.NOT);
+		if (opGood == false)
+			throw new IllegalArgumentException("Unsupported operator " + op);
+	}
 
-    private LogicalTupleFilter(List<TupleFilter> filters, FilterOperatorEnum op) {
-        super(filters, op);
-    }
+	private LogicalTupleFilter(List<TupleFilter> filters, FilterOperatorEnum op) {
+		super(filters, op);
+	}
 
-    @Override
-    public TupleFilter copy() {
-        List<TupleFilter> cloneChildren = new LinkedList<TupleFilter>(children);
-        TupleFilter cloneTuple = new LogicalTupleFilter(cloneChildren, operator);
-        return cloneTuple;
-    }
+	@Override
+	public TupleFilter copy() {
+		List<TupleFilter> cloneChildren = new LinkedList<TupleFilter>(children);
+		TupleFilter cloneTuple = new LogicalTupleFilter(cloneChildren, operator);
+		return cloneTuple;
+	}
 
-    @Override
-    public TupleFilter reverse() {
-        switch (operator) {
-        case NOT:
-            assert (children.size() == 1);
-            return children.get(0);
-        case AND:
-        case OR:
-            LogicalTupleFilter reverse = new LogicalTupleFilter(REVERSE_OP_MAP.get(operator));
-            for (TupleFilter child : children) {
-                reverse.addChild(child.reverse());
-            }
-            return reverse;
-        default:
-            throw new IllegalStateException();
-        }
-    }
+	@Override
+	public TupleFilter reverse() {
+		switch (operator) {
+		case NOT:
+			assert (children.size() == 1);
+			return children.get(0);
+		case AND:
+		case OR:
+			LogicalTupleFilter reverse = new LogicalTupleFilter(
+					REVERSE_OP_MAP.get(operator));
+			for (TupleFilter child : children) {
+				reverse.addChild(child.reverse());
+			}
+			return reverse;
+		default:
+			throw new IllegalStateException();
+		}
+	}
 
-    @Override
-    public String toString() {
-        return "LogicalFilter [operator=" + operator + ", children=" + children + "]";
-    }
+	@Override
+	public String toString() {
+		return "LogicalFilter [operator=" + operator + ", children=" + children
+				+ "]";
+	}
 
-    @Override
-    public boolean evaluate(ITuple tuple) {
-        switch (this.operator) {
-        case AND:
-            return evalAnd(tuple);
-        case OR:
-            return evalOr(tuple);
-        case NOT:
-            return evalNot(tuple);
-        default:
-            return false;
-        }
-    }
+	@Override
+	public boolean evaluate(ITuple tuple) {
+		switch (this.operator) {
+		case AND:
+			return evalAnd(tuple);
+		case OR:
+			return evalOr(tuple);
+		case NOT:
+			return evalNot(tuple);
+		default:
+			return false;
+		}
+	}
 
-    private boolean evalAnd(ITuple tuple) {
-        for (TupleFilter filter : this.children) {
-            if (!filter.evaluate(tuple)) {
-                return false;
-            }
-        }
-        return true;
-    }
+	private boolean evalAnd(ITuple tuple) {
+		for (TupleFilter filter : this.children) {
+			if (!filter.evaluate(tuple)) {
+				return false;
+			}
+		}
+		return true;
+	}
 
-    private boolean evalOr(ITuple tuple) {
-        for (TupleFilter filter : this.children) {
-            if (filter.evaluate(tuple)) {
-                return true;
-            }
-        }
-        return false;
-    }
+	private boolean evalOr(ITuple tuple) {
+		for (TupleFilter filter : this.children) {
+			if (filter.evaluate(tuple)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-    private boolean evalNot(ITuple tuple) {
-        return !this.children.get(0).evaluate(tuple);
-    }
+	private boolean evalNot(ITuple tuple) {
+		return !this.children.get(0).evaluate(tuple);
+	}
 
-    @Override
-    public Collection<String> getValues() {
-        return Collections.emptyList();
-    }
+	@Override
+	public Collection<String> getValues() {
+		return Collections.emptyList();
+	}
 
-    @Override
-    public boolean isEvaluable() {
-        return true;
-    }
+	@Override
+	public boolean isEvaluable() {
+		return true;
+	}
 
-    @Override
-    public byte[] serialize() {
-        return new byte[0];
-    }
+	@Override
+	public byte[] serialize() {
+		return new byte[0];
+	}
 
-    @Override
-    public void deserialize(byte[] bytes) {
-    }
+	@Override
+	public void deserialize(byte[] bytes) {
+	}
 
 }

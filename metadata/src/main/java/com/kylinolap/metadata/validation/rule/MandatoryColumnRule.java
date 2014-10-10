@@ -31,41 +31,46 @@ import com.kylinolap.metadata.validation.ValidateContext;
  * Validate that mandatory column must NOT appear in aggregation group.
  * 
  * @author jianliu
- *
+ * 
  */
 public class MandatoryColumnRule implements IValidatorRule<CubeDesc> {
 
-    /* (non-Javadoc)
-     * @see com.kylinolap.metadata.validation.IValidatorRule#validate(java.lang.Object, com.kylinolap.metadata.validation.ValidateContext)
-     */
-    @Override
-    public void validate(CubeDesc cube, ValidateContext context) {
-        Set<String> mands = new HashSet<String>();
-        RowKeyColDesc[] cols = cube.getRowkey().getRowKeyColumns();
-        if (cols == null || cols.length == 0) {
-            return;
-        }
-        for (int i = 0; i < cols.length; i++) {
-            RowKeyColDesc rowKeyColDesc = cols[i];
-            if (rowKeyColDesc.isMandatory()) {
-                mands.add(rowKeyColDesc.getColumn());
-            }
-        }
-        if (mands.isEmpty()) {
-            return;
-        }
-        String[][] groups = cube.getRowkey().getAggregationGroups();
-        for (int i = 0; i < groups.length; i++) {
-            String[] group = groups[i];
-            for (int j = 0; j < group.length; j++) {
-                String col = group[j];
-                if (mands.contains(col)) {
-                    context.addResult(ResultLevel.ERROR, "mandatory column " + col
-                            + " must not be in aggregation group [" + ArrayUtils.toString(group) + "]");
-                }
-            }
-        }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.kylinolap.metadata.validation.IValidatorRule#validate(java.lang.Object
+	 * , com.kylinolap.metadata.validation.ValidateContext)
+	 */
+	@Override
+	public void validate(CubeDesc cube, ValidateContext context) {
+		Set<String> mands = new HashSet<String>();
+		RowKeyColDesc[] cols = cube.getRowkey().getRowKeyColumns();
+		if (cols == null || cols.length == 0) {
+			return;
+		}
+		for (int i = 0; i < cols.length; i++) {
+			RowKeyColDesc rowKeyColDesc = cols[i];
+			if (rowKeyColDesc.isMandatory()) {
+				mands.add(rowKeyColDesc.getColumn());
+			}
+		}
+		if (mands.isEmpty()) {
+			return;
+		}
+		String[][] groups = cube.getRowkey().getAggregationGroups();
+		for (int i = 0; i < groups.length; i++) {
+			String[] group = groups[i];
+			for (int j = 0; j < group.length; j++) {
+				String col = group[j];
+				if (mands.contains(col)) {
+					context.addResult(ResultLevel.ERROR, "mandatory column "
+							+ col + " must not be in aggregation group ["
+							+ ArrayUtils.toString(group) + "]");
+				}
+			}
+		}
 
-    }
+	}
 
 }

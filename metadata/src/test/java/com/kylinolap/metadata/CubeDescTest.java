@@ -29,24 +29,23 @@ import com.kylinolap.metadata.model.cube.CubeDesc;
  */
 public class CubeDescTest extends LocalFileMetadataTestCase {
 
-    @Before
-    public void setUp() throws Exception {
-        this.createTestMetadata();
-    }
+	@Before
+	public void setUp() throws Exception {
+		this.createTestMetadata();
+	}
 
-    @After
-    public void after() throws Exception {
-        this.cleanupTestMetadata();
-    }
+	@After
+	public void after() throws Exception {
+		this.cleanupTestMetadata();
+	}
 
-    @Test
-    public void testSerialize() throws Exception {
-        CubeDesc desc =
-                MetadataManager.getInstance(this.getTestConfig())
-                        .getCubeDesc("test_kylin_cube_with_slr_desc");
-        String str = JsonUtil.writeValueAsIndentString(desc);
-        System.out.println(str);
-        @SuppressWarnings("unused")
-        CubeDesc desc2 = JsonUtil.readValue(str, CubeDesc.class);
-    }
+	@Test
+	public void testSerialize() throws Exception {
+		CubeDesc desc = MetadataManager.getInstance(this.getTestConfig())
+				.getCubeDesc("test_kylin_cube_with_slr_desc");
+		String str = JsonUtil.writeValueAsIndentString(desc);
+		System.out.println(str);
+		@SuppressWarnings("unused")
+		CubeDesc desc2 = JsonUtil.readValue(str, CubeDesc.class);
+	}
 }

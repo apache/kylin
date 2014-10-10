@@ -33,50 +33,51 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class CopySeq {
 
-    public static void main(String[] args) throws IOException {
-        copyTo64MB(args[0], args[1]);
-    }
+	public static void main(String[] args) throws IOException {
+		copyTo64MB(args[0], args[1]);
+	}
 
-    public static void copyTo64MB(String src, String dst) throws IOException {
-        Configuration hconf = new Configuration();
-        Path srcPath = new Path(src);
-        Path dstPath = new Path(dst);
+	public static void copyTo64MB(String src, String dst) throws IOException {
+		Configuration hconf = new Configuration();
+		Path srcPath = new Path(src);
+		Path dstPath = new Path(dst);
 
-        FileSystem fs = FileSystem.get(hconf);
-        long srcSize = fs.getFileStatus(srcPath).getLen();
-        int copyTimes = (int) (67108864 / srcSize); // 64 MB
-        System.out.println("Copy " + copyTimes + " times");
+		FileSystem fs = FileSystem.get(hconf);
+		long srcSize = fs.getFileStatus(srcPath).getLen();
+		int copyTimes = (int) (67108864 / srcSize); // 64 MB
+		System.out.println("Copy " + copyTimes + " times");
 
-        Reader reader = new Reader(hconf, SequenceFile.Reader.file(srcPath));
-        Writable key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), hconf);
-        Text value = new Text();
+		Reader reader = new Reader(hconf, SequenceFile.Reader.file(srcPath));
+		Writable key = (Writable) ReflectionUtils.newInstance(
+				reader.getKeyClass(), hconf);
+		Text value = new Text();
 
-        Writer writer =
-                SequenceFile.createWriter(hconf, Writer.file(dstPath), Writer.keyClass(key.getClass()),
-                        Writer.valueClass(Text.class),
-                        Writer.compression(CompressionType.BLOCK, getLZOCodec(hconf)));
+		Writer writer = SequenceFile.createWriter(hconf, Writer.file(dstPath),
+				Writer.keyClass(key.getClass()), Writer.valueClass(Text.class),
+				Writer.compression(CompressionType.BLOCK, getLZOCodec(hconf)));
 
-        int count = 0;
-        while (reader.next(key, value)) {
-            for (int i = 0; i < copyTimes; i++) {
-                writer.append(key, value);
-                count++;
-            }
-        }
+		int count = 0;
+		while (reader.next(key, value)) {
+			for (int i = 0; i < copyTimes; i++) {
+				writer.append(key, value);
+				count++;
+			}
+		}
 
-        System.out.println("Len: " + writer.getLength());
-        System.out.println("Rows: " + count);
+		System.out.println("Len: " + writer.getLength());
+		System.out.println("Rows: " + count);
 
-        reader.close();
-        writer.close();
-    }
+		reader.close();
+		writer.close();
+	}
 
-    static CompressionCodec getLZOCodec(Configuration hconf) {
-        CompressionCodecFactory factory = new CompressionCodecFactory(hconf);
-        return factory.getCodecByClassName("org.apache.hadoop.io.compress.LzoCodec");
-    }
+	static CompressionCodec getLZOCodec(Configuration hconf) {
+		CompressionCodecFactory factory = new CompressionCodecFactory(hconf);
+		return factory
+				.getCodecByClassName("org.apache.hadoop.io.compress.LzoCodec");
+	}
 }

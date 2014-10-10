@@ -105,7 +105,8 @@ public class BytesUtil {
         return r;
     }
 
-    // from WritableUtils ============================================================================
+    // from WritableUtils
+    // ============================================================================
 
     public static void writeVInt(int i, ByteBuffer out) {
         writeVLong(i, out);

@@ -26,26 +26,26 @@ import com.kylinolap.query.relnode.OLAPRel;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 
 public class OLAPFilterRule extends RelOptRule {
 
-    public static final RelOptRule INSTANCE = new OLAPFilterRule();
+	public static final RelOptRule INSTANCE = new OLAPFilterRule();
 
-    public OLAPFilterRule() {
-        super(operand(FilterRel.class, any()));
-    }
+	public OLAPFilterRule() {
+		super(operand(FilterRel.class, any()));
+	}
 
-    @Override
-    public void onMatch(RelOptRuleCall call) {
-        FilterRel filter = call.rel(0);
+	@Override
+	public void onMatch(RelOptRuleCall call) {
+		FilterRel filter = call.rel(0);
 
-        RelTraitSet traitSet = filter.getTraitSet().replace(OLAPRel.CONVENTION);
-        OLAPFilterRel olapFilter =
-                new OLAPFilterRel(filter.getCluster(), traitSet, convert(filter.getChild(), traitSet),
-                        filter.getCondition());
-        call.transformTo(olapFilter);
-    }
+		RelTraitSet traitSet = filter.getTraitSet().replace(OLAPRel.CONVENTION);
+		OLAPFilterRel olapFilter = new OLAPFilterRel(filter.getCluster(),
+				traitSet, convert(filter.getChild(), traitSet),
+				filter.getCondition());
+		call.transformTo(olapFilter);
+	}
 
 }

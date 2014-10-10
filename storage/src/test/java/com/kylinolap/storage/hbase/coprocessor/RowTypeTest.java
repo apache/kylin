@@ -16,7 +16,7 @@
 
 package com.kylinolap.storage.hbase.coprocessor;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 
@@ -32,34 +32,35 @@ import com.kylinolap.metadata.model.cube.CubeDesc;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class RowTypeTest extends LocalFileMetadataTestCase {
 
-    @Before
-    public void setUp() throws Exception {
-        this.createTestMetadata();
-    }
+	@Before
+	public void setUp() throws Exception {
+		this.createTestMetadata();
+	}
 
-    @After
-    public void after() throws Exception {
-        this.cleanupTestMetadata();
-    }
+	@After
+	public void after() throws Exception {
+		this.cleanupTestMetadata();
+	}
 
-    @Test
-    public void testSerialize() {
+	@Test
+	public void testSerialize() {
 
-        CubeInstance cube =
-                CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_without_slr_ready");
-        CubeDesc cubeDesc = cube.getDescriptor();
-        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        Cuboid cuboid = Cuboid.findById(cubeDesc, baseCuboidId);
+		CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube(
+				"test_kylin_cube_without_slr_ready");
+		CubeDesc cubeDesc = cube.getDescriptor();
+		long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
+		Cuboid cuboid = Cuboid.findById(cubeDesc, baseCuboidId);
 
-        SRowType rowType = SRowType.fromCuboid(cube.getLatestReadySegment(), cuboid);
-        byte[] bytes = SRowType.serialize(rowType);
-        SRowType copy = SRowType.deserialize(bytes);
+		SRowType rowType = SRowType.fromCuboid(cube.getLatestReadySegment(),
+				cuboid);
+		byte[] bytes = SRowType.serialize(rowType);
+		SRowType copy = SRowType.deserialize(bytes);
 
-        assertTrue(Arrays.equals(rowType.columns, copy.columns));
-        assertTrue(Arrays.equals(rowType.columnSizes, copy.columnSizes));
-    }
+		assertTrue(Arrays.equals(rowType.columns, copy.columns));
+		assertTrue(Arrays.equals(rowType.columnSizes, copy.columnSizes));
+	}
 }

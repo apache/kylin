@@ -25,52 +25,56 @@ import com.kylinolap.common.util.JsonUtil;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class DictionaryInfoSerializer implements Serializer<DictionaryInfo> {
 
-    public static final DictionaryInfoSerializer FULL_SERIALIZER = new DictionaryInfoSerializer(false);
-    public static final DictionaryInfoSerializer INFO_SERIALIZER = new DictionaryInfoSerializer(true);
+	public static final DictionaryInfoSerializer FULL_SERIALIZER = new DictionaryInfoSerializer(
+			false);
+	public static final DictionaryInfoSerializer INFO_SERIALIZER = new DictionaryInfoSerializer(
+			true);
 
-    private boolean infoOnly;
+	private boolean infoOnly;
 
-    public DictionaryInfoSerializer() {
-        this(false);
-    }
+	public DictionaryInfoSerializer() {
+		this(false);
+	}
 
-    public DictionaryInfoSerializer(boolean infoOnly) {
-        this.infoOnly = infoOnly;
-    }
+	public DictionaryInfoSerializer(boolean infoOnly) {
+		this.infoOnly = infoOnly;
+	}
 
-    @Override
-    public void serialize(DictionaryInfo obj, DataOutputStream out) throws IOException {
-        String json = JsonUtil.writeValueAsIndentString(obj);
-        out.writeUTF(json);
+	@Override
+	public void serialize(DictionaryInfo obj, DataOutputStream out)
+			throws IOException {
+		String json = JsonUtil.writeValueAsIndentString(obj);
+		out.writeUTF(json);
 
-        if (infoOnly == false)
-            obj.getDictionaryObject().write(out);
-    }
+		if (infoOnly == false)
+			obj.getDictionaryObject().write(out);
+	}
 
-    @Override
-    public DictionaryInfo deserialize(DataInputStream in) throws IOException {
-        String json = in.readUTF();
-        DictionaryInfo obj = JsonUtil.readValue(json, DictionaryInfo.class);
+	@Override
+	public DictionaryInfo deserialize(DataInputStream in) throws IOException {
+		String json = in.readUTF();
+		DictionaryInfo obj = JsonUtil.readValue(json, DictionaryInfo.class);
 
-        if (infoOnly == false) {
-            Dictionary<?> dict;
-            try {
-                dict = (Dictionary<?>) Class.forName(obj.getDictionaryClass()).newInstance();
-            } catch (InstantiationException e) {
-                throw new RuntimeException(e);
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-            dict.readFields(in);
-            obj.setDictionaryObject(dict);
-        }
-        return obj;
-    }
+		if (infoOnly == false) {
+			Dictionary<?> dict;
+			try {
+				dict = (Dictionary<?>) Class.forName(obj.getDictionaryClass())
+						.newInstance();
+			} catch (InstantiationException e) {
+				throw new RuntimeException(e);
+			} catch (IllegalAccessException e) {
+				throw new RuntimeException(e);
+			} catch (ClassNotFoundException e) {
+				throw new RuntimeException(e);
+			}
+			dict.readFields(in);
+			obj.setDictionaryObject(dict);
+		}
+		return obj;
+	}
 
 }

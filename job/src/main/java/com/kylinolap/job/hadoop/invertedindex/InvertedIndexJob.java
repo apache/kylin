@@ -46,108 +46,116 @@ import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
  * @author yangli9
  */
 public class InvertedIndexJob extends AbstractHadoopJob {
-    protected static final Logger log = LoggerFactory.getLogger(InvertedIndexJob.class);
+	protected static final Logger log = LoggerFactory
+			.getLogger(InvertedIndexJob.class);
 
-    @Override
-    public int run(String[] args) throws Exception {
-        Options options = new Options();
+	@Override
+	public int run(String[] args) throws Exception {
+		Options options = new Options();
 
-        try {
-            options.addOption(OPTION_JOB_NAME);
-            options.addOption(OPTION_CUBE_NAME);
-            options.addOption(OPTION_INPUT_PATH);
-            options.addOption(OPTION_INPUT_FORMAT);
-            options.addOption(OPTION_INPUT_DELIM);
-            options.addOption(OPTION_OUTPUT_PATH);
-            parseOptions(options, args);
+		try {
+			options.addOption(OPTION_JOB_NAME);
+			options.addOption(OPTION_CUBE_NAME);
+			options.addOption(OPTION_INPUT_PATH);
+			options.addOption(OPTION_INPUT_FORMAT);
+			options.addOption(OPTION_INPUT_DELIM);
+			options.addOption(OPTION_OUTPUT_PATH);
+			parseOptions(options, args);
 
-            job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
-            String cubeName = getOptionValue(OPTION_CUBE_NAME);
-            Path input = new Path(getOptionValue(OPTION_INPUT_PATH));
-            String inputFormat = getOptionValue(OPTION_INPUT_FORMAT);
-            String inputDelim = getOptionValue(OPTION_INPUT_DELIM);
-            Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
+			job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
+			String cubeName = getOptionValue(OPTION_CUBE_NAME);
+			Path input = new Path(getOptionValue(OPTION_INPUT_PATH));
+			String inputFormat = getOptionValue(OPTION_INPUT_FORMAT);
+			String inputDelim = getOptionValue(OPTION_INPUT_DELIM);
+			Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
 
-            // ----------------------------------------------------------------------------
+			// ----------------------------------------------------------------------------
 
-            System.out.println("Starting: " + job.getJobName());
+			System.out.println("Starting: " + job.getJobName());
 
-            setupMapInput(input, inputFormat, inputDelim);
-            setupReduceOutput(output);
-            attachMetadata(cubeName);
+			setupMapInput(input, inputFormat, inputDelim);
+			setupReduceOutput(output);
+			attachMetadata(cubeName);
 
-            return waitForCompletion(job);
+			return waitForCompletion(job);
 
-        } catch (Exception e) {
-            printUsage(options);
-            log.error(e.getLocalizedMessage(), e);
-            return 2;
-        }
+		} catch (Exception e) {
+			printUsage(options);
+			log.error(e.getLocalizedMessage(), e);
+			return 2;
+		}
 
-    }
+	}
 
-    private void attachMetadata(String cubeName) throws IOException {
-        CubeManager mgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-        CubeInstance cube = mgr.getCube(cubeName);
-        if (cube == null)
-            throw new IllegalArgumentException("No Inverted Index Cubefound by name " + cubeName);
+	private void attachMetadata(String cubeName) throws IOException {
+		CubeManager mgr = CubeManager.getInstance(KylinConfig
+				.getInstanceFromEnv());
+		CubeInstance cube = mgr.getCube(cubeName);
+		if (cube == null)
+			throw new IllegalArgumentException(
+					"No Inverted Index Cubefound by name " + cubeName);
 
-        Configuration conf = job.getConfiguration();
-        attachKylinPropsAndMetadata(cube, conf);
+		Configuration conf = job.getConfiguration();
+		attachKylinPropsAndMetadata(cube, conf);
 
-        CubeSegment seg = cube.getFirstSegment();
-        InvertedIndexDesc desc = cube.getInvertedIndexDesc();
-        conf.set(BatchConstants.CFG_CUBE_NAME, cubeName);
-        conf.set(BatchConstants.CFG_CUBE_SEGMENT_NAME, seg.getName());
-        conf.set(BatchConstants.TIMESTAMP_GRANULARITY, "" + desc.getTimestampGranularity());
-    }
+		CubeSegment seg = cube.getFirstSegment();
+		InvertedIndexDesc desc = cube.getInvertedIndexDesc();
+		conf.set(BatchConstants.CFG_CUBE_NAME, cubeName);
+		conf.set(BatchConstants.CFG_CUBE_SEGMENT_NAME, seg.getName());
+		conf.set(BatchConstants.TIMESTAMP_GRANULARITY,
+				"" + desc.getTimestampGranularity());
+	}
 
-    private void setupMapInput(Path input, String inputFormat, String inputDelim) throws IOException {
-        FileInputFormat.setInputPaths(job, input);
+	private void setupMapInput(Path input, String inputFormat, String inputDelim)
+			throws IOException {
+		FileInputFormat.setInputPaths(job, input);
 
-        File JarFile = new File(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
-        if (JarFile.exists()) {
-            job.setJar(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
-        } else {
-            job.setJarByClass(this.getClass());
-        }
+		File JarFile = new File(KylinConfig.getInstanceFromEnv()
+				.getKylinJobJarPath());
+		if (JarFile.exists()) {
+			job.setJar(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
+		} else {
+			job.setJarByClass(this.getClass());
+		}
 
-        if ("textinputformat".equalsIgnoreCase(inputFormat) || "text".equalsIgnoreCase(inputFormat)) {
-            job.setInputFormatClass(TextInputFormat.class);
-        } else {
-            job.setInputFormatClass(SequenceFileInputFormat.class);
-        }
+		if ("textinputformat".equalsIgnoreCase(inputFormat)
+				|| "text".equalsIgnoreCase(inputFormat)) {
+			job.setInputFormatClass(TextInputFormat.class);
+		} else {
+			job.setInputFormatClass(SequenceFileInputFormat.class);
+		}
 
-        if ("t".equals(inputDelim)) {
-            inputDelim = "\t";
-        } else if ("177".equals(inputDelim)) {
-            inputDelim = "\177";
-        }
-        if (inputDelim != null) {
-            job.getConfiguration().set(BatchConstants.INPUT_DELIM, inputDelim);
-        }
+		if ("t".equals(inputDelim)) {
+			inputDelim = "\t";
+		} else if ("177".equals(inputDelim)) {
+			inputDelim = "\177";
+		}
+		if (inputDelim != null) {
+			job.getConfiguration().set(BatchConstants.INPUT_DELIM, inputDelim);
+		}
 
-        job.setMapperClass(InvertedIndexMapper.class);
-        job.setMapOutputKeyClass(LongWritable.class);
-        job.setMapOutputValueClass(ImmutableBytesWritable.class);
-        job.setPartitionerClass(InvertedIndexPartitioner.class);
-    }
+		job.setMapperClass(InvertedIndexMapper.class);
+		job.setMapOutputKeyClass(LongWritable.class);
+		job.setMapOutputValueClass(ImmutableBytesWritable.class);
+		job.setPartitionerClass(InvertedIndexPartitioner.class);
+	}
 
-    private void setupReduceOutput(Path output) throws IOException {
-        job.setReducerClass(InvertedIndexReducer.class);
-        job.setOutputFormatClass(SequenceFileOutputFormat.class);
-        job.setOutputKeyClass(ImmutableBytesWritable.class);
-        job.setOutputValueClass(ImmutableBytesWritable.class);
+	private void setupReduceOutput(Path output) throws IOException {
+		job.setReducerClass(InvertedIndexReducer.class);
+		job.setOutputFormatClass(SequenceFileOutputFormat.class);
+		job.setOutputKeyClass(ImmutableBytesWritable.class);
+		job.setOutputValueClass(ImmutableBytesWritable.class);
 
-        FileOutputFormat.setOutputPath(job, output);
-        job.getConfiguration().set(BatchConstants.OUTPUT_PATH, output.toString());
+		FileOutputFormat.setOutputPath(job, output);
+		job.getConfiguration().set(BatchConstants.OUTPUT_PATH,
+				output.toString());
 
-        deletePath(job.getConfiguration(), output);
-    }
+		deletePath(job.getConfiguration(), output);
+	}
 
-    public static void main(String[] args) throws Exception {
-        InvertedIndexJob job = new InvertedIndexJob();
-        int exitCode = ToolRunner.run(job, args);
-        System.exit(exitCode);
-    }
+	public static void main(String[] args) throws Exception {
+		InvertedIndexJob job = new InvertedIndexJob();
+		int exitCode = ToolRunner.run(job, args);
+		System.exit(exitCode);
+	}
 }

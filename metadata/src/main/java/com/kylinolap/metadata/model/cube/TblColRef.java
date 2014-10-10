@@ -22,123 +22,124 @@ import com.kylinolap.metadata.model.schema.DataType;
 import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
- * Created with IntelliJ IDEA.
- * User: lukhan
- * Date: 9/26/13
- * Time: 1:30 PM
- * To change this template use File | Settings | File Templates.
+ * Created with IntelliJ IDEA. User: lukhan Date: 9/26/13 Time: 1:30 PM To
+ * change this template use File | Settings | File Templates.
  */
 public class TblColRef {
 
-    private static final String INNER_TABLE_NAME = "_kylin_table";
+	private static final String INNER_TABLE_NAME = "_kylin_table";
 
-    // used by projection rewrite, see OLAPProjectRel
-    public enum InnerDataTypeEnum {
+	// used by projection rewrite, see OLAPProjectRel
+	public enum InnerDataTypeEnum {
 
-        LITERAL("_literal_type"), DERIVED("_derived_type");
+		LITERAL("_literal_type"), DERIVED("_derived_type");
 
-        private final String dateType;
+		private final String dateType;
 
-        private InnerDataTypeEnum(String name) {
-            this.dateType = name;
-        }
+		private InnerDataTypeEnum(String name) {
+			this.dateType = name;
+		}
 
-        public String getDataType() {
-            return dateType;
-        }
+		public String getDataType() {
+			return dateType;
+		}
 
-        public static boolean contains(String name) {
-            return LITERAL.getDataType().equals(name) || DERIVED.getDataType().equals(name);
-        }
-    }
+		public static boolean contains(String name) {
+			return LITERAL.getDataType().equals(name)
+					|| DERIVED.getDataType().equals(name);
+		}
+	}
 
-    // used by projection rewrite, see OLAPProjectRel
-    public static TblColRef newInnerColumn(String columnName, InnerDataTypeEnum dataType) {
-        ColumnDesc column = new ColumnDesc();
-        column.setName(columnName);
-        TableDesc table = new TableDesc();
-        column.setTable(table);
-        TblColRef colRef = new TblColRef(column);
-        colRef.markInnerColumn(dataType);
-        return colRef;
-    }
+	// used by projection rewrite, see OLAPProjectRel
+	public static TblColRef newInnerColumn(String columnName,
+			InnerDataTypeEnum dataType) {
+		ColumnDesc column = new ColumnDesc();
+		column.setName(columnName);
+		TableDesc table = new TableDesc();
+		column.setTable(table);
+		TblColRef colRef = new TblColRef(column);
+		colRef.markInnerColumn(dataType);
+		return colRef;
+	}
 
-    // ============================================================================
+	// ============================================================================
 
-    private ColumnDesc column;
+	private ColumnDesc column;
 
-    public TblColRef(ColumnDesc column) {
-        this.column = column;
-    }
+	public TblColRef(ColumnDesc column) {
+		this.column = column;
+	}
 
-    public ColumnDesc getColumn() {
-        return column;
-    }
+	public ColumnDesc getColumn() {
+		return column;
+	}
 
-    public void setColumn(ColumnDesc column) {
-        this.column = column;
-    }
+	public void setColumn(ColumnDesc column) {
+		this.column = column;
+	}
 
-    public String getName() {
-        return column.getName();
-    }
+	public String getName() {
+		return column.getName();
+	}
 
-    public String getTable() {
-        if (column.getTable() == null) {
-            return null;
-        }
-        return column.getTable().getName();
-    }
+	public String getTable() {
+		if (column.getTable() == null) {
+			return null;
+		}
+		return column.getTable().getName();
+	}
 
-    public String getDatatype() {
-        return column.getDatatype();
-    }
+	public String getDatatype() {
+		return column.getDatatype();
+	}
 
-    public DataType getType() {
-        return column.getType();
-    }
+	public DataType getType() {
+		return column.getType();
+	}
 
-    public void markInnerColumn(InnerDataTypeEnum dataType) {
-        this.column.setDatatype(dataType.getDataType());
-        this.column.getTable().setName(INNER_TABLE_NAME);
-    }
+	public void markInnerColumn(InnerDataTypeEnum dataType) {
+		this.column.setDatatype(dataType.getDataType());
+		this.column.getTable().setName(INNER_TABLE_NAME);
+	}
 
-    public boolean isInnerColumn() {
-        return InnerDataTypeEnum.contains(getDatatype());
-    }
+	public boolean isInnerColumn() {
+		return InnerDataTypeEnum.contains(getDatatype());
+	}
 
-    public boolean isDerivedDataType() {
-        return InnerDataTypeEnum.DERIVED.getDataType().equals(getDatatype());
-    }
+	public boolean isDerivedDataType() {
+		return InnerDataTypeEnum.DERIVED.getDataType().equals(getDatatype());
+	}
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
 
-        result = prime * result + column.getTable().getName().hashCode();
-        result = prime * result + column.getName().hashCode();
-        return result;
-    }
+		result = prime * result + column.getTable().getName().hashCode();
+		result = prime * result + column.getName().hashCode();
+		return result;
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        TblColRef other = (TblColRef) obj;
-        if (!StringUtils.equals(column.getTable().getName(), other.column.getTable().getName()))
-            return false;
-        if (!StringUtils.equals(column.getName(), other.column.getName()))
-            return false;
-        return true;
-    }
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		TblColRef other = (TblColRef) obj;
+		if (!StringUtils.equals(column.getTable().getName(), other.column
+				.getTable().getName()))
+			return false;
+		if (!StringUtils.equals(column.getName(), other.column.getName()))
+			return false;
+		return true;
+	}
 
-    @Override
-    public String toString() {
-        return (column.getTable() == null ? null : column.getTable().getName()) + "." + column.getName();
-    }
+	@Override
+	public String toString() {
+		return (column.getTable() == null ? null : column.getTable().getName())
+				+ "." + column.getName();
+	}
 }

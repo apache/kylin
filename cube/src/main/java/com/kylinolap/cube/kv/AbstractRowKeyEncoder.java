@@ -34,44 +34,45 @@ import com.kylinolap.metadata.model.cube.TblColRef;
  */
 public abstract class AbstractRowKeyEncoder {
 
-    public static final byte DEFAULT_BLANK_BYTE = Dictionary.NULL;
+	public static final byte DEFAULT_BLANK_BYTE = Dictionary.NULL;
 
-    protected static final Logger logger = LoggerFactory.getLogger(AbstractRowKeyEncoder.class);
+	protected static final Logger logger = LoggerFactory
+			.getLogger(AbstractRowKeyEncoder.class);
 
-    private static final Map<String, Map<Long, AbstractRowKeyEncoder>> ENCODER_CACHE =
-            new ConcurrentHashMap<String, Map<Long, AbstractRowKeyEncoder>>();
+	private static final Map<String, Map<Long, AbstractRowKeyEncoder>> ENCODER_CACHE = new ConcurrentHashMap<String, Map<Long, AbstractRowKeyEncoder>>();
 
-    public static AbstractRowKeyEncoder createInstance(CubeSegment cubeSeg, Cuboid cuboid) {
+	public static AbstractRowKeyEncoder createInstance(CubeSegment cubeSeg,
+			Cuboid cuboid) {
 
-        //The storage location identifier is unique for every segment
-        Map<Long, AbstractRowKeyEncoder> cubeCache =
-                ENCODER_CACHE.get(cubeSeg.getStorageLocationIdentifier());
+		// The storage location identifier is unique for every segment
+		Map<Long, AbstractRowKeyEncoder> cubeCache = ENCODER_CACHE.get(cubeSeg
+				.getStorageLocationIdentifier());
 
-        if (cubeCache == null) {
-            cubeCache = new HashMap<Long, AbstractRowKeyEncoder>();
-            ENCODER_CACHE.put(cuboid.getCube().getName(), cubeCache);
-        }
+		if (cubeCache == null) {
+			cubeCache = new HashMap<Long, AbstractRowKeyEncoder>();
+			ENCODER_CACHE.put(cuboid.getCube().getName(), cubeCache);
+		}
 
-        AbstractRowKeyEncoder encoder = cubeCache.get(cuboid.getId());
-        if (encoder == null) {
-            encoder = new RowKeyEncoder(cubeSeg, cuboid);
-            cubeCache.put(cuboid.getId(), encoder);
-        }
-        return encoder;
-    }
+		AbstractRowKeyEncoder encoder = cubeCache.get(cuboid.getId());
+		if (encoder == null) {
+			encoder = new RowKeyEncoder(cubeSeg, cuboid);
+			cubeCache.put(cuboid.getId(), encoder);
+		}
+		return encoder;
+	}
 
-    protected final Cuboid cuboid;
-    protected byte blankByte = DEFAULT_BLANK_BYTE;
+	protected final Cuboid cuboid;
+	protected byte blankByte = DEFAULT_BLANK_BYTE;
 
-    protected AbstractRowKeyEncoder(Cuboid cuboid) {
-        this.cuboid = cuboid;
-    }
+	protected AbstractRowKeyEncoder(Cuboid cuboid) {
+		this.cuboid = cuboid;
+	}
 
-    public void setBlankByte(byte blankByte) {
-        this.blankByte = blankByte;
-    }
+	public void setBlankByte(byte blankByte) {
+		this.blankByte = blankByte;
+	}
 
-    abstract public byte[] encode(Map<TblColRef, String> valueMap);
+	abstract public byte[] encode(Map<TblColRef, String> valueMap);
 
-    abstract public byte[] encode(byte[][] values);
+	abstract public byte[] encode(byte[][] values);
 }

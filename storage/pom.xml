@@ -3,7 +3,6 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kylin-storage</artifactId>
-    <version>0.6.1-SNAPSHOT</version>
     <name>Kylin:Storage</name>
 
     <parent>

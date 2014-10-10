@@ -33,65 +33,67 @@ import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
  * @author yangli9
- *
+ * 
  */
-public class HBaseKeyValueIterator implements Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>>,
-        Closeable {
+public class HBaseKeyValueIterator implements
+		Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>>,
+		Closeable {
 
-    byte[] family;
-    byte[] qualifier;
+	byte[] family;
+	byte[] qualifier;
 
-    HTableInterface table;
-    ResultScanner scanner;
-    Iterator<Result> iterator;
+	HTableInterface table;
+	ResultScanner scanner;
+	Iterator<Result> iterator;
 
-    public HBaseKeyValueIterator(HConnection hconn, String tableName, byte[] family, byte[] qualifier)
-            throws IOException {
-        this.family = family;
-        this.qualifier = qualifier;
+	public HBaseKeyValueIterator(HConnection hconn, String tableName,
+			byte[] family, byte[] qualifier) throws IOException {
+		this.family = family;
+		this.qualifier = qualifier;
 
-        this.table = hconn.getTable(tableName);
-        this.scanner = table.getScanner(family, qualifier);
-        this.iterator = scanner.iterator();
-    }
+		this.table = hconn.getTable(tableName);
+		this.scanner = table.getScanner(family, qualifier);
+		this.iterator = scanner.iterator();
+	}
 
-    @Override
-    public void close() {
-        IOUtils.closeQuietly(scanner);
-        IOUtils.closeQuietly(table);
-    }
+	@Override
+	public void close() {
+		IOUtils.closeQuietly(scanner);
+		IOUtils.closeQuietly(table);
+	}
 
-    @Override
-    public Iterator<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> iterator() {
-        return new MyIterator();
-    }
+	@Override
+	public Iterator<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> iterator() {
+		return new MyIterator();
+	}
 
-    private class MyIterator implements Iterator<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> {
+	private class MyIterator implements
+			Iterator<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> {
 
-        ImmutableBytesWritable key = new ImmutableBytesWritable();
-        ImmutableBytesWritable value = new ImmutableBytesWritable();
-        Pair<ImmutableBytesWritable, ImmutableBytesWritable> pair =
-                new Pair<ImmutableBytesWritable, ImmutableBytesWritable>(key, value);
+		ImmutableBytesWritable key = new ImmutableBytesWritable();
+		ImmutableBytesWritable value = new ImmutableBytesWritable();
+		Pair<ImmutableBytesWritable, ImmutableBytesWritable> pair = new Pair<ImmutableBytesWritable, ImmutableBytesWritable>(
+				key, value);
 
-        @Override
-        public boolean hasNext() {
-            return iterator.hasNext();
-        }
+		@Override
+		public boolean hasNext() {
+			return iterator.hasNext();
+		}
 
-        @Override
-        public Pair<ImmutableBytesWritable, ImmutableBytesWritable> next() {
-            Result r = iterator.next();
-            Cell c =
-                    r.getColumnLatestCell(InvertedIndexDesc.HBASE_FAMILY_BYTES,
-                            InvertedIndexDesc.HBASE_QUALIFIER_BYTES);
-            key.set(c.getRowArray(), c.getRowOffset(), c.getRowLength());
-            value.set(c.getValueArray(), c.getValueOffset(), c.getValueLength());
-            return pair;
-        }
+		@Override
+		public Pair<ImmutableBytesWritable, ImmutableBytesWritable> next() {
+			Result r = iterator.next();
+			Cell c = r.getColumnLatestCell(
+					InvertedIndexDesc.HBASE_FAMILY_BYTES,
+					InvertedIndexDesc.HBASE_QUALIFIER_BYTES);
+			key.set(c.getRowArray(), c.getRowOffset(), c.getRowLength());
+			value.set(c.getValueArray(), c.getValueOffset(), c.getValueLength());
+			return pair;
+		}
 
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
+		public void remove() {
+			throw new UnsupportedOperationException();
+		}
 
-    }
+	}
 }

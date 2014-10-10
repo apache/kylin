@@ -15,7 +15,7 @@
  */
 package com.kylinolap.job.hadoop.hive;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
@@ -37,46 +37,50 @@ import com.kylinolap.job.engine.JobEngineConfig;
  */
 public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
 
-    CubeInstance cube = null;
-    JoinedFlatTableDesc intermediateTableDesc = null;
-    String fakeJobUUID = "abc-def";
-    CubeSegment cubeSegment = null;
+	CubeInstance cube = null;
+	JoinedFlatTableDesc intermediateTableDesc = null;
+	String fakeJobUUID = "abc-def";
+	CubeSegment cubeSegment = null;
 
-    @Before
-    public void setUp() throws Exception {
-        this.createTestMetadata();
-        cube = CubeManager.getInstance(this.getTestConfig()).getCube("test_kylin_cube_with_slr_ready");
-        cubeSegment = cube.getSegments().get(0);
-        intermediateTableDesc = new JoinedFlatTableDesc(cube.getDescriptor(), cubeSegment);
-    }
+	@Before
+	public void setUp() throws Exception {
+		this.createTestMetadata();
+		cube = CubeManager.getInstance(this.getTestConfig()).getCube(
+				"test_kylin_cube_with_slr_ready");
+		cubeSegment = cube.getSegments().get(0);
+		intermediateTableDesc = new JoinedFlatTableDesc(cube.getDescriptor(),
+				cubeSegment);
+	}
 
-    @After
-    public void after() throws Exception {
-        this.cleanupTestMetadata();
-    }
+	@After
+	public void after() throws Exception {
+		this.cleanupTestMetadata();
+	}
 
-    @Test
-    public void testGenCreateTableDDL() {
-        String ddl = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, "/tmp", fakeJobUUID);
-        System.out.println(ddl);
-        assertEquals(513, ddl.length());
-    }
+	@Test
+	public void testGenCreateTableDDL() {
+		String ddl = JoinedFlatTable.generateCreateTableStatement(
+				intermediateTableDesc, "/tmp", fakeJobUUID);
+		System.out.println(ddl);
+		assertEquals(513, ddl.length());
+	}
 
-    @Test
-    public void testGenDropTableDDL() {
-        String ddl = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc, fakeJobUUID);
-        System.out.println(ddl);
-        assertEquals(108, ddl.length());
-    }
+	@Test
+	public void testGenDropTableDDL() {
+		String ddl = JoinedFlatTable.generateDropTableStatement(
+				intermediateTableDesc, fakeJobUUID);
+		System.out.println(ddl);
+		assertEquals(108, ddl.length());
+	}
 
-    @Test
-    public void testGenerateInsertSql() throws IOException {
-        String sql =
-                JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, fakeJobUUID,
-                        new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
-        System.out.println(sql);
+	@Test
+	public void testGenerateInsertSql() throws IOException {
+		String sql = JoinedFlatTable.generateInsertDataStatement(
+				intermediateTableDesc, fakeJobUUID, new JobEngineConfig(
+						KylinConfig.getInstanceFromEnv()));
+		System.out.println(sql);
 
-        assertEquals(1501, sql.length());
-    }
+		assertEquals(1501, sql.length());
+	}
 
 }

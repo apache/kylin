@@ -15,7 +15,7 @@
  */
 package com.kylinolap.job.hadoop.cube;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.List;
@@ -37,42 +37,43 @@ import com.kylinolap.job.constant.BatchConstants;
  */
 public class CubeHFileMapperTest {
 
-    MapDriver<Text, Text, ImmutableBytesWritable, KeyValue> mapDriver;
+	MapDriver<Text, Text, ImmutableBytesWritable, KeyValue> mapDriver;
 
-    private String cube_name = "FLAT_ITEM_CUBE";
+	private String cube_name = "FLAT_ITEM_CUBE";
 
-    @Before
-    public void setUp() {
-        CubeHFileMapper mapper = new CubeHFileMapper();
-        mapDriver = MapDriver.newMapDriver(mapper);
-    }
+	@Before
+	public void setUp() {
+		CubeHFileMapper mapper = new CubeHFileMapper();
+		mapDriver = MapDriver.newMapDriver(mapper);
+	}
 
-    @SuppressWarnings("deprecation")
-    @Test
-    @Ignore
-    public void testMapper2() throws IOException {
-        mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cube_name);
+	@SuppressWarnings("deprecation")
+	@Test
+	@Ignore
+	public void testMapper2() throws IOException {
+		mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME,
+				cube_name);
 
-        mapDriver.addInput(new Text("52010tech"), new Text("35.432"));
+		mapDriver.addInput(new Text("52010tech"), new Text("35.432"));
 
-        List<Pair<ImmutableBytesWritable, KeyValue>> result = mapDriver.run();
+		List<Pair<ImmutableBytesWritable, KeyValue>> result = mapDriver.run();
 
-        assertEquals(2, result.size());
+		assertEquals(2, result.size());
 
-        byte[] bytes = { 0, 0, 0, 0, 0, 0, 0, 119, 33, 0, 22, 1, 0, 121, 7 };
-        ImmutableBytesWritable key = new ImmutableBytesWritable(bytes);
+		byte[] bytes = { 0, 0, 0, 0, 0, 0, 0, 119, 33, 0, 22, 1, 0, 121, 7 };
+		ImmutableBytesWritable key = new ImmutableBytesWritable(bytes);
 
-        Pair<ImmutableBytesWritable, KeyValue> p1 = result.get(0);
-        Pair<ImmutableBytesWritable, KeyValue> p2 = result.get(1);
+		Pair<ImmutableBytesWritable, KeyValue> p1 = result.get(0);
+		Pair<ImmutableBytesWritable, KeyValue> p2 = result.get(1);
 
-        assertEquals(key, p1.getFirst());
-        assertEquals("cf1", new String(p1.getSecond().getFamily()));
-        assertEquals("usd_amt", new String(p1.getSecond().getQualifier()));
-        assertEquals("35.43", new String(p1.getSecond().getValue()));
+		assertEquals(key, p1.getFirst());
+		assertEquals("cf1", new String(p1.getSecond().getFamily()));
+		assertEquals("usd_amt", new String(p1.getSecond().getQualifier()));
+		assertEquals("35.43", new String(p1.getSecond().getValue()));
 
-        assertEquals(key, p2.getFirst());
-        assertEquals("cf1", new String(p2.getSecond().getFamily()));
-        assertEquals("item_count", new String(p2.getSecond().getQualifier()));
-        assertEquals("2", new String(p2.getSecond().getValue()));
-    }
+		assertEquals(key, p2.getFirst());
+		assertEquals("cf1", new String(p2.getSecond().getFamily()));
+		assertEquals("item_count", new String(p2.getSecond().getQualifier()));
+		assertEquals("2", new String(p2.getSecond().getValue()));
+	}
 }

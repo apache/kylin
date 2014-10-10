@@ -22,7 +22,7 @@ import java.io.IOException;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public interface Serializer<T extends RootPersistentEntity> {
 

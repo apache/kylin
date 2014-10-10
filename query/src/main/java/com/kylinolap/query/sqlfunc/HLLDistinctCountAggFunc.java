@@ -26,125 +26,132 @@ import com.kylinolap.common.hll.HyperLogLogPlusCounter;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class HLLDistinctCountAggFunc {
 
-    private static final Logger logger = LoggerFactory.getLogger(HLLDistinctCountAggFunc.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(HLLDistinctCountAggFunc.class);
 
-    public static HyperLogLogPlusCounter init() {
-        return null;
-    }
+	public static HyperLogLogPlusCounter init() {
+		return null;
+	}
 
-    public static HyperLogLogPlusCounter initAdd(Object v) {
-        if (v instanceof Long) { // holistic case
-            long l = (Long) v;
-            return new FixedValueHLLCMockup(l);
-        } else {
-            HyperLogLogPlusCounter c = (HyperLogLogPlusCounter) v;
-            return new HyperLogLogPlusCounter(c);
-        }
-    }
+	public static HyperLogLogPlusCounter initAdd(Object v) {
+		if (v instanceof Long) { // holistic case
+			long l = (Long) v;
+			return new FixedValueHLLCMockup(l);
+		} else {
+			HyperLogLogPlusCounter c = (HyperLogLogPlusCounter) v;
+			return new HyperLogLogPlusCounter(c);
+		}
+	}
 
-    public static HyperLogLogPlusCounter add(HyperLogLogPlusCounter counter, Object v) {
-        if (v instanceof Long) { // holistic case
-            long l = (Long) v;
-            if (counter == null) {
-                return new FixedValueHLLCMockup(l);
-            } else {
-                ((FixedValueHLLCMockup) counter).set(l);
-                return counter;
-            }
-        } else {
-            HyperLogLogPlusCounter c = (HyperLogLogPlusCounter) v;
-            if (counter == null) {
-                return new HyperLogLogPlusCounter(c);
-            } else {
-                counter.merge(c);
-                return counter;
-            }
-        }
-    }
+	public static HyperLogLogPlusCounter add(HyperLogLogPlusCounter counter,
+			Object v) {
+		if (v instanceof Long) { // holistic case
+			long l = (Long) v;
+			if (counter == null) {
+				return new FixedValueHLLCMockup(l);
+			} else {
+				((FixedValueHLLCMockup) counter).set(l);
+				return counter;
+			}
+		} else {
+			HyperLogLogPlusCounter c = (HyperLogLogPlusCounter) v;
+			if (counter == null) {
+				return new HyperLogLogPlusCounter(c);
+			} else {
+				counter.merge(c);
+				return counter;
+			}
+		}
+	}
 
-    public static HyperLogLogPlusCounter merge(HyperLogLogPlusCounter counter0, Object counter1) {
-        return add(counter0, counter1);
-    }
+	public static HyperLogLogPlusCounter merge(HyperLogLogPlusCounter counter0,
+			Object counter1) {
+		return add(counter0, counter1);
+	}
 
-    public static long result(HyperLogLogPlusCounter counter) {
-        return counter == null ? 0L : counter.getCountEstimate();
-    }
+	public static long result(HyperLogLogPlusCounter counter) {
+		return counter == null ? 0L : counter.getCountEstimate();
+	}
 
-    private static class FixedValueHLLCMockup extends HyperLogLogPlusCounter {
+	private static class FixedValueHLLCMockup extends HyperLogLogPlusCounter {
 
-        private Long value = null;
+		private Long value = null;
 
-        FixedValueHLLCMockup(long value) {
-            this.value = value;
-        }
+		FixedValueHLLCMockup(long value) {
+			this.value = value;
+		}
 
-        public void set(long value) {
-            if (this.value == null) {
-                this.value = value;
-            } else {
-                long oldValue = Math.abs(this.value.longValue());
-                long take = Math.max(oldValue, value);
-                logger.warn("Error to aggregate holistic count distinct, old value " + oldValue
-                        + ", new value " + value + ", taking " + take);
-                this.value = -take; // make it obvious that this value is wrong
-            }
-        }
+		public void set(long value) {
+			if (this.value == null) {
+				this.value = value;
+			} else {
+				long oldValue = Math.abs(this.value.longValue());
+				long take = Math.max(oldValue, value);
+				logger.warn("Error to aggregate holistic count distinct, old value "
+						+ oldValue
+						+ ", new value "
+						+ value
+						+ ", taking "
+						+ take);
+				this.value = -take; // make it obvious that this value is wrong
+			}
+		}
 
-        @Override
-        public void clear() {
-            this.value = null;
-        }
+		@Override
+		public void clear() {
+			this.value = null;
+		}
 
-        @Override
-        protected void add(long hash) {
-            throw new UnsupportedOperationException();
-        }
+		@Override
+		protected void add(long hash) {
+			throw new UnsupportedOperationException();
+		}
 
-        @Override
-        public void merge(HyperLogLogPlusCounter another) {
-            throw new UnsupportedOperationException();
-        }
+		@Override
+		public void merge(HyperLogLogPlusCounter another) {
+			throw new UnsupportedOperationException();
+		}
 
-        @Override
-        public long getCountEstimate() {
-            return value;
-        }
+		@Override
+		public long getCountEstimate() {
+			return value;
+		}
 
-        @Override
-        public void writeRegisters(ByteBuffer out) throws IOException {
-            throw new UnsupportedOperationException();
-        }
+		@Override
+		public void writeRegisters(ByteBuffer out) throws IOException {
+			throw new UnsupportedOperationException();
+		}
 
-        @Override
-        public void readRegisters(ByteBuffer in) throws IOException {
-            throw new UnsupportedOperationException();
-        }
+		@Override
+		public void readRegisters(ByteBuffer in) throws IOException {
+			throw new UnsupportedOperationException();
+		}
 
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = super.hashCode();
-            result = prime * result + (int) (value ^ (value >>> 32));
-            return result;
-        }
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = super.hashCode();
+			result = prime * result + (int) (value ^ (value >>> 32));
+			return result;
+		}
 
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (!super.equals(obj))
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            FixedValueHLLCMockup other = (FixedValueHLLCMockup) obj;
-            if (value != other.value)
-                return false;
-            return true;
-        }
-    }
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (!super.equals(obj))
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			FixedValueHLLCMockup other = (FixedValueHLLCMockup) obj;
+			if (value != other.value)
+				return false;
+			return true;
+		}
+	}
 
 }

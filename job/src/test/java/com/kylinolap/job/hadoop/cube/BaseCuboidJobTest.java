@@ -15,7 +15,7 @@
  */
 package com.kylinolap.job.hadoop.cube;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 
@@ -34,48 +34,50 @@ import com.kylinolap.common.util.LocalFileMetadataTestCase;
  */
 public class BaseCuboidJobTest extends LocalFileMetadataTestCase {
 
-    private Configuration conf;
+	private Configuration conf;
 
-    @Before
-    public void setup() throws Exception {
-        conf = new Configuration();
-        // for local runner out-of-memory issue
-        conf.set("mapreduce.task.io.sort.mb", "10");
+	@Before
+	public void setup() throws Exception {
+		conf = new Configuration();
+		// for local runner out-of-memory issue
+		conf.set("mapreduce.task.io.sort.mb", "10");
 
-        createTestMetadata();
-    }
+		createTestMetadata();
+	}
 
-    @After
-    public void after() throws Exception {
-        cleanupTestMetadata();
-    }
+	@After
+	public void after() throws Exception {
+		cleanupTestMetadata();
+	}
 
-    @Test
-    public void testJob() throws Exception {
-        String input = "src/test/resources/data/flat_table/";
-        String output = "target/test-output/base_cuboid/";
-        String cubeName = "test_kylin_cube_with_slr_1_new_segment";
-        String segmentName = "20130331080000_20131212080000";
-        String jobname = "base_cuboid_job";
-        String level = "0";
-        FileUtil.fullyDelete(new File(output));
+	@Test
+	public void testJob() throws Exception {
+		String input = "src/test/resources/data/flat_table/";
+		String output = "target/test-output/base_cuboid/";
+		String cubeName = "test_kylin_cube_with_slr_1_new_segment";
+		String segmentName = "20130331080000_20131212080000";
+		String jobname = "base_cuboid_job";
+		String level = "0";
+		FileUtil.fullyDelete(new File(output));
 
-        String[] args =
-                { "-input", input, "-cubename", cubeName, "-segmentname", segmentName, "-output", output,
-                        "-jobname", jobname, "-level", level };
-        assertEquals("Job failed", 0, ToolRunner.run(conf, new BaseCuboidJob(), args));
-    }
+		String[] args = { "-input", input, "-cubename", cubeName,
+				"-segmentname", segmentName, "-output", output, "-jobname",
+				jobname, "-level", level };
+		assertEquals("Job failed", 0,
+				ToolRunner.run(conf, new BaseCuboidJob(), args));
+	}
 
-    @Test
-    public void testJobWithBadParas() throws Exception {
+	@Test
+	public void testJobWithBadParas() throws Exception {
 
-        final String input = "src/test/resources/data/flat_table/";
-        final String output = "target/test-output/base_cuboid/";
-        final String metadata = "../examples/test_case_data";
+		final String input = "src/test/resources/data/flat_table/";
+		final String output = "target/test-output/base_cuboid/";
+		final String metadata = "../examples/test_case_data";
 
-        FileUtil.fullyDelete(new File(output));
+		FileUtil.fullyDelete(new File(output));
 
-        String[] args = { "-input", input, "-output", output, "-metadata", metadata };
-        assertEquals(2, ToolRunner.run(conf, new BaseCuboidJob(), args));
-    }
+		String[] args = { "-input", input, "-output", output, "-metadata",
+				metadata };
+		assertEquals(2, ToolRunner.run(conf, new BaseCuboidJob(), args));
+	}
 }

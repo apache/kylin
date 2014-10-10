@@ -36,46 +36,51 @@ import com.kylinolap.cube.kv.RowConstants;
  * @author Jack
  * 
  */
-public class ColumnCardinalityMapper<T> extends Mapper<T, Text, IntWritable, BytesWritable> {
+public class ColumnCardinalityMapper<T> extends
+		Mapper<T, Text, IntWritable, BytesWritable> {
 
-    private Map<Integer, HyperLogLogPlusCounter> hllcMap = new HashMap<Integer, HyperLogLogPlusCounter>();
-    public static final String DEFAULT_DELIM = ",";
+	private Map<Integer, HyperLogLogPlusCounter> hllcMap = new HashMap<Integer, HyperLogLogPlusCounter>();
+	public static final String DEFAULT_DELIM = ",";
 
-    @Override
-    public void map(T key, Text value, Context context) throws IOException, InterruptedException {
-        String delim = context.getConfiguration().get(HiveColumnCardinalityJob.KEY_INPUT_DELIM);
-        if (delim == null) {
-            delim = DEFAULT_DELIM;
-        }
-        String line = value.toString();
-        StringTokenizer tokenizer = new StringTokenizer(line, delim);
-        int i = 1;
-        while (tokenizer.hasMoreTokens()) {
-            String temp = tokenizer.nextToken();
-            getHllc(i).add(Bytes.toBytes(temp));
-            i++;
-        }
-    }
+	@Override
+	public void map(T key, Text value, Context context) throws IOException,
+			InterruptedException {
+		String delim = context.getConfiguration().get(
+				HiveColumnCardinalityJob.KEY_INPUT_DELIM);
+		if (delim == null) {
+			delim = DEFAULT_DELIM;
+		}
+		String line = value.toString();
+		StringTokenizer tokenizer = new StringTokenizer(line, delim);
+		int i = 1;
+		while (tokenizer.hasMoreTokens()) {
+			String temp = tokenizer.nextToken();
+			getHllc(i).add(Bytes.toBytes(temp));
+			i++;
+		}
+	}
 
-    private HyperLogLogPlusCounter getHllc(Integer key) {
-        if (!hllcMap.containsKey(key)) {
-            hllcMap.put(key, new HyperLogLogPlusCounter());
-        }
-        return hllcMap.get(key);
-    }
+	private HyperLogLogPlusCounter getHllc(Integer key) {
+		if (!hllcMap.containsKey(key)) {
+			hllcMap.put(key, new HyperLogLogPlusCounter());
+		}
+		return hllcMap.get(key);
+	}
 
-    @Override
-    protected void cleanup(Context context) throws IOException, InterruptedException {
-        Iterator<Integer> it = hllcMap.keySet().iterator();
-        while (it.hasNext()) {
-            int key = it.next();
-            HyperLogLogPlusCounter hllc = hllcMap.get(key);
-            ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-            buf.clear();
-            hllc.writeRegisters(buf);
-            buf.flip();
-            context.write(new IntWritable(key), new BytesWritable(buf.array()));
-        }
-    }
+	@Override
+	protected void cleanup(Context context) throws IOException,
+			InterruptedException {
+		Iterator<Integer> it = hllcMap.keySet().iterator();
+		while (it.hasNext()) {
+			int key = it.next();
+			HyperLogLogPlusCounter hllc = hllcMap.get(key);
+			ByteBuffer buf = ByteBuffer
+					.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
+			buf.clear();
+			hllc.writeRegisters(buf);
+			buf.flip();
+			context.write(new IntWritable(key), new BytesWritable(buf.array()));
+		}
+	}
 
 }

@@ -16,7 +16,7 @@
 
 package com.kylinolap.job.hadoop.cube;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 
@@ -31,39 +31,41 @@ import com.kylinolap.common.util.LocalFileMetadataTestCase;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class RangeKeyDistributionJobTest extends LocalFileMetadataTestCase {
 
-    private Configuration conf;
+	private Configuration conf;
 
-    @Before
-    public void setup() throws Exception {
-        conf = new Configuration();
-        //conf.set("fs.default.name", "file:///");
-        //conf.set("mapred.job.tracker", "local");
+	@Before
+	public void setup() throws Exception {
+		conf = new Configuration();
+		// conf.set("fs.default.name", "file:///");
+		// conf.set("mapred.job.tracker", "local");
 
-        // for local runner out-of-memory issue
-        conf.set("mapreduce.task.io.sort.mb", "10");
-        createTestMetadata();
-    }
+		// for local runner out-of-memory issue
+		conf.set("mapreduce.task.io.sort.mb", "10");
+		createTestMetadata();
+	}
 
-    @After
-    public void after() throws Exception {
-        cleanupTestMetadata();
-    }
+	@After
+	public void after() throws Exception {
+		cleanupTestMetadata();
+	}
 
-    @Test
-    public void testJob() throws Exception {
-        String input = "src/test/resources/data/base_cuboid/,src/test/resources/data/6d_cuboid/";
-        String output = "target/test-output/key_distribution_range/";
-        String jobname = "calculate_splits";
-        String cubename = "test_kylin_cube_with_slr_ready";
+	@Test
+	public void testJob() throws Exception {
+		String input = "src/test/resources/data/base_cuboid/,src/test/resources/data/6d_cuboid/";
+		String output = "target/test-output/key_distribution_range/";
+		String jobname = "calculate_splits";
+		String cubename = "test_kylin_cube_with_slr_ready";
 
-        FileUtil.fullyDelete(new File(output));
+		FileUtil.fullyDelete(new File(output));
 
-        String[] args = { "-input", input, "-output", output, "-jobname", jobname, "-cubename", cubename };
-        assertEquals("Job failed", 0, ToolRunner.run(conf, new RangeKeyDistributionJob(), args));
-    }
+		String[] args = { "-input", input, "-output", output, "-jobname",
+				jobname, "-cubename", cubename };
+		assertEquals("Job failed", 0,
+				ToolRunner.run(conf, new RangeKeyDistributionJob(), args));
+	}
 
 }

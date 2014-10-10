@@ -38,75 +38,78 @@ import com.kylinolap.job.constant.BatchConstants;
  */
 public class MergeCuboidJob extends CuboidJob {
 
-    private static final Logger log = LoggerFactory.getLogger(MergeCuboidJob.class);
+	private static final Logger log = LoggerFactory
+			.getLogger(MergeCuboidJob.class);
 
-    @Override
-    public int run(String[] args) throws Exception {
-        Options options = new Options();
+	@Override
+	public int run(String[] args) throws Exception {
+		Options options = new Options();
 
-        try {
-            options.addOption(OPTION_JOB_NAME);
-            options.addOption(OPTION_CUBE_NAME);
-            options.addOption(OPTION_SEGMENT_NAME);
-            options.addOption(OPTION_INPUT_PATH);
-            options.addOption(OPTION_OUTPUT_PATH);
-            parseOptions(options, args);
+		try {
+			options.addOption(OPTION_JOB_NAME);
+			options.addOption(OPTION_CUBE_NAME);
+			options.addOption(OPTION_SEGMENT_NAME);
+			options.addOption(OPTION_INPUT_PATH);
+			options.addOption(OPTION_OUTPUT_PATH);
+			parseOptions(options, args);
 
-            String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
-            String segmentName = getOptionValue(OPTION_SEGMENT_NAME).toUpperCase();
-            KylinConfig config = KylinConfig.getInstanceFromEnv();
-            CubeManager cubeMgr = CubeManager.getInstance(config);
-            CubeInstance cube = cubeMgr.getCube(cubeName);
-            //CubeSegment cubeSeg = cubeMgr.findSegment(cube, segmentName);
+			String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
+			String segmentName = getOptionValue(OPTION_SEGMENT_NAME)
+					.toUpperCase();
+			KylinConfig config = KylinConfig.getInstanceFromEnv();
+			CubeManager cubeMgr = CubeManager.getInstance(config);
+			CubeInstance cube = cubeMgr.getCube(cubeName);
+			// CubeSegment cubeSeg = cubeMgr.findSegment(cube, segmentName);
 
-            // start job
-            String jobName = getOptionValue(OPTION_JOB_NAME);
-            System.out.println("Starting: " + jobName);
-            job = Job.getInstance(getConf(), jobName);
+			// start job
+			String jobName = getOptionValue(OPTION_JOB_NAME);
+			System.out.println("Starting: " + jobName);
+			job = Job.getInstance(getConf(), jobName);
 
-            // set job configuration - basic 
-            File JarFile = new File(config.getKylinJobJarPath());
-            if (JarFile.exists()) {
-                job.setJar(config.getKylinJobJarPath());
-            } else {
-                job.setJarByClass(this.getClass());
-            }
+			// set job configuration - basic
+			File JarFile = new File(config.getKylinJobJarPath());
+			if (JarFile.exists()) {
+				job.setJar(config.getKylinJobJarPath());
+			} else {
+				job.setJarByClass(this.getClass());
+			}
 
-            //setJobJar(job);
-            addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
+			// setJobJar(job);
+			addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
 
-            Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
-            FileOutputFormat.setOutputPath(job, output);
+			Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
+			FileOutputFormat.setOutputPath(job, output);
 
-            // Mapper
-            job.setInputFormatClass(SequenceFileInputFormat.class);
-            job.setMapperClass(MergeCuboidMapper.class);
-            job.setMapOutputKeyClass(Text.class);
-            job.setMapOutputValueClass(Text.class);
+			// Mapper
+			job.setInputFormatClass(SequenceFileInputFormat.class);
+			job.setMapperClass(MergeCuboidMapper.class);
+			job.setMapOutputKeyClass(Text.class);
+			job.setMapOutputValueClass(Text.class);
 
-            // Reducer - only one
-            job.setReducerClass(CuboidReducer.class);
-            job.setOutputFormatClass(SequenceFileOutputFormat.class);
-            job.setOutputKeyClass(Text.class);
-            job.setOutputValueClass(Text.class);
+			// Reducer - only one
+			job.setReducerClass(CuboidReducer.class);
+			job.setOutputFormatClass(SequenceFileOutputFormat.class);
+			job.setOutputKeyClass(Text.class);
+			job.setOutputValueClass(Text.class);
 
-            // set job configuration
-            job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
-            job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
+			// set job configuration
+			job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
+			job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME,
+					segmentName);
 
-            // add metadata to distributed cache
-            attachKylinPropsAndMetadata(cube, job.getConfiguration());
+			// add metadata to distributed cache
+			attachKylinPropsAndMetadata(cube, job.getConfiguration());
 
-            setReduceTaskNum(job, config, cubeName, 0);
+			setReduceTaskNum(job, config, cubeName, 0);
 
-            this.deletePath(job.getConfiguration(), output);
+			this.deletePath(job.getConfiguration(), output);
 
-            return waitForCompletion(job);
-        } catch (Exception e) {
-            printUsage(options);
-            log.error(e.getLocalizedMessage(), e);
-            return 2;
-        }
-    }
+			return waitForCompletion(job);
+		} catch (Exception e) {
+			printUsage(options);
+			log.error(e.getLocalizedMessage(), e);
+			return 2;
+		}
+	}
 
 }

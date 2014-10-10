@@ -26,88 +26,90 @@ import com.kylinolap.job.JobManager;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class JobMetrics implements MetricSet {
 
-    private JobManager jobManager;
+	private JobManager jobManager;
 
-    static class JobMetricsHolder {
-        static final JobMetrics INSTANCE = new JobMetrics();
-    }
+	static class JobMetricsHolder {
+		static final JobMetrics INSTANCE = new JobMetrics();
+	}
 
-    public static JobMetrics getInstance() {
-        return JobMetricsHolder.INSTANCE;
-    }
+	public static JobMetrics getInstance() {
+		return JobMetricsHolder.INSTANCE;
+	}
 
-    /* (non-Javadoc)
-     * @see com.codahale.metrics.MetricSet#getMetrics()
-     */
-    @Override
-    public Map<String, Metric> getMetrics() {
-        Map<String, Metric> metricSet = new HashMap<String, Metric>();
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.codahale.metrics.MetricSet#getMetrics()
+	 */
+	@Override
+	public Map<String, Metric> getMetrics() {
+		Map<String, Metric> metricSet = new HashMap<String, Metric>();
 
-        metricSet.put("PercentileJobStepDuration", new Gauge<Double>() {
-            @Override
-            public Double getValue() {
-                return jobManager.getPercentileJobStepDuration(95);
-            }
-        });
+		metricSet.put("PercentileJobStepDuration", new Gauge<Double>() {
+			@Override
+			public Double getValue() {
+				return jobManager.getPercentileJobStepDuration(95);
+			}
+		});
 
-        metricSet.put("scheduledJobs", new Gauge<Integer>() {
-            @Override
-            public Integer getValue() {
-                return jobManager.getScheduledJobsSzie();
-            }
-        });
+		metricSet.put("scheduledJobs", new Gauge<Integer>() {
+			@Override
+			public Integer getValue() {
+				return jobManager.getScheduledJobsSzie();
+			}
+		});
 
-        metricSet.put("EngineThreadPool", new Gauge<Integer>() {
-            @Override
-            public Integer getValue() {
-                return jobManager.getEngineThreadPoolSize();
-            }
-        });
+		metricSet.put("EngineThreadPool", new Gauge<Integer>() {
+			@Override
+			public Integer getValue() {
+				return jobManager.getEngineThreadPoolSize();
+			}
+		});
 
-        metricSet.put("MaxJobStep", new Gauge<Double>() {
-            @Override
-            public Double getValue() {
-                return jobManager.getMaxJobStepDuration();
-            }
-        });
+		metricSet.put("MaxJobStep", new Gauge<Double>() {
+			@Override
+			public Double getValue() {
+				return jobManager.getMaxJobStepDuration();
+			}
+		});
 
-        metricSet.put("MinJobStep", new Gauge<Double>() {
-            @Override
-            public Double getValue() {
-                return jobManager.getMinJobStepDuration();
-            }
-        });
+		metricSet.put("MinJobStep", new Gauge<Double>() {
+			@Override
+			public Double getValue() {
+				return jobManager.getMinJobStepDuration();
+			}
+		});
 
-        metricSet.put("IdleSlots", new Gauge<Integer>() {
-            @Override
-            public Integer getValue() {
-                return jobManager.getNumberOfIdleSlots();
-            }
-        });
+		metricSet.put("IdleSlots", new Gauge<Integer>() {
+			@Override
+			public Integer getValue() {
+				return jobManager.getNumberOfIdleSlots();
+			}
+		});
 
-        metricSet.put("JobStepsExecuted", new Gauge<Integer>() {
-            @Override
-            public Integer getValue() {
-                return jobManager.getNumberOfJobStepsExecuted();
-            }
-        });
+		metricSet.put("JobStepsExecuted", new Gauge<Integer>() {
+			@Override
+			public Integer getValue() {
+				return jobManager.getNumberOfJobStepsExecuted();
+			}
+		});
 
-        metricSet.put("JobStepsRunning", new Gauge<Integer>() {
-            @Override
-            public Integer getValue() {
-                return jobManager.getNumberOfJobStepsRunning();
-            }
-        });
+		metricSet.put("JobStepsRunning", new Gauge<Integer>() {
+			@Override
+			public Integer getValue() {
+				return jobManager.getNumberOfJobStepsRunning();
+			}
+		});
 
-        return metricSet;
-    }
+		return metricSet;
+	}
 
-    public void setJobManager(JobManager jobManager) {
-        this.jobManager = jobManager;
-    }
+	public void setJobManager(JobManager jobManager) {
+		this.jobManager = jobManager;
+	}
 
 }

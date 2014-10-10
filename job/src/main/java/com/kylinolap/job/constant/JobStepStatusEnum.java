@@ -16,34 +16,37 @@
 package com.kylinolap.job.constant;
 
 public enum JobStepStatusEnum {
-    NEW(0), PENDING(1), RUNNING(2), FINISHED(4), ERROR(8), DISCARDED(16), WAITING(32);
+	NEW(0), PENDING(1), RUNNING(2), FINISHED(4), ERROR(8), DISCARDED(16), WAITING(
+			32);
 
-    private final int code;
+	private final int code;
 
-    private JobStepStatusEnum(int statusCode) {
-        this.code = statusCode;
-    }
+	private JobStepStatusEnum(int statusCode) {
+		this.code = statusCode;
+	}
 
-    public static JobStepStatusEnum getByCode(int statusCode) {
-        for (JobStepStatusEnum status : values()) {
-            if (status.getCode() == statusCode) {
-                return status;
-            }
-        }
+	public static JobStepStatusEnum getByCode(int statusCode) {
+		for (JobStepStatusEnum status : values()) {
+			if (status.getCode() == statusCode) {
+				return status;
+			}
+		}
 
-        return null;
-    }
+		return null;
+	}
 
-    public int getCode() {
-        return this.code;
-    }
+	public int getCode() {
+		return this.code;
+	}
 
-    public boolean isComplete() {
-        return code == JobStepStatusEnum.FINISHED.getCode() || code == JobStepStatusEnum.ERROR.getCode()
-                || code == JobStepStatusEnum.DISCARDED.getCode();
-    }
+	public boolean isComplete() {
+		return code == JobStepStatusEnum.FINISHED.getCode()
+				|| code == JobStepStatusEnum.ERROR.getCode()
+				|| code == JobStepStatusEnum.DISCARDED.getCode();
+	}
 
-    public boolean isRunable() {
-        return code == JobStepStatusEnum.PENDING.getCode() || code == JobStepStatusEnum.ERROR.getCode();
-    }
+	public boolean isRunable() {
+		return code == JobStepStatusEnum.PENDING.getCode()
+				|| code == JobStepStatusEnum.ERROR.getCode();
+	}
 }

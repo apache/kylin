@@ -21,19 +21,19 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  * @author xduo
- *
+ * 
  */
 @ResponseStatus(value = HttpStatus.FORBIDDEN)
 public class ForbiddenException extends RuntimeException {
 
-    private static final long serialVersionUID = 2741885728370162194L;
+	private static final long serialVersionUID = 2741885728370162194L;
 
-    public ForbiddenException() {
-        super();
-    }
+	public ForbiddenException() {
+		super();
+	}
 
-    public ForbiddenException(String message) {
-        super(message);
-    }
+	public ForbiddenException(String message) {
+		super(message);
+	}
 
 }

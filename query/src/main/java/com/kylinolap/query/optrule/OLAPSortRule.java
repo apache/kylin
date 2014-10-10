@@ -27,27 +27,29 @@ import com.kylinolap.query.relnode.OLAPSortRel;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class OLAPSortRule extends ConverterRule {
 
-    public static final OLAPSortRule INSTANCE = new OLAPSortRule();
+	public static final OLAPSortRule INSTANCE = new OLAPSortRule();
 
-    public OLAPSortRule() {
-        super(SortRel.class, Convention.NONE, OLAPRel.CONVENTION, "OLAPSortRule");
-    }
+	public OLAPSortRule() {
+		super(SortRel.class, Convention.NONE, OLAPRel.CONVENTION,
+				"OLAPSortRule");
+	}
 
-    @Override
-    public RelNode convert(RelNode rel) {
-        final SortRel sort = (SortRel) rel;
-        if (sort.offset != null || sort.fetch != null) {
-            return null;
-        }
-        final RelTraitSet traitSet = sort.getTraitSet().replace(OLAPRel.CONVENTION);
-        final RelNode input = sort.getChild();
-        return new OLAPSortRel(rel.getCluster(), traitSet, convert(input,
-                input.getTraitSet().replace(OLAPRel.CONVENTION)), sort.getCollation(), sort.offset,
-                sort.fetch);
-    }
+	@Override
+	public RelNode convert(RelNode rel) {
+		final SortRel sort = (SortRel) rel;
+		if (sort.offset != null || sort.fetch != null) {
+			return null;
+		}
+		final RelTraitSet traitSet = sort.getTraitSet().replace(
+				OLAPRel.CONVENTION);
+		final RelNode input = sort.getChild();
+		return new OLAPSortRel(rel.getCluster(), traitSet, convert(input, input
+				.getTraitSet().replace(OLAPRel.CONVENTION)),
+				sort.getCollation(), sort.offset, sort.fetch);
+	}
 
 }

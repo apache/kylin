@@ -11,32 +11,33 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
  */
 public class CubeSizeEstimationJob extends AbstractHadoopJob {
 
-    private int returnCode = 0;
+	private int returnCode = 0;
 
-    @Override
-    public int run(String[] args) throws Exception {
-        Options options = new Options();
+	@SuppressWarnings("unused")
+	@Override
+	public int run(String[] args) throws Exception {
+		Options options = new Options();
 
-        try {
-            options.addOption(OPTION_CUBE_NAME);
-            parseOptions(options, args);
+		try {
+			options.addOption(OPTION_CUBE_NAME);
+			parseOptions(options, args);
 
-            String cubeName = getOptionValue(OPTION_CUBE_NAME);
-            KylinConfig config = KylinConfig.getInstanceFromEnv();
+			String cubeName = getOptionValue(OPTION_CUBE_NAME);
+			KylinConfig config = KylinConfig.getInstanceFromEnv();
 
-        } catch (Exception e) {
-            printUsage(options);
-            e.printStackTrace(System.err);
-            log.error(e.getLocalizedMessage(), e);
-            returnCode = 2;
-        }
+		} catch (Exception e) {
+			printUsage(options);
+			e.printStackTrace(System.err);
+			log.error(e.getLocalizedMessage(), e);
+			returnCode = 2;
+		}
 
-        return returnCode;
-    }
+		return returnCode;
+	}
 
-    public static void main(String[] args) throws Exception {
-        int exitCode = ToolRunner.run(new CubeSizeEstimationJob(), args);
-        System.exit(exitCode);
-    }
+	public static void main(String[] args) throws Exception {
+		int exitCode = ToolRunner.run(new CubeSizeEstimationJob(), args);
+		System.exit(exitCode);
+	}
 
 }

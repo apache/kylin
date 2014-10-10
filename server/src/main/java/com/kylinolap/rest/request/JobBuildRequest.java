@@ -18,38 +18,38 @@ package com.kylinolap.rest.request;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class JobBuildRequest {
 
-    private long startTime;
+	private long startTime;
 
-    private long endTime;
+	private long endTime;
 
-    private String buildType;
+	private String buildType;
 
-    public long getStartTime() {
-        return startTime;
-    }
+	public long getStartTime() {
+		return startTime;
+	}
 
-    public void setStartTime(long startTime) {
-        this.startTime = startTime;
-    }
+	public void setStartTime(long startTime) {
+		this.startTime = startTime;
+	}
 
-    public long getEndTime() {
-        return endTime;
-    }
+	public long getEndTime() {
+		return endTime;
+	}
 
-    public void setEndTime(long endTime) {
-        this.endTime = endTime;
-    }
+	public void setEndTime(long endTime) {
+		this.endTime = endTime;
+	}
 
-    public String getBuildType() {
-        return buildType;
-    }
+	public String getBuildType() {
+		return buildType;
+	}
 
-    public void setBuildType(String buildType) {
-        this.buildType = buildType;
-    }
+	public void setBuildType(String buildType) {
+		this.buildType = buildType;
+	}
 
 }

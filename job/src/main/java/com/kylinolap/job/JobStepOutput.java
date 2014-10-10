@@ -23,47 +23,49 @@ import com.kylinolap.common.persistence.RootPersistentEntity;
 
 /**
  * @author ysong1
- *
+ * 
  */
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class JobStepOutput extends RootPersistentEntity {
 
-    public static String nameOfOutput(String jobUuid, int stepSequenceId) {
-        return jobUuid + "." + stepSequenceId;
-    }
+	public static String nameOfOutput(String jobUuid, int stepSequenceId) {
+		return jobUuid + "." + stepSequenceId;
+	}
 
-    @JsonProperty("name")
-    private String name; // job uuid + "." +step sequence id
-    @JsonProperty("output")
-    private String output = "";
+	@JsonProperty("name")
+	private String name; // job uuid + "." +step sequence id
+	@JsonProperty("output")
+	private String output = "";
 
-    /**
-     * @return the name
-     */
-    public String getName() {
-        return name;
-    }
+	/**
+	 * @return the name
+	 */
+	public String getName() {
+		return name;
+	}
 
-    /**
-     * @return the output
-     */
-    public String getOutput() {
-        return output;
-    }
+	/**
+	 * @return the output
+	 */
+	public String getOutput() {
+		return output;
+	}
 
-    /**
-     * @param output the output to set
-     */
-    public void setOutput(String output) {
-        this.output = output;
-    }
+	/**
+	 * @param output
+	 *            the output to set
+	 */
+	public void setOutput(String output) {
+		this.output = output;
+	}
 
-    /**
-     * @param name the name to set
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
+	/**
+	 * @param name
+	 *            the name to set
+	 */
+	public void setName(String name) {
+		this.name = name;
+	}
 
 }

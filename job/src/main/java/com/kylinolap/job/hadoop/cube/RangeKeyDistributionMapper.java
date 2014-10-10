@@ -24,41 +24,44 @@ import org.apache.hadoop.mapreduce.Mapper;
 
 /**
  * @author ysong1
- *
+ * 
  */
-public class RangeKeyDistributionMapper extends Mapper<Text, Text, Text, LongWritable> {
+public class RangeKeyDistributionMapper extends
+		Mapper<Text, Text, Text, LongWritable> {
 
-    private static final long ONE_MEGA_BYTES = 1L * 1024L * 1024L;
+	private static final long ONE_MEGA_BYTES = 1L * 1024L * 1024L;
 
-    private LongWritable outputValue = new LongWritable(0);
+	private LongWritable outputValue = new LongWritable(0);
 
-    private long bytesRead = 0;
+	private long bytesRead = 0;
 
-    private Text lastKey;
+	private Text lastKey;
 
-    @Override
-    public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
-        lastKey = key;
+	@Override
+	public void map(Text key, Text value, Context context) throws IOException,
+			InterruptedException {
+		lastKey = key;
 
-        int bytesLength = key.getLength() + value.getLength();
-        bytesRead += bytesLength;
+		int bytesLength = key.getLength() + value.getLength();
+		bytesRead += bytesLength;
 
-        if (bytesRead >= ONE_MEGA_BYTES) {
-            outputValue.set(bytesRead);
-            context.write(key, outputValue);
+		if (bytesRead >= ONE_MEGA_BYTES) {
+			outputValue.set(bytesRead);
+			context.write(key, outputValue);
 
-            //reset bytesRead
-            bytesRead = 0;
-        }
+			// reset bytesRead
+			bytesRead = 0;
+		}
 
-    }
+	}
 
-    @Override
-    protected void cleanup(Context context) throws IOException, InterruptedException {
-        if (lastKey != null) {
-            outputValue.set(bytesRead);
-            context.write(lastKey, outputValue);
-        }
-    }
+	@Override
+	protected void cleanup(Context context) throws IOException,
+			InterruptedException {
+		if (lastKey != null) {
+			outputValue.set(bytesRead);
+			context.write(lastKey, outputValue);
+		}
+	}
 
 }

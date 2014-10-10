@@ -24,63 +24,64 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * @author xduo
- *
+ * 
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubePartitionDesc {
 
-    public static enum CubePartitionType {
-        APPEND, UPDATE_INSERT
-    }
+	public static enum CubePartitionType {
+		APPEND, UPDATE_INSERT
+	}
 
-    @JsonProperty("partition_date_column")
-    private String partitionDateColumn;
-    @JsonProperty("partition_date_start")
-    private long partitionDateStart = 0L;
-    @JsonProperty("cube_partition_type")
-    private CubePartitionType cubePartitionType = CubePartitionType.APPEND;
+	@JsonProperty("partition_date_column")
+	private String partitionDateColumn;
+	@JsonProperty("partition_date_start")
+	private long partitionDateStart = 0L;
+	@JsonProperty("cube_partition_type")
+	private CubePartitionType cubePartitionType = CubePartitionType.APPEND;
 
-    private TblColRef partitionDateColumnRef;
+	private TblColRef partitionDateColumnRef;
 
-    public void init(Map<String, Map<String, TblColRef>> columnMap) {
-        if (null != partitionDateColumn) {
-            String[] columns = partitionDateColumn.split("\\.");
+	public void init(Map<String, Map<String, TblColRef>> columnMap) {
+		if (null != partitionDateColumn) {
+			String[] columns = partitionDateColumn.split("\\.");
 
-            if (null != columns && columns.length == 2) {
-                Map<String, TblColRef> cols = columnMap.get(columns[0].toUpperCase());
-                if (cols != null)
-                    partitionDateColumnRef = cols.get(columns[1].toUpperCase());
+			if (null != columns && columns.length == 2) {
+				Map<String, TblColRef> cols = columnMap.get(columns[0]
+						.toUpperCase());
+				if (cols != null)
+					partitionDateColumnRef = cols.get(columns[1].toUpperCase());
 
-            }
-        }
-    }
+			}
+		}
+	}
 
-    public String getPartitionDateColumn() {
-        return partitionDateColumn;
-    }
+	public String getPartitionDateColumn() {
+		return partitionDateColumn;
+	}
 
-    public void setPartitionDateColumn(String partitionDateColumn) {
-        this.partitionDateColumn = partitionDateColumn;
-    }
+	public void setPartitionDateColumn(String partitionDateColumn) {
+		this.partitionDateColumn = partitionDateColumn;
+	}
 
-    public long getPartitionDateStart() {
-        return partitionDateStart;
-    }
+	public long getPartitionDateStart() {
+		return partitionDateStart;
+	}
 
-    public void setPartitionDateStart(long partitionDateStart) {
-        this.partitionDateStart = partitionDateStart;
-    }
+	public void setPartitionDateStart(long partitionDateStart) {
+		this.partitionDateStart = partitionDateStart;
+	}
 
-    public CubePartitionType getCubePartitionType() {
-        return cubePartitionType;
-    }
+	public CubePartitionType getCubePartitionType() {
+		return cubePartitionType;
+	}
 
-    public void setCubePartitionType(CubePartitionType cubePartitionType) {
-        this.cubePartitionType = cubePartitionType;
-    }
+	public void setCubePartitionType(CubePartitionType cubePartitionType) {
+		this.cubePartitionType = cubePartitionType;
+	}
 
-    public TblColRef getPartitionDateColumnRef() {
-        return partitionDateColumnRef;
-    }
+	public TblColRef getPartitionDateColumnRef() {
+		return partitionDateColumnRef;
+	}
 
 }

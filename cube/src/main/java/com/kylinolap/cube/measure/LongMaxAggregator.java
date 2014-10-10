@@ -20,33 +20,33 @@ import org.apache.hadoop.io.LongWritable;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class LongMaxAggregator extends MeasureAggregator<LongWritable> {
 
-    LongWritable max = null;
+	LongWritable max = null;
 
-    @Override
-    public void reset() {
-        max = null;
-    }
+	@Override
+	public void reset() {
+		max = null;
+	}
 
-    @Override
-    public void aggregate(LongWritable value) {
-        if (max == null)
-            max = new LongWritable(value.get());
-        else if (max.get() < value.get())
-            max.set(value.get());
-    }
+	@Override
+	public void aggregate(LongWritable value) {
+		if (max == null)
+			max = new LongWritable(value.get());
+		else if (max.get() < value.get())
+			max.set(value.get());
+	}
 
-    @Override
-    public LongWritable getState() {
-        return max;
-    }
+	@Override
+	public LongWritable getState() {
+		return max;
+	}
 
-    @Override
-    public int getMemBytes() {
-        return guessLongMemBytes();
-    }
+	@Override
+	public int getMemBytes() {
+		return guessLongMemBytes();
+	}
 
 }

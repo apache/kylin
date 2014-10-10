@@ -27,7 +27,8 @@ public class ResourceTool {
     private static String[] excludes = null;
 
     // reset hbase:kylin-local.corp.ebay.com:2181:/hbase-unsecure
-    // copy ../examples/kylin_local hbase:kylin-local.corp.ebay.com:2181:/hbase-unsecure
+    // copy ../examples/kylin_local
+    // hbase:kylin-local.corp.ebay.com:2181:/hbase-unsecure
     public static void main(String[] args) throws IOException {
         args = StringUtil.filterSystemArgs(args);
 
@@ -45,8 +46,7 @@ public class ResourceTool {
 
         String cmd = args[0];
         if (cmd.equals("reset"))
-            reset(args.length == 1 ? KylinConfig.getInstanceFromEnv() : KylinConfig
-                    .createInstanceFromUri(args[1]));
+            reset(args.length == 1 ? KylinConfig.getInstanceFromEnv() : KylinConfig.createInstanceFromUri(args[1]));
         else if (cmd.equals("copy"))
             copy(args[1], args[2]);
         else if (cmd.equals("list"))

@@ -78,7 +78,8 @@ public class HBaseRegionSizeCalculator {
             Collection<ServerName> servers = clusterStatus.getServers();
             final long megaByte = 1024L * 1024L;
 
-            // Iterate all cluster regions, filter regions from our table and compute their size.
+            // Iterate all cluster regions, filter regions from our table and
+            // compute their size.
             for (ServerName serverName : servers) {
                 ServerLoad serverLoad = clusterStatus.getLoad(serverName);
 
@@ -90,7 +91,8 @@ public class HBaseRegionSizeCalculator {
                         long regionSizeBytes = regionLoad.getStorefileSizeMB() * megaByte;
                         sizeMap.put(regionId, regionSizeBytes);
 
-                        //logger.info("Region " + regionLoad.getNameAsString() + " has size " + regionSizeBytes);
+                        // logger.info("Region " + regionLoad.getNameAsString()
+                        // + " has size " + regionSizeBytes);
                     }
                 }
             }

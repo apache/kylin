@@ -37,160 +37,171 @@ import com.kylinolap.storage.tuple.ITuple;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class SRowFilter {
 
-    public static SRowFilter fromFilter(final CubeSegment seg, TupleFilter rootFilter) {
-        // translate constants into dictionary IDs via a serialize copy
-        byte[] bytes = TupleFilterSerializer.serialize(rootFilter, new Decorator() {
-            RowKeyColumnIO columnIO = new RowKeyColumnIO(seg);
+	public static SRowFilter fromFilter(final CubeSegment seg,
+			TupleFilter rootFilter) {
+		// translate constants into dictionary IDs via a serialize copy
+		byte[] bytes = TupleFilterSerializer.serialize(rootFilter,
+				new Decorator() {
+					RowKeyColumnIO columnIO = new RowKeyColumnIO(seg);
 
-            @Override
-            public TupleFilter onSerialize(TupleFilter filter) {
-                if (filter == null)
-                    return filter;
+					@Override
+					public TupleFilter onSerialize(TupleFilter filter) {
+						if (filter == null)
+							return filter;
 
-                if ((filter instanceof CompareTupleFilter) == false)
-                    return filter;
+						if ((filter instanceof CompareTupleFilter) == false)
+							return filter;
 
-                if (TupleFilter.isEvaluableRecursively(filter) == false)
-                    return ConstantTupleFilter.TRUE;
+						if (TupleFilter.isEvaluableRecursively(filter) == false)
+							return ConstantTupleFilter.TRUE;
 
-                // extract ColumnFilter & ConstantFilter
-                CompareTupleFilter compf = (CompareTupleFilter) filter;
-                Pair<ColumnTupleFilter, ConstantTupleFilter> pair = compf.getColumnAndConstant();
-                ColumnTupleFilter colf = pair.getFirst();
-                ConstantTupleFilter constf = pair.getSecond();
-                if (colf == null) {
-                    return filter;
-                }
-                TblColRef col = colf.getColumn();
-                String nullString = nullString(col);
-                if (constf == null) {
-                    compf.setNullString(nullString); // maybe ISNULL
-                    return filter;
-                }
+						// extract ColumnFilter & ConstantFilter
+						CompareTupleFilter compf = (CompareTupleFilter) filter;
+						Pair<ColumnTupleFilter, ConstantTupleFilter> pair = compf
+								.getColumnAndConstant();
+						ColumnTupleFilter colf = pair.getFirst();
+						ConstantTupleFilter constf = pair.getSecond();
+						if (colf == null) {
+							return filter;
+						}
+						TblColRef col = colf.getColumn();
+						String nullString = nullString(col);
+						if (constf == null) {
+							compf.setNullString(nullString); // maybe ISNULL
+							return filter;
+						}
 
-                TupleFilter result;
-                CompareTupleFilter newComp = new CompareTupleFilter(compf.getOperator());
-                newComp.setNullString(nullString);
-                newComp.addChild(colf);
-                String firstValue = constf.getValues().iterator().next();
-                String v;
+						TupleFilter result;
+						CompareTupleFilter newComp = new CompareTupleFilter(
+								compf.getOperator());
+						newComp.setNullString(nullString);
+						newComp.addChild(colf);
+						String firstValue = constf.getValues().iterator()
+								.next();
+						String v;
 
-                // translate constant into rowkey ID
-                switch (newComp.getOperator()) {
-                case EQ:
-                case IN:
-                    Set<String> newValues = Sets.newHashSet();
-                    for (String value : constf.getValues()) {
-                        v = translate(col, value, 0);
-                        if (nullString.equals(v) == false)
-                            newValues.add(v);
-                    }
-                    if (newValues.isEmpty()) {
-                        result = ConstantTupleFilter.FALSE;
-                    } else {
-                        newComp.addChild(new ConstantTupleFilter(newValues));
-                        result = newComp;
-                    }
-                    break;
-                case NEQ:
-                    v = translate(col, firstValue, 0);
-                    if (nullString.equals(v)) {
-                        result = ConstantTupleFilter.TRUE;
-                    } else {
-                        newComp.addChild(new ConstantTupleFilter(v));
-                        result = newComp;
-                    }
-                    break;
-                case LT:
-                    v = translate(col, firstValue, 1);
-                    if (nullString.equals(v)) {
-                        result = ConstantTupleFilter.TRUE;
-                    } else {
-                        newComp.addChild(new ConstantTupleFilter(v));
-                        result = newComp;
-                    }
-                    break;
-                case LTE:
-                    v = translate(col, firstValue, -1);
-                    if (nullString.equals(v)) {
-                        result = ConstantTupleFilter.FALSE;
-                    } else {
-                        newComp.addChild(new ConstantTupleFilter(v));
-                        result = newComp;
-                    }
-                    break;
-                case GT:
-                    v = translate(col, firstValue, -1);
-                    if (nullString.equals(v)) {
-                        result = ConstantTupleFilter.TRUE;
-                    } else {
-                        newComp.addChild(new ConstantTupleFilter(v));
-                        result = newComp;
-                    }
-                    break;
-                case GTE:
-                    v = translate(col, firstValue, 1);
-                    if (nullString.equals(v)) {
-                        result = ConstantTupleFilter.FALSE;
-                    } else {
-                        newComp.addChild(new ConstantTupleFilter(v));
-                        result = newComp;
-                    }
-                    break;
-                default:
-                    throw new IllegalStateException("Cannot handle operator " + newComp.getOperator());
-                }
-                return result;
-            }
+						// translate constant into rowkey ID
+						switch (newComp.getOperator()) {
+						case EQ:
+						case IN:
+							Set<String> newValues = Sets.newHashSet();
+							for (String value : constf.getValues()) {
+								v = translate(col, value, 0);
+								if (nullString.equals(v) == false)
+									newValues.add(v);
+							}
+							if (newValues.isEmpty()) {
+								result = ConstantTupleFilter.FALSE;
+							} else {
+								newComp.addChild(new ConstantTupleFilter(
+										newValues));
+								result = newComp;
+							}
+							break;
+						case NEQ:
+							v = translate(col, firstValue, 0);
+							if (nullString.equals(v)) {
+								result = ConstantTupleFilter.TRUE;
+							} else {
+								newComp.addChild(new ConstantTupleFilter(v));
+								result = newComp;
+							}
+							break;
+						case LT:
+							v = translate(col, firstValue, 1);
+							if (nullString.equals(v)) {
+								result = ConstantTupleFilter.TRUE;
+							} else {
+								newComp.addChild(new ConstantTupleFilter(v));
+								result = newComp;
+							}
+							break;
+						case LTE:
+							v = translate(col, firstValue, -1);
+							if (nullString.equals(v)) {
+								result = ConstantTupleFilter.FALSE;
+							} else {
+								newComp.addChild(new ConstantTupleFilter(v));
+								result = newComp;
+							}
+							break;
+						case GT:
+							v = translate(col, firstValue, -1);
+							if (nullString.equals(v)) {
+								result = ConstantTupleFilter.TRUE;
+							} else {
+								newComp.addChild(new ConstantTupleFilter(v));
+								result = newComp;
+							}
+							break;
+						case GTE:
+							v = translate(col, firstValue, 1);
+							if (nullString.equals(v)) {
+								result = ConstantTupleFilter.FALSE;
+							} else {
+								newComp.addChild(new ConstantTupleFilter(v));
+								result = newComp;
+							}
+							break;
+						default:
+							throw new IllegalStateException(
+									"Cannot handle operator "
+											+ newComp.getOperator());
+						}
+						return result;
+					}
 
-            private String nullString(TblColRef column) {
-                byte[] id = new byte[columnIO.getColumnLength(column)];
-                for (int i = 0; i < id.length; i++) {
-                    id[i] = Dictionary.NULL;
-                }
-                return SRowTuple.dictIdToString(id, 0, id.length);
-            }
+					private String nullString(TblColRef column) {
+						byte[] id = new byte[columnIO.getColumnLength(column)];
+						for (int i = 0; i < id.length; i++) {
+							id[i] = Dictionary.NULL;
+						}
+						return SRowTuple.dictIdToString(id, 0, id.length);
+					}
 
-            private String translate(TblColRef column, String v, int roundingFlag) {
-                byte[] value = Bytes.toBytes(v);
-                byte[] id = new byte[columnIO.getColumnLength(column)];
-                columnIO.writeColumn(column, value, value.length, roundingFlag, Dictionary.NULL, id, 0);
-                return SRowTuple.dictIdToString(id, 0, id.length);
-            }
+					private String translate(TblColRef column, String v,
+							int roundingFlag) {
+						byte[] value = Bytes.toBytes(v);
+						byte[] id = new byte[columnIO.getColumnLength(column)];
+						columnIO.writeColumn(column, value, value.length,
+								roundingFlag, Dictionary.NULL, id, 0);
+						return SRowTuple.dictIdToString(id, 0, id.length);
+					}
 
-        });
-        TupleFilter copy = TupleFilterSerializer.deserialize(bytes);
-        return new SRowFilter(copy);
-    }
+				});
+		TupleFilter copy = TupleFilterSerializer.deserialize(bytes);
+		return new SRowFilter(copy);
+	}
 
-    public static byte[] serialize(SRowFilter o) {
-        return (o.filter == null) ? BytesUtil.EMPTY_BYTE_ARRAY : TupleFilterSerializer.serialize(o.filter);
-    }
+	public static byte[] serialize(SRowFilter o) {
+		return (o.filter == null) ? BytesUtil.EMPTY_BYTE_ARRAY
+				: TupleFilterSerializer.serialize(o.filter);
+	}
 
-    public static SRowFilter deserialize(byte[] filterBytes) {
-        TupleFilter filter = (filterBytes == null || filterBytes.length == 0) //
-                ? null //
-                : TupleFilterSerializer.deserialize(filterBytes);
-        return new SRowFilter(filter);
-    }
+	public static SRowFilter deserialize(byte[] filterBytes) {
+		TupleFilter filter = (filterBytes == null || filterBytes.length == 0) //
+		? null //
+				: TupleFilterSerializer.deserialize(filterBytes);
+		return new SRowFilter(filter);
+	}
 
-    // ============================================================================
+	// ============================================================================
 
-    protected final TupleFilter filter;
+	protected final TupleFilter filter;
 
-    protected SRowFilter(TupleFilter filter) {
-        this.filter = filter;
-    }
+	protected SRowFilter(TupleFilter filter) {
+		this.filter = filter;
+	}
 
-    public boolean evaluate(ITuple tuple) {
-        if (filter == null)
-            return true;
-        else
-            return filter.evaluate(tuple);
-    }
+	public boolean evaluate(ITuple tuple) {
+		if (filter == null)
+			return true;
+		else
+			return filter.evaluate(tuple);
+	}
 
 }

@@ -22,39 +22,37 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Created with IntelliJ IDEA.
- * User: lukhan
- * Date: 9/30/13
- * Time: 10:41 AM
- * To change this template use File | Settings | File Templates.
+ * Created with IntelliJ IDEA. User: lukhan Date: 9/30/13 Time: 10:41 AM To
+ * change this template use File | Settings | File Templates.
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class HBaseColumnFamilyDesc {
 
-    @JsonProperty("name")
-    private String name;
-    @JsonProperty("columns")
-    private HBaseColumnDesc[] columns;
+	@JsonProperty("name")
+	private String name;
+	@JsonProperty("columns")
+	private HBaseColumnDesc[] columns;
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public HBaseColumnDesc[] getColumns() {
-        return columns;
-    }
+	public HBaseColumnDesc[] getColumns() {
+		return columns;
+	}
 
-    public void setColumns(HBaseColumnDesc[] columns) {
-        this.columns = columns;
-    }
+	public void setColumns(HBaseColumnDesc[] columns) {
+		this.columns = columns;
+	}
 
-    @Override
-    public String toString() {
-        return "HBaseColumnFamilyDesc [name=" + name + ", columns=" + Arrays.toString(columns) + "]";
-    }
+	@Override
+	public String toString() {
+		return "HBaseColumnFamilyDesc [name=" + name + ", columns="
+				+ Arrays.toString(columns) + "]";
+	}
 
 }

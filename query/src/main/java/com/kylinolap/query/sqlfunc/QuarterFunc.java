@@ -23,18 +23,18 @@ import net.hydromatic.optiq.runtime.SqlFunctions.TimeUnitRange;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class QuarterFunc {
-    private QuarterFunc() {
-    }
+	private QuarterFunc() {
+	}
 
-    public static long eval(Date date) {
-        throw new UnsupportedOperationException();
-    }
+	public static long eval(Date date) {
+		throw new UnsupportedOperationException();
+	}
 
-    public static long eval(long date) {
-        long month = SqlFunctions.unixDateExtract(TimeUnitRange.MONTH, date);
-        return month / 4 + 1;
-    }
+	public static long eval(long date) {
+		long month = SqlFunctions.unixDateExtract(TimeUnitRange.MONTH, date);
+		return month / 4 + 1;
+	}
 }

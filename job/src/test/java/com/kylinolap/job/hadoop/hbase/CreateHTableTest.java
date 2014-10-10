@@ -15,7 +15,8 @@
  */
 package com.kylinolap.job.hadoop.hbase;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -31,33 +32,36 @@ import com.kylinolap.common.util.LocalFileMetadataTestCase;
  */
 public class CreateHTableTest extends LocalFileMetadataTestCase {
 
-    private Configuration conf;
+	private Configuration conf;
 
-    @Before
-    public void setup() throws Exception {
-        conf = new Configuration();
-        conf.set("fs.default.name", "file:///");
-        conf.set("mapred.job.tracker", "local");
-        this.createTestMetadata();
+	@Before
+	public void setup() throws Exception {
+		conf = new Configuration();
+		conf.set("fs.default.name", "file:///");
+		conf.set("mapred.job.tracker", "local");
+		this.createTestMetadata();
 
-    }
+	}
 
-    @After
-    public void after() throws Exception {
-        this.cleanupTestMetadata();
-    }
+	@After
+	public void after() throws Exception {
+		this.cleanupTestMetadata();
+	}
 
-    @Test
-    public void testGetSplits() throws IllegalArgumentException, Exception {
-        CreateHTableJob c = new CreateHTableJob();
+	@Test
+	public void testGetSplits() throws IllegalArgumentException, Exception {
+		CreateHTableJob c = new CreateHTableJob();
 
-        String input = "src/test/resources/partition_list/part-r-00000";
+		String input = "src/test/resources/partition_list/part-r-00000";
 
-        byte[][] splits = c.getSplits(conf, new Path(input));
+		byte[][] splits = c.getSplits(conf, new Path(input));
 
-        assertEquals(497, splits.length);
-        assertArrayEquals(new byte[] { 0, 0, 0, 0, 0, 0, 15, -1, 11, 51, -45, 2 }, splits[0]);
-        assertArrayEquals(new byte[] { 0, 0, 0, 0, 0, 3, -1, -1, -54, -61, 109, -44, 1 }, splits[496]);
-    }
+		assertEquals(497, splits.length);
+		assertArrayEquals(
+				new byte[] { 0, 0, 0, 0, 0, 0, 15, -1, 11, 51, -45, 2 },
+				splits[0]);
+		assertArrayEquals(new byte[] { 0, 0, 0, 0, 0, 3, -1, -1, -54, -61, 109,
+				-44, 1 }, splits[496]);
+	}
 
 }

@@ -30,7 +30,9 @@ import com.kylinolap.common.persistence.ResourceStore;
 public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
     private String tempTestMetadataUrl = null;
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see com.kylinolap.common.util.AbstractKylinTestCase#createTestMetadata()
      */
     @Override
@@ -46,17 +48,18 @@ public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
             e.printStackTrace();
         }
 
-        if (System.getProperty(KylinConfig.KYLIN_CONF) == null
-                && System.getenv(KylinConfig.KYLIN_CONF) == null)
+        if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null)
             System.setProperty(KylinConfig.KYLIN_CONF, tempTestMetadataUrl);
-
 
         KylinConfig.getInstanceFromEnv().setMetadataUrl(tempTestMetadataUrl);
 
     }
 
-    /* (non-Javadoc)
-     * @see com.kylinolap.common.util.AbstractKylinTestCase#cleanupTestMetadata()
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * com.kylinolap.common.util.AbstractKylinTestCase#cleanupTestMetadata()
      */
     @Override
     public void cleanupTestMetadata() {
@@ -73,8 +76,7 @@ public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
     @Override
     public KylinConfig getTestConfig() {
         if (this.tempTestMetadataUrl == null) {
-            throw new IllegalArgumentException(
-                    "Call createTestMetadata() method to initialize TestMetadataUrl");
+            throw new IllegalArgumentException("Call createTestMetadata() method to initialize TestMetadataUrl");
         }
         return KylinConfig.getInstanceFromEnv();
     }

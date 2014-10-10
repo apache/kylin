@@ -20,108 +20,106 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Column Metadata from Source.   All name should be uppercase.
+ * Column Metadata from Source. All name should be uppercase.
  * <p/>
- * User: lukhan
- * Date: 10/15/13
- * Time: 9:07 AM
- * To change this template use File | Settings | File Templates.
+ * User: lukhan Date: 10/15/13 Time: 9:07 AM To change this template use File |
+ * Settings | File Templates.
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class ColumnDesc {
-    @JsonProperty("id")
-    private String id;
-    @JsonProperty("name")
-    private String name;
-    @JsonProperty("datatype")
-    private String datatype;
+	@JsonProperty("id")
+	private String id;
+	@JsonProperty("name")
+	private String name;
+	@JsonProperty("datatype")
+	private String datatype;
 
-    // parsed from data type
-    private DataType type;
+	// parsed from data type
+	private DataType type;
 
-    private TableDesc table;
-    private int zeroBasedIndex = -1;
-    private boolean isNullable = true;
+	private TableDesc table;
+	private int zeroBasedIndex = -1;
+	private boolean isNullable = true;
 
-    public ColumnDesc() { // default constructor for Jackson
-    }
+	public ColumnDesc() { // default constructor for Jackson
+	}
 
-    public int getZeroBasedIndex() {
-        return zeroBasedIndex;
-    }
+	public int getZeroBasedIndex() {
+		return zeroBasedIndex;
+	}
 
-    public String getDatatype() {
-        return datatype;
-    }
+	public String getDatatype() {
+		return datatype;
+	}
 
-    public void setDatatype(String datatype) {
-        this.datatype = datatype;
-        type = DataType.getInstance(datatype);
-    }
+	public void setDatatype(String datatype) {
+		this.datatype = datatype;
+		type = DataType.getInstance(datatype);
+	}
 
-    public String getId() {
-        return id;
-    }
+	public String getId() {
+		return id;
+	}
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public TableDesc getTable() {
-        return table;
-    }
+	public TableDesc getTable() {
+		return table;
+	}
 
-    public void setTable(TableDesc table) {
-        this.table = table;
-    }
+	public void setTable(TableDesc table) {
+		this.table = table;
+	}
 
-    public DataType getType() {
-        return type;
-    }
+	public DataType getType() {
+		return type;
+	}
 
-    public String getTypeName() {
-        return type.getName();
-    }
+	public String getTypeName() {
+		return type.getName();
+	}
 
-    public int getTypePrecision() {
-        return type.getPrecision();
-    }
+	public int getTypePrecision() {
+		return type.getPrecision();
+	}
 
-    public int getTypeScale() {
-        return type.getScale();
-    }
+	public int getTypeScale() {
+		return type.getScale();
+	}
 
-    public void setNullable(boolean nullable) {
-        this.isNullable = nullable;
-    }
+	public void setNullable(boolean nullable) {
+		this.isNullable = nullable;
+	}
 
-    public boolean isNullable() {
-        return this.isNullable;
-    }
+	public boolean isNullable() {
+		return this.isNullable;
+	}
 
-    public void init(TableDesc table) {
-        this.table = table;
+	public void init(TableDesc table) {
+		this.table = table;
 
-        if (name != null)
-            name = name.toUpperCase();
+		if (name != null)
+			name = name.toUpperCase();
 
-        if (id != null)
-            zeroBasedIndex = Integer.parseInt(id) - 1;
+		if (id != null)
+			zeroBasedIndex = Integer.parseInt(id) - 1;
 
-        type = DataType.getInstance(datatype);
-    }
+		type = DataType.getInstance(datatype);
+	}
 
-    @Override
-    public String toString() {
-        return "ColumnDesc [name=" + name + ",table=" + table.getName() + "]";
-    }
+	@Override
+	public String toString() {
+		return "ColumnDesc [name=" + name + ",table=" + table.getName() + "]";
+	}
 
 }

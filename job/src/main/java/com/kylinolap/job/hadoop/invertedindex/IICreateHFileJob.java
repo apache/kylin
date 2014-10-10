@@ -41,57 +41,61 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 public class IICreateHFileJob extends AbstractHadoopJob {
 
-    protected static final Logger log = LoggerFactory.getLogger(IICreateHFileJob.class);
+	protected static final Logger log = LoggerFactory
+			.getLogger(IICreateHFileJob.class);
 
-    public int run(String[] args) throws Exception {
-        Options options = new Options();
+	public int run(String[] args) throws Exception {
+		Options options = new Options();
 
-        try {
-            options.addOption(OPTION_JOB_NAME);
-            options.addOption(OPTION_CUBE_NAME);
-            options.addOption(OPTION_INPUT_PATH);
-            options.addOption(OPTION_OUTPUT_PATH);
-            options.addOption(OPTION_HTABLE_NAME);
-            parseOptions(options, args);
+		try {
+			options.addOption(OPTION_JOB_NAME);
+			options.addOption(OPTION_CUBE_NAME);
+			options.addOption(OPTION_INPUT_PATH);
+			options.addOption(OPTION_OUTPUT_PATH);
+			options.addOption(OPTION_HTABLE_NAME);
+			parseOptions(options, args);
 
-            Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
+			Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
 
-            job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
+			job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
 
-            File JarFile = new File(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
-            if (JarFile.exists()) {
-                job.setJar(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
-            } else {
-                job.setJarByClass(this.getClass());
-            }
+			File JarFile = new File(KylinConfig.getInstanceFromEnv()
+					.getKylinJobJarPath());
+			if (JarFile.exists()) {
+				job.setJar(KylinConfig.getInstanceFromEnv()
+						.getKylinJobJarPath());
+			} else {
+				job.setJarByClass(this.getClass());
+			}
 
-            addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
-            FileOutputFormat.setOutputPath(job, output);
+			addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
+			FileOutputFormat.setOutputPath(job, output);
 
-            job.setInputFormatClass(SequenceFileInputFormat.class);
-            job.setMapperClass(IICreateHFileMapper.class);
-            job.setMapOutputKeyClass(ImmutableBytesWritable.class);
-            job.setMapOutputValueClass(KeyValue.class);
+			job.setInputFormatClass(SequenceFileInputFormat.class);
+			job.setMapperClass(IICreateHFileMapper.class);
+			job.setMapOutputKeyClass(ImmutableBytesWritable.class);
+			job.setMapOutputValueClass(KeyValue.class);
 
-            String tableName = getOptionValue(OPTION_HTABLE_NAME);
-            HTable htable = new HTable(getConf(), tableName);
-            HFileOutputFormat.configureIncrementalLoad(job, htable);
+			String tableName = getOptionValue(OPTION_HTABLE_NAME);
+			HTable htable = new HTable(getConf(), tableName);
+			HFileOutputFormat.configureIncrementalLoad(job, htable);
 
-            this.deletePath(job.getConfiguration(), output);
+			this.deletePath(job.getConfiguration(), output);
 
-            return waitForCompletion(job);
-        } catch (Exception e) {
-            printUsage(options);
-            log.error(e.getLocalizedMessage(), e);
-            return 2;
-        }
-    }
+			return waitForCompletion(job);
+		} catch (Exception e) {
+			printUsage(options);
+			log.error(e.getLocalizedMessage(), e);
+			return 2;
+		}
+	}
 
-    public static void main(String[] args) throws Exception {
-        IICreateHFileJob job = new IICreateHFileJob();
-        job.setConf(HadoopUtil.newHBaseConfiguration(KylinConfig.getInstanceFromEnv().getStorageUrl()));
-        int exitCode = ToolRunner.run(job, args);
-        System.exit(exitCode);
-    }
+	public static void main(String[] args) throws Exception {
+		IICreateHFileJob job = new IICreateHFileJob();
+		job.setConf(HadoopUtil.newHBaseConfiguration(KylinConfig
+				.getInstanceFromEnv().getStorageUrl()));
+		int exitCode = ToolRunner.run(job, args);
+		System.exit(exitCode);
+	}
 
 }

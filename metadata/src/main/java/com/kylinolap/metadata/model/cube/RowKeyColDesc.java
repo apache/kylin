@@ -22,64 +22,65 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * @author yangli9
- *
+ * 
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class RowKeyColDesc {
 
-    @JsonProperty("column")
-    private String column;
-    @JsonProperty("length")
-    private int length;
-    @JsonProperty("dictionary")
-    private String dictionary;
-    @JsonProperty("mandatory")
-    private boolean mandatory = false;
+	@JsonProperty("column")
+	private String column;
+	@JsonProperty("length")
+	private int length;
+	@JsonProperty("dictionary")
+	private String dictionary;
+	@JsonProperty("mandatory")
+	private boolean mandatory = false;
 
-    // computed
-    private int bitIndex;
-    private TblColRef colRef;
+	// computed
+	private int bitIndex;
+	private TblColRef colRef;
 
-    public String getDictionary() {
-        return dictionary;
-    }
+	public String getDictionary() {
+		return dictionary;
+	}
 
-    public String getColumn() {
-        return column;
-    }
+	public String getColumn() {
+		return column;
+	}
 
-    void setColumn(String column) {
-        this.column = column;
-    }
+	void setColumn(String column) {
+		this.column = column;
+	}
 
-    public int getLength() {
-        return length;
-    }
+	public int getLength() {
+		return length;
+	}
 
-    public boolean isMandatory() {
-        return mandatory;
-    }
+	public boolean isMandatory() {
+		return mandatory;
+	}
 
-    public int getBitIndex() {
-        return bitIndex;
-    }
+	public int getBitIndex() {
+		return bitIndex;
+	}
 
-    void setBitIndex(int index) {
-        this.bitIndex = index;
-    }
+	void setBitIndex(int index) {
+		this.bitIndex = index;
+	}
 
-    public TblColRef getColRef() {
-        return colRef;
-    }
+	public TblColRef getColRef() {
+		return colRef;
+	}
 
-    void setColRef(TblColRef colRef) {
-        this.colRef = colRef;
-    }
+	void setColRef(TblColRef colRef) {
+		this.colRef = colRef;
+	}
 
-    @Override
-    public String toString() {
-        return "RowKeyColDesc [column=" + column + ", length=" + length + ", dictionary=" + dictionary
-                + ", mandatory=" + mandatory + "]";
-    }
+	@Override
+	public String toString() {
+		return "RowKeyColDesc [column=" + column + ", length=" + length
+				+ ", dictionary=" + dictionary + ", mandatory=" + mandatory
+				+ "]";
+	}
 
 }

@@ -56,124 +56,137 @@ import com.kylinolap.metadata.model.cube.HBaseColumnFamilyDesc;
 
 public class CreateHTableJob extends AbstractHadoopJob {
 
-    protected static final Logger log = LoggerFactory.getLogger(CreateHTableJob.class);
+	protected static final Logger log = LoggerFactory
+			.getLogger(CreateHTableJob.class);
 
-    @Override
-    public int run(String[] args) throws Exception {
-        Options options = new Options();
+	@Override
+	public int run(String[] args) throws Exception {
+		Options options = new Options();
 
-        options.addOption(OPTION_CUBE_NAME);
-        options.addOption(OPTION_PARTITION_FILE_PATH);
-        options.addOption(OPTION_HTABLE_NAME);
-        parseOptions(options, args);
+		options.addOption(OPTION_CUBE_NAME);
+		options.addOption(OPTION_PARTITION_FILE_PATH);
+		options.addOption(OPTION_HTABLE_NAME);
+		parseOptions(options, args);
 
-        Path partitionFilePath = new Path(getOptionValue(OPTION_PARTITION_FILE_PATH));
+		Path partitionFilePath = new Path(
+				getOptionValue(OPTION_PARTITION_FILE_PATH));
 
-        String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        CubeManager cubeMgr = CubeManager.getInstance(config);
-        CubeInstance cube = cubeMgr.getCube(cubeName);
-        CubeDesc cubeDesc = cube.getDescriptor();
+		String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
+		KylinConfig config = KylinConfig.getInstanceFromEnv();
+		CubeManager cubeMgr = CubeManager.getInstance(config);
+		CubeInstance cube = cubeMgr.getCube(cubeName);
+		CubeDesc cubeDesc = cube.getDescriptor();
 
-        String tableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
-        HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
-        // https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/regionserver/ConstantSizeRegionSplitPolicy.html
-        tableDesc.setValue(HTableDescriptor.SPLIT_POLICY, ConstantSizeRegionSplitPolicy.class.getName());
+		String tableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
+		HTableDescriptor tableDesc = new HTableDescriptor(
+				TableName.valueOf(tableName));
+		// https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/regionserver/ConstantSizeRegionSplitPolicy.html
+		tableDesc.setValue(HTableDescriptor.SPLIT_POLICY,
+				ConstantSizeRegionSplitPolicy.class.getName());
 
-        Configuration conf = HBaseConfiguration.create(getConf());
-        HBaseAdmin admin = new HBaseAdmin(conf);
+		Configuration conf = HBaseConfiguration.create(getConf());
+		HBaseAdmin admin = new HBaseAdmin(conf);
 
-        try {
-            if (User.isHBaseSecurityEnabled(conf)) {
-                // add coprocessor for bulk load
-                tableDesc.addCoprocessor("org.apache.hadoop.hbase.security.access.SecureBulkLoadEndpoint");
-            }
+		try {
+			if (User.isHBaseSecurityEnabled(conf)) {
+				// add coprocessor for bulk load
+				tableDesc
+						.addCoprocessor("org.apache.hadoop.hbase.security.access.SecureBulkLoadEndpoint");
+			}
 
-            for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping().getColumnFamily()) {
-                HColumnDescriptor cf = new HColumnDescriptor(cfDesc.getName());
-                cf.setMaxVersions(1);
-                cf.setCompressionType(Algorithm.LZO);
-                cf.setDataBlockEncoding(DataBlockEncoding.FAST_DIFF);
-                cf.setInMemory(true);
-                cf.setBlocksize(4 * 1024 * 1024); //set to 4MB
-                tableDesc.addFamily(cf);
-            }
+			for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping()
+					.getColumnFamily()) {
+				HColumnDescriptor cf = new HColumnDescriptor(cfDesc.getName());
+				cf.setMaxVersions(1);
+				cf.setCompressionType(Algorithm.LZO);
+				cf.setDataBlockEncoding(DataBlockEncoding.FAST_DIFF);
+				cf.setInMemory(true);
+				cf.setBlocksize(4 * 1024 * 1024); // set to 4MB
+				tableDesc.addFamily(cf);
+			}
 
-            byte[][] splitKeys = getSplits(conf, partitionFilePath);
+			byte[][] splitKeys = getSplits(conf, partitionFilePath);
 
-            if (admin.tableExists(tableName)) {
-                //admin.disableTable(tableName);
-                //admin.deleteTable(tableName);
-                throw new RuntimeException("HBase table " + tableName + " exists!");
-            }
+			if (admin.tableExists(tableName)) {
+				// admin.disableTable(tableName);
+				// admin.deleteTable(tableName);
+				throw new RuntimeException("HBase table " + tableName
+						+ " exists!");
+			}
 
-            try {
-                initHTableCoprocessor(tableDesc);
-                log.info("hbase table " + tableName + " deployed with coprocessor.");
+			try {
+				initHTableCoprocessor(tableDesc);
+				log.info("hbase table " + tableName
+						+ " deployed with coprocessor.");
 
-            } catch (Exception ex) {
-                log.error("Error deploying coprocessor on " + tableName, ex);
-                log.error("Will try creating the table without coprocessor.");
-            }
+			} catch (Exception ex) {
+				log.error("Error deploying coprocessor on " + tableName, ex);
+				log.error("Will try creating the table without coprocessor.");
+			}
 
-            admin.createTable(tableDesc, splitKeys);
-            log.info("create hbase table " + tableName + " done.");
+			admin.createTable(tableDesc, splitKeys);
+			log.info("create hbase table " + tableName + " done.");
 
-            return 0;
-        } catch (Exception e) {
-            printUsage(options);
-            e.printStackTrace(System.err);
-            log.error(e.getLocalizedMessage(), e);
-            return 2;
-        } finally {
-            admin.close();
-        }
-    }
+			return 0;
+		} catch (Exception e) {
+			printUsage(options);
+			e.printStackTrace(System.err);
+			log.error(e.getLocalizedMessage(), e);
+			return 2;
+		} finally {
+			admin.close();
+		}
+	}
 
-    private void initHTableCoprocessor(HTableDescriptor desc) throws IOException {
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        Configuration hconf = HadoopUtil.getDefaultConfiguration();
-        FileSystem fileSystem = FileSystem.get(hconf);
+	private void initHTableCoprocessor(HTableDescriptor desc)
+			throws IOException {
+		KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+		Configuration hconf = HadoopUtil.getDefaultConfiguration();
+		FileSystem fileSystem = FileSystem.get(hconf);
 
-        String localCoprocessorJar = kylinConfig.getCoprocessorLocalJar();
-        Path hdfsCoprocessorJar =
-                DeployCoprocessorCLI.uploadCoprocessorJar(localCoprocessorJar, fileSystem, null);
+		String localCoprocessorJar = kylinConfig.getCoprocessorLocalJar();
+		Path hdfsCoprocessorJar = DeployCoprocessorCLI.uploadCoprocessorJar(
+				localCoprocessorJar, fileSystem, null);
 
-        DeployCoprocessorCLI.setCoprocessorOnHTable(desc, hdfsCoprocessorJar);
-    }
+		DeployCoprocessorCLI.setCoprocessorOnHTable(desc, hdfsCoprocessorJar);
+	}
 
-    @SuppressWarnings("deprecation")
-    public byte[][] getSplits(Configuration conf, Path path) throws Exception {
-        List<byte[]> rowkeyList = new ArrayList<byte[]>();
-        SequenceFile.Reader reader = null;
-        try {
-            reader = new SequenceFile.Reader(path.getFileSystem(conf), path, conf);
-            Writable key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-            Writable value = (Writable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
-            while (reader.next(key, value)) {
-                byte[] tmp = ((Text) key).copyBytes();
-                if (rowkeyList.contains(tmp) == false) {
-                    rowkeyList.add(tmp);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        } finally {
-            IOUtils.closeStream(reader);
-        }
+	@SuppressWarnings("deprecation")
+	public byte[][] getSplits(Configuration conf, Path path) throws Exception {
+		List<byte[]> rowkeyList = new ArrayList<byte[]>();
+		SequenceFile.Reader reader = null;
+		try {
+			reader = new SequenceFile.Reader(path.getFileSystem(conf), path,
+					conf);
+			Writable key = (Writable) ReflectionUtils.newInstance(
+					reader.getKeyClass(), conf);
+			Writable value = (Writable) ReflectionUtils.newInstance(
+					reader.getValueClass(), conf);
+			while (reader.next(key, value)) {
+				byte[] tmp = ((Text) key).copyBytes();
+				if (rowkeyList.contains(tmp) == false) {
+					rowkeyList.add(tmp);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;
+		} finally {
+			IOUtils.closeStream(reader);
+		}
 
-        byte[][] retValue = rowkeyList.toArray(new byte[rowkeyList.size()][]);
-        if (retValue.length == 0) {
-            throw new IllegalStateException("Expected split number should be greater than 1, but got "
-                    + retValue.length);
-        }
+		byte[][] retValue = rowkeyList.toArray(new byte[rowkeyList.size()][]);
+		if (retValue.length == 0) {
+			throw new IllegalStateException(
+					"Expected split number should be greater than 1, but got "
+							+ retValue.length);
+		}
 
-        return retValue;
-    }
+		return retValue;
+	}
 
-    public static void main(String[] args) throws Exception {
-        int exitCode = ToolRunner.run(new CreateHTableJob(), args);
-        System.exit(exitCode);
-    }
+	public static void main(String[] args) throws Exception {
+		int exitCode = ToolRunner.run(new CreateHTableJob(), args);
+		System.exit(exitCode);
+	}
 }

@@ -15,20 +15,21 @@
  */
 package com.kylinolap.common.persistence;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.restclient.RestClient;
-import com.sun.jndi.toolkit.url.Uri;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
-import sun.reflect.annotation.ExceptionProxy;
+import com.kylinolap.common.KylinConfig;
 
 abstract public class ResourceStore {
 
@@ -45,11 +46,9 @@ abstract public class ResourceStore {
     public static final String TABLE_EXD_RESOURCE_ROOT = "/table_exd";
     public static final String TABLE_RESOURCE_ROOT = "/table";
 
-    private static ConcurrentHashMap<KylinConfig, ResourceStore> CACHE =
-            new ConcurrentHashMap<KylinConfig, ResourceStore>();
+    private static ConcurrentHashMap<KylinConfig, ResourceStore> CACHE = new ConcurrentHashMap<KylinConfig, ResourceStore>();
 
-    public static final ArrayList<Class<? extends ResourceStore>> knownImpl =
-            new ArrayList<Class<? extends ResourceStore>>();
+    public static final ArrayList<Class<? extends ResourceStore>> knownImpl = new ArrayList<Class<? extends ResourceStore>>();
 
     static {
         knownImpl.add(HBaseResourceStore.class);
@@ -68,7 +67,7 @@ abstract public class ResourceStore {
                 } catch (Exception e) {
                     es.add(e);
                 } catch (NoClassDefFoundError er) {
-                    //may throw NoClassDefFoundError
+                    // may throw NoClassDefFoundError
                     es.add(er);
                 }
                 if (r != null) {
@@ -96,7 +95,8 @@ abstract public class ResourceStore {
     }
 
     /**
-     * return a list of child resources & folders under given path, return null if given path is not a folder
+     * return a list of child resources & folders under given path, return null
+     * if given path is not a folder
      */
     final public ArrayList<String> listResources(String resPath) throws IOException {
         resPath = norm(resPath);
@@ -106,7 +106,8 @@ abstract public class ResourceStore {
     abstract protected ArrayList<String> listResourcesImpl(String resPath) throws IOException;
 
     /**
-     * return true if a resource exists, return false in case of folder or non-exist
+     * return true if a resource exists, return false in case of folder or
+     * non-exist
      */
     final public boolean exists(String resPath) throws IOException {
         return existsImpl(norm(resPath));
@@ -117,8 +118,7 @@ abstract public class ResourceStore {
     /**
      * read a resource, return null in case of not found
      */
-    final public <T extends RootPersistentEntity> T getResource(String resPath, Class<T> clz,
-            Serializer<T> serializer) throws IOException {
+    final public <T extends RootPersistentEntity> T getResource(String resPath, Class<T> clz, Serializer<T> serializer) throws IOException {
         resPath = norm(resPath);
         InputStream in = getResourceImpl(resPath);
         if (in == null)
@@ -161,8 +161,7 @@ abstract public class ResourceStore {
     /**
      * check & set, overwrite a resource
      */
-    final public <T extends RootPersistentEntity> void putResource(String resPath, T obj,
-            Serializer<T> serializer) throws IOException {
+    final public <T extends RootPersistentEntity> void putResource(String resPath, T obj, Serializer<T> serializer) throws IOException {
         resPath = norm(resPath);
         logger.debug("Saving resource " + resPath + " (Store " + kylinConfig.getMetadataUrl() + ")");
 
@@ -192,8 +191,7 @@ abstract public class ResourceStore {
     /**
      * checks old timestamp when overwriting existing
      */
-    abstract protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS)
-            throws IOException, IllegalStateException;
+    abstract protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS) throws IOException, IllegalStateException;
 
     /**
      * delete a resource, does nothing on a folder

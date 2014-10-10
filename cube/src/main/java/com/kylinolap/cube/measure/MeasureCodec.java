@@ -25,58 +25,59 @@ import com.kylinolap.metadata.model.cube.MeasureDesc;
 
 /**
  * @author yangli9
- *
+ * 
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class MeasureCodec {
 
-    int nMeasures;
-    MeasureSerializer[] serializers;
+	int nMeasures;
+	MeasureSerializer[] serializers;
 
-    public MeasureCodec(Collection<MeasureDesc> measureDescs) {
-        this((MeasureDesc[]) measureDescs.toArray(new MeasureDesc[measureDescs.size()]));
-    }
+	public MeasureCodec(Collection<MeasureDesc> measureDescs) {
+		this((MeasureDesc[]) measureDescs.toArray(new MeasureDesc[measureDescs
+				.size()]));
+	}
 
-    public MeasureCodec(MeasureDesc... measureDescs) {
-        String[] dataTypes = new String[measureDescs.length];
-        for (int i = 0; i < dataTypes.length; i++) {
-            dataTypes[i] = measureDescs[i].getFunction().getReturnType();
-        }
-        init(dataTypes);
-    }
+	public MeasureCodec(MeasureDesc... measureDescs) {
+		String[] dataTypes = new String[measureDescs.length];
+		for (int i = 0; i < dataTypes.length; i++) {
+			dataTypes[i] = measureDescs[i].getFunction().getReturnType();
+		}
+		init(dataTypes);
+	}
 
-    public MeasureCodec(String... dataTypes) {
-        init(dataTypes);
-    }
+	public MeasureCodec(String... dataTypes) {
+		init(dataTypes);
+	}
 
-    private void init(String[] dataTypes) {
-        nMeasures = dataTypes.length;
-        serializers = new MeasureSerializer[nMeasures];
+	private void init(String[] dataTypes) {
+		nMeasures = dataTypes.length;
+		serializers = new MeasureSerializer[nMeasures];
 
-        for (int i = 0; i < nMeasures; i++) {
-            serializers[i] = MeasureSerializer.create(dataTypes[i]);
-        }
-    }
+		for (int i = 0; i < nMeasures; i++) {
+			serializers[i] = MeasureSerializer.create(dataTypes[i]);
+		}
+	}
 
-    public MeasureSerializer getSerializer(int idx) {
-        return serializers[idx];
-    }
+	public MeasureSerializer getSerializer(int idx) {
+		return serializers[idx];
+	}
 
-    public void decode(Text bytes, Object[] result) {
-        decode(ByteBuffer.wrap(bytes.getBytes(), 0, bytes.getLength()), result);
-    }
+	public void decode(Text bytes, Object[] result) {
+		decode(ByteBuffer.wrap(bytes.getBytes(), 0, bytes.getLength()), result);
+	}
 
-    public void decode(ByteBuffer buf, Object[] result) {
-        assert result.length == nMeasures;
-        for (int i = 0; i < nMeasures; i++) {
-            result[i] = serializers[i].deserialize(buf);
-        }
-    }
+	public void decode(ByteBuffer buf, Object[] result) {
+		assert result.length == nMeasures;
+		for (int i = 0; i < nMeasures; i++) {
+			result[i] = serializers[i].deserialize(buf);
+		}
+	}
 
-    public void encode(Object[] values, ByteBuffer out) {
-        assert values.length == nMeasures;
-        for (int i = 0; i < nMeasures; i++) {
-            serializers[i].serialize(values[i], out);
-        }
-    }
+	public void encode(Object[] values, ByteBuffer out) {
+		assert values.length == nMeasures;
+		for (int i = 0; i < nMeasures; i++) {
+			serializers[i].serialize(values[i], out);
+		}
+	}
 }

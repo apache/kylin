@@ -32,179 +32,188 @@ import com.kylinolap.metadata.model.cube.TblColRef;
  */
 public class StorageContext {
 
-    public static final int HARD_THRESHOLD = 4000000;
-    public static final int DEFAULT_THRESHOLD = 1000000;
+	public static final int HARD_THRESHOLD = 4000000;
+	public static final int DEFAULT_THRESHOLD = 1000000;
 
-    public enum OrderEnum {
-        ASCENDING, DESCENDING
-    }
+	public enum OrderEnum {
+		ASCENDING, DESCENDING
+	}
 
-    private String connUrl;
-    private int threshold;
-    private int limit;
-    private boolean hasSort;
-    private List<MeasureDesc> sortMeasures;
-    private List<OrderEnum> sortOrders;
-    private boolean acceptPartialResult;
-    private BiMap<TblColRef, String> aliasMap;
+	private String connUrl;
+	private int threshold;
+	private int limit;
+	private boolean hasSort;
+	private List<MeasureDesc> sortMeasures;
+	private List<OrderEnum> sortOrders;
+	private boolean acceptPartialResult;
+	private BiMap<TblColRef, String> aliasMap;
 
-    // If cuboid dimensions matches group by exactly, there's no derived or any other form of post aggregation needed.
-    // In case of exactAggregation, holistic count distinct can be used and coprocessor is not beneficial.
-    private boolean exactAggregation;
-    // To hint records shall be returned at most granular level, avoid aggregation (coprocessor) wherever possible. 
-    private boolean avoidAggregation;
-    private Set<TblColRef> mandatoryColumns;
+	// If cuboid dimensions matches group by exactly, there's no derived or any
+	// other form of post aggregation needed.
+	// In case of exactAggregation, holistic count distinct can be used and
+	// coprocessor is not beneficial.
+	private boolean exactAggregation;
+	// To hint records shall be returned at most granular level, avoid
+	// aggregation (coprocessor) wherever possible.
+	private boolean avoidAggregation;
+	private Set<TblColRef> mandatoryColumns;
 
-    private long totalScanCount;
-    private Collection<Cuboid> cuboids;
-    private boolean enableLimit;
-    private boolean partialResultReturned;
+	private long totalScanCount;
+	private Collection<Cuboid> cuboids;
+	private boolean enableLimit;
+	private boolean partialResultReturned;
 
-    public StorageContext() {
-        this.threshold = DEFAULT_THRESHOLD;
-        this.limit = DEFAULT_THRESHOLD;
-        this.totalScanCount = 0;
-        this.cuboids = new HashSet<Cuboid>();
-        this.aliasMap = HashBiMap.create();
-        this.hasSort = false;
-        this.sortOrders = new ArrayList<OrderEnum>();
-        this.sortMeasures = new ArrayList<MeasureDesc>();
+	public StorageContext() {
+		this.threshold = DEFAULT_THRESHOLD;
+		this.limit = DEFAULT_THRESHOLD;
+		this.totalScanCount = 0;
+		this.cuboids = new HashSet<Cuboid>();
+		this.aliasMap = HashBiMap.create();
+		this.hasSort = false;
+		this.sortOrders = new ArrayList<OrderEnum>();
+		this.sortMeasures = new ArrayList<MeasureDesc>();
 
-        this.exactAggregation = false;
-        this.avoidAggregation = false;
-        this.mandatoryColumns = new HashSet<TblColRef>();
+		this.exactAggregation = false;
+		this.avoidAggregation = false;
+		this.mandatoryColumns = new HashSet<TblColRef>();
 
-        this.enableLimit = false;
-        this.acceptPartialResult = false;
-        this.partialResultReturned = false;
-    }
+		this.enableLimit = false;
+		this.acceptPartialResult = false;
+		this.partialResultReturned = false;
+	}
 
-    public String getConnUrl() {
-        return connUrl;
-    }
+	public String getConnUrl() {
+		return connUrl;
+	}
 
-    public void setConnUrl(String connUrl) {
-        this.connUrl = connUrl;
-    }
+	public void setConnUrl(String connUrl) {
+		this.connUrl = connUrl;
+	}
 
-    // the name that maps to optiq row
-    public String getFieldName(TblColRef col) {
-        String name = null;
-        if (aliasMap != null) {
-            name = aliasMap.get(col);
-        }
-        if (name == null) {
-            name = col.getName();
-        }
-        return name;
-    }
+	// the name that maps to optiq row
+	public String getFieldName(TblColRef col) {
+		String name = null;
+		if (aliasMap != null) {
+			name = aliasMap.get(col);
+		}
+		if (name == null) {
+			name = col.getName();
+		}
+		return name;
+	}
 
-    public int getThreshold() {
-        return threshold;
-    }
+	public int getThreshold() {
+		return threshold;
+	}
 
-    public void setThreshold(int t) {
-        threshold = Math.min(t, HARD_THRESHOLD);
-    }
+	public void setThreshold(int t) {
+		threshold = Math.min(t, HARD_THRESHOLD);
+	}
 
-    public int getLimit() {
-        return limit;
-    }
+	public int getLimit() {
+		return limit;
+	}
 
-    public void setLimit(int l) {
-        this.limit = l;
-    }
+	public void setLimit(int l) {
+		this.limit = l;
+	}
 
-    public void enableLimit() {
-        this.enableLimit = true;
-    }
+	public void enableLimit() {
+		this.enableLimit = true;
+	}
 
-    public boolean isLimitEnable() {
-        return this.enableLimit;
-    }
+	public boolean isLimitEnable() {
+		return this.enableLimit;
+	}
 
-    public void addAlias(TblColRef column, String alias) {
-        this.aliasMap.put(column, alias);
-    }
+	public void addAlias(TblColRef column, String alias) {
+		this.aliasMap.put(column, alias);
+	}
 
-    public BiMap<TblColRef, String> getAliasMap() {
-        return aliasMap;
-    }
+	public BiMap<TblColRef, String> getAliasMap() {
+		return aliasMap;
+	}
 
-    public void addSort(MeasureDesc measure, OrderEnum order) {
-        if (measure != null) {
-            sortMeasures.add(measure);
-            sortOrders.add(order);
-        }
-    }
+	public void addSort(MeasureDesc measure, OrderEnum order) {
+		if (measure != null) {
+			sortMeasures.add(measure);
+			sortOrders.add(order);
+		}
+	}
 
-    public void markSort() {
-        this.hasSort = true;
-    }
+	public void markSort() {
+		this.hasSort = true;
+	}
 
-    public boolean hasSort() {
-        return this.hasSort;
-    }
+	public boolean hasSort() {
+		return this.hasSort;
+	}
 
-    public void addCuboid(Cuboid c) {
-        cuboids.add(c);
-    }
+	public void addCuboid(Cuboid c) {
+		cuboids.add(c);
+	}
 
-    public Collection<Cuboid> getCuboids() {
-        return cuboids;
-    }
+	public Collection<Cuboid> getCuboids() {
+		return cuboids;
+	}
 
-    public long getTotalScanCount() {
-        return totalScanCount;
-    }
+	public long getTotalScanCount() {
+		return totalScanCount;
+	}
 
-    public void setTotalScanCount(long totalScanCount) {
-        this.totalScanCount = totalScanCount;
-    }
+	public void setTotalScanCount(long totalScanCount) {
+		this.totalScanCount = totalScanCount;
+	}
 
-    public boolean isAcceptPartialResult() {
-        return acceptPartialResult;
-    }
+	public boolean isAcceptPartialResult() {
+		return acceptPartialResult;
+	}
 
-    public void setAcceptPartialResult(boolean acceptPartialResult) {
-        this.acceptPartialResult = acceptPartialResult;
-    }
+	public void setAcceptPartialResult(boolean acceptPartialResult) {
+		this.acceptPartialResult = acceptPartialResult;
+	}
 
-    public boolean isPartialResultReturned() {
-        return partialResultReturned;
-    }
+	public boolean isPartialResultReturned() {
+		return partialResultReturned;
+	}
 
-    public void setPartialResultReturned(boolean partialResultReturned) {
-        this.partialResultReturned = partialResultReturned;
-    }
+	public void setPartialResultReturned(boolean partialResultReturned) {
+		this.partialResultReturned = partialResultReturned;
+	}
 
-    public boolean isExactAggregation() {
-        return exactAggregation;
-    }
+	public boolean isExactAggregation() {
+		return exactAggregation;
+	}
 
-    public void markExactAggregation() {
-        this.exactAggregation = true;
-    }
+	public void markExactAggregation() {
+		this.exactAggregation = true;
+	}
 
-    public boolean requireNoPostAggregation() {
-        assert cuboids.size() == 1; // all scans must hit the same cuboid to avoid dedup overlaps of records
-        return exactAggregation // is an exact aggregation from query point of view
-                && cuboids.iterator().next().requirePostAggregation() == false; // and use an exact cuboid
-    }
+	public boolean requireNoPostAggregation() {
+		assert cuboids.size() == 1; // all scans must hit the same cuboid to
+									// avoid dedup overlaps of records
+		return exactAggregation // is an exact aggregation from query point of
+								// view
+				&& cuboids.iterator().next().requirePostAggregation() == false; // and
+																				// use
+																				// an
+																				// exact
+																				// cuboid
+	}
 
-    public boolean isAvoidAggregation() {
-        return avoidAggregation;
-    }
+	public boolean isAvoidAggregation() {
+		return avoidAggregation;
+	}
 
-    public void markAvoidAggregation() {
-        this.avoidAggregation = true;
-    }
+	public void markAvoidAggregation() {
+		this.avoidAggregation = true;
+	}
 
-    public void mandateColumn(TblColRef col) {
-        this.mandatoryColumns.add(col);
-    }
+	public void mandateColumn(TblColRef col) {
+		this.mandatoryColumns.add(col);
+	}
 
-    public Set<TblColRef> getMandatoryColumns() {
-        return this.mandatoryColumns;
-    }
+	public Set<TblColRef> getMandatoryColumns() {
+		return this.mandatoryColumns;
+	}
 }
