@@ -2,7 +2,7 @@ package com.kylinolap.kylin.jdbc;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class DummyDriver extends Driver {
 

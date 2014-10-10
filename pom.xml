@@ -522,6 +522,7 @@
         <module>storage</module>
         <module>query</module>
         <module>server</module>
+		<module>jdbc</module>
     </modules>
     <profiles>
         <profile>

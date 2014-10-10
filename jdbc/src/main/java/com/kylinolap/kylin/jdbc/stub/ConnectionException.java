@@ -18,7 +18,7 @@ package com.kylinolap.kylin.jdbc.stub;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class ConnectionException extends Exception {
 

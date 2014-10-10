@@ -17,46 +17,53 @@ import com.kylinolap.kylin.jdbc.stub.RemoteClient;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class DummyClient implements RemoteClient {
 
-    public DummyClient(KylinConnectionImpl conn) {
-    }
+	public DummyClient(KylinConnectionImpl conn) {
+	}
 
-    @Override
-    public void connect() throws ConnectionException {
-    }
+	@Override
+	public void connect() throws ConnectionException {
+	}
 
-    @Override
-    public MetaProject getMetadata(String project) throws ConnectionException {
-        List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
-        for (int i = 0; i < 10; i++) {
-            meta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING), true));
-        }
+	@Override
+	public MetaProject getMetadata(String project) throws ConnectionException {
+		List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
+		for (int i = 0; i < 10; i++) {
+			meta.add(ColumnMetaData.dummy(
+					ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING),
+					true));
+		}
 
-        List<MetaTable> tables = new ArrayList<MetaTable>();
-        MetaTable table =
-                new MetaTable("dummy", "dummy", "dummy", "dummy", "dummy", "dummy", "dummy", "dummy",
-                        "dummy", "dummy");
-        tables.add(table);
+		List<MetaTable> tables = new ArrayList<MetaTable>();
+		MetaTable table = new MetaTable("dummy", "dummy", "dummy", "dummy",
+				"dummy", "dummy", "dummy", "dummy", "dummy", "dummy");
+		tables.add(table);
 
-        return new MetaProject(null, null, new DataSet<MetaTable>(meta, new KylinEnumerator<MetaTable>(
-                tables.iterator())), null);
-    }
+		return new MetaProject(null, null, new DataSet<MetaTable>(meta,
+				new KylinEnumerator<MetaTable>(tables)), null);
+	}
 
-    @Override
-    public DataSet<Object[]> query(AvaticaStatement statement, String sql) {
-        List<Object[]> data = new ArrayList<Object[]>();
-        Object[] row = new Object[] { "foo", "bar", "tool" };
-        data.add(row);
-        Enumerator<Object[]> enumerator = new KylinEnumerator<Object[]>(data.iterator());
-        List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
-        meta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING), true));
-        meta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING), true));
-        meta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING), true));
+	@Override
+	public DataSet<Object[]> query(AvaticaStatement statement, String sql) {
+		List<Object[]> data = new ArrayList<Object[]>();
+		Object[] row = new Object[] { "foo", "bar", "tool" };
+		data.add(row);
+		Enumerator<Object[]> enumerator = new KylinEnumerator<Object[]>(data);
+		List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
+		meta.add(ColumnMetaData.dummy(
+				ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING),
+				true));
+		meta.add(ColumnMetaData.dummy(
+				ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING),
+				true));
+		meta.add(ColumnMetaData.dummy(
+				ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING),
+				true));
 
-        return new DataSet<Object[]>(meta, enumerator);
-    }
+		return new DataSet<Object[]>(meta, enumerator);
+	}
 
 }

@@ -22,24 +22,29 @@ import net.hydromatic.avatica.ColumnMetaData;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class KylinColumnMetaData extends ColumnMetaData {
 
-    public KylinColumnMetaData(int ordinal, boolean autoIncrement, boolean caseSensitive, boolean searchable,
-            boolean currency, int nullable, boolean signed, int displaySize, String label, String columnName,
-            String schemaName, int precision, int scale, String tableName, String catalogName,
-            AvaticaType type, boolean readOnly, boolean writable, boolean definitelyWritable,
-            String columnClassName) {
-        super(ordinal, autoIncrement, caseSensitive, searchable, currency, nullable, signed, displaySize,
-                label, columnName, schemaName, precision, scale, tableName, catalogName, type, readOnly,
-                writable, definitelyWritable, columnClassName);
-    }
+	public KylinColumnMetaData(int ordinal, boolean autoIncrement,
+			boolean caseSensitive, boolean searchable, boolean currency,
+			int nullable, boolean signed, int displaySize, String label,
+			String columnName, String schemaName, int precision, int scale,
+			String tableName, String catalogName, AvaticaType type,
+			boolean readOnly, boolean writable, boolean definitelyWritable,
+			String columnClassName) {
+		super(ordinal, autoIncrement, caseSensitive, searchable, currency,
+				nullable, signed, displaySize, label, columnName, schemaName,
+				precision, scale, tableName, catalogName, type, readOnly,
+				writable, definitelyWritable, columnClassName);
+	}
 
-    public static ColumnMetaData dummy(int ordinal, String label, String columnName, AvaticaType type,
-            boolean nullable) {
-        return new ColumnMetaData(ordinal, false, true, false, false, nullable
-                ? DatabaseMetaData.columnNullable : DatabaseMetaData.columnNoNulls, true, -1, label,
-                columnName, null, -1, -1, null, null, type, true, false, false, null);
-    }
+	public static ColumnMetaData dummy(int ordinal, String label,
+			String columnName, AvaticaType type, boolean nullable) {
+		return new ColumnMetaData(ordinal, false, true, false, false,
+				nullable ? DatabaseMetaData.columnNullable
+						: DatabaseMetaData.columnNoNulls, true, -1, label,
+				columnName, null, -1, -1, null, null, type, true, false, false,
+				null);
+	}
 }

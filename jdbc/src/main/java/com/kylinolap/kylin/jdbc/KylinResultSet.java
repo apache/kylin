@@ -29,7 +29,7 @@ import com.kylinolap.kylin.jdbc.KylinPrepare.PrepareResult;
  * Kylin query result set
  * 
  * @author xduo
- *
+ * 
  */
 public class KylinResultSet extends AvaticaResultSet {
 

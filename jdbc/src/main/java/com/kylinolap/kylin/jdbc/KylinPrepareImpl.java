@@ -24,7 +24,7 @@ import net.hydromatic.avatica.ColumnMetaData;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class KylinPrepareImpl implements KylinPrepare {
 

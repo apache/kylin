@@ -29,69 +29,70 @@ import net.hydromatic.optiq.runtime.EnumeratorCursor;
  * Interface of kylin prepare statement implementation
  * 
  * @author xduo
- *
+ * 
  */
 public interface KylinPrepare {
 
-    PrepareResult prepare(String sql);
+	PrepareResult prepare(String sql);
 
-    /**
-     * The result of preparing a query. It gives the Avatica driver framework
-     * the information it needs to create a prepared statement, or to execute a
-     * statement directly, without an explicit prepare step.
-     */
-    public static class PrepareResult implements AvaticaPrepareResult {
-        public final String sql; // for debug
-        public final ColumnMetaData.StructType structType;
-        public final Enumerator<Object[]> enumerator;
-        public final List<AvaticaParameter> parameterList;
+	/**
+	 * The result of preparing a query. It gives the Avatica driver framework
+	 * the information it needs to create a prepared statement, or to execute a
+	 * statement directly, without an explicit prepare step.
+	 */
+	public static class PrepareResult implements AvaticaPrepareResult {
+		public final String sql; // for debug
+		public final ColumnMetaData.StructType structType;
+		public final Enumerator<Object[]> enumerator;
+		public final List<AvaticaParameter> parameterList;
 
-        public PrepareResult(String sql, List<AvaticaParameter> parameterList,
-                Enumerator<Object[]> enumerator, ColumnMetaData.StructType structType) {
-            super();
-            this.sql = sql;
-            this.parameterList = parameterList;
-            this.enumerator = enumerator;
-            this.structType = structType;
-        }
+		public PrepareResult(String sql, List<AvaticaParameter> parameterList,
+				Enumerator<Object[]> enumerator,
+				ColumnMetaData.StructType structType) {
+			super();
+			this.sql = sql;
+			this.parameterList = parameterList;
+			this.enumerator = enumerator;
+			this.structType = structType;
+		}
 
-        public Cursor createCursor() {
-            return new EnumeratorCursor<Object[]>(enumerator) {
-                @Override
-                protected Getter createGetter(int ordinal) {
-                    return new ArrayEnumeratorGetter(ordinal);
-                }
+		public Cursor createCursor() {
+			return new EnumeratorCursor<Object[]>(enumerator) {
+				@Override
+				protected Getter createGetter(int ordinal) {
+					return new ArrayEnumeratorGetter(ordinal);
+				}
 
-                /**
-                 * Row field accessor via index
-                 */
-                class ArrayEnumeratorGetter extends AbstractGetter {
-                    protected final int field;
+				/**
+				 * Row field accessor via index
+				 */
+				class ArrayEnumeratorGetter extends AbstractGetter {
+					protected final int field;
 
-                    public ArrayEnumeratorGetter(int field) {
-                        this.field = field;
-                    }
+					public ArrayEnumeratorGetter(int field) {
+						this.field = field;
+					}
 
-                    public Object getObject() {
-                        Object o = current()[field];
-                        wasNull[0] = o == null;
-                        return o;
-                    }
-                }
-            };
-        }
+					public Object getObject() {
+						Object o = current()[field];
+						wasNull[0] = o == null;
+						return o;
+					}
+				}
+			};
+		}
 
-        public List<ColumnMetaData> getColumnList() {
-            return structType.columns;
-        }
+		public List<ColumnMetaData> getColumnList() {
+			return structType.columns;
+		}
 
-        public List<AvaticaParameter> getParameterList() {
-            return parameterList;
-        }
+		public List<AvaticaParameter> getParameterList() {
+			return parameterList;
+		}
 
-        public String getSql() {
-            return sql;
-        }
-    }
+		public String getSql() {
+			return sql;
+		}
+	}
 
 }

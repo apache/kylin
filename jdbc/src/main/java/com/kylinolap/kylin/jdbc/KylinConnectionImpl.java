@@ -45,108 +45,122 @@ import com.kylinolap.kylin.jdbc.stub.MetaProject;
  * 
  */
 public abstract class KylinConnectionImpl extends AvaticaConnection {
-    private static final Logger logger = LoggerFactory.getLogger(KylinConnectionImpl.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(KylinConnectionImpl.class);
 
-    private final String baseUrl;
-    private final String project;
-    private MetaProject metaProject;
-    public final List<AvaticaStatement> statements;
-    static final Trojan TROJAN = createTrojan();
+	private final String baseUrl;
+	private final String project;
+	private MetaProject metaProject;
+	public final List<AvaticaStatement> statements;
+	static final Trojan TROJAN = createTrojan();
 
-    protected KylinConnectionImpl(UnregisteredDriver driver, AvaticaFactory factory, String url,
-            Properties info) {
-        super(driver, factory, url, info);
+	protected KylinConnectionImpl(UnregisteredDriver driver,
+			AvaticaFactory factory, String url, Properties info) {
+		super(driver, factory, url, info);
 
-        String odbcUrl = url;
-        odbcUrl = odbcUrl.replace(Driver.CONNECT_STRING_PREFIX + "//", "");
-        String[] temps = odbcUrl.split("/");
+		String odbcUrl = url;
+		odbcUrl = odbcUrl.replace(Driver.CONNECT_STRING_PREFIX + "//", "");
+		String[] temps = odbcUrl.split("/");
 
-        assert temps.length == 2;
+		assert temps.length == 2;
 
-        this.baseUrl = temps[0];
-        this.project = temps[1];
+		this.baseUrl = temps[0];
+		this.project = temps[1];
 
-        logger.debug("Kylin base url " + this.baseUrl + ", project name " + this.project);
+		logger.debug("Kylin base url " + this.baseUrl + ", project name "
+				+ this.project);
 
-        statements = new ArrayList<AvaticaStatement>();
-    }
+		statements = new ArrayList<AvaticaStatement>();
+	}
 
-    @Override
-    protected Meta createMeta() {
-        return new KylinMetaImpl(this, (KylinJdbc41Factory) factory);
-    }
+	@Override
+	protected Meta createMeta() {
+		return new KylinMetaImpl(this, (KylinJdbc41Factory) factory);
+	}
 
-    @Override
-    public AvaticaStatement createStatement(int resultSetType, int resultSetConcurrency,
-            int resultSetHoldability) throws SQLException {
-        AvaticaStatement statement =
-                super.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
-        statements.add(statement);
+	@Override
+	public AvaticaStatement createStatement(int resultSetType,
+			int resultSetConcurrency, int resultSetHoldability)
+			throws SQLException {
+		AvaticaStatement statement = super.createStatement(resultSetType,
+				resultSetConcurrency, resultSetHoldability);
+		statements.add(statement);
 
-        return statement;
-    }
+		return statement;
+	}
 
-    @Override
-    public PreparedStatement prepareStatement(String sql) throws SQLException {
-        PrepareResult pr = new KylinPrepareImpl().prepare(sql);
-        AvaticaPreparedStatement statement =
-                ((KylinJdbc41Factory) factory).newPreparedStatement(this, pr, ResultSet.TYPE_FORWARD_ONLY,
-                        ResultSet.CONCUR_READ_ONLY, this.getHoldability());
-        statements.add(statement);
+	@Override
+	public PreparedStatement prepareStatement(String sql) throws SQLException {
+		PrepareResult pr = new KylinPrepareImpl().prepare(sql);
+		AvaticaPreparedStatement statement = ((KylinJdbc41Factory) factory)
+				.newPreparedStatement(this, pr, ResultSet.TYPE_FORWARD_ONLY,
+						ResultSet.CONCUR_READ_ONLY, this.getHoldability());
+		statements.add(statement);
 
-        return statement;
-    }
+		return statement;
+	}
 
-    //~ kylin specified implements
+	// ~ kylin specified implements
 
-    public String getBasicAuthHeader() {
-        String username = this.info.getProperty("user");
-        String password = this.info.getProperty("password");
+	public String getBasicAuthHeader() {
+		String username = this.info.getProperty("user");
+		String password = this.info.getProperty("password");
 
-        return DatatypeConverter.printBase64Binary((username + ":" + password).getBytes());
-    }
+		return DatatypeConverter.printBase64Binary((username + ":" + password)
+				.getBytes());
+	}
 
-    public String getConnectUrl() {
-        boolean isSsl = Boolean.parseBoolean((this.info.getProperty("ssl", "false")));
-        return (isSsl ? "https://" : "http://") + this.baseUrl + ":" + (isSsl ? 443 : 80)
-                + "/kylin/api/user/authentication";
-    }
+	public String getConnectUrl() {
+		boolean isSsl = Boolean.parseBoolean((this.info.getProperty("ssl",
+				"false")));
+		return (isSsl ? "https://" : "http://") + this.baseUrl + ":"
+				+ (isSsl ? 443 : 80) + "/kylin/api/user/authentication";
+	}
 
-    public String getMetaProjectUrl(String project) {
-        assert project != null;
-        boolean isSsl = Boolean.parseBoolean((this.info.getProperty("ssl", "false")));
-        return (isSsl ? "https://" : "http://") + this.baseUrl + ":" + (isSsl ? 443 : 80)
-                + "/kylin/api/tables_and_columns?project=" + project;
-    }
+	public String getMetaProjectUrl(String project) {
+		assert project != null;
+		boolean isSsl = Boolean.parseBoolean((this.info.getProperty("ssl",
+				"false")));
+		return (isSsl ? "https://" : "http://") + this.baseUrl + ":"
+				+ (isSsl ? 443 : 80) + "/kylin/api/tables_and_columns?project="
+				+ project;
+	}
 
-    public String getQueryUrl() {
-        boolean isSsl = Boolean.parseBoolean((this.info.getProperty("ssl", "false")));
-        return (isSsl ? "https://" : "http://") + this.baseUrl + ":" + (isSsl ? 443 : 80)
-                + "/kylin/api/query";
-    }
+	public String getQueryUrl() {
+		boolean isSsl = Boolean.parseBoolean((this.info.getProperty("ssl",
+				"false")));
+		return (isSsl ? "https://" : "http://") + this.baseUrl + ":"
+				+ (isSsl ? 443 : 80) + "/kylin/api/query";
+	}
 
-    public String getProject() {
-        return this.project;
-    }
+	public String getProject() {
+		return this.project;
+	}
 
-    public Meta getMeta() {
-        return this.meta;
-    }
+	public Meta getMeta() {
+		return this.meta;
+	}
 
-    public AvaticaFactory getFactory() {
-        return this.factory;
-    }
+	public AvaticaFactory getFactory() {
+		return this.factory;
+	}
 
-    public UnregisteredDriver getDriver() {
-        return this.driver;
-    }
+	public UnregisteredDriver getDriver() {
+		return this.driver;
+	}
 
-    public MetaProject getMetaProject() {
-        return metaProject;
-    }
+	public MetaProject getMetaProject() {
+		return metaProject;
+	}
 
-    public void setMetaProject(MetaProject metaProject) {
-        this.metaProject = metaProject;
-    }
+	public void setMetaProject(MetaProject metaProject) {
+		this.metaProject = metaProject;
+	}
+
+	@Override
+	public String toString() {
+		return "KylinConnectionImpl [baseUrl=" + baseUrl + ", project="
+				+ project + ", metaProject=" + metaProject + "]";
+	}
 
 }

@@ -24,32 +24,33 @@ import net.hydromatic.avatica.AvaticaStatement;
  * Remote query stub of kylin restful service
  * 
  * @author xduo
- *
+ * 
  */
 public interface RemoteClient {
 
-    /**
-     * Connect to kylin restful service. 
-     * ConnectionException will be thrown if authentication failed.
-     * 
-     * @throws ConnectionException
-     */
-    public void connect() throws ConnectionException;
+	/**
+	 * Connect to kylin restful service. ConnectionException will be thrown if
+	 * authentication failed.
+	 * 
+	 * @throws ConnectionException
+	 */
+	public void connect() throws ConnectionException;
 
-    /**
-     * @param project
-     * @return
-     */
-    public MetaProject getMetadata(String project) throws ConnectionException;
+	/**
+	 * @param project
+	 * @return
+	 */
+	public MetaProject getMetadata(String project) throws ConnectionException;
 
-    /**
-     * Run query
-     * 
-     * @param statement
-     * @param sql
-     * @return
-     * @throws SQLException
-     */
-    public DataSet<Object[]> query(AvaticaStatement statement, String sql) throws SQLException;
+	/**
+	 * Run query
+	 * 
+	 * @param statement
+	 * @param sql
+	 * @return
+	 * @throws SQLException
+	 */
+	public DataSet<Object[]> query(AvaticaStatement statement, String sql)
+			throws SQLException;
 
 }
