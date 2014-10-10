@@ -24,30 +24,30 @@ import java.util.HashMap;
  */
 public class MetricsResponse extends HashMap<String, Float> {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public void increase(String key) {
-		increase(key, (float) 1);
-	}
+    public void increase(String key) {
+        increase(key, (float) 1);
+    }
 
-	public void increase(String key, Float increased) {
-		if (this.containsKey(key)) {
-			this.put(key, (this.get(key) + increased));
-		} else {
-			this.put(key, increased);
-		}
-	}
+    public void increase(String key, Float increased) {
+        if (this.containsKey(key)) {
+            this.put(key, (this.get(key) + increased));
+        } else {
+            this.put(key, increased);
+        }
+    }
 
-	public void decrease(String key) {
-		decrease(key, (float) 1);
-	}
+    public void decrease(String key) {
+        decrease(key, (float) 1);
+    }
 
-	public void decrease(String key, Float decreased) {
-		if (this.containsKey(key)) {
-			this.put(key, (this.get(key) - decreased));
-		} else {
-			this.put(key, decreased);
-		}
-	}
+    public void decrease(String key, Float decreased) {
+        if (this.containsKey(key)) {
+            this.put(key, (this.get(key) - decreased));
+        } else {
+            this.put(key, decreased);
+        }
+    }
 
 }

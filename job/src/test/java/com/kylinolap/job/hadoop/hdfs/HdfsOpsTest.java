@@ -18,34 +18,33 @@ import com.kylinolap.common.util.LocalFileMetadataTestCase;
  */
 public class HdfsOpsTest extends LocalFileMetadataTestCase {
 
-	FileSystem fileSystem;
+    FileSystem fileSystem;
 
-	@Before
-	public void setup() throws Exception {
+    @Before
+    public void setup() throws Exception {
 
-		this.createTestMetadata();
+        this.createTestMetadata();
 
-		Configuration hconf = new Configuration();
+        Configuration hconf = new Configuration();
 
-		fileSystem = FileSystem.get(hconf);
-	}
+        fileSystem = FileSystem.get(hconf);
+    }
 
-	@Test
-	public void TestPath() throws IOException {
-		String hdfsWorkingDirectory = KylinConfig.getInstanceFromEnv()
-				.getHdfsWorkingDirectory();
-		Path coprocessorDir = new Path(hdfsWorkingDirectory, "test");
-		fileSystem.mkdirs(coprocessorDir);
+    @Test
+    public void TestPath() throws IOException {
+        String hdfsWorkingDirectory = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory();
+        Path coprocessorDir = new Path(hdfsWorkingDirectory, "test");
+        fileSystem.mkdirs(coprocessorDir);
 
-		Path newFile = new Path(coprocessorDir, "test_file");
-		newFile = newFile.makeQualified(fileSystem.getUri(), null);
-		FSDataOutputStream stream = fileSystem.create(newFile);
-		stream.write(new byte[] { 0, 1, 2 });
-		stream.close();
-	}
+        Path newFile = new Path(coprocessorDir, "test_file");
+        newFile = newFile.makeQualified(fileSystem.getUri(), null);
+        FSDataOutputStream stream = fileSystem.create(newFile);
+        stream.write(new byte[] { 0, 1, 2 });
+        stream.close();
+    }
 
-	@After
-	public void after() throws Exception {
-		this.cleanupTestMetadata();
-	}
+    @After
+    public void after() throws Exception {
+        this.cleanupTestMetadata();
+    }
 }

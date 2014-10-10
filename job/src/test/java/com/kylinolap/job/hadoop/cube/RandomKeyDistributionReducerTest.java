@@ -16,7 +16,7 @@
 
 package com.kylinolap.job.hadoop.cube;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,33 +37,33 @@ import com.kylinolap.job.hadoop.invertedindex.RandomKeyDistributionReducer;
  * 
  */
 public class RandomKeyDistributionReducerTest {
-	ReduceDriver<Text, LongWritable, Text, LongWritable> reduceDriver;
+    ReduceDriver<Text, LongWritable, Text, LongWritable> reduceDriver;
 
-	@Before
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void setUp() {
-		RandomKeyDistributionReducer reducer = new RandomKeyDistributionReducer();
-		reduceDriver = ReduceDriver.newReduceDriver(reducer);
-	}
+    @Before
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public void setUp() {
+        RandomKeyDistributionReducer reducer = new RandomKeyDistributionReducer();
+        reduceDriver = ReduceDriver.newReduceDriver(reducer);
+    }
 
-	@Test
-	public void test() throws IOException {
-		List<Text> data = new ArrayList<Text>();
-		for (int i = 0; i < 1001; i++) {
-			data.add(new Text(String.valueOf(i)));
-		}
-		for (Text t : data) {
-			reduceDriver.addInput(t, new ArrayList<LongWritable>());
-		}
+    @Test
+    public void test() throws IOException {
+        List<Text> data = new ArrayList<Text>();
+        for (int i = 0; i < 1001; i++) {
+            data.add(new Text(String.valueOf(i)));
+        }
+        for (Text t : data) {
+            reduceDriver.addInput(t, new ArrayList<LongWritable>());
+        }
 
-		reduceDriver.getConfiguration().set(BatchConstants.REGION_NUMBER, "2");
-		List<Pair<Text, LongWritable>> result = reduceDriver.run();
+        reduceDriver.getConfiguration().set(BatchConstants.REGION_NUMBER, "2");
+        List<Pair<Text, LongWritable>> result = reduceDriver.run();
 
-		assertEquals(2, result.size());
+        assertEquals(2, result.size());
 
-		for (Pair<Text, LongWritable> p : result) {
-			System.out.println(p.getFirst());
-		}
-	}
+        for (Pair<Text, LongWritable> p : result) {
+            System.out.println(p.getFirst());
+        }
+    }
 
 }

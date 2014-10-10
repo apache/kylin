@@ -15,7 +15,7 @@
  */
 package com.kylinolap.cube.common;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.junit.After;
 import org.junit.Before;
@@ -32,45 +32,38 @@ import com.kylinolap.metadata.MetadataManager;
  */
 public class RowKeySplitterTest extends LocalFileMetadataTestCase {
 
-	@Before
-	public void setUp() throws Exception {
-		this.createTestMetadata();
-		MetadataManager.removeInstance(this.getTestConfig());
-	}
+    @Before
+    public void setUp() throws Exception {
+        this.createTestMetadata();
+        MetadataManager.removeInstance(this.getTestConfig());
+    }
 
-	@After
-	public void after() throws Exception {
-		this.cleanupTestMetadata();
-	}
+    @After
+    public void after() throws Exception {
+        this.cleanupTestMetadata();
+    }
 
-	@Test
-	public void testWithSlr() throws Exception {
-		CubeInstance cube = CubeManager.getInstance(this.getTestConfig())
-				.getCube("TEST_KYLIN_CUBE_WITH_SLR_READY");
+    @Test
+    public void testWithSlr() throws Exception {
+        CubeInstance cube = CubeManager.getInstance(this.getTestConfig()).getCube("TEST_KYLIN_CUBE_WITH_SLR_READY");
 
-		RowKeySplitter rowKeySplitter = new RowKeySplitter(
-				cube.getFirstSegment(), 10, 20);
-		// base cuboid rowkey
-		byte[] input = { 0, 0, 0, 0, 0, 0, 1, -1, 49, 48, 48, 48, 48, 48, 48,
-				48, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 54, -105, 55, 13, 71,
-				114, 65, 66, 73, 78, 9, 9, 9, 9, 9, 9, 9, 9, 0, 10, 0 };
-		rowKeySplitter.split(input, input.length);
+        RowKeySplitter rowKeySplitter = new RowKeySplitter(cube.getFirstSegment(), 10, 20);
+        // base cuboid rowkey
+        byte[] input = { 0, 0, 0, 0, 0, 0, 1, -1, 49, 48, 48, 48, 48, 48, 48, 48, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 54, -105, 55, 13, 71, 114, 65, 66, 73, 78, 9, 9, 9, 9, 9, 9, 9, 9, 0, 10, 0 };
+        rowKeySplitter.split(input, input.length);
 
-		assertEquals(10, rowKeySplitter.getBufferSize());
-	}
+        assertEquals(10, rowKeySplitter.getBufferSize());
+    }
 
-	@Test
-	public void testWithoutSlr() throws Exception {
-		CubeInstance cube = CubeManager.getInstance(this.getTestConfig())
-				.getCube("TEST_KYLIN_CUBE_WITHOUT_SLR_READY");
+    @Test
+    public void testWithoutSlr() throws Exception {
+        CubeInstance cube = CubeManager.getInstance(this.getTestConfig()).getCube("TEST_KYLIN_CUBE_WITHOUT_SLR_READY");
 
-		RowKeySplitter rowKeySplitter = new RowKeySplitter(
-				cube.getFirstSegment(), 10, 20);
-		// base cuboid rowkey
-		byte[] input = { 0, 0, 0, 0, 0, 0, 0, -1, 11, 55, -13, 13, 22, 34, 121,
-				70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 };
-		rowKeySplitter.split(input, input.length);
+        RowKeySplitter rowKeySplitter = new RowKeySplitter(cube.getFirstSegment(), 10, 20);
+        // base cuboid rowkey
+        byte[] input = { 0, 0, 0, 0, 0, 0, 0, -1, 11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 };
+        rowKeySplitter.split(input, input.length);
 
-		assertEquals(9, rowKeySplitter.getBufferSize());
-	}
+        assertEquals(9, rowKeySplitter.getBufferSize());
+    }
 }

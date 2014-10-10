@@ -17,32 +17,30 @@ package com.kylinolap.job.constant;
 
 public enum JobStatusEnum {
 
-	NEW(0), PENDING(1), RUNNING(2), FINISHED(4), ERROR(8), DISCARDED(16);
+    NEW(0), PENDING(1), RUNNING(2), FINISHED(4), ERROR(8), DISCARDED(16);
 
-	private final int code;
+    private final int code;
 
-	private JobStatusEnum(int statusCode) {
-		this.code = statusCode;
-	}
+    private JobStatusEnum(int statusCode) {
+        this.code = statusCode;
+    }
 
-	public static JobStatusEnum getByCode(int statusCode) {
-		for (JobStatusEnum status : values()) {
-			if (status.getCode() == statusCode) {
-				return status;
-			}
-		}
+    public static JobStatusEnum getByCode(int statusCode) {
+        for (JobStatusEnum status : values()) {
+            if (status.getCode() == statusCode) {
+                return status;
+            }
+        }
 
-		return null;
-	}
+        return null;
+    }
 
-	public int getCode() {
-		return this.code;
-	}
+    public int getCode() {
+        return this.code;
+    }
 
-	public boolean isComplete() {
-		return code == JobStatusEnum.FINISHED.getCode()
-				|| code == JobStatusEnum.ERROR.getCode()
-				|| code == JobStatusEnum.DISCARDED.getCode();
-	}
+    public boolean isComplete() {
+        return code == JobStatusEnum.FINISHED.getCode() || code == JobStatusEnum.ERROR.getCode() || code == JobStatusEnum.DISCARDED.getCode();
+    }
 
 }

@@ -21,50 +21,50 @@ package com.kylinolap.rest.request;
  * 
  */
 public class SaveSqlRequest {
-	private long id;
-	private String name;
-	private String sql;
-	private String project;
-	private String description;
+    private long id;
+    private String name;
+    private String sql;
+    private String project;
+    private String description;
 
-	public long getId() {
-		return id;
-	}
+    public long getId() {
+        return id;
+    }
 
-	public void setId(long id) {
-		this.id = id;
-	}
+    public void setId(long id) {
+        this.id = id;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public String getSql() {
-		return sql;
-	}
+    public String getSql() {
+        return sql;
+    }
 
-	public void setSql(String sql) {
-		this.sql = sql;
-	}
+    public void setSql(String sql) {
+        this.sql = sql;
+    }
 
-	public String getProject() {
-		return project;
-	}
+    public String getProject() {
+        return project;
+    }
 
-	public void setProject(String project) {
-		this.project = project;
-	}
+    public void setProject(String project) {
+        this.project = project;
+    }
 
-	public String getDescription() {
-		return description;
-	}
+    public String getDescription() {
+        return description;
+    }
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
 }

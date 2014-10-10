@@ -45,77 +45,65 @@ import com.kylinolap.query.schema.OLAPTable;
 /**
  * @author xjiang
  */
-public class OLAPToEnumerableConverter extends ConverterRelImpl implements
-		EnumerableRel {
+public class OLAPToEnumerableConverter extends ConverterRelImpl implements EnumerableRel {
 
-	public OLAPToEnumerableConverter(RelOptCluster cluster, RelTraitSet traits,
-			RelNode input) {
-		super(cluster, ConventionTraitDef.INSTANCE, traits, input);
-	}
+    public OLAPToEnumerableConverter(RelOptCluster cluster, RelTraitSet traits, RelNode input) {
+        super(cluster, ConventionTraitDef.INSTANCE, traits, input);
+    }
 
-	@Override
-	public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-		return new OLAPToEnumerableConverter(getCluster(), traitSet,
-				sole(inputs));
-	}
+    @Override
+    public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
+        return new OLAPToEnumerableConverter(getCluster(), traitSet, sole(inputs));
+    }
 
-	@Override
-	public RelOptCost computeSelfCost(RelOptPlanner planner) {
-		return super.computeSelfCost(planner).multiplyBy(.05);
-	}
+    @Override
+    public RelOptCost computeSelfCost(RelOptPlanner planner) {
+        return super.computeSelfCost(planner).multiplyBy(.05);
+    }
 
-	@Override
-	public Result implement(EnumerableRelImplementor enumImplementor,
-			Prefer pref) {
-		// post-order travel children
-		OLAPImplementor olapImplementor = new OLAPRel.OLAPImplementor();
-		olapImplementor.visitChild(getChild(), this);
+    @Override
+    public Result implement(EnumerableRelImplementor enumImplementor, Prefer pref) {
+        // post-order travel children
+        OLAPImplementor olapImplementor = new OLAPRel.OLAPImplementor();
+        olapImplementor.visitChild(getChild(), this);
 
-		// find cube from olap context
-		try {
-			for (OLAPContext context : OLAPContext.getThreadLocalContexts()) {
-				CubeInstance cube = QueryRouter.findCube(context);
-				context.cubeInstance = cube;
-				context.cubeDesc = cube.getDescriptor();
-			}
-		} catch (CubeNotFoundException e) {
-			OLAPContext ctx0 = (OLAPContext) OLAPContext
-					.getThreadLocalContexts().toArray()[0];
-			if (ctx0 != null && ctx0.olapSchema.hasStarSchemaUrl()) {
-				// generate hive result
-				return buildHiveResult(enumImplementor, pref, ctx0);
-			} else {
-				throw e;
-			}
-		}
+        // find cube from olap context
+        try {
+            for (OLAPContext context : OLAPContext.getThreadLocalContexts()) {
+                CubeInstance cube = QueryRouter.findCube(context);
+                context.cubeInstance = cube;
+                context.cubeDesc = cube.getDescriptor();
+            }
+        } catch (CubeNotFoundException e) {
+            OLAPContext ctx0 = (OLAPContext) OLAPContext.getThreadLocalContexts().toArray()[0];
+            if (ctx0 != null && ctx0.olapSchema.hasStarSchemaUrl()) {
+                // generate hive result
+                return buildHiveResult(enumImplementor, pref, ctx0);
+            } else {
+                throw e;
+            }
+        }
 
-		// rewrite query if necessary
-		RewriteImplementor rewriteImplementor = new RewriteImplementor();
-		rewriteImplementor.visitChild(this, getChild());
+        // rewrite query if necessary
+        RewriteImplementor rewriteImplementor = new RewriteImplementor();
+        rewriteImplementor.visitChild(this, getChild());
 
-		// build java implementation
-		EnumerableRel child = (EnumerableRel) getChild();
-		JavaImplementor javaImplementor = new JavaImplementor(enumImplementor);
-		return javaImplementor.visitChild(this, 0, child, pref);
+        // build java implementation
+        EnumerableRel child = (EnumerableRel) getChild();
+        JavaImplementor javaImplementor = new JavaImplementor(enumImplementor);
+        return javaImplementor.visitChild(this, 0, child, pref);
 
-	}
+    }
 
-	private Result buildHiveResult(EnumerableRelImplementor enumImplementor,
-			Prefer pref, OLAPContext context) {
-		RelDataType hiveRowType = getRowType();
+    private Result buildHiveResult(EnumerableRelImplementor enumImplementor, Prefer pref, OLAPContext context) {
+        RelDataType hiveRowType = getRowType();
 
-		context.olapRowType = hiveRowType;
-		PhysType physType = PhysTypeImpl.of(enumImplementor.getTypeFactory(),
-				hiveRowType, pref.preferArray());
+        context.olapRowType = hiveRowType;
+        PhysType physType = PhysTypeImpl.of(enumImplementor.getTypeFactory(), hiveRowType, pref.preferArray());
 
-		RelOptTable factTable = context.firstTableScan.getTable();
-		Result result = enumImplementor
-				.result(physType,
-						Blocks.toBlock(Expressions.call(
-								factTable.getExpression(OLAPTable.class),
-								"executeHiveQuery",
-								enumImplementor.getRootExpression())));
-		return result;
-	}
+        RelOptTable factTable = context.firstTableScan.getTable();
+        Result result = enumImplementor.result(physType, Blocks.toBlock(Expressions.call(factTable.getExpression(OLAPTable.class), "executeHiveQuery", enumImplementor.getRootExpression())));
+        return result;
+    }
 
 }

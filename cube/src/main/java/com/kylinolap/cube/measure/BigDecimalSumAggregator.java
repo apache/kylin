@@ -24,25 +24,25 @@ import java.math.BigDecimal;
  */
 public class BigDecimalSumAggregator extends MeasureAggregator<BigDecimal> {
 
-	BigDecimal sum = new BigDecimal(0);
+    BigDecimal sum = new BigDecimal(0);
 
-	@Override
-	public void reset() {
-		sum = new BigDecimal(0);
-	}
+    @Override
+    public void reset() {
+        sum = new BigDecimal(0);
+    }
 
-	@Override
-	public void aggregate(BigDecimal value) {
-		sum = sum.add(value);
-	}
+    @Override
+    public void aggregate(BigDecimal value) {
+        sum = sum.add(value);
+    }
 
-	@Override
-	public BigDecimal getState() {
-		return sum;
-	}
+    @Override
+    public BigDecimal getState() {
+        return sum;
+    }
 
-	@Override
-	public int getMemBytes() {
-		return guessBigDecimalMemBytes();
-	}
+    @Override
+    public int getMemBytes() {
+        return guessBigDecimalMemBytes();
+    }
 }

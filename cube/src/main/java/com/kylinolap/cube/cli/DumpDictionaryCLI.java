@@ -27,20 +27,18 @@ import com.kylinolap.dict.DictionaryInfoSerializer;
 
 public class DumpDictionaryCLI {
 
-	public static void main(String[] args) throws IOException {
-		for (String path : args) {
-			File f = new File(path);
-			DictionaryInfoSerializer ser = new DictionaryInfoSerializer();
-			DictionaryInfo dictInfo = ser.deserialize(new DataInputStream(
-					new FileInputStream(f)));
+    public static void main(String[] args) throws IOException {
+        for (String path : args) {
+            File f = new File(path);
+            DictionaryInfoSerializer ser = new DictionaryInfoSerializer();
+            DictionaryInfo dictInfo = ser.deserialize(new DataInputStream(new FileInputStream(f)));
 
-			System.out
-					.println("============================================================================");
-			System.out.println("File: " + f.getAbsolutePath());
-			System.out.println(new Date(dictInfo.getLastModified()));
-			System.out.println(JsonUtil.writeValueAsIndentString(dictInfo));
-			dictInfo.getDictionaryObject().dump(System.out);
-			System.out.println();
-		}
-	}
+            System.out.println("============================================================================");
+            System.out.println("File: " + f.getAbsolutePath());
+            System.out.println(new Date(dictInfo.getLastModified()));
+            System.out.println(JsonUtil.writeValueAsIndentString(dictInfo));
+            dictInfo.getDictionaryObject().dump(System.out);
+            System.out.println();
+        }
+    }
 }

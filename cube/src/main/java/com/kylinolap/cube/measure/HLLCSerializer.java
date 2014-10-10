@@ -27,39 +27,39 @@ import com.kylinolap.common.hll.HyperLogLogPlusCounter;
  */
 public class HLLCSerializer extends MeasureSerializer<HyperLogLogPlusCounter> {
 
-	HyperLogLogPlusCounter current;
+    HyperLogLogPlusCounter current;
 
-	HLLCSerializer(int p) {
-		current = new HyperLogLogPlusCounter(p);
-	}
+    HLLCSerializer(int p) {
+        current = new HyperLogLogPlusCounter(p);
+    }
 
-	@Override
-	public void serialize(HyperLogLogPlusCounter value, ByteBuffer out) {
-		try {
-			value.writeRegisters(out);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
+    @Override
+    public void serialize(HyperLogLogPlusCounter value, ByteBuffer out) {
+        try {
+            value.writeRegisters(out);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-	@Override
-	public HyperLogLogPlusCounter deserialize(ByteBuffer in) {
-		try {
-			current.readRegisters(in);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-		return current;
-	}
+    @Override
+    public HyperLogLogPlusCounter deserialize(ByteBuffer in) {
+        try {
+            current.readRegisters(in);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return current;
+    }
 
-	@Override
-	public HyperLogLogPlusCounter valueOf(byte[] value) {
-		current.clear();
-		if (value == null)
-			current.add("__nUlL__");
-		else
-			current.add(value);
-		return current;
-	}
+    @Override
+    public HyperLogLogPlusCounter valueOf(byte[] value) {
+        current.clear();
+        if (value == null)
+            current.add("__nUlL__");
+        else
+            current.add(value);
+        return current;
+    }
 
 }

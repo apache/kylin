@@ -38,44 +38,36 @@ import org.springframework.security.acls.model.Sid;
  */
 public class AclService extends JdbcMutableAclService {
 
-	private final String findChildrenSql = "select obj.object_id_identity as obj_id, class.class as class "
-			+ "from acl_object_identity obj, acl_object_identity parent, acl_class class "
-			+ "where obj.parent_object = parent.id and obj.object_id_class = class.id "
-			+ "and parent.object_id_identity = ? and parent.object_id_class = ("
-			+ "select id FROM acl_class where acl_class.class = ?)";
+    private final String findChildrenSql = "select obj.object_id_identity as obj_id, class.class as class " + "from acl_object_identity obj, acl_object_identity parent, acl_class class " + "where obj.parent_object = parent.id and obj.object_id_class = class.id " + "and parent.object_id_identity = ? and parent.object_id_class = (" + "select id FROM acl_class where acl_class.class = ?)";
 
-	public AclService(DataSource dataSource, LookupStrategy lookupStrategy,
-			AclCache aclCache) {
-		super(dataSource, lookupStrategy, aclCache);
-	}
+    public AclService(DataSource dataSource, LookupStrategy lookupStrategy, AclCache aclCache) {
+        super(dataSource, lookupStrategy, aclCache);
+    }
 
-	public Sid getSid(String sid, boolean isPrincepal) {
-		if (isPrincepal) {
-			return new PrincipalSid(sid);
-		} else {
-			return new GrantedAuthoritySid(sid);
-		}
-	}
+    public Sid getSid(String sid, boolean isPrincepal) {
+        if (isPrincepal) {
+            return new PrincipalSid(sid);
+        } else {
+            return new GrantedAuthoritySid(sid);
+        }
+    }
 
-	@Override
-	public List<ObjectIdentity> findChildren(ObjectIdentity parentIdentity) {
-		Object[] args = { parentIdentity.getIdentifier(),
-				parentIdentity.getType() };
-		List<ObjectIdentity> objects = jdbcTemplate.query(findChildrenSql,
-				args, new RowMapper<ObjectIdentity>() {
-					public ObjectIdentity mapRow(ResultSet rs, int rowNum)
-							throws SQLException {
-						String javaType = rs.getString("class");
-						String identifier = new String(rs.getString("obj_id"));
+    @Override
+    public List<ObjectIdentity> findChildren(ObjectIdentity parentIdentity) {
+        Object[] args = { parentIdentity.getIdentifier(), parentIdentity.getType() };
+        List<ObjectIdentity> objects = jdbcTemplate.query(findChildrenSql, args, new RowMapper<ObjectIdentity>() {
+            public ObjectIdentity mapRow(ResultSet rs, int rowNum) throws SQLException {
+                String javaType = rs.getString("class");
+                String identifier = new String(rs.getString("obj_id"));
 
-						return new ObjectIdentityImpl(javaType, identifier);
-					}
-				});
+                return new ObjectIdentityImpl(javaType, identifier);
+            }
+        });
 
-		if (objects.size() == 0) {
-			return null;
-		}
+        if (objects.size() == 0) {
+            return null;
+        }
 
-		return objects;
-	}
+        return objects;
+    }
 }

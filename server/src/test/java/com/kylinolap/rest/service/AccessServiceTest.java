@@ -36,84 +36,83 @@ import com.kylinolap.rest.security.AclPermissionFactory;
  */
 public class AccessServiceTest extends TestBase {
 
-	@Autowired
-	AccessService accessService;
+    @Autowired
+    AccessService accessService;
 
-	@Test
-	public void testBasics() throws JsonProcessingException, SchedulerException {
-		Sid adminSid = accessService.getSid("ADMIN", true);
-		Assert.assertNotNull(adminSid);
-		Assert.assertNotNull(AclPermissionFactory.getPermissions());
+    @Test
+    public void testBasics() throws JsonProcessingException, SchedulerException {
+        Sid adminSid = accessService.getSid("ADMIN", true);
+        Assert.assertNotNull(adminSid);
+        Assert.assertNotNull(AclPermissionFactory.getPermissions());
 
-		AclEntity ae = new MockAclEntity("test-domain-object");
+        AclEntity ae = new MockAclEntity("test-domain-object");
 
-		// test getAcl
-		Acl acl = accessService.getAcl(ae);
-		Assert.assertNull(acl);
+        // test getAcl
+        Acl acl = accessService.getAcl(ae);
+        Assert.assertNull(acl);
 
-		// test init
-		acl = accessService.init(ae, AclPermission.ADMINISTRATION);
-		Assert.assertTrue(((PrincipalSid) acl.getOwner()).getPrincipal()
-				.equals("ADMIN"));
-		Assert.assertTrue(accessService.generateAceResponses(acl).size() == 1);
+        // test init
+        acl = accessService.init(ae, AclPermission.ADMINISTRATION);
+        Assert.assertTrue(((PrincipalSid) acl.getOwner()).getPrincipal().equals("ADMIN"));
+        Assert.assertTrue(accessService.generateAceResponses(acl).size() == 1);
 
-		// test grant
-		Sid modeler = accessService.getSid("MODELER", true);
-		acl = accessService.grant(ae, AclPermission.ADMINISTRATION, modeler);
-		Assert.assertTrue(accessService.generateAceResponses(acl).size() == 2);
+        // test grant
+        Sid modeler = accessService.getSid("MODELER", true);
+        acl = accessService.grant(ae, AclPermission.ADMINISTRATION, modeler);
+        Assert.assertTrue(accessService.generateAceResponses(acl).size() == 2);
 
-		Long modelerEntryId = null;
-		for (AccessControlEntry ace : acl.getEntries()) {
-			PrincipalSid sid = (PrincipalSid) ace.getSid();
+        Long modelerEntryId = null;
+        for (AccessControlEntry ace : acl.getEntries()) {
+            PrincipalSid sid = (PrincipalSid) ace.getSid();
 
-			if (sid.getPrincipal().equals("MODELER")) {
-				modelerEntryId = (Long) ace.getId();
-				Assert.assertTrue(ace.getPermission() == AclPermission.ADMINISTRATION);
-			}
-		}
+            if (sid.getPrincipal().equals("MODELER")) {
+                modelerEntryId = (Long) ace.getId();
+                Assert.assertTrue(ace.getPermission() == AclPermission.ADMINISTRATION);
+            }
+        }
 
-		// test update
-		acl = accessService.update(ae, modelerEntryId, AclPermission.READ);
+        // test update
+        acl = accessService.update(ae, modelerEntryId, AclPermission.READ);
 
-		Assert.assertTrue(accessService.generateAceResponses(acl).size() == 2);
+        Assert.assertTrue(accessService.generateAceResponses(acl).size() == 2);
 
-		for (AccessControlEntry ace : acl.getEntries()) {
-			PrincipalSid sid = (PrincipalSid) ace.getSid();
+        for (AccessControlEntry ace : acl.getEntries()) {
+            PrincipalSid sid = (PrincipalSid) ace.getSid();
 
-			if (sid.getPrincipal().equals("MODELER")) {
-				modelerEntryId = (Long) ace.getId();
-				Assert.assertTrue(ace.getPermission() == AclPermission.READ);
-			}
-		}
+            if (sid.getPrincipal().equals("MODELER")) {
+                modelerEntryId = (Long) ace.getId();
+                Assert.assertTrue(ace.getPermission() == AclPermission.READ);
+            }
+        }
 
-		AclEntity attachedEntity = new MockAclEntity("attached-domain-object");
-		accessService.inherit(attachedEntity, ae);
+        AclEntity attachedEntity = new MockAclEntity("attached-domain-object");
+        accessService.inherit(attachedEntity, ae);
 
-		// test revoke
-		acl = accessService.revoke(ae, modelerEntryId);
-		Assert.assertTrue(accessService.generateAceResponses(acl).size() == 1);
+        // test revoke
+        acl = accessService.revoke(ae, modelerEntryId);
+        Assert.assertTrue(accessService.generateAceResponses(acl).size() == 1);
 
-		// test clean
-		accessService.clean(ae, true);
-		acl = accessService.getAcl(ae);
-		Assert.assertNull(acl);
-	}
+        // test clean
+        accessService.clean(ae, true);
+        acl = accessService.getAcl(ae);
+        Assert.assertNull(acl);
+    }
 
-	public class MockAclEntity implements AclEntity {
+    public class MockAclEntity implements AclEntity {
 
-		private String id;
+        private String id;
 
-		/**
-		 * @param id
-		 */
-		public MockAclEntity(String id) {
-			super();
-			this.id = id;
-		}
+        /**
+         * @param id
+         */
+        public MockAclEntity(String id) {
+            super();
+            this.id = id;
+        }
 
-		@Override
-		public String getId() {
-			return id;
-		}
-	}
+        @Override
+        public String getId() {
+            return id;
+        }
+    }
 }

@@ -38,103 +38,101 @@ import com.kylinolap.metadata.model.schema.TableDesc;
  */
 public class SRowType {
 
-	public static SRowType fromCuboid(CubeSegment seg, Cuboid cuboid) {
-		List<TblColRef> colList = cuboid.getColumns();
-		TblColRef[] cols = (TblColRef[]) colList.toArray(new TblColRef[colList
-				.size()]);
-		RowKeyColumnIO colIO = new RowKeyColumnIO(seg);
-		int[] colSizes = new int[cols.length];
-		for (int i = 0; i < cols.length; i++) {
-			colSizes[i] = colIO.getColumnLength(cols[i]);
-		}
-		return new SRowType(cols, colSizes);
-	}
+    public static SRowType fromCuboid(CubeSegment seg, Cuboid cuboid) {
+        List<TblColRef> colList = cuboid.getColumns();
+        TblColRef[] cols = (TblColRef[]) colList.toArray(new TblColRef[colList.size()]);
+        RowKeyColumnIO colIO = new RowKeyColumnIO(seg);
+        int[] colSizes = new int[cols.length];
+        for (int i = 0; i < cols.length; i++) {
+            colSizes[i] = colIO.getColumnLength(cols[i]);
+        }
+        return new SRowType(cols, colSizes);
+    }
 
-	public static byte[] serialize(SRowType o) {
-		ByteBuffer buf = ByteBuffer
-				.allocate(CoprocessorEnabler.SERIALIZE_BUFFER_SIZE);
-		serializer.serialize(o, buf);
-		byte[] result = new byte[buf.position()];
-		System.arraycopy(buf.array(), 0, result, 0, buf.position());
-		return result;
-	}
+    public static byte[] serialize(SRowType o) {
+        ByteBuffer buf = ByteBuffer.allocate(CoprocessorEnabler.SERIALIZE_BUFFER_SIZE);
+        serializer.serialize(o, buf);
+        byte[] result = new byte[buf.position()];
+        System.arraycopy(buf.array(), 0, result, 0, buf.position());
+        return result;
+    }
 
-	public static SRowType deserialize(byte[] bytes) {
-		return serializer.deserialize(ByteBuffer.wrap(bytes));
-	}
+    public static SRowType deserialize(byte[] bytes) {
+        return serializer.deserialize(ByteBuffer.wrap(bytes));
+    }
 
-	private static final Serializer serializer = new Serializer();
+    private static final Serializer serializer = new Serializer();
 
-	private static class Serializer implements BytesSerializer<SRowType> {
+    private static class Serializer implements BytesSerializer<SRowType> {
 
-		@Override
-		public void serialize(SRowType o, ByteBuffer out) {
-			int n = o.columns.length;
-			BytesUtil.writeVInt(o.columns.length, out);
-			for (int i = 0; i < n; i++) {
-				BytesUtil.writeAsciiString(o.columns[i].getTable(), out);
-				BytesUtil.writeAsciiString(o.columns[i].getName(), out);
-				BytesUtil.writeVInt(o.columnSizes[i], out);
-			}
-		}
+        @Override
+        public void serialize(SRowType o, ByteBuffer out) {
+            int n = o.columns.length;
+            BytesUtil.writeVInt(o.columns.length, out);
+            for (int i = 0; i < n; i++) {
+                BytesUtil.writeAsciiString(o.columns[i].getTable(), out);
+                BytesUtil.writeAsciiString(o.columns[i].getName(), out);
+                BytesUtil.writeVInt(o.columnSizes[i], out);
+            }
+        }
 
-		@Override
-		public SRowType deserialize(ByteBuffer in) {
-			int n = BytesUtil.readVInt(in);
-			TblColRef[] cols = new TblColRef[n];
-			int[] colSizes = new int[n];
-			for (int i = 0; i < n; i++) {
-				String tableName = BytesUtil.readAsciiString(in);
-				String colName = BytesUtil.readAsciiString(in);
-				TableDesc table = new TableDesc();
-				table.setName(tableName);
-				ColumnDesc col = new ColumnDesc();
-				col.setTable(table);
-				col.setName(colName);
-				cols[i] = new TblColRef(col);
+        @Override
+        public SRowType deserialize(ByteBuffer in) {
+            int n = BytesUtil.readVInt(in);
+            TblColRef[] cols = new TblColRef[n];
+            int[] colSizes = new int[n];
+            for (int i = 0; i < n; i++) {
+                String tableName = BytesUtil.readAsciiString(in);
+                String colName = BytesUtil.readAsciiString(in);
+                TableDesc table = new TableDesc();
+                table.setName(tableName);
+                ColumnDesc col = new ColumnDesc();
+                col.setTable(table);
+                col.setName(colName);
+                cols[i] = new TblColRef(col);
 
-				int colSize = BytesUtil.readVInt(in);
-				colSizes[i] = colSize;
-			}
-			return new SRowType(cols, colSizes);
-		}
-	}
+                int colSize = BytesUtil.readVInt(in);
+                colSizes[i] = colSize;
+            }
+            return new SRowType(cols, colSizes);
+        }
+    }
 
-	// ============================================================================
+    // ============================================================================
 
-	TblColRef[] columns;
-	int[] columnSizes;
+    TblColRef[] columns;
+    int[] columnSizes;
 
-	int[] columnOffsets;
-	List<TblColRef> columnsAsList;
-	HashMap<TblColRef, Integer> columnIdxMap;
+    int[] columnOffsets;
+    List<TblColRef> columnsAsList;
+    HashMap<TblColRef, Integer> columnIdxMap;
 
-	public SRowType(TblColRef[] columns, int[] columnSizes) {
-		this.columns = columns;
-		this.columnSizes = columnSizes;
-		init();
-	}
+    public SRowType(TblColRef[] columns, int[] columnSizes) {
+        this.columns = columns;
+        this.columnSizes = columnSizes;
+        init();
+    }
 
-	private void init() {
-		int[] offsets = new int[columns.length];
-		int o = RowConstants.ROWKEY_CUBOIDID_LEN;
-		for (int i = 0; i < columns.length; i++) {
-			offsets[i] = o;
-			o += columnSizes[i];
-		}
-		this.columnOffsets = offsets;
+    private void init() {
+        int[] offsets = new int[columns.length];
+        int o = RowConstants.ROWKEY_CUBOIDID_LEN;
+        for (int i = 0; i < columns.length; i++) {
+            offsets[i] = o;
+            o += columnSizes[i];
+        }
+        this.columnOffsets = offsets;
 
-		this.columnsAsList = Arrays.asList(columns);
+        this.columnsAsList = Arrays.asList(columns);
 
-		HashMap<TblColRef, Integer> map = Maps.newHashMap();
-		for (int i = 0; i < columns.length; i++) {
-			map.put(columns[i], i);
-		}
-		this.columnIdxMap = map;
-	}
+        HashMap<TblColRef, Integer> map = Maps.newHashMap();
+        for (int i = 0; i < columns.length; i++) {
+            map.put(columns[i], i);
+        }
+        this.columnIdxMap = map;
+    }
 
-	public int getColumnCount() {
-		return columns.length;
-	}
+    public int getColumnCount() {
+        return columns.length;
+    }
 
 }

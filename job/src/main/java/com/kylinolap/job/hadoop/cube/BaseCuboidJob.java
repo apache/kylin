@@ -23,13 +23,13 @@ import org.apache.hadoop.util.ToolRunner;
  */
 
 public class BaseCuboidJob extends CuboidJob {
-	public BaseCuboidJob() {
-		this.setMapperClass(BaseCuboidMapper.class);
-	}
+    public BaseCuboidJob() {
+        this.setMapperClass(BaseCuboidMapper.class);
+    }
 
-	public static void main(String[] args) throws Exception {
-		CuboidJob job = new BaseCuboidJob();
-		int exitCode = ToolRunner.run(job, args);
-		System.exit(exitCode);
-	}
+    public static void main(String[] args) throws Exception {
+        CuboidJob job = new BaseCuboidJob();
+        int exitCode = ToolRunner.run(job, args);
+        System.exit(exitCode);
+    }
 }

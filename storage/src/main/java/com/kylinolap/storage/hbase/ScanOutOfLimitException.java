@@ -21,9 +21,9 @@ package com.kylinolap.storage.hbase;
  * 
  */
 public class ScanOutOfLimitException extends RuntimeException {
-	private static final long serialVersionUID = 2045169570038227895L;
+    private static final long serialVersionUID = 2045169570038227895L;
 
-	public ScanOutOfLimitException(String message) {
-		super(message);
-	}
+    public ScanOutOfLimitException(String message) {
+        super(message);
+    }
 }

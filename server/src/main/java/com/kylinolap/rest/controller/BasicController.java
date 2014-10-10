@@ -38,39 +38,38 @@ import com.kylinolap.rest.service.MetricsService;
  */
 public class BasicController {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(BasicController.class);
+    private static final Logger logger = LoggerFactory.getLogger(BasicController.class);
 
-	@Autowired
-	protected MetricsService metricsService;
+    @Autowired
+    protected MetricsService metricsService;
 
-	// ~ exception handlers ~
-	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-	@ExceptionHandler(InternalErrorException.class)
-	@ResponseBody
-	ErrorResponse handleInternalError(HttpServletRequest req, Exception ex) {
-		logger.error("Internal error throw out of controller", ex);
-		return new ErrorResponse(req.getRequestURL().toString(), ex);
-	}
+    // ~ exception handlers ~
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(InternalErrorException.class)
+    @ResponseBody
+    ErrorResponse handleInternalError(HttpServletRequest req, Exception ex) {
+        logger.error("Internal error throw out of controller", ex);
+        return new ErrorResponse(req.getRequestURL().toString(), ex);
+    }
 
-	@ResponseStatus(HttpStatus.FORBIDDEN)
-	@ExceptionHandler(ForbiddenException.class)
-	@ResponseBody
-	ErrorResponse handleForbidden(HttpServletRequest req, Exception ex) {
-		return new ErrorResponse(req.getRequestURL().toString(), ex);
-	}
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler(ForbiddenException.class)
+    @ResponseBody
+    ErrorResponse handleForbidden(HttpServletRequest req, Exception ex) {
+        return new ErrorResponse(req.getRequestURL().toString(), ex);
+    }
 
-	@ResponseStatus(HttpStatus.NOT_FOUND)
-	@ExceptionHandler(NotFoundException.class)
-	@ResponseBody
-	ErrorResponse handleNotFound(HttpServletRequest req, Exception ex) {
-		return new ErrorResponse(req.getRequestURL().toString(), ex);
-	}
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(NotFoundException.class)
+    @ResponseBody
+    ErrorResponse handleNotFound(HttpServletRequest req, Exception ex) {
+        return new ErrorResponse(req.getRequestURL().toString(), ex);
+    }
 
-	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	@ExceptionHandler(BadRequestException.class)
-	@ResponseBody
-	ErrorResponse handleBadRequest(HttpServletRequest req, Exception ex) {
-		return new ErrorResponse(req.getRequestURL().toString(), ex);
-	}
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(BadRequestException.class)
+    @ResponseBody
+    ErrorResponse handleBadRequest(HttpServletRequest req, Exception ex) {
+        return new ErrorResponse(req.getRequestURL().toString(), ex);
+    }
 }

@@ -33,38 +33,34 @@ import com.kylinolap.job.constant.BatchConstants;
  * @author ysong1
  * 
  */
-public class RandomKeyDistributionMapper<KEY extends Writable, VALUE> extends
-		Mapper<KEY, VALUE, KEY, NullWritable> {
+public class RandomKeyDistributionMapper<KEY extends Writable, VALUE> extends Mapper<KEY, VALUE, KEY, NullWritable> {
 
-	private Configuration conf;
-	private int sampleNumber;
-	private List<KEY> allKeys;
+    private Configuration conf;
+    private int sampleNumber;
+    private List<KEY> allKeys;
 
-	@Override
-	protected void setup(Context context) throws IOException {
-		conf = context.getConfiguration();
-		allKeys = new ArrayList<KEY>();
-		sampleNumber = Integer.parseInt(conf
-				.get(BatchConstants.MAPPER_SAMPLE_NUMBER));
-	}
+    @Override
+    protected void setup(Context context) throws IOException {
+        conf = context.getConfiguration();
+        allKeys = new ArrayList<KEY>();
+        sampleNumber = Integer.parseInt(conf.get(BatchConstants.MAPPER_SAMPLE_NUMBER));
+    }
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public void map(KEY key, VALUE value, Context context) throws IOException,
-			InterruptedException {
-		KEY keyCopy = (KEY) ReflectionUtils.newInstance(key.getClass(), conf);
-		ReflectionUtils.copy(conf, key, keyCopy);
-		allKeys.add(keyCopy);
-	}
+    @SuppressWarnings("unchecked")
+    @Override
+    public void map(KEY key, VALUE value, Context context) throws IOException, InterruptedException {
+        KEY keyCopy = (KEY) ReflectionUtils.newInstance(key.getClass(), conf);
+        ReflectionUtils.copy(conf, key, keyCopy);
+        allKeys.add(keyCopy);
+    }
 
-	@Override
-	protected void cleanup(Context context) throws IOException,
-			InterruptedException {
-		RandomSampler<KEY> sampler = new RandomSampler<KEY>();
-		List<KEY> sampleResult = sampler.sample(allKeys, sampleNumber);
-		for (KEY k : sampleResult) {
-			context.write(k, NullWritable.get());
-		}
-	}
+    @Override
+    protected void cleanup(Context context) throws IOException, InterruptedException {
+        RandomSampler<KEY> sampler = new RandomSampler<KEY>();
+        List<KEY> sampleResult = sampler.sample(allKeys, sampleNumber);
+        for (KEY k : sampleResult) {
+            context.write(k, NullWritable.get());
+        }
+    }
 
 }

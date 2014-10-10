@@ -16,7 +16,7 @@
 
 package com.kylinolap.cube.measure;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
@@ -37,41 +37,39 @@ import com.kylinolap.metadata.model.cube.MeasureDesc;
  */
 public class MeasureCodecTest {
 
-	@Test
-	public void basicTest() {
-		MeasureDesc descs[] = new MeasureDesc[] { measure("double"),
-				measure("long"), measure("decimal"), measure("HLLC16"),
-				measure("HLLC16") };
-		MeasureCodec codec = new MeasureCodec(descs);
+    @Test
+    public void basicTest() {
+        MeasureDesc descs[] = new MeasureDesc[] { measure("double"), measure("long"), measure("decimal"), measure("HLLC16"), measure("HLLC16") };
+        MeasureCodec codec = new MeasureCodec(descs);
 
-		DoubleWritable d = new DoubleWritable(1.0);
-		LongWritable l = new LongWritable(2);
-		BigDecimal b = new BigDecimal("333.1234567");
-		HyperLogLogPlusCounter hllc = new HyperLogLogPlusCounter(16);
-		hllc.add("1234567");
-		hllc.add("abcdefg");
-		HyperLogLogPlusCounter hllc2 = new HyperLogLogPlusCounter(16);
-		hllc.add("1234567");
-		hllc.add("abcdefg");
-		Object values[] = new Object[] { d, l, b, hllc, hllc2 };
+        DoubleWritable d = new DoubleWritable(1.0);
+        LongWritable l = new LongWritable(2);
+        BigDecimal b = new BigDecimal("333.1234567");
+        HyperLogLogPlusCounter hllc = new HyperLogLogPlusCounter(16);
+        hllc.add("1234567");
+        hllc.add("abcdefg");
+        HyperLogLogPlusCounter hllc2 = new HyperLogLogPlusCounter(16);
+        hllc.add("1234567");
+        hllc.add("abcdefg");
+        Object values[] = new Object[] { d, l, b, hllc, hllc2 };
 
-		ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
+        ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
 
-		codec.encode(values, buf);
-		buf.flip();
-		System.out.println("size: " + buf.limit());
+        codec.encode(values, buf);
+        buf.flip();
+        System.out.println("size: " + buf.limit());
 
-		Object copy[] = new Object[values.length];
-		codec.decode(buf, copy);
+        Object copy[] = new Object[values.length];
+        codec.decode(buf, copy);
 
-		assertTrue(Arrays.equals(values, copy));
-	}
+        assertTrue(Arrays.equals(values, copy));
+    }
 
-	private MeasureDesc measure(String returnType) {
-		MeasureDesc desc = new MeasureDesc();
-		FunctionDesc func = new FunctionDesc();
-		func.setReturnType(returnType);
-		desc.setFunction(func);
-		return desc;
-	}
+    private MeasureDesc measure(String returnType) {
+        MeasureDesc desc = new MeasureDesc();
+        FunctionDesc func = new FunctionDesc();
+        func.setReturnType(returnType);
+        desc.setFunction(func);
+        return desc;
+    }
 }

@@ -38,52 +38,51 @@ import com.kylinolap.metadata.model.cube.HBaseColumnFamilyDesc;
  */
 public class BulkLoadJob extends AbstractHadoopJob {
 
-	@Override
-	public int run(String[] args) throws Exception {
-		Options options = new Options();
+    @Override
+    public int run(String[] args) throws Exception {
+        Options options = new Options();
 
-		try {
-			options.addOption(OPTION_INPUT_PATH);
-			options.addOption(OPTION_HTABLE_NAME);
-			options.addOption(OPTION_CUBE_NAME);
-			parseOptions(options, args);
+        try {
+            options.addOption(OPTION_INPUT_PATH);
+            options.addOption(OPTION_HTABLE_NAME);
+            options.addOption(OPTION_CUBE_NAME);
+            parseOptions(options, args);
 
-			String tableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
-			// e.g
-			// /tmp/kylin-3f150b00-3332-41ca-9d3d-652f67f044d7/test_kylin_cube_with_slr_ready_2_segments/hfile/
-			// end with "/"
-			String input = getOptionValue(OPTION_INPUT_PATH);
+            String tableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
+            // e.g
+            // /tmp/kylin-3f150b00-3332-41ca-9d3d-652f67f044d7/test_kylin_cube_with_slr_ready_2_segments/hfile/
+            // end with "/"
+            String input = getOptionValue(OPTION_INPUT_PATH);
 
-			Configuration conf = HBaseConfiguration.create(getConf());
-			FileSystem fs = FileSystem.get(conf);
+            Configuration conf = HBaseConfiguration.create(getConf());
+            FileSystem fs = FileSystem.get(conf);
 
-			String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
-			KylinConfig config = KylinConfig.getInstanceFromEnv();
-			CubeManager cubeMgr = CubeManager.getInstance(config);
-			CubeInstance cube = cubeMgr.getCube(cubeName);
-			CubeDesc cubeDesc = cube.getDescriptor();
-			FsPermission permission = new FsPermission((short) 0777);
-			for (HBaseColumnFamilyDesc cf : cubeDesc.getHBaseMapping()
-					.getColumnFamily()) {
-				String cfName = cf.getName();
-				fs.setPermission(new Path(input + cfName), permission);
-			}
+            String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
+            KylinConfig config = KylinConfig.getInstanceFromEnv();
+            CubeManager cubeMgr = CubeManager.getInstance(config);
+            CubeInstance cube = cubeMgr.getCube(cubeName);
+            CubeDesc cubeDesc = cube.getDescriptor();
+            FsPermission permission = new FsPermission((short) 0777);
+            for (HBaseColumnFamilyDesc cf : cubeDesc.getHBaseMapping().getColumnFamily()) {
+                String cfName = cf.getName();
+                fs.setPermission(new Path(input + cfName), permission);
+            }
 
-			String[] newArgs = new String[2];
-			newArgs[0] = input;
-			newArgs[1] = tableName;
-			int ret = ToolRunner.run(new LoadIncrementalHFiles(conf), newArgs);
-			return ret;
-		} catch (Exception e) {
-			printUsage(options);
-			e.printStackTrace(System.err);
-			log.error(e.getLocalizedMessage(), e);
-			return 2;
-		}
-	}
+            String[] newArgs = new String[2];
+            newArgs[0] = input;
+            newArgs[1] = tableName;
+            int ret = ToolRunner.run(new LoadIncrementalHFiles(conf), newArgs);
+            return ret;
+        } catch (Exception e) {
+            printUsage(options);
+            e.printStackTrace(System.err);
+            log.error(e.getLocalizedMessage(), e);
+            return 2;
+        }
+    }
 
-	public static void main(String[] args) throws Exception {
-		int exitCode = ToolRunner.run(new BulkLoadJob(), args);
-		System.exit(exitCode);
-	}
+    public static void main(String[] args) throws Exception {
+        int exitCode = ToolRunner.run(new BulkLoadJob(), args);
+        System.exit(exitCode);
+    }
 }

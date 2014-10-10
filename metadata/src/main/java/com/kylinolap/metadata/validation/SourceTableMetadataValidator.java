@@ -25,8 +25,8 @@ import com.kylinolap.metadata.model.schema.TableDesc;
  */
 public class SourceTableMetadataValidator {
 
-	public static boolean validate(TableDesc table) {
-		// table.get
-		return true;
-	}
+    public static boolean validate(TableDesc table) {
+        // table.get
+        return true;
+    }
 }

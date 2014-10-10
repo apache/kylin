@@ -24,18 +24,18 @@ import com.kylinolap.job.constant.JobStepStatusEnum;
  */
 public interface ICommandOutput {
 
-	public void setStatus(JobStepStatusEnum status);
+    public void setStatus(JobStepStatusEnum status);
 
-	public JobStepStatusEnum getStatus();
+    public JobStepStatusEnum getStatus();
 
-	public void appendOutput(String message);
+    public void appendOutput(String message);
 
-	public String getOutput();
+    public String getOutput();
 
-	public void setExitCode(int exitCode);
+    public void setExitCode(int exitCode);
 
-	public int getExitCode();
+    public int getExitCode();
 
-	public void reset();
+    public void reset();
 
 }

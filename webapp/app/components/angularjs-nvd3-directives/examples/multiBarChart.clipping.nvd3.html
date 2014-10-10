@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+<head>
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script src="js/nv.d3.js"></script>
+    <link rel="stylesheet" href="stylesheets/nv.d3.css" />
+</head>
+
+<body>
+
+<div id="test"><svg height="400"></svg></div>
+
+<script>
+
+    function renderChart(chart, data, container) {
+        d3.select(container)
+                .datum(data)
+                .transition().duration(1000).call(chart);
+
+        nv.utils.windowResize(
+                function() {
+                    chart.update();
+                }
+        );
+    }
+
+    function createMultiBarChartByDate(data, container) {
+
+        var chart = nv.models.multiBarChart()
+                .x(function(d,i) { return d[0] })
+                .y(function(d) { return d[1] });
+
+        chart.showLegend(false);
+        chart.showControls(false);
+        chart.forceY([]);
+
+        chart.xAxis
+                .showMaxMin(true)
+                .tickFormat(function(d) {
+                    return d3.time.format('%x')(new Date(d))
+                })
+
+        renderChart(chart, data, container);
+        return chart;
+
+    }
+
+    var dta = [
+        {
+            "key": "Series 1",
+            "values": [ [ 1025409600000 , 0.5] , [ 1028088000000 , 8.5] , [ 1030766400000 , 6] ]
+        }
+    ];
+
+    createMultiBarChartByDate(dta, '#test svg');
+
+
+</script>
+</body>
+
+</html>

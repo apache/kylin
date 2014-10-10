@@ -12,21 +12,21 @@ import com.kylinolap.metadata.MetadataManager;
  */
 public class DataGenTest extends LocalFileMetadataTestCase {
 
-	@Before
-	public void before() throws Exception {
-		this.createTestMetadata();
-		MetadataManager.removeInstance(this.getTestConfig());
-	}
+    @Before
+    public void before() throws Exception {
+        this.createTestMetadata();
+        MetadataManager.removeInstance(this.getTestConfig());
+    }
 
-	@After
-	public void after() throws Exception {
-		this.cleanupTestMetadata();
-	}
+    @After
+    public void after() throws Exception {
+        this.cleanupTestMetadata();
+    }
 
-	@Test
-	public void testBasics() throws Exception {
-		FactTableGenerator.generate("test_kylin_cube_with_slr_ready", "10000",
-				"0.6", null, "left");// default settings
-	}
+    @Test
+    public void testBasics() throws Exception {
+        FactTableGenerator.generate("test_kylin_cube_with_slr_ready", "10000", "0.6", null, "left");// default
+                                                                                                    // settings
+    }
 
 }

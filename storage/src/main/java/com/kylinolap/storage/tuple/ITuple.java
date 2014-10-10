@@ -28,14 +28,14 @@ import com.kylinolap.metadata.model.cube.TblColRef;
  */
 public interface ITuple {
 
-	public List<String> getAllFields();
+    public List<String> getAllFields();
 
-	public List<TblColRef> getAllColumns();
+    public List<TblColRef> getAllColumns();
 
-	public Object[] getAllValues();
+    public Object[] getAllValues();
 
-	public Object getValue(TblColRef col);
+    public Object getValue(TblColRef col);
 
-	public Object getValue(String field);
+    public Object getValue(String field);
 
 }

@@ -32,36 +32,32 @@ import com.kylinolap.job.constant.BatchConstants;
  * @author ysong1
  * 
  */
-public class RandomKeyDistributionReducer<KEY extends Writable> extends
-		Reducer<KEY, NullWritable, KEY, NullWritable> {
+public class RandomKeyDistributionReducer<KEY extends Writable> extends Reducer<KEY, NullWritable, KEY, NullWritable> {
 
-	private Configuration conf;
-	private int regionNumber;
-	private List<KEY> allSplits;
+    private Configuration conf;
+    private int regionNumber;
+    private List<KEY> allSplits;
 
-	@Override
-	protected void setup(Context context) throws IOException {
-		conf = context.getConfiguration();
-		allSplits = new ArrayList<KEY>();
-		regionNumber = Integer.parseInt(context.getConfiguration().get(
-				BatchConstants.REGION_NUMBER));
-	}
+    @Override
+    protected void setup(Context context) throws IOException {
+        conf = context.getConfiguration();
+        allSplits = new ArrayList<KEY>();
+        regionNumber = Integer.parseInt(context.getConfiguration().get(BatchConstants.REGION_NUMBER));
+    }
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public void reduce(KEY key, Iterable<NullWritable> values, Context context)
-			throws IOException, InterruptedException {
-		KEY keyCopy = (KEY) ReflectionUtils.newInstance(key.getClass(), conf);
-		ReflectionUtils.copy(conf, key, keyCopy);
-		allSplits.add(keyCopy);
-	}
+    @SuppressWarnings("unchecked")
+    @Override
+    public void reduce(KEY key, Iterable<NullWritable> values, Context context) throws IOException, InterruptedException {
+        KEY keyCopy = (KEY) ReflectionUtils.newInstance(key.getClass(), conf);
+        ReflectionUtils.copy(conf, key, keyCopy);
+        allSplits.add(keyCopy);
+    }
 
-	@Override
-	protected void cleanup(Context context) throws IOException,
-			InterruptedException {
-		int stepLength = allSplits.size() / regionNumber;
-		for (int i = stepLength; i < allSplits.size(); i += stepLength) {
-			context.write(allSplits.get(i), NullWritable.get());
-		}
-	}
+    @Override
+    protected void cleanup(Context context) throws IOException, InterruptedException {
+        int stepLength = allSplits.size() / regionNumber;
+        for (int i = stepLength; i < allSplits.size(); i += stepLength) {
+            context.write(allSplits.get(i), NullWritable.get());
+        }
+    }
 }

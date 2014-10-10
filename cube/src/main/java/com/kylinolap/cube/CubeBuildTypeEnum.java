@@ -21,12 +21,12 @@ package com.kylinolap.cube;
  * 
  */
 public enum CubeBuildTypeEnum {
-	/**
-	 * rebuild a segment or incremental build
-	 */
-	BUILD,
-	/**
-	 * merge segments
-	 */
-	MERGE;
+    /**
+     * rebuild a segment or incremental build
+     */
+    BUILD,
+    /**
+     * merge segments
+     */
+    MERGE;
 }

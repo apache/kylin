@@ -34,43 +34,40 @@ import com.kylinolap.job.constant.BatchConstants;
 /**
  * @author yangli9
  */
-public class IIDistinctColumnsReducer extends
-		Reducer<ShortWritable, Text, NullWritable, Text> {
+public class IIDistinctColumnsReducer extends Reducer<ShortWritable, Text, NullWritable, Text> {
 
-	private String[] columns;
+    private String[] columns;
 
-	@Override
-	protected void setup(Context context) throws IOException {
-		Configuration conf = context.getConfiguration();
-		this.columns = conf.get(BatchConstants.TABLE_COLUMNS).split(",");
-	}
+    @Override
+    protected void setup(Context context) throws IOException {
+        Configuration conf = context.getConfiguration();
+        this.columns = conf.get(BatchConstants.TABLE_COLUMNS).split(",");
+    }
 
-	@Override
-	public void reduce(ShortWritable key, Iterable<Text> values, Context context)
-			throws IOException, InterruptedException {
-		String columnName = columns[key.get()];
+    @Override
+    public void reduce(ShortWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+        String columnName = columns[key.get()];
 
-		HashSet<ByteArray> set = new HashSet<ByteArray>();
-		for (Text textValue : values) {
-			ByteArray value = new ByteArray(Bytes.copy(textValue.getBytes(), 0,
-					textValue.getLength()));
-			set.add(value);
-		}
+        HashSet<ByteArray> set = new HashSet<ByteArray>();
+        for (Text textValue : values) {
+            ByteArray value = new ByteArray(Bytes.copy(textValue.getBytes(), 0, textValue.getLength()));
+            set.add(value);
+        }
 
-		Configuration conf = context.getConfiguration();
-		FileSystem fs = FileSystem.get(conf);
-		String outputPath = conf.get(BatchConstants.OUTPUT_PATH);
-		FSDataOutputStream out = fs.create(new Path(outputPath, columnName));
+        Configuration conf = context.getConfiguration();
+        FileSystem fs = FileSystem.get(conf);
+        String outputPath = conf.get(BatchConstants.OUTPUT_PATH);
+        FSDataOutputStream out = fs.create(new Path(outputPath, columnName));
 
-		try {
-			for (ByteArray value : set) {
-				out.write(value.data);
-				out.write('\n');
-			}
-		} finally {
-			out.close();
-		}
+        try {
+            for (ByteArray value : set) {
+                out.write(value.data);
+                out.write('\n');
+            }
+        } finally {
+            out.close();
+        }
 
-	}
+    }
 
 }

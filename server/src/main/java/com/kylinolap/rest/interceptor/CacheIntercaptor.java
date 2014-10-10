@@ -31,13 +31,12 @@ import com.kylinolap.common.restclient.Broadcaster;
 @Component("cacheIntercaptor")
 public class CacheIntercaptor {
 
-	@After("execution(public * com.kylinolap.rest.controller.CubeController.*(..)) || execution(public * com.kylinolap.rest.controller.ProjectController.*(..))")
-	public void flush(JoinPoint joinPoint) {
-		String methodName = joinPoint.getSignature().getName();
+    @After("execution(public * com.kylinolap.rest.controller.CubeController.*(..)) || execution(public * com.kylinolap.rest.controller.ProjectController.*(..))")
+    public void flush(JoinPoint joinPoint) {
+        String methodName = joinPoint.getSignature().getName();
 
-		if (methodName
-				.matches("(update|create|save|disable|enable|delete|drop)")) {
-			Broadcaster.flush();
-		}
-	}
+        if (methodName.matches("(update|create|save|disable|enable|delete|drop)")) {
+            Broadcaster.flush();
+        }
+    }
 }

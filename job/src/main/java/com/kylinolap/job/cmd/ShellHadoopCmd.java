@@ -31,34 +31,30 @@ import com.kylinolap.job.exception.JobException;
  * 
  */
 public class ShellHadoopCmd extends ShellCmd {
-	private static Logger log = LoggerFactory.getLogger(ShellHadoopCmd.class);
+    private static Logger log = LoggerFactory.getLogger(ShellHadoopCmd.class);
 
-	private final String jobInstanceID;
-	private final int jobStepID;
-	private final JobEngineConfig engineConfig;
+    private final String jobInstanceID;
+    private final int jobStepID;
+    private final JobEngineConfig engineConfig;
 
-	public ShellHadoopCmd(String executeCmd, String host, String user,
-			String password, boolean async, String instanceID, int stepID,
-			JobEngineConfig engineConfig) {
-		super(executeCmd, new ShellHadoopCmdOutput(instanceID, stepID,
-				engineConfig), host, user, password, async);
-		this.jobInstanceID = instanceID;
-		this.jobStepID = stepID;
-		this.engineConfig = engineConfig;
-	}
+    public ShellHadoopCmd(String executeCmd, String host, String user, String password, boolean async, String instanceID, int stepID, JobEngineConfig engineConfig) {
+        super(executeCmd, new ShellHadoopCmdOutput(instanceID, stepID, engineConfig), host, user, password, async);
+        this.jobInstanceID = instanceID;
+        this.jobStepID = stepID;
+        this.engineConfig = engineConfig;
+    }
 
-	@Override
-	public void cancel() throws JobException {
-		JobDAO jobDAO = JobDAO.getInstance(engineConfig.getConfig());
-		JobInstance jobInstance = null;
-		try {
-			jobInstance = jobDAO.getJob(jobInstanceID);
-			String mrJobId = jobInstance.getSteps().get(jobStepID)
-					.getInfo(JobInstance.MR_JOB_ID);
-			log.debug("kill MR job " + mrJobId);
-			executeCommand("hadoop job -kill " + mrJobId);
-		} catch (IOException e) {
-			throw new JobException(e);
-		}
-	}
+    @Override
+    public void cancel() throws JobException {
+        JobDAO jobDAO = JobDAO.getInstance(engineConfig.getConfig());
+        JobInstance jobInstance = null;
+        try {
+            jobInstance = jobDAO.getJob(jobInstanceID);
+            String mrJobId = jobInstance.getSteps().get(jobStepID).getInfo(JobInstance.MR_JOB_ID);
+            log.debug("kill MR job " + mrJobId);
+            executeCommand("hadoop job -kill " + mrJobId);
+        } catch (IOException e) {
+            throw new JobException(e);
+        }
+    }
 }

@@ -29,36 +29,33 @@ import com.kylinolap.common.util.JsonUtil;
  */
 public class SnapshotTableSerializer implements Serializer<SnapshotTable> {
 
-	public static final SnapshotTableSerializer FULL_SERIALIZER = new SnapshotTableSerializer(
-			false);
-	public static final SnapshotTableSerializer INFO_SERIALIZER = new SnapshotTableSerializer(
-			true);
+    public static final SnapshotTableSerializer FULL_SERIALIZER = new SnapshotTableSerializer(false);
+    public static final SnapshotTableSerializer INFO_SERIALIZER = new SnapshotTableSerializer(true);
 
-	private boolean infoOnly;
+    private boolean infoOnly;
 
-	SnapshotTableSerializer(boolean infoOnly) {
-		this.infoOnly = infoOnly;
-	}
+    SnapshotTableSerializer(boolean infoOnly) {
+        this.infoOnly = infoOnly;
+    }
 
-	@Override
-	public void serialize(SnapshotTable obj, DataOutputStream out)
-			throws IOException {
-		String json = JsonUtil.writeValueAsIndentString(obj);
-		out.writeUTF(json);
+    @Override
+    public void serialize(SnapshotTable obj, DataOutputStream out) throws IOException {
+        String json = JsonUtil.writeValueAsIndentString(obj);
+        out.writeUTF(json);
 
-		if (infoOnly == false)
-			obj.writeData(out);
-	}
+        if (infoOnly == false)
+            obj.writeData(out);
+    }
 
-	@Override
-	public SnapshotTable deserialize(DataInputStream in) throws IOException {
-		String json = in.readUTF();
-		SnapshotTable obj = JsonUtil.readValue(json, SnapshotTable.class);
+    @Override
+    public SnapshotTable deserialize(DataInputStream in) throws IOException {
+        String json = in.readUTF();
+        SnapshotTable obj = JsonUtil.readValue(json, SnapshotTable.class);
 
-		if (infoOnly == false)
-			obj.readData(in);
+        if (infoOnly == false)
+            obj.readData(in);
 
-		return obj;
-	}
+        return obj;
+    }
 
 }

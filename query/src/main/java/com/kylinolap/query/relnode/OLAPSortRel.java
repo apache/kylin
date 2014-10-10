@@ -43,127 +43,117 @@ import com.kylinolap.storage.StorageContext;
  */
 public class OLAPSortRel extends SortRel implements EnumerableRel, OLAPRel {
 
-	private ColumnRowType columnRowType;
-	private OLAPContext context;
+    private ColumnRowType columnRowType;
+    private OLAPContext context;
 
-	public OLAPSortRel(RelOptCluster cluster, RelTraitSet traitSet,
-			RelNode child, RelCollation collation, RexNode offset, RexNode fetch) {
-		super(cluster, traitSet, child, collation, offset, fetch);
-		Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
-		Preconditions.checkArgument(getConvention() == child.getConvention());
-	}
+    public OLAPSortRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, RelCollation collation, RexNode offset, RexNode fetch) {
+        super(cluster, traitSet, child, collation, offset, fetch);
+        Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
+        Preconditions.checkArgument(getConvention() == child.getConvention());
+    }
 
-	@Override
-	public OLAPSortRel copy(RelTraitSet traitSet, RelNode newInput,
-			RelCollation newCollation, RexNode offset, RexNode fetch) {
-		return new OLAPSortRel(getCluster(), traitSet, newInput, newCollation,
-				offset, fetch);
-	}
+    @Override
+    public OLAPSortRel copy(RelTraitSet traitSet, RelNode newInput, RelCollation newCollation, RexNode offset, RexNode fetch) {
+        return new OLAPSortRel(getCluster(), traitSet, newInput, newCollation, offset, fetch);
+    }
 
-	@Override
-	public RelOptCost computeSelfCost(RelOptPlanner planner) {
-		return super.computeSelfCost(planner).multiplyBy(.05);
-	}
+    @Override
+    public RelOptCost computeSelfCost(RelOptPlanner planner) {
+        return super.computeSelfCost(planner).multiplyBy(.05);
+    }
 
-	@Override
-	public void implementOLAP(OLAPImplementor implementor) {
-		implementor.visitChild(getChild(), this);
+    @Override
+    public void implementOLAP(OLAPImplementor implementor) {
+        implementor.visitChild(getChild(), this);
 
-		this.context = implementor.getContext();
-		this.columnRowType = buildColumnRowType();
-	}
+        this.context = implementor.getContext();
+        this.columnRowType = buildColumnRowType();
+    }
 
-	private ColumnRowType buildColumnRowType() {
-		OLAPRel olapChild = (OLAPRel) getChild();
-		ColumnRowType inputColumnRowType = olapChild.getColumnRowType();
-		return inputColumnRowType;
-	}
+    private ColumnRowType buildColumnRowType() {
+        OLAPRel olapChild = (OLAPRel) getChild();
+        ColumnRowType inputColumnRowType = olapChild.getColumnRowType();
+        return inputColumnRowType;
+    }
 
-	@Override
-	public void implementRewrite(RewriteImplementor implementor) {
-		implementor.visitChild(this, getChild());
+    @Override
+    public void implementRewrite(RewriteImplementor implementor) {
+        implementor.visitChild(this, getChild());
 
-		for (RelFieldCollation fieldCollation : this.collation
-				.getFieldCollations()) {
-			int index = fieldCollation.getFieldIndex();
-			StorageContext.OrderEnum order = getOrderEnum(fieldCollation
-					.getDirection());
-			OLAPRel olapChild = (OLAPRel) this.getChild();
-			TblColRef orderCol = olapChild.getColumnRowType().getAllColumns()
-					.get(index);
-			MeasureDesc measure = findMeasure(orderCol);
-			if (measure != null) {
-				this.context.storageContext.addSort(measure, order);
-			}
-			this.context.storageContext.markSort();
-		}
+        for (RelFieldCollation fieldCollation : this.collation.getFieldCollations()) {
+            int index = fieldCollation.getFieldIndex();
+            StorageContext.OrderEnum order = getOrderEnum(fieldCollation.getDirection());
+            OLAPRel olapChild = (OLAPRel) this.getChild();
+            TblColRef orderCol = olapChild.getColumnRowType().getAllColumns().get(index);
+            MeasureDesc measure = findMeasure(orderCol);
+            if (measure != null) {
+                this.context.storageContext.addSort(measure, order);
+            }
+            this.context.storageContext.markSort();
+        }
 
-		this.rowType = this.deriveRowType();
-		this.columnRowType = buildColumnRowType();
-	}
+        this.rowType = this.deriveRowType();
+        this.columnRowType = buildColumnRowType();
+    }
 
-	private StorageContext.OrderEnum getOrderEnum(
-			RelFieldCollation.Direction direction) {
-		if (direction == RelFieldCollation.Direction.DESCENDING) {
-			return StorageContext.OrderEnum.DESCENDING;
-		} else {
-			return StorageContext.OrderEnum.ASCENDING;
-		}
-	}
+    private StorageContext.OrderEnum getOrderEnum(RelFieldCollation.Direction direction) {
+        if (direction == RelFieldCollation.Direction.DESCENDING) {
+            return StorageContext.OrderEnum.DESCENDING;
+        } else {
+            return StorageContext.OrderEnum.ASCENDING;
+        }
+    }
 
-	private MeasureDesc findMeasure(TblColRef col) {
-		for (MeasureDesc measure : this.context.cubeDesc.getMeasures()) {
-			if (col.getName().equals(
-					measure.getFunction().getRewriteFieldName())) {
-				return measure;
-			}
-		}
-		return null;
-	}
+    private MeasureDesc findMeasure(TblColRef col) {
+        for (MeasureDesc measure : this.context.cubeDesc.getMeasures()) {
+            if (col.getName().equals(measure.getFunction().getRewriteFieldName())) {
+                return measure;
+            }
+        }
+        return null;
+    }
 
-	/**
-	 * NOTE: We can't use EnumerableSortRel directly since it will check the
-	 * convention of child. We have to copy the code from
-	 * EnumerableSortRel.implement(). So, We need to check the code during
-	 * upgrade.
-	 */
-	@Override
-	public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
-		OLAPRel childRel = (OLAPRel) getChild();
-		childRel.replaceTraitSet(EnumerableConvention.INSTANCE);
+    /**
+     * NOTE: We can't use EnumerableSortRel directly since it will check the
+     * convention of child. We have to copy the code from
+     * EnumerableSortRel.implement(). So, We need to check the code during
+     * upgrade.
+     */
+    @Override
+    public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
+        OLAPRel childRel = (OLAPRel) getChild();
+        childRel.replaceTraitSet(EnumerableConvention.INSTANCE);
 
-		EnumerableSortRel enumSort = new EnumerableSortRel(getCluster(),
-				getCluster().traitSetOf(EnumerableConvention.INSTANCE,
-						collation), getChild(), collation, offset, fetch);
+        EnumerableSortRel enumSort = new EnumerableSortRel(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE, collation), getChild(), collation, offset, fetch);
 
-		Result res = enumSort.implement(implementor, pref);
+        Result res = enumSort.implement(implementor, pref);
 
-		childRel.replaceTraitSet(OLAPRel.CONVENTION);
+        childRel.replaceTraitSet(OLAPRel.CONVENTION);
 
-		return res;
-	}
+        return res;
+    }
 
-	@Override
-	public OLAPContext getContext() {
-		return context;
-	}
+    @Override
+    public OLAPContext getContext() {
+        return context;
+    }
 
-	@Override
-	public ColumnRowType getColumnRowType() {
-		return columnRowType;
-	}
+    @Override
+    public ColumnRowType getColumnRowType() {
+        return columnRowType;
+    }
 
-	@Override
-	public boolean hasSubQuery() {
-		OLAPRel olapChild = (OLAPRel) getChild();
-		return olapChild.hasSubQuery();
-	}
+    @Override
+    public boolean hasSubQuery() {
+        OLAPRel olapChild = (OLAPRel) getChild();
+        return olapChild.hasSubQuery();
+    }
 
-	@Override
-	public RelTraitSet replaceTraitSet(RelTrait trait) {
-		RelTraitSet oldTraitSet = this.traitSet;
-		this.traitSet = this.traitSet.replace(trait);
-		return oldTraitSet;
-	}
+    @Override
+    public RelTraitSet replaceTraitSet(RelTrait trait) {
+        RelTraitSet oldTraitSet = this.traitSet;
+        this.traitSet = this.traitSet.replace(trait);
+        return oldTraitSet;
+    }
 
 }

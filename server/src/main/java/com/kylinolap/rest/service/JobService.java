@@ -48,151 +48,128 @@ import com.kylinolap.rest.response.MetricsResponse;
 @Component("jobService")
 public class JobService extends BasicService {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(CubeService.class);
+    private static final Logger logger = LoggerFactory.getLogger(CubeService.class);
 
-	@Autowired
-	private AccessService permissionService;
+    @Autowired
+    private AccessService permissionService;
 
-	public List<JobInstance> listAllJobs(final String cubeName,
-			final String projectName, final List<JobStatusEnum> statusList,
-			final Integer limitValue, final Integer offsetValue)
-			throws IOException, JobException {
-		Integer limit = (null == limitValue) ? 30 : limitValue;
-		Integer offset = (null == offsetValue) ? 0 : offsetValue;
-		List<JobInstance> jobs = listAllJobs(cubeName, projectName, statusList);
+    public List<JobInstance> listAllJobs(final String cubeName, final String projectName, final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue) throws IOException, JobException {
+        Integer limit = (null == limitValue) ? 30 : limitValue;
+        Integer offset = (null == offsetValue) ? 0 : offsetValue;
+        List<JobInstance> jobs = listAllJobs(cubeName, projectName, statusList);
 
-		if (jobs.size() <= offset) {
-			return Collections.emptyList();
-		}
+        if (jobs.size() <= offset) {
+            return Collections.emptyList();
+        }
 
-		if ((jobs.size() - offset) < limit) {
-			return jobs.subList(offset, jobs.size());
-		}
+        if ((jobs.size() - offset) < limit) {
+            return jobs.subList(offset, jobs.size());
+        }
 
-		return jobs.subList(offset, offset + limit);
-	}
+        return jobs.subList(offset, offset + limit);
+    }
 
-	public List<JobInstance> listAllJobs(String cubeName, String projectName,
-			List<JobStatusEnum> statusList) throws IOException, JobException {
-		List<JobInstance> jobs = new ArrayList<JobInstance>();
-		jobs.addAll(this.getJobManager().listJobs(cubeName, projectName));
+    public List<JobInstance> listAllJobs(String cubeName, String projectName, List<JobStatusEnum> statusList) throws IOException, JobException {
+        List<JobInstance> jobs = new ArrayList<JobInstance>();
+        jobs.addAll(this.getJobManager().listJobs(cubeName, projectName));
 
-		if (null == jobs || jobs.size() == 0) {
-			return jobs;
-		}
+        if (null == jobs || jobs.size() == 0) {
+            return jobs;
+        }
 
-		List<JobInstance> results = new ArrayList<JobInstance>();
+        List<JobInstance> results = new ArrayList<JobInstance>();
 
-		for (JobInstance job : jobs) {
-			if (null != statusList && statusList.size() > 0) {
-				for (JobStatusEnum status : statusList) {
-					if (job.getStatus() == status) {
-						results.add(job);
-					}
-				}
-			} else {
-				results.add(job);
-			}
-		}
+        for (JobInstance job : jobs) {
+            if (null != statusList && statusList.size() > 0) {
+                for (JobStatusEnum status : statusList) {
+                    if (job.getStatus() == status) {
+                        results.add(job);
+                    }
+                }
+            } else {
+                results.add(job);
+            }
+        }
 
-		return results;
-	}
+        return results;
+    }
 
-	@PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-			+ " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
-	public String submitJob(CubeInstance cube, long startDate, long endDate,
-			CubeBuildTypeEnum buildType) throws IOException, JobException,
-			InvalidJobInstanceException {
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
+    public String submitJob(CubeInstance cube, long startDate, long endDate, CubeBuildTypeEnum buildType) throws IOException, JobException, InvalidJobInstanceException {
 
-		List<JobInstance> jobInstances = this.getJobManager().listJobs(
-				cube.getName(), null);
-		for (JobInstance jobInstance : jobInstances) {
-			if (jobInstance.getStatus() == JobStatusEnum.PENDING
-					|| jobInstance.getStatus() == JobStatusEnum.RUNNING) {
-				throw new JobException("The cube " + cube.getName()
-						+ " has running job, please discard it and try again.");
-			}
-		}
+        List<JobInstance> jobInstances = this.getJobManager().listJobs(cube.getName(), null);
+        for (JobInstance jobInstance : jobInstances) {
+            if (jobInstance.getStatus() == JobStatusEnum.PENDING || jobInstance.getStatus() == JobStatusEnum.RUNNING) {
+                throw new JobException("The cube " + cube.getName() + " has running job, please discard it and try again.");
+            }
+        }
 
-		String uuid = null;
-		try {
-			for (CubeSegment segment : this.getCubeManager().allocateSegments(
-					cube, buildType, startDate, endDate)) {
-				JobInstance job = this.getJobManager().createJob(
-						cube.getName(), segment.getName(), buildType);
-				uuid = this.getJobManager().submitJob(job);
-				permissionService.init(job, null);
-				permissionService.inherit(job, cube);
-			}
-		} catch (CubeIntegrityException e) {
-			throw new InternalErrorException(e.getLocalizedMessage(), e);
-		}
+        String uuid = null;
+        try {
+            for (CubeSegment segment : this.getCubeManager().allocateSegments(cube, buildType, startDate, endDate)) {
+                JobInstance job = this.getJobManager().createJob(cube.getName(), segment.getName(), buildType);
+                uuid = this.getJobManager().submitJob(job);
+                permissionService.init(job, null);
+                permissionService.inherit(job, cube);
+            }
+        } catch (CubeIntegrityException e) {
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
+        }
 
-		return uuid;
-	}
+        return uuid;
+    }
 
-	public JobInstance getJobInstance(String uuid) throws IOException,
-			JobException {
-		return this.getJobManager().getJob(uuid);
-	}
+    public JobInstance getJobInstance(String uuid) throws IOException, JobException {
+        return this.getJobManager().getJob(uuid);
+    }
 
-	@PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-			+ " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
-	public void resumeJob(JobInstance job) throws IOException, JobException {
-		this.getJobManager().resumeJob(job.getUuid());
-	}
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
+    public void resumeJob(JobInstance job) throws IOException, JobException {
+        this.getJobManager().resumeJob(job.getUuid());
+    }
 
-	@PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-			+ " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
-	public void cancelJob(JobInstance job) throws IOException, JobException,
-			CubeIntegrityException {
-		CubeInstance cube = this.getCubeManager().getCube(job.getRelatedCube());
-		List<JobInstance> jobs = this.getJobManager().listJobs(cube.getName(),
-				null);
-		for (JobInstance jobInstance : jobs) {
-			if (jobInstance.getStatus() != JobStatusEnum.DISCARDED
-					&& jobInstance.getStatus() != JobStatusEnum.FINISHED) {
-				this.getJobManager().discardJob(jobInstance.getUuid());
-			}
-		}
-	}
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
+    public void cancelJob(JobInstance job) throws IOException, JobException, CubeIntegrityException {
+        CubeInstance cube = this.getCubeManager().getCube(job.getRelatedCube());
+        List<JobInstance> jobs = this.getJobManager().listJobs(cube.getName(), null);
+        for (JobInstance jobInstance : jobs) {
+            if (jobInstance.getStatus() != JobStatusEnum.DISCARDED && jobInstance.getStatus() != JobStatusEnum.FINISHED) {
+                this.getJobManager().discardJob(jobInstance.getUuid());
+            }
+        }
+    }
 
-	public MetricsResponse calculateMetrics(MetricsRequest request) {
-		List<JobInstance> jobs = new ArrayList<JobInstance>();
+    public MetricsResponse calculateMetrics(MetricsRequest request) {
+        List<JobInstance> jobs = new ArrayList<JobInstance>();
 
-		try {
-			jobs.addAll(getJobManager().listJobs(null, null));
-		} catch (IOException e) {
-			logger.error("", e);
-		} catch (JobException e) {
-			logger.error("", e);
-		}
+        try {
+            jobs.addAll(getJobManager().listJobs(null, null));
+        } catch (IOException e) {
+            logger.error("", e);
+        } catch (JobException e) {
+            logger.error("", e);
+        }
 
-		MetricsResponse metrics = new MetricsResponse();
-		int successCount = 0;
-		long totalTime = 0;
-		Date startTime = (null == request.getStartTime()) ? new Date(-1)
-				: request.getStartTime();
-		Date endTime = (null == request.getEndTime()) ? new Date() : request
-				.getEndTime();
+        MetricsResponse metrics = new MetricsResponse();
+        int successCount = 0;
+        long totalTime = 0;
+        Date startTime = (null == request.getStartTime()) ? new Date(-1) : request.getStartTime();
+        Date endTime = (null == request.getEndTime()) ? new Date() : request.getEndTime();
 
-		for (JobInstance job : jobs) {
-			if (job.getExecStartTime() > startTime.getTime()
-					&& job.getExecStartTime() < endTime.getTime()) {
-				metrics.increase("total");
-				metrics.increase(job.getStatus().name());
+        for (JobInstance job : jobs) {
+            if (job.getExecStartTime() > startTime.getTime() && job.getExecStartTime() < endTime.getTime()) {
+                metrics.increase("total");
+                metrics.increase(job.getStatus().name());
 
-				if (job.getStatus() == JobStatusEnum.FINISHED) {
-					successCount++;
-					totalTime += (job.getExecEndTime() - job.getExecStartTime());
-				}
-			}
-		}
+                if (job.getStatus() == JobStatusEnum.FINISHED) {
+                    successCount++;
+                    totalTime += (job.getExecEndTime() - job.getExecStartTime());
+                }
+            }
+        }
 
-		metrics.increase("aveExecTime", ((successCount == 0) ? 0 : totalTime
-				/ (float) successCount));
+        metrics.increase("aveExecTime", ((successCount == 0) ? 0 : totalTime / (float) successCount));
 
-		return metrics;
-	}
+        return metrics;
+    }
 }

@@ -33,28 +33,28 @@ import com.kylinolap.rest.metrics.QueryMetrics;
 @Component("metricsService")
 public class MetricsService implements InitializingBean {
 
-	@Autowired
-	@Qualifier("metrics")
-	private MetricRegistry metricRegistry;
+    @Autowired
+    @Qualifier("metrics")
+    private MetricRegistry metricRegistry;
 
-	public void registerJobMetrics(final JobManager jobManager) {
-		JobMetrics jobMetrics = JobMetrics.getInstance();
-		jobMetrics.setJobManager(jobManager);
-		metricRegistry.register("JobMetrics", jobMetrics);
-	}
+    public void registerJobMetrics(final JobManager jobManager) {
+        JobMetrics jobMetrics = JobMetrics.getInstance();
+        jobMetrics.setJobManager(jobManager);
+        metricRegistry.register("JobMetrics", jobMetrics);
+    }
 
-	public void registerQueryMetrics() {
-		metricRegistry.register("QueryMetrics", QueryMetrics.getInstance());
-	}
+    public void registerQueryMetrics() {
+        metricRegistry.register("QueryMetrics", QueryMetrics.getInstance());
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-	 */
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		registerQueryMetrics();
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+     */
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        registerQueryMetrics();
+    }
 }

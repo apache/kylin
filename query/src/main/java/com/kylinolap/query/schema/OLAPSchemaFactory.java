@@ -39,97 +39,89 @@ import com.kylinolap.metadata.model.schema.TableDesc;
  */
 public class OLAPSchemaFactory implements SchemaFactory {
 
-	static {
-		/*
-		 * Tricks Optiq to work with Unicode.
-		 * 
-		 * Sets default char set for string literals in SQL and row types of
-		 * RelNode. This is more a label used to compare row type equality. For
-		 * both SQL string and row record, they are passed to Optiq in String
-		 * object and does not require additional codec.
-		 * 
-		 * Ref SaffronProperties.defaultCharset
-		 * SqlUtil.translateCharacterSetName() NlsString constructor()
-		 */
-		System.setProperty("saffron.default.charset",
-				ConversionUtil.NATIVE_UTF16_CHARSET_NAME);
-		System.setProperty("saffron.default.nationalcharset",
-				ConversionUtil.NATIVE_UTF16_CHARSET_NAME);
-		System.setProperty("saffron.default.collation.name",
-				ConversionUtil.NATIVE_UTF16_CHARSET_NAME + "$en_US");
-	}
+    static {
+        /*
+         * Tricks Optiq to work with Unicode.
+         * 
+         * Sets default char set for string literals in SQL and row types of
+         * RelNode. This is more a label used to compare row type equality. For
+         * both SQL string and row record, they are passed to Optiq in String
+         * object and does not require additional codec.
+         * 
+         * Ref SaffronProperties.defaultCharset
+         * SqlUtil.translateCharacterSetName() NlsString constructor()
+         */
+        System.setProperty("saffron.default.charset", ConversionUtil.NATIVE_UTF16_CHARSET_NAME);
+        System.setProperty("saffron.default.nationalcharset", ConversionUtil.NATIVE_UTF16_CHARSET_NAME);
+        System.setProperty("saffron.default.collation.name", ConversionUtil.NATIVE_UTF16_CHARSET_NAME + "$en_US");
+    }
 
-	private final static String SCHEMA_PROJECT = "project";
+    private final static String SCHEMA_PROJECT = "project";
 
-	@Override
-	public Schema create(SchemaPlus parentSchema, String schemaName,
-			Map<String, Object> operand) {
-		String project = (String) operand.get(SCHEMA_PROJECT);
-		Schema newSchema = new OLAPSchema(project, schemaName);
-		return newSchema;
-	}
+    @Override
+    public Schema create(SchemaPlus parentSchema, String schemaName, Map<String, Object> operand) {
+        String project = (String) operand.get(SCHEMA_PROJECT);
+        Schema newSchema = new OLAPSchema(project, schemaName);
+        return newSchema;
+    }
 
-	public static File createTempOLAPJson(String project, KylinConfig config) {
-		project = ProjectInstance.getNormalizedProjectName(project);
+    public static File createTempOLAPJson(String project, KylinConfig config) {
+        project = ProjectInstance.getNormalizedProjectName(project);
 
-		List<TableDesc> tables = ProjectManager.getInstance(config)
-				.listExposedTables(project);
-		// "database" in TableDesc correspond to our schema
-		HashMap<String, Integer> schemaCounts = DatabaseDesc
-				.extractDatabaseOccurenceCounts(tables);
+        List<TableDesc> tables = ProjectManager.getInstance(config).listExposedTables(project);
+        // "database" in TableDesc correspond to our schema
+        HashMap<String, Integer> schemaCounts = DatabaseDesc.extractDatabaseOccurenceCounts(tables);
 
-		String majoritySchemaName = "";
-		int majoritySchemaCount = 0;
-		for (Map.Entry<String, Integer> e : schemaCounts.entrySet()) {
-			if (e.getValue() >= majoritySchemaCount) {
-				majoritySchemaCount = e.getValue();
-				majoritySchemaName = e.getKey();
-			}
-		}
+        String majoritySchemaName = "";
+        int majoritySchemaCount = 0;
+        for (Map.Entry<String, Integer> e : schemaCounts.entrySet()) {
+            if (e.getValue() >= majoritySchemaCount) {
+                majoritySchemaCount = e.getValue();
+                majoritySchemaName = e.getKey();
+            }
+        }
 
-		try {
-			File tmp = File.createTempFile("olap_model_", ".json");
+        try {
+            File tmp = File.createTempFile("olap_model_", ".json");
 
-			FileWriter out = new FileWriter(tmp);
-			out.write("{\n");
-			out.write("    \"version\": \"1.0\",\n");
-			out.write("    \"defaultSchema\": \"" + majoritySchemaName
-					+ "\",\n");
-			out.write("    \"schemas\": [\n");
+            FileWriter out = new FileWriter(tmp);
+            out.write("{\n");
+            out.write("    \"version\": \"1.0\",\n");
+            out.write("    \"defaultSchema\": \"" + majoritySchemaName + "\",\n");
+            out.write("    \"schemas\": [\n");
 
-			int counter = 0;
-			for (String schemaName : schemaCounts.keySet()) {
-				out.write("        {\n");
-				out.write("            \"type\": \"custom\",\n");
-				out.write("            \"name\": \"" + schemaName + "\",\n");
-				out.write("            \"factory\": \"com.kylinolap.query.schema.OLAPSchemaFactory\",\n");
-				out.write("            \"operand\": {\n");
-				out.write("                \"" + SCHEMA_PROJECT + "\": \""
-						+ project + "\"\n");
-				out.write("            },\n");
-				out.write("           \"functions\": [\n");
-				out.write("                 {\n");
-				out.write("                     \"name\": \"QUARTER\",\n");
-				out.write("                     \"className\": \"com.kylinolap.query.sqlfunc.QuarterFunc\"\n");
-				out.write("                 }\n");
-				out.write("            ]\n");
-				out.write("        }\n");
+            int counter = 0;
+            for (String schemaName : schemaCounts.keySet()) {
+                out.write("        {\n");
+                out.write("            \"type\": \"custom\",\n");
+                out.write("            \"name\": \"" + schemaName + "\",\n");
+                out.write("            \"factory\": \"com.kylinolap.query.schema.OLAPSchemaFactory\",\n");
+                out.write("            \"operand\": {\n");
+                out.write("                \"" + SCHEMA_PROJECT + "\": \"" + project + "\"\n");
+                out.write("            },\n");
+                out.write("           \"functions\": [\n");
+                out.write("                 {\n");
+                out.write("                     \"name\": \"QUARTER\",\n");
+                out.write("                     \"className\": \"com.kylinolap.query.sqlfunc.QuarterFunc\"\n");
+                out.write("                 }\n");
+                out.write("            ]\n");
+                out.write("        }\n");
 
-				if (++counter != schemaCounts.size()) {
-					out.write(",\n");
-				}
-			}
+                if (++counter != schemaCounts.size()) {
+                    out.write(",\n");
+                }
+            }
 
-			out.write("    ]\n");
-			out.write("}\n");
-			out.close();
+            out.write("    ]\n");
+            out.write("}\n");
+            out.close();
 
-			tmp.deleteOnExit();
-			return tmp;
+            tmp.deleteOnExit();
+            return tmp;
 
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }

@@ -26,68 +26,68 @@ import com.kylinolap.cube.CubeInstance;
  */
 public class ProjectTable {
 
-	private final String name;
+    private final String name;
 
-	private Multiset<String> columns = HashMultiset.create();
+    private Multiset<String> columns = HashMultiset.create();
 
-	private Multiset<CubeInstance> cubes = HashMultiset.create();
+    private Multiset<CubeInstance> cubes = HashMultiset.create();
 
-	/**
-	 * @param name
-	 */
-	public ProjectTable(String name) {
-		super();
-		this.name = name.toUpperCase();
-	}
+    /**
+     * @param name
+     */
+    public ProjectTable(String name) {
+        super();
+        this.name = name.toUpperCase();
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public Multiset<String> getColumns() {
-		return columns;
-	}
+    public Multiset<String> getColumns() {
+        return columns;
+    }
 
-	public void setColumns(Multiset<String> columns) {
-		this.columns = columns;
-	}
+    public void setColumns(Multiset<String> columns) {
+        this.columns = columns;
+    }
 
-	public Multiset<CubeInstance> getCubes() {
-		return cubes;
-	}
+    public Multiset<CubeInstance> getCubes() {
+        return cubes;
+    }
 
-	public void setCubes(Multiset<CubeInstance> cubes) {
-		this.cubes = cubes;
-	}
+    public void setCubes(Multiset<CubeInstance> cubes) {
+        this.cubes = cubes;
+    }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		return result;
-	}
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        return result;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		ProjectTable other = (ProjectTable) obj;
-		if (name == null) {
-			if (other.name != null)
-				return false;
-		} else if (!name.equals(other.name))
-			return false;
-		return true;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ProjectTable other = (ProjectTable) obj;
+        if (name == null) {
+            if (other.name != null)
+                return false;
+        } else if (!name.equals(other.name))
+            return false;
+        return true;
+    }
 
-	@Override
-	public String toString() {
-		return "ProjectTable [name=" + name + ", columns=" + columns + "]";
-	}
+    @Override
+    public String toString() {
+        return "ProjectTable [name=" + name + ", columns=" + columns + "]";
+    }
 
 }

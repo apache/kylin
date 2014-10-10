@@ -37,55 +37,50 @@ import com.kylinolap.cube.kv.RowConstants;
  * @author Jack
  * 
  */
-public class ColumnCardinalityReducer extends
-		Reducer<IntWritable, BytesWritable, IntWritable, LongWritable> {
+public class ColumnCardinalityReducer extends Reducer<IntWritable, BytesWritable, IntWritable, LongWritable> {
 
-	public static final int ONE = 1;
-	private Map<Integer, HyperLogLogPlusCounter> hllcMap = new HashMap<Integer, HyperLogLogPlusCounter>();
+    public static final int ONE = 1;
+    private Map<Integer, HyperLogLogPlusCounter> hllcMap = new HashMap<Integer, HyperLogLogPlusCounter>();
 
-	@Override
-	public void reduce(IntWritable key, Iterable<BytesWritable> values,
-			Context context) throws IOException, InterruptedException {
-		for (BytesWritable v : values) {
-			int skey = key.get();
-			ByteBuffer buffer = ByteBuffer.wrap(v.getBytes());
-			HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter();
-			hll.readRegisters(buffer);
-			getHllc(skey).merge(hll);
-			hll.clear();
-		}
-	}
+    @Override
+    public void reduce(IntWritable key, Iterable<BytesWritable> values, Context context) throws IOException, InterruptedException {
+        for (BytesWritable v : values) {
+            int skey = key.get();
+            ByteBuffer buffer = ByteBuffer.wrap(v.getBytes());
+            HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter();
+            hll.readRegisters(buffer);
+            getHllc(skey).merge(hll);
+            hll.clear();
+        }
+    }
 
-	private HyperLogLogPlusCounter getHllc(Integer key) {
-		if (!hllcMap.containsKey(key)) {
-			hllcMap.put(key, new HyperLogLogPlusCounter());
-		}
-		return hllcMap.get(key);
-	}
+    private HyperLogLogPlusCounter getHllc(Integer key) {
+        if (!hllcMap.containsKey(key)) {
+            hllcMap.put(key, new HyperLogLogPlusCounter());
+        }
+        return hllcMap.get(key);
+    }
 
-	@Override
-	protected void cleanup(Context context) throws IOException,
-			InterruptedException {
-		List<Integer> keys = new ArrayList<Integer>();
-		Iterator<Integer> it = hllcMap.keySet().iterator();
-		while (it.hasNext()) {
-			keys.add(it.next());
-		}
-		Collections.sort(keys);
-		it = keys.iterator();
-		while (it.hasNext()) {
-			int key = it.next();
-			HyperLogLogPlusCounter hllc = hllcMap.get(key);
-			ByteBuffer buf = ByteBuffer
-					.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-			buf.clear();
-			hllc.writeRegisters(buf);
-			buf.flip();
-			context.write(new IntWritable(key),
-					new LongWritable(hllc.getCountEstimate()));
-			// context.write(new Text("ErrorRate_" + key), new
-			// LongWritable((long)hllc.getErrorRate()));
-		}
+    @Override
+    protected void cleanup(Context context) throws IOException, InterruptedException {
+        List<Integer> keys = new ArrayList<Integer>();
+        Iterator<Integer> it = hllcMap.keySet().iterator();
+        while (it.hasNext()) {
+            keys.add(it.next());
+        }
+        Collections.sort(keys);
+        it = keys.iterator();
+        while (it.hasNext()) {
+            int key = it.next();
+            HyperLogLogPlusCounter hllc = hllcMap.get(key);
+            ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
+            buf.clear();
+            hllc.writeRegisters(buf);
+            buf.flip();
+            context.write(new IntWritable(key), new LongWritable(hllc.getCountEstimate()));
+            // context.write(new Text("ErrorRate_" + key), new
+            // LongWritable((long)hllc.getErrorRate()));
+        }
 
-	}
+    }
 }

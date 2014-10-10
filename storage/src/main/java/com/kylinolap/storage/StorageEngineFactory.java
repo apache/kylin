@@ -26,12 +26,12 @@ import com.kylinolap.storage.hbase.InvertedIndexStorageEngine;
  */
 public class StorageEngineFactory {
 
-	public static IStorageEngine getStorageEngine(CubeInstance cube) {
-		if (cube.isInvertedIndex()) {
-			return new InvertedIndexStorageEngine(cube);
-		} else {
-			return new HBaseStorageEngine(cube);
-		}
-	}
+    public static IStorageEngine getStorageEngine(CubeInstance cube) {
+        if (cube.isInvertedIndex()) {
+            return new InvertedIndexStorageEngine(cube);
+        } else {
+            return new HBaseStorageEngine(cube);
+        }
+    }
 
 }

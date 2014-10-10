@@ -29,48 +29,45 @@ import com.kylinolap.metadata.validation.rule.RowKeyAttrRule;
  * 
  */
 public class CubeMetadataValidator {
-	@SuppressWarnings("unchecked")
-	private IValidatorRule<CubeDesc>[] rules = new IValidatorRule[] {
-			new FunctionRule(), new AggregationGroupSizeRule(),
-			new MandatoryColumnRule(), new RowKeyAttrRule() };
+    @SuppressWarnings("unchecked")
+    private IValidatorRule<CubeDesc>[] rules = new IValidatorRule[] { new FunctionRule(), new AggregationGroupSizeRule(), new MandatoryColumnRule(), new RowKeyAttrRule() };
 
-	public ValidateContext validate(CubeDesc cube) {
-		return validate(cube, false);
-	}
+    public ValidateContext validate(CubeDesc cube) {
+        return validate(cube, false);
+    }
 
-	/**
-	 * @param cubeDesc
-	 * @param inject
-	 *            inject error into cube desc
-	 * @return
-	 */
-	public ValidateContext validate(CubeDesc cube, boolean inject) {
-		ValidateContext context = new ValidateContext();
-		for (int i = 0; i < rules.length; i++) {
-			IValidatorRule<CubeDesc> rule = rules[i];
-			rule.validate(cube, context);
-		}
-		if (inject) {
-			injectResult(cube, context);
-		}
-		return context;
-	}
+    /**
+     * @param cubeDesc
+     * @param inject
+     *            inject error into cube desc
+     * @return
+     */
+    public ValidateContext validate(CubeDesc cube, boolean inject) {
+        ValidateContext context = new ValidateContext();
+        for (int i = 0; i < rules.length; i++) {
+            IValidatorRule<CubeDesc> rule = rules[i];
+            rule.validate(cube, context);
+        }
+        if (inject) {
+            injectResult(cube, context);
+        }
+        return context;
+    }
 
-	/**
-	 * 
-	 * Inject errors info into cubeDesc
-	 * 
-	 * @param cubeDesc
-	 * @param context
-	 */
-	public void injectResult(CubeDesc cubeDesc, ValidateContext context) {
-		Result[] results = context.getResults();
-		for (int i = 0; i < results.length; i++) {
-			Result result = results[i];
-			cubeDesc.addError(result.getLevel() + " : " + result.getMessage(),
-					true);
-		}
+    /**
+     * 
+     * Inject errors info into cubeDesc
+     * 
+     * @param cubeDesc
+     * @param context
+     */
+    public void injectResult(CubeDesc cubeDesc, ValidateContext context) {
+        Result[] results = context.getResults();
+        for (int i = 0; i < results.length; i++) {
+            Result result = results[i];
+            cubeDesc.addError(result.getLevel() + " : " + result.getMessage(), true);
+        }
 
-	}
+    }
 
 }

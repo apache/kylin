@@ -32,47 +32,42 @@ import com.kylinolap.metadata.model.schema.TableDesc;
  */
 public class MetadataManagerTest extends LocalFileMetadataTestCase {
 
-	@Before
-	public void setUp() throws Exception {
-		this.createTestMetadata();
-	}
+    @Before
+    public void setUp() throws Exception {
+        this.createTestMetadata();
+    }
 
-	@After
-	public void after() throws Exception {
-		this.cleanupTestMetadata();
-	}
+    @After
+    public void after() throws Exception {
+        this.cleanupTestMetadata();
+    }
 
-	@Test
-	public void testListAllTables() throws Exception {
-		List<TableDesc> tables = MetadataManager.getInstance(
-				this.getTestConfig()).listAllTables();
-		Assert.assertNotNull(tables);
-		Assert.assertTrue(tables.size() > 0);
-	}
+    @Test
+    public void testListAllTables() throws Exception {
+        List<TableDesc> tables = MetadataManager.getInstance(this.getTestConfig()).listAllTables();
+        Assert.assertNotNull(tables);
+        Assert.assertTrue(tables.size() > 0);
+    }
 
-	@Test
-	public void testFindTableByName() throws Exception {
-		TableDesc table = MetadataManager.getInstance(this.getTestConfig())
-				.getTableDesc("TEST_CAL_DT");
-		Assert.assertNotNull(table);
-		Assert.assertEquals("TEST_CAL_DT", table.getName());
-	}
+    @Test
+    public void testFindTableByName() throws Exception {
+        TableDesc table = MetadataManager.getInstance(this.getTestConfig()).getTableDesc("TEST_CAL_DT");
+        Assert.assertNotNull(table);
+        Assert.assertEquals("TEST_CAL_DT", table.getName());
+    }
 
-	@Test
-	public void testGetInstance() throws Exception {
+    @Test
+    public void testGetInstance() throws Exception {
 
-		Assert.assertNotNull(MetadataManager.getInstance(this.getTestConfig()));
-		Assert.assertNotNull(MetadataManager.getInstance(this.getTestConfig())
-				.listAllTables());
-		Assert.assertTrue(MetadataManager.getInstance(this.getTestConfig())
-				.listAllTables().size() > 0);
-	}
+        Assert.assertNotNull(MetadataManager.getInstance(this.getTestConfig()));
+        Assert.assertNotNull(MetadataManager.getInstance(this.getTestConfig()).listAllTables());
+        Assert.assertTrue(MetadataManager.getInstance(this.getTestConfig()).listAllTables().size() > 0);
+    }
 
-	@Test
-	public void testGetCubeDesc() throws Exception {
-		CubeDesc cubeDesc = MetadataManager.getInstance(this.getTestConfig())
-				.getCubeDesc("test_kylin_cube_with_slr_desc");
-		Assert.assertNotNull(cubeDesc);
-	}
+    @Test
+    public void testGetCubeDesc() throws Exception {
+        CubeDesc cubeDesc = MetadataManager.getInstance(this.getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
+        Assert.assertNotNull(cubeDesc);
+    }
 
 }

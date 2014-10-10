@@ -39,28 +39,27 @@ import com.kylinolap.rest.service.TestBase;
  */
 public class UserControllerTest extends TestBase {
 
-	private UserController userController;
+    private UserController userController;
 
-	@BeforeClass
-	public static void setupResource() {
-		List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
-		User user = new User("ADMIN", "ADMIN", authorities);
-		Authentication authentication = new TestingAuthenticationToken(user,
-				"ADMIN", "ROLE_ADMIN");
-		SecurityContextHolder.getContext().setAuthentication(authentication);
-	}
+    @BeforeClass
+    public static void setupResource() {
+        List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
+        User user = new User("ADMIN", "ADMIN", authorities);
+        Authentication authentication = new TestingAuthenticationToken(user, "ADMIN", "ROLE_ADMIN");
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
 
-	@Before
-	public void setup() {
-		super.setUp();
+    @Before
+    public void setup() {
+        super.setUp();
 
-		userController = new UserController();
-	}
+        userController = new UserController();
+    }
 
-	@Test
-	public void testBasics() throws IOException {
-		UserDetails user = userController.authenticate();
-		Assert.assertNotNull(user);
-		Assert.assertTrue(user.getUsername().equals("ADMIN"));
-	}
+    @Test
+    public void testBasics() throws IOException {
+        UserDetails user = userController.authenticate();
+        Assert.assertNotNull(user);
+        Assert.assertTrue(user.getUsername().equals("ADMIN"));
+    }
 }

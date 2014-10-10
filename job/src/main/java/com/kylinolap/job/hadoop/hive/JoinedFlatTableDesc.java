@@ -32,147 +32,140 @@ import com.kylinolap.metadata.model.cube.TblColRef;
  */
 public class JoinedFlatTableDesc {
 
-	private String tableName;
-	private final CubeDesc cubeDesc;
-	private final CubeSegment cubeSegment;
+    private String tableName;
+    private final CubeDesc cubeDesc;
+    private final CubeSegment cubeSegment;
 
-	private int[] rowKeyColumnIndexes; // the column index on flat table
-	private int[][] measureColumnIndexes; // [i] is the i.th measure related
-											// column index on flat table
+    private int[] rowKeyColumnIndexes; // the column index on flat table
+    private int[][] measureColumnIndexes; // [i] is the i.th measure related
+                                          // column index on flat table
 
-	public JoinedFlatTableDesc(CubeDesc cubeDesc, CubeSegment cubeSegment) {
-		this.cubeDesc = cubeDesc;
-		this.cubeSegment = cubeSegment;
-		parseCubeDesc();
-	}
+    public JoinedFlatTableDesc(CubeDesc cubeDesc, CubeSegment cubeSegment) {
+        this.cubeDesc = cubeDesc;
+        this.cubeSegment = cubeSegment;
+        parseCubeDesc();
+    }
 
-	/**
-	 * @return the cubeSegment
-	 */
-	public CubeSegment getCubeSegment() {
-		return cubeSegment;
-	}
+    /**
+     * @return the cubeSegment
+     */
+    public CubeSegment getCubeSegment() {
+        return cubeSegment;
+    }
 
-	private List<IntermediateColumnDesc> columnList = new ArrayList<IntermediateColumnDesc>();
+    private List<IntermediateColumnDesc> columnList = new ArrayList<IntermediateColumnDesc>();
 
-	public List<IntermediateColumnDesc> getColumnList() {
-		return columnList;
-	}
+    public List<IntermediateColumnDesc> getColumnList() {
+        return columnList;
+    }
 
-	// check what columns from hive tables are required, and index them
-	private void parseCubeDesc() {
-		int rowkeyColCount = cubeDesc.getRowkey().getRowKeyColumns().length;
-		long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-		Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
+    // check what columns from hive tables are required, and index them
+    private void parseCubeDesc() {
+        int rowkeyColCount = cubeDesc.getRowkey().getRowKeyColumns().length;
+        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
+        Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
 
-		if (cubeSegment == null) {
-			this.tableName = "kylin_intermediate_" + cubeDesc.getName();
-		} else {
-			this.tableName = "kylin_intermediate_" + cubeDesc.getName() + "_"
-					+ cubeSegment.getName();
-		}
+        if (cubeSegment == null) {
+            this.tableName = "kylin_intermediate_" + cubeDesc.getName();
+        } else {
+            this.tableName = "kylin_intermediate_" + cubeDesc.getName() + "_" + cubeSegment.getName();
+        }
 
-		Map<String, Integer> dimensionIndexMap = new HashMap<String, Integer>();
-		int columnIndex = 0;
-		for (TblColRef col : cubeDesc.listDimensionColumnsExcludingDerived()) {
-			dimensionIndexMap.put(col.getName(), columnIndex);
-			columnList.add(new IntermediateColumnDesc(String
-					.valueOf(columnIndex), col.getName(), col.getDatatype(),
-					col.getTable()));
-			columnIndex++;
-		}
+        Map<String, Integer> dimensionIndexMap = new HashMap<String, Integer>();
+        int columnIndex = 0;
+        for (TblColRef col : cubeDesc.listDimensionColumnsExcludingDerived()) {
+            dimensionIndexMap.put(col.getName(), columnIndex);
+            columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), col.getName(), col.getDatatype(), col.getTable()));
+            columnIndex++;
+        }
 
-		// build index
-		List<TblColRef> cuboidColumns = baseCuboid.getColumns();
-		rowKeyColumnIndexes = new int[rowkeyColCount];
-		for (int i = 0; i < rowkeyColCount; i++) {
-			String colName = cuboidColumns.get(i).getName();
-			Integer dimIdx = dimensionIndexMap.get(colName);
-			if (dimIdx == null) {
-				throw new RuntimeException("Can't find column " + colName);
-			}
-			rowKeyColumnIndexes[i] = dimIdx;
-		}
+        // build index
+        List<TblColRef> cuboidColumns = baseCuboid.getColumns();
+        rowKeyColumnIndexes = new int[rowkeyColCount];
+        for (int i = 0; i < rowkeyColCount; i++) {
+            String colName = cuboidColumns.get(i).getName();
+            Integer dimIdx = dimensionIndexMap.get(colName);
+            if (dimIdx == null) {
+                throw new RuntimeException("Can't find column " + colName);
+            }
+            rowKeyColumnIndexes[i] = dimIdx;
+        }
 
-		List<MeasureDesc> measures = cubeDesc.getMeasures();
-		int measureSize = measures.size();
-		measureColumnIndexes = new int[measureSize][];
-		for (int i = 0; i < measureSize; i++) {
-			FunctionDesc func = measures.get(i).getFunction();
-			List<TblColRef> colRefs = func.getParameter().getColRefs();
-			if (colRefs == null) {
-				measureColumnIndexes[i] = null;
-			} else {
-				measureColumnIndexes[i] = new int[colRefs.size()];
-				for (int j = 0; j < colRefs.size(); j++) {
-					TblColRef c = colRefs.get(j);
-					measureColumnIndexes[i][j] = contains(columnList, c);
-					if (measureColumnIndexes[i][j] < 0) {
-						measureColumnIndexes[i][j] = columnIndex;
-						columnList.add(new IntermediateColumnDesc(String
-								.valueOf(columnIndex), c.getName(), c
-								.getDatatype(), c.getTable()));
-						columnIndex++;
-					}
-				}
-			}
-		}
-	}
+        List<MeasureDesc> measures = cubeDesc.getMeasures();
+        int measureSize = measures.size();
+        measureColumnIndexes = new int[measureSize][];
+        for (int i = 0; i < measureSize; i++) {
+            FunctionDesc func = measures.get(i).getFunction();
+            List<TblColRef> colRefs = func.getParameter().getColRefs();
+            if (colRefs == null) {
+                measureColumnIndexes[i] = null;
+            } else {
+                measureColumnIndexes[i] = new int[colRefs.size()];
+                for (int j = 0; j < colRefs.size(); j++) {
+                    TblColRef c = colRefs.get(j);
+                    measureColumnIndexes[i][j] = contains(columnList, c);
+                    if (measureColumnIndexes[i][j] < 0) {
+                        measureColumnIndexes[i][j] = columnIndex;
+                        columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), c.getName(), c.getDatatype(), c.getTable()));
+                        columnIndex++;
+                    }
+                }
+            }
+        }
+    }
 
-	private int contains(List<IntermediateColumnDesc> columnList, TblColRef c) {
-		for (int i = 0; i < columnList.size(); i++) {
-			IntermediateColumnDesc col = columnList.get(i);
-			if (col.getColumnName().equals(c.getName())
-					&& col.getTableName().equals(c.getTable()))
-				return i;
-		}
-		return -1;
-	}
+    private int contains(List<IntermediateColumnDesc> columnList, TblColRef c) {
+        for (int i = 0; i < columnList.size(); i++) {
+            IntermediateColumnDesc col = columnList.get(i);
+            if (col.getColumnName().equals(c.getName()) && col.getTableName().equals(c.getTable()))
+                return i;
+        }
+        return -1;
+    }
 
-	public CubeDesc getCubeDesc() {
-		return cubeDesc;
-	}
+    public CubeDesc getCubeDesc() {
+        return cubeDesc;
+    }
 
-	public String getTableName(String jobUUID) {
-		return tableName + "_" + jobUUID.replace("-", "_");
-	}
+    public String getTableName(String jobUUID) {
+        return tableName + "_" + jobUUID.replace("-", "_");
+    }
 
-	public int[] getRowKeyColumnIndexes() {
-		return rowKeyColumnIndexes;
-	}
+    public int[] getRowKeyColumnIndexes() {
+        return rowKeyColumnIndexes;
+    }
 
-	public int[][] getMeasureColumnIndexes() {
-		return measureColumnIndexes;
-	}
+    public int[][] getMeasureColumnIndexes() {
+        return measureColumnIndexes;
+    }
 
-	public static class IntermediateColumnDesc {
-		private String id;
-		private String columnName;
-		private String dataType;
-		private String tableName;
+    public static class IntermediateColumnDesc {
+        private String id;
+        private String columnName;
+        private String dataType;
+        private String tableName;
 
-		public IntermediateColumnDesc(String id, String columnName,
-				String dataType, String tableName) {
-			this.id = id;
-			this.columnName = columnName;
-			this.dataType = dataType;
-			this.tableName = tableName;
-		}
+        public IntermediateColumnDesc(String id, String columnName, String dataType, String tableName) {
+            this.id = id;
+            this.columnName = columnName;
+            this.dataType = dataType;
+            this.tableName = tableName;
+        }
 
-		public String getId() {
-			return id;
-		}
+        public String getId() {
+            return id;
+        }
 
-		public String getColumnName() {
-			return columnName;
-		}
+        public String getColumnName() {
+            return columnName;
+        }
 
-		public String getDataType() {
-			return dataType;
-		}
+        public String getDataType() {
+            return dataType;
+        }
 
-		public String getTableName() {
-			return tableName;
-		}
-	}
+        public String getTableName() {
+            return tableName;
+        }
+    }
 }

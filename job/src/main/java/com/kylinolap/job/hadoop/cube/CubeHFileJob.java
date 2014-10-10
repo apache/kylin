@@ -45,71 +45,67 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 public class CubeHFileJob extends AbstractHadoopJob {
 
-	protected static final Logger log = LoggerFactory
-			.getLogger(CubeHFileJob.class);
+    protected static final Logger log = LoggerFactory.getLogger(CubeHFileJob.class);
 
-	public int run(String[] args) throws Exception {
-		Options options = new Options();
+    public int run(String[] args) throws Exception {
+        Options options = new Options();
 
-		try {
-			options.addOption(OPTION_JOB_NAME);
-			options.addOption(OPTION_CUBE_NAME);
-			options.addOption(OPTION_INPUT_PATH);
-			options.addOption(OPTION_OUTPUT_PATH);
-			options.addOption(OPTION_HTABLE_NAME);
-			parseOptions(options, args);
+        try {
+            options.addOption(OPTION_JOB_NAME);
+            options.addOption(OPTION_CUBE_NAME);
+            options.addOption(OPTION_INPUT_PATH);
+            options.addOption(OPTION_OUTPUT_PATH);
+            options.addOption(OPTION_HTABLE_NAME);
+            parseOptions(options, args);
 
-			Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
-			String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
+            Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
+            String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
 
-			CubeManager cubeMgr = CubeManager.getInstance(KylinConfig
-					.getInstanceFromEnv());
+            CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
 
-			CubeInstance cube = cubeMgr.getCube(cubeName);
-			job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
+            CubeInstance cube = cubeMgr.getCube(cubeName);
+            job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
 
-			File JarFile = new File(KylinConfig.getInstanceFromEnv()
-					.getKylinJobJarPath());
-			if (JarFile.exists()) {
-				job.setJar(KylinConfig.getInstanceFromEnv()
-						.getKylinJobJarPath());
-			} else {
-				job.setJarByClass(this.getClass());
-			}
+            File JarFile = new File(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
+            if (JarFile.exists()) {
+                job.setJar(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
+            } else {
+                job.setJarByClass(this.getClass());
+            }
 
-			addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
-			FileOutputFormat.setOutputPath(job, output);
+            addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
+            FileOutputFormat.setOutputPath(job, output);
 
-			job.setInputFormatClass(SequenceFileInputFormat.class);
-			job.setMapperClass(CubeHFileMapper.class);
-			job.setReducerClass(KeyValueSortReducer.class);
+            job.setInputFormatClass(SequenceFileInputFormat.class);
+            job.setMapperClass(CubeHFileMapper.class);
+            job.setReducerClass(KeyValueSortReducer.class);
 
-			// set job configuration
-			job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
-			Configuration conf = HBaseConfiguration.create(getConf());
-			// add metadata to distributed cache
-			attachKylinPropsAndMetadata(cube, job.getConfiguration());
+            // set job configuration
+            job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
+            Configuration conf = HBaseConfiguration.create(getConf());
+            // add metadata to distributed cache
+            attachKylinPropsAndMetadata(cube, job.getConfiguration());
 
-			String tableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
-			HTable htable = new HTable(conf, tableName);
-			HFileOutputFormat.configureIncrementalLoad(job, htable);
+            String tableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
+            HTable htable = new HTable(conf, tableName);
+            HFileOutputFormat.configureIncrementalLoad(job, htable);
 
-			// set block replication to 3 for hfiles
-			conf.set(DFSConfigKeys.DFS_REPLICATION_KEY, "3");
+            // set block replication to 3 for hfiles
+            conf.set(DFSConfigKeys.DFS_REPLICATION_KEY, "3");
 
-			this.deletePath(job.getConfiguration(), output);
+            this.deletePath(job.getConfiguration(), output);
 
-			return waitForCompletion(job);
-		} catch (Exception e) {
-			printUsage(options);
-			log.error(e.getLocalizedMessage(), e);
-			return 2;
-		}
-	}
+            return waitForCompletion(job);
+        } catch (Exception e) {
+            printUsage(options);
+            log.error(e.getLocalizedMessage(), e);
+            return 2;
+        }
+    }
 
-	public static void main(String[] args) throws Exception {
-		int exitCode = ToolRunner.run(new CubeHFileJob(), args);
-		System.exit(exitCode);
-	}
+    public static void main(String[] args) throws Exception {
+        int exitCode = ToolRunner.run(new CubeHFileJob(), args);
+        System.exit(exitCode);
+    }
 
 }

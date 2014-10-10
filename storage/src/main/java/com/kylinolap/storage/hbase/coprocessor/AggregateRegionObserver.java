@@ -33,77 +33,63 @@ import org.apache.hadoop.hbase.regionserver.RegionScanner;
  */
 public class AggregateRegionObserver extends BaseRegionObserver {
 
-	// HBase uses common logging (vs. Kylin uses slf4j)
-	static final Log LOG = LogFactory.getLog(AggregateRegionObserver.class);
+    // HBase uses common logging (vs. Kylin uses slf4j)
+    static final Log LOG = LogFactory.getLog(AggregateRegionObserver.class);
 
-	static final String COPROCESSOR_ENABLE = "_Coprocessor_Enable";
-	static final String TYPE = "_Type";
-	static final String PROJECTOR = "_Projector";
-	static final String AGGREGATORS = "_Aggregators";
-	static final String FILTER = "_Filter";
+    static final String COPROCESSOR_ENABLE = "_Coprocessor_Enable";
+    static final String TYPE = "_Type";
+    static final String PROJECTOR = "_Projector";
+    static final String AGGREGATORS = "_Aggregators";
+    static final String FILTER = "_Filter";
 
-	@Override
-	public final RegionScanner postScannerOpen(
-			final ObserverContext<RegionCoprocessorEnvironment> ctxt,
-			final Scan scan, final RegionScanner innerScanner)
-			throws IOException {
+    @Override
+    public final RegionScanner postScannerOpen(final ObserverContext<RegionCoprocessorEnvironment> ctxt, final Scan scan, final RegionScanner innerScanner) throws IOException {
 
-		boolean copAbortOnError = ctxt
-				.getEnvironment()
-				.getConfiguration()
-				.getBoolean(RegionCoprocessorHost.ABORT_ON_ERROR_KEY,
-						RegionCoprocessorHost.DEFAULT_ABORT_ON_ERROR);
+        boolean copAbortOnError = ctxt.getEnvironment().getConfiguration().getBoolean(RegionCoprocessorHost.ABORT_ON_ERROR_KEY, RegionCoprocessorHost.DEFAULT_ABORT_ON_ERROR);
 
-		// never throw out exception that could abort region server
-		if (copAbortOnError) {
-			try {
-				return doPostScannerObserver(ctxt, scan, innerScanner);
-			} catch (Throwable e) {
-				LOG.error("Kylin Coprocessor Error", e);
-				return innerScanner;
-			}
-		} else {
-			return doPostScannerObserver(ctxt, scan, innerScanner);
-		}
-	}
+        // never throw out exception that could abort region server
+        if (copAbortOnError) {
+            try {
+                return doPostScannerObserver(ctxt, scan, innerScanner);
+            } catch (Throwable e) {
+                LOG.error("Kylin Coprocessor Error", e);
+                return innerScanner;
+            }
+        } else {
+            return doPostScannerObserver(ctxt, scan, innerScanner);
+        }
+    }
 
-	private RegionScanner doPostScannerObserver(
-			final ObserverContext<RegionCoprocessorEnvironment> ctxt,
-			final Scan scan, final RegionScanner innerScanner)
-			throws IOException {
-		byte[] coprocessorEnableBytes = scan.getAttribute(COPROCESSOR_ENABLE);
-		if (coprocessorEnableBytes == null
-				|| coprocessorEnableBytes.length == 0
-				|| coprocessorEnableBytes[0] == 0) {
-			return innerScanner;
-		}
+    private RegionScanner doPostScannerObserver(final ObserverContext<RegionCoprocessorEnvironment> ctxt, final Scan scan, final RegionScanner innerScanner) throws IOException {
+        byte[] coprocessorEnableBytes = scan.getAttribute(COPROCESSOR_ENABLE);
+        if (coprocessorEnableBytes == null || coprocessorEnableBytes.length == 0 || coprocessorEnableBytes[0] == 0) {
+            return innerScanner;
+        }
 
-		byte[] typeBytes = scan.getAttribute(TYPE);
-		SRowType type = SRowType.deserialize(typeBytes);
+        byte[] typeBytes = scan.getAttribute(TYPE);
+        SRowType type = SRowType.deserialize(typeBytes);
 
-		byte[] projectorBytes = scan.getAttribute(PROJECTOR);
-		SRowProjector projector = SRowProjector.deserialize(projectorBytes);
+        byte[] projectorBytes = scan.getAttribute(PROJECTOR);
+        SRowProjector projector = SRowProjector.deserialize(projectorBytes);
 
-		byte[] aggregatorBytes = scan.getAttribute(AGGREGATORS);
-		SRowAggregators aggregators = SRowAggregators
-				.deserialize(aggregatorBytes);
+        byte[] aggregatorBytes = scan.getAttribute(AGGREGATORS);
+        SRowAggregators aggregators = SRowAggregators.deserialize(aggregatorBytes);
 
-		byte[] filterBytes = scan.getAttribute(FILTER);
-		SRowFilter filter = SRowFilter.deserialize(filterBytes);
+        byte[] filterBytes = scan.getAttribute(FILTER);
+        SRowFilter filter = SRowFilter.deserialize(filterBytes);
 
-		// start/end region operation & sync on scanner is suggested by the
-		// javadoc of RegionScanner.nextRaw()
-		HRegion region = ctxt.getEnvironment().getRegion();
-		region.startRegionOperation();
-		try {
-			synchronized (innerScanner) {
-				return new AggregationScanner(type, filter, projector,
-						aggregators, innerScanner);
-			}
-		} finally {
-			region.closeRegionOperation();
-		}
+        // start/end region operation & sync on scanner is suggested by the
+        // javadoc of RegionScanner.nextRaw()
+        HRegion region = ctxt.getEnvironment().getRegion();
+        region.startRegionOperation();
+        try {
+            synchronized (innerScanner) {
+                return new AggregationScanner(type, filter, projector, aggregators, innerScanner);
+            }
+        } finally {
+            region.closeRegionOperation();
+        }
 
-	}
+    }
 
 }

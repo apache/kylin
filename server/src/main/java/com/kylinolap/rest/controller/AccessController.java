@@ -44,82 +44,74 @@ import com.kylinolap.rest.service.AccessService;
 @RequestMapping(value = "/access")
 public class AccessController extends BasicController {
 
-	@Autowired
-	private AccessService accessService;
+    @Autowired
+    private AccessService accessService;
 
-	/**
-	 * Get access entry list of a domain object
-	 * 
-	 * @param uuid
-	 * @return
-	 * @throws IOException
-	 */
-	@RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.GET })
-	@ResponseBody
-	public List<AccessEntryResponse> getAccessEntities(
-			@PathVariable String type, @PathVariable String uuid) {
-		AclEntity ae = accessService.getAclEntity(type, uuid);
-		Acl acl = accessService.getAcl(ae);
+    /**
+     * Get access entry list of a domain object
+     * 
+     * @param uuid
+     * @return
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.GET })
+    @ResponseBody
+    public List<AccessEntryResponse> getAccessEntities(@PathVariable String type, @PathVariable String uuid) {
+        AclEntity ae = accessService.getAclEntity(type, uuid);
+        Acl acl = accessService.getAcl(ae);
 
-		return accessService.generateAceResponses(acl);
-	}
+        return accessService.generateAceResponses(acl);
+    }
 
-	/**
-	 * Grant a new access on a domain object to a user/role
-	 * 
-	 * @param accessRequest
-	 */
-	@RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.POST })
-	@ResponseBody
-	public List<AccessEntryResponse> grant(@PathVariable String type,
-			@PathVariable String uuid, @RequestBody AccessRequest accessRequest) {
-		AclEntity ae = accessService.getAclEntity(type, uuid);
-		Sid sid = accessService.getSid(accessRequest.getSid(),
-				accessRequest.isPrincipal());
-		Permission permission = AclPermissionFactory
-				.getPermission(accessRequest.getPermission());
-		Acl acl = accessService.grant(ae, permission, sid);
+    /**
+     * Grant a new access on a domain object to a user/role
+     * 
+     * @param accessRequest
+     */
+    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.POST })
+    @ResponseBody
+    public List<AccessEntryResponse> grant(@PathVariable String type, @PathVariable String uuid, @RequestBody AccessRequest accessRequest) {
+        AclEntity ae = accessService.getAclEntity(type, uuid);
+        Sid sid = accessService.getSid(accessRequest.getSid(), accessRequest.isPrincipal());
+        Permission permission = AclPermissionFactory.getPermission(accessRequest.getPermission());
+        Acl acl = accessService.grant(ae, permission, sid);
 
-		return accessService.generateAceResponses(acl);
-	}
+        return accessService.generateAceResponses(acl);
+    }
 
-	/**
-	 * Update a access on a domain object
-	 * 
-	 * @param accessRequest
-	 */
-	@RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.PUT })
-	@ResponseBody
-	public List<AccessEntryResponse> update(@PathVariable String type,
-			@PathVariable String uuid, @RequestBody AccessRequest accessRequest) {
-		AclEntity ae = accessService.getAclEntity(type, uuid);
-		Permission permission = AclPermissionFactory
-				.getPermission(accessRequest.getPermission());
-		Acl acl = accessService.update(ae, accessRequest.getAccessEntryId(),
-				permission);
+    /**
+     * Update a access on a domain object
+     * 
+     * @param accessRequest
+     */
+    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.PUT })
+    @ResponseBody
+    public List<AccessEntryResponse> update(@PathVariable String type, @PathVariable String uuid, @RequestBody AccessRequest accessRequest) {
+        AclEntity ae = accessService.getAclEntity(type, uuid);
+        Permission permission = AclPermissionFactory.getPermission(accessRequest.getPermission());
+        Acl acl = accessService.update(ae, accessRequest.getAccessEntryId(), permission);
 
-		return accessService.generateAceResponses(acl);
-	}
+        return accessService.generateAceResponses(acl);
+    }
 
-	/**
-	 * Revoke access on a domain object from a user/role
-	 * 
-	 * @param AccessRequest
-	 */
-	@RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.DELETE })
-	public List<AccessEntryResponse> revoke(@PathVariable String type,
-			@PathVariable String uuid, AccessRequest accessRequest) {
-		AclEntity ae = accessService.getAclEntity(type, uuid);
-		Acl acl = accessService.revoke(ae, accessRequest.getAccessEntryId());
+    /**
+     * Revoke access on a domain object from a user/role
+     * 
+     * @param AccessRequest
+     */
+    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.DELETE })
+    public List<AccessEntryResponse> revoke(@PathVariable String type, @PathVariable String uuid, AccessRequest accessRequest) {
+        AclEntity ae = accessService.getAclEntity(type, uuid);
+        Acl acl = accessService.revoke(ae, accessRequest.getAccessEntryId());
 
-		return accessService.generateAceResponses(acl);
-	}
+        return accessService.generateAceResponses(acl);
+    }
 
-	/**
-	 * @param accessService
-	 */
-	public void setAccessService(AccessService accessService) {
-		this.accessService = accessService;
-	}
+    /**
+     * @param accessService
+     */
+    public void setAccessService(AccessService accessService) {
+        this.accessService = accessService;
+    }
 
 }

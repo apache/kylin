@@ -16,8 +16,7 @@
 
 package com.kylinolap.storage.hbase;
 
-import static com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc.HBASE_FAMILY_BYTES;
-import static com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc.HBASE_QUALIFIER_BYTES;
+import static com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc.*;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -52,105 +51,100 @@ import com.kylinolap.storage.tuple.TupleInfo;
  */
 public class InvertedIndexStorageEngine implements IStorageEngine {
 
-	private String hbaseUrl;
-	private CubeSegment seg;
+    private String hbaseUrl;
+    private CubeSegment seg;
 
-	public InvertedIndexStorageEngine(CubeInstance cube) {
-		this.seg = cube.getFirstSegment();
-		this.hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
-	}
+    public InvertedIndexStorageEngine(CubeInstance cube) {
+        this.seg = cube.getFirstSegment();
+        this.hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
+    }
 
-	@Override
-	public ITupleIterator search(Collection<TblColRef> dimensions,
-			TupleFilter filter, Collection<TblColRef> groups,
-			Collection<FunctionDesc> metrics, StorageContext context) {
+    @Override
+    public ITupleIterator search(Collection<TblColRef> dimensions, TupleFilter filter, Collection<TblColRef> groups, Collection<FunctionDesc> metrics, StorageContext context) {
 
-		try {
-			return new IISegmentTupleIterator(context);
-		} catch (IOException e) {
-			throw new StorageException(e.getMessage(), e);
-		}
-	}
+        try {
+            return new IISegmentTupleIterator(context);
+        } catch (IOException e) {
+            throw new StorageException(e.getMessage(), e);
+        }
+    }
 
-	private class IISegmentTupleIterator implements ITupleIterator {
-		final StorageContext context;
-		final HBaseKeyValueIterator kvIterator;
-		final IIKeyValueCodec codec;
-		final Iterator<TimeSlice> sliceIterator;
-		Iterator<TableRecord> recordIterator;
-		Tuple next;
+    private class IISegmentTupleIterator implements ITupleIterator {
+        final StorageContext context;
+        final HBaseKeyValueIterator kvIterator;
+        final IIKeyValueCodec codec;
+        final Iterator<TimeSlice> sliceIterator;
+        Iterator<TableRecord> recordIterator;
+        Tuple next;
 
-		TupleInfo tupleInfo;
-		Tuple tuple;
+        TupleInfo tupleInfo;
+        Tuple tuple;
 
-		IISegmentTupleIterator(StorageContext context) throws IOException {
-			this.context = context;
+        IISegmentTupleIterator(StorageContext context) throws IOException {
+            this.context = context;
 
-			HConnection hconn = HBaseConnection.get(hbaseUrl);
-			String tableName = seg.getStorageLocationIdentifier();
-			kvIterator = new HBaseKeyValueIterator(hconn, tableName,
-					HBASE_FAMILY_BYTES, HBASE_QUALIFIER_BYTES);
-			codec = new IIKeyValueCodec(new TableRecordInfo(seg));
-			sliceIterator = codec.decodeKeyValue(kvIterator).iterator();
-		}
+            HConnection hconn = HBaseConnection.get(hbaseUrl);
+            String tableName = seg.getStorageLocationIdentifier();
+            kvIterator = new HBaseKeyValueIterator(hconn, tableName, HBASE_FAMILY_BYTES, HBASE_QUALIFIER_BYTES);
+            codec = new IIKeyValueCodec(new TableRecordInfo(seg));
+            sliceIterator = codec.decodeKeyValue(kvIterator).iterator();
+        }
 
-		private TupleInfo buildTupleInfo(TableRecordInfo recInfo) {
-			TupleInfo info = new TupleInfo();
-			ColumnDesc[] columns = recInfo.getColumns();
-			for (int i = 0; i < columns.length; i++) {
-				TblColRef col = new TblColRef(columns[i]);
-				info.setField(context.getFieldName(col), col,
-						col.getDatatype(), i);
-			}
-			return info;
-		}
+        private TupleInfo buildTupleInfo(TableRecordInfo recInfo) {
+            TupleInfo info = new TupleInfo();
+            ColumnDesc[] columns = recInfo.getColumns();
+            for (int i = 0; i < columns.length; i++) {
+                TblColRef col = new TblColRef(columns[i]);
+                info.setField(context.getFieldName(col), col, col.getDatatype(), i);
+            }
+            return info;
+        }
 
-		private Tuple toTuple(TableRecord rec) {
-			if (tuple == null) {
-				tupleInfo = buildTupleInfo(rec.info());
-				tuple = new Tuple(tupleInfo);
-			}
+        private Tuple toTuple(TableRecord rec) {
+            if (tuple == null) {
+                tupleInfo = buildTupleInfo(rec.info());
+                tuple = new Tuple(tupleInfo);
+            }
 
-			List<String> fieldNames = tupleInfo.getAllFields();
-			for (int i = 0, n = tupleInfo.size(); i < n; i++) {
-				tuple.setDimensionValue(fieldNames.get(i),
-						rec.getValueString(i));
-			}
-			return tuple;
-		}
+            List<String> fieldNames = tupleInfo.getAllFields();
+            for (int i = 0, n = tupleInfo.size(); i < n; i++) {
+                tuple.setDimensionValue(fieldNames.get(i), rec.getValueString(i));
+            }
+            return tuple;
+        }
 
-		@Override
-		public boolean hasNext() {
-			while (next == null) {
-				if (recordIterator != null && recordIterator.hasNext()) {
-					next = toTuple(recordIterator.next());
-					break;
-				}
-				if (sliceIterator.hasNext()) {
-					recordIterator = sliceIterator.next().iterator();
-					continue;
-				}
-				break;
-			}
+        @Override
+        public boolean hasNext() {
+            while (next == null) {
+                if (recordIterator != null && recordIterator.hasNext()) {
+                    next = toTuple(recordIterator.next());
+                    break;
+                }
+                if (sliceIterator.hasNext()) {
+                    recordIterator = sliceIterator.next().iterator();
+                    continue;
+                }
+                break;
+            }
 
-			return next != null;
-		}
+            return next != null;
+        }
 
-		@Override
-		public Tuple next() {
-			if (next == null)
-				throw new NoSuchElementException();
+        @Override
+        public Tuple next() {
+            if (next == null)
+                throw new NoSuchElementException();
 
-			Tuple r = next;
-			next = null;
-			return r;
-		}
+            Tuple r = next;
+            next = null;
+            return r;
+        }
 
-		@Override
-		public void close() {
-			kvIterator.close();
-		}
+        @Override
+        public void close() {
+            kvIterator.close();
+        }
 
-	}
+    }
 
 }

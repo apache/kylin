@@ -48,154 +48,125 @@ import com.kylinolap.metadata.model.cube.TblColRef;
  */
 public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
 
-	private KylinConfig config;
-	private String cubeName;
-	private String segmentName;
-	private CubeManager cubeManager;
-	private CubeInstance cube;
-	private CubeDesc cubeDesc;
-	private CubeSegment mergedCubeSegment;
-	private CubeSegment sourceCubeSegment;// Must be unique during a mapper's
-											// life cycle
+    private KylinConfig config;
+    private String cubeName;
+    private String segmentName;
+    private CubeManager cubeManager;
+    private CubeInstance cube;
+    private CubeDesc cubeDesc;
+    private CubeSegment mergedCubeSegment;
+    private CubeSegment sourceCubeSegment;// Must be unique during a mapper's
+                                          // life cycle
 
-	private Text outputKey = new Text();
+    private Text outputKey = new Text();
 
-	private byte[] newKeyBuf;
-	private RowKeySplitter rowKeySplitter;
+    private byte[] newKeyBuf;
+    private RowKeySplitter rowKeySplitter;
 
-	private HashMap<TblColRef, Boolean> dictsNeedMerging = new HashMap<TblColRef, Boolean>();
+    private HashMap<TblColRef, Boolean> dictsNeedMerging = new HashMap<TblColRef, Boolean>();
 
-	private Boolean checkNeedMerging(TblColRef col) throws IOException {
-		Boolean ret = dictsNeedMerging.get(col);
-		if (ret != null)
-			return ret;
-		else {
-			ret = cubeDesc.getRowkey().isUseDictionary(col)
-					&& cubeDesc.getFactTable().equalsIgnoreCase(
-							(String) DictionaryManager.getInstance(config)
-									.decideSourceData(cubeDesc, col, null)[0]);
-			dictsNeedMerging.put(col, ret);
-			return ret;
-		}
-	}
+    private Boolean checkNeedMerging(TblColRef col) throws IOException {
+        Boolean ret = dictsNeedMerging.get(col);
+        if (ret != null)
+            return ret;
+        else {
+            ret = cubeDesc.getRowkey().isUseDictionary(col) && cubeDesc.getFactTable().equalsIgnoreCase((String) DictionaryManager.getInstance(config).decideSourceData(cubeDesc, col, null)[0]);
+            dictsNeedMerging.put(col, ret);
+            return ret;
+        }
+    }
 
-	private String extractJobIDFromPath(String path) {
-		Pattern pattern = Pattern
-				.compile("kylin-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})");
-		Matcher matcher = pattern.matcher(path);
-		// check the first occurance
-		if (matcher.find()) {
-			return matcher.group(1);
-		} else {
-			throw new IllegalStateException(
-					"Can not extract job ID from file path : " + path);
-		}
-	}
+    private String extractJobIDFromPath(String path) {
+        Pattern pattern = Pattern.compile("kylin-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})");
+        Matcher matcher = pattern.matcher(path);
+        // check the first occurance
+        if (matcher.find()) {
+            return matcher.group(1);
+        } else {
+            throw new IllegalStateException("Can not extract job ID from file path : " + path);
+        }
+    }
 
-	private CubeSegment findSegmentWithJobID(String jobID,
-			CubeInstance cubeInstance) {
-		for (CubeSegment segment : cubeInstance.getSegments()) {
-			if (segment.getLastBuildJobID().equalsIgnoreCase(jobID))
-				return segment;
-		}
+    private CubeSegment findSegmentWithJobID(String jobID, CubeInstance cubeInstance) {
+        for (CubeSegment segment : cubeInstance.getSegments()) {
+            if (segment.getLastBuildJobID().equalsIgnoreCase(jobID))
+                return segment;
+        }
 
-		throw new IllegalStateException(
-				"No merging segment's last build job ID equals " + jobID);
+        throw new IllegalStateException("No merging segment's last build job ID equals " + jobID);
 
-	}
+    }
 
-	@Override
-	protected void setup(Context context) throws IOException,
-			InterruptedException {
-		cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME)
-				.toUpperCase();
-		segmentName = context.getConfiguration()
-				.get(BatchConstants.CFG_CUBE_SEGMENT_NAME).toUpperCase();
+    @Override
+    protected void setup(Context context) throws IOException, InterruptedException {
+        cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
+        segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME).toUpperCase();
 
-		config = AbstractHadoopJob.loadKylinPropsAndMetadata(context
-				.getConfiguration());
+        config = AbstractHadoopJob.loadKylinPropsAndMetadata(context.getConfiguration());
 
-		cubeManager = CubeManager.getInstance(config);
-		cube = cubeManager.getCube(cubeName);
-		cubeDesc = cube.getDescriptor();
-		mergedCubeSegment = cube.getSegment(segmentName,
-				CubeSegmentStatusEnum.NEW);
+        cubeManager = CubeManager.getInstance(config);
+        cube = cubeManager.getCube(cubeName);
+        cubeDesc = cube.getDescriptor();
+        mergedCubeSegment = cube.getSegment(segmentName, CubeSegmentStatusEnum.NEW);
 
-		// int colCount = cubeDesc.getRowkey().getRowKeyColumns().length;
-		newKeyBuf = new byte[256];// size will auto-grow
+        // int colCount = cubeDesc.getRowkey().getRowKeyColumns().length;
+        newKeyBuf = new byte[256];// size will auto-grow
 
-		// decide which source segment
-		org.apache.hadoop.mapreduce.InputSplit inputSplit = context
-				.getInputSplit();
-		String filePath = ((FileSplit) inputSplit).getPath().toString();
-		String jobID = extractJobIDFromPath(filePath);
-		sourceCubeSegment = findSegmentWithJobID(jobID, cube);
+        // decide which source segment
+        org.apache.hadoop.mapreduce.InputSplit inputSplit = context.getInputSplit();
+        String filePath = ((FileSplit) inputSplit).getPath().toString();
+        String jobID = extractJobIDFromPath(filePath);
+        sourceCubeSegment = findSegmentWithJobID(jobID, cube);
 
-		this.rowKeySplitter = new RowKeySplitter(sourceCubeSegment, 65, 255);
-	}
+        this.rowKeySplitter = new RowKeySplitter(sourceCubeSegment, 65, 255);
+    }
 
-	@Override
-	public void map(Text key, Text value, Context context) throws IOException,
-			InterruptedException {
-		long cuboidID = rowKeySplitter.split(key.getBytes(),
-				key.getBytes().length);
-		Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidID);
+    @Override
+    public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
+        long cuboidID = rowKeySplitter.split(key.getBytes(), key.getBytes().length);
+        Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidID);
 
-		SplittedBytes[] splittedByteses = rowKeySplitter.getSplitBuffers();
-		int bufOffset = 0;
-		BytesUtil.writeUnsignedLong(cuboidID, newKeyBuf, bufOffset,
-				RowConstants.ROWKEY_CUBOIDID_LEN);
-		bufOffset += RowConstants.ROWKEY_CUBOIDID_LEN;
+        SplittedBytes[] splittedByteses = rowKeySplitter.getSplitBuffers();
+        int bufOffset = 0;
+        BytesUtil.writeUnsignedLong(cuboidID, newKeyBuf, bufOffset, RowConstants.ROWKEY_CUBOIDID_LEN);
+        bufOffset += RowConstants.ROWKEY_CUBOIDID_LEN;
 
-		for (int i = 0; i < cuboid.getColumns().size(); ++i) {
-			TblColRef col = cuboid.getColumns().get(i);
+        for (int i = 0; i < cuboid.getColumns().size(); ++i) {
+            TblColRef col = cuboid.getColumns().get(i);
 
-			if (this.checkNeedMerging(col)) {
-				// if dictionary on fact table column, needs rewrite
-				DictionaryManager dictMgr = DictionaryManager
-						.getInstance(config);
-				Dictionary<?> sourceDict = dictMgr
-						.getDictionary(sourceCubeSegment.getDictResPath(col));
-				Dictionary<?> mergedDict = dictMgr
-						.getDictionary(mergedCubeSegment.getDictResPath(col));
+            if (this.checkNeedMerging(col)) {
+                // if dictionary on fact table column, needs rewrite
+                DictionaryManager dictMgr = DictionaryManager.getInstance(config);
+                Dictionary<?> sourceDict = dictMgr.getDictionary(sourceCubeSegment.getDictResPath(col));
+                Dictionary<?> mergedDict = dictMgr.getDictionary(mergedCubeSegment.getDictResPath(col));
 
-				while (sourceDict.getSizeOfValue() > newKeyBuf.length
-						- bufOffset
-						|| mergedDict.getSizeOfValue() > newKeyBuf.length
-								- bufOffset) {
-					byte[] oldBuf = newKeyBuf;
-					newKeyBuf = new byte[2 * newKeyBuf.length];
-					System.arraycopy(oldBuf, 0, newKeyBuf, 0, oldBuf.length);
-				}
+                while (sourceDict.getSizeOfValue() > newKeyBuf.length - bufOffset || mergedDict.getSizeOfValue() > newKeyBuf.length - bufOffset) {
+                    byte[] oldBuf = newKeyBuf;
+                    newKeyBuf = new byte[2 * newKeyBuf.length];
+                    System.arraycopy(oldBuf, 0, newKeyBuf, 0, oldBuf.length);
+                }
 
-				int idInSourceDict = BytesUtil.readUnsigned(
-						splittedByteses[i + 1].value, 0,
-						splittedByteses[i + 1].length);
-				int size = sourceDict.getValueBytesFromId(idInSourceDict,
-						newKeyBuf, bufOffset);
-				int idInMergedDict = mergedDict.getIdFromValueBytes(newKeyBuf,
-						bufOffset, size);
-				BytesUtil.writeUnsigned(idInMergedDict, newKeyBuf, bufOffset,
-						mergedDict.getSizeOfId());
+                int idInSourceDict = BytesUtil.readUnsigned(splittedByteses[i + 1].value, 0, splittedByteses[i + 1].length);
+                int size = sourceDict.getValueBytesFromId(idInSourceDict, newKeyBuf, bufOffset);
+                int idInMergedDict = mergedDict.getIdFromValueBytes(newKeyBuf, bufOffset, size);
+                BytesUtil.writeUnsigned(idInMergedDict, newKeyBuf, bufOffset, mergedDict.getSizeOfId());
 
-				bufOffset += mergedDict.getSizeOfId();
-			} else {
-				// keep as it is
-				while (splittedByteses[i + 1].length > newKeyBuf.length
-						- bufOffset) {
-					byte[] oldBuf = newKeyBuf;
-					newKeyBuf = new byte[2 * newKeyBuf.length];
-					System.arraycopy(oldBuf, 0, newKeyBuf, 0, oldBuf.length);
-				}
+                bufOffset += mergedDict.getSizeOfId();
+            } else {
+                // keep as it is
+                while (splittedByteses[i + 1].length > newKeyBuf.length - bufOffset) {
+                    byte[] oldBuf = newKeyBuf;
+                    newKeyBuf = new byte[2 * newKeyBuf.length];
+                    System.arraycopy(oldBuf, 0, newKeyBuf, 0, oldBuf.length);
+                }
 
-				System.arraycopy(splittedByteses[i + 1].value, 0, newKeyBuf,
-						bufOffset, splittedByteses[i + 1].length);
-				bufOffset += splittedByteses[i + 1].length;
-			}
-		}
-		byte[] newKey = Arrays.copyOf(newKeyBuf, bufOffset);
-		outputKey.set(newKey, 0, newKey.length);
+                System.arraycopy(splittedByteses[i + 1].value, 0, newKeyBuf, bufOffset, splittedByteses[i + 1].length);
+                bufOffset += splittedByteses[i + 1].length;
+            }
+        }
+        byte[] newKey = Arrays.copyOf(newKeyBuf, bufOffset);
+        outputKey.set(newKey, 0, newKey.length);
 
-		context.write(outputKey, value);
-	}
+        context.write(outputKey, value);
+    }
 }

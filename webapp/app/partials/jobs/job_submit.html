@@ -1,0 +1,66 @@
+<script type="text/ng-template" id="jobSubmit.html">
+    <div class="modal-header">
+        <h4>CUBE BUILD CONFIRM</h4>
+    </div>
+    <div class="modal-body" style="background-color: white">
+        <div ng-if="cube.detail.cube_partition_desc.partition_date_column" class="row">
+            <div class="col-md-2"></div>
+            <div class="col-md-8">
+                <div class="row">
+                    <table class="table table-striped list"
+                           ng-if="(cube.segments | filter: {status: 'NEW'}).length == 0">
+                        <tbody>
+                        <tr>
+                            <td>PARTITION DATE COLUMN</td>
+                            <td>{{cube.detail.cube_partition_desc.partition_date_column}}</td>
+                        </tr>
+                        <tr>
+                            <td>START DATE</td>
+                            <td>
+                                <div ng-if="cube.segments.length == 0">
+                                    {{jobBuildRequest.startTime =
+                                    (!!cube.detail.cube_partition_desc.partition_date_start)?cube.detail.cube_partition_desc.partition_date_start:0
+                                    | date: 'fullDate'}}
+                                </div>
+                                <div ng-if="cube.segments.length > 0">
+                                    <div ng-if="cube.detail.cube_partition_desc.cube_partition_type=='APPEND'">
+                                        {{ jobBuildRequest.startTime =
+                                        cube.segments[cube.segments.length-1].date_range_end | date: 'fullDate' }}
+                                    </div>
+                                    <div ng-if="cube.detail.cube_partition_desc.cube_partition_type=='UPDATE_INSERT'">
+                                        <!--<datepicker ng-model="jobBuildRequest.startTime" show-weeks="true"-->
+                                                    <!--required class="well well-sm"></datepicker>-->
+                                        <input type="text" datepicker-popup="yyyy-MM-dd" class="input-sm" style="width: 98%"
+                                               ng-model="jobBuildRequest.startTime"
+                                               placeholder="Click to choose START date..." is-open="opened" />
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>END DATE</td>
+                            <td>
+                                <input type="text" datepicker-popup="yyyy-MM-dd" class="input-sm" style="width: 98%"
+                                       ng-model="jobBuildRequest.endTime"
+                                       placeholder="Click to choose END date..." is-open="opened" />
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <div ng-if="(cube.segments|filter: {status: 'NEW'}).length > 0">
+                        <span class="text-warning">There exists a build request of this cube, the job may be running or error. If you need a new build, please wait for its complete or discard it.</span>
+                    </div>
+                </div>
+                <div ng-if="message">
+                    <span class="text-warning">{{message}}</span>
+                </div>
+            </div>
+            <div class="col-md-2"></div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-success" ng-click="updateDate();rebuild()" ng-disabled="jobBuildRequest.endTime<=0">Submit</button>
+        <button class="btn btn-primary" ng-click="cancel()">Close</button>
+    </div>
+</script>

@@ -43,144 +43,136 @@ import com.kylinolap.metadata.model.cube.MeasureDesc;
  * @author George Song (ysong1)
  * 
  */
-public class CubeHFileMapper extends
-		Mapper<Text, Text, ImmutableBytesWritable, KeyValue> {
+public class CubeHFileMapper extends Mapper<Text, Text, ImmutableBytesWritable, KeyValue> {
 
-	ImmutableBytesWritable outputKey = new ImmutableBytesWritable();
+    ImmutableBytesWritable outputKey = new ImmutableBytesWritable();
 
-	String cubeName;
-	CubeDesc cubeDesc;
+    String cubeName;
+    CubeDesc cubeDesc;
 
-	MeasureCodec inputCodec;
-	Object[] inputMeasures;
-	List<KeyValueCreator> keyValueCreators;
+    MeasureCodec inputCodec;
+    Object[] inputMeasures;
+    List<KeyValueCreator> keyValueCreators;
 
-	@Override
-	protected void setup(Context context) throws IOException {
-		cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME);
+    @Override
+    protected void setup(Context context) throws IOException {
+        cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME);
 
-		KylinConfig config = AbstractHadoopJob
-				.loadKylinPropsAndMetadata(context.getConfiguration());
+        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(context.getConfiguration());
 
-		CubeManager cubeMgr = CubeManager.getInstance(config);
-		cubeDesc = cubeMgr.getCube(cubeName).getDescriptor();
+        CubeManager cubeMgr = CubeManager.getInstance(config);
+        cubeDesc = cubeMgr.getCube(cubeName).getDescriptor();
 
-		inputCodec = new MeasureCodec(cubeDesc.getMeasures());
-		inputMeasures = new Object[cubeDesc.getMeasures().size()];
-		keyValueCreators = Lists.newArrayList();
+        inputCodec = new MeasureCodec(cubeDesc.getMeasures());
+        inputMeasures = new Object[cubeDesc.getMeasures().size()];
+        keyValueCreators = Lists.newArrayList();
 
-		for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping()
-				.getColumnFamily()) {
-			for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
-				keyValueCreators.add(new KeyValueCreator(cubeDesc, colDesc));
-			}
-		}
-	}
+        for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping().getColumnFamily()) {
+            for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
+                keyValueCreators.add(new KeyValueCreator(cubeDesc, colDesc));
+            }
+        }
+    }
 
-	@Override
-	public void map(Text key, Text value, Context context) throws IOException,
-			InterruptedException {
-		outputKey.set(key.getBytes(), 0, key.getLength());
-		KeyValue outputValue;
+    @Override
+    public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
+        outputKey.set(key.getBytes(), 0, key.getLength());
+        KeyValue outputValue;
 
-		int n = keyValueCreators.size();
-		if (n == 1 && keyValueCreators.get(0).isFullCopy) { // shortcut for
-															// simple full copy
+        int n = keyValueCreators.size();
+        if (n == 1 && keyValueCreators.get(0).isFullCopy) { // shortcut for
+                                                            // simple full copy
 
-			outputValue = keyValueCreators.get(0).create(key, value.getBytes(),
-					0, value.getLength());
-			context.write(outputKey, outputValue);
+            outputValue = keyValueCreators.get(0).create(key, value.getBytes(), 0, value.getLength());
+            context.write(outputKey, outputValue);
 
-		} else { // normal (complex) case that distributes measures to multiple
-					// HBase columns
+        } else { // normal (complex) case that distributes measures to multiple
+                 // HBase columns
 
-			inputCodec.decode(value, inputMeasures);
+            inputCodec.decode(value, inputMeasures);
 
-			for (int i = 0; i < n; i++) {
-				outputValue = keyValueCreators.get(i)
-						.create(key, inputMeasures);
-				context.write(outputKey, outputValue);
-			}
-		}
-	}
+            for (int i = 0; i < n; i++) {
+                outputValue = keyValueCreators.get(i).create(key, inputMeasures);
+                context.write(outputKey, outputValue);
+            }
+        }
+    }
 
-	class KeyValueCreator {
-		byte[] cfBytes;
-		byte[] qBytes;
-		long timestamp;
+    class KeyValueCreator {
+        byte[] cfBytes;
+        byte[] qBytes;
+        long timestamp;
 
-		int[] refIndex;
-		MeasureDesc[] refMeasures;
+        int[] refIndex;
+        MeasureDesc[] refMeasures;
 
-		MeasureCodec codec;
-		Object[] colValues;
-		ByteBuffer valueBuf = ByteBuffer
-				.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
+        MeasureCodec codec;
+        Object[] colValues;
+        ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
 
-		boolean isFullCopy;
+        boolean isFullCopy;
 
-		public KeyValueCreator(CubeDesc cubeDesc, HBaseColumnDesc colDesc) {
+        public KeyValueCreator(CubeDesc cubeDesc, HBaseColumnDesc colDesc) {
 
-			cfBytes = Bytes.toBytes(colDesc.getColumnFamilyName());
-			qBytes = Bytes.toBytes(colDesc.getQualifier());
-			timestamp = System.currentTimeMillis();
+            cfBytes = Bytes.toBytes(colDesc.getColumnFamilyName());
+            qBytes = Bytes.toBytes(colDesc.getQualifier());
+            timestamp = System.currentTimeMillis();
 
-			List<MeasureDesc> measures = cubeDesc.getMeasures();
-			String[] measureNames = getMeasureNames(cubeDesc);
-			String[] refs = colDesc.getMeasureRefs();
+            List<MeasureDesc> measures = cubeDesc.getMeasures();
+            String[] measureNames = getMeasureNames(cubeDesc);
+            String[] refs = colDesc.getMeasureRefs();
 
-			refIndex = new int[refs.length];
-			refMeasures = new MeasureDesc[refs.length];
-			for (int i = 0; i < refs.length; i++) {
-				refIndex[i] = indexOf(measureNames, refs[i]);
-				refMeasures[i] = measures.get(refIndex[i]);
-			}
+            refIndex = new int[refs.length];
+            refMeasures = new MeasureDesc[refs.length];
+            for (int i = 0; i < refs.length; i++) {
+                refIndex[i] = indexOf(measureNames, refs[i]);
+                refMeasures[i] = measures.get(refIndex[i]);
+            }
 
-			codec = new MeasureCodec(refMeasures);
-			colValues = new Object[refs.length];
+            codec = new MeasureCodec(refMeasures);
+            colValues = new Object[refs.length];
 
-			isFullCopy = true;
-			for (int i = 0; i < measures.size(); i++) {
-				if (refIndex.length <= i || refIndex[i] != i)
-					isFullCopy = false;
-			}
-		}
+            isFullCopy = true;
+            for (int i = 0; i < measures.size(); i++) {
+                if (refIndex.length <= i || refIndex[i] != i)
+                    isFullCopy = false;
+            }
+        }
 
-		public KeyValue create(Text key, Object[] measureValues) {
-			for (int i = 0; i < colValues.length; i++) {
-				colValues[i] = measureValues[refIndex[i]];
-			}
+        public KeyValue create(Text key, Object[] measureValues) {
+            for (int i = 0; i < colValues.length; i++) {
+                colValues[i] = measureValues[refIndex[i]];
+            }
 
-			valueBuf.clear();
-			codec.encode(colValues, valueBuf);
+            valueBuf.clear();
+            codec.encode(colValues, valueBuf);
 
-			return create(key, valueBuf.array(), 0, valueBuf.position());
-		}
+            return create(key, valueBuf.array(), 0, valueBuf.position());
+        }
 
-		public KeyValue create(Text key, byte[] value, int voffset, int vlen) {
-			return new KeyValue(key.getBytes(), 0, key.getLength(), //
-					cfBytes, 0, cfBytes.length, //
-					qBytes, 0, qBytes.length, //
-					timestamp, Type.Put, //
-					value, voffset, vlen);
-		}
+        public KeyValue create(Text key, byte[] value, int voffset, int vlen) {
+            return new KeyValue(key.getBytes(), 0, key.getLength(), //
+                    cfBytes, 0, cfBytes.length, //
+                    qBytes, 0, qBytes.length, //
+                    timestamp, Type.Put, //
+                    value, voffset, vlen);
+        }
 
-		private int indexOf(String[] measureNames, String ref) {
-			for (int i = 0; i < measureNames.length; i++)
-				if (measureNames[i].equalsIgnoreCase(ref))
-					return i;
+        private int indexOf(String[] measureNames, String ref) {
+            for (int i = 0; i < measureNames.length; i++)
+                if (measureNames[i].equalsIgnoreCase(ref))
+                    return i;
 
-			throw new IllegalArgumentException("Measure '" + ref
-					+ "' not found in " + Arrays.toString(measureNames));
-		}
+            throw new IllegalArgumentException("Measure '" + ref + "' not found in " + Arrays.toString(measureNames));
+        }
 
-		private String[] getMeasureNames(CubeDesc cubeDesc) {
-			List<MeasureDesc> measures = cubeDesc.getMeasures();
-			String[] result = new String[measures.size()];
-			for (int i = 0; i < measures.size(); i++)
-				result[i] = measures.get(i).getName();
-			return result;
-		}
+        private String[] getMeasureNames(CubeDesc cubeDesc) {
+            List<MeasureDesc> measures = cubeDesc.getMeasures();
+            String[] result = new String[measures.size()];
+            for (int i = 0; i < measures.size(); i++)
+                result[i] = measures.get(i).getName();
+            return result;
+        }
 
-	}
+    }
 }

@@ -22,15 +22,15 @@ package com.kylinolap.rest.response;
  */
 public class ErrorResponse {
 
-	public String url;
-	public String exception;
+    public String url;
+    public String exception;
 
-	/**
-	 * @param exception
-	 */
-	public ErrorResponse(String url, Exception exception) {
-		this.url = url;
-		this.exception = exception.getLocalizedMessage();
-	}
+    /**
+     * @param exception
+     */
+    public ErrorResponse(String url, Exception exception) {
+        this.url = url;
+        this.exception = exception.getLocalizedMessage();
+    }
 
 }

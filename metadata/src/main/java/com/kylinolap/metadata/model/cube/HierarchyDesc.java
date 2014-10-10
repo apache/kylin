@@ -26,40 +26,40 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class HierarchyDesc {
 
-	@JsonProperty("level")
-	private String level;
-	@JsonProperty("column")
-	private String column;
+    @JsonProperty("level")
+    private String level;
+    @JsonProperty("column")
+    private String column;
 
-	private TblColRef columnRef;
+    private TblColRef columnRef;
 
-	public String getLevel() {
-		return level;
-	}
+    public String getLevel() {
+        return level;
+    }
 
-	public void setLevel(String level) {
-		this.level = level;
-	}
+    public void setLevel(String level) {
+        this.level = level;
+    }
 
-	public TblColRef getColumnRef() {
-		return columnRef;
-	}
+    public TblColRef getColumnRef() {
+        return columnRef;
+    }
 
-	public void setColumnRef(TblColRef column) {
-		this.columnRef = column;
-	}
+    public void setColumnRef(TblColRef column) {
+        this.columnRef = column;
+    }
 
-	public String getColumn() {
-		return column;
-	}
+    public String getColumn() {
+        return column;
+    }
 
-	public void setColumn(String columnName) {
-		this.column = columnName;
-	}
+    public void setColumn(String columnName) {
+        this.column = columnName;
+    }
 
-	@Override
-	public String toString() {
-		return "HierarchyDesc [level=" + level + ", column=" + column + "]";
-	}
+    @Override
+    public String toString() {
+        return "HierarchyDesc [level=" + level + ", column=" + column + "]";
+    }
 
 }

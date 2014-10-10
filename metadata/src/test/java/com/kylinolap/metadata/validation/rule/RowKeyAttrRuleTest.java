@@ -16,7 +16,7 @@
 
 package com.kylinolap.metadata.validation.rule;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -32,30 +32,25 @@ import com.kylinolap.metadata.validation.ValidateContext;
  */
 public class RowKeyAttrRuleTest {
 
-	private CubeDesc cube;
-	private ValidateContext vContext = new ValidateContext();
+    private CubeDesc cube;
+    private ValidateContext vContext = new ValidateContext();
 
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@Before
-	public void setUp() throws Exception {
-		CubeDesc desc2 = JsonUtil.readValue(getClass().getClassLoader()
-				.getResourceAsStream("data/TEST3_desc.json"), CubeDesc.class);
-		this.cube = desc2;
+    /**
+     * @throws java.lang.Exception
+     */
+    @Before
+    public void setUp() throws Exception {
+        CubeDesc desc2 = JsonUtil.readValue(getClass().getClassLoader().getResourceAsStream("data/TEST3_desc.json"), CubeDesc.class);
+        this.cube = desc2;
 
-	}
+    }
 
-	@Test
-	public void testOneMandatoryColumn() {
-		IValidatorRule<CubeDesc> rule = new RowKeyAttrRule();
-		rule.validate(cube, vContext);
-		vContext.print(System.out);
-		assertTrue("Failed to validate rowkey",
-				vContext.getResults().length == 1);
-		assertTrue(
-				"Failed to validate mandatory error",
-				vContext.getResults()[0].getMessage().startsWith(
-						"Rowkey column"));
-	}
+    @Test
+    public void testOneMandatoryColumn() {
+        IValidatorRule<CubeDesc> rule = new RowKeyAttrRule();
+        rule.validate(cube, vContext);
+        vContext.print(System.out);
+        assertTrue("Failed to validate rowkey", vContext.getResults().length == 1);
+        assertTrue("Failed to validate mandatory error", vContext.getResults()[0].getMessage().startsWith("Rowkey column"));
+    }
 }

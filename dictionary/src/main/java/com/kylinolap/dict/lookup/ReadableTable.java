@@ -23,13 +23,13 @@ import java.io.IOException;
  */
 public interface ReadableTable {
 
-	public static final String DELIM_AUTO = "auto";
-	public static final String DELIM_COMMA = ",";
+    public static final String DELIM_AUTO = "auto";
+    public static final String DELIM_COMMA = ",";
 
-	public TableReader getReader() throws IOException;
+    public TableReader getReader() throws IOException;
 
-	public TableSignature getSignature() throws IOException;
+    public TableSignature getSignature() throws IOException;
 
-	public String getColumnDelimeter() throws IOException;
+    public String getColumnDelimeter() throws IOException;
 
 }

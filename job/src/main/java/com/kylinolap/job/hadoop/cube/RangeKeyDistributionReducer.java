@@ -30,68 +30,62 @@ import com.kylinolap.metadata.model.cube.CubeDesc.CubeCapacity;
  * @author ysong1
  * 
  */
-public class RangeKeyDistributionReducer extends
-		Reducer<Text, LongWritable, Text, LongWritable> {
+public class RangeKeyDistributionReducer extends Reducer<Text, LongWritable, Text, LongWritable> {
 
-	public static final long FIVE_GIGA_BYTES = 5L * 1024L * 1024L * 1024L;
-	public static final long TEN_GIGA_BYTES = 10L * 1024L * 1024L * 1024L;
-	public static final long TWENTY_GIGA_BYTES = 20L * 1024L * 1024L * 1024L;
+    public static final long FIVE_GIGA_BYTES = 5L * 1024L * 1024L * 1024L;
+    public static final long TEN_GIGA_BYTES = 10L * 1024L * 1024L * 1024L;
+    public static final long TWENTY_GIGA_BYTES = 20L * 1024L * 1024L * 1024L;
 
-	private LongWritable outputValue = new LongWritable(0);
+    private LongWritable outputValue = new LongWritable(0);
 
-	private long bytesRead = 0;
-	private Text lastKey;
+    private long bytesRead = 0;
+    private Text lastKey;
 
-	private CubeCapacity cubeCapacity;
-	private long cut;
+    private CubeCapacity cubeCapacity;
+    private long cut;
 
-	@Override
-	protected void setup(Context context) throws IOException {
-		cubeCapacity = CubeCapacity.valueOf(context.getConfiguration().get(
-				BatchConstants.CUBE_CAPACITY));
-		switch (cubeCapacity) {
-		case SMALL:
-			cut = FIVE_GIGA_BYTES;
-			break;
-		case MEDIUM:
-			cut = TEN_GIGA_BYTES;
-			break;
-		case LARGE:
-			cut = TWENTY_GIGA_BYTES;
-			break;
-		}
-	}
+    @Override
+    protected void setup(Context context) throws IOException {
+        cubeCapacity = CubeCapacity.valueOf(context.getConfiguration().get(BatchConstants.CUBE_CAPACITY));
+        switch (cubeCapacity) {
+        case SMALL:
+            cut = FIVE_GIGA_BYTES;
+            break;
+        case MEDIUM:
+            cut = TEN_GIGA_BYTES;
+            break;
+        case LARGE:
+            cut = TWENTY_GIGA_BYTES;
+            break;
+        }
+    }
 
-	@Override
-	public void reduce(Text key, Iterable<LongWritable> values, Context context)
-			throws IOException, InterruptedException {
-		lastKey = key;
-		long length = 0;
-		for (LongWritable v : values) {
-			length += v.get();
-		}
+    @Override
+    public void reduce(Text key, Iterable<LongWritable> values, Context context) throws IOException, InterruptedException {
+        lastKey = key;
+        long length = 0;
+        for (LongWritable v : values) {
+            length += v.get();
+        }
 
-		bytesRead += length;
+        bytesRead += length;
 
-		if (bytesRead >= cut) {
-			outputValue.set(bytesRead);
-			context.write(key, outputValue);
-			System.out.println(StringUtils.byteToHexString(key.getBytes())
-					+ "\t" + outputValue.get());
-			// reset bytesRead
-			bytesRead = 0;
-		}
+        if (bytesRead >= cut) {
+            outputValue.set(bytesRead);
+            context.write(key, outputValue);
+            System.out.println(StringUtils.byteToHexString(key.getBytes()) + "\t" + outputValue.get());
+            // reset bytesRead
+            bytesRead = 0;
+        }
 
-	}
+    }
 
-	@Override
-	protected void cleanup(Context context) throws IOException,
-			InterruptedException {
-		if (lastKey != null) {
-			outputValue.set(bytesRead);
-			context.write(lastKey, outputValue);
-			System.out.println(StringUtils.byteToHexString(lastKey.getBytes())
-					+ "\t" + outputValue.get());
-		}
-	}
+    @Override
+    protected void cleanup(Context context) throws IOException, InterruptedException {
+        if (lastKey != null) {
+            outputValue.set(bytesRead);
+            context.write(lastKey, outputValue);
+            System.out.println(StringUtils.byteToHexString(lastKey.getBytes()) + "\t" + outputValue.get());
+        }
+    }
 }

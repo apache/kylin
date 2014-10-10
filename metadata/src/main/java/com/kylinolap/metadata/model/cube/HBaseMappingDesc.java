@@ -31,65 +31,62 @@ import com.kylinolap.common.util.StringUtil;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class HBaseMappingDesc {
 
-	@JsonProperty("column_family")
-	private HBaseColumnFamilyDesc[] columnFamily;
+    @JsonProperty("column_family")
+    private HBaseColumnFamilyDesc[] columnFamily;
 
-	// point to the cube instance which contain this HBaseMappingDesc instance.
-	private CubeDesc cubeRef;
+    // point to the cube instance which contain this HBaseMappingDesc instance.
+    private CubeDesc cubeRef;
 
-	public Collection<HBaseColumnDesc> findHBaseColumnByFunction(
-			FunctionDesc function) {
-		Collection<HBaseColumnDesc> result = new LinkedList<HBaseColumnDesc>();
-		HBaseMappingDesc hbaseMapping = cubeRef.getHBaseMapping();
-		if (hbaseMapping == null || hbaseMapping.getColumnFamily() == null) {
-			return result;
-		}
-		for (HBaseColumnFamilyDesc cf : hbaseMapping.getColumnFamily()) {
-			for (HBaseColumnDesc c : cf.getColumns()) {
-				for (MeasureDesc m : c.getMeasures()) {
-					if (m.getFunction().equals(function)) {
-						result.add(c);
-					}
-				}
-			}
-		}
-		return result;
-	}
+    public Collection<HBaseColumnDesc> findHBaseColumnByFunction(FunctionDesc function) {
+        Collection<HBaseColumnDesc> result = new LinkedList<HBaseColumnDesc>();
+        HBaseMappingDesc hbaseMapping = cubeRef.getHBaseMapping();
+        if (hbaseMapping == null || hbaseMapping.getColumnFamily() == null) {
+            return result;
+        }
+        for (HBaseColumnFamilyDesc cf : hbaseMapping.getColumnFamily()) {
+            for (HBaseColumnDesc c : cf.getColumns()) {
+                for (MeasureDesc m : c.getMeasures()) {
+                    if (m.getFunction().equals(function)) {
+                        result.add(c);
+                    }
+                }
+            }
+        }
+        return result;
+    }
 
-	public CubeDesc getCubeRef() {
-		return cubeRef;
-	}
+    public CubeDesc getCubeRef() {
+        return cubeRef;
+    }
 
-	public void setCubeRef(CubeDesc cubeRef) {
-		this.cubeRef = cubeRef;
-	}
+    public void setCubeRef(CubeDesc cubeRef) {
+        this.cubeRef = cubeRef;
+    }
 
-	public HBaseColumnFamilyDesc[] getColumnFamily() {
-		return columnFamily;
-	}
+    public HBaseColumnFamilyDesc[] getColumnFamily() {
+        return columnFamily;
+    }
 
-	public void setColumnFamily(HBaseColumnFamilyDesc[] columnFamily) {
-		this.columnFamily = columnFamily;
-	}
+    public void setColumnFamily(HBaseColumnFamilyDesc[] columnFamily) {
+        this.columnFamily = columnFamily;
+    }
 
-	public void init(CubeDesc cubeDesc) {
-		cubeRef = cubeDesc;
+    public void init(CubeDesc cubeDesc) {
+        cubeRef = cubeDesc;
 
-		for (HBaseColumnFamilyDesc cf : columnFamily) {
-			cf.setName(cf.getName().toUpperCase());
+        for (HBaseColumnFamilyDesc cf : columnFamily) {
+            cf.setName(cf.getName().toUpperCase());
 
-			for (HBaseColumnDesc c : cf.getColumns()) {
-				c.setQualifier(c.getQualifier().toUpperCase());
-				StringUtil.toUpperCaseArray(c.getMeasureRefs(),
-						c.getMeasureRefs());
-			}
-		}
-	}
+            for (HBaseColumnDesc c : cf.getColumns()) {
+                c.setQualifier(c.getQualifier().toUpperCase());
+                StringUtil.toUpperCaseArray(c.getMeasureRefs(), c.getMeasureRefs());
+            }
+        }
+    }
 
-	@Override
-	public String toString() {
-		return "HBaseMappingDesc [columnFamily="
-				+ Arrays.toString(columnFamily) + "]";
-	}
+    @Override
+    public String toString() {
+        return "HBaseMappingDesc [columnFamily=" + Arrays.toString(columnFamily) + "]";
+    }
 
 }

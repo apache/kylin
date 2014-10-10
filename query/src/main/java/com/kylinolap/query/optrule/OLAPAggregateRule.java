@@ -32,24 +32,21 @@ import com.kylinolap.query.relnode.OLAPRel;
  */
 public class OLAPAggregateRule extends ConverterRule {
 
-	public static final ConverterRule INSTANCE = new OLAPAggregateRule();
+    public static final ConverterRule INSTANCE = new OLAPAggregateRule();
 
-	public OLAPAggregateRule() {
-		super(AggregateRel.class, Convention.NONE, OLAPRel.CONVENTION,
-				"OLAPAggregateRule");
-	}
+    public OLAPAggregateRule() {
+        super(AggregateRel.class, Convention.NONE, OLAPRel.CONVENTION, "OLAPAggregateRule");
+    }
 
-	@Override
-	public RelNode convert(RelNode rel) {
-		AggregateRel agg = (AggregateRel) rel;
-		RelTraitSet traitSet = agg.getTraitSet().replace(OLAPRel.CONVENTION);
-		try {
-			return new OLAPAggregateRel(agg.getCluster(), traitSet, convert(
-					agg.getChild(), traitSet), agg.getGroupSet(),
-					agg.getAggCallList());
-		} catch (InvalidRelException e) {
-			throw new IllegalStateException("Can't create OLAPAggregateRel!", e);
-		}
-	}
+    @Override
+    public RelNode convert(RelNode rel) {
+        AggregateRel agg = (AggregateRel) rel;
+        RelTraitSet traitSet = agg.getTraitSet().replace(OLAPRel.CONVENTION);
+        try {
+            return new OLAPAggregateRel(agg.getCluster(), traitSet, convert(agg.getChild(), traitSet), agg.getGroupSet(), agg.getAggCallList());
+        } catch (InvalidRelException e) {
+            throw new IllegalStateException("Can't create OLAPAggregateRel!", e);
+        }
+    }
 
 }

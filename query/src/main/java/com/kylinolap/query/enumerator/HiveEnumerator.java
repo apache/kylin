@@ -35,99 +35,96 @@ import com.kylinolap.query.relnode.OLAPContext;
  */
 public class HiveEnumerator implements Enumerator<Object[]> {
 
-	private final OLAPContext olapContext;
-	private final Object[] current;
-	private ResultSet rs;
-	private Connection conn;
+    private final OLAPContext olapContext;
+    private final Object[] current;
+    private ResultSet rs;
+    private Connection conn;
 
-	public HiveEnumerator(OLAPContext olapContext) {
-		this.olapContext = olapContext;
-		this.current = new Object[olapContext.olapRowType.getFieldCount()];
-	}
+    public HiveEnumerator(OLAPContext olapContext) {
+        this.olapContext = olapContext;
+        this.current = new Object[olapContext.olapRowType.getFieldCount()];
+    }
 
-	@Override
-	public Object[] current() {
-		return current;
-	}
+    @Override
+    public Object[] current() {
+        return current;
+    }
 
-	@Override
-	public boolean moveNext() {
-		if (rs == null) {
-			rs = executeQuery();
-		}
-		return populateResult();
-	}
+    @Override
+    public boolean moveNext() {
+        if (rs == null) {
+            rs = executeQuery();
+        }
+        return populateResult();
+    }
 
-	private ResultSet executeQuery() {
-		String url = olapContext.olapSchema.getStarSchemaUrl();
-		String user = olapContext.olapSchema.getStarSchemaUser();
-		String pwd = olapContext.olapSchema.getStarSchemaPassword();
-		String sql = olapContext.sql;
-		Statement stmt = null;
-		try {
-			conn = DriverManager.getConnection(url, user, pwd);
-			stmt = conn.createStatement();
-			return stmt.executeQuery(sql);
-		} catch (SQLException e) {
-			throw new IllegalStateException(
-					url + " can't execute query " + sql, e);
-		} finally {
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException ex) {
-					ex.printStackTrace();
-				}
-			}
-			stmt = null;
-			if (conn != null) {
-				try {
-					conn.close();
-				} catch (SQLException ex) {
-					ex.printStackTrace();
-				}
-				conn = null;
-			}
-		}
-	}
+    private ResultSet executeQuery() {
+        String url = olapContext.olapSchema.getStarSchemaUrl();
+        String user = olapContext.olapSchema.getStarSchemaUser();
+        String pwd = olapContext.olapSchema.getStarSchemaPassword();
+        String sql = olapContext.sql;
+        Statement stmt = null;
+        try {
+            conn = DriverManager.getConnection(url, user, pwd);
+            stmt = conn.createStatement();
+            return stmt.executeQuery(sql);
+        } catch (SQLException e) {
+            throw new IllegalStateException(url + " can't execute query " + sql, e);
+        } finally {
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            stmt = null;
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                conn = null;
+            }
+        }
+    }
 
-	private boolean populateResult() {
-		try {
-			boolean hasNext = rs.next();
-			if (hasNext) {
-				for (RelDataTypeField relField : olapContext.olapRowType
-						.getFieldList()) {
-					Object value = rs.getObject(relField.getName()
-							.toLowerCase());
-					current[relField.getIndex()] = value;
-				}
-			}
-			return hasNext;
-		} catch (SQLException e) {
-			throw new IllegalStateException("Can't populate result!", e);
-		}
-	}
+    private boolean populateResult() {
+        try {
+            boolean hasNext = rs.next();
+            if (hasNext) {
+                for (RelDataTypeField relField : olapContext.olapRowType.getFieldList()) {
+                    Object value = rs.getObject(relField.getName().toLowerCase());
+                    current[relField.getIndex()] = value;
+                }
+            }
+            return hasNext;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Can't populate result!", e);
+        }
+    }
 
-	@Override
-	public void reset() {
-		close();
-		rs = executeQuery();
-	}
+    @Override
+    public void reset() {
+        close();
+        rs = executeQuery();
+    }
 
-	@Override
-	public void close() {
-		try {
-			if (rs != null) {
-				rs.close();
-				rs = null;
-			}
-			if (conn != null) {
-				conn.close();
-				conn = null;
-			}
-		} catch (SQLException e) {
-			throw new IllegalStateException("Can't close ResultSet!", e);
-		}
-	}
+    @Override
+    public void close() {
+        try {
+            if (rs != null) {
+                rs.close();
+                rs = null;
+            }
+            if (conn != null) {
+                conn.close();
+                conn = null;
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Can't close ResultSet!", e);
+        }
+    }
 
 }

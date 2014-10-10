@@ -43,94 +43,87 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
  * @author yangli9
  */
 public class FactDistinctColumnsJob extends AbstractHadoopJob {
-	protected static final Logger log = LoggerFactory
-			.getLogger(FactDistinctColumnsJob.class);
+    protected static final Logger log = LoggerFactory.getLogger(FactDistinctColumnsJob.class);
 
-	@Override
-	public int run(String[] args) throws Exception {
-		Options options = new Options();
+    @Override
+    public int run(String[] args) throws Exception {
+        Options options = new Options();
 
-		try {
-			options.addOption(OPTION_JOB_NAME);
-			options.addOption(OPTION_CUBE_NAME);
-			options.addOption(OPTION_INPUT_PATH);
-			options.addOption(OPTION_INPUT_FORMAT);
-			options.addOption(OPTION_OUTPUT_PATH);
-			parseOptions(options, args);
+        try {
+            options.addOption(OPTION_JOB_NAME);
+            options.addOption(OPTION_CUBE_NAME);
+            options.addOption(OPTION_INPUT_PATH);
+            options.addOption(OPTION_INPUT_FORMAT);
+            options.addOption(OPTION_OUTPUT_PATH);
+            parseOptions(options, args);
 
-			job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
-			String cubeName = getOptionValue(OPTION_CUBE_NAME);
-			Path input = new Path(getOptionValue(OPTION_INPUT_PATH));
-			String inputFormat = getOptionValue(OPTION_INPUT_FORMAT);
-			Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
+            job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
+            String cubeName = getOptionValue(OPTION_CUBE_NAME);
+            Path input = new Path(getOptionValue(OPTION_INPUT_PATH));
+            String inputFormat = getOptionValue(OPTION_INPUT_FORMAT);
+            Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
 
-			// ----------------------------------------------------------------------------
+            // ----------------------------------------------------------------------------
 
-			job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
-			System.out.println("Starting: " + job.getJobName());
+            job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
+            System.out.println("Starting: " + job.getJobName());
 
-			setupMapInput(input, inputFormat);
-			setupReduceOutput(output);
+            setupMapInput(input, inputFormat);
+            setupReduceOutput(output);
 
-			// add metadata to distributed cache
-			CubeManager cubeMgr = CubeManager.getInstance(KylinConfig
-					.getInstanceFromEnv());
-			// CubeSegment seg = cubeMgr.getCube(cubeName).getTheOnlySegment();
-			attachKylinPropsAndMetadata(cubeMgr.getCube(cubeName),
-					job.getConfiguration());
+            // add metadata to distributed cache
+            CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
+            // CubeSegment seg = cubeMgr.getCube(cubeName).getTheOnlySegment();
+            attachKylinPropsAndMetadata(cubeMgr.getCube(cubeName), job.getConfiguration());
 
-			return waitForCompletion(job);
+            return waitForCompletion(job);
 
-		} catch (Exception e) {
-			printUsage(options);
-			log.error(e.getLocalizedMessage(), e);
-			return 2;
-		}
+        } catch (Exception e) {
+            printUsage(options);
+            log.error(e.getLocalizedMessage(), e);
+            return 2;
+        }
 
-	}
+    }
 
-	private void setupMapInput(Path input, String inputFormat)
-			throws IOException {
-		FileInputFormat.setInputPaths(job, input);
+    private void setupMapInput(Path input, String inputFormat) throws IOException {
+        FileInputFormat.setInputPaths(job, input);
 
-		File JarFile = new File(KylinConfig.getInstanceFromEnv()
-				.getKylinJobJarPath());
-		if (JarFile.exists()) {
-			job.setJar(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
-		} else {
-			job.setJarByClass(this.getClass());
-		}
+        File JarFile = new File(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
+        if (JarFile.exists()) {
+            job.setJar(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
+        } else {
+            job.setJarByClass(this.getClass());
+        }
 
-		if ("text".equalsIgnoreCase(inputFormat)
-				|| "textinputformat".equalsIgnoreCase(inputFormat)) {
-			job.setInputFormatClass(TextInputFormat.class);
-		} else {
-			job.setInputFormatClass(SequenceFileInputFormat.class);
-		}
-		job.setMapperClass(FactDistinctColumnsMapper.class);
-		job.setCombinerClass(FactDistinctColumnsCombiner.class);
-		job.setMapOutputKeyClass(ShortWritable.class);
-		job.setMapOutputValueClass(Text.class);
-	}
+        if ("text".equalsIgnoreCase(inputFormat) || "textinputformat".equalsIgnoreCase(inputFormat)) {
+            job.setInputFormatClass(TextInputFormat.class);
+        } else {
+            job.setInputFormatClass(SequenceFileInputFormat.class);
+        }
+        job.setMapperClass(FactDistinctColumnsMapper.class);
+        job.setCombinerClass(FactDistinctColumnsCombiner.class);
+        job.setMapOutputKeyClass(ShortWritable.class);
+        job.setMapOutputValueClass(Text.class);
+    }
 
-	private void setupReduceOutput(Path output) throws IOException {
-		job.setReducerClass(FactDistinctColumnsReducer.class);
-		job.setOutputFormatClass(SequenceFileOutputFormat.class);
-		job.setOutputKeyClass(NullWritable.class);
-		job.setOutputValueClass(Text.class);
+    private void setupReduceOutput(Path output) throws IOException {
+        job.setReducerClass(FactDistinctColumnsReducer.class);
+        job.setOutputFormatClass(SequenceFileOutputFormat.class);
+        job.setOutputKeyClass(NullWritable.class);
+        job.setOutputValueClass(Text.class);
 
-		FileOutputFormat.setOutputPath(job, output);
-		job.getConfiguration().set(BatchConstants.OUTPUT_PATH,
-				output.toString());
+        FileOutputFormat.setOutputPath(job, output);
+        job.getConfiguration().set(BatchConstants.OUTPUT_PATH, output.toString());
 
-		job.setNumReduceTasks(1);
+        job.setNumReduceTasks(1);
 
-		deletePath(job.getConfiguration(), output);
-	}
+        deletePath(job.getConfiguration(), output);
+    }
 
-	public static void main(String[] args) throws Exception {
-		FactDistinctColumnsJob job = new FactDistinctColumnsJob();
-		int exitCode = ToolRunner.run(job, args);
-		System.exit(exitCode);
-	}
+    public static void main(String[] args) throws Exception {
+        FactDistinctColumnsJob job = new FactDistinctColumnsJob();
+        int exitCode = ToolRunner.run(job, args);
+        System.exit(exitCode);
+    }
 }

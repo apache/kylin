@@ -37,68 +37,61 @@ import com.kylinolap.storage.tuple.Tuple;
  */
 public class LookupTableEnumerator implements Enumerator<Object[]> {
 
-	private final Collection<String[]> allRows;
-	private final List<ColumnDesc> colDescs;
-	private final Object[] current;
-	private Iterator<String[]> iterator;
+    private final Collection<String[]> allRows;
+    private final List<ColumnDesc> colDescs;
+    private final Object[] current;
+    private Iterator<String[]> iterator;
 
-	public LookupTableEnumerator(OLAPContext olapContext) {
+    public LookupTableEnumerator(OLAPContext olapContext) {
 
-		String lookupTableName = olapContext.firstTableScan.getCubeTable();
-		DimensionDesc dim = olapContext.cubeDesc
-				.findDimensionByTable(lookupTableName);
-		if (dim == null)
-			throw new IllegalStateException(
-					"No dimension with derived columns found for lookup table "
-							+ lookupTableName + ", cube desc "
-							+ olapContext.cubeDesc);
+        String lookupTableName = olapContext.firstTableScan.getCubeTable();
+        DimensionDesc dim = olapContext.cubeDesc.findDimensionByTable(lookupTableName);
+        if (dim == null)
+            throw new IllegalStateException("No dimension with derived columns found for lookup table " + lookupTableName + ", cube desc " + olapContext.cubeDesc);
 
-		CubeInstance cube = olapContext.cubeInstance;
-		CubeManager cubeMgr = CubeManager.getInstance(cube.getConfig());
-		// CubeSegment seg = cube.getTheOnlySegment();
-		LookupStringTable table = cubeMgr.getLookupTable(
-				cube.getLatestReadySegment(), dim);
-		this.allRows = table.getAllRows();
+        CubeInstance cube = olapContext.cubeInstance;
+        CubeManager cubeMgr = CubeManager.getInstance(cube.getConfig());
+        // CubeSegment seg = cube.getTheOnlySegment();
+        LookupStringTable table = cubeMgr.getLookupTable(cube.getLatestReadySegment(), dim);
+        this.allRows = table.getAllRows();
 
-		OLAPTable olapTable = (OLAPTable) olapContext.firstTableScan
-				.getOlapTable();
-		this.colDescs = olapTable.getExposedColumns();
-		this.current = new Object[colDescs.size()];
+        OLAPTable olapTable = (OLAPTable) olapContext.firstTableScan.getOlapTable();
+        this.colDescs = olapTable.getExposedColumns();
+        this.current = new Object[colDescs.size()];
 
-		reset();
-	}
+        reset();
+    }
 
-	@Override
-	public boolean moveNext() {
-		boolean hasNext = iterator.hasNext();
-		if (hasNext) {
-			String[] row = iterator.next();
-			for (int i = 0, n = colDescs.size(); i < n; i++) {
-				ColumnDesc colDesc = colDescs.get(i);
-				int colIdx = colDesc.getZeroBasedIndex();
-				if (colIdx >= 0) {
-					current[i] = Tuple.convertOptiqCellValue(row[colIdx],
-							colDesc.getDatatype());
-				} else {
-					current[i] = null; // fake column
-				}
-			}
-		}
-		return hasNext;
-	}
+    @Override
+    public boolean moveNext() {
+        boolean hasNext = iterator.hasNext();
+        if (hasNext) {
+            String[] row = iterator.next();
+            for (int i = 0, n = colDescs.size(); i < n; i++) {
+                ColumnDesc colDesc = colDescs.get(i);
+                int colIdx = colDesc.getZeroBasedIndex();
+                if (colIdx >= 0) {
+                    current[i] = Tuple.convertOptiqCellValue(row[colIdx], colDesc.getDatatype());
+                } else {
+                    current[i] = null; // fake column
+                }
+            }
+        }
+        return hasNext;
+    }
 
-	@Override
-	public Object[] current() {
-		return current;
-	}
+    @Override
+    public Object[] current() {
+        return current;
+    }
 
-	@Override
-	public void reset() {
-		this.iterator = allRows.iterator();
-	}
+    @Override
+    public void reset() {
+        this.iterator = allRows.iterator();
+    }
 
-	@Override
-	public void close() {
-	}
+    @Override
+    public void close() {
+    }
 
 }

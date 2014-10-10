@@ -1,16 +1,27 @@
 #!/bin/sh
 
-#Init env
-source ~/.bashrc
+set -o pipefail  # trace ERR through pipes
+set -o errtrace  # trace ERR through 'time command' and other functions
+
+function error() {
+SCRIPT="$0"           # script name
+LASTLINE="$1"         # line of error occurrence
+LASTERR="$2"          # error code
+echo "ERROR exit from ${SCRIPT} : line ${LASTLINE} with exit code ${LASTERR}"
+exit 1
+}
+
+trap 'error ${LINENO} ${?}' ERR
 
 echo ""
 echo "Welcome to use Kylin-Deploy script"
 echo "This script will help you:"
 echo "1. Check environment"
-echo "2. Build a sample cube with Kylin"
-echo "3. Lauch a web service to query with (at http://localhost:8081)"
+echo "2. Build Kylin"
+echo "3. Prepare test cube related data"
+echo "4. Lauch a web service to build cube and query with (at http://localhost:8081)"
 echo "Please make sure you're running this script on a hadoop CLI machine, and you have enough permissions."
-echo "Also, We assume you have installed: JAVA, TOMCAT, NODEJS and MAVEN."
+echo "Also, We assume you have installed: JAVA, TOMCAT, NPM and MAVEN."
 echo "[Warning] The installation may break existing tomcat applications on this CLI"
 echo ""
 
@@ -102,7 +113,7 @@ source /tmp/kylin_retrieve.sh
 cd $KYLIN_HOME
 mvn test -Dtest=com.kylinolap.job.BuildOneCubeTest -DfailIfNoTests=false
 
-sudo -i "${CATALINA_HOME}/bin/shutdown.sh"
+sudo -i "${CATALINA_HOME}/bin/shutdown.sh" || true # avoid trapping
 cd $KYLIN_HOME/server/target
 WAR_NAME="kylin.war"
 rm -f $CATALINA_HOME/webapps/$WAR_NAME
@@ -121,14 +132,9 @@ cd $KYLIN_HOME/
 #deploy setenv.sh
 rm -rf $CATALINA_HOME/bin/setenv.sh
 echo JAVA_OPTS=\"-Djava.library.path=${KYLIN_LD_LIBRARY_PATH}\" >> ${CATALINA_HOME}/bin/setenv.sh
-echo CATALINA_OPTS=\"-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true\" >> ${CATALINA_HOME}/bin/setenv.sh
+echo CATALINA_OPTS=\"-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true -Dspring.profiles.active=sandbox \" >> ${CATALINA_HOME}/bin/setenv.sh
 echo CLASSPATH=\"${CATALINA_HOME}/lib/*:${KYLIN_HBASE_CLASSPATH}:/etc/kylin\" >> ${CATALINA_HOME}/bin/setenv.sh
 echo "setenv.sh created"
-
-#deploy tomcat-users.xml
-rm -rf ${CATALINA_HOME}/conf/tomcat-users.xml
-cp deploy/tomcat-users.xml ${CATALINA_HOME}/conf/tomcat-users.xml
-echo "tomcat-users.xml copied"
 
 #deploy server.xml
 rm -rf ${CATALINA_HOME}/conf/server.xml
@@ -145,4 +151,4 @@ sudo -i "${CATALINA_HOME}/bin/startup.sh"
 
 
 echo "Kylin-Deploy Success!"
-echo "Please visit http://localhost:8081 to play with the cubes!"
+echo "Please visit http://yoursandboxip:8081 to play with the cubes!"

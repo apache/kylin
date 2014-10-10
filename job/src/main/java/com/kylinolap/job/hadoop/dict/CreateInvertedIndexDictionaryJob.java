@@ -30,40 +30,37 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
  */
 public class CreateInvertedIndexDictionaryJob extends AbstractHadoopJob {
 
-	@Override
-	public int run(String[] args) throws Exception {
-		Options options = new Options();
+    @Override
+    public int run(String[] args) throws Exception {
+        Options options = new Options();
 
-		try {
-			options.addOption(OPTION_CUBE_NAME);
-			options.addOption(OPTION_INPUT_PATH);
-			parseOptions(options, args);
+        try {
+            options.addOption(OPTION_CUBE_NAME);
+            options.addOption(OPTION_INPUT_PATH);
+            parseOptions(options, args);
 
-			String cubeName = getOptionValue(OPTION_CUBE_NAME);
-			String factColumnsInputPath = getOptionValue(OPTION_INPUT_PATH);
-			KylinConfig config = KylinConfig.getInstanceFromEnv();
+            String cubeName = getOptionValue(OPTION_CUBE_NAME);
+            String factColumnsInputPath = getOptionValue(OPTION_INPUT_PATH);
+            KylinConfig config = KylinConfig.getInstanceFromEnv();
 
-			CubeManager mgr = CubeManager.getInstance(config);
-			CubeInstance cube = mgr.getCube(cubeName);
-			if (cube == null || cube.isInvertedIndex() == false)
-				throw new IllegalArgumentException(
-						"No Inverted Index Cube found by name " + cubeName);
+            CubeManager mgr = CubeManager.getInstance(config);
+            CubeInstance cube = mgr.getCube(cubeName);
+            if (cube == null || cube.isInvertedIndex() == false)
+                throw new IllegalArgumentException("No Inverted Index Cube found by name " + cubeName);
 
-			mgr.buildInvertedIndexDictionary(cube.getFirstSegment(),
-					factColumnsInputPath);
-			return 0;
-		} catch (Exception e) {
-			printUsage(options);
-			e.printStackTrace(System.err);
-			log.error(e.getLocalizedMessage(), e);
-			return 2;
-		}
-	}
+            mgr.buildInvertedIndexDictionary(cube.getFirstSegment(), factColumnsInputPath);
+            return 0;
+        } catch (Exception e) {
+            printUsage(options);
+            e.printStackTrace(System.err);
+            log.error(e.getLocalizedMessage(), e);
+            return 2;
+        }
+    }
 
-	public static void main(String[] args) throws Exception {
-		int exitCode = ToolRunner.run(new CreateInvertedIndexDictionaryJob(),
-				args);
-		System.exit(exitCode);
-	}
+    public static void main(String[] args) throws Exception {
+        int exitCode = ToolRunner.run(new CreateInvertedIndexDictionaryJob(), args);
+        System.exit(exitCode);
+    }
 
 }

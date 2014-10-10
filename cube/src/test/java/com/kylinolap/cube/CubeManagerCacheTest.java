@@ -16,7 +16,7 @@
 
 package com.kylinolap.cube;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.junit.After;
 import org.junit.Before;
@@ -34,43 +34,42 @@ import com.kylinolap.metadata.model.cube.CubeDesc;
  */
 public class CubeManagerCacheTest extends LocalFileMetadataTestCase {
 
-	private CubeManager cubeManager;
+    private CubeManager cubeManager;
 
-	@Before
-	public void setUp() throws Exception {
-		this.createTestMetadata();
-		MetadataManager.removeInstance(this.getTestConfig());
-		CubeManager.removeInstance(this.getTestConfig());
-		ProjectManager.removeInstance(this.getTestConfig());
-		cubeManager = CubeManager.getInstance(this.getTestConfig());
-	}
+    @Before
+    public void setUp() throws Exception {
+        this.createTestMetadata();
+        MetadataManager.removeInstance(this.getTestConfig());
+        CubeManager.removeInstance(this.getTestConfig());
+        ProjectManager.removeInstance(this.getTestConfig());
+        cubeManager = CubeManager.getInstance(this.getTestConfig());
+    }
 
-	@After
-	public void after() throws Exception {
-		this.cleanupTestMetadata();
-	}
+    @After
+    public void after() throws Exception {
+        this.cleanupTestMetadata();
+    }
 
-	@Test
-	public void testReloadCache() throws Exception {
-		ResourceStore store = getStore();
+    @Test
+    public void testReloadCache() throws Exception {
+        ResourceStore store = getStore();
 
-		// clean legacy in case last run failed
-		store.deleteResource("/cube/a_whole_new_cube.json");
-		MetadataManager metaMgr = getMetadataManager();
-		CubeDesc desc = metaMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
-		cubeManager.createCube("a_whole_new_cube", "default", desc, null);
+        // clean legacy in case last run failed
+        store.deleteResource("/cube/a_whole_new_cube.json");
+        MetadataManager metaMgr = getMetadataManager();
+        CubeDesc desc = metaMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
+        cubeManager.createCube("a_whole_new_cube", "default", desc, null);
 
-		CubeInstance createdCube = cubeManager.getCube("a_whole_new_cube");
-		assertEquals(0, createdCube.getSegments().size());
-		assertEquals(CubeStatusEnum.DISABLED, createdCube.getStatus());
-		createdCube.setStatus(CubeStatusEnum.DESCBROKEN);
+        CubeInstance createdCube = cubeManager.getCube("a_whole_new_cube");
+        assertEquals(0, createdCube.getSegments().size());
+        assertEquals(CubeStatusEnum.DISABLED, createdCube.getStatus());
+        createdCube.setStatus(CubeStatusEnum.DESCBROKEN);
 
-		cubeManager.updateCube(createdCube);
-		assertEquals(CubeStatusEnum.DESCBROKEN,
-				cubeManager.getCube("a_whole_new_cube").getStatus());
-	}
+        cubeManager.updateCube(createdCube);
+        assertEquals(CubeStatusEnum.DESCBROKEN, cubeManager.getCube("a_whole_new_cube").getStatus());
+    }
 
-	private MetadataManager getMetadataManager() {
-		return MetadataManager.getInstance(getTestConfig());
-	}
+    private MetadataManager getMetadataManager() {
+        return MetadataManager.getInstance(getTestConfig());
+    }
 }

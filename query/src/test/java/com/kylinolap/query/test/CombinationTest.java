@@ -17,42 +17,39 @@ import com.kylinolap.storage.hbase.coprocessor.CoprocessorEnabler;
 @RunWith(Parameterized.class)
 public class CombinationTest extends KylinQueryTest {
 
-	@BeforeClass
-	public static void setUp() throws SQLException {
-	}
+    @BeforeClass
+    public static void setUp() throws SQLException {
+    }
 
-	@AfterClass
-	public static void tearDown() {
-		clean();
-	}
+    @AfterClass
+    public static void tearDown() {
+        clean();
+    }
 
-	/**
-	 * return all config combinations, where first setting specifies join type
-	 * (inner or left), and the second setting specifies whether to force using
-	 * coprocessors(on, off or unset).
-	 */
-	@Parameterized.Parameters
-	public static Collection<Object[]> configs() {
-		return Arrays.asList(new Object[][] { { "inner", "unset" },
-				{ "left", "unset" }, { "inner", "off" }, { "left", "off" },
-				{ "inner", "on" }, { "left", "on" }, });
-	}
+    /**
+     * return all config combinations, where first setting specifies join type
+     * (inner or left), and the second setting specifies whether to force using
+     * coprocessors(on, off or unset).
+     */
+    @Parameterized.Parameters
+    public static Collection<Object[]> configs() {
+        return Arrays.asList(new Object[][] { { "inner", "unset" }, { "left", "unset" }, { "inner", "off" }, { "left", "off" }, { "inner", "on" }, { "left", "on" }, });
+    }
 
-	public CombinationTest(String joinType, String coprocessorToggle)
-			throws Exception {
+    public CombinationTest(String joinType, String coprocessorToggle) throws Exception {
 
-		KylinQueryTest.clean();
+        KylinQueryTest.clean();
 
-		KylinQueryTest.joinType = joinType;
-		KylinQueryTest.setupAll();
-		KylinQueryTest.preferCubeOf(joinType);
+        KylinQueryTest.joinType = joinType;
+        KylinQueryTest.setupAll();
+        KylinQueryTest.preferCubeOf(joinType);
 
-		if (coprocessorToggle.equals("on")) {
-			CoprocessorEnabler.forceCoprocessorOn();
-		} else if (coprocessorToggle.equals("off")) {
-			CoprocessorEnabler.forceCoprocessorOff();
-		} else if (coprocessorToggle.equals("unset")) {
-			// unset
-		}
-	}
+        if (coprocessorToggle.equals("on")) {
+            CoprocessorEnabler.forceCoprocessorOn();
+        } else if (coprocessorToggle.equals("off")) {
+            CoprocessorEnabler.forceCoprocessorOff();
+        } else if (coprocessorToggle.equals("unset")) {
+            // unset
+        }
+    }
 }

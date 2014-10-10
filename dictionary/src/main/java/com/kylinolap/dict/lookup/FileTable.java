@@ -30,40 +30,39 @@ import com.kylinolap.common.util.HadoopUtil;
  */
 public class FileTable implements ReadableTable {
 
-	String path;
-	String delim;
-	int nColumns;
+    String path;
+    String delim;
+    int nColumns;
 
-	public FileTable(String path, int nColumns) {
-		this(path, ReadableTable.DELIM_AUTO, nColumns);
-	}
+    public FileTable(String path, int nColumns) {
+        this(path, ReadableTable.DELIM_AUTO, nColumns);
+    }
 
-	public FileTable(String path, String delim, int nColumns) {
-		this.path = path;
-		this.delim = delim;
-		this.nColumns = nColumns;
-	}
+    public FileTable(String path, String delim, int nColumns) {
+        this.path = path;
+        this.delim = delim;
+        this.nColumns = nColumns;
+    }
 
-	@Override
-	public String getColumnDelimeter() {
-		return delim;
-	}
+    @Override
+    public String getColumnDelimeter() {
+        return delim;
+    }
 
-	@Override
-	public TableReader getReader() throws IOException {
-		return new FileTableReader(path, delim, nColumns);
-	}
+    @Override
+    public TableReader getReader() throws IOException {
+        return new FileTableReader(path, delim, nColumns);
+    }
 
-	@Override
-	public TableSignature getSignature() throws IOException {
-		FileSystem fs = HadoopUtil.getFileSystem(path);
-		FileStatus status = fs.getFileStatus(new Path(path));
-		return new TableSignature(path, status.getLen(),
-				status.getModificationTime());
-	}
+    @Override
+    public TableSignature getSignature() throws IOException {
+        FileSystem fs = HadoopUtil.getFileSystem(path);
+        FileStatus status = fs.getFileStatus(new Path(path));
+        return new TableSignature(path, status.getLen(), status.getModificationTime());
+    }
 
-	@Override
-	public String toString() {
-		return path;
-	}
+    @Override
+    public String toString() {
+        return path;
+    }
 }

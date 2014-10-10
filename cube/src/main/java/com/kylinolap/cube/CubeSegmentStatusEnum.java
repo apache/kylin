@@ -21,5 +21,5 @@ package com.kylinolap.cube;
  * 
  */
 public enum CubeSegmentStatusEnum {
-	NEW, READY, READY_PENDING
+    NEW, READY, READY_PENDING
 }

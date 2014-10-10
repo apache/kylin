@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+<head>
+    <title>Angular.js nvd3.js Bullet Chart Directive</title>
+    <script src="js/angular.js"></script>
+    <script src="js/d3.js"></script>
+    <script src="js/nv.d3.js"></script>
+    <script src="../dist/angularjs-nvd3-directives.js"></script>
+    <link rel="stylesheet" href="stylesheets/nv.d3.css"/>
+    <script>
+        var app = angular.module("nvd3TestApp", ['nvd3ChartDirectives']);
+
+        function ExampleCtrl($scope){
+            $scope.exampleData =  {
+                "title": "Revenue",
+                "subtitle": "US$, in thousands",
+                "ranges": [150, 225, 300],
+                "measures": [220],
+                "markers": [250]
+            };
+
+ //           $scope.exampleData =  {"title":"Revenue","subtitle":"US$, in thousands","ranges":[50,200,275],"measures":[220],"markers":[250]};
+//            $scope.exampleData =  {"title":"Revenue","subtitle":"US$, in thousands","measures":[220],"markers":[250]};
+
+            $scope.rangesFunction = function(){
+                console.log('rangesFunction called');
+                return function(d){
+                    return [50,100,200];
+                }
+            }
+
+        }
+    </script>
+
+</head>
+<body ng-app='nvd3TestApp'>
+
+<div ng-controller="ExampleCtrl">
+    <nvd3-bullet-chart
+            data="exampleData"
+            id="exampleId"
+            margin="{left:75,top:30,bottom:30,right:10}"
+            width="550"
+            height="160">
+        <svg></svg>
+    </nvd3-bullet-chart>
+
+</div>
+
+</body>
+</html>

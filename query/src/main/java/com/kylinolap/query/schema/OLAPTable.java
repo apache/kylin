@@ -56,194 +56,180 @@ import com.kylinolap.query.relnode.OLAPTableScan;
  * @author xjiang
  * 
  */
-public class OLAPTable extends AbstractQueryableTable implements
-		TranslatableTable {
+public class OLAPTable extends AbstractQueryableTable implements TranslatableTable {
 
-	private static Map<String, SqlTypeName> SQLTYPE_MAPPING = new HashMap<String, SqlTypeName>();
+    private static Map<String, SqlTypeName> SQLTYPE_MAPPING = new HashMap<String, SqlTypeName>();
 
-	static {
-		SQLTYPE_MAPPING.put("char", SqlTypeName.CHAR);
-		SQLTYPE_MAPPING.put("varchar", SqlTypeName.VARCHAR);
-		SQLTYPE_MAPPING.put("boolean", SqlTypeName.BOOLEAN);
-		SQLTYPE_MAPPING.put("integer", SqlTypeName.INTEGER);
-		SQLTYPE_MAPPING.put("tinyint", SqlTypeName.TINYINT);
-		SQLTYPE_MAPPING.put("smallint", SqlTypeName.SMALLINT);
-		SQLTYPE_MAPPING.put("bigint", SqlTypeName.BIGINT);
-		SQLTYPE_MAPPING.put("decimal", SqlTypeName.DECIMAL);
-		SQLTYPE_MAPPING.put("numeric", SqlTypeName.DECIMAL);
-		SQLTYPE_MAPPING.put("float", SqlTypeName.FLOAT);
-		SQLTYPE_MAPPING.put("real", SqlTypeName.REAL);
-		SQLTYPE_MAPPING.put("double", SqlTypeName.DOUBLE);
-		SQLTYPE_MAPPING.put("date", SqlTypeName.DATE);
-		SQLTYPE_MAPPING.put("time", SqlTypeName.TIME);
-		SQLTYPE_MAPPING.put("timestamp", SqlTypeName.TIMESTAMP);
-		SQLTYPE_MAPPING.put("any", SqlTypeName.ANY);
+    static {
+        SQLTYPE_MAPPING.put("char", SqlTypeName.CHAR);
+        SQLTYPE_MAPPING.put("varchar", SqlTypeName.VARCHAR);
+        SQLTYPE_MAPPING.put("boolean", SqlTypeName.BOOLEAN);
+        SQLTYPE_MAPPING.put("integer", SqlTypeName.INTEGER);
+        SQLTYPE_MAPPING.put("tinyint", SqlTypeName.TINYINT);
+        SQLTYPE_MAPPING.put("smallint", SqlTypeName.SMALLINT);
+        SQLTYPE_MAPPING.put("bigint", SqlTypeName.BIGINT);
+        SQLTYPE_MAPPING.put("decimal", SqlTypeName.DECIMAL);
+        SQLTYPE_MAPPING.put("numeric", SqlTypeName.DECIMAL);
+        SQLTYPE_MAPPING.put("float", SqlTypeName.FLOAT);
+        SQLTYPE_MAPPING.put("real", SqlTypeName.REAL);
+        SQLTYPE_MAPPING.put("double", SqlTypeName.DOUBLE);
+        SQLTYPE_MAPPING.put("date", SqlTypeName.DATE);
+        SQLTYPE_MAPPING.put("time", SqlTypeName.TIME);
+        SQLTYPE_MAPPING.put("timestamp", SqlTypeName.TIMESTAMP);
+        SQLTYPE_MAPPING.put("any", SqlTypeName.ANY);
 
-		// try {
-		// Class.forName("org.apache.hive.jdbc.HiveDriver");
-		// } catch (ClassNotFoundException e) {
-		// e.printStackTrace();
-		// }
-	}
+        // try {
+        // Class.forName("org.apache.hive.jdbc.HiveDriver");
+        // } catch (ClassNotFoundException e) {
+        // e.printStackTrace();
+        // }
+    }
 
-	private final OLAPSchema olapSchema;
-	private final TableDesc sourceTable;
-	private RelDataType rowType;
-	private List<ColumnDesc> exposedColumns;
+    private final OLAPSchema olapSchema;
+    private final TableDesc sourceTable;
+    private RelDataType rowType;
+    private List<ColumnDesc> exposedColumns;
 
-	public OLAPTable(OLAPSchema schema, TableDesc tableDesc) {
-		super(Object[].class);
-		this.olapSchema = schema;
-		this.sourceTable = tableDesc;
-		this.rowType = null;
-	}
+    public OLAPTable(OLAPSchema schema, TableDesc tableDesc) {
+        super(Object[].class);
+        this.olapSchema = schema;
+        this.sourceTable = tableDesc;
+        this.rowType = null;
+    }
 
-	public OLAPSchema getSchema() {
-		return this.olapSchema;
-	}
+    public OLAPSchema getSchema() {
+        return this.olapSchema;
+    }
 
-	public TableDesc getSourceTable() {
-		return this.sourceTable;
-	}
+    public TableDesc getSourceTable() {
+        return this.sourceTable;
+    }
 
-	public String getTableName() {
-		return this.sourceTable.getName();
-	}
+    public String getTableName() {
+        return this.sourceTable.getName();
+    }
 
-	public List<ColumnDesc> getExposedColumns() {
-		return exposedColumns;
-	}
+    public List<ColumnDesc> getExposedColumns() {
+        return exposedColumns;
+    }
 
-	@Override
-	public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-		if (this.rowType == null) {
-			// always build exposedColumns and rowType together
-			this.exposedColumns = listSourceColumns();
-			this.rowType = deduceRowType(typeFactory);
-		}
-		return this.rowType;
-	}
+    @Override
+    public RelDataType getRowType(RelDataTypeFactory typeFactory) {
+        if (this.rowType == null) {
+            // always build exposedColumns and rowType together
+            this.exposedColumns = listSourceColumns();
+            this.rowType = deduceRowType(typeFactory);
+        }
+        return this.rowType;
+    }
 
-	private RelDataType deduceRowType(RelDataTypeFactory typeFactory) {
-		RelDataTypeFactory.FieldInfoBuilder fieldInfo = typeFactory.builder();
-		for (ColumnDesc column : exposedColumns) {
-			RelDataType sqlType = createSqlType(typeFactory, column);
-			sqlType = SqlTypeUtil.addCharsetAndCollation(sqlType, typeFactory);
-			fieldInfo.add(column.getName(), sqlType);
-		}
-		return typeFactory.createStructType(fieldInfo);
-	}
+    private RelDataType deduceRowType(RelDataTypeFactory typeFactory) {
+        RelDataTypeFactory.FieldInfoBuilder fieldInfo = typeFactory.builder();
+        for (ColumnDesc column : exposedColumns) {
+            RelDataType sqlType = createSqlType(typeFactory, column);
+            sqlType = SqlTypeUtil.addCharsetAndCollation(sqlType, typeFactory);
+            fieldInfo.add(column.getName(), sqlType);
+        }
+        return typeFactory.createStructType(fieldInfo);
+    }
 
-	private RelDataType createSqlType(RelDataTypeFactory typeFactory,
-			ColumnDesc column) {
-		SqlTypeName sqlTypeName = SQLTYPE_MAPPING.get(column.getTypeName());
-		if (sqlTypeName == null)
-			throw new IllegalArgumentException("Unrecognized column type "
-					+ column.getTypeName() + " from " + column);
+    private RelDataType createSqlType(RelDataTypeFactory typeFactory, ColumnDesc column) {
+        SqlTypeName sqlTypeName = SQLTYPE_MAPPING.get(column.getTypeName());
+        if (sqlTypeName == null)
+            throw new IllegalArgumentException("Unrecognized column type " + column.getTypeName() + " from " + column);
 
-		int precision = column.getTypePrecision();
-		int scale = column.getTypeScale();
+        int precision = column.getTypePrecision();
+        int scale = column.getTypeScale();
 
-		RelDataType result;
-		if (precision >= 0 && scale >= 0)
-			result = typeFactory.createSqlType(sqlTypeName, precision, scale);
-		else if (precision >= 0)
-			result = typeFactory.createSqlType(sqlTypeName, precision);
-		else
-			result = typeFactory.createSqlType(sqlTypeName);
+        RelDataType result;
+        if (precision >= 0 && scale >= 0)
+            result = typeFactory.createSqlType(sqlTypeName, precision, scale);
+        else if (precision >= 0)
+            result = typeFactory.createSqlType(sqlTypeName, precision);
+        else
+            result = typeFactory.createSqlType(sqlTypeName);
 
-		// due to left join and uncertain data quality, dimension value can be
-		// null
-		if (column.isNullable()) {
-			result = typeFactory.createTypeWithNullability(result, true);
-		} else {
-			result = typeFactory.createTypeWithNullability(result, false);
-		}
+        // due to left join and uncertain data quality, dimension value can be
+        // null
+        if (column.isNullable()) {
+            result = typeFactory.createTypeWithNullability(result, true);
+        } else {
+            result = typeFactory.createTypeWithNullability(result, false);
+        }
 
-		return result;
-	}
+        return result;
+    }
 
-	private List<ColumnDesc> listSourceColumns() {
-		ProjectManager projectMgr = olapSchema.getProjectManager();
-		List<ColumnDesc> exposedColumns = projectMgr.listExposedColumns(
-				olapSchema.getProjectName(), sourceTable.getName());
+    private List<ColumnDesc> listSourceColumns() {
+        ProjectManager projectMgr = olapSchema.getProjectManager();
+        List<ColumnDesc> exposedColumns = projectMgr.listExposedColumns(olapSchema.getProjectName(), sourceTable.getName());
 
-		List<MeasureDesc> countMeasures = projectMgr
-				.listEffectiveRewriteMeasures(olapSchema.getProjectName(),
-						sourceTable.getName());
-		HashSet<String> metFields = new HashSet<String>();
-		for (MeasureDesc m : countMeasures) {
-			FunctionDesc func = m.getFunction();
-			String fieldName = func.getRewriteFieldName();
-			if (metFields.contains(fieldName) == false) {
-				metFields.add(fieldName);
-				ColumnDesc fakeCountCol = new ColumnDesc();
-				fakeCountCol.setName(fieldName);
-				fakeCountCol.setDatatype(func.getSQLType());
-				fakeCountCol.setNullable(false);
-				fakeCountCol.init(sourceTable);
-				exposedColumns.add(fakeCountCol);
-			}
-		}
+        List<MeasureDesc> countMeasures = projectMgr.listEffectiveRewriteMeasures(olapSchema.getProjectName(), sourceTable.getName());
+        HashSet<String> metFields = new HashSet<String>();
+        for (MeasureDesc m : countMeasures) {
+            FunctionDesc func = m.getFunction();
+            String fieldName = func.getRewriteFieldName();
+            if (metFields.contains(fieldName) == false) {
+                metFields.add(fieldName);
+                ColumnDesc fakeCountCol = new ColumnDesc();
+                fakeCountCol.setName(fieldName);
+                fakeCountCol.setDatatype(func.getSQLType());
+                fakeCountCol.setNullable(false);
+                fakeCountCol.init(sourceTable);
+                exposedColumns.add(fakeCountCol);
+            }
+        }
 
-		return exposedColumns;
-	}
+        return exposedColumns;
+    }
 
-	@Override
-	public RelNode toRel(ToRelContext context, RelOptTable relOptTable) {
-		int fieldCount = relOptTable.getRowType().getFieldCount();
-		int[] fields = identityList(fieldCount);
-		return new OLAPTableScan(context.getCluster(), relOptTable, this,
-				fields);
-	}
+    @Override
+    public RelNode toRel(ToRelContext context, RelOptTable relOptTable) {
+        int fieldCount = relOptTable.getRowType().getFieldCount();
+        int[] fields = identityList(fieldCount);
+        return new OLAPTableScan(context.getCluster(), relOptTable, this, fields);
+    }
 
-	private int[] identityList(int n) {
-		int[] integers = new int[n];
-		for (int i = 0; i < n; i++) {
-			integers[i] = i;
-		}
-		return integers;
-	}
+    private int[] identityList(int n) {
+        int[] integers = new int[n];
+        for (int i = 0; i < n; i++) {
+            integers[i] = i;
+        }
+        return integers;
+    }
 
-	@Override
-	public <T> Queryable<T> asQueryable(QueryProvider queryProvider,
-			SchemaPlus schema, String tableName) {
-		return new AbstractTableQueryable<T>(queryProvider, schema, this,
-				tableName) {
-			@SuppressWarnings("unchecked")
-			public Enumerator<T> enumerator() {
-				final OLAPQuery query = new OLAPQuery(EnumeratorTypeEnum.CUBE,
-						0);
-				return (Enumerator<T>) query.enumerator();
-			}
-		};
-	}
+    @Override
+    public <T> Queryable<T> asQueryable(QueryProvider queryProvider, SchemaPlus schema, String tableName) {
+        return new AbstractTableQueryable<T>(queryProvider, schema, this, tableName) {
+            @SuppressWarnings("unchecked")
+            public Enumerator<T> enumerator() {
+                final OLAPQuery query = new OLAPQuery(EnumeratorTypeEnum.CUBE, 0);
+                return (Enumerator<T>) query.enumerator();
+            }
+        };
+    }
 
-	@Override
-	public Statistic getStatistic() {
-		List<BitSet> keys = new ArrayList<BitSet>();
-		return Statistics.of(100, keys);
-	}
+    @Override
+    public Statistic getStatistic() {
+        List<BitSet> keys = new ArrayList<BitSet>();
+        return Statistics.of(100, keys);
+    }
 
-	@Override
-	public String toString() {
-		return "OLAPTable {" + getTableName() + "}";
-	}
+    @Override
+    public String toString() {
+        return "OLAPTable {" + getTableName() + "}";
+    }
 
-	public Enumerable<Object[]> executeCubeQuery(DataContext optiqContext,
-			int ctxSeq) {
-		return new OLAPQuery(optiqContext, EnumeratorTypeEnum.CUBE, ctxSeq);
-	}
+    public Enumerable<Object[]> executeCubeQuery(DataContext optiqContext, int ctxSeq) {
+        return new OLAPQuery(optiqContext, EnumeratorTypeEnum.CUBE, ctxSeq);
+    }
 
-	public Enumerable<Object[]> executeLookupTableQuery(
-			DataContext optiqContext, int ctxSeq) {
-		return new OLAPQuery(optiqContext, EnumeratorTypeEnum.LOOKUP_TABLE,
-				ctxSeq);
-	}
+    public Enumerable<Object[]> executeLookupTableQuery(DataContext optiqContext, int ctxSeq) {
+        return new OLAPQuery(optiqContext, EnumeratorTypeEnum.LOOKUP_TABLE, ctxSeq);
+    }
 
-	public Enumerable<Object[]> executeHiveQuery(DataContext optiqContext,
-			int ctxSeq) {
-		return new OLAPQuery(optiqContext, EnumeratorTypeEnum.HIVE, ctxSeq);
-	}
+    public Enumerable<Object[]> executeHiveQuery(DataContext optiqContext, int ctxSeq) {
+        return new OLAPQuery(optiqContext, EnumeratorTypeEnum.HIVE, ctxSeq);
+    }
 
 }

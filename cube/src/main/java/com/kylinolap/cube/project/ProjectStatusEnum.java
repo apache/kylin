@@ -17,6 +17,6 @@ package com.kylinolap.cube.project;
 
 public enum ProjectStatusEnum {
 
-	DISABLED, ENABLED
+    DISABLED, ENABLED
 
 }
