@@ -1,5 +1,18 @@
 #!/bin/sh
 
+set -o pipefail  # trace ERR through pipes
+set -o errtrace  # trace ERR through 'time command' and other functions
+
+function error() {
+SCRIPT="$0"           # script name
+LASTLINE="$1"         # line of error occurrence
+LASTERR="$2"          # error code
+echo "ERROR exit from ${SCRIPT} : line ${LASTLINE} with exit code ${LASTERR}"
+exit 1
+}
+
+trap 'error ${LINENO} ${?}' ERR
+
 #Init env
 source ~/.bashrc
 
