@@ -13,6 +13,7 @@ ls -lt storage/target/*-coprocessor.jar | head -1 | awk '{print "cp " $9 " stora
 #package webapp
 cd webapp/
 npm install
+npm install -g grunt-cli
 grunt dev --buildEnv=dev
 cd dist
 tar -cvf Web.tar * .htaccess
