@@ -32,3 +32,8 @@ INSERT INTO `acl_sid` VALUES ('1', '1', 'ADMIN');
 -- ----------------------------
 INSERT INTO `acl_object_identity` VALUES ('1', '1', 'daa53e80-41be-49a5-90ca-9fb7294db186', null, '1', '0');
 INSERT INTO `acl_object_identity` VALUES ('2', '1', '1eaca32a-a33e-4b69-83dd-0bb8b1f8c53b', null, '1', '0');
+
+-- ----------------------------
+-- Records of queries
+-- ----------------------------
+INSERT INTO `queries` VALUES ('1', 'test_query', 'default','select * from test_table;', 'ADMIN', 'test', '2014-05-04');
