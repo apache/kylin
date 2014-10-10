@@ -32,8 +32,12 @@ public class QuarterFunc {
     public static long eval(Date date) {
         throw new UnsupportedOperationException();
     }
-
-    public static long eval(long date) {
+    
+    public static void test() {
+        
+    }
+    
+    public static long eval(int date) {
         long month = SqlFunctions.unixDateExtract(TimeUnitRange.MONTH, date);
         return month / 4 + 1;
     }
