@@ -46,184 +46,173 @@ import com.kylinolap.common.util.StringSplitter;
  */
 public class FileTableReader implements TableReader {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(FileTableReader.class);
-	private static final char CSV_QUOTE = '"';
-	private static final String[] DETECT_DELIMS = new String[] { "\177", "|",
-			"\t", "," };
+    private static final Logger logger = LoggerFactory.getLogger(FileTableReader.class);
+    private static final char CSV_QUOTE = '"';
+    private static final String[] DETECT_DELIMS = new String[] { "\177", "|", "\t", "," };
 
-	private String filePath;
-	private String delim;
-	private RowReader reader;
+    private String filePath;
+    private String delim;
+    private RowReader reader;
 
-	private String curLine;
-	private String[] curColumns;
-	private int expectedColumnNumber = -1; // helps delimiter detection
+    private String curLine;
+    private String[] curColumns;
+    private int expectedColumnNumber = -1; // helps delimiter detection
 
-	public FileTableReader(String filePath, String delim,
-			int expectedColumnNumber) throws IOException {
-		this.filePath = filePath;
-		this.delim = delim;
-		this.expectedColumnNumber = expectedColumnNumber;
+    public FileTableReader(String filePath, String delim, int expectedColumnNumber) throws IOException {
+        this.filePath = filePath;
+        this.delim = delim;
+        this.expectedColumnNumber = expectedColumnNumber;
 
-		FileSystem fs = HadoopUtil.getFileSystem(filePath);
+        FileSystem fs = HadoopUtil.getFileSystem(filePath);
 
-		try {
-			this.reader = new SeqRowReader(
-					HadoopUtil.getDefaultConfiguration(), fs, filePath);
+        try {
+            this.reader = new SeqRowReader(HadoopUtil.getDefaultConfiguration(), fs, filePath);
 
-		} catch (IOException e) {
-			if (isExceptionSayingNotSeqFile(e) == false)
-				throw e;
+        } catch (IOException e) {
+            if (isExceptionSayingNotSeqFile(e) == false)
+                throw e;
 
-			this.reader = new CsvRowReader(fs, filePath);
-		}
-	}
+            this.reader = new CsvRowReader(fs, filePath);
+        }
+    }
 
-	private boolean isExceptionSayingNotSeqFile(IOException e) {
-		if (e.getMessage() != null
-				&& e.getMessage().contains("not a SequenceFile"))
-			return true;
+    private boolean isExceptionSayingNotSeqFile(IOException e) {
+        if (e.getMessage() != null && e.getMessage().contains("not a SequenceFile"))
+            return true;
 
-		if (e instanceof EOFException) // in case the file is very very small
-			return true;
+        if (e instanceof EOFException) // in case the file is very very small
+            return true;
 
-		return false;
-	}
+        return false;
+    }
 
-	@Override
-	public void setExpectedColumnNumber(int expectedColumnNumber) {
-		this.expectedColumnNumber = expectedColumnNumber;
-	}
+    @Override
+    public void setExpectedColumnNumber(int expectedColumnNumber) {
+        this.expectedColumnNumber = expectedColumnNumber;
+    }
 
-	@Override
-	public boolean next() throws IOException {
-		curLine = reader.nextLine();
-		curColumns = null;
-		return curLine != null;
-	}
+    @Override
+    public boolean next() throws IOException {
+        curLine = reader.nextLine();
+        curColumns = null;
+        return curLine != null;
+    }
 
-	public String getLine() {
-		return curLine;
-	}
+    public String getLine() {
+        return curLine;
+    }
 
-	@Override
-	public String[] getRow() {
-		if (curColumns == null) {
-			if (ReadableTable.DELIM_AUTO.equals(delim))
-				delim = autoDetectDelim(curLine);
+    @Override
+    public String[] getRow() {
+        if (curColumns == null) {
+            if (ReadableTable.DELIM_AUTO.equals(delim))
+                delim = autoDetectDelim(curLine);
 
-			if (delim == null)
-				curColumns = new String[] { curLine };
-			else
-				curColumns = split(curLine, delim);
-		}
-		return curColumns;
-	}
+            if (delim == null)
+                curColumns = new String[] { curLine };
+            else
+                curColumns = split(curLine, delim);
+        }
+        return curColumns;
+    }
 
-	private String[] split(String line, String delim) {
-		// FIXME CVS line should be parsed considering escapes
-		String str[] = StringSplitter.split(line, delim);
+    private String[] split(String line, String delim) {
+        // FIXME CVS line should be parsed considering escapes
+        String str[] = StringSplitter.split(line, delim);
 
-		// un-escape CSV
-		if (ReadableTable.DELIM_COMMA.equals(delim)) {
-			for (int i = 0; i < str.length; i++) {
-				str[i] = unescapeCsv(str[i]);
-			}
-		}
+        // un-escape CSV
+        if (ReadableTable.DELIM_COMMA.equals(delim)) {
+            for (int i = 0; i < str.length; i++) {
+                str[i] = unescapeCsv(str[i]);
+            }
+        }
 
-		return str;
-	}
+        return str;
+    }
 
-	private String unescapeCsv(String str) {
-		if (str == null || str.length() < 2)
-			return str;
+    private String unescapeCsv(String str) {
+        if (str == null || str.length() < 2)
+            return str;
 
-		str = StringEscapeUtils.unescapeCsv(str);
+        str = StringEscapeUtils.unescapeCsv(str);
 
-		// unescapeCsv may not remove the outer most quotes
-		if (str.charAt(0) == CSV_QUOTE
-				&& str.charAt(str.length() - 1) == CSV_QUOTE)
-			str = str.substring(1, str.length() - 1);
+        // unescapeCsv may not remove the outer most quotes
+        if (str.charAt(0) == CSV_QUOTE && str.charAt(str.length() - 1) == CSV_QUOTE)
+            str = str.substring(1, str.length() - 1);
 
-		return str;
-	}
+        return str;
+    }
 
-	@Override
-	public void close() throws IOException {
-		if (reader != null)
-			reader.close();
-	}
+    @Override
+    public void close() throws IOException {
+        if (reader != null)
+            reader.close();
+    }
 
-	private String autoDetectDelim(String line) {
-		if (expectedColumnNumber > 0) {
-			for (String delim : DETECT_DELIMS) {
-				if (StringSplitter.split(line, delim).length == expectedColumnNumber) {
-					logger.info("Auto detect delim to be '" + delim
-							+ "', split line to " + expectedColumnNumber
-							+ " columns -- " + line);
-					return delim;
-				}
-			}
-		}
+    private String autoDetectDelim(String line) {
+        if (expectedColumnNumber > 0) {
+            for (String delim : DETECT_DELIMS) {
+                if (StringSplitter.split(line, delim).length == expectedColumnNumber) {
+                    logger.info("Auto detect delim to be '" + delim + "', split line to " + expectedColumnNumber + " columns -- " + line);
+                    return delim;
+                }
+            }
+        }
 
-		logger.info("Auto detect delim to be null, will take THE-WHOLE-LINE as a single value, for "
-				+ filePath);
-		return null;
-	}
+        logger.info("Auto detect delim to be null, will take THE-WHOLE-LINE as a single value, for " + filePath);
+        return null;
+    }
 
-	// ============================================================================
+    // ============================================================================
 
-	private interface RowReader extends Closeable {
-		String nextLine() throws IOException; // return null on EOF
-	}
+    private interface RowReader extends Closeable {
+        String nextLine() throws IOException; // return null on EOF
+    }
 
-	private class SeqRowReader implements RowReader {
-		Reader reader;
-		Writable key;
-		Text value;
+    private class SeqRowReader implements RowReader {
+        Reader reader;
+        Writable key;
+        Text value;
 
-		SeqRowReader(Configuration hconf, FileSystem fs, String path)
-				throws IOException {
-			reader = new Reader(hconf, SequenceFile.Reader.file(new Path(path)));
-			key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(),
-					hconf);
-			value = new Text();
-		}
+        SeqRowReader(Configuration hconf, FileSystem fs, String path) throws IOException {
+            reader = new Reader(hconf, SequenceFile.Reader.file(new Path(path)));
+            key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), hconf);
+            value = new Text();
+        }
 
-		@Override
-		public String nextLine() throws IOException {
-			boolean hasNext = reader.next(key, value);
-			if (hasNext)
-				return Bytes.toString(value.getBytes(), 0, value.getLength());
-			else
-				return null;
-		}
+        @Override
+        public String nextLine() throws IOException {
+            boolean hasNext = reader.next(key, value);
+            if (hasNext)
+                return Bytes.toString(value.getBytes(), 0, value.getLength());
+            else
+                return null;
+        }
 
-		@Override
-		public void close() throws IOException {
-			reader.close();
-		}
-	}
+        @Override
+        public void close() throws IOException {
+            reader.close();
+        }
+    }
 
-	private class CsvRowReader implements RowReader {
-		BufferedReader reader;
+    private class CsvRowReader implements RowReader {
+        BufferedReader reader;
 
-		CsvRowReader(FileSystem fs, String path) throws IOException {
-			FSDataInputStream in = fs.open(new Path(path));
-			reader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
-		}
+        CsvRowReader(FileSystem fs, String path) throws IOException {
+            FSDataInputStream in = fs.open(new Path(path));
+            reader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
+        }
 
-		@Override
-		public String nextLine() throws IOException {
-			return reader.readLine();
-		}
+        @Override
+        public String nextLine() throws IOException {
+            return reader.readLine();
+        }
 
-		@Override
-		public void close() throws IOException {
-			reader.close();
-		}
+        @Override
+        public void close() throws IOException {
+            reader.close();
+        }
 
-	}
+    }
 
 }

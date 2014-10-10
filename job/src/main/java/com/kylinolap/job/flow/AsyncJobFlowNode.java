@@ -45,97 +45,75 @@ import com.kylinolap.job.exception.JobException;
  */
 public class AsyncJobFlowNode extends JobFlowNode {
 
-	@Override
-	public void execute(JobExecutionContext context)
-			throws JobExecutionException {
-		this.currentJobDetail = context.getJobDetail();
-		JobDataMap data = this.currentJobDetail.getJobDataMap();
-		JobFlow jobFlow = (JobFlow) data.get(JobConstants.PROP_JOB_FLOW);
-		JobEngineConfig engineConfig = jobFlow.getJobengineConfig();
-		KylinConfig config = engineConfig.getConfig();
-		String jobInstanceID = data
-				.getString(JobConstants.PROP_JOBINSTANCE_UUID);
-		int jobStepID = data.getInt(JobConstants.PROP_JOBSTEP_SEQ_ID);
-		ICommandOutput output = (ICommandOutput) data
-				.get(JobConstants.PROP_JOB_CMD_OUTPUT);
+    @Override
+    public void execute(JobExecutionContext context) throws JobExecutionException {
+        this.currentJobDetail = context.getJobDetail();
+        JobDataMap data = this.currentJobDetail.getJobDataMap();
+        JobFlow jobFlow = (JobFlow) data.get(JobConstants.PROP_JOB_FLOW);
+        JobEngineConfig engineConfig = jobFlow.getJobengineConfig();
+        KylinConfig config = engineConfig.getConfig();
+        String jobInstanceID = data.getString(JobConstants.PROP_JOBINSTANCE_UUID);
+        int jobStepID = data.getInt(JobConstants.PROP_JOBSTEP_SEQ_ID);
+        ICommandOutput output = (ICommandOutput) data.get(JobConstants.PROP_JOB_CMD_OUTPUT);
 
-		try {
-			if (data.getBoolean(JobConstants.PROP_JOB_KILLED)) {
-				log.info(this.currentJobDetail.getKey() + " is killed");
-				return;
-			}
+        try {
+            if (data.getBoolean(JobConstants.PROP_JOB_KILLED)) {
+                log.info(this.currentJobDetail.getKey() + " is killed");
+                return;
+            }
 
-			if (output == null) {
-				JobInstance jobInstance = updateJobStep(jobInstanceID,
-						jobStepID, config, JobStepStatusEnum.RUNNING,
-						System.currentTimeMillis(), null, null);
+            if (output == null) {
+                JobInstance jobInstance = updateJobStep(jobInstanceID, jobStepID, config, JobStepStatusEnum.RUNNING, System.currentTimeMillis(), null, null);
 
-				String command = data.getString(JobConstants.PROP_COMMAND);
-				jobCmd = JobCommandFactory.getJobCommand(command, jobInstance,
-						jobStepID, engineConfig);
-				output = jobCmd.execute();
-				data.put(JobConstants.PROP_JOB_CMD_OUTPUT, output);
-				data.put(JobConstants.PROP_JOB_CMD_EXECUTOR, jobCmd);
-				context.getScheduler()
-						.addJob(this.currentJobDetail, true, true);
+                String command = data.getString(JobConstants.PROP_COMMAND);
+                jobCmd = JobCommandFactory.getJobCommand(command, jobInstance, jobStepID, engineConfig);
+                output = jobCmd.execute();
+                data.put(JobConstants.PROP_JOB_CMD_OUTPUT, output);
+                data.put(JobConstants.PROP_JOB_CMD_EXECUTOR, jobCmd);
+                context.getScheduler().addJob(this.currentJobDetail, true, true);
 
-				JobStepStatusEnum stepStatus = output.getStatus();
-				updateJobStep(jobInstanceID, jobStepID, config, stepStatus,
-						null,
-						stepStatus.isComplete() ? System.currentTimeMillis()
-								: null, output.getOutput());
+                JobStepStatusEnum stepStatus = output.getStatus();
+                updateJobStep(jobInstanceID, jobStepID, config, stepStatus, null, stepStatus.isComplete() ? System.currentTimeMillis() : null, output.getOutput());
 
-				context.setResult(output.getExitCode());
-				scheduleStatusChecker(context);
-				log.debug("Start async job " + currentJobDetail.getKey());
-			} else {
-				JobInstance jobInstance = JobDAO.getInstance(
-						engineConfig.getConfig()).getJob(jobInstanceID);
-				JobStep jobStep = jobInstance.getSteps().get(jobStepID);
+                context.setResult(output.getExitCode());
+                scheduleStatusChecker(context);
+                log.debug("Start async job " + currentJobDetail.getKey());
+            } else {
+                JobInstance jobInstance = JobDAO.getInstance(engineConfig.getConfig()).getJob(jobInstanceID);
+                JobStep jobStep = jobInstance.getSteps().get(jobStepID);
 
-				log.debug("Start to check hadoop job status of "
-						+ currentJobDetail.getKey());
-				JobStepStatusEnum stepStatus = output.getStatus();
+                log.debug("Start to check hadoop job status of " + currentJobDetail.getKey());
+                JobStepStatusEnum stepStatus = output.getStatus();
 
-				if ((System.currentTimeMillis() - jobStep.getExecStartTime()) / 1000 >= engineConfig
-						.getJobStepTimeout()) {
-					throw new JobException("Job step " + jobStep.getName()
-							+ " timeout.");
-				}
+                if ((System.currentTimeMillis() - jobStep.getExecStartTime()) / 1000 >= engineConfig.getJobStepTimeout()) {
+                    throw new JobException("Job step " + jobStep.getName() + " timeout.");
+                }
 
-				updateJobStep(jobInstance.getUuid(), jobStepID, config,
-						stepStatus, null,
-						stepStatus.isComplete() ? System.currentTimeMillis()
-								: null, output.getOutput());
+                updateJobStep(jobInstance.getUuid(), jobStepID, config, stepStatus, null, stepStatus.isComplete() ? System.currentTimeMillis() : null, output.getOutput());
 
-				if (!stepStatus.isComplete()) {
-					scheduleStatusChecker(context);
-				}
+                if (!stepStatus.isComplete()) {
+                    scheduleStatusChecker(context);
+                }
 
-				context.setResult(0);
-				log.debug("Status of async job " + currentJobDetail.getKey()
-						+ ":" + stepStatus);
-			}
-		} catch (Throwable t) {
-			handleException(jobInstanceID, jobStepID, config, t);
-		}
+                context.setResult(0);
+                log.debug("Status of async job " + currentJobDetail.getKey() + ":" + stepStatus);
+            }
+        } catch (Throwable t) {
+            handleException(jobInstanceID, jobStepID, config, t);
+        }
 
-	}
+    }
 
-	private void scheduleStatusChecker(JobExecutionContext context)
-			throws SchedulerException {
-		JobDataMap jobDataMap = this.currentJobDetail.getJobDataMap();
-		JobFlow jobFlow = (JobFlow) jobDataMap.get(JobConstants.PROP_JOB_FLOW);
-		JobEngineConfig engineConfig = jobFlow.getJobengineConfig();
-		int interval = engineConfig.getAsyncJobCheckInterval();
-		log.debug("Trigger a status check job in " + interval
-				+ " seconds for job " + currentJobDetail.getKey());
+    private void scheduleStatusChecker(JobExecutionContext context) throws SchedulerException {
+        JobDataMap jobDataMap = this.currentJobDetail.getJobDataMap();
+        JobFlow jobFlow = (JobFlow) jobDataMap.get(JobConstants.PROP_JOB_FLOW);
+        JobEngineConfig engineConfig = jobFlow.getJobengineConfig();
+        int interval = engineConfig.getAsyncJobCheckInterval();
+        log.debug("Trigger a status check job in " + interval + " seconds for job " + currentJobDetail.getKey());
 
-		Trigger trigger = TriggerBuilder.newTrigger()
-				.startAt(DateBuilder.futureDate(interval, IntervalUnit.SECOND))
-				.build();
-		Set<Trigger> triggers = new HashSet<Trigger>();
-		triggers.add(trigger);
-		context.getScheduler().scheduleJob(currentJobDetail, triggers, true);
-	}
+        Trigger trigger = TriggerBuilder.newTrigger().startAt(DateBuilder.futureDate(interval, IntervalUnit.SECOND)).build();
+        Set<Trigger> triggers = new HashSet<Trigger>();
+        triggers.add(trigger);
+        context.getScheduler().scheduleJob(currentJobDetail, triggers, true);
+    }
 }

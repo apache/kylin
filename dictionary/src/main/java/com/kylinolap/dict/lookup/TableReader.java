@@ -26,9 +26,9 @@ import java.io.IOException;
  */
 public interface TableReader extends Closeable {
 
-	public boolean next() throws IOException;
+    public boolean next() throws IOException;
 
-	public String[] getRow();
+    public String[] getRow();
 
-	public void setExpectedColumnNumber(int expectedColumnNumber);
+    public void setExpectedColumnNumber(int expectedColumnNumber);
 }

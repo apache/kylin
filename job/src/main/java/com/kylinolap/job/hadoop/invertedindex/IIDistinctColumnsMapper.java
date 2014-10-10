@@ -29,47 +29,42 @@ import com.kylinolap.job.constant.BatchConstants;
 /**
  * @author yangli9
  */
-public class IIDistinctColumnsMapper<KEYIN> extends
-		Mapper<KEYIN, Text, ShortWritable, Text> {
+public class IIDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, Text, ShortWritable, Text> {
 
-	private String[] columns;
-	private int delim;
-	private BytesSplitter splitter;
+    private String[] columns;
+    private int delim;
+    private BytesSplitter splitter;
 
-	private ShortWritable outputKey = new ShortWritable();
-	private Text outputValue = new Text();
+    private ShortWritable outputKey = new ShortWritable();
+    private Text outputValue = new Text();
 
-	@Override
-	protected void setup(Context context) throws IOException {
-		Configuration conf = context.getConfiguration();
-		this.columns = conf.get(BatchConstants.TABLE_COLUMNS).split(",");
-		String inputDelim = conf.get(BatchConstants.INPUT_DELIM);
-		this.delim = inputDelim == null ? -1 : inputDelim.codePointAt(0);
-		this.splitter = new BytesSplitter(200, 4096);
-	}
+    @Override
+    protected void setup(Context context) throws IOException {
+        Configuration conf = context.getConfiguration();
+        this.columns = conf.get(BatchConstants.TABLE_COLUMNS).split(",");
+        String inputDelim = conf.get(BatchConstants.INPUT_DELIM);
+        this.delim = inputDelim == null ? -1 : inputDelim.codePointAt(0);
+        this.splitter = new BytesSplitter(200, 4096);
+    }
 
-	@Override
-	public void map(KEYIN key, Text value, Context context) throws IOException,
-			InterruptedException {
-		if (delim == -1) {
-			delim = splitter.detectDelim(value, columns.length);
-		}
+    @Override
+    public void map(KEYIN key, Text value, Context context) throws IOException, InterruptedException {
+        if (delim == -1) {
+            delim = splitter.detectDelim(value, columns.length);
+        }
 
-		int nParts = splitter.split(value.getBytes(), value.getLength(),
-				(byte) delim);
-		SplittedBytes[] parts = splitter.getSplitBuffers();
+        int nParts = splitter.split(value.getBytes(), value.getLength(), (byte) delim);
+        SplittedBytes[] parts = splitter.getSplitBuffers();
 
-		if (nParts != columns.length) {
-			throw new RuntimeException("Got " + parts.length + " from -- "
-					+ value.toString() + " -- but only " + columns.length
-					+ " expected");
-		}
+        if (nParts != columns.length) {
+            throw new RuntimeException("Got " + parts.length + " from -- " + value.toString() + " -- but only " + columns.length + " expected");
+        }
 
-		for (short i = 0; i < nParts; i++) {
-			outputKey.set(i);
-			outputValue.set(parts[i].value, 0, parts[i].length);
-			context.write(outputKey, outputValue);
-		}
-	}
+        for (short i = 0; i < nParts; i++) {
+            outputKey.set(i);
+            outputValue.set(parts[i].value, 0, parts[i].length);
+            context.write(outputKey, outputValue);
+        }
+    }
 
 }

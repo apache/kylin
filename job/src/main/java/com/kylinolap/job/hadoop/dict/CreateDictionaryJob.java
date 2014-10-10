@@ -30,39 +30,38 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 public class CreateDictionaryJob extends AbstractHadoopJob {
 
-	private int returnCode = 0;
+    private int returnCode = 0;
 
-	@Override
-	public int run(String[] args) throws Exception {
-		Options options = new Options();
+    @Override
+    public int run(String[] args) throws Exception {
+        Options options = new Options();
 
-		try {
-			options.addOption(OPTION_CUBE_NAME);
-			options.addOption(OPTION_SEGMENT_NAME);
-			options.addOption(OPTION_INPUT_PATH);
-			parseOptions(options, args);
+        try {
+            options.addOption(OPTION_CUBE_NAME);
+            options.addOption(OPTION_SEGMENT_NAME);
+            options.addOption(OPTION_INPUT_PATH);
+            parseOptions(options, args);
 
-			String cubeName = getOptionValue(OPTION_CUBE_NAME);
-			String segmentName = getOptionValue(OPTION_SEGMENT_NAME);
-			String factColumnsInputPath = getOptionValue(OPTION_INPUT_PATH);
+            String cubeName = getOptionValue(OPTION_CUBE_NAME);
+            String segmentName = getOptionValue(OPTION_SEGMENT_NAME);
+            String factColumnsInputPath = getOptionValue(OPTION_INPUT_PATH);
 
-			KylinConfig config = KylinConfig.getInstanceFromEnv();
+            KylinConfig config = KylinConfig.getInstanceFromEnv();
 
-			DictionaryGeneratorCLI.processSegment(config, cubeName,
-					segmentName, factColumnsInputPath);
-		} catch (Exception e) {
-			printUsage(options);
-			e.printStackTrace(System.err);
-			log.error(e.getLocalizedMessage(), e);
-			returnCode = 2;
-		}
+            DictionaryGeneratorCLI.processSegment(config, cubeName, segmentName, factColumnsInputPath);
+        } catch (Exception e) {
+            printUsage(options);
+            e.printStackTrace(System.err);
+            log.error(e.getLocalizedMessage(), e);
+            returnCode = 2;
+        }
 
-		return returnCode;
-	}
+        return returnCode;
+    }
 
-	public static void main(String[] args) throws Exception {
-		int exitCode = ToolRunner.run(new CreateDictionaryJob(), args);
-		System.exit(exitCode);
-	}
+    public static void main(String[] args) throws Exception {
+        int exitCode = ToolRunner.run(new CreateDictionaryJob(), args);
+        System.exit(exitCode);
+    }
 
 }

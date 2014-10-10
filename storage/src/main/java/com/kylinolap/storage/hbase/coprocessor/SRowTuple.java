@@ -32,76 +32,75 @@ import com.kylinolap.storage.tuple.ITuple;
  */
 public class SRowTuple implements ITuple {
 
-	final SRowType type;
+    final SRowType type;
 
-	ImmutableBytesWritable rowkey;
-	String[] values;
+    ImmutableBytesWritable rowkey;
+    String[] values;
 
-	public SRowTuple(SRowType type) {
-		this.type = type;
-		this.rowkey = new ImmutableBytesWritable();
-		this.values = new String[type.getColumnCount()];
-	}
+    public SRowTuple(SRowType type) {
+        this.type = type;
+        this.rowkey = new ImmutableBytesWritable();
+        this.values = new String[type.getColumnCount()];
+    }
 
-	public void setUnderlying(byte[] array, int offset, int length) {
-		rowkey.set(array, offset, length);
-		for (int i = 0; i < values.length; i++) {
-			values[i] = null;
-		}
-	}
+    public void setUnderlying(byte[] array, int offset, int length) {
+        rowkey.set(array, offset, length);
+        for (int i = 0; i < values.length; i++) {
+            values[i] = null;
+        }
+    }
 
-	@Override
-	public List<TblColRef> getAllColumns() {
-		return type.columnsAsList;
-	}
+    @Override
+    public List<TblColRef> getAllColumns() {
+        return type.columnsAsList;
+    }
 
-	@Override
-	public Object[] getAllValues() {
-		int n = type.getColumnCount();
-		for (int i = 0; i < n; i++) {
-			getValueAt(i);
-		}
-		return values;
-	}
+    @Override
+    public Object[] getAllValues() {
+        int n = type.getColumnCount();
+        for (int i = 0; i < n; i++) {
+            getValueAt(i);
+        }
+        return values;
+    }
 
-	private String getValueAt(int i) {
-		int n = type.getColumnCount();
-		if (i < 0 || i >= n)
-			return null;
+    private String getValueAt(int i) {
+        int n = type.getColumnCount();
+        if (i < 0 || i >= n)
+            return null;
 
-		if (values[i] == null) {
-			values[i] = dictIdToString(rowkey.get(), rowkey.getOffset()
-					+ type.columnOffsets[i], type.columnSizes[i]);
-		}
+        if (values[i] == null) {
+            values[i] = dictIdToString(rowkey.get(), rowkey.getOffset() + type.columnOffsets[i], type.columnSizes[i]);
+        }
 
-		return values[i];
-	}
+        return values[i];
+    }
 
-	// a special string encoding for dictionary ID that maintains order and
-	// equality
-	public static String dictIdToString(byte[] idBytes, int offset, int length) {
-		try {
-			return new String(idBytes, offset, length, "ISO-8859-1");
-		} catch (UnsupportedEncodingException e) {
-			// never happen
-			return null;
-		}
-	}
+    // a special string encoding for dictionary ID that maintains order and
+    // equality
+    public static String dictIdToString(byte[] idBytes, int offset, int length) {
+        try {
+            return new String(idBytes, offset, length, "ISO-8859-1");
+        } catch (UnsupportedEncodingException e) {
+            // never happen
+            return null;
+        }
+    }
 
-	@Override
-	public Object getValue(TblColRef col) {
-		int i = type.columnIdxMap.get(col);
-		return getValueAt(i);
-	}
+    @Override
+    public Object getValue(TblColRef col) {
+        int i = type.columnIdxMap.get(col);
+        return getValueAt(i);
+    }
 
-	@Override
-	public List<String> getAllFields() {
-		throw new UnsupportedOperationException();
-	}
+    @Override
+    public List<String> getAllFields() {
+        throw new UnsupportedOperationException();
+    }
 
-	@Override
-	public Object getValue(String field) {
-		throw new UnsupportedOperationException();
-	}
+    @Override
+    public Object getValue(String field) {
+        throw new UnsupportedOperationException();
+    }
 
 }

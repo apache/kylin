@@ -62,198 +62,187 @@ import com.kylinolap.query.schema.OLAPTable;
  * @author xjiang
  * 
  */
-public class OLAPTableScan extends TableAccessRelBase implements OLAPRel,
-		EnumerableRel {
+public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, EnumerableRel {
 
-	private final OLAPTable olapTable;
-	private final String cubeTable;
-	private final int[] fields;
-	private ColumnRowType columnRowType;
-	private OLAPContext context;
+    private final OLAPTable olapTable;
+    private final String cubeTable;
+    private final int[] fields;
+    private ColumnRowType columnRowType;
+    private OLAPContext context;
 
-	public OLAPTableScan(RelOptCluster cluster, RelOptTable table,
-			OLAPTable olapTable, int[] fields) {
-		super(cluster, cluster.traitSetOf(OLAPRel.CONVENTION), table);
-		this.olapTable = olapTable;
-		this.fields = fields;
-		this.cubeTable = olapTable.getTableName();
-		this.rowType = getRowType();
-	}
+    public OLAPTableScan(RelOptCluster cluster, RelOptTable table, OLAPTable olapTable, int[] fields) {
+        super(cluster, cluster.traitSetOf(OLAPRel.CONVENTION), table);
+        this.olapTable = olapTable;
+        this.fields = fields;
+        this.cubeTable = olapTable.getTableName();
+        this.rowType = getRowType();
+    }
 
-	public OLAPTable getOlapTable() {
-		return olapTable;
-	}
+    public OLAPTable getOlapTable() {
+        return olapTable;
+    }
 
-	public String getCubeTable() {
-		return cubeTable;
-	}
+    public String getCubeTable() {
+        return cubeTable;
+    }
 
-	public int[] getFields() {
-		return fields;
-	}
+    public int[] getFields() {
+        return fields;
+    }
 
-	@Override
-	public OLAPContext getContext() {
-		return context;
-	}
+    @Override
+    public OLAPContext getContext() {
+        return context;
+    }
 
-	@Override
-	public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-		Preconditions.checkArgument(inputs.isEmpty());
-		return new OLAPTableScan(getCluster(), table, olapTable, fields);
-	}
+    @Override
+    public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
+        Preconditions.checkArgument(inputs.isEmpty());
+        return new OLAPTableScan(getCluster(), table, olapTable, fields);
+    }
 
-	@Override
-	public void register(RelOptPlanner planner) {
-		// force clear the query context before traversal relational operators
-		OLAPContext.clearThreadLocalContexts();
+    @Override
+    public void register(RelOptPlanner planner) {
+        // force clear the query context before traversal relational operators
+        OLAPContext.clearThreadLocalContexts();
 
-		// register OLAP rules
-		planner.addRule(OLAPToEnumerableConverterRule.INSTANCE);
-		planner.addRule(OLAPFilterRule.INSTANCE);
-		planner.addRule(OLAPProjectRule.INSTANCE);
-		planner.addRule(OLAPAggregateRule.INSTANCE);
-		planner.addRule(OLAPJoinRule.INSTANCE);
-		planner.addRule(OLAPLimitRule.INSTANCE);
-		planner.addRule(OLAPSortRule.INSTANCE);
+        // register OLAP rules
+        planner.addRule(OLAPToEnumerableConverterRule.INSTANCE);
+        planner.addRule(OLAPFilterRule.INSTANCE);
+        planner.addRule(OLAPProjectRule.INSTANCE);
+        planner.addRule(OLAPAggregateRule.INSTANCE);
+        planner.addRule(OLAPJoinRule.INSTANCE);
+        planner.addRule(OLAPLimitRule.INSTANCE);
+        planner.addRule(OLAPSortRule.INSTANCE);
 
-		// since join is the entry point, we can't push filter past join
-		planner.removeRule(PushFilterPastJoinRule.FILTER_ON_JOIN);
-		planner.removeRule(PushFilterPastJoinRule.JOIN);
+        // since join is the entry point, we can't push filter past join
+        planner.removeRule(PushFilterPastJoinRule.FILTER_ON_JOIN);
+        planner.removeRule(PushFilterPastJoinRule.JOIN);
 
-		// TODO : since we don't have statistic of table, the optimization of
-		// join is too cost
-		planner.removeRule(SwapJoinRule.INSTANCE);
-		planner.removeRule(PushJoinThroughJoinRule.LEFT);
-		planner.removeRule(PushJoinThroughJoinRule.RIGHT);
+        // TODO : since we don't have statistic of table, the optimization of
+        // join is too cost
+        planner.removeRule(SwapJoinRule.INSTANCE);
+        planner.removeRule(PushJoinThroughJoinRule.LEFT);
+        planner.removeRule(PushJoinThroughJoinRule.RIGHT);
 
-		// distinct count will be split into a separated query that is joined
-		// with the left query
-		planner.removeRule(RemoveDistinctAggregateRule.INSTANCE);
-	}
+        // distinct count will be split into a separated query that is joined
+        // with the left query
+        planner.removeRule(RemoveDistinctAggregateRule.INSTANCE);
+    }
 
-	@Override
-	public RelDataType deriveRowType() {
-		final List<RelDataTypeField> fieldList = table.getRowType()
-				.getFieldList();
-		final RelDataTypeFactory.FieldInfoBuilder builder = getCluster()
-				.getTypeFactory().builder();
-		for (int field : fields) {
-			builder.add(fieldList.get(field));
-		}
-		return getCluster().getTypeFactory().createStructType(builder);
-	}
+    @Override
+    public RelDataType deriveRowType() {
+        final List<RelDataTypeField> fieldList = table.getRowType().getFieldList();
+        final RelDataTypeFactory.FieldInfoBuilder builder = getCluster().getTypeFactory().builder();
+        for (int field : fields) {
+            builder.add(fieldList.get(field));
+        }
+        return getCluster().getTypeFactory().createStructType(builder);
+    }
 
-	@Override
-	public RelOptCost computeSelfCost(RelOptPlanner planner) {
-		return super.computeSelfCost(planner).multiplyBy(.05);
-	}
+    @Override
+    public RelOptCost computeSelfCost(RelOptPlanner planner) {
+        return super.computeSelfCost(planner).multiplyBy(.05);
+    }
 
-	@Override
-	public RelWriter explainTerms(RelWriter pw) {
-		return super.explainTerms(pw).item("fields", Primitive.asList(fields));
-	}
+    @Override
+    public RelWriter explainTerms(RelWriter pw) {
+        return super.explainTerms(pw).item("fields", Primitive.asList(fields));
+    }
 
-	@Override
-	public void implementOLAP(OLAPImplementor implementor) {
-		// create context in case of non-join
-		if (implementor.getContext() == null
-				|| !(implementor.getParentNode() instanceof OLAPJoinRel)) {
-			implementor.allocateContext();
-		}
-		columnRowType = buildColumnRowType();
-		context = implementor.getContext();
+    @Override
+    public void implementOLAP(OLAPImplementor implementor) {
+        // create context in case of non-join
+        if (implementor.getContext() == null || !(implementor.getParentNode() instanceof OLAPJoinRel)) {
+            implementor.allocateContext();
+        }
+        columnRowType = buildColumnRowType();
+        context = implementor.getContext();
 
-		if (context.olapSchema == null) {
-			OLAPSchema schema = olapTable.getSchema();
-			context.olapSchema = schema;
-			context.storageContext.setConnUrl(schema.getStorageUrl());
-		}
+        if (context.olapSchema == null) {
+            OLAPSchema schema = olapTable.getSchema();
+            context.olapSchema = schema;
+            context.storageContext.setConnUrl(schema.getStorageUrl());
+        }
 
-		if (context.firstTableScan == null) {
-			context.firstTableScan = this;
-		}
+        if (context.firstTableScan == null) {
+            context.firstTableScan = this;
+        }
 
-		context.olapRowType = rowType;
-	}
+        context.olapRowType = rowType;
+    }
 
-	private ColumnRowType buildColumnRowType() {
-		List<TblColRef> columns = new ArrayList<TblColRef>();
-		for (ColumnDesc sourceColumn : olapTable.getExposedColumns()) {
-			TblColRef colRef = new TblColRef(sourceColumn);
-			columns.add(colRef);
-		}
-		return new ColumnRowType(columns);
-	}
+    private ColumnRowType buildColumnRowType() {
+        List<TblColRef> columns = new ArrayList<TblColRef>();
+        for (ColumnDesc sourceColumn : olapTable.getExposedColumns()) {
+            TblColRef colRef = new TblColRef(sourceColumn);
+            columns.add(colRef);
+        }
+        return new ColumnRowType(columns);
+    }
 
-	@Override
-	public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
-		JavaImplementor javaImplementor = (JavaImplementor) implementor;
+    @Override
+    public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
+        JavaImplementor javaImplementor = (JavaImplementor) implementor;
 
-		int ctxId = this.context.id;
-		if (javaImplementor.getParentContext() != null) {
-			ctxId = javaImplementor.getParentContext().id;
-		}
+        int ctxId = this.context.id;
+        if (javaImplementor.getParentContext() != null) {
+            ctxId = javaImplementor.getParentContext().id;
+        }
 
-		PhysType physType = PhysTypeImpl.of(javaImplementor.getTypeFactory(),
-				this.rowType, pref.preferArray());
+        PhysType physType = PhysTypeImpl.of(javaImplementor.getTypeFactory(), this.rowType, pref.preferArray());
 
-		String execFunction = genExecFunc();
+        String execFunction = genExecFunc();
 
-		return javaImplementor.result(physType, Blocks.toBlock(Expressions
-				.call(table.getExpression(OLAPTable.class), execFunction,
-						javaImplementor.getRootExpression(),
-						Expressions.constant(ctxId))));
-	}
+        return javaImplementor.result(physType, Blocks.toBlock(Expressions.call(table.getExpression(OLAPTable.class), execFunction, javaImplementor.getRootExpression(), Expressions.constant(ctxId))));
+    }
 
-	private String genExecFunc() {
-		// if the table to scan is not the fact table of cube, then it's a
-		// lookup table
-		if (context.hasJoin == false
-				&& cubeTable.equals(context.cubeDesc.getFactTable()) == false) {
-			return "executeLookupTableQuery";
-		} else {
-			return "executeCubeQuery";
-		}
+    private String genExecFunc() {
+        // if the table to scan is not the fact table of cube, then it's a
+        // lookup table
+        if (context.hasJoin == false && cubeTable.equals(context.cubeDesc.getFactTable()) == false) {
+            return "executeLookupTableQuery";
+        } else {
+            return "executeCubeQuery";
+        }
 
-	}
+    }
 
-	@Override
-	public ColumnRowType getColumnRowType() {
-		return columnRowType;
-	}
+    @Override
+    public ColumnRowType getColumnRowType() {
+        return columnRowType;
+    }
 
-	/**
-	 * Because OLAPTableScan is reused for the same table, we can't use
-	 * this.context and have to use parent context
-	 **/
-	@Override
-	public void implementRewrite(RewriteImplementor implementor) {
-		Map<String, RelDataType> rewriteFields = this.context.rewriteFields;
-		if (implementor.getParentContext() != null) {
-			rewriteFields = implementor.getParentContext().rewriteFields;
-		}
+    /**
+     * Because OLAPTableScan is reused for the same table, we can't use
+     * this.context and have to use parent context
+     **/
+    @Override
+    public void implementRewrite(RewriteImplementor implementor) {
+        Map<String, RelDataType> rewriteFields = this.context.rewriteFields;
+        if (implementor.getParentContext() != null) {
+            rewriteFields = implementor.getParentContext().rewriteFields;
+        }
 
-		for (Map.Entry<String, RelDataType> rewriteField : rewriteFields
-				.entrySet()) {
-			String fieldName = rewriteField.getKey();
-			RelDataTypeField field = rowType.getField(fieldName, true);
-			if (field != null) {
-				RelDataType fieldType = field.getType();
-				rewriteField.setValue(fieldType);
-			}
-		}
-	}
+        for (Map.Entry<String, RelDataType> rewriteField : rewriteFields.entrySet()) {
+            String fieldName = rewriteField.getKey();
+            RelDataTypeField field = rowType.getField(fieldName, true);
+            if (field != null) {
+                RelDataType fieldType = field.getType();
+                rewriteField.setValue(fieldType);
+            }
+        }
+    }
 
-	@Override
-	public boolean hasSubQuery() {
-		return false;
-	}
+    @Override
+    public boolean hasSubQuery() {
+        return false;
+    }
 
-	@Override
-	public RelTraitSet replaceTraitSet(RelTrait trait) {
-		RelTraitSet oldTraitSet = this.traitSet;
-		this.traitSet = this.traitSet.replace(trait);
-		return oldTraitSet;
-	}
+    @Override
+    public RelTraitSet replaceTraitSet(RelTrait trait) {
+        RelTraitSet oldTraitSet = this.traitSet;
+        this.traitSet = this.traitSet.replace(trait);
+        return oldTraitSet;
+    }
 }

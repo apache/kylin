@@ -15,7 +15,7 @@
  */
 package com.kylinolap.cube.common;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.junit.Test;
 
@@ -25,35 +25,26 @@ import org.junit.Test;
  */
 public class BytesSplitterTest {
 
-	@Test
-	public void test() {
-		BytesSplitter bytesSplitter = new BytesSplitter(10, 15);
-		byte[] input = "2013-02-17Collectibles".getBytes();
-		bytesSplitter.split(input, input.length, (byte) 127);
+    @Test
+    public void test() {
+        BytesSplitter bytesSplitter = new BytesSplitter(10, 15);
+        byte[] input = "2013-02-17Collectibles".getBytes();
+        bytesSplitter.split(input, input.length, (byte) 127);
 
-		assertEquals(2, bytesSplitter.getBufferSize());
-		assertEquals("2013-02-17",
-				new String(bytesSplitter.getSplitBuffers()[0].value, 0,
-						bytesSplitter.getSplitBuffers()[0].length));
-		assertEquals("Collectibles",
-				new String(bytesSplitter.getSplitBuffers()[1].value, 0,
-						bytesSplitter.getSplitBuffers()[1].length));
-	}
+        assertEquals(2, bytesSplitter.getBufferSize());
+        assertEquals("2013-02-17", new String(bytesSplitter.getSplitBuffers()[0].value, 0, bytesSplitter.getSplitBuffers()[0].length));
+        assertEquals("Collectibles", new String(bytesSplitter.getSplitBuffers()[1].value, 0, bytesSplitter.getSplitBuffers()[1].length));
+    }
 
-	@Test
-	public void testNullValue() {
-		BytesSplitter bytesSplitter = new BytesSplitter(10, 15);
-		byte[] input = "2013-02-17Collectibles".getBytes();
-		bytesSplitter.split(input, input.length, (byte) 127);
+    @Test
+    public void testNullValue() {
+        BytesSplitter bytesSplitter = new BytesSplitter(10, 15);
+        byte[] input = "2013-02-17Collectibles".getBytes();
+        bytesSplitter.split(input, input.length, (byte) 127);
 
-		assertEquals(3, bytesSplitter.getBufferSize());
-		assertEquals("2013-02-17",
-				new String(bytesSplitter.getSplitBuffers()[0].value, 0,
-						bytesSplitter.getSplitBuffers()[0].length));
-		assertEquals("", new String(bytesSplitter.getSplitBuffers()[1].value,
-				0, bytesSplitter.getSplitBuffers()[1].length));
-		assertEquals("Collectibles",
-				new String(bytesSplitter.getSplitBuffers()[2].value, 0,
-						bytesSplitter.getSplitBuffers()[2].length));
-	}
+        assertEquals(3, bytesSplitter.getBufferSize());
+        assertEquals("2013-02-17", new String(bytesSplitter.getSplitBuffers()[0].value, 0, bytesSplitter.getSplitBuffers()[0].length));
+        assertEquals("", new String(bytesSplitter.getSplitBuffers()[1].value, 0, bytesSplitter.getSplitBuffers()[1].length));
+        assertEquals("Collectibles", new String(bytesSplitter.getSplitBuffers()[2].value, 0, bytesSplitter.getSplitBuffers()[2].length));
+    }
 }

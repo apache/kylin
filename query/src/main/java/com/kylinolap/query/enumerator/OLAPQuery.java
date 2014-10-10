@@ -27,42 +27,39 @@ import com.kylinolap.query.relnode.OLAPContext;
  * @author xjiang
  * 
  */
-public class OLAPQuery extends AbstractEnumerable<Object[]> implements
-		Enumerable<Object[]> {
+public class OLAPQuery extends AbstractEnumerable<Object[]> implements Enumerable<Object[]> {
 
-	public static final String PROP_SCAN_THRESHOLD = "scan_threshold";
+    public static final String PROP_SCAN_THRESHOLD = "scan_threshold";
 
-	public enum EnumeratorTypeEnum {
-		CUBE, LOOKUP_TABLE, HIVE
-	}
+    public enum EnumeratorTypeEnum {
+        CUBE, LOOKUP_TABLE, HIVE
+    }
 
-	private final DataContext optiqContext;
-	private final EnumeratorTypeEnum type;
-	private final int contextId;
+    private final DataContext optiqContext;
+    private final EnumeratorTypeEnum type;
+    private final int contextId;
 
-	public OLAPQuery(DataContext optiqContext, EnumeratorTypeEnum type,
-			int ctxId) {
-		this.optiqContext = optiqContext;
-		this.type = type;
-		this.contextId = ctxId;
-	}
+    public OLAPQuery(DataContext optiqContext, EnumeratorTypeEnum type, int ctxId) {
+        this.optiqContext = optiqContext;
+        this.type = type;
+        this.contextId = ctxId;
+    }
 
-	public OLAPQuery(EnumeratorTypeEnum type, int ctxSeq) {
-		this(null, type, ctxSeq);
-	}
+    public OLAPQuery(EnumeratorTypeEnum type, int ctxSeq) {
+        this(null, type, ctxSeq);
+    }
 
-	public Enumerator<Object[]> enumerator() {
-		OLAPContext olapContext = OLAPContext
-				.getThreadLocalContextById(contextId);
-		switch (type) {
-		case CUBE:
-			return new CubeEnumerator(olapContext, optiqContext);
-		case LOOKUP_TABLE:
-			return new LookupTableEnumerator(olapContext);
-		case HIVE:
-			return new HiveEnumerator(olapContext);
-		default:
-			throw new IllegalArgumentException("Wrong type " + type + "!");
-		}
-	}
+    public Enumerator<Object[]> enumerator() {
+        OLAPContext olapContext = OLAPContext.getThreadLocalContextById(contextId);
+        switch (type) {
+        case CUBE:
+            return new CubeEnumerator(olapContext, optiqContext);
+        case LOOKUP_TABLE:
+            return new LookupTableEnumerator(olapContext);
+        case HIVE:
+            return new HiveEnumerator(olapContext);
+        default:
+            throw new IllegalArgumentException("Wrong type " + type + "!");
+        }
+    }
 }

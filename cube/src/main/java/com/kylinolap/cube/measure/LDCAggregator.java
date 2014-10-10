@@ -26,37 +26,37 @@ import org.apache.hadoop.io.LongWritable;
  */
 public class LDCAggregator extends MeasureAggregator<LongWritable> {
 
-	private static LongWritable ZERO = new LongWritable(0);
+    private static LongWritable ZERO = new LongWritable(0);
 
-	private HLLCAggregator hllAgg = null;
-	private LongWritable state = new LongWritable(0);
+    private HLLCAggregator hllAgg = null;
+    private LongWritable state = new LongWritable(0);
 
-	@SuppressWarnings("rawtypes")
-	public void setDependentAggregator(MeasureAggregator agg) {
-		this.hllAgg = (HLLCAggregator) agg;
-	}
+    @SuppressWarnings("rawtypes")
+    public void setDependentAggregator(MeasureAggregator agg) {
+        this.hllAgg = (HLLCAggregator) agg;
+    }
 
-	@Override
-	public void reset() {
-	}
+    @Override
+    public void reset() {
+    }
 
-	@Override
-	public void aggregate(LongWritable value) {
-	}
+    @Override
+    public void aggregate(LongWritable value) {
+    }
 
-	@Override
-	public LongWritable getState() {
-		if (hllAgg == null) {
-			return ZERO;
-		} else {
-			state.set(hllAgg.getState().getCountEstimate());
-			return state;
-		}
-	}
+    @Override
+    public LongWritable getState() {
+        if (hllAgg == null) {
+            return ZERO;
+        } else {
+            state.set(hllAgg.getState().getCountEstimate());
+            return state;
+        }
+    }
 
-	@Override
-	public int getMemBytes() {
-		return guessLongMemBytes();
-	}
+    @Override
+    public int getMemBytes() {
+        return guessLongMemBytes();
+    }
 
 }

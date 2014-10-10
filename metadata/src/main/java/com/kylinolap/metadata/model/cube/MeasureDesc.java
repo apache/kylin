@@ -27,74 +27,74 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class MeasureDesc {
 
-	@JsonProperty("id")
-	private int id;
-	@JsonProperty("name")
-	private String name;
-	@JsonProperty("function")
-	private FunctionDesc function;
-	@JsonProperty("dependent_measure_ref")
-	private String dependentMeasureRef;
+    @JsonProperty("id")
+    private int id;
+    @JsonProperty("name")
+    private String name;
+    @JsonProperty("function")
+    private FunctionDesc function;
+    @JsonProperty("dependent_measure_ref")
+    private String dependentMeasureRef;
 
-	public int getId() {
-		return id;
-	}
+    public int getId() {
+        return id;
+    }
 
-	public void setId(int id) {
-		this.id = id;
-	}
+    public void setId(int id) {
+        this.id = id;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public FunctionDesc getFunction() {
-		return function;
-	}
+    public FunctionDesc getFunction() {
+        return function;
+    }
 
-	public void setFunction(FunctionDesc function) {
-		this.function = function;
-	}
+    public void setFunction(FunctionDesc function) {
+        this.function = function;
+    }
 
-	public String getDependentMeasureRef() {
-		return dependentMeasureRef;
-	}
+    public String getDependentMeasureRef() {
+        return dependentMeasureRef;
+    }
 
-	public void setDependentMeasureRef(String dependentMeasureRef) {
-		this.dependentMeasureRef = dependentMeasureRef;
-	}
+    public void setDependentMeasureRef(String dependentMeasureRef) {
+        this.dependentMeasureRef = dependentMeasureRef;
+    }
 
-	public boolean isHolisticCountDistinct() {
-		return function.isHolisticCountDistinct();
-	}
+    public boolean isHolisticCountDistinct() {
+        return function.isHolisticCountDistinct();
+    }
 
-	@Override
-	public boolean equals(Object o) {
-		if (this == o)
-			return true;
-		if (o == null || getClass() != o.getClass())
-			return false;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
-		MeasureDesc that = (MeasureDesc) o;
+        MeasureDesc that = (MeasureDesc) o;
 
-		if (id != that.id)
-			return false;
+        if (id != that.id)
+            return false;
 
-		return true;
-	}
+        return true;
+    }
 
-	@Override
-	public int hashCode() {
-		return id;
-	}
+    @Override
+    public int hashCode() {
+        return id;
+    }
 
-	@Override
-	public String toString() {
-		return "MeasureDesc [name=" + name + ", function=" + function + "]";
-	}
+    @Override
+    public String toString() {
+        return "MeasureDesc [name=" + name + ", function=" + function + "]";
+    }
 
 }

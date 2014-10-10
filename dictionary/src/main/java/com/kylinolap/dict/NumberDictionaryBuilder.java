@@ -24,23 +24,23 @@ import org.apache.hadoop.hbase.util.Bytes;
  */
 public class NumberDictionaryBuilder<T> extends TrieDictionaryBuilder<T> {
 
-	NumberDictionary.NumberBytesCodec codec = new NumberDictionary.NumberBytesCodec();
+    NumberDictionary.NumberBytesCodec codec = new NumberDictionary.NumberBytesCodec();
 
-	public NumberDictionaryBuilder(BytesConverter<T> bytesConverter) {
-		super(bytesConverter);
-	}
+    public NumberDictionaryBuilder(BytesConverter<T> bytesConverter) {
+        super(bytesConverter);
+    }
 
-	@Override
-	public void addValue(byte[] value) {
-		codec.encodeNumber(value, 0, value.length);
-		byte[] copy = Bytes.copy(codec.buf, codec.bufOffset, codec.bufLen);
-		super.addValue(copy);
-	}
+    @Override
+    public void addValue(byte[] value) {
+        codec.encodeNumber(value, 0, value.length);
+        byte[] copy = Bytes.copy(codec.buf, codec.bufOffset, codec.bufLen);
+        super.addValue(copy);
+    }
 
-	public NumberDictionary<T> build(int baseId) {
-		byte[] trieBytes = buildTrieBytes(baseId);
-		NumberDictionary<T> r = new NumberDictionary<T>(trieBytes);
-		return r;
-	}
+    public NumberDictionary<T> build(int baseId) {
+        byte[] trieBytes = buildTrieBytes(baseId);
+        NumberDictionary<T> r = new NumberDictionary<T>(trieBytes);
+        return r;
+    }
 
 }

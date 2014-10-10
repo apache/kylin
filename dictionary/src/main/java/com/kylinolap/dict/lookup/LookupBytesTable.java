@@ -29,24 +29,22 @@ import com.kylinolap.metadata.model.schema.TableDesc;
  */
 public class LookupBytesTable extends LookupTable<ByteArray> {
 
-	public LookupBytesTable(TableDesc tableDesc, String[] keyColumns,
-			ReadableTable table) throws IOException {
-		super(tableDesc, keyColumns, table);
-	}
+    public LookupBytesTable(TableDesc tableDesc, String[] keyColumns, ReadableTable table) throws IOException {
+        super(tableDesc, keyColumns, table);
+    }
 
-	@Override
-	protected ByteArray[] convertRow(String[] cols) {
-		ByteArray[] r = new ByteArray[cols.length];
-		for (int i = 0; i < cols.length; i++) {
-			r[i] = cols[i] == null ? null : new ByteArray(
-					Bytes.toBytes(cols[i]));
-		}
-		return r;
-	}
+    @Override
+    protected ByteArray[] convertRow(String[] cols) {
+        ByteArray[] r = new ByteArray[cols.length];
+        for (int i = 0; i < cols.length; i++) {
+            r[i] = cols[i] == null ? null : new ByteArray(Bytes.toBytes(cols[i]));
+        }
+        return r;
+    }
 
-	@Override
-	protected String toString(ByteArray cell) {
-		return Bytes.toString(cell.data);
-	}
+    @Override
+    protected String toString(ByteArray cell) {
+        return Bytes.toString(cell.data);
+    }
 
 }

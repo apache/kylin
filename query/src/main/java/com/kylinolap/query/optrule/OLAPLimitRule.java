@@ -31,30 +31,26 @@ import com.kylinolap.query.relnode.OLAPRel;
  */
 public class OLAPLimitRule extends RelOptRule {
 
-	public static final RelOptRule INSTANCE = new OLAPLimitRule();
+    public static final RelOptRule INSTANCE = new OLAPLimitRule();
 
-	public OLAPLimitRule() {
-		super(operand(SortRel.class, any()), "OLAPLimitRule");
-	}
+    public OLAPLimitRule() {
+        super(operand(SortRel.class, any()), "OLAPLimitRule");
+    }
 
-	@Override
-	public void onMatch(RelOptRuleCall call) {
-		final SortRel sort = call.rel(0);
-		if (sort.offset == null && sort.fetch == null) {
-			return;
-		}
-		final RelTraitSet traitSet = sort.getTraitSet().replace(
-				OLAPRel.CONVENTION);
-		RelNode input = sort.getChild();
-		if (!sort.getCollation().getFieldCollations().isEmpty()) {
-			// Create a sort with the same sort key, but no offset or fetch.
-			input = sort.copy(sort.getTraitSet(), input, sort.getCollation(),
-					null, null);
-		}
-		RelNode x = convert(input,
-				input.getTraitSet().replace(OLAPRel.CONVENTION));
-		call.transformTo(new OLAPLimitRel(sort.getCluster(), traitSet, x,
-				sort.offset, sort.fetch));
-	}
+    @Override
+    public void onMatch(RelOptRuleCall call) {
+        final SortRel sort = call.rel(0);
+        if (sort.offset == null && sort.fetch == null) {
+            return;
+        }
+        final RelTraitSet traitSet = sort.getTraitSet().replace(OLAPRel.CONVENTION);
+        RelNode input = sort.getChild();
+        if (!sort.getCollation().getFieldCollations().isEmpty()) {
+            // Create a sort with the same sort key, but no offset or fetch.
+            input = sort.copy(sort.getTraitSet(), input, sort.getCollation(), null, null);
+        }
+        RelNode x = convert(input, input.getTraitSet().replace(OLAPRel.CONVENTION));
+        call.transformTo(new OLAPLimitRel(sort.getCluster(), traitSet, x, sort.offset, sort.fetch));
+    }
 
 }

@@ -39,129 +39,113 @@ import com.kylinolap.job.engine.JobEngineConfig;
  */
 public class JobFlow {
 
-	private static Logger log = LoggerFactory.getLogger(JobFlow.class);
+    private static Logger log = LoggerFactory.getLogger(JobFlow.class);
 
-	private final List<JobDetail> flowNodes;
-	private final JobInstance jobInstance;
-	private final JobEngineConfig engineConfig;
+    private final List<JobDetail> flowNodes;
+    private final JobInstance jobInstance;
+    private final JobEngineConfig engineConfig;
 
-	public JobFlow(JobInstance job, JobEngineConfig context) {
-		this.engineConfig = context;
-		this.jobInstance = job;
-		// validate job instance
-		List<JobStep> sortedSteps = jobInstance.getSteps();
+    public JobFlow(JobInstance job, JobEngineConfig context) {
+        this.engineConfig = context;
+        this.jobInstance = job;
+        // validate job instance
+        List<JobStep> sortedSteps = jobInstance.getSteps();
 
-		if (sortedSteps == null || sortedSteps.size() == 0) {
-			throw new IllegalStateException("Steps of job "
-					+ jobInstance.getUuid() + " is null or empty!");
-		}
+        if (sortedSteps == null || sortedSteps.size() == 0) {
+            throw new IllegalStateException("Steps of job " + jobInstance.getUuid() + " is null or empty!");
+        }
 
-		// sort the steps by step_sequenceID
-		Collections.sort(sortedSteps);
-		// find the 1st runnable job
-		int firstStepIndex = findFirstStep(sortedSteps);
+        // sort the steps by step_sequenceID
+        Collections.sort(sortedSteps);
+        // find the 1st runnable job
+        int firstStepIndex = findFirstStep(sortedSteps);
 
-		log.info("Job " + jobInstance.getUuid() + " will be started at step "
-				+ firstStepIndex + " (sequence number)");
+        log.info("Job " + jobInstance.getUuid() + " will be started at step " + firstStepIndex + " (sequence number)");
 
-		flowNodes = new LinkedList<JobDetail>();
-		for (int i = firstStepIndex; i < sortedSteps.size(); i++) {
-			JobDetail node = createJobFlowNode(jobInstance, i);
-			flowNodes.add(node);
-		}
-	}
+        flowNodes = new LinkedList<JobDetail>();
+        for (int i = firstStepIndex; i < sortedSteps.size(); i++) {
+            JobDetail node = createJobFlowNode(jobInstance, i);
+            flowNodes.add(node);
+        }
+    }
 
-	public JobInstance getJobInstance() {
-		return jobInstance;
-	}
+    public JobInstance getJobInstance() {
+        return jobInstance;
+    }
 
-	public JobEngineConfig getJobengineConfig() {
-		return engineConfig;
-	}
+    public JobEngineConfig getJobengineConfig() {
+        return engineConfig;
+    }
 
-	public JobDetail getFirst() {
-		if (flowNodes.isEmpty()) {
-			return null;
-		}
-		return flowNodes.get(0);
-	}
+    public JobDetail getFirst() {
+        if (flowNodes.isEmpty()) {
+            return null;
+        }
+        return flowNodes.get(0);
+    }
 
-	public JobDetail getNext(JobDetail jobFlowNode) {
-		int targetIndex = -1;
-		for (int index = 0; index < flowNodes.size(); index++) {
-			if (flowNodes.get(index).equals(jobFlowNode)) {
-				targetIndex = index;
-			}
-		}
+    public JobDetail getNext(JobDetail jobFlowNode) {
+        int targetIndex = -1;
+        for (int index = 0; index < flowNodes.size(); index++) {
+            if (flowNodes.get(index).equals(jobFlowNode)) {
+                targetIndex = index;
+            }
+        }
 
-		if (targetIndex != -1 && flowNodes.size() > targetIndex + 1) {
-			return flowNodes.get(targetIndex + 1);
-		}
-		return null;
-	}
+        if (targetIndex != -1 && flowNodes.size() > targetIndex + 1) {
+            return flowNodes.get(targetIndex + 1);
+        }
+        return null;
+    }
 
-	private int findFirstStep(List<JobStep> stepList) {
-		int firstJobIndex = 0;
-		for (int i = 0; i < stepList.size(); i++) {
-			JobStep currentStep = stepList.get(i);
-			if (currentStep.getStatus().isRunable() == false) {
-				continue;
-			} else {
-				firstJobIndex = i;
-				break;
-			}
-		}
-		return firstJobIndex;
-	}
+    private int findFirstStep(List<JobStep> stepList) {
+        int firstJobIndex = 0;
+        for (int i = 0; i < stepList.size(); i++) {
+            JobStep currentStep = stepList.get(i);
+            if (currentStep.getStatus().isRunable() == false) {
+                continue;
+            } else {
+                firstJobIndex = i;
+                break;
+            }
+        }
+        return firstJobIndex;
+    }
 
-	private JobDetail createJobFlowNode(final JobInstance jobInstance,
-			final int stepSeqId) {
-		JobStep step = jobInstance.getSteps().get(stepSeqId);
+    private JobDetail createJobFlowNode(final JobInstance jobInstance, final int stepSeqId) {
+        JobStep step = jobInstance.getSteps().get(stepSeqId);
 
-		if (jobInstance.getName() == null || step.getName() == null) {
-			throw new IllegalArgumentException(
-					"JobInstance name or JobStep name cannot be null!");
-		}
+        if (jobInstance.getName() == null || step.getName() == null) {
+            throw new IllegalArgumentException("JobInstance name or JobStep name cannot be null!");
+        }
 
-		// submit job the different groups based on isRunAsync property
-		JobDetail jobFlowNode = JobBuilder
-				.newJob(step.isRunAsync() ? AsyncJobFlowNode.class
-						: JobFlowNode.class)
-				.withIdentity(JobInstance.getStepIdentity(jobInstance, step),
-						JobConstants.CUBE_JOB_GROUP_NAME).storeDurably()
-				.build();
+        // submit job the different groups based on isRunAsync property
+        JobDetail jobFlowNode = JobBuilder.newJob(step.isRunAsync() ? AsyncJobFlowNode.class : JobFlowNode.class).withIdentity(JobInstance.getStepIdentity(jobInstance, step), JobConstants.CUBE_JOB_GROUP_NAME).storeDurably().build();
 
-		// add job flow to node
-		jobFlowNode.getJobDataMap().put(JobConstants.PROP_JOB_FLOW, this);
+        // add job flow to node
+        jobFlowNode.getJobDataMap().put(JobConstants.PROP_JOB_FLOW, this);
 
-		// add command to flow node
-		String execCmd = (step.getCmdType() == JobStepCmdTypeEnum.SHELL_CMD || step
-				.getCmdType() == JobStepCmdTypeEnum.SHELL_CMD_HADOOP) ? wrapExecCmd(
-				jobInstance, step.getExecCmd(),
-				String.valueOf(step.getSequenceID())) : step.getExecCmd();
-		jobFlowNode.getJobDataMap().put(JobConstants.PROP_COMMAND, execCmd);
+        // add command to flow node
+        String execCmd = (step.getCmdType() == JobStepCmdTypeEnum.SHELL_CMD || step.getCmdType() == JobStepCmdTypeEnum.SHELL_CMD_HADOOP) ? wrapExecCmd(jobInstance, step.getExecCmd(), String.valueOf(step.getSequenceID())) : step.getExecCmd();
+        jobFlowNode.getJobDataMap().put(JobConstants.PROP_COMMAND, execCmd);
 
-		// add job instance and step sequenceID to flow node
-		jobFlowNode.getJobDataMap().put(JobConstants.PROP_JOBINSTANCE_UUID,
-				jobInstance.getUuid());
-		jobFlowNode.getJobDataMap().put(JobConstants.PROP_JOBSTEP_SEQ_ID,
-				step.getSequenceID());
+        // add job instance and step sequenceID to flow node
+        jobFlowNode.getJobDataMap().put(JobConstants.PROP_JOBINSTANCE_UUID, jobInstance.getUuid());
+        jobFlowNode.getJobDataMap().put(JobConstants.PROP_JOBSTEP_SEQ_ID, step.getSequenceID());
 
-		// add async flag to flow node
-		jobFlowNode.getJobDataMap().put(JobConstants.PROP_JOB_ASYNC,
-				step.isRunAsync());
+        // add async flag to flow node
+        jobFlowNode.getJobDataMap().put(JobConstants.PROP_JOB_ASYNC, step.isRunAsync());
 
-		return jobFlowNode;
-	}
+        return jobFlowNode;
+    }
 
-	private String wrapExecCmd(JobInstance job, String cmd, String suffix) {
-		if (StringUtils.isBlank(cmd))
-			return cmd;
+    private String wrapExecCmd(JobInstance job, String cmd, String suffix) {
+        if (StringUtils.isBlank(cmd))
+            return cmd;
 
-		KylinConfig config = KylinConfig.getInstanceFromEnv();
-		String log = config.getKylinJobLogDir() + "/" + job.getUuid() + "_"
-				+ suffix + ".log";
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        String log = config.getKylinJobLogDir() + "/" + job.getUuid() + "_" + suffix + ".log";
 
-		return "set -o pipefail; " + cmd + " 2>&1 | tee " + log;
-	}
+        return "set -o pipefail; " + cmd + " 2>&1 | tee " + log;
+    }
 }

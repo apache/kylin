@@ -28,74 +28,74 @@ import java.util.List;
  * 
  */
 public class ValidateContext {
-	private List<Result> results = new ArrayList<ValidateContext.Result>();
+    private List<Result> results = new ArrayList<ValidateContext.Result>();
 
-	public void addResult(ResultLevel level, String message) {
-		results.add(new Result(level, message));
-	}
+    public void addResult(ResultLevel level, String message) {
+        results.add(new Result(level, message));
+    }
 
-	public void addResult(Result result) {
-		results.add(result);
-	}
+    public void addResult(Result result) {
+        results.add(result);
+    }
 
-	public class Result {
-		private ResultLevel level;
-		private String message;
+    public class Result {
+        private ResultLevel level;
+        private String message;
 
-		/**
-		 * @param level
-		 * @param message
-		 */
-		public Result(ResultLevel level, String message) {
-			this.level = level;
-			this.message = message;
-		}
+        /**
+         * @param level
+         * @param message
+         */
+        public Result(ResultLevel level, String message) {
+            this.level = level;
+            this.message = message;
+        }
 
-		/**
-		 * @return the level
-		 */
-		public ResultLevel getLevel() {
-			return level;
-		}
+        /**
+         * @return the level
+         */
+        public ResultLevel getLevel() {
+            return level;
+        }
 
-		/**
-		 * @return the message
-		 */
-		public String getMessage() {
-			return message;
-		}
-	}
+        /**
+         * @return the message
+         */
+        public String getMessage() {
+            return message;
+        }
+    }
 
-	/**
-	 * Get validation result
-	 * 
-	 * @return
-	 */
-	public Result[] getResults() {
-		Result[] rs = new Result[0];
-		rs = results.toArray(rs);
-		return rs;
-	}
+    /**
+     * Get validation result
+     * 
+     * @return
+     */
+    public Result[] getResults() {
+        Result[] rs = new Result[0];
+        rs = results.toArray(rs);
+        return rs;
+    }
 
-	/**
+    /**
      * 
      */
-	public void print(PrintStream out) {
-		if (results.isEmpty()) {
-			out.print("The element is perfect.");
-		}
-		Iterator<Result> it = results.iterator();
-		while (it.hasNext()) {
-			Result result = it.next();
-			out.println(result.level + " : " + result.message);
-		}
-	}
+    public void print(PrintStream out) {
+        if (results.isEmpty()) {
+            out.print("The element is perfect.");
+        }
+        Iterator<Result> it = results.iterator();
+        while (it.hasNext()) {
+            Result result = it.next();
+            out.println(result.level + " : " + result.message);
+        }
+    }
 
-	/**
-	 * @return if there is not validation errors
-	 */
-	public boolean ifPass() {
-		return results.isEmpty();
-	}
+    /**
+     * @return if there is not validation errors
+     */
+    public boolean ifPass() {
+        return results.isEmpty();
+    }
 
 }

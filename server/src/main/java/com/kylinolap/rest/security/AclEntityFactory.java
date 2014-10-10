@@ -27,29 +27,28 @@ import com.kylinolap.job.JobInstance;
  */
 public class AclEntityFactory {
 
-	public static RootPersistentEntity createAclEntity(String entityType,
-			String uuid) {
-		if ("CubeInstance".equals(entityType)) {
-			CubeInstance cubeInstance = new CubeInstance();
-			cubeInstance.setUuid(uuid);
+    public static RootPersistentEntity createAclEntity(String entityType, String uuid) {
+        if ("CubeInstance".equals(entityType)) {
+            CubeInstance cubeInstance = new CubeInstance();
+            cubeInstance.setUuid(uuid);
 
-			return cubeInstance;
-		}
+            return cubeInstance;
+        }
 
-		if ("JobInstance".equals(entityType)) {
-			JobInstance jobInstance = new JobInstance();
-			jobInstance.setUuid(uuid);
+        if ("JobInstance".equals(entityType)) {
+            JobInstance jobInstance = new JobInstance();
+            jobInstance.setUuid(uuid);
 
-			return jobInstance;
-		}
+            return jobInstance;
+        }
 
-		if ("ProjectInstance".equals(entityType)) {
-			ProjectInstance projectInstance = new ProjectInstance();
-			projectInstance.setUuid(uuid);
+        if ("ProjectInstance".equals(entityType)) {
+            ProjectInstance projectInstance = new ProjectInstance();
+            projectInstance.setUuid(uuid);
 
-			return projectInstance;
-		}
+            return projectInstance;
+        }
 
-		throw new RuntimeException("Unsupported entity type!");
-	}
+        throw new RuntimeException("Unsupported entity type!");
+    }
 }

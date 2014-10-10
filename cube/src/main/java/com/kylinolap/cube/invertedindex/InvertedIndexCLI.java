@@ -38,69 +38,64 @@ import com.kylinolap.cube.CubeManager;
  */
 public class InvertedIndexCLI {
 
-	public static void main(String[] args) throws IOException {
-		Configuration hconf = HadoopUtil.getDefaultConfiguration();
-		CubeManager mgr = CubeManager.getInstance(KylinConfig
-				.getInstanceFromEnv());
+    public static void main(String[] args) throws IOException {
+        Configuration hconf = HadoopUtil.getDefaultConfiguration();
+        CubeManager mgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
 
-		String cubeName = args[0];
-		CubeInstance cube = mgr.getCube(cubeName);
+        String cubeName = args[0];
+        CubeInstance cube = mgr.getCube(cubeName);
 
-		String path = args[1];
-		System.out.println("Reading from " + path + " ...");
+        String path = args[1];
+        System.out.println("Reading from " + path + " ...");
 
-		TableRecordInfo info = new TableRecordInfo(cube.getFirstSegment());
-		IIKeyValueCodec codec = new IIKeyValueCodec(info);
-		int count = 0;
-		for (TimeSlice slice : codec
-				.decodeKeyValue(readSequenceKVs(hconf, path))) {
-			for (TableRecord rec : slice) {
-				System.out.println(rec);
-				count++;
-			}
-		}
-		System.out.println("Total " + count + " records");
-	}
+        TableRecordInfo info = new TableRecordInfo(cube.getFirstSegment());
+        IIKeyValueCodec codec = new IIKeyValueCodec(info);
+        int count = 0;
+        for (TimeSlice slice : codec.decodeKeyValue(readSequenceKVs(hconf, path))) {
+            for (TableRecord rec : slice) {
+                System.out.println(rec);
+                count++;
+            }
+        }
+        System.out.println("Total " + count + " records");
+    }
 
-	public static Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> readSequenceKVs(
-			Configuration hconf, String path) throws IOException {
-		final Reader reader = new Reader(hconf,
-				SequenceFile.Reader.file(new Path(path)));
-		return new Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>>() {
-			@Override
-			public Iterator<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> iterator() {
-				return new Iterator<Pair<ImmutableBytesWritable, ImmutableBytesWritable>>() {
-					ImmutableBytesWritable k = new ImmutableBytesWritable();
-					ImmutableBytesWritable v = new ImmutableBytesWritable();
-					Pair<ImmutableBytesWritable, ImmutableBytesWritable> pair = new Pair<ImmutableBytesWritable, ImmutableBytesWritable>(
-							k, v);
+    public static Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> readSequenceKVs(Configuration hconf, String path) throws IOException {
+        final Reader reader = new Reader(hconf, SequenceFile.Reader.file(new Path(path)));
+        return new Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>>() {
+            @Override
+            public Iterator<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> iterator() {
+                return new Iterator<Pair<ImmutableBytesWritable, ImmutableBytesWritable>>() {
+                    ImmutableBytesWritable k = new ImmutableBytesWritable();
+                    ImmutableBytesWritable v = new ImmutableBytesWritable();
+                    Pair<ImmutableBytesWritable, ImmutableBytesWritable> pair = new Pair<ImmutableBytesWritable, ImmutableBytesWritable>(k, v);
 
-					@Override
-					public boolean hasNext() {
-						boolean hasNext = false;
-						try {
-							hasNext = reader.next(k, v);
-						} catch (IOException e) {
-							throw new RuntimeException(e);
-						} finally {
-							if (hasNext == false) {
-								IOUtils.closeQuietly(reader);
-							}
-						}
-						return hasNext;
-					}
+                    @Override
+                    public boolean hasNext() {
+                        boolean hasNext = false;
+                        try {
+                            hasNext = reader.next(k, v);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        } finally {
+                            if (hasNext == false) {
+                                IOUtils.closeQuietly(reader);
+                            }
+                        }
+                        return hasNext;
+                    }
 
-					@Override
-					public Pair<ImmutableBytesWritable, ImmutableBytesWritable> next() {
-						return pair;
-					}
+                    @Override
+                    public Pair<ImmutableBytesWritable, ImmutableBytesWritable> next() {
+                        return pair;
+                    }
 
-					@Override
-					public void remove() {
-						throw new UnsupportedOperationException();
-					}
-				};
-			}
-		};
-	}
+                    @Override
+                    public void remove() {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+            }
+        };
+    }
 }

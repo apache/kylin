@@ -9,35 +9,31 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.servlet.InstrumentedFilterContextListener;
 
-public class KylinInstrumentedFilterContextListener implements
-		ServletContextListener {
+public class KylinInstrumentedFilterContextListener implements ServletContextListener {
 
-	@Autowired
-	private MetricRegistry metricRegistry;
+    @Autowired
+    private MetricRegistry metricRegistry;
 
-	private final InnerKylinInstrumentedFilterContextListener innerKylinInstrumentedFilterContextListener = new InnerKylinInstrumentedFilterContextListener();
+    private final InnerKylinInstrumentedFilterContextListener innerKylinInstrumentedFilterContextListener = new InnerKylinInstrumentedFilterContextListener();
 
-	@Override
-	public void contextInitialized(ServletContextEvent event) {
-		WebApplicationContextUtils
-				.getRequiredWebApplicationContext(event.getServletContext())
-				.getAutowireCapableBeanFactory().autowireBean(this);
+    @Override
+    public void contextInitialized(ServletContextEvent event) {
+        WebApplicationContextUtils.getRequiredWebApplicationContext(event.getServletContext()).getAutowireCapableBeanFactory().autowireBean(this);
 
-		innerKylinInstrumentedFilterContextListener.contextInitialized(event);
-	}
+        innerKylinInstrumentedFilterContextListener.contextInitialized(event);
+    }
 
-	@Override
-	public void contextDestroyed(ServletContextEvent event) {
-	}
+    @Override
+    public void contextDestroyed(ServletContextEvent event) {
+    }
 
-	class InnerKylinInstrumentedFilterContextListener extends
-			InstrumentedFilterContextListener {
+    class InnerKylinInstrumentedFilterContextListener extends InstrumentedFilterContextListener {
 
-		@Override
-		protected MetricRegistry getMetricRegistry() {
-			return metricRegistry;
-		}
+        @Override
+        protected MetricRegistry getMetricRegistry() {
+            return metricRegistry;
+        }
 
-	}
+    }
 
 }

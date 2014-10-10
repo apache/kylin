@@ -55,154 +55,135 @@ import com.kylinolap.metadata.model.cube.TblColRef;
 @SuppressWarnings("rawtypes")
 public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(MergeCuboidMapperTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(MergeCuboidMapperTest.class);
 
-	MapDriver<Text, Text, Text, Text> mapDriver;
-	CubeManager cubeManager;
-	CubeInstance cube;
-	DictionaryManager dictionaryManager;
+    MapDriver<Text, Text, Text, Text> mapDriver;
+    CubeManager cubeManager;
+    CubeInstance cube;
+    DictionaryManager dictionaryManager;
 
-	TblColRef lfn;
-	TblColRef lsi;
-	TblColRef ssc;
+    TblColRef lfn;
+    TblColRef lsi;
+    TblColRef ssc;
 
-	private DictionaryInfo makeSharedDict() throws IOException {
-		TableSignature signature = new TableSignature();
-		signature.setSize(100);
-		signature.setLastModifiedTime(System.currentTimeMillis());
-		signature.setPath("fake_common_dict");
+    private DictionaryInfo makeSharedDict() throws IOException {
+        TableSignature signature = new TableSignature();
+        signature.setSize(100);
+        signature.setLastModifiedTime(System.currentTimeMillis());
+        signature.setPath("fake_common_dict");
 
-		DictionaryInfo newDictInfo = new DictionaryInfo("", "", 0, "string",
-				signature, "");
+        DictionaryInfo newDictInfo = new DictionaryInfo("", "", 0, "string", signature, "");
 
-		List<byte[]> values = new ArrayList<byte[]>();
-		values.add(new byte[] { 101, 101, 101 });
-		values.add(new byte[] { 102, 102, 102 });
-		Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueList(
-				newDictInfo, values);
-		dictionaryManager.trySaveNewDict(dict, newDictInfo);
-		((TrieDictionary) dict).dump(System.out);
+        List<byte[]> values = new ArrayList<byte[]>();
+        values.add(new byte[] { 101, 101, 101 });
+        values.add(new byte[] { 102, 102, 102 });
+        Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueList(newDictInfo, values);
+        dictionaryManager.trySaveNewDict(dict, newDictInfo);
+        ((TrieDictionary) dict).dump(System.out);
 
-		return newDictInfo;
-	}
+        return newDictInfo;
+    }
 
-	@Before
-	public void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
 
-		createTestMetadata();
+        createTestMetadata();
 
-		logger.info("The metadataUrl is : " + this.getTestConfig());
+        logger.info("The metadataUrl is : " + this.getTestConfig());
 
-		MetadataManager.removeInstance(this.getTestConfig());
-		CubeManager.removeInstance(this.getTestConfig());
-		ProjectManager.removeInstance(this.getTestConfig());
-		DictionaryManager.removeInstance(this.getTestConfig());
+        MetadataManager.removeInstance(this.getTestConfig());
+        CubeManager.removeInstance(this.getTestConfig());
+        ProjectManager.removeInstance(this.getTestConfig());
+        DictionaryManager.removeInstance(this.getTestConfig());
 
-		// hack for distributed cache
-		// CubeManager.removeInstance(KylinConfig.createInstanceFromUri("../job/meta"));//to
-		// make sure the following mapper could get latest CubeManger
-		FileUtils.deleteDirectory(new File("../job/meta"));
+        // hack for distributed cache
+        // CubeManager.removeInstance(KylinConfig.createInstanceFromUri("../job/meta"));//to
+        // make sure the following mapper could get latest CubeManger
+        FileUtils.deleteDirectory(new File("../job/meta"));
 
-		MergeCuboidMapper mapper = new MergeCuboidMapper();
-		mapDriver = MapDriver.newMapDriver(mapper);
+        MergeCuboidMapper mapper = new MergeCuboidMapper();
+        mapDriver = MapDriver.newMapDriver(mapper);
 
-		cubeManager = CubeManager.getInstance(this.getTestConfig());
-		cube = cubeManager
-				.getCube("test_kylin_cube_without_slr_left_join_ready_2_segments");
-		dictionaryManager = DictionaryManager.getInstance(getTestConfig());
-		lfn = cube.getDescriptor().findColumnRef("TEST_KYLIN_FACT",
-				"LSTG_FORMAT_NAME");
-		lsi = cube.getDescriptor().findColumnRef("TEST_KYLIN_FACT", "CAL_DT");
-		ssc = cube.getDescriptor().findColumnRef("TEST_CATEGORY_GROUPINGS",
-				"META_CATEG_NAME");
+        cubeManager = CubeManager.getInstance(this.getTestConfig());
+        cube = cubeManager.getCube("test_kylin_cube_without_slr_left_join_ready_2_segments");
+        dictionaryManager = DictionaryManager.getInstance(getTestConfig());
+        lfn = cube.getDescriptor().findColumnRef("TEST_KYLIN_FACT", "LSTG_FORMAT_NAME");
+        lsi = cube.getDescriptor().findColumnRef("TEST_KYLIN_FACT", "CAL_DT");
+        ssc = cube.getDescriptor().findColumnRef("TEST_CATEGORY_GROUPINGS", "META_CATEG_NAME");
 
-		DictionaryInfo sharedDict = makeSharedDict();
+        DictionaryInfo sharedDict = makeSharedDict();
 
-		boolean isFirstSegment = true;
-		for (CubeSegment segment : cube.getSegments()) {
+        boolean isFirstSegment = true;
+        for (CubeSegment segment : cube.getSegments()) {
 
-			TableSignature signature = new TableSignature();
-			signature.setSize(100);
-			signature.setLastModifiedTime(System.currentTimeMillis());
-			signature.setPath("fake_dict_for" + lfn.getName()
-					+ segment.getName());
+            TableSignature signature = new TableSignature();
+            signature.setSize(100);
+            signature.setLastModifiedTime(System.currentTimeMillis());
+            signature.setPath("fake_dict_for" + lfn.getName() + segment.getName());
 
-			DictionaryInfo newDictInfo = new DictionaryInfo(lfn.getTable(), lfn
-					.getColumn().getName(),
-					lfn.getColumn().getZeroBasedIndex(), "string", signature,
-					"");
+            DictionaryInfo newDictInfo = new DictionaryInfo(lfn.getTable(), lfn.getColumn().getName(), lfn.getColumn().getZeroBasedIndex(), "string", signature, "");
 
-			List<byte[]> values = new ArrayList<byte[]>();
-			values.add(new byte[] { 97, 97, 97 });
-			if (isFirstSegment)
-				values.add(new byte[] { 99, 99, 99 });
-			else
-				values.add(new byte[] { 98, 98, 98 });
-			Dictionary<?> dict = DictionaryGenerator
-					.buildDictionaryFromValueList(newDictInfo, values);
-			dictionaryManager.trySaveNewDict(dict, newDictInfo);
-			((TrieDictionary) dict).dump(System.out);
+            List<byte[]> values = new ArrayList<byte[]>();
+            values.add(new byte[] { 97, 97, 97 });
+            if (isFirstSegment)
+                values.add(new byte[] { 99, 99, 99 });
+            else
+                values.add(new byte[] { 98, 98, 98 });
+            Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueList(newDictInfo, values);
+            dictionaryManager.trySaveNewDict(dict, newDictInfo);
+            ((TrieDictionary) dict).dump(System.out);
 
-			segment.putDictResPath(lfn, newDictInfo.getResourcePath());
-			segment.putDictResPath(lsi, sharedDict.getResourcePath());
-			segment.putDictResPath(ssc, sharedDict.getResourcePath());
+            segment.putDictResPath(lfn, newDictInfo.getResourcePath());
+            segment.putDictResPath(lsi, sharedDict.getResourcePath());
+            segment.putDictResPath(ssc, sharedDict.getResourcePath());
 
-			// cubeManager.saveResource(segment.getCubeInstance());
-			// cubeManager.afterCubeUpdated(segment.getCubeInstance());
-			cubeManager.updateCube(cube);
+            // cubeManager.saveResource(segment.getCubeInstance());
+            // cubeManager.afterCubeUpdated(segment.getCubeInstance());
+            cubeManager.updateCube(cube);
 
-			isFirstSegment = false;
-		}
+            isFirstSegment = false;
+        }
 
-	}
+    }
 
-	@After
-	public void after() throws Exception {
-		cleanupTestMetadata();
-		FileUtils.deleteDirectory(new File("../job/meta"));
-	}
+    @After
+    public void after() throws Exception {
+        cleanupTestMetadata();
+        FileUtils.deleteDirectory(new File("../job/meta"));
+    }
 
-	@Test
-	public void test() throws IOException, ParseException,
-			CubeIntegrityException {
+    @Test
+    public void test() throws IOException, ParseException, CubeIntegrityException {
 
-		String cubeName = "test_kylin_cube_without_slr_left_join_ready_2_segments";
+        String cubeName = "test_kylin_cube_without_slr_left_join_ready_2_segments";
 
-		List<CubeSegment> newSegments = cubeManager.allocateSegments(cube,
-				CubeBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L);
+        List<CubeSegment> newSegments = cubeManager.allocateSegments(cube, CubeBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L);
 
-		logger.info("Size of new segments: " + newSegments.size());
+        logger.info("Size of new segments: " + newSegments.size());
 
-		CubeSegment newSeg = newSegments.get(0);
-		String segmentName = newSeg.getName();
+        CubeSegment newSeg = newSegments.get(0);
+        String segmentName = newSeg.getName();
 
-		((TrieDictionary) cubeManager.getDictionary(newSeg, lfn))
-				.dump(System.out);
+        ((TrieDictionary) cubeManager.getDictionary(newSeg, lfn)).dump(System.out);
 
-		// hack for distributed cache
-		File metaDir = new File("../job/meta");
-		FileUtils.copyDirectory(
-				new File(this.getTestConfig().getMetadataUrl()), metaDir);
+        // hack for distributed cache
+        File metaDir = new File("../job/meta");
+        FileUtils.copyDirectory(new File(this.getTestConfig().getMetadataUrl()), metaDir);
 
-		mapDriver.getConfiguration()
-				.set(BatchConstants.CFG_CUBE_NAME, cubeName);
-		mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME,
-				segmentName);
-		// mapDriver.getConfiguration().set(KylinConfig.KYLIN_METADATA_URL,
-		// "../job/meta");
+        mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
+        mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
+        // mapDriver.getConfiguration().set(KylinConfig.KYLIN_METADATA_URL,
+        // "../job/meta");
 
-		byte[] key = new byte[] { 0, 0, 0, 0, 0, 0, 0, -92, 1, 1, 1 };
-		byte[] value = new byte[] { 1, 2, 3 };
-		byte[] newkey = new byte[] { 0, 0, 0, 0, 0, 0, 0, -92, 1, 1, 2 };
-		byte[] newvalue = new byte[] { 1, 2, 3 };
+        byte[] key = new byte[] { 0, 0, 0, 0, 0, 0, 0, -92, 1, 1, 1 };
+        byte[] value = new byte[] { 1, 2, 3 };
+        byte[] newkey = new byte[] { 0, 0, 0, 0, 0, 0, 0, -92, 1, 1, 2 };
+        byte[] newvalue = new byte[] { 1, 2, 3 };
 
-		mapDriver.withInput(new Text(key), new Text(value));
-		mapDriver.withOutput(new Text(newkey), new Text(newvalue));
-		mapDriver
-				.setMapInputPath(new Path(
-						"/apps/hdmi-prod/b_kylin/prod/kylin-f24668f6-dcff-4cb6-a89b-77f1119df8fa/vac_sw_cube_v4/cuboid/15d_cuboid"));
+        mapDriver.withInput(new Text(key), new Text(value));
+        mapDriver.withOutput(new Text(newkey), new Text(newvalue));
+        mapDriver.setMapInputPath(new Path("/apps/hdmi-prod/b_kylin/prod/kylin-f24668f6-dcff-4cb6-a89b-77f1119df8fa/vac_sw_cube_v4/cuboid/15d_cuboid"));
 
-		mapDriver.runTest();
-	}
+        mapDriver.runTest();
+    }
 }

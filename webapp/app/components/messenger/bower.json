@@ -1,0 +1,43 @@
+{
+  "name": "messenger",
+  "repo": "HubSpot/messenger",
+  "description": "Client-side growl-like notifications with actions and auto-retry.",
+  "version": "1.4.1",
+  "homepage": "http://github.hubspot.com/messenger",
+  "authors": [
+    "Zack Bloom <zackbloom@gmail.com>",
+    "Adam Schwartz <adam.flynn.schwartz@gmail.com>"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "client-side",
+    "notification",
+    "toast",
+    "growl",
+    "ajax"
+  ],
+  "main": [
+    "build/js/messenger.js",
+    "build/js/messenger-theme-future.js",
+    "build/js/messenger-theme-flat.js",
+    "build/css/messenger.css",
+    "build/css/messenger-theme-future.css",
+    "build/css/messenger-theme-flat.css",
+    "build/css/messenger-theme-block.css",
+    "build/css/messenger-theme-air.css",
+    "build/css/messenger-theme-ice.css"
+  ],
+  "dependencies": {
+    "jquery": "*"
+  },
+  "ignore": [
+    "**/.*",
+    "component.json",
+    "Gruntfile.coffee",
+    "lib/",
+    "package.json",
+    "SpecRunner.html",
+    "spec/",
+    "src/"
+  ]
+}

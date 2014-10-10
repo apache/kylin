@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+<head>
+    <title>Angular.js nvd3.js Line Chart Directive</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF8">
+    <script src="js/angular.js"></script>
+    <script src="js/d3.js"></script>
+    <script src="js/nv.d3.js"></script>
+    <script src="js/moment.js"></script>
+    <script src="../dist/angularjs-nvd3-directives.js"></script>
+    <link rel="stylesheet" href="stylesheets/nv.d3.css"/>
+    <script>
+        var app = angular.module("nvd3TestApp", ['nvd3ChartDirectives']);
+
+        function ExampleCtrl($scope){
+            $scope.exampleData = [
+                {
+                    "key": "Github Api Mean Web Response Time",
+                    "values": [[1378387200.0, 123.08370666666667], [1378387500.0, 119.64371999999999], [1378387800.0, 126.92131333333332], [1378388100.0, 122.06958666666667], [1378388400.0, 126.50453], [1378388700.0, 168.14301666666668], [1378389000.0, 132.83243], [1378389300.0, 137.11919333333336], [1378389600.0, 152.85155], [1378389900.0, 133.26816], [1378390200.0, 178.5094466666667], [1378390500.0, 156.0947666666667]]
+                }];
+
+            $scope.xAxisTickValuesFunction = function(){
+                return function(d){
+                    var tickVals = [];
+                    var values = d[0].values;
+                    var interestedTimeValuesArray = [0, 00, 15, 30, 45];
+                    for(var i in values){
+                        if(interestedTimeValuesArray.indexOf(moment.unix(values[i][0]).minute()) >= 0){
+                            tickVals.push(values[i][0]);
+                        }
+                    }
+                    console.log('xAxisTickValuesFunction', d);
+                    return tickVals;
+                };
+            };
+
+            $scope.xAxisTickFormatFunction = function(){
+                return function(d){
+                    return d3.time.format('%H:%M')(moment.unix(d).toDate());
+                }
+            };
+
+        }
+    </script>
+
+</head>
+<body ng-app='nvd3TestApp'>
+
+<div ng-controller="ExampleCtrl">
+    <nvd3-line-chart
+            data="exampleData"
+            id="arrayExample"
+            width="800"
+            height="400"
+            showXAxis="true"
+            showYAxis="true"
+            tooltips="true"
+            interactive="true"
+            xAxisTickValues="[1378387200, 1378388100, 1378389600]"
+            xAxisTickFormat="xAxisTickFormatFunction()"
+            margin="{left:50,top:50,bottom:50,right:50}"
+            >
+        <svg></svg>
+    </nvd3-line-chart>
+
+    <nvd3-line-chart
+            data="exampleData"
+            id="functionExample"
+            width="800"
+            height="400"
+            showXAxis="true"
+            showYAxis="true"
+            tooltips="true"
+            interactive="true"
+            xAxisTickValues="xAxisTickValuesFunction()"
+            xAxisTickFormat="xAxisTickFormatFunction()"
+            margin="{left:50,top:50,bottom:50,right:50}"
+            >
+        <svg></svg>
+    </nvd3-line-chart>
+
+</div>
+
+</body>
+</html>

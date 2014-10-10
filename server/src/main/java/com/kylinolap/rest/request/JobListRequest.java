@@ -24,53 +24,53 @@ import java.util.List;
  */
 public class JobListRequest {
 
-	private List<Integer> status;
-	private String cubeName;
-	private String projectName;
-	private Integer offset;
-	private Integer limit;
+    private List<Integer> status;
+    private String cubeName;
+    private String projectName;
+    private Integer offset;
+    private Integer limit;
 
-	public JobListRequest() {
-	}
+    public JobListRequest() {
+    }
 
-	public List<Integer> getStatus() {
-		return status;
-	}
+    public List<Integer> getStatus() {
+        return status;
+    }
 
-	public void setStatus(List<Integer> status) {
-		this.status = status;
-	}
+    public void setStatus(List<Integer> status) {
+        this.status = status;
+    }
 
-	public String getCubeName() {
-		return cubeName;
-	}
+    public String getCubeName() {
+        return cubeName;
+    }
 
-	public void setCubeName(String cubeName) {
-		this.cubeName = cubeName;
-	}
+    public void setCubeName(String cubeName) {
+        this.cubeName = cubeName;
+    }
 
-	public String getProjectName() {
-		return projectName;
-	}
+    public String getProjectName() {
+        return projectName;
+    }
 
-	public void setProjectName(String projectName) {
-		this.projectName = projectName;
-	}
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
+    }
 
-	public Integer getOffset() {
-		return offset;
-	}
+    public Integer getOffset() {
+        return offset;
+    }
 
-	public void setOffset(Integer offset) {
-		this.offset = offset;
-	}
+    public void setOffset(Integer offset) {
+        this.offset = offset;
+    }
 
-	public Integer getLimit() {
-		return limit;
-	}
+    public Integer getLimit() {
+        return limit;
+    }
 
-	public void setLimit(Integer limit) {
-		this.limit = limit;
-	}
+    public void setLimit(Integer limit) {
+        this.limit = limit;
+    }
 
 }

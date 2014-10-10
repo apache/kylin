@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+<head>
+    <title>Angular.js nvd3.js Line Chart Directive</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF8">
+    <script src="js/angular.js"></script>
+    <script src="js/d3.js"></script>
+    <script src="js/nv.d3.js"></script>
+    <script src="../dist/angularjs-nvd3-directives.js"></script>
+    <link rel="stylesheet" href="stylesheets/nv.d3.css"/>
+    <script>
+        angular.module("nvd3TestApp", ['nvd3ChartDirectives']);
+
+        function ExampleCtrl($scope){
+            $scope.xFunction = function(){
+                return function(d){
+                    return d.x;
+                }
+            }
+
+            $scope.yFunction = function(){
+                return function(d){
+                    return d.y;
+                }
+            }
+
+            $scope.xAxisTickFormatFunction = function(){
+                return function(d){
+                    return d3.time.format('%x')(new Date(d));
+                }
+            }
+
+            $scope.chartData = [{
+                "key": "Time Value",
+                "values": [{
+                    "x": 1358917200000,
+                    "y": 16.39
+                }, {
+                    "x": 1361336400000,
+                    "y": 5.43
+                }, {
+                    "x": 1364356800000,
+                    "y": 2.94
+                }, {
+                    "x": 1366776000000,
+                    "y": 4.16
+                }, {
+                    "x": 1369800000000,
+                    "y": 3.83
+                }, {
+                    "x": 1372219200000,
+                    "y": 3.38
+                }, {
+                    "x": 1374638400000,
+                    "y": 1.6
+                }, {
+                    "x": 1377662400000,
+                    "y": 4.75
+                }, {
+                    "x": 1380081600000,
+                    "y": 4.3
+                }, {
+                    "x": 1382500800000,
+                    "y": 8.59
+                }, {
+                    "x": 1385528400000,
+                    "y": 1.46
+                }]
+            }, {
+                "key": "Stock Price",
+                "values": [{
+                    "x": 1358917200000,
+                    "y": 514.01
+                }, {
+                    "x": 1361336400000,
+                    "y": 448.85
+                }, {
+                    "x": 1364356800000,
+                    "y": 452.08
+                }, {
+                    "x": 1366776000000,
+                    "y": 405.46
+                }, {
+                    "x": 1369800000000,
+                    "y": 444.95
+                }, {
+                    "x": 1372219200000,
+                    "y": 398.07
+                }, {
+                    "x": 1374638400000,
+                    "y": 440.51
+                }, {
+                    "x": 1377662400000,
+                    "y": 490.9
+                }, {
+                    "x": 1380081600000,
+                    "y": 481.53
+                }, {
+                    "x": 1382500800000,
+                    "y": 524.96
+                }, {
+                    "x": 1385528400000,
+                    "y": 545.96
+                }]
+            }];
+
+            $scope.chartDataOne = [$scope.chartData[0]];
+
+            $scope.chartDataTwo = [$scope.chartData[1]];
+        }
+    </script>
+
+</head>
+<body ng-app='nvd3TestApp'>
+
+<div ng-app='nvd3TestApp'>
+    <div  ng-controller="ExampleCtrl">
+
+        <div>
+        <nvd3-line-plus-bar-chart
+                data="chartDataTwo"
+                id="exampleId"
+                x="xFunction()"
+                y="yFunction()"
+                width="800"
+                height="150"
+                margin="{top: 10, right: 10, bottom: 10, left: 50}"
+                tooltips="true"
+                showXAxis="true">
+        </nvd3-line-plus-bar-chart>
+        </div>
+        <div>
+        <nvd3-discrete-bar-chart
+                data="chartDataTwo"
+                id="exampleId2"
+                x="xFunction()"
+                y="yFunction()"
+                width="800"
+                height="150"
+                margin="{top: 10, right: 10, bottom: 10, left: 50}"
+                tooltips="true"
+                showXAxis="true">
+        </nvd3-discrete-bar-chart>
+        </div>
+        <div>
+        <nvd3-line-chart
+                data="chartDataTwo"
+                id="exampleId3"
+                x="xFunction()"
+                y="yFunction()"
+                width="800"
+                height="150"
+                margin="{top: 10, right: 10, bottom: 10, left: 50}"
+                tooltips="true"
+                showXAxis="true">
+        </nvd3-line-chart>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

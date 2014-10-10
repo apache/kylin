@@ -16,8 +16,7 @@
 
 package com.kylinolap.dict;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.junit.After;
 import org.junit.Before;
@@ -37,49 +36,46 @@ import com.kylinolap.metadata.model.schema.TableDesc;
  */
 public class SnapshotManagerTest extends LocalFileMetadataTestCase {
 
-	SnapshotManager snapshotMgr;
+    SnapshotManager snapshotMgr;
 
-	@Before
-	public void setup() throws Exception {
-		createTestMetadata();
+    @Before
+    public void setup() throws Exception {
+        createTestMetadata();
 
-		snapshotMgr = SnapshotManager.getInstance(this.getTestConfig());
-	}
+        snapshotMgr = SnapshotManager.getInstance(this.getTestConfig());
+    }
 
-	@After
-	public void after() throws Exception {
-		cleanupTestMetadata();
-	}
+    @After
+    public void after() throws Exception {
+        cleanupTestMetadata();
+    }
 
-	@Test
-	public void basicTest() throws Exception {
-		String tableName = "TEST_SITES";
-		HiveTable hiveTable = new HiveTable(MetadataManager.getInstance(this
-				.getTestConfig()), tableName);
-		TableDesc tableDesc = MetadataManager.getInstance(this.getTestConfig())
-				.getTableDesc(tableName);
-		String snapshotPath = snapshotMgr.buildSnapshot(hiveTable, tableDesc,
-				false).getResourcePath();
+    @Test
+    public void basicTest() throws Exception {
+        String tableName = "TEST_SITES";
+        HiveTable hiveTable = new HiveTable(MetadataManager.getInstance(this.getTestConfig()), tableName);
+        TableDesc tableDesc = MetadataManager.getInstance(this.getTestConfig()).getTableDesc(tableName);
+        String snapshotPath = snapshotMgr.buildSnapshot(hiveTable, tableDesc, false).getResourcePath();
 
-		snapshotMgr.wipeoutCache();
+        snapshotMgr.wipeoutCache();
 
-		SnapshotTable snapshot = snapshotMgr.getSnapshotTable(snapshotPath);
+        SnapshotTable snapshot = snapshotMgr.getSnapshotTable(snapshotPath);
 
-		// compare hive & snapshot
-		TableReader hiveReader = hiveTable.getReader();
-		TableReader snapshotReader = snapshot.getReader();
+        // compare hive & snapshot
+        TableReader hiveReader = hiveTable.getReader();
+        TableReader snapshotReader = snapshot.getReader();
 
-		while (true) {
-			boolean hiveNext = hiveReader.next();
-			boolean snapshotNext = snapshotReader.next();
-			assertEquals(hiveNext, snapshotNext);
+        while (true) {
+            boolean hiveNext = hiveReader.next();
+            boolean snapshotNext = snapshotReader.next();
+            assertEquals(hiveNext, snapshotNext);
 
-			if (hiveNext == false)
-				break;
+            if (hiveNext == false)
+                break;
 
-			String[] hiveRow = hiveReader.getRow();
-			String[] snapshotRow = snapshotReader.getRow();
-			assertArrayEquals(hiveRow, snapshotRow);
-		}
-	}
+            String[] hiveRow = hiveReader.getRow();
+            String[] snapshotRow = snapshotReader.getRow();
+            assertArrayEquals(hiveRow, snapshotRow);
+        }
+    }
 }

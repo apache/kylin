@@ -21,5 +21,5 @@ package com.kylinolap.job.constant;
  * 
  */
 public enum SchedulerTypeEnum {
-	QUATZ;
+    QUATZ;
 }

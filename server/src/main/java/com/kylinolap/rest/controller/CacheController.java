@@ -41,77 +41,72 @@ import com.kylinolap.rest.service.ProjectService;
 @Controller
 @RequestMapping(value = "/cache")
 public class CacheController extends BasicController {
-	private static final Logger logger = LoggerFactory
-			.getLogger(CacheController.class);
+    private static final Logger logger = LoggerFactory.getLogger(CacheController.class);
 
-	@Autowired
-	private CubeService cubeMgmtService;
+    @Autowired
+    private CubeService cubeMgmtService;
 
-	@Autowired
-	private ProjectService projectService;
+    @Autowired
+    private ProjectService projectService;
 
-	/**
-	 * Wipe system cache
-	 * 
-	 * @param type
-	 *            {@link MetadataConstances.TYPE}
-	 * @param event
-	 *            {@link MetadataConstances.EVENT}
-	 * @param name
-	 * @return if the action success
-	 * @throws IOException
-	 */
-	@RequestMapping(value = "/{type}/{name}/{event}", method = { RequestMethod.PUT })
-	@ResponseBody
-	public void wipeCache(@PathVariable String type,
-			@PathVariable String event, @PathVariable String name)
-			throws IOException {
-		Broadcaster.TYPE wipeType = Broadcaster.TYPE.getType(type);
-		EVENT wipeEvent = Broadcaster.EVENT.getEvent(event);
-		switch (wipeType) {
-		case METADATA:
-			logger.debug("Reload all metadata");
-			cubeMgmtService.reloadMetadataCache();
-			cubeMgmtService.cleanDataCache();
-			break;
-		case CUBE:
-			logger.debug("Reload cube " + name + " with type:" + type
-					+ ", event type " + event);
-			cubeMgmtService.reloadMetadataCache();
-			if ("ALL".equalsIgnoreCase(name.toUpperCase())) {
-				cubeMgmtService.cleanDataCache();
-				break;
-			}
+    /**
+     * Wipe system cache
+     * 
+     * @param type
+     *            {@link MetadataConstances.TYPE}
+     * @param event
+     *            {@link MetadataConstances.EVENT}
+     * @param name
+     * @return if the action success
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{type}/{name}/{event}", method = { RequestMethod.PUT })
+    @ResponseBody
+    public void wipeCache(@PathVariable String type, @PathVariable String event, @PathVariable String name) throws IOException {
+        Broadcaster.TYPE wipeType = Broadcaster.TYPE.getType(type);
+        EVENT wipeEvent = Broadcaster.EVENT.getEvent(event);
+        switch (wipeType) {
+        case METADATA:
+            logger.debug("Reload all metadata");
+            cubeMgmtService.reloadMetadataCache();
+            cubeMgmtService.cleanDataCache();
+            break;
+        case CUBE:
+            logger.debug("Reload cube " + name + " with type:" + type + ", event type " + event);
+            cubeMgmtService.reloadMetadataCache();
+            if ("ALL".equalsIgnoreCase(name.toUpperCase())) {
+                cubeMgmtService.cleanDataCache();
+                break;
+            }
 
-			switch (wipeEvent) {
-			case CREATE:
-			case UPDATE:
-				cubeMgmtService.reloadCubeCache(name);
-				break;
-			case DROP:
-				cubeMgmtService.removeCubeCache(name);
-				break;
-			}
-			break;
-		case PROJECT:
-			logger.debug("Reload project " + name + " with type:" + type
-					+ ", event type " + event);
-			cubeMgmtService.reloadMetadataCache();
-			if ("ALL".equalsIgnoreCase(name.toUpperCase())) {
-				projectService.cleanDataCache();
-				break;
-			}
+            switch (wipeEvent) {
+            case CREATE:
+            case UPDATE:
+                cubeMgmtService.reloadCubeCache(name);
+                break;
+            case DROP:
+                cubeMgmtService.removeCubeCache(name);
+                break;
+            }
+            break;
+        case PROJECT:
+            logger.debug("Reload project " + name + " with type:" + type + ", event type " + event);
+            cubeMgmtService.reloadMetadataCache();
+            if ("ALL".equalsIgnoreCase(name.toUpperCase())) {
+                projectService.cleanDataCache();
+                break;
+            }
 
-			switch (wipeEvent) {
-			case CREATE:
-			case UPDATE:
-				projectService.reloadProjectCache(name);
-				break;
-			case DROP:
-				projectService.removeProjectCache(name);
-				break;
-			}
-			break;
-		}
-	}
+            switch (wipeEvent) {
+            case CREATE:
+            case UPDATE:
+                projectService.reloadProjectCache(name);
+                break;
+            case DROP:
+                projectService.removeProjectCache(name);
+                break;
+            }
+            break;
+        }
+    }
 }

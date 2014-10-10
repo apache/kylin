@@ -24,28 +24,28 @@ import java.math.BigDecimal;
  */
 public class BigDecimalMaxAggregator extends MeasureAggregator<BigDecimal> {
 
-	BigDecimal max = null;
+    BigDecimal max = null;
 
-	@Override
-	public void reset() {
-		max = null;
-	}
+    @Override
+    public void reset() {
+        max = null;
+    }
 
-	@Override
-	public void aggregate(BigDecimal value) {
-		if (max == null)
-			max = value;
-		else if (max.compareTo(value) < 0)
-			max = value;
-	}
+    @Override
+    public void aggregate(BigDecimal value) {
+        if (max == null)
+            max = value;
+        else if (max.compareTo(value) < 0)
+            max = value;
+    }
 
-	@Override
-	public BigDecimal getState() {
-		return max;
-	}
+    @Override
+    public BigDecimal getState() {
+        return max;
+    }
 
-	@Override
-	public int getMemBytes() {
-		return guessBigDecimalMemBytes();
-	}
+    @Override
+    public int getMemBytes() {
+        return guessBigDecimalMemBytes();
+    }
 }

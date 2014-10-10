@@ -19,127 +19,122 @@ package com.kylinolap.rest.model;
  * Created by lukhan on 2/27/14.
  */
 public class SelectedColumnMeta {
-	public SelectedColumnMeta(boolean isAutoIncrement, boolean isCaseSensitive,
-			boolean isSearchable, boolean isCurrency, int isNullalbe,
-			boolean isSigned, int displaySize, String label, String name,
-			String schemaName, String catelogName, String tableName,
-			int precision, int scale, int columnType, String columnTypeName,
-			boolean isReadOnly, boolean isWritable, boolean isDefinitelyWritable) {
-		super();
-		this.isAutoIncrement = isAutoIncrement;
-		this.isCaseSensitive = isCaseSensitive;
-		this.isSearchable = isSearchable;
-		this.isCurrency = isCurrency;
-		this.isNullable = isNullalbe;
-		this.isSigned = isSigned;
-		this.displaySize = displaySize;
-		this.label = label;
-		this.name = name;
-		this.schemaName = schemaName;
-		this.catelogName = catelogName;
-		this.tableName = tableName;
-		this.precision = precision;
-		this.scale = scale;
-		this.columnType = columnType;
-		this.columnTypeName = columnTypeName;
-		this.isReadOnly = isReadOnly;
-		this.isWritable = isWritable;
-		this.isDefinitelyWritable = isDefinitelyWritable;
-	}
+    public SelectedColumnMeta(boolean isAutoIncrement, boolean isCaseSensitive, boolean isSearchable, boolean isCurrency, int isNullalbe, boolean isSigned, int displaySize, String label, String name, String schemaName, String catelogName, String tableName, int precision, int scale, int columnType, String columnTypeName, boolean isReadOnly, boolean isWritable, boolean isDefinitelyWritable) {
+        super();
+        this.isAutoIncrement = isAutoIncrement;
+        this.isCaseSensitive = isCaseSensitive;
+        this.isSearchable = isSearchable;
+        this.isCurrency = isCurrency;
+        this.isNullable = isNullalbe;
+        this.isSigned = isSigned;
+        this.displaySize = displaySize;
+        this.label = label;
+        this.name = name;
+        this.schemaName = schemaName;
+        this.catelogName = catelogName;
+        this.tableName = tableName;
+        this.precision = precision;
+        this.scale = scale;
+        this.columnType = columnType;
+        this.columnTypeName = columnTypeName;
+        this.isReadOnly = isReadOnly;
+        this.isWritable = isWritable;
+        this.isDefinitelyWritable = isDefinitelyWritable;
+    }
 
-	public boolean isAutoIncrement() {
-		return isAutoIncrement;
-	}
+    public boolean isAutoIncrement() {
+        return isAutoIncrement;
+    }
 
-	public boolean isCaseSensitive() {
-		return isCaseSensitive;
-	}
+    public boolean isCaseSensitive() {
+        return isCaseSensitive;
+    }
 
-	public boolean isSearchable() {
-		return isSearchable;
-	}
+    public boolean isSearchable() {
+        return isSearchable;
+    }
 
-	public boolean isCurrency() {
-		return isCurrency;
-	}
+    public boolean isCurrency() {
+        return isCurrency;
+    }
 
-	public int getIsNullable() {
-		return isNullable;
-	}
+    public int getIsNullable() {
+        return isNullable;
+    }
 
-	public boolean isSigned() {
-		return isSigned;
-	}
+    public boolean isSigned() {
+        return isSigned;
+    }
 
-	public int getDisplaySize() {
-		return displaySize;
-	}
+    public int getDisplaySize() {
+        return displaySize;
+    }
 
-	public String getLabel() {
-		return label;
-	}
+    public String getLabel() {
+        return label;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public String getSchemaName() {
-		return schemaName;
-	}
+    public String getSchemaName() {
+        return schemaName;
+    }
 
-	public String getCatelogName() {
-		return catelogName;
-	}
+    public String getCatelogName() {
+        return catelogName;
+    }
 
-	public String getTableName() {
-		return tableName;
-	}
+    public String getTableName() {
+        return tableName;
+    }
 
-	public int getPrecision() {
-		return precision;
-	}
+    public int getPrecision() {
+        return precision;
+    }
 
-	public int getScale() {
-		return scale;
-	}
+    public int getScale() {
+        return scale;
+    }
 
-	public int getColumnType() {
-		return columnType;
-	}
+    public int getColumnType() {
+        return columnType;
+    }
 
-	public String getColumnTypeName() {
-		return columnTypeName;
-	}
+    public String getColumnTypeName() {
+        return columnTypeName;
+    }
 
-	public boolean isReadOnly() {
-		return isReadOnly;
-	}
+    public boolean isReadOnly() {
+        return isReadOnly;
+    }
 
-	public boolean isWritable() {
-		return isWritable;
-	}
+    public boolean isWritable() {
+        return isWritable;
+    }
 
-	public boolean isDefinitelyWritable() {
-		return isDefinitelyWritable;
-	}
+    public boolean isDefinitelyWritable() {
+        return isDefinitelyWritable;
+    }
 
-	private final boolean isAutoIncrement;
-	private final boolean isCaseSensitive;
-	private final boolean isSearchable;
-	private final boolean isCurrency;
-	private final int isNullable;// 0:nonull, 1:nullable, 2: nullableunknown
-	private final boolean isSigned;
-	private final int displaySize;
-	private final String label;// AS keyword
-	private final String name;
-	private final String schemaName;
-	private final String catelogName;
-	private final String tableName;
-	private final int precision;
-	private final int scale;
-	private final int columnType;// as defined in java.sql.Types
-	private final String columnTypeName;
-	private final boolean isReadOnly;
-	private final boolean isWritable;
-	private final boolean isDefinitelyWritable;
+    private final boolean isAutoIncrement;
+    private final boolean isCaseSensitive;
+    private final boolean isSearchable;
+    private final boolean isCurrency;
+    private final int isNullable;// 0:nonull, 1:nullable, 2: nullableunknown
+    private final boolean isSigned;
+    private final int displaySize;
+    private final String label;// AS keyword
+    private final String name;
+    private final String schemaName;
+    private final String catelogName;
+    private final String tableName;
+    private final int precision;
+    private final int scale;
+    private final int columnType;// as defined in java.sql.Types
+    private final String columnTypeName;
+    private final boolean isReadOnly;
+    private final boolean isWritable;
+    private final boolean isDefinitelyWritable;
 }

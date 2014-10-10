@@ -24,160 +24,155 @@ import org.apache.hadoop.hbase.util.Bytes;
  */
 public class NumberDictionary<T> extends TrieDictionary<T> {
 
-	public static final int MAX_DIGITS_BEFORE_DECIMAL_POINT = 16;
+    public static final int MAX_DIGITS_BEFORE_DECIMAL_POINT = 16;
 
-	// encode a number into an order preserving byte sequence
-	// for positives -- padding '0'
-	// for negatives -- '-' sign, padding '9', invert digits, and terminate by
-	// ';'
-	static class NumberBytesCodec {
+    // encode a number into an order preserving byte sequence
+    // for positives -- padding '0'
+    // for negatives -- '-' sign, padding '9', invert digits, and terminate by
+    // ';'
+    static class NumberBytesCodec {
 
-		byte[] buf = new byte[MAX_DIGITS_BEFORE_DECIMAL_POINT * 2];
-		int bufOffset = 0;
-		int bufLen = 0;
+        byte[] buf = new byte[MAX_DIGITS_BEFORE_DECIMAL_POINT * 2];
+        int bufOffset = 0;
+        int bufLen = 0;
 
-		void encodeNumber(byte[] value, int offset, int len) {
-			if (len == 0) {
-				bufOffset = 0;
-				bufLen = 0;
-				return;
-			}
+        void encodeNumber(byte[] value, int offset, int len) {
+            if (len == 0) {
+                bufOffset = 0;
+                bufLen = 0;
+                return;
+            }
 
-			boolean negative = value[offset] == '-';
+            boolean negative = value[offset] == '-';
 
-			// terminate negative ';'
-			int start = buf.length - len;
-			int end = buf.length;
-			if (negative) {
-				start--;
-				end--;
-				buf[end] = ';';
-			}
+            // terminate negative ';'
+            int start = buf.length - len;
+            int end = buf.length;
+            if (negative) {
+                start--;
+                end--;
+                buf[end] = ';';
+            }
 
-			// copy & find decimal point
-			int decimalPoint = end;
-			for (int i = start, j = offset; i < end; i++, j++) {
-				buf[i] = value[j];
-				if (buf[i] == '.' && i < decimalPoint) {
-					decimalPoint = i;
-				}
-			}
-			// remove '-' sign
-			if (negative) {
-				start++;
-			}
+            // copy & find decimal point
+            int decimalPoint = end;
+            for (int i = start, j = offset; i < end; i++, j++) {
+                buf[i] = value[j];
+                if (buf[i] == '.' && i < decimalPoint) {
+                    decimalPoint = i;
+                }
+            }
+            // remove '-' sign
+            if (negative) {
+                start++;
+            }
 
-			// prepend '0'
-			int nZeroPadding = MAX_DIGITS_BEFORE_DECIMAL_POINT
-					- (decimalPoint - start);
-			if (nZeroPadding < 0 || nZeroPadding + 1 > start)
-				throw new IllegalArgumentException(
-						"Too many digits for NumberDictionary: "
-								+ Bytes.toString(value, offset, len));
-			for (int i = 0; i < nZeroPadding; i++) {
-				buf[--start] = '0';
-			}
+            // prepend '0'
+            int nZeroPadding = MAX_DIGITS_BEFORE_DECIMAL_POINT - (decimalPoint - start);
+            if (nZeroPadding < 0 || nZeroPadding + 1 > start)
+                throw new IllegalArgumentException("Too many digits for NumberDictionary: " + Bytes.toString(value, offset, len));
+            for (int i = 0; i < nZeroPadding; i++) {
+                buf[--start] = '0';
+            }
 
-			// consider negative
-			if (negative) {
-				buf[--start] = '-';
-				for (int i = start + 1; i < buf.length; i++) {
-					int c = buf[i];
-					if (c >= '0' && c <= '9') {
-						buf[i] = (byte) ('9' - (c - '0'));
-					}
-				}
-			} else {
-				buf[--start] = '0';
-			}
+            // consider negative
+            if (negative) {
+                buf[--start] = '-';
+                for (int i = start + 1; i < buf.length; i++) {
+                    int c = buf[i];
+                    if (c >= '0' && c <= '9') {
+                        buf[i] = (byte) ('9' - (c - '0'));
+                    }
+                }
+            } else {
+                buf[--start] = '0';
+            }
 
-			bufOffset = start;
-			bufLen = buf.length - start;
-		}
+            bufOffset = start;
+            bufLen = buf.length - start;
+        }
 
-		int decodeNumber(byte[] returnValue, int offset) {
-			if (bufLen == 0) {
-				return 0;
-			}
+        int decodeNumber(byte[] returnValue, int offset) {
+            if (bufLen == 0) {
+                return 0;
+            }
 
-			int in = bufOffset;
-			int end = bufOffset + bufLen;
-			int out = offset;
+            int in = bufOffset;
+            int end = bufOffset + bufLen;
+            int out = offset;
 
-			// sign
-			boolean negative = buf[in] == '-';
-			if (negative) {
-				returnValue[out++] = '-';
-				in++;
-				end--;
-			}
+            // sign
+            boolean negative = buf[in] == '-';
+            if (negative) {
+                returnValue[out++] = '-';
+                in++;
+                end--;
+            }
 
-			// remove padding
-			byte padding = (byte) (negative ? '9' : '0');
-			for (; in < end; in++) {
-				if (buf[in] != padding)
-					break;
-			}
+            // remove padding
+            byte padding = (byte) (negative ? '9' : '0');
+            for (; in < end; in++) {
+                if (buf[in] != padding)
+                    break;
+            }
 
-			// all paddings before '.', special case for '0'
-			if (in == end || !(buf[in] >= '0' && buf[in] <= '9')) {
-				returnValue[out++] = '0';
-			}
+            // all paddings before '.', special case for '0'
+            if (in == end || !(buf[in] >= '0' && buf[in] <= '9')) {
+                returnValue[out++] = '0';
+            }
 
-			// copy the rest
-			if (negative) {
-				for (; in < end; in++, out++) {
-					int c = buf[in];
-					if (c >= '0' && c <= '9') {
-						c = '9' - (c - '0');
-					}
-					returnValue[out] = (byte) c;
-				}
-			} else {
-				System.arraycopy(buf, in, returnValue, out, end - in);
-				out += end - in;
-			}
+            // copy the rest
+            if (negative) {
+                for (; in < end; in++, out++) {
+                    int c = buf[in];
+                    if (c >= '0' && c <= '9') {
+                        c = '9' - (c - '0');
+                    }
+                    returnValue[out] = (byte) c;
+                }
+            } else {
+                System.arraycopy(buf, in, returnValue, out, end - in);
+                out += end - in;
+            }
 
-			return out - offset;
-		}
-	}
+            return out - offset;
+        }
+    }
 
-	static ThreadLocal<NumberBytesCodec> localCodec = new ThreadLocal<NumberBytesCodec>();
+    static ThreadLocal<NumberBytesCodec> localCodec = new ThreadLocal<NumberBytesCodec>();
 
-	// ============================================================================
+    // ============================================================================
 
-	public NumberDictionary() { // default constructor for Writable interface
-		super();
-	}
+    public NumberDictionary() { // default constructor for Writable interface
+        super();
+    }
 
-	public NumberDictionary(byte[] trieBytes) {
-		super(trieBytes);
-	}
+    public NumberDictionary(byte[] trieBytes) {
+        super(trieBytes);
+    }
 
-	private NumberBytesCodec getCodec() {
-		NumberBytesCodec codec = localCodec.get();
-		if (codec == null) {
-			codec = new NumberBytesCodec();
-			localCodec.set(codec);
-		}
-		return codec;
-	}
+    private NumberBytesCodec getCodec() {
+        NumberBytesCodec codec = localCodec.get();
+        if (codec == null) {
+            codec = new NumberBytesCodec();
+            localCodec.set(codec);
+        }
+        return codec;
+    }
 
-	@Override
-	protected int getIdFromValueBytesImpl(byte[] value, int offset, int len,
-			int roundingFlag) {
-		NumberBytesCodec codec = getCodec();
-		codec.encodeNumber(value, offset, len);
-		return super.getIdFromValueBytesImpl(codec.buf, codec.bufOffset,
-				codec.bufLen, roundingFlag);
-	}
+    @Override
+    protected int getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag) {
+        NumberBytesCodec codec = getCodec();
+        codec.encodeNumber(value, offset, len);
+        return super.getIdFromValueBytesImpl(codec.buf, codec.bufOffset, codec.bufLen, roundingFlag);
+    }
 
-	@Override
-	protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) {
-		NumberBytesCodec codec = getCodec();
-		codec.bufOffset = 0;
-		codec.bufLen = super.getValueBytesFromIdImpl(id, codec.buf, 0);
-		return codec.decodeNumber(returnValue, offset);
-	}
+    @Override
+    protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) {
+        NumberBytesCodec codec = getCodec();
+        codec.bufOffset = 0;
+        codec.bufLen = super.getValueBytesFromIdImpl(id, codec.buf, 0);
+        return codec.decodeNumber(returnValue, offset);
+    }
 
 }

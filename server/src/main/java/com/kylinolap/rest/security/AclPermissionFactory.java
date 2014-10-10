@@ -29,47 +29,47 @@ import org.springframework.security.acls.model.Permission;
  */
 public class AclPermissionFactory extends DefaultPermissionFactory {
 
-	public AclPermissionFactory() {
-		super();
-		registerPublicPermissions(AclPermission.class);
-	}
+    public AclPermissionFactory() {
+        super();
+        registerPublicPermissions(AclPermission.class);
+    }
 
-	public static List<Permission> getPermissions() {
-		List<Permission> permissions = new ArrayList<Permission>();
-		Field[] fields = AclPermission.class.getFields();
+    public static List<Permission> getPermissions() {
+        List<Permission> permissions = new ArrayList<Permission>();
+        Field[] fields = AclPermission.class.getFields();
 
-		for (Field field : fields) {
-			try {
-				Object fieldValue = field.get(null);
+        for (Field field : fields) {
+            try {
+                Object fieldValue = field.get(null);
 
-				if (Permission.class.isAssignableFrom(fieldValue.getClass())) {
-					// Found a Permission static field
-					permissions.add((Permission) fieldValue);
-				}
-			} catch (Exception ignore) {
-			}
-		}
+                if (Permission.class.isAssignableFrom(fieldValue.getClass())) {
+                    // Found a Permission static field
+                    permissions.add((Permission) fieldValue);
+                }
+            } catch (Exception ignore) {
+            }
+        }
 
-		return permissions;
-	}
+        return permissions;
+    }
 
-	public static Permission getPermission(String perName) {
-		Field[] fields = AclPermission.class.getFields();
+    public static Permission getPermission(String perName) {
+        Field[] fields = AclPermission.class.getFields();
 
-		for (Field field : fields) {
-			try {
-				Object fieldValue = field.get(null);
+        for (Field field : fields) {
+            try {
+                Object fieldValue = field.get(null);
 
-				if (Permission.class.isAssignableFrom(fieldValue.getClass())) {
-					// Found a Permission static field
-					if (perName.equals(field.getName())) {
-						return (Permission) fieldValue;
-					}
-				}
-			} catch (Exception ignore) {
-			}
-		}
+                if (Permission.class.isAssignableFrom(fieldValue.getClass())) {
+                    // Found a Permission static field
+                    if (perName.equals(field.getName())) {
+                        return (Permission) fieldValue;
+                    }
+                }
+            } catch (Exception ignore) {
+            }
+        }
 
-		return null;
-	}
+        return null;
+    }
 }

@@ -30,23 +30,19 @@ import com.kylinolap.query.relnode.OLAPRel;
  */
 public class OLAPProjectRule extends RelOptRule {
 
-	public static final RelOptRule INSTANCE = new OLAPProjectRule();
+    public static final RelOptRule INSTANCE = new OLAPProjectRule();
 
-	public OLAPProjectRule() {
-		super(operand(ProjectRel.class, any()));
-	}
+    public OLAPProjectRule() {
+        super(operand(ProjectRel.class, any()));
+    }
 
-	@Override
-	public void onMatch(RelOptRuleCall call) {
-		ProjectRel project = call.rel(0);
+    @Override
+    public void onMatch(RelOptRuleCall call) {
+        ProjectRel project = call.rel(0);
 
-		RelTraitSet traitSet = project.getTraitSet()
-				.replace(OLAPRel.CONVENTION);
-		OLAPProjectRel olapProj = new OLAPProjectRel(project.getCluster(),
-				traitSet, convert(project.getChild(), project.getTraitSet()
-						.replace(OLAPRel.CONVENTION)), project.getProjects(),
-				project.getRowType(), project.getFlags());
-		call.transformTo(olapProj);
-	}
+        RelTraitSet traitSet = project.getTraitSet().replace(OLAPRel.CONVENTION);
+        OLAPProjectRel olapProj = new OLAPProjectRel(project.getCluster(), traitSet, convert(project.getChild(), project.getTraitSet().replace(OLAPRel.CONVENTION)), project.getProjects(), project.getRowType(), project.getFlags());
+        call.transformTo(olapProj);
+    }
 
 }

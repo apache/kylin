@@ -26,81 +26,81 @@ import com.kylinolap.metadata.model.schema.DataType;
  */
 abstract public class RowKeyColumnOrder implements Comparator<String> {
 
-	public static final NumberOrder NUMBER_ORDER = new NumberOrder();
-	public static final StringOrder STRING_ORDER = new StringOrder();
+    public static final NumberOrder NUMBER_ORDER = new NumberOrder();
+    public static final StringOrder STRING_ORDER = new StringOrder();
 
-	public static RowKeyColumnOrder getInstance(DataType type) {
-		if (type.isNumberFamily())
-			return NUMBER_ORDER;
-		else
-			return STRING_ORDER;
-	}
+    public static RowKeyColumnOrder getInstance(DataType type) {
+        if (type.isNumberFamily())
+            return NUMBER_ORDER;
+        else
+            return STRING_ORDER;
+    }
 
-	public String max(Collection<String> values) {
-		String max = null;
-		for (String v : values) {
-			if (max == null || compare(max, v) < 0)
-				max = v;
-		}
-		return max;
-	}
+    public String max(Collection<String> values) {
+        String max = null;
+        for (String v : values) {
+            if (max == null || compare(max, v) < 0)
+                max = v;
+        }
+        return max;
+    }
 
-	public String min(Collection<String> values) {
-		String min = null;
-		for (String v : values) {
-			if (min == null || compare(min, v) > 0)
-				min = v;
-		}
-		return min;
-	}
+    public String min(Collection<String> values) {
+        String min = null;
+        for (String v : values) {
+            if (min == null || compare(min, v) > 0)
+                min = v;
+        }
+        return min;
+    }
 
-	public String min(String v1, String v2) {
-		if (v1 == null)
-			return v2;
-		else if (v2 == null)
-			return v1;
-		else
-			return compare(v1, v2) <= 0 ? v1 : v2;
-	}
+    public String min(String v1, String v2) {
+        if (v1 == null)
+            return v2;
+        else if (v2 == null)
+            return v1;
+        else
+            return compare(v1, v2) <= 0 ? v1 : v2;
+    }
 
-	public String max(String v1, String v2) {
-		if (v1 == null)
-			return v2;
-		else if (v2 == null)
-			return v1;
-		else
-			return compare(v1, v2) >= 0 ? v1 : v2;
-	}
+    public String max(String v1, String v2) {
+        if (v1 == null)
+            return v2;
+        else if (v2 == null)
+            return v1;
+        else
+            return compare(v1, v2) >= 0 ? v1 : v2;
+    }
 
-	@Override
-	public int compare(String o1, String o2) {
-		// consider null
-		if (o1 == o2)
-			return 0;
-		if (o1 == null)
-			return -1;
-		if (o2 == null)
-			return 1;
+    @Override
+    public int compare(String o1, String o2) {
+        // consider null
+        if (o1 == o2)
+            return 0;
+        if (o1 == null)
+            return -1;
+        if (o2 == null)
+            return 1;
 
-		return compareNonNull(o1, o2);
-	}
+        return compareNonNull(o1, o2);
+    }
 
-	abstract int compareNonNull(String o1, String o2);
+    abstract int compareNonNull(String o1, String o2);
 
-	private static class StringOrder extends RowKeyColumnOrder {
-		@Override
-		public int compareNonNull(String o1, String o2) {
-			return o1.compareTo(o2);
-		}
-	}
+    private static class StringOrder extends RowKeyColumnOrder {
+        @Override
+        public int compareNonNull(String o1, String o2) {
+            return o1.compareTo(o2);
+        }
+    }
 
-	private static class NumberOrder extends RowKeyColumnOrder {
-		@Override
-		public int compareNonNull(String o1, String o2) {
-			double d1 = Double.parseDouble(o1);
-			double d2 = Double.parseDouble(o2);
-			return Double.compare(d1, d2);
-		}
-	}
+    private static class NumberOrder extends RowKeyColumnOrder {
+        @Override
+        public int compareNonNull(String o1, String o2) {
+            double d1 = Double.parseDouble(o1);
+            double d2 = Double.parseDouble(o2);
+            return Double.compare(d1, d2);
+        }
+    }
 
 }

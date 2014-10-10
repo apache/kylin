@@ -21,127 +21,121 @@ import java.util.List;
 import com.kylinolap.rest.model.SelectedColumnMeta;
 
 public class SQLResponse implements Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	// private static final Logger logger =
-	// LoggerFactory.getLogger(SQLResponse.class);
+    // private static final Logger logger =
+    // LoggerFactory.getLogger(SQLResponse.class);
 
-	// the data type for each column
-	private List<SelectedColumnMeta> columnMetas;
+    // the data type for each column
+    private List<SelectedColumnMeta> columnMetas;
 
-	// the results rows, each row contains several columns
-	private List<List<String>> results;
+    // the results rows, each row contains several columns
+    private List<List<String>> results;
 
-	private String cube;
+    private String cube;
 
-	// if not select query, only return affected row count
-	private int affectedRowCount;
+    // if not select query, only return affected row count
+    private int affectedRowCount;
 
-	// flag indicating whether an exception occurred
-	private boolean isException;
+    // flag indicating whether an exception occurred
+    private boolean isException;
 
-	// if isException, the detailed exception message
-	private String exceptionMessage;
+    // if isException, the detailed exception message
+    private String exceptionMessage;
 
-	private long duration;
+    private long duration;
 
-	private boolean isPartial = false;
+    private boolean isPartial = false;
 
-	private long totalScanCount;
+    private long totalScanCount;
 
-	private boolean hitCache = false;
+    private boolean hitCache = false;
 
-	public SQLResponse() {
-	}
+    public SQLResponse() {
+    }
 
-	public SQLResponse(List<SelectedColumnMeta> columnMetas,
-			List<List<String>> results, int affectedRowCount,
-			boolean isException, String exceptionMessage) {
-		this.columnMetas = columnMetas;
-		this.results = results;
-		this.affectedRowCount = affectedRowCount;
-		this.isException = isException;
-		this.exceptionMessage = exceptionMessage;
-	}
+    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, int affectedRowCount, boolean isException, String exceptionMessage) {
+        this.columnMetas = columnMetas;
+        this.results = results;
+        this.affectedRowCount = affectedRowCount;
+        this.isException = isException;
+        this.exceptionMessage = exceptionMessage;
+    }
 
-	public SQLResponse(List<SelectedColumnMeta> columnMetas,
-			List<List<String>> results, String cube, int affectedRowCount,
-			boolean isException, String exceptionMessage) {
-		this.columnMetas = columnMetas;
-		this.results = results;
-		this.cube = cube;
-		this.affectedRowCount = affectedRowCount;
-		this.isException = isException;
-		this.exceptionMessage = exceptionMessage;
-	}
+    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube, int affectedRowCount, boolean isException, String exceptionMessage) {
+        this.columnMetas = columnMetas;
+        this.results = results;
+        this.cube = cube;
+        this.affectedRowCount = affectedRowCount;
+        this.isException = isException;
+        this.exceptionMessage = exceptionMessage;
+    }
 
-	public SQLResponse(List<SelectedColumnMeta> columnMetas,
-			List<List<String>> results, String cube, int affectedRowCount,
-			boolean isException, String exceptionMessage, boolean isPartial) {
-		this.columnMetas = columnMetas;
-		this.results = results;
-		this.cube = cube;
-		this.affectedRowCount = affectedRowCount;
-		this.isException = isException;
-		this.exceptionMessage = exceptionMessage;
-		this.isPartial = isPartial;
-	}
+    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube, int affectedRowCount, boolean isException, String exceptionMessage, boolean isPartial) {
+        this.columnMetas = columnMetas;
+        this.results = results;
+        this.cube = cube;
+        this.affectedRowCount = affectedRowCount;
+        this.isException = isException;
+        this.exceptionMessage = exceptionMessage;
+        this.isPartial = isPartial;
+    }
 
-	public List<SelectedColumnMeta> getColumnMetas() {
-		return columnMetas;
-	}
+    public List<SelectedColumnMeta> getColumnMetas() {
+        return columnMetas;
+    }
 
-	public List<List<String>> getResults() {
-		return results;
-	}
+    public List<List<String>> getResults() {
+        return results;
+    }
 
-	public void setResults(List<List<String>> results) {
-		this.results = results;
-	}
+    public void setResults(List<List<String>> results) {
+        this.results = results;
+    }
 
-	public String getCube() {
-		return cube;
-	}
+    public String getCube() {
+        return cube;
+    }
 
-	public int getAffectedRowCount() {
-		return affectedRowCount;
-	}
+    public int getAffectedRowCount() {
+        return affectedRowCount;
+    }
 
-	public boolean getIsException() {
-		return isException;
-	}
+    public boolean getIsException() {
+        return isException;
+    }
 
-	public String getExceptionMessage() {
-		return exceptionMessage;
-	}
+    public String getExceptionMessage() {
+        return exceptionMessage;
+    }
 
-	public long getDuration() {
-		return duration;
-	}
+    public long getDuration() {
+        return duration;
+    }
 
-	public void setDuration(long duration) {
-		this.duration = duration;
-	}
+    public void setDuration(long duration) {
+        this.duration = duration;
+    }
 
-	public boolean isPartial() {
+    public boolean isPartial() {
 
-		return isPartial;
-	}
+        return isPartial;
+    }
 
-	public long getTotalScanCount() {
-		return totalScanCount;
-	}
+    public long getTotalScanCount() {
+        return totalScanCount;
+    }
 
-	public void setTotalScanCount(long totalScanCount) {
-		this.totalScanCount = totalScanCount;
-	}
+    public void setTotalScanCount(long totalScanCount) {
+        this.totalScanCount = totalScanCount;
+    }
 
-	public boolean isHitCache() {
-		return hitCache;
-	}
+    public boolean isHitCache() {
+        return hitCache;
+    }
 
-	public void setHitCache(boolean hitCache) {
-		this.hitCache = hitCache;
-	}
+    public void setHitCache(boolean hitCache) {
+        this.hitCache = hitCache;
+    }
 
 }

@@ -25,16 +25,16 @@ import org.springframework.security.acls.model.Permission;
  */
 public class AclPermission extends BasePermission {
 
-	private static final long serialVersionUID = 6121785617686149123L;
+    private static final long serialVersionUID = 6121785617686149123L;
 
-	public static final Permission MANAGEMENT = new AclPermission(1 << 5, 'M'); // 32
-	public static final Permission OPERATION = new AclPermission(1 << 6, 'O'); // 64
+    public static final Permission MANAGEMENT = new AclPermission(1 << 5, 'M'); // 32
+    public static final Permission OPERATION = new AclPermission(1 << 6, 'O'); // 64
 
-	protected AclPermission(int mask) {
-		super(mask);
-	}
+    protected AclPermission(int mask) {
+        super(mask);
+    }
 
-	protected AclPermission(int mask, char code) {
-		super(mask, code);
-	}
+    protected AclPermission(int mask, char code) {
+        super(mask, code);
+    }
 }

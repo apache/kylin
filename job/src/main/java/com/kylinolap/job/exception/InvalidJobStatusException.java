@@ -22,12 +22,12 @@ package com.kylinolap.job.exception;
  */
 public class InvalidJobStatusException extends Exception {
 
-	/**
-	 * @param string
-	 */
-	public InvalidJobStatusException(String string) {
-	}
+    /**
+     * @param string
+     */
+    public InvalidJobStatusException(String string) {
+    }
 
-	private static final long serialVersionUID = -8549756520626114000L;
+    private static final long serialVersionUID = -8549756520626114000L;
 
 }

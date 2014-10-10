@@ -24,29 +24,29 @@ import org.apache.hadoop.io.LongWritable;
  */
 public class LongMinAggregator extends MeasureAggregator<LongWritable> {
 
-	LongWritable min = null;
+    LongWritable min = null;
 
-	@Override
-	public void reset() {
-		min = null;
-	}
+    @Override
+    public void reset() {
+        min = null;
+    }
 
-	@Override
-	public void aggregate(LongWritable value) {
-		if (min == null)
-			min = new LongWritable(value.get());
-		else if (min.get() > value.get())
-			min.set(value.get());
-	}
+    @Override
+    public void aggregate(LongWritable value) {
+        if (min == null)
+            min = new LongWritable(value.get());
+        else if (min.get() > value.get())
+            min.set(value.get());
+    }
 
-	@Override
-	public LongWritable getState() {
-		return min;
-	}
+    @Override
+    public LongWritable getState() {
+        return min;
+    }
 
-	@Override
-	public int getMemBytes() {
-		return guessLongMemBytes();
-	}
+    @Override
+    public int getMemBytes() {
+        return guessLongMemBytes();
+    }
 
 }

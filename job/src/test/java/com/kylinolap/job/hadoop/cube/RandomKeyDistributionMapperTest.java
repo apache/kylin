@@ -16,7 +16,7 @@
 
 package com.kylinolap.job.hadoop.cube;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,34 +38,33 @@ import com.kylinolap.job.hadoop.invertedindex.RandomKeyDistributionMapper;
  */
 public class RandomKeyDistributionMapperTest {
 
-	MapDriver<Text, Text, Text, LongWritable> mapDriver;
+    MapDriver<Text, Text, Text, LongWritable> mapDriver;
 
-	@Before
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void setUp() {
-		RandomKeyDistributionMapper mapper = new RandomKeyDistributionMapper();
-		mapDriver = MapDriver.newMapDriver(mapper);
-	}
+    @Before
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public void setUp() {
+        RandomKeyDistributionMapper mapper = new RandomKeyDistributionMapper();
+        mapDriver = MapDriver.newMapDriver(mapper);
+    }
 
-	@Test
-	public void test() throws IOException {
-		List<Text> data = new ArrayList<Text>();
-		for (int i = 0; i < 1001; i++) {
-			data.add(new Text(String.valueOf(i)));
-		}
+    @Test
+    public void test() throws IOException {
+        List<Text> data = new ArrayList<Text>();
+        for (int i = 0; i < 1001; i++) {
+            data.add(new Text(String.valueOf(i)));
+        }
 
-		for (Text t : data) {
-			mapDriver.addInput(t, new Text("abc"));
-		}
+        for (Text t : data) {
+            mapDriver.addInput(t, new Text("abc"));
+        }
 
-		mapDriver.getConfiguration().set(BatchConstants.MAPPER_SAMPLE_NUMBER,
-				"100");
-		List<Pair<Text, LongWritable>> result = mapDriver.run();
-		assertEquals(100, result.size());
+        mapDriver.getConfiguration().set(BatchConstants.MAPPER_SAMPLE_NUMBER, "100");
+        List<Pair<Text, LongWritable>> result = mapDriver.run();
+        assertEquals(100, result.size());
 
-		for (Pair<Text, LongWritable> p : result) {
-			System.out.println(p.getFirst());
-		}
-	}
+        for (Pair<Text, LongWritable> p : result) {
+            System.out.println(p.getFirst());
+        }
+    }
 
 }

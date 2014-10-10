@@ -40,99 +40,89 @@ import com.kylinolap.metadata.MetadataManager;
  */
 public class HiveTable implements ReadableTable {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(HiveTable.class);
+    private static final Logger logger = LoggerFactory.getLogger(HiveTable.class);
 
-	private String hiveTable;
-	private int nColumns;
-	private String hdfsLocation;
-	private FileTable fileTable;
+    private String hiveTable;
+    private int nColumns;
+    private String hdfsLocation;
+    private FileTable fileTable;
 
-	public HiveTable(MetadataManager metaMgr, String table) {
-		this.hiveTable = table;
-		this.nColumns = metaMgr.getTableDesc(table).getColumnCount();
-	}
+    public HiveTable(MetadataManager metaMgr, String table) {
+        this.hiveTable = table;
+        this.nColumns = metaMgr.getTableDesc(table).getColumnCount();
+    }
 
-	@Override
-	public String getColumnDelimeter() throws IOException {
-		return getFileTable().getColumnDelimeter();
-	}
+    @Override
+    public String getColumnDelimeter() throws IOException {
+        return getFileTable().getColumnDelimeter();
+    }
 
-	@Override
-	public TableReader getReader() throws IOException {
-		return getFileTable().getReader();
-	}
+    @Override
+    public TableReader getReader() throws IOException {
+        return getFileTable().getReader();
+    }
 
-	@Override
-	public TableSignature getSignature() throws IOException {
-		return getFileTable().getSignature();
-	}
+    @Override
+    public TableSignature getSignature() throws IOException {
+        return getFileTable().getSignature();
+    }
 
-	private FileTable getFileTable() throws IOException {
-		if (fileTable == null) {
-			fileTable = new FileTable(getHDFSLocation(true), nColumns);
-		}
-		return fileTable;
-	}
+    private FileTable getFileTable() throws IOException {
+        if (fileTable == null) {
+            fileTable = new FileTable(getHDFSLocation(true), nColumns);
+        }
+        return fileTable;
+    }
 
-	public String getHDFSLocation(boolean needFilePath) throws IOException {
-		if (hdfsLocation == null) {
-			hdfsLocation = computeHDFSLocation(needFilePath);
-		}
-		return hdfsLocation;
-	}
+    public String getHDFSLocation(boolean needFilePath) throws IOException {
+        if (hdfsLocation == null) {
+            hdfsLocation = computeHDFSLocation(needFilePath);
+        }
+        return hdfsLocation;
+    }
 
-	private String computeHDFSLocation(boolean needFilePath) throws IOException {
+    private String computeHDFSLocation(boolean needFilePath) throws IOException {
 
-		String override = KylinConfig.getInstanceFromEnv()
-				.getOverrideHiveTableLocation(hiveTable);
-		if (override != null) {
-			logger.debug("Override hive table location " + hiveTable + " -- "
-					+ override);
-			return override;
-		}
+        String override = KylinConfig.getInstanceFromEnv().getOverrideHiveTableLocation(hiveTable);
+        if (override != null) {
+            logger.debug("Override hive table location " + hiveTable + " -- " + override);
+            return override;
+        }
 
-		OSCommandExecutor exec = KylinConfig.getInstanceFromEnv()
-				.getOSCommandExecutor(
-						"hive -e \"describe extended " + hiveTable + ";\"");
-		String output = exec.execute();
+        OSCommandExecutor exec = KylinConfig.getInstanceFromEnv().getOSCommandExecutor("hive -e \"describe extended " + hiveTable + ";\"");
+        String output = exec.execute();
 
-		Pattern ptn = Pattern.compile("location:(.*?),");
-		Matcher m = ptn.matcher(output);
-		if (m.find() == false)
-			throw new IOException(
-					"Failed to find HDFS location for hive table " + hiveTable
-							+ " from output -- " + output);
+        Pattern ptn = Pattern.compile("location:(.*?),");
+        Matcher m = ptn.matcher(output);
+        if (m.find() == false)
+            throw new IOException("Failed to find HDFS location for hive table " + hiveTable + " from output -- " + output);
 
-		String hdfsDir = m.group(1);
+        String hdfsDir = m.group(1);
 
-		if (needFilePath) {
-			FileSystem fs = HadoopUtil.getFileSystem(hdfsDir);
-			FileStatus file = findOnlyFile(hdfsDir, fs);
-			return file.getPath().toString();
-		} else {
-			return hdfsDir;
-		}
-	}
+        if (needFilePath) {
+            FileSystem fs = HadoopUtil.getFileSystem(hdfsDir);
+            FileStatus file = findOnlyFile(hdfsDir, fs);
+            return file.getPath().toString();
+        } else {
+            return hdfsDir;
+        }
+    }
 
-	private FileStatus findOnlyFile(String hdfsDir, FileSystem fs)
-			throws FileNotFoundException, IOException {
-		FileStatus[] files = fs.listStatus(new Path(hdfsDir));
-		ArrayList<FileStatus> nonZeroFiles = Lists.newArrayList();
-		for (FileStatus f : files) {
-			if (f.getLen() > 0)
-				nonZeroFiles.add(f);
-		}
-		if (nonZeroFiles.size() != 1)
-			throw new IllegalStateException(
-					"Expect 1 and only 1 non-zero file under " + hdfsDir
-							+ ", but find " + nonZeroFiles.size());
-		return nonZeroFiles.get(0);
-	}
+    private FileStatus findOnlyFile(String hdfsDir, FileSystem fs) throws FileNotFoundException, IOException {
+        FileStatus[] files = fs.listStatus(new Path(hdfsDir));
+        ArrayList<FileStatus> nonZeroFiles = Lists.newArrayList();
+        for (FileStatus f : files) {
+            if (f.getLen() > 0)
+                nonZeroFiles.add(f);
+        }
+        if (nonZeroFiles.size() != 1)
+            throw new IllegalStateException("Expect 1 and only 1 non-zero file under " + hdfsDir + ", but find " + nonZeroFiles.size());
+        return nonZeroFiles.get(0);
+    }
 
-	@Override
-	public String toString() {
-		return "hive:" + hiveTable;
-	}
+    @Override
+    public String toString() {
+        return "hive:" + hiveTable;
+    }
 
 }

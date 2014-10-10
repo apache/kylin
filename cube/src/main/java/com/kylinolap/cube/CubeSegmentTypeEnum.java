@@ -21,5 +21,5 @@ package com.kylinolap.cube;
  * 
  */
 public enum CubeSegmentTypeEnum {
-	TRANSIENT, PERMANENT
+    TRANSIENT, PERMANENT
 }

@@ -41,84 +41,81 @@ import com.kylinolap.storage.filter.TupleFilter;
  */
 public class OLAPContext {
 
-	public static final String PRM_ACCEPT_PARTIAL_RESULT = "AcceptPartialResult";
+    public static final String PRM_ACCEPT_PARTIAL_RESULT = "AcceptPartialResult";
 
-	private static final ThreadLocal<Map<String, String>> _localPrarameters = new ThreadLocal<Map<String, String>>();
+    private static final ThreadLocal<Map<String, String>> _localPrarameters = new ThreadLocal<Map<String, String>>();
 
-	private static final ThreadLocal<Map<Integer, OLAPContext>> _localContexts = new ThreadLocal<Map<Integer, OLAPContext>>();
+    private static final ThreadLocal<Map<Integer, OLAPContext>> _localContexts = new ThreadLocal<Map<Integer, OLAPContext>>();
 
-	public static void setParameters(Map<String, String> parameters) {
-		_localPrarameters.set(parameters);
-	}
+    public static void setParameters(Map<String, String> parameters) {
+        _localPrarameters.set(parameters);
+    }
 
-	public static void clearParameter() {
-		_localPrarameters.remove();
-	}
+    public static void clearParameter() {
+        _localPrarameters.remove();
+    }
 
-	public static void registerContext(OLAPContext ctx) {
-		if (_localContexts.get() == null) {
-			Map<Integer, OLAPContext> contextMap = new HashMap<Integer, OLAPContext>();
-			_localContexts.set(contextMap);
-		}
-		_localContexts.get().put(ctx.id, ctx);
-	}
+    public static void registerContext(OLAPContext ctx) {
+        if (_localContexts.get() == null) {
+            Map<Integer, OLAPContext> contextMap = new HashMap<Integer, OLAPContext>();
+            _localContexts.set(contextMap);
+        }
+        _localContexts.get().put(ctx.id, ctx);
+    }
 
-	public static Collection<OLAPContext> getThreadLocalContexts() {
-		return _localContexts.get().values();
-	}
+    public static Collection<OLAPContext> getThreadLocalContexts() {
+        return _localContexts.get().values();
+    }
 
-	public static OLAPContext getThreadLocalContextById(int id) {
-		return _localContexts.get().get(id);
-	}
+    public static OLAPContext getThreadLocalContextById(int id) {
+        return _localContexts.get().get(id);
+    }
 
-	public static void clearThreadLocalContexts() {
-		_localContexts.remove();
-	}
+    public static void clearThreadLocalContexts() {
+        _localContexts.remove();
+    }
 
-	public OLAPContext(int seq) {
-		this.id = seq;
-		this.storageContext = new StorageContext();
-		Map<String, String> parameters = _localPrarameters.get();
-		if (parameters != null) {
-			String acceptPartialResult = parameters
-					.get(PRM_ACCEPT_PARTIAL_RESULT);
-			if (acceptPartialResult != null) {
-				this.storageContext.setAcceptPartialResult(Boolean
-						.parseBoolean(acceptPartialResult));
-			}
-		}
-	}
+    public OLAPContext(int seq) {
+        this.id = seq;
+        this.storageContext = new StorageContext();
+        Map<String, String> parameters = _localPrarameters.get();
+        if (parameters != null) {
+            String acceptPartialResult = parameters.get(PRM_ACCEPT_PARTIAL_RESULT);
+            if (acceptPartialResult != null) {
+                this.storageContext.setAcceptPartialResult(Boolean.parseBoolean(acceptPartialResult));
+            }
+        }
+    }
 
-	public final int id;
-	public final StorageContext storageContext;
+    public final int id;
+    public final StorageContext storageContext;
 
-	// query info
-	public OLAPSchema olapSchema = null;
-	public OLAPTableScan firstTableScan = null; // to be fact table scan except
-												// "select * from lookupTable"
-	public RelDataType olapRowType = null;
-	public boolean afterAggregate = false;
-	public boolean afterJoin = false;
-	public boolean hasJoin = false;
+    // query info
+    public OLAPSchema olapSchema = null;
+    public OLAPTableScan firstTableScan = null; // to be fact table scan except
+                                                // "select * from lookupTable"
+    public RelDataType olapRowType = null;
+    public boolean afterAggregate = false;
+    public boolean afterJoin = false;
+    public boolean hasJoin = false;
 
-	// cube metadata
-	public CubeInstance cubeInstance;
-	public CubeDesc cubeDesc;
-	public Collection<TblColRef> allColumns = new HashSet<TblColRef>();
-	public Collection<TblColRef> metricsColumns = new HashSet<TblColRef>();
-	public Collection<TblColRef> groupByColumns = new ArrayList<TblColRef>();
-	public List<FunctionDesc> aggregations = new ArrayList<FunctionDesc>();
-	public List<JoinDesc> joins = new LinkedList<JoinDesc>();
-	public TupleFilter filter;
+    // cube metadata
+    public CubeInstance cubeInstance;
+    public CubeDesc cubeDesc;
+    public Collection<TblColRef> allColumns = new HashSet<TblColRef>();
+    public Collection<TblColRef> metricsColumns = new HashSet<TblColRef>();
+    public Collection<TblColRef> groupByColumns = new ArrayList<TblColRef>();
+    public List<FunctionDesc> aggregations = new ArrayList<FunctionDesc>();
+    public List<JoinDesc> joins = new LinkedList<JoinDesc>();
+    public TupleFilter filter;
 
-	// rewrite info
-	public Map<String, RelDataType> rewriteFields = new HashMap<String, RelDataType>();
+    // rewrite info
+    public Map<String, RelDataType> rewriteFields = new HashMap<String, RelDataType>();
 
-	// hive query
-	public String sql = null;
+    // hive query
+    public String sql = null;
 
-	public boolean isSimpleQuery() {
-		return (joins.size() == 0) && (groupByColumns.size() == 0)
-				&& (aggregations.size() == 0);
-	}
+    public boolean isSimpleQuery() {
+        return (joins.size() == 0) && (groupByColumns.size() == 0) && (aggregations.size() == 0);
+    }
 }

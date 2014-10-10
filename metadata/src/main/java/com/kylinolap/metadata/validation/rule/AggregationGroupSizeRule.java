@@ -30,40 +30,35 @@ import com.kylinolap.metadata.validation.ValidateContext;
  */
 public class AggregationGroupSizeRule implements IValidatorRule<CubeDesc> {
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * com.kylinolap.metadata.validation.IValidatorRule#validate(java.lang.Object
-	 * , com.kylinolap.metadata.validation.ValidateContext)
-	 */
-	@Override
-	public void validate(CubeDesc cube, ValidateContext context) {
-		innerValidateMaxSize(cube, context);
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * com.kylinolap.metadata.validation.IValidatorRule#validate(java.lang.Object
+     * , com.kylinolap.metadata.validation.ValidateContext)
+     */
+    @Override
+    public void validate(CubeDesc cube, ValidateContext context) {
+        innerValidateMaxSize(cube, context);
+    }
 
-	/**
-	 * @param cube
-	 * @param context
-	 */
-	private void innerValidateMaxSize(CubeDesc cube, ValidateContext context) {
-		int maxSize = getMaxAgrGroupSize();
-		String[][] groups = cube.getRowkey().getAggregationGroups();
-		for (int i = 0; i < groups.length; i++) {
-			String[] group = groups[i];
-			if (group.length >= maxSize) {
-				context.addResult(ResultLevel.ERROR, "Length of the number "
-						+ i
-						+ " aggregation group's length should be less that "
-						+ maxSize);
-			}
-		}
-	}
+    /**
+     * @param cube
+     * @param context
+     */
+    private void innerValidateMaxSize(CubeDesc cube, ValidateContext context) {
+        int maxSize = getMaxAgrGroupSize();
+        String[][] groups = cube.getRowkey().getAggregationGroups();
+        for (int i = 0; i < groups.length; i++) {
+            String[] group = groups[i];
+            if (group.length >= maxSize) {
+                context.addResult(ResultLevel.ERROR, "Length of the number " + i + " aggregation group's length should be less that " + maxSize);
+            }
+        }
+    }
 
-	protected int getMaxAgrGroupSize() {
-		String size = KylinConfig.getInstanceFromEnv().getProperty(
-				KEY_MAX_AGR_GROUP_SIZE,
-				String.valueOf(DEFAULT_MAX_AGR_GROUP_SIZE));
-		return Integer.parseInt(size);
-	}
+    protected int getMaxAgrGroupSize() {
+        String size = KylinConfig.getInstanceFromEnv().getProperty(KEY_MAX_AGR_GROUP_SIZE, String.valueOf(DEFAULT_MAX_AGR_GROUP_SIZE));
+        return Integer.parseInt(size);
+    }
 }

@@ -26,19 +26,18 @@ import com.kylinolap.metadata.model.schema.TableDesc;
  */
 public class LookupStringTable extends LookupTable<String> {
 
-	public LookupStringTable(TableDesc tableDesc, String[] keyColumns,
-			ReadableTable table) throws IOException {
-		super(tableDesc, keyColumns, table);
-	}
+    public LookupStringTable(TableDesc tableDesc, String[] keyColumns, ReadableTable table) throws IOException {
+        super(tableDesc, keyColumns, table);
+    }
 
-	@Override
-	protected String[] convertRow(String[] cols) {
-		return cols;
-	}
+    @Override
+    protected String[] convertRow(String[] cols) {
+        return cols;
+    }
 
-	@Override
-	protected String toString(String cell) {
-		return cell;
-	}
+    @Override
+    protected String toString(String cell) {
+        return cell;
+    }
 
 }

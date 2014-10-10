@@ -30,151 +30,141 @@ import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
  * 
  */
 public class ColumnValueRange {
-	private TblColRef column;
-	private RowKeyColumnOrder order;
-	private String beginValue;
-	private String endValue;
-	private Set<String> equalValues;
+    private TblColRef column;
+    private RowKeyColumnOrder order;
+    private String beginValue;
+    private String endValue;
+    private Set<String> equalValues;
 
-	public ColumnValueRange(TblColRef column, Collection<String> values,
-			FilterOperatorEnum op) {
-		this.column = column;
-		this.order = RowKeyColumnOrder.getInstance(column.getType());
+    public ColumnValueRange(TblColRef column, Collection<String> values, FilterOperatorEnum op) {
+        this.column = column;
+        this.order = RowKeyColumnOrder.getInstance(column.getType());
 
-		switch (op) {
-		case EQ:
-		case IN:
-			equalValues = new HashSet<String>(values);
-			refreshBeginEndFromEquals();
-			break;
-		case LT:
-		case LTE:
-			endValue = order.max(values);
-			break;
-		case GT:
-		case GTE:
-			beginValue = order.min(values);
-			break;
-		case NEQ:
-		case NOTIN:
-		case ISNULL: // TODO ISNULL worth pass down as a special equal value
-		case ISNOTNULL:
-			// let Optiq filter it!
-			break;
-		default:
-			throw new UnsupportedOperationException(op.name());
-		}
-	}
+        switch (op) {
+        case EQ:
+        case IN:
+            equalValues = new HashSet<String>(values);
+            refreshBeginEndFromEquals();
+            break;
+        case LT:
+        case LTE:
+            endValue = order.max(values);
+            break;
+        case GT:
+        case GTE:
+            beginValue = order.min(values);
+            break;
+        case NEQ:
+        case NOTIN:
+        case ISNULL: // TODO ISNULL worth pass down as a special equal value
+        case ISNOTNULL:
+            // let Optiq filter it!
+            break;
+        default:
+            throw new UnsupportedOperationException(op.name());
+        }
+    }
 
-	public ColumnValueRange(TblColRef column, String beginValue,
-			String endValue, Set<String> equalValues) {
-		copy(column, beginValue, endValue, equalValues);
-	}
+    public ColumnValueRange(TblColRef column, String beginValue, String endValue, Set<String> equalValues) {
+        copy(column, beginValue, endValue, equalValues);
+    }
 
-	void copy(TblColRef column, String beginValue, String endValue,
-			Set<String> equalValues) {
-		this.column = column;
-		this.order = RowKeyColumnOrder.getInstance(column.getType());
-		this.beginValue = beginValue;
-		this.endValue = endValue;
-		this.equalValues = equalValues;
-	}
+    void copy(TblColRef column, String beginValue, String endValue, Set<String> equalValues) {
+        this.column = column;
+        this.order = RowKeyColumnOrder.getInstance(column.getType());
+        this.beginValue = beginValue;
+        this.endValue = endValue;
+        this.equalValues = equalValues;
+    }
 
-	public TblColRef getColumn() {
-		return column;
-	}
+    public TblColRef getColumn() {
+        return column;
+    }
 
-	public String getBeginValue() {
-		return beginValue;
-	}
+    public String getBeginValue() {
+        return beginValue;
+    }
 
-	public String getEndValue() {
-		return endValue;
-	}
+    public String getEndValue() {
+        return endValue;
+    }
 
-	public Set<String> getEqualValues() {
-		return equalValues;
-	}
+    public Set<String> getEqualValues() {
+        return equalValues;
+    }
 
-	private void refreshBeginEndFromEquals() {
-		this.beginValue = order.min(this.equalValues);
-		this.endValue = order.max(this.equalValues);
-	}
+    private void refreshBeginEndFromEquals() {
+        this.beginValue = order.min(this.equalValues);
+        this.endValue = order.max(this.equalValues);
+    }
 
-	public boolean satisfyAll() {
-		return beginValue == null && endValue == null; // the NEQ case
-	}
+    public boolean satisfyAll() {
+        return beginValue == null && endValue == null; // the NEQ case
+    }
 
-	public boolean satisfyNone() {
-		if (equalValues != null) {
-			return equalValues.isEmpty();
-		} else if (beginValue != null && endValue != null) {
-			return order.compare(beginValue, endValue) > 0;
-		} else {
-			return false;
-		}
-	}
+    public boolean satisfyNone() {
+        if (equalValues != null) {
+            return equalValues.isEmpty();
+        } else if (beginValue != null && endValue != null) {
+            return order.compare(beginValue, endValue) > 0;
+        } else {
+            return false;
+        }
+    }
 
-	public void andMerge(ColumnValueRange another) {
-		assert this.column.equals(another.column);
+    public void andMerge(ColumnValueRange another) {
+        assert this.column.equals(another.column);
 
-		if (another.satisfyAll()) {
-			return;
-		}
+        if (another.satisfyAll()) {
+            return;
+        }
 
-		if (this.satisfyAll()) {
-			copy(another.column, another.beginValue, another.endValue,
-					another.equalValues);
-			return;
-		}
+        if (this.satisfyAll()) {
+            copy(another.column, another.beginValue, another.endValue, another.equalValues);
+            return;
+        }
 
-		if (this.equalValues != null && another.equalValues != null) {
-			this.equalValues.retainAll(another.equalValues);
-			refreshBeginEndFromEquals();
-			return;
-		}
+        if (this.equalValues != null && another.equalValues != null) {
+            this.equalValues.retainAll(another.equalValues);
+            refreshBeginEndFromEquals();
+            return;
+        }
 
-		if (this.equalValues != null) {
-			this.equalValues = filter(this.equalValues, another.beginValue,
-					another.endValue);
-			refreshBeginEndFromEquals();
-			return;
-		}
+        if (this.equalValues != null) {
+            this.equalValues = filter(this.equalValues, another.beginValue, another.endValue);
+            refreshBeginEndFromEquals();
+            return;
+        }
 
-		if (another.equalValues != null) {
-			this.equalValues = filter(another.equalValues, this.beginValue,
-					this.endValue);
-			refreshBeginEndFromEquals();
-			return;
-		}
+        if (another.equalValues != null) {
+            this.equalValues = filter(another.equalValues, this.beginValue, this.endValue);
+            refreshBeginEndFromEquals();
+            return;
+        }
 
-		this.beginValue = order.max(this.beginValue, another.beginValue);
-		this.endValue = order.min(this.endValue, another.endValue);
-	}
+        this.beginValue = order.max(this.beginValue, another.beginValue);
+        this.endValue = order.min(this.endValue, another.endValue);
+    }
 
-	private Set<String> filter(Set<String> equalValues, String beginValue,
-			String endValue) {
-		Set<String> result = Sets
-				.newHashSetWithExpectedSize(equalValues.size());
-		for (String v : equalValues) {
-			if (between(v, beginValue, endValue)) {
-				result.add(v);
-			}
-		}
-		return equalValues;
-	}
+    private Set<String> filter(Set<String> equalValues, String beginValue, String endValue) {
+        Set<String> result = Sets.newHashSetWithExpectedSize(equalValues.size());
+        for (String v : equalValues) {
+            if (between(v, beginValue, endValue)) {
+                result.add(v);
+            }
+        }
+        return equalValues;
+    }
 
-	private boolean between(String v, String beginValue, String endValue) {
-		return (beginValue == null || order.compare(beginValue, v) <= 0)
-				&& (endValue == null || order.compare(v, endValue) <= 0);
-	}
+    private boolean between(String v, String beginValue, String endValue) {
+        return (beginValue == null || order.compare(beginValue, v) <= 0) && (endValue == null || order.compare(v, endValue) <= 0);
+    }
 
-	public String toString() {
-		if (equalValues == null) {
-			return column.getName() + " between " + beginValue + " and "
-					+ endValue;
-		} else {
-			return column.getName() + " in " + equalValues;
-		}
-	}
+    public String toString() {
+        if (equalValues == null) {
+            return column.getName() + " between " + beginValue + " and " + endValue;
+        } else {
+            return column.getName() + " in " + equalValues;
+        }
+    }
 }

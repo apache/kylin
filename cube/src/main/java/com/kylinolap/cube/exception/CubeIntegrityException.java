@@ -21,13 +21,13 @@ package com.kylinolap.cube.exception;
  * 
  */
 public class CubeIntegrityException extends Exception {
-	/**
-	 * @param string
-	 */
-	public CubeIntegrityException(String string) {
-		super(string);
-	}
+    /**
+     * @param string
+     */
+    public CubeIntegrityException(String string) {
+        super(string);
+    }
 
-	private static final long serialVersionUID = -7924187859607404390L;
+    private static final long serialVersionUID = -7924187859607404390L;
 
 }

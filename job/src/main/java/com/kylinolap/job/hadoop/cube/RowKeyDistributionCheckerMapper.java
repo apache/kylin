@@ -37,79 +37,71 @@ import org.apache.hadoop.util.ReflectionUtils;
  * @author ysong1
  * 
  */
-public class RowKeyDistributionCheckerMapper extends
-		Mapper<Text, Text, Text, LongWritable> {
+public class RowKeyDistributionCheckerMapper extends Mapper<Text, Text, Text, LongWritable> {
 
-	String rowKeyStatsFilePath;
-	byte[][] splitKeys;
-	Map<Text, Long> resultMap;
-	List<Text> keyList;
+    String rowKeyStatsFilePath;
+    byte[][] splitKeys;
+    Map<Text, Long> resultMap;
+    List<Text> keyList;
 
-	@Override
-	protected void setup(Context context) throws IOException {
-		rowKeyStatsFilePath = context.getConfiguration().get(
-				"rowKeyStatsFilePath");
-		splitKeys = this.getSplits(context.getConfiguration(), new Path(
-				rowKeyStatsFilePath));
+    @Override
+    protected void setup(Context context) throws IOException {
+        rowKeyStatsFilePath = context.getConfiguration().get("rowKeyStatsFilePath");
+        splitKeys = this.getSplits(context.getConfiguration(), new Path(rowKeyStatsFilePath));
 
-		resultMap = new HashMap<Text, Long>();
-		keyList = new ArrayList<Text>();
-		for (int i = 0; i < splitKeys.length; i++) {
-			Text key = new Text(splitKeys[i]);
-			resultMap.put(key, 0L);
-			keyList.add(new Text(splitKeys[i]));
-		}
-	}
+        resultMap = new HashMap<Text, Long>();
+        keyList = new ArrayList<Text>();
+        for (int i = 0; i < splitKeys.length; i++) {
+            Text key = new Text(splitKeys[i]);
+            resultMap.put(key, 0L);
+            keyList.add(new Text(splitKeys[i]));
+        }
+    }
 
-	@Override
-	public void map(Text key, Text value, Context context) throws IOException,
-			InterruptedException {
-		for (Text t : keyList) {
-			if (key.compareTo(t) < 0) {
-				Long v = resultMap.get(t);
-				long length = key.getLength() + value.getLength();
-				v += length;
-				resultMap.put(t, v);
-				break;
-			}
-		}
-	}
+    @Override
+    public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
+        for (Text t : keyList) {
+            if (key.compareTo(t) < 0) {
+                Long v = resultMap.get(t);
+                long length = key.getLength() + value.getLength();
+                v += length;
+                resultMap.put(t, v);
+                break;
+            }
+        }
+    }
 
-	@Override
-	protected void cleanup(Context context) throws IOException,
-			InterruptedException {
-		LongWritable outputValue = new LongWritable();
-		for (Entry<Text, Long> kv : resultMap.entrySet()) {
-			outputValue.set(kv.getValue());
-			context.write(kv.getKey(), outputValue);
-		}
-	}
+    @Override
+    protected void cleanup(Context context) throws IOException, InterruptedException {
+        LongWritable outputValue = new LongWritable();
+        for (Entry<Text, Long> kv : resultMap.entrySet()) {
+            outputValue.set(kv.getValue());
+            context.write(kv.getKey(), outputValue);
+        }
+    }
 
-	@SuppressWarnings("deprecation")
-	public byte[][] getSplits(Configuration conf, Path path) {
-		List<byte[]> rowkeyList = new ArrayList<byte[]>();
-		SequenceFile.Reader reader = null;
-		try {
-			reader = new SequenceFile.Reader(path.getFileSystem(conf), path,
-					conf);
-			Writable key = (Writable) ReflectionUtils.newInstance(
-					reader.getKeyClass(), conf);
-			Writable value = (Writable) ReflectionUtils.newInstance(
-					reader.getValueClass(), conf);
-			while (reader.next(key, value)) {
-				byte[] tmp = ((Text) key).copyBytes();
-				if (rowkeyList.contains(tmp) == false) {
-					rowkeyList.add(tmp);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			IOUtils.closeStream(reader);
-		}
+    @SuppressWarnings("deprecation")
+    public byte[][] getSplits(Configuration conf, Path path) {
+        List<byte[]> rowkeyList = new ArrayList<byte[]>();
+        SequenceFile.Reader reader = null;
+        try {
+            reader = new SequenceFile.Reader(path.getFileSystem(conf), path, conf);
+            Writable key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+            Writable value = (Writable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+            while (reader.next(key, value)) {
+                byte[] tmp = ((Text) key).copyBytes();
+                if (rowkeyList.contains(tmp) == false) {
+                    rowkeyList.add(tmp);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            IOUtils.closeStream(reader);
+        }
 
-		byte[][] retValue = rowkeyList.toArray(new byte[rowkeyList.size()][]);
+        byte[][] retValue = rowkeyList.toArray(new byte[rowkeyList.size()][]);
 
-		return retValue;
-	}
+        return retValue;
+    }
 }

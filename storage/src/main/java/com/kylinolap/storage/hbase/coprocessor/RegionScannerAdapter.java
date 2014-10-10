@@ -31,65 +31,65 @@ import org.apache.hadoop.hbase.regionserver.RegionScanner;
  */
 public class RegionScannerAdapter implements RegionScanner {
 
-	private ResultScanner scanner;
+    private ResultScanner scanner;
 
-	public RegionScannerAdapter(ResultScanner scanner) {
-		this.scanner = scanner;
-	}
+    public RegionScannerAdapter(ResultScanner scanner) {
+        this.scanner = scanner;
+    }
 
-	@Override
-	public boolean next(List<Cell> results) throws IOException {
-		Result result = scanner.next();
-		if (result == null) // EOF
-			return false;
+    @Override
+    public boolean next(List<Cell> results) throws IOException {
+        Result result = scanner.next();
+        if (result == null) // EOF
+            return false;
 
-		results.addAll(result.listCells());
-		return true;
-	}
+        results.addAll(result.listCells());
+        return true;
+    }
 
-	@Override
-	public boolean next(List<Cell> result, int limit) throws IOException {
-		return next(result);
-	}
+    @Override
+    public boolean next(List<Cell> result, int limit) throws IOException {
+        return next(result);
+    }
 
-	@Override
-	public boolean nextRaw(List<Cell> result) throws IOException {
-		return next(result);
-	}
+    @Override
+    public boolean nextRaw(List<Cell> result) throws IOException {
+        return next(result);
+    }
 
-	@Override
-	public boolean nextRaw(List<Cell> result, int limit) throws IOException {
-		return next(result);
-	}
+    @Override
+    public boolean nextRaw(List<Cell> result, int limit) throws IOException {
+        return next(result);
+    }
 
-	@Override
-	public void close() throws IOException {
-		scanner.close();
-	}
+    @Override
+    public void close() throws IOException {
+        scanner.close();
+    }
 
-	@Override
-	public HRegionInfo getRegionInfo() {
-		return null;
-	}
+    @Override
+    public HRegionInfo getRegionInfo() {
+        return null;
+    }
 
-	@Override
-	public long getMaxResultSize() {
-		return Long.MAX_VALUE;
-	}
+    @Override
+    public long getMaxResultSize() {
+        return Long.MAX_VALUE;
+    }
 
-	@Override
-	public boolean isFilterDone() throws IOException {
-		return false;
-	}
+    @Override
+    public boolean isFilterDone() throws IOException {
+        return false;
+    }
 
-	@Override
-	public boolean reseek(byte[] row) throws IOException {
-		throw new UnsupportedOperationException();
-	}
+    @Override
+    public boolean reseek(byte[] row) throws IOException {
+        throw new UnsupportedOperationException();
+    }
 
-	@Override
-	public long getMvccReadPoint() {
-		return Long.MAX_VALUE;
-	}
+    @Override
+    public long getMvccReadPoint() {
+        return Long.MAX_VALUE;
+    }
 
 }

@@ -17,47 +17,47 @@ import com.kylinolap.common.util.JsonUtil;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class GenConfig {
 
-	@JsonProperty("columnConfigs")
-	private ArrayList<ColumnConfig> columnConfigs;
+    @JsonProperty("columnConfigs")
+    private ArrayList<ColumnConfig> columnConfigs;
 
-	private HashMap<String, ColumnConfig> cache = new HashMap<String, ColumnConfig>();
+    private HashMap<String, ColumnConfig> cache = new HashMap<String, ColumnConfig>();
 
-	public ArrayList<ColumnConfig> getColumnConfigs() {
-		return columnConfigs;
-	}
+    public ArrayList<ColumnConfig> getColumnConfigs() {
+        return columnConfigs;
+    }
 
-	public void setColumnConfigs(ArrayList<ColumnConfig> columnConfigs) {
-		this.columnConfigs = columnConfigs;
-	}
+    public void setColumnConfigs(ArrayList<ColumnConfig> columnConfigs) {
+        this.columnConfigs = columnConfigs;
+    }
 
-	public ColumnConfig getColumnConfigByName(String columnName) {
-		columnName = columnName.toLowerCase();
+    public ColumnConfig getColumnConfigByName(String columnName) {
+        columnName = columnName.toLowerCase();
 
-		if (cache.containsKey(columnName))
-			return cache.get(columnName);
+        if (cache.containsKey(columnName))
+            return cache.get(columnName);
 
-		for (ColumnConfig cConfig : columnConfigs) {
-			if (cConfig.getColumnName().toLowerCase().equals(columnName)) {
-				cache.put(columnName, cConfig);
-				return cConfig;
-			}
-		}
-		cache.put(columnName, null);
-		return null;
-	}
+        for (ColumnConfig cConfig : columnConfigs) {
+            if (cConfig.getColumnName().toLowerCase().equals(columnName)) {
+                cache.put(columnName, cConfig);
+                return cConfig;
+            }
+        }
+        cache.put(columnName, null);
+        return null;
+    }
 
-	public static GenConfig loadConfig(InputStream stream) {
-		try {
-			GenConfig config = JsonUtil.readValue(stream, GenConfig.class);
-			return config;
-		} catch (JsonMappingException e) {
-			e.printStackTrace();
-		} catch (JsonParseException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+    public static GenConfig loadConfig(InputStream stream) {
+        try {
+            GenConfig config = JsonUtil.readValue(stream, GenConfig.class);
+            return config;
+        } catch (JsonMappingException e) {
+            e.printStackTrace();
+        } catch (JsonParseException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-		return null;
-	}
+        return null;
+    }
 }

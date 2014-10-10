@@ -15,8 +15,7 @@
  */
 package com.kylinolap.dict;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.HashSet;
 
@@ -33,51 +32,49 @@ import com.kylinolap.metadata.model.cube.TblColRef;
 
 public class DictionaryManagerTest extends LocalFileMetadataTestCase {
 
-	DictionaryManager dictMgr;
+    DictionaryManager dictMgr;
 
-	@Before
-	public void setup() throws Exception {
-		createTestMetadata();
-		dictMgr = DictionaryManager.getInstance(this.getTestConfig());
-	}
+    @Before
+    public void setup() throws Exception {
+        createTestMetadata();
+        dictMgr = DictionaryManager.getInstance(this.getTestConfig());
+    }
 
-	@After
-	public void after() throws Exception {
-		cleanupTestMetadata();
-	}
+    @After
+    public void after() throws Exception {
+        cleanupTestMetadata();
+    }
 
-	@Test
-	@Ignore
-	public void basic() throws Exception {
-		CubeDesc cubeDesc = MetadataManager.getInstance(this.getTestConfig())
-				.getCubeDesc("test_kylin_cube_without_slr_desc");
-		TblColRef col = cubeDesc.findColumnRef("TEST_SITES", "SITE_NAME");
+    @Test
+    @Ignore
+    public void basic() throws Exception {
+        CubeDesc cubeDesc = MetadataManager.getInstance(this.getTestConfig()).getCubeDesc("test_kylin_cube_without_slr_desc");
+        TblColRef col = cubeDesc.findColumnRef("TEST_SITES", "SITE_NAME");
 
-		DictionaryInfo info1 = dictMgr.buildDictionary(cubeDesc, col, null);
-		System.out.println(JsonUtil.writeValueAsIndentString(info1));
+        DictionaryInfo info1 = dictMgr.buildDictionary(cubeDesc, col, null);
+        System.out.println(JsonUtil.writeValueAsIndentString(info1));
 
-		DictionaryInfo info2 = dictMgr.buildDictionary(cubeDesc, col, null);
-		System.out.println(JsonUtil.writeValueAsIndentString(info2));
+        DictionaryInfo info2 = dictMgr.buildDictionary(cubeDesc, col, null);
+        System.out.println(JsonUtil.writeValueAsIndentString(info2));
 
-		assertTrue(info1.getUuid() == info2.getUuid());
+        assertTrue(info1.getUuid() == info2.getUuid());
 
-		assertTrue(info1 == dictMgr.getDictionaryInfo(info1.getResourcePath()));
-		assertTrue(info2 == dictMgr.getDictionaryInfo(info2.getResourcePath()));
+        assertTrue(info1 == dictMgr.getDictionaryInfo(info1.getResourcePath()));
+        assertTrue(info2 == dictMgr.getDictionaryInfo(info2.getResourcePath()));
 
-		assertTrue(info1.getDictionaryObject() == info2.getDictionaryObject());
+        assertTrue(info1.getDictionaryObject() == info2.getDictionaryObject());
 
-		touchDictValues(info1);
-	}
+        touchDictValues(info1);
+    }
 
-	@SuppressWarnings("unchecked")
-	private void touchDictValues(DictionaryInfo info1) {
-		Dictionary<String> dict = (Dictionary<String>) info1
-				.getDictionaryObject();
+    @SuppressWarnings("unchecked")
+    private void touchDictValues(DictionaryInfo info1) {
+        Dictionary<String> dict = (Dictionary<String>) info1.getDictionaryObject();
 
-		HashSet<String> set = new HashSet<String>();
-		for (int i = 0, n = info1.getCardinality(); i < n; i++) {
-			set.add(dict.getValueFromId(i));
-		}
-		assertEquals(info1.getCardinality(), set.size());
-	}
+        HashSet<String> set = new HashSet<String>();
+        for (int i = 0, n = info1.getCardinality(); i < n; i++) {
+            set.add(dict.getValueFromId(i));
+        }
+        assertEquals(info1.getCardinality(), set.size());
+    }
 }

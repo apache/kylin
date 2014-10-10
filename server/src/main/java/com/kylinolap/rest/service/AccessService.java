@@ -54,251 +54,233 @@ import com.kylinolap.rest.security.AclService;
 @Component("accessService")
 public class AccessService {
 
-	@Autowired
-	private AclService aclService;
+    @Autowired
+    private AclService aclService;
 
-	@Autowired
-	UserService userService;
+    @Autowired
+    UserService userService;
 
-	// ~ Methods to manage acl life circle of domain objects ~
+    // ~ Methods to manage acl life circle of domain objects ~
 
-	@Transactional
-	public Acl init(AclEntity ae, Permission initPermission) {
-		MutableAcl acl = null;
-		ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(),
-				ae.getId());
+    @Transactional
+    public Acl init(AclEntity ae, Permission initPermission) {
+        MutableAcl acl = null;
+        ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(), ae.getId());
 
-		try {
-			// Create acl record for secured domain object.
-			acl = aclService.createAcl(objectIdentity);
-		} catch (AlreadyExistsException e) {
-			acl = (MutableAcl) aclService.readAclById(objectIdentity);
-		}
+        try {
+            // Create acl record for secured domain object.
+            acl = aclService.createAcl(objectIdentity);
+        } catch (AlreadyExistsException e) {
+            acl = (MutableAcl) aclService.readAclById(objectIdentity);
+        }
 
-		if (null != initPermission) {
-			Authentication auth = SecurityContextHolder.getContext()
-					.getAuthentication();
-			PrincipalSid sid = new PrincipalSid(auth);
-			grant(ae, initPermission, sid);
-		}
-		acl.setEntriesInheriting(false);
+        if (null != initPermission) {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            PrincipalSid sid = new PrincipalSid(auth);
+            grant(ae, initPermission, sid);
+        }
+        acl.setEntriesInheriting(false);
 
-		return aclService.updateAcl(acl);
-	}
+        return aclService.updateAcl(acl);
+    }
 
-	@Transactional
-	@PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-			+ " or hasPermission(#ae, 'ADMINISTRATION')")
-	public Acl grant(AclEntity ae, Permission permission, Sid sid) {
-		Assert.notNull(ae, "Acl domain object required");
-		Assert.notNull(permission, "Acl permission required");
-		Assert.notNull(sid, "Sid required");
+    @Transactional
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
+    public Acl grant(AclEntity ae, Permission permission, Sid sid) {
+        Assert.notNull(ae, "Acl domain object required");
+        Assert.notNull(permission, "Acl permission required");
+        Assert.notNull(sid, "Sid required");
 
-		ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(),
-				ae.getId());
-		MutableAcl acl = null;
+        ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(), ae.getId());
+        MutableAcl acl = null;
 
-		try {
-			acl = (MutableAcl) aclService.readAclById(objectIdentity);
-		} catch (NotFoundException e) {
-			acl = (MutableAcl) init(ae, null);
-		}
+        try {
+            acl = (MutableAcl) aclService.readAclById(objectIdentity);
+        } catch (NotFoundException e) {
+            acl = (MutableAcl) init(ae, null);
+        }
 
-		int indexOfAce = -1;
-		for (int i = 0; i < acl.getEntries().size(); i++) {
-			AccessControlEntry ace = acl.getEntries().get(i);
+        int indexOfAce = -1;
+        for (int i = 0; i < acl.getEntries().size(); i++) {
+            AccessControlEntry ace = acl.getEntries().get(i);
 
-			if (ace.getSid().equals(sid)) {
-				indexOfAce = i;
-			}
-		}
+            if (ace.getSid().equals(sid)) {
+                indexOfAce = i;
+            }
+        }
 
-		if (indexOfAce != -1) {
-			secureOwner(acl, indexOfAce);
-			acl.updateAce(indexOfAce, permission);
-		} else {
-			acl.insertAce(acl.getEntries().size(), permission, sid, true);
-		}
+        if (indexOfAce != -1) {
+            secureOwner(acl, indexOfAce);
+            acl.updateAce(indexOfAce, permission);
+        } else {
+            acl.insertAce(acl.getEntries().size(), permission, sid, true);
+        }
 
-		acl = aclService.updateAcl(acl);
+        acl = aclService.updateAcl(acl);
 
-		return acl;
-	}
+        return acl;
+    }
 
-	@Transactional
-	@PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-			+ " or hasPermission(#ae, 'ADMINISTRATION')")
-	public Acl update(AclEntity ae, Long accessEntryId, Permission newPermission) {
-		Assert.notNull(ae, "Acl domain object required");
-		Assert.notNull(accessEntryId, "Ace id required");
-		Assert.notNull(newPermission, "Acl permission required");
+    @Transactional
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
+    public Acl update(AclEntity ae, Long accessEntryId, Permission newPermission) {
+        Assert.notNull(ae, "Acl domain object required");
+        Assert.notNull(accessEntryId, "Ace id required");
+        Assert.notNull(newPermission, "Acl permission required");
 
-		ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(),
-				ae.getId());
-		MutableAcl acl = (MutableAcl) aclService.readAclById(objectIdentity);
+        ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(), ae.getId());
+        MutableAcl acl = (MutableAcl) aclService.readAclById(objectIdentity);
 
-		int indexOfAce = -1;
-		for (int i = 0; i < acl.getEntries().size(); i++) {
-			AccessControlEntry ace = acl.getEntries().get(i);
-			if (ace.getId().equals(accessEntryId)) {
-				indexOfAce = i;
-				break;
-			}
-		}
+        int indexOfAce = -1;
+        for (int i = 0; i < acl.getEntries().size(); i++) {
+            AccessControlEntry ace = acl.getEntries().get(i);
+            if (ace.getId().equals(accessEntryId)) {
+                indexOfAce = i;
+                break;
+            }
+        }
 
-		if (indexOfAce != -1) {
-			secureOwner(acl, indexOfAce);
+        if (indexOfAce != -1) {
+            secureOwner(acl, indexOfAce);
 
-			try {
-				acl.updateAce(indexOfAce, newPermission);
-				acl = aclService.updateAcl(acl);
-			} catch (NotFoundException e) {
-			}
-		}
+            try {
+                acl.updateAce(indexOfAce, newPermission);
+                acl = aclService.updateAcl(acl);
+            } catch (NotFoundException e) {
+            }
+        }
 
-		return acl;
-	}
+        return acl;
+    }
 
-	@Transactional
-	@PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-			+ " or hasPermission(#ae, 'ADMINISTRATION')")
-	public Acl revoke(AclEntity ae, Long accessEntryId) {
-		Assert.notNull(ae, "Acl domain object required");
-		Assert.notNull(accessEntryId, "Ace id required");
+    @Transactional
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
+    public Acl revoke(AclEntity ae, Long accessEntryId) {
+        Assert.notNull(ae, "Acl domain object required");
+        Assert.notNull(accessEntryId, "Ace id required");
 
-		ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(),
-				ae.getId());
-		MutableAcl acl = (MutableAcl) aclService.readAclById(objectIdentity);
-		int indexOfAce = -1;
+        ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(), ae.getId());
+        MutableAcl acl = (MutableAcl) aclService.readAclById(objectIdentity);
+        int indexOfAce = -1;
 
-		for (int i = 0; i < acl.getEntries().size(); i++) {
-			AccessControlEntry ace = acl.getEntries().get(i);
-			if (((Long) ace.getId()).equals(accessEntryId)) {
-				indexOfAce = i;
-				break;
-			}
-		}
+        for (int i = 0; i < acl.getEntries().size(); i++) {
+            AccessControlEntry ace = acl.getEntries().get(i);
+            if (((Long) ace.getId()).equals(accessEntryId)) {
+                indexOfAce = i;
+                break;
+            }
+        }
 
-		if (indexOfAce != -1) {
-			secureOwner(acl, indexOfAce);
+        if (indexOfAce != -1) {
+            secureOwner(acl, indexOfAce);
 
-			try {
-				acl.deleteAce(indexOfAce);
-				acl = aclService.updateAcl(acl);
-			} catch (NotFoundException e) {
-			}
-		}
+            try {
+                acl.deleteAce(indexOfAce);
+                acl = aclService.updateAcl(acl);
+            } catch (NotFoundException e) {
+            }
+        }
 
-		return acl;
-	}
+        return acl;
+    }
 
-	@Transactional
-	public void inherit(AclEntity ae, AclEntity parentAe) {
-		Assert.notNull(ae, "Acl domain object required");
-		Assert.notNull(parentAe, "Parent acl required");
+    @Transactional
+    public void inherit(AclEntity ae, AclEntity parentAe) {
+        Assert.notNull(ae, "Acl domain object required");
+        Assert.notNull(parentAe, "Parent acl required");
 
-		ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(),
-				ae.getId());
-		MutableAcl acl = null;
-		try {
-			acl = (MutableAcl) aclService.readAclById(objectIdentity);
-		} catch (NotFoundException e) {
-			acl = (MutableAcl) init(ae, null);
-		}
+        ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(), ae.getId());
+        MutableAcl acl = null;
+        try {
+            acl = (MutableAcl) aclService.readAclById(objectIdentity);
+        } catch (NotFoundException e) {
+            acl = (MutableAcl) init(ae, null);
+        }
 
-		ObjectIdentity parentObjectIdentity = new ObjectIdentityImpl(
-				parentAe.getClass(), parentAe.getId());
-		MutableAcl parentAcl = null;
-		try {
-			parentAcl = (MutableAcl) aclService
-					.readAclById(parentObjectIdentity);
-		} catch (NotFoundException e) {
-			parentAcl = (MutableAcl) init(parentAe, null);
-		}
+        ObjectIdentity parentObjectIdentity = new ObjectIdentityImpl(parentAe.getClass(), parentAe.getId());
+        MutableAcl parentAcl = null;
+        try {
+            parentAcl = (MutableAcl) aclService.readAclById(parentObjectIdentity);
+        } catch (NotFoundException e) {
+            parentAcl = (MutableAcl) init(parentAe, null);
+        }
 
-		if (null == acl || null == parentAcl) {
-			return;
-		}
+        if (null == acl || null == parentAcl) {
+            return;
+        }
 
-		acl.setEntriesInheriting(true);
-		acl.setParent(parentAcl);
-		aclService.updateAcl(acl);
-	}
+        acl.setEntriesInheriting(true);
+        acl.setParent(parentAcl);
+        aclService.updateAcl(acl);
+    }
 
-	@Transactional
-	@PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-			+ " or hasPermission(#ae, 'ADMINISTRATION')")
-	public void clean(AclEntity ae, boolean deleteChildren) {
-		Assert.notNull(ae, "Acl domain object required");
+    @Transactional
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
+    public void clean(AclEntity ae, boolean deleteChildren) {
+        Assert.notNull(ae, "Acl domain object required");
 
-		ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(),
-				ae.getId());
+        ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(), ae.getId());
 
-		try {
-			aclService.deleteAcl(objectIdentity, deleteChildren);
-		} catch (NotFoundException e) {
-		}
-	}
+        try {
+            aclService.deleteAcl(objectIdentity, deleteChildren);
+        } catch (NotFoundException e) {
+        }
+    }
 
-	// ~ Methods to get acl info of domain objects ~
+    // ~ Methods to get acl info of domain objects ~
 
-	public RootPersistentEntity getAclEntity(String entityType, String uuid) {
-		if (null == uuid) {
-			return null;
-		}
+    public RootPersistentEntity getAclEntity(String entityType, String uuid) {
+        if (null == uuid) {
+            return null;
+        }
 
-		return AclEntityFactory.createAclEntity(entityType, uuid);
-	}
+        return AclEntityFactory.createAclEntity(entityType, uuid);
+    }
 
-	public Acl getAcl(AclEntity ae) {
-		if (null == ae) {
-			return null;
-		}
-		ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(),
-				ae.getId());
-		Acl acl = null;
+    public Acl getAcl(AclEntity ae) {
+        if (null == ae) {
+            return null;
+        }
+        ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(), ae.getId());
+        Acl acl = null;
 
-		try {
-			acl = (MutableAcl) aclService.readAclById(objectIdentity);
-		} catch (NotFoundException e) {
-		}
+        try {
+            acl = (MutableAcl) aclService.readAclById(objectIdentity);
+        } catch (NotFoundException e) {
+        }
 
-		return acl;
-	}
+        return acl;
+    }
 
-	public Sid getSid(String sid, boolean isPrincepal) {
-		return aclService.getSid(sid, isPrincepal);
-	}
+    public Sid getSid(String sid, boolean isPrincepal) {
+        return aclService.getSid(sid, isPrincepal);
+    }
 
-	public List<AccessEntryResponse> generateAceResponses(Acl acl) {
-		if (null == acl) {
-			return Collections.emptyList();
-		}
-		List<AccessEntryResponse> accessControlEntities = new ArrayList<AccessEntryResponse>();
+    public List<AccessEntryResponse> generateAceResponses(Acl acl) {
+        if (null == acl) {
+            return Collections.emptyList();
+        }
+        List<AccessEntryResponse> accessControlEntities = new ArrayList<AccessEntryResponse>();
 
-		// Cause there is a circle reference in AccessControlEntry, it needs to
-		// set acl to null as a workaround.
-		for (AccessControlEntry ace : acl.getEntries()) {
-			accessControlEntities.add(new AccessEntryResponse(ace.getId(), ace
-					.getSid(), ace.getPermission(), ace.isGranting()));
-		}
+        // Cause there is a circle reference in AccessControlEntry, it needs to
+        // set acl to null as a workaround.
+        for (AccessControlEntry ace : acl.getEntries()) {
+            accessControlEntities.add(new AccessEntryResponse(ace.getId(), ace.getSid(), ace.getPermission(), ace.isGranting()));
+        }
 
-		return accessControlEntities;
-	}
+        return accessControlEntities;
+    }
 
-	/**
-	 * Protect admin permission granted to acl owner.
-	 * 
-	 * @param acl
-	 * @param indexOfAce
-	 */
-	private void secureOwner(MutableAcl acl, int indexOfAce) {
-		// Can't revoke admin permission from domain object owner
-		if (acl.getOwner().equals(acl.getEntries().get(indexOfAce).getSid())
-				&& BasePermission.ADMINISTRATION.equals(acl.getEntries()
-						.get(indexOfAce).getPermission())) {
-			throw new ForbiddenException(
-					"Can't revoke admin permission of owner.");
-		}
-	}
+    /**
+     * Protect admin permission granted to acl owner.
+     * 
+     * @param acl
+     * @param indexOfAce
+     */
+    private void secureOwner(MutableAcl acl, int indexOfAce) {
+        // Can't revoke admin permission from domain object owner
+        if (acl.getOwner().equals(acl.getEntries().get(indexOfAce).getSid()) && BasePermission.ADMINISTRATION.equals(acl.getEntries().get(indexOfAce).getPermission())) {
+            throw new ForbiddenException("Can't revoke admin permission of owner.");
+        }
+    }
 }

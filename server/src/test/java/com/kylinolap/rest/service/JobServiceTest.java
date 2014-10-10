@@ -31,18 +31,17 @@ import com.kylinolap.job.exception.JobException;
  */
 public class JobServiceTest extends TestBase {
 
-	@Autowired
-	JobService jobService;
+    @Autowired
+    JobService jobService;
 
-	@Test
-	public void testBasics() throws JobException, IOException {
-		Assert.assertNotNull(jobService.getJobManager());
-		Assert.assertNotNull(jobService.getConfig());
-		Assert.assertNotNull(jobService.getKylinConfig());
-		Assert.assertNotNull(jobService.getMetadataManager());
-		Assert.assertNotNull(jobService
-				.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
-		Assert.assertNull(jobService.getJobInstance("job_not_exist"));
-		Assert.assertNotNull(jobService.listAllJobs(null, null, null));
-	}
+    @Test
+    public void testBasics() throws JobException, IOException {
+        Assert.assertNotNull(jobService.getJobManager());
+        Assert.assertNotNull(jobService.getConfig());
+        Assert.assertNotNull(jobService.getKylinConfig());
+        Assert.assertNotNull(jobService.getMetadataManager());
+        Assert.assertNotNull(jobService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
+        Assert.assertNull(jobService.getJobInstance("job_not_exist"));
+        Assert.assertNotNull(jobService.listAllJobs(null, null, null));
+    }
 }

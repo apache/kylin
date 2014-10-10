@@ -35,42 +35,33 @@ import com.kylinolap.rest.response.MetricsResponse;
  */
 public class UserService extends JdbcUserDetailsManager {
 
-	@Autowired
-	protected JdbcTemplate jdbcTemplate;
+    @Autowired
+    protected JdbcTemplate jdbcTemplate;
 
-	public void hit(final String username) {
-		jdbcTemplate.update(
-				"insert into user_hits(username,hit_time) values(?,?);",
-				new PreparedStatementSetter() {
-					@Override
-					public void setValues(PreparedStatement ps)
-							throws SQLException {
-						ps.setString(1, username);
-						ps.setTimestamp(2,
-								new java.sql.Timestamp(new Date().getTime()));
-					}
-				});
-	}
+    public void hit(final String username) {
+        jdbcTemplate.update("insert into user_hits(username,hit_time) values(?,?);", new PreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps) throws SQLException {
+                ps.setString(1, username);
+                ps.setTimestamp(2, new java.sql.Timestamp(new Date().getTime()));
+            }
+        });
+    }
 
-	public List<String> getUserAuthorities() {
-		return jdbcTemplate.queryForList(
-				"select distinct authority from authorities", new String[] {},
-				String.class);
-	}
+    public List<String> getUserAuthorities() {
+        return jdbcTemplate.queryForList("select distinct authority from authorities", new String[] {}, String.class);
+    }
 
-	public MetricsResponse calculateMetrics(MetricsRequest request) {
-		MetricsResponse metrics = new MetricsResponse();
-		Date startTime = (null == request.getStartTime()) ? new Date(-1)
-				: request.getStartTime();
-		Date endTime = (null == request.getEndTime()) ? new Date() : request
-				.getEndTime();
-		String userCountSql = "select count(distinct username) as count from user_hits where hit_time > ? and hit_time < ?";
+    public MetricsResponse calculateMetrics(MetricsRequest request) {
+        MetricsResponse metrics = new MetricsResponse();
+        Date startTime = (null == request.getStartTime()) ? new Date(-1) : request.getStartTime();
+        Date endTime = (null == request.getEndTime()) ? new Date() : request.getEndTime();
+        String userCountSql = "select count(distinct username) as count from user_hits where hit_time > ? and hit_time < ?";
 
-		int userCount = (Integer) jdbcTemplate.queryForObject(userCountSql,
-				new Object[] { startTime, endTime }, Integer.class);
+        int userCount = (Integer) jdbcTemplate.queryForObject(userCountSql, new Object[] { startTime, endTime }, Integer.class);
 
-		metrics.increase("userCount", (float) userCount);
+        metrics.increase("userCount", (float) userCount);
 
-		return metrics;
-	}
+        return metrics;
+    }
 }

@@ -35,122 +35,115 @@ import com.kylinolap.metadata.model.schema.TableDesc;
  * @author yangli9
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class SnapshotTable extends RootPersistentEntity implements
-		ReadableTable {
+public class SnapshotTable extends RootPersistentEntity implements ReadableTable {
 
-	@JsonProperty("signature")
-	private TableSignature signature;
-	@JsonProperty("column_delimeter")
-	private String columnDelimeter;
+    @JsonProperty("signature")
+    private TableSignature signature;
+    @JsonProperty("column_delimeter")
+    private String columnDelimeter;
 
-	private ArrayList<String[]> rows;
+    private ArrayList<String[]> rows;
 
-	// default constructor for JSON serialization
-	public SnapshotTable() {
-	}
+    // default constructor for JSON serialization
+    public SnapshotTable() {
+    }
 
-	SnapshotTable(ReadableTable table) throws IOException {
-		this.signature = table.getSignature();
-		this.columnDelimeter = table.getColumnDelimeter();
-	}
+    SnapshotTable(ReadableTable table) throws IOException {
+        this.signature = table.getSignature();
+        this.columnDelimeter = table.getColumnDelimeter();
+    }
 
-	public void takeSnapshot(ReadableTable table, TableDesc tableDesc)
-			throws IOException {
-		this.signature = table.getSignature();
-		this.columnDelimeter = table.getColumnDelimeter();
+    public void takeSnapshot(ReadableTable table, TableDesc tableDesc) throws IOException {
+        this.signature = table.getSignature();
+        this.columnDelimeter = table.getColumnDelimeter();
 
-		int maxIndex = tableDesc.getMaxColumnIndex();
+        int maxIndex = tableDesc.getMaxColumnIndex();
 
-		TableReader reader = table.getReader();
-		ArrayList<String[]> allRows = new ArrayList<String[]>();
-		while (reader.next()) {
-			String[] row = reader.getRow();
-			if (row.length <= maxIndex) {
-				throw new IllegalStateException("Bad hive table row, "
-						+ tableDesc + " expect " + (maxIndex + 1)
-						+ " columns, but got " + Arrays.toString(row));
-			}
-			allRows.add(row);
-		}
-		this.rows = allRows;
-	}
+        TableReader reader = table.getReader();
+        ArrayList<String[]> allRows = new ArrayList<String[]>();
+        while (reader.next()) {
+            String[] row = reader.getRow();
+            if (row.length <= maxIndex) {
+                throw new IllegalStateException("Bad hive table row, " + tableDesc + " expect " + (maxIndex + 1) + " columns, but got " + Arrays.toString(row));
+            }
+            allRows.add(row);
+        }
+        this.rows = allRows;
+    }
 
-	public String getResourcePath() {
-		return ResourceStore.SNAPSHOT_RESOURCE_ROOT + "/"
-				+ new Path(signature.getPath()).getName() + "/" + uuid
-				+ ".snapshot";
-	}
+    public String getResourcePath() {
+        return ResourceStore.SNAPSHOT_RESOURCE_ROOT + "/" + new Path(signature.getPath()).getName() + "/" + uuid + ".snapshot";
+    }
 
-	public String getResourceDir() {
-		return ResourceStore.SNAPSHOT_RESOURCE_ROOT + "/"
-				+ new Path(signature.getPath()).getName();
-	}
+    public String getResourceDir() {
+        return ResourceStore.SNAPSHOT_RESOURCE_ROOT + "/" + new Path(signature.getPath()).getName();
+    }
 
-	@Override
-	public TableReader getReader() throws IOException {
-		return new TableReader() {
+    @Override
+    public TableReader getReader() throws IOException {
+        return new TableReader() {
 
-			int i = -1;
+            int i = -1;
 
-			@Override
-			public boolean next() throws IOException {
-				i++;
-				return i < rows.size();
-			}
+            @Override
+            public boolean next() throws IOException {
+                i++;
+                return i < rows.size();
+            }
 
-			@Override
-			public String[] getRow() {
-				return rows.get(i);
-			}
+            @Override
+            public String[] getRow() {
+                return rows.get(i);
+            }
 
-			@Override
-			public void close() throws IOException {
-			}
+            @Override
+            public void close() throws IOException {
+            }
 
-			@Override
-			public void setExpectedColumnNumber(int expectedColumnNumber) {
-				// noop
-			}
-		};
-	}
+            @Override
+            public void setExpectedColumnNumber(int expectedColumnNumber) {
+                // noop
+            }
+        };
+    }
 
-	@Override
-	public TableSignature getSignature() throws IOException {
-		return signature;
-	}
+    @Override
+    public TableSignature getSignature() throws IOException {
+        return signature;
+    }
 
-	@Override
-	public String getColumnDelimeter() throws IOException {
-		return columnDelimeter;
-	}
+    @Override
+    public String getColumnDelimeter() throws IOException {
+        return columnDelimeter;
+    }
 
-	void writeData(DataOutput out) throws IOException {
-		out.writeInt(rows.size());
-		if (rows.size() > 0) {
-			int n = rows.get(0).length;
-			out.writeInt(n);
-			for (int i = 0; i < rows.size(); i++) {
-				String[] row = rows.get(i);
-				for (int j = 0; j < n; j++) {
-					out.writeUTF(row[j]);
-				}
-			}
-		}
-	}
+    void writeData(DataOutput out) throws IOException {
+        out.writeInt(rows.size());
+        if (rows.size() > 0) {
+            int n = rows.get(0).length;
+            out.writeInt(n);
+            for (int i = 0; i < rows.size(); i++) {
+                String[] row = rows.get(i);
+                for (int j = 0; j < n; j++) {
+                    out.writeUTF(row[j]);
+                }
+            }
+        }
+    }
 
-	void readData(DataInput in) throws IOException {
-		int rowNum = in.readInt();
-		rows = new ArrayList<String[]>(rowNum);
-		if (rowNum > 0) {
-			int n = in.readInt();
-			for (int i = 0; i < rowNum; i++) {
-				String[] row = new String[n];
-				rows.add(row);
-				for (int j = 0; j < n; j++) {
-					row[j] = in.readUTF();
-				}
-			}
-		}
-	}
+    void readData(DataInput in) throws IOException {
+        int rowNum = in.readInt();
+        rows = new ArrayList<String[]>(rowNum);
+        if (rowNum > 0) {
+            int n = in.readInt();
+            for (int i = 0; i < rowNum; i++) {
+                String[] row = new String[n];
+                rows.add(row);
+                for (int j = 0; j < n; j++) {
+                    row[j] = in.readUTF();
+                }
+            }
+        }
+    }
 
 }

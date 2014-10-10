@@ -15,9 +15,7 @@
  */
 package com.kylinolap.job;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 
@@ -37,74 +35,73 @@ import com.kylinolap.job.exception.InvalidJobInstanceException;
  */
 public class JobDAOTest extends LocalFileMetadataTestCase {
 
-	@Before
-	public void setup() throws Exception {
-		createTestMetadata();
-	}
+    @Before
+    public void setup() throws Exception {
+        createTestMetadata();
+    }
 
-	@After
-	public void after() throws Exception {
-		cleanupTestMetadata();
-	}
+    @After
+    public void after() throws Exception {
+        cleanupTestMetadata();
+    }
 
-	@Test
-	public void test() throws IOException, InvalidJobInstanceException {
+    @Test
+    public void test() throws IOException, InvalidJobInstanceException {
 
-		String uuid = "132432cb-8c68-42d8-aa3a-504151b39d1b";
-		JobDAO service = JobDAO.getInstance(getTestConfig());
-		JobInstance job = createDumbJobInstance(uuid);
-		assertEquals(0, job.getLastModified());
-		service.updateJobInstance(job);
+        String uuid = "132432cb-8c68-42d8-aa3a-504151b39d1b";
+        JobDAO service = JobDAO.getInstance(getTestConfig());
+        JobInstance job = createDumbJobInstance(uuid);
+        assertEquals(0, job.getLastModified());
+        service.updateJobInstance(job);
 
-		// test read
-		JobInstance job2 = service.getJob(uuid);
-		// assertEquals(JobStatusEnum.PENDING, job2.getStatus());
-		assertTrue(job2.getLastModified() > 0);
+        // test read
+        JobInstance job2 = service.getJob(uuid);
+        // assertEquals(JobStatusEnum.PENDING, job2.getStatus());
+        assertTrue(job2.getLastModified() > 0);
 
-		// test modify
-		job2.setRelatedCube("abc");
-		service.updateJobInstance(job2);
-		JobInstance job3 = service.getJob(uuid);
-		assertEquals("abc", job3.getRelatedCube());
-		assertTrue(job3.getLastModified() > 0);
+        // test modify
+        job2.setRelatedCube("abc");
+        service.updateJobInstance(job2);
+        JobInstance job3 = service.getJob(uuid);
+        assertEquals("abc", job3.getRelatedCube());
+        assertTrue(job3.getLastModified() > 0);
 
-		// test delete
-		service.deleteJob(job2);
-		JobInstance job4 = service.getJob(uuid);
-		assertNull(job4);
-	}
+        // test delete
+        service.deleteJob(job2);
+        JobInstance job4 = service.getJob(uuid);
+        assertNull(job4);
+    }
 
-	@Test
-	public void testOutput() throws IOException, InvalidJobInstanceException {
-		String uuid = "132432cb-8c68-42d8-aa3a-504151b39d1b";
-		int seq = 1;
-		String s = "this is output";
-		JobDAO service = JobDAO.getInstance(getTestConfig());
-		service.saveJobOutput(uuid, seq, s);
+    @Test
+    public void testOutput() throws IOException, InvalidJobInstanceException {
+        String uuid = "132432cb-8c68-42d8-aa3a-504151b39d1b";
+        int seq = 1;
+        String s = "this is output";
+        JobDAO service = JobDAO.getInstance(getTestConfig());
+        service.saveJobOutput(uuid, seq, s);
 
-		// test read
-		JobStepOutput output2 = service.getJobOutput(uuid, seq);
-		assertTrue(output2.getLastModified() > 0);
-		assertEquals(s, output2.getOutput());
+        // test read
+        JobStepOutput output2 = service.getJobOutput(uuid, seq);
+        assertTrue(output2.getLastModified() > 0);
+        assertEquals(s, output2.getOutput());
 
-	}
+    }
 
-	private JobInstance createDumbJobInstance(String uuid) {
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+    private JobInstance createDumbJobInstance(String uuid) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
 
-			JobInstance jobInstance = new JobInstance();
-			jobInstance.setUuid(uuid);
-			jobInstance.setType(CubeBuildTypeEnum.BUILD);
-			jobInstance
-					.setRelatedCube("test_kylin_cube_with_slr".toUpperCase());
-			jobInstance.setName("Dummy_Job");
-			// jobInstance.setStatus(JobStatusEnum.PENDING);
+            JobInstance jobInstance = new JobInstance();
+            jobInstance.setUuid(uuid);
+            jobInstance.setType(CubeBuildTypeEnum.BUILD);
+            jobInstance.setRelatedCube("test_kylin_cube_with_slr".toUpperCase());
+            jobInstance.setName("Dummy_Job");
+            // jobInstance.setStatus(JobStatusEnum.PENDING);
 
-			return jobInstance;
-		} catch (Exception e) {
-			return null;
-		}
-	}
+            return jobInstance;
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

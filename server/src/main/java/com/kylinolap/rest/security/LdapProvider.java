@@ -44,70 +44,64 @@ import com.kylinolap.rest.service.UserService;
  */
 public class LdapProvider extends LdapAuthenticationProvider {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(LdapProvider.class);
+    private static final Logger logger = LoggerFactory.getLogger(LdapProvider.class);
 
-	@Autowired
-	UserService userService;
+    @Autowired
+    UserService userService;
 
-	@Autowired
-	private CacheManager cacheManager;
+    @Autowired
+    private CacheManager cacheManager;
 
-	MessageDigest md = null;
+    MessageDigest md = null;
 
-	/**
-	 * @param authenticator
-	 * @param authoritiesPopulator
-	 */
-	public LdapProvider(LdapAuthenticator authenticator,
-			LdapAuthoritiesPopulator authoritiesPopulator) {
-		super(authenticator, authoritiesPopulator);
+    /**
+     * @param authenticator
+     * @param authoritiesPopulator
+     */
+    public LdapProvider(LdapAuthenticator authenticator, LdapAuthoritiesPopulator authoritiesPopulator) {
+        super(authenticator, authoritiesPopulator);
 
-		try {
-			md = MessageDigest.getInstance("MD5");
-		} catch (NoSuchAlgorithmException e) {
-			logger.error("Failed to init Message Digest ", e);
-		}
-	}
+        try {
+            md = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            logger.error("Failed to init Message Digest ", e);
+        }
+    }
 
-	@Override
-	public Authentication authenticate(Authentication authentication)
-			throws AuthenticationException {
-		Authentication authed = null;
-		Cache userCache = cacheManager.getCache("UserCache");
-		md.reset();
-		byte[] hashKey = md.digest((authentication.getName() + authentication
-				.getCredentials()).getBytes());
-		String userKey = Arrays.toString(hashKey);
+    @Override
+    public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+        Authentication authed = null;
+        Cache userCache = cacheManager.getCache("UserCache");
+        md.reset();
+        byte[] hashKey = md.digest((authentication.getName() + authentication.getCredentials()).getBytes());
+        String userKey = Arrays.toString(hashKey);
 
-		Element authedUser = userCache.get(userKey);
-		if (null != authedUser) {
-			authed = (Authentication) authedUser.getObjectValue();
-			SecurityContextHolder.getContext().setAuthentication(authed);
-		} else {
-			try {
-				authed = super.authenticate(authentication);
-				userCache.put(new Element(userKey, authed));
-			} catch (AuthenticationException e) {
-				logger.error(
-						"Failed to auth user: " + authentication.getName(), e);
-				throw e;
-			}
+        Element authedUser = userCache.get(userKey);
+        if (null != authedUser) {
+            authed = (Authentication) authedUser.getObjectValue();
+            SecurityContextHolder.getContext().setAuthentication(authed);
+        } else {
+            try {
+                authed = super.authenticate(authentication);
+                userCache.put(new Element(userKey, authed));
+            } catch (AuthenticationException e) {
+                logger.error("Failed to auth user: " + authentication.getName(), e);
+                throw e;
+            }
 
-			UserDetails user = new User(authentication.getName(),
-					"skippped-ldap", authed.getAuthorities());
+            UserDetails user = new User(authentication.getName(), "skippped-ldap", authed.getAuthorities());
 
-			try {
-				if (!userService.userExists(authentication.getName())) {
-					userService.createUser(user);
-				} else {
-					userService.updateUser(user);
-				}
-			} catch (Exception e) {
-				logger.error(e.getLocalizedMessage(), e);
-			}
-		}
+            try {
+                if (!userService.userExists(authentication.getName())) {
+                    userService.createUser(user);
+                } else {
+                    userService.updateUser(user);
+                }
+            } catch (Exception e) {
+                logger.error(e.getLocalizedMessage(), e);
+            }
+        }
 
-		return authed;
-	}
+        return authed;
+    }
 }

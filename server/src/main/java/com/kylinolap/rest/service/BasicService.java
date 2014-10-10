@@ -56,150 +56,140 @@ import com.kylinolap.rest.controller.QueryController;
 
 public abstract class BasicService {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(BasicService.class);
+    private static final Logger logger = LoggerFactory.getLogger(BasicService.class);
 
-	private static ConcurrentMap<String, DataSource> olapDataSources = new ConcurrentHashMap<String, DataSource>();
+    private static ConcurrentMap<String, DataSource> olapDataSources = new ConcurrentHashMap<String, DataSource>();
 
-	@Autowired
-	protected JdbcTemplate jdbcTemplate;
+    @Autowired
+    protected JdbcTemplate jdbcTemplate;
 
-	public KylinConfig getConfig() {
-		return KylinConfig.getInstanceFromEnv();
-	}
+    public KylinConfig getConfig() {
+        return KylinConfig.getInstanceFromEnv();
+    }
 
-	public void removeOLAPDataSource(String project) {
-		if (StringUtils.isEmpty(project))
-			throw new IllegalArgumentException(
-					"removeOLAPDataSource: project name not given");
+    public void removeOLAPDataSource(String project) {
+        if (StringUtils.isEmpty(project))
+            throw new IllegalArgumentException("removeOLAPDataSource: project name not given");
 
-		project = ProjectInstance.getNormalizedProjectName(project);
-		olapDataSources.remove(project);
-	}
+        project = ProjectInstance.getNormalizedProjectName(project);
+        olapDataSources.remove(project);
+    }
 
-	public void resetOLAPDataSources() {
-		// brutal, yet simplest way
-		logger.info("resetOLAPDataSources is called.");
-		olapDataSources = new ConcurrentHashMap<String, DataSource>();
-	}
+    public void resetOLAPDataSources() {
+        // brutal, yet simplest way
+        logger.info("resetOLAPDataSources is called.");
+        olapDataSources = new ConcurrentHashMap<String, DataSource>();
+    }
 
-	public DataSource getOLAPDataSource(String project) {
+    public DataSource getOLAPDataSource(String project) {
 
-		project = ProjectInstance.getNormalizedProjectName(project);
+        project = ProjectInstance.getNormalizedProjectName(project);
 
-		DataSource ret = olapDataSources.get(project);
-		if (ret == null) {
-			logger.debug("Creating a new data source");
-			logger.debug("OLAP data source pointing to " + getConfig());
+        DataSource ret = olapDataSources.get(project);
+        if (ret == null) {
+            logger.debug("Creating a new data source");
+            logger.debug("OLAP data source pointing to " + getConfig());
 
-			File modelJson = OLAPSchemaFactory.createTempOLAPJson(project,
-					getConfig());
+            File modelJson = OLAPSchemaFactory.createTempOLAPJson(project, getConfig());
 
-			try {
-				List<String> text = Files.readLines(modelJson,
-						Charset.defaultCharset());
-				logger.debug("The new temp olap json is :");
-				for (String line : text)
-					logger.debug(line);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+            try {
+                List<String> text = Files.readLines(modelJson, Charset.defaultCharset());
+                logger.debug("The new temp olap json is :");
+                for (String line : text)
+                    logger.debug(line);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-			DriverManagerDataSource ds = new DriverManagerDataSource();
-			Properties props = new Properties();
-			props.setProperty(OLAPQuery.PROP_SCAN_THRESHOLD, String
-					.valueOf(KylinConfig.getInstanceFromEnv()
-							.getScanThreshold()));
-			ds.setConnectionProperties(props);
-			ds.setDriverClassName("net.hydromatic.optiq.jdbc.Driver");
-			ds.setUrl("jdbc:optiq:model=" + modelJson.getAbsolutePath());
+            DriverManagerDataSource ds = new DriverManagerDataSource();
+            Properties props = new Properties();
+            props.setProperty(OLAPQuery.PROP_SCAN_THRESHOLD, String.valueOf(KylinConfig.getInstanceFromEnv().getScanThreshold()));
+            ds.setConnectionProperties(props);
+            ds.setDriverClassName("net.hydromatic.optiq.jdbc.Driver");
+            ds.setUrl("jdbc:optiq:model=" + modelJson.getAbsolutePath());
 
-			ret = olapDataSources.putIfAbsent(project, ds);
-			if (ret == null) {
-				ret = ds;
-			}
-		}
-		return ret;
-	}
+            ret = olapDataSources.putIfAbsent(project, ds);
+            if (ret == null) {
+                ret = ds;
+            }
+        }
+        return ret;
+    }
 
-	/**
-	 * Reload changed cube into cache
-	 * 
-	 * @param name
-	 * @throws IOException
-	 */
-	@Caching(evict = {
-			@CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true),
-			@CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
-	public void cleanDataCache() {
-		CubeManager.removeInstance(getConfig());
-		ProjectManager.removeInstance(getConfig());
-		this.resetOLAPDataSources();
-	}
+    /**
+     * Reload changed cube into cache
+     * 
+     * @param name
+     * @throws IOException
+     */
+    @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
+    public void cleanDataCache() {
+        CubeManager.removeInstance(getConfig());
+        ProjectManager.removeInstance(getConfig());
+        this.resetOLAPDataSources();
+    }
 
-	/**
-	 * Reload the cube desc with name {name} into cache
-	 * 
-	 * @param name
-	 */
-	public void reloadMetadataCache() {
-		MetadataManager.getInstance(getConfig()).reload();
-	}
+    /**
+     * Reload the cube desc with name {name} into cache
+     * 
+     * @param name
+     */
+    public void reloadMetadataCache() {
+        MetadataManager.getInstance(getConfig()).reload();
+    }
 
-	public KylinConfig getKylinConfig() {
-		KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+    public KylinConfig getKylinConfig() {
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
 
-		if (kylinConfig == null) {
-			throw new IllegalArgumentException(
-					"Failed to load kylin config instance");
-		}
+        if (kylinConfig == null) {
+            throw new IllegalArgumentException("Failed to load kylin config instance");
+        }
 
-		return kylinConfig;
-	}
+        return kylinConfig;
+    }
 
-	public MetadataManager getMetadataManager() {
-		return MetadataManager.getInstance(getConfig());
-	}
+    public MetadataManager getMetadataManager() {
+        return MetadataManager.getInstance(getConfig());
+    }
 
-	public CubeManager getCubeManager() {
-		return CubeManager.getInstance(getConfig());
-	}
+    public CubeManager getCubeManager() {
+        return CubeManager.getInstance(getConfig());
+    }
 
-	public ProjectManager getProjectManager() {
-		return ProjectManager.getInstance(getConfig());
-	}
+    public ProjectManager getProjectManager() {
+        return ProjectManager.getInstance(getConfig());
+    }
 
-	public JobManager getJobManager() throws JobException, UnknownHostException {
-		KylinConfig config = KylinConfig.getInstanceFromEnv();
+    public JobManager getJobManager() throws JobException, UnknownHostException {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
 
-		JobEngineConfig engineCntx = new JobEngineConfig(config);
+        JobEngineConfig engineCntx = new JobEngineConfig(config);
 
-		InetAddress ia = InetAddress.getLocalHost();
-		return new JobManager(ia.getCanonicalHostName(), engineCntx);
-	}
+        InetAddress ia = InetAddress.getLocalHost();
+        return new JobManager(ia.getCanonicalHostName(), engineCntx);
+    }
 
-	protected static void close(ResultSet resultSet, Statement stat,
-			Connection conn) {
-		OLAPContext.clearParameter();
+    protected static void close(ResultSet resultSet, Statement stat, Connection conn) {
+        OLAPContext.clearParameter();
 
-		if (resultSet != null)
-			try {
-				resultSet.close();
-			} catch (SQLException e) {
-				logger.error("failed to close", e);
-			}
-		if (stat != null)
-			try {
-				stat.close();
-			} catch (SQLException e) {
-				logger.error("failed to close", e);
-			}
-		if (conn != null)
-			try {
-				conn.close();
-			} catch (SQLException e) {
-				logger.error("failed to close", e);
-			}
-	}
+        if (resultSet != null)
+            try {
+                resultSet.close();
+            } catch (SQLException e) {
+                logger.error("failed to close", e);
+            }
+        if (stat != null)
+            try {
+                stat.close();
+            } catch (SQLException e) {
+                logger.error("failed to close", e);
+            }
+        if (conn != null)
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                logger.error("failed to close", e);
+            }
+    }
 
 }

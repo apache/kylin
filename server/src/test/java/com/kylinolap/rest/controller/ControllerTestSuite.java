@@ -24,9 +24,6 @@ import org.junit.runners.Suite;
  * 
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ AccessControllerTest.class, AdminControllerTest.class,
-		BaseControllerTest.class, CubeControllerTest.class,
-		JobControllerTest.class, QueryControllerTest.class,
-		UserControllerTest.class })
+@Suite.SuiteClasses({ AccessControllerTest.class, AdminControllerTest.class, BaseControllerTest.class, CubeControllerTest.class, JobControllerTest.class, QueryControllerTest.class, UserControllerTest.class })
 public class ControllerTestSuite {
 }

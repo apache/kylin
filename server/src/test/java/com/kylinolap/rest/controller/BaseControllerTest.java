@@ -36,41 +36,34 @@ import com.kylinolap.rest.service.TestBase;
  */
 public class BaseControllerTest extends TestBase {
 
-	private BasicController basicController;
+    private BasicController basicController;
 
-	@Before
-	public void setup() {
-		super.setUp();
+    @Before
+    public void setup() {
+        super.setUp();
 
-		basicController = new BasicController();
-	}
+        basicController = new BasicController();
+    }
 
-	@Test
-	public void testBasics() throws IOException {
-		MockHttpServletRequest request = new MockHttpServletRequest();
-		request.setRequestURI("http://localhost");
+    @Test
+    public void testBasics() throws IOException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("http://localhost");
 
-		NotFoundException notFoundException = new NotFoundException("not found");
-		ErrorResponse errorResponse = basicController.handleBadRequest(request,
-				notFoundException);
-		Assert.assertNotNull(errorResponse);
+        NotFoundException notFoundException = new NotFoundException("not found");
+        ErrorResponse errorResponse = basicController.handleBadRequest(request, notFoundException);
+        Assert.assertNotNull(errorResponse);
 
-		ForbiddenException forbiddenException = new ForbiddenException(
-				"forbidden");
-		errorResponse = basicController.handleForbidden(request,
-				forbiddenException);
-		Assert.assertNotNull(errorResponse);
+        ForbiddenException forbiddenException = new ForbiddenException("forbidden");
+        errorResponse = basicController.handleForbidden(request, forbiddenException);
+        Assert.assertNotNull(errorResponse);
 
-		InternalErrorException internalErrorException = new InternalErrorException(
-				"error");
-		errorResponse = basicController.handleInternalError(request,
-				internalErrorException);
-		Assert.assertNotNull(errorResponse);
+        InternalErrorException internalErrorException = new InternalErrorException("error");
+        errorResponse = basicController.handleInternalError(request, internalErrorException);
+        Assert.assertNotNull(errorResponse);
 
-		BadRequestException badRequestException = new BadRequestException(
-				"error");
-		errorResponse = basicController.handleBadRequest(request,
-				badRequestException);
-		Assert.assertNotNull(errorResponse);
-	}
+        BadRequestException badRequestException = new BadRequestException("error");
+        errorResponse = basicController.handleBadRequest(request, badRequestException);
+        Assert.assertNotNull(errorResponse);
+    }
 }

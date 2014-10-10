@@ -29,86 +29,81 @@ import com.kylinolap.metadata.model.schema.TableDesc;
  */
 public class DictionaryLookupTable {
 
-	private static final int MAX_CARDINALITY = 1000000;
+    private static final int MAX_CARDINALITY = 1000000;
 
-	private TableDesc tableDesc;
-	private String keyCol; // whose value must be unique across table
-	private Dictionary<String> dict;
-	private String tablePath;
+    private TableDesc tableDesc;
+    private String keyCol; // whose value must be unique across table
+    private Dictionary<String> dict;
+    private String tablePath;
 
-	private int keyColIndex;
-	private String[][] table;
+    private int keyColIndex;
+    private String[][] table;
 
-	public DictionaryLookupTable(TableDesc tableDesc, String keyCol,
-			Dictionary<String> dict, String tablePath) throws IOException {
-		this.tableDesc = tableDesc;
-		this.keyCol = keyCol;
-		this.dict = dict;
-		this.tablePath = tablePath;
-		init();
-	}
+    public DictionaryLookupTable(TableDesc tableDesc, String keyCol, Dictionary<String> dict, String tablePath) throws IOException {
+        this.tableDesc = tableDesc;
+        this.keyCol = keyCol;
+        this.dict = dict;
+        this.tablePath = tablePath;
+        init();
+    }
 
-	private void init() throws IOException {
-		keyColIndex = tableDesc.findColumnByName(keyCol).getZeroBasedIndex();
-		table = new String[dict.getMaxId() - dict.getMinId() + 1][];
+    private void init() throws IOException {
+        keyColIndex = tableDesc.findColumnByName(keyCol).getZeroBasedIndex();
+        table = new String[dict.getMaxId() - dict.getMinId() + 1][];
 
-		if (table.length > MAX_CARDINALITY) // 1 million
-			throw new IllegalStateException("Too high cardinality of table "
-					+ tableDesc + " as an in-mem lookup: " + table.length);
+        if (table.length > MAX_CARDINALITY) // 1 million
+            throw new IllegalStateException("Too high cardinality of table " + tableDesc + " as an in-mem lookup: " + table.length);
 
-		TableReader reader = new FileTable(tablePath,
-				tableDesc.getColumnCount()).getReader();
-		try {
-			while (reader.next()) {
-				String[] cols = reader.getRow();
-				String key = cols[keyColIndex];
-				int rowNo = getRowNoByValue(key);
+        TableReader reader = new FileTable(tablePath, tableDesc.getColumnCount()).getReader();
+        try {
+            while (reader.next()) {
+                String[] cols = reader.getRow();
+                String key = cols[keyColIndex];
+                int rowNo = getRowNoByValue(key);
 
-				if (table[rowNo] != null) // dup key
-					throw new IllegalStateException("Dup key found, key=" + key
-							+ ", value1=" + toString(table[rowNo])
-							+ ", value2=" + toString(cols));
+                if (table[rowNo] != null) // dup key
+                    throw new IllegalStateException("Dup key found, key=" + key + ", value1=" + toString(table[rowNo]) + ", value2=" + toString(cols));
 
-				table[rowNo] = cols;
-			}
-		} finally {
-			reader.close();
-		}
-	}
+                table[rowNo] = cols;
+            }
+        } finally {
+            reader.close();
+        }
+    }
 
-	public String[] getRow(int id) {
-		return table[getRowNoByID(id)];
-	}
+    public String[] getRow(int id) {
+        return table[getRowNoByID(id)];
+    }
 
-	public String[] getRow(String key) {
-		return table[getRowNoByValue(key)];
-	}
+    public String[] getRow(String key) {
+        return table[getRowNoByValue(key)];
+    }
 
-	private int getRowNoByValue(String key) {
-		return getRowNoByID(dict.getIdFromValue(key));
-	}
+    private int getRowNoByValue(String key) {
+        return getRowNoByID(dict.getIdFromValue(key));
+    }
 
-	private int getRowNoByID(int id) {
-		int rowNo = id - dict.getMinId();
-		return rowNo;
-	}
+    private int getRowNoByID(int id) {
+        int rowNo = id - dict.getMinId();
+        return rowNo;
+    }
 
-	public void dump() {
-		for (int i = 0; i < table.length; i++) {
-			String key = dict.getValueFromId(i + dict.getMinId());
-			System.out.println(key + " => " + toString(table[i]));
-		}
-	}
+    public void dump() {
+        for (int i = 0; i < table.length; i++) {
+            String key = dict.getValueFromId(i + dict.getMinId());
+            System.out.println(key + " => " + toString(table[i]));
+        }
+    }
 
-	private String toString(String[] cols) {
-		StringBuilder b = new StringBuilder();
-		b.append("[");
-		for (int i = 0; i < cols.length; i++) {
-			if (i > 0)
-				b.append(",");
-			b.append(cols[i]);
-		}
-		b.append("]");
-		return b.toString();
-	}
+    private String toString(String[] cols) {
+        StringBuilder b = new StringBuilder();
+        b.append("[");
+        for (int i = 0; i < cols.length; i++) {
+            if (i > 0)
+                b.append(",");
+            b.append(cols[i]);
+        }
+        b.append("]");
+        return b.toString();
+    }
 }

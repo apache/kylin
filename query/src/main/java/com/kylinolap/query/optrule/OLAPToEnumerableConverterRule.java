@@ -31,17 +31,16 @@ import com.kylinolap.query.relnode.OLAPToEnumerableConverter;
  */
 public class OLAPToEnumerableConverterRule extends ConverterRule {
 
-	public static final ConverterRule INSTANCE = new OLAPToEnumerableConverterRule();
+    public static final ConverterRule INSTANCE = new OLAPToEnumerableConverterRule();
 
-	public OLAPToEnumerableConverterRule() {
-		super(RelNode.class, OLAPRel.CONVENTION, EnumerableConvention.INSTANCE,
-				"OLAPToEnumerableConverterRule");
-	}
+    public OLAPToEnumerableConverterRule() {
+        super(RelNode.class, OLAPRel.CONVENTION, EnumerableConvention.INSTANCE, "OLAPToEnumerableConverterRule");
+    }
 
-	@Override
-	public RelNode convert(RelNode rel) {
-		RelTraitSet newTraitSet = rel.getTraitSet().replace(getOutConvention());
-		return new OLAPToEnumerableConverter(rel.getCluster(), newTraitSet, rel);
-	}
+    @Override
+    public RelNode convert(RelNode rel) {
+        RelTraitSet newTraitSet = rel.getTraitSet().replace(getOutConvention());
+        return new OLAPToEnumerableConverter(rel.getCluster(), newTraitSet, rel);
+    }
 
 }

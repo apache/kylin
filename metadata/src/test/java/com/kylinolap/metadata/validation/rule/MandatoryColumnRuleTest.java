@@ -16,7 +16,7 @@
 
 package com.kylinolap.metadata.validation.rule;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -32,29 +32,24 @@ import com.kylinolap.metadata.validation.ValidateContext;
  */
 public class MandatoryColumnRuleTest {
 
-	private CubeDesc cube;
-	private ValidateContext vContext = new ValidateContext();
+    private CubeDesc cube;
+    private ValidateContext vContext = new ValidateContext();
 
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@Before
-	public void setUp() throws Exception {
-		CubeDesc desc2 = JsonUtil.readValue(getClass().getClassLoader()
-				.getResourceAsStream("data/TEST1_desc.json"), CubeDesc.class);
-		this.cube = desc2;
+    /**
+     * @throws java.lang.Exception
+     */
+    @Before
+    public void setUp() throws Exception {
+        CubeDesc desc2 = JsonUtil.readValue(getClass().getClassLoader().getResourceAsStream("data/TEST1_desc.json"), CubeDesc.class);
+        this.cube = desc2;
 
-	}
+    }
 
-	@Test
-	public void testOneMandatoryColumn() {
-		IValidatorRule<CubeDesc> rule = new MandatoryColumnRule();
-		rule.validate(cube, vContext);
-		assertTrue("Failed to validate mandatory error",
-				vContext.getResults().length == 1);
-		assertTrue(
-				"Failed to validate mandatory error",
-				vContext.getResults()[0].getMessage().startsWith(
-						"mandatory column"));
-	}
+    @Test
+    public void testOneMandatoryColumn() {
+        IValidatorRule<CubeDesc> rule = new MandatoryColumnRule();
+        rule.validate(cube, vContext);
+        assertTrue("Failed to validate mandatory error", vContext.getResults().length == 1);
+        assertTrue("Failed to validate mandatory error", vContext.getResults()[0].getMessage().startsWith("mandatory column"));
+    }
 }

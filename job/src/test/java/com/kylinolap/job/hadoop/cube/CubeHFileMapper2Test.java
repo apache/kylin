@@ -16,7 +16,7 @@
 
 package com.kylinolap.job.hadoop.cube;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.nio.ByteBuffer;
@@ -45,55 +45,48 @@ import com.kylinolap.metadata.model.cube.CubeDesc;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class CubeHFileMapper2Test extends LocalFileMetadataTestCase {
 
-	String cubeName = "test_kylin_cube_with_slr_ready";
+    String cubeName = "test_kylin_cube_with_slr_ready";
 
-	MeasureCodec codec;
-	ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-	Object[] outKV = new Object[2];
+    MeasureCodec codec;
+    ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
+    Object[] outKV = new Object[2];
 
-	@Before
-	public void setup() throws Exception {
-		this.createTestMetadata();
-		// hack for distributed cache
-		FileUtils.deleteDirectory(new File("../job/meta"));
-		FileUtils.copyDirectory(
-				new File(this.getTestConfig().getMetadataUrl()), new File(
-						"../job/meta"));
-		CubeDesc desc = CubeManager.getInstance(this.getTestConfig())
-				.getCube(cubeName).getDescriptor();
-		codec = new MeasureCodec(desc.getMeasures());
-	}
+    @Before
+    public void setup() throws Exception {
+        this.createTestMetadata();
+        // hack for distributed cache
+        FileUtils.deleteDirectory(new File("../job/meta"));
+        FileUtils.copyDirectory(new File(this.getTestConfig().getMetadataUrl()), new File("../job/meta"));
+        CubeDesc desc = CubeManager.getInstance(this.getTestConfig()).getCube(cubeName).getDescriptor();
+        codec = new MeasureCodec(desc.getMeasures());
+    }
 
-	@After
-	public void after() throws Exception {
-		cleanupTestMetadata();
-		FileUtils.deleteDirectory(new File("../job/meta"));
-	}
+    @After
+    public void after() throws Exception {
+        cleanupTestMetadata();
+        FileUtils.deleteDirectory(new File("../job/meta"));
+    }
 
-	@Test
-	public void testBasic() throws Exception {
+    @Test
+    public void testBasic() throws Exception {
 
-		Configuration hconf = new Configuration();
-		Context context = MockupMapContext.create(hconf, this.getTestConfig()
-				.getMetadataUrl(), cubeName, outKV);
+        Configuration hconf = new Configuration();
+        Context context = MockupMapContext.create(hconf, this.getTestConfig().getMetadataUrl(), cubeName, outKV);
 
-		CubeHFileMapper mapper = new CubeHFileMapper();
-		mapper.setup(context);
+        CubeHFileMapper mapper = new CubeHFileMapper();
+        mapper.setup(context);
 
-		Text key = new Text("not important");
-		Text value = new Text(new byte[] { 2, 2, 51, -79, 1 });
+        Text key = new Text("not important");
+        Text value = new Text(new byte[] { 2, 2, 51, -79, 1 });
 
-		mapper.map(key, value, context);
+        mapper.map(key, value, context);
 
-		ImmutableBytesWritable outKey = (ImmutableBytesWritable) outKV[0];
-		KeyValue outValue = (KeyValue) outKV[1];
+        ImmutableBytesWritable outKey = (ImmutableBytesWritable) outKV[0];
+        KeyValue outValue = (KeyValue) outKV[1];
 
-		assertTrue(Bytes.compareTo(key.getBytes(), 0, key.getLength(),
-				outKey.get(), outKey.getOffset(), outKey.getLength()) == 0);
+        assertTrue(Bytes.compareTo(key.getBytes(), 0, key.getLength(), outKey.get(), outKey.getOffset(), outKey.getLength()) == 0);
 
-		assertTrue(Bytes.compareTo(value.getBytes(), 0, value.getLength(),
-				outValue.getValueArray(), outValue.getValueOffset(),
-				outValue.getValueLength()) == 0);
-	}
+        assertTrue(Bytes.compareTo(value.getBytes(), 0, value.getLength(), outValue.getValueArray(), outValue.getValueOffset(), outValue.getValueLength()) == 0);
+    }
 
 }

@@ -24,7 +24,6 @@ import org.junit.runners.Suite;
  * 
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ AccessServiceTest.class, CubeServiceTest.class,
-		JobServiceTest.class, QueryServiceTest.class })
+@Suite.SuiteClasses({ AccessServiceTest.class, CubeServiceTest.class, JobServiceTest.class, QueryServiceTest.class })
 public class ServiceTestSuite {
 }

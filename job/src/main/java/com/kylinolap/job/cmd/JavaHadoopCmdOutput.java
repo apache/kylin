@@ -37,156 +37,144 @@ import com.kylinolap.job.tools.HadoopStatusChecker;
  */
 public class JavaHadoopCmdOutput implements ICommandOutput {
 
-	protected static final Logger log = LoggerFactory
-			.getLogger(JavaHadoopCmdOutput.class);
+    protected static final Logger log = LoggerFactory.getLogger(JavaHadoopCmdOutput.class);
 
-	protected StringBuilder output;
-	protected int exitCode;
-	protected JobStepStatusEnum status;
-	private final KylinConfig config;
-	private final String jobInstanceID;
-	private final int jobStepID;
-	private final String yarnUrl;
-	private final AbstractHadoopJob job;
-	private String mrJobID = null;
-	private String trackUrl = null;
-	private boolean isAsync;
+    protected StringBuilder output;
+    protected int exitCode;
+    protected JobStepStatusEnum status;
+    private final KylinConfig config;
+    private final String jobInstanceID;
+    private final int jobStepID;
+    private final String yarnUrl;
+    private final AbstractHadoopJob job;
+    private String mrJobID = null;
+    private String trackUrl = null;
+    private boolean isAsync;
 
-	public JavaHadoopCmdOutput(String jobInstanceID, int jobStepID,
-			JobEngineConfig engineConfig, AbstractHadoopJob job, boolean isAsync) {
-		super();
-		this.config = engineConfig.getConfig();
-		this.yarnUrl = engineConfig.getYarnStatusServiceUrl();
-		this.jobInstanceID = jobInstanceID;
-		this.jobStepID = jobStepID;
-		this.job = job;
-		this.isAsync = isAsync;
+    public JavaHadoopCmdOutput(String jobInstanceID, int jobStepID, JobEngineConfig engineConfig, AbstractHadoopJob job, boolean isAsync) {
+        super();
+        this.config = engineConfig.getConfig();
+        this.yarnUrl = engineConfig.getYarnStatusServiceUrl();
+        this.jobInstanceID = jobInstanceID;
+        this.jobStepID = jobStepID;
+        this.job = job;
+        this.isAsync = isAsync;
 
-		init();
-	}
+        init();
+    }
 
-	@Override
-	public void setStatus(JobStepStatusEnum status) {
-		this.status = status;
-	}
+    @Override
+    public void setStatus(JobStepStatusEnum status) {
+        this.status = status;
+    }
 
-	@Override
-	public JobStepStatusEnum getStatus() {
-		if (this.isAsync) {
-			if (this.status == JobStepStatusEnum.ERROR) {
-				return status;
-			}
+    @Override
+    public JobStepStatusEnum getStatus() {
+        if (this.isAsync) {
+            if (this.status == JobStepStatusEnum.ERROR) {
+                return status;
+            }
 
-			if (null == this.mrJobID || null == this.trackUrl) {
-				updateHadoopJobInfo();
-			}
+            if (null == this.mrJobID || null == this.trackUrl) {
+                updateHadoopJobInfo();
+            }
 
-			status = new HadoopStatusChecker(this.yarnUrl, this.mrJobID, output)
-					.checkStatus();
+            status = new HadoopStatusChecker(this.yarnUrl, this.mrJobID, output).checkStatus();
 
-			if (this.status.isComplete()) {
-				updateJobCounter();
-			}
-		} else {
-			status = (this.exitCode == 0) ? JobStepStatusEnum.FINISHED
-					: JobStepStatusEnum.ERROR;
-		}
+            if (this.status.isComplete()) {
+                updateJobCounter();
+            }
+        } else {
+            status = (this.exitCode == 0) ? JobStepStatusEnum.FINISHED : JobStepStatusEnum.ERROR;
+        }
 
-		return status;
-	}
+        return status;
+    }
 
-	@Override
-	public void appendOutput(String message) {
-		log.debug(message);
-		output.append(message).append("\n");
-	}
+    @Override
+    public void appendOutput(String message) {
+        log.debug(message);
+        output.append(message).append("\n");
+    }
 
-	@Override
-	public String getOutput() {
-		return output.toString();
-	}
+    @Override
+    public String getOutput() {
+        return output.toString();
+    }
 
-	@Override
-	public void setExitCode(int exitCode) {
-		this.exitCode = exitCode;
-	}
+    @Override
+    public void setExitCode(int exitCode) {
+        this.exitCode = exitCode;
+    }
 
-	@Override
-	public int getExitCode() {
-		return exitCode;
-	}
+    @Override
+    public int getExitCode() {
+        return exitCode;
+    }
 
-	@Override
-	public void reset() {
-		init();
-	}
+    @Override
+    public void reset() {
+        init();
+    }
 
-	private void init() {
-		output = new StringBuilder();
-		exitCode = -1;
-		status = JobStepStatusEnum.NEW;
-	}
+    private void init() {
+        output = new StringBuilder();
+        exitCode = -1;
+        status = JobStepStatusEnum.NEW;
+    }
 
-	/**
-	 * @param jobStatus
-	 */
-	private void updateHadoopJobInfo() {
-		try {
-			Map<String, String> jobInfo = job.getInfo();
+    /**
+     * @param jobStatus
+     */
+    private void updateHadoopJobInfo() {
+        try {
+            Map<String, String> jobInfo = job.getInfo();
 
-			JobDAO jobDAO = JobDAO.getInstance(config);
-			JobInstance jobInstance = jobDAO.getJob(jobInstanceID);
-			JobStep jobStep = jobInstance.getSteps().get(jobStepID);
-			boolean hasChange = false;
+            JobDAO jobDAO = JobDAO.getInstance(config);
+            JobInstance jobInstance = jobDAO.getJob(jobInstanceID);
+            JobStep jobStep = jobInstance.getSteps().get(jobStepID);
+            boolean hasChange = false;
 
-			if (null == this.mrJobID
-					&& jobInfo.containsKey(JobInstance.MR_JOB_ID)) {
-				this.mrJobID = jobInfo.get(JobInstance.MR_JOB_ID);
-				jobStep.putInfo(JobInstance.MR_JOB_ID, this.mrJobID);
-				output.append("Get job id " + this.mrJobID).append("\n");
-				hasChange = true;
-			}
+            if (null == this.mrJobID && jobInfo.containsKey(JobInstance.MR_JOB_ID)) {
+                this.mrJobID = jobInfo.get(JobInstance.MR_JOB_ID);
+                jobStep.putInfo(JobInstance.MR_JOB_ID, this.mrJobID);
+                output.append("Get job id " + this.mrJobID).append("\n");
+                hasChange = true;
+            }
 
-			if (null == this.trackUrl
-					&& jobInfo.containsKey(JobInstance.YARN_APP_URL)) {
-				this.trackUrl = jobInfo.get(JobInstance.YARN_APP_URL);
-				jobStep.putInfo(JobInstance.YARN_APP_URL, this.trackUrl);
-				output.append("Get job track url " + this.trackUrl)
-						.append("\n");
-				hasChange = true;
-			}
-			if (hasChange) {
-				jobDAO.updateJobInstance(jobInstance);
-			}
-		} catch (Exception e) {
-			log.error(e.getLocalizedMessage(), e);
-			output.append(e.getLocalizedMessage());
-		}
-	}
+            if (null == this.trackUrl && jobInfo.containsKey(JobInstance.YARN_APP_URL)) {
+                this.trackUrl = jobInfo.get(JobInstance.YARN_APP_URL);
+                jobStep.putInfo(JobInstance.YARN_APP_URL, this.trackUrl);
+                output.append("Get job track url " + this.trackUrl).append("\n");
+                hasChange = true;
+            }
+            if (hasChange) {
+                jobDAO.updateJobInstance(jobInstance);
+            }
+        } catch (Exception e) {
+            log.error(e.getLocalizedMessage(), e);
+            output.append(e.getLocalizedMessage());
+        }
+    }
 
-	private void updateJobCounter() {
-		try {
-			this.output.append(job.getCounters().toString()).append("\n");
-			log.debug(job.getCounters().toString());
+    private void updateJobCounter() {
+        try {
+            this.output.append(job.getCounters().toString()).append("\n");
+            log.debug(job.getCounters().toString());
 
-			JobDAO jobDAO = JobDAO.getInstance(config);
-			JobInstance jobInstance = jobDAO.getJob(jobInstanceID);
-			JobStep jobStep = jobInstance.getSteps().get(jobStepID);
+            JobDAO jobDAO = JobDAO.getInstance(config);
+            JobInstance jobInstance = jobDAO.getJob(jobInstanceID);
+            JobStep jobStep = jobInstance.getSteps().get(jobStepID);
 
-			long mapInputRecords = job.getCounters()
-					.findCounter(TaskCounter.MAP_INPUT_RECORDS).getValue();
-			jobStep.putInfo(JobInstance.SOURCE_RECORDS_COUNT,
-					String.valueOf(mapInputRecords));
-			long hdfsBytesWritten = job.getCounters()
-					.findCounter("FileSystemCounters", "HDFS_BYTES_WRITTEN")
-					.getValue();
-			jobStep.putInfo(JobInstance.HDFS_BYTES_WRITTEN,
-					String.valueOf(hdfsBytesWritten));
+            long mapInputRecords = job.getCounters().findCounter(TaskCounter.MAP_INPUT_RECORDS).getValue();
+            jobStep.putInfo(JobInstance.SOURCE_RECORDS_COUNT, String.valueOf(mapInputRecords));
+            long hdfsBytesWritten = job.getCounters().findCounter("FileSystemCounters", "HDFS_BYTES_WRITTEN").getValue();
+            jobStep.putInfo(JobInstance.HDFS_BYTES_WRITTEN, String.valueOf(hdfsBytesWritten));
 
-			jobDAO.updateJobInstance(jobInstance);
-		} catch (Exception e) {
-			log.error(e.getLocalizedMessage(), e);
-			output.append(e.getLocalizedMessage());
-		}
-	}
+            jobDAO.updateJobInstance(jobInstance);
+        } catch (Exception e) {
+            log.error(e.getLocalizedMessage(), e);
+            output.append(e.getLocalizedMessage());
+        }
+    }
 }

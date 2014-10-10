@@ -33,66 +33,66 @@ import com.google.common.collect.Lists;
  */
 public class ResultScannerAdapter implements ResultScanner {
 
-	private RegionScanner scanner;
+    private RegionScanner scanner;
 
-	public ResultScannerAdapter(RegionScanner scanner) {
-		this.scanner = scanner;
-	}
+    public ResultScannerAdapter(RegionScanner scanner) {
+        this.scanner = scanner;
+    }
 
-	@Override
-	public Iterator<Result> iterator() {
-		return new Iterator<Result>() {
+    @Override
+    public Iterator<Result> iterator() {
+        return new Iterator<Result>() {
 
-			Result next = null;
+            Result next = null;
 
-			@Override
-			public boolean hasNext() {
-				if (next == null) {
-					try {
-						next = ResultScannerAdapter.this.next();
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					}
-				}
-				return next != null;
-			}
+            @Override
+            public boolean hasNext() {
+                if (next == null) {
+                    try {
+                        next = ResultScannerAdapter.this.next();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                return next != null;
+            }
 
-			@Override
-			public Result next() {
-				Result r = next;
-				next = null;
-				return r;
-			}
+            @Override
+            public Result next() {
+                Result r = next;
+                next = null;
+                return r;
+            }
 
-			@Override
-			public void remove() {
-				throw new UnsupportedOperationException();
-			}
-		};
-	}
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
 
-	@Override
-	public Result next() throws IOException {
-		List<Cell> cells = Lists.newArrayList();
-		scanner.next(cells);
-		if (cells.isEmpty())
-			return null;
-		else
-			return Result.create(cells);
-	}
+    @Override
+    public Result next() throws IOException {
+        List<Cell> cells = Lists.newArrayList();
+        scanner.next(cells);
+        if (cells.isEmpty())
+            return null;
+        else
+            return Result.create(cells);
+    }
 
-	@Override
-	public Result[] next(int nbRows) throws IOException {
-		throw new UnsupportedOperationException();
-	}
+    @Override
+    public Result[] next(int nbRows) throws IOException {
+        throw new UnsupportedOperationException();
+    }
 
-	@Override
-	public void close() {
-		try {
-			scanner.close();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
+    @Override
+    public void close() {
+        try {
+            scanner.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }

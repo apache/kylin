@@ -16,7 +16,7 @@
 
 package com.kylinolap.storage.hbase.coprocessor;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
@@ -31,36 +31,32 @@ import com.kylinolap.storage.hbase.coprocessor.SRowAggregators.HCol;
  */
 public class RowAggregatorsTest {
 
-	@Test
-	public void testSerialize() {
-		HCol[] hcols = new HCol[] { //
-				newHCol("f", "c1", new String[] { "SUM", "COUNT" },
-						new String[] { "decimal", "long" }), //
-				newHCol("f", "c2", new String[] { "SUM", "SUM" }, new String[] {
-						"long", "long" }) };
-		SRowAggregators sample = new SRowAggregators(hcols);
+    @Test
+    public void testSerialize() {
+        HCol[] hcols = new HCol[] { //
+        newHCol("f", "c1", new String[] { "SUM", "COUNT" }, new String[] { "decimal", "long" }), //
+                newHCol("f", "c2", new String[] { "SUM", "SUM" }, new String[] { "long", "long" }) };
+        SRowAggregators sample = new SRowAggregators(hcols);
 
-		byte[] bytes = SRowAggregators.serialize(sample);
-		SRowAggregators copy = SRowAggregators.deserialize(bytes);
+        byte[] bytes = SRowAggregators.serialize(sample);
+        SRowAggregators copy = SRowAggregators.deserialize(bytes);
 
-		assertTrue(sample.nHCols == copy.nHCols);
-		assertTrue(sample.nTotalMeasures == copy.nTotalMeasures);
-		assertEquals(sample.hcols[0], copy.hcols[0]);
-		assertEquals(sample.hcols[1], copy.hcols[1]);
-	}
+        assertTrue(sample.nHCols == copy.nHCols);
+        assertTrue(sample.nTotalMeasures == copy.nTotalMeasures);
+        assertEquals(sample.hcols[0], copy.hcols[0]);
+        assertEquals(sample.hcols[1], copy.hcols[1]);
+    }
 
-	private static HCol newHCol(String family, String qualifier,
-			String[] funcNames, String[] dataTypes) {
-		return new HCol(Bytes.toBytes(family), Bytes.toBytes(qualifier),
-				funcNames, dataTypes);
-	}
+    private static HCol newHCol(String family, String qualifier, String[] funcNames, String[] dataTypes) {
+        return new HCol(Bytes.toBytes(family), Bytes.toBytes(qualifier), funcNames, dataTypes);
+    }
 
-	private static void assertEquals(HCol a, HCol b) {
-		assertTrue(a.nMeasures == b.nMeasures);
-		assertTrue(Arrays.equals(a.family, b.family));
-		assertTrue(Arrays.equals(a.qualifier, b.qualifier));
-		assertTrue(Arrays.equals(a.funcNames, b.funcNames));
-		assertTrue(Arrays.equals(a.dataTypes, b.dataTypes));
-	}
+    private static void assertEquals(HCol a, HCol b) {
+        assertTrue(a.nMeasures == b.nMeasures);
+        assertTrue(Arrays.equals(a.family, b.family));
+        assertTrue(Arrays.equals(a.qualifier, b.qualifier));
+        assertTrue(Arrays.equals(a.funcNames, b.funcNames));
+        assertTrue(Arrays.equals(a.dataTypes, b.dataTypes));
+    }
 
 }

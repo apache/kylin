@@ -1,0 +1,43 @@
+<div>
+    <div class="form-group">
+
+        <table style="margin-left:42px; width:92%"
+               ng-if="cubeMetaFrame.rowkey.aggregation_groups.length > 0"
+               class="table table-hover list">
+            <tr class="row">
+                <th class="col-xs-1">ID</th>
+                <th class="col-xs-10">Aggregation Groups</th>
+                <th ng-if="state.mode=='edit'" class="col-xs-1"></th>
+            </tr>
+
+            <tr ng-repeat="aggregation_groups in cubeMetaFrame.rowkey.aggregation_groups" class="row">
+                <td class="col-xs-1">
+                    <!-- ID -->
+                    <b>{{($index + 1)}}</b>
+                </td>
+                <td class="col-xs-10">
+                    <!-- Dimensions -->
+                    <select ng-if="state.mode=='edit'" style="width: 100%"
+                            ng-model="aggregation_groups" required chosen multiple
+                            ng-change="refreshAggregationGroup(cubeMetaFrame.rowkey.aggregation_groups, $index, aggregation_groups)"
+                            ng-options="dimension.name as dimension.name for dimension in cubeMetaFrame.dimensions">
+                    </select>
+
+                    <p ng-if="state.mode=='view'" style="word-wrap: break-word; word-break: normal;max-width: 1000px ">{{aggregation_groups}}</p>
+                </td>
+                <td ng-if="state.mode=='edit'" class="col-xs-1">
+                    <button class="btn btn-xs btn-info"
+                            ng-click="removeElement(cubeMetaFrame.rowkey.aggregation_groups, aggregation_groups)"><i
+                            class="fa fa-minus"></i>
+                    </button>
+                </td>
+            </tr>
+        </table>
+
+        <button class="btn btn-sm btn-info" style="margin-left:42px" ng-click="addNewAggregationGroup()"
+                ng-show="state.mode=='edit'">New Aggregation Group<i class="fa fa-plus"></i>
+        </button>
+
+
+    </div>
+</div>

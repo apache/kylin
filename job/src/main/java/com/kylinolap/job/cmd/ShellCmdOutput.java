@@ -27,57 +27,56 @@ import com.kylinolap.job.constant.JobStepStatusEnum;
  */
 public class ShellCmdOutput implements ICommandOutput {
 
-	protected static final Logger log = LoggerFactory
-			.getLogger(ShellCmdOutput.class);
+    protected static final Logger log = LoggerFactory.getLogger(ShellCmdOutput.class);
 
-	protected StringBuilder output;
-	protected int exitCode;
-	protected JobStepStatusEnum status;
+    protected StringBuilder output;
+    protected int exitCode;
+    protected JobStepStatusEnum status;
 
-	public ShellCmdOutput() {
-		init();
-	}
+    public ShellCmdOutput() {
+        init();
+    }
 
-	private void init() {
-		output = new StringBuilder();
-		exitCode = -1;
-		status = JobStepStatusEnum.NEW;
-	}
+    private void init() {
+        output = new StringBuilder();
+        exitCode = -1;
+        status = JobStepStatusEnum.NEW;
+    }
 
-	@Override
-	public JobStepStatusEnum getStatus() {
-		return status;
-	}
+    @Override
+    public JobStepStatusEnum getStatus() {
+        return status;
+    }
 
-	@Override
-	public void setStatus(JobStepStatusEnum s) {
-		this.status = s;
-	}
+    @Override
+    public void setStatus(JobStepStatusEnum s) {
+        this.status = s;
+    }
 
-	@Override
-	public String getOutput() {
-		return output.toString();
-	}
+    @Override
+    public String getOutput() {
+        return output.toString();
+    }
 
-	@Override
-	public void appendOutput(String message) {
-		output.append(message).append(System.getProperty("line.separator"));
-		log.debug(message);
-	}
+    @Override
+    public void appendOutput(String message) {
+        output.append(message).append(System.getProperty("line.separator"));
+        log.debug(message);
+    }
 
-	@Override
-	public int getExitCode() {
-		return exitCode;
-	}
+    @Override
+    public int getExitCode() {
+        return exitCode;
+    }
 
-	@Override
-	public void setExitCode(int code) {
-		exitCode = code;
-	}
+    @Override
+    public void setExitCode(int code) {
+        exitCode = code;
+    }
 
-	@Override
-	public void reset() {
-		init();
-	}
+    @Override
+    public void reset() {
+        init();
+    }
 
 }

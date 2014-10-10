@@ -25,32 +25,32 @@ import com.kylinolap.common.hll.HyperLogLogPlusCounter;
  */
 public class HLLCAggregator extends MeasureAggregator<HyperLogLogPlusCounter> {
 
-	HyperLogLogPlusCounter sum = null;
+    HyperLogLogPlusCounter sum = null;
 
-	@Override
-	public void reset() {
-		sum = null;
-	}
+    @Override
+    public void reset() {
+        sum = null;
+    }
 
-	@Override
-	public void aggregate(HyperLogLogPlusCounter value) {
-		if (sum == null)
-			sum = new HyperLogLogPlusCounter(value);
-		else
-			sum.merge(value);
-	}
+    @Override
+    public void aggregate(HyperLogLogPlusCounter value) {
+        if (sum == null)
+            sum = new HyperLogLogPlusCounter(value);
+        else
+            sum.merge(value);
+    }
 
-	@Override
-	public HyperLogLogPlusCounter getState() {
-		return sum;
-	}
+    @Override
+    public HyperLogLogPlusCounter getState() {
+        return sum;
+    }
 
-	@Override
-	public int getMemBytes() {
-		if (sum == null)
-			return Integer.MIN_VALUE;
-		else
-			return 4 + sum.getMemBytes();
-	}
+    @Override
+    public int getMemBytes() {
+        if (sum == null)
+            return Integer.MIN_VALUE;
+        else
+            return 4 + sum.getMemBytes();
+    }
 
 }

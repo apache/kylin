@@ -37,143 +37,131 @@ import com.kylinolap.metadata.model.schema.TableDesc;
  */
 abstract public class LookupTable<T extends Comparable<T>> {
 
-	protected TableDesc tableDesc;
-	protected String[] keyColumns;
-	protected ReadableTable table;
-	protected ConcurrentHashMap<Array<T>, T[]> data;
+    protected TableDesc tableDesc;
+    protected String[] keyColumns;
+    protected ReadableTable table;
+    protected ConcurrentHashMap<Array<T>, T[]> data;
 
-	public LookupTable(TableDesc tableDesc, String[] keyColumns,
-			ReadableTable table) throws IOException {
-		this.tableDesc = tableDesc;
-		this.keyColumns = keyColumns;
-		this.table = table;
-		this.data = new ConcurrentHashMap<Array<T>, T[]>();
-		init();
-	}
+    public LookupTable(TableDesc tableDesc, String[] keyColumns, ReadableTable table) throws IOException {
+        this.tableDesc = tableDesc;
+        this.keyColumns = keyColumns;
+        this.table = table;
+        this.data = new ConcurrentHashMap<Array<T>, T[]>();
+        init();
+    }
 
-	protected void init() throws IOException {
-		int[] keyIndex = new int[keyColumns.length];
-		for (int i = 0; i < keyColumns.length; i++) {
-			keyIndex[i] = tableDesc.findColumnByName(keyColumns[i])
-					.getZeroBasedIndex();
-		}
+    protected void init() throws IOException {
+        int[] keyIndex = new int[keyColumns.length];
+        for (int i = 0; i < keyColumns.length; i++) {
+            keyIndex[i] = tableDesc.findColumnByName(keyColumns[i]).getZeroBasedIndex();
+        }
 
-		TableReader reader = table.getReader();
-		try {
-			while (reader.next()) {
-				initRow(reader.getRow(), keyIndex);
-			}
-		} finally {
-			reader.close();
-		}
-	}
+        TableReader reader = table.getReader();
+        try {
+            while (reader.next()) {
+                initRow(reader.getRow(), keyIndex);
+            }
+        } finally {
+            reader.close();
+        }
+    }
 
-	@SuppressWarnings("unchecked")
-	private void initRow(String[] cols, int[] keyIndex) {
-		T[] value = convertRow(cols);
-		T[] keyCols = (T[]) java.lang.reflect.Array.newInstance(
-				value[0].getClass(), keyIndex.length);
-		for (int i = 0; i < keyCols.length; i++)
-			keyCols[i] = value[keyIndex[i]];
+    @SuppressWarnings("unchecked")
+    private void initRow(String[] cols, int[] keyIndex) {
+        T[] value = convertRow(cols);
+        T[] keyCols = (T[]) java.lang.reflect.Array.newInstance(value[0].getClass(), keyIndex.length);
+        for (int i = 0; i < keyCols.length; i++)
+            keyCols[i] = value[keyIndex[i]];
 
-		Array<T> key = new Array<T>(keyCols);
+        Array<T> key = new Array<T>(keyCols);
 
-		if (data.containsKey(key))
-			throw new IllegalStateException("Dup key found, key="
-					+ toString(keyCols) + ", value1=" + toString(data.get(key))
-					+ ", value2=" + toString(value));
+        if (data.containsKey(key))
+            throw new IllegalStateException("Dup key found, key=" + toString(keyCols) + ", value1=" + toString(data.get(key)) + ", value2=" + toString(value));
 
-		data.put(key, value);
-	}
+        data.put(key, value);
+    }
 
-	abstract protected T[] convertRow(String[] cols);
+    abstract protected T[] convertRow(String[] cols);
 
-	public T[] getRow(Array<T> key) {
-		return data.get(key);
-	}
+    public T[] getRow(Array<T> key) {
+        return data.get(key);
+    }
 
-	public Collection<T[]> getAllRows() {
-		return data.values();
-	}
+    public Collection<T[]> getAllRows() {
+        return data.values();
+    }
 
-	public List<T> scan(String col, List<T> values, String returnCol) {
-		ArrayList<T> result = new ArrayList<T>();
-		int colIdx = tableDesc.findColumnByName(col).getZeroBasedIndex();
-		int returnIdx = tableDesc.findColumnByName(returnCol)
-				.getZeroBasedIndex();
-		for (T[] row : data.values()) {
-			if (values.contains(row[colIdx]))
-				result.add(row[returnIdx]);
-		}
-		return result;
-	}
+    public List<T> scan(String col, List<T> values, String returnCol) {
+        ArrayList<T> result = new ArrayList<T>();
+        int colIdx = tableDesc.findColumnByName(col).getZeroBasedIndex();
+        int returnIdx = tableDesc.findColumnByName(returnCol).getZeroBasedIndex();
+        for (T[] row : data.values()) {
+            if (values.contains(row[colIdx]))
+                result.add(row[returnIdx]);
+        }
+        return result;
+    }
 
-	public Pair<T, T> mapRange(String col, T beginValue, T endValue,
-			String returnCol) {
-		int colIdx = tableDesc.findColumnByName(col).getZeroBasedIndex();
-		int returnIdx = tableDesc.findColumnByName(returnCol)
-				.getZeroBasedIndex();
-		T returnBegin = null;
-		T returnEnd = null;
-		for (T[] row : data.values()) {
-			if (between(beginValue, row[colIdx], endValue)) {
-				T returnValue = row[returnIdx];
-				if (returnBegin == null
-						|| returnValue.compareTo(returnBegin) < 0) {
-					returnBegin = returnValue;
-				}
-				if (returnEnd == null || returnValue.compareTo(returnEnd) > 0) {
-					returnEnd = returnValue;
-				}
-			}
-		}
-		if (returnBegin == null && returnEnd == null)
-			return null;
-		else
-			return new Pair<T, T>(returnBegin, returnEnd);
-	}
+    public Pair<T, T> mapRange(String col, T beginValue, T endValue, String returnCol) {
+        int colIdx = tableDesc.findColumnByName(col).getZeroBasedIndex();
+        int returnIdx = tableDesc.findColumnByName(returnCol).getZeroBasedIndex();
+        T returnBegin = null;
+        T returnEnd = null;
+        for (T[] row : data.values()) {
+            if (between(beginValue, row[colIdx], endValue)) {
+                T returnValue = row[returnIdx];
+                if (returnBegin == null || returnValue.compareTo(returnBegin) < 0) {
+                    returnBegin = returnValue;
+                }
+                if (returnEnd == null || returnValue.compareTo(returnEnd) > 0) {
+                    returnEnd = returnValue;
+                }
+            }
+        }
+        if (returnBegin == null && returnEnd == null)
+            return null;
+        else
+            return new Pair<T, T>(returnBegin, returnEnd);
+    }
 
-	public Set<T> mapValues(String col, Set<T> values, String returnCol) {
-		int colIdx = tableDesc.findColumnByName(col).getZeroBasedIndex();
-		int returnIdx = tableDesc.findColumnByName(returnCol)
-				.getZeroBasedIndex();
-		Set<T> result = Sets.newHashSetWithExpectedSize(values.size());
-		for (T[] row : data.values()) {
-			if (values.contains(row[colIdx])) {
-				result.add(row[returnIdx]);
-			}
-		}
-		return result;
-	}
+    public Set<T> mapValues(String col, Set<T> values, String returnCol) {
+        int colIdx = tableDesc.findColumnByName(col).getZeroBasedIndex();
+        int returnIdx = tableDesc.findColumnByName(returnCol).getZeroBasedIndex();
+        Set<T> result = Sets.newHashSetWithExpectedSize(values.size());
+        for (T[] row : data.values()) {
+            if (values.contains(row[colIdx])) {
+                result.add(row[returnIdx]);
+            }
+        }
+        return result;
+    }
 
-	private boolean between(T beginValue, T v, T endValue) {
-		return (beginValue == null || beginValue.compareTo(v) <= 0)
-				&& (endValue == null || v.compareTo(endValue) <= 0);
-	}
+    private boolean between(T beginValue, T v, T endValue) {
+        return (beginValue == null || beginValue.compareTo(v) <= 0) && (endValue == null || v.compareTo(endValue) <= 0);
+    }
 
-	public String toString() {
-		return "LookupTable [path=" + table + "]";
-	}
+    public String toString() {
+        return "LookupTable [path=" + table + "]";
+    }
 
-	protected String toString(T[] cols) {
-		StringBuilder b = new StringBuilder();
-		b.append("[");
-		for (int i = 0; i < cols.length; i++) {
-			if (i > 0)
-				b.append(",");
-			b.append(toString(cols[i]));
-		}
-		b.append("]");
-		return b.toString();
-	}
+    protected String toString(T[] cols) {
+        StringBuilder b = new StringBuilder();
+        b.append("[");
+        for (int i = 0; i < cols.length; i++) {
+            if (i > 0)
+                b.append(",");
+            b.append(toString(cols[i]));
+        }
+        b.append("]");
+        return b.toString();
+    }
 
-	abstract protected String toString(T cell);
+    abstract protected String toString(T cell);
 
-	public void dump() {
-		for (Array<T> key : data.keySet()) {
-			System.out.println(toString(key.data) + " => "
-					+ toString(data.get(key)));
-		}
-	}
+    public void dump() {
+        for (Array<T> key : data.keySet()) {
+            System.out.println(toString(key.data) + " => " + toString(data.get(key)));
+        }
+    }
 
 }

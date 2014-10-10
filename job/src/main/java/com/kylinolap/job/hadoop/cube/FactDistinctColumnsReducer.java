@@ -43,50 +43,47 @@ import com.kylinolap.metadata.model.cube.TblColRef;
 /**
  * @author yangli9
  */
-public class FactDistinctColumnsReducer extends
-		Reducer<ShortWritable, Text, NullWritable, Text> {
+public class FactDistinctColumnsReducer extends Reducer<ShortWritable, Text, NullWritable, Text> {
 
-	private List<TblColRef> columnList = new ArrayList<TblColRef>();
+    private List<TblColRef> columnList = new ArrayList<TblColRef>();
 
-	@Override
-	protected void setup(Context context) throws IOException {
-		Configuration conf = context.getConfiguration();
-		KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
-		String cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
-		CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
-		CubeDesc cubeDesc = cube.getDescriptor();
+    @Override
+    protected void setup(Context context) throws IOException {
+        Configuration conf = context.getConfiguration();
+        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
+        String cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
+        CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
+        CubeDesc cubeDesc = cube.getDescriptor();
 
-		long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-		Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
-		columnList = baseCuboid.getColumns();
-	}
+        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
+        Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
+        columnList = baseCuboid.getColumns();
+    }
 
-	@Override
-	public void reduce(ShortWritable key, Iterable<Text> values, Context context)
-			throws IOException, InterruptedException {
-		TblColRef col = columnList.get(key.get());
+    @Override
+    public void reduce(ShortWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+        TblColRef col = columnList.get(key.get());
 
-		HashSet<ByteArray> set = new HashSet<ByteArray>();
-		for (Text textValue : values) {
-			ByteArray value = new ByteArray(Bytes.copy(textValue.getBytes(), 0,
-					textValue.getLength()));
-			set.add(value);
-		}
+        HashSet<ByteArray> set = new HashSet<ByteArray>();
+        for (Text textValue : values) {
+            ByteArray value = new ByteArray(Bytes.copy(textValue.getBytes(), 0, textValue.getLength()));
+            set.add(value);
+        }
 
-		Configuration conf = context.getConfiguration();
-		FileSystem fs = FileSystem.get(conf);
-		String outputPath = conf.get(BatchConstants.OUTPUT_PATH);
-		FSDataOutputStream out = fs.create(new Path(outputPath, col.getName()));
+        Configuration conf = context.getConfiguration();
+        FileSystem fs = FileSystem.get(conf);
+        String outputPath = conf.get(BatchConstants.OUTPUT_PATH);
+        FSDataOutputStream out = fs.create(new Path(outputPath, col.getName()));
 
-		try {
-			for (ByteArray value : set) {
-				out.write(value.data);
-				out.write('\n');
-			}
-		} finally {
-			out.close();
-		}
+        try {
+            for (ByteArray value : set) {
+                out.write(value.data);
+                out.write('\n');
+            }
+        } finally {
+            out.close();
+        }
 
-	}
+    }
 
 }

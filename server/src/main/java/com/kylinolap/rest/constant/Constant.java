@@ -22,23 +22,22 @@ package com.kylinolap.rest.constant;
  */
 public class Constant {
 
-	// @hardcode
-	public final static String FakeSchemaName = "defaultSchema";
+    // @hardcode
+    public final static String FakeSchemaName = "defaultSchema";
 
-	// @hardcode
-	public final static String FakeCatalogName = "defaultCatalog";
+    // @hardcode
+    public final static String FakeCatalogName = "defaultCatalog";
 
-	public final static String IDENTITY_USER = "user";
+    public final static String IDENTITY_USER = "user";
 
-	public final static String IDENTITY_ROLE = "role";
+    public final static String IDENTITY_ROLE = "role";
 
-	public final static String ACCESS_HAS_ROLE_ADMIN = "hasRole('ROLE_ADMIN')";
+    public final static String ACCESS_HAS_ROLE_ADMIN = "hasRole('ROLE_ADMIN')";
 
-	public final static String ACCESS_POST_FILTER_READ = "hasRole('ROLE_ADMIN') or hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'MANAGEMENT') "
-			+ "or hasPermission(filterObject, 'OPERATION') or hasPermission(filterObject, 'ADMINISTRATION')";
+    public final static String ACCESS_POST_FILTER_READ = "hasRole('ROLE_ADMIN') or hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'MANAGEMENT') " + "or hasPermission(filterObject, 'OPERATION') or hasPermission(filterObject, 'ADMINISTRATION')";
 
-	public final static String SERVER_MODE_QUERY = "query";
-	public final static String SERVER_MODE_JOB = "job";
-	public final static String SERVER_MODE_ALL = "all";
+    public final static String SERVER_MODE_QUERY = "query";
+    public final static String SERVER_MODE_JOB = "job";
+    public final static String SERVER_MODE_ALL = "all";
 
 }

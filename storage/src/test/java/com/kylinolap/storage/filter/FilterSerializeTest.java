@@ -32,169 +32,167 @@ import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
  */
 public class FilterSerializeTest extends FilterBaseTest {
 
-	@Test
-	public void testSerialize01() {
-		List<TblColRef> groups = buildGroups();
-		TupleFilter filter = buildCompareFilter(groups, 0);
+    @Test
+    public void testSerialize01() {
+        List<TblColRef> groups = buildGroups();
+        TupleFilter filter = buildCompareFilter(groups, 0);
 
-		byte[] bytes = TupleFilterSerializer.serialize(filter);
-		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-		compareFilter(filter, newFilter);
-	}
+        compareFilter(filter, newFilter);
+    }
 
-	@Test
-	public void testSerialize02() {
-		List<TblColRef> groups = buildGroups();
-		TupleFilter filter = buildCompareFilter(groups, 1);
+    @Test
+    public void testSerialize02() {
+        List<TblColRef> groups = buildGroups();
+        TupleFilter filter = buildCompareFilter(groups, 1);
 
-		byte[] bytes = TupleFilterSerializer.serialize(filter);
-		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-		compareFilter(filter, newFilter);
-	}
+        compareFilter(filter, newFilter);
+    }
 
-	@Test
-	public void testSerialize03() {
-		List<TblColRef> groups = buildGroups();
-		TupleFilter filter = buildAndFilter(groups);
+    @Test
+    public void testSerialize03() {
+        List<TblColRef> groups = buildGroups();
+        TupleFilter filter = buildAndFilter(groups);
 
-		byte[] bytes = TupleFilterSerializer.serialize(filter);
-		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-		compareFilter(filter, newFilter);
-	}
+        compareFilter(filter, newFilter);
+    }
 
-	@Test
-	public void testSerialize04() {
-		List<TblColRef> groups = buildGroups();
-		TupleFilter filter = buildOrFilter(groups);
+    @Test
+    public void testSerialize04() {
+        List<TblColRef> groups = buildGroups();
+        TupleFilter filter = buildOrFilter(groups);
 
-		byte[] bytes = TupleFilterSerializer.serialize(filter);
-		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-		compareFilter(filter, newFilter);
-	}
+        compareFilter(filter, newFilter);
+    }
 
-	@Test
-	public void testSerialize05() {
-		ColumnDesc column = new ColumnDesc();
+    @Test
+    public void testSerialize05() {
+        ColumnDesc column = new ColumnDesc();
 
-		TblColRef colRef = new TblColRef(column);
-		List<TblColRef> groups = new ArrayList<TblColRef>();
-		groups.add(colRef);
-		TupleFilter filter = buildCompareFilter(groups, 0);
+        TblColRef colRef = new TblColRef(column);
+        List<TblColRef> groups = new ArrayList<TblColRef>();
+        groups.add(colRef);
+        TupleFilter filter = buildCompareFilter(groups, 0);
 
-		byte[] bytes = TupleFilterSerializer.serialize(filter);
-		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-		compareFilter(filter, newFilter);
-	}
+        compareFilter(filter, newFilter);
+    }
 
-	@Test
-	public void testSerialize06() {
-		ColumnDesc column = new ColumnDesc();
-		column.setName("META_CATEG_NAME");
-		TblColRef colRef = new TblColRef(column);
-		List<TblColRef> groups = new ArrayList<TblColRef>();
-		groups.add(colRef);
-		TupleFilter filter = buildCompareFilter(groups, 0);
+    @Test
+    public void testSerialize06() {
+        ColumnDesc column = new ColumnDesc();
+        column.setName("META_CATEG_NAME");
+        TblColRef colRef = new TblColRef(column);
+        List<TblColRef> groups = new ArrayList<TblColRef>();
+        groups.add(colRef);
+        TupleFilter filter = buildCompareFilter(groups, 0);
 
-		byte[] bytes = TupleFilterSerializer.serialize(filter);
-		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-		compareFilter(filter, newFilter);
-	}
+        compareFilter(filter, newFilter);
+    }
 
-	@Test
-	public void testSerialize07() {
-		TableDesc table = new TableDesc();
-		table.setName("TEST_KYLIN_FACT");
+    @Test
+    public void testSerialize07() {
+        TableDesc table = new TableDesc();
+        table.setName("TEST_KYLIN_FACT");
 
-		ColumnDesc column = new ColumnDesc();
-		column.setTable(table);
-		TblColRef colRef = new TblColRef(column);
-		List<TblColRef> groups = new ArrayList<TblColRef>();
-		groups.add(colRef);
-		TupleFilter filter = buildCompareFilter(groups, 0);
+        ColumnDesc column = new ColumnDesc();
+        column.setTable(table);
+        TblColRef colRef = new TblColRef(column);
+        List<TblColRef> groups = new ArrayList<TblColRef>();
+        groups.add(colRef);
+        TupleFilter filter = buildCompareFilter(groups, 0);
 
-		byte[] bytes = TupleFilterSerializer.serialize(filter);
-		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-		compareFilter(filter, newFilter);
-	}
+        compareFilter(filter, newFilter);
+    }
 
-	@Test
-	public void testSerialize08() {
-		TableDesc table = new TableDesc();
+    @Test
+    public void testSerialize08() {
+        TableDesc table = new TableDesc();
 
-		ColumnDesc column = new ColumnDesc();
-		column.setTable(table);
-		TblColRef colRef = new TblColRef(column);
-		List<TblColRef> groups = new ArrayList<TblColRef>();
-		groups.add(colRef);
-		TupleFilter filter = buildCompareFilter(groups, 0);
+        ColumnDesc column = new ColumnDesc();
+        column.setTable(table);
+        TblColRef colRef = new TblColRef(column);
+        List<TblColRef> groups = new ArrayList<TblColRef>();
+        groups.add(colRef);
+        TupleFilter filter = buildCompareFilter(groups, 0);
 
-		byte[] bytes = TupleFilterSerializer.serialize(filter);
-		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-		compareFilter(filter, newFilter);
-	}
+        compareFilter(filter, newFilter);
+    }
 
-	@Test
-	public void testSerialize10() {
-		List<TblColRef> groups = buildGroups();
-		TupleFilter orFilter = buildOrFilter(groups);
-		TupleFilter andFilter = buildAndFilter(groups);
+    @Test
+    public void testSerialize10() {
+        List<TblColRef> groups = buildGroups();
+        TupleFilter orFilter = buildOrFilter(groups);
+        TupleFilter andFilter = buildAndFilter(groups);
 
-		LogicalTupleFilter logicFilter = new LogicalTupleFilter(
-				FilterOperatorEnum.OR);
-		logicFilter.addChild(orFilter);
-		logicFilter.addChild(andFilter);
+        LogicalTupleFilter logicFilter = new LogicalTupleFilter(FilterOperatorEnum.OR);
+        logicFilter.addChild(orFilter);
+        logicFilter.addChild(andFilter);
 
-		byte[] bytes = TupleFilterSerializer.serialize(logicFilter);
-		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(logicFilter);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-		compareFilter(logicFilter, newFilter);
-	}
+        compareFilter(logicFilter, newFilter);
+    }
 
-	@Test
-	public void testSerialize11() {
-		List<TblColRef> groups = buildGroups();
-		TupleFilter orFilter = buildOrFilter(groups);
-		TupleFilter andFilter = buildAndFilter(groups);
+    @Test
+    public void testSerialize11() {
+        List<TblColRef> groups = buildGroups();
+        TupleFilter orFilter = buildOrFilter(groups);
+        TupleFilter andFilter = buildAndFilter(groups);
 
-		LogicalTupleFilter logicFilter = new LogicalTupleFilter(
-				FilterOperatorEnum.AND);
-		logicFilter.addChild(orFilter);
-		logicFilter.addChild(andFilter);
+        LogicalTupleFilter logicFilter = new LogicalTupleFilter(FilterOperatorEnum.AND);
+        logicFilter.addChild(orFilter);
+        logicFilter.addChild(andFilter);
 
-		byte[] bytes = TupleFilterSerializer.serialize(logicFilter);
-		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(logicFilter);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-		compareFilter(logicFilter, newFilter);
-	}
+        compareFilter(logicFilter, newFilter);
+    }
 
-	@Test
-	public void testSerialize12() {
-		List<TblColRef> groups = buildGroups();
-		TupleFilter filter = buildCaseFilter(groups);
+    @Test
+    public void testSerialize12() {
+        List<TblColRef> groups = buildGroups();
+        TupleFilter filter = buildCaseFilter(groups);
 
-		byte[] bytes = TupleFilterSerializer.serialize(filter);
-		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-		compareFilter(filter, newFilter);
-	}
+        compareFilter(filter, newFilter);
+    }
 
-	@Test
-	public void testSerialize13() {
-		List<TblColRef> groups = buildGroups();
-		TupleFilter filter = buildCompareCaseFilter(groups, "0");
+    @Test
+    public void testSerialize13() {
+        List<TblColRef> groups = buildGroups();
+        TupleFilter filter = buildCompareCaseFilter(groups, "0");
 
-		byte[] bytes = TupleFilterSerializer.serialize(filter);
-		TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
 
-		compareFilter(filter, newFilter);
-	}
+        compareFilter(filter, newFilter);
+    }
 
 }

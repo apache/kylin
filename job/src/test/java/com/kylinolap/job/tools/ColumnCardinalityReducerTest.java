@@ -16,8 +16,7 @@
 
 package com.kylinolap.job.tools;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,73 +45,67 @@ import com.kylinolap.job.hadoop.cardinality.ColumnCardinalityReducer;
  */
 public class ColumnCardinalityReducerTest {
 
-	ReduceDriver<IntWritable, BytesWritable, IntWritable, LongWritable> reduceDriver;
-	String localTempDir = System.getProperty("java.io.tmpdir") + File.separator;
+    ReduceDriver<IntWritable, BytesWritable, IntWritable, LongWritable> reduceDriver;
+    String localTempDir = System.getProperty("java.io.tmpdir") + File.separator;
 
-	@Before
-	public void setUp() {
-		ColumnCardinalityReducer reducer = new ColumnCardinalityReducer();
-		reduceDriver = ReduceDriver.newReduceDriver(reducer);
-	}
+    @Before
+    public void setUp() {
+        ColumnCardinalityReducer reducer = new ColumnCardinalityReducer();
+        reduceDriver = ReduceDriver.newReduceDriver(reducer);
+    }
 
-	private byte[] getBytes(String str) throws IOException {
-		HyperLogLogPlusCounter hllc = new HyperLogLogPlusCounter();
-		StringTokenizer tokenizer = new StringTokenizer(str,
-				ColumnCardinalityMapper.DEFAULT_DELIM);
-		int i = 0;
-		while (tokenizer.hasMoreTokens()) {
-			String temp = i + "_" + tokenizer.nextToken();
-			i++;
-			hllc.add(Bytes.toBytes(temp));
-		}
-		ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-		buf.clear();
-		hllc.writeRegisters(buf);
-		buf.flip();
-		return buf.array();
-	}
+    private byte[] getBytes(String str) throws IOException {
+        HyperLogLogPlusCounter hllc = new HyperLogLogPlusCounter();
+        StringTokenizer tokenizer = new StringTokenizer(str, ColumnCardinalityMapper.DEFAULT_DELIM);
+        int i = 0;
+        while (tokenizer.hasMoreTokens()) {
+            String temp = i + "_" + tokenizer.nextToken();
+            i++;
+            hllc.add(Bytes.toBytes(temp));
+        }
+        ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
+        buf.clear();
+        hllc.writeRegisters(buf);
+        buf.flip();
+        return buf.array();
+    }
 
-	@Test
-	public void testReducer() throws IOException {
-		IntWritable key1 = new IntWritable(1);
-		List<BytesWritable> values1 = new ArrayList<BytesWritable>();
-		values1.add(new BytesWritable(
-				getBytes(ColumnCardinalityMapperTest.strArr)));
+    @Test
+    public void testReducer() throws IOException {
+        IntWritable key1 = new IntWritable(1);
+        List<BytesWritable> values1 = new ArrayList<BytesWritable>();
+        values1.add(new BytesWritable(getBytes(ColumnCardinalityMapperTest.strArr)));
 
-		IntWritable key2 = new IntWritable(2);
-		List<BytesWritable> values2 = new ArrayList<BytesWritable>();
-		values2.add(new BytesWritable(
-				getBytes(ColumnCardinalityMapperTest.strArr + " x")));
+        IntWritable key2 = new IntWritable(2);
+        List<BytesWritable> values2 = new ArrayList<BytesWritable>();
+        values2.add(new BytesWritable(getBytes(ColumnCardinalityMapperTest.strArr + " x")));
 
-		IntWritable key3 = new IntWritable(3);
-		List<BytesWritable> values3 = new ArrayList<BytesWritable>();
-		values3.add(new BytesWritable(
-				getBytes(ColumnCardinalityMapperTest.strArr + " xx")));
+        IntWritable key3 = new IntWritable(3);
+        List<BytesWritable> values3 = new ArrayList<BytesWritable>();
+        values3.add(new BytesWritable(getBytes(ColumnCardinalityMapperTest.strArr + " xx")));
 
-		IntWritable key4 = new IntWritable(4);
-		List<BytesWritable> values4 = new ArrayList<BytesWritable>();
-		values4.add(new BytesWritable(
-				getBytes(ColumnCardinalityMapperTest.strArr + " xxx")));
+        IntWritable key4 = new IntWritable(4);
+        List<BytesWritable> values4 = new ArrayList<BytesWritable>();
+        values4.add(new BytesWritable(getBytes(ColumnCardinalityMapperTest.strArr + " xxx")));
 
-		IntWritable key5 = new IntWritable(5);
-		List<BytesWritable> values5 = new ArrayList<BytesWritable>();
-		values5.add(new BytesWritable(
-				getBytes(ColumnCardinalityMapperTest.strArr + " xxxx")));
+        IntWritable key5 = new IntWritable(5);
+        List<BytesWritable> values5 = new ArrayList<BytesWritable>();
+        values5.add(new BytesWritable(getBytes(ColumnCardinalityMapperTest.strArr + " xxxx")));
 
-		reduceDriver.withInput(key1, values1);
-		reduceDriver.withInput(key2, values2);
-		reduceDriver.withInput(key3, values3);
-		reduceDriver.withInput(key4, values4);
-		reduceDriver.withInput(key5, values5);
+        reduceDriver.withInput(key1, values1);
+        reduceDriver.withInput(key2, values2);
+        reduceDriver.withInput(key3, values3);
+        reduceDriver.withInput(key4, values4);
+        reduceDriver.withInput(key5, values5);
 
-		List<Pair<IntWritable, LongWritable>> result = reduceDriver.run();
+        List<Pair<IntWritable, LongWritable>> result = reduceDriver.run();
 
-		assertEquals(5, result.size());
+        assertEquals(5, result.size());
 
-		int outputKey1 = result.get(0).getFirst().get();
-		LongWritable value1 = result.get(0).getSecond();
-		assertTrue(outputKey1 == 1);
-		assertTrue((10 == value1.get()) || (9 == value1.get()));
+        int outputKey1 = result.get(0).getFirst().get();
+        LongWritable value1 = result.get(0).getSecond();
+        assertTrue(outputKey1 == 1);
+        assertTrue((10 == value1.get()) || (9 == value1.get()));
 
-	}
+    }
 }

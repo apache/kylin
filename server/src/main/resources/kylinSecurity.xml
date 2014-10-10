@@ -22,13 +22,13 @@
 			access="hasAnyRole('ROLE_ANALYST', 'ROLE_MODELER')" />
 		<intercept-url pattern="/api/cubes*/**" access="hasRole('ROLE_MODELER')" />
 		<intercept-url pattern="/api/job*/**" access="hasRole('ROLE_MODELER')" />
-		
-		 
+
+
 		<intercept-url pattern="/api/admin/config" access="permitAll" />
 		<intercept-url pattern="/api/admin*/**" access="hasRole('ROLE_ADMIN')" />
-		
+
 		<intercept-url pattern="/api/**" access="isAuthenticated()" />
-				
+
 		<logout invalidate-session="true" delete-cookies="JSESSIONID" />
 		<session-management session-fixation-protection="newSession" />
 	</http>
@@ -42,78 +42,6 @@
 		<beans:property name="enableGroups" value="true" />
 		<beans:property name="enableAuthorities" value="true" />
 	</beans:bean>
-
-	<beans:bean id="ldapUserAuthProvider" class="com.kylinolap.rest.security.LdapProvider">
-		<beans:constructor-arg>
-			<beans:bean
-				class="org.springframework.security.ldap.authentication.BindAuthenticator">
-				<beans:constructor-arg ref="ldapSource" />
-				<beans:property name="userSearch">
-                    <beans:bean id="userSearch"
-                        class="org.springframework.security.ldap.search.FilterBasedLdapUserSearch">
-                        <beans:constructor-arg index="0"
-                            value="OU=Accounts_User,DC=corp,DC=ebay,DC=com" />
-                        <beans:constructor-arg index="1"  value="(&amp;(sAMAccountName={0})(memberOf=CN=ACL-eBay-MAX-Users,OU=Security Group,OU=Accounts_Group,DC=corp,DC=ebay,DC=com))" />
-                        <beans:constructor-arg index="2" ref="ldapSource" />
-                    </beans:bean>
-                </beans:property>
-			</beans:bean>
-		</beans:constructor-arg>
-		<beans:constructor-arg>
-			<beans:bean class="com.kylinolap.rest.security.AuthoritiesPopulator">
-			    <beans:constructor-arg index="0" ref="ldapSource" />
-                <beans:constructor-arg index="1" value="OU=DLManager,OU=Accounts_Group,DC=corp,DC=ebay,DC=com" />
-			</beans:bean>
-		</beans:constructor-arg>
-	</beans:bean>
-	
-	<beans:bean id="ldapServiceAccountAuthProvider" class="com.kylinolap.rest.security.LdapProvider">
-		<beans:constructor-arg>
-			<beans:bean
-				class="org.springframework.security.ldap.authentication.BindAuthenticator">
-				<beans:constructor-arg ref="ldapSource" />
-				<beans:property name="userSearch">
-                    <beans:bean id="userSearch"
-                        class="org.springframework.security.ldap.search.FilterBasedLdapUserSearch">
-                        <beans:constructor-arg index="0"
-                            value="OU=ServiceAccounts,OU=Accounts_User,DC=corp,DC=ebay,DC=com" />
-                        <beans:constructor-arg index="1"  value="(sAMAccountName={0})" />
-                        <beans:constructor-arg index="2" ref="ldapSource" />
-                    </beans:bean>
-                </beans:property>
-			</beans:bean>
-		</beans:constructor-arg>
-		<beans:constructor-arg>
-			<beans:bean class="com.kylinolap.rest.security.AuthoritiesPopulator">
-			    <beans:constructor-arg index="0" ref="ldapSource" />
-                <beans:constructor-arg index="1" value="OU=DLManager,OU=Accounts_Group,DC=corp,DC=ebay,DC=com" />
-			</beans:bean>
-		</beans:constructor-arg>
-	</beans:bean>
-
-	<authentication-manager alias="authenticationManager">
-		<authentication-provider>
-			<user-service>
-				<user name="MODELER" password="$2a$10$Le5ernTeGNIARwMJsY0WaOLioNQdb0QD11DwjeyNqqNRp5NaDo2FG" authorities="ROLE_MODELER" />
-				<user name="ANALYST" password="$2a$10$s4INO3XHjPP5Vm2xH027Ce9QeXWdrfq5pvzuGr9z/lQmHqi0rsbNi" authorities="ROLE_ANALYST" />
-				<user name="ADMIN" password="$2a$10$JjFuU8Lghg8eYx/8EpIXyOlM8J3LBHwV1uueEXwNzh.jrruv52n1q"
-					authorities="ROLE_MODELER, ROLE_ANALYST, ROLE_ADMIN" />
-			</user-service>
-			<password-encoder ref="passwordEncoder" />
-		</authentication-provider>
-		
-		<!-- do user ldap auth -->
-		<authentication-provider ref="ldapUserAuthProvider"></authentication-provider>
-		
-		<!-- do service account ldap auth -->
-		<authentication-provider ref="ldapServiceAccountAuthProvider"></authentication-provider>
-		
-		<!-- custom user provider
-		<authentication-provider user-service-ref="userService">
-			<password-encoder ref="passwordEncoder" />
-		</authentication-provider>
-		-->
-	</authentication-manager>
 
 	<!-- domain object acl -->
 	<beans:bean id="aclPermissionFactory"
@@ -179,7 +107,113 @@
 			</beans:list>
 		</beans:constructor-arg>
 	</beans:bean>
-
+	
 	<beans:bean id="auditLogger"
 		class="org.springframework.security.acls.domain.ConsoleAuditLogger" />
+	
+	<beans:beans profile="default">
+		<beans:bean id="ldapUserAuthProvider" class="com.kylinolap.rest.security.LdapProvider">
+			<beans:constructor-arg>
+				<beans:bean
+					class="org.springframework.security.ldap.authentication.BindAuthenticator">
+					<beans:constructor-arg ref="ldapSource" />
+					<beans:property name="userSearch">
+						<beans:bean id="userSearch"
+							class="org.springframework.security.ldap.search.FilterBasedLdapUserSearch">
+							<beans:constructor-arg index="0"
+								value="${ldap.user.searchBase}" />
+							<beans:constructor-arg index="1"
+								value="${ldap.user.searchPattern}" />
+							<beans:constructor-arg index="2" ref="ldapSource" />
+						</beans:bean>
+					</beans:property>
+				</beans:bean>
+			</beans:constructor-arg>
+			<beans:constructor-arg>
+				<beans:bean class="com.kylinolap.rest.security.AuthoritiesPopulator">
+					<beans:constructor-arg index="0" ref="ldapSource" />
+					<beans:constructor-arg index="1"
+						value="${ldap.user.groupSearchBase}" />
+				</beans:bean>
+			</beans:constructor-arg>
+		</beans:bean>
+
+		<beans:bean id="ldapServiceAccountAuthProvider" class="com.kylinolap.rest.security.LdapProvider">
+			<beans:constructor-arg>
+				<beans:bean
+					class="org.springframework.security.ldap.authentication.BindAuthenticator">
+					<beans:constructor-arg ref="ldapSource" />
+					<beans:property name="userSearch">
+						<beans:bean id="userSearch"
+							class="org.springframework.security.ldap.search.FilterBasedLdapUserSearch">
+							<beans:constructor-arg index="0"
+								value="${ldap.service.searchBase}" />
+							<beans:constructor-arg index="1"
+								value="${ldap.service.searchPattern}" />
+							<beans:constructor-arg index="2" ref="ldapSource" />
+						</beans:bean>
+					</beans:property>
+				</beans:bean>
+			</beans:constructor-arg>
+			<beans:constructor-arg>
+				<beans:bean class="com.kylinolap.rest.security.AuthoritiesPopulator">
+					<beans:constructor-arg index="0" ref="ldapSource" />
+					<beans:constructor-arg index="1"
+						value="${ldap.service.groupSearchBase}" />
+				</beans:bean>
+			</beans:constructor-arg>
+		</beans:bean>
+
+		<authentication-manager alias="authenticationManager">
+			<authentication-provider>
+				<user-service>
+					<user name="MODELER"
+						password="$2a$10$Le5ernTeGNIARwMJsY0WaOLioNQdb0QD11DwjeyNqqNRp5NaDo2FG"
+						authorities="ROLE_MODELER" />
+					<user name="ANALYST"
+						password="$2a$10$s4INO3XHjPP5Vm2xH027Ce9QeXWdrfq5pvzuGr9z/lQmHqi0rsbNi"
+						authorities="ROLE_ANALYST" />
+					<user name="ADMIN"
+						password="$2a$10$JjFuU8Lghg8eYx/8EpIXyOlM8J3LBHwV1uueEXwNzh.jrruv52n1q"
+						authorities="ROLE_MODELER, ROLE_ANALYST, ROLE_ADMIN" />
+				</user-service>
+				<password-encoder ref="passwordEncoder" />
+			</authentication-provider>
+
+			<!-- do user ldap auth -->
+			<authentication-provider ref="ldapUserAuthProvider"></authentication-provider>
+
+			<!-- do service account ldap auth -->
+			<authentication-provider ref="ldapServiceAccountAuthProvider"></authentication-provider>
+
+			<!-- custom user provider <authentication-provider user-service-ref="userService"> 
+				<password-encoder ref="passwordEncoder" /> </authentication-provider> -->
+		</authentication-manager>
+
+		<beans:bean id="ldapSource"
+			class="org.springframework.security.ldap.DefaultSpringSecurityContextSource">
+			<beans:constructor-arg value="${ldap.server}" />
+			<beans:property name="userDn" value="${ldap.username}" />
+			<beans:property name="password" value="${ldap.password}" />
+		</beans:bean>
+	</beans:beans>
+
+	<beans:beans profile="sandbox,testing">
+		<authentication-manager alias="authenticationManager">
+			<authentication-provider>
+				<user-service>
+					<user name="MODELER"
+						password="$2a$10$Le5ernTeGNIARwMJsY0WaOLioNQdb0QD11DwjeyNqqNRp5NaDo2FG"
+						authorities="ROLE_MODELER" />
+					<user name="ANALYST"
+						password="$2a$10$s4INO3XHjPP5Vm2xH027Ce9QeXWdrfq5pvzuGr9z/lQmHqi0rsbNi"
+						authorities="ROLE_ANALYST" />
+					<user name="ADMIN"
+						password="$2a$10$JjFuU8Lghg8eYx/8EpIXyOlM8J3LBHwV1uueEXwNzh.jrruv52n1q"
+						authorities="ROLE_MODELER, ROLE_ANALYST, ROLE_ADMIN" />
+				</user-service>
+				<password-encoder ref="passwordEncoder" />
+			</authentication-provider>
+		</authentication-manager>
+	</beans:beans>
 </beans:beans>

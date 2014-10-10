@@ -28,108 +28,105 @@ import com.kylinolap.common.util.SSHClient;
 
 public class CopyExecutor {
 
-	private String remoteHost;
-	private String remoteUser;
-	private String remotePwd;
+    private String remoteHost;
+    private String remoteUser;
+    private String remotePwd;
 
-	private String localFile;
-	private String destDir;
+    private String localFile;
+    private String destDir;
 
-	private int exitCode = 0;
+    private int exitCode = 0;
 
-	private CliOutputConsumer cliOutputConsumer;
+    private CliOutputConsumer cliOutputConsumer;
 
-	public CopyExecutor(String localFile, String destDir,
-			CliOutputConsumer cliOutputConsumer) {
-		this.localFile = localFile;
-		this.destDir = destDir;
-		this.cliOutputConsumer = cliOutputConsumer;
-	}
+    public CopyExecutor(String localFile, String destDir, CliOutputConsumer cliOutputConsumer) {
+        this.localFile = localFile;
+        this.destDir = destDir;
+        this.cliOutputConsumer = cliOutputConsumer;
+    }
 
-	public void setRunAtRemote(String host, String user, String pwd) {
-		this.remoteHost = host;
-		this.remoteUser = user;
-		this.remotePwd = pwd;
-	}
+    public void setRunAtRemote(String host, String user, String pwd) {
+        this.remoteHost = host;
+        this.remoteUser = user;
+        this.remotePwd = pwd;
+    }
 
-	public int execute(boolean wait) throws IOException {
-		if (remoteHost == null) {
-			if (wait) {
-				copyToLocal();
-			} else {
-				new Thread(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							copyToLocal();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					}
-				}).start();
-			}
+    public int execute(boolean wait) throws IOException {
+        if (remoteHost == null) {
+            if (wait) {
+                copyToLocal();
+            } else {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            copyToLocal();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
+            }
 
-		} else {
-			if (wait) {
-				copyToRemote();
-			} else {
-				new Thread(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							copyToRemote();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					}
-				}).start();
-			}
-		}
+        } else {
+            if (wait) {
+                copyToRemote();
+            } else {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            copyToRemote();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
+            }
+        }
 
-		return exitCode;
-	}
+        return exitCode;
+    }
 
-	private void copyToRemote() throws IOException {
-		SSHClient ssh = new SSHClient(remoteHost, remoteUser, remotePwd,
-				this.cliOutputConsumer);
+    private void copyToRemote() throws IOException {
+        SSHClient ssh = new SSHClient(remoteHost, remoteUser, remotePwd, this.cliOutputConsumer);
 
-		try {
-			ssh.scpFileToRemote(localFile, destDir);
-		} catch (Exception e) {
-			throw new IOException(e);
-		}
-	}
+        try {
+            ssh.scpFileToRemote(localFile, destDir);
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
+    }
 
-	private void copyToLocal() throws IOException {
-		String[] cmd = new String[3];
-		String osName = System.getProperty("os.name");
-		if (osName.startsWith("Windows")) {
-			cmd[0] = "cmd";
-			cmd[1] = "/C";
-		} else {
-			cmd[0] = "/bin/bash";
-			cmd[1] = "-c";
-		}
-		cmd[2] = " cp " + localFile + " " + destDir;
+    private void copyToLocal() throws IOException {
+        String[] cmd = new String[3];
+        String osName = System.getProperty("os.name");
+        if (osName.startsWith("Windows")) {
+            cmd[0] = "cmd";
+            cmd[1] = "/C";
+        } else {
+            cmd[0] = "/bin/bash";
+            cmd[1] = "-c";
+        }
+        cmd[2] = " cp " + localFile + " " + destDir;
 
-		ProcessBuilder builder = new ProcessBuilder(cmd);
-		builder.redirectErrorStream(true);
-		Process proc = builder.start();
+        ProcessBuilder builder = new ProcessBuilder(cmd);
+        builder.redirectErrorStream(true);
+        Process proc = builder.start();
 
-		BufferedReader reader = new BufferedReader(new InputStreamReader(
-				proc.getInputStream()));
-		String line = null;
+        BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+        String line = null;
 
-		while ((line = reader.readLine()) != null) {
-			this.cliOutputConsumer.consume(line);
-		}
+        while ((line = reader.readLine()) != null) {
+            this.cliOutputConsumer.consume(line);
+        }
 
-		try {
-			exitCode = proc.waitFor();
-		} catch (InterruptedException e) {
-			throw new IOException(e);
-		} finally {
-			reader.close();
-		}
-	}
+        try {
+            exitCode = proc.waitFor();
+        } catch (InterruptedException e) {
+            throw new IOException(e);
+        } finally {
+            reader.close();
+        }
+    }
 }

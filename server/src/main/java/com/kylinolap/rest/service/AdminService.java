@@ -40,73 +40,69 @@ import com.kylinolap.rest.exception.InternalErrorException;
  */
 @Component("adminService")
 public class AdminService extends BasicService {
-	private static final Logger logger = LoggerFactory
-			.getLogger(AdminService.class);
+    private static final Logger logger = LoggerFactory.getLogger(AdminService.class);
 
-	/**
-	 * Get Java Env info as string
-	 * 
-	 * @return
-	 */
-	@PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-	public String getEnv() {
-		logger.debug("Get Kylin Runtime environment");
-		PropertiesConfiguration tempConfig = new PropertiesConfiguration();
+    /**
+     * Get Java Env info as string
+     * 
+     * @return
+     */
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    public String getEnv() {
+        logger.debug("Get Kylin Runtime environment");
+        PropertiesConfiguration tempConfig = new PropertiesConfiguration();
 
-		// Add Java Env
+        // Add Java Env
 
-		try {
-			String content = "";
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			// env
-			Map<String, String> env = System.getenv();
-			for (String envName : env.keySet()) {
-				tempConfig.addProperty(envName, env.get(envName));
-			}
-			// properties
-			Properties properteis = System.getProperties();
-			for (Object propName : properteis.keySet()) {
-				tempConfig.setProperty((String) propName,
-						properteis.get(propName));
-			}
+        try {
+            String content = "";
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            // env
+            Map<String, String> env = System.getenv();
+            for (String envName : env.keySet()) {
+                tempConfig.addProperty(envName, env.get(envName));
+            }
+            // properties
+            Properties properteis = System.getProperties();
+            for (Object propName : properteis.keySet()) {
+                tempConfig.setProperty((String) propName, properteis.get(propName));
+            }
 
-			// do save
-			tempConfig.save(baos);
-			content = baos.toString();
-			return content;
-		} catch (ConfigurationException e) {
-			logger.debug("Failed to get Kylin Runtime env", e);
-			throw new InternalErrorException("Failed to get Kylin env Config",
-					e);
-		}
-	}
+            // do save
+            tempConfig.save(baos);
+            content = baos.toString();
+            return content;
+        } catch (ConfigurationException e) {
+            logger.debug("Failed to get Kylin Runtime env", e);
+            throw new InternalErrorException("Failed to get Kylin env Config", e);
+        }
+    }
 
-	/**
-	 * Get Java config info as String
-	 * 
-	 * @return
-	 */
-	// @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-	public String getConfigAsString() {
-		logger.debug("Get Kylin Runtime Config");
+    /**
+     * Get Java config info as String
+     * 
+     * @return
+     */
+    // @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    public String getConfigAsString() {
+        logger.debug("Get Kylin Runtime Config");
 
-		try {
-			return KylinConfig.getInstanceFromEnv().getConfigAsString();
-		} catch (IOException e) {
-			logger.debug("Failed to get Kylin Runtime Config", e);
-			throw new InternalErrorException(
-					"Failed to get Kylin Runtime Config", e);
-		}
-	}
+        try {
+            return KylinConfig.getInstanceFromEnv().getConfigAsString();
+        } catch (IOException e) {
+            logger.debug("Failed to get Kylin Runtime Config", e);
+            throw new InternalErrorException("Failed to get Kylin Runtime Config", e);
+        }
+    }
 
-	public void cleanupStorage() {
-		StorageCleanupJob job = new StorageCleanupJob();
-		String[] args = new String[] { "-delete", "true" };
-		try {
-			ToolRunner.run(job, args);
-		} catch (Exception e) {
-			logger.error(e.getLocalizedMessage(), e);
-			throw new InternalErrorException(e);
-		}
-	}
+    public void cleanupStorage() {
+        StorageCleanupJob job = new StorageCleanupJob();
+        String[] args = new String[] { "-delete", "true" };
+        try {
+            ToolRunner.run(job, args);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e);
+        }
+    }
 }

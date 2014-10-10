@@ -34,27 +34,27 @@ import com.kylinolap.rest.service.UserService;
  */
 public class AdminControllerTest extends TestBase {
 
-	private AdminController adminController;
+    private AdminController adminController;
 
-	@Autowired
-	private AdminService adminService;
-	@Autowired
-	private UserService userService;
-	@Autowired
-	private CubeService cubeService;
+    @Autowired
+    private AdminService adminService;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private CubeService cubeService;
 
-	@Before
-	public void setup() {
-		super.setUp();
-		adminController = new AdminController();
-		adminController.setAdminService(adminService);
-		adminController.setUserService(userService);
-		adminController.setCubeMgmtService(cubeService);
-	}
+    @Before
+    public void setup() {
+        super.setUp();
+        adminController = new AdminController();
+        adminController.setAdminService(adminService);
+        adminController.setUserService(userService);
+        adminController.setCubeMgmtService(cubeService);
+    }
 
-	@Test
-	public void testBasics() throws IOException {
-		Assert.assertNotNull(adminController.getConfig());
-		Assert.assertNotNull(adminController.getEnv());
-	}
+    @Test
+    public void testBasics() throws IOException {
+        Assert.assertNotNull(adminController.getConfig());
+        Assert.assertNotNull(adminController.getEnv());
+    }
 }

@@ -29,112 +29,110 @@ import com.kylinolap.common.util.SSHClientOutput;
 
 public class CommandExecutor {
 
-	private String command;
-	private String remoteHost;
-	private String remoteUser;
-	private String remotePwd;
-	private int remoteTimeoutSeconds = 3600;
-	private int exitCode = 0;
+    private String command;
+    private String remoteHost;
+    private String remoteUser;
+    private String remotePwd;
+    private int remoteTimeoutSeconds = 3600;
+    private int exitCode = 0;
 
-	private CliOutputConsumer cliOutputConsumer;
+    private CliOutputConsumer cliOutputConsumer;
 
-	public CommandExecutor(String command, CliOutputConsumer cliOutputConsumer) {
-		this.command = command;
-		this.cliOutputConsumer = cliOutputConsumer;
-	}
+    public CommandExecutor(String command, CliOutputConsumer cliOutputConsumer) {
+        this.command = command;
+        this.cliOutputConsumer = cliOutputConsumer;
+    }
 
-	public void setRunAtRemote(String host, String user, String pwd) {
-		this.remoteHost = host;
-		this.remoteUser = user;
-		this.remotePwd = pwd;
-	}
+    public void setRunAtRemote(String host, String user, String pwd) {
+        this.remoteHost = host;
+        this.remoteUser = user;
+        this.remotePwd = pwd;
+    }
 
-	public void setRunAtLocal() {
-		this.remoteHost = null;
-		this.remoteUser = null;
-		this.remotePwd = null;
-	}
+    public void setRunAtLocal() {
+        this.remoteHost = null;
+        this.remoteUser = null;
+        this.remotePwd = null;
+    }
 
-	public int execute(boolean wait) throws IOException {
-		if (remoteHost == null) {
-			if (wait) {
-				runNativeCommand();
-			} else {
-				new Thread(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							runNativeCommand();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					}
-				}).start();
-			}
+    public int execute(boolean wait) throws IOException {
+        if (remoteHost == null) {
+            if (wait) {
+                runNativeCommand();
+            } else {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            runNativeCommand();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
+            }
 
-		} else {
-			if (wait) {
-				runRemoteCommand();
-			} else {
-				new Thread(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							runRemoteCommand();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					}
-				}).start();
-			}
-		}
+        } else {
+            if (wait) {
+                runRemoteCommand();
+            } else {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            runRemoteCommand();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
+            }
+        }
 
-		return exitCode;
-	}
+        return exitCode;
+    }
 
-	private void runRemoteCommand() throws IOException {
-		SSHClient ssh = new SSHClient(remoteHost, remoteUser, remotePwd,
-				this.cliOutputConsumer);
+    private void runRemoteCommand() throws IOException {
+        SSHClient ssh = new SSHClient(remoteHost, remoteUser, remotePwd, this.cliOutputConsumer);
 
-		SSHClientOutput sshOutput;
-		try {
-			sshOutput = ssh.execCommand(command, remoteTimeoutSeconds);
-			exitCode = sshOutput.getExitCode();
-		} catch (Exception e) {
-			throw new IOException(e);
-		}
-	}
+        SSHClientOutput sshOutput;
+        try {
+            sshOutput = ssh.execCommand(command, remoteTimeoutSeconds);
+            exitCode = sshOutput.getExitCode();
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
+    }
 
-	private void runNativeCommand() throws IOException {
-		String[] cmd = new String[3];
-		String osName = System.getProperty("os.name");
-		if (osName.startsWith("Windows")) {
-			cmd[0] = "cmd";
-			cmd[1] = "/C";
-		} else {
-			cmd[0] = "/bin/bash";
-			cmd[1] = "-c";
-		}
-		cmd[2] = command;
+    private void runNativeCommand() throws IOException {
+        String[] cmd = new String[3];
+        String osName = System.getProperty("os.name");
+        if (osName.startsWith("Windows")) {
+            cmd[0] = "cmd";
+            cmd[1] = "/C";
+        } else {
+            cmd[0] = "/bin/bash";
+            cmd[1] = "-c";
+        }
+        cmd[2] = command;
 
-		ProcessBuilder builder = new ProcessBuilder(cmd);
-		builder.redirectErrorStream(true);
-		Process proc = builder.start();
+        ProcessBuilder builder = new ProcessBuilder(cmd);
+        builder.redirectErrorStream(true);
+        Process proc = builder.start();
 
-		BufferedReader reader = new BufferedReader(new InputStreamReader(
-				proc.getInputStream()));
-		String line = null;
+        BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+        String line = null;
 
-		while ((line = reader.readLine()) != null) {
-			this.cliOutputConsumer.consume(line);
-		}
+        while ((line = reader.readLine()) != null) {
+            this.cliOutputConsumer.consume(line);
+        }
 
-		try {
-			exitCode = proc.waitFor();
-		} catch (InterruptedException e) {
-			throw new IOException(e);
-		} finally {
-			reader.close();
-		}
-	}
+        try {
+            exitCode = proc.waitFor();
+        } catch (InterruptedException e) {
+            throw new IOException(e);
+        } finally {
+            reader.close();
+        }
+    }
 }

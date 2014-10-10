@@ -5,20 +5,20 @@ package com.kylinolap.rest.request;
  */
 public class MetaRequest {
 
-	private String project;
+    private String project;
 
-	public MetaRequest() {
-	}
+    public MetaRequest() {
+    }
 
-	public MetaRequest(String project) {
-		this.project = project;
-	}
+    public MetaRequest(String project) {
+        this.project = project;
+    }
 
-	public String getProject() {
-		return project;
-	}
+    public String getProject() {
+        return project;
+    }
 
-	public void setProject(String project) {
-		this.project = project;
-	}
+    public void setProject(String project) {
+        this.project = project;
+    }
 }

@@ -16,7 +16,7 @@
 
 package com.kylinolap.storage.hbase.coprocessor;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,53 +36,52 @@ import com.kylinolap.storage.hbase.coprocessor.SRowProjector.AggrKey;
  */
 public class RowProjectorTest {
 
-	byte[] mask = new byte[] { (byte) 0xff, 0x00, 0x00, (byte) 0xff };
-	SRowProjector sample = new SRowProjector(mask);
+    byte[] mask = new byte[] { (byte) 0xff, 0x00, 0x00, (byte) 0xff };
+    SRowProjector sample = new SRowProjector(mask);
 
-	@Test
-	public void testSerialize() {
+    @Test
+    public void testSerialize() {
 
-		byte[] bytes = SRowProjector.serialize(sample);
-		SRowProjector copy = SRowProjector.deserialize(bytes);
+        byte[] bytes = SRowProjector.serialize(sample);
+        SRowProjector copy = SRowProjector.deserialize(bytes);
 
-		assertTrue(Arrays.equals(sample.groupByMask, copy.groupByMask));
-	}
+        assertTrue(Arrays.equals(sample.groupByMask, copy.groupByMask));
+    }
 
-	@Test
-	public void testProject() {
-		byte[] bytes1 = new byte[] { -1, -2, -3, -4 };
-		byte[] bytes2 = new byte[] { 1, 2, 3, 4 };
-		byte[] bytes3 = new byte[] { 1, 99, 100, 4 };
-		byte[] bytes4 = new byte[] { 1, 1, 1, 5 };
+    @Test
+    public void testProject() {
+        byte[] bytes1 = new byte[] { -1, -2, -3, -4 };
+        byte[] bytes2 = new byte[] { 1, 2, 3, 4 };
+        byte[] bytes3 = new byte[] { 1, 99, 100, 4 };
+        byte[] bytes4 = new byte[] { 1, 1, 1, 5 };
 
-		AggrKey rowKey = sample.getRowKey(newCellWithRowKey(bytes1));
-		AggrKey rowKey2 = sample.getRowKey(newCellWithRowKey(bytes2));
-		assertTrue(rowKey == rowKey2); // no extra object creation
-		assertTrue(Bytes.equals(rowKey.get(), rowKey.offset(), rowKey.length(),
-				bytes2, 0, bytes2.length));
+        AggrKey rowKey = sample.getRowKey(newCellWithRowKey(bytes1));
+        AggrKey rowKey2 = sample.getRowKey(newCellWithRowKey(bytes2));
+        assertTrue(rowKey == rowKey2); // no extra object creation
+        assertTrue(Bytes.equals(rowKey.get(), rowKey.offset(), rowKey.length(), bytes2, 0, bytes2.length));
 
-		rowKey2 = rowKey.copy(); // explicit object creation
-		assertTrue(rowKey != rowKey2);
+        rowKey2 = rowKey.copy(); // explicit object creation
+        assertTrue(rowKey != rowKey2);
 
-		rowKey = sample.getRowKey(newCellWithRowKey(bytes1));
-		assertTrue(rowKey.hashCode() != rowKey2.hashCode());
-		assertTrue(rowKey.equals(rowKey2) == false);
-		assertTrue(rowKey.compareTo(rowKey2) > 0); // unsigned compare
+        rowKey = sample.getRowKey(newCellWithRowKey(bytes1));
+        assertTrue(rowKey.hashCode() != rowKey2.hashCode());
+        assertTrue(rowKey.equals(rowKey2) == false);
+        assertTrue(rowKey.compareTo(rowKey2) > 0); // unsigned compare
 
-		rowKey = sample.getRowKey(newCellWithRowKey(bytes3));
-		assertTrue(rowKey.hashCode() == rowKey2.hashCode());
-		assertTrue(rowKey.equals(rowKey2) == true);
-		assertTrue(rowKey.compareTo(rowKey2) == 0);
+        rowKey = sample.getRowKey(newCellWithRowKey(bytes3));
+        assertTrue(rowKey.hashCode() == rowKey2.hashCode());
+        assertTrue(rowKey.equals(rowKey2) == true);
+        assertTrue(rowKey.compareTo(rowKey2) == 0);
 
-		rowKey = sample.getRowKey(newCellWithRowKey(bytes4));
-		assertTrue(rowKey.hashCode() != rowKey2.hashCode());
-		assertTrue(rowKey.equals(rowKey2) == false);
-		assertTrue(rowKey.compareTo(rowKey2) > 0);
-	}
+        rowKey = sample.getRowKey(newCellWithRowKey(bytes4));
+        assertTrue(rowKey.hashCode() != rowKey2.hashCode());
+        assertTrue(rowKey.equals(rowKey2) == false);
+        assertTrue(rowKey.compareTo(rowKey2) > 0);
+    }
 
-	private List<Cell> newCellWithRowKey(byte[] rowkey) {
-		ArrayList<Cell> list = Lists.newArrayList();
-		list.add(new KeyValue(rowkey, null, null, null));
-		return list;
-	}
+    private List<Cell> newCellWithRowKey(byte[] rowkey) {
+        ArrayList<Cell> list = Lists.newArrayList();
+        list.add(new KeyValue(rowkey, null, null, null));
+        return list;
+    }
 }

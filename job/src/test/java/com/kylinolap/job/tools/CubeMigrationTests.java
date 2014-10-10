@@ -17,25 +17,23 @@ import com.kylinolap.common.util.LocalFileMetadataTestCase;
  */
 @Ignore
 public class CubeMigrationTests extends LocalFileMetadataTestCase {
-	@Before
-	public void setup() throws Exception {
-		super.createTestMetadata();
-		ClasspathUtil.addClasspath(new File(
-				"../examples/test_case_data/hadoop-site").getAbsolutePath());
-	}
+    @Before
+    public void setup() throws Exception {
+        super.createTestMetadata();
+        ClasspathUtil.addClasspath(new File("../examples/test_case_data/hadoop-site").getAbsolutePath());
+    }
 
-	@After
-	public void clean() {
-		this.cleanupTestMetadata();
-	}
+    @After
+    public void clean() {
+        this.cleanupTestMetadata();
+    }
 
-	@Test
-	public void testMigrate() throws IOException, JSONException,
-			InterruptedException {
+    @Test
+    public void testMigrate() throws IOException, JSONException, InterruptedException {
 
-		// CubeMigrationCLI.moveCube(KylinConfig.getInstanceFromEnv(),
-		// KylinConfig.getInstanceFromEnv(),
-		// "test_kylin_cube_with_slr_empty", "migration", "true", "false");
-	}
+        // CubeMigrationCLI.moveCube(KylinConfig.getInstanceFromEnv(),
+        // KylinConfig.getInstanceFromEnv(),
+        // "test_kylin_cube_with_slr_empty", "migration", "true", "false");
+    }
 
 }

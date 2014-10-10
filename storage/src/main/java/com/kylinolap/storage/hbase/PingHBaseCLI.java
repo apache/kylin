@@ -38,58 +38,51 @@ import com.kylinolap.common.util.HadoopUtil;
  */
 public class PingHBaseCLI {
 
-	public static void main(String[] args) throws IOException {
-		String metadataUrl = args[0];
-		String hbaseTable = args[1];
+    public static void main(String[] args) throws IOException {
+        String metadataUrl = args[0];
+        String hbaseTable = args[1];
 
-		System.out.println("Hello friend.");
+        System.out.println("Hello friend.");
 
-		Configuration hconf = HadoopUtil.newHBaseConfiguration(metadataUrl);
-		if (User.isHBaseSecurityEnabled(hconf)) {
-			try {
-				System.out
-						.println("--------------Getting kerberos credential for user "
-								+ UserGroupInformation.getCurrentUser()
-										.getUserName());
-				TokenUtil.obtainAndCacheToken(hconf,
-						UserGroupInformation.getCurrentUser());
-			} catch (InterruptedException e) {
-				System.out
-						.println("--------------Error while getting kerberos credential for user "
-								+ UserGroupInformation.getCurrentUser()
-										.getUserName());
-			}
-		}
+        Configuration hconf = HadoopUtil.newHBaseConfiguration(metadataUrl);
+        if (User.isHBaseSecurityEnabled(hconf)) {
+            try {
+                System.out.println("--------------Getting kerberos credential for user " + UserGroupInformation.getCurrentUser().getUserName());
+                TokenUtil.obtainAndCacheToken(hconf, UserGroupInformation.getCurrentUser());
+            } catch (InterruptedException e) {
+                System.out.println("--------------Error while getting kerberos credential for user " + UserGroupInformation.getCurrentUser().getUserName());
+            }
+        }
 
-		Scan scan = new Scan();
-		int limit = 20;
+        Scan scan = new Scan();
+        int limit = 20;
 
-		HConnection conn = null;
-		HTableInterface table = null;
-		ResultScanner scanner = null;
-		try {
-			conn = HConnectionManager.createConnection(hconf);
-			table = conn.getTable(hbaseTable);
-			scanner = table.getScanner(scan);
-			int count = 0;
-			for (Result r : scanner) {
-				byte[] rowkey = r.getRow();
-				System.out.println(Bytes.toStringBinary(rowkey));
-				count++;
-				if (count == limit)
-					break;
-			}
-		} finally {
-			if (scanner != null) {
-				scanner.close();
-			}
-			if (table != null) {
-				table.close();
-			}
-			if (conn != null) {
-				conn.close();
-			}
-		}
+        HConnection conn = null;
+        HTableInterface table = null;
+        ResultScanner scanner = null;
+        try {
+            conn = HConnectionManager.createConnection(hconf);
+            table = conn.getTable(hbaseTable);
+            scanner = table.getScanner(scan);
+            int count = 0;
+            for (Result r : scanner) {
+                byte[] rowkey = r.getRow();
+                System.out.println(Bytes.toStringBinary(rowkey));
+                count++;
+                if (count == limit)
+                    break;
+            }
+        } finally {
+            if (scanner != null) {
+                scanner.close();
+            }
+            if (table != null) {
+                table.close();
+            }
+            if (conn != null) {
+                conn.close();
+            }
+        }
 
-	}
+    }
 }

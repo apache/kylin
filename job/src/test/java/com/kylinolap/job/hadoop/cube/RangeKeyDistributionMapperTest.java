@@ -16,8 +16,7 @@
 
 package com.kylinolap.job.hadoop.cube;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,99 +35,75 @@ import org.junit.Test;
  */
 public class RangeKeyDistributionMapperTest {
 
-	@SuppressWarnings("rawtypes")
-	MapDriver mapDriver;
-	String localTempDir = System.getProperty("java.io.tmpdir") + File.separator;
+    @SuppressWarnings("rawtypes")
+    MapDriver mapDriver;
+    String localTempDir = System.getProperty("java.io.tmpdir") + File.separator;
 
-	@Before
-	public void setUp() {
-		RangeKeyDistributionMapper mapper = new RangeKeyDistributionMapper();
-		mapDriver = MapDriver.newMapDriver(mapper);
-	}
+    @Before
+    public void setUp() {
+        RangeKeyDistributionMapper mapper = new RangeKeyDistributionMapper();
+        mapDriver = MapDriver.newMapDriver(mapper);
+    }
 
-	@SuppressWarnings("unchecked")
-	@Test
-	public void testMapperWithoutHeader() throws IOException {
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testMapperWithoutHeader() throws IOException {
 
-		Text inputKey1 = new Text(new byte[] { 0, 0, 0, 0, 0, 0, 0, 127, 11,
-				56, -23, 0, 22, 98, 1, 0, 121, 7 });
-		Text inputKey2 = new Text(new byte[] { 0, 0, 0, 0, 0, 0, 0, 127, 11,
-				122, 1, 0, 22, 98, 1, 0, 121, 7 });
-		Text inputKey3 = new Text(new byte[] { 2, 2, 2, 2, 2, 2, 2, 127, 11,
-				56, -23, 0, 22, 98, 1, 0, 121, 7 });
-		Text inputKey4 = new Text(new byte[] { 3, 3, 3, 3, 3, 3, 3, 127, 11,
-				56, -23, 0, 22, 98, 1, 0, 121, 7 });
-		Text inputKey5 = new Text(new byte[] { 4, 4, 4, 4, 4, 4, 4, 127, 11,
-				56, -23, 0, 22, 98, 1, 0, 121, 7 });
-		Text inputKey6 = new Text(new byte[] { 5, 5, 5, 5, 5, 5, 5, 127, 11,
-				56, -23, 0, 22, 98, 1, 0, 121, 7 });
-		Text inputKey7 = new Text(new byte[] { 6, 6, 6, 6, 6, 6, 6, 127, 11,
-				56, -23, 0, 22, 98, 1, 0, 121, 7 });
+        Text inputKey1 = new Text(new byte[] { 0, 0, 0, 0, 0, 0, 0, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7 });
+        Text inputKey2 = new Text(new byte[] { 0, 0, 0, 0, 0, 0, 0, 127, 11, 122, 1, 0, 22, 98, 1, 0, 121, 7 });
+        Text inputKey3 = new Text(new byte[] { 2, 2, 2, 2, 2, 2, 2, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7 });
+        Text inputKey4 = new Text(new byte[] { 3, 3, 3, 3, 3, 3, 3, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7 });
+        Text inputKey5 = new Text(new byte[] { 4, 4, 4, 4, 4, 4, 4, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7 });
+        Text inputKey6 = new Text(new byte[] { 5, 5, 5, 5, 5, 5, 5, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7 });
+        Text inputKey7 = new Text(new byte[] { 6, 6, 6, 6, 6, 6, 6, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7 });
 
-		mapDriver.addInput(inputKey1, new Text("abc"));
-		mapDriver.addInput(inputKey2, new Text("abc"));
-		mapDriver.addInput(inputKey3, new Text("abc"));
-		mapDriver.addInput(inputKey4, new Text("abc"));
-		mapDriver.addInput(inputKey5, new Text("abc"));
-		mapDriver.addInput(inputKey6, new Text("abc"));
-		mapDriver.addInput(inputKey7, new Text("abc"));
+        mapDriver.addInput(inputKey1, new Text("abc"));
+        mapDriver.addInput(inputKey2, new Text("abc"));
+        mapDriver.addInput(inputKey3, new Text("abc"));
+        mapDriver.addInput(inputKey4, new Text("abc"));
+        mapDriver.addInput(inputKey5, new Text("abc"));
+        mapDriver.addInput(inputKey6, new Text("abc"));
+        mapDriver.addInput(inputKey7, new Text("abc"));
 
-		List<Pair<Text, LongWritable>> result = mapDriver.run();
+        List<Pair<Text, LongWritable>> result = mapDriver.run();
 
-		assertEquals(1, result.size());
+        assertEquals(1, result.size());
 
-		byte[] key1 = result.get(0).getFirst().getBytes();
-		LongWritable value1 = result.get(0).getSecond();
-		assertArrayEquals(new byte[] { 6, 6, 6, 6, 6, 6, 6, 127, 11, 56, -23,
-				0, 22, 98, 1, 0, 121, 7 }, key1);
-		assertEquals(147, value1.get());
-	}
+        byte[] key1 = result.get(0).getFirst().getBytes();
+        LongWritable value1 = result.get(0).getSecond();
+        assertArrayEquals(new byte[] { 6, 6, 6, 6, 6, 6, 6, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7 }, key1);
+        assertEquals(147, value1.get());
+    }
 
-	@SuppressWarnings("unchecked")
-	@Test
-	public void testMapperWithHeader() throws IOException {
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testMapperWithHeader() throws IOException {
 
-		Text inputKey1 = new Text(new byte[] { 0, 0, 0, 0, 0, 0, 0, 127, 11,
-				56, -23, 0, 22, 98, 1, 0, 121, 7, 0, 0, 0, 0, 0, 0, 0, 127, 11,
-				56, -23, 0, 22, 98, 1, 0, 121, 7 });
-		Text inputKey2 = new Text(new byte[] { 0, 0, 0, 0, 0, 0, 0, 127, 11,
-				56, -23, 0, 22, 98, 1, 0, 121, 7, 0, 0, 0, 0, 0, 0, 0, 127, 11,
-				122, 1, 0, 22, 98, 1, 0, 121, 7 });
-		Text inputKey3 = new Text(new byte[] { 0, 0, 0, 0, 0, 0, 0, 127, 11,
-				56, -23, 0, 22, 98, 1, 0, 121, 7, 2, 2, 2, 2, 2, 2, 2, 127, 11,
-				56, -23, 0, 22, 98, 1, 0, 121, 7 });
-		Text inputKey4 = new Text(new byte[] { 0, 0, 0, 0, 0, 0, 0, 127, 11,
-				56, -23, 0, 22, 98, 1, 0, 121, 7, 3, 3, 3, 3, 3, 3, 3, 127, 11,
-				56, -23, 0, 22, 98, 1, 0, 121, 7 });
-		Text inputKey5 = new Text(new byte[] { 0, 0, 0, 0, 0, 0, 0, 127, 11,
-				56, -23, 0, 22, 98, 1, 0, 121, 7, 4, 4, 4, 4, 4, 4, 4, 127, 11,
-				56, -23, 0, 22, 98, 1, 0, 121, 7 });
-		Text inputKey6 = new Text(new byte[] { 0, 0, 0, 0, 0, 0, 0, 127, 11,
-				56, -23, 0, 22, 98, 1, 0, 121, 7, 5, 5, 5, 5, 5, 5, 5, 127, 11,
-				56, -23, 0, 22, 98, 1, 0, 121, 7 });
-		Text inputKey7 = new Text(new byte[] { 0, 0, 0, 0, 0, 0, 0, 127, 11,
-				56, -23, 0, 22, 98, 1, 0, 121, 7, 6, 6, 6, 6, 6, 6, 6, 127, 11,
-				56, -23, 0, 22, 98, 1, 0, 121, 7 });
+        Text inputKey1 = new Text(new byte[] { 0, 0, 0, 0, 0, 0, 0, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7, 0, 0, 0, 0, 0, 0, 0, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7 });
+        Text inputKey2 = new Text(new byte[] { 0, 0, 0, 0, 0, 0, 0, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7, 0, 0, 0, 0, 0, 0, 0, 127, 11, 122, 1, 0, 22, 98, 1, 0, 121, 7 });
+        Text inputKey3 = new Text(new byte[] { 0, 0, 0, 0, 0, 0, 0, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7, 2, 2, 2, 2, 2, 2, 2, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7 });
+        Text inputKey4 = new Text(new byte[] { 0, 0, 0, 0, 0, 0, 0, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7, 3, 3, 3, 3, 3, 3, 3, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7 });
+        Text inputKey5 = new Text(new byte[] { 0, 0, 0, 0, 0, 0, 0, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7, 4, 4, 4, 4, 4, 4, 4, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7 });
+        Text inputKey6 = new Text(new byte[] { 0, 0, 0, 0, 0, 0, 0, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7, 5, 5, 5, 5, 5, 5, 5, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7 });
+        Text inputKey7 = new Text(new byte[] { 0, 0, 0, 0, 0, 0, 0, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7, 6, 6, 6, 6, 6, 6, 6, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7 });
 
-		mapDriver.addInput(inputKey1, new Text("abc"));
-		mapDriver.addInput(inputKey2, new Text("abc"));
-		mapDriver.addInput(inputKey3, new Text("abc"));
-		mapDriver.addInput(inputKey4, new Text("abc"));
-		mapDriver.addInput(inputKey5, new Text("abc"));
-		mapDriver.addInput(inputKey6, new Text("abc"));
-		mapDriver.addInput(inputKey7, new Text("abc"));
+        mapDriver.addInput(inputKey1, new Text("abc"));
+        mapDriver.addInput(inputKey2, new Text("abc"));
+        mapDriver.addInput(inputKey3, new Text("abc"));
+        mapDriver.addInput(inputKey4, new Text("abc"));
+        mapDriver.addInput(inputKey5, new Text("abc"));
+        mapDriver.addInput(inputKey6, new Text("abc"));
+        mapDriver.addInput(inputKey7, new Text("abc"));
 
-		List<Pair<Text, LongWritable>> result = mapDriver.run();
+        List<Pair<Text, LongWritable>> result = mapDriver.run();
 
-		assertEquals(1, result.size());
+        assertEquals(1, result.size());
 
-		byte[] key1 = result.get(0).getFirst().getBytes();
-		LongWritable value1 = result.get(0).getSecond();
-		assertArrayEquals(new byte[] { 0, 0, 0, 0, 0, 0, 0, 127, 11, 56, -23,
-				0, 22, 98, 1, 0, 121, 7, 6, 6, 6, 6, 6, 6, 6, 127, 11, 56, -23,
-				0, 22, 98, 1, 0, 121, 7 }, key1);
-		assertEquals(273, value1.get());
+        byte[] key1 = result.get(0).getFirst().getBytes();
+        LongWritable value1 = result.get(0).getSecond();
+        assertArrayEquals(new byte[] { 0, 0, 0, 0, 0, 0, 0, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7, 6, 6, 6, 6, 6, 6, 6, 127, 11, 56, -23, 0, 22, 98, 1, 0, 121, 7 }, key1);
+        assertEquals(273, value1.get());
 
-	}
+    }
 
 }

@@ -29,8 +29,6 @@ import com.kylinolap.storage.tuple.ITupleIterator;
  */
 public interface IStorageEngine {
 
-	ITupleIterator search(Collection<TblColRef> dimensions, TupleFilter filter,
-			Collection<TblColRef> groups, Collection<FunctionDesc> metrics,
-			StorageContext context);
+    ITupleIterator search(Collection<TblColRef> dimensions, TupleFilter filter, Collection<TblColRef> groups, Collection<FunctionDesc> metrics, StorageContext context);
 
 }

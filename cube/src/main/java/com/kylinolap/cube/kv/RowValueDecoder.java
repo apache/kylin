@@ -38,101 +38,99 @@ import com.kylinolap.metadata.model.cube.MeasureDesc;
  */
 public class RowValueDecoder implements Cloneable {
 
-	private final HBaseColumnDesc hbaseColumn;
-	private final MeasureCodec codec;
-	private final BitSet projectionIndex;
-	private final MeasureDesc[] measures;
-	private final List<String> names;
-	private Object[] values;
+    private final HBaseColumnDesc hbaseColumn;
+    private final MeasureCodec codec;
+    private final BitSet projectionIndex;
+    private final MeasureDesc[] measures;
+    private final List<String> names;
+    private Object[] values;
 
-	public RowValueDecoder(RowValueDecoder rowValueDecoder) {
-		this.hbaseColumn = rowValueDecoder.getHBaseColumn();
-		this.projectionIndex = rowValueDecoder.getProjectionIndex();
-		this.names = new ArrayList<String>();
-		this.measures = hbaseColumn.getMeasures();
-		for (MeasureDesc measure : measures) {
-			this.names.add(measure.getFunction().getRewriteFieldName());
-		}
-		this.codec = new MeasureCodec(measures);
-		this.values = new Object[measures.length];
-	}
+    public RowValueDecoder(RowValueDecoder rowValueDecoder) {
+        this.hbaseColumn = rowValueDecoder.getHBaseColumn();
+        this.projectionIndex = rowValueDecoder.getProjectionIndex();
+        this.names = new ArrayList<String>();
+        this.measures = hbaseColumn.getMeasures();
+        for (MeasureDesc measure : measures) {
+            this.names.add(measure.getFunction().getRewriteFieldName());
+        }
+        this.codec = new MeasureCodec(measures);
+        this.values = new Object[measures.length];
+    }
 
-	public RowValueDecoder(HBaseColumnDesc hbaseColumn) {
-		this.hbaseColumn = hbaseColumn;
-		this.projectionIndex = new BitSet();
-		this.names = new ArrayList<String>();
-		this.measures = hbaseColumn.getMeasures();
-		for (MeasureDesc measure : measures) {
-			this.names.add(measure.getFunction().getRewriteFieldName());
-		}
-		this.codec = new MeasureCodec(measures);
-		this.values = new Object[measures.length];
-	}
+    public RowValueDecoder(HBaseColumnDesc hbaseColumn) {
+        this.hbaseColumn = hbaseColumn;
+        this.projectionIndex = new BitSet();
+        this.names = new ArrayList<String>();
+        this.measures = hbaseColumn.getMeasures();
+        for (MeasureDesc measure : measures) {
+            this.names.add(measure.getFunction().getRewriteFieldName());
+        }
+        this.codec = new MeasureCodec(measures);
+        this.values = new Object[measures.length];
+    }
 
-	public void decode(byte[] bytes) {
-		codec.decode(ByteBuffer.wrap(bytes), values);
-		convertToJavaObjects(values, values);
-	}
+    public void decode(byte[] bytes) {
+        codec.decode(ByteBuffer.wrap(bytes), values);
+        convertToJavaObjects(values, values);
+    }
 
-	private void convertToJavaObjects(Object[] mapredObjs, Object[] results) {
-		for (int i = 0; i < mapredObjs.length; i++) {
-			Object o = mapredObjs[i];
+    private void convertToJavaObjects(Object[] mapredObjs, Object[] results) {
+        for (int i = 0; i < mapredObjs.length; i++) {
+            Object o = mapredObjs[i];
 
-			if (o instanceof LongWritable)
-				o = Long.valueOf(((LongWritable) o).get());
-			else if (o instanceof IntWritable)
-				o = Integer.valueOf(((IntWritable) o).get());
-			else if (o instanceof DoubleWritable)
-				o = Double.valueOf(((DoubleWritable) o).get());
-			else if (o instanceof FloatWritable)
-				o = Float.valueOf(((FloatWritable) o).get());
+            if (o instanceof LongWritable)
+                o = Long.valueOf(((LongWritable) o).get());
+            else if (o instanceof IntWritable)
+                o = Integer.valueOf(((IntWritable) o).get());
+            else if (o instanceof DoubleWritable)
+                o = Double.valueOf(((DoubleWritable) o).get());
+            else if (o instanceof FloatWritable)
+                o = Float.valueOf(((FloatWritable) o).get());
 
-			results[i] = o;
-		}
-	}
+            results[i] = o;
+        }
+    }
 
-	public void setIndex(int bitIndex) {
-		projectionIndex.set(bitIndex);
-	}
+    public void setIndex(int bitIndex) {
+        projectionIndex.set(bitIndex);
+    }
 
-	public HBaseColumnDesc getHBaseColumn() {
-		return hbaseColumn;
-	}
+    public HBaseColumnDesc getHBaseColumn() {
+        return hbaseColumn;
+    }
 
-	public BitSet getProjectionIndex() {
-		return projectionIndex;
-	}
+    public BitSet getProjectionIndex() {
+        return projectionIndex;
+    }
 
-	public Object[] getValues() {
-		return values;
-	}
+    public Object[] getValues() {
+        return values;
+    }
 
-	public List<String> getNames() {
-		return names;
-	}
+    public List<String> getNames() {
+        return names;
+    }
 
-	public MeasureDesc[] getMeasures() {
-		return measures;
-	}
+    public MeasureDesc[] getMeasures() {
+        return measures;
+    }
 
-	public boolean hasMemHungryCountDistinct() {
-		for (int i = projectionIndex.nextSetBit(0); i >= 0; i = projectionIndex
-				.nextSetBit(i + 1)) {
-			FunctionDesc func = measures[i].getFunction();
-			if (func.isCountDistinct() && !func.isHolisticCountDistinct()) {
-				return true;
-			}
-		}
-		return false;
-	}
+    public boolean hasMemHungryCountDistinct() {
+        for (int i = projectionIndex.nextSetBit(0); i >= 0; i = projectionIndex.nextSetBit(i + 1)) {
+            FunctionDesc func = measures[i].getFunction();
+            if (func.isCountDistinct() && !func.isHolisticCountDistinct()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-	public static boolean hasMemHungryCountDistinct(
-			Collection<RowValueDecoder> rowValueDecoders) {
-		for (RowValueDecoder decoder : rowValueDecoders) {
-			if (decoder.hasMemHungryCountDistinct())
-				return true;
-		}
-		return false;
-	}
+    public static boolean hasMemHungryCountDistinct(Collection<RowValueDecoder> rowValueDecoders) {
+        for (RowValueDecoder decoder : rowValueDecoders) {
+            if (decoder.hasMemHungryCountDistinct())
+                return true;
+        }
+        return false;
+    }
 
 }

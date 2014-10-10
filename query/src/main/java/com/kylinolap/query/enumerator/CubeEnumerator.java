@@ -52,259 +52,240 @@ import com.kylinolap.storage.tuple.ITupleIterator;
  */
 public class CubeEnumerator implements Enumerator<Object[]> {
 
-	private final static Logger logger = LoggerFactory
-			.getLogger(CubeEnumerator.class);
+    private final static Logger logger = LoggerFactory.getLogger(CubeEnumerator.class);
 
-	private final OLAPContext olapContext;
-	private final DataContext optiqContext;
-	private final Object[] current;
-	private ITupleIterator cursor;
-	private int[] fieldIndexes;
+    private final OLAPContext olapContext;
+    private final DataContext optiqContext;
+    private final Object[] current;
+    private ITupleIterator cursor;
+    private int[] fieldIndexes;
 
-	public CubeEnumerator(OLAPContext olapContext, DataContext optiqContext) {
-		this.olapContext = olapContext;
-		this.optiqContext = optiqContext;
-		this.current = new Object[olapContext.olapRowType.getFieldCount()];
-		this.cursor = null;
-		this.fieldIndexes = null;
-	}
+    public CubeEnumerator(OLAPContext olapContext, DataContext optiqContext) {
+        this.olapContext = olapContext;
+        this.optiqContext = optiqContext;
+        this.current = new Object[olapContext.olapRowType.getFieldCount()];
+        this.cursor = null;
+        this.fieldIndexes = null;
+    }
 
-	@Override
-	public Object[] current() {
-		return current;
-	}
+    @Override
+    public Object[] current() {
+        return current;
+    }
 
-	@Override
-	public boolean moveNext() {
-		if (cursor == null) {
-			cursor = queryStorage();
-		}
+    @Override
+    public boolean moveNext() {
+        if (cursor == null) {
+            cursor = queryStorage();
+        }
 
-		if (!cursor.hasNext()) {
-			return false;
-		}
+        if (!cursor.hasNext()) {
+            return false;
+        }
 
-		ITuple tuple = cursor.next();
-		if (tuple == null) {
-			return false;
-		}
-		convertCurrentRow(tuple);
-		return true;
-	}
+        ITuple tuple = cursor.next();
+        if (tuple == null) {
+            return false;
+        }
+        convertCurrentRow(tuple);
+        return true;
+    }
 
-	@Override
-	public void reset() {
-		close();
-		cursor = queryStorage();
-	}
+    @Override
+    public void reset() {
+        close();
+        cursor = queryStorage();
+    }
 
-	@Override
-	public void close() {
-		if (cursor != null) {
-			cursor.close();
-		}
-	}
+    @Override
+    public void close() {
+        if (cursor != null) {
+            cursor.close();
+        }
+    }
 
-	private Object[] convertCurrentRow(ITuple tuple) {
+    private Object[] convertCurrentRow(ITuple tuple) {
 
-		// build field index map
-		if (this.fieldIndexes == null) {
-			List<String> fields = tuple.getAllFields();
-			int size = fields.size();
-			this.fieldIndexes = new int[size];
-			for (int i = 0; i < size; i++) {
-				String field = fields.get(i);
-				RelDataTypeField relField = olapContext.olapRowType.getField(
-						field, true);
-				if (relField != null) {
-					fieldIndexes[i] = relField.getIndex();
-				} else {
-					fieldIndexes[i] = -1;
-				}
-			}
-		}
+        // build field index map
+        if (this.fieldIndexes == null) {
+            List<String> fields = tuple.getAllFields();
+            int size = fields.size();
+            this.fieldIndexes = new int[size];
+            for (int i = 0; i < size; i++) {
+                String field = fields.get(i);
+                RelDataTypeField relField = olapContext.olapRowType.getField(field, true);
+                if (relField != null) {
+                    fieldIndexes[i] = relField.getIndex();
+                } else {
+                    fieldIndexes[i] = -1;
+                }
+            }
+        }
 
-		// set field value
-		Object[] values = tuple.getAllValues();
-		for (int i = 0, n = values.length; i < n; i++) {
-			Object value = values[i];
-			int index = fieldIndexes[i];
-			if (index >= 0) {
-				current[index] = value;
-			}
-		}
+        // set field value
+        Object[] values = tuple.getAllValues();
+        for (int i = 0, n = values.length; i < n; i++) {
+            Object value = values[i];
+            int index = fieldIndexes[i];
+            if (index >= 0) {
+                current[index] = value;
+            }
+        }
 
-		return current;
-	}
+        return current;
+    }
 
-	private ITupleIterator queryStorage() {
-		logger.debug("query storage...");
+    private ITupleIterator queryStorage() {
+        logger.debug("query storage...");
 
-		// set connection properties
-		setConnectionProperties();
+        // set connection properties
+        setConnectionProperties();
 
-		// bind dynamic variables
-		bindVariable(olapContext.filter);
+        // bind dynamic variables
+        bindVariable(olapContext.filter);
 
-		// build dimension & metrics
-		Collection<TblColRef> dimensions = new HashSet<TblColRef>();
-		Collection<FunctionDesc> metrics = new HashSet<FunctionDesc>();
-		buildDimensionsAndMetrics(dimensions, metrics);
+        // build dimension & metrics
+        Collection<TblColRef> dimensions = new HashSet<TblColRef>();
+        Collection<FunctionDesc> metrics = new HashSet<FunctionDesc>();
+        buildDimensionsAndMetrics(dimensions, metrics);
 
-		// query storage engine
-		IStorageEngine storageEngine = StorageEngineFactory
-				.getStorageEngine(olapContext.cubeInstance);
-		ITupleIterator iterator = storageEngine.search(dimensions,
-				olapContext.filter, olapContext.groupByColumns, metrics,
-				olapContext.storageContext);
-		if (logger.isDebugEnabled()) {
-			logger.debug("return TupleIterator...");
-		}
+        // query storage engine
+        IStorageEngine storageEngine = StorageEngineFactory.getStorageEngine(olapContext.cubeInstance);
+        ITupleIterator iterator = storageEngine.search(dimensions, olapContext.filter, olapContext.groupByColumns, metrics, olapContext.storageContext);
+        if (logger.isDebugEnabled()) {
+            logger.debug("return TupleIterator...");
+        }
 
-		this.fieldIndexes = null;
-		return iterator;
-	}
+        this.fieldIndexes = null;
+        return iterator;
+    }
 
-	private void buildDimensionsAndMetrics(Collection<TblColRef> dimensions,
-			Collection<FunctionDesc> metrics) {
+    private void buildDimensionsAndMetrics(Collection<TblColRef> dimensions, Collection<FunctionDesc> metrics) {
 
-		for (FunctionDesc func : olapContext.aggregations) {
-			if (!func.isAppliedOnDimension()) {
-				metrics.add(func);
-			}
-		}
+        for (FunctionDesc func : olapContext.aggregations) {
+            if (!func.isAppliedOnDimension()) {
+                metrics.add(func);
+            }
+        }
 
-		Set<TblColRef> derivedPostAggregation = Sets.newHashSet();
-		Set<TblColRef> columnNotOnGroupBy = Sets.newHashSet();
+        Set<TblColRef> derivedPostAggregation = Sets.newHashSet();
+        Set<TblColRef> columnNotOnGroupBy = Sets.newHashSet();
 
-		if (olapContext.isSimpleQuery()) {
-			// In order to prevent coprocessor from doing the real aggregating,
-			// All dimensions are injected
-			for (DimensionDesc dim : olapContext.cubeDesc.getDimensions()) {
-				for (TblColRef col : dim.getColumnRefs()) {
-					dimensions.add(col);
-				}
-			}
-			// select sth from fact table
-			for (MeasureDesc measure : olapContext.cubeDesc.getMeasures()) {
-				FunctionDesc func = measure.getFunction();
-				if (func.isSum()) {
-					// the rewritten name for sum(metric) is metric itself
-					metrics.add(func);
-				}
-			}
-			olapContext.storageContext.markAvoidAggregation();
-		} else {
-			// any column has only a single value in result set can be excluded
-			// in check of exact aggregation
-			Set<TblColRef> singleValueCols = findSingleValueColumns(olapContext.filter);
-			for (TblColRef column : olapContext.allColumns) {
-				// skip measure columns
-				if (olapContext.metricsColumns.contains(column)) {
-					continue;
-				}
+        if (olapContext.isSimpleQuery()) {
+            // In order to prevent coprocessor from doing the real aggregating,
+            // All dimensions are injected
+            for (DimensionDesc dim : olapContext.cubeDesc.getDimensions()) {
+                for (TblColRef col : dim.getColumnRefs()) {
+                    dimensions.add(col);
+                }
+            }
+            // select sth from fact table
+            for (MeasureDesc measure : olapContext.cubeDesc.getMeasures()) {
+                FunctionDesc func = measure.getFunction();
+                if (func.isSum()) {
+                    // the rewritten name for sum(metric) is metric itself
+                    metrics.add(func);
+                }
+            }
+            olapContext.storageContext.markAvoidAggregation();
+        } else {
+            // any column has only a single value in result set can be excluded
+            // in check of exact aggregation
+            Set<TblColRef> singleValueCols = findSingleValueColumns(olapContext.filter);
+            for (TblColRef column : olapContext.allColumns) {
+                // skip measure columns
+                if (olapContext.metricsColumns.contains(column)) {
+                    continue;
+                }
 
-				if (olapContext.groupByColumns.contains(column) == false
-						&& singleValueCols.contains(column) == false) {
-					columnNotOnGroupBy.add(column);
-				}
+                if (olapContext.groupByColumns.contains(column) == false && singleValueCols.contains(column) == false) {
+                    columnNotOnGroupBy.add(column);
+                }
 
-				if (olapContext.cubeDesc.isDerived(column)) {
-					DeriveInfo hostInfo = olapContext.cubeDesc
-							.getHostInfo(column);
-					if (hostInfo.isOneToOne == false
-							&& containsAll(olapContext.groupByColumns,
-									hostInfo.columns) == false) {
-						derivedPostAggregation.add(column);
-					}
-					for (TblColRef hostCol : hostInfo.columns) {
-						dimensions.add(hostCol);
-					}
-				} else {
-					dimensions.add(column);
-				}
-			}
-		}
+                if (olapContext.cubeDesc.isDerived(column)) {
+                    DeriveInfo hostInfo = olapContext.cubeDesc.getHostInfo(column);
+                    if (hostInfo.isOneToOne == false && containsAll(olapContext.groupByColumns, hostInfo.columns) == false) {
+                        derivedPostAggregation.add(column);
+                    }
+                    for (TblColRef hostCol : hostInfo.columns) {
+                        dimensions.add(hostCol);
+                    }
+                } else {
+                    dimensions.add(column);
+                }
+            }
+        }
 
-		if (derivedPostAggregation.size() > 0) {
-			logger.info("ExactAggregation is false due to derived "
-					+ derivedPostAggregation + " require post aggregation");
-		} else if (columnNotOnGroupBy.size() > 0) {
-			logger.info("ExactAggregation is false due to "
-					+ columnNotOnGroupBy + " not on group by");
-		} else {
-			logger.info("ExactAggregation is true");
-			olapContext.storageContext.markExactAggregation();
-		}
-	}
+        if (derivedPostAggregation.size() > 0) {
+            logger.info("ExactAggregation is false due to derived " + derivedPostAggregation + " require post aggregation");
+        } else if (columnNotOnGroupBy.size() > 0) {
+            logger.info("ExactAggregation is false due to " + columnNotOnGroupBy + " not on group by");
+        } else {
+            logger.info("ExactAggregation is true");
+            olapContext.storageContext.markExactAggregation();
+        }
+    }
 
-	private boolean containsAll(Collection<TblColRef> groupByColumns,
-			TblColRef[] columns) {
-		for (TblColRef col : columns) {
-			if (groupByColumns.contains(col) == false)
-				return false;
-		}
-		return true;
-	}
+    private boolean containsAll(Collection<TblColRef> groupByColumns, TblColRef[] columns) {
+        for (TblColRef col : columns) {
+            if (groupByColumns.contains(col) == false)
+                return false;
+        }
+        return true;
+    }
 
-	@SuppressWarnings("unchecked")
-	private Set<TblColRef> findSingleValueColumns(TupleFilter filter) {
-		Collection<? extends TupleFilter> toCheck;
-		if (filter instanceof CompareTupleFilter) {
-			toCheck = Collections.singleton(filter);
-		} else if (filter instanceof LogicalTupleFilter
-				&& filter.getOperator() == FilterOperatorEnum.AND) {
-			toCheck = filter.getChildren();
-		} else {
-			return (Set<TblColRef>) Collections.EMPTY_SET;
-		}
+    @SuppressWarnings("unchecked")
+    private Set<TblColRef> findSingleValueColumns(TupleFilter filter) {
+        Collection<? extends TupleFilter> toCheck;
+        if (filter instanceof CompareTupleFilter) {
+            toCheck = Collections.singleton(filter);
+        } else if (filter instanceof LogicalTupleFilter && filter.getOperator() == FilterOperatorEnum.AND) {
+            toCheck = filter.getChildren();
+        } else {
+            return (Set<TblColRef>) Collections.EMPTY_SET;
+        }
 
-		Set<TblColRef> result = Sets.newHashSet();
-		for (TupleFilter f : toCheck) {
-			if (f instanceof CompareTupleFilter) {
-				CompareTupleFilter compFilter = (CompareTupleFilter) f;
-				// is COL=const ?
-				if (compFilter.getOperator() == FilterOperatorEnum.EQ
-						&& compFilter.getValues().size() == 1
-						&& compFilter.getColumn() != null) {
-					result.add(compFilter.getColumn());
-				}
-			}
-		}
-		return result;
-	}
+        Set<TblColRef> result = Sets.newHashSet();
+        for (TupleFilter f : toCheck) {
+            if (f instanceof CompareTupleFilter) {
+                CompareTupleFilter compFilter = (CompareTupleFilter) f;
+                // is COL=const ?
+                if (compFilter.getOperator() == FilterOperatorEnum.EQ && compFilter.getValues().size() == 1 && compFilter.getColumn() != null) {
+                    result.add(compFilter.getColumn());
+                }
+            }
+        }
+        return result;
+    }
 
-	private void bindVariable(TupleFilter filter) {
-		if (filter == null) {
-			return;
-		}
+    private void bindVariable(TupleFilter filter) {
+        if (filter == null) {
+            return;
+        }
 
-		for (TupleFilter childFilter : filter.getChildren()) {
-			bindVariable(childFilter);
-		}
+        for (TupleFilter childFilter : filter.getChildren()) {
+            bindVariable(childFilter);
+        }
 
-		if (filter instanceof CompareTupleFilter && optiqContext != null) {
-			CompareTupleFilter compFilter = (CompareTupleFilter) filter;
-			for (Map.Entry<String, String> entry : compFilter.getVariables()
-					.entrySet()) {
-				String variable = entry.getKey();
-				Object value = optiqContext.get(variable);
-				if (value != null) {
-					compFilter.bindVariable(variable, value.toString());
-				}
+        if (filter instanceof CompareTupleFilter && optiqContext != null) {
+            CompareTupleFilter compFilter = (CompareTupleFilter) filter;
+            for (Map.Entry<String, String> entry : compFilter.getVariables().entrySet()) {
+                String variable = entry.getKey();
+                Object value = optiqContext.get(variable);
+                if (value != null) {
+                    compFilter.bindVariable(variable, value.toString());
+                }
 
-			}
-		}
-	}
+            }
+        }
+    }
 
-	private void setConnectionProperties() {
-		OptiqConnection conn = (OptiqConnection) optiqContext
-				.getQueryProvider();
-		Properties connProps = conn.getProperties();
+    private void setConnectionProperties() {
+        OptiqConnection conn = (OptiqConnection) optiqContext.getQueryProvider();
+        Properties connProps = conn.getProperties();
 
-		String propThreshold = connProps
-				.getProperty(OLAPQuery.PROP_SCAN_THRESHOLD);
-		int threshold = Integer.valueOf(propThreshold);
-		olapContext.storageContext.setThreshold(threshold);
-	}
+        String propThreshold = connProps.getProperty(OLAPQuery.PROP_SCAN_THRESHOLD);
+        int threshold = Integer.valueOf(propThreshold);
+        olapContext.storageContext.setThreshold(threshold);
+    }
 }

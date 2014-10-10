@@ -14,65 +14,60 @@ import org.apache.commons.lang3.StringUtils;
  * visible to this class.
  */
 public class HbaseConfigPrinter {
-	public static void main(String[] args) {
-		printConfigs();
-	}
+    public static void main(String[] args) {
+        printConfigs();
+    }
 
-	private static void printConfigs() {
-		System.out.println("export KYLIN_LD_LIBRARY_PATH="
-				+ ConfigLoader.LD_LIBRARY_PATH_LOADER.loadValue());
-		System.out.println("export KYLIN_HBASE_CLASSPATH="
-				+ ConfigLoader.HBASE_CLASSPATH_LOADER.loadValue());
-		System.out.println("export KYLIN_HBASE_CONF_PATH="
-				+ ConfigLoader.HBASE_CONF_FOLDER_LOADER.loadValue());
-	}
+    private static void printConfigs() {
+        System.out.println("export KYLIN_LD_LIBRARY_PATH=" + ConfigLoader.LD_LIBRARY_PATH_LOADER.loadValue());
+        System.out.println("export KYLIN_HBASE_CLASSPATH=" + ConfigLoader.HBASE_CLASSPATH_LOADER.loadValue());
+        System.out.println("export KYLIN_HBASE_CONF_PATH=" + ConfigLoader.HBASE_CONF_FOLDER_LOADER.loadValue());
+    }
 
-	@SuppressWarnings("unused")
-	private static void printAllEnv() {
-		for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
-			System.out.println("Key: " + entry.getKey());
-			System.out.println("Value: " + entry.getValue());
-			System.out.println();
-		}
-	}
+    @SuppressWarnings("unused")
+    private static void printAllEnv() {
+        for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
+            System.out.println("Key: " + entry.getKey());
+            System.out.println("Value: " + entry.getValue());
+            System.out.println();
+        }
+    }
 
-	enum ConfigLoader {
+    enum ConfigLoader {
 
-		LD_LIBRARY_PATH_LOADER {
-			@Override
-			public String loadValue() {
-				return System.getenv("LD_LIBRARY_PATH");
-			}
-		},
+        LD_LIBRARY_PATH_LOADER {
+            @Override
+            public String loadValue() {
+                return System.getenv("LD_LIBRARY_PATH");
+            }
+        },
 
-		HBASE_CLASSPATH_LOADER {
-			@Override
-			public String loadValue() {
-				return System.getenv("CLASSPATH");
-			}
-		},
+        HBASE_CLASSPATH_LOADER {
+            @Override
+            public String loadValue() {
+                return System.getenv("CLASSPATH");
+            }
+        },
 
-		HBASE_CONF_FOLDER_LOADER {
-			@Override
-			public String loadValue() {
-				String output = HBASE_CLASSPATH_LOADER.loadValue();
-				String[] paths = output.split(":");
-				StringBuilder sb = new StringBuilder();
+        HBASE_CONF_FOLDER_LOADER {
+            @Override
+            public String loadValue() {
+                String output = HBASE_CLASSPATH_LOADER.loadValue();
+                String[] paths = output.split(":");
+                StringBuilder sb = new StringBuilder();
 
-				for (String path : paths) {
-					path = path.trim();
-					File f = new File(path);
-					if (StringUtils.containsIgnoreCase(path, "conf")
-							&& f.exists() && f.isDirectory()
-							&& f.getName().equalsIgnoreCase("conf")) {
-						sb.append(":" + path);
-					}
-				}
-				return sb.toString();
-			}
-		};
+                for (String path : paths) {
+                    path = path.trim();
+                    File f = new File(path);
+                    if (StringUtils.containsIgnoreCase(path, "conf") && f.exists() && f.isDirectory() && f.getName().equalsIgnoreCase("conf")) {
+                        sb.append(":" + path);
+                    }
+                }
+                return sb.toString();
+            }
+        };
 
-		public abstract String loadValue();
-	}
+        public abstract String loadValue();
+    }
 
 }
