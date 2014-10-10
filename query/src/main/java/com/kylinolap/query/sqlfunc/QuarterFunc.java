@@ -18,27 +18,15 @@ package com.kylinolap.query.sqlfunc;
 
 import java.sql.Date;
 
-import net.hydromatic.optiq.runtime.SqlFunctions;
-import net.hydromatic.optiq.runtime.SqlFunctions.TimeUnitRange;
-
 /**
  * @author xjiang
  * 
  */
-public class QuarterFunc {
+public class QuarterFunc extends QuarterBase {
     private QuarterFunc() {
     }
 
     public static long eval(Date date) {
         throw new UnsupportedOperationException();
-    }
-    
-    public static void test() {
-        
-    }
-    
-    public static long eval(int date) {
-        long month = SqlFunctions.unixDateExtract(TimeUnitRange.MONTH, date);
-        return month / 4 + 1;
     }
 }
