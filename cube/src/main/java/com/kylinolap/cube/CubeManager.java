@@ -227,7 +227,8 @@ public class CubeManager {
 
         //delete cube instance and cube desc
         CubeInstance cube = getCube(cubeName);
-        store.deleteResource(cube.getDescriptor().getResourcePath());
+        if (cube.getDescriptor() != null)
+            store.deleteResource(cube.getDescriptor().getResourcePath());
         store.deleteResource(cube.getResourcePath());
 
         //delete cube from project
