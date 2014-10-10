@@ -108,7 +108,7 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
                 .isCubeInProject("alien", createdCube));
 
         CubeInstance droppedCube =
-                CubeManager.getInstance(this.getTestConfig()).dropCube("cube_in_alien_project");
+                CubeManager.getInstance(this.getTestConfig()).dropCube("cube_in_alien_project",true);
 
         assertTrue(createdCube == droppedCube);
         assertNull(CubeManager.getInstance(this.getTestConfig()).getCube("cube_in_alien_project"));
@@ -143,7 +143,7 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
         assertTrue(CubeManager.getInstance(this.getTestConfig()).listAllCubes().size() == originalCubeCount + 1);
 
         CubeInstance droppedCube =
-                CubeManager.getInstance(this.getTestConfig()).dropCube("new_cube_in_default");
+                CubeManager.getInstance(this.getTestConfig()).dropCube("new_cube_in_default",true);
 
         assertTrue(createdCube == droppedCube);
         assertNull(CubeManager.getInstance(this.getTestConfig()).getCube("new_cube_in_default"));
@@ -160,7 +160,7 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
         assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllCubes("default")
                 .contains(cube));
 
-        CubeManager.getInstance(getTestConfig()).dropCube(cube.getName());
+        CubeManager.getInstance(getTestConfig()).dropCube(cube.getName(),true);
 
         assertTrue(!ProjectManager.getInstance(this.getTestConfig())
                 .getCubesByTable("default", "test_kylin_fact").contains(cube));
