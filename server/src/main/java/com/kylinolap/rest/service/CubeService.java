@@ -234,7 +234,7 @@ public class CubeService extends BasicService {
         }
 
         this.releaseAllSegments(cube);
-        getCubeManager().dropCube(cube.getName());
+        getCubeManager().dropCube(cube.getName(),true);
         accessService.clean(cube, true);
     }
 

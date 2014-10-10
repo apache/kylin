@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+<head>
+    <title>Angular.js nvd3.js Pie Chart Directive</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF8">
+    <script src="js/angular.js"></script>
+    <script src="js/d3.js"></script>
+    <script src="js/nv.d3.js"></script>
+    <script src="../dist/angularjs-nvd3-directives.js"></script>
+    <link rel="stylesheet" href="stylesheets/nv.d3.css"/>
+    <script>
+        var app = angular.module("nvd3TestApp", ['nvd3ChartDirectives']);
+
+        function ExampleCtrl($scope){
+            $scope.exampleData = [
+                {
+                    key: "One",
+                    y: 5
+                },
+                {
+                    key: "Two",
+                    y: 2
+                },
+                {
+                    key: "Three",
+                    y: 9
+                },
+                {
+                    key: "Four",
+                    y: 7
+                },
+                {
+                    key: "Five",
+                    y: 4
+                },
+                {
+                    key: "Six",
+                    y: 3
+                },
+                {
+                    key: "Seven",
+                    y: 9
+                }
+            ];
+
+            $scope.xFunction = function(){
+                return function(d) {
+                    return d.key;
+                };
+            }
+            $scope.yFunction = function(){
+                return function(d) {
+                    return d.y;
+                };
+            }
+
+            $scope.descriptionFunction = function(){
+                return function(d){
+                    return d.key;
+                }
+            }
+        }
+    </script>
+
+</head>
+<body ng-app='nvd3TestApp'>
+
+<div ng-controller="ExampleCtrl">
+    <nvd3-pie-chart
+            data="exampleData"
+            id="exampleId"
+            margin="{left:0,top:0,bottom:0,right:0}"
+            x="xFunction()"
+            y="yFunction()"
+            showLabels="true"
+            pieLabelsOutside="false"
+            showValues="true"
+            labelType="percent">
+        <svg></svg>
+    </nvd3-pie-chart>
+</div>
+
+</body>
+</html>
