@@ -67,6 +67,7 @@ public class BuildOneCubeTest extends BuildCubeWithEngineTest {
         // buildOneCube();
     }
 
+    @SuppressWarnings("unused")
     private void buildOneCube() throws Exception {
         jobManager.startJobEngine(10);
         ArrayList<String> jobs = new ArrayList<String>();
