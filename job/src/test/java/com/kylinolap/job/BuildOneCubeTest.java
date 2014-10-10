@@ -41,7 +41,7 @@ public class BuildOneCubeTest extends BuildCubeWithEngineTest {
         }
 
         this.createTestMetadata();
-        initEnv(false);
+        initEnv();
 
         engineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
         jobManager = new JobManager("Build_One_Cube_Engine", engineConfig);
