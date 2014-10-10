@@ -116,7 +116,7 @@ source /tmp/kylin_retrieve.sh
 cd $KYLIN_HOME
 mvn test -Dtest=com.kylinolap.job.BuildOneCubeTest -DfailIfNoTests=false
 
-sudo -i "${CATALINA_HOME}/bin/shutdown.sh"
+sudo -i "${CATALINA_HOME}/bin/shutdown.sh" || true # avoid trapping
 cd $KYLIN_HOME/server/target
 WAR_NAME="kylin.war"
 rm -f $CATALINA_HOME/webapps/$WAR_NAME
