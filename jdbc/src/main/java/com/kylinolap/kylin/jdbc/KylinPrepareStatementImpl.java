@@ -35,27 +35,27 @@ import net.hydromatic.avatica.AvaticaResultSet;
  * Kylin prepare statement. <br>
  * Supported operations:
  * <ul>
- * 		<li>setString</li>
- * 		<li>setInt</li>
- * 		<li>setShort</li>
- * 		<li>setLong</li>
- * 		<li>setFloat</li>
- * 		<li>setDouble</li>
- * 		<li>setBoolean</li>
- * 		<li>setByte</li>
- * 		<li>setDate</li>
- * 		<li>setTime</li>
- * 		<li>setTimestamp</li>
+ * <li>setString</li>
+ * <li>setInt</li>
+ * <li>setShort</li>
+ * <li>setLong</li>
+ * <li>setFloat</li>
+ * <li>setDouble</li>
+ * <li>setBoolean</li>
+ * <li>setByte</li>
+ * <li>setDate</li>
+ * <li>setTime</li>
+ * <li>setTimestamp</li>
  * </ul>
  * 
  * @author xduo
- *
+ * 
  */
 public abstract class KylinPrepareStatementImpl extends
 		AvaticaPreparedStatement {
 
 	/**
-	 * Before real query, 
+	 * Before real query,
 	 */
 	protected AvaticaPrepareResult prequeryResult;
 

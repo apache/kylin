@@ -25,29 +25,29 @@ import net.hydromatic.linq4j.Enumerator;
  * Data set wrapper.
  * 
  * @author xduo
- *
+ * 
  */
 public class DataSet<E> {
 
-    private final List<ColumnMetaData> meta;
+	private final List<ColumnMetaData> meta;
 
-    private final Enumerator<E> enumerator;
+	private final Enumerator<E> enumerator;
 
-    /**
-     * @param meta
-     * @param enumerator
-     */
-    public DataSet(List<ColumnMetaData> meta, Enumerator<E> enumerator) {
-        this.meta = meta;
-        this.enumerator = enumerator;
-    }
+	/**
+	 * @param meta
+	 * @param enumerator
+	 */
+	public DataSet(List<ColumnMetaData> meta, Enumerator<E> enumerator) {
+		this.meta = meta;
+		this.enumerator = enumerator;
+	}
 
-    public List<ColumnMetaData> getMeta() {
-        return meta;
-    }
+	public List<ColumnMetaData> getMeta() {
+		return meta;
+	}
 
-    public Enumerator<E> getEnumerator() {
-        return enumerator;
-    }
+	public Enumerator<E> getEnumerator() {
+		return enumerator;
+	}
 
 }

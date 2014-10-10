@@ -16,6 +16,7 @@
 
 package com.kylinolap.kylin.jdbc;
 
+import java.util.Collection;
 import java.util.Iterator;
 
 import net.hydromatic.linq4j.Enumerator;
@@ -28,46 +29,56 @@ import net.hydromatic.linq4j.Enumerator;
  */
 public class KylinEnumerator<E> implements Enumerator<E> {
 
-    /**
-     * current row
-     */
-    private E current;
+	/**
+	 * current row
+	 */
+	private E current;
 
-    /**
-     * result iterator
-     */
-    private Iterator<E> cursor;
+	/**
+	 * data collection
+	 */
+	private Collection<E> dataCollection;
 
-    public KylinEnumerator(Iterator<E> cursor) {
-        if (null == cursor) {
-            throw new RuntimeException("Cursor can't be null");
-        }
-        this.cursor = cursor;
-    }
+	/**
+	 * result iterator
+	 */
+	private Iterator<E> cursor;
 
-    @Override
-    public E current() {
-        return current;
-    }
+	public KylinEnumerator(Collection<E> dataCollection) {
+		this.dataCollection = dataCollection;
+		this.cursor = this.dataCollection.iterator();
+		
+		if (null == this.cursor) {
+			throw new RuntimeException("Cursor can't be null");
+		}
+	}
 
-    @Override
-    public boolean moveNext() {
-        if (!cursor.hasNext()) {
-            return false;
-        }
+	@Override
+	public E current() {
+		return current;
+	}
 
-        current = cursor.next();
+	@Override
+	public boolean moveNext() {
+		if (!cursor.hasNext()) {
+			this.reset();
+			
+			return false;
+		}
 
-        return true;
-    }
+		current = cursor.next();
 
-    @Override
-    public void reset() {
-    }
+		return true;
+	}
 
-    @Override
-    public void close() {
-        //        cursor = null;
-    }
+	@Override
+	public void reset() {
+		this.cursor = this.dataCollection.iterator();
+	}
+
+	@Override
+	public void close() {
+		this.reset();
+	}
 
 }

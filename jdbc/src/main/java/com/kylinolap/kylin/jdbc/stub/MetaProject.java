@@ -23,40 +23,46 @@ import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaTable;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class MetaProject {
 
-    private final DataSet<MetaCatalog> metaCatalogs;
+	private final DataSet<MetaCatalog> metaCatalogs;
 
-    private final DataSet<MetaSchema> metaSchemas;
+	private final DataSet<MetaSchema> metaSchemas;
 
-    private final DataSet<MetaTable> metaTables;
+	private final DataSet<MetaTable> metaTables;
 
-    private final DataSet<MetaColumn> metaColumns;
+	private final DataSet<MetaColumn> metaColumns;
 
-    public MetaProject(DataSet<MetaCatalog> metaCatalogs, DataSet<MetaSchema> metaSchemas,
-            DataSet<MetaTable> metaTables, DataSet<MetaColumn> metaColumns) {
-        this.metaCatalogs = metaCatalogs;
-        this.metaSchemas = metaSchemas;
-        this.metaTables = metaTables;
-        this.metaColumns = metaColumns;
-    }
+	public MetaProject(DataSet<MetaCatalog> metaCatalogs,
+			DataSet<MetaSchema> metaSchemas, DataSet<MetaTable> metaTables,
+			DataSet<MetaColumn> metaColumns) {
+		this.metaCatalogs = metaCatalogs;
+		this.metaSchemas = metaSchemas;
+		this.metaTables = metaTables;
+		this.metaColumns = metaColumns;
+	}
 
-    public DataSet<MetaCatalog> getMetaCatalogs() {
-        return metaCatalogs;
-    }
+	public DataSet<MetaCatalog> getMetaCatalogs() {
+		return metaCatalogs;
+	}
 
-    public DataSet<MetaSchema> getMetaSchemas() {
-        return metaSchemas;
-    }
+	public DataSet<MetaSchema> getMetaSchemas() {
+		return metaSchemas;
+	}
 
-    public DataSet<MetaTable> getMetaTables() {
-        return metaTables;
-    }
+	public DataSet<MetaTable> getMetaTables() {
+		return metaTables;
+	}
 
-    public DataSet<MetaColumn> getMetaColumns() {
-        return metaColumns;
-    }
+	public DataSet<MetaColumn> getMetaColumns() {
+		return metaColumns;
+	}
+
+	@Override
+	public String toString() {
+		return "MetaProject [metaSchemas=" + metaSchemas + "]";
+	}
 
 }
