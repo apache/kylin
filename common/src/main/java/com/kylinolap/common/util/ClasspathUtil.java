@@ -28,6 +28,7 @@ import java.net.URLClassLoader;
 public class ClasspathUtil {
 
     public static void addClasspath(String path) throws Exception {
+        System.out.println("Adding path " + path + " to class path");
         File file = new File(path);
 
         if (file.exists()) {

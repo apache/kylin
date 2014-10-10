@@ -1,0 +1,12 @@
+<ng-form name = "innerform">
+<input name="typeahead" class="form-control" type="text" ng-model="model"
+       placeholder="{{prompt}}" ng-keydown="selected=false" ng-keyup="keyListener($event)" ng-required="{{required}}"/>
+<div ng-hide="!model.length || selected">
+    <div ng-repeat="item in items | filter:{name:model} | orderBy:'name'"
+         style="cursor:pointer; "
+         ng-click="handleSelection()"
+         ng-class="{'bg-primary': isCurrent(item)}"
+         ng-mouseover="setCurrent(item)">{{item[title]}}
+    </div>
+</div>
+</ng-form>

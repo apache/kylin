@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+<head>
+    <title>Angular.js nvd3.js Line Chart Directive</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF8">
+    <script src="js/angular.js"></script>
+    <script src="js/d3.js"></script>
+    <script src="js/nv.d3.js"></script>
+    <script src="js/moment.js"></script>
+    <script src="../dist/angularjs-nvd3-directives.js"></script>
+    <link rel="stylesheet" href="stylesheets/nv.d3.css"/>
+    <script>
+        var app = angular.module("nvd3TestApp", ['nvd3ChartDirectives']);
+
+        app.directive('nvd3RepeatChart', function ($compile) {
+            var template = '<nvd3-line-chart data="chartData" id="exampleId" width="800" height="400" showXAxis="true" showYAxis="true" tooltips="true" interactive="true" margin="{left:50,top:50,bottom:50,right:50}" > <svg></svg> </nvd3-line-chart>';
+            return {
+                restrict: "E",
+                rep1ace: true,
+                scope: {
+                    data:'='
+                },
+                compile: function (element, attrs) {
+                    scope.chartData = data;
+                    var x = angular.element('<nvd3-line-chart data="chartData" id="exampleId" width="800" height="400" showXAxis="true" showYAxis="true" tooltips="true" interactive="true" margin="{left:50,top:50,bottom:50,right:50}" > <svg></svg> </nvd3-line-chart>');
+                    element.append(x);
+                    $compile(x);
+                }
+            }
+        });
+
+        function ExampleCtrl($scope){
+            $scope.exampleDatas = [
+                {"key":"Stream0","values":[{"x":0,"y":0.11202022216748447},{"x":1,"y":0.18210439675021917},{"x":2,"y":0.1749461018014699},{"x":3,"y":0.16745319645851853},{"x":4,"y":0.15597335710190238},{"x":5,"y":0.10864052760880441},{"x":6,"y":0.15779187045991422},{"x":7,"y":0.1280471979873255},{"x":8,"y":0.1275304277194664},{"x":9,"y":0.1368145151762292},{"x":10,"y":0.18007409486453982},{"x":11,"y":0.10525933781173082},{"x":12,"y":0.24307308361125324},{"x":13,"y":0.18451326762493261},{"x":14,"y":0.18820573857522288},{"x":15,"y":0.11912847666638085},{"x":16,"y":0.10938216055725342},{"x":17,"y":0.19836232458345682},{"x":18,"y":0.17060091027571767},{"x":19,"y":0.1507065103490858}]},
+                {"key":"Stream1","values":[{"x":0,"y":1.2461429820111032},{"x":1,"y":1.5547242522959712},{"x":2,"y":1.3611401831020646},{"x":3,"y":1.3142089892043882},{"x":4,"y":1.1609356196394387},{"x":5,"y":0.180540407914486},{"x":6,"y":0.11197289436141909},{"x":7,"y":0.12293253964610426},{"x":8,"y":0.11363472106245147},{"x":9,"y":0.1635834126783459},{"x":10,"y":0.16399837256298186},{"x":11,"y":0.16194022783554066},{"x":12,"y":0.10689478984998},{"x":13,"y":0.11321467257997972},{"x":14,"y":0.17276834286866996},{"x":15,"y":0.1908953342921736},{"x":16,"y":0.19875109071969232},{"x":17,"y":0.5814536357892204},{"x":18,"y":2.2986587659320725},{"x":19,"y":3.547639947916671}]},
+                {"key":"Stream2","values":[{"x":0,"y":0.2772845612888777},{"x":1,"y":0.8265276948487991},{"x":2,"y":1.0876511640794808},{"x":3,"y":0.5653209631365128},{"x":4,"y":0.2485585226267344},{"x":5,"y":0.1616426795042487},{"x":6,"y":0.12149041296499158},{"x":7,"y":0.17316134090862023},{"x":8,"y":0.23030283265947082},{"x":9,"y":0.6389507079322726},{"x":10,"y":0.1653847193304205},{"x":11,"y":0.12120783436264082},{"x":12,"y":0.17193685386303442},{"x":13,"y":0.2627551870510155},{"x":14,"y":1.6511426060927212},{"x":15,"y":0.19438468896816716},{"x":16,"y":0.16203280119314312},{"x":17,"y":0.10520605633776596},{"x":18,"y":0.13348730609286577},{"x":19,"y":0.13448515716008844}]}
+            ];
+
+            $scope.xFunction = function(){
+                return function(d){
+                    return d.x;
+                }
+            }
+
+            $scope.yFunction = function(){
+                return function(d){
+                    return d.y;
+                }
+            }
+        }
+    </script>
+
+</head>
+<body ng-app='nvd3TestApp'>
+<div ng-controller="ExampleCtrl">
+    <div ng-repeat="dta in exampleDatas">
+        <div nvd3-repeat-chart data="dta"></div>
+    </div>
+</div>
+
+</body>
+</html>

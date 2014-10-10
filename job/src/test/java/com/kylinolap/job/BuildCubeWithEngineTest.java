@@ -77,10 +77,10 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
     String[] TABLE_NAMES = new String[] { TABLE_CAL_DT, TABLE_CATEGORY_GROUPINGS, TABLE_KYLIN_FACT,
             TABLE_SELLER_TYPE_DIM, TABLE_SITES };
 
-    private JobManager jobManager;
-    private JobEngineConfig engineConfig;
-    private String jobJarName;
-    private String coprocessorJarName;
+    protected JobManager jobManager;
+    protected JobEngineConfig engineConfig;
+    protected String jobJarName;
+    protected String coprocessorJarName;
 
     public void scpFilesToHadoopCli(String[] files, String remoteDir) throws Exception {
         for (String file : files) {
@@ -222,17 +222,11 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
     }
 
     public class VerboseConsumer implements CliOutputConsumer {
-        /* (non-Javadoc)
-         * @see com.kylinolap.common.util.StreamLineConsumer#consume(java.lang.String)
-         */
         @Override
         public void consume(String message) {
             logger.debug(message);
         }
 
-        /* (non-Javadoc)
-         * @see com.kylinolap.common.util.SSHLogger#log(java.lang.String)
-         */
         @Override
         public void log(String message) {
             consume(message);
@@ -312,16 +306,10 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         this.execHiveCommand(this.generateLoadDataHql(TABLE_SITES));
     }
 
-    private void initEnv() throws Exception {
+    protected void initEnv() throws Exception {
         // create log dir
         this.execCommand("mkdir -p /tmp/kylin/logs");
-
         retrieveJarName();
-
-        if (System.getProperty("skipDeployData") != null) {
-            return;
-        }
-
         cleanUp();
 
         // install metadata to hbase
@@ -335,10 +323,11 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
 
         deployJarToHadoopCli();
         deployJarToLocalDir();
+
         deployConfigFile();
     }
 
-    private void prepareTestData(String joinType) throws Exception {
+    protected void prepareTestData(String joinType) throws Exception {
         if (joinType.equalsIgnoreCase("inner")) {
             //put data to cli
             FactTableGenerator.generate("test_kylin_cube_with_slr_empty", "10000", "1", null, "inner");
@@ -360,7 +349,6 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         initEnv();
 
         engineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
-
         jobManager = new JobManager("Build_Test_Cube_Engine", engineConfig);
         jobManager.deleteAllJobs();
     }
@@ -471,7 +459,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         waitCubeBuilt(jobs);
     }
 
-    private void waitCubeBuilt(List<String> jobs) throws Exception {
+    protected void waitCubeBuilt(List<String> jobs) throws Exception {
 
         boolean allFinished = false;
         while (!allFinished) {
@@ -493,7 +481,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
             assertEquals("Job fail - " + job, JobStatusEnum.FINISHED, jobManager.getJob(job).getStatus());
     }
 
-    private List<String> submitJob(String cubename, long startDate, long endDate, CubeBuildTypeEnum jobType)
+    protected List<String> submitJob(String cubename, long startDate, long endDate, CubeBuildTypeEnum jobType)
             throws SchedulerException, IOException, InvalidJobInstanceException, CubeIntegrityException {
         List<String> jobList = new ArrayList<String>();
 

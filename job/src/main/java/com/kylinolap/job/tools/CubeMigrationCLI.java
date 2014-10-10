@@ -73,7 +73,7 @@ public class CubeMigrationCLI {
         if (cube.getStatus() != CubeStatusEnum.READY)
             throw new IllegalStateException("Cannot migrate cube that is not in READY state.");
 
-        String hbaseUrl = checkAndGetHbaseUrl();
+        checkAndGetHbaseUrl();
 
         hbaseAdmin = new HBaseAdmin(HBaseConfiguration.create());
         hdfsFS = FileSystem.get(new Configuration());
@@ -91,7 +91,6 @@ public class CubeMigrationCLI {
         } else {
             showOpts();
         }
-
     }
 
     public static void moveCube(String srcCfgUri, String dstCfgUri, String cubeName, String projectName,
