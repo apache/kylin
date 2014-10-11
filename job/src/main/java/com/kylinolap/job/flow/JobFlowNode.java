@@ -42,7 +42,7 @@ import com.kylinolap.job.engine.JobEngineConfig;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class JobFlowNode implements InterruptableJob {
 
@@ -51,7 +51,9 @@ public class JobFlowNode implements InterruptableJob {
     protected JobDetail currentJobDetail;
     protected IJobCommand jobCmd;
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.quartz.Job#execute(org.quartz.JobExecutionContext)
      */
     @Override
@@ -66,9 +68,7 @@ public class JobFlowNode implements InterruptableJob {
         KylinConfig config = engineConfig.getConfig();
 
         try {
-            JobInstance jobInstance =
-                    updateJobStep(jobInstanceID, jobStepID, config, JobStepStatusEnum.RUNNING,
-                            System.currentTimeMillis(), null, null);
+            JobInstance jobInstance = updateJobStep(jobInstanceID, jobStepID, config, JobStepStatusEnum.RUNNING, System.currentTimeMillis(), null, null);
 
             jobCmd = JobCommandFactory.getJobCommand(command, jobInstance, jobStepID, engineConfig);
             data.put(JobConstants.PROP_JOB_CMD_EXECUTOR, jobCmd);
@@ -81,8 +81,7 @@ public class JobFlowNode implements InterruptableJob {
             }
 
             int exitCode = output.getExitCode();
-            updateJobStep(jobInstanceID, jobStepID, config, output.getStatus(), null,
-                    System.currentTimeMillis(), output.getOutput());
+            updateJobStep(jobInstanceID, jobStepID, config, output.getStatus(), null, System.currentTimeMillis(), output.getOutput());
             context.setResult(exitCode);
 
             log.info("Job status for " + context.getJobDetail().getKey() + " has been updated.");
@@ -99,9 +98,7 @@ public class JobFlowNode implements InterruptableJob {
     public void interrupt() throws UnableToInterruptJobException {
     }
 
-    protected JobInstance updateJobStep(String jobInstanceUuid, int jobInstanceStepSeqId, KylinConfig config,
-            JobStepStatusEnum newStatus, Long execStartTime, Long execEndTime, String output)
-            throws IOException {
+    protected JobInstance updateJobStep(String jobInstanceUuid, int jobInstanceStepSeqId, KylinConfig config, JobStepStatusEnum newStatus, Long execStartTime, Long execEndTime, String output) throws IOException {
         // set step status to running
         JobInstance jobInstance = JobDAO.getInstance(config).getJob(jobInstanceUuid);
         JobStep currentStep = null;
@@ -121,14 +118,12 @@ public class JobFlowNode implements InterruptableJob {
             }
             if (null != output) {
                 hasChange = true;
-                //currentStep.setCmdOutput(output);
+                // currentStep.setCmdOutput(output);
                 JobDAO.getInstance(config).saveJobOutput(currentStep, output);
             }
-            if (JobStepStatusEnum.WAITING == currentStatus
-                    && (JobStepStatusEnum.RUNNING == newStatus || JobStepStatusEnum.FINISHED == newStatus)) {
+            if (JobStepStatusEnum.WAITING == currentStatus && (JobStepStatusEnum.RUNNING == newStatus || JobStepStatusEnum.FINISHED == newStatus)) {
                 hasChange = true;
-                currentStep
-                        .setExecWaitTime((System.currentTimeMillis() - currentStep.getExecStartTime()) / 1000);
+                currentStep.setExecWaitTime((System.currentTimeMillis() - currentStep.getExecStartTime()) / 1000);
             }
             if (null != newStatus) {
                 hasChange = true;
@@ -143,17 +138,13 @@ public class JobFlowNode implements InterruptableJob {
         }
 
         if (null != execEndTime) {
-            JobEngine.JOB_DURATION.put(
-                    JobInstance.getStepIdentity(jobInstance, currentStep) + " - "
-                            + String.valueOf(currentStep.getExecStartTime()),
-                    (double) (currentStep.getExecEndTime() - currentStep.getExecStartTime()) / 1000);
+            JobEngine.JOB_DURATION.put(JobInstance.getStepIdentity(jobInstance, currentStep) + " - " + String.valueOf(currentStep.getExecStartTime()), (double) (currentStep.getExecEndTime() - currentStep.getExecStartTime()) / 1000);
         }
 
         return jobInstance;
     }
 
-    protected void handleException(String jobInstanceUuid, int jobInstanceStepSeqId, KylinConfig config,
-            Throwable t) {
+    protected void handleException(String jobInstanceUuid, int jobInstanceStepSeqId, KylinConfig config, Throwable t) {
         log.error(t.getLocalizedMessage(), t);
         String exceptionMsg = "Failed with Exception:" + ExceptionUtils.getFullStackTrace(t);
         try {

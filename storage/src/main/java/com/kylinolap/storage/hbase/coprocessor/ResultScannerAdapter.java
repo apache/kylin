@@ -29,7 +29,7 @@ import com.google.common.collect.Lists;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class ResultScannerAdapter implements ResultScanner {
 

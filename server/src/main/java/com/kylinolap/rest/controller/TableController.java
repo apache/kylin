@@ -46,7 +46,7 @@ import com.kylinolap.rest.service.CubeService;
 
 /**
  * @author xduo
- *
+ * 
  */
 @Controller
 @RequestMapping(value = "/tables")
@@ -58,7 +58,7 @@ public class TableController extends BasicController {
 
     /**
      * Get available table list of the input database
-     *
+     * 
      * @return Table metadata array
      * @throws IOException
      */
@@ -80,7 +80,7 @@ public class TableController extends BasicController {
 
     /**
      * Get available table list of the input database
-     *
+     * 
      * @return Table metadata array
      * @throws IOException
      */
@@ -92,7 +92,7 @@ public class TableController extends BasicController {
 
     /**
      * Get available table list of the input database
-     *
+     * 
      * @return Table metadata array
      * @throws IOException
      */
@@ -127,8 +127,7 @@ public class TableController extends BasicController {
      */
     @RequestMapping(value = "/{tableNames}/cardinality", method = { RequestMethod.PUT })
     @ResponseBody
-    public CardinalityRequest generateCardinality(@PathVariable String tableNames,
-            @RequestBody CardinalityRequest request) {
+    public CardinalityRequest generateCardinality(@PathVariable String tableNames, @RequestBody CardinalityRequest request) {
         String[] tables = tableNames.split(",");
         for (String table : tables) {
             cubeMgmtService.generateCardinality(table.trim(), request.getFormat(), request.getDelimiter());
@@ -153,7 +152,7 @@ public class TableController extends BasicController {
             if (exd == null) {
                 descs.add(table);
             } else {
-                //Clone TableDesc
+                // Clone TableDesc
                 TableDescResponse rtableDesc = new TableDescResponse(table);
                 rtableDesc.setDescExd(exd);
                 if (exd.containsKey(MetadataConstances.TABLE_EXD_CARDINALITY)) {
@@ -167,8 +166,7 @@ public class TableController extends BasicController {
                             if (cards.length > i) {
                                 cardinality.put(columnDesc.getName(), Long.parseLong(cards[i]));
                             } else {
-                                logger.error("The result cardinality is not identical with hive table metadata, cardinaly : "
-                                        + scard + " column array length: " + cdescs.length);
+                                logger.error("The result cardinality is not identical with hive table metadata, cardinaly : " + scard + " column array length: " + cdescs.length);
                                 break;
                             }
                         }

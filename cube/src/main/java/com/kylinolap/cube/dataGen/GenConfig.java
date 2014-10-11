@@ -1,15 +1,15 @@
 package com.kylinolap.cube.dataGen;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.kylinolap.common.util.JsonUtil;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * Created by honma on 5/29/14.
@@ -20,7 +20,7 @@ public class GenConfig {
     @JsonProperty("columnConfigs")
     private ArrayList<ColumnConfig> columnConfigs;
 
-    private HashMap<String,ColumnConfig> cache = new HashMap<String, ColumnConfig>();
+    private HashMap<String, ColumnConfig> cache = new HashMap<String, ColumnConfig>();
 
     public ArrayList<ColumnConfig> getColumnConfigs() {
         return columnConfigs;
@@ -30,26 +30,23 @@ public class GenConfig {
         this.columnConfigs = columnConfigs;
     }
 
-    public ColumnConfig getColumnConfigByName(String columnName)
-    {
+    public ColumnConfig getColumnConfigByName(String columnName) {
         columnName = columnName.toLowerCase();
 
-        if(cache.containsKey(columnName))
+        if (cache.containsKey(columnName))
             return cache.get(columnName);
 
-        for(ColumnConfig cConfig : columnConfigs)
-        {
-            if(cConfig.getColumnName().toLowerCase().equals(columnName)) {
-                cache.put(columnName,cConfig);
+        for (ColumnConfig cConfig : columnConfigs) {
+            if (cConfig.getColumnName().toLowerCase().equals(columnName)) {
+                cache.put(columnName, cConfig);
                 return cConfig;
             }
         }
-        cache.put(columnName,null);
+        cache.put(columnName, null);
         return null;
     }
 
-    public static GenConfig loadConfig(InputStream stream)
-    {
+    public static GenConfig loadConfig(InputStream stream) {
         try {
             GenConfig config = JsonUtil.readValue(stream, GenConfig.class);
             return config;
@@ -64,5 +61,3 @@ public class GenConfig {
         return null;
     }
 }
-
-

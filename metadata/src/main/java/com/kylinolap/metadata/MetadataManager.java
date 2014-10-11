@@ -46,9 +46,9 @@ import com.kylinolap.metadata.validation.ValidateContext;
 /**
  * Serves (and caches) cube metadata for Kylin instance.
  * <p/>
- * Also provides a ResourceStore for general purpose data persistence. Cube metadata is serialized
- * as JSON and stored in ResourceStore.
- *
+ * Also provides a ResourceStore for general purpose data persistence. Cube
+ * metadata is serialized as JSON and stored in ResourceStore.
+ * 
  * @author yangli9
  */
 public class MetadataManager {
@@ -56,17 +56,14 @@ public class MetadataManager {
     private static final Logger logger = LoggerFactory.getLogger(MetadataManager.class);
 
     private static final Serializer<CubeDesc> CUBE_SERIALIZER = new JsonSerializer<CubeDesc>(CubeDesc.class);
-    private static final Serializer<TableDesc> TABLE_SERIALIZER = new JsonSerializer<TableDesc>(
-            TableDesc.class);
-    private static final Serializer<InvertedIndexDesc> IIDESC_SERIALIZER =
-            new JsonSerializer<InvertedIndexDesc>(InvertedIndexDesc.class);
+    private static final Serializer<TableDesc> TABLE_SERIALIZER = new JsonSerializer<TableDesc>(TableDesc.class);
+    private static final Serializer<InvertedIndexDesc> IIDESC_SERIALIZER = new JsonSerializer<InvertedIndexDesc>(InvertedIndexDesc.class);
 
     TypeReference<HashMap<String, Object>> typeRef = new TypeReference<HashMap<String, Object>>() {
     };
 
     // static cached instances
-    private static final ConcurrentHashMap<KylinConfig, MetadataManager> CACHE =
-            new ConcurrentHashMap<KylinConfig, MetadataManager>();
+    private static final ConcurrentHashMap<KylinConfig, MetadataManager> CACHE = new ConcurrentHashMap<KylinConfig, MetadataManager>();
 
     public static MetadataManager getInstance(KylinConfig config) {
         MetadataManager r = CACHE.get(config);
@@ -101,17 +98,13 @@ public class MetadataManager {
 
     private KylinConfig config;
     // table name ==> SourceTable
-    private SingleValueCache<String, TableDesc> srcTableMap = new SingleValueCache<String, TableDesc>(
-            Broadcaster.TYPE.METADATA);
+    private SingleValueCache<String, TableDesc> srcTableMap = new SingleValueCache<String, TableDesc>(Broadcaster.TYPE.METADATA);
     // name ==> CubeDesc
-    private SingleValueCache<String, CubeDesc> cubeDescMap = new SingleValueCache<String, CubeDesc>(
-            Broadcaster.TYPE.METADATA);
+    private SingleValueCache<String, CubeDesc> cubeDescMap = new SingleValueCache<String, CubeDesc>(Broadcaster.TYPE.METADATA);
     // name ==> InvertedIndexDesc
-    private SingleValueCache<String, InvertedIndexDesc> iiDescMap =
-            new SingleValueCache<String, InvertedIndexDesc>(Broadcaster.TYPE.METADATA);
+    private SingleValueCache<String, InvertedIndexDesc> iiDescMap = new SingleValueCache<String, InvertedIndexDesc>(Broadcaster.TYPE.METADATA);
     // name => value
-    private SingleValueCache<String, Map<String, String>> srcTableExdMap =
-            new SingleValueCache<String, Map<String, String>>(Broadcaster.TYPE.METADATA);
+    private SingleValueCache<String, Map<String, String>> srcTableExdMap = new SingleValueCache<String, Map<String, String>>(Broadcaster.TYPE.METADATA);
 
     private MetadataManager(KylinConfig config) throws IOException {
         init(config);
@@ -135,7 +128,7 @@ public class MetadataManager {
 
     /**
      * Get Table Desc object
-     *
+     * 
      * @param tableName
      * @return
      */
@@ -145,9 +138,8 @@ public class MetadataManager {
     }
 
     /**
-     * Get table extended info.
-     * Keys are defined in {@link MetadataConstances}
-     *
+     * Get table extended info. Keys are defined in {@link MetadataConstances}
+     * 
      * @param tableName
      * @return
      */
@@ -190,7 +182,7 @@ public class MetadataManager {
 
     /**
      * Create a new CubeDesc
-     *
+     * 
      * @param cubeDesc
      * @return
      * @throws IOException
@@ -206,7 +198,7 @@ public class MetadataManager {
         } catch (IllegalStateException e) {
             cubeDesc.addError(e.getMessage(), true);
         }
-        //Check base validation
+        // Check base validation
         if (!cubeDesc.getError().isEmpty()) {
             return cubeDesc;
         }
@@ -237,14 +229,11 @@ public class MetadataManager {
 
     private void reloadAllSourceTableExd() throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Reloading SourceTable exd info from folder "
-                + store.getReadableResourcePath(ResourceStore.TABLE_EXD_RESOURCE_ROOT));
+        logger.debug("Reloading SourceTable exd info from folder " + store.getReadableResourcePath(ResourceStore.TABLE_EXD_RESOURCE_ROOT));
 
         srcTableExdMap.clear();
 
-        List<String> paths =
-                store.collectResourceRecursively(ResourceStore.TABLE_EXD_RESOURCE_ROOT,
-                        MetadataConstances.FILE_SURFIX);
+        List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_EXD_RESOURCE_ROOT, MetadataConstances.FILE_SURFIX);
         for (String path : paths) {
             Map<String, String> attrContainer = new HashMap<String, String>();
             String tableName = loadSourceTableExd(getStore(), path, attrContainer);
@@ -255,14 +244,11 @@ public class MetadataManager {
 
     private void reloadAllSourceTable() throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Reloading SourceTable from folder "
-                + store.getReadableResourcePath(ResourceStore.TABLE_RESOURCE_ROOT));
+        logger.debug("Reloading SourceTable from folder " + store.getReadableResourcePath(ResourceStore.TABLE_RESOURCE_ROOT));
 
         srcTableMap.clear();
 
-        List<String> paths =
-                store.collectResourceRecursively(ResourceStore.TABLE_RESOURCE_ROOT,
-                        MetadataConstances.FILE_SURFIX);
+        List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_RESOURCE_ROOT, MetadataConstances.FILE_SURFIX);
         for (String path : paths) {
             loadSourceTable(path);
         }
@@ -274,8 +260,7 @@ public class MetadataManager {
     /**
      * return table name
      */
-    public static String loadSourceTableExd(ResourceStore store, String path,
-            Map<String, String> attrContainer) throws IOException {
+    public static String loadSourceTableExd(ResourceStore store, String path, Map<String, String> attrContainer) throws IOException {
 
         logger.debug("Loading SourceTable exd " + path);
         InputStream is = store.getResource(path);
@@ -311,14 +296,11 @@ public class MetadataManager {
 
     private void reloadAllCubeDesc() throws IOException {
         ResourceStore store = getStore();
-        logger.info("Reloading Cube Metadata from folder "
-                + store.getReadableResourcePath(ResourceStore.CUBE_DESC_RESOURCE_ROOT));
+        logger.info("Reloading Cube Metadata from folder " + store.getReadableResourcePath(ResourceStore.CUBE_DESC_RESOURCE_ROOT));
 
         cubeDescMap.clear();
 
-        List<String> paths =
-                store.collectResourceRecursively(ResourceStore.CUBE_DESC_RESOURCE_ROOT,
-                        MetadataConstances.FILE_SURFIX);
+        List<String> paths = store.collectResourceRecursively(ResourceStore.CUBE_DESC_RESOURCE_ROOT, MetadataConstances.FILE_SURFIX);
         for (String path : paths) {
             CubeDesc desc;
             try {
@@ -328,8 +310,7 @@ public class MetadataManager {
                 continue;
             }
             if (path.equals(desc.getResourcePath()) == false) {
-                logger.error("Skip suspicious desc at " + path + ", " + desc + " should be at "
-                        + desc.getResourcePath());
+                logger.error("Skip suspicious desc at " + path + ", " + desc + " should be at " + desc.getResourcePath());
                 continue;
             }
             if (cubeDescMap.containsKey(desc.getName())) {
@@ -364,8 +345,7 @@ public class MetadataManager {
 
     private void reloadAllInvertedIndexDesc() throws IOException {
         ResourceStore store = getStore();
-        logger.info("Reloading Inverted Index Desc from folder "
-                + store.getReadableResourcePath(ResourceStore.IIDESC_RESOURCE_ROOT));
+        logger.info("Reloading Inverted Index Desc from folder " + store.getReadableResourcePath(ResourceStore.IIDESC_RESOURCE_ROOT));
 
         iiDescMap.clear();
 
@@ -379,8 +359,7 @@ public class MetadataManager {
                 continue;
             }
             if (path.equals(desc.getResourcePath()) == false) {
-                logger.error("Skip suspicious desc at " + path + ", " + desc + " should be at "
-                        + desc.getResourcePath());
+                logger.error("Skip suspicious desc at " + path + ", " + desc + " should be at " + desc.getResourcePath());
                 continue;
             }
             if (iiDescMap.containsKey(desc.getName())) {
@@ -409,15 +388,14 @@ public class MetadataManager {
     }
 
     /**
-     * Update CubeDesc with the input.
-     * Broadcast the event into cluster
-     *
+     * Update CubeDesc with the input. Broadcast the event into cluster
+     * 
      * @param desc
      * @return
      * @throws IOException
      */
     public CubeDesc updateCubeDesc(CubeDesc desc) throws IOException {
-        //Validate CubeDesc
+        // Validate CubeDesc
         if (desc.getUuid() == null || desc.getName() == null) {
             throw new IllegalArgumentException();
         }
@@ -445,44 +423,43 @@ public class MetadataManager {
 
         desc.setSignature(desc.calculateSignature());
 
-        //Save Source
+        // Save Source
         String path = desc.getResourcePath();
         getStore().putResource(path, desc, CUBE_SERIALIZER);
 
-        //Reload the CubeDesc
+        // Reload the CubeDesc
         CubeDesc ndesc = loadCubeDesc(path);
-        //Here replace the old one
+        // Here replace the old one
         cubeDescMap.put(ndesc.getName(), desc);
 
         return ndesc;
     }
 
     /**
-     * Reload CubeDesc from resource store
-     * It will be triggered by an desc update event.
-     *
+     * Reload CubeDesc from resource store It will be triggered by an desc
+     * update event.
+     * 
      * @param name
      * @throws IOException
      */
     public CubeDesc reloadCubeDesc(String name) throws IOException {
 
-        //Save Source
+        // Save Source
         String path = CubeDesc.getCubeDescResourcePath(name);
 
-        //Reload the CubeDesc
+        // Reload the CubeDesc
         CubeDesc ndesc = loadCubeDesc(path);
 
-        //Here replace the old one
+        // Here replace the old one
         cubeDescMap.put(ndesc.getName(), ndesc);
         return ndesc;
     }
 
     /**
-     * Tell CubeManager that the cube instance has changed.
-     * The cube info will be stored
-     * Reload the cube desc and source table
-     * A broadcast must be sent out
-     *
+     * Tell CubeManager that the cube instance has changed. The cube info will
+     * be stored Reload the cube desc and source table A broadcast must be sent
+     * out
+     * 
      * @return
      * @throws IOException
      */

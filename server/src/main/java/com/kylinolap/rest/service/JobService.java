@@ -43,7 +43,7 @@ import com.kylinolap.rest.response.MetricsResponse;
 
 /**
  * @author ysong1
- *
+ * 
  */
 @Component("jobService")
 public class JobService extends BasicService {
@@ -53,9 +53,7 @@ public class JobService extends BasicService {
     @Autowired
     private AccessService permissionService;
 
-    public List<JobInstance> listAllJobs(final String cubeName, final String projectName,
-            final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue)
-            throws IOException, JobException {
+    public List<JobInstance> listAllJobs(final String cubeName, final String projectName, final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue) throws IOException, JobException {
         Integer limit = (null == limitValue) ? 30 : limitValue;
         Integer offset = (null == offsetValue) ? 0 : offsetValue;
         List<JobInstance> jobs = listAllJobs(cubeName, projectName, statusList);
@@ -71,8 +69,7 @@ public class JobService extends BasicService {
         return jobs.subList(offset, offset + limit);
     }
 
-    public List<JobInstance> listAllJobs(String cubeName, String projectName, List<JobStatusEnum> statusList)
-            throws IOException, JobException {
+    public List<JobInstance> listAllJobs(String cubeName, String projectName, List<JobStatusEnum> statusList) throws IOException, JobException {
         List<JobInstance> jobs = new ArrayList<JobInstance>();
         jobs.addAll(this.getJobManager().listJobs(cubeName, projectName));
 
@@ -97,26 +94,20 @@ public class JobService extends BasicService {
         return results;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public String submitJob(CubeInstance cube, long startDate, long endDate, CubeBuildTypeEnum buildType)
-            throws IOException, JobException, InvalidJobInstanceException {
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
+    public String submitJob(CubeInstance cube, long startDate, long endDate, CubeBuildTypeEnum buildType) throws IOException, JobException, InvalidJobInstanceException {
 
         List<JobInstance> jobInstances = this.getJobManager().listJobs(cube.getName(), null);
         for (JobInstance jobInstance : jobInstances) {
-            if (jobInstance.getStatus() == JobStatusEnum.PENDING
-                    || jobInstance.getStatus() == JobStatusEnum.RUNNING) {
-                throw new JobException("The cube " + cube.getName()
-                        + " has running job, please discard it and try again.");
+            if (jobInstance.getStatus() == JobStatusEnum.PENDING || jobInstance.getStatus() == JobStatusEnum.RUNNING) {
+                throw new JobException("The cube " + cube.getName() + " has running job, please discard it and try again.");
             }
         }
 
         String uuid = null;
         try {
-            for (CubeSegment segment : this.getCubeManager().allocateSegments(cube, buildType, startDate,
-                    endDate)) {
-                JobInstance job =
-                        this.getJobManager().createJob(cube.getName(), segment.getName(), buildType);
+            for (CubeSegment segment : this.getCubeManager().allocateSegments(cube, buildType, startDate, endDate)) {
+                JobInstance job = this.getJobManager().createJob(cube.getName(), segment.getName(), buildType);
                 uuid = this.getJobManager().submitJob(job);
                 permissionService.init(job, null);
                 permissionService.inherit(job, cube);
@@ -132,20 +123,17 @@ public class JobService extends BasicService {
         return this.getJobManager().getJob(uuid);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
     public void resumeJob(JobInstance job) throws IOException, JobException {
         this.getJobManager().resumeJob(job.getUuid());
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
     public void cancelJob(JobInstance job) throws IOException, JobException, CubeIntegrityException {
         CubeInstance cube = this.getCubeManager().getCube(job.getRelatedCube());
         List<JobInstance> jobs = this.getJobManager().listJobs(cube.getName(), null);
         for (JobInstance jobInstance : jobs) {
-            if (jobInstance.getStatus() != JobStatusEnum.DISCARDED
-                    && jobInstance.getStatus() != JobStatusEnum.FINISHED) {
+            if (jobInstance.getStatus() != JobStatusEnum.DISCARDED && jobInstance.getStatus() != JobStatusEnum.FINISHED) {
                 this.getJobManager().discardJob(jobInstance.getUuid());
             }
         }

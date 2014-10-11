@@ -20,15 +20,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 
-import org.apache.hadoop.hbase.util.Bytes;
-
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.storage.tuple.ITuple;
 
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public class ConstantTupleFilter extends TupleFilter {
 
@@ -83,7 +81,7 @@ public class ConstantTupleFilter extends TupleFilter {
         int size = this.constantValues.size();
         BytesUtil.writeVInt(size, buffer);
         for (String val : this.constantValues) {
-            BytesUtil.writeByteArray(Bytes.toBytes(val), buffer);
+            BytesUtil.writeUTFString(val, buffer);
         }
         byte[] result = new byte[buffer.position()];
         System.arraycopy(buffer.array(), 0, result, 0, buffer.position());
@@ -96,8 +94,7 @@ public class ConstantTupleFilter extends TupleFilter {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         int size = BytesUtil.readVInt(buffer);
         for (int i = 0; i < size; i++) {
-            byte[] strBytes = BytesUtil.readByteArray(buffer);
-            this.constantValues.add(Bytes.toString(strBytes));
+            this.constantValues.add(BytesUtil.readUTFString(buffer));
         }
     }
 

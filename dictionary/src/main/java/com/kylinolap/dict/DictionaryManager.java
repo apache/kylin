@@ -48,8 +48,7 @@ public class DictionaryManager {
     private static final DictionaryInfo NONE_INDICATOR = new DictionaryInfo();
 
     // static cached instances
-    private static final ConcurrentHashMap<KylinConfig, DictionaryManager> SERVICE_CACHE =
-            new ConcurrentHashMap<KylinConfig, DictionaryManager>();
+    private static final ConcurrentHashMap<KylinConfig, DictionaryManager> SERVICE_CACHE = new ConcurrentHashMap<KylinConfig, DictionaryManager>();
 
     public static DictionaryManager getInstance(KylinConfig config) {
         DictionaryManager r = SERVICE_CACHE.get(config);
@@ -67,7 +66,9 @@ public class DictionaryManager {
     // ============================================================================
 
     private KylinConfig config;
-    private ConcurrentHashMap<String, DictionaryInfo> dictCache; // resource path ==> DictionaryInfo
+    private ConcurrentHashMap<String, DictionaryInfo> dictCache; // resource
+                                                                 // path ==>
+                                                                 // DictionaryInfo
 
     private DictionaryManager(KylinConfig config) {
         this.config = config;
@@ -90,13 +91,11 @@ public class DictionaryManager {
         return dictInfo == NONE_INDICATOR ? null : dictInfo;
     }
 
-    public DictionaryInfo trySaveNewDict(Dictionary<?> newDict, DictionaryInfo newDictInfo)
-            throws IOException {
+    public DictionaryInfo trySaveNewDict(Dictionary<?> newDict, DictionaryInfo newDictInfo) throws IOException {
 
         String dupDict = checkDupByContent(newDictInfo, newDict);
         if (dupDict != null) {
-            logger.info("Identical dictionary content " + newDict + ", reuse existing dictionary at "
-                    + dupDict);
+            logger.info("Identical dictionary content " + newDict + ", reuse existing dictionary at " + dupDict);
             return getDictionaryInfo(dupDict);
         }
 
@@ -114,13 +113,12 @@ public class DictionaryManager {
         DictionaryInfo firstDictInfo = null;
         int totalSize = 0;
         for (DictionaryInfo info : dicts) {
-            //check
+            // check
             if (firstDictInfo == null) {
                 firstDictInfo = info;
             } else {
                 if (!firstDictInfo.isDictOnSameColumn(info)) {
-                    throw new IllegalArgumentException(
-                            "Merging dictionaries are not structurally equal(regardless of signature).");
+                    throw new IllegalArgumentException("Merging dictionaries are not structurally equal(regardless of signature).");
                 }
             }
             totalSize += info.getInput().getSize();
@@ -138,8 +136,7 @@ public class DictionaryManager {
 
         String dupDict = checkDupByInfo(newDictInfo);
         if (dupDict != null) {
-            logger.info("Identical dictionary input " + newDictInfo.getInput()
-                    + ", reuse existing dictionary at " + dupDict);
+            logger.info("Identical dictionary input " + newDictInfo.getInput() + ", reuse existing dictionary at " + dupDict);
             return getDictionaryInfo(dupDict);
         }
 
@@ -148,8 +145,7 @@ public class DictionaryManager {
         return trySaveNewDict(newDict, newDictInfo);
     }
 
-    public DictionaryInfo buildDictionary(CubeDesc cube, TblColRef col, String factColumnsPath)
-            throws IOException {
+    public DictionaryInfo buildDictionary(CubeDesc cube, TblColRef col, String factColumnsPath) throws IOException {
 
         Object[] tmp = decideSourceData(cube, col, factColumnsPath);
         String srcTable = (String) tmp[0];
@@ -157,14 +153,11 @@ public class DictionaryManager {
         int srcColIdx = (Integer) tmp[2];
         ReadableTable inpTable = (ReadableTable) tmp[3];
 
-        DictionaryInfo dictInfo =
-                new DictionaryInfo(srcTable, srcCol, srcColIdx, col.getDatatype(), inpTable.getSignature(),
-                        inpTable.getColumnDelimeter());
+        DictionaryInfo dictInfo = new DictionaryInfo(srcTable, srcCol, srcColIdx, col.getDatatype(), inpTable.getSignature(), inpTable.getColumnDelimeter());
 
         String dupDict = checkDupByInfo(dictInfo);
         if (dupDict != null) {
-            logger.info("Identical dictionary input " + dictInfo.getInput()
-                    + ", reuse existing dictionary at " + dupDict);
+            logger.info("Identical dictionary input " + dictInfo.getInput() + ", reuse existing dictionary at " + dupDict);
             return getDictionaryInfo(dupDict);
         }
 
@@ -193,19 +186,21 @@ public class DictionaryManager {
         // 1. If 'useDict' specifies pre-defined data set, use that
         // 2. Otherwise find a lookup table to scan through
 
-        // Note normal column on fact table is not supported due to the size of fact table
-        // Note FK on fact table is supported by scan the related PK on lookup table
+        // Note normal column on fact table is not supported due to the size of
+        // fact table
+        // Note FK on fact table is supported by scan the related PK on lookup
+        // table
 
         String useDict = cube.getRowkey().getDictionary(col);
 
         // normal case, source from lookup table
-        if ("true".equals(useDict) || "string".equals(useDict) || "number".equals(useDict)
-                || "any".equals(useDict)) {
+        if ("true".equals(useDict) || "string".equals(useDict) || "number".equals(useDict) || "any".equals(useDict)) {
             // FK on fact table, use PK from lookup instead
             if (cube.isFactTable(col.getTable())) {
                 TblColRef pkCol = cube.findPKByFK(col);
                 if (pkCol != null)
-                    col = pkCol; // scan the counterparty PK on lookup table instead
+                    col = pkCol; // scan the counterparty PK on lookup table
+                                 // instead
             }
             srcTable = col.getTable();
             srcCol = col.getName();
@@ -221,8 +216,7 @@ public class DictionaryManager {
         else {
             String dictDataSetPath = unpackDataSet(this.config.getTempHDFSDir(), useDict);
             if (dictDataSetPath == null)
-                throw new IllegalArgumentException("Unknown dictionary data set '" + useDict
-                        + "', referred from " + col);
+                throw new IllegalArgumentException("Unknown dictionary data set '" + useDict + "', referred from " + col);
             srcTable = "PREDEFINED";
             srcCol = useDict;
             srcColIdx = 0;
@@ -243,8 +237,7 @@ public class DictionaryManager {
         in.close();
         byte[] bytes = buf.toByteArray();
 
-        Path tmpDataSetPath =
-                new Path(tempHDFSDir + "/dict/temp_dataset/" + dataSetName + "_" + bytes.length + ".txt");
+        Path tmpDataSetPath = new Path(tempHDFSDir + "/dict/temp_dataset/" + dataSetName + "_" + bytes.length + ".txt");
 
         FileSystem fs = HadoopUtil.getFileSystem(tempHDFSDir);
         boolean writtenNewFile = false;
@@ -270,7 +263,10 @@ public class DictionaryManager {
 
         TableSignature input = dictInfo.getInput();
         for (String existing : existings) {
-            DictionaryInfo existingInfo = load(existing, false); // skip cache, direct load from store
+            DictionaryInfo existingInfo = load(existing, false); // skip cache,
+                                                                 // direct
+                                                                 // load from
+                                                                 // store
             if (input.equals(existingInfo.getInput()))
                 return existing;
         }
@@ -285,7 +281,9 @@ public class DictionaryManager {
             return null;
 
         for (String existing : existings) {
-            DictionaryInfo existingInfo = load(existing, true); // skip cache, direct load from store
+            DictionaryInfo existingInfo = load(existing, true); // skip cache,
+                                                                // direct load
+                                                                // from store
             if (existingInfo != null && dict.equals(existingInfo.getDictionaryObject()))
                 return existing;
         }
@@ -323,9 +321,7 @@ public class DictionaryManager {
     DictionaryInfo load(String resourcePath, boolean loadDictObj) throws IOException {
         ResourceStore store = MetadataManager.getInstance(config).getStore();
 
-        DictionaryInfo info =
-                store.getResource(resourcePath, DictionaryInfo.class, loadDictObj
-                        ? DictionaryInfoSerializer.FULL_SERIALIZER : DictionaryInfoSerializer.INFO_SERIALIZER);
+        DictionaryInfo info = store.getResource(resourcePath, DictionaryInfo.class, loadDictObj ? DictionaryInfoSerializer.FULL_SERIALIZER : DictionaryInfoSerializer.INFO_SERIALIZER);
 
         if (loadDictObj)
             logger.debug("Loaded dictionary at " + resourcePath);

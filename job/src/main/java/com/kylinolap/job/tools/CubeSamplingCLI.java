@@ -27,11 +27,12 @@ import com.kylinolap.metadata.tool.HiveSourceTableMgmt;
  * <p/>
  * This tool facilitates cube sampling by:
  * <p/>
- * 1. Run hive commands to sample the fact table, with sampling ratio configurable
+ * 1. Run hive commands to sample the fact table, with sampling ratio
+ * configurable
  * <p/>
- * 2. Create a new cube named like CUBE_1_of_10000_sample into current env.
- * The fact table refers to the sampled fact table created in phrase 1.
- * NOTE: cube building require extra operations.
+ * 2. Create a new cube named like CUBE_1_of_10000_sample into current env. The
+ * fact table refers to the sampled fact table created in phrase 1. NOTE: cube
+ * building require extra operations.
  */
 public class CubeSamplingCLI {
 
@@ -45,7 +46,8 @@ public class CubeSamplingCLI {
 
     /**
      * @param cubeName
-     * @param sampleRatio use 100 if you want to get a 1/100 sample
+     * @param sampleRatio
+     *            use 100 if you want to get a 1/100 sample
      */
     public static void createSampleCube(String cubeName, int sampleRatio) throws IOException, JobException {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
@@ -53,49 +55,44 @@ public class CubeSamplingCLI {
         CubeInstance cube = cubeMgr.getCube(cubeName);
         String factTableName = cube.getDescriptor().getFactTable();
 
-        //run hive query to sample the table
+        // run hive query to sample the table
         String sampledFactTableName = sampleFactTable(factTableName, sampleRatio);
 
-        //sync the table desc of the created sample table
+        // sync the table desc of the created sample table
         HiveSourceTableMgmt.reloadHiveTable(sampledFactTableName);
 
-        //When integrating into REST server, create cube and desc for sample cube
+        // When integrating into REST server, create cube and desc for sample
+        // cube
     }
 
-    private static String sampleFactTable(String factTableName, int sampleRatio) throws IOException,
-            JobException {
+    private static String sampleFactTable(String factTableName, int sampleRatio) throws IOException, JobException {
         String sampleTableName = factTableName + "_sample_1_of_" + sampleRatio;
 
-        //hive settings:
-        String settingQueries =
-                "set hive.exec.dynamic.partition.mode=nonstrict;set hive.exec.max.dynamic.partitions=10000;";
+        // hive settings:
+        String settingQueries = "set hive.exec.dynamic.partition.mode=nonstrict;set hive.exec.max.dynamic.partitions=10000;";
 
-        //hive drop table query
+        // hive drop table query
         String dropQuery = "drop table if exists " + sampleTableName + ";";
 
-        //hive create table query
+        // hive create table query
         String createQuery = "create table " + sampleTableName + " like " + factTableName + ";";
 
-        //hive insert query based on hive table attributes
+        // hive insert query based on hive table attributes
         HiveSourceTableMgmt hstm = new HiveSourceTableMgmt();
         File dir = File.createTempFile("meta", null);
         dir.delete();
-        dir.mkdir();//replace file with a folder
-        //dir.deleteOnExit();
+        dir.mkdir();// replace file with a folder
+        // dir.deleteOnExit();
         logger.info("Extracting table " + factTableName + "'s metadata into " + dir.getAbsolutePath());
         hstm.extractTableDescWithTablePattern(factTableName, dir.getAbsolutePath());
-        String factTableExdFilePath =
-                dir.getAbsolutePath() + File.separator + HiveSourceTableMgmt.TABLE_EXD_FOLDER_NAME
-                        + File.separator + factTableName.toUpperCase() + "."
-                        + HiveSourceTableMgmt.OUTPUT_SURFIX;
+        String factTableExdFilePath = dir.getAbsolutePath() + File.separator + HiveSourceTableMgmt.TABLE_EXD_FOLDER_NAME + File.separator + factTableName.toUpperCase() + "." + HiveSourceTableMgmt.OUTPUT_SURFIX;
         logger.info("Getting fact table's extend attributes from " + factTableExdFilePath);
         InputStream is = new FileInputStream(factTableExdFilePath);
+        @SuppressWarnings("unchecked")
         Map<String, String> attrs = JsonUtil.readValue(is, HashMap.class);
         is.close();
         String partitionClause = getPartitionClause(attrs);
-        String insertQuery =
-                " INSERT OVERWRITE TABLE " + sampleTableName + " " + partitionClause + "  SELECT * FROM "
-                        + factTableName + " TABLESAMPLE(BUCKET 1 OUT OF " + sampleRatio + "  ON rand()) s;";
+        String insertQuery = " INSERT OVERWRITE TABLE " + sampleTableName + " " + partitionClause + "  SELECT * FROM " + factTableName + " TABLESAMPLE(BUCKET 1 OUT OF " + sampleRatio + "  ON rand()) s;";
 
         String query = settingQueries + dropQuery + createQuery + insertQuery;
         logger.info("The query being submitted is: \r\n" + query);
@@ -130,8 +127,7 @@ public class CubeSamplingCLI {
                     for (String pair : str.split(", ")) {
                         String[] tokens = pair.trim().split(" ");
                         if (tokens.length != 2) {
-                            throw new IllegalStateException("Error parsing " + pair + " in "
-                                    + partitionedCols);
+                            throw new IllegalStateException("Error parsing " + pair + " in " + partitionedCols);
                         }
                         sb.append(tokens[1] + ",");
                     }

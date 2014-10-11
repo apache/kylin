@@ -28,7 +28,7 @@ import com.kylinolap.metadata.model.cube.CubeDesc.CubeCapacity;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class RangeKeyDistributionReducer extends Reducer<Text, LongWritable, Text, LongWritable> {
 
@@ -61,8 +61,7 @@ public class RangeKeyDistributionReducer extends Reducer<Text, LongWritable, Tex
     }
 
     @Override
-    public void reduce(Text key, Iterable<LongWritable> values, Context context) throws IOException,
-            InterruptedException {
+    public void reduce(Text key, Iterable<LongWritable> values, Context context) throws IOException, InterruptedException {
         lastKey = key;
         long length = 0;
         for (LongWritable v : values) {
@@ -75,7 +74,7 @@ public class RangeKeyDistributionReducer extends Reducer<Text, LongWritable, Tex
             outputValue.set(bytesRead);
             context.write(key, outputValue);
             System.out.println(StringUtils.byteToHexString(key.getBytes()) + "\t" + outputValue.get());
-            //reset bytesRead
+            // reset bytesRead
             bytesRead = 0;
         }
 

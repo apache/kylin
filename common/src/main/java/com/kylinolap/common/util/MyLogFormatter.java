@@ -26,18 +26,20 @@ public class MyLogFormatter extends Formatter {
 
     Date dat = new Date();
 
-    // Line separator string.  This is the value of the line.separator
+    // Line separator string. This is the value of the line.separator
     // property at the moment that the SimpleFormatter was created.
     private String lineSeparator = "\n";
 
     /**
      * Format the given LogRecord.
-     * @param record the log record to be formatted.
+     * 
+     * @param record
+     *            the log record to be formatted.
      * @return a formatted log record
      */
     public synchronized String format(LogRecord record) {
         StringBuffer sb = new StringBuffer();
-        // Minimize memory allocations here.		
+        // Minimize memory allocations here.
         Timestamp ts = new Timestamp(record.getMillis());
         String text = ts.toString();
         sb.append("JUL ");

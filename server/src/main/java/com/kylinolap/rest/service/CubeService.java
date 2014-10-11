@@ -84,7 +84,7 @@ import com.kylinolap.rest.security.AclPermission;
 
 /**
  * Stateless & lightweight service facade of cube management functions.
- *
+ * 
  * @author yangli9
  */
 @Component("cubeMgmtService")
@@ -109,9 +109,7 @@ public class CubeService extends BasicService {
 
         List<CubeInstance> filterCubes = new ArrayList<CubeInstance>();
         for (CubeInstance cubeInstance : cubeInstances) {
-            boolean isCubeMatch =
-                    (null == cubeName)
-                            || cubeInstance.getName().toLowerCase().contains(cubeName.toLowerCase());
+            boolean isCubeMatch = (null == cubeName) || cubeInstance.getName().toLowerCase().contains(cubeName.toLowerCase());
 
             if (isCubeMatch) {
                 filterCubes.add(cubeInstance);
@@ -121,8 +119,7 @@ public class CubeService extends BasicService {
         return filterCubes;
     }
 
-    public List<CubeInstance> getCubes(final String cubeName, final String projectName, final Integer limit,
-            final Integer offset) {
+    public List<CubeInstance> getCubes(final String cubeName, final String projectName, final Integer limit, final Integer offset) {
         int climit = (null == limit) ? 30 : limit;
         int coffset = (null == offset) ? 0 : offset;
 
@@ -147,7 +144,7 @@ public class CubeService extends BasicService {
             throw new IOException("Cannot find cube " + cubeName);
         }
         if (cube.getCost() == cost) {
-            //Do nothing
+            // Do nothing
             return cube;
         }
         cube.setCost(cost);
@@ -158,8 +155,7 @@ public class CubeService extends BasicService {
         return getCubeManager().updateCube(cube);
     }
 
-    public CubeInstance createCubeAndDesc(String cubeName, String projectName, CubeDesc desc)
-            throws IOException {
+    public CubeInstance createCubeAndDesc(String cubeName, String projectName, CubeDesc desc) throws IOException {
         if (getCubeManager().getCube(cubeName) != null) {
             throw new InternalErrorException("The cube named " + cubeName + " already exists");
         }
@@ -186,14 +182,11 @@ public class CubeService extends BasicService {
         return createdCube;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public CubeDesc updateCubeAndDesc(CubeInstance cube, CubeDesc desc, String newProjectName)
-            throws UnknownHostException, IOException, JobException {
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
+    public CubeDesc updateCubeAndDesc(CubeInstance cube, CubeDesc desc, String newProjectName) throws UnknownHostException, IOException, JobException {
         List<JobInstance> jobInstances = this.getJobManager().listJobs(cube.getName(), null);
         for (JobInstance jobInstance : jobInstances) {
-            if (jobInstance.getStatus() == JobStatusEnum.PENDING
-                    || jobInstance.getStatus() == JobStatusEnum.RUNNING) {
+            if (jobInstance.getStatus() == JobStatusEnum.PENDING || jobInstance.getStatus() == JobStatusEnum.RUNNING) {
                 throw new JobException("Cube schema shouldn't be changed with running job.");
             }
         }
@@ -208,8 +201,7 @@ public class CubeService extends BasicService {
 
             if (!getProjectManager().isCubeInProject(newProjectName, cube)) {
                 String owner = SecurityContextHolder.getContext().getAuthentication().getName();
-                ProjectInstance newProject =
-                        getProjectManager().updateCubeToProject(cube.getName(), newProjectName, owner);
+                ProjectInstance newProject = getProjectManager().updateCubeToProject(cube.getName(), newProjectName, owner);
                 accessService.inherit(cube, newProject);
             }
 
@@ -221,20 +213,17 @@ public class CubeService extends BasicService {
         }
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
     public void deleteCube(CubeInstance cube) throws IOException, JobException, CubeIntegrityException {
         List<JobInstance> jobInstances = this.getJobManager().listJobs(cube.getName(), null);
         for (JobInstance jobInstance : jobInstances) {
-            if (jobInstance.getStatus() == JobStatusEnum.PENDING
-                    || jobInstance.getStatus() == JobStatusEnum.RUNNING) {
-                throw new JobException("The cube " + cube.getName()
-                        + " has running job, please discard it and try again.");
+            if (jobInstance.getStatus() == JobStatusEnum.PENDING || jobInstance.getStatus() == JobStatusEnum.RUNNING) {
+                throw new JobException("The cube " + cube.getName() + " has running job, please discard it and try again.");
             }
         }
 
         this.releaseAllSegments(cube);
-        getCubeManager().dropCube(cube.getName(),true);
+        getCubeManager().dropCube(cube.getName(), true);
         accessService.clean(cube, true);
     }
 
@@ -280,25 +269,21 @@ public class CubeService extends BasicService {
 
     /**
      * Update a cube status from ready to disabled.
-     *
+     * 
      * @param cubeName
      * @return
      * @throws CubeIntegrityException
      * @throws IOException
      * @throws JobException
      */
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
-    @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true),
-            @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
-    public CubeInstance disableCube(CubeInstance cube) throws IOException, CubeIntegrityException,
-            JobException {
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
+    @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
+    public CubeInstance disableCube(CubeInstance cube) throws IOException, CubeIntegrityException, JobException {
         String cubeName = cube.getName();
 
         CubeStatusEnum ostatus = cube.getStatus();
         if (null != ostatus && !CubeStatusEnum.READY.equals(ostatus)) {
-            throw new InternalErrorException("Only ready cube can be disabled, status of " + cubeName
-                    + " is " + ostatus);
+            throw new InternalErrorException("Only ready cube can be disabled, status of " + cubeName + " is " + ostatus);
         }
 
         cube.setStatus(CubeStatusEnum.DISABLED);
@@ -313,22 +298,19 @@ public class CubeService extends BasicService {
 
     /**
      * Update a cube status from disable to ready.
-     *
+     * 
      * @return
      * @throws CubeIntegrityException
      * @throws IOException
      * @throws JobException
      */
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
-    public CubeInstance enableCube(CubeInstance cube) throws IOException, CubeIntegrityException,
-            JobException {
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
+    public CubeInstance enableCube(CubeInstance cube) throws IOException, CubeIntegrityException, JobException {
         String cubeName = cube.getName();
 
         CubeStatusEnum ostatus = cube.getStatus();
         if (!cube.getStatus().equals(CubeStatusEnum.DISABLED)) {
-            throw new InternalErrorException("Only disabled cube can be enabled, status of " + cubeName
-                    + " is " + ostatus);
+            throw new InternalErrorException("Only disabled cube can be enabled, status of " + cubeName + " is " + ostatus);
         }
 
         if (cube.getSegments(CubeSegmentStatusEnum.READY).size() == 0) {
@@ -337,8 +319,7 @@ public class CubeService extends BasicService {
 
         List<JobInstance> jobInstances = this.getJobManager().listJobs(cube.getName(), null);
         for (JobInstance jobInstance : jobInstances) {
-            if (jobInstance.getStatus() == JobStatusEnum.PENDING
-                    || jobInstance.getStatus() == JobStatusEnum.RUNNING) {
+            if (jobInstance.getStatus() == JobStatusEnum.PENDING || jobInstance.getStatus() == JobStatusEnum.RUNNING) {
                 throw new JobException("Enable is not allowed with a running job.");
             }
         }
@@ -367,8 +348,7 @@ public class CubeService extends BasicService {
         for (CubeInstance cube : cubes) {
             Date createdDate = new Date(-1);
             try {
-                createdDate =
-                        (null == cube.getCreateTime()) ? createdDate : format.parse(cube.getCreateTime());
+                createdDate = (null == cube.getCreateTime()) ? createdDate : format.parse(cube.getCreateTime());
             } catch (ParseException e) {
                 logger.error("", e);
             }
@@ -378,18 +358,21 @@ public class CubeService extends BasicService {
             }
         }
 
-        metrics.increase("aveStorage", (metrics.get("totalCubes") == 0) ? 0 : metrics.get("totalStorage")
-                / metrics.get("totalCubes"));
+        metrics.increase("aveStorage", (metrics.get("totalCubes") == 0) ? 0 : metrics.get("totalStorage") / metrics.get("totalCubes"));
 
         return metrics;
     }
 
     /**
-     * Calculate size of each region for given table and other info of the table.
-     *
-     * @param tableName The table name.
-     * @return The HBaseResponse object contains table size, region count. null if error happens.
-     * @throws IOException Exception when HTable resource is not closed correctly.
+     * Calculate size of each region for given table and other info of the
+     * table.
+     * 
+     * @param tableName
+     *            The table name.
+     * @return The HBaseResponse object contains table size, region count. null
+     *         if error happens.
+     * @throws IOException
+     *             Exception when HTable resource is not closed correctly.
      */
     public HBaseResponse getHTableInfo(String tableName) throws IOException {
         // Get HBase storage conf.
@@ -431,10 +414,9 @@ public class CubeService extends BasicService {
     }
 
     /**
-     * Generate cardinality for table
-     * This will trigger a hadoop job and nothing
+     * Generate cardinality for table This will trigger a hadoop job and nothing
      * The result will be merged into table exd info
-     *
+     * 
      * @param tableName
      * @param delimiter
      * @param format
@@ -443,8 +425,7 @@ public class CubeService extends BasicService {
         TableDesc table = getMetadataManager().getTableDesc(tableName);
         Map<String, String> tableExd = getMetadataManager().getTableDescExd(tableName);
         if (tableExd == null || table == null) {
-            IllegalArgumentException e =
-                    new IllegalArgumentException("Cannot find table descirptor " + tableName);
+            IllegalArgumentException e = new IllegalArgumentException("Cannot find table descirptor " + tableName);
             logger.error("Cannot find table descirptor " + tableName, e);
             throw e;
         }
@@ -454,13 +435,11 @@ public class CubeService extends BasicService {
         }
         String location = exd.get(MetadataConstances.TABLE_EXD_LOCATION);
         if (location == null || MetadataConstances.TABLE_EXD_DEFAULT_VALUE.equals(location)) {
-            throw new IllegalArgumentException("Cannot get table " + tableName
-                    + " location, the location is " + location);
+            throw new IllegalArgumentException("Cannot get table " + tableName + " location, the location is " + location);
         }
         String inputFormat = exd.get(MetadataConstances.TABLE_EXD_IF);
         if (inputFormat == null || MetadataConstances.TABLE_EXD_DEFAULT_VALUE.equals(inputFormat)) {
-            throw new IllegalArgumentException("Cannot get table " + tableName
-                    + " input format, the format is " + inputFormat);
+            throw new IllegalArgumentException("Cannot get table " + tableName + " input format, the format is " + inputFormat);
         }
         String delim = exd.get(MetadataConstances.TABLE_EXD_DELIM);
         if (delimiter != null) {
@@ -472,9 +451,7 @@ public class CubeService extends BasicService {
         if (delim == null) {
             args = new String[] { "-input", location, "-output", outPath, "-iformat", inputFormat };
         } else {
-            args =
-                    new String[] { "-input", location, "-output", outPath, "-iformat", inputFormat,
-                            "-idelim", delim };
+            args = new String[] { "-input", location, "-output", outPath, "-iformat", inputFormat, "-idelim", delim };
         }
         HiveColumnCardinalityJob job = new HiveColumnCardinalityJob(jarPath, null);
         int hresult = 0;
@@ -485,7 +462,7 @@ public class CubeService extends BasicService {
             throw new IllegalArgumentException("Hadoop job failed with exception ", e);
         }
 
-        //Get calculate result;
+        // Get calculate result;
         if (hresult != 0) {
             throw new IllegalArgumentException("Hadoop job failed with result " + hresult);
         }
@@ -502,8 +479,7 @@ public class CubeService extends BasicService {
         StringBuffer cardi = new StringBuffer();
         ColumnDesc[] cols = table.getColumns();
         if (columns.isEmpty() || cols.length != columns.size()) {
-            logger.error("The hadoop cardinality column size " + columns.size()
-                    + " is not equal metadata column size " + cols.length + ". Table " + tableName);
+            logger.error("The hadoop cardinality column size " + columns.size() + " is not equal metadata column size " + cols.length + ". Table " + tableName);
         }
         Iterator<String> it = columns.iterator();
         while (it.hasNext()) {
@@ -526,9 +502,7 @@ public class CubeService extends BasicService {
             JsonUtil.writeValueIndent(bos, tableExd);
             System.out.println(bos.toString());
             ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
-            String xPath =
-                    ResourceStore.TABLE_EXD_RESOURCE_ROOT + "/" + tableName.toUpperCase() + "."
-                            + HiveSourceTableMgmt.OUTPUT_SURFIX;
+            String xPath = ResourceStore.TABLE_EXD_RESOURCE_ROOT + "/" + tableName.toUpperCase() + "." + HiveSourceTableMgmt.OUTPUT_SURFIX;
             writeResource(bis, KylinConfig.getInstanceFromEnv(), xPath);
         } catch (JsonGenerationException e) {
             e.printStackTrace();
@@ -541,23 +515,19 @@ public class CubeService extends BasicService {
         getMetadataManager().reload();
     }
 
-    private static void writeResource(InputStream source, KylinConfig dstConfig, String path)
-            throws IOException {
+    private static void writeResource(InputStream source, KylinConfig dstConfig, String path) throws IOException {
         ResourceStore store = ResourceStore.getStore(dstConfig);
         store.putResource(path, source, System.currentTimeMillis());
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
-    public void updateCubeNotifyList(CubeInstance cube, List<String> notifyList) throws IOException,
-            CubeIntegrityException {
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
+    public void updateCubeNotifyList(CubeInstance cube, List<String> notifyList) throws IOException, CubeIntegrityException {
         CubeDesc desc = cube.getDescriptor();
         desc.setNotifyList(notifyList);
         getMetadataManager().updateCubeDesc(desc);
     }
 
-    public CubeInstance rebuildLookupSnapshot(String cubeName, String segmentName, String lookupTable)
-            throws IOException {
+    public CubeInstance rebuildLookupSnapshot(String cubeName, String segmentName, String lookupTable) throws IOException {
         CubeManager cubeMgr = getCubeManager();
         CubeInstance cube = cubeMgr.getCube(cubeName);
         CubeSegment seg = cube.getSegment(segmentName, CubeSegmentStatusEnum.READY);
@@ -573,11 +543,9 @@ public class CubeService extends BasicService {
      * @throws UnknownHostException
      * @throws CubeIntegrityException
      */
-    private void releaseAllSegments(CubeInstance cube) throws IOException, JobException,
-            UnknownHostException, CubeIntegrityException {
+    private void releaseAllSegments(CubeInstance cube) throws IOException, JobException, UnknownHostException, CubeIntegrityException {
         for (JobInstance jobInstance : this.getJobManager().listJobs(cube.getName(), null)) {
-            if (jobInstance.getStatus() != JobStatusEnum.FINISHED
-                    && jobInstance.getStatus() != JobStatusEnum.DISCARDED) {
+            if (jobInstance.getStatus() != JobStatusEnum.FINISHED && jobInstance.getStatus() != JobStatusEnum.DISCARDED) {
                 for (JobStep jobStep : jobInstance.getSteps()) {
                     if (jobStep.getStatus() != JobStepStatusEnum.FINISHED) {
                         jobStep.setStatus(JobStepStatusEnum.DISCARDED);
@@ -595,14 +563,14 @@ public class CubeService extends BasicService {
     public String[] reloadHiveTable(String tables) {
         String tableMetaDir = HiveSourceTableMgmt.reloadHiveTable(tables);
 
-        //Reload
+        // Reload
         getMetadataManager().reload();
 
         File metaDir = new File(tableMetaDir);
         if (metaDir.exists()) {
             File tableDir = new File(metaDir, HiveSourceTableMgmt.TABLE_FOLDER_NAME);
             if (tableDir.exists()) {
-                //                return tokens;
+                // return tokens;
                 return tableDir.list();
             }
         }

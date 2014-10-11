@@ -38,7 +38,7 @@ import com.kylinolap.job.flow.JobFlow;
 
 /**
  * @author ysong1, xduo
- *
+ * 
  */
 public class JobFetcher implements Job {
 
@@ -49,9 +49,7 @@ public class JobFetcher implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
 
-        JobEngineConfig engineConfig =
-                (JobEngineConfig) context.getJobDetail().getJobDataMap()
-                        .get(JobConstants.PROP_ENGINE_CONTEXT);
+        JobEngineConfig engineConfig = (JobEngineConfig) context.getJobDetail().getJobDataMap().get(JobConstants.PROP_ENGINE_CONTEXT);
 
         JobDAO jobDAO = JobDAO.getInstance(engineConfig.getConfig());
 
@@ -68,12 +66,11 @@ public class JobFetcher implements Job {
 
             for (JobInstance jobInstance : pendingJobList) {
                 @SuppressWarnings("unchecked")
-                ConcurrentHashMap<String, JobFlow> jobFlows =
-                        (ConcurrentHashMap<String, JobFlow>) context.getScheduler().getContext()
-                                .get(JobConstants.PROP_JOB_RUNTIME_FLOWS);
+                ConcurrentHashMap<String, JobFlow> jobFlows = (ConcurrentHashMap<String, JobFlow>) context.getScheduler().getContext().get(JobConstants.PROP_JOB_RUNTIME_FLOWS);
 
                 if (jobFlows.size() >= maxConcurrentJobCount) {
-                    // If too many job instances in current job context, just wait.
+                    // If too many job instances in current job context, just
+                    // wait.
                     break;
                 }
 
@@ -85,15 +82,13 @@ public class JobFetcher implements Job {
                         String cubename = tmp[0];
                         String jobid = tmp[1];
                         if (cubename.equals(jobInstance.getRelatedCube())) {
-                            log.info("There is already a job of cube " + jobInstance.getRelatedCube()
-                                    + " running, job uuid is " + jobid);
+                            log.info("There is already a job of cube " + jobInstance.getRelatedCube() + " running, job uuid is " + jobid);
                             cubeHasRunningJob = true;
                             break;
                         }
                     }
 
-                    if (cubeHasRunningJob == false
-                            && jobFlows.containsKey(JobInstance.getJobIdentity(jobInstance)) == false) {
+                    if (cubeHasRunningJob == false && jobFlows.containsKey(JobInstance.getJobIdentity(jobInstance)) == false) {
                         // create job flow
                         JobFlow jobFlow = new JobFlow(jobInstance, engineConfig);
                         jobFlows.put(JobInstance.getJobIdentity(jobInstance), jobFlow);
@@ -103,8 +98,7 @@ public class JobFetcher implements Job {
                         JobDetail firstStep = jobFlow.getFirst();
                         context.getScheduler().scheduleJob(firstStep, trigger);
 
-                        log.info("Job " + jobInstance.getUuid() + " has been scheduled with the first step "
-                                + firstStep.getKey().toString());
+                        log.info("Job " + jobInstance.getUuid() + " has been scheduled with the first step " + firstStep.getKey().toString());
                     }
                 } catch (Exception e) {
                     log.error("Failed to trigger the job detail", e);

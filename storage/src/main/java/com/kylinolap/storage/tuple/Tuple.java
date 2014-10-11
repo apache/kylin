@@ -83,7 +83,8 @@ public class Tuple implements ITuple {
 
     public void setMeasureValue(String fieldName, Object fieldValue) {
         String dataType = info.getDataType(fieldName);
-        // special handling for BigDecimal, allow double be aggregated as BigDecimal during cube build for best precision
+        // special handling for BigDecimal, allow double be aggregated as
+        // BigDecimal during cube build for best precision
         if ("double".equals(dataType) && fieldValue instanceof BigDecimal) {
             fieldValue = ((BigDecimal) fieldValue).doubleValue();
         }
@@ -116,10 +117,14 @@ public class Tuple implements ITuple {
         // TODO use data type enum instead of string comparison
         if ("date".equals(dataType)) {
             // convert epoch time
-            Date dateValue = DateStrDictionary.stringToDate(strValue); // NOTE: forces GMT timezone
+            Date dateValue = DateStrDictionary.stringToDate(strValue); // NOTE:
+                                                                       // forces
+                                                                       // GMT
+                                                                       // timezone
             long millis = dateValue.getTime();
             long days = millis / (1000 * 3600 * 24);
-            return Integer.valueOf((int) days); // Optiq expects Integer instead of Long. by honma
+            return Integer.valueOf((int) days); // Optiq expects Integer instead
+                                                // of Long. by honma
         } else if ("tinyint".equals(dataType)) {
             return Byte.valueOf(strValue);
         } else if ("short".equals(dataType) || "smallint".equals(dataType)) {
@@ -139,9 +144,7 @@ public class Tuple implements ITuple {
 
     // ============================================================================
 
-    public static IDerivedColumnFiller newDerivedColumnFiller(List<TblColRef> rowColumns,
-            TblColRef[] hostCols, DeriveInfo deriveInfo, TupleInfo tupleInfo, CubeManager cubeMgr,
-            CubeSegment cubeSegment) {
+    public static IDerivedColumnFiller newDerivedColumnFiller(List<TblColRef> rowColumns, TblColRef[] hostCols, DeriveInfo deriveInfo, TupleInfo tupleInfo, CubeManager cubeMgr, CubeSegment cubeSegment) {
 
         int[] hostIndex = new int[hostCols.length];
         for (int i = 0; i < hostCols.length; i++) {
@@ -194,8 +197,7 @@ public class Tuple implements ITuple {
         final int derivedLen;
         final String[] derivedFieldNames;
 
-        public LookupFiller(int[] hostIndex, LookupStringTable lookupTable, DeriveInfo deriveInfo,
-                String[] derivedFieldNames) {
+        public LookupFiller(int[] hostIndex, LookupStringTable lookupTable, DeriveInfo deriveInfo, String[] derivedFieldNames) {
             this.hostIndex = hostIndex;
             this.hostLen = hostIndex.length;
             this.lookupKey = new Array<String>(new String[hostLen]);

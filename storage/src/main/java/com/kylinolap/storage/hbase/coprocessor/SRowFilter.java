@@ -37,7 +37,7 @@ import com.kylinolap.storage.tuple.ITuple;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class SRowFilter {
 
@@ -173,7 +173,7 @@ public class SRowFilter {
 
     public static SRowFilter deserialize(byte[] filterBytes) {
         TupleFilter filter = (filterBytes == null || filterBytes.length == 0) //
-                ? null //
+        ? null //
                 : TupleFilterSerializer.deserialize(filterBytes);
         return new SRowFilter(filter);
     }

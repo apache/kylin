@@ -88,8 +88,10 @@ public class NDCuboidMapper extends Mapper<Text, Text, Text, Text> {
         long parentCuboidIdActualLength = Long.SIZE - Long.numberOfLeadingZeros(parentCuboid.getId());
         int index = 1; // skip cuboidId
         for (int i = 0; i < parentCuboidIdActualLength; i++) {
-            if ((mask & parentCuboidId) > 0) {//if the this bit position equals 1 
-                if ((mask & childCuboidId) > 0) {// if the child cuboid has this column
+            if ((mask & parentCuboidId) > 0) {// if the this bit position equals
+                                              // 1
+                if ((mask & childCuboidId) > 0) {// if the child cuboid has this
+                                                 // column
                     System.arraycopy(splitBuffers[index].value, 0, keyBuf, offset, splitBuffers[index].length);
                     offset += splitBuffers[index].length;
                 }

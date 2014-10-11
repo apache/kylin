@@ -20,7 +20,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 /**
- * Within a partition (per timestampGranularity), records are further sliced (per sliceLength) to fit into HBASE cell.
+ * Within a partition (per timestampGranularity), records are further sliced
+ * (per sliceLength) to fit into HBASE cell.
  * 
  * @author yangli9
  */

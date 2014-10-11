@@ -26,7 +26,7 @@ import org.junit.Test;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class RandomSamplerTest {
 

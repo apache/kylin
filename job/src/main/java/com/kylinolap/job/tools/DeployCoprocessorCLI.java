@@ -57,8 +57,7 @@ public class DeployCoprocessorCLI {
 
     private static final Logger logger = LoggerFactory.getLogger(DeployCoprocessorCLI.class);
 
-    public static final String AGGR_COPROCESSOR_CLS_NAME =
-            "com.kylinolap.storage.hbase.coprocessor.AggregateRegionObserver";
+    public static final String AGGR_COPROCESSOR_CLS_NAME = "com.kylinolap.storage.hbase.coprocessor.AggregateRegionObserver";
 
     public static void main(String[] args) throws IOException {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -89,14 +88,12 @@ public class DeployCoprocessorCLI {
         logger.info("Active coprocessor jar: " + hdfsCoprocessorJar);
     }
 
-    public static void setCoprocessorOnHTable(HTableDescriptor desc, Path hdfsCoprocessorJar)
-            throws IOException {
+    public static void setCoprocessorOnHTable(HTableDescriptor desc, Path hdfsCoprocessorJar) throws IOException {
         logger.info("Set coprocessor on " + desc.getNameAsString());
         desc.addCoprocessor(AGGR_COPROCESSOR_CLS_NAME, hdfsCoprocessorJar, 1001, null);
     }
 
-    public static void resetCoprocessor(String tableName, HBaseAdmin hbaseAdmin, Path hdfsCoprocessorJar)
-            throws IOException {
+    public static void resetCoprocessor(String tableName, HBaseAdmin hbaseAdmin, Path hdfsCoprocessorJar) throws IOException {
         logger.info("Disable " + tableName);
         hbaseAdmin.disableTable(tableName);
 
@@ -113,8 +110,7 @@ public class DeployCoprocessorCLI {
         hbaseAdmin.enableTable(tableName);
     }
 
-    private static List<String> resetCoprocessorOnHTables(HBaseAdmin hbaseAdmin, Path hdfsCoprocessorJar,
-            List<String> tableNames) throws IOException {
+    private static List<String> resetCoprocessorOnHTables(HBaseAdmin hbaseAdmin, Path hdfsCoprocessorJar, List<String> tableNames) throws IOException {
         List<String> processed = new ArrayList<String>();
 
         for (String tableName : tableNames) {
@@ -149,8 +145,7 @@ public class DeployCoprocessorCLI {
         return path;
     }
 
-    public static Path uploadCoprocessorJar(String localCoprocessorJar, FileSystem fileSystem,
-            Set<String> oldJarPaths) throws IOException {
+    public static Path uploadCoprocessorJar(String localCoprocessorJar, FileSystem fileSystem, Set<String> oldJarPaths) throws IOException {
         Path uploadPath = null;
         File localCoprocessorFile = new File(localCoprocessorJar);
 
@@ -160,8 +155,7 @@ public class DeployCoprocessorCLI {
         }
         Path coprocessorDir = getCoprocessorHDFSDir(fileSystem, KylinConfig.getInstanceFromEnv());
         for (FileStatus fileStatus : fileSystem.listStatus(coprocessorDir)) {
-            if (fileStatus.getLen() == localCoprocessorJar.length()
-                    && fileStatus.getModificationTime() == localCoprocessorFile.lastModified()) {
+            if (fileStatus.getLen() == localCoprocessorJar.length() && fileStatus.getModificationTime() == localCoprocessorFile.lastModified()) {
                 uploadPath = fileStatus.getPath();
                 break;
             }
@@ -222,8 +216,7 @@ public class DeployCoprocessorCLI {
         return coprocessorDir;
     }
 
-    private static Set<String> getCoprocessorJarPaths(HBaseAdmin hbaseAdmin, List<String> tableNames)
-            throws IOException {
+    private static Set<String> getCoprocessorJarPaths(HBaseAdmin hbaseAdmin, List<String> tableNames) throws IOException {
         HashSet<String> result = new HashSet<String>();
 
         for (String tableName : tableNames) {
@@ -237,14 +230,12 @@ public class DeployCoprocessorCLI {
 
             Matcher keyMatcher;
             Matcher valueMatcher;
-            for (Map.Entry<ImmutableBytesWritable, ImmutableBytesWritable> e : tableDescriptor.getValues()
-                    .entrySet()) {
+            for (Map.Entry<ImmutableBytesWritable, ImmutableBytesWritable> e : tableDescriptor.getValues().entrySet()) {
                 keyMatcher = HConstants.CP_HTD_ATTR_KEY_PATTERN.matcher(Bytes.toString(e.getKey().get()));
                 if (!keyMatcher.matches()) {
                     continue;
                 }
-                valueMatcher =
-                        HConstants.CP_HTD_ATTR_VALUE_PATTERN.matcher(Bytes.toString(e.getValue().get()));
+                valueMatcher = HConstants.CP_HTD_ATTR_VALUE_PATTERN.matcher(Bytes.toString(e.getValue().get()));
                 if (!valueMatcher.matches()) {
                     continue;
                 }

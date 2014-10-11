@@ -31,7 +31,7 @@ import org.junit.Test;
 
 /**
  * @author yangli9
- *
+ * 
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class BaseCuboidMapperPerformanceTest {

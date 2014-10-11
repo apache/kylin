@@ -33,7 +33,7 @@ import com.kylinolap.rest.service.TestBase;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class CubeControllerTest extends TestBase {
 
@@ -60,8 +60,7 @@ public class CubeControllerTest extends TestBase {
     public void testBasics() throws IOException {
         CubeDesc[] cubes = (CubeDesc[]) cubeDescController.getCube("test_kylin_cube_with_slr_ready");
         Assert.assertNotNull(cubes);
-        Assert.assertNotNull(cubeController.getSql("test_kylin_cube_with_slr_ready",
-                "20130331080000_20131212080000"));
+        Assert.assertNotNull(cubeController.getSql("test_kylin_cube_with_slr_ready", "20130331080000_20131212080000"));
         Assert.assertNotNull(cubeController.getCubes(null, null, 0, 5));
 
         CubeDesc cube = cubes[0];

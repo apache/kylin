@@ -35,7 +35,7 @@ import com.kylinolap.rest.service.TestBase;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class UserControllerTest extends TestBase {
 

@@ -14,13 +14,11 @@ public class KylinInstrumentedFilterContextListener implements ServletContextLis
     @Autowired
     private MetricRegistry metricRegistry;
 
-    private final InnerKylinInstrumentedFilterContextListener innerKylinInstrumentedFilterContextListener =
-            new InnerKylinInstrumentedFilterContextListener();
+    private final InnerKylinInstrumentedFilterContextListener innerKylinInstrumentedFilterContextListener = new InnerKylinInstrumentedFilterContextListener();
 
     @Override
     public void contextInitialized(ServletContextEvent event) {
-        WebApplicationContextUtils.getRequiredWebApplicationContext(event.getServletContext())
-                .getAutowireCapableBeanFactory().autowireBean(this);
+        WebApplicationContextUtils.getRequiredWebApplicationContext(event.getServletContext()).getAutowireCapableBeanFactory().autowireBean(this);
 
         innerKylinInstrumentedFilterContextListener.contextInitialized(event);
     }

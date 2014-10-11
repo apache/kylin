@@ -28,7 +28,7 @@ import com.kylinolap.metadata.validation.ValidateContext;
 
 /**
  * @author jianliu
- *
+ * 
  */
 public class RowKeyAttrRuleTest {
 
@@ -40,9 +40,7 @@ public class RowKeyAttrRuleTest {
      */
     @Before
     public void setUp() throws Exception {
-        CubeDesc desc2 =
-                JsonUtil.readValue(getClass().getClassLoader().getResourceAsStream("data/TEST3_desc.json"),
-                        CubeDesc.class);
+        CubeDesc desc2 = JsonUtil.readValue(getClass().getClassLoader().getResourceAsStream("data/TEST3_desc.json"), CubeDesc.class);
         this.cube = desc2;
 
     }
@@ -53,7 +51,6 @@ public class RowKeyAttrRuleTest {
         rule.validate(cube, vContext);
         vContext.print(System.out);
         assertTrue("Failed to validate rowkey", vContext.getResults().length == 1);
-        assertTrue("Failed to validate mandatory error",
-                vContext.getResults()[0].getMessage().startsWith("Rowkey column"));
+        assertTrue("Failed to validate mandatory error", vContext.getResults()[0].getMessage().startsWith("Rowkey column"));
     }
 }

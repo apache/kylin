@@ -23,7 +23,7 @@ import com.kylinolap.job.constant.JobStepStatusEnum;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class ShellCmdOutput implements ICommandOutput {
 

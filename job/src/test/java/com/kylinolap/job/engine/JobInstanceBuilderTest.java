@@ -20,8 +20,6 @@ import static org.junit.Assert.*;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
-import com.kylinolap.cube.project.ProjectManager;
-import com.kylinolap.dict.DictionaryManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,16 +31,18 @@ import com.kylinolap.cube.CubeBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.cube.project.ProjectManager;
+import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.JobInstance.JobStep;
 import com.kylinolap.job.JobManager;
 import com.kylinolap.job.constant.JobStepCmdTypeEnum;
 import com.kylinolap.metadata.MetadataManager;
 
-/** 
-* @author George Song (ysong1)
-* 
-*/
+/**
+ * @author George Song (ysong1)
+ * 
+ */
 public class JobInstanceBuilderTest extends LocalFileMetadataTestCase {
 
     @Before
@@ -148,10 +148,7 @@ public class JobInstanceBuilderTest extends LocalFileMetadataTestCase {
         CubeInstance cube = cubeManager.getCube(cubeName);
 
         // initial segment
-        CubeSegment segment =
-                CubeManager.getInstance(this.getTestConfig())
-                        .allocateSegments(cube, CubeBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L)
-                        .get(0);
+        CubeSegment segment = CubeManager.getInstance(this.getTestConfig()).allocateSegments(cube, CubeBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L).get(0);
 
         JobInstance jobInstance = jobManager.createJob(cubeName, segment.getName(), CubeBuildTypeEnum.MERGE);
 

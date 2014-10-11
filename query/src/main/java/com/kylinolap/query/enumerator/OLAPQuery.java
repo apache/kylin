@@ -25,7 +25,7 @@ import com.kylinolap.query.relnode.OLAPContext;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public class OLAPQuery extends AbstractEnumerable<Object[]> implements Enumerable<Object[]> {
 

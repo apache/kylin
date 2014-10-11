@@ -80,12 +80,14 @@ public class CubeHFileMapper extends Mapper<Text, Text, ImmutableBytesWritable, 
         KeyValue outputValue;
 
         int n = keyValueCreators.size();
-        if (n == 1 && keyValueCreators.get(0).isFullCopy) { // shortcut for simple full copy
+        if (n == 1 && keyValueCreators.get(0).isFullCopy) { // shortcut for
+                                                            // simple full copy
 
             outputValue = keyValueCreators.get(0).create(key, value.getBytes(), 0, value.getLength());
             context.write(outputKey, outputValue);
 
-        } else { // normal (complex) case that distributes measures to multiple HBase columns
+        } else { // normal (complex) case that distributes measures to multiple
+                 // HBase columns
 
             inputCodec.decode(value, inputMeasures);
 
@@ -161,8 +163,7 @@ public class CubeHFileMapper extends Mapper<Text, Text, ImmutableBytesWritable, 
                 if (measureNames[i].equalsIgnoreCase(ref))
                     return i;
 
-            throw new IllegalArgumentException("Measure '" + ref + "' not found in "
-                    + Arrays.toString(measureNames));
+            throw new IllegalArgumentException("Measure '" + ref + "' not found in " + Arrays.toString(measureNames));
         }
 
         private String[] getMeasureNames(CubeDesc cubeDesc) {

@@ -18,7 +18,7 @@ package com.kylinolap.rest.request;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class PrepareSqlRequest extends SQLRequest {
 

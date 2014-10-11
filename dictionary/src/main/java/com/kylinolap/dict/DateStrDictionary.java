@@ -31,12 +31,12 @@ import org.apache.commons.lang.StringUtils;
 
 /**
  * A dictionary for date string (date only, no time).
- *
- * Dates are numbered from 1970-1-1 -- 0 for 1970-1-1, 1 for 1-2, 2 for 1-3 and so on.
- * With 2 bytes, 65536 states, can express dates up to the year of 2149.
- *
+ * 
+ * Dates are numbered from 1970-1-1 -- 0 for 1970-1-1, 1 for 1-2, 2 for 1-3 and
+ * so on. With 2 bytes, 65536 states, can express dates up to the year of 2149.
+ * 
  * Note the implementation is not thread-safe.
- *
+ * 
  * @author yangli9
  */
 public class DateStrDictionary extends Dictionary<String> {
@@ -44,8 +44,7 @@ public class DateStrDictionary extends Dictionary<String> {
     static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd";
     static final String DEFAULT_DATETIME_PATTERN = "yyyy-MM-dd HH:mm:ss.SSS";
 
-    static final private Map<String, ThreadLocal<SimpleDateFormat>> threadLocalMap =
-            new ConcurrentHashMap<String, ThreadLocal<SimpleDateFormat>>();
+    static final private Map<String, ThreadLocal<SimpleDateFormat>> threadLocalMap = new ConcurrentHashMap<String, ThreadLocal<SimpleDateFormat>>();
 
     static SimpleDateFormat getDateFormat(String datePattern) {
         ThreadLocal<SimpleDateFormat> formatThreadLocal = threadLocalMap.get(datePattern);
@@ -55,7 +54,11 @@ public class DateStrDictionary extends Dictionary<String> {
         SimpleDateFormat format = formatThreadLocal.get();
         if (format == null) {
             format = new SimpleDateFormat(datePattern);
-            format.setTimeZone(TimeZone.getTimeZone("GMT")); // NOTE: this must be GMT to calculate epoch date correctly
+            format.setTimeZone(TimeZone.getTimeZone("GMT")); // NOTE: this must
+                                                             // be GMT to
+                                                             // calculate
+                                                             // epoch date
+                                                             // correctly
             formatThreadLocal.set(format);
         }
         return format;
@@ -78,8 +81,7 @@ public class DateStrDictionary extends Dictionary<String> {
         try {
             date = getDateFormat(pattern).parse(str);
         } catch (ParseException e) {
-            throw new IllegalArgumentException("'" + str + "' is not a valid date of pattern '" + pattern
-                    + "'", e);
+            throw new IllegalArgumentException("'" + str + "' is not a valid date of pattern '" + pattern + "'", e);
         }
         return date;
     }
@@ -134,8 +136,7 @@ public class DateStrDictionary extends Dictionary<String> {
         Date date = stringToDate(value, pattern);
         int id = calcIdFromSeqNo(getNumOfDaysSince0000(date));
         if (id < 0 || id >= 16777216)
-            throw new IllegalArgumentException("'" + value + "' encodes to '" + id
-                    + "' which is out of range of 3 bytes");
+            throw new IllegalArgumentException("'" + value + "' encodes to '" + id + "' which is out of range of 3 bytes");
 
         return id;
     }

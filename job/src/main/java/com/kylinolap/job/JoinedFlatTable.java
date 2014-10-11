@@ -48,17 +48,14 @@ import com.kylinolap.metadata.model.cube.TblColRef;
  */
 public class JoinedFlatTable {
 
-    public static String getTableDir(JoinedFlatTableDesc intermediateTableDesc, String storageDfsDir,
-            String jobUUID) {
+    public static String getTableDir(JoinedFlatTableDesc intermediateTableDesc, String storageDfsDir, String jobUUID) {
         return storageDfsDir + "/" + intermediateTableDesc.getTableName(jobUUID);
     }
 
-    public static String generateCreateTableStatement(JoinedFlatTableDesc intermediateTableDesc,
-            String storageDfsDir, String jobUUID) {
+    public static String generateCreateTableStatement(JoinedFlatTableDesc intermediateTableDesc, String storageDfsDir, String jobUUID) {
         StringBuilder ddl = new StringBuilder();
 
-        ddl.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + intermediateTableDesc.getTableName(jobUUID)
-                + "\n");
+        ddl.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + intermediateTableDesc.getTableName(jobUUID) + "\n");
 
         ddl.append("(" + "\n");
         for (int i = 0; i < intermediateTableDesc.getColumnList().size(); i++) {
@@ -66,16 +63,15 @@ public class JoinedFlatTable {
             if (i > 0) {
                 ddl.append(",");
             }
-            ddl.append(col.getColumnName() + " " + SqlHiveDataTypeMapping.getHiveDataType(col.getDataType())
-                    + "\n");
+            ddl.append(col.getColumnName() + " " + SqlHiveDataTypeMapping.getHiveDataType(col.getDataType()) + "\n");
         }
         ddl.append(")" + "\n");
 
         ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\177'" + "\n");
         ddl.append("STORED AS SEQUENCEFILE" + "\n");
-        ddl.append("LOCATION '" + storageDfsDir + "/" + intermediateTableDesc.getTableName(jobUUID) + "'"
-                + ";");
-        //ddl.append("TBLPROPERTIES ('serialization.null.format'='\\\\N')" + ";\n");
+        ddl.append("LOCATION '" + storageDfsDir + "/" + intermediateTableDesc.getTableName(jobUUID) + "'" + ";");
+        // ddl.append("TBLPROPERTIES ('serialization.null.format'='\\\\N')" +
+        // ";\n");
         return ddl.toString();
     }
 
@@ -85,13 +81,10 @@ public class JoinedFlatTable {
         return ddl.toString();
     }
 
-    public static String generateInsertDataStatement(JoinedFlatTableDesc intermediateTableDesc,
-            String jobUUID, JobEngineConfig engineConfig) throws IOException {
+    public static String generateInsertDataStatement(JoinedFlatTableDesc intermediateTableDesc, String jobUUID, JobEngineConfig engineConfig) throws IOException {
         StringBuilder sql = new StringBuilder();
 
-        File hadoopPropertiesFile =
-                new File(engineConfig.getHadoopJobConfFilePath(intermediateTableDesc.getCubeDesc()
-                        .getCapacity()));
+        File hadoopPropertiesFile = new File(engineConfig.getHadoopJobConfFilePath(intermediateTableDesc.getCubeDesc().getCapacity()));
 
         if (hadoopPropertiesFile.exists()) {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -166,8 +159,7 @@ public class JoinedFlatTable {
                         if (i > 0) {
                             sql.append(" AND ");
                         }
-                        sql.append(factTableName + "." + fk[i].getName() + " = " + dimTableName + "."
-                                + pk[i].getName());
+                        sql.append(factTableName + "." + fk[i].getName() + " = " + dimTableName + "." + pk[i].getName());
                     }
                     sql.append("\n");
 
@@ -199,12 +191,10 @@ public class JoinedFlatTable {
 
                 whereBuilder.append(hasCondition ? " AND (" : " (");
                 if (dateStart > 0) {
-                    whereBuilder.append(partitionColumnName + " >= '"
-                            + formatDateTimeInWhereClause(dateStart) + "' ");
+                    whereBuilder.append(partitionColumnName + " >= '" + formatDateTimeInWhereClause(dateStart) + "' ");
                     whereBuilder.append("AND ");
                 }
-                whereBuilder
-                        .append(partitionColumnName + " < '" + formatDateTimeInWhereClause(dateEnd) + "'");
+                whereBuilder.append(partitionColumnName + " < '" + formatDateTimeInWhereClause(dateEnd) + "'");
                 whereBuilder.append(")\n");
                 hasCondition = true;
             }

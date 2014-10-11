@@ -20,7 +20,7 @@ import java.util.HashMap;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class MetricsResponse extends HashMap<String, Float> {
 

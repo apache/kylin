@@ -20,7 +20,7 @@ import java.util.List;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class JobListRequest {
 

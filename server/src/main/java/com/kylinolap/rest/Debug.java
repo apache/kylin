@@ -21,16 +21,17 @@ import java.util.Random;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class Debug {
 
     public static void main(String[] args) throws IOException {
-        //        MetadataManager mgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-        //        CubeDesc cubeDesc = mgr.getCubeDesc("geox_trans_mtrc_sd_cube_desc");
+        // MetadataManager mgr =
+        // MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        // CubeDesc cubeDesc = mgr.getCubeDesc("geox_trans_mtrc_sd_cube_desc");
         //
-        //        int mathCalcCuboidCount = CuboidCLI.mathCalcCuboidCount(cubeDesc);
-        //        System.out.println(mathCalcCuboidCount);
+        // int mathCalcCuboidCount = CuboidCLI.mathCalcCuboidCount(cubeDesc);
+        // System.out.println(mathCalcCuboidCount);
 
         String[] codeSpace = new String[256 * 256 * 256];
 

@@ -54,11 +54,11 @@ public class TestHbaseClient {
             return;
         }
 
-        //write at flags[start]
+        // write at flags[start]
         flags[start] = true;
         inner(flags, start + 1, remaining - 1);
 
-        //not write at flags[start]
+        // not write at flags[start]
         flags[start] = false;
         inner(flags, start + 1, remaining);
     }
@@ -79,5 +79,6 @@ public class TestHbaseClient {
         put.add(Bytes.toBytes("colfam1"), Bytes.toBytes("qual2"), Bytes.toBytes("val2"));
 
         table.put(put);
+        table.close();
     }
 }

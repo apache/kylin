@@ -51,14 +51,13 @@ public class ProjectController extends BasicController {
 
     /**
      * Get available project list
-     *
+     * 
      * @return Table metadata array
      * @throws IOException
      */
     @RequestMapping(value = "", method = { RequestMethod.GET })
     @ResponseBody
-    public List<ProjectInstance> getProjects(@RequestParam(value = "limit", required = false) Integer limit,
-            @RequestParam(value = "offset", required = false) Integer offset) {
+    public List<ProjectInstance> getProjects(@RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         return projectService.listAllProjects(limit, offset);
     }
 
@@ -108,8 +107,7 @@ public class ProjectController extends BasicController {
             projectService.deleteProject(projectName);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException("Failed to delete project. " + " Caused by: " + e.getMessage(),
-                    e);
+            throw new InternalErrorException("Failed to delete project. " + " Caused by: " + e.getMessage(), e);
         }
     }
 

@@ -28,7 +28,7 @@ import com.kylinolap.job.exception.JobException;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class ShellHadoopCmd extends ShellCmd {
     private static Logger log = LoggerFactory.getLogger(ShellHadoopCmd.class);
@@ -37,10 +37,8 @@ public class ShellHadoopCmd extends ShellCmd {
     private final int jobStepID;
     private final JobEngineConfig engineConfig;
 
-    public ShellHadoopCmd(String executeCmd, String host, String user, String password, boolean async,
-            String instanceID, int stepID, JobEngineConfig engineConfig) {
-        super(executeCmd, new ShellHadoopCmdOutput(instanceID, stepID, engineConfig), host, user, password,
-                async);
+    public ShellHadoopCmd(String executeCmd, String host, String user, String password, boolean async, String instanceID, int stepID, JobEngineConfig engineConfig) {
+        super(executeCmd, new ShellHadoopCmdOutput(instanceID, stepID, engineConfig), host, user, password, async);
         this.jobInstanceID = instanceID;
         this.jobStepID = stepID;
         this.engineConfig = engineConfig;

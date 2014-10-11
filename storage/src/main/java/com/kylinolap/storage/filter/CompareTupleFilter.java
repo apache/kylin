@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
 
 import com.kylinolap.common.util.BytesUtil;
@@ -44,11 +43,7 @@ public class CompareTupleFilter extends TupleFilter {
         super(new ArrayList<TupleFilter>(2), op);
         this.conditionValues = new HashSet<String>();
         this.dynamicVariables = new HashMap<String, String>();
-        boolean opGood =
-                (op == FilterOperatorEnum.EQ || op == FilterOperatorEnum.NEQ || op == FilterOperatorEnum.LT
-                        || op == FilterOperatorEnum.LTE || op == FilterOperatorEnum.GT
-                        || op == FilterOperatorEnum.GTE || op == FilterOperatorEnum.IN
-                        || op == FilterOperatorEnum.ISNULL || op == FilterOperatorEnum.ISNOTNULL);
+        boolean opGood = (op == FilterOperatorEnum.EQ || op == FilterOperatorEnum.NEQ || op == FilterOperatorEnum.LT || op == FilterOperatorEnum.LTE || op == FilterOperatorEnum.GT || op == FilterOperatorEnum.GTE || op == FilterOperatorEnum.IN || op == FilterOperatorEnum.ISNULL || op == FilterOperatorEnum.ISNOTNULL);
         if (opGood == false)
             throw new IllegalArgumentException("Unsupported operator " + op);
     }
@@ -68,13 +63,13 @@ public class CompareTupleFilter extends TupleFilter {
         if (child instanceof ColumnTupleFilter) {
             ColumnTupleFilter columnFilter = (ColumnTupleFilter) child;
             if (this.column != null) {
-                throw new IllegalStateException("Duplicate columns! old is " + column.getName()
-                        + " and new is " + columnFilter.getColumn().getName());
+                throw new IllegalStateException("Duplicate columns! old is " + column.getName() + " and new is " + columnFilter.getColumn().getName());
             }
             this.column = columnFilter.getColumn();
-            // if value is before column, we need to reverse the operator. e.g. "1 >= c1" => "c1 < 1"
+            // if value is before column, we need to reverse the operator. e.g.
+            // "1 >= c1" => "c1 <= 1"
             if (!this.conditionValues.isEmpty() && needSwapOperator()) {
-                this.operator = REVERSE_OP_MAP.get(this.operator);
+                this.operator = SWAP_OP_MAP.get(this.operator);
             }
         } else if (child instanceof ConstantTupleFilter) {
             this.conditionValues.addAll(child.getValues());
@@ -90,8 +85,7 @@ public class CompareTupleFilter extends TupleFilter {
     }
 
     private boolean needSwapOperator() {
-        return operator == FilterOperatorEnum.LT || operator == FilterOperatorEnum.GT
-                || operator == FilterOperatorEnum.LTE || operator == FilterOperatorEnum.GTE;
+        return operator == FilterOperatorEnum.LT || operator == FilterOperatorEnum.GT || operator == FilterOperatorEnum.LTE || operator == FilterOperatorEnum.GTE;
     }
 
     public Pair<ColumnTupleFilter, ConstantTupleFilter> getColumnAndConstant() {
@@ -149,13 +143,12 @@ public class CompareTupleFilter extends TupleFilter {
 
     @Override
     public String toString() {
-        return "CompareFilter [" + column + " " + operator + " " + conditionValues + ", children=" + children
-                + "]";
+        return "CompareFilter [" + column + " " + operator + " " + conditionValues + ", children=" + children + "]";
     }
 
     @Override
     public boolean evaluate(ITuple tuple) {
-        // extract tuple value 
+        // extract tuple value
         String tupleValue = null;
         for (TupleFilter filter : this.children) {
             if (!(filter instanceof ConstantTupleFilter)) {
@@ -179,7 +172,8 @@ public class CompareTupleFilter extends TupleFilter {
         if (firstCondValue.equals(nullString))
             return false;
 
-        // tricky here -- order is ensured by string compare (even for number columns)
+        // tricky here -- order is ensured by string compare (even for number
+        // columns)
         // because it's row key ID (not real value) being compared
         int comp = tupleValue.compareTo(firstCondValue);
 
@@ -223,8 +217,8 @@ public class CompareTupleFilter extends TupleFilter {
         int size = this.dynamicVariables.size();
         BytesUtil.writeVInt(size, buffer);
         for (Map.Entry<String, String> entry : this.dynamicVariables.entrySet()) {
-            BytesUtil.writeByteArray(Bytes.toBytes(entry.getKey()), buffer);
-            BytesUtil.writeByteArray(Bytes.toBytes(entry.getValue()), buffer);
+            BytesUtil.writeUTFString(entry.getKey(), buffer);
+            BytesUtil.writeUTFString(entry.getValue(), buffer);
         }
         BytesUtil.writeAsciiString(nullString, buffer);
         byte[] result = new byte[buffer.position()];
@@ -238,10 +232,8 @@ public class CompareTupleFilter extends TupleFilter {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         int size = BytesUtil.readVInt(buffer);
         for (int i = 0; i < size; i++) {
-            byte[] nameBytes = BytesUtil.readByteArray(buffer);
-            String nameString = Bytes.toString(nameBytes);
-            byte[] valueBytes = BytesUtil.readByteArray(buffer);
-            String valueString = Bytes.toString(valueBytes);
+            String nameString = BytesUtil.readUTFString(buffer);
+            String valueString = BytesUtil.readUTFString(buffer);
             bindVariable(nameString, valueString);
         }
         this.nullString = BytesUtil.readAsciiString(buffer);

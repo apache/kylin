@@ -25,7 +25,7 @@ import com.kylinolap.common.util.BytesUtil;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class LongSerializer extends MeasureSerializer<LongWritable> {
 

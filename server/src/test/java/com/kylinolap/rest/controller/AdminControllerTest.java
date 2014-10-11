@@ -30,7 +30,7 @@ import com.kylinolap.rest.service.UserService;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class AdminControllerTest extends TestBase {
 

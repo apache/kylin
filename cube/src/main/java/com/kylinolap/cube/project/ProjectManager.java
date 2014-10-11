@@ -51,24 +51,20 @@ import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class ProjectManager {
     private static final Logger logger = LoggerFactory.getLogger(ProjectManager.class);
 
     // static cached instances
-    private static final ConcurrentHashMap<KylinConfig, ProjectManager> CACHE =
-            new ConcurrentHashMap<KylinConfig, ProjectManager>();
-    private static final Serializer<ProjectInstance> PROJECT_SERIALIZER =
-            new JsonSerializer<ProjectInstance>(ProjectInstance.class);
+    private static final ConcurrentHashMap<KylinConfig, ProjectManager> CACHE = new ConcurrentHashMap<KylinConfig, ProjectManager>();
+    private static final Serializer<ProjectInstance> PROJECT_SERIALIZER = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
 
     private KylinConfig config;
     // project name => ProjrectDesc
-    private SingleValueCache<String, ProjectInstance> projectMap =
-            new SingleValueCache<String, ProjectInstance>(Broadcaster.TYPE.PROJECT);
+    private SingleValueCache<String, ProjectInstance> projectMap = new SingleValueCache<String, ProjectInstance>(Broadcaster.TYPE.PROJECT);
     // project name => tables
-    private Multimap<String, ProjectTable> projectTables = Multimaps.synchronizedMultimap(HashMultimap
-            .<String, ProjectTable> create());
+    private Multimap<String, ProjectTable> projectTables = Multimaps.synchronizedMultimap(HashMultimap.<String, ProjectTable> create());
 
     public static ProjectManager getInstance(KylinConfig config) {
         ProjectManager r = CACHE.get(config);
@@ -125,8 +121,7 @@ public class ProjectManager {
         }
 
         if (projectInstance.getCubes().size() != 0) {
-            throw new IllegalStateException("The project named " + projectName
-                    + " can not be deleted because there's still cubes in it. Delete all the cubes first.");
+            throw new IllegalStateException("The project named " + projectName + " can not be deleted because there's still cubes in it. Delete all the cubes first.");
         }
 
         logger.info("Dropping project '" + projectInstance.getName() + "'");
@@ -142,8 +137,7 @@ public class ProjectManager {
         return projectMap.get(projectName);
     }
 
-    public ProjectInstance createProject(String projectName, String owner, String description)
-            throws IOException {
+    public ProjectInstance createProject(String projectName, String owner, String description) throws IOException {
 
         logger.info("Creating project '" + projectName);
 
@@ -159,8 +153,7 @@ public class ProjectManager {
         return currentProject;
     }
 
-    public ProjectInstance updateProject(ProjectInstance project, String newName, String newDesc)
-            throws IOException {
+    public ProjectInstance updateProject(ProjectInstance project, String newName, String newDesc) throws IOException {
         if (!project.getName().equals(newName)) {
             ProjectInstance newProject = this.createProject(newName, project.getOwner(), newDesc);
             newProject.setCreateTime(project.getCreateTime());
@@ -188,8 +181,7 @@ public class ProjectManager {
         return this.listAllCubes(projectName).contains(cube);
     }
 
-    public ProjectInstance updateCubeToProject(String cubeName, String newProjectName, String owner)
-            throws IOException {
+    public ProjectInstance updateCubeToProject(String cubeName, String newProjectName, String owner) throws IOException {
         removeCubeFromProjects(cubeName);
 
         return addCubeToProject(cubeName, newProjectName, owner);
@@ -407,8 +399,7 @@ public class ProjectManager {
         ResourceStore store = getStore();
         List<String> paths = store.collectResourceRecursively(ResourceStore.PROJECT_RESOURCE_ROOT, ".json");
 
-        logger.debug("Loading Project from folder "
-                + store.getReadableResourcePath(ResourceStore.PROJECT_RESOURCE_ROOT));
+        logger.debug("Loading Project from folder " + store.getReadableResourcePath(ResourceStore.PROJECT_RESOURCE_ROOT));
 
         for (String path : paths) {
             loadProject(path, false);
@@ -422,9 +413,7 @@ public class ProjectManager {
         String newProjectName = ProjectInstance.getNormalizedProjectName(project);
         ProjectInstance newProject = getProject(newProjectName);
         if (newProject == null) {
-            newProject =
-                    this.createProject(newProjectName, user,
-                            "This is a project automatically added when adding cube " + cubeName);
+            newProject = this.createProject(newProjectName, user, "This is a project automatically added when adding cube " + cubeName);
         }
         newProject.addCube(cubeName);
         saveResource(newProject);
@@ -498,8 +487,7 @@ public class ProjectManager {
 
         ColumnDesc srcCol = t.findColumnByName(column);
         if (srcCol == null)
-            throw new IllegalStateException("No SourceColumn found by name '" + table + "/" + column
-                    + "', ref by " + refObj);
+            throw new IllegalStateException("No SourceColumn found by name '" + table + "/" + column + "', ref by " + refObj);
 
         if (!projTable.getColumns().contains(srcCol.getName())) {
             projTable.getColumns().add(srcCol.getName());

@@ -24,10 +24,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import com.kylinolap.common.persistence.HBaseConnection;
 import org.apache.hadoop.hbase.client.HConnection;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.persistence.HBaseConnection;
+import com.kylinolap.common.persistence.StorageException;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.invertedindex.IIKeyValueCodec;
@@ -39,15 +40,14 @@ import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.storage.IStorageEngine;
 import com.kylinolap.storage.StorageContext;
-import com.kylinolap.common.persistence.StorageException;
 import com.kylinolap.storage.filter.TupleFilter;
+import com.kylinolap.storage.tuple.ITupleIterator;
 import com.kylinolap.storage.tuple.Tuple;
 import com.kylinolap.storage.tuple.TupleInfo;
-import com.kylinolap.storage.tuple.ITupleIterator;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class InvertedIndexStorageEngine implements IStorageEngine {
 
@@ -60,8 +60,7 @@ public class InvertedIndexStorageEngine implements IStorageEngine {
     }
 
     @Override
-    public ITupleIterator search(Collection<TblColRef> dimensions, TupleFilter filter,
-            Collection<TblColRef> groups, Collection<FunctionDesc> metrics, StorageContext context) {
+    public ITupleIterator search(Collection<TblColRef> dimensions, TupleFilter filter, Collection<TblColRef> groups, Collection<FunctionDesc> metrics, StorageContext context) {
 
         try {
             return new IISegmentTupleIterator(context);
@@ -86,8 +85,7 @@ public class InvertedIndexStorageEngine implements IStorageEngine {
 
             HConnection hconn = HBaseConnection.get(hbaseUrl);
             String tableName = seg.getStorageLocationIdentifier();
-            kvIterator =
-                    new HBaseKeyValueIterator(hconn, tableName, HBASE_FAMILY_BYTES, HBASE_QUALIFIER_BYTES);
+            kvIterator = new HBaseKeyValueIterator(hconn, tableName, HBASE_FAMILY_BYTES, HBASE_QUALIFIER_BYTES);
             codec = new IIKeyValueCodec(new TableRecordInfo(seg));
             sliceIterator = codec.decodeKeyValue(kvIterator).iterator();
         }

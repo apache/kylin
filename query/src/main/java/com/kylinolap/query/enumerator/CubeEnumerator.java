@@ -151,9 +151,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
 
         // query storage engine
         IStorageEngine storageEngine = StorageEngineFactory.getStorageEngine(olapContext.cubeInstance);
-        ITupleIterator iterator =
-                storageEngine.search(dimensions, olapContext.filter, olapContext.groupByColumns, metrics,
-                        olapContext.storageContext);
+        ITupleIterator iterator = storageEngine.search(dimensions, olapContext.filter, olapContext.groupByColumns, metrics, olapContext.storageContext);
         if (logger.isDebugEnabled()) {
             logger.debug("return TupleIterator...");
         }
@@ -174,24 +172,25 @@ public class CubeEnumerator implements Enumerator<Object[]> {
         Set<TblColRef> columnNotOnGroupBy = Sets.newHashSet();
 
         if (olapContext.isSimpleQuery()) {
-            //In order to prevent coprocessor from doing the real aggregating,
-            //All dimensions are injected
+            // In order to prevent coprocessor from doing the real aggregating,
+            // All dimensions are injected
             for (DimensionDesc dim : olapContext.cubeDesc.getDimensions()) {
                 for (TblColRef col : dim.getColumnRefs()) {
                     dimensions.add(col);
                 }
             }
-            //select sth from fact table
+            // select sth from fact table
             for (MeasureDesc measure : olapContext.cubeDesc.getMeasures()) {
                 FunctionDesc func = measure.getFunction();
                 if (func.isSum()) {
-                    //the rewritten name for sum(metric) is metric itself
+                    // the rewritten name for sum(metric) is metric itself
                     metrics.add(func);
                 }
             }
             olapContext.storageContext.markAvoidAggregation();
         } else {
-            // any column has only a single value in result set can be excluded in check of exact aggregation
+            // any column has only a single value in result set can be excluded
+            // in check of exact aggregation
             Set<TblColRef> singleValueCols = findSingleValueColumns(olapContext.filter);
             for (TblColRef column : olapContext.allColumns) {
                 // skip measure columns
@@ -199,15 +198,13 @@ public class CubeEnumerator implements Enumerator<Object[]> {
                     continue;
                 }
 
-                if (olapContext.groupByColumns.contains(column) == false
-                        && singleValueCols.contains(column) == false) {
+                if (olapContext.groupByColumns.contains(column) == false && singleValueCols.contains(column) == false) {
                     columnNotOnGroupBy.add(column);
                 }
 
                 if (olapContext.cubeDesc.isDerived(column)) {
                     DeriveInfo hostInfo = olapContext.cubeDesc.getHostInfo(column);
-                    if (hostInfo.isOneToOne == false
-                            && containsAll(olapContext.groupByColumns, hostInfo.columns) == false) {
+                    if (hostInfo.isOneToOne == false && containsAll(olapContext.groupByColumns, hostInfo.columns) == false) {
                         derivedPostAggregation.add(column);
                     }
                     for (TblColRef hostCol : hostInfo.columns) {
@@ -220,8 +217,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
         }
 
         if (derivedPostAggregation.size() > 0) {
-            logger.info("ExactAggregation is false due to derived " + derivedPostAggregation
-                    + " require post aggregation");
+            logger.info("ExactAggregation is false due to derived " + derivedPostAggregation + " require post aggregation");
         } else if (columnNotOnGroupBy.size() > 0) {
             logger.info("ExactAggregation is false due to " + columnNotOnGroupBy + " not on group by");
         } else {
@@ -254,8 +250,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
             if (f instanceof CompareTupleFilter) {
                 CompareTupleFilter compFilter = (CompareTupleFilter) f;
                 // is COL=const ?
-                if (compFilter.getOperator() == FilterOperatorEnum.EQ && compFilter.getValues().size() == 1
-                        && compFilter.getColumn() != null) {
+                if (compFilter.getOperator() == FilterOperatorEnum.EQ && compFilter.getValues().size() == 1 && compFilter.getColumn() != null) {
                     result.add(compFilter.getColumn());
                 }
             }

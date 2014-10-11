@@ -35,20 +35,17 @@ import com.kylinolap.metadata.MetadataManager;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class JobDAO {
     private static Logger log = LoggerFactory.getLogger(JobDAO.class);
 
-    private static final Serializer<JobInstance> JOB_SERIALIZER = new JsonSerializer<JobInstance>(
-            JobInstance.class);
-    private static final Serializer<JobStepOutput> JOB_OUTPUT_SERIALIZER = new JsonSerializer<JobStepOutput>(
-            JobStepOutput.class);
+    private static final Serializer<JobInstance> JOB_SERIALIZER = new JsonSerializer<JobInstance>(JobInstance.class);
+    private static final Serializer<JobStepOutput> JOB_OUTPUT_SERIALIZER = new JsonSerializer<JobStepOutput>(JobStepOutput.class);
 
     private ResourceStore store;
 
-    private static final ConcurrentHashMap<KylinConfig, JobDAO> CACHE =
-            new ConcurrentHashMap<KylinConfig, JobDAO>();
+    private static final ConcurrentHashMap<KylinConfig, JobDAO> CACHE = new ConcurrentHashMap<KylinConfig, JobDAO>();
 
     public static JobDAO getInstance(KylinConfig config) {
         JobDAO r = CACHE.get(config);
@@ -120,8 +117,7 @@ public class JobDAO {
     }
 
     public JobStepOutput getJobOutput(String jobUuid, int stepSequenceId) throws IOException {
-        return readJobOutputResource(ResourceStore.JOB_OUTPUT_PATH_ROOT + "/"
-                + JobStepOutput.nameOfOutput(jobUuid, stepSequenceId));
+        return readJobOutputResource(ResourceStore.JOB_OUTPUT_PATH_ROOT + "/" + JobStepOutput.nameOfOutput(jobUuid, stepSequenceId));
     }
 
     public JobStepOutput getJobOutput(JobStep jobStep) throws IOException {
@@ -193,14 +189,13 @@ public class JobDAO {
     public void updateRunningJobToError() throws IOException {
         List<JobInstance> runningJobs = listAllJobs(JobStatusEnum.RUNNING);
         for (JobInstance job : runningJobs) {
-            //job.setStatus(JobStatusEnum.ERROR);
+            // job.setStatus(JobStatusEnum.ERROR);
 
             // set the last running step to ERROR
             int lastRunningStepIndex = 0;
             for (int i = job.getSteps().size() - 1; i >= 0; i--) {
                 JobStep currentStep = job.getSteps().get(i);
-                if (currentStep.getStatus() != JobStepStatusEnum.RUNNING
-                        && currentStep.getStatus() != JobStepStatusEnum.WAITING) {
+                if (currentStep.getStatus() != JobStepStatusEnum.RUNNING && currentStep.getStatus() != JobStepStatusEnum.WAITING) {
                     continue;
                 } else {
                     lastRunningStepIndex = i;

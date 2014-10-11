@@ -18,7 +18,7 @@ package com.kylinolap.job.exception;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class InvalidJobStatusException extends Exception {
 

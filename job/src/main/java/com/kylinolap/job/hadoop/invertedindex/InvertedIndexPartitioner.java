@@ -26,10 +26,9 @@ import com.kylinolap.job.constant.BatchConstants;
 
 /**
  * @author yangli9
- *
+ * 
  */
-public class InvertedIndexPartitioner extends Partitioner<LongWritable, ImmutableBytesWritable> implements
-        Configurable {
+public class InvertedIndexPartitioner extends Partitioner<LongWritable, ImmutableBytesWritable> implements Configurable {
 
     Configuration conf;
     long timestampGranularity;

@@ -32,7 +32,7 @@ import com.kylinolap.common.KylinConfig;
  * Broadcast kylin event out
  * 
  * @author jianliu
- *
+ * 
  */
 public class Broadcaster {
 
@@ -66,7 +66,8 @@ public class Broadcaster {
     /**
      * Broadcast the cubedesc event out
      * 
-     * @param action event action
+     * @param action
+     *            event action
      */
     public static synchronized void queue(String type, String action, String key) {
         BroadcastEvent event = BroadcasterHolder.INSTANCE.new BroadcastEvent(type, action, key);
@@ -83,11 +84,8 @@ public class Broadcaster {
 
         for (BroadcastEvent event : broadcaseEvents) {
             for (String nodeUri : nodes) {
-                logger.debug("Broadcast nodeUri: " + nodeUri + ", type: " + event.getType() + ", action: "
-                        + event.getAction() + ", name: " + event.getName());
-                WipeCacheThread thread =
-                        BroadcasterHolder.INSTANCE.new WipeCacheThread(nodeUri, event.getType(),
-                                event.getAction(), event.getName());
+                logger.debug("Broadcast nodeUri: " + nodeUri + ", type: " + event.getType() + ", action: " + event.getAction() + ", name: " + event.getName());
+                WipeCacheThread thread = BroadcasterHolder.INSTANCE.new WipeCacheThread(nodeUri, event.getType(), event.getAction(), event.getName());
                 thread.start();
             }
         }
@@ -113,7 +111,9 @@ public class Broadcaster {
             this.name = name;
         }
 
-        /* (non-Javadoc)
+        /*
+         * (non-Javadoc)
+         * 
          * @see java.lang.Thread#run()
          */
         @Override

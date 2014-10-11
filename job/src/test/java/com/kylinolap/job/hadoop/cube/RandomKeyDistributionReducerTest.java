@@ -34,12 +34,13 @@ import com.kylinolap.job.hadoop.invertedindex.RandomKeyDistributionReducer;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class RandomKeyDistributionReducerTest {
     ReduceDriver<Text, LongWritable, Text, LongWritable> reduceDriver;
 
     @Before
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public void setUp() {
         RandomKeyDistributionReducer reducer = new RandomKeyDistributionReducer();
         reduceDriver = ReduceDriver.newReduceDriver(reducer);

@@ -38,7 +38,7 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class InvertedIndexMapper<KEYIN> extends Mapper<KEYIN, Text, LongWritable, ImmutableBytesWritable> {
 
@@ -60,8 +60,7 @@ public class InvertedIndexMapper<KEYIN> extends Mapper<KEYIN, Text, LongWritable
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
         CubeManager mgr = CubeManager.getInstance(config);
         CubeInstance cube = mgr.getCube(conf.get(BatchConstants.CFG_CUBE_NAME));
-        CubeSegment seg =
-                cube.getSegment(conf.get(BatchConstants.CFG_CUBE_SEGMENT_NAME), CubeSegmentStatusEnum.NEW);
+        CubeSegment seg = cube.getSegment(conf.get(BatchConstants.CFG_CUBE_SEGMENT_NAME), CubeSegmentStatusEnum.NEW);
         this.info = new TableRecordInfo(seg);
         this.rec = new TableRecord(this.info);
 
@@ -79,8 +78,7 @@ public class InvertedIndexMapper<KEYIN> extends Mapper<KEYIN, Text, LongWritable
         SplittedBytes[] parts = splitter.getSplitBuffers();
 
         if (nParts != info.getColumnCount()) {
-            throw new RuntimeException("Got " + parts.length + " from -- " + value.toString()
-                    + " -- but only " + info.getColumnCount() + " expected");
+            throw new RuntimeException("Got " + parts.length + " from -- " + value.toString() + " -- but only " + info.getColumnCount() + " expected");
         }
 
         rec.reset();

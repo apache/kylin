@@ -25,12 +25,10 @@ import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
 
 /**
- * Table Metadata from Source.  All name should be uppercase.
+ * Table Metadata from Source. All name should be uppercase.
  * <p/>
- * User: lukhan
- * Date: 10/15/13
- * Time: 9:06 AM
- * To change this template use File | Settings | File Templates.
+ * User: lukhan Date: 10/15/13 Time: 9:06 AM To change this template use File |
+ * Settings | File Templates.
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class TableDesc extends RootPersistentEntity {
@@ -43,7 +41,7 @@ public class TableDesc extends RootPersistentEntity {
 
     public ColumnDesc findColumnByName(String name) {
         for (ColumnDesc c : columns) {
-            //return first matched column
+            // return first matched column
             if (name.equalsIgnoreCase(c.getName())) {
                 return c;
             }

@@ -35,7 +35,7 @@ import com.kylinolap.job.engine.JobEngineConfig;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class JobFlow {
 
@@ -57,11 +57,10 @@ public class JobFlow {
 
         // sort the steps by step_sequenceID
         Collections.sort(sortedSteps);
-        // find the 1st runnable job 
+        // find the 1st runnable job
         int firstStepIndex = findFirstStep(sortedSteps);
 
-        log.info("Job " + jobInstance.getUuid() + " will be started at step " + firstStepIndex
-                + " (sequence number)");
+        log.info("Job " + jobInstance.getUuid() + " will be started at step " + firstStepIndex + " (sequence number)");
 
         flowNodes = new LinkedList<JobDetail>();
         for (int i = firstStepIndex; i < sortedSteps.size(); i++) {
@@ -121,27 +120,20 @@ public class JobFlow {
         }
 
         // submit job the different groups based on isRunAsync property
-        JobDetail jobFlowNode =
-                JobBuilder
-                        .newJob(step.isRunAsync() ? AsyncJobFlowNode.class : JobFlowNode.class)
-                        .withIdentity(JobInstance.getStepIdentity(jobInstance, step),
-                                JobConstants.CUBE_JOB_GROUP_NAME).storeDurably().build();
+        JobDetail jobFlowNode = JobBuilder.newJob(step.isRunAsync() ? AsyncJobFlowNode.class : JobFlowNode.class).withIdentity(JobInstance.getStepIdentity(jobInstance, step), JobConstants.CUBE_JOB_GROUP_NAME).storeDurably().build();
 
-        // add job flow to node 
+        // add job flow to node
         jobFlowNode.getJobDataMap().put(JobConstants.PROP_JOB_FLOW, this);
 
-        // add command to flow node 
-        String execCmd =
-                (step.getCmdType() == JobStepCmdTypeEnum.SHELL_CMD || step.getCmdType() == JobStepCmdTypeEnum.SHELL_CMD_HADOOP)
-                        ? wrapExecCmd(jobInstance, step.getExecCmd(), String.valueOf(step.getSequenceID()))
-                        : step.getExecCmd();
+        // add command to flow node
+        String execCmd = (step.getCmdType() == JobStepCmdTypeEnum.SHELL_CMD || step.getCmdType() == JobStepCmdTypeEnum.SHELL_CMD_HADOOP) ? wrapExecCmd(jobInstance, step.getExecCmd(), String.valueOf(step.getSequenceID())) : step.getExecCmd();
         jobFlowNode.getJobDataMap().put(JobConstants.PROP_COMMAND, execCmd);
 
-        // add job instance and step sequenceID to flow node 
+        // add job instance and step sequenceID to flow node
         jobFlowNode.getJobDataMap().put(JobConstants.PROP_JOBINSTANCE_UUID, jobInstance.getUuid());
         jobFlowNode.getJobDataMap().put(JobConstants.PROP_JOBSTEP_SEQ_ID, step.getSequenceID());
 
-        // add async flag to flow node 
+        // add async flag to flow node
         jobFlowNode.getJobDataMap().put(JobConstants.PROP_JOB_ASYNC, step.isRunAsync());
 
         return jobFlowNode;

@@ -61,8 +61,7 @@ public class FactDistinctColumnsReducer extends Reducer<ShortWritable, Text, Nul
     }
 
     @Override
-    public void reduce(ShortWritable key, Iterable<Text> values, Context context) throws IOException,
-            InterruptedException {
+    public void reduce(ShortWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
         TblColRef col = columnList.get(key.get());
 
         HashSet<ByteArray> set = new HashSet<ByteArray>();

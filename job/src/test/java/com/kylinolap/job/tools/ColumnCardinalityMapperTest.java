@@ -41,7 +41,7 @@ import com.kylinolap.job.hadoop.cardinality.HiveColumnCardinalityJob;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class ColumnCardinalityMapperTest {
 
@@ -73,7 +73,7 @@ public class ColumnCardinalityMapperTest {
             mapDriver.addInput(inputKey, new Text(s));
             s = breader.readLine();
         }
-        //breader.close();
+        // breader.close();
         mapDriver.getConfiguration().set(HiveColumnCardinalityJob.KEY_INPUT_DELIM, "\20");
         List<Pair<IntWritable, BytesWritable>> result = mapDriver.run();
         breader.close();

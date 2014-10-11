@@ -25,11 +25,8 @@ import com.kylinolap.common.util.StringUtil;
 import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
- * Created with IntelliJ IDEA.
- * User: lukhan
- * Date: 9/24/13
- * Time: 10:40 AM
- * To change this template use File | Settings | File Templates.
+ * Created with IntelliJ IDEA. User: lukhan Date: 9/24/13 Time: 10:40 AM To
+ * change this template use File | Settings | File Templates.
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class DimensionDesc {
@@ -174,9 +171,7 @@ public class DimensionDesc {
 
     @Override
     public String toString() {
-        return "DimensionDesc [name=" + name + ", join=" + join + ", hierarchy=" + Arrays.toString(hierarchy)
-                + ", table=" + table + ", column=" + column + ", datatype=" + datatype + ", derived="
-                + Arrays.toString(derived) + "]";
+        return "DimensionDesc [name=" + name + ", join=" + join + ", hierarchy=" + Arrays.toString(hierarchy) + ", table=" + table + ", column=" + column + ", datatype=" + datatype + ", derived=" + Arrays.toString(derived) + "]";
     }
 
     public void init(Map<String, TableDesc> tables) {

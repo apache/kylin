@@ -30,8 +30,7 @@ import org.slf4j.LoggerFactory;
 public class BytesSplitter {
     private static final Logger logger = LoggerFactory.getLogger(BytesSplitter.class);
 
-    private static final int[] COMMON_DELIMS = new int[] { "\177".codePointAt(0), "|".codePointAt(0),
-            "\t".codePointAt(0), ",".codePointAt(0) };
+    private static final int[] COMMON_DELIMS = new int[] { "\177".codePointAt(0), "|".codePointAt(0), "\t".codePointAt(0), ",".codePointAt(0) };
 
     private SplittedBytes[] splitBuffers;
     private int bufferSize;
@@ -115,8 +114,7 @@ public class BytesSplitter {
                             delimiterFound = true;
                             foundDelimiter = c;
                         } else if (c != foundDelimiter) {
-                            throw new IOException("Duplicate delimiter found, found delimiter is : "
-                                    + foundDelimiter + " new delimiter is " + c);
+                            throw new IOException("Duplicate delimiter found, found delimiter is : " + foundDelimiter + " new delimiter is " + c);
                         }
                     }
                 } catch (Exception e) {
@@ -137,8 +135,7 @@ public class BytesSplitter {
             if (nParts == expectedParts)
                 return COMMON_DELIMS[i];
         }
-        throw new RuntimeException("Cannot detect delimeter from first line -- " + value.toString()
-                + " -- expect " + expectedParts + " columns");
+        throw new RuntimeException("Cannot detect delimeter from first line -- " + value.toString() + " -- expect " + expectedParts + " columns");
     }
 
 }

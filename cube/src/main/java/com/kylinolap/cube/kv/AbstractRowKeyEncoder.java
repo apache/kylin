@@ -38,14 +38,12 @@ public abstract class AbstractRowKeyEncoder {
 
     protected static final Logger logger = LoggerFactory.getLogger(AbstractRowKeyEncoder.class);
 
-    private static final Map<String, Map<Long, AbstractRowKeyEncoder>> ENCODER_CACHE =
-            new ConcurrentHashMap<String, Map<Long, AbstractRowKeyEncoder>>();
+    private static final Map<String, Map<Long, AbstractRowKeyEncoder>> ENCODER_CACHE = new ConcurrentHashMap<String, Map<Long, AbstractRowKeyEncoder>>();
 
     public static AbstractRowKeyEncoder createInstance(CubeSegment cubeSeg, Cuboid cuboid) {
 
-        //The storage location identifier is unique for every segment
-        Map<Long, AbstractRowKeyEncoder> cubeCache =
-                ENCODER_CACHE.get(cubeSeg.getStorageLocationIdentifier());
+        // The storage location identifier is unique for every segment
+        Map<Long, AbstractRowKeyEncoder> cubeCache = ENCODER_CACHE.get(cubeSeg.getStorageLocationIdentifier());
 
         if (cubeCache == null) {
             cubeCache = new HashMap<Long, AbstractRowKeyEncoder>();

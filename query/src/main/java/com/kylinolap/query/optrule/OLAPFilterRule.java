@@ -26,7 +26,7 @@ import com.kylinolap.query.relnode.OLAPRel;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 
 public class OLAPFilterRule extends RelOptRule {
@@ -42,9 +42,7 @@ public class OLAPFilterRule extends RelOptRule {
         FilterRel filter = call.rel(0);
 
         RelTraitSet traitSet = filter.getTraitSet().replace(OLAPRel.CONVENTION);
-        OLAPFilterRel olapFilter =
-                new OLAPFilterRel(filter.getCluster(), traitSet, convert(filter.getChild(), traitSet),
-                        filter.getCondition());
+        OLAPFilterRel olapFilter = new OLAPFilterRel(filter.getCluster(), traitSet, convert(filter.getChild(), traitSet), filter.getCondition());
         call.transformTo(olapFilter);
     }
 

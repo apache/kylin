@@ -27,8 +27,7 @@ public class LogicalTupleFilter extends TupleFilter {
 
     public LogicalTupleFilter(FilterOperatorEnum op) {
         super(new ArrayList<TupleFilter>(2), op);
-        boolean opGood =
-                (op == FilterOperatorEnum.AND || op == FilterOperatorEnum.OR || op == FilterOperatorEnum.NOT);
+        boolean opGood = (op == FilterOperatorEnum.AND || op == FilterOperatorEnum.OR || op == FilterOperatorEnum.NOT);
         if (opGood == false)
             throw new IllegalArgumentException("Unsupported operator " + op);
     }

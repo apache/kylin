@@ -26,7 +26,7 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class CreateInvertedIndexDictionaryJob extends AbstractHadoopJob {
 

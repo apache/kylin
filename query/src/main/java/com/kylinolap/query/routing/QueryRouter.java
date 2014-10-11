@@ -49,14 +49,19 @@ public class QueryRouter {
     public static CubeInstance findCube(OLAPContext olapContext) throws CubeNotFoundException {
 
         CubeInstance bestCube = null;
-        // NOTE: since some query has no groups and projections are the superset of groups, we choose projections.
+        // NOTE: since some query has no groups and projections are the superset
+        // of groups, we choose projections.
         ProjectManager projectManager = ProjectManager.getInstance(olapContext.olapSchema.getConfig());
 
         if (olapContext.isSimpleQuery()) {
-            //if simple query like "select X from fact table", just return the cube with most dimensions
-            //Note that this will only succeed to get best cube if the current simple query is on fact table.
-            //Simple query on look up table is handled in OLAPTableScan.genExecFunc
-            //In other words, for simple query on lookup tables, bestCube here will be assigned null.
+            // if simple query like "select X from fact table", just return the
+            // cube with most dimensions
+            // Note that this will only succeed to get best cube if the current
+            // simple query is on fact table.
+            // Simple query on look up table is handled in
+            // OLAPTableScan.genExecFunc
+            // In other words, for simple query on lookup tables, bestCube here
+            // will be assigned null.
             bestCube = findCubeWithMostDimensions(projectManager, olapContext);
         }
 
@@ -65,21 +70,14 @@ public class QueryRouter {
         }
 
         if (bestCube == null) {
-            throw new CubeNotFoundException("Can't find cube for fact table "
-                    + olapContext.firstTableScan.getCubeTable() + " in project "
-                    + olapContext.olapSchema.getProjectName() + " with dimensions "
-                    + getDimensionColumns(olapContext) + " and measures " + olapContext.aggregations
-                    + ". Also please check whether join types match what defined in Cube.");
+            throw new CubeNotFoundException("Can't find cube for fact table " + olapContext.firstTableScan.getCubeTable() + " in project " + olapContext.olapSchema.getProjectName() + " with dimensions " + getDimensionColumns(olapContext) + " and measures " + olapContext.aggregations + ". Also please check whether join types match what defined in Cube.");
         }
 
         return bestCube;
     }
 
-    private static CubeInstance findCubeWithMostDimensions(ProjectManager projectManager,
-            OLAPContext olapContext) {
-        List<CubeInstance> candidates =
-                projectManager.getOnlineCubesByFactTable(olapContext.olapSchema.getProjectName(),
-                        olapContext.firstTableScan.getCubeTable());
+    private static CubeInstance findCubeWithMostDimensions(ProjectManager projectManager, OLAPContext olapContext) {
+        List<CubeInstance> candidates = projectManager.getOnlineCubesByFactTable(olapContext.olapSchema.getProjectName(), olapContext.firstTableScan.getCubeTable());
         if (candidates.isEmpty()) {
             return null;
         }
@@ -87,19 +85,17 @@ public class QueryRouter {
         CubeInstance cubeWithMostColumns = candidates.get(0);
         for (CubeInstance instance : candidates) {
             int currentDimCount = instance.getDescriptor().listDimensionColumnsIncludingDerived().size();
-            int maxDimCount =
-                    cubeWithMostColumns.getDescriptor().listDimensionColumnsIncludingDerived().size();
+            int maxDimCount = cubeWithMostColumns.getDescriptor().listDimensionColumnsIncludingDerived().size();
 
-            if ((currentDimCount > maxDimCount)
-                    || ((currentDimCount == maxDimCount) && (instance.getCost() < cubeWithMostColumns
-                            .getCost())))
+            if ((currentDimCount > maxDimCount) || ((currentDimCount == maxDimCount) && (instance.getCost() < cubeWithMostColumns.getCost())))
                 cubeWithMostColumns = instance;
         }
         return cubeWithMostColumns;
     }
 
     private static void sortByCost(List<CubeInstance> matchCubes) {
-        // sort cube candidates, 0) the cost indicator, 1) the lesser header columns the better, 2) the lesser body columns the better
+        // sort cube candidates, 0) the cost indicator, 1) the lesser header
+        // columns the better, 2) the lesser body columns the better
         Collections.sort(matchCubes, new Comparator<CubeInstance>() {
             @Override
             public int compare(CubeInstance c1, CubeInstance c2) {
@@ -112,9 +108,7 @@ public class QueryRouter {
                 CubeDesc schema1 = c1.getDescriptor();
                 CubeDesc schema2 = c2.getDescriptor();
 
-                comp =
-                        schema1.listDimensionColumnsIncludingDerived().size()
-                                - schema2.listDimensionColumnsIncludingDerived().size();
+                comp = schema1.listDimensionColumnsIncludingDerived().size() - schema2.listDimensionColumnsIncludingDerived().size();
                 if (comp != 0)
                     return comp;
 
@@ -133,16 +127,13 @@ public class QueryRouter {
         return dimensionColumns;
     }
 
-    static List<CubeInstance> findMatchCubesForTableScanQuery(CubeManager cubeMgr, String factTableName,
-            Collection<TblColRef> dimensionColumns, Collection<FunctionDesc> functions)
-            throws CubeNotFoundException {
+    static List<CubeInstance> findMatchCubesForTableScanQuery(CubeManager cubeMgr, String factTableName, Collection<TblColRef> dimensionColumns, Collection<FunctionDesc> functions) throws CubeNotFoundException {
         return null;
     }
 
-    static CubeInstance findBestMatchCube(ProjectManager projectManager, OLAPContext olapContext)
-            throws CubeNotFoundException {
+    static CubeInstance findBestMatchCube(ProjectManager projectManager, OLAPContext olapContext) throws CubeNotFoundException {
 
-        //retrieve members from olapContext
+        // retrieve members from olapContext
         String factTableName = olapContext.firstTableScan.getCubeTable();
         String projectName = olapContext.olapSchema.getProjectName();
         Collection<TblColRef> dimensionColumns = getDimensionColumns(olapContext);
@@ -158,8 +149,7 @@ public class QueryRouter {
             buf.append(cube.getName());
             buf.append(",");
         }
-        logger.info("Find candidates by table " + factTableName + " and project=" + projectName + " : "
-                + buf.toString());
+        logger.info("Find candidates by table " + factTableName + " and project=" + projectName + " : " + buf.toString());
 
         // match dimensions & aggregations & joins
         Iterator<CubeInstance> it = candidates.iterator();
@@ -173,10 +163,12 @@ public class QueryRouter {
             boolean matchAggregation = isMatchedWithAggregations(functions, cube);
             boolean matchJoin = isMatchedWithJoins(joins, cube);
 
-            //Some cubes are not "perfectly" match, but still save them in case of usage
+            // Some cubes are not "perfectly" match, but still save them in case
+            // of usage
             if (isOnline && matchDimensions && !matchAggregation && matchJoin) {
-                //sometimes metrics are indeed dimensions
-                //e.g. select min(cal_dt) from ..., where cal_dt is actually a dimension
+                // sometimes metrics are indeed dimensions
+                // e.g. select min(cal_dt) from ..., where cal_dt is actually a
+                // dimension
                 if (isWeaklyMatchedWithAggregations(functions, metricsColumns, cube)) {
                     logger.info("Weak matched cube " + cube);
                     backups.add(cube);
@@ -184,21 +176,20 @@ public class QueryRouter {
             }
 
             if (!isOnline || !matchDimensions || !matchAggregation || !matchJoin) {
-                logger.info("Remove cube " + cube.getName() + " because " + " isOnlne=" + isOnline
-                        + ",matchDimensions=" + matchDimensions + ",matchAggregation=" + matchAggregation
-                        + ",matchJoin=" + matchJoin);
+                logger.info("Remove cube " + cube.getName() + " because " + " isOnlne=" + isOnline + ",matchDimensions=" + matchDimensions + ",matchAggregation=" + matchAggregation + ",matchJoin=" + matchJoin);
                 it.remove();
             }
         }
 
-        //normal case:
+        // normal case:
         if (!candidates.isEmpty()) {
             return getCheapestCube(candidates);
         }
-        //consider backup
+        // consider backup
         else if (!backups.isEmpty()) {
             CubeInstance cube = getCheapestCube(backups);
-            //Using backup cubes indicates that previous judgment on dimensions/metrics is incorrect
+            // Using backup cubes indicates that previous judgment on
+            // dimensions/metrics is incorrect
             adjustOLAPContext(dimensionColumns, functions, metricsColumns, cube, rewriteFields, olapContext);
             logger.info("Use weak matched cube " + cube.getName());
             return cube;
@@ -227,8 +218,7 @@ public class QueryRouter {
         return matchAgg;
     }
 
-    private static boolean isMatchedWithJoins(Collection<JoinDesc> joins, CubeInstance cube)
-            throws CubeNotFoundException {
+    private static boolean isMatchedWithJoins(Collection<JoinDesc> joins, CubeInstance cube) throws CubeNotFoundException {
         CubeDesc cubeDesc = cube.getDescriptor();
 
         List<JoinDesc> cubeJoins = new ArrayList<JoinDesc>(cubeDesc.getDimensions().size());
@@ -250,13 +240,12 @@ public class QueryRouter {
             // Using first column's table name to check.
             String fTable = j.getForeignKeyColumns()[0].getTable();
             if (!factTable.equals(fTable)) {
-                logger.info("Fact Table" + factTable + " not matched in join: " + j + " on cube "
-                        + cube.getName());
+                logger.info("Fact Table" + factTable + " not matched in join: " + j + " on cube " + cube.getName());
                 return false;
             }
 
-            //The hashcode() function of JoinDesc has been overwritten,
-            //which takes into consideration: pk,fk,jointype
+            // The hashcode() function of JoinDesc has been overwritten,
+            // which takes into consideration: pk,fk,jointype
             if (!cubeJoins.contains(j)) {
                 logger.info("Query joins don't macth on cube " + cube.getName());
                 return false;
@@ -265,8 +254,7 @@ public class QueryRouter {
         return true;
     }
 
-    private static boolean isWeaklyMatchedWithAggregations(Collection<FunctionDesc> aggregations,
-            Collection<TblColRef> metricColumns, CubeInstance cube) {
+    private static boolean isWeaklyMatchedWithAggregations(Collection<FunctionDesc> aggregations, Collection<TblColRef> metricColumns, CubeInstance cube) {
         CubeDesc cubeDesc = cube.getDescriptor();
         Collection<FunctionDesc> cubeFuncs = cubeDesc.listAllFunctions();
 
@@ -274,7 +262,8 @@ public class QueryRouter {
         for (FunctionDesc functionDesc : aggregations) {
             if (!cubeFuncs.contains(functionDesc)) {
 
-                if (functionDesc.isCountDistinct())//optiq can not handle distinct count
+                if (functionDesc.isCountDistinct())// optiq can not handle
+                                                   // distinct count
                     matched = false;
 
                 ParameterDesc param = functionDesc.getParameter();
@@ -291,9 +280,7 @@ public class QueryRouter {
         return matched;
     }
 
-    private static void adjustOLAPContext(Collection<TblColRef> dimensionColumns,
-            Collection<FunctionDesc> aggregations, Collection<TblColRef> metricColumns, CubeInstance cube,
-            Map<String, RelDataType> rewriteFields, OLAPContext olapContext) {
+    private static void adjustOLAPContext(Collection<TblColRef> dimensionColumns, Collection<FunctionDesc> aggregations, Collection<TblColRef> metricColumns, CubeInstance cube, Map<String, RelDataType> rewriteFields, OLAPContext olapContext) {
         CubeDesc cubeDesc = cube.getDescriptor();
         Collection<FunctionDesc> cubeFuncs = cubeDesc.listAllFunctions();
 
@@ -301,7 +288,7 @@ public class QueryRouter {
         while (it.hasNext()) {
             FunctionDesc functionDesc = it.next();
             if (!cubeFuncs.contains(functionDesc)) {
-                //try to convert the metric to dimension to see if it works
+                // try to convert the metric to dimension to see if it works
                 TblColRef col = findTblColByColumnName(metricColumns, functionDesc.getParameter().getValue());
                 functionDesc.setAppliedOnDimension(true);
                 rewriteFields.remove(functionDesc.getRewriteFieldName());

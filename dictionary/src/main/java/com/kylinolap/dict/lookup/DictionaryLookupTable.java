@@ -22,8 +22,8 @@ import com.kylinolap.dict.Dictionary;
 import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
- * An in-memory lookup table indexed by a dictionary column.
- * The column value must be unique within the table.
+ * An in-memory lookup table indexed by a dictionary column. The column value
+ * must be unique within the table.
  * 
  * @author yangli9
  */
@@ -39,8 +39,7 @@ public class DictionaryLookupTable {
     private int keyColIndex;
     private String[][] table;
 
-    public DictionaryLookupTable(TableDesc tableDesc, String keyCol, Dictionary<String> dict, String tablePath)
-            throws IOException {
+    public DictionaryLookupTable(TableDesc tableDesc, String keyCol, Dictionary<String> dict, String tablePath) throws IOException {
         this.tableDesc = tableDesc;
         this.keyCol = keyCol;
         this.dict = dict;
@@ -53,8 +52,7 @@ public class DictionaryLookupTable {
         table = new String[dict.getMaxId() - dict.getMinId() + 1][];
 
         if (table.length > MAX_CARDINALITY) // 1 million
-            throw new IllegalStateException("Too high cardinality of table " + tableDesc
-                    + " as an in-mem lookup: " + table.length);
+            throw new IllegalStateException("Too high cardinality of table " + tableDesc + " as an in-mem lookup: " + table.length);
 
         TableReader reader = new FileTable(tablePath, tableDesc.getColumnCount()).getReader();
         try {
@@ -64,8 +62,7 @@ public class DictionaryLookupTable {
                 int rowNo = getRowNoByValue(key);
 
                 if (table[rowNo] != null) // dup key
-                    throw new IllegalStateException("Dup key found, key=" + key + ", value1="
-                            + toString(table[rowNo]) + ", value2=" + toString(cols));
+                    throw new IllegalStateException("Dup key found, key=" + key + ", value1=" + toString(table[rowNo]) + ", value2=" + toString(cols));
 
                 table[rowNo] = cols;
             }

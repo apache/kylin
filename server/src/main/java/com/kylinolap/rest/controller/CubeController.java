@@ -64,7 +64,7 @@ import com.kylinolap.storage.hbase.coprocessor.CoprocessorEnabler;
 
 /**
  * CubeController is defined as Restful API entrance for UI.
- *
+ * 
  * @author jianliu
  */
 @Controller
@@ -81,16 +81,15 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "", method = { RequestMethod.GET })
     @ResponseBody
     @Metered(name = "listCubes")
-    public List<CubeInstance> getCubes(@RequestParam(value = "cubeName", required = false) String cubeName,
-            @RequestParam(value = "projectName", required = false) String projectName,
-            @RequestParam("limit") Integer limit, @RequestParam("offset") Integer offset) {
+    public List<CubeInstance> getCubes(@RequestParam(value = "cubeName", required = false) String cubeName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam("limit") Integer limit, @RequestParam("offset") Integer offset) {
         return cubeService.getCubes(cubeName, projectName, (null == limit) ? 20 : limit, offset);
     }
 
     /**
      * Get hive SQL of the cube
-     *
-     * @param cubeName Cube Name
+     * 
+     * @param cubeName
+     *            Cube Name
      * @return
      * @throws UnknownHostException
      * @throws IOException
@@ -117,11 +116,11 @@ public class CubeController extends BasicController {
 
     /**
      * Update cube notify list
-     *
+     * 
      * @param cubeName
      * @param notifyList
      * @throws IOException
-     * @throws CubeIntegrityException 
+     * @throws CubeIntegrityException
      */
     @RequestMapping(value = "/{cubeName}/notify_list", method = { RequestMethod.PUT })
     @ResponseBody
@@ -156,8 +155,7 @@ public class CubeController extends BasicController {
 
     @RequestMapping(value = "/{cubeName}/coprocessor", method = { RequestMethod.PUT })
     @ResponseBody
-    public Map<String, Boolean> updateCubeCoprocessor(@PathVariable String cubeName,
-            @RequestParam(value = "force") String force) {
+    public Map<String, Boolean> updateCubeCoprocessor(@PathVariable String cubeName, @RequestParam(value = "force") String force) {
         try {
             CoprocessorEnabler.updateCubeOverride(cubeName, force);
             return CoprocessorEnabler.getCubeOverrides();
@@ -170,13 +168,12 @@ public class CubeController extends BasicController {
 
     /**
      * Force rebuild a cube's lookup table snapshot
-     *
+     * 
      * @throws IOException
      */
     @RequestMapping(value = "/{cubeName}/segs/{segmentName}/refresh_lookup", method = { RequestMethod.PUT })
     @ResponseBody
-    public CubeInstance rebuildLookupSnapshot(@PathVariable String cubeName,
-            @PathVariable String segmentName, @RequestParam(value = "lookupTable") String lookupTable) {
+    public CubeInstance rebuildLookupSnapshot(@PathVariable String cubeName, @PathVariable String segmentName, @RequestParam(value = "lookupTable") String lookupTable) {
         try {
             return cubeService.rebuildLookupSnapshot(cubeName, segmentName, lookupTable);
         } catch (IOException e) {
@@ -188,11 +185,12 @@ public class CubeController extends BasicController {
     /**
      * Send a rebuild cube job
      * 
-     * @param cubeName    Cube ID
+     * @param cubeName
+     *            Cube ID
      * @return
-     * @throws SchedulerException 
+     * @throws SchedulerException
      * @throws IOException
-     * @throws InvalidJobInstanceException 
+     * @throws InvalidJobInstanceException
      */
     @RequestMapping(value = "/{cubeName}/rebuild", method = { RequestMethod.PUT })
     @ResponseBody
@@ -201,9 +199,7 @@ public class CubeController extends BasicController {
 
         try {
             CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
-            String jobId =
-                    jobService.submitJob(cube, jobBuildRequest.getStartTime(), jobBuildRequest.getEndTime(),
-                            CubeBuildTypeEnum.valueOf(jobBuildRequest.getBuildType()));
+            String jobId = jobService.submitJob(cube, jobBuildRequest.getStartTime(), jobBuildRequest.getEndTime(), CubeBuildTypeEnum.valueOf(jobBuildRequest.getBuildType()));
             jobInstance = jobService.getJobInstance(jobId);
         } catch (JobException e) {
             logger.error(e.getLocalizedMessage(), e);
@@ -221,7 +217,7 @@ public class CubeController extends BasicController {
 
     /**
      * Get available table list of the input database
-     *
+     * 
      * @return true
      * @throws IOException
      */
@@ -246,7 +242,7 @@ public class CubeController extends BasicController {
 
     /**
      * Get available table list of the input database
-     *
+     * 
      * @return true
      * @throws IOException
      */
@@ -287,7 +283,7 @@ public class CubeController extends BasicController {
 
     /**
      * Get available table list of the input database
-     *
+     * 
      * @return Table metadata array
      * @throws IOException
      */
@@ -308,9 +304,7 @@ public class CubeController extends BasicController {
 
         try {
             desc.setUuid(UUID.randomUUID().toString());
-            String projectName =
-                    (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest
-                            .getProject();
+            String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest.getProject();
             cubeService.createCubeAndDesc(name, projectName, desc);
         } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);
@@ -324,7 +318,7 @@ public class CubeController extends BasicController {
 
     /**
      * Get available table list of the input database
-     *
+     * 
      * @return Table metadata array
      * @throws IOException
      */
@@ -338,7 +332,7 @@ public class CubeController extends BasicController {
             return cubeRequest;
         }
 
-        //Check if the cube is editable
+        // Check if the cube is editable
         if (!cubeService.isCubeDescEditable(desc)) {
             String error = "Cube desc " + desc.getName().toUpperCase() + " is not editable.";
             updateRequest(cubeRequest, false, error);
@@ -348,9 +342,7 @@ public class CubeController extends BasicController {
         String descData = "";
         try {
             CubeInstance cube = cubeService.getCubeManager().getCube(cubeRequest.getCubeName());
-            String projectName =
-                    (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest
-                            .getProject();
+            String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest.getProject();
             desc = cubeService.updateCubeAndDesc(cube, desc, projectName);
 
             descData = JsonUtil.writeValueAsIndentString(desc);
@@ -373,7 +365,7 @@ public class CubeController extends BasicController {
 
     /**
      * Get available table list of the input database
-     *
+     * 
      * @return true
      * @throws IOException
      */

@@ -18,7 +18,7 @@ package com.kylinolap.job.constant;
 
 /**
  * @author ysong1, xduo
- *
+ * 
  */
 public class JobConstants {
 
@@ -45,17 +45,13 @@ public class JobConstants {
     public static final String PROP_JOBINSTANCE_UUID = "jobInstanceUuid";
     public static final String PROP_JOBSTEP_SEQ_ID = "jobStepSequenceID";
     public static final String PROP_COMMAND = "command";
-    //public static final String PROP_STORAGE_LOCATION = "storageLocationIdentifier";
+    // public static final String PROP_STORAGE_LOCATION =
+    // "storageLocationIdentifier";
     public static final String PROP_JOB_ASYNC = "jobAsync";
     public static final String PROP_JOB_CMD_EXECUTOR = "jobCmdExecutor";
     public static final String PROP_JOB_CMD_OUTPUT = "jobCmdOutput";
     public static final String PROP_JOB_KILLED = "jobKilled";
     public static final String PROP_JOB_RUNTIME_FLOWS = "jobFlows";
 
-    public static final String NOTIFY_EMAIL_TEMPLATE = "<div><b>Build Result of Job ${job_name}</b><pre><ul>"
-            + "<li>Build Result: <b>${result}</b></li>" + "<li>Job Engine: ${job_engine}</li>"
-            + "<li>Cube Name: ${cube_name}</li>" + "<li>Start Time: ${start_time}</li>"
-            + "<li>Duration: ${duration}</li>" + "<li>MR Waiting: ${mr_waiting}</li>"
-            + "<li>Last Update Time: ${last_update_time}</li>" + "<li>Error Log: ${error_log}</li>"
-            + "</ul></pre><div/>";
+    public static final String NOTIFY_EMAIL_TEMPLATE = "<div><b>Build Result of Job ${job_name}</b><pre><ul>" + "<li>Build Result: <b>${result}</b></li>" + "<li>Job Engine: ${job_engine}</li>" + "<li>Cube Name: ${cube_name}</li>" + "<li>Start Time: ${start_time}</li>" + "<li>Duration: ${duration}</li>" + "<li>MR Waiting: ${mr_waiting}</li>" + "<li>Last Update Time: ${last_update_time}</li>" + "<li>Error Log: ${error_log}</li>" + "</ul></pre><div/>";
 }

@@ -50,12 +50,12 @@ import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.tools.MailService;
 
-/** 
+/**
  * Handle kylin job and cube change update.
  * 
-* @author George Song (ysong1), xduo
-* 
-*/
+ * @author George Song (ysong1), xduo
+ * 
+ */
 public class JobFlowListener implements JobListener {
 
     private static Logger log = LoggerFactory.getLogger(JobFlowListener.class);
@@ -121,9 +121,7 @@ public class JobFlowListener implements JobListener {
                 try {
                     context.getScheduler().deleteJob(context.getJobDetail().getKey());
                     @SuppressWarnings("unchecked")
-                    ConcurrentHashMap<String, JobFlow> jobFlows =
-                            (ConcurrentHashMap<String, JobFlow>) context.getScheduler().getContext()
-                                    .get(JobConstants.PROP_JOB_RUNTIME_FLOWS);
+                    ConcurrentHashMap<String, JobFlow> jobFlows = (ConcurrentHashMap<String, JobFlow>) context.getScheduler().getContext().get(JobConstants.PROP_JOB_RUNTIME_FLOWS);
                     jobFlows.remove(JobInstance.getJobIdentity(jobInstance));
                 } catch (SchedulerException e) {
                     log.error(e.getMessage(), e);
@@ -132,15 +130,21 @@ public class JobFlowListener implements JobListener {
         }
     }
 
-    /* (non-Javadoc)
-     * @see org.quartz.JobListener#jobToBeExecuted(org.quartz.JobExecutionContext)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.quartz.JobListener#jobToBeExecuted(org.quartz.JobExecutionContext)
      */
     @Override
     public void jobToBeExecuted(JobExecutionContext context) {
     }
 
-    /* (non-Javadoc)
-     * @see org.quartz.JobListener#jobExecutionVetoed(org.quartz.JobExecutionContext)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.quartz.JobListener#jobExecutionVetoed(org.quartz.JobExecutionContext)
      */
     @Override
     public void jobExecutionVetoed(JobExecutionContext context) {
@@ -159,8 +163,7 @@ public class JobFlowListener implements JobListener {
             if (nextJob != null) {
                 try {
                     Trigger trigger = TriggerBuilder.newTrigger().startNow().build();
-                    log.debug("Job " + context.getJobDetail().getKey() + " will now chain to Job "
-                            + nextJob.getKey() + "");
+                    log.debug("Job " + context.getJobDetail().getKey() + " will now chain to Job " + nextJob.getKey() + "");
 
                     context.getScheduler().scheduleJob(nextJob, trigger);
 
@@ -178,7 +181,7 @@ public class JobFlowListener implements JobListener {
 
     /**
      * @param jobInstance
-     * @param stepId 
+     * @param stepId
      */
     private void updateKylinJobStatus(JobInstance jobInstance, int stepId, JobEngineConfig engineConfig) {
         validate(jobInstance);
@@ -222,20 +225,17 @@ public class JobFlowListener implements JobListener {
         }
     }
 
-    private void updateCubeSegmentInfoOnDiscard(JobInstance jobInstance, JobEngineConfig engineConfig)
-            throws IOException, CubeIntegrityException {
+    private void updateCubeSegmentInfoOnDiscard(JobInstance jobInstance, JobEngineConfig engineConfig) throws IOException, CubeIntegrityException {
         CubeManager cubeMgr = CubeManager.getInstance(engineConfig.getConfig());
         CubeInstance cubeInstance = cubeMgr.getCube(jobInstance.getRelatedCube());
         cubeMgr.updateSegmentOnJobDiscard(cubeInstance, jobInstance.getRelatedSegment());
     }
 
-    private void updateCubeSegmentInfoOnSucceed(JobInstance jobInstance, JobEngineConfig engineConfig)
-            throws CubeIntegrityException, IOException {
+    private void updateCubeSegmentInfoOnSucceed(JobInstance jobInstance, JobEngineConfig engineConfig) throws CubeIntegrityException, IOException {
         if (jobInstance.getStatus().equals(JobStatusEnum.FINISHED)) {
             validate(jobInstance);
 
-            log.info("Updating cube segment " + jobInstance.getRelatedSegment() + " for cube "
-                    + jobInstance.getRelatedCube());
+            log.info("Updating cube segment " + jobInstance.getRelatedSegment() + " for cube " + jobInstance.getRelatedCube());
 
             long cubeSize = 0;
             JobStep convertToHFileStep = jobInstance.findStep(JobConstants.STEP_NAME_CONVERT_CUBOID_TO_HFILE);
@@ -246,8 +246,7 @@ public class JobFlowListener implements JobListener {
                 }
                 cubeSize = Long.parseLong(cubeSizeString) / 1024;
             } else {
-                log.info("No step with name '" + JobConstants.STEP_NAME_CONVERT_CUBOID_TO_HFILE
-                        + "' is found");
+                log.info("No step with name '" + JobConstants.STEP_NAME_CONVERT_CUBOID_TO_HFILE + "' is found");
             }
 
             CubeManager cubeMgr = CubeManager.getInstance(engineConfig.getConfig());
@@ -268,8 +267,7 @@ public class JobFlowListener implements JobListener {
                     log.info("No step with name '" + JobConstants.STEP_NAME_BUILD_BASE_CUBOID + "' is found");
                 }
 
-                JobStep createFlatTableStep =
-                        jobInstance.findStep(JobConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
+                JobStep createFlatTableStep = jobInstance.findStep(JobConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
                 if (null != createFlatTableStep) {
                     String sourceRecordsSize = createFlatTableStep.getInfo(JobInstance.SOURCE_RECORDS_SIZE);
                     if (sourceRecordsSize == null || sourceRecordsSize.equals("")) {
@@ -277,8 +275,7 @@ public class JobFlowListener implements JobListener {
                     }
                     sourceSize = Long.parseLong(sourceRecordsSize);
                 } else {
-                    log.info("No step with name '" + JobConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE
-                            + "' is found");
+                    log.info("No step with name '" + JobConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE + "' is found");
                 }
                 break;
             case MERGE:
@@ -289,9 +286,7 @@ public class JobFlowListener implements JobListener {
                 break;
             }
 
-            cubeMgr.updateSegmentOnJobSucceed(cubeInstance, jobInstance.getType(),
-                    jobInstance.getRelatedSegment(), jobInstance.getUuid(), jobInstance.getExecEndTime(),
-                    cubeSize, sourceCount, sourceSize);
+            cubeMgr.updateSegmentOnJobSucceed(cubeInstance, jobInstance.getType(), jobInstance.getRelatedSegment(), jobInstance.getUuid(), jobInstance.getExecEndTime(), cubeSize, sourceCount, sourceSize);
         }
     }
 
@@ -302,21 +297,20 @@ public class JobFlowListener implements JobListener {
         }
     }
 
-    private void handleException(String jobInstanceUuid, int jobInstanceStepSeqId, KylinConfig config,
-            Throwable t) {
+    private void handleException(String jobInstanceUuid, int jobInstanceStepSeqId, KylinConfig config, Throwable t) {
         log.error(t.getLocalizedMessage(), t);
         String exceptionMsg = "Failed with Exception:" + ExceptionUtils.getFullStackTrace(t);
         try {
             JobInstance jobInstance = JobDAO.getInstance(config).getJob(jobInstanceUuid);
             jobInstance.getSteps().get(jobInstanceStepSeqId).setStatus(JobStepStatusEnum.ERROR);
-            //            String output = jobInstance.getSteps().get(jobInstanceStepSeqId).getCmdOutput();
-            //            jobInstance.getSteps().get(jobInstanceStepSeqId).setCmdOutput(output + "\n" + exceptionMsg);
+            // String output =
+            // jobInstance.getSteps().get(jobInstanceStepSeqId).getCmdOutput();
+            // jobInstance.getSteps().get(jobInstanceStepSeqId).setCmdOutput(output
+            // + "\n" + exceptionMsg);
             jobInstance.getSteps().get(jobInstanceStepSeqId).setExecEndTime(System.currentTimeMillis());
             JobDAO.getInstance(config).updateJobInstance(jobInstance);
 
-            String output =
-                    JobDAO.getInstance(config).getJobOutput(jobInstanceUuid, jobInstanceStepSeqId)
-                            .getOutput();
+            String output = JobDAO.getInstance(config).getJobOutput(jobInstanceUuid, jobInstanceStepSeqId).getOutput();
             output = output + "\n" + exceptionMsg;
             JobDAO.getInstance(config).saveJobOutput(jobInstanceUuid, jobInstanceStepSeqId, output);
         } catch (IOException e1) {
@@ -371,13 +365,10 @@ public class JobFlowListener implements JobListener {
         content = content.replaceAll("\\$\\{job_name\\}", jobInstance.getName());
         content = content.replaceAll("\\$\\{result\\}", finalStatus);
         content = content.replaceAll("\\$\\{cube_name\\}", cubeName);
-        content =
-                content.replaceAll("\\$\\{start_time\\}", new Date(jobInstance.getExecStartTime()).toString());
+        content = content.replaceAll("\\$\\{start_time\\}", new Date(jobInstance.getExecStartTime()).toString());
         content = content.replaceAll("\\$\\{duration\\}", jobInstance.getDuration() / 60 + "mins");
         content = content.replaceAll("\\$\\{mr_waiting\\}", jobInstance.getMrWaiting() / 60 + "mins");
-        content =
-                content.replaceAll("\\$\\{last_update_time\\}",
-                        new Date(jobInstance.getLastModified()).toString());
+        content = content.replaceAll("\\$\\{last_update_time\\}", new Date(jobInstance.getLastModified()).toString());
         content = content.replaceAll("\\$\\{error_log\\}", logMsg);
 
         MailService mailService = new MailService();
@@ -397,8 +388,7 @@ public class JobFlowListener implements JobListener {
             }
 
             if (users.size() > 0) {
-                mailService
-                        .sendMail(users, "[Kylin Cube Build Job]-" + cubeName + "-" + finalStatus, content);
+                mailService.sendMail(users, "[Kylin Cube Build Job]-" + cubeName + "-" + finalStatus, content);
             }
         } catch (IOException e) {
             log.error(e.getLocalizedMessage(), e);

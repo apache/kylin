@@ -4,22 +4,22 @@
  */
 
 /*
-// Licensed to Julian Hyde under one or more contributor license
-// agreements. See the NOTICE file distributed with this work for
-// additional information regarding copyright ownership.
-//
-// Julian Hyde licenses this file to you under the Apache License,
-// Version 2.0 (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License at:
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-*/
+ // Licensed to Julian Hyde under one or more contributor license
+ // agreements. See the NOTICE file distributed with this work for
+ // additional information regarding copyright ownership.
+ //
+ // Julian Hyde licenses this file to you under the Apache License,
+ // Version 2.0 (the "License"); you may not use this file except in
+ // compliance with the License. You may obtain a copy of the License at:
+ //
+ // http://www.apache.org/licenses/LICENSE-2.0
+ //
+ // Unless required by applicable law or agreed to in writing, software
+ // distributed under the License is distributed on an "AS IS" BASIS,
+ // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ */
 package net.hydromatic.optiq.runtime;
 
 import java.math.BigDecimal;
@@ -46,16 +46,21 @@ import org.eigenbase.util14.DateTimeUtil;
 
 /**
  * Helper methods to implement SQL functions in generated code.
- *
- * <p>Not present: and, or, not (builtin operators are better, because they
- * use lazy evaluation. Implementations do not check for null values; the
- * calling code must do that.</p>
- *
- * <p>Many of the functions do not check for null values. This is intentional.
- * If null arguments are possible, the code-generation framework checks for
- * nulls before calling the functions.</p>
+ * 
+ * <p>
+ * Not present: and, or, not (builtin operators are better, because they use
+ * lazy evaluation. Implementations do not check for null values; the calling
+ * code must do that.
+ * </p>
+ * 
+ * <p>
+ * Many of the functions do not check for null values. This is intentional. If
+ * null arguments are possible, the code-generation framework checks for nulls
+ * before calling the functions.
+ * </p>
  */
 @Deterministic
+@SuppressWarnings({ "unused", "rawtypes", "unchecked" })
 public class SqlFunctions {
     private static final DecimalFormat DOUBLE_FORMAT = new DecimalFormat("0.0E0");
 
@@ -64,12 +69,11 @@ public class SqlFunctions {
 
     private static final TimeZone LOCAL_TZ = TimeZone.getDefault();
 
-    private static final Function1<List<Object>, Enumerable<Object>> LIST_AS_ENUMERABLE =
-            new Function1<List<Object>, Enumerable<Object>>() {
-                public Enumerable<Object> apply(List<Object> list) {
-                    return Linq4j.asEnumerable(list);
-                }
-            };
+    private static final Function1<List<Object>, Enumerable<Object>> LIST_AS_ENUMERABLE = new Function1<List<Object>, Enumerable<Object>>() {
+        public Enumerable<Object> apply(List<Object> list) {
+            return Linq4j.asEnumerable(list);
+        }
+    };
 
     private SqlFunctions() {
     }
@@ -287,8 +291,10 @@ public class SqlFunctions {
 
     // =
 
-    /** SQL = operator applied to Object values (including String; neither
-     * side may be null). */
+    /**
+     * SQL = operator applied to Object values (including String; neither side
+     * may be null).
+     */
     public static boolean eq(Object b0, Object b1) {
         return b0.equals(b1);
     }
@@ -300,8 +306,10 @@ public class SqlFunctions {
 
     // <>
 
-    /** SQL &lt;&gt; operator applied to Object values (including String;
-     * neither side may be null). */
+    /**
+     * SQL &lt;&gt; operator applied to Object values (including String; neither
+     * side may be null).
+     */
     public static boolean ne(Object b0, Object b1) {
         return !b0.equals(b1);
     }
@@ -406,14 +414,17 @@ public class SqlFunctions {
         return b0 + b1;
     }
 
-    /** SQL <code>+</code> operator applied to int values; left side may be
-     * null. */
+    /**
+     * SQL <code>+</code> operator applied to int values; left side may be null.
+     */
     public static Integer plus(Integer b0, int b1) {
         return b0 == null ? null : (b0 + b1);
     }
 
-    /** SQL <code>+</code> operator applied to int values; right side may be
-     * null. */
+    /**
+     * SQL <code>+</code> operator applied to int values; right side may be
+     * null.
+     */
     public static Integer plus(int b0, Integer b1) {
         return b1 == null ? null : (b0 + b1);
     }
@@ -445,14 +456,17 @@ public class SqlFunctions {
         return b0 - b1;
     }
 
-    /** SQL <code>-</code> operator applied to int values; left side may be
-     * null. */
+    /**
+     * SQL <code>-</code> operator applied to int values; left side may be null.
+     */
     public static Integer minus(Integer b0, int b1) {
         return b0 == null ? null : (b0 - b1);
     }
 
-    /** SQL <code>-</code> operator applied to int values; right side may be
-     * null. */
+    /**
+     * SQL <code>-</code> operator applied to int values; right side may be
+     * null.
+     */
     public static Integer minus(int b0, Integer b1) {
         return b1 == null ? null : (b0 - b1);
     }
@@ -484,14 +498,17 @@ public class SqlFunctions {
         return b0 / b1;
     }
 
-    /** SQL <code>/</code> operator applied to int values; left side may be
-     * null. */
+    /**
+     * SQL <code>/</code> operator applied to int values; left side may be null.
+     */
     public static Integer divide(Integer b0, int b1) {
         return b0 == null ? null : (b0 / b1);
     }
 
-    /** SQL <code>/</code> operator applied to int values; right side may be
-     * null. */
+    /**
+     * SQL <code>/</code> operator applied to int values; right side may be
+     * null.
+     */
     public static Integer divide(int b0, Integer b1) {
         return b1 == null ? null : (b0 / b1);
     }
@@ -524,14 +541,17 @@ public class SqlFunctions {
         return b0 * b1;
     }
 
-    /** SQL <code>*</code> operator applied to int values; left side may be
-     * null. */
+    /**
+     * SQL <code>*</code> operator applied to int values; left side may be null.
+     */
     public static Integer multiply(Integer b0, int b1) {
         return b0 == null ? null : (b0 * b1);
     }
 
-    /** SQL <code>*</code> operator applied to int values; right side may be
-     * null. */
+    /**
+     * SQL <code>*</code> operator applied to int values; right side may be
+     * null.
+     */
     public static Integer multiply(int b0, Integer b1) {
         return b1 == null ? null : (b0 * b1);
     }
@@ -843,15 +863,13 @@ public class SqlFunctions {
     }
 
     public static boolean toBoolean(Object o) {
-        return o instanceof Boolean ? (Boolean) o : o instanceof Number ? toBoolean((Number) o)
-                : o instanceof String ? toBoolean((String) o) : (Boolean) cannotConvert(o, boolean.class);
+        return o instanceof Boolean ? (Boolean) o : o instanceof Number ? toBoolean((Number) o) : o instanceof String ? toBoolean((String) o) : (Boolean) cannotConvert(o, boolean.class);
     }
 
     // Don't need parseByte etc. - Byte.parseByte is sufficient.
 
     public static byte toByte(Object o) {
-        return o instanceof Byte ? (Byte) o : o instanceof Number ? toByte((Number) o) : Byte.parseByte(o
-                .toString());
+        return o instanceof Byte ? (Byte) o : o instanceof Number ? toByte((Number) o) : Byte.parseByte(o.toString());
     }
 
     public static byte toByte(Number number) {
@@ -875,8 +893,7 @@ public class SqlFunctions {
     }
 
     public static short toShort(Object o) {
-        return o instanceof Short ? (Short) o : o instanceof Number ? toShort((Number) o)
-                : o instanceof String ? toShort((String) o) : (Short) cannotConvert(o, short.class);
+        return o instanceof Short ? (Short) o : o instanceof Number ? toShort((Number) o) : o instanceof String ? toShort((String) o) : (Short) cannotConvert(o, short.class);
     }
 
     public static int toInt(java.util.Date v) {
@@ -912,8 +929,7 @@ public class SqlFunctions {
     }
 
     public static int toInt(Object o) {
-        return o instanceof Integer ? (Integer) o : o instanceof Number ? toInt((Number) o)
-                : o instanceof String ? toInt((String) o) : (Integer) cannotConvert(o, int.class);
+        return o instanceof Integer ? (Integer) o : o instanceof Number ? toInt((Number) o) : o instanceof String ? toInt((String) o) : (Integer) cannotConvert(o, int.class);
     }
 
     public static long toLong(Timestamp v) {
@@ -950,8 +966,7 @@ public class SqlFunctions {
     }
 
     public static long toLong(Object o) {
-        return o instanceof Long ? (Long) o : o instanceof Number ? toLong((Number) o) : o instanceof String
-                ? toLong((String) o) : (Long) cannotConvert(o, long.class);
+        return o instanceof Long ? (Long) o : o instanceof Number ? toLong((Number) o) : o instanceof String ? toLong((String) o) : (Long) cannotConvert(o, long.class);
     }
 
     public static float toFloat(String s) {
@@ -963,8 +978,7 @@ public class SqlFunctions {
     }
 
     public static float toFloat(Object o) {
-        return o instanceof Float ? (Float) o : o instanceof Number ? toFloat((Number) o)
-                : o instanceof String ? toFloat((String) o) : (Float) cannotConvert(o, float.class);
+        return o instanceof Float ? (Float) o : o instanceof Number ? toFloat((Number) o) : o instanceof String ? toFloat((String) o) : (Float) cannotConvert(o, float.class);
     }
 
     public static double toDouble(String s) {
@@ -976,8 +990,7 @@ public class SqlFunctions {
     }
 
     public static double toDouble(Object o) {
-        return o instanceof Double ? (Double) o : o instanceof Number ? toDouble((Number) o)
-                : o instanceof String ? toDouble((String) o) : (Double) cannotConvert(o, double.class);
+        return o instanceof Double ? (Double) o : o instanceof Number ? toDouble((Number) o) : o instanceof String ? toDouble((String) o) : (Double) cannotConvert(o, double.class);
     }
 
     public static BigDecimal toBigDecimal(String s) {
@@ -985,11 +998,10 @@ public class SqlFunctions {
     }
 
     public static BigDecimal toBigDecimal(Number number) {
-        // There are some values of "long" that cannot be represented as "double".
+        // There are some values of "long" that cannot be represented as
+        // "double".
         // Not so "int". If it isn't a long, go straight to double.
-        return number instanceof BigDecimal ? (BigDecimal) number : number instanceof BigInteger
-                ? new BigDecimal((BigInteger) number) : number instanceof Long ? new BigDecimal(
-                        number.longValue()) : new BigDecimal(number.doubleValue());
+        return number instanceof BigDecimal ? (BigDecimal) number : number instanceof BigInteger ? new BigDecimal((BigInteger) number) : number instanceof Long ? new BigDecimal(number.longValue()) : new BigDecimal(number.doubleValue());
     }
 
     public static BigDecimal toBigDecimal(Object o) {
@@ -1426,10 +1438,13 @@ public class SqlFunctions {
     }
 
     /**
-     * Rounds a dividend to the nearest divisor.
-     * For example roundUp(31, 10) yields 30; roundUp(37, 10) yields 40.
-     * @param dividend Number to be divided
-     * @param divisor Number to divide by
+     * Rounds a dividend to the nearest divisor. For example roundUp(31, 10)
+     * yields 30; roundUp(37, 10) yields 40.
+     * 
+     * @param dividend
+     *            Number to be divided
+     * @param divisor
+     *            Number to divide by
      * @return Rounded dividend
      */
     private static long roundUp(long dividend, long divisor) {
@@ -1458,8 +1473,10 @@ public class SqlFunctions {
         }
     }
 
-    /** Helper for "array element reference". Caller has already ensured that
-     * array and index are not null. Index is 1-based, per SQL. */
+    /**
+     * Helper for "array element reference". Caller has already ensured that
+     * array and index are not null. Index is 1-based, per SQL.
+     */
     public static Object arrayItem(List list, int item) {
         if (item < 1 || item > list.size()) {
             return null;
@@ -1467,13 +1484,16 @@ public class SqlFunctions {
         return list.get(item - 1);
     }
 
-    /** Helper for "map element reference". Caller has already ensured that
-     * array and index are not null. Index is 1-based, per SQL. */
+    /**
+     * Helper for "map element reference". Caller has already ensured that array
+     * and index are not null. Index is 1-based, per SQL.
+     */
     public static Object mapItem(Map map, Object item) {
         return map.get(item);
     }
 
-    /** Implements the {@code [ ... ]} operator on an object whose type is not
+    /**
+     * Implements the {@code [ ... ]} operator on an object whose type is not
      * known until runtime.
      */
     public static Object item(Object object, Object index) {
@@ -1528,13 +1548,14 @@ public class SqlFunctions {
 
     /** Returns a lambda that converts a list to an enumerable. */
     public static <E> Function1<List<E>, Enumerable<E>> listToEnumerable() {
-        //noinspection unchecked
+        // noinspection unchecked
         return (Function1<List<E>, Enumerable<E>>) (Function1) LIST_AS_ENUMERABLE;
     }
 
-    /** A range of time units. The first is more significant than the
-     * other (e.g. year-to-day) or the same as the other
-     * (e.g. month). */
+    /**
+     * A range of time units. The first is more significant than the other (e.g.
+     * year-to-day) or the same as the other (e.g. month).
+     */
     public enum TimeUnitRange {
         YEAR, YEAR_TO_MONTH, MONTH, DAY, DAY_TO_HOUR, DAY_TO_MINUTE, DAY_TO_SECOND, HOUR, HOUR_TO_MINUTE, HOUR_TO_SECOND, MINUTE, MINUTE_TO_SECOND, SECOND;
 

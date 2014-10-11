@@ -95,15 +95,15 @@ public class CreateHTableJob extends AbstractHadoopJob {
                 cf.setCompressionType(Algorithm.LZO);
                 cf.setDataBlockEncoding(DataBlockEncoding.FAST_DIFF);
                 cf.setInMemory(true);
-                cf.setBlocksize(4 * 1024 * 1024); //set to 4MB
+                cf.setBlocksize(4 * 1024 * 1024); // set to 4MB
                 tableDesc.addFamily(cf);
             }
 
             byte[][] splitKeys = getSplits(conf, partitionFilePath);
 
             if (admin.tableExists(tableName)) {
-                //admin.disableTable(tableName);
-                //admin.deleteTable(tableName);
+                // admin.disableTable(tableName);
+                // admin.deleteTable(tableName);
                 throw new RuntimeException("HBase table " + tableName + " exists!");
             }
 
@@ -136,8 +136,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         FileSystem fileSystem = FileSystem.get(hconf);
 
         String localCoprocessorJar = kylinConfig.getCoprocessorLocalJar();
-        Path hdfsCoprocessorJar =
-                DeployCoprocessorCLI.uploadCoprocessorJar(localCoprocessorJar, fileSystem, null);
+        Path hdfsCoprocessorJar = DeployCoprocessorCLI.uploadCoprocessorJar(localCoprocessorJar, fileSystem, null);
 
         DeployCoprocessorCLI.setCoprocessorOnHTable(desc, hdfsCoprocessorJar);
     }
@@ -165,8 +164,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
         byte[][] retValue = rowkeyList.toArray(new byte[rowkeyList.size()][]);
         if (retValue.length == 0) {
-            throw new IllegalStateException("Expected split number should be greater than 1, but got "
-                    + retValue.length);
+            throw new IllegalStateException("Expected split number should be greater than 1, but got " + retValue.length);
         }
 
         return retValue;

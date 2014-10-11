@@ -21,8 +21,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.hadoop.hbase.util.Bytes;
-
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
@@ -32,7 +30,7 @@ import com.kylinolap.storage.tuple.ITuple;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public class ColumnTupleFilter extends TupleFilter {
 
@@ -86,25 +84,13 @@ public class ColumnTupleFilter extends TupleFilter {
     public byte[] serialize() {
         ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
         String table = columnRef.getTable();
-        if (table == null) {
-            BytesUtil.writeByteArray(new byte[0], buffer);
-        } else {
-            BytesUtil.writeByteArray(Bytes.toBytes(table), buffer);
-        }
+        BytesUtil.writeUTFString(table, buffer);
 
         String columnName = columnRef.getName();
-        if (columnName == null) {
-            BytesUtil.writeByteArray(new byte[0], buffer);
-        } else {
-            BytesUtil.writeByteArray(Bytes.toBytes(columnName), buffer);
-        }
+        BytesUtil.writeUTFString(columnName, buffer);
 
         String dataType = columnRef.getDatatype();
-        if (dataType == null) {
-            BytesUtil.writeByteArray(new byte[0], buffer);
-        } else {
-            BytesUtil.writeByteArray(Bytes.toBytes(dataType), buffer);
-        }
+        BytesUtil.writeUTFString(dataType, buffer);
 
         byte[] result = new byte[buffer.position()];
         System.arraycopy(buffer.array(), 0, result, 0, buffer.position());
@@ -115,33 +101,13 @@ public class ColumnTupleFilter extends TupleFilter {
     public void deserialize(byte[] bytes) {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         TableDesc table = new TableDesc();
-
-        byte[] tableBytes = BytesUtil.readByteArray(buffer);
-        if (tableBytes.length == 0) {
-            table.setName(null);
-        } else {
-            String tableName = Bytes.toString(tableBytes);
-            table.setName(tableName);
-        }
+        table.setName(BytesUtil.readUTFString(buffer));
 
         ColumnDesc column = new ColumnDesc();
         column.setTable(table);
+        column.setName(BytesUtil.readUTFString(buffer));
+        column.setDatatype(BytesUtil.readUTFString(buffer));
 
-        byte[] columnBytes = BytesUtil.readByteArray(buffer);
-        if (columnBytes.length == 0) {
-            column.setName(null);
-        } else {
-            String columnName = Bytes.toString(columnBytes);
-            column.setName(columnName);
-        }
-
-        byte[] typeBytes = BytesUtil.readByteArray(buffer);
-        if (typeBytes.length == 0) {
-            column.setDatatype(null);
-        } else {
-            String dataType = Bytes.toString(typeBytes);
-            column.setDatatype(dataType);
-        }
         this.columnRef = new TblColRef(column);
     }
 }

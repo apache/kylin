@@ -48,9 +48,7 @@ public class DictionaryManagerTest extends LocalFileMetadataTestCase {
     @Test
     @Ignore
     public void basic() throws Exception {
-        CubeDesc cubeDesc =
-                MetadataManager.getInstance(this.getTestConfig()).getCubeDesc(
-                        "test_kylin_cube_without_slr_desc");
+        CubeDesc cubeDesc = MetadataManager.getInstance(this.getTestConfig()).getCubeDesc("test_kylin_cube_without_slr_desc");
         TblColRef col = cubeDesc.findColumnRef("TEST_SITES", "SITE_NAME");
 
         DictionaryInfo info1 = dictMgr.buildDictionary(cubeDesc, col, null);

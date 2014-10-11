@@ -31,7 +31,7 @@ import com.kylinolap.common.util.LocalFileMetadataTestCase;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class RangeKeyDistributionJobTest extends LocalFileMetadataTestCase {
 
@@ -40,8 +40,8 @@ public class RangeKeyDistributionJobTest extends LocalFileMetadataTestCase {
     @Before
     public void setup() throws Exception {
         conf = new Configuration();
-        //conf.set("fs.default.name", "file:///");
-        //conf.set("mapred.job.tracker", "local");
+        // conf.set("fs.default.name", "file:///");
+        // conf.set("mapred.job.tracker", "local");
 
         // for local runner out-of-memory issue
         conf.set("mapreduce.task.io.sort.mb", "10");

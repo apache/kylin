@@ -16,23 +16,22 @@
 package com.kylinolap.storage.filter;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
 import com.kylinolap.storage.tuple.ITuple;
 
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public abstract class TupleFilter {
 
     public enum FilterOperatorEnum {
-        EQ(1), NEQ(2), GT(3), LT(4), GTE(5), LTE(6), ISNULL(7), ISNOTNULL(8), IN(9), NOTIN(10), AND(20), OR(
-                21), NOT(22), COLUMN(30), CONSTANT(31), DYNAMIC(32), EXTRACT(33), CASE(34);
+        EQ(1), NEQ(2), GT(3), LT(4), GTE(5), LTE(6), ISNULL(7), ISNOTNULL(8), IN(9), NOTIN(10), AND(20), OR(21), NOT(22), COLUMN(30), CONSTANT(31), DYNAMIC(32), EXTRACT(33), CASE(34);
 
         private final int value;
 
@@ -47,8 +46,8 @@ public abstract class TupleFilter {
 
     public static final int BUFFER_SIZE = 10240;
 
-    protected static final Map<FilterOperatorEnum, FilterOperatorEnum> REVERSE_OP_MAP =
-            new HashMap<FilterOperatorEnum, FilterOperatorEnum>();
+    protected static final Map<FilterOperatorEnum, FilterOperatorEnum> REVERSE_OP_MAP = Maps.newHashMap();
+    protected static final Map<FilterOperatorEnum, FilterOperatorEnum> SWAP_OP_MAP = Maps.newHashMap();
 
     static {
         REVERSE_OP_MAP.put(FilterOperatorEnum.EQ, FilterOperatorEnum.NEQ);
@@ -63,6 +62,13 @@ public abstract class TupleFilter {
         REVERSE_OP_MAP.put(FilterOperatorEnum.ISNOTNULL, FilterOperatorEnum.ISNULL);
         REVERSE_OP_MAP.put(FilterOperatorEnum.AND, FilterOperatorEnum.OR);
         REVERSE_OP_MAP.put(FilterOperatorEnum.OR, FilterOperatorEnum.AND);
+
+        SWAP_OP_MAP.put(FilterOperatorEnum.EQ, FilterOperatorEnum.EQ);
+        SWAP_OP_MAP.put(FilterOperatorEnum.NEQ, FilterOperatorEnum.NEQ);
+        SWAP_OP_MAP.put(FilterOperatorEnum.GT, FilterOperatorEnum.LT);
+        SWAP_OP_MAP.put(FilterOperatorEnum.LTE, FilterOperatorEnum.GTE);
+        SWAP_OP_MAP.put(FilterOperatorEnum.LT, FilterOperatorEnum.GT);
+        SWAP_OP_MAP.put(FilterOperatorEnum.GTE, FilterOperatorEnum.LTE);
     }
 
     protected final List<TupleFilter> children;
@@ -130,7 +136,7 @@ public abstract class TupleFilter {
             }
         }
 
-        // boolean algebra flatten			
+        // boolean algebra flatten
         if (op == FilterOperatorEnum.AND) {
             flatFilter = new LogicalTupleFilter(FilterOperatorEnum.AND);
             for (TupleFilter andChild : andChildren) {

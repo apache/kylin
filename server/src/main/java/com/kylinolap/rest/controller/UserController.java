@@ -29,10 +29,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.kylinolap.rest.service.UserService;
 
 /**
- * Handle user authentication request to protected kylin rest resources by spring security.
+ * Handle user authentication request to protected kylin rest resources by
+ * spring security.
  * 
  * @author xduo
- *
+ * 
  */
 @Controller
 @RequestMapping(value = "/user")

@@ -32,7 +32,7 @@ import com.google.common.collect.Sets;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class NumberDictionaryTest {
 
@@ -74,8 +74,7 @@ public class NumberDictionaryTest {
         int n = 100;
 
         Set<BigDecimal> set = Sets.newHashSet();
-        NumberDictionaryBuilder<String> builder =
-                new NumberDictionaryBuilder<String>(new StringBytesConverter());
+        NumberDictionaryBuilder<String> builder = new NumberDictionaryBuilder<String>(new StringBytesConverter());
         for (int i = 0; i < n; i++) {
             String num = randNumber();
             builder.addValue(num);
@@ -104,7 +103,8 @@ public class NumberDictionaryTest {
             int insertion = -(binarySearch + 1);
             int expectedLowerId = insertion - 1;
             int expectedHigherId = insertion;
-            //            System.out.println("-- " + randStr + ", " + expectedLowerId + ", " + expectedHigherId);
+            // System.out.println("-- " + randStr + ", " + expectedLowerId +
+            // ", " + expectedHigherId);
 
             if (expectedLowerId < 0) {
                 try {
@@ -145,7 +145,8 @@ public class NumberDictionaryTest {
         if (digits2 > 0) {
             buf.append(".");
             for (int i = 0; i < digits2; i++)
-                buf.append("" + rand.nextInt(9) + 1); // BigDecimal thinks 4.5 != 4.50, my god!
+                buf.append("" + rand.nextInt(9) + 1); // BigDecimal thinks 4.5
+                                                      // != 4.50, my god!
         }
         return buf.toString();
     }

@@ -67,8 +67,7 @@ public class InvertedIndexDesc extends RootPersistentEntity {
             if (ArrayUtils.contains(lowCardinalityDimensions, col.getName())) {
                 bitmapCols[i++] = col.getZeroBasedIndex();
             }
-            if (ArrayUtils.contains(highCardinalityDimensions, col.getName())
-                    || ArrayUtils.contains(measures, col.getName())) {
+            if (ArrayUtils.contains(highCardinalityDimensions, col.getName()) || ArrayUtils.contains(measures, col.getName())) {
                 valueCols[j++] = col.getZeroBasedIndex();
             }
         }

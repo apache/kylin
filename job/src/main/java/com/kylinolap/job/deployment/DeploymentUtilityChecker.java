@@ -17,6 +17,5 @@ public enum DeploymentUtilityChecker {
         }
     };
 
-
     abstract boolean isOkay();
 }

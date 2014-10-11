@@ -90,19 +90,17 @@ public class QueryService extends BasicService {
 
     public void saveQuery(final String name, final String project, final String sql, final String description) {
         final String creator = SecurityContextHolder.getContext().getAuthentication().getName();
-        jdbcTemplate
-                .update("insert into queries(name,project,sql_string,creator,description,created_date) values(?,?,?,?,?,?);",
-                        new PreparedStatementSetter() {
-                            @Override
-                            public void setValues(PreparedStatement ps) throws SQLException {
-                                ps.setString(1, name);
-                                ps.setString(2, project);
-                                ps.setString(3, sql);
-                                ps.setString(4, creator);
-                                ps.setString(5, description);
-                                ps.setTimestamp(6, new java.sql.Timestamp(new Date().getTime()));
-                            }
-                        });
+        jdbcTemplate.update("insert into queries(name,project,sql_string,creator,description,created_date) values(?,?,?,?,?,?);", new PreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps) throws SQLException {
+                ps.setString(1, name);
+                ps.setString(2, project);
+                ps.setString(3, sql);
+                ps.setString(4, creator);
+                ps.setString(5, description);
+                ps.setTimestamp(6, new java.sql.Timestamp(new Date().getTime()));
+            }
+        });
     }
 
     public void removeQuery(final String id) {
@@ -112,9 +110,7 @@ public class QueryService extends BasicService {
     public List<GeneralResponse> getQueries(final String creator) {
         List<GeneralResponse> responses = new ArrayList<GeneralResponse>();
 
-        List<Map<String, Object>> rows =
-                jdbcTemplate
-                        .queryForList("SELECT * FROM queries WHERE creator = ?", new Object[] { creator });
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList("SELECT * FROM queries WHERE creator = ?", new Object[] { creator });
 
         for (Map<String, Object> row : rows) {
             GeneralResponse generalResponse = new GeneralResponse();
@@ -127,16 +123,14 @@ public class QueryService extends BasicService {
             generalResponse.setProperty("description", (null != description) ? description : "");
             String sqlCreator = (String) row.get("creator");
             generalResponse.setProperty("creator", (null != sqlCreator) ? sqlCreator : "");
-            generalResponse.setProperty("createdDate",
-                    (String) new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(row.get("created_date")));
+            generalResponse.setProperty("createdDate", (String) new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(row.get("created_date")));
             responses.add(generalResponse);
         }
 
         return responses;
     }
 
-    public void logQuery(final SQLRequest request, final SQLResponse response, final Date startTime,
-            final Date endTime) {
+    public void logQuery(final SQLRequest request, final SQLResponse response, final Date startTime, final Date endTime) {
         final String user = SecurityContextHolder.getContext().getAuthentication().getName();
         final Set<String> cubeNames = new HashSet<String>();
         final Set<Long> cuboidIds = new HashSet<Long>();
@@ -166,8 +160,7 @@ public class QueryService extends BasicService {
         String newLine = System.getProperty("line.separator");
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(newLine);
-        stringBuilder.append("==========================[QUERY]===============================").append(
-                newLine);
+        stringBuilder.append("==========================[QUERY]===============================").append(newLine);
         stringBuilder.append("SQL: ").append(request.getSql()).append(newLine);
         stringBuilder.append("User: ").append(user).append(newLine);
         stringBuilder.append("Success: ").append((null == response.getExceptionMessage())).append(newLine);
@@ -180,19 +173,16 @@ public class QueryService extends BasicService {
         stringBuilder.append("Accept Partial: ").append(request.isAcceptPartial()).append(newLine);
         stringBuilder.append("Hit Cache: ").append(response.isHitCache()).append(newLine);
         stringBuilder.append("Message: ").append(response.getExceptionMessage()).append(newLine);
-        stringBuilder.append("==========================[QUERY]===============================").append(
-                newLine);
+        stringBuilder.append("==========================[QUERY]===============================").append(newLine);
 
         logger.info(stringBuilder.toString());
     }
 
     /**
      * @param sql
-     * @throws SQLException 
+     * @throws SQLException
      */
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')"
-            + " or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'READ')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')" + " or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'READ')")
     public void checkAuthorization(CubeInstance cubeInstance) {
     }
 
@@ -217,8 +207,7 @@ public class QueryService extends BasicService {
         return execute(sql, sqlRequest);
     }
 
-    protected List<TableMeta> getMetadata(CubeManager cubeMgr, String project, boolean cubedOnly)
-            throws SQLException {
+    protected List<TableMeta> getMetadata(CubeManager cubeMgr, String project, boolean cubedOnly) throws SQLException {
 
         Connection conn = null;
         ResultSet columnMeta = null;
@@ -238,13 +227,10 @@ public class QueryService extends BasicService {
                 String catalogName = JDBCTableMeta.getString(1);
                 String schemaName = JDBCTableMeta.getString(2);
 
-                // Not every JDBC data provider offers full 10 columns, for example,
+                // Not every JDBC data provider offers full 10 columns, for
+                // example,
                 // PostgreSQL has only 5
-                TableMeta tblMeta =
-                        new TableMeta(catalogName == null ? Constant.FakeCatalogName : catalogName,
-                                schemaName == null ? Constant.FakeSchemaName : schemaName,
-                                JDBCTableMeta.getString(3), JDBCTableMeta.getString(4),
-                                JDBCTableMeta.getString(5), null, null, null, null, null);
+                TableMeta tblMeta = new TableMeta(catalogName == null ? Constant.FakeCatalogName : catalogName, schemaName == null ? Constant.FakeSchemaName : schemaName, JDBCTableMeta.getString(3), JDBCTableMeta.getString(4), JDBCTableMeta.getString(5), null, null, null, null, null);
 
                 if (!cubedOnly || getProjectManager().isExposedTable(project, tblMeta.getTABLE_NAME())) {
                     tableMetas.add(tblMeta);
@@ -260,23 +246,10 @@ public class QueryService extends BasicService {
                 String schemaName = columnMeta.getString(2);
 
                 // kylin(optiq) is not strictly following JDBC specification
-                ColumnMeta colmnMeta =
-                        new ColumnMeta(catalogName == null ? Constant.FakeCatalogName : catalogName,
-                                schemaName == null ? Constant.FakeSchemaName : schemaName,
-                                columnMeta.getString(3), columnMeta.getString(4), columnMeta.getInt(5),
-                                columnMeta.getString(6), columnMeta.getInt(7),
-                                getInt(columnMeta.getString(8)), columnMeta.getInt(9), columnMeta.getInt(10),
-                                columnMeta.getInt(11), columnMeta.getString(12), columnMeta.getString(13),
-                                getInt(columnMeta.getString(14)), getInt(columnMeta.getString(15)),
-                                columnMeta.getInt(16), columnMeta.getInt(17), columnMeta.getString(18),
-                                columnMeta.getString(19), columnMeta.getString(20), columnMeta.getString(21),
-                                getShort(columnMeta.getString(22)), columnMeta.getString(23));
+                ColumnMeta colmnMeta = new ColumnMeta(catalogName == null ? Constant.FakeCatalogName : catalogName, schemaName == null ? Constant.FakeSchemaName : schemaName, columnMeta.getString(3), columnMeta.getString(4), columnMeta.getInt(5), columnMeta.getString(6), columnMeta.getInt(7), getInt(columnMeta.getString(8)), columnMeta.getInt(9), columnMeta.getInt(10), columnMeta.getInt(11), columnMeta.getString(12), columnMeta.getString(13), getInt(columnMeta.getString(14)), getInt(columnMeta.getString(15)), columnMeta.getInt(16), columnMeta.getInt(17), columnMeta.getString(18), columnMeta.getString(19), columnMeta.getString(20), columnMeta.getString(21), getShort(columnMeta.getString(22)), columnMeta.getString(23));
 
-                if (!cubedOnly
-                        || getProjectManager().isExposedColumn(project, colmnMeta.getTABLE_NAME(),
-                                colmnMeta.getCOLUMN_NAME())) {
-                    tableMap.get(colmnMeta.getTABLE_SCHEM() + "#" + colmnMeta.getTABLE_NAME()).addColumn(
-                            colmnMeta);
+                if (!cubedOnly || getProjectManager().isExposedColumn(project, colmnMeta.getTABLE_NAME(), colmnMeta.getCOLUMN_NAME())) {
+                    tableMap.get(colmnMeta.getTABLE_SCHEM() + "#" + colmnMeta.getTABLE_NAME()).addColumn(colmnMeta);
                 }
             }
             logger.debug("done column metas");
@@ -291,7 +264,7 @@ public class QueryService extends BasicService {
      * @param sql
      * @param project
      * @return
-     * @throws Exception 
+     * @throws Exception
      */
     private SQLResponse execute(String sql, SQLRequest sqlRequest) throws Exception {
         Connection conn = null;
@@ -321,13 +294,7 @@ public class QueryService extends BasicService {
 
             // Fill in selected column meta
             for (int i = 1; i <= columnCount; ++i) {
-                columnMetas.add(new SelectedColumnMeta(metaData.isAutoIncrement(i), metaData
-                        .isCaseSensitive(i), metaData.isSearchable(i), metaData.isCurrency(i), metaData
-                        .isNullable(i), metaData.isSigned(i), metaData.getColumnDisplaySize(i), metaData
-                        .getColumnLabel(i), metaData.getColumnName(i), metaData.getSchemaName(i), metaData
-                        .getCatalogName(i), metaData.getTableName(i), metaData.getPrecision(i), metaData
-                        .getScale(i), metaData.getColumnType(i), metaData.getColumnTypeName(i), metaData
-                        .isReadOnly(i), metaData.isWritable(i), metaData.isDefinitelyWritable(i)));
+                columnMetas.add(new SelectedColumnMeta(metaData.isAutoIncrement(i), metaData.isCaseSensitive(i), metaData.isSearchable(i), metaData.isCurrency(i), metaData.isNullable(i), metaData.isSigned(i), metaData.getColumnDisplaySize(i), metaData.getColumnLabel(i), metaData.getColumnName(i), metaData.getSchemaName(i), metaData.getCatalogName(i), metaData.getTableName(i), metaData.getPrecision(i), metaData.getScale(i), metaData.getColumnType(i), metaData.getColumnTypeName(i), metaData.isReadOnly(i), metaData.isWritable(i), metaData.isDefinitelyWritable(i)));
             }
 
             List<String> oneRow = new LinkedList<String>();
@@ -366,7 +333,7 @@ public class QueryService extends BasicService {
     /**
      * @param preparedState
      * @param param
-     * @throws SQLException 
+     * @throws SQLException
      */
     private void setParam(PreparedStatement preparedState, int index, StateParam param) throws SQLException {
         boolean isNull = (null == param.getValue());

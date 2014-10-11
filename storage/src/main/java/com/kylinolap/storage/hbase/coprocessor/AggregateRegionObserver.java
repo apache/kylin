@@ -43,14 +43,9 @@ public class AggregateRegionObserver extends BaseRegionObserver {
     static final String FILTER = "_Filter";
 
     @Override
-    public final RegionScanner postScannerOpen(final ObserverContext<RegionCoprocessorEnvironment> ctxt,
-            final Scan scan, final RegionScanner innerScanner) throws IOException {
+    public final RegionScanner postScannerOpen(final ObserverContext<RegionCoprocessorEnvironment> ctxt, final Scan scan, final RegionScanner innerScanner) throws IOException {
 
-        boolean copAbortOnError =
-                ctxt.getEnvironment()
-                        .getConfiguration()
-                        .getBoolean(RegionCoprocessorHost.ABORT_ON_ERROR_KEY,
-                                RegionCoprocessorHost.DEFAULT_ABORT_ON_ERROR);
+        boolean copAbortOnError = ctxt.getEnvironment().getConfiguration().getBoolean(RegionCoprocessorHost.ABORT_ON_ERROR_KEY, RegionCoprocessorHost.DEFAULT_ABORT_ON_ERROR);
 
         // never throw out exception that could abort region server
         if (copAbortOnError) {
@@ -65,11 +60,9 @@ public class AggregateRegionObserver extends BaseRegionObserver {
         }
     }
 
-    private RegionScanner doPostScannerObserver(final ObserverContext<RegionCoprocessorEnvironment> ctxt,
-            final Scan scan, final RegionScanner innerScanner) throws IOException {
+    private RegionScanner doPostScannerObserver(final ObserverContext<RegionCoprocessorEnvironment> ctxt, final Scan scan, final RegionScanner innerScanner) throws IOException {
         byte[] coprocessorEnableBytes = scan.getAttribute(COPROCESSOR_ENABLE);
-        if (coprocessorEnableBytes == null || coprocessorEnableBytes.length == 0
-                || coprocessorEnableBytes[0] == 0) {
+        if (coprocessorEnableBytes == null || coprocessorEnableBytes.length == 0 || coprocessorEnableBytes[0] == 0) {
             return innerScanner;
         }
 
@@ -85,7 +78,8 @@ public class AggregateRegionObserver extends BaseRegionObserver {
         byte[] filterBytes = scan.getAttribute(FILTER);
         SRowFilter filter = SRowFilter.deserialize(filterBytes);
 
-        // start/end region operation & sync on scanner is suggested by the javadoc of RegionScanner.nextRaw()
+        // start/end region operation & sync on scanner is suggested by the
+        // javadoc of RegionScanner.nextRaw()
         HRegion region = ctxt.getEnvironment().getRegion();
         region.startRegionOperation();
         try {

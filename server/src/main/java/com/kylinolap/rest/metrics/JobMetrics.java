@@ -26,7 +26,7 @@ import com.kylinolap.job.JobManager;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class JobMetrics implements MetricSet {
 
@@ -40,7 +40,9 @@ public class JobMetrics implements MetricSet {
         return JobMetricsHolder.INSTANCE;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see com.codahale.metrics.MetricSet#getMetrics()
      */
     @Override

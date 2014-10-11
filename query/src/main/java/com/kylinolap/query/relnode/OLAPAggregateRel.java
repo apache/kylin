@@ -98,8 +98,7 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
     private List<TblColRef> groups;
     private List<FunctionDesc> aggregations;
 
-    public OLAPAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, BitSet groupSet,
-            List<AggregateCall> aggCalls) throws InvalidRelException {
+    public OLAPAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, BitSet groupSet, List<AggregateCall> aggCalls) throws InvalidRelException {
         super(cluster, traits, child, groupSet, aggCalls);
         Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
         this.afterAggregate = false;
@@ -108,8 +107,7 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
     }
 
     @Override
-    public AggregateRelBase copy(RelTraitSet traitSet, RelNode input, BitSet groupSet,
-            List<AggregateCall> aggCalls) {
+    public AggregateRelBase copy(RelTraitSet traitSet, RelNode input, BitSet groupSet, List<AggregateCall> aggCalls) {
         try {
             return new OLAPAggregateRel(getCluster(), traitSet, input, groupSet, aggCalls);
         } catch (InvalidRelException e) {
@@ -145,7 +143,7 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
             this.context.afterAggregate = true;
         } else {
             for (AggregateCall aggCall : aggCalls) {
-                //check if supported by kylin
+                // check if supported by kylin
                 if (aggCall.isDistinct()) {
                     throw new IllegalStateException("Distinct count is only allowed in innermost sub-query.");
                 }
@@ -249,7 +247,8 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
     }
 
     private void fillbackOptimizedColumn() {
-        // some aggcall will be optimized out in sub-query (e.g. tableau generated sql)
+        // some aggcall will be optimized out in sub-query (e.g. tableau
+        // generated sql)
         // we need to fill them back
         RelDataType inputAggRow = getChild().getRowType();
         RelDataType outputAggRow = getRowType();
@@ -308,7 +307,8 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
         // rebuild aggregate call
         AggregateCall newAggCall = new AggregateCall(newAgg, false, newArgList, fieldType, newAgg.getName());
 
-        // To make sure specified type matches the inferReturnType, or otherwise there will be assertion failure in optiq
+        // To make sure specified type matches the inferReturnType, or otherwise
+        // there will be assertion failure in optiq
         // The problem is BIGINT != BIGINT NOT NULL
         // Details see https://github.scm.corp.ebay.com/Kylin/Kylin/issues/323
         SqlAggFunction aggFunction = (SqlAggFunction) newAggCall.getAggregation();
@@ -329,8 +329,7 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
             argTypes.add(type);
             typeFamilies.add(Util.first(type.getSqlTypeName().getFamily(), SqlTypeFamily.ANY));
         }
-        return new SqlUserDefinedAggFunction(sqlIdentifier, ReturnTypes.explicit(returnType),
-                InferTypes.explicit(argTypes), OperandTypes.family(typeFamilies), aggFunction);
+        return new SqlUserDefinedAggFunction(sqlIdentifier, ReturnTypes.explicit(returnType), InferTypes.explicit(argTypes), OperandTypes.family(typeFamilies), aggFunction);
     }
 
     @Override
@@ -338,9 +337,7 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
 
         EnumerableAggregateRel enumAggRel;
         try {
-            enumAggRel =
-                    new EnumerableAggregateRel(getCluster(), getCluster().traitSetOf(
-                            EnumerableConvention.INSTANCE), getChild(), this.groupSet, rewriteAggCalls);
+            enumAggRel = new EnumerableAggregateRel(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), getChild(), this.groupSet, rewriteAggCalls);
         } catch (InvalidRelException e) {
             throw new IllegalStateException("Can't create EnumerableAggregateRel!", e);
         }

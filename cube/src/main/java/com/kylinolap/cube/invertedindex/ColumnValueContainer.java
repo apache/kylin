@@ -18,7 +18,7 @@ package com.kylinolap.cube.invertedindex;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public interface ColumnValueContainer {
 

@@ -29,14 +29,13 @@ import com.kylinolap.storage.hbase.coprocessor.SRowProjector.AggrKey;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class AggregationScanner implements RegionScanner {
 
     private RegionScanner outerScanner;
 
-    public AggregationScanner(SRowType type, SRowFilter filter, SRowProjector groupBy, SRowAggregators aggrs,
-            RegionScanner innerScanner) throws IOException {
+    public AggregationScanner(SRowType type, SRowFilter filter, SRowProjector groupBy, SRowAggregators aggrs, RegionScanner innerScanner) throws IOException {
 
         AggregateRegionObserver.LOG.info("Kylin Coprocessor start");
 
@@ -51,8 +50,7 @@ public class AggregationScanner implements RegionScanner {
     }
 
     @SuppressWarnings("rawtypes")
-    AggregationCache buildAggrCache(final RegionScanner innerScanner, SRowType type, SRowProjector projector,
-            SRowAggregators aggregators, SRowFilter filter, Stats stats) throws IOException {
+    AggregationCache buildAggrCache(final RegionScanner innerScanner, SRowType type, SRowProjector projector, SRowAggregators aggregators, SRowFilter filter, Stats stats) throws IOException {
 
         AggregationCache aggCache = new AggregationCache(aggregators, 0);
 
@@ -137,7 +135,8 @@ public class AggregationScanner implements RegionScanner {
         long inputBytes = 0;
         long outputRows = 0;
 
-        // have no outputBytes because that requires actual serialize all the aggregator buffers
+        // have no outputBytes because that requires actual serialize all the
+        // aggregator buffers
 
         public void countInputRow(List<Cell> row) {
             inputRows++;
@@ -153,9 +152,7 @@ public class AggregationScanner implements RegionScanner {
 
         public String toString() {
             double percent = (double) outputRows / inputRows * 100;
-            return Math.round(percent) + "% = " + outputRows + " (out rows) / " + inputRows
-                    + " (in rows); in bytes = " + inputBytes + "; est. out bytes = "
-                    + Math.round(inputBytes * percent / 100);
+            return Math.round(percent) + "% = " + outputRows + " (out rows) / " + inputRows + " (in rows); in bytes = " + inputBytes + "; est. out bytes = " + Math.round(inputBytes * percent / 100);
         }
     }
 }

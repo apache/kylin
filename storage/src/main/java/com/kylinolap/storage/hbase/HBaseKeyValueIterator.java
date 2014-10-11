@@ -33,10 +33,9 @@ import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
  * @author yangli9
- *
+ * 
  */
-public class HBaseKeyValueIterator implements Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>>,
-        Closeable {
+public class HBaseKeyValueIterator implements Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>>, Closeable {
 
     byte[] family;
     byte[] qualifier;
@@ -45,8 +44,7 @@ public class HBaseKeyValueIterator implements Iterable<Pair<ImmutableBytesWritab
     ResultScanner scanner;
     Iterator<Result> iterator;
 
-    public HBaseKeyValueIterator(HConnection hconn, String tableName, byte[] family, byte[] qualifier)
-            throws IOException {
+    public HBaseKeyValueIterator(HConnection hconn, String tableName, byte[] family, byte[] qualifier) throws IOException {
         this.family = family;
         this.qualifier = qualifier;
 
@@ -70,8 +68,7 @@ public class HBaseKeyValueIterator implements Iterable<Pair<ImmutableBytesWritab
 
         ImmutableBytesWritable key = new ImmutableBytesWritable();
         ImmutableBytesWritable value = new ImmutableBytesWritable();
-        Pair<ImmutableBytesWritable, ImmutableBytesWritable> pair =
-                new Pair<ImmutableBytesWritable, ImmutableBytesWritable>(key, value);
+        Pair<ImmutableBytesWritable, ImmutableBytesWritable> pair = new Pair<ImmutableBytesWritable, ImmutableBytesWritable>(key, value);
 
         @Override
         public boolean hasNext() {
@@ -81,9 +78,7 @@ public class HBaseKeyValueIterator implements Iterable<Pair<ImmutableBytesWritab
         @Override
         public Pair<ImmutableBytesWritable, ImmutableBytesWritable> next() {
             Result r = iterator.next();
-            Cell c =
-                    r.getColumnLatestCell(InvertedIndexDesc.HBASE_FAMILY_BYTES,
-                            InvertedIndexDesc.HBASE_QUALIFIER_BYTES);
+            Cell c = r.getColumnLatestCell(InvertedIndexDesc.HBASE_FAMILY_BYTES, InvertedIndexDesc.HBASE_QUALIFIER_BYTES);
             key.set(c.getRowArray(), c.getRowOffset(), c.getRowLength());
             value.set(c.getValueArray(), c.getValueOffset(), c.getValueLength());
             return pair;

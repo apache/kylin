@@ -39,8 +39,7 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 /**
  * @author yangli9
  */
-public class InvertedIndexReducer extends
-        Reducer<LongWritable, ImmutableBytesWritable, ImmutableBytesWritable, ImmutableBytesWritable> {
+public class InvertedIndexReducer extends Reducer<LongWritable, ImmutableBytesWritable, ImmutableBytesWritable, ImmutableBytesWritable> {
 
     private TableRecordInfo info;
     private TableRecord rec;
@@ -53,8 +52,7 @@ public class InvertedIndexReducer extends
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
         CubeManager mgr = CubeManager.getInstance(config);
         CubeInstance cube = mgr.getCube(conf.get(BatchConstants.CFG_CUBE_NAME));
-        CubeSegment seg =
-                cube.getSegment(conf.get(BatchConstants.CFG_CUBE_SEGMENT_NAME), CubeSegmentStatusEnum.NEW);
+        CubeSegment seg = cube.getSegment(conf.get(BatchConstants.CFG_CUBE_SEGMENT_NAME), CubeSegmentStatusEnum.NEW);
         info = new TableRecordInfo(seg);
         rec = new TableRecord(info);
         builder = new TimeSliceBuilder(info);
@@ -62,8 +60,7 @@ public class InvertedIndexReducer extends
     }
 
     @Override
-    public void reduce(LongWritable key, Iterable<ImmutableBytesWritable> values, Context context)
-            throws IOException, InterruptedException {
+    public void reduce(LongWritable key, Iterable<ImmutableBytesWritable> values, Context context) throws IOException, InterruptedException {
         for (ImmutableBytesWritable v : values) {
             rec.setBytes(v.get(), v.getOffset(), v.getLength());
             TimeSlice slice = builder.append(rec);

@@ -15,10 +15,10 @@
  */
 package com.kylinolap.cube.common;
 
-/** 
-* @author George Song (ysong1)
-* 
-*/
+/**
+ * @author George Song (ysong1)
+ * 
+ */
 public class SplittedBytes {
     public SplittedBytes(int length) {
         value = new byte[length];

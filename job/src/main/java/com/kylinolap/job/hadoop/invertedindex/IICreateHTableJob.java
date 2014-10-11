@@ -120,8 +120,7 @@ public class IICreateHTableJob extends AbstractHadoopJob {
             IOUtils.closeStream(reader);
         }
 
-        System.out.println("Total " + rowkeyList.size() + " split point, " + (rowkeyList.size() + 1)
-                + " regions.");
+        System.out.println("Total " + rowkeyList.size() + " split point, " + (rowkeyList.size() + 1) + " regions.");
 
         return rowkeyList.toArray(new byte[rowkeyList.size()][]);
     }

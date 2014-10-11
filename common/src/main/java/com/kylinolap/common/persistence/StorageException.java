@@ -18,7 +18,7 @@ package com.kylinolap.common.persistence;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public class StorageException extends RuntimeException {
 

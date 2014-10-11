@@ -22,11 +22,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Created with IntelliJ IDEA.
- * User: lukhan
- * Date: 9/30/13
- * Time: 10:57 AM
- * To change this template use File | Settings | File Templates.
+ * Created with IntelliJ IDEA. User: lukhan Date: 9/30/13 Time: 10:57 AM To
+ * change this template use File | Settings | File Templates.
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class HBaseColumnDesc {
@@ -36,7 +33,7 @@ public class HBaseColumnDesc {
     @JsonProperty("measure_refs")
     private String[] measureRefs;
 
-    //these two will be assemble in runtime.
+    // these two will be assemble in runtime.
     private MeasureDesc[] measures;
     private String columnFamilyName;
 
@@ -114,8 +111,7 @@ public class HBaseColumnDesc {
 
     @Override
     public String toString() {
-        return "HBaseColumnDesc [qualifier=" + qualifier + ", measureRefs=" + Arrays.toString(measureRefs)
-                + "]";
+        return "HBaseColumnDesc [qualifier=" + qualifier + ", measureRefs=" + Arrays.toString(measureRefs) + "]";
     }
 
 }

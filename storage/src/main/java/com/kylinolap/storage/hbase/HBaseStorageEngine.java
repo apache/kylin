@@ -79,15 +79,17 @@ public class HBaseStorageEngine implements IStorageEngine {
     }
 
     @Override
-    public ITupleIterator search(Collection<TblColRef> dimensions, TupleFilter filter,
-            Collection<TblColRef> groups, Collection<FunctionDesc> metrics, StorageContext context) {
+    public ITupleIterator search(Collection<TblColRef> dimensions, TupleFilter filter, Collection<TblColRef> groups, Collection<FunctionDesc> metrics, StorageContext context) {
 
-        // The columns returned from storage, can be more than query groups due to
+        // The columns returned from storage, can be more than query groups due
+        // to
         // - derived columns on query group by
         // - columns on filter that is not evaluate-able
-        // - condition gets loosened and all columns in the loosened filter must be returned to optiq
+        // - condition gets loosened and all columns in the loosened filter must
+        // be returned to optiq
         // Storage groups is less than dimensions due to
-        // - columns on filter get evaluated inside storage and aggregated away; only representative value returned to pass optiq filter
+        // - columns on filter get evaluated inside storage and aggregated away;
+        // only representative value returned to pass optiq filter
         Set<TblColRef> storageGroupBy = Sets.newHashSet(context.getMandatoryColumns());
         collectGroupBy(groups, storageGroupBy);
         collectNonEvaluable(filter, storageGroupBy);
@@ -103,15 +105,14 @@ public class HBaseStorageEngine implements IStorageEngine {
         // post process filter: remove unused segment & set limit
         postProcessFilter(scans, flatFilter, context);
 
-        // check involved measures, build value decoder for each each family:column
-        List<RowValueDecoder> valueDecoders =
-                translateAggregation(cubeDesc.getHBaseMapping(), metrics, scans, context);
+        // check involved measures, build value decoder for each each
+        // family:column
+        List<RowValueDecoder> valueDecoders = translateAggregation(cubeDesc.getHBaseMapping(), metrics, scans, context);
 
         setThreshold(dimensions, valueDecoders, context);
 
         HConnection conn = HBaseConnection.get(context.getConnUrl());
-        return new SerializedHBaseTupleIterator(conn, scans, cubeInstance, dimensions, filter,
-                storageGroupBy, valueDecoders, context);
+        return new SerializedHBaseTupleIterator(conn, scans, cubeInstance, dimensions, filter, storageGroupBy, valueDecoders, context);
     }
 
     private void collectGroupBy(Collection<TblColRef> groups, Set<TblColRef> storageGroupBy) {
@@ -187,8 +188,7 @@ public class HBaseStorageEngine implements IStorageEngine {
         CubeManager cubeMgr = CubeManager.getInstance(this.cubeInstance.getConfig());
         CubeSegment seg = cubeInstance.getLatestReadySegment();
         LookupStringTable lookup = cubeMgr.getLookupTable(seg, hostInfo.dimension);
-        Pair<TupleFilter, Boolean> translated =
-                DerivedFilterTranslator.translate(lookup, hostInfo, compf, colf, constf);
+        Pair<TupleFilter, Boolean> translated = DerivedFilterTranslator.translate(lookup, hostInfo, compf, colf, constf);
         TupleFilter translatedFilter = translated.getFirst();
         boolean loosened = translated.getSecond();
         if (loosened) {
@@ -197,8 +197,7 @@ public class HBaseStorageEngine implements IStorageEngine {
         return translatedFilter;
     }
 
-    private void setThreshold(Collection<TblColRef> dimensions, List<RowValueDecoder> valueDecoders,
-            StorageContext context) {
+    private void setThreshold(Collection<TblColRef> dimensions, List<RowValueDecoder> valueDecoders, StorageContext context) {
         if (RowValueDecoder.hasMemHungryCountDistinct(valueDecoders) == false) {
             return;
         }
@@ -217,14 +216,12 @@ public class HBaseStorageEngine implements IStorageEngine {
         context.setThreshold((int) rowEst);
     }
 
-    private List<RowValueDecoder> translateAggregation(HBaseMappingDesc hbaseMapping,
-            Collection<FunctionDesc> aggregations, List<HBaseKeyRange> scans, StorageContext context) {
+    private List<RowValueDecoder> translateAggregation(HBaseMappingDesc hbaseMapping, Collection<FunctionDesc> aggregations, List<HBaseKeyRange> scans, StorageContext context) {
         Map<HBaseColumnDesc, RowValueDecoder> codecMap = Maps.newHashMap();
         for (FunctionDesc aggrFunc : aggregations) {
             Collection<HBaseColumnDesc> hbCols = hbaseMapping.findHBaseColumnByFunction(aggrFunc);
             if (hbCols.isEmpty()) {
-                throw new IllegalStateException("can't find HBaseColumnDesc for function "
-                        + aggrFunc.getFullExpression());
+                throw new IllegalStateException("can't find HBaseColumnDesc for function " + aggrFunc.getFullExpression());
             }
             HBaseColumnDesc bestHBCol = null;
             int bestIndex = -1;
@@ -232,7 +229,8 @@ public class HBaseStorageEngine implements IStorageEngine {
                 bestHBCol = hbCol;
                 bestIndex = hbCol.findMeasureIndex(aggrFunc);
                 MeasureDesc measure = hbCol.getMeasures()[bestIndex];
-                // criteria for holistic measure: Exact Aggregation && Exact Cuboid
+                // criteria for holistic measure: Exact Aggregation && Exact
+                // Cuboid
                 if (measure.isHolisticCountDistinct() && context.requireNoPostAggregation()) {
                     logger.info("Holistic count distinct chosen for " + aggrFunc);
                     break;
@@ -275,17 +273,16 @@ public class HBaseStorageEngine implements IStorageEngine {
         // build row key range for each cube segment
         for (CubeSegment cubeSeg : cubeInstance.getSegments(CubeSegmentStatusEnum.READY)) {
 
-            // consider derived (lookup snapshot), filter on dimension may differ per segment
-            List<Collection<ColumnValueRange>> orAndDimRanges =
-                    translateToOrAndDimRanges(flatFilter, cubeSeg);
+            // consider derived (lookup snapshot), filter on dimension may
+            // differ per segment
+            List<Collection<ColumnValueRange>> orAndDimRanges = translateToOrAndDimRanges(flatFilter, cubeSeg);
             if (orAndDimRanges == null) { // has conflict
                 continue;
             }
 
             List<HBaseKeyRange> scanRanges = Lists.newArrayListWithCapacity(orAndDimRanges.size());
             for (Collection<ColumnValueRange> andDimRanges : orAndDimRanges) {
-                HBaseKeyRange rowKeyRange =
-                        new HBaseKeyRange(dimensionColumns, andDimRanges, cubeSeg, cubeDesc);
+                HBaseKeyRange rowKeyRange = new HBaseKeyRange(dimensionColumns, andDimRanges, cubeSeg, cubeDesc);
                 scanRanges.add(rowKeyRange);
             }
 
@@ -297,8 +294,7 @@ public class HBaseStorageEngine implements IStorageEngine {
         return result;
     }
 
-    private List<Collection<ColumnValueRange>> translateToOrAndDimRanges(TupleFilter flatFilter,
-            CubeSegment cubeSegment) {
+    private List<Collection<ColumnValueRange>> translateToOrAndDimRanges(TupleFilter flatFilter, CubeSegment cubeSegment) {
         List<Collection<ColumnValueRange>> result = Lists.newArrayList();
 
         if (flatFilter == null) {
@@ -311,8 +307,7 @@ public class HBaseStorageEngine implements IStorageEngine {
                 throw new IllegalStateException("Filter should be AND instead of " + andFilter);
             }
 
-            Collection<ColumnValueRange> andRanges =
-                    translateToAndDimRanges(andFilter.getChildren(), cubeSegment);
+            Collection<ColumnValueRange> andRanges = translateToAndDimRanges(andFilter.getChildren(), cubeSegment);
 
             result.add(andRanges);
         }
@@ -320,8 +315,7 @@ public class HBaseStorageEngine implements IStorageEngine {
         return preprocessConstantConditions(result);
     }
 
-    private List<Collection<ColumnValueRange>> preprocessConstantConditions(
-            List<Collection<ColumnValueRange>> orAndRanges) {
+    private List<Collection<ColumnValueRange>> preprocessConstantConditions(List<Collection<ColumnValueRange>> orAndRanges) {
         boolean globalAlwaysTrue = false;
         Iterator<Collection<ColumnValueRange>> iterator = orAndRanges.iterator();
         while (iterator.hasNext()) {
@@ -349,8 +343,7 @@ public class HBaseStorageEngine implements IStorageEngine {
         return orAndRanges;
     }
 
-    private Collection<ColumnValueRange> translateToAndDimRanges(List<? extends TupleFilter> andFilters,
-            CubeSegment cubeSegment) {
+    private Collection<ColumnValueRange> translateToAndDimRanges(List<? extends TupleFilter> andFilters, CubeSegment cubeSegment) {
         Map<TblColRef, ColumnValueRange> rangeMap = new HashMap<TblColRef, ColumnValueRange>();
         for (TupleFilter filter : andFilters) {
             if ((filter instanceof CompareTupleFilter) == false) {
@@ -362,8 +355,7 @@ public class HBaseStorageEngine implements IStorageEngine {
                 continue;
             }
 
-            ColumnValueRange range =
-                    new ColumnValueRange(comp.getColumn(), comp.getValues(), comp.getOperator());
+            ColumnValueRange range = new ColumnValueRange(comp.getColumn(), comp.getValues(), comp.getOperator());
             andMerge(range, rangeMap);
 
         }
@@ -439,23 +431,19 @@ public class HBaseStorageEngine implements IStorageEngine {
                 if (Bytes.compareTo(stopKey, nextRange.getStopKey()) < 0) {
                     stopKey = nextRange.getStopKey();
                 }
-                if (nextRange.getPartitionColumnStartDate() > 0
-                        && nextRange.getPartitionColumnStartDate() < partitionColumnStartDate) {
+                if (nextRange.getPartitionColumnStartDate() > 0 && nextRange.getPartitionColumnStartDate() < partitionColumnStartDate) {
                     partitionColumnStartDate = nextRange.getPartitionColumnStartDate();
                 }
-                if (nextRange.getPartitionColumnEndDate() < Long.MAX_VALUE
-                        && nextRange.getPartitionColumnEndDate() > partitionColumnEndDate) {
+                if (nextRange.getPartitionColumnEndDate() < Long.MAX_VALUE && nextRange.getPartitionColumnEndDate() > partitionColumnEndDate) {
                     partitionColumnEndDate = nextRange.getPartitionColumnEndDate();
                 }
             }
 
-            partitionColumnStartDate =
-                    (partitionColumnStartDate == Long.MAX_VALUE) ? 0 : partitionColumnStartDate;
+            partitionColumnStartDate = (partitionColumnStartDate == Long.MAX_VALUE) ? 0 : partitionColumnStartDate;
             partitionColumnEndDate = (partitionColumnEndDate == 0) ? Long.MAX_VALUE : partitionColumnEndDate;
             keyRange =
 
-                    new HBaseKeyRange(cubeSegment, cuboid, startKey, stopKey, newFuzzyKeys,
-                            newFlatOrAndFilter, partitionColumnStartDate, partitionColumnEndDate);
+            new HBaseKeyRange(cubeSegment, cuboid, startKey, stopKey, newFuzzyKeys, newFlatOrAndFilter, partitionColumnStartDate, partitionColumnEndDate);
         }
         return keyRange;
     }
@@ -464,7 +452,8 @@ public class HBaseStorageEngine implements IStorageEngine {
         if (keyRanges.size() < MERGE_KEYRANGE_THRESHOLD) {
             return keyRanges;
         }
-        //TODO: check the distance between range. and merge the large distance range
+        // TODO: check the distance between range. and merge the large distance
+        // range
         List<HBaseKeyRange> mergedRanges = new LinkedList<HBaseKeyRange>();
         HBaseKeyRange mergedRange = mergeKeyRange(keyRanges, 0, keyRanges.size() - 1);
         mergedRanges.add(mergedRange);
@@ -486,9 +475,9 @@ public class HBaseStorageEngine implements IStorageEngine {
             // note all scans have the same cuboid, to avoid dedup
             Cuboid cuboid = scans.get(0).getCuboid();
             context.addCuboid(cuboid);
-            //TODO: we don't need to check filter after enable hbase coproccessor
-            if (!cuboid.requirePostAggregation() && context.isExactAggregation() && flatFilter == null
-                    && !context.hasSort()) {
+            // TODO: we don't need to check filter after enable hbase
+            // coproccessor
+            if (!cuboid.requirePostAggregation() && context.isExactAggregation() && flatFilter == null && !context.hasSort()) {
                 logger.info("Enable limit " + context.getLimit());
                 context.enableLimit();
             }

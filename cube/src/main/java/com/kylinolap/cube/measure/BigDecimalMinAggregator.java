@@ -20,7 +20,7 @@ import java.math.BigDecimal;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class BigDecimalMinAggregator extends MeasureAggregator<BigDecimal> {
 

@@ -32,7 +32,7 @@ import com.kylinolap.job.hadoop.cardinality.HiveColumnCardinalityJob;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class ColumnCardinalityJobTest {
 

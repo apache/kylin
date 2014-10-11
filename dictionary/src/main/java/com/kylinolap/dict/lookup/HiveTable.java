@@ -36,7 +36,7 @@ import com.kylinolap.metadata.MetadataManager;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class HiveTable implements ReadableTable {
 
@@ -89,16 +89,13 @@ public class HiveTable implements ReadableTable {
             return override;
         }
 
-        OSCommandExecutor exec =
-                KylinConfig.getInstanceFromEnv().getOSCommandExecutor(
-                        "hive -e \"describe extended " + hiveTable + ";\"");
+        OSCommandExecutor exec = KylinConfig.getInstanceFromEnv().getOSCommandExecutor("hive -e \"describe extended " + hiveTable + ";\"");
         String output = exec.execute();
 
         Pattern ptn = Pattern.compile("location:(.*?),");
         Matcher m = ptn.matcher(output);
         if (m.find() == false)
-            throw new IOException("Failed to find HDFS location for hive table " + hiveTable
-                    + " from output -- " + output);
+            throw new IOException("Failed to find HDFS location for hive table " + hiveTable + " from output -- " + output);
 
         String hdfsDir = m.group(1);
 
@@ -119,8 +116,7 @@ public class HiveTable implements ReadableTable {
                 nonZeroFiles.add(f);
         }
         if (nonZeroFiles.size() != 1)
-            throw new IllegalStateException("Expect 1 and only 1 non-zero file under " + hdfsDir
-                    + ", but find " + nonZeroFiles.size());
+            throw new IllegalStateException("Expect 1 and only 1 non-zero file under " + hdfsDir + ", but find " + nonZeroFiles.size());
         return nonZeroFiles.get(0);
     }
 

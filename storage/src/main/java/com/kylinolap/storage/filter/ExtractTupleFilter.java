@@ -9,7 +9,7 @@ import com.kylinolap.storage.tuple.ITuple;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public class ExtractTupleFilter extends TupleFilter {
 

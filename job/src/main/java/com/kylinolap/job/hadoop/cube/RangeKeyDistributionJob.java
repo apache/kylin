@@ -39,13 +39,15 @@ import com.kylinolap.metadata.model.cube.CubeDesc.CubeCapacity;
 
 /**
  * @author xjiang, ysong1
- *
+ * 
  */
 
 public class RangeKeyDistributionJob extends AbstractHadoopJob {
     protected static final Logger log = LoggerFactory.getLogger(RangeKeyDistributionJob.class);
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.hadoop.util.Tool#run(java.lang.String[])
      */
     @Override
@@ -75,7 +77,7 @@ public class RangeKeyDistributionJob extends AbstractHadoopJob {
 
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
             FileOutputFormat.setOutputPath(job, output);
-            //job.getConfiguration().set("dfs.block.size", "67108864");
+            // job.getConfiguration().set("dfs.block.size", "67108864");
 
             // Mapper
             job.setInputFormatClass(SequenceFileInputFormat.class);

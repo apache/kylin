@@ -28,7 +28,7 @@ import com.kylinolap.rest.metrics.QueryMetrics;
 
 /**
  * @author xduo
- *
+ * 
  */
 @Component("metricsService")
 public class MetricsService implements InitializingBean {
@@ -47,8 +47,11 @@ public class MetricsService implements InitializingBean {
         metricRegistry.register("QueryMetrics", QueryMetrics.getInstance());
     }
 
-    /* (non-Javadoc)
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     @Override
     public void afterPropertiesSet() throws Exception {

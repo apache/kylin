@@ -27,16 +27,14 @@ public class CombinationTest extends KylinQueryTest {
     }
 
     /**
-     * return all config combinations,
-     * where first setting specifies join type (inner or left),
-     * and the second setting specifies whether to force using coprocessors(on, off or unset).
+     * return all config combinations, where first setting specifies join type
+     * (inner or left), and the second setting specifies whether to force using
+     * coprocessors(on, off or unset).
      */
     @Parameterized.Parameters
     public static Collection<Object[]> configs() {
-        return Arrays.asList(new Object[][] { { "inner", "unset" }, { "left", "unset" }, { "inner", "off" },
-                { "left", "off" }, { "inner", "on" }, { "left", "on" }, });
+        return Arrays.asList(new Object[][] { { "inner", "unset" }, { "left", "unset" }, { "inner", "off" }, { "left", "off" }, { "inner", "on" }, { "left", "on" }, });
     }
-
 
     public CombinationTest(String joinType, String coprocessorToggle) throws Exception {
 
@@ -51,7 +49,7 @@ public class CombinationTest extends KylinQueryTest {
         } else if (coprocessorToggle.equals("off")) {
             CoprocessorEnabler.forceCoprocessorOff();
         } else if (coprocessorToggle.equals("unset")) {
-            //unset
+            // unset
         }
     }
 }

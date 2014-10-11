@@ -30,8 +30,8 @@ import com.kylinolap.common.util.Array;
 import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
- * An in-memory lookup table, in which each cell is an object of type T.
- * The table is indexed by specified PK for fast lookup.
+ * An in-memory lookup table, in which each cell is an object of type T. The
+ * table is indexed by specified PK for fast lookup.
  * 
  * @author yangli9
  */
@@ -76,8 +76,7 @@ abstract public class LookupTable<T extends Comparable<T>> {
         Array<T> key = new Array<T>(keyCols);
 
         if (data.containsKey(key))
-            throw new IllegalStateException("Dup key found, key=" + toString(keyCols) + ", value1="
-                    + toString(data.get(key)) + ", value2=" + toString(value));
+            throw new IllegalStateException("Dup key found, key=" + toString(keyCols) + ", value1=" + toString(data.get(key)) + ", value2=" + toString(value));
 
         data.put(key, value);
     }
@@ -138,8 +137,7 @@ abstract public class LookupTable<T extends Comparable<T>> {
     }
 
     private boolean between(T beginValue, T v, T endValue) {
-        return (beginValue == null || beginValue.compareTo(v) <= 0)
-                && (endValue == null || v.compareTo(endValue) <= 0);
+        return (beginValue == null || beginValue.compareTo(v) <= 0) && (endValue == null || v.compareTo(endValue) <= 0);
     }
 
     public String toString() {

@@ -55,12 +55,17 @@ public class CubeSegment implements Comparable<CubeSegment> {
     private String lastBuildJobID;
 
     @JsonProperty("binary_signature")
-    private String binarySignature; // a hash of cube schema and dictionary ID, used for sanity check
+    private String binarySignature; // a hash of cube schema and dictionary ID,
+                                    // used for sanity check
 
     @JsonProperty("dictionaries")
-    private ConcurrentHashMap<String, String> dictionaries; // table/column ==> dictionary resource path
+    private ConcurrentHashMap<String, String> dictionaries; // table/column ==>
+                                                            // dictionary
+                                                            // resource path
     @JsonProperty("snapshots")
-    private ConcurrentHashMap<String, String> snapshots; // table name ==> snapshot resource path
+    private ConcurrentHashMap<String, String> snapshots; // table name ==>
+                                                         // snapshot resource
+                                                         // path
 
     public CubeDesc getCubeDesc() {
         return getCubeInstance().getDescriptor();
@@ -69,7 +74,8 @@ public class CubeSegment implements Comparable<CubeSegment> {
     /**
      * @param startDate
      * @param endDate
-     * @return if(startDate == 0 && endDate == 0), returns "FULL_BUILD", else returns "yyyyMMddHHmmss_yyyyMMddHHmmss"
+     * @return if(startDate == 0 && endDate == 0), returns "FULL_BUILD", else
+     *         returns "yyyyMMddHHmmss_yyyyMMddHHmmss"
      */
     public static String getSegmentName(long startDate, long endDate) {
         if (startDate == 0 && endDate == 0) {
@@ -201,8 +207,7 @@ public class CubeSegment implements Comparable<CubeSegment> {
         return getDictionaries().values();
     }
 
-    public Collection<String> getSnapshotPaths()
-    {
+    public Collection<String> getSnapshotPaths() {
         return getSnapshots().values();
     }
 
@@ -219,7 +224,8 @@ public class CubeSegment implements Comparable<CubeSegment> {
     }
 
     /**
-     * @param storageLocationIdentifier the storageLocationIdentifier to set
+     * @param storageLocationIdentifier
+     *            the storageLocationIdentifier to set
      */
     public void setStorageLocationIdentifier(String storageLocationIdentifier) {
         this.storageLocationIdentifier = storageLocationIdentifier;

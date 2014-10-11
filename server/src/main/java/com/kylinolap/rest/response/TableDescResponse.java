@@ -26,7 +26,7 @@ import com.kylinolap.metadata.model.schema.TableDesc;
  * A response class to wrap TableDesc
  * 
  * @author jianliu
- *
+ * 
  */
 public class TableDescResponse extends TableDesc {
     @JsonProperty("exd")
@@ -42,7 +42,8 @@ public class TableDescResponse extends TableDesc {
     }
 
     /**
-     * @param cardinality the cardinality to set
+     * @param cardinality
+     *            the cardinality to set
      */
     public void setCardinality(Map<String, Long> cardinality) {
         this.cardinality = cardinality;
@@ -56,7 +57,8 @@ public class TableDescResponse extends TableDesc {
     }
 
     /**
-     * @param descExd the descExd to set
+     * @param descExd
+     *            the descExd to set
      */
     public void setDescExd(Map<String, String> descExd) {
         this.descExd = descExd;

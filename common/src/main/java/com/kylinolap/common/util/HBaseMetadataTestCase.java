@@ -28,16 +28,17 @@ import com.kylinolap.common.persistence.ResourceTool;
 public class HBaseMetadataTestCase extends AbstractKylinTestCase {
     private String tempTestMetadataUrl = null;
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see com.kylinolap.common.util.AbstractKylinTestCase#createTestMetadata()
      */
     @Override
     public void createTestMetadata() {
-        
+
         KylinConfig.destoryInstance();
 
-        if (System.getProperty(KylinConfig.KYLIN_CONF) == null
-                && System.getenv(KylinConfig.KYLIN_CONF) == null)
+        if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null)
             System.setProperty(KylinConfig.KYLIN_CONF, this.testDataFolder);
 
         this.tempTestMetadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
@@ -45,13 +46,15 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
             throw new IllegalArgumentException("Error while initializing metadata url");
         }
         if (this.tempTestMetadataUrl.contains("hbase:") == false) {
-            throw new IllegalArgumentException("Excepted HBase metadata url, but got "
-                    + this.tempTestMetadataUrl);
+            throw new IllegalArgumentException("Excepted HBase metadata url, but got " + this.tempTestMetadataUrl);
         }
     }
 
-    /* (non-Javadoc)
-     * @see com.kylinolap.common.util.AbstractKylinTestCase#cleanupTestMetadata()
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * com.kylinolap.common.util.AbstractKylinTestCase#cleanupTestMetadata()
      */
     @Override
     public void cleanupTestMetadata() {
@@ -60,14 +63,15 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
         this.tempTestMetadataUrl = null;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see com.kylinolap.common.util.AbstractKylinTestCase#getTestConfig()
      */
     @Override
     public KylinConfig getTestConfig() {
         if (this.tempTestMetadataUrl == null) {
-            throw new IllegalArgumentException(
-                    "Call createTestMetadata() method to initialize TestMetadataUrl");
+            throw new IllegalArgumentException("Call createTestMetadata() method to initialize TestMetadataUrl");
         }
         return KylinConfig.getInstanceFromEnv();
     }
@@ -75,8 +79,7 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
     public void installMetadataToHBase() throws IOException, Exception {
         // install metadata to hbase
         ResourceTool.reset(KylinConfig.getInstanceFromEnv());
-        ResourceTool.copy(KylinConfig.createInstanceFromUri(this.testDataFolder),
-                KylinConfig.getInstanceFromEnv());
+        ResourceTool.copy(KylinConfig.createInstanceFromUri(this.testDataFolder), KylinConfig.getInstanceFromEnv());
     }
 
     protected ResourceStore getStore() {

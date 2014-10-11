@@ -21,11 +21,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kylinolap.metadata.model.schema.DataType;
 
 /**
- * Created with IntelliJ IDEA.
- * User: lukhan
- * Date: 9/26/13
- * Time: 1:30 PM
- * To change this template use File | Settings | File Templates.
+ * Created with IntelliJ IDEA. User: lukhan Date: 9/26/13 Time: 1:30 PM To
+ * change this template use File | Settings | File Templates.
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class FunctionDesc {
@@ -53,7 +50,8 @@ public class FunctionDesc {
         if (isSum()) {
             return getParameter().getValue();
         } else if (isCount()) {
-            return "COUNT__"; // ignores parameter, count(*), count(1), count(col) are all the same
+            return "COUNT__"; // ignores parameter, count(*), count(1),
+                              // count(col) are all the same
         } else {
             return getFullExpression().replaceAll("[(), ]", "_");
         }
@@ -176,7 +174,7 @@ public class FunctionDesc {
                 return false;
         } else if (!expression.equals(other.expression))
             return false;
-        //NOTE: don't check the parameter of count()
+        // NOTE: don't check the parameter of count()
         if (isCount() == false) {
             if (parameter == null) {
                 if (other.parameter != null)
@@ -189,8 +187,7 @@ public class FunctionDesc {
 
     @Override
     public String toString() {
-        return "FunctionDesc [expression=" + expression + ", parameter=" + parameter + ", returnType="
-                + returnType + "]";
+        return "FunctionDesc [expression=" + expression + ", parameter=" + parameter + ", returnType=" + returnType + "]";
     }
 
 }

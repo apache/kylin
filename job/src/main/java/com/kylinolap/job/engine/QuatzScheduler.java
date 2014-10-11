@@ -44,7 +44,7 @@ import com.kylinolap.job.flow.JobFlowListener;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class QuatzScheduler {
 
@@ -53,35 +53,33 @@ public class QuatzScheduler {
     private Scheduler scheduler;
     private JobFlowListener globalJobListener;
 
-    //    public static void scheduleJobFlow(Scheduler scheduler, JobFlow jobFlow) throws JobException {
-    //        // schedule the 1st step
-    //        Trigger trigger = TriggerBuilder.newTrigger().startNow().build();
-    //        JobDetail firstStep = jobFlow.getFirst();
-    //        try {
-    //            scheduler.scheduleJob(firstStep, trigger);
-    //        } catch (SchedulerException e) {
-    //            throw new JobException(e);
-    //        }
-    //    }
+    // public static void scheduleJobFlow(Scheduler scheduler, JobFlow jobFlow)
+    // throws JobException {
+    // // schedule the 1st step
+    // Trigger trigger = TriggerBuilder.newTrigger().startNow().build();
+    // JobDetail firstStep = jobFlow.getFirst();
+    // try {
+    // scheduler.scheduleJob(firstStep, trigger);
+    // } catch (SchedulerException e) {
+    // throw new JobException(e);
+    // }
+    // }
 
     public QuatzScheduler() throws JobException {
         this.globalJobListener = new JobFlowListener(JobConstants.GLOBAL_LISTENER_NAME);
         StdSchedulerFactory sf = new StdSchedulerFactory();
         Properties schedulerProperties = new Properties();
         int numberOfProcessors = Runtime.getRuntime().availableProcessors();
-        schedulerProperties.setProperty("org.quartz.threadPool.threadCount",
-                String.valueOf(numberOfProcessors));
+        schedulerProperties.setProperty("org.quartz.threadPool.threadCount", String.valueOf(numberOfProcessors));
         schedulerProperties.setProperty("org.quartz.scheduler.skipUpdateCheck", "true");
 
         try {
             sf.initialize(schedulerProperties);
             this.scheduler = sf.getScheduler();
-            this.scheduler.getListenerManager().addJobListener(this.globalJobListener,
-                    GroupMatcher.jobGroupEquals(JobConstants.CUBE_JOB_GROUP_NAME));
+            this.scheduler.getListenerManager().addJobListener(this.globalJobListener, GroupMatcher.jobGroupEquals(JobConstants.CUBE_JOB_GROUP_NAME));
 
             // cubename.jobUuid -> job flow
-            this.scheduler.getContext().put(JobConstants.PROP_JOB_RUNTIME_FLOWS,
-                    new ConcurrentHashMap<String, JobFlow>());
+            this.scheduler.getContext().put(JobConstants.PROP_JOB_RUNTIME_FLOWS, new ConcurrentHashMap<String, JobFlow>());
 
             // put the scheduler in standby mode first
             this.scheduler.standby();
@@ -99,20 +97,10 @@ public class QuatzScheduler {
     }
 
     public void scheduleFetcher(int intervalInSeconds, JobEngineConfig engineConfig) throws JobException {
-        JobDetail job =
-                JobBuilder
-                        .newJob(JobFetcher.class)
-                        .withIdentity(JobFetcher.class.getCanonicalName(), JobConstants.DAEMON_JOB_GROUP_NAME)
-                        .build();
+        JobDetail job = JobBuilder.newJob(JobFetcher.class).withIdentity(JobFetcher.class.getCanonicalName(), JobConstants.DAEMON_JOB_GROUP_NAME).build();
         job.getJobDataMap().put(JobConstants.PROP_ENGINE_CONTEXT, engineConfig);
 
-        Trigger trigger =
-                TriggerBuilder
-                        .newTrigger()
-                        .startNow()
-                        .withSchedule(
-                                SimpleScheduleBuilder.simpleSchedule()
-                                        .withIntervalInSeconds(intervalInSeconds).repeatForever()).build();
+        Trigger trigger = TriggerBuilder.newTrigger().startNow().withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(intervalInSeconds).repeatForever()).build();
 
         try {
             this.scheduler.scheduleJob(job, trigger);
@@ -122,16 +110,13 @@ public class QuatzScheduler {
     }
 
     public boolean interrupt(JobInstance jobInstance, JobStep jobStep) throws JobException, IOException {
-        JobKey jobKey =
-                new JobKey(JobInstance.getStepIdentity(jobInstance, jobStep),
-                        JobConstants.CUBE_JOB_GROUP_NAME);
+        JobKey jobKey = new JobKey(JobInstance.getStepIdentity(jobInstance, jobStep), JobConstants.CUBE_JOB_GROUP_NAME);
 
         boolean res = false;
         try {
             JobDetail jobDetail = this.scheduler.getJobDetail(jobKey);
 
-            IJobCommand iJobStepCmd =
-                    (IJobCommand) jobDetail.getJobDataMap().get(JobConstants.PROP_JOB_CMD_EXECUTOR);
+            IJobCommand iJobStepCmd = (IJobCommand) jobDetail.getJobDataMap().get(JobConstants.PROP_JOB_CMD_EXECUTOR);
             if (null != iJobStepCmd) {
                 iJobStepCmd.cancel();
             }
@@ -140,9 +125,7 @@ public class QuatzScheduler {
             this.scheduler.addJob(jobDetail, true, true);
 
             @SuppressWarnings("unchecked")
-            ConcurrentHashMap<String, JobFlow> jobFlows =
-                    (ConcurrentHashMap<String, JobFlow>) this.scheduler.getContext().get(
-                            JobConstants.PROP_JOB_RUNTIME_FLOWS);
+            ConcurrentHashMap<String, JobFlow> jobFlows = (ConcurrentHashMap<String, JobFlow>) this.scheduler.getContext().get(JobConstants.PROP_JOB_RUNTIME_FLOWS);
             jobFlows.remove(JobInstance.getJobIdentity(jobInstance));
         } catch (UnableToInterruptJobException e) {
             log.error(e.getLocalizedMessage(), e);
@@ -166,7 +149,7 @@ public class QuatzScheduler {
         return this.scheduler;
     }
 
-    //// metrics
+    // // metrics
 
     public int getThreadPoolSize() {
         try {
@@ -188,8 +171,7 @@ public class QuatzScheduler {
 
     public int getIdleSlots() {
         try {
-            return this.scheduler.getMetaData().getThreadPoolSize()
-                    - this.scheduler.getCurrentlyExecutingJobs().size();
+            return this.scheduler.getMetaData().getThreadPoolSize() - this.scheduler.getCurrentlyExecutingJobs().size();
         } catch (SchedulerException e) {
             log.error("Can't get scheduler metadata!", e);
             return 0;

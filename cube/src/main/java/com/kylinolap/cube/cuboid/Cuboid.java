@@ -38,8 +38,7 @@ import com.kylinolap.metadata.model.cube.TblColRef;
  */
 public class Cuboid implements Comparable<Cuboid> {
 
-    private final static Map<String, Map<Long, Cuboid>> CUBOID_CACHE =
-            new ConcurrentHashMap<String, Map<Long, Cuboid>>();
+    private final static Map<String, Map<Long, Cuboid>> CUBOID_CACHE = new ConcurrentHashMap<String, Map<Long, Cuboid>>();
 
     public static Cuboid findById(CubeDesc cube, byte[] cuboidID) {
         return findById(cube, Bytes.toLong(cuboidID));
@@ -204,7 +203,7 @@ public class Cuboid implements Comparable<Cuboid> {
     private final boolean requirePostAggregation;
     private List<TblColRef> dimensionColumns;
 
-    //will translate the cuboidID if it is not valid
+    // will translate the cuboidID if it is not valid
     private Cuboid(CubeDesc cube, long originalID, long validID) {
         this.cube = cube;
         this.inputID = originalID;

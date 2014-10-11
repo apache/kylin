@@ -41,7 +41,7 @@ import com.kylinolap.job.exception.JobException;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class AsyncJobFlowNode extends JobFlowNode {
 
@@ -63,9 +63,7 @@ public class AsyncJobFlowNode extends JobFlowNode {
             }
 
             if (output == null) {
-                JobInstance jobInstance =
-                        updateJobStep(jobInstanceID, jobStepID, config, JobStepStatusEnum.RUNNING,
-                                System.currentTimeMillis(), null, null);
+                JobInstance jobInstance = updateJobStep(jobInstanceID, jobStepID, config, JobStepStatusEnum.RUNNING, System.currentTimeMillis(), null, null);
 
                 String command = data.getString(JobConstants.PROP_COMMAND);
                 jobCmd = JobCommandFactory.getJobCommand(command, jobInstance, jobStepID, engineConfig);
@@ -75,8 +73,7 @@ public class AsyncJobFlowNode extends JobFlowNode {
                 context.getScheduler().addJob(this.currentJobDetail, true, true);
 
                 JobStepStatusEnum stepStatus = output.getStatus();
-                updateJobStep(jobInstanceID, jobStepID, config, stepStatus, null, stepStatus.isComplete()
-                        ? System.currentTimeMillis() : null, output.getOutput());
+                updateJobStep(jobInstanceID, jobStepID, config, stepStatus, null, stepStatus.isComplete() ? System.currentTimeMillis() : null, output.getOutput());
 
                 context.setResult(output.getExitCode());
                 scheduleStatusChecker(context);
@@ -88,13 +85,11 @@ public class AsyncJobFlowNode extends JobFlowNode {
                 log.debug("Start to check hadoop job status of " + currentJobDetail.getKey());
                 JobStepStatusEnum stepStatus = output.getStatus();
 
-                if ((System.currentTimeMillis() - jobStep.getExecStartTime()) / 1000 >= engineConfig
-                        .getJobStepTimeout()) {
+                if ((System.currentTimeMillis() - jobStep.getExecStartTime()) / 1000 >= engineConfig.getJobStepTimeout()) {
                     throw new JobException("Job step " + jobStep.getName() + " timeout.");
                 }
 
-                updateJobStep(jobInstance.getUuid(), jobStepID, config, stepStatus, null,
-                        stepStatus.isComplete() ? System.currentTimeMillis() : null, output.getOutput());
+                updateJobStep(jobInstance.getUuid(), jobStepID, config, stepStatus, null, stepStatus.isComplete() ? System.currentTimeMillis() : null, output.getOutput());
 
                 if (!stepStatus.isComplete()) {
                     scheduleStatusChecker(context);
@@ -114,12 +109,9 @@ public class AsyncJobFlowNode extends JobFlowNode {
         JobFlow jobFlow = (JobFlow) jobDataMap.get(JobConstants.PROP_JOB_FLOW);
         JobEngineConfig engineConfig = jobFlow.getJobengineConfig();
         int interval = engineConfig.getAsyncJobCheckInterval();
-        log.debug("Trigger a status check job in " + interval + " seconds for job "
-                + currentJobDetail.getKey());
+        log.debug("Trigger a status check job in " + interval + " seconds for job " + currentJobDetail.getKey());
 
-        Trigger trigger =
-                TriggerBuilder.newTrigger().startAt(DateBuilder.futureDate(interval, IntervalUnit.SECOND))
-                        .build();
+        Trigger trigger = TriggerBuilder.newTrigger().startAt(DateBuilder.futureDate(interval, IntervalUnit.SECOND)).build();
         Set<Trigger> triggers = new HashSet<Trigger>();
         triggers.add(trigger);
         context.getScheduler().scheduleJob(currentJobDetail, triggers, true);

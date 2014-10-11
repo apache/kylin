@@ -50,9 +50,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBasics() throws Exception {
-        CubeInstance cube =
-                CubeManager.getInstance(this.getTestConfig()).getCube(
-                        "test_kylin_cube_without_slr_ready");
+        CubeInstance cube = CubeManager.getInstance(this.getTestConfig()).getCube("test_kylin_cube_without_slr_ready");
         CubeDesc desc = cube.getDescriptor();
         System.out.println(JsonUtil.writeValueAsIndentString(desc));
 
@@ -71,21 +69,15 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
         MetadataManager metaMgr = getMetadataManager();
         CubeDesc desc = metaMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
-        CubeInstance createdCube =
-                CubeManager.getInstance(this.getTestConfig()).createCube("a_whole_new_cube",
-                        ProjectInstance.DEFAULT_PROJECT_NAME, desc, null);
-        assertTrue(createdCube == CubeManager.getInstance(this.getTestConfig()).getCube(
-                "a_whole_new_cube"));
+        CubeInstance createdCube = CubeManager.getInstance(this.getTestConfig()).createCube("a_whole_new_cube", ProjectInstance.DEFAULT_PROJECT_NAME, desc, null);
+        assertTrue(createdCube == CubeManager.getInstance(this.getTestConfig()).getCube("a_whole_new_cube"));
 
-        assertTrue(ProjectManager.getInstance(getTestConfig())
-                .listAllCubes(ProjectInstance.DEFAULT_PROJECT_NAME).contains(createdCube));
+        assertTrue(ProjectManager.getInstance(getTestConfig()).listAllCubes(ProjectInstance.DEFAULT_PROJECT_NAME).contains(createdCube));
 
-        CubeInstance droppedCube =
-                CubeManager.getInstance(this.getTestConfig()).dropCube("a_whole_new_cube",true);
+        CubeInstance droppedCube = CubeManager.getInstance(this.getTestConfig()).dropCube("a_whole_new_cube", true);
         assertTrue(createdCube == droppedCube);
 
-        assertTrue(!ProjectManager.getInstance(getTestConfig())
-                .listAllCubes(ProjectInstance.DEFAULT_PROJECT_NAME).contains(droppedCube));
+        assertTrue(!ProjectManager.getInstance(getTestConfig()).listAllCubes(ProjectInstance.DEFAULT_PROJECT_NAME).contains(droppedCube));
 
         assertNull(CubeManager.getInstance(this.getTestConfig()).getCube("a_whole_new_cube"));
     }

@@ -49,7 +49,17 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
 
     private final CubeSegment cubeSeg;
     private final Cuboid cuboid;
-    private final List<Collection<ColumnValueRange>> flatOrAndFilter; // OR-AND filter, (A AND B AND ..) OR (C AND D AND ..) OR ..
+    private final List<Collection<ColumnValueRange>> flatOrAndFilter; // OR-AND
+                                                                      // filter,
+                                                                      // (A
+                                                                      // AND B
+                                                                      // AND
+                                                                      // ..)
+                                                                      // OR (C
+                                                                      // AND D
+                                                                      // AND
+                                                                      // ..)
+                                                                      // OR ..
 
     private byte[] startKey;
     private byte[] stopKey;
@@ -62,9 +72,7 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
     private long partitionColumnStartDate = Long.MIN_VALUE;
     private long partitionColumnEndDate = Long.MAX_VALUE;
 
-    public HBaseKeyRange(CubeSegment cubeSeg, Cuboid cuboid, byte[] startKey, byte[] stopKey,
-            List<Pair<byte[], byte[]>> fuzzyKeys, List<Collection<ColumnValueRange>> flatColumnValueFilter,
-            long partitionColumnStartDate, long partitionColumnEndDate) {
+    public HBaseKeyRange(CubeSegment cubeSeg, Cuboid cuboid, byte[] startKey, byte[] stopKey, List<Pair<byte[], byte[]>> fuzzyKeys, List<Collection<ColumnValueRange>> flatColumnValueFilter, long partitionColumnStartDate, long partitionColumnEndDate) {
         this.cubeSeg = cubeSeg;
         this.cuboid = cuboid;
         this.startKey = startKey;
@@ -76,8 +84,7 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
         initDebugString();
     }
 
-    public HBaseKeyRange(Collection<TblColRef> dimensionColumns,
-            Collection<ColumnValueRange> andDimensionRanges, CubeSegment cubeSeg, CubeDesc cubeDesc) {
+    public HBaseKeyRange(Collection<TblColRef> dimensionColumns, Collection<ColumnValueRange> andDimensionRanges, CubeSegment cubeSeg, CubeDesc cubeDesc) {
         this.cubeSeg = cubeSeg;
         long cuboidId = this.calculateCuboidID(cubeDesc, dimensionColumns);
         this.cuboid = Cuboid.findById(cubeDesc, cuboidId);
@@ -107,8 +114,7 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
             stopValues.put(column, dimRange.getEndValue());
             fuzzyValues.put(column, dimRange.getEqualValues());
 
-            TblColRef partitionDateColumnRef =
-                    cubeSeg.getCubeDesc().getCubePartitionDesc().getPartitionDateColumnRef();
+            TblColRef partitionDateColumnRef = cubeSeg.getCubeDesc().getCubePartitionDesc().getPartitionDateColumnRef();
             if (column.equals(partitionDateColumnRef)) {
                 initPartitionRange(dimRange);
             }
@@ -119,10 +125,12 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
         this.startKey = encoder.encode(startValues);
 
         encoder.setBlankByte(RowConstants.ROWKEY_UPPER_BYTE);
-        // In order to make stopRow inclusive add a trailing 0 byte. #See Scan.setStopRow(byte [] stopRow)
+        // In order to make stopRow inclusive add a trailing 0 byte. #See
+        // Scan.setStopRow(byte [] stopRow)
         this.stopKey = Bytes.add(encoder.encode(stopValues), ZERO_TAIL_BYTES);
 
-        // restore encoder defaults for later reuse (note AbstractRowKeyEncoder.createInstance() caches instances)
+        // restore encoder defaults for later reuse (note
+        // AbstractRowKeyEncoder.createInstance() caches instances)
         encoder.setBlankByte(AbstractRowKeyEncoder.DEFAULT_BLANK_BYTE);
 
         // always fuzzy match cuboid ID to lock on the selected cuboid
@@ -131,8 +139,7 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
 
     private void initPartitionRange(ColumnValueRange dimRange) {
         if (null != dimRange.getBeginValue()) {
-            this.partitionColumnStartDate =
-                    DateStrDictionary.stringToDate(dimRange.getBeginValue()).getTime();
+            this.partitionColumnStartDate = DateStrDictionary.stringToDate(dimRange.getBeginValue()).getTime();
         }
         if (null != dimRange.getEndValue()) {
             this.partitionColumnEndDate = DateStrDictionary.stringToDate(dimRange.getEndValue()).getTime();
@@ -157,11 +164,9 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
         FuzzyKeyEncoder fuzzyKeyEncoder = new FuzzyKeyEncoder(cubeSeg, cuboid);
         FuzzyMaskEncoder fuzzyMaskEncoder = new FuzzyMaskEncoder(cubeSeg, cuboid);
 
-        List<Map<TblColRef, String>> fuzzyValues =
-                FuzzyValueCombination.calculate(fuzzyValueSet, FUZZY_VALUE_CAP);
+        List<Map<TblColRef, String>> fuzzyValues = FuzzyValueCombination.calculate(fuzzyValueSet, FUZZY_VALUE_CAP);
         for (Map<TblColRef, String> fuzzyValue : fuzzyValues) {
-            result.add(new Pair<byte[], byte[]>(fuzzyKeyEncoder.encode(fuzzyValue), fuzzyMaskEncoder
-                    .encode(fuzzyValue)));
+            result.add(new Pair<byte[], byte[]>(fuzzyKeyEncoder.encode(fuzzyValue), fuzzyMaskEncoder.encode(fuzzyValue)));
         }
         return result;
     }
@@ -265,7 +270,6 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
     }
 
     public boolean hitSegment() {
-        return cubeSeg.getDateRangeStart() <= getPartitionColumnEndDate()
-                && cubeSeg.getDateRangeEnd() >= getPartitionColumnStartDate();
+        return cubeSeg.getDateRangeStart() <= getPartitionColumnEndDate() && cubeSeg.getDateRangeEnd() >= getPartitionColumnStartDate();
     }
 }

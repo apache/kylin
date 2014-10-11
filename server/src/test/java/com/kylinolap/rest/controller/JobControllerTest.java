@@ -38,7 +38,7 @@ import com.kylinolap.rest.service.TestBase;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class JobControllerTest extends TestBase {
 
@@ -87,7 +87,7 @@ public class JobControllerTest extends TestBase {
         Map<String, String> output = jobSchedulerController.getStepOutput(job.getId(), 0);
         Assert.assertNotNull(output);
 
-        //        jobSchedulerController.cancel(job.getId());
+        // jobSchedulerController.cancel(job.getId());
     }
 
     @Test(expected = RuntimeException.class)

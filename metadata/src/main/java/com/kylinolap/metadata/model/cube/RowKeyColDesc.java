@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * @author yangli9
- *
+ * 
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class RowKeyColDesc {
@@ -78,8 +78,7 @@ public class RowKeyColDesc {
 
     @Override
     public String toString() {
-        return "RowKeyColDesc [column=" + column + ", length=" + length + ", dictionary=" + dictionary
-                + ", mandatory=" + mandatory + "]";
+        return "RowKeyColDesc [column=" + column + ", length=" + length + ", dictionary=" + dictionary + ", mandatory=" + mandatory + "]";
     }
 
 }

@@ -28,7 +28,7 @@ import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class TableRecordInfo {
 
@@ -109,7 +109,9 @@ public class TableRecordInfo {
         return desc.getTimestampGranularity();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see java.lang.Object#hashCode()
      */
     @Override
@@ -120,7 +122,9 @@ public class TableRecordInfo {
         return result;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override

@@ -35,7 +35,7 @@ import com.kylinolap.rest.service.UserService;
  * Admin Controller is defined as Restful API entrance for UI.
  * 
  * @author jianliu
- *
+ * 
  */
 @Controller
 @RequestMapping(value = "/admin")
@@ -90,8 +90,7 @@ public class AdminController extends BasicController {
 
     @RequestMapping(value = "/config", method = { RequestMethod.PUT })
     public void updateKylinConfig(@RequestBody UpdateConfigRequest updateConfigRequest) {
-        KylinConfig.getInstanceFromEnv().setProperty(updateConfigRequest.getKey(),
-                updateConfigRequest.getValue());
+        KylinConfig.getInstanceFromEnv().setProperty(updateConfigRequest.getKey(), updateConfigRequest.getValue());
     }
 
     public void setAdminService(AdminService adminService) {

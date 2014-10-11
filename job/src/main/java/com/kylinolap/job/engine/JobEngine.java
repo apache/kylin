@@ -16,9 +16,9 @@
 package com.kylinolap.job.engine;
 
 /** 
-* @author George Song (ysong1), xduo
-* 
-*/
+ * @author George Song (ysong1), xduo
+ * 
+ */
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -57,8 +57,7 @@ public class JobEngine implements ConnectionStateListener {
     private CuratorFramework zkClient;
 
     private static final String ZOOKEEPER_LOCK_PATH = "/kylin/job_engine/lock";
-    private static final ConcurrentHashMap<JobEngineConfig, JobEngine> CACHE =
-            new ConcurrentHashMap<JobEngineConfig, JobEngine>();
+    private static final ConcurrentHashMap<JobEngineConfig, JobEngine> CACHE = new ConcurrentHashMap<JobEngineConfig, JobEngine>();
     private int daemonJobIntervalInSeconds;
 
     public static JobEngine getInstance(String engineID, JobEngineConfig engineCfg) throws JobException {
@@ -98,10 +97,9 @@ public class JobEngine implements ConnectionStateListener {
                 sharedLock.release();
             }
             if (zkClient.getState().equals(CuratorFrameworkState.STARTED)) {
-                //client.setData().forPath(ZOOKEEPER_LOCK_PATH, null);
+                // client.setData().forPath(ZOOKEEPER_LOCK_PATH, null);
                 if (zkClient.checkExists().forPath(ZOOKEEPER_LOCK_PATH + "/" + this.engineID) != null) {
-                    zkClient.delete().guaranteed().deletingChildrenIfNeeded()
-                            .forPath(ZOOKEEPER_LOCK_PATH + "/" + this.engineID);
+                    zkClient.delete().guaranteed().deletingChildrenIfNeeded().forPath(ZOOKEEPER_LOCK_PATH + "/" + this.engineID);
                 }
             }
         } catch (Exception e) {

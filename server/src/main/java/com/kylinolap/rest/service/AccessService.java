@@ -49,7 +49,7 @@ import com.kylinolap.rest.security.AclService;
 
 /**
  * @author xduo
- *
+ * 
  */
 @Component("accessService")
 public class AccessService {
@@ -60,7 +60,7 @@ public class AccessService {
     @Autowired
     UserService userService;
 
-    //~ Methods to manage acl life circle of domain objects ~
+    // ~ Methods to manage acl life circle of domain objects ~
 
     @Transactional
     public Acl init(AclEntity ae, Permission initPermission) {
@@ -227,7 +227,7 @@ public class AccessService {
         }
     }
 
-    //~ Methods to get acl info of domain objects ~
+    // ~ Methods to get acl info of domain objects ~
 
     public RootPersistentEntity getAclEntity(String entityType, String uuid) {
         if (null == uuid) {
@@ -262,10 +262,10 @@ public class AccessService {
         }
         List<AccessEntryResponse> accessControlEntities = new ArrayList<AccessEntryResponse>();
 
-        // Cause there is a circle reference in AccessControlEntry, it needs to set acl to null as a workaround.
+        // Cause there is a circle reference in AccessControlEntry, it needs to
+        // set acl to null as a workaround.
         for (AccessControlEntry ace : acl.getEntries()) {
-            accessControlEntities.add(new AccessEntryResponse(ace.getId(), ace.getSid(), ace.getPermission(),
-                    ace.isGranting()));
+            accessControlEntities.add(new AccessEntryResponse(ace.getId(), ace.getSid(), ace.getPermission(), ace.isGranting()));
         }
 
         return accessControlEntities;
@@ -279,8 +279,7 @@ public class AccessService {
      */
     private void secureOwner(MutableAcl acl, int indexOfAce) {
         // Can't revoke admin permission from domain object owner
-        if (acl.getOwner().equals(acl.getEntries().get(indexOfAce).getSid())
-                && BasePermission.ADMINISTRATION.equals(acl.getEntries().get(indexOfAce).getPermission())) {
+        if (acl.getOwner().equals(acl.getEntries().get(indexOfAce).getSid()) && BasePermission.ADMINISTRATION.equals(acl.getEntries().get(indexOfAce).getPermission())) {
             throw new ForbiddenException("Can't revoke admin permission of owner.");
         }
     }

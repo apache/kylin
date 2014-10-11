@@ -39,7 +39,7 @@ import com.kylinolap.job.exception.JobException;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class ShellCmd implements IJobCommand {
 
@@ -54,8 +54,7 @@ public class ShellCmd implements IJobCommand {
 
     private FutureTask<Integer> future;
 
-    protected ShellCmd(String executeCmd, ICommandOutput out, String host, String user, String password,
-            boolean async) {
+    protected ShellCmd(String executeCmd, ICommandOutput out, String host, String user, String password, boolean async) {
         this.executeCommand = executeCmd;
         this.output = out;
         this.remoteHost = host;
@@ -168,7 +167,7 @@ public class ShellCmd implements IJobCommand {
             PipedInputStream in = new PipedInputStream(64 * 1024);
             PipedOutputStream out = new PipedOutputStream(in);
             channel.setOutputStream(out);
-            ((ChannelExec) channel).setErrStream(out); //redirect error to out
+            ((ChannelExec) channel).setErrStream(out); // redirect error to out
             channel.connect();
 
             byte[] tmp = new byte[1024];

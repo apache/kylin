@@ -29,12 +29,16 @@ import com.kylinolap.metadata.validation.ValidateContext;
  * Validate that only one of "length" and "dictionary" appears on rowkey_column
  * 
  * @author jianliu
- *
+ * 
  */
 public class RowKeyAttrRule implements IValidatorRule<CubeDesc> {
 
-    /* (non-Javadoc)
-     * @see com.kylinolap.metadata.validation.IValidatorRule#validate(java.lang.Object, com.kylinolap.metadata.validation.ValidateContext)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * com.kylinolap.metadata.validation.IValidatorRule#validate(java.lang.Object
+     * , com.kylinolap.metadata.validation.ValidateContext)
      */
     @Override
     public void validate(CubeDesc cube, ValidateContext context) {
@@ -53,12 +57,10 @@ public class RowKeyAttrRule implements IValidatorRule<CubeDesc> {
         for (int i = 0; i < rcd.length; i++) {
             RowKeyColDesc rd = rcd[i];
             if (rd.getLength() != 0 && !StringUtils.isEmpty(rd.getDictionary())) {
-                context.addResult(ResultLevel.ERROR, "Rowkey column " + rd.getColumn()
-                        + " must not have both 'length' and 'dictionary' attribute");
+                context.addResult(ResultLevel.ERROR, "Rowkey column " + rd.getColumn() + " must not have both 'length' and 'dictionary' attribute");
             }
             if (rd.getLength() == 0 && StringUtils.isEmpty(rd.getDictionary())) {
-                context.addResult(ResultLevel.ERROR, "Rowkey column " + rd.getColumn()
-                        + " must not have both 'length' and 'dictionary' empty");
+                context.addResult(ResultLevel.ERROR, "Rowkey column " + rd.getColumn() + " must not have both 'length' and 'dictionary' empty");
             }
         }
 

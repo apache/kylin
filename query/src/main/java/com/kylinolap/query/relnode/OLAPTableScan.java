@@ -60,7 +60,7 @@ import com.kylinolap.query.schema.OLAPTable;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, EnumerableRel {
 
@@ -115,16 +115,18 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
         planner.addRule(OLAPLimitRule.INSTANCE);
         planner.addRule(OLAPSortRule.INSTANCE);
 
-        // since join is the entry point, we can't push filter past join 
+        // since join is the entry point, we can't push filter past join
         planner.removeRule(PushFilterPastJoinRule.FILTER_ON_JOIN);
         planner.removeRule(PushFilterPastJoinRule.JOIN);
 
-        // TODO : since we don't have statistic of table, the optimization of join is too cost
+        // TODO : since we don't have statistic of table, the optimization of
+        // join is too cost
         planner.removeRule(SwapJoinRule.INSTANCE);
         planner.removeRule(PushJoinThroughJoinRule.LEFT);
         planner.removeRule(PushJoinThroughJoinRule.RIGHT);
 
-        // distinct count will be split into a separated query that is joined with the left query
+        // distinct count will be split into a separated query that is joined
+        // with the left query
         planner.removeRule(RemoveDistinctAggregateRule.INSTANCE);
     }
 
@@ -150,7 +152,7 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
 
     @Override
     public void implementOLAP(OLAPImplementor implementor) {
-        // create context in case of non-join 
+        // create context in case of non-join
         if (implementor.getContext() == null || !(implementor.getParentNode() instanceof OLAPJoinRel)) {
             implementor.allocateContext();
         }
@@ -188,18 +190,16 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
             ctxId = javaImplementor.getParentContext().id;
         }
 
-        PhysType physType =
-                PhysTypeImpl.of(javaImplementor.getTypeFactory(), this.rowType, pref.preferArray());
+        PhysType physType = PhysTypeImpl.of(javaImplementor.getTypeFactory(), this.rowType, pref.preferArray());
 
         String execFunction = genExecFunc();
 
-        return javaImplementor.result(physType, Blocks.toBlock(Expressions.call(
-                table.getExpression(OLAPTable.class), execFunction, javaImplementor.getRootExpression(),
-                Expressions.constant(ctxId))));
+        return javaImplementor.result(physType, Blocks.toBlock(Expressions.call(table.getExpression(OLAPTable.class), execFunction, javaImplementor.getRootExpression(), Expressions.constant(ctxId))));
     }
 
     private String genExecFunc() {
-        // if the table to scan is not the fact table of cube, then it's a lookup table
+        // if the table to scan is not the fact table of cube, then it's a
+        // lookup table
         if (context.hasJoin == false && cubeTable.equals(context.cubeDesc.getFactTable()) == false) {
             return "executeLookupTableQuery";
         } else {
@@ -213,7 +213,10 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
         return columnRowType;
     }
 
-    /** Because OLAPTableScan is reused for the same table, we can't use this.context and have to use parent context **/
+    /**
+     * Because OLAPTableScan is reused for the same table, we can't use
+     * this.context and have to use parent context
+     **/
     @Override
     public void implementRewrite(RewriteImplementor implementor) {
         Map<String, RelDataType> rewriteFields = this.context.rewriteFields;

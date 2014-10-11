@@ -37,7 +37,8 @@ public class JoinedFlatTableDesc {
     private final CubeSegment cubeSegment;
 
     private int[] rowKeyColumnIndexes; // the column index on flat table
-    private int[][] measureColumnIndexes; // [i] is the i.th measure related column index on flat table
+    private int[][] measureColumnIndexes; // [i] is the i.th measure related
+                                          // column index on flat table
 
     public JoinedFlatTableDesc(CubeDesc cubeDesc, CubeSegment cubeSegment) {
         this.cubeDesc = cubeDesc;
@@ -58,7 +59,7 @@ public class JoinedFlatTableDesc {
         return columnList;
     }
 
-    //check what columns from hive tables are required, and index them
+    // check what columns from hive tables are required, and index them
     private void parseCubeDesc() {
         int rowkeyColCount = cubeDesc.getRowkey().getRowKeyColumns().length;
         long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
@@ -74,8 +75,7 @@ public class JoinedFlatTableDesc {
         int columnIndex = 0;
         for (TblColRef col : cubeDesc.listDimensionColumnsExcludingDerived()) {
             dimensionIndexMap.put(col.getName(), columnIndex);
-            columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), col.getName(), col
-                    .getDatatype(), col.getTable()));
+            columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), col.getName(), col.getDatatype(), col.getTable()));
             columnIndex++;
         }
 
@@ -106,8 +106,7 @@ public class JoinedFlatTableDesc {
                     measureColumnIndexes[i][j] = contains(columnList, c);
                     if (measureColumnIndexes[i][j] < 0) {
                         measureColumnIndexes[i][j] = columnIndex;
-                        columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), c.getName(), c
-                                .getDatatype(), c.getTable()));
+                        columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), c.getName(), c.getDatatype(), c.getTable()));
                         columnIndex++;
                     }
                 }

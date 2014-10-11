@@ -36,7 +36,7 @@ import com.kylinolap.rest.security.AclPermission;
 
 /**
  * @author xduo
- *
+ * 
  */
 @Component("projectService")
 public class ProjectService extends BasicService {
@@ -62,8 +62,7 @@ public class ProjectService extends BasicService {
         return createdProject;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
     public ProjectInstance updateProject(UpdateProjectRequest projectRequest) throws IOException {
         String formerProjectName = projectRequest.getFormerProjectName();
         String newProjectName = projectRequest.getNewProjectName();
@@ -75,8 +74,7 @@ public class ProjectService extends BasicService {
             throw new InternalErrorException("The project named " + formerProjectName + " does not exists");
         }
 
-        ProjectInstance updatedProject =
-                getProjectManager().updateProject(currentProject, newProjectName, newDescription);
+        ProjectInstance updatedProject = getProjectManager().updateProject(currentProject, newProjectName, newDescription);
 
         logger.debug("Project updated.");
 
@@ -100,8 +98,7 @@ public class ProjectService extends BasicService {
         return projects.subList(coffset, coffset + climit);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
     public void deleteProject(String projectName) throws IOException {
         ProjectInstance project = getProjectManager().getProject(projectName);
         getProjectManager().dropProject(projectName);
@@ -111,7 +108,7 @@ public class ProjectService extends BasicService {
 
     /**
      * @param name
-     * @throws IOException 
+     * @throws IOException
      */
     public void reloadProjectCache(String name) throws IOException {
         ProjectInstance project = this.getProjectManager().getProject(name);

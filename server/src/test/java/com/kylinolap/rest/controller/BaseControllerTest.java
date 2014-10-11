@@ -32,7 +32,7 @@ import com.kylinolap.rest.service.TestBase;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class BaseControllerTest extends TestBase {
 

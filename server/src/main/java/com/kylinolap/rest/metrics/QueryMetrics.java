@@ -25,7 +25,7 @@ import com.codahale.metrics.MetricSet;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class QueryMetrics implements MetricSet {
 

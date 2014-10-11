@@ -57,14 +57,14 @@ public class MergeCuboidJob extends CuboidJob {
             KylinConfig config = KylinConfig.getInstanceFromEnv();
             CubeManager cubeMgr = CubeManager.getInstance(config);
             CubeInstance cube = cubeMgr.getCube(cubeName);
-            //CubeSegment cubeSeg = cubeMgr.findSegment(cube, segmentName);
+            // CubeSegment cubeSeg = cubeMgr.findSegment(cube, segmentName);
 
             // start job
             String jobName = getOptionValue(OPTION_JOB_NAME);
             System.out.println("Starting: " + jobName);
             job = Job.getInstance(getConf(), jobName);
 
-            // set job configuration - basic 
+            // set job configuration - basic
             File JarFile = new File(config.getKylinJobJarPath());
             if (JarFile.exists()) {
                 job.setJar(config.getKylinJobJarPath());
@@ -72,7 +72,7 @@ public class MergeCuboidJob extends CuboidJob {
                 job.setJarByClass(this.getClass());
             }
 
-            //setJobJar(job);
+            // setJobJar(job);
             addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
 
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));

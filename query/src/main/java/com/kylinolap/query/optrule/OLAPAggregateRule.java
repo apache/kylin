@@ -28,7 +28,7 @@ import com.kylinolap.query.relnode.OLAPRel;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public class OLAPAggregateRule extends ConverterRule {
 
@@ -43,8 +43,7 @@ public class OLAPAggregateRule extends ConverterRule {
         AggregateRel agg = (AggregateRel) rel;
         RelTraitSet traitSet = agg.getTraitSet().replace(OLAPRel.CONVENTION);
         try {
-            return new OLAPAggregateRel(agg.getCluster(), traitSet, convert(agg.getChild(), traitSet),
-                    agg.getGroupSet(), agg.getAggCallList());
+            return new OLAPAggregateRel(agg.getCluster(), traitSet, convert(agg.getChild(), traitSet), agg.getGroupSet(), agg.getAggCallList());
         } catch (InvalidRelException e) {
             throw new IllegalStateException("Can't create OLAPAggregateRel!", e);
         }

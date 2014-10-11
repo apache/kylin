@@ -31,7 +31,7 @@ import com.kylinolap.metadata.model.cube.CubeDesc.CubeCapacity;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class JobEngineConfig {
     private static final Logger logger = LoggerFactory.getLogger(JobEngineConfig.class);
@@ -56,8 +56,7 @@ public class JobEngineConfig {
                 path = defaultFilePath.getAbsolutePath();
             } else {
                 logger.debug("Search conf file " + hadoopJobConfFile + "  from classpath ...");
-                InputStream is =
-                        JobEngineConfig.class.getClassLoader().getResourceAsStream(hadoopJobConfFile);
+                InputStream is = JobEngineConfig.class.getClassLoader().getResourceAsStream(hadoopJobConfFile);
                 if (is == null) {
                     logger.debug("Can't get " + hadoopJobConfFile + " from classpath");
                     logger.debug("No " + hadoopJobConfFile + " file were found");
@@ -224,7 +223,9 @@ public class JobEngineConfig {
         return asyncJobCheckInterval;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see java.lang.Object#hashCode()
      */
     @Override
@@ -235,7 +236,9 @@ public class JobEngineConfig {
         return result;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override

@@ -28,7 +28,7 @@ import com.kylinolap.metadata.validation.ValidateContext;
 
 /**
  * @author jianliu
- *
+ * 
  */
 public class AggregationGroupSizeRuleTest {
 
@@ -40,9 +40,7 @@ public class AggregationGroupSizeRuleTest {
      */
     @Before
     public void setUp() throws Exception {
-        CubeDesc desc2 =
-                JsonUtil.readValue(getClass().getClassLoader().getResourceAsStream("data/TEST2_desc.json"),
-                        CubeDesc.class);
+        CubeDesc desc2 = JsonUtil.readValue(getClass().getClassLoader().getResourceAsStream("data/TEST2_desc.json"), CubeDesc.class);
         this.cube = desc2;
 
     }
@@ -50,8 +48,12 @@ public class AggregationGroupSizeRuleTest {
     @Test
     public void testOneMandatoryColumn() {
         IValidatorRule<CubeDesc> rule = new AggregationGroupSizeRule() {
-            /* (non-Javadoc)
-             * @see com.kylinolap.metadata.validation.rule.AggregationGroupSizeRule#getMaxAgrGroupSize()
+            /*
+             * (non-Javadoc)
+             * 
+             * @see
+             * com.kylinolap.metadata.validation.rule.AggregationGroupSizeRule
+             * #getMaxAgrGroupSize()
              */
             @Override
             protected int getMaxAgrGroupSize() {
@@ -61,19 +63,22 @@ public class AggregationGroupSizeRuleTest {
         rule.validate(cube, vContext);
         vContext.print(System.out);
         assertEquals("Failed to validate aggragation group error", vContext.getResults().length, 2);
-        assertTrue("Failed to validate aggragation group error", vContext.getResults()[0].getMessage()
-                .startsWith("Length of the number"));
-        assertTrue("Failed to validate aggragation group error", vContext.getResults()[1].getMessage()
-                .startsWith("Length of the number"));
-        //        assertTrue("Failed to validate aggragation group error", vContext.getResults()[2].getMessage()
-        //                .startsWith("Hierachy column"));
+        assertTrue("Failed to validate aggragation group error", vContext.getResults()[0].getMessage().startsWith("Length of the number"));
+        assertTrue("Failed to validate aggragation group error", vContext.getResults()[1].getMessage().startsWith("Length of the number"));
+        // assertTrue("Failed to validate aggragation group error",
+        // vContext.getResults()[2].getMessage()
+        // .startsWith("Hierachy column"));
     }
 
     @Test
     public void testAggColumnSize() {
         AggregationGroupSizeRule rule = new AggregationGroupSizeRule() {
-            /* (non-Javadoc)
-             * @see com.kylinolap.metadata.validation.rule.AggregationGroupSizeRule#getMaxAgrGroupSize()
+            /*
+             * (non-Javadoc)
+             * 
+             * @see
+             * com.kylinolap.metadata.validation.rule.AggregationGroupSizeRule
+             * #getMaxAgrGroupSize()
              */
             @Override
             protected int getMaxAgrGroupSize() {
@@ -83,9 +88,11 @@ public class AggregationGroupSizeRuleTest {
         rule.validate(cube, vContext);
         vContext.print(System.out);
         assertEquals("Failed to validate aggragation group error", vContext.getResults().length, 0);
-        //        assertTrue("Failed to validate aggragation group error", vContext.getResults()[0].getMessage()
-        //                .startsWith("Aggregation group"));
-        //        assertTrue("Failed to validate aggragation group error", vContext.getResults()[0].getMessage()
-        //                .startsWith("Hierachy column"));
+        // assertTrue("Failed to validate aggragation group error",
+        // vContext.getResults()[0].getMessage()
+        // .startsWith("Aggregation group"));
+        // assertTrue("Failed to validate aggragation group error",
+        // vContext.getResults()[0].getMessage()
+        // .startsWith("Hierachy column"));
     }
 }

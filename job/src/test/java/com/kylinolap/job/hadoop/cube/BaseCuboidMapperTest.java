@@ -41,7 +41,7 @@ import com.kylinolap.metadata.model.cube.MeasureDesc;
 
 /**
  * @author George Song (ysong1)
- *
+ * 
  */
 public class BaseCuboidMapperTest extends LocalFileMetadataTestCase {
 
@@ -72,9 +72,9 @@ public class BaseCuboidMapperTest extends LocalFileMetadataTestCase {
         String segmentName = "20130331080000_20131212080000";
         mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
         mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
-        //mapDriver.getConfiguration().set(BatchConstants.CFG_METADATA_URL, metadata);
-        mapDriver.withInput(new Text("key"), new Text(
-                "2012-12-15118480Health & BeautyFragrancesWomenAuction15123456789132.331"));
+        // mapDriver.getConfiguration().set(BatchConstants.CFG_METADATA_URL,
+        // metadata);
+        mapDriver.withInput(new Text("key"), new Text("2012-12-15118480Health & BeautyFragrancesWomenAuction15123456789132.331"));
         List<Pair<Text, Text>> result = mapDriver.run();
 
         CubeManager cubeMgr = CubeManager.getInstance(this.getTestConfig());
@@ -90,19 +90,16 @@ public class BaseCuboidMapperTest extends LocalFileMetadataTestCase {
 
         RowKeyDecoder decoder = new RowKeyDecoder(cube.getFirstSegment());
         decoder.decode(key);
-        assertEquals("[123456789, 2012-12-15, 11848, Health & Beauty, Fragrances, Women, Auction, 0, 15]",
-                decoder.getValues().toString());
+        assertEquals("[123456789, 2012-12-15, 11848, Health & Beauty, Fragrances, Women, Auction, 0, 15]", decoder.getValues().toString());
 
         assertTrue(Bytes.toString(sellerId).startsWith("123456789"));
         assertEquals(511, Bytes.toLong(cuboidId));
         assertEquals(22, restKey.length);
 
-        verifyMeasures(cube.getDescriptor().getMeasures(), result.get(0).getSecond(), "132.33", "132.33",
-                "132.33", 1);
+        verifyMeasures(cube.getDescriptor().getMeasures(), result.get(0).getSecond(), "132.33", "132.33", "132.33", 1);
     }
 
-    private void verifyMeasures(List<MeasureDesc> measures, Text valueBytes, String m1, String m2, String m3,
-            long m4) {
+    private void verifyMeasures(List<MeasureDesc> measures, Text valueBytes, String m1, String m2, String m3, long m4) {
         MeasureCodec codec = new MeasureCodec(measures);
         Object[] values = new Object[measures.size()];
         codec.decode(valueBytes, values);
@@ -118,9 +115,9 @@ public class BaseCuboidMapperTest extends LocalFileMetadataTestCase {
         String segmentName = "20130331080000_20131212080000";
         mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
         mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
-        //mapDriver.getConfiguration().set(BatchConstants.CFG_METADATA_URL, metadata);
-        mapDriver.withInput(new Text("key"), new Text(
-                "2012-12-15118480Health & BeautyFragrances\\NAuction15123456789\\N\\N"));
+        // mapDriver.getConfiguration().set(BatchConstants.CFG_METADATA_URL,
+        // metadata);
+        mapDriver.withInput(new Text("key"), new Text("2012-12-15118480Health & BeautyFragrances\\NAuction15123456789\\N\\N"));
         List<Pair<Text, Text>> result = mapDriver.run();
 
         CubeManager cubeMgr = CubeManager.getInstance(this.getTestConfig());
@@ -136,8 +133,7 @@ public class BaseCuboidMapperTest extends LocalFileMetadataTestCase {
 
         RowKeyDecoder decoder = new RowKeyDecoder(cube.getFirstSegment());
         decoder.decode(key);
-        assertEquals("[123456789, 2012-12-15, 11848, Health & Beauty, Fragrances, null, Auction, 0, 15]",
-                decoder.getValues().toString());
+        assertEquals("[123456789, 2012-12-15, 11848, Health & Beauty, Fragrances, null, Auction, 0, 15]", decoder.getValues().toString());
 
         assertTrue(Bytes.toString(sellerId).startsWith("123456789"));
         assertEquals(511, Bytes.toLong(cuboidId));

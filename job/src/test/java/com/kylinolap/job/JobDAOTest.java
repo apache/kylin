@@ -29,10 +29,10 @@ import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeBuildTypeEnum;
 import com.kylinolap.job.exception.InvalidJobInstanceException;
 
-/** 
-* @author George Song (ysong1)
-* 
-*/
+/**
+ * @author George Song (ysong1)
+ * 
+ */
 public class JobDAOTest extends LocalFileMetadataTestCase {
 
     @Before
@@ -56,10 +56,10 @@ public class JobDAOTest extends LocalFileMetadataTestCase {
 
         // test read
         JobInstance job2 = service.getJob(uuid);
-        //assertEquals(JobStatusEnum.PENDING, job2.getStatus());
+        // assertEquals(JobStatusEnum.PENDING, job2.getStatus());
         assertTrue(job2.getLastModified() > 0);
 
-        // test modify 
+        // test modify
         job2.setRelatedCube("abc");
         service.updateJobInstance(job2);
         JobInstance job3 = service.getJob(uuid);
@@ -97,7 +97,7 @@ public class JobDAOTest extends LocalFileMetadataTestCase {
             jobInstance.setType(CubeBuildTypeEnum.BUILD);
             jobInstance.setRelatedCube("test_kylin_cube_with_slr".toUpperCase());
             jobInstance.setName("Dummy_Job");
-            //jobInstance.setStatus(JobStatusEnum.PENDING);
+            // jobInstance.setStatus(JobStatusEnum.PENDING);
 
             return jobInstance;
         } catch (Exception e) {

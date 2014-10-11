@@ -18,7 +18,7 @@ package com.kylinolap.rest.request;
 
 /**
  * @author jianliu
- *
+ * 
  */
 public class CardinalityRequest {
     private int delimiter;
@@ -42,7 +42,8 @@ public class CardinalityRequest {
     }
 
     /**
-     * @param delimiter the delimiter to set
+     * @param delimiter
+     *            the delimiter to set
      */
     public void setDelimiter(int delimiter) {
         this.delimiter = delimiter;
@@ -65,7 +66,8 @@ public class CardinalityRequest {
     }
 
     /**
-     * @param format the format to set
+     * @param format
+     *            the format to set
      */
     public void setFormat(int format) {
         this.format = format;

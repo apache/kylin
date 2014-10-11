@@ -35,12 +35,10 @@ import com.kylinolap.query.schema.OLAPSchemaFactory;
 public class QueryCli {
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_METADATA = OptionBuilder.withArgName("metadata url").hasArg()
-            .isRequired().withDescription("Metadata URL").create("metadata");
+    private static final Option OPTION_METADATA = OptionBuilder.withArgName("metadata url").hasArg().isRequired().withDescription("Metadata URL").create("metadata");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_SQL = OptionBuilder.withArgName("input sql").hasArg().isRequired()
-            .withDescription("SQL").create("sql");
+    private static final Option OPTION_SQL = OptionBuilder.withArgName("input sql").hasArg().isRequired().withDescription("SQL").create("sql");
 
     public static void main(String[] args) throws Exception {
 
@@ -50,8 +48,7 @@ public class QueryCli {
 
         CommandLineParser parser = new GnuParser();
         CommandLine commandLine = parser.parse(options, args);
-        KylinConfig config =
-                KylinConfig.createInstanceFromUri(commandLine.getOptionValue(OPTION_METADATA.getOpt()));
+        KylinConfig config = KylinConfig.createInstanceFromUri(commandLine.getOptionValue(OPTION_METADATA.getOpt()));
         String sql = commandLine.getOptionValue(OPTION_SQL.getOpt());
 
         Class.forName("net.hydromatic.optiq.jdbc.Driver");

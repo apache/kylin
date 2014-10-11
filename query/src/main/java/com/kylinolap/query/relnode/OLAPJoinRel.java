@@ -65,8 +65,7 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
     private boolean isTopJoin;
     private boolean hasSubQuery;
 
-    public OLAPJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right,
-            RexNode condition, JoinRelType joinType, Set<String> variablesStopped) throws InvalidRelException {
+    public OLAPJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition, JoinRelType joinType, Set<String> variablesStopped) throws InvalidRelException {
         super(cluster, traits, left, right, condition, joinType, variablesStopped);
         Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
         this.rowType = getRowType();
@@ -80,11 +79,9 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
     }
 
     @Override
-    public EnumerableJoinRel copy(RelTraitSet traitSet, RexNode conditionExpr, RelNode left, RelNode right,
-            JoinRelType joinType) {
+    public EnumerableJoinRel copy(RelTraitSet traitSet, RexNode conditionExpr, RelNode left, RelNode right, JoinRelType joinType) {
         try {
-            return new OLAPJoinRel(getCluster(), traitSet, left, right, conditionExpr, joinType,
-                    variablesStopped);
+            return new OLAPJoinRel(getCluster(), traitSet, left, right, conditionExpr, joinType, variablesStopped);
         } catch (InvalidRelException e) {
             // Semantic error not possible. Must be a bug. Convert to
             // internal error.
@@ -113,7 +110,8 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
         this.isTopJoin = !this.context.hasJoin;
         this.context.hasJoin = true;
 
-        // as we keep the first table as fact table, we need to visit from left to right 
+        // as we keep the first table as fact table, we need to visit from left
+        // to right
         implementor.visitChild(this.left, this);
         if (this.context != implementor.getContext() || ((OLAPRel) this.left).hasSubQuery()) {
             this.hasSubQuery = true;
@@ -140,9 +138,7 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
             JoinDesc join = buildJoin(condition);
 
             JoinRelType joinRelType = this.getJoinType();
-            String joinType =
-                    joinRelType == JoinRelType.INNER ? "INNER" : joinRelType == JoinRelType.LEFT ? "LEFT"
-                            : null;
+            String joinType = joinRelType == JoinRelType.INNER ? "INNER" : joinRelType == JoinRelType.LEFT ? "LEFT" : null;
             join.setType(joinType);
 
             this.context.joins.add(join);
@@ -161,8 +157,7 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
         columns.addAll(rightColumnRowType.getAllColumns());
 
         if (columns.size() != this.rowType.getFieldCount()) {
-            throw new IllegalStateException("RowType=" + this.rowType.getFieldCount() + ", ColumnRowType="
-                    + columns.size());
+            throw new IllegalStateException("RowType=" + this.rowType.getFieldCount() + ", ColumnRowType=" + columns.size());
         }
         return new ColumnRowType(columns);
     }
@@ -233,14 +228,10 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
         if (this.hasSubQuery) {
             result = super.implement(implementor, pref);
         } else {
-            PhysType physType =
-                    PhysTypeImpl.of(implementor.getTypeFactory(), getRowType(), pref.preferArray());
+            PhysType physType = PhysTypeImpl.of(implementor.getTypeFactory(), getRowType(), pref.preferArray());
 
             RelOptTable factTable = context.firstTableScan.getTable();
-            result =
-                    implementor.result(physType, Blocks.toBlock(Expressions.call(
-                            factTable.getExpression(OLAPTable.class), "executeCubeQuery",
-                            implementor.getRootExpression(), Expressions.constant(context.id))));
+            result = implementor.result(physType, Blocks.toBlock(Expressions.call(factTable.getExpression(OLAPTable.class), "executeCubeQuery", implementor.getRootExpression(), Expressions.constant(context.id))));
         }
 
         return result;

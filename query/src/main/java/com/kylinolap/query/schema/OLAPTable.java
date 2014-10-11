@@ -54,7 +54,7 @@ import com.kylinolap.query.relnode.OLAPTableScan;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public class OLAPTable extends AbstractQueryableTable implements TranslatableTable {
 
@@ -78,11 +78,11 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         SQLTYPE_MAPPING.put("timestamp", SqlTypeName.TIMESTAMP);
         SQLTYPE_MAPPING.put("any", SqlTypeName.ANY);
 
-        //        try {
-        //            Class.forName("org.apache.hive.jdbc.HiveDriver");
-        //        } catch (ClassNotFoundException e) {
-        //            e.printStackTrace();
-        //        }
+        // try {
+        // Class.forName("org.apache.hive.jdbc.HiveDriver");
+        // } catch (ClassNotFoundException e) {
+        // e.printStackTrace();
+        // }
     }
 
     private final OLAPSchema olapSchema;
@@ -136,8 +136,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
     private RelDataType createSqlType(RelDataTypeFactory typeFactory, ColumnDesc column) {
         SqlTypeName sqlTypeName = SQLTYPE_MAPPING.get(column.getTypeName());
         if (sqlTypeName == null)
-            throw new IllegalArgumentException("Unrecognized column type " + column.getTypeName() + " from "
-                    + column);
+            throw new IllegalArgumentException("Unrecognized column type " + column.getTypeName() + " from " + column);
 
         int precision = column.getTypePrecision();
         int scale = column.getTypeScale();
@@ -150,7 +149,8 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         else
             result = typeFactory.createSqlType(sqlTypeName);
 
-        // due to left join and uncertain data quality, dimension value can be null
+        // due to left join and uncertain data quality, dimension value can be
+        // null
         if (column.isNullable()) {
             result = typeFactory.createTypeWithNullability(result, true);
         } else {
@@ -162,11 +162,9 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
 
     private List<ColumnDesc> listSourceColumns() {
         ProjectManager projectMgr = olapSchema.getProjectManager();
-        List<ColumnDesc> exposedColumns =
-                projectMgr.listExposedColumns(olapSchema.getProjectName(), sourceTable.getName());
+        List<ColumnDesc> exposedColumns = projectMgr.listExposedColumns(olapSchema.getProjectName(), sourceTable.getName());
 
-        List<MeasureDesc> countMeasures =
-                projectMgr.listEffectiveRewriteMeasures(olapSchema.getProjectName(), sourceTable.getName());
+        List<MeasureDesc> countMeasures = projectMgr.listEffectiveRewriteMeasures(olapSchema.getProjectName(), sourceTable.getName());
         HashSet<String> metFields = new HashSet<String>();
         for (MeasureDesc m : countMeasures) {
             FunctionDesc func = m.getFunction();

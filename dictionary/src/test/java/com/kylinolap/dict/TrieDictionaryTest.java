@@ -39,7 +39,9 @@ public class TrieDictionaryTest {
 
     public static void main(String[] args) throws Exception {
         InputStream is = new FileInputStream("src/test/resources/dict/dw_category_grouping_names.dat");
-        //		InputStream is = Util.getPackageResourceAsStream(TrieDictionaryTest.class, "eng_com.dic");
+        // InputStream is =
+        // Util.getPackageResourceAsStream(TrieDictionaryTest.class,
+        // "eng_com.dic");
         ArrayList<String> str = loadStrings(is);
         benchmarkStringDictionary(str);
     }
@@ -47,26 +49,19 @@ public class TrieDictionaryTest {
     @Test
     public void partOverflowTest() {
         ArrayList<String> str = new ArrayList<String>();
-        //str.add("");
+        // str.add("");
         str.add("part");
         str.add("par");
         str.add("partition");
         str.add("party");
         str.add("parties");
         str.add("paint");
-        String longStr =
-                "paintjkjdfklajkdljfkdsajklfjklsadjkjekjrklewjrklewjklrjklewjkljkljkljkljweklrjewkljrklewjrlkjewkljrkljkljkjlkjjkljkljkljkljlkjlkjlkjljdfadfads"
-                        + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
-                        + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
-                        + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
-                        + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
-                        + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
-                        + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
-                        + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk";
+        String longStr = "paintjkjdfklajkdljfkdsajklfjklsadjkjekjrklewjrklewjklrjklewjkljkljkljkljweklrjewkljrklewjrlkjewkljrkljkljkjlkjjkljkljkljkljlkjlkjlkjljdfadfads" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
+                + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk";
         System.out.println("The length of the long string is " + longStr.length());
         str.add(longStr);
 
-        str.add("zzzzzz" + longStr);//another long string
+        str.add("zzzzzz" + longStr);// another long string
 
         TrieDictionaryBuilder<String> b = newDictBuilder(str);
         TrieDictionary<String> dict = b.build(0);
@@ -86,8 +81,8 @@ public class TrieDictionaryTest {
         for (; it.hasNext(); id++) {
             String value = it.next();
 
-            //in case of overflow parts, there exist interpolation nodes
-            //they exist to make sure that any node's part is shorter than 255
+            // in case of overflow parts, there exist interpolation nodes
+            // they exist to make sure that any node's part is shorter than 255
             int actualId = dict.getIdFromValue(value);
             assertTrue(actualId >= id);
             assertTrue(actualId > previousId);
@@ -169,19 +164,22 @@ public class TrieDictionaryTest {
             array[id] = value.getBytes("UTF-8");
         }
 
-        //		System.out.println("Dict size in bytes:  " + MemoryUtil.deepMemoryUsageOf(dict));
-        //		System.out.println("Map size in bytes:   " + MemoryUtil.deepMemoryUsageOf(map));
-        //		System.out.println("Array size in bytes: " + MemoryUtil.deepMemoryUsageOf(strArray));
+        // System.out.println("Dict size in bytes:  " +
+        // MemoryUtil.deepMemoryUsageOf(dict));
+        // System.out.println("Map size in bytes:   " +
+        // MemoryUtil.deepMemoryUsageOf(map));
+        // System.out.println("Array size in bytes: " +
+        // MemoryUtil.deepMemoryUsageOf(strArray));
 
-        // warm-up, said that code only got JIT after run 1k-10k times, following jvm options may help
+        // warm-up, said that code only got JIT after run 1k-10k times,
+        // following jvm options may help
         // -XX:CompileThreshold=1500
         // -XX:+PrintCompilation
         benchmark("Warm up", dict, set, map, strArray, array);
         benchmark("Benchmark", dict, set, map, strArray, array);
     }
 
-    private static int benchmark(String msg, TrieDictionary<String> dict, TreeSet<String> set,
-            HashMap<String, Integer> map, String[] strArray, byte[][] array) {
+    private static int benchmark(String msg, TrieDictionary<String> dict, TreeSet<String> set, HashMap<String, Integer> map, String[] strArray, byte[][] array) {
         int n = set.size();
         int times = 10 * 1000 * 1000 / n; // run 10 million lookups
         int keep = 0; // make sure JIT don't OPT OUT function calls under test
@@ -320,14 +318,10 @@ public class TrieDictionaryTest {
 
     @Test
     public void testSuperLongStringValue() {
-        String longPrefix =
-                "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789"
-                        + "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789";
+        String longPrefix = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789" + "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789";
 
         TrieDictionaryBuilder<String> b = new TrieDictionaryBuilder<String>(new StringBytesConverter());
-        String v1 =
-                longPrefix
-                        + "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz";
+        String v1 = longPrefix + "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz";
         String v2 = longPrefix + "xyz";
 
         b.addValue(v1);

@@ -34,7 +34,7 @@ import com.kylinolap.job.constant.BatchConstants;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class RangeKeyDistributionReducerTest {
 

@@ -39,23 +39,21 @@ import com.kylinolap.storage.StorageContext;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class OLAPSortRel extends SortRel implements EnumerableRel, OLAPRel {
 
     private ColumnRowType columnRowType;
     private OLAPContext context;
 
-    public OLAPSortRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, RelCollation collation,
-            RexNode offset, RexNode fetch) {
+    public OLAPSortRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, RelCollation collation, RexNode offset, RexNode fetch) {
         super(cluster, traitSet, child, collation, offset, fetch);
         Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
         Preconditions.checkArgument(getConvention() == child.getConvention());
     }
 
     @Override
-    public OLAPSortRel copy(RelTraitSet traitSet, RelNode newInput, RelCollation newCollation,
-            RexNode offset, RexNode fetch) {
+    public OLAPSortRel copy(RelTraitSet traitSet, RelNode newInput, RelCollation newCollation, RexNode offset, RexNode fetch) {
         return new OLAPSortRel(getCluster(), traitSet, newInput, newCollation, offset, fetch);
     }
 
@@ -116,18 +114,17 @@ public class OLAPSortRel extends SortRel implements EnumerableRel, OLAPRel {
     }
 
     /**
-     * NOTE: We can't use EnumerableSortRel directly since it will check the convention of child.
-     *       We have to copy the code from EnumerableSortRel.implement(). 
-     *       So, We need to check the code during upgrade.
+     * NOTE: We can't use EnumerableSortRel directly since it will check the
+     * convention of child. We have to copy the code from
+     * EnumerableSortRel.implement(). So, We need to check the code during
+     * upgrade.
      */
     @Override
     public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
         OLAPRel childRel = (OLAPRel) getChild();
         childRel.replaceTraitSet(EnumerableConvention.INSTANCE);
 
-        EnumerableSortRel enumSort =
-                new EnumerableSortRel(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE,
-                        collation), getChild(), collation, offset, fetch);
+        EnumerableSortRel enumSort = new EnumerableSortRel(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE, collation), getChild(), collation, offset, fetch);
 
         Result res = enumSort.implement(implementor, pref);
 

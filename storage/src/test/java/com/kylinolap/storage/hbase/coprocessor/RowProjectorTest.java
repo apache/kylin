@@ -32,7 +32,7 @@ import com.kylinolap.storage.hbase.coprocessor.SRowProjector.AggrKey;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class RowProjectorTest {
 

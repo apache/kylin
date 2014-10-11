@@ -28,7 +28,7 @@ import com.kylinolap.storage.tuple.Tuple;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class FilterEvaluateTest extends FilterBaseTest {
 

@@ -13,6 +13,7 @@ public class CubeSizeEstimationJob extends AbstractHadoopJob {
 
     private int returnCode = 0;
 
+    @SuppressWarnings("unused")
     @Override
     public int run(String[] args) throws Exception {
         Options options = new Options();

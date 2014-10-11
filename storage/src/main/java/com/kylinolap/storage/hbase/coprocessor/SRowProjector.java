@@ -32,25 +32,24 @@ import com.kylinolap.metadata.model.cube.TblColRef;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class SRowProjector {
 
-    public static SRowProjector fromColumns(final CubeSegment cubeSegment, final Cuboid cuboid,
-            final Collection<TblColRef> dimensionColumns) {
+    public static SRowProjector fromColumns(final CubeSegment cubeSegment, final Cuboid cuboid, final Collection<TblColRef> dimensionColumns) {
 
         RowKeyEncoder rowKeyMaskEncoder = new RowKeyEncoder(cubeSegment, cuboid) {
             @Override
             protected int fillHeader(byte[] bytes, byte[][] values) {
-                // always keep header, coz with-header cube is only selected when header-column is needed
+                // always keep header, coz with-header cube is only selected
+                // when header-column is needed
                 // (otherwise the non-header cube should be selected)
                 Arrays.fill(bytes, 0, this.headerLength, (byte) 0xff);
                 return this.headerLength;
             }
 
             @Override
-            protected void fillColumnValue(TblColRef column, int columnLen, byte[] value, int valueLen,
-                    byte[] outputValue, int outputValueOffset) {
+            protected void fillColumnValue(TblColRef column, int columnLen, byte[] value, int valueLen, byte[] outputValue, int outputValueOffset) {
                 byte bits = dimensionColumns.contains(column) ? (byte) 0xff : 0x00;
                 Arrays.fill(outputValue, outputValueOffset, outputValueOffset + columnLen, bits);
             }
@@ -90,7 +89,8 @@ public class SRowProjector {
 
     // ============================================================================
 
-    final byte[] groupByMask; // mask out columns that are not needed (by group by)
+    final byte[] groupByMask; // mask out columns that are not needed (by group
+                              // by)
     final AggrKey aggrKey = new AggrKey();
 
     public SRowProjector(byte[] groupByMask) {

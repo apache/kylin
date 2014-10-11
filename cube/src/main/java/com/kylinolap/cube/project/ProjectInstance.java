@@ -57,8 +57,7 @@ public class ProjectInstance extends RootPersistentEntity {
         return concatResourcePath(name);
     }
 
-    public static String concatResourcePath(String projectName)
-    {
+    public static String concatResourcePath(String projectName) {
         return ResourceStore.PROJECT_RESOURCE_ROOT + "/" + projectName + ".json";
     }
 

@@ -38,7 +38,7 @@ import com.google.common.base.Preconditions;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public class OLAPLimitRel extends SingleRel implements OLAPRel, EnumerableRel {
 
@@ -47,8 +47,7 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel, EnumerableRel {
     private ColumnRowType columnRowType;
     private OLAPContext context;
 
-    public OLAPLimitRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, RexNode offset,
-            RexNode fetch) {
+    public OLAPLimitRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, RexNode offset, RexNode fetch) {
         super(cluster, traitSet, child);
         Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
         Preconditions.checkArgument(getConvention() == child.getConvention());
@@ -68,8 +67,7 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel, EnumerableRel {
 
     @Override
     public RelWriter explainTerms(RelWriter pw) {
-        return super.explainTerms(pw).itemIf("offset", localOffset, localOffset != null)
-                .itemIf("fetch", localFetch, localFetch != null);
+        return super.explainTerms(pw).itemIf("offset", localOffset, localOffset != null).itemIf("fetch", localFetch, localFetch != null);
     }
 
     @Override
@@ -99,18 +97,17 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel, EnumerableRel {
     }
 
     /**
-     * NOTE: We can't use EnumerableLimitRel directly since it will check the convention of child.
-     *       We have to copy the code from EnumerableLimitRel.implement(). 
-     *       So, We need to check the code during upgrade.
+     * NOTE: We can't use EnumerableLimitRel directly since it will check the
+     * convention of child. We have to copy the code from
+     * EnumerableLimitRel.implement(). So, We need to check the code during
+     * upgrade.
      */
     @Override
     public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
         OLAPRel childRel = (OLAPRel) getChild();
         childRel.replaceTraitSet(EnumerableConvention.INSTANCE);
 
-        EnumerableLimitRel enumLimit =
-                new EnumerableLimitRel(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE),
-                        getChild(), localOffset, localFetch);
+        EnumerableLimitRel enumLimit = new EnumerableLimitRel(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), getChild(), localOffset, localFetch);
         Result res = enumLimit.implement(implementor, pref);
 
         childRel.replaceTraitSet(OLAPRel.CONVENTION);

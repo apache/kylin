@@ -39,14 +39,13 @@ import com.kylinolap.storage.tuple.ITuple;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class DerivedFilterTranslator {
 
     private static final int IN_THRESHOLD = 5;
 
-    public static Pair<TupleFilter, Boolean> translate(LookupStringTable lookup, DeriveInfo hostInfo,
-            CompareTupleFilter compf, ColumnTupleFilter colf, ConstantTupleFilter constf) {
+    public static Pair<TupleFilter, Boolean> translate(LookupStringTable lookup, DeriveInfo hostInfo, CompareTupleFilter compf, ColumnTupleFilter colf, ConstantTupleFilter constf) {
 
         TblColRef derivedCol = colf.getColumn();
         TblColRef[] hostCols = hostInfo.columns;
@@ -134,8 +133,7 @@ public class DerivedFilterTranslator {
         return values;
     }
 
-    private static LogicalTupleFilter buildRangeFilter(TblColRef[] hostCols,
-            Set<Array<String>> satisfyingHostRecords) {
+    private static LogicalTupleFilter buildRangeFilter(TblColRef[] hostCols, Set<Array<String>> satisfyingHostRecords) {
         int hn = hostCols.length;
         String[] min = new String[hn];
         String[] max = new String[hn];
@@ -154,8 +152,7 @@ public class DerivedFilterTranslator {
         return and;
     }
 
-    private static void findMinMax(Set<Array<String>> satisfyingHostRecords, TblColRef[] hostCols,
-            String[] min, String[] max) {
+    private static void findMinMax(Set<Array<String>> satisfyingHostRecords, TblColRef[] hostCols, String[] min, String[] max) {
 
         RowKeyColumnOrder[] orders = new RowKeyColumnOrder[hostCols.length];
         for (int i = 0; i < hostCols.length; i++) {

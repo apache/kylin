@@ -33,7 +33,7 @@ import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class FuzzyValueCombinationTest {
 
@@ -48,8 +48,7 @@ public class FuzzyValueCombinationTest {
 
     @Test
     public void testBasics() {
-        System.out
-                .println("test basics ============================================================================");
+        System.out.println("test basics ============================================================================");
         Map<TblColRef, Set<String>> values = Maps.newHashMap();
         values.put(col1, set("a", "b", "c"));
         values.put(col2, set("x", "y", "z"));
@@ -62,8 +61,7 @@ public class FuzzyValueCombinationTest {
 
     @Test
     public void testSomeNull() {
-        System.out
-                .println("test some null ============================================================================");
+        System.out.println("test some null ============================================================================");
         Map<TblColRef, Set<String>> values = Maps.newHashMap();
         values.put(col1, set("a", "b", "c"));
         values.put(col2, set());
@@ -77,8 +75,7 @@ public class FuzzyValueCombinationTest {
 
     @Test
     public void testAllNulls() {
-        System.out
-                .println("test all nulls ============================================================================");
+        System.out.println("test all nulls ============================================================================");
         Map<TblColRef, Set<String>> values = Maps.newHashMap();
         values.put(col1, set());
         values.put(col2, set());
@@ -92,8 +89,7 @@ public class FuzzyValueCombinationTest {
 
     @Test
     public void testCap() {
-        System.out
-                .println("test cap ============================================================================");
+        System.out.println("test cap ============================================================================");
         Map<TblColRef, Set<String>> values = Maps.newHashMap();
         values.put(col1, set("1", "2", "3", "4"));
         values.put(col2, set("a", "b", "c"));

@@ -74,8 +74,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
     protected static final String TABLE_SELLER_TYPE_DIM = "test_seller_type_dim";
     protected static final String TABLE_SITES = "test_sites";
 
-    String[] TABLE_NAMES = new String[] { TABLE_CAL_DT, TABLE_CATEGORY_GROUPINGS, TABLE_KYLIN_FACT,
-            TABLE_SELLER_TYPE_DIM, TABLE_SITES };
+    String[] TABLE_NAMES = new String[] { TABLE_CAL_DT, TABLE_CATEGORY_GROUPINGS, TABLE_KYLIN_FACT, TABLE_SELLER_TYPE_DIM, TABLE_SITES };
 
     protected JobManager jobManager;
     protected JobEngineConfig engineConfig;
@@ -170,8 +169,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
     }
 
     public String generateLoadDataHql(String tableName) {
-        return "LOAD DATA LOCAL INPATH '" + this.getHadoopCliWorkingDir() + "/" + tableName.toUpperCase()
-                + ".csv' OVERWRITE INTO TABLE " + tableName.toUpperCase();
+        return "LOAD DATA LOCAL INPATH '" + this.getHadoopCliWorkingDir() + "/" + tableName.toUpperCase() + ".csv' OVERWRITE INTO TABLE " + tableName.toUpperCase();
     }
 
     public String generateCreateTableHql(TableDesc tableDesc) {
@@ -186,8 +184,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
             if (i > 0) {
                 ddl.append(",");
             }
-            ddl.append(col.getName() + " " + SqlHiveDataTypeMapping.getHiveDataType((col.getDatatype()))
-                    + "\n");
+            ddl.append(col.getName() + " " + SqlHiveDataTypeMapping.getHiveDataType((col.getDatatype())) + "\n");
         }
 
         ddl.append(")" + "\n");
@@ -238,8 +235,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
     }
 
     private void deployJarToHadoopCli() throws Exception {
-        scpFilesToHadoopCli(new String[] { ".." + File.separator + "job" + File.separator + "target"
-                + File.separator + jobJarName }, this.getHadoopCliWorkingDir());
+        scpFilesToHadoopCli(new String[] { ".." + File.separator + "job" + File.separator + "target" + File.separator + jobJarName }, this.getHadoopCliWorkingDir());
     }
 
     private void deployJarToLocalDir() throws IOException {
@@ -249,16 +245,11 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
             throw new IllegalStateException("Couldn't create dir: " + parent);
         }
 
-        FileUtils.copyFile(new File(".." + File.separator + "storage" + File.separator + "target"
-                + File.separator + coprocessorJarName), targetFile);
+        FileUtils.copyFile(new File(".." + File.separator + "storage" + File.separator + "target" + File.separator + coprocessorJarName), targetFile);
     }
 
     private void deployConfigFile() throws Exception {
-        scpFilesToHadoopCli(new String[] {
-                ".." + File.separator + "examples" + File.separator + "test_case_data" + File.separator
-                        + "kylin.properties",
-                ".." + File.separator + "examples" + File.separator + "test_case_data" + File.separator
-                        + "hadoop_job_conf.xml" }, "/etc/kylin");
+        scpFilesToHadoopCli(new String[] { ".." + File.separator + "examples" + File.separator + "test_case_data" + File.separator + "kylin.properties", ".." + File.separator + "examples" + File.separator + "test_case_data" + File.separator + "hadoop_job_conf.xml" }, "/etc/kylin");
     }
 
     private void deployTestData() throws Exception {
@@ -281,8 +272,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
             hbaseDataStream.close();
             localFileStream.close();
 
-            this.scpFilesToHadoopCli(new String[] { localBufferFile.getPath() },
-                    this.getHadoopCliWorkingDir());
+            this.scpFilesToHadoopCli(new String[] { localBufferFile.getPath() }, this.getHadoopCliWorkingDir());
 
             localBufferFile.delete();
         }
@@ -290,11 +280,9 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
 
         // create hive tables
         this.execHiveCommand(this.generateCreateTableHql(metaMgr.getTableDesc(TABLE_CAL_DT.toUpperCase())));
-        this.execHiveCommand(this.generateCreateTableHql(metaMgr.getTableDesc(TABLE_CATEGORY_GROUPINGS
-                .toUpperCase())));
+        this.execHiveCommand(this.generateCreateTableHql(metaMgr.getTableDesc(TABLE_CATEGORY_GROUPINGS.toUpperCase())));
         this.execHiveCommand(this.generateCreateTableHql(metaMgr.getTableDesc(TABLE_KYLIN_FACT.toUpperCase())));
-        this.execHiveCommand(this.generateCreateTableHql(metaMgr.getTableDesc(TABLE_SELLER_TYPE_DIM
-                .toUpperCase())));
+        this.execHiveCommand(this.generateCreateTableHql(metaMgr.getTableDesc(TABLE_SELLER_TYPE_DIM.toUpperCase())));
         this.execHiveCommand(this.generateCreateTableHql(metaMgr.getTableDesc(TABLE_SITES.toUpperCase())));
 
         // load data to hive tables
@@ -307,10 +295,12 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
     }
 
     protected void initEnv() throws Exception {
-        // create log dir
-        this.execCommand("mkdir -p /tmp/kylin/logs");
+    	cleanUp();
+    	
+    	// create log dir
+        this.execCommand("mkdir -p "+KylinConfig.getInstanceFromEnv().getKylinJobLogDir());
         retrieveJarName();
-        cleanUp();
+        
 
         // install metadata to hbase
         installMetadataToHBase();
@@ -329,11 +319,10 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
 
     protected void prepareTestData(String joinType) throws Exception {
         if (joinType.equalsIgnoreCase("inner")) {
-            //put data to cli
+            // put data to cli
             FactTableGenerator.generate("test_kylin_cube_with_slr_empty", "10000", "1", null, "inner");
         } else if (joinType.equalsIgnoreCase("left")) {
-            FactTableGenerator.generate("test_kylin_cube_with_slr_left_join_empty", "10000", "0.6", null,
-                    "left");
+            FactTableGenerator.generate("test_kylin_cube_with_slr_left_join_empty", "10000", "0.6", null, "left");
         } else {
             throw new Exception("Unsupported join type : " + joinType);
         }
@@ -355,7 +344,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
 
     @After
     public void after() throws IOException {
-        //        jobManager.deleteAllJobs();
+        // jobManager.deleteAllJobs();
     }
 
     @Test
@@ -364,7 +353,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         // start job schedule engine
         jobManager.startJobEngine(10);
 
-        //keep this order.
+        // keep this order.
         testLeftJoinCube();
         testInnerJoinCube();
 
@@ -372,13 +361,14 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
     }
 
     /**
-     * For cube test_kylin_cube_with_slr_empty, we will create 2 segments
-     * For cube test_kylin_cube_without_slr_empty, since it doesn't support incremental build, we will create only 1 segment (full build)
-     *
+     * For cube test_kylin_cube_with_slr_empty, we will create 2 segments For
+     * cube test_kylin_cube_without_slr_empty, since it doesn't support
+     * incremental build, we will create only 1 segment (full build)
+     * 
      * @throws Exception
      */
     private void testInnerJoinCube() throws Exception {
-        this.prepareTestData("inner");//default settings;
+        this.prepareTestData("inner");// default settings;
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -390,31 +380,32 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         // this cube's start date is 0, end date is 20501112000000
         dateStart = 0;
         dateEnd = f.parse("2013-01-01").getTime();
-        jobs.addAll(this.submitJob("test_kylin_cube_with_slr_empty", dateStart, dateEnd,
-                CubeBuildTypeEnum.BUILD));
+        jobs.addAll(this.submitJob("test_kylin_cube_with_slr_empty", dateStart, dateEnd, CubeBuildTypeEnum.BUILD));
 
         // this cube doesn't support incremental build, always do full build
         jobs.addAll(this.submitJob("test_kylin_cube_without_slr_empty", 0, 0, CubeBuildTypeEnum.BUILD));
 
         waitCubeBuilt(jobs);
 
-        // then submit a incremental job, start date is 20130101000000, end date is 20220101000000
+        // then submit a incremental job, start date is 20130101000000, end date
+        // is 20220101000000
         jobs.clear();
         dateStart = f.parse("2013-01-01").getTime();
         dateEnd = f.parse("2022-01-01").getTime();
-        jobs.addAll(this.submitJob("test_kylin_cube_with_slr_empty", dateStart, dateEnd,
-                CubeBuildTypeEnum.BUILD));
+        jobs.addAll(this.submitJob("test_kylin_cube_with_slr_empty", dateStart, dateEnd, CubeBuildTypeEnum.BUILD));
         waitCubeBuilt(jobs);
     }
 
     /**
-     * For cube test_kylin_cube_without_slr_left_join_empty, it is using update_insert, we will create 2 segments, and then merge these 2 segments into a larger segment
-     * For cube test_kylin_cube_with_slr_left_join_empty, we will create only 1 segment
-     *
+     * For cube test_kylin_cube_without_slr_left_join_empty, it is using
+     * update_insert, we will create 2 segments, and then merge these 2 segments
+     * into a larger segment For cube test_kylin_cube_with_slr_left_join_empty,
+     * we will create only 1 segment
+     * 
      * @throws Exception
      */
     private void testLeftJoinCube() throws Exception {
-        this.prepareTestData("left");//default settings;
+        this.prepareTestData("left");// default settings;
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -425,37 +416,30 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
 
         // this cube's start date is 0, end date is 20501112000000
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-        dateStart =
-                cubeMgr.getCube("test_kylin_cube_with_slr_left_join_empty").getDescriptor()
-                        .getCubePartitionDesc().getPartitionDateStart();
+        dateStart = cubeMgr.getCube("test_kylin_cube_with_slr_left_join_empty").getDescriptor().getCubePartitionDesc().getPartitionDateStart();
         dateEnd = f.parse("2050-11-12").getTime();
-        jobs.addAll(this.submitJob("test_kylin_cube_with_slr_left_join_empty", dateStart, dateEnd,
-                CubeBuildTypeEnum.BUILD));
+        jobs.addAll(this.submitJob("test_kylin_cube_with_slr_left_join_empty", dateStart, dateEnd, CubeBuildTypeEnum.BUILD));
 
         // this cube's start date is 0, end date is 20120601000000
-        dateStart =
-                cubeMgr.getCube("test_kylin_cube_without_slr_left_join_empty").getDescriptor()
-                        .getCubePartitionDesc().getPartitionDateStart();
+        dateStart = cubeMgr.getCube("test_kylin_cube_without_slr_left_join_empty").getDescriptor().getCubePartitionDesc().getPartitionDateStart();
         dateEnd = f.parse("2012-06-01").getTime();
-        jobs.addAll(this.submitJob("test_kylin_cube_without_slr_left_join_empty", dateStart, dateEnd,
-                CubeBuildTypeEnum.BUILD));
+        jobs.addAll(this.submitJob("test_kylin_cube_without_slr_left_join_empty", dateStart, dateEnd, CubeBuildTypeEnum.BUILD));
 
         waitCubeBuilt(jobs);
 
         jobs.clear();
-        // then submit a update_insert job, start date is 20120101000000, end date is 20220101000000
+        // then submit a update_insert job, start date is 20120101000000, end
+        // date is 20220101000000
         dateStart = f.parse("2012-03-01").getTime();
         dateEnd = f.parse("2022-01-01").getTime();
-        jobs.addAll(this.submitJob("test_kylin_cube_without_slr_left_join_empty", dateStart, dateEnd,
-                CubeBuildTypeEnum.BUILD));
+        jobs.addAll(this.submitJob("test_kylin_cube_without_slr_left_join_empty", dateStart, dateEnd, CubeBuildTypeEnum.BUILD));
 
         waitCubeBuilt(jobs);
 
         jobs.clear();
         // final submit a merge job, start date is 0, end date is 20220101000000
         dateEnd = f.parse("2022-01-01").getTime();
-        jobs.addAll(this.submitJob("test_kylin_cube_without_slr_left_join_empty", 0, dateEnd,
-                CubeBuildTypeEnum.MERGE));
+        jobs.addAll(this.submitJob("test_kylin_cube_without_slr_left_join_empty", 0, dateEnd, CubeBuildTypeEnum.MERGE));
         waitCubeBuilt(jobs);
     }
 
@@ -481,8 +465,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
             assertEquals("Job fail - " + job, JobStatusEnum.FINISHED, jobManager.getJob(job).getStatus());
     }
 
-    protected List<String> submitJob(String cubename, long startDate, long endDate, CubeBuildTypeEnum jobType)
-            throws SchedulerException, IOException, InvalidJobInstanceException, CubeIntegrityException {
+    protected List<String> submitJob(String cubename, long startDate, long endDate, CubeBuildTypeEnum jobType) throws SchedulerException, IOException, InvalidJobInstanceException, CubeIntegrityException {
         List<String> jobList = new ArrayList<String>();
 
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());

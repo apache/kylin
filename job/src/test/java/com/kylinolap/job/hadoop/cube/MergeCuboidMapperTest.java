@@ -32,7 +32,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
@@ -53,6 +52,7 @@ import com.kylinolap.metadata.model.cube.TblColRef;
 /**
  * @author honma
  */
+@SuppressWarnings("rawtypes")
 public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
     private static final Logger logger = LoggerFactory.getLogger(MergeCuboidMapperTest.class);
@@ -97,7 +97,8 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
         DictionaryManager.removeInstance(this.getTestConfig());
 
         // hack for distributed cache
-        //CubeManager.removeInstance(KylinConfig.createInstanceFromUri("../job/meta"));//to make sure the following mapper could get latest CubeManger
+        // CubeManager.removeInstance(KylinConfig.createInstanceFromUri("../job/meta"));//to
+        // make sure the following mapper could get latest CubeManger
         FileUtils.deleteDirectory(new File("../job/meta"));
 
         MergeCuboidMapper mapper = new MergeCuboidMapper();
@@ -120,9 +121,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
             signature.setLastModifiedTime(System.currentTimeMillis());
             signature.setPath("fake_dict_for" + lfn.getName() + segment.getName());
 
-            DictionaryInfo newDictInfo =
-                    new DictionaryInfo(lfn.getTable(), lfn.getColumn().getName(), lfn.getColumn()
-                            .getZeroBasedIndex(), "string", signature, "");
+            DictionaryInfo newDictInfo = new DictionaryInfo(lfn.getTable(), lfn.getColumn().getName(), lfn.getColumn().getZeroBasedIndex(), "string", signature, "");
 
             List<byte[]> values = new ArrayList<byte[]>();
             values.add(new byte[] { 97, 97, 97 });
@@ -138,8 +137,8 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
             segment.putDictResPath(lsi, sharedDict.getResourcePath());
             segment.putDictResPath(ssc, sharedDict.getResourcePath());
 
-            //cubeManager.saveResource(segment.getCubeInstance());
-            //cubeManager.afterCubeUpdated(segment.getCubeInstance());
+            // cubeManager.saveResource(segment.getCubeInstance());
+            // cubeManager.afterCubeUpdated(segment.getCubeInstance());
             cubeManager.updateCube(cube);
 
             isFirstSegment = false;
@@ -158,8 +157,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
         String cubeName = "test_kylin_cube_without_slr_left_join_ready_2_segments";
 
-        List<CubeSegment> newSegments =
-                cubeManager.allocateSegments(cube, CubeBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L);
+        List<CubeSegment> newSegments = cubeManager.allocateSegments(cube, CubeBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L);
 
         logger.info("Size of new segments: " + newSegments.size());
 
@@ -174,7 +172,8 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
         mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
         mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
-        //mapDriver.getConfiguration().set(KylinConfig.KYLIN_METADATA_URL, "../job/meta");
+        // mapDriver.getConfiguration().set(KylinConfig.KYLIN_METADATA_URL,
+        // "../job/meta");
 
         byte[] key = new byte[] { 0, 0, 0, 0, 0, 0, 0, -92, 1, 1, 1 };
         byte[] value = new byte[] { 1, 2, 3 };
@@ -183,9 +182,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
         mapDriver.withInput(new Text(key), new Text(value));
         mapDriver.withOutput(new Text(newkey), new Text(newvalue));
-        mapDriver
-                .setMapInputPath(new Path(
-                        "/apps/hdmi-prod/b_kylin/prod/kylin-f24668f6-dcff-4cb6-a89b-77f1119df8fa/vac_sw_cube_v4/cuboid/15d_cuboid"));
+        mapDriver.setMapInputPath(new Path("/apps/hdmi-prod/b_kylin/prod/kylin-f24668f6-dcff-4cb6-a89b-77f1119df8fa/vac_sw_cube_v4/cuboid/15d_cuboid"));
 
         mapDriver.runTest();
     }

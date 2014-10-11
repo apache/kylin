@@ -28,7 +28,7 @@ import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class FilterSerializeTest extends FilterBaseTest {
 

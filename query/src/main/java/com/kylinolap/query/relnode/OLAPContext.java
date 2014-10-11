@@ -37,17 +37,15 @@ import com.kylinolap.storage.filter.TupleFilter;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class OLAPContext {
 
     public static final String PRM_ACCEPT_PARTIAL_RESULT = "AcceptPartialResult";
 
-    private static final ThreadLocal<Map<String, String>> _localPrarameters =
-            new ThreadLocal<Map<String, String>>();
+    private static final ThreadLocal<Map<String, String>> _localPrarameters = new ThreadLocal<Map<String, String>>();
 
-    private static final ThreadLocal<Map<Integer, OLAPContext>> _localContexts =
-            new ThreadLocal<Map<Integer, OLAPContext>>();
+    private static final ThreadLocal<Map<Integer, OLAPContext>> _localContexts = new ThreadLocal<Map<Integer, OLAPContext>>();
 
     public static void setParameters(Map<String, String> parameters) {
         _localPrarameters.set(parameters);
@@ -94,7 +92,8 @@ public class OLAPContext {
 
     // query info
     public OLAPSchema olapSchema = null;
-    public OLAPTableScan firstTableScan = null; // to be fact table scan except "select * from lookupTable"
+    public OLAPTableScan firstTableScan = null; // to be fact table scan except
+                                                // "select * from lookupTable"
     public RelDataType olapRowType = null;
     public boolean afterAggregate = false;
     public boolean afterJoin = false;

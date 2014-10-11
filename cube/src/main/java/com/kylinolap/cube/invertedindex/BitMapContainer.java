@@ -120,7 +120,8 @@ public class BitMapContainer implements ColumnValueContainer {
 
     private ImmutableBytesWritable setToBytes(ConciseSet set) {
         byte[] array;
-        if (set.isEmpty()) // ConciseSet.toByteBuffer() throws exception when set is empty
+        if (set.isEmpty()) // ConciseSet.toByteBuffer() throws exception when
+                           // set is empty
             array = BytesUtil.EMPTY_BYTE_ARRAY;
         else
             array = set.toByteBuffer().array();
@@ -131,8 +132,7 @@ public class BitMapContainer implements ColumnValueContainer {
         if (bytes.get() == null || bytes.getLength() == 0) {
             return new ConciseSet();
         } else {
-            IntBuffer intBuffer =
-                    ByteBuffer.wrap(bytes.get(), bytes.getOffset(), bytes.getLength()).asIntBuffer();
+            IntBuffer intBuffer = ByteBuffer.wrap(bytes.get(), bytes.getOffset(), bytes.getLength()).asIntBuffer();
             int[] words = new int[intBuffer.capacity()];
             intBuffer.get(words);
             return new ConciseSet(words, false);

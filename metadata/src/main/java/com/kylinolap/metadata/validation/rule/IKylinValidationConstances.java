@@ -20,7 +20,7 @@ import com.kylinolap.metadata.MetadataConstances;
 
 /**
  * @author jianliu
- *
+ * 
  */
 public interface IKylinValidationConstances extends MetadataConstances {
 

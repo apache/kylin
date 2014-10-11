@@ -63,7 +63,7 @@ public class OLAPToEnumerableConverter extends ConverterRelImpl implements Enume
 
     @Override
     public Result implement(EnumerableRelImplementor enumImplementor, Prefer pref) {
-        // post-order travel children 
+        // post-order travel children
         OLAPImplementor olapImplementor = new OLAPRel.OLAPImplementor();
         olapImplementor.visitChild(getChild(), this);
 
@@ -99,14 +99,10 @@ public class OLAPToEnumerableConverter extends ConverterRelImpl implements Enume
         RelDataType hiveRowType = getRowType();
 
         context.olapRowType = hiveRowType;
-        PhysType physType =
-                PhysTypeImpl.of(enumImplementor.getTypeFactory(), hiveRowType, pref.preferArray());
+        PhysType physType = PhysTypeImpl.of(enumImplementor.getTypeFactory(), hiveRowType, pref.preferArray());
 
         RelOptTable factTable = context.firstTableScan.getTable();
-        Result result =
-                enumImplementor.result(physType, Blocks.toBlock(Expressions.call(
-                        factTable.getExpression(OLAPTable.class), "executeHiveQuery",
-                        enumImplementor.getRootExpression())));
+        Result result = enumImplementor.result(physType, Blocks.toBlock(Expressions.call(factTable.getExpression(OLAPTable.class), "executeHiveQuery", enumImplementor.getRootExpression())));
         return result;
     }
 

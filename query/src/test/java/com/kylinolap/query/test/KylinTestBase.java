@@ -61,11 +61,11 @@ import com.kylinolap.common.KylinConfig;
  */
 public class KylinTestBase {
 
-    // Hack for the different constant integer type between optiq (INTEGER) and h2 (BIGINT)
+    // Hack for the different constant integer type between optiq (INTEGER) and
+    // h2 (BIGINT)
     public static class TestH2DataTypeFactory extends H2DataTypeFactory {
         @Override
-        public DataType createDataType(int sqlType, String sqlTypeName, String tableName, String columnName)
-                throws DataTypeException {
+        public DataType createDataType(int sqlType, String sqlTypeName, String tableName, String columnName) throws DataTypeException {
 
             if ((columnName.startsWith("COL") || columnName.startsWith("col")) && sqlType == Types.BIGINT) {
                 return DataType.INTEGER;
@@ -96,7 +96,8 @@ public class KylinTestBase {
 
     /**
      * @param folder
-     * @param fileType specify the interested file type by file extension
+     * @param fileType
+     *            specify the interested file type by file extension
      * @return
      */
     protected static List<File> getFilesFromFolder(final File folder, final String fileType) {
@@ -109,8 +110,7 @@ public class KylinTestBase {
         return files;
     }
 
-    protected static void getFilesFromFolderR(final String directoryStr, List<File> files,
-            final String fileType) {
+    protected static void getFilesFromFolderR(final String directoryStr, List<File> files, final String fileType) {
         File folder = new File(directoryStr);
         for (final File fileEntry : folder.listFiles()) {
             if (fileEntry.isDirectory()) {
@@ -190,13 +190,12 @@ public class KylinTestBase {
         return exclusiveSet;
     }
 
-    //////////////////////////////////////////////////////////////////////////////////////////
-    //execute
+    // ////////////////////////////////////////////////////////////////////////////////////////
+    // execute
 
-    protected ITable executeQuery(IDatabaseConnection dbConn, String queryName, String sql, boolean needSort)
-            throws Exception {
+    protected ITable executeQuery(IDatabaseConnection dbConn, String queryName, String sql, boolean needSort) throws Exception {
 
-        //change join type to match current setting
+        // change join type to match current setting
         sql = changeJoinType(sql, joinType);
 
         ITable queryTable = dbConn.createQueryTable(resultTableName + queryName, sql);
@@ -214,7 +213,7 @@ public class KylinTestBase {
 
     protected int executeQuery(String sql, boolean needDisplay) throws SQLException {
 
-        //change join type to match current setting
+        // change join type to match current setting
         sql = changeJoinType(sql, joinType);
 
         Statement statement = null;
@@ -245,10 +244,9 @@ public class KylinTestBase {
 
     }
 
-    protected ITable executeDynamicQuery(IDatabaseConnection dbConn, String queryName, String sql,
-            List<String> parameters, boolean needSort) throws Exception {
+    protected ITable executeDynamicQuery(IDatabaseConnection dbConn, String queryName, String sql, List<String> parameters, boolean needSort) throws Exception {
 
-        //change join type to match current setting
+        // change join type to match current setting
         sql = changeJoinType(sql, joinType);
 
         PreparedStatement prepStat = dbConn.getConnection().prepareStatement(sql);
@@ -269,7 +267,7 @@ public class KylinTestBase {
     }
 
     // end of execute
-    //////////////////////////////////////////////////////////////////////////////////////////
+    // ////////////////////////////////////////////////////////////////////////////////////////
 
     protected static String changeJoinType(String sql, String targetType) {
 
@@ -279,10 +277,9 @@ public class KylinTestBase {
         String specialStr = "changeJoinType_DELIMITERS";
         sql = sql.replaceAll(System.getProperty("line.separator"), " " + specialStr + " ");
 
-        String[] tokens = StringUtils.split(sql, null);//split white spaces
+        String[] tokens = StringUtils.split(sql, null);// split white spaces
         for (int i = 0; i < tokens.length - 1; ++i) {
-            if ((tokens[i].equalsIgnoreCase("inner") || tokens[i].equalsIgnoreCase("left"))
-                    && tokens[i + 1].equalsIgnoreCase("join")) {
+            if ((tokens[i].equalsIgnoreCase("inner") || tokens[i].equalsIgnoreCase("left")) && tokens[i + 1].equalsIgnoreCase("join")) {
                 tokens[i] = targetType.toLowerCase();
             }
         }
@@ -314,8 +311,7 @@ public class KylinTestBase {
             // execute H2
             printInfo("Query Result from H2 - " + queryName);
             H2Connection h2Conn = new H2Connection(h2Connection, null);
-            h2Conn.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY,
-                    new TestH2DataTypeFactory());
+            h2Conn.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new TestH2DataTypeFactory());
             executeQuery(h2Conn, queryName, sql, needSort);
         }
     }
@@ -329,8 +325,7 @@ public class KylinTestBase {
             String sql = getTextFromFile(sqlFile);
 
             File expectResultFile = new File(sqlFile.getParent(), sqlFile.getName() + ".expected");
-            int expectRowCount =
-                    Integer.parseInt(Files.readFirstLine(expectResultFile, Charset.defaultCharset()));
+            int expectRowCount = Integer.parseInt(Files.readFirstLine(expectResultFile, Charset.defaultCharset()));
 
             // execute Kylin
             printInfo("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
@@ -339,12 +334,11 @@ public class KylinTestBase {
 
             // compare the result
             Assert.assertEquals(expectRowCount, kylinTable.getRowCount());
-            //Assertion.assertEquals(expectRowCount, kylinTable.getRowCount());
+            // Assertion.assertEquals(expectRowCount, kylinTable.getRowCount());
         }
     }
 
-    protected void execAndCompQuery(String queryFolder, String[] exclusiveQuerys, boolean needSort)
-            throws Exception {
+    protected void execAndCompQuery(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
         printInfo("---------- test folder: " + queryFolder);
         Set<String> exclusiveSet = buildExclusiveSet(exclusiveQuerys);
 
@@ -364,8 +358,7 @@ public class KylinTestBase {
             // execute H2
             printInfo("Query Result from H2 - " + queryName);
             H2Connection h2Conn = new H2Connection(h2Connection, null);
-            h2Conn.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY,
-                    new TestH2DataTypeFactory());
+            h2Conn.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new TestH2DataTypeFactory());
             ITable h2Table = executeQuery(h2Conn, queryName, sql, needSort);
 
             // compare the result
@@ -378,8 +371,7 @@ public class KylinTestBase {
         }
     }
 
-    protected void execAndCompDynamicQuery(String queryFolder, String[] exclusiveQuerys, boolean needSort)
-            throws Exception {
+    protected void execAndCompDynamicQuery(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
         printInfo("---------- test folder: " + queryFolder);
         Set<String> exclusiveSet = buildExclusiveSet(exclusiveQuerys);
 
@@ -400,8 +392,7 @@ public class KylinTestBase {
             // execute H2
             printInfo("Query Result from H2 - " + queryName);
             IDatabaseConnection h2Conn = new DatabaseConnection(h2Connection);
-            h2Conn.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY,
-                    new TestH2DataTypeFactory());
+            h2Conn.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new TestH2DataTypeFactory());
             ITable h2Table = executeDynamicQuery(h2Conn, queryName, sql, parameters, needSort);
 
             // compare the result

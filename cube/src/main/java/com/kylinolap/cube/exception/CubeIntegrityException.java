@@ -18,7 +18,7 @@ package com.kylinolap.cube.exception;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class CubeIntegrityException extends Exception {
     /**

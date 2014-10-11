@@ -29,45 +29,34 @@ import com.kylinolap.rest.response.SQLResponse;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class QueryUtil {
 
     private static final String S0 = "\\s*";
     private static final String S1 = "\\s";
     private static final String SM = "\\s+";
-    private static final Pattern PTN_GROUP_BY = Pattern.compile(S1 + "GROUP" + SM + "BY" + S1,
-            Pattern.CASE_INSENSITIVE);
-    private static final Pattern PTN_HAVING_COUNT_GREATER_THAN_ZERO = Pattern.compile(S1 + "HAVING" + SM
-            + "[(]?" + S0 + "COUNT" + S0 + "[(]" + S0 + "1" + S0 + "[)]" + S0 + ">" + S0 + "0" + S0 + "[)]?",
-            Pattern.CASE_INSENSITIVE);
-    private static final Pattern PTN_SUM_1 = Pattern.compile(S1 + "SUM" + S0 + "[(]" + S0 + "[1]" + S0
-            + "[)]" + S1, Pattern.CASE_INSENSITIVE);
+    private static final Pattern PTN_GROUP_BY = Pattern.compile(S1 + "GROUP" + SM + "BY" + S1, Pattern.CASE_INSENSITIVE);
+    private static final Pattern PTN_HAVING_COUNT_GREATER_THAN_ZERO = Pattern.compile(S1 + "HAVING" + SM + "[(]?" + S0 + "COUNT" + S0 + "[(]" + S0 + "1" + S0 + "[)]" + S0 + ">" + S0 + "0" + S0 + "[)]?", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PTN_SUM_1 = Pattern.compile(S1 + "SUM" + S0 + "[(]" + S0 + "[1]" + S0 + "[)]" + S1, Pattern.CASE_INSENSITIVE);
 
-    //private static final Pattern PTN_HAVING_ESCAPE_FUNCTION = Pattern.compile("\\{fn" + "(" + S0 + ")" + "\\}", Pattern.CASE_INSENSITIVE);
-    private static final Pattern PTN_HAVING_ESCAPE_FUNCTION = Pattern.compile("\\{fn" + "(.*?)" + "\\}",
-            Pattern.CASE_INSENSITIVE);
+    // private static final Pattern PTN_HAVING_ESCAPE_FUNCTION =
+    // Pattern.compile("\\{fn" + "(" + S0 + ")" + "\\}",
+    // Pattern.CASE_INSENSITIVE);
+    private static final Pattern PTN_HAVING_ESCAPE_FUNCTION = Pattern.compile("\\{fn" + "(.*?)" + "\\}", Pattern.CASE_INSENSITIVE);
 
-    private static String[] tableauTestQueries =
-            new String[] {
-                    "SELECT 1",//
-                    "CREATE LOCAL TEMPORARY TABLE \"XTableau_B_Connect\" ( \"COL\" INTEGER ) ON COMMIT PRESERVE ROWS",//
-                    "DROP TABLE \"XTableau_B_Connect\"",//
-                    "SELECT \"COL\" FROM (SELECT 1 AS \"COL\") AS \"SUBQUERY\"",//
-                    "SELECT TOP 1 \"COL\" FROM (SELECT 1 AS \"COL\") AS \"CHECKTOP\"",
-                    "SELECT \"COL\" FROM (SELECT 1 AS \"COL\") AS \"CHECKTOP\" LIMIT 1",//
-                    "SELECT \"SUBCOL\" AS \"COL\"  FROM (   SELECT 1 AS \"SUBCOL\" ) \"SUBQUERY\" GROUP BY 1",
-                    "SELECT \"SUBCOL\" AS \"COL\" FROM (   SELECT 1 AS \"SUBCOL\" ) \"SUBQUERY\" GROUP BY 2",
-                    "INSERT INTO \"XTableau_C_Connect\" SELECT * FROM (SELECT 1 AS COL) AS CHECKTEMP LIMIT 1",
-                    "DROP TABLE \"XTableau_C_Connect\"",
-                    "INSERT INTO \"XTableau_B_Connect\" SELECT * FROM (SELECT 1 AS COL) AS CHECKTEMP LIMIT 1" };
+    private static String[] tableauTestQueries = new String[] { "SELECT 1",//
+            "CREATE LOCAL TEMPORARY TABLE \"XTableau_B_Connect\" ( \"COL\" INTEGER ) ON COMMIT PRESERVE ROWS",//
+            "DROP TABLE \"XTableau_B_Connect\"",//
+            "SELECT \"COL\" FROM (SELECT 1 AS \"COL\") AS \"SUBQUERY\"",//
+            "SELECT TOP 1 \"COL\" FROM (SELECT 1 AS \"COL\") AS \"CHECKTOP\"", "SELECT \"COL\" FROM (SELECT 1 AS \"COL\") AS \"CHECKTOP\" LIMIT 1",//
+            "SELECT \"SUBCOL\" AS \"COL\"  FROM (   SELECT 1 AS \"SUBCOL\" ) \"SUBQUERY\" GROUP BY 1", "SELECT \"SUBCOL\" AS \"COL\" FROM (   SELECT 1 AS \"SUBCOL\" ) \"SUBQUERY\" GROUP BY 2", "INSERT INTO \"XTableau_C_Connect\" SELECT * FROM (SELECT 1 AS COL) AS CHECKTEMP LIMIT 1", "DROP TABLE \"XTableau_C_Connect\"", "INSERT INTO \"XTableau_B_Connect\" SELECT * FROM (SELECT 1 AS COL) AS CHECKTEMP LIMIT 1" };
 
     private static SQLResponse temp = new SQLResponse(new LinkedList<SelectedColumnMeta>() {
         private static final long serialVersionUID = -8086728462624901359L;
 
         {
-            add(new SelectedColumnMeta(false, false, true, false, 2, true, 11, "COL", "COL", "", "", "", 10,
-                    0, 4, "int4", false, true, false));
+            add(new SelectedColumnMeta(false, false, true, false, 2, true, 11, "COL", "COL", "", "", "", 10, 0, 4, "int4", false, true, false));
         }
     }, new LinkedList<List<String>>() {
         private static final long serialVersionUID = -470083340592928073L;
@@ -83,9 +72,7 @@ public class QueryUtil {
         }
     }, 0, false, null);
 
-    private static SQLResponse[] fakeResponses = new SQLResponse[] {
-            temp,
-            new SQLResponse(null, null, 0, false, null), //
+    private static SQLResponse[] fakeResponses = new SQLResponse[] { temp, new SQLResponse(null, null, 0, false, null), //
             new SQLResponse(null, null, 0, false, null), //
             temp, //
             new SQLResponse(null, null, 0, true, "near 1 syntax error"), //
@@ -93,8 +80,7 @@ public class QueryUtil {
             new SQLResponse(null, null, 0, true, "group by 1????"), //
             new SQLResponse(null, null, 0, true, "group by 2????"), //
             new SQLResponse(null, null, 0, true, "XTableau_C_Connect not exist"), //
-            new SQLResponse(null, null, 0, true, "XTableau_C_Connect not exist"),
-            new SQLResponse(null, null, 0, true, "XTableau_B_Connect not exist"), };
+            new SQLResponse(null, null, 0, true, "XTableau_C_Connect not exist"), new SQLResponse(null, null, 0, true, "XTableau_B_Connect not exist"), };
 
     private static ArrayList<HashSet<String>> tableauTestQueriesInToken = new ArrayList<HashSet<String>>();
 
@@ -123,7 +109,8 @@ public class QueryUtil {
         }
 
         // Case: HAVING COUNT(1)>0 without Group By
-        // Tableau generates: SELECT SUM(1) AS "COL"  FROM "VAC_SW"  HAVING COUNT(1)>0
+        // Tableau generates: SELECT SUM(1) AS "COL" FROM "VAC_SW" HAVING
+        // COUNT(1)>0
         m = PTN_HAVING_COUNT_GREATER_THAN_ZERO.matcher(sql);
         if (m.find() && PTN_GROUP_BY.matcher(sql).find() == false) {
             sql = sql.substring(0, m.start()) + " " + sql.substring(m.end());

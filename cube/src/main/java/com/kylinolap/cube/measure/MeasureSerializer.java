@@ -23,7 +23,7 @@ import com.kylinolap.metadata.model.schema.DataType;
 
 /**
  * @author yangli9
- *
+ * 
  */
 abstract public class MeasureSerializer<T> implements BytesSerializer<T> {
 
