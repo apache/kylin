@@ -22,45 +22,41 @@ Getting Started
 
 _Tested with Hortornworks distribution (HDP2.1.3), not tested with others yet._
 
-#### Kylin Server ####
+#### Misc ####
 - Command hadoop, hive, hbase is workable on your hadoop cluster
 - JDK Runtime: JDK7 (OpenJDK or Oracle JDK)
 - Maven
 - Git
-- Tomcat
-- Mysql
+- Tomcat (CATALINA_HOME being set)
+- Npm
 
 #### Before Install ####
-- Mysql: mysql is running and user "root@localhost" without password is ready.
 - For the quick tutorial, we assume that your hadoop has priviledges disabled which means any user could run hadoop and hive command
-- CATALINA_HOME is set
-
-### Building Kylin ###
-
-#### Git Clone ####
-    export KYLIN_REPO=Your Path #$KYLIN_REPO is your dir to handle kylin code base
-    mkdir -p $KYLIN_REPO
-    cd $KYLIN_REPO
-    git clone git@github.com:KylinOLAP/Kylin.git
-   
-#### Compile ####
-To compile Kylin from source code, clone from this repository and run:
-
-    mvn clean compile
-
-Kylin will run as web server for user to interactive with it, to generate deployment package (war file) for host on J2EE application server:
-
-#### Package ####
-    mvn clean package
-
-Kylin has a comprehensive set of unit tests that can take long time to run especially for cube generation. You can disable the tests when building:
-
-    mvn clean package -DskipTests
 
 
-### Run Kylin ###
-To run Kylin, deploy geneated war file into J2EE application server like Tomcat, and restart application server. then access from browser via following URL:
-[http://\<localhost>:\<port>/\<application name>]
+### Installation ###
+
+Depending on different use cases Kylin can be installed differently. There are two major scenarios:
+
+##### On-CLI installation ####
+
+If you are free to install Kylin on your hadoop CLI machine or Hadoop sandbox, this is the most convenient scenario, for it puts everything in a single machine.
+
+
+
+![On-CLI-installation](https://github.com/KylinOLAP/Kylin/blob/gh-pages/docs/installation/Picture1.png)
+
+For normal users, the application in the above picture means `Kylin Web`, which contains a web interface for cube building, querying and all sorts of management. Kylin Web launches a query engine for querying and a cube build engine for building cubes. These two engines interact with the components in Hadoop CLI, like hive and hbase.
+
+For more details please visit [On-CLI installation](https://github.com/KylinOLAP/Kylin/wiki/On-CLI-installation).
+
+#### Off-CLI Installation ####
+
+Applications does not necessarily mean Kylin Web, it can also be any test cases or java applications running at your local IDE(query engine and cube build engine can be launched programmatically in your code). In this case, it is no longer reasonable to assume that all the Kylin components reside in the same machine as your Hadoop CLI.  Fortunately, Kylin still works under such condition with proper settings on your CLI machine.
+
+![Off-CLI Installation](https://github.com/KylinOLAP/Kylin/blob/gh-pages/docs/installation/Picture2.png)
+
+For more details please visit [Off-CLI installation](https://github.com/KylinOLAP/Kylin/wiki/Off-CLI-Installation)
 
 
 ### Resources ###
