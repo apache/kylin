@@ -48,7 +48,7 @@ If you are free to install Kylin on your hadoop CLI machine or Hadoop sandbox, t
 
 For normal users, the application in the above picture means `Kylin Web`, which contains a web interface for cube building, querying and all sorts of management. Kylin Web launches a query engine for querying and a cube build engine for building cubes. These two engines interact with the components in Hadoop CLI, like hive and hbase.
 
-For more details please visit [On-CLI installation](https://github.com/KylinOLAP/Kylin/wiki/On-CLI-installation).
+For a hands-on tutorial please visit [On-CLI installation](https://github.com/KylinOLAP/Kylin/wiki/On-CLI-installation).
 
 #### Off-CLI Installation ####
 
@@ -56,7 +56,7 @@ Applications does not necessarily mean Kylin Web, it can also be any test cases 
 
 ![Off-CLI Installation](https://github.com/KylinOLAP/Kylin/blob/gh-pages/docs/installation/Picture2.png)
 
-For more details please visit [Off-CLI installation](https://github.com/KylinOLAP/Kylin/wiki/Off-CLI-Installation)
+For a hands-on tutorial please visit [Off-CLI installation](https://github.com/KylinOLAP/Kylin/wiki/Off-CLI-Installation)
 
 
 ### Resources ###
