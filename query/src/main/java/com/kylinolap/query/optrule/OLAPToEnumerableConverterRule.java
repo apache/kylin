@@ -27,15 +27,14 @@ import com.kylinolap.query.relnode.OLAPToEnumerableConverter;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public class OLAPToEnumerableConverterRule extends ConverterRule {
 
     public static final ConverterRule INSTANCE = new OLAPToEnumerableConverterRule();
 
     public OLAPToEnumerableConverterRule() {
-        super(RelNode.class, OLAPRel.CONVENTION, EnumerableConvention.INSTANCE,
-                "OLAPToEnumerableConverterRule");
+        super(RelNode.class, OLAPRel.CONVENTION, EnumerableConvention.INSTANCE, "OLAPToEnumerableConverterRule");
     }
 
     @Override

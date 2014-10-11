@@ -73,7 +73,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
 
             // add metadata to distributed cache
             CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-            //CubeSegment seg = cubeMgr.getCube(cubeName).getTheOnlySegment();
+            // CubeSegment seg = cubeMgr.getCube(cubeName).getTheOnlySegment();
             attachKylinPropsAndMetadata(cubeMgr.getCube(cubeName), job.getConfiguration());
 
             return waitForCompletion(job);

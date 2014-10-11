@@ -52,7 +52,8 @@ public class RestClient {
     }
 
     /**
-     * @param uri "user:pwd@host:port"
+     * @param uri
+     *            "user:pwd@host:port"
      */
     public RestClient(String uri) {
         Matcher m = fullRestPattern.matcher(uri);

@@ -28,7 +28,7 @@ import com.kylinolap.metadata.validation.ValidateContext;
 
 /**
  * @author jianliu
- *
+ * 
  */
 public class MandatoryColumnRuleTest {
 
@@ -40,9 +40,7 @@ public class MandatoryColumnRuleTest {
      */
     @Before
     public void setUp() throws Exception {
-        CubeDesc desc2 =
-                JsonUtil.readValue(getClass().getClassLoader().getResourceAsStream("data/TEST1_desc.json"),
-                        CubeDesc.class);
+        CubeDesc desc2 = JsonUtil.readValue(getClass().getClassLoader().getResourceAsStream("data/TEST1_desc.json"), CubeDesc.class);
         this.cube = desc2;
 
     }
@@ -52,7 +50,6 @@ public class MandatoryColumnRuleTest {
         IValidatorRule<CubeDesc> rule = new MandatoryColumnRule();
         rule.validate(cube, vContext);
         assertTrue("Failed to validate mandatory error", vContext.getResults().length == 1);
-        assertTrue("Failed to validate mandatory error",
-                vContext.getResults()[0].getMessage().startsWith("mandatory column"));
+        assertTrue("Failed to validate mandatory error", vContext.getResults()[0].getMessage().startsWith("mandatory column"));
     }
 }

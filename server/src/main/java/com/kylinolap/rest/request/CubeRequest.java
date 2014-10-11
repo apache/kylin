@@ -41,7 +41,8 @@ public class CubeRequest {
     }
 
     /**
-     * @param cubeDescName the cubeDescName to set
+     * @param cubeDescName
+     *            the cubeDescName to set
      */
     public void setCubeDescName(String cubeDescName) {
         this.cubeDescName = cubeDescName;
@@ -55,7 +56,8 @@ public class CubeRequest {
     }
 
     /**
-     * @param message the message to set
+     * @param message
+     *            the message to set
      */
     public void setMessage(String message) {
         this.message = message;
@@ -69,7 +71,8 @@ public class CubeRequest {
     }
 
     /**
-     * @param status the status to set
+     * @param status
+     *            the status to set
      */
     public void setSuccessful(boolean status) {
         this.successful = status;
@@ -99,7 +102,8 @@ public class CubeRequest {
     }
 
     /**
-     * @param cubeName the cubeDescName to set
+     * @param cubeName
+     *            the cubeDescName to set
      */
     public void setCubeName(String cubeName) {
         this.cubeName = cubeName;

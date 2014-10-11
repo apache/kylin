@@ -3,7 +3,6 @@
     <modelVersion>4.0.0</modelVersion>
     <!-- The basics. -->
     <artifactId>kylin-query</artifactId>
-    <version>0.6.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>Kylin:Query</name>
     <description>kylin query engine based on optiq</description>

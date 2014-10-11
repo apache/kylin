@@ -25,7 +25,8 @@ public class DataGenTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBasics() throws Exception {
-        FactTableGenerator.generate("test_kylin_cube_with_slr_ready", "10000", "0.6", null, "left");//default settings
+        FactTableGenerator.generate("test_kylin_cube_with_slr_ready", "10000", "0.6", null, "left");// default
+                                                                                                    // settings
     }
 
 }

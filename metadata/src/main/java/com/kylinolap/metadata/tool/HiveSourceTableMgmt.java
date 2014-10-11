@@ -30,6 +30,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.kylinolap.common.KylinConfig;
@@ -37,14 +41,11 @@ import com.kylinolap.common.persistence.ResourceTool;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Management class to sync hive table metadata with command See main method for
  * how to use the class
- *
+ * 
  * @author jianliu
  */
 public class HiveSourceTableMgmt {
@@ -53,16 +54,14 @@ public class HiveSourceTableMgmt {
     public static final String TABLE_FOLDER_NAME = "table";
     public static final String TABLE_EXD_FOLDER_NAME = "table_exd";
 
-
     public static InputStream executeHiveCommand(String command) throws IOException {
 
         ProcessBuilder pb = new ProcessBuilder("/bin/bash", "-c", "hive -e \"" + command + "\"");
 
-        //Run hive
+        // Run hive
         pb.redirectErrorStream(true);
         Process p = pb.start();
         InputStream is = p.getInputStream();
-
 
         return is;
     }
@@ -165,8 +164,7 @@ public class HiveSourceTableMgmt {
         }
     }
 
-    public void getTables(InputStream is, List<TableDesc> tableDescList,
-            List<Map<String, String>> tableAttrsList) {
+    public void getTables(InputStream is, List<TableDesc> tableDescList, List<Map<String, String>> tableAttrsList) {
 
         InputStreamReader reader = new InputStreamReader(is);
         BufferedReader bufferedReader = new BufferedReader(reader);
@@ -205,7 +203,7 @@ public class HiveSourceTableMgmt {
                     // metadata
                     String tname = tableAttrs.get("tableName");
 
-                    //TODO, should not assume database to be "default"
+                    // TODO, should not assume database to be "default"
                     tableDesc.setDatabase("default".toUpperCase());
                     tableDesc.setName(tname.toUpperCase());
                     tableDesc.setUuid(UUID.randomUUID().toString());
@@ -259,12 +257,11 @@ public class HiveSourceTableMgmt {
         return colType;
     }
 
-
     /**
      * @param tables
      */
     public static String reloadHiveTable(String tables) {
-        //Rewrite the table string
+        // Rewrite the table string
         String[] tokens = StringUtils.split(tables, ",");
         StringBuffer buff = new StringBuffer();
         for (int i = 0; i < tokens.length; i++) {
@@ -278,16 +275,15 @@ public class HiveSourceTableMgmt {
         if (StringUtils.isEmpty(hiveCommand)) {
             throw new IllegalArgumentException("The required tabes is empty");
         }
-        //Call shell to generate source tabe
+        // Call shell to generate source tabe
         String tableMetaDir = "";
         try {
             tableMetaDir = callGenerateCommand(hiveCommand);
         } catch (IOException e) {
             e.printStackTrace();
-            throw new IllegalArgumentException("Failed to get metadata from upstream, for tables " + tables,
-                    e);
+            throw new IllegalArgumentException("Failed to get metadata from upstream, for tables " + tables, e);
         }
-        //Update Metadata
+        // Update Metadata
         if (StringUtils.isEmpty(tableMetaDir)) {
             throw new IllegalArgumentException("Failed to get metadata from upstream, for tables " + tables);
         }
@@ -320,7 +316,7 @@ public class HiveSourceTableMgmt {
      * @param hiveCommd
      */
     private static String callGenerateCommand(String hiveCommd) throws IOException {
-        //Get out put path
+        // Get out put path
         String tempDir = System.getProperty("java.io.tmpdir");
         logger.info("OS current temporary directory is " + tempDir);
         if (StringUtils.isEmpty(tempDir)) {
@@ -336,10 +332,11 @@ public class HiveSourceTableMgmt {
             cmd[1] = "-c";
         }
 
-        //hive command output
-        //String hiveOutputPath = tempDir + File.separator + "tmp_kylin_output";
+        // hive command output
+        // String hiveOutputPath = tempDir + File.separator +
+        // "tmp_kylin_output";
         String hiveOutputPath = File.createTempFile("HiveOutput", null).getAbsolutePath();
-        //Metadata output
+        // Metadata output
         File dir = File.createTempFile("meta", null);
         dir.delete();
         dir.mkdir();
@@ -353,7 +350,7 @@ public class HiveSourceTableMgmt {
             pb = new ProcessBuilder(cmd[0], cmd[1], "hive -e \"" + hiveCommd + "\" > " + hiveOutputPath);
         }
 
-        //Run hive
+        // Run hive
         pb.directory(new File(tempDir));
         pb.redirectErrorStream(true);
         Process p = pb.start();
@@ -380,10 +377,10 @@ public class HiveSourceTableMgmt {
         return tableMetaOutcomeDir;
     }
 
-
     /**
-     * @param args HiveSourceTableMgmt jdbc:hive2://kylin-local:10000/default,
-     *             hive, hive, c:\\temp [, name]
+     * @param args
+     *            HiveSourceTableMgmt jdbc:hive2://kylin-local:10000/default,
+     *            hive, hive, c:\\temp [, name]
      */
     public static void main(String[] args) {
         if (args.length < 3) {

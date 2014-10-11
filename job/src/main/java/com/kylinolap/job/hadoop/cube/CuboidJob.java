@@ -94,8 +94,7 @@ public class CuboidJob extends AbstractHadoopJob {
             }
 
             boolean isInputTextFormat = false;
-            if (hasOption(OPTION_INPUT_FORMAT)
-                    && ("textinputformat".equalsIgnoreCase(getOptionValue(OPTION_INPUT_FORMAT)))) {
+            if (hasOption(OPTION_INPUT_FORMAT) && ("textinputformat".equalsIgnoreCase(getOptionValue(OPTION_INPUT_FORMAT)))) {
                 isInputTextFormat = true;
             }
 
@@ -108,7 +107,11 @@ public class CuboidJob extends AbstractHadoopJob {
             job.setMapperClass(this.mapperClass);
             job.setMapOutputKeyClass(Text.class);
             job.setMapOutputValueClass(Text.class);
-            job.setCombinerClass(CuboidReducer.class); // for base cuboid shuffle skew, some rowkey aggregates far more records than others
+            job.setCombinerClass(CuboidReducer.class); // for base cuboid
+                                                       // shuffle skew, some
+                                                       // rowkey aggregates far
+                                                       // more records than
+                                                       // others
 
             // Reducer
             job.setReducerClass(CuboidReducer.class);
@@ -136,8 +139,7 @@ public class CuboidJob extends AbstractHadoopJob {
         }
     }
 
-    protected void setReduceTaskNum(Job job, KylinConfig config, String cubeName, int level)
-            throws ClassNotFoundException, IOException, InterruptedException, JobException {
+    protected void setReduceTaskNum(Job job, KylinConfig config, String cubeName, int level) throws ClassNotFoundException, IOException, InterruptedException, JobException {
         Configuration jobConf = job.getConfiguration();
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
 
@@ -165,7 +167,8 @@ public class CuboidJob extends AbstractHadoopJob {
         // number of reduce tasks
         int numReduceTasks = (int) Math.round(totalReduceInputMB / perReduceInputMB * reduceCountRatio);
 
-        // adjust reducer number for cube which has DISTINCT_COUNT measures for better performance 
+        // adjust reducer number for cube which has DISTINCT_COUNT measures for
+        // better performance
         if (cubeDesc.hasHolisticCountDistinctMeasures()) {
             numReduceTasks = numReduceTasks * 4;
         }
@@ -178,15 +181,14 @@ public class CuboidJob extends AbstractHadoopJob {
         jobConf.setInt(MAPRED_REDUCE_TASKS, numReduceTasks);
 
         System.out.println("Having total map input MB " + Math.round(totalMapInputMB));
-        System.out.println("Having level " + level + ", pre-level cuboids " + preLevelCuboids
-                + ", this level cuboids " + thisLevelCuboids);
-        System.out.println("Having per reduce MB " + perReduceInputMB + ", reduce count ratio "
-                + reduceCountRatio);
+        System.out.println("Having level " + level + ", pre-level cuboids " + preLevelCuboids + ", this level cuboids " + thisLevelCuboids);
+        System.out.println("Having per reduce MB " + perReduceInputMB + ", reduce count ratio " + reduceCountRatio);
         System.out.println("Setting " + MAPRED_REDUCE_TASKS + "=" + numReduceTasks);
     }
 
     /**
-     * @param mapperClass the mapperClass to set
+     * @param mapperClass
+     *            the mapperClass to set
      */
     @SuppressWarnings("rawtypes")
     public void setMapperClass(Class<? extends Mapper> mapperClass) {

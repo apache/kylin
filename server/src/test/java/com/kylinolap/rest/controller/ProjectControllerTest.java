@@ -45,37 +45,29 @@ public class ProjectControllerTest extends TestBase {
         ProjectInstance ret = projectController.saveProject(request);
 
         Assert.assertEquals(ret.getOwner(), "ADMIN");
-        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size(),
-                originalProjectCount + 1);
+        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size(), originalProjectCount + 1);
 
         UpdateProjectRequest updateR = new UpdateProjectRequest();
         updateR.setFormerProjectName("new_project");
         updateR.setNewProjectName("new_project_2");
         projectController.updateProject(updateR);
 
-        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size(),
-                originalProjectCount + 1);
-        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project"),
-                null);
+        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size(), originalProjectCount + 1);
+        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project"), null);
 
-        Assert.assertNotEquals(
-                ProjectManager.getInstance(this.getTestConfig()).getProject("new_project_2"), null);
+        Assert.assertNotEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project_2"), null);
 
-        //only update desc:
+        // only update desc:
         updateR = new UpdateProjectRequest();
         updateR.setFormerProjectName("new_project_2");
         updateR.setNewProjectName("new_project_2");
         updateR.setNewDescription("hello world");
         projectController.updateProject(updateR);
 
-        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size(),
-                originalProjectCount + 1);
-        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project"),
-                null);
-        Assert.assertNotEquals(
-                ProjectManager.getInstance(this.getTestConfig()).getProject("new_project_2"), null);
-        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project_2")
-                .getDescription(), "hello world");
+        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size(), originalProjectCount + 1);
+        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project"), null);
+        Assert.assertNotEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project_2"), null);
+        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project_2").getDescription(), "hello world");
     }
 
     @Test(expected = InternalErrorException.class)

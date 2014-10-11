@@ -33,7 +33,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class CopySeq {
 
@@ -55,10 +55,7 @@ public class CopySeq {
         Writable key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), hconf);
         Text value = new Text();
 
-        Writer writer =
-                SequenceFile.createWriter(hconf, Writer.file(dstPath), Writer.keyClass(key.getClass()),
-                        Writer.valueClass(Text.class),
-                        Writer.compression(CompressionType.BLOCK, getLZOCodec(hconf)));
+        Writer writer = SequenceFile.createWriter(hconf, Writer.file(dstPath), Writer.keyClass(key.getClass()), Writer.valueClass(Text.class), Writer.compression(CompressionType.BLOCK, getLZOCodec(hconf)));
 
         int count = 0;
         while (reader.next(key, value)) {

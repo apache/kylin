@@ -1,4 +1,5 @@
 package com.kylinolap.job.hadoop.cube;
+
 ///*
 // * Copyright 2013-2014 eBay Software Foundation
 // *
@@ -149,4 +150,4 @@ package com.kylinolap.job.hadoop.cube;
 //        assertArrayEquals(new byte[] { 0 }, key7);
 //        assertEquals(7, value7.get());
 //    }
-//}
+// }

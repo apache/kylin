@@ -24,7 +24,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class RangeKeyDistributionMapper extends Mapper<Text, Text, Text, LongWritable> {
 
@@ -47,7 +47,7 @@ public class RangeKeyDistributionMapper extends Mapper<Text, Text, Text, LongWri
             outputValue.set(bytesRead);
             context.write(key, outputValue);
 
-            //reset bytesRead
+            // reset bytesRead
             bytesRead = 0;
         }
 

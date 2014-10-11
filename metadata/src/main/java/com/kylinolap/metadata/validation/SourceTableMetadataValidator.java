@@ -20,15 +20,13 @@ import com.kylinolap.metadata.model.schema.TableDesc;
 /**
  * Validate Table metadata from source.
  * <p/>
- * User: lukhan
- * Date: 12/2/13
- * Time: 10:45 AM
- * To change this template use File | Settings | File Templates.
+ * User: lukhan Date: 12/2/13 Time: 10:45 AM To change this template use File |
+ * Settings | File Templates.
  */
 public class SourceTableMetadataValidator {
 
     public static boolean validate(TableDesc table) {
-        //table.get
+        // table.get
         return true;
     }
 }

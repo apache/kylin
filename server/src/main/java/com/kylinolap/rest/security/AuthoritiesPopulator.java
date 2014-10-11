@@ -27,7 +27,7 @@ import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopul
 
 /**
  * @author xduo
- *
+ * 
  */
 public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
 

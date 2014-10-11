@@ -27,11 +27,8 @@ import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
- * Created with IntelliJ IDEA.
- * User: lukhan
- * Date: 9/24/13
- * Time: 2:38 PM
- * To change this template use File | Settings | File Templates.
+ * Created with IntelliJ IDEA. User: lukhan Date: 9/24/13 Time: 2:38 PM To
+ * change this template use File | Settings | File Templates.
  */
 public class MetadataManagerTest extends LocalFileMetadataTestCase {
 
@@ -69,9 +66,7 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testGetCubeDesc() throws Exception {
-        CubeDesc cubeDesc =
-                MetadataManager.getInstance(this.getTestConfig()).getCubeDesc(
-                        "test_kylin_cube_with_slr_desc");
+        CubeDesc cubeDesc = MetadataManager.getInstance(this.getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         Assert.assertNotNull(cubeDesc);
     }
 

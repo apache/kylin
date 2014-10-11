@@ -1,7 +1,7 @@
 package com.kylinolap.job.hadoop.hdfs;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import java.io.IOException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -10,13 +10,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.LocalFileMetadataTestCase;
 
 /**
  * Created by honma on 8/20/14.
  */
 public class HdfsOpsTest extends LocalFileMetadataTestCase {
-
 
     FileSystem fileSystem;
 

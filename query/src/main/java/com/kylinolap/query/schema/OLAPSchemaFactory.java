@@ -42,19 +42,18 @@ public class OLAPSchemaFactory implements SchemaFactory {
     static {
         /*
          * Tricks Optiq to work with Unicode.
-         *  
-         * Sets default char set for string literals in SQL and row types of RelNode. This is more a 
-         * label used to compare row type equality. For both SQL string and row record, they are 
-         * passed to Optiq in String object and does not require additional codec.
+         * 
+         * Sets default char set for string literals in SQL and row types of
+         * RelNode. This is more a label used to compare row type equality. For
+         * both SQL string and row record, they are passed to Optiq in String
+         * object and does not require additional codec.
          * 
          * Ref SaffronProperties.defaultCharset
-         *     SqlUtil.translateCharacterSetName()
-         *     NlsString constructor()
+         * SqlUtil.translateCharacterSetName() NlsString constructor()
          */
         System.setProperty("saffron.default.charset", ConversionUtil.NATIVE_UTF16_CHARSET_NAME);
         System.setProperty("saffron.default.nationalcharset", ConversionUtil.NATIVE_UTF16_CHARSET_NAME);
-        System.setProperty("saffron.default.collation.name", ConversionUtil.NATIVE_UTF16_CHARSET_NAME
-                + "$en_US");
+        System.setProperty("saffron.default.collation.name", ConversionUtil.NATIVE_UTF16_CHARSET_NAME + "$en_US");
     }
 
     private final static String SCHEMA_PROJECT = "project";
@@ -70,7 +69,7 @@ public class OLAPSchemaFactory implements SchemaFactory {
         project = ProjectInstance.getNormalizedProjectName(project);
 
         List<TableDesc> tables = ProjectManager.getInstance(config).listExposedTables(project);
-        //"database" in TableDesc correspond to our schema
+        // "database" in TableDesc correspond to our schema
         HashMap<String, Integer> schemaCounts = DatabaseDesc.extractDatabaseOccurenceCounts(tables);
 
         String majoritySchemaName = "";

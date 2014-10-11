@@ -65,7 +65,7 @@ import com.kylinolap.rest.service.QueryService;
 
 /**
  * Handle query requests.
- *
+ * 
  * @author xduo
  */
 @Controller
@@ -92,8 +92,7 @@ public class QueryController extends BasicController {
         SQLResponse response = doQuery(sqlRequest);
         response.setDuration(System.currentTimeMillis() - startTimestamp);
 
-        queryService.logQuery(sqlRequest, response, new Date(startTimestamp),
-                new Date(System.currentTimeMillis()));
+        queryService.logQuery(sqlRequest, response, new Date(startTimestamp), new Date(System.currentTimeMillis()));
 
         if (response.getIsException()) {
             String errorMsg = response.getExceptionMessage();
@@ -112,8 +111,7 @@ public class QueryController extends BasicController {
         SQLResponse response = doQuery(sqlRequest);
         response.setDuration(System.currentTimeMillis() - startTimestamp);
 
-        queryService.logQuery(sqlRequest, response, new Date(startTimestamp),
-                new Date(System.currentTimeMillis()));
+        queryService.logQuery(sqlRequest, response, new Date(startTimestamp), new Date(System.currentTimeMillis()));
 
         if (response.getIsException()) {
             String errorMsg = response.getExceptionMessage();
@@ -125,18 +123,18 @@ public class QueryController extends BasicController {
 
     /**
      * adjust error message order
-     *
+     * 
      * @param errorMsg
      * @return
      */
     public String makeErrorMsgUserFriendly(String errorMsg) {
         try {
-            errorMsg = errorMsg.replaceAll("\\s", " ");//replace all invisible characters
+            errorMsg = errorMsg.replaceAll("\\s", " ");// replace all invisible
+                                                       // characters
             Pattern pattern = Pattern.compile("error while executing SQL \"(.*)\":(.*)");
             Matcher matcher = pattern.matcher(errorMsg);
             if (matcher.find()) {
-                return matcher.group(2).trim() + "\n" + "while executing SQL: \"" + matcher.group(1).trim()
-                        + "\"";
+                return matcher.group(2).trim() + "\n" + "while executing SQL: \"" + matcher.group(1).trim() + "\"";
             } else
                 return errorMsg;
         } catch (Exception e) {
@@ -148,8 +146,7 @@ public class QueryController extends BasicController {
     @ResponseBody
     @Timed(name = "saveQuery")
     public void saveQuery(@RequestBody SaveSqlRequest sqlRequest) {
-        queryService.saveQuery(sqlRequest.getName(), sqlRequest.getProject(), sqlRequest.getSql(),
-                sqlRequest.getDescription());
+        queryService.saveQuery(sqlRequest.getName(), sqlRequest.getProject(), sqlRequest.getSql(), sqlRequest.getDescription());
     }
 
     @RequestMapping(value = "/saved_queries/{id}", method = RequestMethod.DELETE)
@@ -170,8 +167,7 @@ public class QueryController extends BasicController {
     @RequestMapping(value = "/query/format/{format}", method = RequestMethod.GET)
     @ResponseBody
     @Timed(name = "downloadResult")
-    public void downloadQueryResult(@PathVariable String format, SQLRequest sqlRequest,
-            HttpServletResponse response) {
+    public void downloadQueryResult(@PathVariable String format, SQLRequest sqlRequest, HttpServletResponse response) {
         SQLResponse result = doQuery(sqlRequest);
         response.setContentType("text/" + format + ";charset=utf-8");
         response.setHeader("Content-Disposition", "attachment; filename=\"result." + format + "\"");
@@ -222,8 +218,7 @@ public class QueryController extends BasicController {
 
         // Check server mode.
         String serverMode = KylinConfig.getInstanceFromEnv().getServerMode();
-        if (!(Constant.SERVER_MODE_QUERY.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL
-                .equals(serverMode.toLowerCase()))) {
+        if (!(Constant.SERVER_MODE_QUERY.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase()))) {
             throw new InternalErrorException("Query is not allowed in " + serverMode + " mode.");
         }
 
@@ -256,14 +251,12 @@ public class QueryController extends BasicController {
 
                 long durationThreshold = KylinConfig.getInstanceFromEnv().getQueryDurationCacheThreshold();
                 long scancountThreshold = KylinConfig.getInstanceFromEnv().getQueryScanCountCacheThreshold();
-                if (!sqlResponse.getIsException()
-                        && (sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold)) {
+                if (!sqlResponse.getIsException() && (sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold)) {
                     queryCache.put(new Element(sqlRequest, sqlResponse));
                 }
 
                 if (!sqlResponse.getIsException() && KylinConfig.getInstanceFromEnv().isQuerySecureEnabled()) {
-                    CubeInstance cubeInstance =
-                            this.queryService.getCubeManager().getCube(sqlResponse.getCube());
+                    CubeInstance cubeInstance = this.queryService.getCubeManager().getCube(sqlResponse.getCube());
                     queryService.checkAuthorization(cubeInstance);
                 }
 

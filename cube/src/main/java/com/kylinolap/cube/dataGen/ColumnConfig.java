@@ -1,9 +1,9 @@
 package com.kylinolap.cube.dataGen;
 
+import java.util.ArrayList;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.ArrayList;
 
 /**
  * Created by honma on 5/29/14.
@@ -51,7 +51,4 @@ public class ColumnConfig {
         this.valueSet = valueSet;
     }
 
-
 }
-
-

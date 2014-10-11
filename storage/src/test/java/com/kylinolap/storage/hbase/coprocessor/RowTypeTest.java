@@ -32,7 +32,7 @@ import com.kylinolap.metadata.model.cube.CubeDesc;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class RowTypeTest extends LocalFileMetadataTestCase {
 
@@ -49,8 +49,7 @@ public class RowTypeTest extends LocalFileMetadataTestCase {
     @Test
     public void testSerialize() {
 
-        CubeInstance cube =
-                CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_without_slr_ready");
+        CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_without_slr_ready");
         CubeDesc cubeDesc = cube.getDescriptor();
         long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         Cuboid cuboid = Cuboid.findById(cubeDesc, baseCuboidId);

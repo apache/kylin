@@ -27,10 +27,9 @@ import org.apache.hadoop.mapreduce.Mapper;
 
 /**
  * @author yangli9
- *
+ * 
  */
-public class IICreateHFileMapper extends
-        Mapper<ImmutableBytesWritable, ImmutableBytesWritable, ImmutableBytesWritable, KeyValue> {
+public class IICreateHFileMapper extends Mapper<ImmutableBytesWritable, ImmutableBytesWritable, ImmutableBytesWritable, KeyValue> {
 
     long timestamp;
 
@@ -40,8 +39,7 @@ public class IICreateHFileMapper extends
     }
 
     @Override
-    protected void map(ImmutableBytesWritable key, ImmutableBytesWritable value, Context context)
-            throws IOException, InterruptedException {
+    protected void map(ImmutableBytesWritable key, ImmutableBytesWritable value, Context context) throws IOException, InterruptedException {
 
         KeyValue kv = new KeyValue(key.get(), key.getOffset(), key.getLength(), //
                 HBASE_FAMILY_BYTES, 0, HBASE_FAMILY_BYTES.length, //

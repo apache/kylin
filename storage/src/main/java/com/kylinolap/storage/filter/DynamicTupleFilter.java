@@ -19,15 +19,13 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.apache.hadoop.hbase.util.Bytes;
-
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.storage.tuple.ITuple;
 
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public class DynamicTupleFilter extends TupleFilter {
 
@@ -70,7 +68,7 @@ public class DynamicTupleFilter extends TupleFilter {
     @Override
     public byte[] serialize() {
         ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
-        BytesUtil.writeByteArray(Bytes.toBytes(variableName), buffer);
+        BytesUtil.writeUTFString(variableName, buffer);
         byte[] result = new byte[buffer.position()];
         System.arraycopy(buffer.array(), 0, result, 0, buffer.position());
         return result;
@@ -79,8 +77,7 @@ public class DynamicTupleFilter extends TupleFilter {
     @Override
     public void deserialize(byte[] bytes) {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
-        byte[] strBytes = BytesUtil.readByteArray(buffer);
-        this.variableName = Bytes.toString(strBytes);
+        this.variableName = BytesUtil.readUTFString(buffer);
     }
 
 }

@@ -26,7 +26,7 @@ import com.kylinolap.storage.tuple.Tuple.IDerivedColumnFiller;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public class TupleInfo {
 

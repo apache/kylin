@@ -18,7 +18,7 @@ package com.kylinolap.storage.tuple;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public interface ITupleIterator {
 

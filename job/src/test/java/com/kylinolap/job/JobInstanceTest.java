@@ -32,7 +32,7 @@ import com.kylinolap.job.engine.JobEngineConfig;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class JobInstanceTest extends LocalFileMetadataTestCase {
     @Before
@@ -50,9 +50,7 @@ public class JobInstanceTest extends LocalFileMetadataTestCase {
         KylinConfig kylinCfg = KylinConfig.getInstanceFromEnv();
         JobManager jobManager = new JobManager("JobInstanceTest", new JobEngineConfig(kylinCfg));
 
-        JobInstance jobInstance =
-                jobManager.createJob("test_kylin_cube_with_slr_1_new_segment",
-                        "20130331080000_20131212080000", CubeBuildTypeEnum.BUILD);
+        JobInstance jobInstance = jobManager.createJob("test_kylin_cube_with_slr_1_new_segment", "20130331080000_20131212080000", CubeBuildTypeEnum.BUILD);
         // initial job status should be PENDING
         assertEquals(JobStatusEnum.PENDING, jobInstance.getStatus());
 

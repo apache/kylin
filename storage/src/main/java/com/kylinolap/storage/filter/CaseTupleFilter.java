@@ -25,7 +25,7 @@ import com.kylinolap.storage.tuple.ITuple;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class CaseTupleFilter extends TupleFilter {
 
@@ -57,8 +57,7 @@ public class CaseTupleFilter extends TupleFilter {
 
     @Override
     public String toString() {
-        return "CaseTupleFilter [when=" + whenFilters + ", then=" + thenFilters + ", else=" + elseFilter
-                + ", children=" + children + "]";
+        return "CaseTupleFilter [when=" + whenFilters + ", then=" + thenFilters + ", else=" + elseFilter + ", children=" + children + "]";
     }
 
     @Override

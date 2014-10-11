@@ -30,10 +30,9 @@ import com.kylinolap.job.constant.BatchConstants;
 
 /**
  * @author ysong1
- *
+ * 
  */
-public class RandomKeyDistributionReducer<KEY extends Writable> extends
-        Reducer<KEY, NullWritable, KEY, NullWritable> {
+public class RandomKeyDistributionReducer<KEY extends Writable> extends Reducer<KEY, NullWritable, KEY, NullWritable> {
 
     private Configuration conf;
     private int regionNumber;
@@ -48,8 +47,7 @@ public class RandomKeyDistributionReducer<KEY extends Writable> extends
 
     @SuppressWarnings("unchecked")
     @Override
-    public void reduce(KEY key, Iterable<NullWritable> values, Context context) throws IOException,
-            InterruptedException {
+    public void reduce(KEY key, Iterable<NullWritable> values, Context context) throws IOException, InterruptedException {
         KEY keyCopy = (KEY) ReflectionUtils.newInstance(key.getClass(), conf);
         ReflectionUtils.copy(conf, key, keyCopy);
         allSplits.add(keyCopy);

@@ -129,8 +129,7 @@ public class StorageTest extends HBaseMetadataTestCase {
         assertTrue(count > 0);
     }
 
-    private int search(List<TblColRef> groups, List<FunctionDesc> aggregations, TupleFilter filter,
-            StorageContext context) {
+    private int search(List<TblColRef> groups, List<FunctionDesc> aggregations, TupleFilter filter, StorageContext context) {
         int count = 0;
         ITupleIterator iterator = null;
         try {

@@ -19,12 +19,7 @@ package com.kylinolap.rest.model;
  * Created by lukhan on 2/27/14.
  */
 public class SelectedColumnMeta {
-    public SelectedColumnMeta(boolean isAutoIncrement, boolean isCaseSensitive,
-                              boolean isSearchable, boolean isCurrency, int isNullalbe,
-                              boolean isSigned, int displaySize, String label, String name,
-                              String schemaName, String catelogName, String tableName,
-                              int precision, int scale, int columnType, String columnTypeName,
-                              boolean isReadOnly, boolean isWritable, boolean isDefinitelyWritable) {
+    public SelectedColumnMeta(boolean isAutoIncrement, boolean isCaseSensitive, boolean isSearchable, boolean isCurrency, int isNullalbe, boolean isSigned, int displaySize, String label, String name, String schemaName, String catelogName, String tableName, int precision, int scale, int columnType, String columnTypeName, boolean isReadOnly, boolean isWritable, boolean isDefinitelyWritable) {
         super();
         this.isAutoIncrement = isAutoIncrement;
         this.isCaseSensitive = isCaseSensitive;

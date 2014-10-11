@@ -25,7 +25,8 @@ import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.storage.tuple.ITuple;
 
 /**
- * A special kind of tuple that exposes column value (dictionary ID) directly on top of row key.
+ * A special kind of tuple that exposes column value (dictionary ID) directly on
+ * top of row key.
  * 
  * @author yangli9
  */
@@ -69,15 +70,14 @@ public class SRowTuple implements ITuple {
             return null;
 
         if (values[i] == null) {
-            values[i] =
-                    dictIdToString(rowkey.get(), rowkey.getOffset() + type.columnOffsets[i],
-                            type.columnSizes[i]);
+            values[i] = dictIdToString(rowkey.get(), rowkey.getOffset() + type.columnOffsets[i], type.columnSizes[i]);
         }
 
         return values[i];
     }
 
-    // a special string encoding for dictionary ID that maintains order and equality
+    // a special string encoding for dictionary ID that maintains order and
+    // equality
     public static String dictIdToString(byte[] idBytes, int offset, int length) {
         try {
             return new String(idBytes, offset, length, "ISO-8859-1");

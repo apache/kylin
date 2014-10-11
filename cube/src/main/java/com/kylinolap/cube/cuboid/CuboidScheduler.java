@@ -76,7 +76,8 @@ public class CuboidScheduler {
     private Collection<Long> generateChildren(long cuboid) {
         Collection<Long> result = new HashSet<Long>();
 
-        // generate zero tail cuboid -- the one with all 1 in the first aggregation group and all 0 for the rest bits
+        // generate zero tail cuboid -- the one with all 1 in the first
+        // aggregation group and all 0 for the rest bits
         generateZeroTailBase(cuboid, result);
 
         RowKeyDesc rowkey = cubeDef.getRowkey();
@@ -110,8 +111,7 @@ public class CuboidScheduler {
         long cuboidWithoutMandatory = cuboid & ~rowkey.getMandatoryColumnMask();
 
         for (AggrGroupMask mask : rowkey.getAggrGroupMasks()) {
-            if ((cuboidWithoutMandatory & mask.groupMask) == mask.groupMask
-                    && (cuboidWithoutMandatory & mask.leftoverMask) == mask.leftoverMask) {
+            if ((cuboidWithoutMandatory & mask.groupMask) == mask.groupMask && (cuboidWithoutMandatory & mask.leftoverMask) == mask.leftoverMask) {
                 long zeroTail = rowkey.getMandatoryColumnMask() | mask.groupMask;
                 if (zeroTail > 0 && zeroTail != cuboid) {
                     result.add(zeroTail);
@@ -159,8 +159,7 @@ public class CuboidScheduler {
         return r;
     }
 
-    private void combination(long cuboid, Collection<Long> siblings, long[] bitMasks, int offset,
-            long bitValue, int k) {
+    private void combination(long cuboid, Collection<Long> siblings, long[] bitMasks, int offset, long bitValue, int k) {
         if (k == 0) {
             if (Cuboid.isValid(cubeDef, bitValue)) {
                 siblings.add(bitValue);

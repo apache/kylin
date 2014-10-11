@@ -33,11 +33,8 @@ import com.kylinolap.rest.response.ErrorResponse;
 import com.kylinolap.rest.service.MetricsService;
 
 /**
- * Created with IntelliJ IDEA.
- * User: lukhan
- * Date: 9/1/13
- * Time: 10:54 PM
- * To change this template use File | Settings | File Templates.
+ * Created with IntelliJ IDEA. User: lukhan Date: 9/1/13 Time: 10:54 PM To
+ * change this template use File | Settings | File Templates.
  */
 public class BasicController {
 

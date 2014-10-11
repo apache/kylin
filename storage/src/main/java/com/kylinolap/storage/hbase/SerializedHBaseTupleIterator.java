@@ -37,7 +37,7 @@ import com.kylinolap.storage.tuple.ITupleIterator;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class SerializedHBaseTupleIterator implements ITupleIterator {
 
@@ -51,10 +51,7 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
     private ITupleIterator segmentIterator;
     private int scanCount;
 
-    public SerializedHBaseTupleIterator(HConnection conn, List<HBaseKeyRange> segmentKeyRanges,
-            CubeInstance cube, Collection<TblColRef> dimensions, TupleFilter filter,
-            Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders,
-            StorageContext context) {
+    public SerializedHBaseTupleIterator(HConnection conn, List<HBaseKeyRange> segmentKeyRanges, CubeInstance cube, Collection<TblColRef> dimensions, TupleFilter filter, Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders, StorageContext context) {
 
         this.context = context;
         int limit = context.getLimit();
@@ -64,9 +61,7 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
         Map<CubeSegment, List<HBaseKeyRange>> rangesMap = makeRangesMap(segmentKeyRanges);
         for (CubeSegment cubeSeg : rangesMap.keySet()) {
             List<HBaseKeyRange> keyRanges = rangesMap.get(cubeSeg);
-            CubeSegmentTupleIterator segIter =
-                    new CubeSegmentTupleIterator(cubeSeg, keyRanges, conn, dimensions, filter, groupBy,
-                            rowValueDecoders, context);
+            CubeSegmentTupleIterator segIter = new CubeSegmentTupleIterator(cubeSeg, keyRanges, conn, dimensions, filter, groupBy, rowValueDecoders, context);
             this.segmentIteratorList.add(segIter);
         }
 
@@ -93,7 +88,7 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
 
     @Override
     public boolean hasNext() {
-        // 1. check limit 
+        // 1. check limit
         if (context.isLimitEnable() && scanCount >= context.getLimit()) {
             return false;
         }
@@ -104,10 +99,9 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
         }
         // 3. check threshold
         if (scanCount >= context.getThreshold()) {
-            throw new ScanOutOfLimitException("Scan row count exceeded threshold: " + context.getThreshold()
-                    + ", please add filter condition to narrow down backend scan range, like where clause.");
+            throw new ScanOutOfLimitException("Scan row count exceeded threshold: " + context.getThreshold() + ", please add filter condition to narrow down backend scan range, like where clause.");
         }
-        // 4. check cube segments 
+        // 4. check cube segments
         return segmentIteratorIterator.hasNext() || segmentIterator.hasNext();
     }
 

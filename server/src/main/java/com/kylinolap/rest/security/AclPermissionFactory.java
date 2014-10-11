@@ -25,7 +25,7 @@ import org.springframework.security.acls.model.Permission;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class AclPermissionFactory extends DefaultPermissionFactory {
 

@@ -55,19 +55,19 @@ public class FactTableGenerator {
     double conflictRatio;
     double linkableRatio;
 
-    //the names of lookup table columns which is in relation with fact table(appear as fk in fact table)
+    // the names of lookup table columns which is in relation with fact
+    // table(appear as fk in fact table)
     Hashtable<String, LinkedList<String>> lookupTableKeys = new Hashtable<String, LinkedList<String>>();
 
-    //possible values of lookupTableKeys, extracted from existing lookup tables.
-    //The key is in the format of tablename/columnname
+    // possible values of lookupTableKeys, extracted from existing lookup
+    // tables.
+    // The key is in the format of tablename/columnname
     HashMap<String, ArrayList<String>> feasibleValues = new HashMap<String, ArrayList<String>>();
 
-    //lookup table name -> sets of all composite keys
-    HashMap<String, HashSet<Array<String>>> lookupTableCompositeKeyValues =
-            new HashMap<String, HashSet<Array<String>>>();
+    // lookup table name -> sets of all composite keys
+    HashMap<String, HashSet<Array<String>>> lookupTableCompositeKeyValues = new HashMap<String, HashSet<Array<String>>>();
 
-    private void init(String cubeName, int rowCount, double conflictRaio, double linkableRatio,
-            long randomSeed) {
+    private void init(String cubeName, int rowCount, double conflictRaio, double linkableRatio, long randomSeed) {
         this.rowCount = rowCount;
         this.conflictRatio = conflictRaio;
         this.cubeName = cubeName;
@@ -87,7 +87,7 @@ public class FactTableGenerator {
     }
 
     /*
-    users can specify the value preference for each column
+     * users can specify the value preference for each column
      */
     private void loadConfig() {
         try {
@@ -102,11 +102,10 @@ public class FactTableGenerator {
         }
     }
 
-    private void loadLookupTableValues(String lookupTableName, LinkedList<String> columnNames,
-            int distinctRowCount) throws Exception {
+    private void loadLookupTableValues(String lookupTableName, LinkedList<String> columnNames, int distinctRowCount) throws Exception {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
 
-        //only deal with composite keys
+        // only deal with composite keys
         if (columnNames.size() > 1 && !lookupTableCompositeKeyValues.containsKey(lookupTableName)) {
             lookupTableCompositeKeyValues.put(lookupTableName, new HashSet<Array<String>>());
         }
@@ -116,9 +115,7 @@ public class FactTableGenerator {
         try {
             Hashtable<String, Integer> zeroBasedInice = new Hashtable<String, Integer>();
             for (String columnName : columnNames) {
-                ColumnDesc cDesc =
-                        MetadataManager.getInstance(config).getTableDesc(lookupTableName)
-                                .findColumnByName(columnName);
+                ColumnDesc cDesc = MetadataManager.getInstance(config).getTableDesc(lookupTableName).findColumnByName(columnName);
                 zeroBasedInice.put(columnName, cDesc.getZeroBasedIndex());
             }
 
@@ -138,7 +135,7 @@ public class FactTableGenerator {
                 rows.add(new Integer(r.nextInt(rowCount)));
             }
 
-            //reopen the stream
+            // reopen the stream
             tableStream.close();
             tableReader.close();
             tableStream = store.getResource(path);
@@ -187,9 +184,9 @@ public class FactTableGenerator {
         }
     }
 
-    //prepare the candidate values for each joined column
+    // prepare the candidate values for each joined column
     private void prepare() throws Exception {
-        //load config
+        // load config
         loadConfig();
 
         HashSet<String> factTableColumns = new HashSet<String>();
@@ -216,7 +213,7 @@ public class FactTableGenerator {
 
         int distinctRowCount = (int) (this.rowCount / this.conflictRatio);
         distinctRowCount = (distinctRowCount == 0) ? 1 : distinctRowCount;
-        //lookup tables
+        // lookup tables
         for (String lookupTable : lookupTableKeys.keySet()) {
             this.loadLookupTableValues(lookupTable, lookupTableKeys.get(lookupTable), distinctRowCount);
         }
@@ -229,8 +226,7 @@ public class FactTableGenerator {
             public int compare(DimensionDesc o1, DimensionDesc o2) {
                 JoinDesc j1 = o2.getJoin();
                 JoinDesc j2 = o1.getJoin();
-                return new Integer(j1 != null ? j1.getPrimaryKey().length : 0).compareTo(j2 != null ? j2
-                        .getPrimaryKey().length : 0);
+                return new Integer(j1 != null ? j1.getPrimaryKey().length : 0).compareTo(j2 != null ? j2.getPrimaryKey().length : 0);
             }
         });
         return dimensions;
@@ -238,10 +234,10 @@ public class FactTableGenerator {
 
     private void execute(String joinType) throws Exception {
 
-        //main logic here , generate the data to a temp file
+        // main logic here , generate the data to a temp file
         String tempFilePath = generate();
 
-        //Write to hbase
+        // Write to hbase
         File tempFile = new File(tempFilePath);
 
         InputStream in = new FileInputStream(tempFile);
@@ -250,8 +246,9 @@ public class FactTableGenerator {
         store.putResource(factTablePath, in, System.currentTimeMillis());
         in.close();
 
-        //duplicate a copy of this fact table, with a naming convention with jointype added
-        //so that later test cases can select different data files
+        // duplicate a copy of this fact table, with a naming convention with
+        // jointype added
+        // so that later test cases can select different data files
         in = new FileInputStream(tempFile);
         String factTablePathWithJoinType = "/data/" + factTableName + ".csv." + joinType.toLowerCase();
         store.deleteResource(factTablePathWithJoinType);
@@ -267,25 +264,26 @@ public class FactTableGenerator {
 
     /**
      * Generate the fact table and put it into a temp file
+     * 
      * @return
      * @throws Exception
      */
     private String generate() throws Exception {
-        //the columns on the fact table can be classified into three groups:
-        //1. foreign keys
+        // the columns on the fact table can be classified into three groups:
+        // 1. foreign keys
         HashMap<String, String> factTableCol2LookupCol = new HashMap<String, String>();
-        //2. metrics or directly used dimensions
+        // 2. metrics or directly used dimensions
         HashSet<String> usedCols = new HashSet<String>();
-        //3. others, not referenced anywhere
+        // 3. others, not referenced anywhere
 
         HashMap<String, String> lookupCol2factTableCol = new HashMap<String, String>();
 
-        //find fact table columns in fks
+        // find fact table columns in fks
         List<DimensionDesc> dimensions = getSortedDimentsionDescs();
         for (DimensionDesc dim : dimensions) {
             JoinDesc jDesc = dim.getJoin();
             if (jDesc == null) {
-                //deal with it in next round
+                // deal with it in next round
             } else {
                 String[] fks = jDesc.getForeignKey();
                 String[] pks = jDesc.getPrimaryKey();
@@ -297,8 +295,7 @@ public class FactTableGenerator {
 
                     if (factTableCol2LookupCol.containsKey(fks[i])) {
                         if (!factTableCol2LookupCol.get(fks[i]).equals(value)) {
-                            System.out.println("Warning: Disambiguation on the mapping of column " + fks[i]
-                                    + ", " + factTableCol2LookupCol.get(fks[i]) + "(chosen) or " + value);
+                            System.out.println("Warning: Disambiguation on the mapping of column " + fks[i] + ", " + factTableCol2LookupCol.get(fks[i]) + "(chosen) or " + value);
                             continue;
                         }
                     }
@@ -307,18 +304,18 @@ public class FactTableGenerator {
             }
         }
 
-        //find fact table columns in direct dimension
-        //DO NOT merge this with the previous loop
+        // find fact table columns in direct dimension
+        // DO NOT merge this with the previous loop
         for (DimensionDesc dim : dimensions) {
             JoinDesc jDesc = dim.getJoin();
             if (jDesc == null) {
-                //column on fact table used directly as a dimension
+                // column on fact table used directly as a dimension
                 if (!factTableCol2LookupCol.containsKey(dim.getColumn()))
                     usedCols.add(dim.getColumn());
             }
         }
 
-        //find fact table columns in measures
+        // find fact table columns in measures
         for (MeasureDesc mDesc : desc.getMeasures()) {
             List<TblColRef> pcols = mDesc.getFunction().getParameter().getColRefs();
             if (pcols != null) {
@@ -382,8 +379,7 @@ public class FactTableGenerator {
             // first day
             cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
 
-            return cal.get(Calendar.YEAR) + "-" + normToTwoDigits(cal.get(Calendar.MONTH) + 1) + "-"
-                    + normToTwoDigits(cal.get(Calendar.DAY_OF_MONTH));
+            return cal.get(Calendar.YEAR) + "-" + normToTwoDigits(cal.get(Calendar.MONTH) + 1) + "-" + normToTwoDigits(cal.get(Calendar.DAY_OF_MONTH));
         } else {
             System.out.println("The data type " + type + "is not recognized");
             System.exit(1);
@@ -397,7 +393,8 @@ public class FactTableGenerator {
         if (s.equals("string") || s.equals("char") || s.equals("varchar")) {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < 2; i++) {
-                sb.append((char) ('a' + r.nextInt(10)));//there are 10*10 possible strings
+                sb.append((char) ('a' + r.nextInt(10)));// there are 10*10
+                                                        // possible strings
             }
             return sb.toString();
         } else if (s.equals("bigint") || s.equals("int") || s.equals("tinyint") || s.equals("smallint")) {
@@ -418,8 +415,7 @@ public class FactTableGenerator {
             // first day
             cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
 
-            return cal.get(Calendar.YEAR) + "-" + normToTwoDigits(cal.get(Calendar.MONTH) + 1) + "-"
-                    + normToTwoDigits(cal.get(Calendar.DAY_OF_MONTH));
+            return cal.get(Calendar.YEAR) + "-" + normToTwoDigits(cal.get(Calendar.MONTH) + 1) + "-" + normToTwoDigits(cal.get(Calendar.DAY_OF_MONTH));
         } else {
             System.out.println("The data type " + type + "is not recognized");
             System.exit(1);
@@ -448,8 +444,7 @@ public class FactTableGenerator {
         return null;
     }
 
-    private void printColumnMappings(HashMap<String, String> factTableCol2LookupCol,
-            HashSet<String> usedCols, HashSet<String> defaultColumns) {
+    private void printColumnMappings(HashMap<String, String> factTableCol2LookupCol, HashSet<String> usedCols, HashSet<String> defaultColumns) {
 
         System.out.println("=======================================================================");
         System.out.format("%-30s %s", "FACT_TABLE_COLUMN", "MAPPING");
@@ -482,11 +477,11 @@ public class FactTableGenerator {
         System.out.println();
     }
 
-    //Any row in the column must finally appear in the flatten big table.
-    //for single-column joins the generated row is guaranteed to have a match in lookup table
-    //for composite keys we'll need an extra check
-    private boolean matchAllCompositeKeys(HashMap<String, String> lookupCol2FactTableCol,
-            LinkedList<String> columnValues) {
+    // Any row in the column must finally appear in the flatten big table.
+    // for single-column joins the generated row is guaranteed to have a match
+    // in lookup table
+    // for composite keys we'll need an extra check
+    private boolean matchAllCompositeKeys(HashMap<String, String> lookupCol2FactTableCol, LinkedList<String> columnValues) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
 
         for (String lookupTable : lookupTableKeys.keySet()) {
@@ -498,16 +493,14 @@ public class FactTableGenerator {
             for (String column : lookupTableKeys.get(lookupTable)) {
                 String key = lookupTable + "/" + column;
                 String factTableCol = lookupCol2FactTableCol.get(key);
-                int cardinal =
-                        MetadataManager.getInstance(config).getTableDesc(factTableName)
-                                .findColumnByName(factTableCol).getZeroBasedIndex();
+                int cardinal = MetadataManager.getInstance(config).getTableDesc(factTableName).findColumnByName(factTableCol).getZeroBasedIndex();
                 comboKey[index] = columnValues.get(cardinal);
 
                 index++;
             }
             Array<String> wrap = new Array<String>(comboKey);
             if (!lookupTableCompositeKeyValues.get(lookupTable).contains(wrap)) {
-                //System.out.println("Try " + wrap + " Failed, continue...");
+                // System.out.println("Try " + wrap + " Failed, continue...");
                 return false;
             }
         }
@@ -518,17 +511,17 @@ public class FactTableGenerator {
         ColumnConfig cConfig = null;
 
         if ((cConfig = genConf.getColumnConfigByName(cDesc.getName())) == null) {
-            //if the column is not configured, use random values
+            // if the column is not configured, use random values
             return (createRandomCell(cDesc));
 
         } else {
-            //the column has a configuration
+            // the column has a configuration
             if (!cConfig.isAsRange() && !cConfig.isExclusive() && r.nextBoolean()) {
-                //if the column still allows random values
+                // if the column still allows random values
                 return (createRandomCell(cDesc));
 
             } else {
-                //use specified values
+                // use specified values
                 ArrayList<String> valueSet = cConfig.getValueSet();
                 if (valueSet == null || valueSet.size() == 0)
                     throw new Exception("Did you forget to specify value set for " + cDesc.getName());
@@ -537,8 +530,7 @@ public class FactTableGenerator {
                     return (randomPick(valueSet));
                 } else {
                     if (valueSet.size() != 2)
-                        throw new Exception("Only two values can be set for range values, the column: "
-                                + cDesc.getName());
+                        throw new Exception("Only two values can be set for range values, the column: " + cDesc.getName());
 
                     return (createRandomCell(cDesc, valueSet));
                 }
@@ -547,8 +539,7 @@ public class FactTableGenerator {
         }
     }
 
-    private LinkedList<String> createRow(HashMap<String, String> factTableCol2LookupCol,
-            HashSet<String> usedCols, HashSet<String> defaultColumns) throws Exception {
+    private LinkedList<String> createRow(HashMap<String, String> factTableCol2LookupCol, HashSet<String> usedCols, HashSet<String> defaultColumns) throws Exception {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         LinkedList<String> columnValues = new LinkedList<String>();
 
@@ -560,16 +551,16 @@ public class FactTableGenerator {
 
             if (factTableCol2LookupCol.containsKey(colName)) {
 
-                //if the current column is a fk column in fact table
+                // if the current column is a fk column in fact table
                 ArrayList<String> candidates = this.feasibleValues.get(factTableCol2LookupCol.get(colName));
                 columnValues.add(candidates.get(Math.abs(seed) % candidates.size()));
             } else if (usedCols.contains(colName)) {
 
-                //if the current column is a metric column in fact table
+                // if the current column is a metric column in fact table
                 columnValues.add(createCell(cDesc));
             } else {
 
-                //otherwise this column is not useful in OLAP
+                // otherwise this column is not useful in OLAP
                 columnValues.add(createDefaultsCell(cDesc.getTypeName()));
                 defaultColumns.add(colName);
             }
@@ -578,8 +569,7 @@ public class FactTableGenerator {
         return columnValues;
     }
 
-    private String createTable(int rowCount, HashMap<String, String> factTableCol2LookupCol,
-            HashMap<String, String> lookupCol2FactTableCol, HashSet<String> usedCols) throws Exception {
+    private String createTable(int rowCount, HashMap<String, String> factTableCol2LookupCol, HashMap<String, String> lookupCol2FactTableCol, HashSet<String> usedCols) throws Exception {
         try {
             File tempFile = File.createTempFile("ftg", ".tmp");
             BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
@@ -605,7 +595,7 @@ public class FactTableGenerator {
                 writer.newLine();
                 i++;
 
-                //System.out.println("Just generated the " + i + "th record");
+                // System.out.println("Just generated the " + i + "th record");
             }
             writer.flush();
             writer.close();
@@ -624,14 +614,18 @@ public class FactTableGenerator {
 
     /**
      * Randomly create a fact table and put it to test_kylin_data table in hbase
-     *
-     * @param cubeName      name of the cube
-     * @param rowCount      expected row count generated
-     * @param linkableRatio the percentage of fact table rows that can be linked with all lookup table by INNER join
-     * @param randomSeed    random seed
+     * 
+     * @param cubeName
+     *            name of the cube
+     * @param rowCount
+     *            expected row count generated
+     * @param linkableRatio
+     *            the percentage of fact table rows that can be linked with all
+     *            lookup table by INNER join
+     * @param randomSeed
+     *            random seed
      */
-    public static void generate(String cubeName, String rowCount, String linkableRatio, String randomSeed,
-            String joinType) throws Exception {
+    public static void generate(String cubeName, String rowCount, String linkableRatio, String randomSeed, String joinType) throws Exception {
 
         if (cubeName == null)
             cubeName = "test_kylin_cube_with_slr_ready";
@@ -640,9 +634,10 @@ public class FactTableGenerator {
         if (linkableRatio == null)
             linkableRatio = "0.6";
         if (randomSeed == null)
-            ;//don't give it value
+            ;// don't give it value
 
-        //String conflictRatio = "5";//this parameter do not allow configuring any more
+        // String conflictRatio = "5";//this parameter do not allow configuring
+        // any more
 
         FactTableGenerator generator = new FactTableGenerator();
         long seed;

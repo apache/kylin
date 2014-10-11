@@ -18,7 +18,7 @@ package com.kylinolap.cube;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public enum CubeSegmentTypeEnum {
     TRANSIENT, PERMANENT

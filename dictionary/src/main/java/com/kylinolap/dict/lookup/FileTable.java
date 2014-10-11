@@ -26,7 +26,7 @@ import com.kylinolap.common.util.HadoopUtil;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class FileTable implements ReadableTable {
 

@@ -18,8 +18,9 @@ package com.kylinolap.metadata.validation;
 
 /**
  * Validation result level
+ * 
  * @author jianliu
- *
+ * 
  */
 public enum ResultLevel {
     ERROR("ERROR"), WARN("WARN");

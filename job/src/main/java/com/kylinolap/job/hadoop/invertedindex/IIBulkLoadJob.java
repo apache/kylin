@@ -34,7 +34,7 @@ import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class IIBulkLoadJob extends AbstractHadoopJob {
 
@@ -56,8 +56,7 @@ public class IIBulkLoadJob extends AbstractHadoopJob {
             FsPermission permission = new FsPermission((short) 0777);
             fs.setPermission(new Path(input, InvertedIndexDesc.HBASE_FAMILY), permission);
 
-            int hbaseExitCode =
-                    ToolRunner.run(new LoadIncrementalHFiles(getConf()), new String[] { input, tableName });
+            int hbaseExitCode = ToolRunner.run(new LoadIncrementalHFiles(getConf()), new String[] { input, tableName });
 
             CubeManager mgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cube = mgr.getCube(cubeName);

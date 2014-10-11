@@ -22,7 +22,7 @@ import com.kylinolap.storage.hbase.InvertedIndexStorageEngine;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public class StorageEngineFactory {
 

@@ -103,8 +103,7 @@ public class TableSignature {
 
     @Override
     public String toString() {
-        return "FileSignature [path=" + path + ", size=" + size + ", lastModifiedTime=" + lastModifiedTime
-                + "]";
+        return "FileSignature [path=" + path + ", size=" + size + ", lastModifiedTime=" + lastModifiedTime + "]";
     }
 
 }

@@ -115,14 +115,12 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder {
         System.arraycopy(cuboid.getBytes(), 0, bytes, offset, RowConstants.ROWKEY_CUBOIDID_LEN);
         offset += RowConstants.ROWKEY_CUBOIDID_LEN;
         if (this.headerLength != offset) {
-            throw new IllegalStateException("Expected header length is " + headerLength
-                    + ". But the offset is " + offset);
+            throw new IllegalStateException("Expected header length is " + headerLength + ". But the offset is " + offset);
         }
         return offset;
     }
 
-    protected void fillColumnValue(TblColRef column, int columnLen, byte[] value, int valueLen,
-            byte[] outputValue, int outputValueOffset) {
+    protected void fillColumnValue(TblColRef column, int columnLen, byte[] value, int valueLen, byte[] outputValue, int outputValueOffset) {
         // special null value case
         if (value == null) {
             byte[] valueBytes = defaultValue(columnLen);

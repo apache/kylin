@@ -49,10 +49,7 @@ public class CoprocessorEnabler {
     static final int SERIALIZE_BUFFER_SIZE = 65536;
     static final Map<String, Boolean> CUBE_OVERRIDES = Maps.newConcurrentMap();
 
-    public static ResultScanner scanWithCoprocessorIfBeneficial(CubeSegment segment, Cuboid cuboid,
-            TupleFilter tupleFiler, Collection<TblColRef> groupBy,
-            Collection<RowValueDecoder> rowValueDecoders, StorageContext context, HTableInterface table,
-            Scan scan) throws IOException {
+    public static ResultScanner scanWithCoprocessorIfBeneficial(CubeSegment segment, Cuboid cuboid, TupleFilter tupleFiler, Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders, StorageContext context, HTableInterface table, Scan scan) throws IOException {
 
         if (!isCoprocessorBeneficial(segment.getCubeInstance(), groupBy, rowValueDecoders, cuboid, context)) {
             return table.getScanner(scan);
@@ -65,8 +62,7 @@ public class CoprocessorEnabler {
 
         if (DEBUG_LOCAL_COPROCESSOR) {
             RegionScanner innerScanner = new RegionScannerAdapter(table.getScanner(scan));
-            AggregationScanner aggrScanner =
-                    new AggregationScanner(type, filter, projector, aggrs, innerScanner);
+            AggregationScanner aggrScanner = new AggregationScanner(type, filter, projector, aggrs, innerScanner);
             return new ResultScannerAdapter(aggrScanner);
         } else {
             scan.setAttribute(AggregateRegionObserver.COPROCESSOR_ENABLE, new byte[] { 0x01 });
@@ -78,8 +74,7 @@ public class CoprocessorEnabler {
         }
     }
 
-    private static boolean isCoprocessorBeneficial(CubeInstance cube, Collection<TblColRef> groupBy,
-            Collection<RowValueDecoder> rowValueDecoders, Cuboid cuboid, StorageContext context) {
+    private static boolean isCoprocessorBeneficial(CubeInstance cube, Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders, Cuboid cuboid, StorageContext context) {
 
         if (context.isAvoidAggregation()) {
             logger.info("Coprocessor is disabled because context tells to avoid aggregation");

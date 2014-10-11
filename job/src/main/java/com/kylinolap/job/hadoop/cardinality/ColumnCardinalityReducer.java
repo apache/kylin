@@ -35,7 +35,7 @@ import com.kylinolap.cube.kv.RowConstants;
 
 /**
  * @author Jack
- *
+ * 
  */
 public class ColumnCardinalityReducer extends Reducer<IntWritable, BytesWritable, IntWritable, LongWritable> {
 
@@ -43,8 +43,7 @@ public class ColumnCardinalityReducer extends Reducer<IntWritable, BytesWritable
     private Map<Integer, HyperLogLogPlusCounter> hllcMap = new HashMap<Integer, HyperLogLogPlusCounter>();
 
     @Override
-    public void reduce(IntWritable key, Iterable<BytesWritable> values, Context context) throws IOException,
-            InterruptedException {
+    public void reduce(IntWritable key, Iterable<BytesWritable> values, Context context) throws IOException, InterruptedException {
         for (BytesWritable v : values) {
             int skey = key.get();
             ByteBuffer buffer = ByteBuffer.wrap(v.getBytes());
@@ -79,7 +78,8 @@ public class ColumnCardinalityReducer extends Reducer<IntWritable, BytesWritable
             hllc.writeRegisters(buf);
             buf.flip();
             context.write(new IntWritable(key), new LongWritable(hllc.getCountEstimate()));
-            //			context.write(new Text("ErrorRate_" + key), new LongWritable((long)hllc.getErrorRate()));
+            // context.write(new Text("ErrorRate_" + key), new
+            // LongWritable((long)hllc.getErrorRate()));
         }
 
     }

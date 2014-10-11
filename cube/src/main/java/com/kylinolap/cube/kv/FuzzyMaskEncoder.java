@@ -42,14 +42,11 @@ public class FuzzyMaskEncoder extends RowKeyEncoder {
     }
 
     @Override
-    protected void fillColumnValue(TblColRef column, int columnLen, byte[] value, int valueLen,
-            byte[] outputValue, int outputValueOffset) {
+    protected void fillColumnValue(TblColRef column, int columnLen, byte[] value, int valueLen, byte[] outputValue, int outputValueOffset) {
         if (value == null) {
-            Arrays.fill(outputValue, outputValueOffset, outputValueOffset + columnLen,
-                    RowConstants.FUZZY_MASK_ONE);
+            Arrays.fill(outputValue, outputValueOffset, outputValueOffset + columnLen, RowConstants.FUZZY_MASK_ONE);
         } else {
-            Arrays.fill(outputValue, outputValueOffset, outputValueOffset + columnLen,
-                    RowConstants.FUZZY_MASK_ZERO);
+            Arrays.fill(outputValue, outputValueOffset, outputValueOffset + columnLen, RowConstants.FUZZY_MASK_ZERO);
         }
     }
 }

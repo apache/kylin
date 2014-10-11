@@ -28,7 +28,7 @@ import com.ning.compress.lzf.LZFEncoder;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class CompressedValueContainer implements ColumnValueContainer {
     int valueLen;

@@ -48,19 +48,20 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class StorageCleanupJob extends AbstractHadoopJob {
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg()
-            .isRequired(false).withDescription("Delete the unused storage").create("delete");
+    private static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false).withDescription("Delete the unused storage").create("delete");
 
     protected static final Logger log = LoggerFactory.getLogger(StorageCleanupJob.class);
 
     boolean delete = false;
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.hadoop.util.Tool#run(java.lang.String[])
      */
     @Override
@@ -87,9 +88,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
     }
 
     private boolean isJobInUse(JobInstance job) {
-        if (job.getStatus().equals(JobStatusEnum.NEW) || job.getStatus().equals(JobStatusEnum.PENDING)
-                || job.getStatus().equals(JobStatusEnum.RUNNING)
-                || job.getStatus().equals(JobStatusEnum.ERROR)) {
+        if (job.getStatus().equals(JobStatusEnum.NEW) || job.getStatus().equals(JobStatusEnum.PENDING) || job.getStatus().equals(JobStatusEnum.RUNNING) || job.getStatus().equals(JobStatusEnum.ERROR)) {
             return true;
         } else {
             return false;
@@ -97,8 +96,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
 
     }
 
-    private void cleanUnusedHBaseTables(Configuration conf) throws MasterNotRunningException,
-            ZooKeeperConnectionException, IOException {
+    private void cleanUnusedHBaseTables(Configuration conf) throws MasterNotRunningException, ZooKeeperConnectionException, IOException {
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
 
         // get all kylin hbase tables
@@ -110,13 +108,12 @@ public class StorageCleanupJob extends AbstractHadoopJob {
             allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
         }
 
-        // remove every segment htable from drop list 
+        // remove every segment htable from drop list
         for (CubeInstance cube : cubeMgr.listAllCubes()) {
             for (CubeSegment seg : cube.getSegments()) {
                 String tablename = seg.getStorageLocationIdentifier();
                 allTablesNeedToBeDropped.remove(tablename);
-                log.info("Remove table " + tablename + " from drop list, as the table belongs to cube "
-                        + cube.getName() + " with status " + cube.getStatus());
+                log.info("Remove table " + tablename + " from drop list, as the table belongs to cube " + cube.getName() + " with status " + cube.getStatus());
             }
         }
 
@@ -149,12 +146,13 @@ public class StorageCleanupJob extends AbstractHadoopJob {
 
         FileSystem fs = FileSystem.get(conf);
         List<String> allHdfsPathsNeedToBeDeleted = new ArrayList<String>();
-        //GlobFilter filter = new GlobFilter(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/kylin-.*");
-        FileStatus[] fStatus =
-                fs.listStatus(new Path(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory()));
+        // GlobFilter filter = new
+        // GlobFilter(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory()
+        // + "/kylin-.*");
+        FileStatus[] fStatus = fs.listStatus(new Path(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory()));
         for (FileStatus status : fStatus) {
             String path = status.getPath().getName();
-            //System.out.println(path);
+            // System.out.println(path);
             if (path.startsWith(JobInstance.JOB_WORKING_DIR_PREFIX)) {
                 String kylinJobPath = engineConfig.getHdfsWorkingDirectory() + "/" + path;
                 allHdfsPathsNeedToBeDeleted.add(kylinJobPath);
@@ -167,21 +165,18 @@ public class StorageCleanupJob extends AbstractHadoopJob {
             if (isJobInUse(jobInstance) == true) {
                 String path = JobInstance.getJobWorkingDir(jobInstance, engineConfig);
                 allHdfsPathsNeedToBeDeleted.remove(path);
-                log.info("Remove " + path + " from deletion list, as the path belongs to job "
-                        + jobInstance.getUuid() + " with status " + jobInstance.getStatus());
+                log.info("Remove " + path + " from deletion list, as the path belongs to job " + jobInstance.getUuid() + " with status " + jobInstance.getStatus());
             }
         }
 
-        // remove every segment working dir from deletion list 
+        // remove every segment working dir from deletion list
         for (CubeInstance cube : cubeMgr.listAllCubes()) {
             for (CubeSegment seg : cube.getSegments()) {
                 String jobUuid = seg.getLastBuildJobID();
                 if (jobUuid != null && jobUuid.equals("") == false) {
-                    String path =
-                            JobInstance.getJobWorkingDir(jobUuid, engineConfig.getHdfsWorkingDirectory());
+                    String path = JobInstance.getJobWorkingDir(jobUuid, engineConfig.getHdfsWorkingDirectory());
                     allHdfsPathsNeedToBeDeleted.remove(path);
-                    log.info("Remove " + path + " from deletion list, as the path belongs to segment "
-                            + seg.getName() + " of cube " + cube.getName());
+                    log.info("Remove " + path + " from deletion list, as the path belongs to segment " + seg.getName() + " of cube " + cube.getName());
                 }
             }
         }

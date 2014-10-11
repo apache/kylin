@@ -30,7 +30,7 @@ import com.kylinolap.common.KylinConfig;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class SSHClientTest extends LocalFileMetadataTestCase {
 

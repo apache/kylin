@@ -27,15 +27,15 @@ import com.kylinolap.storage.hbase.coprocessor.SRowAggregators.HCol;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class RowAggregatorsTest {
 
     @Test
     public void testSerialize() {
         HCol[] hcols = new HCol[] { //
-                newHCol("f", "c1", new String[] { "SUM", "COUNT" }, new String[] { "decimal", "long" }), //
-                        newHCol("f", "c2", new String[] { "SUM", "SUM" }, new String[] { "long", "long" }) };
+        newHCol("f", "c1", new String[] { "SUM", "COUNT" }, new String[] { "decimal", "long" }), //
+                newHCol("f", "c2", new String[] { "SUM", "SUM" }, new String[] { "long", "long" }) };
         SRowAggregators sample = new SRowAggregators(hcols);
 
         byte[] bytes = SRowAggregators.serialize(sample);

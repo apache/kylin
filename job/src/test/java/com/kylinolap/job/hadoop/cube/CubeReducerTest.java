@@ -73,9 +73,7 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
 
         reduceDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, "test_kylin_cube_with_slr_ready");
 
-        CubeDesc cubeDesc =
-                CubeManager.getInstance(this.getTestConfig()).getCube("test_kylin_cube_with_slr_ready")
-                        .getDescriptor();
+        CubeDesc cubeDesc = CubeManager.getInstance(this.getTestConfig()).getCube("test_kylin_cube_with_slr_ready").getDescriptor();
         MeasureCodec codec = new MeasureCodec(cubeDesc.getMeasures());
 
         Text key1 = new Text("72010ustech");
@@ -99,13 +97,9 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
 
         List<Pair<Text, Text>> result = reduceDriver.run();
 
-        Pair<Text, Text> p1 =
-                new Pair<Text, Text>(new Text("72010ustech"), newValueText(codec, "45.43", "10", "20.34",
-                        3));
-        Pair<Text, Text> p2 =
-                new Pair<Text, Text>(new Text("1tech"), newValueText(codec, "35.43", "15.09", "20.34", 2));
-        Pair<Text, Text> p3 =
-                new Pair<Text, Text>(new Text("0"), newValueText(codec, "146.52", "146.52", "146.52", 4));
+        Pair<Text, Text> p1 = new Pair<Text, Text>(new Text("72010ustech"), newValueText(codec, "45.43", "10", "20.34", 3));
+        Pair<Text, Text> p2 = new Pair<Text, Text>(new Text("1tech"), newValueText(codec, "35.43", "15.09", "20.34", 2));
+        Pair<Text, Text> p3 = new Pair<Text, Text>(new Text("0"), newValueText(codec, "146.52", "146.52", "146.52", 4));
 
         assertEquals(3, result.size());
 
@@ -115,9 +109,7 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
     }
 
     private Text newValueText(MeasureCodec codec, String sum, String min, String max, int count) {
-        Object[] values =
-                new Object[] { new BigDecimal(sum), new BigDecimal(min), new BigDecimal(max),
-                        new LongWritable(count) };
+        Object[] values = new Object[] { new BigDecimal(sum), new BigDecimal(min), new BigDecimal(max), new LongWritable(count) };
 
         buf.clear();
         codec.encode(values, buf);

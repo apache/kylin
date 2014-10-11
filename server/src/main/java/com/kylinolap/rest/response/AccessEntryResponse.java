@@ -24,7 +24,7 @@ import org.springframework.util.Assert;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class AccessEntryResponse {
 

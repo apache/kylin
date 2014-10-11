@@ -48,10 +48,13 @@ public class StorageContext {
     private boolean acceptPartialResult;
     private BiMap<TblColRef, String> aliasMap;
 
-    // If cuboid dimensions matches group by exactly, there's no derived or any other form of post aggregation needed.
-    // In case of exactAggregation, holistic count distinct can be used and coprocessor is not beneficial.
+    // If cuboid dimensions matches group by exactly, there's no derived or any
+    // other form of post aggregation needed.
+    // In case of exactAggregation, holistic count distinct can be used and
+    // coprocessor is not beneficial.
     private boolean exactAggregation;
-    // To hint records shall be returned at most granular level, avoid aggregation (coprocessor) wherever possible. 
+    // To hint records shall be returned at most granular level, avoid
+    // aggregation (coprocessor) wherever possible.
     private boolean avoidAggregation;
     private Set<TblColRef> mandatoryColumns;
 
@@ -187,9 +190,15 @@ public class StorageContext {
     }
 
     public boolean requireNoPostAggregation() {
-        assert cuboids.size() == 1; // all scans must hit the same cuboid to avoid dedup overlaps of records
-        return exactAggregation // is an exact aggregation from query point of view
-                && cuboids.iterator().next().requirePostAggregation() == false; // and use an exact cuboid
+        assert cuboids.size() == 1; // all scans must hit the same cuboid to
+                                    // avoid dedup overlaps of records
+        return exactAggregation // is an exact aggregation from query point of
+                                // view
+                && cuboids.iterator().next().requirePostAggregation() == false; // and
+                                                                                // use
+                                                                                // an
+                                                                                // exact
+                                                                                // cuboid
     }
 
     public boolean isAvoidAggregation() {

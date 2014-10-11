@@ -22,7 +22,7 @@ import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class LookupStringTable extends LookupTable<String> {
 

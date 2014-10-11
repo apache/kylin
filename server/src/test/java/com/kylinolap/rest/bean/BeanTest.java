@@ -34,7 +34,7 @@ import com.kylinolap.rest.response.SQLResponse;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class BeanTest {
 
@@ -55,9 +55,7 @@ public class BeanTest {
 
         new SQLResponse(null, null, null, 0, true, null);
 
-        SelectedColumnMeta coulmnMeta =
-                new SelectedColumnMeta(false, false, false, false, 0, false, 0, null, null, null, null, null,
-                        0, 0, 0, null, false, false, false);
+        SelectedColumnMeta coulmnMeta = new SelectedColumnMeta(false, false, false, false, 0, false, 0, null, null, null, null, null, 0, 0, 0, null, false, false, false);
         Assert.assertTrue(!coulmnMeta.isAutoIncrement());
         Assert.assertTrue(!coulmnMeta.isCaseSensitive());
         Assert.assertTrue(!coulmnMeta.isSearchable());
@@ -66,10 +64,7 @@ public class BeanTest {
         Assert.assertTrue(!coulmnMeta.isSigned());
 
         Assert.assertEquals(Constant.ACCESS_HAS_ROLE_ADMIN, "hasRole('ROLE_ADMIN')");
-        Assert.assertEquals(
-                Constant.ACCESS_POST_FILTER_READ,
-                "hasRole('ROLE_ADMIN') or hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'MANAGEMENT') "
-                        + "or hasPermission(filterObject, 'OPERATION') or hasPermission(filterObject, 'ADMINISTRATION')");
+        Assert.assertEquals(Constant.ACCESS_POST_FILTER_READ, "hasRole('ROLE_ADMIN') or hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'MANAGEMENT') " + "or hasPermission(filterObject, 'OPERATION') or hasPermission(filterObject, 'ADMINISTRATION')");
         Assert.assertEquals(Constant.FakeCatalogName, "defaultCatalog");
         Assert.assertEquals(Constant.FakeSchemaName, "defaultSchema");
         Assert.assertEquals(Constant.IDENTITY_ROLE, "role");

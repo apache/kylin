@@ -36,7 +36,7 @@ import com.kylinolap.storage.hbase.coprocessor.SRowProjector.AggrKey;
 
 /**
  * @author yangli9
- *
+ * 
  */
 @SuppressWarnings("rawtypes")
 public class AggregationCache {
@@ -71,7 +71,8 @@ public class AggregationCache {
     }
 
     public void checkMemoryUsage() {
-        // about memory calculation, http://seniorjava.wordpress.com/2013/09/01/java-objects-memory-size-reference/
+        // about memory calculation,
+        // http://seniorjava.wordpress.com/2013/09/01/java-objects-memory-size-reference/
         if (rowMemBytes <= 0) {
             if (aggBufMap.size() > 0) {
                 rowMemBytes = 0;
@@ -84,8 +85,7 @@ public class AggregationCache {
         int size = aggBufMap.size();
         int memUsage = (40 + rowMemBytes) * size;
         if (memUsage > MEMORY_USAGE_CAP) {
-            throw new RuntimeException("Kylin coprocess memory usage goes beyond cap, (40 + " + rowMemBytes
-                    + ") * " + size + " > " + MEMORY_USAGE_CAP + ". Abord coprocessor.");
+            throw new RuntimeException("Kylin coprocess memory usage goes beyond cap, (40 + " + rowMemBytes + ") * " + size + " > " + MEMORY_USAGE_CAP + ". Abord coprocessor.");
         }
     }
 
@@ -101,14 +101,14 @@ public class AggregationCache {
 
         @Override
         public boolean next(List<Cell> results) throws IOException {
-            //            AggregateRegionObserver.LOG.info("Kylin Scanner next()");
+            // AggregateRegionObserver.LOG.info("Kylin Scanner next()");
             boolean hasMore = false;
             if (iterator.hasNext()) {
                 Entry<AggrKey, MeasureAggregator[]> entry = iterator.next();
                 makeCells(entry, results);
                 hasMore = iterator.hasNext();
             }
-            //            AggregateRegionObserver.LOG.info("Kylin Scanner next() done");
+            // AggregateRegionObserver.LOG.info("Kylin Scanner next() done");
             return hasMore;
         }
 
@@ -157,26 +157,26 @@ public class AggregationCache {
 
         @Override
         public void close() throws IOException {
-            //            AggregateRegionObserver.LOG.info("Kylin Scanner close()");
+            // AggregateRegionObserver.LOG.info("Kylin Scanner close()");
             innerScanner.close();
-            //            AggregateRegionObserver.LOG.info("Kylin Scanner close() done");
+            // AggregateRegionObserver.LOG.info("Kylin Scanner close() done");
         }
 
         @Override
         public HRegionInfo getRegionInfo() {
-            //            AggregateRegionObserver.LOG.info("Kylin Scanner getRegionInfo()");
+            // AggregateRegionObserver.LOG.info("Kylin Scanner getRegionInfo()");
             return innerScanner.getRegionInfo();
         }
 
         @Override
         public long getMaxResultSize() {
-            //            AggregateRegionObserver.LOG.info("Kylin Scanner getMaxResultSize()");
+            // AggregateRegionObserver.LOG.info("Kylin Scanner getMaxResultSize()");
             return Long.MAX_VALUE;
         }
 
         @Override
         public boolean isFilterDone() throws IOException {
-            //            AggregateRegionObserver.LOG.info("Kylin Scanner isFilterDone()");
+            // AggregateRegionObserver.LOG.info("Kylin Scanner isFilterDone()");
             return false;
         }
 
@@ -187,7 +187,7 @@ public class AggregationCache {
 
         @Override
         public long getMvccReadPoint() {
-            //            AggregateRegionObserver.LOG.info("Kylin Scanner getMvccReadPoint()");
+            // AggregateRegionObserver.LOG.info("Kylin Scanner getMvccReadPoint()");
             return Long.MAX_VALUE;
         }
     }

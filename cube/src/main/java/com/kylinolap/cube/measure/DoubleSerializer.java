@@ -23,7 +23,7 @@ import org.apache.hadoop.io.DoubleWritable;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class DoubleSerializer extends MeasureSerializer<DoubleWritable> {
 

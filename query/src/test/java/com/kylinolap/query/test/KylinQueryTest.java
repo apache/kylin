@@ -55,8 +55,7 @@ public class KylinQueryTest extends KylinTestBase {
 
     private static void setUpEnv() {
 
-        if (System.getProperty(KylinConfig.KYLIN_CONF) == null
-                && System.getenv(KylinConfig.KYLIN_CONF) == null)
+        if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null)
             System.setProperty(KylinConfig.KYLIN_CONF, "../examples/test_case_data");
 
         config = KylinConfig.getInstanceFromEnv();
@@ -82,20 +81,21 @@ public class KylinQueryTest extends KylinTestBase {
     public static void tearDown() throws Exception {
         printInfo("tearDown");
         printInfo("Closing connection...");
-        //        printInfo("Count of compared queries: " + compQueryCount);
-        //        printInfo("among which the count of zero result queries: " + zeroResultQueries.size());
-        //        printInfo("Zero result queries listed:");
-        //        for (int i = 0; i < zeroResultQueries.size(); ++i) {
-        //            System.out.println("" + (i + 1) + ":");
-        //            System.out.println(zeroResultQueries.get(i));
-        //            System.out.println("");
-        //        }
+        // printInfo("Count of compared queries: " + compQueryCount);
+        // printInfo("among which the count of zero result queries: " +
+        // zeroResultQueries.size());
+        // printInfo("Zero result queries listed:");
+        // for (int i = 0; i < zeroResultQueries.size(); ++i) {
+        // System.out.println("" + (i + 1) + ":");
+        // System.out.println(zeroResultQueries.get(i));
+        // System.out.println("");
+        // }
         clean();
-        //        other test cases still need the drivers
-        //                Enumeration<Driver> drivers = DriverManager.getDrivers();
-        //                while (drivers.hasMoreElements()) {
-        //                    DriverManager.deregisterDriver(drivers.nextElement());
-        //                }
+        // other test cases still need the drivers
+        // Enumeration<Driver> drivers = DriverManager.getDrivers();
+        // while (drivers.hasMoreElements()) {
+        // DriverManager.deregisterDriver(drivers.nextElement());
+        // }
 
     }
 
@@ -114,11 +114,7 @@ public class KylinQueryTest extends KylinTestBase {
 
         CubeManager cubeManager = CubeManager.getInstance(config);
 
-        boolean cubesBuiltInBatch =
-                cubeManager.getCube("test_kylin_cube_with_slr_empty") != null
-                        && cubeManager.getCube("test_kylin_cube_without_slr_empty") != null
-                        && cubeManager.getCube("test_kylin_cube_with_slr_left_join_empty") != null
-                        && cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty") != null;
+        boolean cubesBuiltInBatch = cubeManager.getCube("test_kylin_cube_with_slr_empty") != null && cubeManager.getCube("test_kylin_cube_without_slr_empty") != null && cubeManager.getCube("test_kylin_cube_with_slr_left_join_empty") != null && cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty") != null;
 
         if (!cubesBuiltInBatch) {
             printInfo("Four empty cubes built in BuildCubeWithEngineTest is not complete, preferCubeOf being ignored");
@@ -138,7 +134,7 @@ public class KylinQueryTest extends KylinTestBase {
         }
     }
 
-    //for debug purpose
+    // for debug purpose
     @Ignore
     @Test
     public void testTempQuery() throws Exception {
@@ -148,13 +144,14 @@ public class KylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        //        String queryFileName = "src/test/resources/query/sql_tableau/query22.sql.disabled";
+        // String queryFileName =
+        // "src/test/resources/query/sql_tableau/query22.sql.disabled";
 
-        String queryFileName = "src/test/resources/query/sql/query67.sql";
+        String queryFileName = "src/test/resources/query/sql_tableau/query15.sql";
 
         File sqlFile = new File(queryFileName);
         runSQL(sqlFile, true, false);
-        //runSQL(sqlFile, false, true);
+        // runSQL(sqlFile, false, true);
     }
 
     @Test
@@ -189,9 +186,12 @@ public class KylinQueryTest extends KylinTestBase {
     public void testOrderByQuery() throws Exception {
         execAndCompQuery("src/test/resources/query/sql_orderby", null, true);
         // FIXME
-        // as of optiq 0.8, we lost metadata type with "order by" clause, e.g. sql_orderby/query01.sql
-        // thus, temporarily the "order by" clause was cross out, and the needSort is set to true
-        // execAndCompQuery("src/test/resources/query/sql_orderby", null, false);
+        // as of optiq 0.8, we lost metadata type with "order by" clause, e.g.
+        // sql_orderby/query01.sql
+        // thus, temporarily the "order by" clause was cross out, and the
+        // needSort is set to true
+        // execAndCompQuery("src/test/resources/query/sql_orderby", null,
+        // false);
     }
 
     @Test

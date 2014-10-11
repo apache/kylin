@@ -34,12 +34,11 @@ import com.kylinolap.job.hadoop.hbase.CreateHTableJob;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class JobCommandFactory {
 
-    public static IJobCommand getJobCommand(String command, JobInstance jobInstance, int jobStepID,
-            JobEngineConfig engineConfig) {
+    public static IJobCommand getJobCommand(String command, JobInstance jobInstance, int jobStepID, JobEngineConfig engineConfig) {
         String instanceID = jobInstance.getUuid();
 
         boolean isRemote = engineConfig.isRunAsRemoteCommand();
@@ -52,8 +51,7 @@ public class JobCommandFactory {
 
         switch (type) {
         case SHELL_CMD_HADOOP:
-            return new ShellHadoopCmd(command, hostname, username, password, isAsync, instanceID, jobStepID,
-                    engineConfig);
+            return new ShellHadoopCmd(command, hostname, username, password, isAsync, instanceID, jobStepID, engineConfig);
         case JAVA_CMD_HADOOP_FACTDISTINCT:
             FactDistinctColumnsJob factDistinctJob = new FactDistinctColumnsJob();
             factDistinctJob.setAsync(isAsync);
@@ -71,8 +69,7 @@ public class JobCommandFactory {
         case JAVA_CMD_HADOOP_RANGEKEYDISTRIBUTION:
             AbstractHadoopJob rangeKeyDistributionJob = new RangeKeyDistributionJob();
             rangeKeyDistributionJob.setAsync(isAsync);
-            return new JavaHadoopCmd(command, instanceID, jobStepID, engineConfig, rangeKeyDistributionJob,
-                    isAsync);
+            return new JavaHadoopCmd(command, instanceID, jobStepID, engineConfig, rangeKeyDistributionJob, isAsync);
         case JAVA_CMD_HADOOP_CONVERTHFILE:
             CubeHFileJob cubeHFileJob = new CubeHFileJob();
             cubeHFileJob.setAsync(isAsync);
@@ -84,8 +81,7 @@ public class JobCommandFactory {
         case JAVA_CMD_HADOOP_NO_MR_DICTIONARY:
             CreateDictionaryJob createDictionaryJob = new CreateDictionaryJob();
             createDictionaryJob.setAsync(isAsync);
-            return new JavaHadoopCmd(command, instanceID, jobStepID, engineConfig, createDictionaryJob,
-                    isAsync);
+            return new JavaHadoopCmd(command, instanceID, jobStepID, engineConfig, createDictionaryJob, isAsync);
         case JAVA_CMD_HADDOP_NO_MR_CREATEHTABLE:
             CreateHTableJob createHTableJob = new CreateHTableJob();
             createHTableJob.setAsync(isAsync);

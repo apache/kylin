@@ -59,9 +59,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, Text, ShortW
     @Override
     protected void setup(Context context) throws IOException {
         Configuration conf = context.getConfiguration();
-        intermediateTableRowDelimiter =
-                conf.get(BatchConstants.CFG_CUBE_INTERMEDIATE_TABLE_ROW_DELIMITER,
-                        Character.toString(BatchConstants.INTERMEDIATE_TABLE_ROW_DELIMITER));
+        intermediateTableRowDelimiter = conf.get(BatchConstants.CFG_CUBE_INTERMEDIATE_TABLE_ROW_DELIMITER, Character.toString(BatchConstants.INTERMEDIATE_TABLE_ROW_DELIMITER));
         byteRowDelimiter = intermediateTableRowDelimiter.getBytes("UTF-8")[0];
         bytesSplitter = new BytesSplitter(200, 4096);
 

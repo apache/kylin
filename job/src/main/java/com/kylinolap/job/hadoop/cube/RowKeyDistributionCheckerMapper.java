@@ -35,7 +35,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class RowKeyDistributionCheckerMapper extends Mapper<Text, Text, Text, LongWritable> {
 

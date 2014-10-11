@@ -35,8 +35,7 @@ public class CubeSegmentValidator {
     private CubeSegmentValidator() {
     }
 
-    public static CubeSegmentValidator getCubeSegmentValidator(CubeBuildTypeEnum buildType,
-            CubePartitionType partitionType) {
+    public static CubeSegmentValidator getCubeSegmentValidator(CubeBuildTypeEnum buildType, CubePartitionType partitionType) {
         switch (buildType) {
         case MERGE:
             return new CubeSegmentValidator().new MergeOperationValidator();
@@ -56,8 +55,7 @@ public class CubeSegmentValidator {
     }
 
     public class MergeOperationValidator extends CubeSegmentValidator {
-        private void checkContingency(CubeInstance cubeInstance, List<CubeSegment> newSegments)
-                throws CubeIntegrityException {
+        private void checkContingency(CubeInstance cubeInstance, List<CubeSegment> newSegments) throws CubeIntegrityException {
             if (cubeInstance.getSegments().size() < 2) {
                 throw new CubeIntegrityException("No segments to merge.");
             }
@@ -77,14 +75,12 @@ public class CubeSegmentValidator {
                 }
             }
 
-            if (null == startSeg || null == endSeg
-                    || startSeg.getDateRangeStart() >= endSeg.getDateRangeStart()) {
+            if (null == startSeg || null == endSeg || startSeg.getDateRangeStart() >= endSeg.getDateRangeStart()) {
                 throw new CubeIntegrityException("Invalid date range.");
             }
         }
 
-        private void checkLoopTableConsistency(CubeInstance cube, List<CubeSegment> newSegments)
-                throws CubeIntegrityException {
+        private void checkLoopTableConsistency(CubeInstance cube, List<CubeSegment> newSegments) throws CubeIntegrityException {
 
             CubeSegment cubeSeg = newSegments.get(0);
             DictionaryManager dictMgr = DictionaryManager.getInstance(cube.getConfig());
@@ -93,45 +89,37 @@ public class CubeSegmentValidator {
             HashSet<TblColRef> cols = new HashSet<TblColRef>();
             for (DimensionDesc dim : cube.getDescriptor().getDimensions()) {
                 for (TblColRef col : dim.getColumnRefs()) {
-                    //include those dictionaries that do not need mergning
+                    // include those dictionaries that do not need mergning
                     try {
-                        if (cubeSeg.getCubeDesc().getRowkey().isUseDictionary(col)
-                                && !cube.getDescriptor()
-                                        .getFactTable()
-                                        .equalsIgnoreCase(
-                                                (String) dictMgr.decideSourceData(cube.getDescriptor(), col,
-                                                        null)[0])) {
+                        if (cubeSeg.getCubeDesc().getRowkey().isUseDictionary(col) && !cube.getDescriptor().getFactTable().equalsIgnoreCase((String) dictMgr.decideSourceData(cube.getDescriptor(), col, null)[0])) {
                             cols.add(col);
                         }
                     } catch (IOException e) {
-                        throw new CubeIntegrityException(
-                                "checkLoopTableConsistency not passed when allocating a new segment.");
+                        throw new CubeIntegrityException("checkLoopTableConsistency not passed when allocating a new segment.");
                     }
                 }
             }
 
-            //check if all dictionaries on lookup table columns are identical
+            // check if all dictionaries on lookup table columns are identical
             for (TblColRef col : cols) {
                 String dictOfFirstSegment = null;
                 for (CubeSegment segment : segmentList) {
                     String temp = segment.getDictResPath(col);
                     if (temp == null) {
-                        throw new CubeIntegrityException("Dictionary is null on column: " + col
-                                + " Segment: " + segment);
+                        throw new CubeIntegrityException("Dictionary is null on column: " + col + " Segment: " + segment);
                     }
 
                     if (dictOfFirstSegment == null) {
                         dictOfFirstSegment = temp;
                     } else {
                         if (!dictOfFirstSegment.equalsIgnoreCase(temp)) {
-                            throw new CubeIntegrityException(
-                                    "Segments with different dictionaries(on lookup table) cannot be merged");
+                            throw new CubeIntegrityException("Segments with different dictionaries(on lookup table) cannot be merged");
                         }
                     }
                 }
             }
 
-            //check if all segments' snapshot are identical
+            // check if all segments' snapshot are identical
             CubeSegment firstSegment = null;
             for (CubeSegment segment : segmentList) {
                 if (firstSegment == null) {
@@ -140,7 +128,7 @@ public class CubeSegmentValidator {
                     Collection<String> a = firstSegment.getSnapshots().values();
                     Collection<String> b = segment.getSnapshots().values();
                     if ((a.size() == b.size()) && a.containsAll(b)) {
-                        //good
+                        // good
                     } else {
                         throw new CubeIntegrityException("Segments with different snapshots cannot be merged");
                     }
@@ -150,24 +138,26 @@ public class CubeSegmentValidator {
         }
 
         @Override
-        public void validate(CubeInstance cubeInstance, List<CubeSegment> newSegments)
-                throws CubeIntegrityException {
+        public void validate(CubeInstance cubeInstance, List<CubeSegment> newSegments) throws CubeIntegrityException {
             this.checkContingency(cubeInstance, newSegments);
             this.checkLoopTableConsistency(cubeInstance, newSegments);
         }
     }
 
     public class IncrementalBuildOperationValidator extends CubeSegmentValidator {
-        /* (non-Javadoc)
-         * @see com.kylinolap.cube.CubeSegmentValidator#validate(com.kylinolap.cube.CubeInstance, java.util.List)
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * com.kylinolap.cube.CubeSegmentValidator#validate(com.kylinolap.cube
+         * .CubeInstance, java.util.List)
          */
         @Override
         void validate(CubeInstance cubeInstance, List<CubeSegment> newSegments) throws CubeIntegrityException {
             this.checkContingency(cubeInstance, newSegments);
         }
 
-        void checkContingency(CubeInstance cubeInstance, List<CubeSegment> newSegments)
-                throws CubeIntegrityException {
+        void checkContingency(CubeInstance cubeInstance, List<CubeSegment> newSegments) throws CubeIntegrityException {
             if (newSegments.size() != 1) {
                 throw new CubeIntegrityException("Invalid date range.");
             }
@@ -187,13 +177,11 @@ public class CubeSegmentValidator {
 
             if (!hasMatchSegment) {
                 if (cubeInstance.getSegments().size() == 0) {
-                    if (cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateStart() != newSegment
-                            .getDateRangeStart()) {
+                    if (cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateStart() != newSegment.getDateRangeStart()) {
                         throw new CubeIntegrityException("Invalid start date.");
                     }
                 } else {
-                    CubeSegment lastSegment =
-                            cubeInstance.getSegments().get(cubeInstance.getSegments().size() - 1);
+                    CubeSegment lastSegment = cubeInstance.getSegments().get(cubeInstance.getSegments().size() - 1);
                     if (newSegment.getDateRangeStart() != lastSegment.getDateRangeEnd()) {
                         throw new CubeIntegrityException("Invalid start date.");
                     }
@@ -204,8 +192,12 @@ public class CubeSegmentValidator {
 
     public class UpdateBuildOperationValidator extends CubeSegmentValidator {
 
-        /* (non-Javadoc)
-         * @see com.kylinolap.cube.CubeSegmentValidator#validate(com.kylinolap.cube.CubeInstance, java.util.List)
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * com.kylinolap.cube.CubeSegmentValidator#validate(com.kylinolap.cube
+         * .CubeInstance, java.util.List)
          */
         @Override
         void validate(CubeInstance cubeInstance, List<CubeSegment> newSegments) throws CubeIntegrityException {
@@ -225,8 +217,7 @@ public class CubeSegmentValidator {
             }
 
             if (cubeInstance.getSegments().size() == 0) {
-                if (cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateStart() != newSegments
-                        .get(0).getDateRangeStart()) {
+                if (cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateStart() != newSegments.get(0).getDateRangeStart()) {
                     throw new CubeIntegrityException("Invalid start date.");
                 }
             } else {
@@ -242,9 +233,7 @@ public class CubeSegmentValidator {
                     throw new CubeIntegrityException("Invalid date range.");
                 }
 
-                if (newSegments.size() == 2
-                        && newSegments.get(newSegments.size() - 1).getDateRangeEnd() < matchSeg
-                                .getDateRangeEnd()) {
+                if (newSegments.size() == 2 && newSegments.get(newSegments.size() - 1).getDateRangeEnd() < matchSeg.getDateRangeEnd()) {
                     throw new CubeIntegrityException("Invalid date range.");
                 }
             }

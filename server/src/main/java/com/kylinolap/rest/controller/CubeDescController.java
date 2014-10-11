@@ -31,7 +31,7 @@ import com.kylinolap.rest.service.CubeService;
 
 /**
  * @author xduo
- *
+ * 
  */
 @Controller
 @RequestMapping(value = "/cube_desc")
@@ -42,8 +42,9 @@ public class CubeDescController {
 
     /**
      * Get detail information of the "Cube ID"
-     *
-     * @param cubeDescName Cube ID
+     * 
+     * @param cubeDescName
+     *            Cube ID
      * @return
      * @throws IOException
      */

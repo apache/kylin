@@ -22,11 +22,8 @@ import com.kylinolap.metadata.model.schema.DataType;
 import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
- * Created with IntelliJ IDEA.
- * User: lukhan
- * Date: 9/26/13
- * Time: 1:30 PM
- * To change this template use File | Settings | File Templates.
+ * Created with IntelliJ IDEA. User: lukhan Date: 9/26/13 Time: 1:30 PM To
+ * change this template use File | Settings | File Templates.
  */
 public class TblColRef {
 

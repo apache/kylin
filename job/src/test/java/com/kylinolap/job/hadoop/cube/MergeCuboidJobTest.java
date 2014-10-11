@@ -40,8 +40,8 @@ public class MergeCuboidJobTest extends LocalFileMetadataTestCase {
     @Before
     public void setup() throws Exception {
         conf = new Configuration();
-        //conf.set("fs.default.name", "file:///");
-        //conf.set("mapred.job.tracker", "local");
+        // conf.set("fs.default.name", "file:///");
+        // conf.set("mapred.job.tracker", "local");
 
         // for local runner out-of-memory issue
         conf.set("mapreduce.task.io.sort.mb", "10");
@@ -55,7 +55,8 @@ public class MergeCuboidJobTest extends LocalFileMetadataTestCase {
 
     @Test
     public void test() throws Exception {
-        //String input = "src/test/resources/data/base_cuboid,src/test/resources/data/6d_cuboid";
+        // String input =
+        // "src/test/resources/data/base_cuboid,src/test/resources/data/6d_cuboid";
         String output = "target/test-output/merged_cuboid";
         String cubeName = "test_kylin_cube_with_slr_ready";
         String jobname = "merge_cuboid";
@@ -74,12 +75,10 @@ public class MergeCuboidJobTest extends LocalFileMetadataTestCase {
 
         FileUtil.fullyDelete(new File(output));
 
-        //CubeManager cubeManager = CubeManager.getInstanceFromEnv(this.getTestConfig());
+        // CubeManager cubeManager =
+        // CubeManager.getInstanceFromEnv(this.getTestConfig());
 
-        String[] args =
-                { "-input", baseFolder.getAbsolutePath() + "," + sixDFolder.getAbsolutePath(), "-cubename",
-                        cubeName, "-segmentname", "20130331080000_20131212080000", "-output", output,
-                        "-jobname", jobname };
+        String[] args = { "-input", baseFolder.getAbsolutePath() + "," + sixDFolder.getAbsolutePath(), "-cubename", cubeName, "-segmentname", "20130331080000_20131212080000", "-output", output, "-jobname", jobname };
         assertEquals("Job failed", 0, ToolRunner.run(conf, new MergeCuboidJob(), args));
 
     }

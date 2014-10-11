@@ -32,7 +32,7 @@ import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class SnapshotManagerTest extends LocalFileMetadataTestCase {
 
@@ -53,8 +53,7 @@ public class SnapshotManagerTest extends LocalFileMetadataTestCase {
     @Test
     public void basicTest() throws Exception {
         String tableName = "TEST_SITES";
-        HiveTable hiveTable =
-                new HiveTable(MetadataManager.getInstance(this.getTestConfig()), tableName);
+        HiveTable hiveTable = new HiveTable(MetadataManager.getInstance(this.getTestConfig()), tableName);
         TableDesc tableDesc = MetadataManager.getInstance(this.getTestConfig()).getTableDesc(tableName);
         String snapshotPath = snapshotMgr.buildSnapshot(hiveTable, tableDesc, false).getResourcePath();
 

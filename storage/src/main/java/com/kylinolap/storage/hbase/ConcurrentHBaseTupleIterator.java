@@ -76,15 +76,14 @@ import com.kylinolap.storage.tuple.TupleInfo;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class ConcurrentHBaseTupleIterator implements ITupleIterator {
 
     private static final Logger logger = LoggerFactory.getLogger(ConcurrentHBaseTupleIterator.class);
     public static final int SCAN_CACHE = 1024;
     private static final int MAX_QUEUED_RESULTS = 4096;
-    private static ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors
-            .newFixedThreadPool(KylinConfig.getInstanceFromEnv().getConcurrentScanThreadCount()));
+    private static ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(KylinConfig.getInstanceFromEnv().getConcurrentScanThreadCount()));
 
     private final HConnection conn;
     private final Map<CubeSegment, Collection<HBaseKeyRange>> segmentKeyRanges;
@@ -108,11 +107,7 @@ public class ConcurrentHBaseTupleIterator implements ITupleIterator {
 
     private Tuple next;
 
-    public ConcurrentHBaseTupleIterator(HConnection conn,
-            Map<CubeSegment, Collection<HBaseKeyRange>> segmentKeyRanges, CubeDesc cubeDesc,
-            CubeInstance cube, Collection<TblColRef> dimensions, TupleFilter filter,
-            Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders,
-            StorageContext context) {
+    public ConcurrentHBaseTupleIterator(HConnection conn, Map<CubeSegment, Collection<HBaseKeyRange>> segmentKeyRanges, CubeDesc cubeDesc, CubeInstance cube, Collection<TblColRef> dimensions, TupleFilter filter, Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders, StorageContext context) {
         this.conn = conn;
         this.segmentKeyRanges = segmentKeyRanges;
         this.cube = cube;
@@ -140,8 +135,7 @@ public class ConcurrentHBaseTupleIterator implements ITupleIterator {
                     localRowValueDecoders.add(new RowValueDecoder(rowValueDecoder));
                 }
 
-                ListenableFuture<Long> scanFuture =
-                        executor.submit(new RangeScanCallable(cubeSegment, keyRange, localRowValueDecoders));
+                ListenableFuture<Long> scanFuture = executor.submit(new RangeScanCallable(cubeSegment, keyRange, localRowValueDecoders));
                 Futures.addCallback(scanFuture, new FutureCallback<Long>() {
                     public void onSuccess(Long scanCount) {
                         rangesCounter.decrementAndGet();
@@ -219,10 +213,7 @@ public class ConcurrentHBaseTupleIterator implements ITupleIterator {
 
         if (scanCounter.get() >= threshold) {
             if (acceptPartialResult == false) {
-                throw new ScanOutOfLimitException(
-                        "Scan row count exceeded limit: "
-                                + limit
-                                + ", please add filter condition to narrow down backend scan range, like where clause.");
+                throw new ScanOutOfLimitException("Scan row count exceeded limit: " + limit + ", please add filter condition to narrow down backend scan range, like where clause.");
             }
             context.setPartialResultReturned(true);
             return false;
@@ -246,8 +237,7 @@ public class ConcurrentHBaseTupleIterator implements ITupleIterator {
         private HTableInterface table = null;
         private ResultScanner scanner = null;
 
-        public RangeScanCallable(CubeSegment cubeSeg, HBaseKeyRange keyRange,
-                Collection<RowValueDecoder> rowValueDecoders) {
+        public RangeScanCallable(CubeSegment cubeSeg, HBaseKeyRange keyRange, Collection<RowValueDecoder> rowValueDecoders) {
             super();
             this.cubeSeg = cubeSeg;
             this.keyRange = keyRange;
@@ -257,7 +247,9 @@ public class ConcurrentHBaseTupleIterator implements ITupleIterator {
             this.rowKeyDecoder = new RowKeyDecoder(cubeSeg);
         }
 
-        /* (non-Javadoc)
+        /*
+         * (non-Javadoc)
+         * 
          * @see java.util.concurrent.Callable#call()
          */
         @Override
@@ -297,16 +289,10 @@ public class ConcurrentHBaseTupleIterator implements ITupleIterator {
             try {
                 Scan scan = buildScan(keyRange);
                 applyFuzzyFilter(scan, keyRange);
-                scanner =
-                        CoprocessorEnabler.scanWithCoprocessorIfBeneficial(cubeSeg, keyRange.getCuboid(),
-                                filter, groupBy, rowValueDecoders, context, table, scan);
+                scanner = CoprocessorEnabler.scanWithCoprocessorIfBeneficial(cubeSeg, keyRange.getCuboid(), filter, groupBy, rowValueDecoders, context, table, scan);
                 iter = scanner.iterator();
             } catch (Throwable t) {
-                String msg =
-                        MessageFormat.format(
-                                "Error when scan from lower key {1} to upper key {2} on table {0}.",
-                                tableName, Bytes.toString(keyRange.getStartKey()),
-                                Bytes.toString(keyRange.getStopKey()));
+                String msg = MessageFormat.format("Error when scan from lower key {1} to upper key {2} on table {0}.", tableName, Bytes.toString(keyRange.getStartKey()), Bytes.toString(keyRange.getStopKey()));
                 throw new StorageException(msg, t);
             }
 
@@ -315,8 +301,7 @@ public class ConcurrentHBaseTupleIterator implements ITupleIterator {
 
         private String logScan(HBaseKeyRange keyRange) {
             StringBuilder sb = new StringBuilder();
-            sb.append("Scan ").append(tableName).append(" from ").append(keyRange.getStartKeyAsString())
-                    .append(" to ").append(keyRange.getStopKeyAsString()).append(" on ");
+            sb.append("Scan ").append(tableName).append(" from ").append(keyRange.getStartKeyAsString()).append(" to ").append(keyRange.getStopKeyAsString()).append(" on ");
             for (RowValueDecoder valueDecoder : rowValueDecoders) {
                 HBaseColumnDesc hbaseColumn = valueDecoder.getHBaseColumn();
                 sb.append(hbaseColumn.toString());
@@ -340,8 +325,8 @@ public class ConcurrentHBaseTupleIterator implements ITupleIterator {
 
             scan.setStartRow(keyRange.getStartKey());
 
-            //scan.setStopRow(keyRange.getStopKey());
-            //what we need is an inclusive end:
+            // scan.setStopRow(keyRange.getStopKey());
+            // what we need is an inclusive end:
             InclusiveStopFilter endFilter = new InclusiveStopFilter(keyRange.getStopKey());
             scan.setFilter(endFilter);
             return scan;
@@ -354,7 +339,7 @@ public class ConcurrentHBaseTupleIterator implements ITupleIterator {
 
                 Filter filter = scan.getFilter();
                 if (filter != null) {
-                    //may have existed InclusiveStopFilter, see buildScan
+                    // may have existed InclusiveStopFilter, see buildScan
                     FilterList filterList = new FilterList();
                     filterList.addFilter(filter);
                     filterList.addFilter(rowFilter);
@@ -383,8 +368,7 @@ public class ConcurrentHBaseTupleIterator implements ITupleIterator {
             }
 
             // derived columns and filler
-            Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedInfo =
-                    cubeSeg.getCubeDesc().getHostToDerivedInfo(rowColumns, null);
+            Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedInfo = cubeSeg.getCubeDesc().getHostToDerivedInfo(rowColumns, null);
             for (Entry<Array<TblColRef>, List<DeriveInfo>> entry : hostToDerivedInfo.entrySet()) {
                 TblColRef[] hostCols = entry.getKey().data;
                 for (DeriveInfo deriveInfo : entry.getValue()) {
@@ -394,8 +378,7 @@ public class ConcurrentHBaseTupleIterator implements ITupleIterator {
                         info.setField(derivedField, derivedCol, derivedCol.getDatatype(), index++);
                     }
                     // add filler
-                    info.addDerivedColumnFiller(Tuple.newDerivedColumnFiller(rowColumns, hostCols,
-                            deriveInfo, info, CubeManager.getInstance(cube.getConfig()), cubeSeg));
+                    info.addDerivedColumnFiller(Tuple.newDerivedColumnFiller(rowColumns, hostCols, deriveInfo, info, CubeManager.getInstance(cube.getConfig()), cubeSeg));
                 }
             }
 

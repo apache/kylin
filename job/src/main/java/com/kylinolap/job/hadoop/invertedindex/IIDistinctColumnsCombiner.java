@@ -37,8 +37,7 @@ public class IIDistinctColumnsCombiner extends Reducer<ShortWritable, Text, Shor
     }
 
     @Override
-    public void reduce(ShortWritable key, Iterable<Text> values, Context context) throws IOException,
-            InterruptedException {
+    public void reduce(ShortWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
         HashSet<ByteArray> set = new HashSet<ByteArray>();
         for (Text textValue : values) {

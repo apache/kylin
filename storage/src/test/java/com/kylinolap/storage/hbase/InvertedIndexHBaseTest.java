@@ -41,7 +41,7 @@ import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
  * @author yangli9
- *
+ * 
  */
 @Ignore
 public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
@@ -74,9 +74,7 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
         IIKeyValueCodec codec = new IIKeyValueCodec(new TableRecordInfo(seg));
 
         List<TimeSlice> slices = Lists.newArrayList();
-        HBaseKeyValueIterator kvIterator =
-                new HBaseKeyValueIterator(hconn, tableName, InvertedIndexDesc.HBASE_FAMILY_BYTES,
-                        InvertedIndexDesc.HBASE_QUALIFIER_BYTES);
+        HBaseKeyValueIterator kvIterator = new HBaseKeyValueIterator(hconn, tableName, InvertedIndexDesc.HBASE_FAMILY_BYTES, InvertedIndexDesc.HBASE_QUALIFIER_BYTES);
         try {
             for (TimeSlice slice : codec.decodeKeyValue(kvIterator)) {
                 slices.add(slice);

@@ -33,8 +33,7 @@ public interface BatchConstants {
     public static final String TABLE_NAME = "table.name";
     public static final String TABLE_COLUMNS = "table.columns";
 
-    public static final String CFG_CUBE_INTERMEDIATE_TABLE_ROW_DELIMITER =
-            "cube.intermediate.table.row.delimiter";
+    public static final String CFG_CUBE_INTERMEDIATE_TABLE_ROW_DELIMITER = "cube.intermediate.table.row.delimiter";
 
     public static final String MAPREDUCE_COUTNER_GROUP_NAME = "Cube Builder";
 

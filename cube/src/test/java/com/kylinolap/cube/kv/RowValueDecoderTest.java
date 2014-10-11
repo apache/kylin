@@ -55,9 +55,7 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testDecode() throws Exception {
-        CubeDesc cubeDesc =
-                CubeManager.getInstance(this.getTestConfig()).getCube("test_kylin_cube_with_slr_ready")
-                        .getDescriptor();
+        CubeDesc cubeDesc = CubeManager.getInstance(this.getTestConfig()).getCube("test_kylin_cube_with_slr_ready").getDescriptor();
         HBaseColumnDesc hbaseCol = cubeDesc.getHBaseMapping().getColumnFamily()[0].getColumns()[0];
 
         MeasureCodec codec = new MeasureCodec(hbaseCol.getMeasures());

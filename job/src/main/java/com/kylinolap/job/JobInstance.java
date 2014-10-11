@@ -86,8 +86,7 @@ public class JobInstance extends RootPersistentEntity {
 
     public JobStep getRunningStep() {
         for (JobStep step : this.getSteps()) {
-            if (step.getStatus().equals(JobStepStatusEnum.RUNNING)
-                    || step.getStatus().equals(JobStepStatusEnum.WAITING)) {
+            if (step.getStatus().equals(JobStepStatusEnum.RUNNING) || step.getStatus().equals(JobStepStatusEnum.WAITING)) {
                 return step;
             }
         }
@@ -109,7 +108,7 @@ public class JobInstance extends RootPersistentEntity {
 
     @JsonProperty("job_status")
     public JobStatusEnum getStatus() {
-        //JobStatusEnum finalJobStatus;
+        // JobStatusEnum finalJobStatus;
         int compositResult = 0;
 
         // if steps status are all NEW, then job status is NEW
@@ -192,7 +191,8 @@ public class JobInstance extends RootPersistentEntity {
     }
 
     /**
-     * @param execStartTime the execStartTime to set
+     * @param execStartTime
+     *            the execStartTime to set
      */
     public void setExecStartTime(long execStartTime) {
         this.execStartTime = execStartTime;
@@ -206,7 +206,8 @@ public class JobInstance extends RootPersistentEntity {
     }
 
     /**
-     * @param execEndTime the execEndTime to set
+     * @param execEndTime
+     *            the execEndTime to set
      */
     public void setExecEndTime(long execEndTime) {
         this.execEndTime = execEndTime;
@@ -351,7 +352,8 @@ public class JobInstance extends RootPersistentEntity {
         }
 
         /**
-         * @param execStartTime the execStartTime to set
+         * @param execStartTime
+         *            the execStartTime to set
          */
         public void setExecStartTime(long execStartTime) {
             this.execStartTime = execStartTime;
@@ -365,7 +367,8 @@ public class JobInstance extends RootPersistentEntity {
         }
 
         /**
-         * @param execEndTime the execEndTime to set
+         * @param execEndTime
+         *            the execEndTime to set
          */
         public void setExecEndTime(long execEndTime) {
             this.execEndTime = execEndTime;
@@ -403,7 +406,8 @@ public class JobInstance extends RootPersistentEntity {
         }
 
         /**
-         * @param runAsync the runAsync to set
+         * @param runAsync
+         *            the runAsync to set
          */
         public void setRunAsync(boolean runAsync) {
             this.runAsync = runAsync;

@@ -22,14 +22,13 @@ import org.junit.Test;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class CombinationTest {
 
     public int findSmallerSibling(long valueBits, long valueMask) {
         if ((valueBits | valueMask) != valueMask) {
-            throw new IllegalArgumentException("Dismatch " + Long.toBinaryString(valueBits) + " from "
-                    + Long.toBinaryString(valueMask));
+            throw new IllegalArgumentException("Dismatch " + Long.toBinaryString(valueBits) + " from " + Long.toBinaryString(valueMask));
         }
 
         int n = Long.bitCount(valueMask);
@@ -81,11 +80,9 @@ public class CombinationTest {
     @Test
     public void testComb3() {
         long valueBits = 1 << 4 | 1 << 6 | 1 << 8;
-        System.out.println("value = " + Long.toBinaryString(valueBits) + ", count = "
-                + Long.bitCount(valueBits));
+        System.out.println("value = " + Long.toBinaryString(valueBits) + ", count = " + Long.bitCount(valueBits));
         long valueMask = (long) Math.pow(2, 10) - 1;
-        System.out.println("mask = " + Long.toBinaryString(valueMask) + ", count = "
-                + Long.bitCount(valueMask));
+        System.out.println("mask = " + Long.toBinaryString(valueMask) + ", count = " + Long.bitCount(valueMask));
         System.out.println("************");
         int count = findSmallerSibling(valueBits, valueMask);
         System.out.println("smaller sibling count = " + count);

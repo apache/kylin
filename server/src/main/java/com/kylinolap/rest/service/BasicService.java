@@ -58,9 +58,7 @@ public abstract class BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(BasicService.class);
 
-
-    private static ConcurrentMap<String, DataSource> olapDataSources =
-            new ConcurrentHashMap<String, DataSource>();
+    private static ConcurrentMap<String, DataSource> olapDataSources = new ConcurrentHashMap<String, DataSource>();
 
     @Autowired
     protected JdbcTemplate jdbcTemplate;
@@ -78,7 +76,7 @@ public abstract class BasicService {
     }
 
     public void resetOLAPDataSources() {
-        //brutal, yet simplest way
+        // brutal, yet simplest way
         logger.info("resetOLAPDataSources is called.");
         olapDataSources = new ConcurrentHashMap<String, DataSource>();
     }
@@ -105,8 +103,7 @@ public abstract class BasicService {
 
             DriverManagerDataSource ds = new DriverManagerDataSource();
             Properties props = new Properties();
-            props.setProperty(OLAPQuery.PROP_SCAN_THRESHOLD,
-                    String.valueOf(KylinConfig.getInstanceFromEnv().getScanThreshold()));
+            props.setProperty(OLAPQuery.PROP_SCAN_THRESHOLD, String.valueOf(KylinConfig.getInstanceFromEnv().getScanThreshold()));
             ds.setConnectionProperties(props);
             ds.setDriverClassName("net.hydromatic.optiq.jdbc.Driver");
             ds.setUrl("jdbc:optiq:model=" + modelJson.getAbsolutePath());
@@ -121,12 +118,11 @@ public abstract class BasicService {
 
     /**
      * Reload changed cube into cache
-     *
+     * 
      * @param name
      * @throws IOException
      */
-    @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true),
-            @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
+    @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
     public void cleanDataCache() {
         CubeManager.removeInstance(getConfig());
         ProjectManager.removeInstance(getConfig());
@@ -135,7 +131,7 @@ public abstract class BasicService {
 
     /**
      * Reload the cube desc with name {name} into cache
-     *
+     * 
      * @param name
      */
     public void reloadMetadataCache() {

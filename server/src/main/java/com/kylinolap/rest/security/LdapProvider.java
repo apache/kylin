@@ -40,7 +40,7 @@ import com.kylinolap.rest.service.UserService;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class LdapProvider extends LdapAuthenticationProvider {
 

@@ -39,8 +39,8 @@ public class NDCuboidJobTest extends LocalFileMetadataTestCase {
     @Before
     public void setup() throws Exception {
         conf = new Configuration();
-        //conf.set("fs.default.name", "file:///");
-        //conf.set("mapred.job.tracker", "local");
+        // conf.set("fs.default.name", "file:///");
+        // conf.set("mapred.job.tracker", "local");
 
         // for local runner out-of-memory issue
         conf.set("mapreduce.task.io.sort.mb", "10");
@@ -64,9 +64,7 @@ public class NDCuboidJobTest extends LocalFileMetadataTestCase {
 
         FileUtil.fullyDelete(new File(output));
 
-        String[] args =
-                { "-input", input, "-cubename", cubeName, "-segmentname", segmentName, "-output", output,
-                        "-jobname", jobname, "-level", level };
+        String[] args = { "-input", input, "-cubename", cubeName, "-segmentname", segmentName, "-output", output, "-jobname", jobname, "-level", level };
         assertEquals("Job failed", 0, ToolRunner.run(conf, new NDCuboidJob(), args));
     }
 
@@ -81,9 +79,7 @@ public class NDCuboidJobTest extends LocalFileMetadataTestCase {
 
         FileUtil.fullyDelete(new File(output));
 
-        String[] args =
-                { "-input", input, "-cubename", cubeName, "-segmentname", segmentName, "-output", output,
-                        "-jobname", jobname, "-level", level };
+        String[] args = { "-input", input, "-cubename", cubeName, "-segmentname", segmentName, "-output", output, "-jobname", jobname, "-level", level };
         assertEquals("Job failed", 0, ToolRunner.run(conf, new NDCuboidJob(), args));
     }
 }

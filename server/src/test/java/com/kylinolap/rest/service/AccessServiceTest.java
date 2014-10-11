@@ -32,7 +32,7 @@ import com.kylinolap.rest.security.AclPermissionFactory;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class AccessServiceTest extends TestBase {
 
@@ -92,7 +92,7 @@ public class AccessServiceTest extends TestBase {
         acl = accessService.revoke(ae, modelerEntryId);
         Assert.assertTrue(accessService.generateAceResponses(acl).size() == 1);
 
-        // test clean 
+        // test clean
         accessService.clean(ae, true);
         acl = accessService.getAcl(ae);
         Assert.assertNull(acl);

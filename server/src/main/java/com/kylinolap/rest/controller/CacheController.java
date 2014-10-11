@@ -36,7 +36,7 @@ import com.kylinolap.rest.service.ProjectService;
  * CubeController is defined as Restful API entrance for UI.
  * 
  * @author jianliu
- *
+ * 
  */
 @Controller
 @RequestMapping(value = "/cache")
@@ -52,16 +52,17 @@ public class CacheController extends BasicController {
     /**
      * Wipe system cache
      * 
-     * @param type     {@link MetadataConstances.TYPE}
-     * @param event    {@link MetadataConstances.EVENT}
+     * @param type
+     *            {@link MetadataConstances.TYPE}
+     * @param event
+     *            {@link MetadataConstances.EVENT}
      * @param name
-     * @return  if the action success
+     * @return if the action success
      * @throws IOException
      */
     @RequestMapping(value = "/{type}/{name}/{event}", method = { RequestMethod.PUT })
     @ResponseBody
-    public void wipeCache(@PathVariable String type, @PathVariable String event, @PathVariable String name)
-            throws IOException {
+    public void wipeCache(@PathVariable String type, @PathVariable String event, @PathVariable String name) throws IOException {
         Broadcaster.TYPE wipeType = Broadcaster.TYPE.getType(type);
         EVENT wipeEvent = Broadcaster.EVENT.getEvent(event);
         switch (wipeType) {

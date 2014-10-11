@@ -1,4 +1,5 @@
 package com.kylinolap.job.hadoop.cube;
+
 ///*
 // * Copyright 2013-2014 eBay Software Foundation
 // *
@@ -135,4 +136,4 @@ package com.kylinolap.job.hadoop.cube;
 //        int exitCode = ToolRunner.run(new KeyDistributionJob(), args);
 //        System.exit(exitCode);
 //    }
-//}
+// }

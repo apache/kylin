@@ -71,9 +71,7 @@ public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testGenerateInsertSql() throws IOException {
-        String sql =
-                JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, fakeJobUUID,
-                        new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
+        String sql = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, fakeJobUUID, new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
         System.out.println(sql);
 
         assertEquals(1501, sql.length());

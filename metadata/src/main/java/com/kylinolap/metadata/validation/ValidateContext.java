@@ -22,11 +22,10 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Context.
- * Supply all dependent objects for validator
+ * Context. Supply all dependent objects for validator
  * 
  * @author jianliu
- *
+ * 
  */
 public class ValidateContext {
     private List<Result> results = new ArrayList<ValidateContext.Result>();
@@ -69,6 +68,7 @@ public class ValidateContext {
 
     /**
      * Get validation result
+     * 
      * @return
      */
     public Result[] getResults() {

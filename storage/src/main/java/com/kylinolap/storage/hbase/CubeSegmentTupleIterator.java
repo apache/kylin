@@ -63,7 +63,7 @@ import com.kylinolap.storage.tuple.TupleInfo;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class CubeSegmentTupleIterator implements ITupleIterator {
 
@@ -106,10 +106,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
     private Tuple tuple;
     private int scanCount;
 
-    public CubeSegmentTupleIterator(CubeSegment cubeSeg, Collection<HBaseKeyRange> keyRanges,
-            HConnection conn, Collection<TblColRef> dimensions, TupleFilter filter,
-            Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders,
-            StorageContext context) {
+    public CubeSegmentTupleIterator(CubeSegment cubeSeg, Collection<HBaseKeyRange> keyRanges, HConnection conn, Collection<TblColRef> dimensions, TupleFilter filter, Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders, StorageContext context) {
         this.cube = cubeSeg.getCubeInstance();
         this.cubeSeg = cubeSeg;
         this.dimensions = dimensions;
@@ -142,14 +139,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
             byte[] metricsBytes = scan.getAttribute(Scan.SCAN_ATTRIBUTES_METRICS_DATA);
             if (metricsBytes != null) {
                 ScanMetrics scanMetrics = ProtobufUtil.toScanMetrics(metricsBytes);
-                logger.debug(
-                        "HBase Metrics: "
-                                + "count={}, ms={}, bytes={}, remote_bytes={}, regions={}, not_serving_region={}, rpc={}, rpc_retries={}, remote_rpc={}, remote_rpc_retries={}",
-                        new Object[] { scanCount, scanMetrics.sumOfMillisSecBetweenNexts,
-                                scanMetrics.countOfBytesInResults, scanMetrics.countOfBytesInRemoteResults,
-                                scanMetrics.countOfRegions, scanMetrics.countOfNSRE,
-                                scanMetrics.countOfRPCcalls, scanMetrics.countOfRPCRetries,
-                                scanMetrics.countOfRemoteRPCcalls, scanMetrics.countOfRemoteRPCRetries });
+                logger.debug("HBase Metrics: " + "count={}, ms={}, bytes={}, remote_bytes={}, regions={}, not_serving_region={}, rpc={}, rpc_retries={}, remote_rpc={}, remote_rpc_retries={}", new Object[] { scanCount, scanMetrics.sumOfMillisSecBetweenNexts, scanMetrics.countOfBytesInResults, scanMetrics.countOfBytesInRemoteResults, scanMetrics.countOfRegions, scanMetrics.countOfNSRE, scanMetrics.countOfRPCcalls, scanMetrics.countOfRPCRetries, scanMetrics.countOfRemoteRPCcalls, scanMetrics.countOfRemoteRPCRetries });
             }
         }
         try {
@@ -223,16 +213,11 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
             applyFuzzyFilter(scan, keyRange);
             logScan(keyRange);
 
-            scanner =
-                    CoprocessorEnabler.scanWithCoprocessorIfBeneficial(cubeSeg, keyRange.getCuboid(), filter,
-                            groupBy, rowValueDecoders, context, table, scan);
+            scanner = CoprocessorEnabler.scanWithCoprocessorIfBeneficial(cubeSeg, keyRange.getCuboid(), filter, groupBy, rowValueDecoders, context, table, scan);
 
             iter = scanner.iterator();
         } catch (Throwable t) {
-            String msg =
-                    MessageFormat.format("Error when scan from lower key {1} to upper key {2} on table {0}.",
-                            tableName, Bytes.toString(keyRange.getStartKey()),
-                            Bytes.toString(keyRange.getStopKey()));
+            String msg = MessageFormat.format("Error when scan from lower key {1} to upper key {2} on table {0}.", tableName, Bytes.toString(keyRange.getStartKey()), Bytes.toString(keyRange.getStopKey()));
             throw new StorageException(msg, t);
         }
         return iter;
@@ -287,7 +272,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
 
             Filter filter = scan.getFilter();
             if (filter != null) {
-                //may have existed InclusiveStopFilter, see buildScan
+                // may have existed InclusiveStopFilter, see buildScan
                 FilterList filterList = new FilterList();
                 filterList.addFilter(filter);
                 filterList.addFilter(rowFilter);
@@ -314,8 +299,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         }
 
         // derived columns and filler
-        Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedInfo =
-                cubeSeg.getCubeDesc().getHostToDerivedInfo(rowColumns, null);
+        Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedInfo = cubeSeg.getCubeDesc().getHostToDerivedInfo(rowColumns, null);
         for (Entry<Array<TblColRef>, List<DeriveInfo>> entry : hostToDerivedInfo.entrySet()) {
             TblColRef[] hostCols = entry.getKey().data;
             for (DeriveInfo deriveInfo : entry.getValue()) {
@@ -325,8 +309,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
                     info.setField(derivedField, derivedCol, derivedCol.getDatatype(), index++);
                 }
                 // add filler
-                info.addDerivedColumnFiller(Tuple.newDerivedColumnFiller(rowColumns, hostCols, deriveInfo,
-                        info, CubeManager.getInstance(this.cube.getConfig()), cubeSeg));
+                info.addDerivedColumnFiller(Tuple.newDerivedColumnFiller(rowColumns, hostCols, deriveInfo, info, CubeManager.getInstance(this.cube.getConfig()), cubeSeg));
             }
         }
 

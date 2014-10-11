@@ -18,7 +18,7 @@ package com.kylinolap.common.restclient;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public abstract class AbstractRestCache<K, V> {
 

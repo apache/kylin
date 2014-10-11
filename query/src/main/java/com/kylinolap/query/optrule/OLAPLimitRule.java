@@ -27,7 +27,7 @@ import com.kylinolap.query.relnode.OLAPRel;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public class OLAPLimitRule extends RelOptRule {
 

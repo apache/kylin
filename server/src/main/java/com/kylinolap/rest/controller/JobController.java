@@ -46,7 +46,7 @@ import com.kylinolap.rest.service.JobService;
 /**
  * @author ysong1
  * @author Jack
- *
+ * 
  */
 @Controller
 @RequestMapping(value = "jobs")
@@ -56,8 +56,11 @@ public class JobController extends BasicController implements InitializingBean {
     @Autowired
     private JobService jobService;
 
-    /* (non-Javadoc)
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -67,8 +70,7 @@ public class JobController extends BasicController implements InitializingBean {
 
         String serverMode = KylinConfig.getInstanceFromEnv().getServerMode();
 
-        if (Constant.SERVER_MODE_JOB.equals(serverMode.toLowerCase())
-                || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase())) {
+        if (Constant.SERVER_MODE_JOB.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase())) {
             logger.info("Initializing Job Engine ....");
 
             new Thread(new Runnable() {
@@ -90,7 +92,8 @@ public class JobController extends BasicController implements InitializingBean {
     /**
      * get all cube jobs
      * 
-     * @param cubeName    Cube ID
+     * @param cubeName
+     *            Cube ID
      * @return
      * @throws IOException
      */
@@ -108,9 +111,7 @@ public class JobController extends BasicController implements InitializingBean {
         }
 
         try {
-            jobInstanceList =
-                    jobService.listAllJobs(jobRequest.getCubeName(), jobRequest.getProjectName(), statusList,
-                            jobRequest.getLimit(), jobRequest.getOffset());
+            jobInstanceList = jobService.listAllJobs(jobRequest.getCubeName(), jobRequest.getProjectName(), statusList, jobRequest.getLimit(), jobRequest.getOffset());
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e);
@@ -121,7 +122,8 @@ public class JobController extends BasicController implements InitializingBean {
     /**
      * Get a cube job
      * 
-     * @param cubeName    Cube ID
+     * @param cubeName
+     *            Cube ID
      * @return
      * @throws IOException
      */
@@ -142,7 +144,8 @@ public class JobController extends BasicController implements InitializingBean {
     /**
      * Get a job step output
      * 
-     * @param cubeName    Cube ID
+     * @param cubeName
+     *            Cube ID
      * @return
      * @throws IOException
      */
@@ -164,15 +167,15 @@ public class JobController extends BasicController implements InitializingBean {
 
         result.put("cmd_output", output);
         long end = System.currentTimeMillis();
-        logger.info("Complete fetching step " + jobId + ":" + stepId + " output in " + (end - start)
-                + " seconds");
+        logger.info("Complete fetching step " + jobId + ":" + stepId + " output in " + (end - start) + " seconds");
         return result;
     }
 
     /**
      * Resume a cube job
      * 
-     * @param String   Job ID
+     * @param String
+     *            Job ID
      * @return
      * @throws IOException
      */
@@ -195,7 +198,8 @@ public class JobController extends BasicController implements InitializingBean {
     /**
      * Cancel a job
      * 
-     * @param String    Job ID
+     * @param String
+     *            Job ID
      * @return
      * @throws IOException
      */

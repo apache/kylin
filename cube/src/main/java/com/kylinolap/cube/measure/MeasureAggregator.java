@@ -21,13 +21,12 @@ import com.kylinolap.metadata.model.schema.DataType;
 
 /**
  * @author yangli9
- *
+ * 
  */
 abstract public class MeasureAggregator<V> {
 
     public static MeasureAggregator<?> create(String funcName, String returnType) {
-        if (FunctionDesc.FUNC_SUM.equalsIgnoreCase(funcName)
-                || FunctionDesc.FUNC_COUNT.equalsIgnoreCase(funcName)) {
+        if (FunctionDesc.FUNC_SUM.equalsIgnoreCase(funcName) || FunctionDesc.FUNC_COUNT.equalsIgnoreCase(funcName)) {
             if (isInteger(returnType))
                 return new LongSumAggregator();
             else if (isBigDecimal(returnType))
@@ -54,8 +53,7 @@ abstract public class MeasureAggregator<V> {
             else if (isDouble(returnType))
                 return new DoubleMinAggregator();
         }
-        throw new IllegalArgumentException("No aggregator for func '" + funcName + "' and return type '"
-                + returnType + "'");
+        throw new IllegalArgumentException("No aggregator for func '" + funcName + "' and return type '" + returnType + "'");
     }
 
     public static boolean isBigDecimal(String type) {
@@ -63,13 +61,11 @@ abstract public class MeasureAggregator<V> {
     }
 
     public static boolean isDouble(String type) {
-        return "double".equalsIgnoreCase(type) || "float".equalsIgnoreCase(type)
-                || "real".equalsIgnoreCase(type);
+        return "double".equalsIgnoreCase(type) || "float".equalsIgnoreCase(type) || "real".equalsIgnoreCase(type);
     }
 
     public static boolean isInteger(String type) {
-        return "long".equalsIgnoreCase(type) || "bigint".equalsIgnoreCase(type)
-                || "int".equalsIgnoreCase(type) || "integer".equalsIgnoreCase(type);
+        return "long".equalsIgnoreCase(type) || "bigint".equalsIgnoreCase(type) || "int".equalsIgnoreCase(type) || "integer".equalsIgnoreCase(type);
     }
 
     public static int guessBigDecimalMemBytes() {

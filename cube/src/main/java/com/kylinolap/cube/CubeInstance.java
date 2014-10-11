@@ -58,7 +58,7 @@ public class CubeInstance extends RootPersistentEntity {
     private String version; // user info only, we don't do version control
     @JsonProperty("descriptor")
     private String descName;
-    // Mark cube priority for query 
+    // Mark cube priority for query
     @JsonProperty("cost")
     private int cost = 50;
     @JsonProperty("status")
@@ -75,8 +75,7 @@ public class CubeInstance extends RootPersistentEntity {
         List<CubeSegment> buildingSegments = new ArrayList<CubeSegment>();
         if (null != segments) {
             for (CubeSegment segment : segments) {
-                if (CubeSegmentStatusEnum.NEW == segment.getStatus()
-                        || CubeSegmentStatusEnum.READY_PENDING == segment.getStatus()) {
+                if (CubeSegmentStatusEnum.NEW == segment.getStatus() || CubeSegmentStatusEnum.READY_PENDING == segment.getStatus()) {
                     buildingSegments.add(segment);
                 }
             }
@@ -125,8 +124,7 @@ public class CubeInstance extends RootPersistentEntity {
         if (null != this.segments) {
             for (CubeSegment segment : this.segments) {
                 if (segment.getStatus() == CubeSegmentStatusEnum.READY) {
-                    if (buildingSegment.getDateRangeStart() <= segment.getDateRangeStart()
-                            && buildingSegment.getDateRangeEnd() >= segment.getDateRangeEnd()) {
+                    if (buildingSegment.getDateRangeStart() <= segment.getDateRangeStart() && buildingSegment.getDateRangeEnd() >= segment.getDateRangeEnd()) {
                         mergingSegments.add(segment);
                     }
                 }
@@ -147,8 +145,7 @@ public class CubeInstance extends RootPersistentEntity {
                 long endDate = buildingSegments.get(buildingSegments.size() - 1).getDateRangeEnd();
                 for (CubeSegment segment : this.segments) {
                     if (segment.getStatus() == CubeSegmentStatusEnum.READY) {
-                        if (startDate >= segment.getDateRangeStart() && startDate < segment.getDateRangeEnd()
-                                && segment.getDateRangeEnd() < endDate) {
+                        if (startDate >= segment.getDateRangeStart() && startDate < segment.getDateRangeEnd() && segment.getDateRangeEnd() < endDate) {
                             rebuildingSegments.add(segment);
                             continue;
                         }
@@ -327,8 +324,7 @@ public class CubeInstance extends RootPersistentEntity {
 
     public CubeSegment getSegment(String name, CubeSegmentStatusEnum status) {
         for (CubeSegment segment : this.getSegments()) {
-            if ((null != segment.getName() && segment.getName().equals(name))
-                    && segment.getStatus() == status) {
+            if ((null != segment.getName() && segment.getName().equals(name)) && segment.getStatus() == status) {
                 return segment;
             }
         }

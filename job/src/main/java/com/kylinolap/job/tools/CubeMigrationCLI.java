@@ -32,12 +32,11 @@ import com.kylinolap.metadata.model.schema.TableDesc;
 /**
  * Created by honma on 9/3/14.
  * <p/>
- * This tool serves for the purpose of migrating cubes.
- * e.g. upgrade cube from dev env to test(prod) env,
- * or vice versa.
+ * This tool serves for the purpose of migrating cubes. e.g. upgrade cube from
+ * dev env to test(prod) env, or vice versa.
  * <p/>
- * Note that different envs are assumed to share the same
- * hadoop cluster, including hdfs, hbase and hive.
+ * Note that different envs are assumed to share the same hadoop cluster,
+ * including hdfs, hbase and hive.
  */
 public class CubeMigrationCLI {
 
@@ -57,9 +56,7 @@ public class CubeMigrationCLI {
         moveCube(args[0], args[1], args[2], args[3], args[4], args[5]);
     }
 
-    public static void moveCube(KylinConfig srcCfg, KylinConfig dstCfg, String cubeName, String projectName,
-            String overwriteIfExists, String realExecute) throws IOException, JSONException,
-            InterruptedException {
+    public static void moveCube(KylinConfig srcCfg, KylinConfig dstCfg, String cubeName, String projectName, String overwriteIfExists, String realExecute) throws IOException, JSONException, InterruptedException {
 
         srcConfig = srcCfg;
         srcStore = ResourceStore.getStore(srcConfig);
@@ -83,7 +80,8 @@ public class CubeMigrationCLI {
         operations = new ArrayList<Opt>();
         copyFilesInMetaStore(cube, overwriteIfExists);
         renameFoldersInHdfs(cube);
-        renameTablesInHbase(cube);//change htable name + change name in cube instance + alter coprocessor
+        renameTablesInHbase(cube);// change htable name + change name in cube
+                                  // instance + alter coprocessor
         addCubeIntoProject(cubeName, projectName);
 
         if (realExecute.equalsIgnoreCase("true")) {
@@ -93,15 +91,9 @@ public class CubeMigrationCLI {
         }
     }
 
-    public static void moveCube(String srcCfgUri, String dstCfgUri, String cubeName, String projectName,
-            String overwriteIfExists, String realExecute) throws IOException, JSONException,
-            InterruptedException {
+    public static void moveCube(String srcCfgUri, String dstCfgUri, String cubeName, String projectName, String overwriteIfExists, String realExecute) throws IOException, JSONException, InterruptedException {
 
-        moveCube(
-                KylinConfig.createInstanceFromUri(srcCfgUri),
-                KylinConfig.createInstanceFromUri(dstCfgUri),
-                cubeName, projectName, overwriteIfExists, realExecute
-        );
+        moveCube(KylinConfig.createInstanceFromUri(srcCfgUri), KylinConfig.createInstanceFromUri(dstCfgUri), cubeName, projectName, overwriteIfExists, realExecute);
     }
 
     private static String checkAndGetHbaseUrl() {
@@ -153,14 +145,12 @@ public class CubeMigrationCLI {
             String remaining = oldHTableName.substring(srcPrefix.length());
             String newHTableName = dstPrefix + remaining;
 
-            operations.add(new Opt(OptType.RENAME_TABLE_IN_HBASE,
-                    new Object[] { oldHTableName, newHTableName }));
+            operations.add(new Opt(OptType.RENAME_TABLE_IN_HBASE, new Object[] { oldHTableName, newHTableName }));
             operations.add(new Opt(OptType.ALTER_TABLE_COPROCESSOR, new Object[] { newHTableName }));
             renamedHTables.put(oldHTableName, newHTableName);
         }
 
-        operations.add(new Opt(OptType.CHANGE_HTABLE_NAME_IN_CUBE, new Object[] { cube.getName(),
-                renamedHTables }));
+        operations.add(new Opt(OptType.CHANGE_HTABLE_NAME_IN_CUBE, new Object[] { cube.getName(), renamedHTables }));
     }
 
     private static void copyFilesInMetaStore(CubeInstance cube, String overwriteIfExists) throws IOException {
@@ -168,8 +158,7 @@ public class CubeMigrationCLI {
         List<String> movingItems = listCubeRelatedResources(cube);
 
         if (dstStore.exists(cube.getResourcePath()) && !overwriteIfExists.equalsIgnoreCase("true"))
-            throw new IllegalStateException("The cube named " + cube.getName()
-                    + " already exists on target metadata store. Use overwriteIfExists to overwrite it");
+            throw new IllegalStateException("The cube named " + cube.getName() + " already exists on target metadata store. Use overwriteIfExists to overwrite it");
 
         for (String item : movingItems) {
             operations.add(new Opt(OptType.COPY_FILE_IN_META, new Object[] { item }));
@@ -246,7 +235,7 @@ public class CubeMigrationCLI {
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage());
             logger.info("Try undoing previous changes");
-            //undo:
+            // undo:
             for (int i = index; i >= 0; --i) {
                 try {
                     undo(operations.get(i));
@@ -292,6 +281,7 @@ public class CubeMigrationCLI {
         }
         case CHANGE_HTABLE_NAME_IN_CUBE: {
             String cubeName = (String) opt.params[0];
+            @SuppressWarnings("unchecked")
             HashMap<String, String> renamedHtables = (HashMap<String, String>) opt.params[1];
             String cubeResPath = CubeInstance.concatResourcePath(cubeName);
             Serializer<CubeInstance> cubeSerializer = new JsonSerializer<CubeInstance>(CubeInstance.class);
@@ -308,10 +298,8 @@ public class CubeMigrationCLI {
             String cubeName = (String) opt.params[0];
             String projectName = (String) opt.params[1];
             String projectResPath = ProjectInstance.concatResourcePath(projectName);
-            Serializer<ProjectInstance> projectSerializer =
-                    new JsonSerializer<ProjectInstance>(ProjectInstance.class);
-            ProjectInstance project =
-                    dstStore.getResource(projectResPath, ProjectInstance.class, projectSerializer);
+            Serializer<ProjectInstance> projectSerializer = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
+            ProjectInstance project = dstStore.getResource(projectResPath, ProjectInstance.class, projectSerializer);
             project.removeCube(cubeName);
             project.addCube(cubeName);
             dstStore.putResource(projectResPath, project, projectSerializer);
@@ -321,8 +309,7 @@ public class CubeMigrationCLI {
         case ALTER_TABLE_COPROCESSOR: {
             String htableName = (String) opt.params[0];
             DeployCoprocessorCLI.resetCoprocessor(htableName, hbaseAdmin, dstCoprocessorPath);
-            logger.info("The hbase table " + htableName + " is bound with new coprocessor "
-                    + dstCoprocessorPath);
+            logger.info("The hbase table " + htableName + " is bound with new coprocessor " + dstCoprocessorPath);
             break;
         }
         }
@@ -333,7 +320,7 @@ public class CubeMigrationCLI {
 
         switch (opt.type) {
         case COPY_FILE_IN_META: {
-            //no harm
+            // no harm
             logger.info("Undo for COPY_FILE_IN_META is ignored");
         }
         case RENAME_FOLDER_IN_HDFS: {
@@ -371,8 +358,7 @@ public class CubeMigrationCLI {
         case ALTER_TABLE_COPROCESSOR: {
             String htableName = (String) opt.params[0];
             DeployCoprocessorCLI.resetCoprocessor(htableName, hbaseAdmin, srcCoprocessorPath);
-            logger.info("The hbase table " + htableName + " is bound with new coprocessor "
-                    + srcCoprocessorPath);
+            logger.info("The hbase table " + htableName + " is bound with new coprocessor " + srcCoprocessorPath);
             break;
         }
         }

@@ -38,7 +38,7 @@ import com.kylinolap.metadata.MetadataManager;
 
 /**
  * @author xduo
- *
+ * 
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:applicationContext-test.xml" })

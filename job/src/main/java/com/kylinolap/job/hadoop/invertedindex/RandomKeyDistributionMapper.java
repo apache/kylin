@@ -31,10 +31,9 @@ import com.kylinolap.job.constant.BatchConstants;
 
 /**
  * @author ysong1
- *
+ * 
  */
-public class RandomKeyDistributionMapper<KEY extends Writable, VALUE> extends
-        Mapper<KEY, VALUE, KEY, NullWritable> {
+public class RandomKeyDistributionMapper<KEY extends Writable, VALUE> extends Mapper<KEY, VALUE, KEY, NullWritable> {
 
     private Configuration conf;
     private int sampleNumber;

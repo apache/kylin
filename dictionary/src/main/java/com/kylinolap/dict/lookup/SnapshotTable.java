@@ -64,8 +64,7 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
         while (reader.next()) {
             String[] row = reader.getRow();
             if (row.length <= maxIndex) {
-                throw new IllegalStateException("Bad hive table row, " + tableDesc + " expect "
-                        + (maxIndex + 1) + " columns, but got " + Arrays.toString(row));
+                throw new IllegalStateException("Bad hive table row, " + tableDesc + " expect " + (maxIndex + 1) + " columns, but got " + Arrays.toString(row));
             }
             allRows.add(row);
         }
@@ -73,8 +72,7 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
     }
 
     public String getResourcePath() {
-        return ResourceStore.SNAPSHOT_RESOURCE_ROOT + "/" + new Path(signature.getPath()).getName() + "/"
-                + uuid + ".snapshot";
+        return ResourceStore.SNAPSHOT_RESOURCE_ROOT + "/" + new Path(signature.getPath()).getName() + "/" + uuid + ".snapshot";
     }
 
     public String getResourceDir() {

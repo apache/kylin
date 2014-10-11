@@ -28,17 +28,15 @@ import com.kylinolap.dict.lookup.ReadableTable;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class TableReaderTest {
 
     @Test
     public void testBasicReader() throws IOException {
-        FileTableReader reader =
-                new FileTableReader("src/test/resources/dict/DW_SITES", ReadableTable.DELIM_AUTO, 10);
+        FileTableReader reader = new FileTableReader("src/test/resources/dict/DW_SITES", ReadableTable.DELIM_AUTO, 10);
         while (reader.next()) {
-            assertEquals("[-1, Korea Auction.co.kr, S, 48, 0, 111, 2009-02-11, , DW_OFFPLAT, ]",
-                    Arrays.toString(reader.getRow()));
+            assertEquals("[-1, Korea Auction.co.kr, S, 48, 0, 111, 2009-02-11, , DW_OFFPLAT, ]", Arrays.toString(reader.getRow()));
             break;
         }
         reader.close();

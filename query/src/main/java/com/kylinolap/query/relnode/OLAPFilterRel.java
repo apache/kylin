@@ -57,10 +57,10 @@ import com.kylinolap.storage.filter.ColumnTupleFilter;
 import com.kylinolap.storage.filter.CompareTupleFilter;
 import com.kylinolap.storage.filter.ConstantTupleFilter;
 import com.kylinolap.storage.filter.DynamicTupleFilter;
+import com.kylinolap.storage.filter.ExtractTupleFilter;
 import com.kylinolap.storage.filter.LogicalTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
-import com.kylinolap.storage.filter.ExtractTupleFilter;
 
 /**
  * @author xjiang
@@ -209,11 +209,9 @@ public class OLAPFilterRel extends FilterRelBase implements OLAPRel, EnumerableR
                 strValue = ((NlsString) literalValue).getValue();
             } else if (literalValue instanceof GregorianCalendar) {
                 GregorianCalendar g = (GregorianCalendar) literalValue;
-                strValue =
-                        "" + g.get(Calendar.YEAR) + "-" + normToTwoDigits(g.get(Calendar.MONTH) + 1) + "-"
-                                + normToTwoDigits(g.get(Calendar.DAY_OF_MONTH));
+                strValue = "" + g.get(Calendar.YEAR) + "-" + normToTwoDigits(g.get(Calendar.MONTH) + 1) + "-" + normToTwoDigits(g.get(Calendar.DAY_OF_MONTH));
             } else if (literalValue instanceof SqlFunctions.TimeUnitRange) {
-                //Extract(x from y)  in where clause
+                // Extract(x from y) in where clause
                 strValue = ((SqlFunctions.TimeUnitRange) literalValue).name();
             } else if (literalValue == null) {
                 strValue = null;
@@ -290,9 +288,7 @@ public class OLAPFilterRel extends FilterRelBase implements OLAPRel, EnumerableR
         programBuilder.addCondition(this.condition);
         RexProgram program = programBuilder.getProgram();
 
-        EnumerableCalcRel enumCalcRel =
-                new EnumerableCalcRel(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE),
-                        getChild(), this.rowType, program, ImmutableList.<RelCollation> of());
+        EnumerableCalcRel enumCalcRel = new EnumerableCalcRel(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), getChild(), this.rowType, program, ImmutableList.<RelCollation> of());
 
         return enumCalcRel.implement(implementor, pref);
     }

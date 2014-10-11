@@ -20,7 +20,7 @@ import org.apache.hadoop.io.DoubleWritable;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class DoubleMaxAggregator extends MeasureAggregator<DoubleWritable> {
 

@@ -36,7 +36,7 @@ import com.kylinolap.rest.exception.InternalErrorException;
 
 /**
  * @author jianliu
- *
+ * 
  */
 @Component("adminService")
 public class AdminService extends BasicService {
@@ -52,23 +52,23 @@ public class AdminService extends BasicService {
         logger.debug("Get Kylin Runtime environment");
         PropertiesConfiguration tempConfig = new PropertiesConfiguration();
 
-        //Add Java Env
+        // Add Java Env
 
         try {
             String content = "";
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            //env
+            // env
             Map<String, String> env = System.getenv();
             for (String envName : env.keySet()) {
                 tempConfig.addProperty(envName, env.get(envName));
             }
-            //properties
+            // properties
             Properties properteis = System.getProperties();
             for (Object propName : properteis.keySet()) {
                 tempConfig.setProperty((String) propName, properteis.get(propName));
             }
 
-            //do save
+            // do save
             tempConfig.save(baos);
             content = baos.toString();
             return content;
@@ -83,7 +83,7 @@ public class AdminService extends BasicService {
      * 
      * @return
      */
-    //@PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    // @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public String getConfigAsString() {
         logger.debug("Get Kylin Runtime Config");
 

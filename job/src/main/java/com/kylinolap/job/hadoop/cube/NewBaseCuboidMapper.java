@@ -1,18 +1,18 @@
 /*
-* Copyright 2013-2014 eBay Software Foundation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*   http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2013-2014 eBay Software Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.kylinolap.job.hadoop.cube;
 
 import java.io.IOException;
@@ -90,24 +90,25 @@ public class NewBaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> 
     private AbstractRowKeyEncoder rowKeyEncoder;
     private MeasureCodec measureCodec;
 
-    //deal with table join
-    private HashMap<String, LookupBytesTable> lookupTables;//name -> table
+    // deal with table join
+    private HashMap<String, LookupBytesTable> lookupTables;// name -> table
     private LinkedList<TableJoin> tableJoins;
-    private LinkedList<Pair<Integer, Integer>> factTblColAsRowKey;//similar as TableJoin.dimTblColAsRowKey
+    private LinkedList<Pair<Integer, Integer>> factTblColAsRowKey;// similar as
+                                                                  // TableJoin.dimTblColAsRowKey
     private int[][] measureColumnIndice;
     private byte[] nullValue;
 
     private class TableJoin {
-        public LinkedList<Integer> fkIndice;//zero-based join columns on fact table
+        public LinkedList<Integer> fkIndice;// zero-based join columns on fact
+                                            // table
         public String lookupTableName;
         public String joinType;
 
-        //Pair.first -> zero-based column index in lookup table
-        //Pair.second -> zero based row key index
+        // Pair.first -> zero-based column index in lookup table
+        // Pair.second -> zero based row key index
         public LinkedList<Pair<Integer, Integer>> dimTblColAsRowKey;
 
-        private TableJoin(String joinType, LinkedList<Integer> fkIndice, String lookupTableName,
-                LinkedList<Pair<Integer, Integer>> dimTblColAsRowKey) {
+        private TableJoin(String joinType, LinkedList<Integer> fkIndice, String lookupTableName, LinkedList<Pair<Integer, Integer>> dimTblColAsRowKey) {
             this.joinType = joinType;
             this.fkIndice = fkIndice;
             this.lookupTableName = lookupTableName;
@@ -131,7 +132,8 @@ public class NewBaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> 
         long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
 
-        //intermediateTableDesc = new JoinedFlatTableDesc(cube.getDescriptor());
+        // intermediateTableDesc = new
+        // JoinedFlatTableDesc(cube.getDescriptor());
 
         rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid);
 
@@ -143,7 +145,9 @@ public class NewBaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> 
 
         bytesSplitter = new BytesSplitter(factTableDesc.getColumns().length, 4096);
 
-        nullValue = new byte[] { (byte) '\\', (byte) 'N' };//As in Hive, null value is represented by \N
+        nullValue = new byte[] { (byte) '\\', (byte) 'N' };// As in Hive, null
+                                                           // value is
+                                                           // represented by \N
 
         prepareJoins();
         prepareMetrics();
@@ -160,22 +164,19 @@ public class NewBaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> 
                 String joinType = join.getType().toUpperCase();
                 String lookupTableName = dim.getTable();
 
-                //load lookup tables
+                // load lookup tables
                 if (!lookupTables.containsKey(lookupTableName)) {
                     HiveTable htable = new HiveTable(metadataManager, lookupTableName);
-                    LookupBytesTable btable =
-                            new LookupBytesTable(metadataManager.getTableDesc(lookupTableName),
-                                    join.getPrimaryKey(), htable);
+                    LookupBytesTable btable = new LookupBytesTable(metadataManager.getTableDesc(lookupTableName), join.getPrimaryKey(), htable);
                     lookupTables.put(lookupTableName, btable);
                 }
 
-                //create join infos
+                // create join infos
                 LinkedList<Integer> fkIndice = new LinkedList<Integer>();
                 for (TblColRef colRef : join.getForeignKeyColumns()) {
                     fkIndice.add(colRef.getColumn().getZeroBasedIndex());
                 }
-                this.tableJoins.add(new TableJoin(joinType, fkIndice, lookupTableName, this
-                        .findColumnRowKeyRelationships(dim)));
+                this.tableJoins.add(new TableJoin(joinType, fkIndice, lookupTableName, this.findColumnRowKeyRelationships(dim)));
 
             } else {
 
@@ -183,7 +184,7 @@ public class NewBaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> 
             }
         }
 
-        //put composite keys joins ahead of single key joins
+        // put composite keys joins ahead of single key joins
         Collections.sort(tableJoins, new Comparator<TableJoin>() {
             @Override
             public int compare(TableJoin o1, TableJoin o2) {
@@ -228,9 +229,9 @@ public class NewBaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> 
 
     private byte[] buildKey(SplittedBytes[] splitBuffers) {
 
-        int filledDimension = 0;//debug
+        int filledDimension = 0;// debug
 
-        //join lookup tables, and fill into RowKey the columns in lookup table
+        // join lookup tables, and fill into RowKey the columns in lookup table
         for (TableJoin tableJoin : this.tableJoins) {
             String dimTblName = tableJoin.lookupTableName;
             LookupBytesTable dimTbl = this.lookupTables.get(dimTblName);
@@ -257,7 +258,7 @@ public class NewBaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> 
             }
         }
 
-        //fill into RowKey the columns in fact table
+        // fill into RowKey the columns in fact table
         for (Pair<Integer, Integer> relation : this.factTblColAsRowKey) {
             keyBytesBuf[relation.getSecond()] = trimSplitBuffer(splitBuffers[relation.getFirst()]);
             filledDimension++;
@@ -265,7 +266,7 @@ public class NewBaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> 
 
         Assert.isTrue(filledDimension == keyBytesBuf.length);
 
-        //all the row key slots(keyBytesBuf) should be complete now
+        // all the row key slots(keyBytesBuf) should be complete now
         return rowKeyEncoder.encode(keyBytesBuf);
     }
 
@@ -308,8 +309,8 @@ public class NewBaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> 
 
     @Override
     public void map(KEYIN key, Text value, Context context) throws IOException, InterruptedException {
-        //combining the hive table flattening logic into base cuboid building.
-        //the input of this mapper is the fact table rows
+        // combining the hive table flattening logic into base cuboid building.
+        // the input of this mapper is the fact table rows
 
         counter++;
         if (counter % BatchConstants.COUNTER_MAX == 0) {
@@ -317,16 +318,14 @@ public class NewBaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> 
         }
 
         if (!byteRowDelimiterInferred)
-            byteRowDelimiter =
-                    bytesSplitter.inferByteRowDelimiter(value.getBytes(), value.getLength(),
-                            factTableDesc.getColumns().length);
+            byteRowDelimiter = bytesSplitter.inferByteRowDelimiter(value.getBytes(), value.getLength(), factTableDesc.getColumns().length);
 
         bytesSplitter.split(value.getBytes(), value.getLength(), byteRowDelimiter);
 
         try {
             byte[] rowKey = buildKey(bytesSplitter.getSplitBuffers());
             if (rowKey == null)
-                return;//skip this fact table row
+                return;// skip this fact table row
 
             outputKey.set(rowKey, 0, rowKey.length);
 

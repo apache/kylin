@@ -28,12 +28,11 @@ import com.kylinolap.common.util.HadoopUtil;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class HBaseConnection {
 
-    private static final Map<String, Configuration> ConfigCache =
-            new ConcurrentHashMap<String, Configuration>();
+    private static final Map<String, Configuration> ConfigCache = new ConcurrentHashMap<String, Configuration>();
 
     private static final Map<String, HConnection> ConnPool = new ConcurrentHashMap<String, HConnection>();
 

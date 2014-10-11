@@ -25,10 +25,11 @@ import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
 
 /**
- * http://eli.thegreenplace.net/2011/09/29/an-interesting-tree-serialization-algorithm-from-dwarf
+ * http://eli.thegreenplace.net/2011/09/29/an-interesting-tree-serialization-
+ * algorithm-from-dwarf
  * 
  * @author xjiang
- *
+ * 
  */
 public class TupleFilterSerializer {
 
@@ -37,8 +38,7 @@ public class TupleFilterSerializer {
     }
 
     private static final int BUFFER_SIZE = 65536;
-    private static final Map<Integer, FilterOperatorEnum> ID_OP_MAP =
-            new HashMap<Integer, FilterOperatorEnum>();
+    private static final Map<Integer, FilterOperatorEnum> ID_OP_MAP = new HashMap<Integer, FilterOperatorEnum>();
 
     static {
         for (FilterOperatorEnum op : FilterOperatorEnum.values()) {
@@ -59,7 +59,8 @@ public class TupleFilterSerializer {
     }
 
     private static void internalSerialize(TupleFilter filter, Decorator decorator, ByteBuffer buffer) {
-        if (decorator != null) { // give decorator a chance to manipulate the output filter
+        if (decorator != null) { // give decorator a chance to manipulate the
+                                 // output filter
             filter = decorator.onSerialize(filter);
         }
 

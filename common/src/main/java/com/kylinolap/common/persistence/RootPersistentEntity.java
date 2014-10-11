@@ -24,14 +24,11 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Marks the root entity of JSON persistence.
- * Unit of read, write, cache, and refresh.
+ * Marks the root entity of JSON persistence. Unit of read, write, cache, and
+ * refresh.
  * 
- * - CubeInstance
- * - CubeDesc
- * - SourceTable
- * - JobMeta
- * - Dictionary (not JSON but also top level persistence)
+ * - CubeInstance - CubeDesc - SourceTable - JobMeta - Dictionary (not JSON but
+ * also top level persistence)
  * 
  * @author yangli9
  */

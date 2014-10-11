@@ -1,10 +1,12 @@
 package com.kylinolap.common.util;
-import org.junit.Ignore;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.junit.Ignore;
 
 /**
  * Created by honma on 6/6/14.
@@ -21,7 +23,7 @@ public class InstallJarIntoMavenTest {
         for (File file : folder.listFiles()) {
             String name = file.getName();
 
-            if(!name.endsWith(".jar"))
+            if (!name.endsWith(".jar"))
                 continue;
 
             int firstSlash = name.indexOf('-');
@@ -34,9 +36,7 @@ public class InstallJarIntoMavenTest {
             String artifactId = name.substring(0, match.start());
             String version = name.substring(match.start() + 1, lastDot);
 
-            fw.write(String
-                    .format("mvn install:install-file -Dfile=%s -DgroupId=%s -DartifactId=%s -Dversion=%s -Dpackaging=jar",
-                            name, "org.apache." + groupId, artifactId, version));
+            fw.write(String.format("mvn install:install-file -Dfile=%s -DgroupId=%s -DartifactId=%s -Dversion=%s -Dpackaging=jar", name, "org.apache." + groupId, artifactId, version));
             fw.write("\n");
         }
         fw.close();

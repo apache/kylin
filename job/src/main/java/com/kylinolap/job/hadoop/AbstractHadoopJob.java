@@ -61,35 +61,19 @@ import com.kylinolap.metadata.model.schema.TableDesc;
 public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected static final Logger log = LoggerFactory.getLogger(AbstractHadoopJob.class);
 
-    protected static final Option OPTION_JOB_NAME = OptionBuilder.withArgName("name").hasArg()
-            .isRequired(true)
-            .withDescription("Job name. For exmaple, Kylin_Cuboid_Builder-clsfd_v2_Step_22-D)")
-            .create("jobname");
-    protected static final Option OPTION_CUBE_NAME = OptionBuilder.withArgName("name").hasArg()
-            .isRequired(true).withDescription("Cube name. For exmaple, flat_item_cube").create("cubename");
-    protected static final Option OPTION_SEGMENT_NAME = OptionBuilder.withArgName("name").hasArg()
-            .isRequired(true).withDescription("Cube segment name)").create("segmentname");
-    protected static final Option OPTION_TABLE_NAME = OptionBuilder.withArgName("name").hasArg()
-            .isRequired(true).withDescription("Hive table name.").create("tablename");
-    protected static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName("path").hasArg()
-            .isRequired(true).withDescription("Input path").create("input");
-    protected static final Option OPTION_INPUT_FORMAT = OptionBuilder.withArgName("inputformat").hasArg()
-            .isRequired(false).withDescription("Input format").create("inputformat");
-    protected static final Option OPTION_INPUT_DELIM = OptionBuilder.withArgName("inputdelim").hasArg()
-            .isRequired(false).withDescription("Input delimeter").create("inputdelim");
-    protected static final Option OPTION_OUTPUT_PATH = OptionBuilder.withArgName("path").hasArg()
-            .isRequired(true).withDescription("Output path").create("output");
-    protected static final Option OPTION_NCUBOID_LEVEL = OptionBuilder.withArgName("level").hasArg()
-            .isRequired(true).withDescription("N-Cuboid build level, e.g. 1, 2, 3...").create("level");
-    protected static final Option OPTION_PARTITION_FILE_PATH = OptionBuilder.withArgName("path").hasArg()
-            .isRequired(true).withDescription("Partition file path.").create("input");
-    protected static final Option OPTION_HTABLE_NAME = OptionBuilder.withArgName("htable name").hasArg()
-            .isRequired(true).withDescription("HTable name").create("htablename");
-    protected static final Option OPTION_KEY_COLUMN_PERCENTAGE = OptionBuilder
-            .withArgName("rowkey column percentage").hasArg().isRequired(true)
-            .withDescription("Percentage of row key columns").create("columnpercentage");
-    protected static final Option OPTION_KEY_SPLIT_NUMBER = OptionBuilder.withArgName("key split number")
-            .hasArg().isRequired(true).withDescription("Number of key split range").create("splitnumber");
+    protected static final Option OPTION_JOB_NAME = OptionBuilder.withArgName("name").hasArg().isRequired(true).withDescription("Job name. For exmaple, Kylin_Cuboid_Builder-clsfd_v2_Step_22-D)").create("jobname");
+    protected static final Option OPTION_CUBE_NAME = OptionBuilder.withArgName("name").hasArg().isRequired(true).withDescription("Cube name. For exmaple, flat_item_cube").create("cubename");
+    protected static final Option OPTION_SEGMENT_NAME = OptionBuilder.withArgName("name").hasArg().isRequired(true).withDescription("Cube segment name)").create("segmentname");
+    protected static final Option OPTION_TABLE_NAME = OptionBuilder.withArgName("name").hasArg().isRequired(true).withDescription("Hive table name.").create("tablename");
+    protected static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName("path").hasArg().isRequired(true).withDescription("Input path").create("input");
+    protected static final Option OPTION_INPUT_FORMAT = OptionBuilder.withArgName("inputformat").hasArg().isRequired(false).withDescription("Input format").create("inputformat");
+    protected static final Option OPTION_INPUT_DELIM = OptionBuilder.withArgName("inputdelim").hasArg().isRequired(false).withDescription("Input delimeter").create("inputdelim");
+    protected static final Option OPTION_OUTPUT_PATH = OptionBuilder.withArgName("path").hasArg().isRequired(true).withDescription("Output path").create("output");
+    protected static final Option OPTION_NCUBOID_LEVEL = OptionBuilder.withArgName("level").hasArg().isRequired(true).withDescription("N-Cuboid build level, e.g. 1, 2, 3...").create("level");
+    protected static final Option OPTION_PARTITION_FILE_PATH = OptionBuilder.withArgName("path").hasArg().isRequired(true).withDescription("Partition file path.").create("input");
+    protected static final Option OPTION_HTABLE_NAME = OptionBuilder.withArgName("htable name").hasArg().isRequired(true).withDescription("HTable name").create("htablename");
+    protected static final Option OPTION_KEY_COLUMN_PERCENTAGE = OptionBuilder.withArgName("rowkey column percentage").hasArg().isRequired(true).withDescription("Percentage of row key columns").create("columnpercentage");
+    protected static final Option OPTION_KEY_SPLIT_NUMBER = OptionBuilder.withArgName("key split number").hasArg().isRequired(true).withDescription("Number of key split range").create("splitnumber");
 
     protected String name;
     protected String description;
@@ -133,9 +117,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             retVal = job.isSuccessful() ? 0 : 1;
         }
 
-        log.debug("Job '" + job.getJobName() + "' finished "
-                + (job.isSuccessful() ? "successfully in " : "with failures.  Time taken ")
-                + StringUtils.formatTime((System.nanoTime() - start) / 1000000L));
+        log.debug("Job '" + job.getJobName() + "' finished " + (job.isSuccessful() ? "successfully in " : "with failures.  Time taken ") + StringUtils.formatTime((System.nanoTime() - start) / 1000000L));
 
         return retVal;
     }
@@ -197,12 +179,11 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
         dumpResources(kylinConfig, metaDir, dumpList);
 
-        //hadoop distributed cache
+        // hadoop distributed cache
         conf.set("tmpfiles", "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath()));
     }
 
-    private void dumpResources(KylinConfig kylinConfig, File metaDir, ArrayList<String> dumpList)
-            throws IOException {
+    private void dumpResources(KylinConfig kylinConfig, File metaDir, ArrayList<String> dumpList) throws IOException {
         ResourceStore from = ResourceStore.getStore(kylinConfig);
         KylinConfig localConfig = KylinConfig.createInstanceFromUri(metaDir.getAbsolutePath());
         ResourceStore to = ResourceStore.getStore(localConfig);
@@ -223,15 +204,13 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
     }
 
-    protected double getTotalMapInputMB() throws ClassNotFoundException, IOException, InterruptedException,
-            JobException {
+    protected double getTotalMapInputMB() throws ClassNotFoundException, IOException, InterruptedException, JobException {
         if (job == null) {
             throw new JobException("Job is null");
         }
 
         long mapInputBytes = 0;
-        InputFormat<?, ?> input =
-                ReflectionUtils.newInstance(job.getInputFormatClass(), job.getConfiguration());
+        InputFormat<?, ?> input = ReflectionUtils.newInstance(job.getInputFormatClass(), job.getConfiguration());
         for (InputSplit split : input.getSplits(job)) {
             mapInputBytes += split.getLength();
         }
@@ -242,13 +221,11 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         return totalMapInputMB;
     }
 
-    protected int getMapInputSplitCount() throws ClassNotFoundException, JobException, IOException,
-            InterruptedException {
+    protected int getMapInputSplitCount() throws ClassNotFoundException, JobException, IOException, InterruptedException {
         if (job == null) {
             throw new JobException("Job is null");
         }
-        InputFormat<?, ?> input =
-                ReflectionUtils.newInstance(job.getInputFormatClass(), job.getConfiguration());
+        InputFormat<?, ?> input = ReflectionUtils.newInstance(job.getInputFormatClass(), job.getConfiguration());
         return input.getSplits(job).size();
     }
 

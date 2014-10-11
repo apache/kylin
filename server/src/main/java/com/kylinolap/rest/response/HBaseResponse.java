@@ -34,7 +34,8 @@ public class HBaseResponse implements Serializable {
     }
 
     /**
-     * @param tableName The hbase table name.
+     * @param tableName
+     *            The hbase table name.
      */
     public void setTableName(String tableName) {
         this.tableName = tableName;
@@ -48,7 +49,8 @@ public class HBaseResponse implements Serializable {
     }
 
     /**
-     * @param tableSize the tableSize to set
+     * @param tableSize
+     *            the tableSize to set
      */
     public void setTableSize(long tableSize) {
         this.tableSize = tableSize;
@@ -62,7 +64,8 @@ public class HBaseResponse implements Serializable {
     }
 
     /**
-     * @param regionCount the regionCount to set
+     * @param regionCount
+     *            the regionCount to set
      */
     public void setRegionCount(int regionCount) {
         this.regionCount = regionCount;

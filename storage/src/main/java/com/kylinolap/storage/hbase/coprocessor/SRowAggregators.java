@@ -36,7 +36,7 @@ import com.kylinolap.metadata.model.cube.MeasureDesc;
 
 /**
  * @author yangli9
- *
+ * 
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class SRowAggregators {
@@ -170,8 +170,7 @@ public class SRowAggregators {
                 continue;
             }
 
-            ByteBuffer input =
-                    ByteBuffer.wrap(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength());
+            ByteBuffer input = ByteBuffer.wrap(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength());
 
             col.measureCodec.decode(input, col.measureValues);
             for (int j = 0; j < col.nMeasures; j++)
@@ -180,7 +179,8 @@ public class SRowAggregators {
     }
 
     private Cell findCell(HCol col, List<Cell> cells) {
-        // cells are ordered by timestamp asc, thus search from back, first hit is the latest version
+        // cells are ordered by timestamp asc, thus search from back, first hit
+        // is the latest version
         for (int i = cells.size() - 1; i >= 0; i--) {
             Cell cell = cells.get(i);
             if (match(col, cell)) {
@@ -191,10 +191,7 @@ public class SRowAggregators {
     }
 
     public static boolean match(HCol col, Cell cell) {
-        return Bytes.compareTo(col.family, 0, col.family.length, cell.getFamilyArray(),
-                cell.getFamilyOffset(), cell.getFamilyLength()) == 0
-                && Bytes.compareTo(col.qualifier, 0, col.qualifier.length, cell.getQualifierArray(),
-                        cell.getQualifierOffset(), cell.getQualifierLength()) == 0;
+        return Bytes.compareTo(col.family, 0, col.family.length, cell.getFamilyArray(), cell.getFamilyOffset(), cell.getFamilyLength()) == 0 && Bytes.compareTo(col.qualifier, 0, col.qualifier.length, cell.getQualifierArray(), cell.getQualifierOffset(), cell.getQualifierLength()) == 0;
     }
 
     public int getHColsNum() {
@@ -257,8 +254,7 @@ public class SRowAggregators {
 
         @Override
         public String toString() {
-            return "HCol [bFamily=" + Bytes.toString(family) + ", bQualifier=" + Bytes.toString(qualifier)
-                    + ", nMeasures=" + nMeasures + "]";
+            return "HCol [bFamily=" + Bytes.toString(family) + ", bQualifier=" + Bytes.toString(qualifier) + ", nMeasures=" + nMeasures + "]";
         }
     }
 

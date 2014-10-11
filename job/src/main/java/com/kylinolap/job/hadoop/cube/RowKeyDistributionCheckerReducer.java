@@ -24,15 +24,14 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class RowKeyDistributionCheckerReducer extends Reducer<Text, LongWritable, Text, LongWritable> {
 
     LongWritable outputKey = new LongWritable(0L);
 
     @Override
-    public void reduce(Text key, Iterable<LongWritable> values, Context context) throws IOException,
-            InterruptedException {
+    public void reduce(Text key, Iterable<LongWritable> values, Context context) throws IOException, InterruptedException {
 
         long length = 0;
         for (LongWritable v : values) {

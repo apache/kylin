@@ -16,7 +16,10 @@
 
 package com.kylinolap.job.tools;
 
-import com.kylinolap.job.constant.JobStepStatusEnum;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -31,13 +34,11 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import com.kylinolap.job.constant.JobStepStatusEnum;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class HadoopStatusChecker {
 
@@ -68,12 +69,10 @@ public class HadoopStatusChecker {
             checkResponse = getHttpResponse(url);
             JsonNode root = new ObjectMapper().readTree(checkResponse);
             RMAppState state = RMAppState.valueOf(root.findValue("state").getTextValue());
-            FinalApplicationStatus finalStatus =
-                    FinalApplicationStatus.valueOf(root.findValue("finalStatus").getTextValue());
+            FinalApplicationStatus finalStatus = FinalApplicationStatus.valueOf(root.findValue("finalStatus").getTextValue());
 
             log.debug("State of Hadoop job: " + mrJobID + ":" + state + "-" + finalStatus);
-            output.append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S").format(new Date())
-                    + " - State of Hadoop job: " + mrJobID + ":" + state + " - " + finalStatus + "\n");
+            output.append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S").format(new Date()) + " - State of Hadoop job: " + mrJobID + ":" + state + " - " + finalStatus + "\n");
 
             switch (finalStatus) {
             case SUCCEEDED:
@@ -163,8 +162,7 @@ public class HadoopStatusChecker {
     private static void registerEasyHttps() {
         // by pass all https issue
         if (EASY_HTTPS == null) {
-            EASY_HTTPS =
-                    new Protocol("https", (ProtocolSocketFactory) new DefaultSslProtocolSocketFactory(), 443);
+            EASY_HTTPS = new Protocol("https", (ProtocolSocketFactory) new DefaultSslProtocolSocketFactory(), 443);
             Protocol.registerProtocol("https", EASY_HTTPS);
         }
     }

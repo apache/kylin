@@ -13,9 +13,6 @@ exit 1
 
 trap 'error ${LINENO} ${?}' ERR
 
-#Init env
-source ~/.bashrc
-
 echo ""
 echo "Welcome to use Kylin-Deploy script"
 echo "This script will help you:"

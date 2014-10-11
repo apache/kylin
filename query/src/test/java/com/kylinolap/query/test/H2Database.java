@@ -36,8 +36,7 @@ import com.kylinolap.metadata.model.schema.TableDesc;
 public class H2Database {
     private static final Logger logger = LoggerFactory.getLogger(H2Database.class);
 
-    private static final String[] ALL_TABLES = new String[] { "test_cal_dt", "test_category_groupings",
-            "test_kylin_fact", "test_seller_type_dim", "test_sites" };
+    private static final String[] ALL_TABLES = new String[] { "test_cal_dt", "test_category_groupings", "test_kylin_fact", "test_seller_type_dim", "test_sites" };
     private static final Map<String, String> javaToH2DataTypeMapping = new HashMap<String, String>();
 
     static {
@@ -74,14 +73,14 @@ public class H2Database {
             FileOutputStream tempFileStream = new FileOutputStream(tempFile);
             String normalPath = "/data/" + tableDesc.getName() + ".csv";
 
-            //If it's the fact table, there will be a facttable.csv.inner or facttable.csv.left in hbase
-            //otherwise just use lookup.csv
+            // If it's the fact table, there will be a facttable.csv.inner or
+            // facttable.csv.left in hbase
+            // otherwise just use lookup.csv
             InputStream csvStream = metaMgr.getStore().getResource(normalPath + fileNameSuffix);
             if (csvStream == null) {
                 csvStream = metaMgr.getStore().getResource(normalPath);
             } else {
-                logger.info("H2 decides to load " + (normalPath + fileNameSuffix) + " for table "
-                        + tableDesc.getName());
+                logger.info("H2 decides to load " + (normalPath + fileNameSuffix) + " for table " + tableDesc.getName());
             }
 
             org.apache.commons.io.IOUtils.copy(csvStream, tempFileStream);
@@ -93,7 +92,8 @@ public class H2Database {
             e.printStackTrace();
         }
 
-        //String cvsFilePath = "../examples/sample_cube/data/" + tableDesc.getName() + ".csv";
+        // String cvsFilePath = "../examples/sample_cube/data/" +
+        // tableDesc.getName() + ".csv";
         String cvsFilePath = tempFile.getPath();
         Statement stmt = h2Connection.createStatement();
         String sql = generateCreateH2TableSql(tableDesc, cvsFilePath);
@@ -120,8 +120,7 @@ public class H2Database {
             csvColumns.append(col.getName());
         }
         ddl.append(")" + "\n");
-        ddl.append("AS SELECT * FROM CSVREAD('" + csvFilePath + "', '" + csvColumns
-                + "', 'charset=UTF-8 fieldSeparator=,');");
+        ddl.append("AS SELECT * FROM CSVREAD('" + csvFilePath + "', '" + csvColumns + "', 'charset=UTF-8 fieldSeparator=,');");
 
         return ddl.toString();
     }

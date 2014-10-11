@@ -85,7 +85,7 @@ public class AggregateRegionObserverTest {
 
     private Cell newCell(byte[] key, HCol col, String decimal, int number) {
         Object[] values = number == Integer.MIN_VALUE ? //
-                new Object[] { new BigDecimal(decimal) } //
+        new Object[] { new BigDecimal(decimal) } //
                 : new Object[] { new BigDecimal(decimal), new LongWritable(number) };
         buf.clear();
         col.measureCodec.encode(values, buf);
@@ -105,7 +105,9 @@ public class AggregateRegionObserverTest {
         SRowType rowType = newRowType();
         SRowProjector projector = new SRowProjector(mask);
         SRowAggregators aggregators = new SRowAggregators(new HCol[] { c1, c2 });
-        SRowFilter filter = SRowFilter.deserialize(null); // a default, always-true, filter
+        SRowFilter filter = SRowFilter.deserialize(null); // a default,
+                                                          // always-true,
+                                                          // filter
         HashSet<String> expectedResult = new HashSet<String>();
 
         expectedResult.add("\\x02\\x02\\x00\\x00, f:q1, [26.0, 7]");
@@ -115,8 +117,7 @@ public class AggregateRegionObserverTest {
 
         MockupRegionScanner innerScanner = new MockupRegionScanner(cellsInput);
 
-        RegionScanner aggrScanner =
-                new AggregationScanner(rowType, filter, projector, aggregators, innerScanner);
+        RegionScanner aggrScanner = new AggregationScanner(rowType, filter, projector, aggregators, innerScanner);
         ArrayList<Cell> result = Lists.newArrayList();
         boolean hasMore = true;
         while (hasMore) {
@@ -134,9 +135,7 @@ public class AggregateRegionObserverTest {
             } else
                 fail();
 
-            hcol.measureCodec.decode(
-                    ByteBuffer.wrap(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength()),
-                    hcol.measureValues);
+            hcol.measureCodec.decode(ByteBuffer.wrap(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength()), hcol.measureValues);
 
             String rowKey = toString(cell.getRowArray(), cell.getRowOffset(), cell.getRowLength(), mask);
             String col = Bytes.toString(hcol.family) + ":" + Bytes.toString(hcol.qualifier);
@@ -157,7 +156,9 @@ public class AggregateRegionObserverTest {
         SRowType rowType = newRowType();
         SRowProjector projector = new SRowProjector(mask);
         SRowAggregators aggregators = new SRowAggregators(new HCol[] {});
-        SRowFilter filter = SRowFilter.deserialize(null); // a default, always-true, filter
+        SRowFilter filter = SRowFilter.deserialize(null); // a default,
+                                                          // always-true,
+                                                          // filter
         HashSet<String> expectedResult = new HashSet<String>();
 
         expectedResult.add("\\x02\\x02\\x00\\x00");
@@ -165,8 +166,7 @@ public class AggregateRegionObserverTest {
 
         MockupRegionScanner innerScanner = new MockupRegionScanner(cellsInput);
 
-        RegionScanner aggrScanner =
-                new AggregationScanner(rowType, filter, projector, aggregators, innerScanner);
+        RegionScanner aggrScanner = new AggregationScanner(rowType, filter, projector, aggregators, innerScanner);
         ArrayList<Cell> result = Lists.newArrayList();
         boolean hasMore = true;
         while (hasMore) {
@@ -216,23 +216,33 @@ public class AggregateRegionObserverTest {
             this.input = cellInputs;
         }
 
-        /* (non-Javadoc)
-         * @see org.apache.hadoop.hbase.regionserver.InternalScanner#next(java.util.List)
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.apache.hadoop.hbase.regionserver.InternalScanner#next(java.util
+         * .List)
          */
         @Override
         public boolean next(List<Cell> results) throws IOException {
             return nextRaw(results);
         }
 
-        /* (non-Javadoc)
-         * @see org.apache.hadoop.hbase.regionserver.InternalScanner#next(java.util.List, int)
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.apache.hadoop.hbase.regionserver.InternalScanner#next(java.util
+         * .List, int)
          */
         @Override
         public boolean next(List<Cell> result, int limit) throws IOException {
             return next(result);
         }
 
-        /* (non-Javadoc)
+        /*
+         * (non-Javadoc)
+         * 
          * @see org.apache.hadoop.hbase.regionserver.InternalScanner#close()
          */
         @Override
@@ -240,48 +250,67 @@ public class AggregateRegionObserverTest {
 
         }
 
-        /* (non-Javadoc)
-         * @see org.apache.hadoop.hbase.regionserver.RegionScanner#getRegionInfo()
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.apache.hadoop.hbase.regionserver.RegionScanner#getRegionInfo()
          */
         @Override
         public HRegionInfo getRegionInfo() {
             return null;
         }
 
-        /* (non-Javadoc)
-         * @see org.apache.hadoop.hbase.regionserver.RegionScanner#isFilterDone()
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.apache.hadoop.hbase.regionserver.RegionScanner#isFilterDone()
          */
         @Override
         public boolean isFilterDone() throws IOException {
             return false;
         }
 
-        /* (non-Javadoc)
-         * @see org.apache.hadoop.hbase.regionserver.RegionScanner#reseek(byte[])
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.apache.hadoop.hbase.regionserver.RegionScanner#reseek(byte[])
          */
         @Override
         public boolean reseek(byte[] row) throws IOException {
             return false;
         }
 
-        /* (non-Javadoc)
-         * @see org.apache.hadoop.hbase.regionserver.RegionScanner#getMaxResultSize()
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.apache.hadoop.hbase.regionserver.RegionScanner#getMaxResultSize()
          */
         @Override
         public long getMaxResultSize() {
             return 0;
         }
 
-        /* (non-Javadoc)
-         * @see org.apache.hadoop.hbase.regionserver.RegionScanner#getMvccReadPoint()
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.apache.hadoop.hbase.regionserver.RegionScanner#getMvccReadPoint()
          */
         @Override
         public long getMvccReadPoint() {
             return 0;
         }
 
-        /* (non-Javadoc)
-         * @see org.apache.hadoop.hbase.regionserver.RegionScanner#nextRaw(java.util.List)
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.apache.hadoop.hbase.regionserver.RegionScanner#nextRaw(java.util
+         * .List)
          */
         @Override
         public boolean nextRaw(List<Cell> result) throws IOException {
@@ -292,8 +321,12 @@ public class AggregateRegionObserverTest {
             return i < input.size();
         }
 
-        /* (non-Javadoc)
-         * @see org.apache.hadoop.hbase.regionserver.RegionScanner#nextRaw(java.util.List, int)
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.apache.hadoop.hbase.regionserver.RegionScanner#nextRaw(java.util
+         * .List, int)
          */
         @Override
         public boolean nextRaw(List<Cell> result, int limit) throws IOException {

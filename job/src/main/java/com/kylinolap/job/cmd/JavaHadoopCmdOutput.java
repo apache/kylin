@@ -33,7 +33,7 @@ import com.kylinolap.job.tools.HadoopStatusChecker;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class JavaHadoopCmdOutput implements ICommandOutput {
 
@@ -51,8 +51,7 @@ public class JavaHadoopCmdOutput implements ICommandOutput {
     private String trackUrl = null;
     private boolean isAsync;
 
-    public JavaHadoopCmdOutput(String jobInstanceID, int jobStepID, JobEngineConfig engineConfig,
-            AbstractHadoopJob job, boolean isAsync) {
+    public JavaHadoopCmdOutput(String jobInstanceID, int jobStepID, JobEngineConfig engineConfig, AbstractHadoopJob job, boolean isAsync) {
         super();
         this.config = engineConfig.getConfig();
         this.yarnUrl = engineConfig.getYarnStatusServiceUrl();
@@ -169,8 +168,7 @@ public class JavaHadoopCmdOutput implements ICommandOutput {
 
             long mapInputRecords = job.getCounters().findCounter(TaskCounter.MAP_INPUT_RECORDS).getValue();
             jobStep.putInfo(JobInstance.SOURCE_RECORDS_COUNT, String.valueOf(mapInputRecords));
-            long hdfsBytesWritten =
-                    job.getCounters().findCounter("FileSystemCounters", "HDFS_BYTES_WRITTEN").getValue();
+            long hdfsBytesWritten = job.getCounters().findCounter("FileSystemCounters", "HDFS_BYTES_WRITTEN").getValue();
             jobStep.putInfo(JobInstance.HDFS_BYTES_WRITTEN, String.valueOf(hdfsBytesWritten));
 
             jobDAO.updateJobInstance(jobInstance);

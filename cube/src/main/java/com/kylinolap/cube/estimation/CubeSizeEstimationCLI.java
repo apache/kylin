@@ -65,7 +65,8 @@ public class CubeSizeEstimationCLI {
         int measureSpace = getMeasureSpace(cubeDesc);
 
         for (List<Integer> hlist : rowKeyColInfo.hierachyColBitIndice) {
-            //for hierachy columns, the cardinality of the most detailed column nominates.
+            // for hierachy columns, the cardinality of the most detailed column
+            // nominates.
             int i;
             for (i = 0; i < hlist.size() && rowKeyColExists(hlist.get(i), cuboidID); ++i) {
                 dimensionSpace += rowKeySpaces[hlist.get(i)];
@@ -91,8 +92,7 @@ public class CubeSizeEstimationCLI {
             RowKeyColDesc rowKeyColDesc = rowKeyColDescs[rowKeyColDescs.length - 1 - i];
             if (rowKeyColDesc.getDictionary() == null) {
                 if (rowKeyColDesc.getLength() == 0)
-                    throw new IllegalStateException("The non-dictionary col " + rowKeyColDesc.getColumn()
-                            + " has length of 0");
+                    throw new IllegalStateException("The non-dictionary col " + rowKeyColDesc.getColumn() + " has length of 0");
                 ret[i] = rowKeyColDesc.getLength();
             } else {
                 ret[i] = estimateDictionaryColSpace(cardinality[i]);
@@ -101,7 +101,7 @@ public class CubeSizeEstimationCLI {
         return ret;
     }
 
-    //TODO what if it's date dictionary?
+    // TODO what if it's date dictionary?
     private static int estimateDictionaryColSpace(long cardinality) {
         long mask = 1L;
         int i;
@@ -114,7 +114,8 @@ public class CubeSizeEstimationCLI {
         if (i < 0)
             throw new IllegalStateException("the cardinality is 0");
 
-        return ((i + 1) + 7) / 8;//the bytes required to save at most cardinality numbers
+        return ((i + 1) + 7) / 8;// the bytes required to save at most
+                                 // cardinality numbers
     }
 
     private static int getMeasureSpace(CubeDesc cubeDesc) {

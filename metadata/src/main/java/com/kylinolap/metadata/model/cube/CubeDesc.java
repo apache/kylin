@@ -80,8 +80,7 @@ public class CubeDesc extends RootPersistentEntity {
 
         @Override
         public String toString() {
-            return "DeriveInfo [type=" + type + ", dimension=" + dimension + ", columns="
-                    + Arrays.toString(columns) + ", isOneToOne=" + isOneToOne + "]";
+            return "DeriveInfo [type=" + type + ", dimension=" + dimension + ", columns=" + Arrays.toString(columns) + ", isOneToOne=" + isOneToOne + "]";
         }
 
     }
@@ -154,7 +153,7 @@ public class CubeDesc extends RootPersistentEntity {
 
     /**
      * Find FunctionDesc by Full Expression.
-     *
+     * 
      * @return
      */
     public FunctionDesc findFunctionOnCube(FunctionDesc manualFunc) {
@@ -211,7 +210,8 @@ public class CubeDesc extends RootPersistentEntity {
             int find = ArrayUtils.indexOf(join.getForeignKeyColumns(), fk);
             if (find >= 0) {
                 candidate = join.getPrimaryKeyColumns()[find];
-                if (join.getForeignKeyColumns().length == 1) { // is single column join?
+                if (join.getForeignKeyColumns().length == 1) { // is single
+                                                               // column join?
                     break;
                 }
             }
@@ -221,7 +221,7 @@ public class CubeDesc extends RootPersistentEntity {
 
     /**
      * Get all functions from each measure.
-     *
+     * 
      * @return
      */
     public List<FunctionDesc> listAllFunctions() {
@@ -263,8 +263,7 @@ public class CubeDesc extends RootPersistentEntity {
         return derivedToHostMap.get(derived);
     }
 
-    public Map<Array<TblColRef>, List<DeriveInfo>> getHostToDerivedInfo(List<TblColRef> rowCols,
-            Collection<TblColRef> wantedCols) {
+    public Map<Array<TblColRef>, List<DeriveInfo>> getHostToDerivedInfo(List<TblColRef> rowCols, Collection<TblColRef> wantedCols) {
         Map<Array<TblColRef>, List<DeriveInfo>> result = new HashMap<Array<TblColRef>, List<DeriveInfo>>();
         for (Entry<Array<TblColRef>, List<DeriveInfo>> entry : hostToDerivedMap.entrySet()) {
             Array<TblColRef> hostCols = entry.getKey();
@@ -274,8 +273,10 @@ public class CubeDesc extends RootPersistentEntity {
 
             List<DeriveInfo> wantedInfo = new ArrayList<DeriveInfo>();
             for (DeriveInfo info : entry.getValue()) {
-                if (wantedCols == null
-                        || Collections.disjoint(wantedCols, Arrays.asList(info.columns)) == false) // has any wanted columns?
+                if (wantedCols == null || Collections.disjoint(wantedCols, Arrays.asList(info.columns)) == false) // has
+                                                                                                                  // any
+                                                                                                                  // wanted
+                                                                                                                  // columns?
                     wantedInfo.add(info);
             }
 
@@ -430,9 +431,7 @@ public class CubeDesc extends RootPersistentEntity {
 
     @Override
     public String toString() {
-        return "CubeDesc [name=" + name + ", factTable=" + factTable + ", cubePartitionDesc="
-                + cubePartitionDesc + ", dimensions=" + dimensions + ", measures=" + measures + ", rowkey="
-                + rowkey + ", hbaseMapping=" + hbaseMapping + "]";
+        return "CubeDesc [name=" + name + ", factTable=" + factTable + ", cubePartitionDesc=" + cubePartitionDesc + ", dimensions=" + dimensions + ", measures=" + measures + ", rowkey=" + rowkey + ", hbaseMapping=" + hbaseMapping + "]";
     }
 
     public String calculateSignature() {
@@ -440,12 +439,7 @@ public class CubeDesc extends RootPersistentEntity {
         try {
             md = MessageDigest.getInstance("MD5");
             StringBuilder sigString = new StringBuilder();
-            sigString.append(this.name).append("|").append(this.factTable).append("|")
-                    .append(JsonUtil.writeValueAsString(this.cubePartitionDesc)).append("|")
-                    .append(JsonUtil.writeValueAsString(this.dimensions)).append("|")
-                    .append(JsonUtil.writeValueAsString(this.measures)).append("|")
-                    .append(JsonUtil.writeValueAsString(this.rowkey)).append("|")
-                    .append(JsonUtil.writeValueAsString(this.hbaseMapping));
+            sigString.append(this.name).append("|").append(this.factTable).append("|").append(JsonUtil.writeValueAsString(this.cubePartitionDesc)).append("|").append(JsonUtil.writeValueAsString(this.dimensions)).append("|").append(JsonUtil.writeValueAsString(this.measures)).append("|").append(JsonUtil.writeValueAsString(this.rowkey)).append("|").append(JsonUtil.writeValueAsString(this.hbaseMapping));
 
             byte[] signature = md.digest(sigString.toString().getBytes());
             return new String(Base64.encodeBase64(signature));
@@ -495,8 +489,7 @@ public class CubeDesc extends RootPersistentEntity {
         // check all dimension columns are presented on rowkey
         List<TblColRef> dimCols = listDimensionColumnsExcludingDerived();
         if (rowkey.getRowKeyColumns().length != dimCols.size()) {
-            addError("RowKey columns count (" + rowkey.getRowKeyColumns().length
-                    + ") does not equal to dimension columns count (" + dimCols.size() + "). ");
+            addError("RowKey columns count (" + rowkey.getRowKeyColumns().length + ") does not equal to dimension columns count (" + dimCols.size() + "). ");
         }
     }
 
@@ -530,7 +523,9 @@ public class CubeDesc extends RootPersistentEntity {
                     hier.setColumnRef(ref);
                     dimColList.add(ref);
                 }
-                if (hostColList.isEmpty()) { // the last hierarchy could serve as host when col is unspecified
+                if (hostColList.isEmpty()) { // the last hierarchy could serve
+                                             // as host when col is
+                                             // unspecified
                     hostColList.add(dimColList.get(dimColList.size() - 1));
                 }
             }
@@ -590,13 +585,11 @@ public class CubeDesc extends RootPersistentEntity {
         return new String[][] { cols, extra };
     }
 
-    private void initDerivedMap(TblColRef hostCol, DeriveType type, DimensionDesc dimension,
-            TblColRef derivedCol) {
+    private void initDerivedMap(TblColRef hostCol, DeriveType type, DimensionDesc dimension, TblColRef derivedCol) {
         initDerivedMap(new TblColRef[] { hostCol }, type, dimension, new TblColRef[] { derivedCol }, null);
     }
 
-    private void initDerivedMap(TblColRef[] hostCols, DeriveType type, DimensionDesc dimension,
-            TblColRef[] derivedCols, String[] extra) {
+    private void initDerivedMap(TblColRef[] hostCols, DeriveType type, DimensionDesc dimension, TblColRef[] derivedCols, String[] extra) {
         if (hostCols.length == 0 || derivedCols.length == 0)
             throw new IllegalStateException("host/derived columns must not be empty");
 
@@ -609,9 +602,7 @@ public class CubeDesc extends RootPersistentEntity {
 
         for (int i = 0; i < derivedCols.length; i++) {
             TblColRef derivedCol = derivedCols[i];
-            boolean isOneToOne =
-                    type == DeriveType.PK_FK || ArrayUtils.contains(hostCols, derivedCol)
-                            || (extra != null && extra[i].contains("1-1"));
+            boolean isOneToOne = type == DeriveType.PK_FK || ArrayUtils.contains(hostCols, derivedCol) || (extra != null && extra[i].contains("1-1"));
             derivedToHostMap.put(derivedCol, new DeriveInfo(type, dimension, hostCols, isOneToOne));
         }
     }
@@ -683,17 +674,13 @@ public class CubeDesc extends RootPersistentEntity {
                 fkCols[i] = colRef;
             }
             join.setForeignKeyColumns(fkCols);
-            //Validate join in dimension
+            // Validate join in dimension
             if (pkCols.length != fkCols.length) {
-                addError("Primary keys(" + dim.getTable() + ")" + Arrays.toString(pks)
-                        + " are not consistent with Foreign keys(" + this.factTable + ") "
-                        + Arrays.toString(fks));
+                addError("Primary keys(" + dim.getTable() + ")" + Arrays.toString(pks) + " are not consistent with Foreign keys(" + this.factTable + ") " + Arrays.toString(fks));
             }
             for (int i = 0; i < fkCols.length; i++) {
                 if (!fkCols[i].getDatatype().equals(pkCols[i].getDatatype())) {
-                    addError("Primary key " + dim.getTable() + "." + pkCols[i].getName() + "."
-                            + pkCols[i].getDatatype() + " are not consistent with Foreign key "
-                            + this.factTable + "." + fkCols[i].getName() + "." + fkCols[i].getDatatype());
+                    addError("Primary key " + dim.getTable() + "." + pkCols[i].getName() + "." + pkCols[i].getDatatype() + " are not consistent with Foreign key " + this.factTable + "." + fkCols[i].getName() + "." + fkCols[i].getDatatype());
                 }
             }
 
@@ -812,7 +799,7 @@ public class CubeDesc extends RootPersistentEntity {
 
     /**
      * Add error info and thrown exception out
-     *
+     * 
      * @param message
      */
     public void addError(String message) {
@@ -820,8 +807,10 @@ public class CubeDesc extends RootPersistentEntity {
     }
 
     /**
-     * @param message error message
-     * @param silent  if throw exception
+     * @param message
+     *            error message
+     * @param silent
+     *            if throw exception
      */
     public void addError(String message, boolean silent) {
         if (!silent) {

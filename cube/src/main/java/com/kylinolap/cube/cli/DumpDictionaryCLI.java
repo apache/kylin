@@ -33,8 +33,7 @@ public class DumpDictionaryCLI {
             DictionaryInfoSerializer ser = new DictionaryInfoSerializer();
             DictionaryInfo dictInfo = ser.deserialize(new DataInputStream(new FileInputStream(f)));
 
-            System.out
-                    .println("============================================================================");
+            System.out.println("============================================================================");
             System.out.println("File: " + f.getAbsolutePath());
             System.out.println(new Date(dictInfo.getLastModified()));
             System.out.println(JsonUtil.writeValueAsIndentString(dictInfo));

@@ -25,7 +25,7 @@ import org.apache.commons.mail.HtmlEmail;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class MailService {
 

@@ -27,7 +27,7 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class JavaHadoopCmd implements IJobCommand {
     protected static final Logger log = LoggerFactory.getLogger(JavaHadoopCmd.class);
@@ -36,8 +36,7 @@ public class JavaHadoopCmd implements IJobCommand {
     private final ICommandOutput output;
     private final AbstractHadoopJob job;
 
-    public JavaHadoopCmd(String executeCommand, String jobInstanceID, int jobStepID,
-            JobEngineConfig engineConfig, AbstractHadoopJob job, boolean isAsync) {
+    public JavaHadoopCmd(String executeCommand, String jobInstanceID, int jobStepID, JobEngineConfig engineConfig, AbstractHadoopJob job, boolean isAsync) {
         super();
         this.executeCommand = executeCommand;
         this.job = job;

@@ -18,7 +18,7 @@ package com.kylinolap.cube;
 
 /**
  * @author xduo
- *
+ * 
  */
 public enum CubeSegmentStatusEnum {
     NEW, READY, READY_PENDING

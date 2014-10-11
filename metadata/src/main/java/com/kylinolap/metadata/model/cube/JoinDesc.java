@@ -22,16 +22,13 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Created with IntelliJ IDEA.
- * User: lukhan
- * Date: 10/14/13
- * Time: 2:16 PM
- * To change this template use File | Settings | File Templates.
+ * Created with IntelliJ IDEA. User: lukhan Date: 10/14/13 Time: 2:16 PM To
+ * change this template use File | Settings | File Templates.
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class JoinDesc {
 
-    //inner, left, right, outer...
+    // inner, left, right, outer...
     @JsonProperty("type")
     private String type;
     @JsonProperty("primary_key")
@@ -131,8 +128,7 @@ public class JoinDesc {
 
     @Override
     public String toString() {
-        return "JoinDesc [type=" + type + ", primary_key=" + Arrays.toString(primaryKey) + ", foreign_key="
-                + Arrays.toString(foreignKey) + "]";
+        return "JoinDesc [type=" + type + ", primary_key=" + Arrays.toString(primaryKey) + ", foreign_key=" + Arrays.toString(foreignKey) + "]";
     }
 
 }

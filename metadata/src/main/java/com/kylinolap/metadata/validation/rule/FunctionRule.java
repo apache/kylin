@@ -38,24 +38,27 @@ import com.kylinolap.metadata.validation.ResultLevel;
 import com.kylinolap.metadata.validation.ValidateContext;
 
 /**
- * Validate function parameter.
- * Ticket:
+ * Validate function parameter. Ticket:
  * https://github.scm.corp.ebay.com/Kylin/Kylin/issues/268
  * 
- * if type is column, check values are valid fact table columns
- * if type is constant, the value only can be numberic
+ * if type is column, check values are valid fact table columns if type is
+ * constant, the value only can be numberic
  * 
  * the return type only can be int/bigint/long/double/decimal
  * 
  * 
  * 
  * @author jianliu
- *
+ * 
  */
 public class FunctionRule implements IValidatorRule<CubeDesc> {
 
-    /* (non-Javadoc)
-     * @see com.kylinolap.metadata.validation.IValidatorRule#validate(java.lang.Object, com.kylinolap.metadata.validation.ValidateContext)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * com.kylinolap.metadata.validation.IValidatorRule#validate(java.lang.Object
+     * , com.kylinolap.metadata.validation.ValidateContext)
      */
     @Override
     public void validate(CubeDesc cube, ValidateContext context) {
@@ -69,34 +72,22 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
             FunctionDesc func = measure.getFunction();
             ParameterDesc parameter = func.getParameter();
             if (parameter == null) {
-                context.addResult(
-                        ResultLevel.ERROR,
-                        "Must define parameter for function " + func.getExpression() + " in "
-                                + measure.getName());
+                context.addResult(ResultLevel.ERROR, "Must define parameter for function " + func.getExpression() + " in " + measure.getName());
                 return;
             }
 
             String type = func.getParameter().getType();
             String value = func.getParameter().getValue();
             if (StringUtils.isEmpty(type)) {
-                context.addResult(
-                        ResultLevel.ERROR,
-                        "Must define type for parameter type " + func.getExpression() + " in "
-                                + measure.getName());
+                context.addResult(ResultLevel.ERROR, "Must define type for parameter type " + func.getExpression() + " in " + measure.getName());
                 return;
             }
             if (StringUtils.isEmpty(value)) {
-                context.addResult(
-                        ResultLevel.ERROR,
-                        "Must define type for parameter value " + func.getExpression() + " in "
-                                + measure.getName());
+                context.addResult(ResultLevel.ERROR, "Must define type for parameter value " + func.getExpression() + " in " + measure.getName());
                 return;
             }
             if (StringUtils.isEmpty(func.getReturnType())) {
-                context.addResult(
-                        ResultLevel.ERROR,
-                        "Must define return type for function " + func.getExpression() + " in "
-                                + measure.getName());
+                context.addResult(ResultLevel.ERROR, "Must define return type for function " + func.getExpression() + " in " + measure.getName());
                 return;
             }
 
@@ -112,9 +103,7 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
         }
 
         if (countFuncs.size() != 1) {
-            context.addResult(ResultLevel.ERROR,
-                    "Must define one and only one count(1) function, but there are " + countFuncs.size()
-                            + " -- " + countFuncs);
+            context.addResult(ResultLevel.ERROR, "Must define one and only one count(1) function, but there are " + countFuncs.size() + " -- " + countFuncs);
         }
     }
 
@@ -125,22 +114,18 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
 
         if (funcDesc.isCount()) {
             if (rtype.isIntegerFamily() == false) {
-                context.addResult(ResultLevel.ERROR, "Return type for function " + func + " must be one of "
-                        + DataType.INTEGER_FAMILY);
+                context.addResult(ResultLevel.ERROR, "Return type for function " + func + " must be one of " + DataType.INTEGER_FAMILY);
             }
         } else if (funcDesc.isCountDistinct()) {
             if (rtype.isHLLC() == false && funcDesc.isHolisticCountDistinct() == false) {
-                context.addResult(ResultLevel.ERROR, "Return type for function " + func
-                        + " must be hllc(10), hllc(12) etc.");
+                context.addResult(ResultLevel.ERROR, "Return type for function " + func + " must be hllc(10), hllc(12) etc.");
             }
         } else if (funcDesc.isMax() || funcDesc.isMin() || funcDesc.isSum()) {
             if (rtype.isNumberFamily() == false) {
-                context.addResult(ResultLevel.ERROR, "Return type for function " + func + " must be one of "
-                        + DataType.NUMBER_FAMILY);
+                context.addResult(ResultLevel.ERROR, "Return type for function " + func + " must be one of " + DataType.NUMBER_FAMILY);
             }
         } else {
-            if (StringUtils.equalsIgnoreCase(
-                    KylinConfig.getInstanceFromEnv().getProperty(KEY_IGNORE_UNKNOWN_FUNC, "false"), "false")) {
+            if (StringUtils.equalsIgnoreCase(KylinConfig.getInstanceFromEnv().getProperty(KEY_IGNORE_UNKNOWN_FUNC, "false"), "false")) {
                 context.addResult(ResultLevel.ERROR, "Unrecognized function: [" + func + "]");
             }
         }
@@ -175,7 +160,7 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
         if (table == null) {
             context.addResult(ResultLevel.ERROR, "Fact table can not be found: " + cube);
         }
-        //Prepare column set
+        // Prepare column set
         Set<String> set = new HashSet<String>();
         ColumnDesc[] cdesc = table.getColumns();
         for (int i = 0; i < cdesc.length; i++) {
@@ -190,8 +175,7 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
                 continue;
             }
             if (!set.contains(item)) {
-                context.addResult(ResultLevel.ERROR, "Column [" + item + "] does not exist in factable table"
-                        + factTable);
+                context.addResult(ResultLevel.ERROR, "Column [" + item + "] does not exist in factable table" + factTable);
             }
         }
 

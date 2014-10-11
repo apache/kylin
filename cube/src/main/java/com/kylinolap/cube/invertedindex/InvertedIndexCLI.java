@@ -34,7 +34,7 @@ import com.kylinolap.cube.CubeManager;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class InvertedIndexCLI {
 
@@ -60,8 +60,7 @@ public class InvertedIndexCLI {
         System.out.println("Total " + count + " records");
     }
 
-    public static Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> readSequenceKVs(
-            Configuration hconf, String path) throws IOException {
+    public static Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> readSequenceKVs(Configuration hconf, String path) throws IOException {
         final Reader reader = new Reader(hconf, SequenceFile.Reader.file(new Path(path)));
         return new Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>>() {
             @Override
@@ -69,8 +68,7 @@ public class InvertedIndexCLI {
                 return new Iterator<Pair<ImmutableBytesWritable, ImmutableBytesWritable>>() {
                     ImmutableBytesWritable k = new ImmutableBytesWritable();
                     ImmutableBytesWritable v = new ImmutableBytesWritable();
-                    Pair<ImmutableBytesWritable, ImmutableBytesWritable> pair =
-                            new Pair<ImmutableBytesWritable, ImmutableBytesWritable>(k, v);
+                    Pair<ImmutableBytesWritable, ImmutableBytesWritable> pair = new Pair<ImmutableBytesWritable, ImmutableBytesWritable>(k, v);
 
                     @Override
                     public boolean hasNext() {

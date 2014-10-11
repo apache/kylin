@@ -34,13 +34,14 @@ import com.kylinolap.job.hadoop.invertedindex.RandomKeyDistributionMapper;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class RandomKeyDistributionMapperTest {
 
     MapDriver<Text, Text, Text, LongWritable> mapDriver;
 
     @Before
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public void setUp() {
         RandomKeyDistributionMapper mapper = new RandomKeyDistributionMapper();
         mapDriver = MapDriver.newMapDriver(mapper);

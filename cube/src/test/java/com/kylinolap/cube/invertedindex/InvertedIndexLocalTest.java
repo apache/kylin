@@ -130,7 +130,8 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
         Collections.sort(records, new Comparator<TableRecord>() {
             @Override
             public int compare(TableRecord a, TableRecord b) {
-                return a.getValueID(1) - b.getValueID(1); // the second column is CAL_DT
+                return a.getValueID(1) - b.getValueID(1); // the second column
+                                                          // is CAL_DT
             }
         });
 
@@ -151,8 +152,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
         return slices;
     }
 
-    private List<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> encodeKVs(IIKeyValueCodec codec,
-            List<TimeSlice> slices) {
+    private List<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> encodeKVs(IIKeyValueCodec codec, List<TimeSlice> slices) {
 
         List<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> kvs = Lists.newArrayList();
         for (TimeSlice slice : slices) {
@@ -161,8 +161,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
         return kvs;
     }
 
-    private List<TimeSlice> decodeKVs(IIKeyValueCodec codec,
-            List<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> kvs) {
+    private List<TimeSlice> decodeKVs(IIKeyValueCodec codec, List<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> kvs) {
         List<TimeSlice> slices = Lists.newArrayList();
         for (TimeSlice slice : codec.decodeKeyValue(kvs)) {
             slices.add(slice);

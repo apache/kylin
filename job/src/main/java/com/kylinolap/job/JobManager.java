@@ -66,13 +66,13 @@ public class JobManager {
         this.config = engineConfig.getConfig();
         this.jobDAO = JobDAO.getInstance(config);
 
-        //        InetAddress ia = InetAddress.getLocalHost();
-        //        this.jobEngine = Constant.getInstanceFromEnv(ia.getCanonicalHostName(), cfg);
+        // InetAddress ia = InetAddress.getLocalHost();
+        // this.jobEngine =
+        // Constant.getInstanceFromEnv(ia.getCanonicalHostName(), cfg);
         this.jobEngine = JobEngine.getInstance(engineID, engineCfg);
     }
 
-    public JobInstance createJob(String cubeName, String segmentName, CubeBuildTypeEnum jobType)
-            throws IOException {
+    public JobInstance createJob(String cubeName, String segmentName, CubeBuildTypeEnum jobType) throws IOException {
         // build job instance
         JobInstance jobInstance = buildJobInstance(cubeName, segmentName, jobType);
 
@@ -92,8 +92,7 @@ public class JobManager {
         jobInstance.setType(jobType);
         jobInstance.setRelatedCube(cubeName);
         jobInstance.setRelatedSegment(segmentName);
-        jobInstance.setName(cubeName + " - " + segmentName + " - " + jobType.toString() + " - "
-                + format.format(new Date(System.currentTimeMillis())));
+        jobInstance.setName(cubeName + " - " + segmentName + " - " + jobType.toString() + " - " + format.format(new Date(System.currentTimeMillis())));
 
         return jobInstance;
     }
@@ -101,7 +100,7 @@ public class JobManager {
     public String submitJob(JobInstance job) throws IOException, InvalidJobInstanceException {
         if (hasDuplication(job) == false) {
             // submitted job status should always be PENDING
-            //job.setStatus(JobStatusEnum.PENDING);
+            // job.setStatus(JobStatusEnum.PENDING);
             jobDAO.updateJobInstance(job);
             return job.getUuid();
         } else {
@@ -119,7 +118,7 @@ public class JobManager {
         for (JobStep jobStep : jobInstance.getSteps()) {
             if (jobStep.getStatus() == JobStepStatusEnum.ERROR) {
                 jobStep.setStatus(JobStepStatusEnum.PENDING);
-                //jobStep.setCmdOutput("");
+                // jobStep.setCmdOutput("");
                 jobStep.clearInfo();
                 jobDAO.saveJobOutput(jobStep, "");
             }
@@ -130,9 +129,7 @@ public class JobManager {
     private boolean hasDuplication(JobInstance newJob) throws IOException {
         List<JobInstance> allJobs = listJobs(null, null);
         for (JobInstance job : allJobs) {
-            if (job.getRelatedCube().equals(newJob.getRelatedCube())
-                    && job.getRelatedSegment().equals(newJob.getRelatedSegment())
-                    && job.getType().equals(newJob.getType()) && job.getStatus().equals(newJob.getStatus())) {
+            if (job.getRelatedCube().equals(newJob.getRelatedCube()) && job.getRelatedSegment().equals(newJob.getRelatedSegment()) && job.getType().equals(newJob.getType()) && job.getStatus().equals(newJob.getStatus())) {
                 return true;
             }
         }
@@ -149,8 +146,7 @@ public class JobManager {
             try {
                 killRunningJob(jobInstance);
             } finally {
-                CubeManager.getInstance(config).updateSegmentOnJobDiscard(cube,
-                        jobInstance.getRelatedSegment());
+                CubeManager.getInstance(config).updateSegmentOnJobDiscard(cube, jobInstance.getRelatedSegment());
             }
             break;
         case ERROR:
@@ -162,8 +158,7 @@ public class JobManager {
                 }
                 jobDAO.updateJobInstance(jobInstance);
             } finally {
-                CubeManager.getInstance(config).updateSegmentOnJobDiscard(cube,
-                        jobInstance.getRelatedSegment());
+                CubeManager.getInstance(config).updateSegmentOnJobDiscard(cube, jobInstance.getRelatedSegment());
             }
             break;
         default:
@@ -175,7 +170,7 @@ public class JobManager {
      * @param uuid
      * @param jobInstance
      * @throws IOException
-     * @throws JobException 
+     * @throws JobException
      */
     private void killRunningJob(JobInstance jobInstance) throws IOException, JobException {
         // find the running step
@@ -275,7 +270,8 @@ public class JobManager {
     }
 
     /**
-     * @param percentile (eg. 95 percentile)
+     * @param percentile
+     *            (eg. 95 percentile)
      * @return the percentile value
      */
     public double getPercentileJobStepDuration(double percentile) {

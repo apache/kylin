@@ -43,13 +43,12 @@ import com.kylinolap.job.constant.BatchConstants;
 
 /**
  * @author yangli9
- *
+ * 
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class MockupMapContext {
 
-    public static Context create(final Configuration hconf, String metadataUrl, String cubeName,
-            final Object[] outKV) {
+    public static Context create(final Configuration hconf, String metadataUrl, String cubeName, final Object[] outKV) {
 
         hconf.set(BatchConstants.CFG_CUBE_NAME, cubeName);
 

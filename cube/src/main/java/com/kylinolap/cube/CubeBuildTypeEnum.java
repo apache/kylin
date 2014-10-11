@@ -18,7 +18,7 @@ package com.kylinolap.cube;
 
 /**
  * @author xduo
- *
+ * 
  */
 public enum CubeBuildTypeEnum {
     /**

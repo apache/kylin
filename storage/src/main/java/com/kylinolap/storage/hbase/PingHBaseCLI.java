@@ -34,7 +34,7 @@ import com.kylinolap.common.util.HadoopUtil;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class PingHBaseCLI {
 
@@ -47,12 +47,10 @@ public class PingHBaseCLI {
         Configuration hconf = HadoopUtil.newHBaseConfiguration(metadataUrl);
         if (User.isHBaseSecurityEnabled(hconf)) {
             try {
-                System.out.println("--------------Getting kerberos credential for user "
-                        + UserGroupInformation.getCurrentUser().getUserName());
+                System.out.println("--------------Getting kerberos credential for user " + UserGroupInformation.getCurrentUser().getUserName());
                 TokenUtil.obtainAndCacheToken(hconf, UserGroupInformation.getCurrentUser());
             } catch (InterruptedException e) {
-                System.out.println("--------------Error while getting kerberos credential for user "
-                        + UserGroupInformation.getCurrentUser().getUserName());
+                System.out.println("--------------Error while getting kerberos credential for user " + UserGroupInformation.getCurrentUser().getUserName());
             }
         }
 

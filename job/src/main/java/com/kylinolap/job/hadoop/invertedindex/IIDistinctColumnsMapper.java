@@ -57,8 +57,7 @@ public class IIDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, Text, ShortWri
         SplittedBytes[] parts = splitter.getSplitBuffers();
 
         if (nParts != columns.length) {
-            throw new RuntimeException("Got " + parts.length + " from -- " + value.toString()
-                    + " -- but only " + columns.length + " expected");
+            throw new RuntimeException("Got " + parts.length + " from -- " + value.toString() + " -- but only " + columns.length + " expected");
         }
 
         for (short i = 0; i < nParts; i++) {

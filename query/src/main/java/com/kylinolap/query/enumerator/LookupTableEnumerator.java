@@ -33,7 +33,7 @@ import com.kylinolap.storage.tuple.Tuple;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class LookupTableEnumerator implements Enumerator<Object[]> {
 
@@ -47,12 +47,11 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
         String lookupTableName = olapContext.firstTableScan.getCubeTable();
         DimensionDesc dim = olapContext.cubeDesc.findDimensionByTable(lookupTableName);
         if (dim == null)
-            throw new IllegalStateException("No dimension with derived columns found for lookup table "
-                    + lookupTableName + ", cube desc " + olapContext.cubeDesc);
+            throw new IllegalStateException("No dimension with derived columns found for lookup table " + lookupTableName + ", cube desc " + olapContext.cubeDesc);
 
         CubeInstance cube = olapContext.cubeInstance;
         CubeManager cubeMgr = CubeManager.getInstance(cube.getConfig());
-        //CubeSegment seg = cube.getTheOnlySegment();
+        // CubeSegment seg = cube.getTheOnlySegment();
         LookupStringTable table = cubeMgr.getLookupTable(cube.getLatestReadySegment(), dim);
         this.allRows = table.getAllRows();
 

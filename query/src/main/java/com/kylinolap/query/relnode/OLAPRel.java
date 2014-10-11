@@ -30,22 +30,22 @@ import org.slf4j.LoggerFactory;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public interface OLAPRel extends RelNode {
 
     public static final Logger logger = LoggerFactory.getLogger(OLAPRel.class);
 
-    // Calling convention for relational operations that occur in OLAP. 
+    // Calling convention for relational operations that occur in OLAP.
     public static final Convention CONVENTION = new Convention.Impl("OLAP", OLAPRel.class);
 
-    /** 
+    /**
      * get olap context
      */
     public OLAPContext getContext();
 
     /**
-     * get the row type of ColumnDesc 
+     * get the row type of ColumnDesc
      * 
      * @return
      */
@@ -100,7 +100,7 @@ public interface OLAPRel extends RelNode {
     public void implementOLAP(OLAPImplementor implementor);
 
     /**
-     * visitor pattern for query rewrite 
+     * visitor pattern for query rewrite
      */
 
     public static class RewriteImplementor {
@@ -120,8 +120,7 @@ public interface OLAPRel extends RelNode {
         }
 
         public static boolean needRewrite(OLAPContext ctx) {
-            boolean hasFactTable =
-                    ctx.hasJoin || ctx.firstTableScan.getCubeTable().equals(ctx.cubeDesc.getFactTable());
+            boolean hasFactTable = ctx.hasJoin || ctx.firstTableScan.getCubeTable().equals(ctx.cubeDesc.getFactTable());
             boolean hasRewriteFields = !ctx.rewriteFields.isEmpty();
             return hasRewriteFields && hasFactTable;
         }
@@ -145,8 +144,7 @@ public interface OLAPRel extends RelNode {
         }
 
         @Override
-        public EnumerableRel.Result visitChild(EnumerableRel parent, int ordinal, EnumerableRel child,
-                EnumerableRel.Prefer prefer) {
+        public EnumerableRel.Result visitChild(EnumerableRel parent, int ordinal, EnumerableRel child, EnumerableRel.Prefer prefer) {
             if (parent instanceof OLAPRel) {
                 OLAPRel olapRel = (OLAPRel) parent;
                 this.parentContext = olapRel.getContext();

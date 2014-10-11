@@ -52,7 +52,7 @@ import com.kylinolap.metadata.MetadataManager;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class GenericJobEngineTest {
     private static String cubeName = "test_kylin_cube_with_slr_empty";
@@ -65,9 +65,7 @@ public class GenericJobEngineTest {
     private static String mrInputDir = "/tmp/mapredsmokeinput";
     private static String mrOutputDir1 = "/tmp/mapredsmokeoutput1";
     private static String mrOutputDir2 = "/tmp/mapredsmokeoutput2";
-    private static String mrCmd =
-            "hadoop --config /etc/hadoop/conf jar /usr/lib/hadoop-mapreduce/hadoop-mapreduce-examples-2.*.jar wordcount "
-                    + mrInputDir + " ";
+    private static String mrCmd = "hadoop --config /etc/hadoop/conf jar /usr/lib/hadoop-mapreduce/hadoop-mapreduce-examples-2.*.jar wordcount " + mrInputDir + " ";
 
     public static void removeHdfsDir(SSHClient hadoopCli, String hdfsDir) throws Exception {
         String cmd = "hadoop fs -rm -f -r " + hdfsDir;
@@ -90,8 +88,7 @@ public class GenericJobEngineTest {
         return KylinConfig.getInstanceFromEnv().getRunAsRemoteCommand();
     }
 
-    public static void scpFilesToHdfs(SSHClient hadoopCli, String[] localFiles, String hdfsDir)
-            throws Exception {
+    public static void scpFilesToHdfs(SSHClient hadoopCli, String[] localFiles, String hdfsDir) throws Exception {
         String remoteTempDir = "/tmp/";
 
         List<String> nameList = new ArrayList<String>();
@@ -119,12 +116,9 @@ public class GenericJobEngineTest {
         FileUtils.copyDirectory(new File("../examples/test_case_data"), new File(tempTestMetadataUrl));
         System.setProperty(KylinConfig.KYLIN_CONF, tempTestMetadataUrl);
 
-
         // deploy files to hdfs
-        SSHClient hadoopCli =
-                new SSHClient(getHadoopCliHostname(), getHadoopCliUsername(), getHadoopCliPassword(), null);
-        scpFilesToHdfs(hadoopCli, new String[] { "src/test/resources/json/dummy_jobinstance.json" },
-                mrInputDir);
+        SSHClient hadoopCli = new SSHClient(getHadoopCliHostname(), getHadoopCliUsername(), getHadoopCliPassword(), null);
+        scpFilesToHdfs(hadoopCli, new String[] { "src/test/resources/json/dummy_jobinstance.json" }, mrInputDir);
         // deploy sample java jar
         hadoopCli.scpFileToRemote("src/test/resources/jarfile/SampleJavaProgram.jarfile", "/tmp");
         hadoopCli.scpFileToRemote("src/test/resources/jarfile/SampleBadJavaProgram.jarfile", "/tmp");
@@ -134,8 +128,7 @@ public class GenericJobEngineTest {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         kylinConfig.setMetadataUrl(tempTestMetadataUrl);
 
-        jobManager =
-                new JobManager("GenericJobEngineTest", new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
+        jobManager = new JobManager("GenericJobEngineTest", new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
 
         jobDAO = JobDAO.getInstance(KylinConfig.getInstanceFromEnv());
 
@@ -151,8 +144,7 @@ public class GenericJobEngineTest {
         System.clearProperty(KylinConfig.KYLIN_CONF);
 
         // print metrics
-        System.out.println("Job step duration seconds 80 percentile: "
-                + jobManager.getPercentileJobStepDuration(80));
+        System.out.println("Job step duration seconds 80 percentile: " + jobManager.getPercentileJobStepDuration(80));
         System.out.println("Max job step duration seconds: " + jobManager.getMaxJobStepDuration());
         System.out.println("Min job step duration seconds: " + jobManager.getMinJobStepDuration());
         System.out.println("# job steps executed: " + jobManager.getNumberOfJobStepsExecuted());
@@ -164,8 +156,7 @@ public class GenericJobEngineTest {
 
     @Before
     public void before() throws Exception {
-        SSHClient hadoopCli =
-                new SSHClient(getHadoopCliHostname(), getHadoopCliUsername(), getHadoopCliPassword(), null);
+        SSHClient hadoopCli = new SSHClient(getHadoopCliHostname(), getHadoopCliUsername(), getHadoopCliPassword(), null);
         removeHdfsDir(hadoopCli, mrOutputDir1);
         removeHdfsDir(hadoopCli, mrOutputDir2);
 
@@ -175,11 +166,10 @@ public class GenericJobEngineTest {
     }
 
     @Test(expected = InvalidJobInstanceException.class)
-    public void testSubmitDuplicatedJobs() throws IOException, InvalidJobInstanceException,
-            CubeIntegrityException {
+    public void testSubmitDuplicatedJobs() throws IOException, InvalidJobInstanceException, CubeIntegrityException {
         String uuid = "bad_job_2";
         JobInstance job = createASingleStepBadJobInstance(uuid);
-        //job.setStatus(JobStatusEnum.KILLED);
+        // job.setStatus(JobStatusEnum.KILLED);
         jobManager.submitJob(job);
         jobManager.submitJob(job);
     }
@@ -299,9 +289,7 @@ public class GenericJobEngineTest {
 
             JobInstance savedJob = jobManager.getJob(jobUuid);
             for (JobStep step : savedJob.getSteps()) {
-                if (step.getCmdType().equals(JobStepCmdTypeEnum.SHELL_CMD_HADOOP)
-                        && step.getStatus().equals(JobStepStatusEnum.RUNNING)
-                        && step.getInfo(JobInstance.MR_JOB_ID) != null) {
+                if (step.getCmdType().equals(JobStepCmdTypeEnum.SHELL_CMD_HADOOP) && step.getStatus().equals(JobStepStatusEnum.RUNNING) && step.getInfo(JobInstance.MR_JOB_ID) != null) {
                     System.out.println("MR step is running with id " + step.getInfo(JobInstance.MR_JOB_ID));
                     running = true;
                     break;
@@ -329,23 +317,21 @@ public class GenericJobEngineTest {
         }
     }
 
-    private JobInstance createAGoodJobInstance(String uuid, int syncCmdSleepSeconds) throws IOException,
-            CubeIntegrityException {
+    private JobInstance createAGoodJobInstance(String uuid, int syncCmdSleepSeconds) throws IOException, CubeIntegrityException {
         CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
         cube.getSegments().clear();
         CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).updateCube(cube);
-        CubeSegment seg =
-                CubeManager.getInstance(KylinConfig.getInstanceFromEnv())
-                        .allocateSegments(cube, CubeBuildTypeEnum.BUILD, 0, 12345L).get(0);
+        CubeSegment seg = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).allocateSegments(cube, CubeBuildTypeEnum.BUILD, 0, 12345L).get(0);
 
         JobInstance jobInstance = new JobInstance();
         jobInstance.setUuid(uuid);
         jobInstance.setRelatedCube(cubeName);
         jobInstance.setRelatedSegment(seg.getName());
         jobInstance.setName("A_Good_Job");
-        //jobInstance.setStatus(JobStatusEnum.PENDING);
+        // jobInstance.setStatus(JobStatusEnum.PENDING);
         jobInstance.setType(CubeBuildTypeEnum.BUILD);
-        //jobInstance.putInputParameter(JobConstants.PROP_STORAGE_LOCATION, "htablename");
+        // jobInstance.putInputParameter(JobConstants.PROP_STORAGE_LOCATION,
+        // "htablename");
 
         JobStep step1 = new JobStep();
         step1.setName("step1");
@@ -379,23 +365,21 @@ public class GenericJobEngineTest {
         return jobInstance;
     }
 
-    private JobInstance createASingleStepBadJobInstance(String uuid) throws IOException,
-            CubeIntegrityException {
+    private JobInstance createASingleStepBadJobInstance(String uuid) throws IOException, CubeIntegrityException {
         CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
         cube.getSegments().clear();
         CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).updateCube(cube);
-        CubeSegment seg =
-                CubeManager.getInstance(KylinConfig.getInstanceFromEnv())
-                        .allocateSegments(cube, CubeBuildTypeEnum.BUILD, 0, 12345L).get(0);
+        CubeSegment seg = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).allocateSegments(cube, CubeBuildTypeEnum.BUILD, 0, 12345L).get(0);
 
         JobInstance jobInstance = new JobInstance();
         jobInstance.setUuid(uuid);
         jobInstance.setRelatedCube(cubeName);
         jobInstance.setRelatedSegment(seg.getName());
         jobInstance.setName("A_Bad_Job");
-        //jobInstance.setStatus(JobStatusEnum.PENDING);
+        // jobInstance.setStatus(JobStatusEnum.PENDING);
         jobInstance.setType(CubeBuildTypeEnum.BUILD);
-        //jobInstance.putInputParameter(JobConstants.PROP_STORAGE_LOCATION, "htablename");
+        // jobInstance.putInputParameter(JobConstants.PROP_STORAGE_LOCATION,
+        // "htablename");
 
         JobStep step1 = new JobStep();
         step1.setName("step1");
@@ -409,23 +393,21 @@ public class GenericJobEngineTest {
         return jobInstance;
     }
 
-    private static JobInstance createARunningJobInstance(String uuid) throws IOException,
-            CubeIntegrityException {
+    private static JobInstance createARunningJobInstance(String uuid) throws IOException, CubeIntegrityException {
         CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
         cube.getSegments().clear();
         CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).updateCube(cube);
-        CubeSegment seg =
-                CubeManager.getInstance(KylinConfig.getInstanceFromEnv())
-                        .allocateSegments(cube, CubeBuildTypeEnum.BUILD, 0, 12345L).get(0);
+        CubeSegment seg = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).allocateSegments(cube, CubeBuildTypeEnum.BUILD, 0, 12345L).get(0);
 
         JobInstance jobInstance = new JobInstance();
         jobInstance.setUuid(uuid);
         jobInstance.setRelatedCube(cubeName);
         jobInstance.setRelatedSegment(seg.getName());
         jobInstance.setName("A_Running_Job");
-        //jobInstance.setStatus(JobStatusEnum.RUNNING);
+        // jobInstance.setStatus(JobStatusEnum.RUNNING);
         jobInstance.setType(CubeBuildTypeEnum.BUILD);
-        //jobInstance.putInputParameter(JobConstants.PROP_STORAGE_LOCATION, "htablename");
+        // jobInstance.putInputParameter(JobConstants.PROP_STORAGE_LOCATION,
+        // "htablename");
 
         JobStep step1 = new JobStep();
         step1.setName("step1");

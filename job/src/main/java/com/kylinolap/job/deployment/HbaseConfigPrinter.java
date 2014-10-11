@@ -1,16 +1,17 @@
 package com.kylinolap.job.deployment;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.io.File;
 import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Created by honma on 9/30/14.
  * <p/>
  * This class is assumed to be run by
  * "hbase org.apache.hadoop.util.RunJar kylin-job-0.5.7-SNAPSHOT-job.jar com.kylinolap.job.deployment.HadoopConfigPrinter "
- * in the shell, so that hbase and hadoop related environment variables will be visible to this class.
+ * in the shell, so that hbase and hadoop related environment variables will be
+ * visible to this class.
  */
 public class HbaseConfigPrinter {
     public static void main(String[] args) {
@@ -23,6 +24,7 @@ public class HbaseConfigPrinter {
         System.out.println("export KYLIN_HBASE_CONF_PATH=" + ConfigLoader.HBASE_CONF_FOLDER_LOADER.loadValue());
     }
 
+    @SuppressWarnings("unused")
     private static void printAllEnv() {
         for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
             System.out.println("Key: " + entry.getKey());
@@ -30,7 +32,6 @@ public class HbaseConfigPrinter {
             System.out.println();
         }
     }
-
 
     enum ConfigLoader {
 
@@ -58,8 +59,7 @@ public class HbaseConfigPrinter {
                 for (String path : paths) {
                     path = path.trim();
                     File f = new File(path);
-                    if (StringUtils.containsIgnoreCase(path, "conf")
-                            && f.exists() && f.isDirectory() && f.getName().equalsIgnoreCase("conf")) {
+                    if (StringUtils.containsIgnoreCase(path, "conf") && f.exists() && f.isDirectory() && f.getName().equalsIgnoreCase("conf")) {
                         sb.append(":" + path);
                     }
                 }

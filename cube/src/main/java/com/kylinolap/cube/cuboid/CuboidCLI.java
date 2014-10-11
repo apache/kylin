@@ -29,7 +29,7 @@ import com.kylinolap.metadata.model.cube.RowKeyDesc.HierarchyMask;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class CuboidCLI {
 
@@ -56,8 +56,7 @@ public class CuboidCLI {
             for (Long sc : spnanningCuboids) {
                 boolean notfound = cuboidSet.add(sc);
                 if (!notfound) {
-                    throw new IllegalStateException("Find duplicate spanning cuboid " + sc + " from cuboid "
-                            + cuboid);
+                    throw new IllegalStateException("Find duplicate spanning cuboid " + sc + " from cuboid " + cuboid);
                 }
                 cuboidQueue.push(sc);
             }
@@ -65,14 +64,12 @@ public class CuboidCLI {
 
         TreeSet<Long> enumCuboids = enumCalcCuboidCount(cube);
         if (enumCuboids.equals(cuboidSet) == false) {
-            throw new IllegalStateException("Expected cuboid set " + enumCuboids + "; but actual cuboid set "
-                    + cuboidSet);
+            throw new IllegalStateException("Expected cuboid set " + enumCuboids + "; but actual cuboid set " + cuboidSet);
         }
 
         int mathCount = mathCalcCuboidCount(cube);
         if (mathCount != enumCuboids.size()) {
-            throw new IllegalStateException("Math cuboid count " + mathCount + ", but actual cuboid count "
-                    + enumCuboids.size());
+            throw new IllegalStateException("Math cuboid count " + mathCount + ", but actual cuboid count " + enumCuboids.size());
         }
 
         return mathCount;
@@ -122,7 +119,8 @@ public class CuboidCLI {
             result += lastAggrGroupCount;
         }
         result *= 2; // for zero-tail
-        if (cube.getRowkey().getTailMask() == 0) { // last group may not have zero-tail cuboid
+        if (cube.getRowkey().getTailMask() == 0) { // last group may not have
+                                                   // zero-tail cuboid
             result -= lastAggrGroupCount;
         }
         result--; // minus the all-zero cuboid
@@ -132,8 +130,7 @@ public class CuboidCLI {
     private static int mathCalcCuboidCount_aggrGroup(CubeDesc cube, AggrGroupMask aggrGroupMask) {
         long groupMask = aggrGroupMask.groupMask;
         long nonUniqueMask = groupMask & (~aggrGroupMask.uniqueMask);
-        return mathCalcCuboidCount_combination(cube, groupMask)
-                - mathCalcCuboidCount_combination(cube, nonUniqueMask);
+        return mathCalcCuboidCount_combination(cube, groupMask) - mathCalcCuboidCount_combination(cube, nonUniqueMask);
     }
 
     private static int mathCalcCuboidCount_combination(CubeDesc cube, long colMask) {

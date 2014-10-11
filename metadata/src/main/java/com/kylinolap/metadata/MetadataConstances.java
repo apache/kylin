@@ -20,7 +20,7 @@ package com.kylinolap.metadata;
  * Constances to describe metadata and it's change.
  * 
  * @author jianliu
- *
+ * 
  */
 public interface MetadataConstances {
 

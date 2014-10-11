@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class DefaultX509TrustManager implements X509TrustManager {
 
@@ -42,13 +42,12 @@ public class DefaultX509TrustManager implements X509TrustManager {
 
     /**
      * Constructor for DefaultX509TrustManager.
-     *
+     * 
      */
     public DefaultX509TrustManager(KeyStore keystore) throws NoSuchAlgorithmException, KeyStoreException {
         super();
 
-        TrustManagerFactory factory =
-                TrustManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        TrustManagerFactory factory = TrustManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
         factory.init(keystore);
 
         TrustManager[] trustmanagers = factory.getTrustManagers();
@@ -66,7 +65,7 @@ public class DefaultX509TrustManager implements X509TrustManager {
 
     public boolean isClientTrusted(X509Certificate[] certificates) {
         return true;
-        //return this.standardTrustManager.isClientTrusted(certificates);
+        // return this.standardTrustManager.isClientTrusted(certificates);
     }
 
     public boolean isServerTrusted(X509Certificate[] certificates) {
@@ -94,7 +93,7 @@ public class DefaultX509TrustManager implements X509TrustManager {
             return true;
         } else {
             return true;
-            //     return this.standardTrustManager.isServerTrusted(certificates);
+            // return this.standardTrustManager.isServerTrusted(certificates);
         }
     }
 

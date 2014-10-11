@@ -1,15 +1,16 @@
 package com.kylinolap.job.tools;
 
-import com.kylinolap.common.util.ClasspathUtil;
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import java.io.File;
+import java.io.IOException;
+
 import org.codehaus.jettison.json.JSONException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
+import com.kylinolap.common.util.ClasspathUtil;
+import com.kylinolap.common.util.LocalFileMetadataTestCase;
 
 /**
  * Created by honma on 9/17/14.
@@ -30,9 +31,9 @@ public class CubeMigrationTests extends LocalFileMetadataTestCase {
     @Test
     public void testMigrate() throws IOException, JSONException, InterruptedException {
 
-
-        //CubeMigrationCLI.moveCube(KylinConfig.getInstanceFromEnv(), KylinConfig.getInstanceFromEnv(),
-        //"test_kylin_cube_with_slr_empty", "migration", "true", "false");
+        // CubeMigrationCLI.moveCube(KylinConfig.getInstanceFromEnv(),
+        // KylinConfig.getInstanceFromEnv(),
+        // "test_kylin_cube_with_slr_empty", "migration", "true", "false");
     }
 
 }

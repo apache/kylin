@@ -31,7 +31,7 @@ import com.kylinolap.rest.service.TestBase;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class AccessControllerTest extends TestBase {
 
@@ -52,8 +52,7 @@ public class AccessControllerTest extends TestBase {
     public void testBasics() throws IOException {
         Assert.assertNotNull(accessController.getAccessEntities("JobInstance", ""));
 
-        List<AccessEntryResponse> aes =
-                accessController.getAccessEntities("CubeInstance", "a24ca905-1fc6-4f67-985c-38fa5aeafd92");
+        List<AccessEntryResponse> aes = accessController.getAccessEntities("CubeInstance", "a24ca905-1fc6-4f67-985c-38fa5aeafd92");
         Assert.assertTrue(aes.size() == 0);
 
         AccessRequest accessRequest = new AccessRequest();

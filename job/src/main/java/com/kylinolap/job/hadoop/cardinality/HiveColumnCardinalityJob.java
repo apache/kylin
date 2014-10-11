@@ -37,12 +37,10 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
     public static final String JOB_TITLE = "Kylin Hive Column Cardinality Job";
 
     @SuppressWarnings("static-access")
-    protected static final Option OPTION_FORMAT = OptionBuilder.withArgName("input format").hasArg()
-            .isRequired(true).withDescription("The file format").create("iformat");
+    protected static final Option OPTION_FORMAT = OptionBuilder.withArgName("input format").hasArg().isRequired(true).withDescription("The file format").create("iformat");
 
     @SuppressWarnings("static-access")
-    protected static final Option OPTION_INPUT_DELIM = OptionBuilder.withArgName("input_dilim").hasArg()
-            .isRequired(false).withDescription("Input delim").create("idelim");
+    protected static final Option OPTION_INPUT_DELIM = OptionBuilder.withArgName("input_dilim").hasArg().isRequired(false).withDescription("Input delim").create("idelim");
 
     public static final String KEY_INPUT_DELIM = "INPUT_DELIM";
     public static final String OUTPUT_PATH = "/tmp/cardinality";
@@ -67,7 +65,9 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
         this.tokenPath = tokenPath;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.hadoop.conf.Configured#getConf()
      */
     @Override
@@ -92,14 +92,13 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
             }
         }
 
-        //        conf.addResource("/apache/hadoop/conf/mapred-site.xml");
+        // conf.addResource("/apache/hadoop/conf/mapred-site.xml");
         if (tokenPath != null) {
             conf.set(MRJobConfig.MAPREDUCE_JOB_CREDENTIALS_BINARY, tokenPath);
             conf.set("hadoop.security.authentication", "kerberos");
             UserGroupInformation.setConfiguration(conf);
             try {
-                UserGroupInformation
-                        .loginUserFromKeytab("b_kylin@CORP.EBAY.COM", "~/.keytabs/b_kylin.keytab");
+                UserGroupInformation.loginUserFromKeytab("b_kylin@CORP.EBAY.COM", "~/.keytabs/b_kylin.keytab");
                 System.out.println("###" + UserGroupInformation.getLoginUser());
             } catch (IOException e) {
                 e.printStackTrace();
@@ -203,16 +202,13 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
 
     public static void main(String[] args) {
 
-        String location =
-                "hdfs://apollo-phx-nn.vip.ebay.com:8020/tmp/f1a98d8a-26b9-452e-ab7b-9f01e5a6459b/shipping_sisense_cube_desc_intermediate_table";
+        String location = "hdfs://apollo-phx-nn.vip.ebay.com:8020/tmp/f1a98d8a-26b9-452e-ab7b-9f01e5a6459b/shipping_sisense_cube_desc_intermediate_table";
         String tempName = "test";
         String inputFormat = "org.apache.hadoop.mapred.SequenceFileInputFormat";
         String delim = "177";
         String jarPath = "/usr/lib/kylin/kylin-index-latest.jar";
 
-        args =
-                new String[] { "-input", location, "-output", "/tmp/cardinality/" + tempName, "-iformat",
-                        inputFormat, "-idelim", delim };
+        args = new String[] { "-input", location, "-output", "/tmp/cardinality/" + tempName, "-iformat", inputFormat, "-idelim", delim };
         HiveColumnCardinalityJob job = new HiveColumnCardinalityJob(jarPath, "/tmp/krb5cc_882");
         try {
             ToolRunner.run(job, args);

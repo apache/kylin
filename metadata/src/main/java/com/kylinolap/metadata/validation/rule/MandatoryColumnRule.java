@@ -31,12 +31,16 @@ import com.kylinolap.metadata.validation.ValidateContext;
  * Validate that mandatory column must NOT appear in aggregation group.
  * 
  * @author jianliu
- *
+ * 
  */
 public class MandatoryColumnRule implements IValidatorRule<CubeDesc> {
 
-    /* (non-Javadoc)
-     * @see com.kylinolap.metadata.validation.IValidatorRule#validate(java.lang.Object, com.kylinolap.metadata.validation.ValidateContext)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * com.kylinolap.metadata.validation.IValidatorRule#validate(java.lang.Object
+     * , com.kylinolap.metadata.validation.ValidateContext)
      */
     @Override
     public void validate(CubeDesc cube, ValidateContext context) {
@@ -60,8 +64,7 @@ public class MandatoryColumnRule implements IValidatorRule<CubeDesc> {
             for (int j = 0; j < group.length; j++) {
                 String col = group[j];
                 if (mands.contains(col)) {
-                    context.addResult(ResultLevel.ERROR, "mandatory column " + col
-                            + " must not be in aggregation group [" + ArrayUtils.toString(group) + "]");
+                    context.addResult(ResultLevel.ERROR, "mandatory column " + col + " must not be in aggregation group [" + ArrayUtils.toString(group) + "]");
                 }
             }
         }

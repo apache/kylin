@@ -27,7 +27,7 @@ import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
 /**
  * 
  * @author xjiang
- *
+ * 
  */
 public class ColumnValueRange {
     private TblColRef column;
@@ -157,8 +157,7 @@ public class ColumnValueRange {
     }
 
     private boolean between(String v, String beginValue, String endValue) {
-        return (beginValue == null || order.compare(beginValue, v) <= 0)
-                && (endValue == null || order.compare(v, endValue) <= 0);
+        return (beginValue == null || order.compare(beginValue, v) <= 0) && (endValue == null || order.compare(v, endValue) <= 0);
     }
 
     public String toString() {

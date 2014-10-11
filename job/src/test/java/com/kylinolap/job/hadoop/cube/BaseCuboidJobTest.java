@@ -60,9 +60,7 @@ public class BaseCuboidJobTest extends LocalFileMetadataTestCase {
         String level = "0";
         FileUtil.fullyDelete(new File(output));
 
-        String[] args =
-                { "-input", input, "-cubename", cubeName, "-segmentname", segmentName, "-output", output,
-                        "-jobname", jobname, "-level", level };
+        String[] args = { "-input", input, "-cubename", cubeName, "-segmentname", segmentName, "-output", output, "-jobname", jobname, "-level", level };
         assertEquals("Job failed", 0, ToolRunner.run(conf, new BaseCuboidJob(), args));
     }
 

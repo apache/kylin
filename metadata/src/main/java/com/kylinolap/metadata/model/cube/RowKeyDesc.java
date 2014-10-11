@@ -57,7 +57,7 @@ public class RowKeyDesc {
     @JsonProperty("aggregation_groups")
     private String[][] aggregationGroups;
 
-    // computed content    
+    // computed content
     private CubeDesc cubeRef;
     private Map<TblColRef, RowKeyColDesc> columnMap;
 
@@ -73,7 +73,7 @@ public class RowKeyDesc {
         return rowkeyColumns;
     }
 
-    //search a specific row key col
+    // search a specific row key col
     public int getRowKeyIndexByColumnName(String columnName) {
         if (this.rowkeyColumns == null)
             return -1;
@@ -175,8 +175,7 @@ public class RowKeyDesc {
 
     @Override
     public String toString() {
-        return "RowKeyDesc [rowkeyColumns=" + Arrays.toString(rowkeyColumns) + ", aggregationGroups="
-                + Arrays.toString(aggregationGroups) + "]";
+        return "RowKeyDesc [rowkeyColumns=" + Arrays.toString(rowkeyColumns) + ", aggregationGroups=" + Arrays.toString(aggregationGroups) + "]";
     }
 
     private void buildRowKey(Map<String, TblColRef> colNameAbbr) {
@@ -189,8 +188,7 @@ public class RowKeyDesc {
             col.setBitIndex(rowkeyColumns.length - i - 1);
             col.setColRef(colNameAbbr.get(col.getColumn()));
             if (col.getColRef() == null)
-                throw new IllegalArgumentException("Cannot find rowkey column " + col.getColumn()
-                        + " in cube " + cubeRef);
+                throw new IllegalArgumentException("Cannot find rowkey column " + col.getColumn() + " in cube " + cubeRef);
 
             columnMap.put(col.getColRef(), col);
 
@@ -222,8 +220,7 @@ public class RowKeyDesc {
             for (int j = 0; j < aggGrp.length; j++) {
                 TblColRef aggCol = colNameAbbr.get(aggGrp[j].toUpperCase());
                 if (aggCol == null) {
-                    throw new IllegalArgumentException("Can't find aggregation column " + aggGrp[j]
-                            + " in  cube " + this.cubeRef.getName());
+                    throw new IllegalArgumentException("Can't find aggregation column " + aggGrp[j] + " in  cube " + this.cubeRef.getName());
                 }
                 Integer index = getColumnBitIndex(aggCol);
                 mask.groupMask |= 1L << index;
@@ -236,7 +233,8 @@ public class RowKeyDesc {
         this.tailMask = fullMask ^ mandatoryColumnMask ^ aggrGroupFullMask;
 
         // unique mask = (bits in this group) - (bits in following groups)
-        // leftover mask = (tail bits) + (bits in following groups) - (bits in this group)
+        // leftover mask = (tail bits) + (bits in following groups) - (bits in
+        // this group)
         for (int i = 0; i < aggrGroupMasks.length; i++) {
             AggrGroupMask mask = aggrGroupMasks[i];
 
@@ -269,7 +267,8 @@ public class RowKeyDesc {
                 long bit = 1L << index;
 
                 if ((tailMask & bit) > 0)
-                    continue; // ignore levels in tail, they don't participate aggregation group combination anyway
+                    continue; // ignore levels in tail, they don't participate
+                              // aggregation group combination anyway
 
                 mask.fullMask |= bit;
                 allMaskList.add(mask.fullMask);

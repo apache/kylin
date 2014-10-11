@@ -30,26 +30,21 @@ import com.kylinolap.job.tools.HadoopStatusChecker;
 
 /**
  * @author xjiang
- *
+ * 
  */
 public class ShellHadoopCmdOutput extends ShellCmdOutput {
 
-    //mr job
-    private static final Pattern PATTERN_APP_ID = Pattern
-            .compile("Submitted application (.*?) to ResourceManager");
+    // mr job
+    private static final Pattern PATTERN_APP_ID = Pattern.compile("Submitted application (.*?) to ResourceManager");
     private static final Pattern PATTERN_APP_URL = Pattern.compile("The url to track the job: (.*)");
     private static final Pattern PATTERN_JOB_ID = Pattern.compile("Running job: (.*)");
-    private static final Pattern PATTERN_HDFS_BYTES_WRITTEN = Pattern
-            .compile("HDFS: Number of bytes written=(\\d+)");
+    private static final Pattern PATTERN_HDFS_BYTES_WRITTEN = Pattern.compile("HDFS: Number of bytes written=(\\d+)");
     private static final Pattern PATTERN_SOURCE_RECORDS_COUNT = Pattern.compile("Map input records=(\\d+)");
-    private static final Pattern PATTERN_SOURCE_RECORDS_SIZE = Pattern
-            .compile("HDFS Read: (\\d+) HDFS Write");
+    private static final Pattern PATTERN_SOURCE_RECORDS_SIZE = Pattern.compile("HDFS Read: (\\d+) HDFS Write");
 
-    //hive
-    private static final Pattern PATTERN_HIVE_APP_ID_URL = Pattern
-            .compile("Starting Job = (.*?), Tracking URL = (.*)");
-    private static final Pattern PATTERN_HIVE_BYTES_WRITTEN = Pattern
-            .compile("HDFS Read: (\\d+) HDFS Write: (\\d+) SUCCESS");
+    // hive
+    private static final Pattern PATTERN_HIVE_APP_ID_URL = Pattern.compile("Starting Job = (.*?), Tracking URL = (.*)");
+    private static final Pattern PATTERN_HIVE_BYTES_WRITTEN = Pattern.compile("HDFS Read: (\\d+) HDFS Write: (\\d+) SUCCESS");
 
     private final KylinConfig config;
     private final String jobInstanceID;
@@ -157,7 +152,7 @@ public class ShellHadoopCmdOutput extends ShellCmdOutput {
 
         matcher = PATTERN_HIVE_BYTES_WRITTEN.matcher(message);
         if (matcher.find()) {
-            //String hdfsRead = matcher.group(1);
+            // String hdfsRead = matcher.group(1);
             String hdfsWritten = matcher.group(2);
             jobStep.putInfo(JobInstance.HDFS_BYTES_WRITTEN, hdfsWritten);
             jobDAO.updateJobInstance(jobInstance);

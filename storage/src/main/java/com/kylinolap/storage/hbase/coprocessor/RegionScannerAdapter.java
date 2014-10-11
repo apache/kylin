@@ -27,7 +27,7 @@ import org.apache.hadoop.hbase.regionserver.RegionScanner;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class RegionScannerAdapter implements RegionScanner {
 

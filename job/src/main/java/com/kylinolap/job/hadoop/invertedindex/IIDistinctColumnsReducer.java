@@ -45,8 +45,7 @@ public class IIDistinctColumnsReducer extends Reducer<ShortWritable, Text, NullW
     }
 
     @Override
-    public void reduce(ShortWritable key, Iterable<Text> values, Context context) throws IOException,
-            InterruptedException {
+    public void reduce(ShortWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
         String columnName = columns[key.get()];
 
         HashSet<ByteArray> set = new HashSet<ByteArray>();

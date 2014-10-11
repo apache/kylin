@@ -18,7 +18,7 @@ package com.kylinolap.job.exception;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class InvalidJobInstanceException extends Exception {
 

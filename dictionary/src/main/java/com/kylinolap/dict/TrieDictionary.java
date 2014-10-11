@@ -28,12 +28,13 @@ import java.util.HashMap;
 import com.kylinolap.common.util.BytesUtil;
 
 /**
- * A dictionary based on Trie data structure that maps enumerations of byte[] to int IDs.
+ * A dictionary based on Trie data structure that maps enumerations of byte[] to
+ * int IDs.
  * 
- * With Trie the memory footprint of the mapping is kinda minimized at the cost CPU, if
- * compared to HashMap of ID Arrays. Performance test shows Trie is roughly 10 times slower,
- * so there's a cache layer overlays on top of Trie and gracefully fall back to Trie using
- * a weak reference.
+ * With Trie the memory footprint of the mapping is kinda minimized at the cost
+ * CPU, if compared to HashMap of ID Arrays. Performance test shows Trie is
+ * roughly 10 times slower, so there's a cache layer overlays on top of Trie and
+ * gracefully fall back to Trie using a weak reference.
  * 
  * The implementation is thread-safe.
  * 
@@ -96,10 +97,35 @@ public class TrieDictionary<T> extends Dictionary<T> {
                 this.bytesConvert = (BytesConverter<T>) Class.forName(converterName).newInstance();
 
             this.nValues = BytesUtil.readUnsigned(trieBytes, headSize + sizeChildOffset, sizeNoValuesBeneath);
-            this.sizeOfId = BytesUtil.sizeForValue(baseId + nValues + 1); // note baseId could raise 1 byte in ID space, +1 to reserve all 0xFF for NULL case
-            this.childOffsetMask =
-                    ~((BIT_IS_LAST_CHILD | BIT_IS_END_OF_VALUE) << ((sizeChildOffset - 1) * 8));
-            this.firstByteOffset = sizeChildOffset + sizeNoValuesBeneath + 1; // the offset from begin of node to its first value byte
+            this.sizeOfId = BytesUtil.sizeForValue(baseId + nValues + 1); // note
+                                                                          // baseId
+                                                                          // could
+                                                                          // raise
+                                                                          // 1
+                                                                          // byte
+                                                                          // in
+                                                                          // ID
+                                                                          // space,
+                                                                          // +1
+                                                                          // to
+                                                                          // reserve
+                                                                          // all
+                                                                          // 0xFF
+                                                                          // for
+                                                                          // NULL
+                                                                          // case
+            this.childOffsetMask = ~((BIT_IS_LAST_CHILD | BIT_IS_END_OF_VALUE) << ((sizeChildOffset - 1) * 8));
+            this.firstByteOffset = sizeChildOffset + sizeNoValuesBeneath + 1; // the
+                                                                              // offset
+                                                                              // from
+                                                                              // begin
+                                                                              // of
+                                                                              // node
+                                                                              // to
+                                                                              // its
+                                                                              // first
+                                                                              // value
+                                                                              // byte
         } catch (Exception e) {
             if (e instanceof RuntimeException)
                 throw (RuntimeException) e;
@@ -136,7 +162,9 @@ public class TrieDictionary<T> extends Dictionary<T> {
     @Override
     final protected int getIdFromValueImpl(T value, int roundingFlag) {
         if (enableCache && roundingFlag == 0) {
-            HashMap cache = valueToIdCache.get(); // SoftReference to skip cache gracefully when short of memory
+            HashMap cache = valueToIdCache.get(); // SoftReference to skip cache
+                                                  // gracefully when short of
+                                                  // memory
             if (cache != null) {
                 Integer id = null;
                 id = (Integer) cache.get(value);
@@ -159,20 +187,25 @@ public class TrieDictionary<T> extends Dictionary<T> {
         int seq = lookupSeqNoFromValue(headSize, value, offset, offset + len, roundingFlag);
         int id = calcIdFromSeqNo(seq);
         if (id < 0)
-            throw new IllegalArgumentException("Not a valid value: "
-                    + bytesConvert.convertFromBytes(value, offset, len));
+            throw new IllegalArgumentException("Not a valid value: " + bytesConvert.convertFromBytes(value, offset, len));
         return id;
     }
 
     /**
      * returns a code point from [0, nValues), preserving order of value
-     * @param n -- the offset of current node
-     * @param inp -- input value bytes to lookup
-     * @param o -- offset in the input value bytes matched so far
-     * @param inpEnd -- end of input
-     * @param roundingFlag -- =0: return -1 if not found
-     *                     -- <0: return closest smaller if not found, might be -1
-     *                     -- >0: return closest bigger if not found, might be nValues
+     * 
+     * @param n
+     *            -- the offset of current node
+     * @param inp
+     *            -- input value bytes to lookup
+     * @param o
+     *            -- offset in the input value bytes matched so far
+     * @param inpEnd
+     *            -- end of input
+     * @param roundingFlag
+     *            -- =0: return -1 if not found -- <0: return closest smaller if
+     *            not found, might be -1 -- >0: return closest bigger if not
+     *            found, might be nValues
      */
     private int lookupSeqNoFromValue(int n, byte[] inp, int o, int inpEnd, int roundingFlag) {
         if (inp.length == 0) // special 'empty' value
@@ -181,10 +214,14 @@ public class TrieDictionary<T> extends Dictionary<T> {
         int seq = 0; // the sequence no under track
 
         while (true) {
-            // match the current node, note [0] of node's value has been matched when this node is selected by its parent
+            // match the current node, note [0] of node's value has been matched
+            // when this node is selected by its parent
             int p = n + firstByteOffset; // start of node's value
-            int end = p + BytesUtil.readUnsigned(trieBytes, p - 1, 1); // end of node's value
-            for (p++; p < end && o < inpEnd; p++, o++) { // note matching start from [1]
+            int end = p + BytesUtil.readUnsigned(trieBytes, p - 1, 1); // end of
+                                                                       // node's
+                                                                       // value
+            for (p++; p < end && o < inpEnd; p++, o++) { // note matching start
+                                                         // from [1]
                 if (trieBytes[p] != inp[o]) {
                     int comp = BytesUtil.compareByteUnsigned(trieBytes[p], inp[o]);
                     if (comp < 0) {
@@ -197,7 +234,9 @@ public class TrieDictionary<T> extends Dictionary<T> {
             // node completely matched, is input all consumed?
             boolean isEndOfValue = checkFlag(n, BIT_IS_END_OF_VALUE);
             if (o == inpEnd) {
-                return p == end && isEndOfValue ? seq : roundSeqNo(roundingFlag, seq - 1, -1, seq); // input all matched
+                return p == end && isEndOfValue ? seq : roundSeqNo(roundingFlag, seq - 1, -1, seq); // input
+                                                                                                    // all
+                                                                                                    // matched
             }
             if (isEndOfValue)
                 seq++;
@@ -205,23 +244,42 @@ public class TrieDictionary<T> extends Dictionary<T> {
             // find a child to continue
             int c = headSize + (BytesUtil.readUnsigned(trieBytes, n, sizeChildOffset) & childOffsetMask);
             if (c == headSize) // has no children
-                return roundSeqNo(roundingFlag, seq - 1, -1, seq); // input only partially matched
+                return roundSeqNo(roundingFlag, seq - 1, -1, seq); // input only
+                                                                   // partially
+                                                                   // matched
             byte inpByte = inp[o];
             int comp;
             while (true) {
                 p = c + firstByteOffset;
                 comp = BytesUtil.compareByteUnsigned(trieBytes[p], inpByte);
-                if (comp == 0) { // continue in the matching child, reset n and loop again
+                if (comp == 0) { // continue in the matching child, reset n and
+                                 // loop again
                     n = c;
                     o++;
                     break;
                 } else if (comp < 0) { // try next child
                     seq += BytesUtil.readUnsigned(trieBytes, c + sizeChildOffset, sizeNoValuesBeneath);
                     if (checkFlag(c, BIT_IS_LAST_CHILD))
-                        return roundSeqNo(roundingFlag, seq - 1, -1, seq); // no child can match the next byte of input
+                        return roundSeqNo(roundingFlag, seq - 1, -1, seq); // no
+                                                                           // child
+                                                                           // can
+                                                                           // match
+                                                                           // the
+                                                                           // next
+                                                                           // byte
+                                                                           // of
+                                                                           // input
                     c = p + BytesUtil.readUnsigned(trieBytes, p - 1, 1);
                 } else { // children are ordered by their first value byte
-                    return roundSeqNo(roundingFlag, seq - 1, -1, seq); // no child can match the next byte of input
+                    return roundSeqNo(roundingFlag, seq - 1, -1, seq); // no
+                                                                       // child
+                                                                       // can
+                                                                       // match
+                                                                       // the
+                                                                       // next
+                                                                       // byte
+                                                                       // of
+                                                                       // input
                 }
             }
         }
@@ -239,7 +297,9 @@ public class TrieDictionary<T> extends Dictionary<T> {
     @Override
     final protected T getValueFromIdImpl(int id) {
         if (enableCache) {
-            Object[] cache = idToValueCache.get(); // SoftReference to skip cache gracefully when short of memory
+            Object[] cache = idToValueCache.get(); // SoftReference to skip
+                                                   // cache gracefully when
+                                                   // short of memory
             if (cache != null) {
                 int seq = calcSeqNoFromId(id);
                 if (seq < 0 || seq >= nValues)
@@ -271,11 +331,17 @@ public class TrieDictionary<T> extends Dictionary<T> {
     }
 
     /**
-     * returns a code point from [0, nValues), preserving order of value, or -1 if not found
-     * @param n -- the offset of current node
-     * @param seq -- the code point under track
-     * @param o -- write offset in returnValue
-     * @param returnValue -- where return value is written to
+     * returns a code point from [0, nValues), preserving order of value, or -1
+     * if not found
+     * 
+     * @param n
+     *            -- the offset of current node
+     * @param seq
+     *            -- the code point under track
+     * @param o
+     *            -- write offset in returnValue
+     * @param returnValue
+     *            -- where return value is written to
      */
     private int lookupValueFromSeqNo(int n, int seq, byte[] returnValue, int offset) {
         int o = offset;
@@ -301,7 +367,8 @@ public class TrieDictionary<T> extends Dictionary<T> {
             int nValuesBeneath;
             while (true) {
                 nValuesBeneath = BytesUtil.readUnsigned(trieBytes, c + sizeChildOffset, sizeNoValuesBeneath);
-                if (seq - nValuesBeneath < 0) { // value is under this child, reset n and loop again
+                if (seq - nValuesBeneath < 0) { // value is under this child,
+                                                // reset n and loop again
                     n = c;
                     break;
                 } else { // go to next child
@@ -381,20 +448,20 @@ public class TrieDictionary<T> extends Dictionary<T> {
 
     public static void main(String[] args) throws Exception {
         TrieDictionaryBuilder<String> b = new TrieDictionaryBuilder<String>(new StringBytesConverter());
-        //        b.addValue("part");
-        //        b.print();
-        //        b.addValue("part");
-        //        b.print();
-        //        b.addValue("par");
-        //        b.print();
-        //        b.addValue("partition");
-        //        b.print();
-        //        b.addValue("party");
-        //        b.print();
-        //        b.addValue("parties");
-        //        b.print();
-        //        b.addValue("paint");
-        //        b.print();
+        // b.addValue("part");
+        // b.print();
+        // b.addValue("part");
+        // b.print();
+        // b.addValue("par");
+        // b.print();
+        // b.addValue("partition");
+        // b.print();
+        // b.addValue("party");
+        // b.print();
+        // b.addValue("parties");
+        // b.print();
+        // b.addValue("paint");
+        // b.print();
         b.addValue("-000000.41");
         b.addValue("0000101.81");
         b.addValue("6779331");

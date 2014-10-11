@@ -25,7 +25,7 @@ import com.kylinolap.common.util.JsonUtil;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class DictionaryInfoSerializer implements Serializer<DictionaryInfo> {
 

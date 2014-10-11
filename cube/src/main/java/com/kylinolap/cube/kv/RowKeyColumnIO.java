@@ -31,7 +31,7 @@ import com.kylinolap.metadata.model.cube.TblColRef;
 
 /**
  * Read/Write column values from/into bytes
- *
+ * 
  * @author yangli9
  */
 @SuppressWarnings("unchecked")
@@ -61,13 +61,11 @@ public class RowKeyColumnIO {
         }
     }
 
-    public void writeColumn(TblColRef column, byte[] value, int valueLen, byte dft, byte[] output,
-            int outputOffset) {
+    public void writeColumn(TblColRef column, byte[] value, int valueLen, byte dft, byte[] output, int outputOffset) {
         writeColumn(column, value, valueLen, 0, dft, output, outputOffset);
     }
 
-    public void writeColumn(TblColRef column, byte[] value, int valueLen, int roundingFlag, byte dft,
-            byte[] output, int outputOffset) {
+    public void writeColumn(TblColRef column, byte[] value, int valueLen, int roundingFlag, byte dft, byte[] output, int outputOffset) {
 
         Dictionary<String> dict = getDictionary(column);
         int columnLen = getColumnLength(column);
@@ -86,9 +84,7 @@ public class RowKeyColumnIO {
         } catch (IllegalArgumentException ex) {
             for (int i = outputOffset; i < outputOffset + columnLen; i++)
                 output[i] = dft;
-            logger.error("Can't translate value " + Bytes.toString(value, 0, valueLen)
-                    + " to dictionary ID, roundingFlag " + roundingFlag + ". Using default value "
-                    + String.format("\\x%02X", dft));
+            logger.error("Can't translate value " + Bytes.toString(value, 0, valueLen) + " to dictionary ID, roundingFlag " + roundingFlag + ". Using default value " + String.format("\\x%02X", dft));
         }
     }
 
@@ -163,8 +159,7 @@ public class RowKeyColumnIO {
         if (forceNoDict)
             return null;
 
-        return (Dictionary<String>) CubeManager.getInstance(seg.getCubeInstance().getConfig()).getDictionary(
-                seg, col);
+        return (Dictionary<String>) CubeManager.getInstance(seg.getCubeInstance().getConfig()).getDictionary(seg, col);
     }
 
 }

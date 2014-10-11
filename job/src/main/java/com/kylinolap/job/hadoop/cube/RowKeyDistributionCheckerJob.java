@@ -32,13 +32,12 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**
  * @author ysong1
- *
+ * 
  */
 public class RowKeyDistributionCheckerJob extends AbstractHadoopJob {
 
     @SuppressWarnings("static-access")
-    protected static final Option rowKeyStatsFilePath = OptionBuilder.withArgName("path").hasArg()
-            .isRequired(true).withDescription("rowKeyStatsFilePath").create("rowKeyStatsFilePath");
+    protected static final Option rowKeyStatsFilePath = OptionBuilder.withArgName("path").hasArg().isRequired(true).withDescription("rowKeyStatsFilePath").create("rowKeyStatsFilePath");
 
     @Override
     public int run(String[] args) throws Exception {

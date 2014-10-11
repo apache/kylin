@@ -24,6 +24,7 @@ import java.util.Collections;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
@@ -110,8 +111,7 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     private void testSpanningAndGetParent(CuboidScheduler scheduler, CubeDesc cube, long[] cuboidIds) {
         for (long cuboidId : cuboidIds) {
             Collection<Long> spannings = scheduler.getSpanningCuboid(cuboidId);
-            System.out.println("Spanning result for " + cuboidId + "(" + Long.toBinaryString(cuboidId)
-                    + "): " + toString(spannings));
+            System.out.println("Spanning result for " + cuboidId + "(" + Long.toBinaryString(cuboidId) + "): " + toString(spannings));
 
             for (long child : spannings) {
                 assertTrue(Cuboid.isValid(cube, child));
@@ -246,24 +246,28 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
+    @Ignore
     public void testCuboidGeneration4() {
         CubeDesc cube = getMetadataManager().getCubeDesc("geox_trans_mtrc_sd_cube_desc");
         CuboidCLI.simulateCuboidGeneration(cube);
     }
 
     @Test
+    @Ignore
     public void testCuboidGeneration5() {
         CubeDesc cube = getMetadataManager().getCubeDesc("clsfd_ga_dayweek");
         CuboidCLI.simulateCuboidGeneration(cube);
     }
 
     @Test
+    @Ignore
     public void testCuboidGeneration6() {
         CubeDesc cube = getMetadataManager().getCubeDesc("clsfd_ga_day");
         CuboidCLI.simulateCuboidGeneration(cube);
     }
 
     @Test
+    @Ignore
     public void testCuboidGeneration7() {
         CubeDesc cube = getMetadataManager().getCubeDesc("clsfd_ga_week");
         CuboidCLI.simulateCuboidGeneration(cube);

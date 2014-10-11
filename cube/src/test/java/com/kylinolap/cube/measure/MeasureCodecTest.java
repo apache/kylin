@@ -33,15 +33,13 @@ import com.kylinolap.metadata.model.cube.MeasureDesc;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class MeasureCodecTest {
 
     @Test
     public void basicTest() {
-        MeasureDesc descs[] =
-                new MeasureDesc[] { measure("double"), measure("long"), measure("decimal"),
-                        measure("HLLC16"), measure("HLLC16") };
+        MeasureDesc descs[] = new MeasureDesc[] { measure("double"), measure("long"), measure("decimal"), measure("HLLC16"), measure("HLLC16") };
         MeasureCodec codec = new MeasureCodec(descs);
 
         DoubleWritable d = new DoubleWritable(1.0);

@@ -47,8 +47,7 @@ public class DictionaryInfo extends RootPersistentEntity {
     public DictionaryInfo() {
     }
 
-    public DictionaryInfo(String sourceTable, String sourceColumn, int sourceColumnIndex, String dataType,
-            TableSignature input, String inputDelimeter) {
+    public DictionaryInfo(String sourceTable, String sourceColumn, int sourceColumnIndex, String dataType, TableSignature input, String inputDelimeter) {
 
         this.updateRandomUuid();
 
@@ -75,8 +74,7 @@ public class DictionaryInfo extends RootPersistentEntity {
     // ----------------------------------------------------------------------------
 
     public String getResourcePath() {
-        return ResourceStore.DICT_RESOURCE_ROOT + "/" + sourceTable + "/" + sourceColumn + "/" + uuid
-                + ".dict";
+        return ResourceStore.DICT_RESOURCE_ROOT + "/" + sourceTable + "/" + sourceColumn + "/" + uuid + ".dict";
     }
 
     public String getResourceDir() {
@@ -85,15 +83,10 @@ public class DictionaryInfo extends RootPersistentEntity {
 
     // ----------------------------------------------------------------------------
 
-    //to decide if two dictionaries are built on the same table/column,
-    //regardless of their signature
+    // to decide if two dictionaries are built on the same table/column,
+    // regardless of their signature
     public boolean isDictOnSameColumn(DictionaryInfo other) {
-        return this.sourceTable.equalsIgnoreCase(other.sourceTable)
-                && this.sourceColumn.equalsIgnoreCase(other.sourceColumn)
-                && this.sourceColumnIndex == other.sourceColumnIndex
-                && this.dataType.equalsIgnoreCase(other.dataType)
-                && this.inputDelimeter.equalsIgnoreCase(other.inputDelimeter)
-                && this.dictionaryClass.equalsIgnoreCase(other.dictionaryClass);
+        return this.sourceTable.equalsIgnoreCase(other.sourceTable) && this.sourceColumn.equalsIgnoreCase(other.sourceColumn) && this.sourceColumnIndex == other.sourceColumnIndex && this.dataType.equalsIgnoreCase(other.dataType) && this.inputDelimeter.equalsIgnoreCase(other.inputDelimeter) && this.dictionaryClass.equalsIgnoreCase(other.dictionaryClass);
     }
 
     public String getSourceTable() {

@@ -21,7 +21,8 @@ import java.util.List;
 import com.kylinolap.metadata.model.cube.TblColRef;
 
 /**
- * Tuple is a record row, contains multiple values being lookup by either field (optiq notion) or column (kylin notion).
+ * Tuple is a record row, contains multiple values being lookup by either field
+ * (optiq notion) or column (kylin notion).
  * 
  * @author yangli9
  */

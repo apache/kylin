@@ -23,7 +23,8 @@ import com.kylinolap.rest.model.SelectedColumnMeta;
 public class SQLResponse implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    //private static final Logger logger = LoggerFactory.getLogger(SQLResponse.class);
+    // private static final Logger logger =
+    // LoggerFactory.getLogger(SQLResponse.class);
 
     // the data type for each column
     private List<SelectedColumnMeta> columnMetas;
@@ -53,8 +54,7 @@ public class SQLResponse implements Serializable {
     public SQLResponse() {
     }
 
-    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results,
-            int affectedRowCount, boolean isException, String exceptionMessage) {
+    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, int affectedRowCount, boolean isException, String exceptionMessage) {
         this.columnMetas = columnMetas;
         this.results = results;
         this.affectedRowCount = affectedRowCount;
@@ -62,8 +62,7 @@ public class SQLResponse implements Serializable {
         this.exceptionMessage = exceptionMessage;
     }
 
-    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube,
-            int affectedRowCount, boolean isException, String exceptionMessage) {
+    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube, int affectedRowCount, boolean isException, String exceptionMessage) {
         this.columnMetas = columnMetas;
         this.results = results;
         this.cube = cube;
@@ -72,8 +71,7 @@ public class SQLResponse implements Serializable {
         this.exceptionMessage = exceptionMessage;
     }
 
-    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube,
-            int affectedRowCount, boolean isException, String exceptionMessage, boolean isPartial) {
+    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube, int affectedRowCount, boolean isException, String exceptionMessage, boolean isPartial) {
         this.columnMetas = columnMetas;
         this.results = results;
         this.cube = cube;

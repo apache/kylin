@@ -40,7 +40,7 @@ import com.kylinolap.metadata.model.cube.CubeDesc;
 
 /**
  * @author yangli9
- *
+ * 
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class CubeHFileMapper2Test extends LocalFileMetadataTestCase {
@@ -71,8 +71,7 @@ public class CubeHFileMapper2Test extends LocalFileMetadataTestCase {
     public void testBasic() throws Exception {
 
         Configuration hconf = new Configuration();
-        Context context =
-                MockupMapContext.create(hconf, this.getTestConfig().getMetadataUrl(), cubeName, outKV);
+        Context context = MockupMapContext.create(hconf, this.getTestConfig().getMetadataUrl(), cubeName, outKV);
 
         CubeHFileMapper mapper = new CubeHFileMapper();
         mapper.setup(context);
@@ -85,11 +84,9 @@ public class CubeHFileMapper2Test extends LocalFileMetadataTestCase {
         ImmutableBytesWritable outKey = (ImmutableBytesWritable) outKV[0];
         KeyValue outValue = (KeyValue) outKV[1];
 
-        assertTrue(Bytes.compareTo(key.getBytes(), 0, key.getLength(), outKey.get(), outKey.getOffset(),
-                outKey.getLength()) == 0);
+        assertTrue(Bytes.compareTo(key.getBytes(), 0, key.getLength(), outKey.get(), outKey.getOffset(), outKey.getLength()) == 0);
 
-        assertTrue(Bytes.compareTo(value.getBytes(), 0, value.getLength(), outValue.getValueArray(),
-                outValue.getValueOffset(), outValue.getValueLength()) == 0);
+        assertTrue(Bytes.compareTo(value.getBytes(), 0, value.getLength(), outValue.getValueArray(), outValue.getValueOffset(), outValue.getValueLength()) == 0);
     }
 
 }

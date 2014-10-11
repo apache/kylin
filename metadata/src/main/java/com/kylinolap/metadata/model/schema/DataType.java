@@ -29,18 +29,17 @@ import com.kylinolap.metadata.model.cube.TblColRef.InnerDataTypeEnum;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class DataType {
 
-    public static final String VALID_TYPES_STRING =
-            "any|char|varchar|boolean|integer|tinyint|smallint|bigint|decimal|numeric|float|real|double"
-                    + "|date|time|datetime|timestamp|byte|int|short|long|string|hllc" //
-                    + "|" + InnerDataTypeEnum.LITERAL.getDataType() //
-                    + "|" + InnerDataTypeEnum.DERIVED.getDataType();
+    public static final String VALID_TYPES_STRING = "any|char|varchar|boolean|integer|tinyint|smallint|bigint|decimal|numeric|float|real|double" + "|date|time|datetime|timestamp|byte|int|short|long|string|hllc" //
+            + "|" + InnerDataTypeEnum.LITERAL.getDataType() //
+            + "|" + InnerDataTypeEnum.DERIVED.getDataType();
 
     private static final Pattern TYPE_PATTERN = Pattern.compile(
-    // standard sql types, ref: http://www.w3schools.com/sql/sql_datatypes_general.asp
+    // standard sql types, ref:
+    // http://www.w3schools.com/sql/sql_datatypes_general.asp
             "(" + VALID_TYPES_STRING + ")" + "\\s*" //
                     + "(?:" + "[(]" + "([\\d\\s,]+)" + "[)]" + ")?", Pattern.CASE_INSENSITIVE);
 
@@ -82,8 +81,7 @@ public class DataType {
             HLLC_PRECISIONS.add(i);
     }
 
-    private static final ConcurrentMap<DataType, DataType> CACHE =
-            new ConcurrentHashMap<DataType, DataType>();
+    private static final ConcurrentMap<DataType, DataType> CACHE = new ConcurrentHashMap<DataType, DataType>();
 
     public static DataType getInstance(String type) {
         if (type == null)
@@ -114,8 +112,7 @@ public class DataType {
 
         Matcher m = TYPE_PATTERN.matcher(datatype);
         if (m.matches() == false)
-            throw new IllegalArgumentException("bad data type -- " + datatype + ", does not match "
-                    + TYPE_PATTERN);
+            throw new IllegalArgumentException("bad data type -- " + datatype + ", does not match " + TYPE_PATTERN);
 
         name = replaceLegacy(m.group(1));
         precision = -1;
@@ -129,22 +126,21 @@ public class DataType {
                 try {
                     n = Integer.parseInt(parts[i]);
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("bad data type -- " + datatype
-                            + ", precision/scale not numeric");
+                    throw new IllegalArgumentException("bad data type -- " + datatype + ", precision/scale not numeric");
                 }
                 if (i == 0)
                     precision = n;
                 else if (i == 1)
                     scale = n;
                 else
-                    throw new IllegalArgumentException("bad data type -- " + datatype
-                            + ", too many precision/scale parts");
+                    throw new IllegalArgumentException("bad data type -- " + datatype + ", too many precision/scale parts");
             }
         }
 
         // FIXME 256 for unknown string precision
         if ((name.equals("char") || name.equals("varchar")) && precision == -1) {
-            precision = 256; // to save memory at frontend, e.g. tableau will allocate memory according to this
+            precision = 256; // to save memory at frontend, e.g. tableau will
+                             // allocate memory according to this
         }
 
         // FIXME (19,4) for unknown decimal precision

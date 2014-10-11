@@ -48,23 +48,20 @@ public class KylinConfig {
 
     public static final String KYLIN_REST_TIMEZONE = "kylin.rest.timezone";
     /**
-     * The dir containing scripts for kylin.
-     * For example: /usr/lib/kylin/bin
+     * The dir containing scripts for kylin. For example: /usr/lib/kylin/bin
      */
     public static final String KYLIN_SCRIPT_DIR = "kylin.script.dir";
     /**
-     * The script file name for generating table metadat from hive.
-     * For example: generateTable.sh
+     * The script file name for generating table metadat from hive. For example:
+     * generateTable.sh
      */
     public static final String KYLIN_SCRIPT_GEN_TABLE_META = "kylin.script.genTableMeta";
 
     public static final String KYLIN_JOB_CONCURRENT_MAX_LIMIT = "kylin.job.concurrent.max.limit";
 
-    public static final String KYLIN_JOB_YARN_APP_REST_CHECK_STATUS_URL =
-            "kylin.job.yarn.app.rest.check.status.url";
+    public static final String KYLIN_JOB_YARN_APP_REST_CHECK_STATUS_URL = "kylin.job.yarn.app.rest.check.status.url";
 
-    public static final String KYLIN_JOB_YARN_APP_REST_CHECK_INTERVAL_SECONDS =
-            "kylin.job.yarn.app.rest.check.interval.seconds";
+    public static final String KYLIN_JOB_YARN_APP_REST_CHECK_INTERVAL_SECONDS = "kylin.job.yarn.app.rest.check.interval.seconds";
 
     public static final String KYLIN_TMP_HDFS_DIR = "kylin.tmp.hdfs.dir";
 
@@ -78,21 +75,18 @@ public class KylinConfig {
 
     public static final String KYLIN_JOB_REMOTE_CLI_WORKING_DIR = "kylin.job.remote.cli.working.dir";
     /**
-     * Toggle to indicate whether to use hive for table flattening.
-     * Default true.
+     * Toggle to indicate whether to use hive for table flattening. Default
+     * true.
      */
     public static final String KYLIN_JOB_HIVE_FLATTEN = "kylin.job.hive.flatten";
 
     public static final String KYLIN_JOB_RUN_AS_REMOTE_CMD = "kylin.job.run.as.remote.cmd";
 
-    public static final String KYLIN_JOB_MAPREDUCE_DEFAULT_REDUCE_COUNT_RATIO =
-            "kylin.job.mapreduce.default.reduce.count.ratio";
+    public static final String KYLIN_JOB_MAPREDUCE_DEFAULT_REDUCE_COUNT_RATIO = "kylin.job.mapreduce.default.reduce.count.ratio";
 
-    public static final String KYLIN_JOB_MAPREDUCE_DEFAULT_REDUCE_INPUT_MB =
-            "kylin.job.mapreduce.default.reduce.input.mb";
+    public static final String KYLIN_JOB_MAPREDUCE_DEFAULT_REDUCE_INPUT_MB = "kylin.job.mapreduce.default.reduce.input.mb";
 
-    public static final String KYLIN_JOB_MAPREDUCE_MAX_REDUCER_NUMBER =
-            "kylin.job.mapreduce.max.reducer.number";
+    public static final String KYLIN_JOB_MAPREDUCE_MAX_REDUCER_NUMBER = "kylin.job.mapreduce.max.reducer.number";
 
     public static final String KYLIN_JOB_JAR = "kylin.job.jar";
 
@@ -149,10 +143,10 @@ public class KylinConfig {
     }
 
     /**
-     * This method only for test case.
-     * You can get a KylinConfig instance by path "/a/b/c", where "/a/b/c/kylin.properties" exists.
-     * By default, the getInstanceFromEnv() should be called.
-     *
+     * This method only for test case. You can get a KylinConfig instance by
+     * path "/a/b/c", where "/a/b/c/kylin.properties" exists. By default, the
+     * getInstanceFromEnv() should be called.
+     * 
      * @param confPath
      * @return
      * @deprecated
@@ -189,16 +183,14 @@ public class KylinConfig {
                     if (file.getName().equalsIgnoreCase(KYLIN_CONF_PROPERTIES_FILE)) {
                         return UriType.PROPERTIES_FILE;
                     } else {
-                        throw new IllegalStateException("Metadata uri : " + metaUri
-                                + " is a local file but not kylin.properties");
+                        throw new IllegalStateException("Metadata uri : " + metaUri + " is a local file but not kylin.properties");
                     }
                 }
             } else {
                 if (RestClient.matchFullRestPattern(metaUri))
                     return UriType.REST_ADDR;
                 else
-                    throw new IllegalStateException("Metadata uri : " + metaUri
-                            + " is not a valid REST URI address");
+                    throw new IllegalStateException("Metadata uri : " + metaUri + " is not a valid REST URI address");
             }
         } catch (Exception e) {
             logger.info(e.getLocalizedMessage());
@@ -210,11 +202,9 @@ public class KylinConfig {
 
     public static KylinConfig createInstanceFromUri(String uri) {
         /**
-         *  --hbase:
-         *      1. PROPERTIES_FILE: path to kylin.properties
-         *      2. REST_ADDR:       rest service resource, format: user:password@host:port
-         *  --local:
-         *      1. LOCAL_FOLDER:    path to resource folder
+         * --hbase: 1. PROPERTIES_FILE: path to kylin.properties 2. REST_ADDR:
+         * rest service resource, format: user:password@host:port --local: 1.
+         * LOCAL_FOLDER: path to resource folder
          */
         UriType uriType = decideUriType(uri);
         logger.info("The URI " + uri + " is recognized as " + uriType);
@@ -234,7 +224,7 @@ public class KylinConfig {
                 throw new RuntimeException(e);
             }
             return config;
-        } else {//rest_addr
+        } else {// rest_addr
             try {
                 KylinConfig config = new KylinConfig();
                 RestClient client = new RestClient(uri);
@@ -258,12 +248,10 @@ public class KylinConfig {
     // ============================================================================
 
     /**
-     * Find config from environment.
-     * The Search process:
-     * 1. Check the $KYLIN_CONF/kylin.properties
-     * 2. Check the /etc/kylin/kylin.properties
-     * 3. Check the kylin.properties in classpath
-     *
+     * Find config from environment. The Search process: 1. Check the
+     * $KYLIN_CONF/kylin.properties 2. Check the /etc/kylin/kylin.properties 3.
+     * Check the kylin.properties in classpath
+     * 
      * @return
      */
     private static KylinConfig loadKylinConfig() {
@@ -281,8 +269,7 @@ public class KylinConfig {
     public OSCommandExecutor getOSCommandExecutor(String command) throws IOException {
         OSCommandExecutor exec = new OSCommandExecutor(command);
         if (getRunAsRemoteCommand()) {
-            exec.setRunAtRemote(getRemoteHadoopCliHostname(), getRemoteHadoopCliUsername(),
-                    getRemoteHadoopCliPassword());
+            exec.setRunAtRemote(getRemoteHadoopCliHostname(), getRemoteHadoopCliUsername(), getRemoteHadoopCliPassword());
         }
         return exec;
     }
@@ -443,8 +430,7 @@ public class KylinConfig {
     }
 
     public Long getQueryScanCountCacheThreshold() {
-        return Long.parseLong(this.getOptional("kylin.query.cache.threshold.scancount",
-                String.valueOf(10 * 1024)));
+        return Long.parseLong(this.getOptional("kylin.query.cache.threshold.scancount", String.valueOf(10 * 1024)));
     }
 
     public boolean isQuerySecureEnabled() {
@@ -539,7 +525,7 @@ public class KylinConfig {
 
     /**
      * Check if there is kylin.properties exist
-     *
+     * 
      * @param path
      * @param env
      * @return the properties file
@@ -577,7 +563,7 @@ public class KylinConfig {
 
     /**
      * return -1 if there is no setting
-     *
+     * 
      * @return
      */
     public int getPropScanThreshold() {
@@ -590,7 +576,7 @@ public class KylinConfig {
 
     /**
      * Set a new key:value into the kylin config.
-     *
+     * 
      * @param key
      * @param value
      */

@@ -72,8 +72,7 @@ public class DictionaryGenerator {
         logger.info("Dictionary cardinality " + info.getCardinality());
 
         if (values.size() > 1000000)
-            throw new IllegalArgumentException(
-                    "Too high cardinality is not suitable for dictionary! Are the values stable enough for incremental load??");
+            throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary! Are the values stable enough for incremental load??");
 
         return dict;
     }
@@ -99,11 +98,10 @@ public class DictionaryGenerator {
         return buildDictionaryFromValueList(targetInfo, valueList);
     }
 
-    public static Dictionary<?> buildDictionary(DictionaryInfo info, ReadableTable inpTable)
-            throws IOException {
+    public static Dictionary<?> buildDictionary(DictionaryInfo info, ReadableTable inpTable) throws IOException {
 
         // currently all data types are casted to string to build dictionary
-        //String dataType = info.getDataType();
+        // String dataType = info.getDataType();
 
         logger.info("Building dictionary " + JsonUtil.writeValueAsString(info));
 
@@ -112,8 +110,7 @@ public class DictionaryGenerator {
         return buildDictionaryFromValueList(info, values);
     }
 
-    private static Dictionary buildDateStrDict(List<byte[]> values, int baseId, int nSamples,
-            ArrayList samples) {
+    private static Dictionary buildDateStrDict(List<byte[]> values, int baseId, int nSamples, ArrayList samples) {
         String matchPattern = null;
         for (String ptn : DATE_PATTERNS) {
             matchPattern = ptn; // be optimistic
@@ -177,8 +174,7 @@ public class DictionaryGenerator {
                 // normal case
                 else {
                     if (split.length <= colIndex) {
-                        throw new ArrayIndexOutOfBoundsException("Column no. " + colIndex
-                                + " not found, line split is " + Arrays.asList(split));
+                        throw new ArrayIndexOutOfBoundsException("Column no. " + colIndex + " not found, line split is " + Arrays.asList(split));
                     }
                     colValue = split[colIndex];
                 }

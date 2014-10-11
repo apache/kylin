@@ -22,7 +22,7 @@ import org.apache.hadoop.io.LongWritable;
  * Long Distinct Count
  * 
  * @author xjiang
- *
+ * 
  */
 public class LDCAggregator extends MeasureAggregator<LongWritable> {
 

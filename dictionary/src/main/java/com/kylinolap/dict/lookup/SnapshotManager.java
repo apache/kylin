@@ -30,15 +30,14 @@ import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class SnapshotManager {
 
     private static final Logger logger = LoggerFactory.getLogger(SnapshotManager.class);
 
     // static cached instances
-    private static final ConcurrentHashMap<KylinConfig, SnapshotManager> SERVICE_CACHE =
-            new ConcurrentHashMap<KylinConfig, SnapshotManager>();
+    private static final ConcurrentHashMap<KylinConfig, SnapshotManager> SERVICE_CACHE = new ConcurrentHashMap<KylinConfig, SnapshotManager>();
 
     public static SnapshotManager getInstance(KylinConfig config) {
         SnapshotManager r = SERVICE_CACHE.get(config);
@@ -52,7 +51,9 @@ public class SnapshotManager {
     // ============================================================================
 
     private KylinConfig config;
-    private ConcurrentHashMap<String, SnapshotTable> snapshotCache; // resource path ==> SnapshotTable
+    private ConcurrentHashMap<String, SnapshotTable> snapshotCache; // resource
+                                                                    // path ==>
+                                                                    // SnapshotTable
 
     private SnapshotManager(KylinConfig config) {
         this.config = config;
@@ -78,8 +79,7 @@ public class SnapshotManager {
         snapshotCache.remove(resourcePath);
     }
 
-    public SnapshotTable buildSnapshot(ReadableTable table, TableDesc tableDesc, boolean reuseExisting)
-            throws IOException {
+    public SnapshotTable buildSnapshot(ReadableTable table, TableDesc tableDesc, boolean reuseExisting) throws IOException {
         SnapshotTable snapshot = new SnapshotTable(table);
         snapshot.updateRandomUuid();
 
@@ -108,7 +108,10 @@ public class SnapshotManager {
 
         TableSignature sig = snapshot.getSignature();
         for (String existing : existings) {
-            SnapshotTable existingTable = load(existing, false); // skip cache, direct load from store
+            SnapshotTable existingTable = load(existing, false); // skip cache,
+                                                                 // direct
+                                                                 // load from
+                                                                 // store
             if (sig.equals(existingTable.getSignature()))
                 return existing;
         }
@@ -125,9 +128,7 @@ public class SnapshotManager {
     private SnapshotTable load(String resourcePath, boolean loadData) throws IOException {
         ResourceStore store = MetadataManager.getInstance(this.config).getStore();
 
-        SnapshotTable table =
-                store.getResource(resourcePath, SnapshotTable.class, loadData
-                        ? SnapshotTableSerializer.FULL_SERIALIZER : SnapshotTableSerializer.INFO_SERIALIZER);
+        SnapshotTable table = store.getResource(resourcePath, SnapshotTable.class, loadData ? SnapshotTableSerializer.FULL_SERIALIZER : SnapshotTableSerializer.INFO_SERIALIZER);
 
         if (loadData)
             logger.debug("Loaded snapshot at " + resourcePath);

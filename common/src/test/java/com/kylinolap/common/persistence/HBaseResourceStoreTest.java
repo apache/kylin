@@ -62,8 +62,7 @@ public class HBaseResourceStoreTest extends HBaseMetadataTestCase {
         ResourceStore store = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
 
         try {
-            config.setProperty("kylin.hbase.client.keyvalue.maxsize",
-                    String.valueOf(largeContent.length() - 1));
+            config.setProperty("kylin.hbase.client.keyvalue.maxsize", String.valueOf(largeContent.length() - 1));
 
             store.deleteResource(path);
 
@@ -72,7 +71,7 @@ public class HBaseResourceStoreTest extends HBaseMetadataTestCase {
             StringEntity t = store.getResource(path, StringEntity.class, StringEntity.serializer);
             assertEquals(content, t);
 
-            Path redirectPath = ((HBaseResourceStore)store).bigCellHDFSPath(path);
+            Path redirectPath = ((HBaseResourceStore) store).bigCellHDFSPath(path);
             Configuration hconf = HadoopUtil.getDefaultConfiguration();
             FileSystem fileSystem = FileSystem.get(hconf);
             assertTrue(fileSystem.exists(redirectPath));

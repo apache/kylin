@@ -55,7 +55,8 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
     private CubeInstance cube;
     private CubeDesc cubeDesc;
     private CubeSegment mergedCubeSegment;
-    private CubeSegment sourceCubeSegment;//Must be unique during a mapper's life cycle
+    private CubeSegment sourceCubeSegment;// Must be unique during a mapper's
+                                          // life cycle
 
     private Text outputKey = new Text();
 
@@ -69,19 +70,14 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
         if (ret != null)
             return ret;
         else {
-            ret =
-                    cubeDesc.getRowkey().isUseDictionary(col)
-                            && cubeDesc.getFactTable().equalsIgnoreCase(
-                                    (String) DictionaryManager.getInstance(config).decideSourceData(cubeDesc,
-                                            col, null)[0]);
+            ret = cubeDesc.getRowkey().isUseDictionary(col) && cubeDesc.getFactTable().equalsIgnoreCase((String) DictionaryManager.getInstance(config).decideSourceData(cubeDesc, col, null)[0]);
             dictsNeedMerging.put(col, ret);
             return ret;
         }
     }
 
     private String extractJobIDFromPath(String path) {
-        Pattern pattern =
-                Pattern.compile("kylin-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})");
+        Pattern pattern = Pattern.compile("kylin-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})");
         Matcher matcher = pattern.matcher(path);
         // check the first occurance
         if (matcher.find()) {
@@ -113,10 +109,10 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
         cubeDesc = cube.getDescriptor();
         mergedCubeSegment = cube.getSegment(segmentName, CubeSegmentStatusEnum.NEW);
 
-        //int colCount = cubeDesc.getRowkey().getRowKeyColumns().length;
-        newKeyBuf = new byte[256];//size will auto-grow
+        // int colCount = cubeDesc.getRowkey().getRowKeyColumns().length;
+        newKeyBuf = new byte[256];// size will auto-grow
 
-        //decide which source segment
+        // decide which source segment
         org.apache.hadoop.mapreduce.InputSplit inputSplit = context.getInputSplit();
         String filePath = ((FileSplit) inputSplit).getPath().toString();
         String jobID = extractJobIDFromPath(filePath);
@@ -139,36 +135,32 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
             TblColRef col = cuboid.getColumns().get(i);
 
             if (this.checkNeedMerging(col)) {
-                //if dictionary on fact table column, needs rewrite
+                // if dictionary on fact table column, needs rewrite
                 DictionaryManager dictMgr = DictionaryManager.getInstance(config);
                 Dictionary<?> sourceDict = dictMgr.getDictionary(sourceCubeSegment.getDictResPath(col));
                 Dictionary<?> mergedDict = dictMgr.getDictionary(mergedCubeSegment.getDictResPath(col));
 
-                while (sourceDict.getSizeOfValue() > newKeyBuf.length - bufOffset
-                        || mergedDict.getSizeOfValue() > newKeyBuf.length - bufOffset) {
+                while (sourceDict.getSizeOfValue() > newKeyBuf.length - bufOffset || mergedDict.getSizeOfValue() > newKeyBuf.length - bufOffset) {
                     byte[] oldBuf = newKeyBuf;
                     newKeyBuf = new byte[2 * newKeyBuf.length];
                     System.arraycopy(oldBuf, 0, newKeyBuf, 0, oldBuf.length);
                 }
 
-                int idInSourceDict =
-                        BytesUtil
-                                .readUnsigned(splittedByteses[i + 1].value, 0, splittedByteses[i + 1].length);
+                int idInSourceDict = BytesUtil.readUnsigned(splittedByteses[i + 1].value, 0, splittedByteses[i + 1].length);
                 int size = sourceDict.getValueBytesFromId(idInSourceDict, newKeyBuf, bufOffset);
                 int idInMergedDict = mergedDict.getIdFromValueBytes(newKeyBuf, bufOffset, size);
                 BytesUtil.writeUnsigned(idInMergedDict, newKeyBuf, bufOffset, mergedDict.getSizeOfId());
 
                 bufOffset += mergedDict.getSizeOfId();
             } else {
-                //keep as it is
+                // keep as it is
                 while (splittedByteses[i + 1].length > newKeyBuf.length - bufOffset) {
                     byte[] oldBuf = newKeyBuf;
                     newKeyBuf = new byte[2 * newKeyBuf.length];
                     System.arraycopy(oldBuf, 0, newKeyBuf, 0, oldBuf.length);
                 }
 
-                System.arraycopy(splittedByteses[i + 1].value, 0, newKeyBuf, bufOffset,
-                        splittedByteses[i + 1].length);
+                System.arraycopy(splittedByteses[i + 1].value, 0, newKeyBuf, bufOffset, splittedByteses[i + 1].length);
                 bufOffset += splittedByteses[i + 1].length;
             }
         }

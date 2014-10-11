@@ -26,7 +26,7 @@ import com.kylinolap.dict.Dictionary;
 
 /**
  * @author yangli9
- *
+ * 
  */
 public class TableRecord implements Cloneable {
 

@@ -72,9 +72,9 @@ public class NewBaseCuboidMapperTest extends LocalFileMetadataTestCase {
     public void testMapperWithHeader() throws Exception {
         String cubeName = "test_kylin_cube_with_slr_ready";
         mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
-        //mapDriver.getConfiguration().set(BatchConstants.CFG_METADATA_URL, metadata);
-        mapDriver.withInput(new Text("key"), new Text(
-                "0,2013-05-05,Auction,80053,0,5,41.204172263562,0,10000638"));
+        // mapDriver.getConfiguration().set(BatchConstants.CFG_METADATA_URL,
+        // metadata);
+        mapDriver.withInput(new Text("key"), new Text("0,2013-05-05,Auction,80053,0,5,41.204172263562,0,10000638"));
 
         List<Pair<Text, Text>> result = mapDriver.run();
 
@@ -91,20 +91,16 @@ public class NewBaseCuboidMapperTest extends LocalFileMetadataTestCase {
 
         RowKeyDecoder decoder = new RowKeyDecoder(cube.getFirstSegment());
         decoder.decode(key);
-        assertEquals(
-                "[10000638, 2013-05-05, Computers/Tablets & Networking, MonitorProjectors & Accs, Monitors, Auction, 0, 5]",
-                decoder.getValues().toString());
+        assertEquals("[10000638, 2013-05-05, Computers/Tablets & Networking, MonitorProjectors & Accs, Monitors, Auction, 0, 5]", decoder.getValues().toString());
 
         assertTrue(Bytes.toString(sellerId).startsWith("10000638"));
         assertEquals(255, Bytes.toLong(cuboidId));
         assertEquals(21, restKey.length);
 
-        verifyMeasures(cube.getDescriptor().getMeasures(), result.get(0).getSecond(), "41.204172263562",
-                "41.204172263562", "41.204172263562", 1);
+        verifyMeasures(cube.getDescriptor().getMeasures(), result.get(0).getSecond(), "41.204172263562", "41.204172263562", "41.204172263562", 1);
     }
 
-    private void verifyMeasures(List<MeasureDesc> measures, Text valueBytes, String m1, String m2, String m3,
-            long m4) {
+    private void verifyMeasures(List<MeasureDesc> measures, Text valueBytes, String m1, String m2, String m3, long m4) {
         MeasureCodec codec = new MeasureCodec(measures);
         Object[] values = new Object[measures.size()];
         codec.decode(valueBytes, values);
