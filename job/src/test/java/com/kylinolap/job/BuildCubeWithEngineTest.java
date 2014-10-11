@@ -295,10 +295,12 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
     }
 
     protected void initEnv() throws Exception {
-        // create log dir
-        this.execCommand("mkdir -p /tmp/kylin/logs");
+    	cleanUp();
+    	
+    	// create log dir
+        this.execCommand("mkdir -p "+KylinConfig.getInstanceFromEnv().getKylinJobLogDir());
         retrieveJarName();
-        cleanUp();
+        
 
         // install metadata to hbase
         installMetadataToHBase();
