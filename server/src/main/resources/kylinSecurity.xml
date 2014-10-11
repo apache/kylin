@@ -165,21 +165,6 @@
 		</beans:bean>
 
 		<authentication-manager alias="authenticationManager">
-			<authentication-provider>
-				<user-service>
-					<user name="MODELER"
-						password="$2a$10$Le5ernTeGNIARwMJsY0WaOLioNQdb0QD11DwjeyNqqNRp5NaDo2FG"
-						authorities="ROLE_MODELER" />
-					<user name="ANALYST"
-						password="$2a$10$s4INO3XHjPP5Vm2xH027Ce9QeXWdrfq5pvzuGr9z/lQmHqi0rsbNi"
-						authorities="ROLE_ANALYST" />
-					<user name="ADMIN"
-						password="$2a$10$JjFuU8Lghg8eYx/8EpIXyOlM8J3LBHwV1uueEXwNzh.jrruv52n1q"
-						authorities="ROLE_MODELER, ROLE_ANALYST, ROLE_ADMIN" />
-				</user-service>
-				<password-encoder ref="passwordEncoder" />
-			</authentication-provider>
-
 			<!-- do user ldap auth -->
 			<authentication-provider ref="ldapUserAuthProvider"></authentication-provider>
 
