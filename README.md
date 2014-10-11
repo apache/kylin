@@ -38,7 +38,7 @@ _Tested with Hortornworks distribution (HDP2.1.3), not tested with others yet._
 
 Depending on different use cases Kylin can be installed differently. There are two major scenarios:
 
-##### On-CLI installation ####
+#### On-CLI installation ####
 
 If you are free to install Kylin on your hadoop CLI machine or Hadoop sandbox, this is the most convenient scenario, for it puts everything in a single machine.
 
