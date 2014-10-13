@@ -28,28 +28,25 @@ import net.hydromatic.avatica.AvaticaStatement;
  */
 public abstract class KylinStatementImpl extends AvaticaStatement {
 
-	protected KylinStatementImpl(AvaticaConnection connection,
-			int resultSetType, int resultSetConcurrency,
-			int resultSetHoldability) {
-		super(connection, resultSetType, resultSetConcurrency,
-				resultSetHoldability);
-	}
+    protected KylinStatementImpl(AvaticaConnection connection, int resultSetType, int resultSetConcurrency, int resultSetHoldability) {
+        super(connection, resultSetType, resultSetConcurrency, resultSetHoldability);
+    }
 
-	@Override
-	protected void close_() {
-		if (!closed) {
-			closed = true;
-			final KylinConnectionImpl connection_ = (KylinConnectionImpl) connection;
-			connection_.statements.remove(this);
-			if (openResultSet != null) {
-				AvaticaResultSet c = openResultSet;
-				openResultSet = null;
-				c.close();
-			}
-			// If onStatementClose throws, this method will throw an exception
-			// (later
-			// converted to SQLException), but this statement still gets closed.
-			connection_.getDriver().handler.onStatementClose(this);
-		}
-	}
+    @Override
+    protected void close_() {
+        if (!closed) {
+            closed = true;
+            final KylinConnectionImpl connection_ = (KylinConnectionImpl) connection;
+            connection_.statements.remove(this);
+            if (openResultSet != null) {
+                AvaticaResultSet c = openResultSet;
+                openResultSet = null;
+                c.close();
+            }
+            // If onStatementClose throws, this method will throw an exception
+            // (later
+            // converted to SQLException), but this statement still gets closed.
+            connection_.getDriver().handler.onStatementClose(this);
+        }
+    }
 }

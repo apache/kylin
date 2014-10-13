@@ -18,11 +18,8 @@ package com.kylinolap.kylin.jdbc.stub;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import net.hydromatic.avatica.AvaticaStatement;
 import net.hydromatic.avatica.ColumnMetaData;
@@ -43,13 +40,16 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.HashMultimap;
 import com.kylinolap.kylin.jdbc.KylinConnectionImpl;
 import com.kylinolap.kylin.jdbc.KylinEnumerator;
 import com.kylinolap.kylin.jdbc.KylinJdbc41Factory.KylinJdbc41PreparedStatement;
 import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaCatalog;
 import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaColumn;
+import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaProject;
 import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaSchema;
 import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaTable;
+import com.kylinolap.kylin.jdbc.stub.TableMetaStub.ColumnMetaStub;
 import com.kylinolap.kylin.jdbc.util.DefaultSslProtocolSocketFactory;
 import com.kylinolap.kylin.jdbc.util.SQLTypeMap;
 
@@ -58,389 +58,319 @@ import com.kylinolap.kylin.jdbc.util.SQLTypeMap;
  * 
  */
 public class KylinClient implements RemoteClient {
-	private static final Logger logger = LoggerFactory
-			.getLogger(KylinClient.class);
-
-	private final KylinConnectionImpl conn;
-
-	public KylinClient(KylinConnectionImpl conn) {
-		this.conn = conn;
-	}
-
-	@Override
-	public void connect() throws ConnectionException {
-		PostMethod post = new PostMethod(conn.getConnectUrl());
-		HttpClient httpClient = new HttpClient();
-
-		if (conn.getConnectUrl().toLowerCase().startsWith("https://")) {
-			registerSsl();
-		}
-		addPostHeaders(post);
-
-		try {
-			StringRequestEntity requestEntity = new StringRequestEntity("{}",
-					"application/json", "UTF-8");
-			post.setRequestEntity(requestEntity);
-			httpClient.executeMethod(post);
-
-			if (post.getStatusCode() != 200 && post.getStatusCode() != 201) {
-				logger.error("Authentication Failed with error code "
-						+ post.getStatusCode() + " and message:\n"
-						+ post.getResponseBodyAsString());
-
-				throw new ConnectionException("Authentication Failed.");
-			}
-		} catch (HttpException e) {
-			logger.error(e.getLocalizedMessage(), e);
-			throw new ConnectionException(e.getLocalizedMessage());
-		} catch (IOException e) {
-			logger.error(e.getLocalizedMessage(), e);
-			throw new ConnectionException(e.getLocalizedMessage());
-		}
-	}
-
-	@Override
-	public MetaProject getMetadata(String project) throws ConnectionException {
-		GetMethod get = new GetMethod(conn.getMetaProjectUrl(project));
-		HttpClient httpClient = new HttpClient();
-
-		if (conn.getConnectUrl().toLowerCase().startsWith("https://")) {
-			registerSsl();
-		}
-		addPostHeaders(get);
-
-		List<TableMetaStub> tableMetaStubs = null;
-		try {
-			httpClient.executeMethod(get);
-
-			if (get.getStatusCode() != 200 && get.getStatusCode() != 201) {
-				logger.error("Authentication Failed with error code "
-						+ get.getStatusCode() + " and message:\n"
-						+ get.getResponseBodyAsString());
-
-				throw new ConnectionException("Authentication Failed.");
-			}
-
-			tableMetaStubs = new ObjectMapper().readValue(
-					get.getResponseBodyAsString(),
-					new TypeReference<List<TableMetaStub>>() {
-					});
-
-			DataSet<MetaCatalog> metaCatalogs = genMetaCatalogs(tableMetaStubs);
-			DataSet<MetaSchema> metaSchemas = genMetaSchemas(tableMetaStubs);
-			DataSet<MetaTable> metaTables = genMetaTables(tableMetaStubs);
-			DataSet<MetaColumn> metaColumns = genMetaColumns(tableMetaStubs);
-
-			return new MetaProject(metaCatalogs, metaSchemas, metaTables,
-					metaColumns);
-		} catch (HttpException e) {
-			logger.error(e.getLocalizedMessage(), e);
-			throw new ConnectionException(e.getLocalizedMessage());
-		} catch (IOException e) {
-			logger.error(e.getLocalizedMessage(), e);
-			throw new ConnectionException(e.getLocalizedMessage());
-		}
-	}
-
-	@Override
-	public DataSet<Object[]> query(AvaticaStatement statement, String sql)
-			throws SQLException {
-		SQLResponseStub queryRes = null;
-
-		List<StateParam> params = null;
-		if (statement instanceof KylinJdbc41PreparedStatement) {
-			params = genPrestateStates(statement);
-		}
-
-		queryRes = runKylinQuery(sql, params);
-
-		List<ColumnMetaData> metas = genColumnMeta(queryRes);
-		List<Object[]> data = genResultData(queryRes, metas);
-
-		return new DataSet<Object[]>(metas, new KylinEnumerator<Object[]>(data));
-	}
-
-	private DataSet<MetaCatalog> genMetaCatalogs(
-			List<TableMetaStub> tableMetaStubs) {
-		List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
-		meta.add(KylinColumnMetaData.dummy(0, "TABLE_CAT", "TABLE_CAT",
-				ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING),
-				true));
-
-		Set<MetaCatalog> catalogs = new HashSet<MetaCatalog>();
-		for (TableMetaStub tableStub : tableMetaStubs) {
-			catalogs.add(new MetaCatalog(tableStub.getTABLE_CAT()));
-		}
-
-		return new DataSet<MetaCatalog>(meta, new KylinEnumerator<MetaCatalog>(
-				catalogs));
-	}
-
-	/**
-	 * @param tableMetaStubs
-	 * @return
-	 */
-	private DataSet<MetaSchema> genMetaSchemas(
-			List<TableMetaStub> tableMetaStubs) {
-		List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
-		for (ColumnMetaData cmd : SQLTypeMap.schemaMetaTypeMapping.values()) {
-			meta.add(cmd);
-		}
-
-		Set<MetaSchema> schemas = new HashSet<MetaSchema>();
-		for (TableMetaStub tableStub : tableMetaStubs) {
-			schemas.add(new MetaSchema(tableStub.getTABLE_CAT(), tableStub
-					.getTABLE_SCHEM()));
-		}
-
-		return new DataSet<MetaSchema>(meta, new KylinEnumerator<MetaSchema>(
-				schemas));
-	}
-
-	/**
-	 * @param tableMetaStub
-	 * @return
-	 */
-	private DataSet<MetaTable> genMetaTables(List<TableMetaStub> tableMetaStubs) {
-		List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
-
-		for (ColumnMetaData cmd : SQLTypeMap.tableMetaTypeMapping.values()) {
-			meta.add(cmd);
-		}
-
-		List<MetaTable> tables = new ArrayList<MetaTable>();
-		for (TableMetaStub tableStub : tableMetaStubs) {
-			MetaTable table = new MetaTable(tableStub.getTABLE_CAT(),
-					tableStub.getTABLE_SCHEM(), tableStub.getTABLE_NAME(),
-					tableStub.getTABLE_TYPE(), tableStub.getREMARKS(),
-					tableStub.getTYPE_CAT(), tableStub.getTYPE_SCHEM(),
-					tableStub.getTYPE_NAME(),
-					tableStub.getSELF_REFERENCING_COL_NAME(),
-					tableStub.getREF_GENERATION());
-			tables.add(table);
-		}
-
-		return new DataSet<MetaTable>(meta, new KylinEnumerator<MetaTable>(
-				tables));
-	}
-
-	/**
-	 * @param tableMetaStub
-	 * @return
-	 */
-	private DataSet<MetaColumn> genMetaColumns(
-			List<TableMetaStub> tableMetaStubs) {
-		List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
-
-		for (ColumnMetaData cmd : SQLTypeMap.columnMetaTypeMapping.values()) {
-			meta.add(cmd);
-		}
-
-		List<MetaColumn> columns = new ArrayList<MetaColumn>();
-
-		for (TableMetaStub tableStub : tableMetaStubs) {
-			for (TableMetaStub.ColumnMetaStub columnMetaStub : tableStub
-					.getColumns()) {
-				MetaColumn column = new MetaColumn(
-						columnMetaStub.getTABLE_CAT(),
-						columnMetaStub.getTABLE_SCHEM(),
-						columnMetaStub.getTABLE_NAME(),
-						columnMetaStub.getCOLUMN_NAME(),
-						columnMetaStub.getDATA_TYPE(),
-						columnMetaStub.getTYPE_NAME(),
-						columnMetaStub.getCOLUMN_SIZE(),
-						columnMetaStub.getBUFFER_LENGTH(),
-						columnMetaStub.getDECIMAL_DIGITS(),
-						columnMetaStub.getNUM_PREC_RADIX(),
-						columnMetaStub.getNULLABLE(),
-						columnMetaStub.getREMARKS(),
-						columnMetaStub.getCOLUMN_DEF(),
-						columnMetaStub.getSQL_DATA_TYPE(),
-						columnMetaStub.getSQL_DATETIME_SUB(),
-						columnMetaStub.getCHAR_OCTET_LENGTH(),
-						columnMetaStub.getORDINAL_POSITION(),
-						columnMetaStub.getIS_NULLABLE(),
-						columnMetaStub.getSCOPE_CATLOG(),
-						columnMetaStub.getSCOPE_TABLE(),
-						columnMetaStub.getSOURCE_DATA_TYPE(),
-						columnMetaStub.getIS_AUTOINCREMENT(),
-						columnMetaStub.getSCOPE_SCHEMA());
-
-				columns.add(column);
-			}
-		}
-
-		return new DataSet<MetaColumn>(meta, new KylinEnumerator<MetaColumn>(
-				columns));
-	}
-
-	/**
-	 * @param queryRes
-	 * @param metas
-	 * @return
-	 */
-	private List<Object[]> genResultData(SQLResponseStub queryRes,
-			List<ColumnMetaData> metas) {
-		List<Object[]> data = new ArrayList<Object[]>();
-		for (String[] result : queryRes.getResults()) {
-			Object[] row = new Object[result.length];
-
-			for (int i = 0; i < result.length; i++) {
-				ColumnMetaData meta = metas.get(i);
-				row[i] = SQLTypeMap.wrapObject(result[i], meta.type.type);
-			}
-
-			data.add(row);
-		}
-		return data;
-	}
-
-	/**
-	 * @param statement
-	 * @param params
-	 */
-	private List<StateParam> genPrestateStates(AvaticaStatement statement) {
-		List<StateParam> params = new ArrayList<StateParam>();
-		List<Object> values = ((KylinJdbc41PreparedStatement) statement)
-				.getParameterValues();
-
-		for (int i = 0; i < values.size(); i++) {
-			Object value = values.get(i);
-			params.add(new StateParam(value.getClass().getCanonicalName(),
-					(null == value) ? null : String.valueOf(value)));
-		}
-
-		return params;
-	}
-
-	/**
-	 * @param queryRes
-	 * @return
-	 */
-	private List<ColumnMetaData> genColumnMeta(SQLResponseStub queryRes) {
-		List<ColumnMetaData> metas = new ArrayList<ColumnMetaData>();
-		for (int i = 0; i < queryRes.getColumnMetas().size(); i++) {
-			SQLResponseStub.ColumnMetaStub scm = queryRes.getColumnMetas().get(
-					i);
-			ScalarType type = ColumnMetaData.scalar(scm.getColumnType(),
-					scm.getColumnTypeName(),
-					Rep.of(SQLTypeMap.convert(scm.getColumnType())));
-
-			ColumnMetaData meta = new ColumnMetaData(i, scm.isAutoIncrement(),
-					scm.isCaseSensitive(), scm.isSearchable(),
-					scm.isCurrency(), scm.getIsNullable(), scm.isSigned(),
-					scm.getDisplaySize(), scm.getLabel(), scm.getName(),
-					scm.getSchemaName(), scm.getPrecision(), scm.getScale(),
-					scm.getTableName(), scm.getSchemaName(), type,
-					scm.isReadOnly(), scm.isWritable(), scm.isWritable(), null);
-
-			metas.add(meta);
-		}
-
-		return metas;
-	}
-
-	/**
-	 * @param sql
-	 * @return
-	 * @throws IOException
-	 */
-	private SQLResponseStub runKylinQuery(String sql, List<StateParam> params)
-			throws SQLException {
-		String paramString = null;
-		String url = conn.getQueryUrl();
-
-		if (null != params) {
-			ObjectMapper mapper = new ObjectMapper();
-			try {
-				paramString = mapper.writeValueAsString(params);
-				paramString = "\"params\": " + paramString;
-			} catch (JsonProcessingException e) {
-				logger.error(e.getLocalizedMessage(), e);
-			}
-
-			url += "/prestate";
-		}
-
-		PostMethod post = new PostMethod(url);
-		HttpClient httpClient = new HttpClient();
-
-		if (conn.getQueryUrl().toLowerCase().startsWith("https://")) {
-			registerSsl();
-		}
-
-		addPostHeaders(post);
-
-		String postBody = "{\"sql\":\"" + sql + "\", \"project\":\""
-				+ conn.getProject() + "\""
-				+ ((null == paramString) ? "" : "," + paramString) + "}";
-		String response = null;
-		SQLResponseStub queryRes = null;
-
-		try {
-			StringRequestEntity requestEntity = new StringRequestEntity(
-					postBody, "application/json", "UTF-8");
-			post.setRequestEntity(requestEntity);
-
-			httpClient.executeMethod(post);
-			response = post.getResponseBodyAsString();
-
-			if (post.getStatusCode() != 200 && post.getStatusCode() != 201) {
-				logger.error("Failed to query", response);
-				throw new SQLException(response);
-			}
-
-			queryRes = new ObjectMapper().readValue(response,
-					SQLResponseStub.class);
-
-		} catch (HttpException e) {
-			logger.error(e.getLocalizedMessage(), e);
-			throw new SQLException(e.getLocalizedMessage());
-		} catch (IOException e) {
-			logger.error(e.getLocalizedMessage(), e);
-			throw new SQLException(e.getLocalizedMessage());
-		}
-
-		return queryRes;
-	}
-
-	private void addPostHeaders(HttpMethodBase method) {
-		method.addRequestHeader("Accept", "application/json, text/plain, */*");
-		method.addRequestHeader("Content-Type", "application/json");
-		method.addRequestHeader("Authorization",
-				"Basic " + conn.getBasicAuthHeader());
-	}
-
-	private void registerSsl() {
-		Protocol.registerProtocol("https", new Protocol("https",
-				(ProtocolSocketFactory) new DefaultSslProtocolSocketFactory(),
-				443));
-	}
-
-	public class StateParam {
-		private String className;
-		private String value;
-
-		public StateParam(String className, String value) {
-			super();
-			this.className = className;
-			this.value = value;
-		}
-
-		public String getClassName() {
-			return className;
-		}
-
-		public void setClazz(String className) {
-			this.className = className;
-		}
-
-		public String getValue() {
-			return value;
-		}
-
-		public void setValue(String value) {
-			this.value = value;
-		}
-	}
+    private static final Logger logger = LoggerFactory.getLogger(KylinClient.class);
+
+    private final KylinConnectionImpl conn;
+
+    public KylinClient(KylinConnectionImpl conn) {
+        this.conn = conn;
+    }
+
+    @Override
+    public void connect() throws ConnectionException {
+        PostMethod post = new PostMethod(conn.getConnectUrl());
+        HttpClient httpClient = new HttpClient();
+
+        if (conn.getConnectUrl().toLowerCase().startsWith("https://")) {
+            registerSsl();
+        }
+        addPostHeaders(post);
+
+        try {
+            StringRequestEntity requestEntity = new StringRequestEntity("{}", "application/json", "UTF-8");
+            post.setRequestEntity(requestEntity);
+            httpClient.executeMethod(post);
+
+            if (post.getStatusCode() != 200 && post.getStatusCode() != 201) {
+                logger.error("Authentication Failed with error code " + post.getStatusCode() + " and message:\n" + post.getResponseBodyAsString());
+
+                throw new ConnectionException("Authentication Failed.");
+            }
+        } catch (HttpException e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new ConnectionException(e.getLocalizedMessage());
+        } catch (IOException e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new ConnectionException(e.getLocalizedMessage());
+        }
+    }
+
+    @Override
+    public MetaProject getMetadata(String project) throws ConnectionException {
+        GetMethod get = new GetMethod(conn.getMetaProjectUrl(project));
+        HttpClient httpClient = new HttpClient();
+
+        if (conn.getConnectUrl().toLowerCase().startsWith("https://")) {
+            registerSsl();
+        }
+        addPostHeaders(get);
+
+        List<TableMetaStub> tableMetaStubs = null;
+        try {
+            httpClient.executeMethod(get);
+
+            if (get.getStatusCode() != 200 && get.getStatusCode() != 201) {
+                logger.error("Authentication Failed with error code " + get.getStatusCode() + " and message:\n" + get.getResponseBodyAsString());
+
+                throw new ConnectionException("Authentication Failed.");
+            }
+
+            tableMetaStubs = new ObjectMapper().readValue(get.getResponseBodyAsString(), new TypeReference<List<TableMetaStub>>() {
+            });
+
+            List<MetaTable> tables = new ArrayList<MetaTable>();
+            HashMultimap<String, MetaTable> schemasMap = HashMultimap.create();
+
+            for (TableMetaStub tableMetaStub : tableMetaStubs) {
+                List<MetaColumn> columns = new ArrayList<MetaColumn>();
+
+                for (ColumnMetaStub columnMetaStub : tableMetaStub.getColumns()) {
+                    MetaColumn column = createNewColumn(columnMetaStub);
+                    columns.add(column);
+                }
+
+                MetaTable table = createNewTable(tableMetaStub, columns);
+                tables.add(table);
+                schemasMap.put(tableMetaStub.getTABLE_CAT() + "#" + tableMetaStub.getTABLE_SCHEM(), table);
+            }
+
+            HashMultimap<String, MetaSchema> catalogMap = HashMultimap.create();
+            List<MetaSchema> schemas = new ArrayList<MetaSchema>();
+            for (String key : schemasMap.keySet()) {
+                String cat = key.split("#")[0];
+                String schema = key.split("#")[1];
+                MetaSchema metaSchema = new MetaSchema(cat, schema, new ArrayList<MetaTable>(schemasMap.get(key)));
+                schemas.add(metaSchema);
+                catalogMap.put(cat, metaSchema);
+            }
+
+            List<MetaCatalog> catalogs = new ArrayList<MetaCatalog>();
+            for (String key : catalogMap.keySet()) {
+                MetaCatalog metaCatalog = new MetaCatalog(key, new ArrayList<MetaSchema>(catalogMap.get(key)));
+                catalogs.add(metaCatalog);
+            }
+
+            return new MetaProject(project, catalogs);
+        } catch (HttpException e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new ConnectionException(e.getLocalizedMessage());
+        } catch (IOException e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new ConnectionException(e.getLocalizedMessage());
+        }
+    }
+
+    private MetaTable createNewTable(TableMetaStub tableMetaStub, List<MetaColumn> columns) {
+        MetaTable table = new MetaTable(tableMetaStub.getTABLE_CAT(), tableMetaStub.getTABLE_SCHEM(), tableMetaStub.getTABLE_NAME(), tableMetaStub.getTABLE_TYPE(), tableMetaStub.getREMARKS(), tableMetaStub.getTYPE_CAT(), tableMetaStub.getTYPE_SCHEM(), tableMetaStub.getTYPE_NAME(), tableMetaStub.getSELF_REFERENCING_COL_NAME(), tableMetaStub.getREF_GENERATION(), columns);
+        return table;
+    }
+
+    private MetaColumn createNewColumn(ColumnMetaStub columnMetaStub) {
+        MetaColumn column = new MetaColumn(columnMetaStub.getTABLE_CAT(), columnMetaStub.getTABLE_SCHEM(), columnMetaStub.getTABLE_NAME(), columnMetaStub.getCOLUMN_NAME(), columnMetaStub.getDATA_TYPE(), columnMetaStub.getTYPE_NAME(), columnMetaStub.getCOLUMN_SIZE(), columnMetaStub.getBUFFER_LENGTH(), columnMetaStub.getDECIMAL_DIGITS(), columnMetaStub.getNUM_PREC_RADIX(), columnMetaStub.getNULLABLE(), columnMetaStub.getREMARKS(), columnMetaStub.getCOLUMN_DEF(), columnMetaStub.getSQL_DATA_TYPE(), columnMetaStub.getSQL_DATETIME_SUB(), columnMetaStub.getCHAR_OCTET_LENGTH(), columnMetaStub.getORDINAL_POSITION(), columnMetaStub.getIS_NULLABLE(), columnMetaStub.getSCOPE_CATLOG(), columnMetaStub.getSCOPE_TABLE(), columnMetaStub.getSOURCE_DATA_TYPE(), columnMetaStub.getIS_AUTOINCREMENT(), columnMetaStub.getSCOPE_SCHEMA());
+        return column;
+    }
+
+    @Override
+    public DataSet<Object[]> query(AvaticaStatement statement, String sql) throws SQLException {
+        SQLResponseStub queryRes = null;
+
+        List<StateParam> params = null;
+        if (statement instanceof KylinJdbc41PreparedStatement) {
+            params = genPrestateStates(statement);
+        }
+
+        queryRes = runKylinQuery(sql, params);
+
+        List<ColumnMetaData> metas = genColumnMeta(queryRes);
+        List<Object[]> data = genResultData(queryRes, metas);
+
+        return new DataSet<Object[]>(metas, new KylinEnumerator<Object[]>(data));
+    }
+
+    /**
+     * @param queryRes
+     * @param metas
+     * @return
+     */
+    private List<Object[]> genResultData(SQLResponseStub queryRes, List<ColumnMetaData> metas) {
+        List<Object[]> data = new ArrayList<Object[]>();
+        for (String[] result : queryRes.getResults()) {
+            Object[] row = new Object[result.length];
+
+            for (int i = 0; i < result.length; i++) {
+                ColumnMetaData meta = metas.get(i);
+                row[i] = SQLTypeMap.wrapObject(result[i], meta.type.type);
+            }
+
+            data.add(row);
+        }
+        return data;
+    }
+
+    /**
+     * @param statement
+     * @param params
+     */
+    private List<StateParam> genPrestateStates(AvaticaStatement statement) {
+        List<StateParam> params = new ArrayList<StateParam>();
+        List<Object> values = ((KylinJdbc41PreparedStatement) statement).getParameterValues();
+
+        for (int i = 0; i < values.size(); i++) {
+            Object value = values.get(i);
+            params.add(new StateParam(value.getClass().getCanonicalName(), (null == value) ? null : String.valueOf(value)));
+        }
+
+        return params;
+    }
+
+    /**
+     * @param queryRes
+     * @return
+     */
+    private List<ColumnMetaData> genColumnMeta(SQLResponseStub queryRes) {
+        List<ColumnMetaData> metas = new ArrayList<ColumnMetaData>();
+        for (int i = 0; i < queryRes.getColumnMetas().size(); i++) {
+            SQLResponseStub.ColumnMetaStub scm = queryRes.getColumnMetas().get(i);
+            ScalarType type = ColumnMetaData.scalar(scm.getColumnType(), scm.getColumnTypeName(), Rep.of(SQLTypeMap.convert(scm.getColumnType())));
+
+            ColumnMetaData meta = new ColumnMetaData(i, scm.isAutoIncrement(), scm.isCaseSensitive(), scm.isSearchable(), scm.isCurrency(), scm.getIsNullable(), scm.isSigned(), scm.getDisplaySize(), scm.getLabel(), scm.getName(), scm.getSchemaName(), scm.getPrecision(), scm.getScale(), scm.getTableName(), scm.getSchemaName(), type, scm.isReadOnly(), scm.isWritable(), scm.isWritable(), null);
+
+            metas.add(meta);
+        }
+
+        return metas;
+    }
+
+    /**
+     * @param sql
+     * @return
+     * @throws IOException
+     */
+    private SQLResponseStub runKylinQuery(String sql, List<StateParam> params) throws SQLException {
+        String url = conn.getQueryUrl();
+        String project = conn.getProject();
+        QueryRequest request = null;
+
+        if (null != params) {
+            request = new PreQueryRequest();
+            ((PreQueryRequest) request).setParams(params);
+            url += "/prestate";
+        } else {
+            request = new QueryRequest();
+        }
+        request.setSql(sql);
+        request.setProject(project);
+
+        PostMethod post = new PostMethod(url);
+        addPostHeaders(post);
+        HttpClient httpClient = new HttpClient();
+        if (conn.getQueryUrl().toLowerCase().startsWith("https://")) {
+            registerSsl();
+        }
+
+        String postBody = null;
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            postBody = mapper.writeValueAsString(request);
+            logger.debug("Post body:\n " + postBody);
+        } catch (JsonProcessingException e) {
+            logger.error(e.getLocalizedMessage(), e);
+        }
+        String response = null;
+        SQLResponseStub queryRes = null;
+
+        try {
+            StringRequestEntity requestEntity = new StringRequestEntity(postBody, "application/json", "UTF-8");
+            post.setRequestEntity(requestEntity);
+
+            httpClient.executeMethod(post);
+            response = post.getResponseBodyAsString();
+
+            if (post.getStatusCode() != 200 && post.getStatusCode() != 201) {
+                logger.error("Failed to query", response);
+                throw new SQLException(response);
+            }
+
+            queryRes = new ObjectMapper().readValue(response, SQLResponseStub.class);
+
+        } catch (HttpException e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new SQLException(e.getLocalizedMessage());
+        } catch (IOException e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new SQLException(e.getLocalizedMessage());
+        }
+
+        return queryRes;
+    }
+
+    private void addPostHeaders(HttpMethodBase method) {
+        method.addRequestHeader("Accept", "application/json, text/plain, */*");
+        method.addRequestHeader("Content-Type", "application/json");
+        method.addRequestHeader("Authorization", "Basic " + conn.getBasicAuthHeader());
+    }
+
+    private void registerSsl() {
+        Protocol.registerProtocol("https", new Protocol("https", (ProtocolSocketFactory) new DefaultSslProtocolSocketFactory(), 443));
+    }
+
+    public class QueryRequest {
+        private String sql;
+        private String project;
+
+        public String getSql() {
+            return sql;
+        }
+
+        public void setSql(String sql) {
+            this.sql = sql;
+        }
+
+        public String getProject() {
+            return project;
+        }
+
+        public void setProject(String project) {
+            this.project = project;
+        }
+    }
+
+    public class PreQueryRequest extends QueryRequest {
+        private List<StateParam> params;
+
+        public List<StateParam> getParams() {
+            return params;
+        }
+
+        public void setParams(List<StateParam> params) {
+            this.params = params;
+        }
+    }
+
+    public class StateParam {
+        private String className;
+        private String value;
+
+        public StateParam(String className, String value) {
+            super();
+            this.className = className;
+            this.value = value;
+        }
+
+        public String getClassName() {
+            return className;
+        }
+
+        public void setClazz(String className) {
+            this.className = className;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
+        }
+    }
 }

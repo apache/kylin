@@ -9,10 +9,13 @@ import net.hydromatic.avatica.ColumnMetaData;
 import net.hydromatic.avatica.ColumnMetaData.Rep;
 import net.hydromatic.linq4j.Enumerator;
 
+import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaCatalog;
+import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaColumn;
+import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaProject;
+import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaSchema;
 import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaTable;
 import com.kylinolap.kylin.jdbc.stub.ConnectionException;
 import com.kylinolap.kylin.jdbc.stub.DataSet;
-import com.kylinolap.kylin.jdbc.stub.MetaProject;
 import com.kylinolap.kylin.jdbc.stub.RemoteClient;
 
 /**
@@ -21,49 +24,44 @@ import com.kylinolap.kylin.jdbc.stub.RemoteClient;
  */
 public class DummyClient implements RemoteClient {
 
-	public DummyClient(KylinConnectionImpl conn) {
-	}
+    public DummyClient(KylinConnectionImpl conn) {
+    }
 
-	@Override
-	public void connect() throws ConnectionException {
-	}
+    @Override
+    public void connect() throws ConnectionException {
+    }
 
-	@Override
-	public MetaProject getMetadata(String project) throws ConnectionException {
-		List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
-		for (int i = 0; i < 10; i++) {
-			meta.add(ColumnMetaData.dummy(
-					ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING),
-					true));
-		}
+    @Override
+    public MetaProject getMetadata(String project) throws ConnectionException {
+        List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
+        for (int i = 0; i < 10; i++) {
+            meta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING), true));
+        }
 
-		List<MetaTable> tables = new ArrayList<MetaTable>();
-		MetaTable table = new MetaTable("dummy", "dummy", "dummy", "dummy",
-				"dummy", "dummy", "dummy", "dummy", "dummy", "dummy");
-		tables.add(table);
+        List<MetaTable> tables = new ArrayList<MetaTable>();
+        MetaTable table = new MetaTable("dummy", "dummy", "dummy", "dummy", "dummy", "dummy", "dummy", "dummy", "dummy", "dummy", new ArrayList<MetaColumn>());
+        tables.add(table);
 
-		return new MetaProject(null, null, new DataSet<MetaTable>(meta,
-				new KylinEnumerator<MetaTable>(tables)), null);
-	}
+        List<MetaSchema> schemas = new ArrayList<MetaSchema>();
+        schemas.add(new MetaSchema("dummy", "dummy", tables));
+        List<MetaCatalog> catalogs = new ArrayList<MetaCatalog>();
+        catalogs.add(new MetaCatalog("dummy", schemas));
 
-	@Override
-	public DataSet<Object[]> query(AvaticaStatement statement, String sql) {
-		List<Object[]> data = new ArrayList<Object[]>();
-		Object[] row = new Object[] { "foo", "bar", "tool" };
-		data.add(row);
-		Enumerator<Object[]> enumerator = new KylinEnumerator<Object[]>(data);
-		List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
-		meta.add(ColumnMetaData.dummy(
-				ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING),
-				true));
-		meta.add(ColumnMetaData.dummy(
-				ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING),
-				true));
-		meta.add(ColumnMetaData.dummy(
-				ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING),
-				true));
+        return new MetaProject(null, catalogs);
+    }
 
-		return new DataSet<Object[]>(meta, enumerator);
-	}
+    @Override
+    public DataSet<Object[]> query(AvaticaStatement statement, String sql) {
+        List<Object[]> data = new ArrayList<Object[]>();
+        Object[] row = new Object[] { "foo", "bar", "tool" };
+        data.add(row);
+        Enumerator<Object[]> enumerator = new KylinEnumerator<Object[]>(data);
+        List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
+        meta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING), true));
+        meta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING), true));
+        meta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING), true));
+
+        return new DataSet<Object[]>(meta, enumerator);
+    }
 
 }

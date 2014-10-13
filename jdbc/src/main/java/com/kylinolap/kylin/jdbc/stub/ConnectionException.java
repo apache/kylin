@@ -22,32 +22,32 @@ package com.kylinolap.kylin.jdbc.stub;
  */
 public class ConnectionException extends Exception {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public ConnectionException() {
-		super();
-	}
+    public ConnectionException() {
+        super();
+    }
 
-	/**
-	 * @param message
-	 * @param cause
-	 */
-	public ConnectionException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    /**
+     * @param message
+     * @param cause
+     */
+    public ConnectionException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-	/**
-	 * @param message
-	 */
-	public ConnectionException(String message) {
-		super(message);
-	}
+    /**
+     * @param message
+     */
+    public ConnectionException(String message) {
+        super(message);
+    }
 
-	/**
-	 * @param cause
-	 */
-	public ConnectionException(Throwable cause) {
-		super(cause);
-	}
+    /**
+     * @param cause
+     */
+    public ConnectionException(Throwable cause) {
+        super(cause);
+    }
 
 }
