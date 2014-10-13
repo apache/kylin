@@ -33,13 +33,11 @@ import com.kylinolap.kylin.jdbc.KylinPrepare.PrepareResult;
  */
 public class KylinResultSet extends AvaticaResultSet {
 
-	public KylinResultSet(AvaticaStatement statement,
-			AvaticaPrepareResult prepareResult,
-			ResultSetMetaData resultSetMetaData, TimeZone timeZone) {
-		super(statement, prepareResult, resultSetMetaData, timeZone);
-	}
+    public KylinResultSet(AvaticaStatement statement, AvaticaPrepareResult prepareResult, ResultSetMetaData resultSetMetaData, TimeZone timeZone) {
+        super(statement, prepareResult, resultSetMetaData, timeZone);
+    }
 
-	public KylinPrepare.PrepareResult getPrepareResult() {
-		return (PrepareResult) prepareResult;
-	}
+    public KylinPrepare.PrepareResult getPrepareResult() {
+        return (PrepareResult) prepareResult;
+    }
 }
