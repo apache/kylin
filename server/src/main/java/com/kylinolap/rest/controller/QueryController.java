@@ -214,9 +214,8 @@ public class QueryController extends BasicController {
         }
 
         if (sql.toLowerCase().contains("select")) {
+            SQLResponse sqlResponse = searchQueryInCache(sqlRequest);
             try {
-                SQLResponse sqlResponse = searchQueryInCache(sqlRequest);
-
                 if (null == sqlResponse) {
                     sqlResponse = queryService.query(sqlRequest);
 
