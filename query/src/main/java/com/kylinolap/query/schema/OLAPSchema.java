@@ -19,6 +19,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.hydromatic.optiq.Table;
 import net.hydromatic.optiq.impl.AbstractSchema;
 
@@ -34,23 +37,7 @@ import com.kylinolap.metadata.model.schema.TableDesc;
  */
 public class OLAPSchema extends AbstractSchema {
 
-    // static {
-    // addHookHandler();
-    // }
-    //
-    // private static void addHookHandler() {
-    // Function1<Object, Object> handler = new Function1<Object, Object>() {
-    // public Object apply(Object a0) {
-    // if (a0 != null) {
-    // Object[] parseTree = (Object[]) a0;
-    // OLAPRel._localContext.set(new OLAPContext());
-    // OLAPRel._localContext.get().sql = (String) parseTree[0];
-    // }
-    // return a0;
-    // }
-    // };
-    // Hook.PARSE_TREE.add(handler);
-    // }
+    private static final Logger logger = LoggerFactory.getLogger(OLAPSchema.class);
 
     private KylinConfig config;
     private String projectName;
@@ -87,6 +74,7 @@ public class OLAPSchema extends AbstractSchema {
             final String tableName = tableDesc.getName();
             final OLAPTable table = new OLAPTable(this, tableDesc);
             olapTables.put(tableName, table);
+            logger.debug("Project " + projectName + " exposes table " + tableName);
         }
 
         return olapTables;
