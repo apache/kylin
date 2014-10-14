@@ -35,8 +35,8 @@ import net.hydromatic.avatica.UnregisteredDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaProject;
 import com.kylinolap.kylin.jdbc.KylinPrepare.PrepareResult;
-import com.kylinolap.kylin.jdbc.stub.MetaProject;
 
 /**
  * Kylin connection implementation
@@ -53,8 +53,7 @@ public abstract class KylinConnectionImpl extends AvaticaConnection {
     public final List<AvaticaStatement> statements;
     static final Trojan TROJAN = createTrojan();
 
-    protected KylinConnectionImpl(UnregisteredDriver driver, AvaticaFactory factory, String url,
-            Properties info) {
+    protected KylinConnectionImpl(UnregisteredDriver driver, AvaticaFactory factory, String url, Properties info) {
         super(driver, factory, url, info);
 
         String odbcUrl = url;
@@ -77,10 +76,8 @@ public abstract class KylinConnectionImpl extends AvaticaConnection {
     }
 
     @Override
-    public AvaticaStatement createStatement(int resultSetType, int resultSetConcurrency,
-            int resultSetHoldability) throws SQLException {
-        AvaticaStatement statement =
-                super.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
+    public AvaticaStatement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+        AvaticaStatement statement = super.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
         statements.add(statement);
 
         return statement;
@@ -89,15 +86,13 @@ public abstract class KylinConnectionImpl extends AvaticaConnection {
     @Override
     public PreparedStatement prepareStatement(String sql) throws SQLException {
         PrepareResult pr = new KylinPrepareImpl().prepare(sql);
-        AvaticaPreparedStatement statement =
-                ((KylinJdbc41Factory) factory).newPreparedStatement(this, pr, ResultSet.TYPE_FORWARD_ONLY,
-                        ResultSet.CONCUR_READ_ONLY, this.getHoldability());
+        AvaticaPreparedStatement statement = ((KylinJdbc41Factory) factory).newPreparedStatement(this, pr, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, this.getHoldability());
         statements.add(statement);
 
         return statement;
     }
 
-    //~ kylin specified implements
+    // ~ kylin specified implements
 
     public String getBasicAuthHeader() {
         String username = this.info.getProperty("user");
@@ -108,21 +103,18 @@ public abstract class KylinConnectionImpl extends AvaticaConnection {
 
     public String getConnectUrl() {
         boolean isSsl = Boolean.parseBoolean((this.info.getProperty("ssl", "false")));
-        return (isSsl ? "https://" : "http://") + this.baseUrl + ":" + (isSsl ? 443 : 80)
-                + "/kylin/api/user/authentication";
+        return (isSsl ? "https://" : "http://") + this.baseUrl + ":" + (isSsl ? 443 : 80) + "/kylin/api/user/authentication";
     }
 
     public String getMetaProjectUrl(String project) {
         assert project != null;
         boolean isSsl = Boolean.parseBoolean((this.info.getProperty("ssl", "false")));
-        return (isSsl ? "https://" : "http://") + this.baseUrl + ":" + (isSsl ? 443 : 80)
-                + "/kylin/api/tables_and_columns?project=" + project;
+        return (isSsl ? "https://" : "http://") + this.baseUrl + ":" + (isSsl ? 443 : 80) + "/kylin/api/tables_and_columns?project=" + project;
     }
 
     public String getQueryUrl() {
         boolean isSsl = Boolean.parseBoolean((this.info.getProperty("ssl", "false")));
-        return (isSsl ? "https://" : "http://") + this.baseUrl + ":" + (isSsl ? 443 : 80)
-                + "/kylin/api/query";
+        return (isSsl ? "https://" : "http://") + this.baseUrl + ":" + (isSsl ? 443 : 80) + "/kylin/api/query";
     }
 
     public String getProject() {
@@ -147,6 +139,19 @@ public abstract class KylinConnectionImpl extends AvaticaConnection {
 
     public void setMetaProject(MetaProject metaProject) {
         this.metaProject = metaProject;
+    }
+
+    @Override
+    public void close() throws SQLException {
+        super.close();
+
+        this.metaProject = null;
+        this.statements.clear();
+    }
+
+    @Override
+    public String toString() {
+        return "KylinConnectionImpl [baseUrl=" + baseUrl + ", project=" + project + ", metaProject=" + metaProject + "]";
     }
 
 }

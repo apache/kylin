@@ -25,7 +25,7 @@ import net.hydromatic.linq4j.Enumerator;
  * Data set wrapper.
  * 
  * @author xduo
- *
+ * 
  */
 public class DataSet<E> {
 

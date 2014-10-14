@@ -147,7 +147,7 @@ public class KylinQueryTest extends KylinTestBase {
         // String queryFileName =
         // "src/test/resources/query/sql_tableau/query22.sql.disabled";
 
-        String queryFileName = "src/test/resources/query/sql/query67.sql";
+        String queryFileName = "src/test/resources/query/sql_tableau/query15.sql";
 
         File sqlFile = new File(queryFileName);
         runSQL(sqlFile, true, false);

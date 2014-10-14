@@ -20,7 +20,7 @@ import java.util.List;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class SQLResponseStub implements Serializable {
     private static final long serialVersionUID = 1L;

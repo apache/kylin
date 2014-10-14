@@ -35,155 +35,134 @@ import net.hydromatic.avatica.AvaticaResultSet;
  * Kylin prepare statement. <br>
  * Supported operations:
  * <ul>
- * 		<li>setString</li>
- * 		<li>setInt</li>
- * 		<li>setShort</li>
- * 		<li>setLong</li>
- * 		<li>setFloat</li>
- * 		<li>setDouble</li>
- * 		<li>setBoolean</li>
- * 		<li>setByte</li>
- * 		<li>setDate</li>
- * 		<li>setTime</li>
- * 		<li>setTimestamp</li>
+ * <li>setString</li>
+ * <li>setInt</li>
+ * <li>setShort</li>
+ * <li>setLong</li>
+ * <li>setFloat</li>
+ * <li>setDouble</li>
+ * <li>setBoolean</li>
+ * <li>setByte</li>
+ * <li>setDate</li>
+ * <li>setTime</li>
+ * <li>setTimestamp</li>
  * </ul>
  * 
  * @author xduo
- *
+ * 
  */
-public abstract class KylinPrepareStatementImpl extends
-		AvaticaPreparedStatement {
+public abstract class KylinPrepareStatementImpl extends AvaticaPreparedStatement {
 
-	/**
-	 * Before real query, 
-	 */
-	protected AvaticaPrepareResult prequeryResult;
+    /**
+     * Before real query,
+     */
+    protected AvaticaPrepareResult prequeryResult;
 
-	protected KylinPrepareStatementImpl(AvaticaConnection connection,
-			AvaticaPrepareResult prepareResult, int resultSetType,
-			int resultSetConcurrency, int resultSetHoldability)
-			throws SQLException {
-		super(connection, prepareResult, resultSetType, resultSetConcurrency,
-				resultSetHoldability);
+    protected KylinPrepareStatementImpl(AvaticaConnection connection, AvaticaPrepareResult prepareResult, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+        super(connection, prepareResult, resultSetType, resultSetConcurrency, resultSetHoldability);
 
-		this.prequeryResult = prepareResult;
-	}
+        this.prequeryResult = prepareResult;
+    }
 
-	@Override
-	public ResultSet executeQuery() throws SQLException {
-		AvaticaPrepareResult queriedResult = ((KylinConnectionImpl) this.connection)
-				.getMeta().prepare(this, this.prequeryResult.getSql());
+    @Override
+    public ResultSet executeQuery() throws SQLException {
+        AvaticaPrepareResult queriedResult = ((KylinConnectionImpl) this.connection).getMeta().prepare(this, this.prequeryResult.getSql());
 
-		return executeQueryInternal(queriedResult);
-	}
+        return executeQueryInternal(queriedResult);
+    }
 
-	@Override
-	protected void close_() {
-		if (!closed) {
-			closed = true;
-			final KylinConnectionImpl connection_ = (KylinConnectionImpl) connection;
-			connection_.statements.remove(this);
-			if (openResultSet != null) {
-				AvaticaResultSet c = openResultSet;
-				openResultSet = null;
-				c.close();
-			}
-			// If onStatementClose throws, this method will throw an
-			// exception (later
-			// converted to SQLException), but this statement still gets
-			// closed.
-			connection_.getDriver().handler.onStatementClose(this);
-		}
-	}
+    @Override
+    protected void close_() {
+        if (!closed) {
+            closed = true;
+            final KylinConnectionImpl connection_ = (KylinConnectionImpl) connection;
+            connection_.statements.remove(this);
+            if (openResultSet != null) {
+                AvaticaResultSet c = openResultSet;
+                openResultSet = null;
+                c.close();
+            }
+            // If onStatementClose throws, this method will throw an
+            // exception (later
+            // converted to SQLException), but this statement still gets
+            // closed.
+            connection_.getDriver().handler.onStatementClose(this);
+        }
+    }
 
-	public List<Object> getParameterValues() {
-		return (List<Object>) Collections.unmodifiableList(super
-				.getParameterValues());
-	}
+    public List<Object> getParameterValues() {
+        return (List<Object>) Collections.unmodifiableList(super.getParameterValues());
+    }
 
-	public void setRowId(int parameterIndex, RowId x) throws SQLException {
-		getParameter(parameterIndex).setRowId(x);
-	}
+    public void setRowId(int parameterIndex, RowId x) throws SQLException {
+        getParameter(parameterIndex).setRowId(x);
+    }
 
-	public void setNString(int parameterIndex, String value)
-			throws SQLException {
-		getParameter(parameterIndex).setNString(value);
-	}
+    public void setNString(int parameterIndex, String value) throws SQLException {
+        getParameter(parameterIndex).setNString(value);
+    }
 
-	public void setNCharacterStream(int parameterIndex, Reader value,
-			long length) throws SQLException {
-		getParameter(parameterIndex).setNCharacterStream(value, length);
-	}
+    public void setNCharacterStream(int parameterIndex, Reader value, long length) throws SQLException {
+        getParameter(parameterIndex).setNCharacterStream(value, length);
+    }
 
-	public void setNClob(int parameterIndex, NClob value) throws SQLException {
-		getParameter(parameterIndex).setNClob(value);
-	}
+    public void setNClob(int parameterIndex, NClob value) throws SQLException {
+        getParameter(parameterIndex).setNClob(value);
+    }
 
-	public void setClob(int parameterIndex, Reader reader, long length)
-			throws SQLException {
-		getParameter(parameterIndex).setClob(reader, length);
-	}
+    public void setClob(int parameterIndex, Reader reader, long length) throws SQLException {
+        getParameter(parameterIndex).setClob(reader, length);
+    }
 
-	public void setBlob(int parameterIndex, InputStream inputStream, long length)
-			throws SQLException {
-		getParameter(parameterIndex).setBlob(inputStream, length);
-	}
+    public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
+        getParameter(parameterIndex).setBlob(inputStream, length);
+    }
 
-	public void setNClob(int parameterIndex, Reader reader, long length)
-			throws SQLException {
-		getParameter(parameterIndex).setNClob(reader, length);
-	}
+    public void setNClob(int parameterIndex, Reader reader, long length) throws SQLException {
+        getParameter(parameterIndex).setNClob(reader, length);
+    }
 
-	public void setSQLXML(int parameterIndex, SQLXML xmlObject)
-			throws SQLException {
-		getParameter(parameterIndex).setSQLXML(xmlObject);
-	}
+    public void setSQLXML(int parameterIndex, SQLXML xmlObject) throws SQLException {
+        getParameter(parameterIndex).setSQLXML(xmlObject);
+    }
 
-	public void setAsciiStream(int parameterIndex, InputStream x, long length)
-			throws SQLException {
-		getParameter(parameterIndex).setAsciiStream(x, length);
-	}
+    public void setAsciiStream(int parameterIndex, InputStream x, long length) throws SQLException {
+        getParameter(parameterIndex).setAsciiStream(x, length);
+    }
 
-	public void setBinaryStream(int parameterIndex, InputStream x, long length)
-			throws SQLException {
-		getParameter(parameterIndex).setBinaryStream(x, length);
-	}
+    public void setBinaryStream(int parameterIndex, InputStream x, long length) throws SQLException {
+        getParameter(parameterIndex).setBinaryStream(x, length);
+    }
 
-	public void setCharacterStream(int parameterIndex, Reader reader,
-			long length) throws SQLException {
-		getParameter(parameterIndex).setCharacterStream(reader, length);
-	}
+    public void setCharacterStream(int parameterIndex, Reader reader, long length) throws SQLException {
+        getParameter(parameterIndex).setCharacterStream(reader, length);
+    }
 
-	public void setAsciiStream(int parameterIndex, InputStream x)
-			throws SQLException {
-		getParameter(parameterIndex).setAsciiStream(x);
-	}
+    public void setAsciiStream(int parameterIndex, InputStream x) throws SQLException {
+        getParameter(parameterIndex).setAsciiStream(x);
+    }
 
-	public void setBinaryStream(int parameterIndex, InputStream x)
-			throws SQLException {
-		getParameter(parameterIndex).setBinaryStream(x);
-	}
+    public void setBinaryStream(int parameterIndex, InputStream x) throws SQLException {
+        getParameter(parameterIndex).setBinaryStream(x);
+    }
 
-	public void setCharacterStream(int parameterIndex, Reader reader)
-			throws SQLException {
-		getParameter(parameterIndex).setCharacterStream(reader);
-	}
+    public void setCharacterStream(int parameterIndex, Reader reader) throws SQLException {
+        getParameter(parameterIndex).setCharacterStream(reader);
+    }
 
-	public void setNCharacterStream(int parameterIndex, Reader value)
-			throws SQLException {
-		getParameter(parameterIndex).setNCharacterStream(value);
-	}
+    public void setNCharacterStream(int parameterIndex, Reader value) throws SQLException {
+        getParameter(parameterIndex).setNCharacterStream(value);
+    }
 
-	public void setClob(int parameterIndex, Reader reader) throws SQLException {
-		getParameter(parameterIndex).setClob(reader);
-	}
+    public void setClob(int parameterIndex, Reader reader) throws SQLException {
+        getParameter(parameterIndex).setClob(reader);
+    }
 
-	public void setBlob(int parameterIndex, InputStream inputStream)
-			throws SQLException {
-		getParameter(parameterIndex).setBlob(inputStream);
-	}
+    public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {
+        getParameter(parameterIndex).setBlob(inputStream);
+    }
 
-	public void setNClob(int parameterIndex, Reader reader) throws SQLException {
-		getParameter(parameterIndex).setNClob(reader);
-	}
+    public void setNClob(int parameterIndex, Reader reader) throws SQLException {
+        getParameter(parameterIndex).setNClob(reader);
+    }
 }

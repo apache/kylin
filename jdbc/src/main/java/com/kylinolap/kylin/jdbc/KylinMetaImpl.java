@@ -21,7 +21,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import net.hydromatic.avatica.AvaticaPrepareResult;
 import net.hydromatic.avatica.AvaticaResultSet;
@@ -40,8 +44,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.kylin.jdbc.stub.DataSet;
-import com.kylinolap.kylin.jdbc.stub.MetaProject;
+import com.kylinolap.kylin.jdbc.stub.KylinColumnMetaData;
 import com.kylinolap.kylin.jdbc.stub.RemoteClient;
+import com.kylinolap.kylin.jdbc.util.SQLTypeMap;
 
 /**
  * Implementation of avatica interface
@@ -71,12 +76,7 @@ public class KylinMetaImpl implements Meta {
         try {
             List<ColumnMetaData> columnMetas = new ArrayList<ColumnMetaData>();
             List<Object[]> data = new ArrayList<Object[]>();
-            resultSet =
-                    this.conn.getFactory().newResultSet(
-                            this.conn.createStatement(),
-                            new KylinPrepare.PrepareResult(null, null, new KylinEnumerator<Object[]>(data
-                                    .iterator()), ColumnMetaData.struct(columnMetas)),
-                            this.conn.getTimeZone());
+            resultSet = this.conn.getFactory().newResultSet(this.conn.createStatement(), new KylinPrepare.PrepareResult(null, null, new KylinEnumerator<Object[]>(data), ColumnMetaData.struct(columnMetas)), this.conn.getTimeZone());
             KylinConnectionImpl.TROJAN.execute(resultSet);
         } catch (SQLException e) {
             logger.error(e.getLocalizedMessage(), e);
@@ -106,26 +106,21 @@ public class KylinMetaImpl implements Meta {
     }
 
     public ResultSet getTables(String catalog, Pat schemaPattern, Pat tableNamePattern, List<String> typeList) {
+        logger.debug("Get tables with conn " + conn);
         MetaProject metaProject = conn.getMetaProject();
 
         if (null != metaProject) {
-            // todo: apply patterns
-            final DataSet<MetaTable> tables = metaProject.getMetaTables();
-            final NamedFieldGetter<MetaTable> tableGetter =
-                    new NamedFieldGetter<MetaTable>(MetaTable.class, tables.getMeta(), "TABLE_CAT",
-                            "TABLE_SCHEM", "TABLE_NAME", "TABLE_TYPE", "REMARKS", "TYPE_CAT", "TYPE_SCHEM",
-                            "TYPE_NAME", "SELF_REFERENCING_COL_NAME", "REF_GENERATION");
+            final DataSet<MetaTable> tables = metaProject.getMetaTables(catalog, schemaPattern, tableNamePattern);
+            final NamedFieldGetter<MetaTable> tableGetter = new NamedFieldGetter<MetaTable>(MetaTable.class, tables.getMeta(), "TABLE_CAT", "TABLE_SCHEM", "TABLE_NAME", "TABLE_TYPE", "REMARKS", "TYPE_CAT", "TYPE_SCHEM", "TYPE_NAME", "SELF_REFERENCING_COL_NAME", "REF_GENERATION");
 
             AvaticaResultSet resultSet = null;
             try {
-                resultSet =
-                        this.conn.getFactory().newResultSet(this.conn.createStatement(),
-                                new KylinPrepare.PrepareResult(null, null, null, tableGetter.structType) {
-                                    @Override
-                                    public Cursor createCursor() {
-                                        return tableGetter.cursor(tables.getEnumerator());
-                                    }
-                                }, this.conn.getTimeZone());
+                resultSet = this.conn.getFactory().newResultSet(this.conn.createStatement(), new KylinPrepare.PrepareResult(null, null, null, tableGetter.structType) {
+                    @Override
+                    public Cursor createCursor() {
+                        return tableGetter.cursor(tables.getEnumerator());
+                    }
+                }, this.conn.getTimeZone());
                 KylinConnectionImpl.TROJAN.execute(resultSet);
             } catch (SQLException e) {
                 logger.error(e.getLocalizedMessage(), e);
@@ -138,29 +133,21 @@ public class KylinMetaImpl implements Meta {
     }
 
     public ResultSet getColumns(String catalog, Pat schemaPattern, Pat tableNamePattern, Pat columnNamePattern) {
+        logger.debug("Get columns with conn " + conn);
         MetaProject metaProject = conn.getMetaProject();
 
         if (null != metaProject) {
-            // todo: apply patterns
-            final DataSet<MetaColumn> columns = metaProject.getMetaColumns();
-            final NamedFieldGetter<MetaColumn> columnGetter =
-                    new NamedFieldGetter<MetaColumn>(MetaColumn.class, columns.getMeta(), "TABLE_CAT",
-                            "TABLE_SCHEM", "TABLE_NAME", "COLUMN_NAME", "DATA_TYPE", "TYPE_NAME",
-                            "COLUMN_SIZE", "BUFFER_LENGTH", "DECIMAL_DIGITS", "NUM_PREC_RADIX", "NULLABLE",
-                            "REMARKS", "COLUMN_DEF", "SQL_DATA_TYPE", "SQL_DATETIME_SUB",
-                            "CHAR_OCTET_LENGTH", "ORDINAL_POSITION", "IS_NULLABLE", "SCOPE_CATALOG",
-                            "SCOPE_TABLE", "SOURCE_DATA_TYPE", "IS_AUTOINCREMENT", "IS_GENERATEDCOLUMN");
+            final DataSet<MetaColumn> columns = metaProject.getMetaColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern);
+            final NamedFieldGetter<MetaColumn> columnGetter = new NamedFieldGetter<MetaColumn>(MetaColumn.class, columns.getMeta(), "TABLE_CAT", "TABLE_SCHEM", "TABLE_NAME", "COLUMN_NAME", "DATA_TYPE", "TYPE_NAME", "COLUMN_SIZE", "BUFFER_LENGTH", "DECIMAL_DIGITS", "NUM_PREC_RADIX", "NULLABLE", "REMARKS", "COLUMN_DEF", "SQL_DATA_TYPE", "SQL_DATETIME_SUB", "CHAR_OCTET_LENGTH", "ORDINAL_POSITION", "IS_NULLABLE", "SCOPE_CATALOG", "SCOPE_TABLE", "SOURCE_DATA_TYPE", "IS_AUTOINCREMENT", "IS_GENERATEDCOLUMN");
 
             AvaticaResultSet resultSet = null;
             try {
-                resultSet =
-                        this.conn.getFactory().newResultSet(this.conn.createStatement(),
-                                new KylinPrepare.PrepareResult(null, null, null, columnGetter.structType) {
-                                    @Override
-                                    public Cursor createCursor() {
-                                        return columnGetter.cursor(columns.getEnumerator());
-                                    }
-                                }, this.conn.getTimeZone());
+                resultSet = this.conn.getFactory().newResultSet(this.conn.createStatement(), new KylinPrepare.PrepareResult(null, null, null, columnGetter.structType) {
+                    @Override
+                    public Cursor createCursor() {
+                        return columnGetter.cursor(columns.getEnumerator());
+                    }
+                }, this.conn.getTimeZone());
 
                 KylinConnectionImpl.TROJAN.execute(resultSet);
             } catch (SQLException e) {
@@ -174,25 +161,21 @@ public class KylinMetaImpl implements Meta {
     }
 
     public ResultSet getSchemas(String catalog, Pat schemaPattern) {
+        logger.debug("Get schemas with conn " + conn);
         MetaProject metaProject = conn.getMetaProject();
 
         if (null != metaProject) {
-            // todo: apply patterns
-            final DataSet<MetaSchema> schemas = metaProject.getMetaSchemas();
-            final NamedFieldGetter<MetaSchema> schemaGetter =
-                    new NamedFieldGetter<MetaSchema>(MetaSchema.class, schemas.getMeta(), "TABLE_SCHEM",
-                            "TABLE_CATALOG");
+            final DataSet<MetaSchema> schemas = metaProject.getMetaSchemas(catalog, schemaPattern);
+            final NamedFieldGetter<MetaSchema> schemaGetter = new NamedFieldGetter<MetaSchema>(MetaSchema.class, schemas.getMeta(), "TABLE_SCHEM", "TABLE_CATALOG");
 
             AvaticaResultSet resultSet = null;
             try {
-                resultSet =
-                        this.conn.getFactory().newResultSet(this.conn.createStatement(),
-                                new KylinPrepare.PrepareResult(null, null, null, schemaGetter.structType) {
-                                    @Override
-                                    public Cursor createCursor() {
-                                        return schemaGetter.cursor(schemas.getEnumerator());
-                                    }
-                                }, this.conn.getTimeZone());
+                resultSet = this.conn.getFactory().newResultSet(this.conn.createStatement(), new KylinPrepare.PrepareResult(null, null, null, schemaGetter.structType) {
+                    @Override
+                    public Cursor createCursor() {
+                        return schemaGetter.cursor(schemas.getEnumerator());
+                    }
+                }, this.conn.getTimeZone());
 
                 KylinConnectionImpl.TROJAN.execute(resultSet);
             } catch (SQLException e) {
@@ -206,41 +189,35 @@ public class KylinMetaImpl implements Meta {
     }
 
     public ResultSet getCatalogs() {
-        return mockEmptyResultSet();
-        //        MetaProject metaProject = conn.getMetaProject();
-        //
-        //        if (null != metaProject) {
-        //            // todo: apply patterns
-        //            final DataSet<MetaCatalog> catalogs = metaProject.getMetaCatalogs();
-        //            final NamedFieldGetter<MetaCatalog> catalogGetter =
-        //                    new NamedFieldGetter<MetaCatalog>(MetaCatalog.class, catalogs.getMeta(), "TABLE_CATALOG");
-        //
-        //            AvaticaResultSet resultSet = null;
-        //            try {
-        //                resultSet =
-        //                        this.conn.getFactory().newResultSet(this.conn.createStatement(),
-        //                                new KylinPrepare.PrepareResult(null, null, null, catalogGetter.structType) {
-        //                                    @Override
-        //                                    public Cursor createCursor() {
-        //                                        return catalogGetter.cursor(catalogs.getEnumerator());
-        //                                    }
-        //                                }, this.conn.getTimeZone());
-        //
-        //                KylinConnectionImpl.TROJAN.execute(resultSet);
-        //            } catch (SQLException e) {
-        //                logger.error(e.getLocalizedMessage(), e);
-        //            }
-        //
-        //            return resultSet;
-        //        } else {
-        //            return mockEmptyResultSet();
-        //        }
+        MetaProject metaProject = conn.getMetaProject();
+
+        if (null != metaProject) {
+            final DataSet<MetaCatalog> catalogs = metaProject.getMetaCatalogs();
+            final NamedFieldGetter<MetaCatalog> catalogGetter = new NamedFieldGetter<MetaCatalog>(MetaCatalog.class, catalogs.getMeta(), "TABLE_CATALOG");
+
+            AvaticaResultSet resultSet = null;
+            try {
+                resultSet = this.conn.getFactory().newResultSet(this.conn.createStatement(), new KylinPrepare.PrepareResult(null, null, null, catalogGetter.structType) {
+                    @Override
+                    public Cursor createCursor() {
+                        return catalogGetter.cursor(catalogs.getEnumerator());
+                    }
+                }, this.conn.getTimeZone());
+
+                KylinConnectionImpl.TROJAN.execute(resultSet);
+            } catch (SQLException e) {
+                logger.error(e.getLocalizedMessage(), e);
+            }
+
+            return resultSet;
+        } else {
+            return mockEmptyResultSet();
+        }
     }
 
     public ResultSet getTableTypes() {
         List<ColumnMetaData> tableTypeMeta = new ArrayList<ColumnMetaData>();
-        tableTypeMeta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING),
-                false));
+        tableTypeMeta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING), false));
         List<Object[]> data = new ArrayList<Object[]>();
         Object[] row = new Object[1];
         row[0] = "TABLE";
@@ -248,12 +225,7 @@ public class KylinMetaImpl implements Meta {
 
         AvaticaResultSet resultSet = null;
         try {
-            resultSet =
-                    this.conn.getFactory().newResultSet(
-                            this.conn.createStatement(),
-                            new KylinPrepare.PrepareResult(null, null, new KylinEnumerator<Object[]>(data
-                                    .iterator()), ColumnMetaData.struct(tableTypeMeta)),
-                            this.conn.getTimeZone());
+            resultSet = this.conn.getFactory().newResultSet(this.conn.createStatement(), new KylinPrepare.PrepareResult(null, null, new KylinEnumerator<Object[]>(data), ColumnMetaData.struct(tableTypeMeta)), this.conn.getTimeZone());
             KylinConnectionImpl.TROJAN.execute(resultSet);
         } catch (SQLException e) {
             logger.error(e.getLocalizedMessage(), e);
@@ -266,8 +238,7 @@ public class KylinMetaImpl implements Meta {
         return mockEmptyResultSet();
     }
 
-    public ResultSet getProcedureColumns(String catalog, Pat schemaPattern, Pat procedureNamePattern,
-            Pat columnNamePattern) {
+    public ResultSet getProcedureColumns(String catalog, Pat schemaPattern, Pat procedureNamePattern, Pat columnNamePattern) {
         return mockEmptyResultSet();
     }
 
@@ -279,8 +250,7 @@ public class KylinMetaImpl implements Meta {
         return mockEmptyResultSet();
     }
 
-    public ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope,
-            boolean nullable) {
+    public ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope, boolean nullable) {
         return mockEmptyResultSet();
     }
 
@@ -300,8 +270,7 @@ public class KylinMetaImpl implements Meta {
         return mockEmptyResultSet();
     }
 
-    public ResultSet getCrossReference(String parentCatalog, String parentSchema, String parentTable,
-            String foreignCatalog, String foreignSchema, String foreignTable) {
+    public ResultSet getCrossReference(String parentCatalog, String parentSchema, String parentTable, String foreignCatalog, String foreignSchema, String foreignTable) {
         return mockEmptyResultSet();
     }
 
@@ -309,8 +278,7 @@ public class KylinMetaImpl implements Meta {
         return mockEmptyResultSet();
     }
 
-    public ResultSet getIndexInfo(String catalog, String schema, String table, boolean unique,
-            boolean approximate) {
+    public ResultSet getIndexInfo(String catalog, String schema, String table, boolean unique, boolean approximate) {
         return mockEmptyResultSet();
     }
 
@@ -326,8 +294,7 @@ public class KylinMetaImpl implements Meta {
         return mockEmptyResultSet();
     }
 
-    public ResultSet getAttributes(String catalog, Pat schemaPattern, Pat typeNamePattern,
-            Pat attributeNamePattern) {
+    public ResultSet getAttributes(String catalog, Pat schemaPattern, Pat typeNamePattern, Pat attributeNamePattern) {
         return mockEmptyResultSet();
     }
 
@@ -339,13 +306,11 @@ public class KylinMetaImpl implements Meta {
         return mockEmptyResultSet();
     }
 
-    public ResultSet getFunctionColumns(String catalog, Pat schemaPattern, Pat functionNamePattern,
-            Pat columnNamePattern) {
+    public ResultSet getFunctionColumns(String catalog, Pat schemaPattern, Pat functionNamePattern, Pat columnNamePattern) {
         return mockEmptyResultSet();
     }
 
-    public ResultSet getPseudoColumns(String catalog, Pat schemaPattern, Pat tableNamePattern,
-            Pat columnNamePattern) {
+    public ResultSet getPseudoColumns(String catalog, Pat schemaPattern, Pat tableNamePattern, Pat columnNamePattern) {
         return mockEmptyResultSet();
     }
 
@@ -363,25 +328,202 @@ public class KylinMetaImpl implements Meta {
             result = (DataSet<Object[]>) client.query(statement, sql);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
-            throw new RuntimeException("Failed to query kylin server with exception "
-                    + e.getLocalizedMessage());
+            throw new RuntimeException("Failed to query kylin server with exception " + e.getLocalizedMessage());
         }
 
-        return new KylinPrepare.PrepareResult(sql, null, (Enumerator<Object[]>) result.getEnumerator(),
-                ColumnMetaData.struct(result.getMeta()));
+        return new KylinPrepare.PrepareResult(sql, null, (Enumerator<Object[]>) result.getEnumerator(), ColumnMetaData.struct(result.getMeta()));
     }
 
-    /** An object that has a name. */
-    interface Named {
-        String getName();
+    /**
+     * Tree node used by project tree-like structure
+     * 
+     * @author xduo
+     * 
+     */
+    interface Node {
+        /**
+         * Get the node name
+         * 
+         * @return
+         */
+        public String getName();
+
+        /**
+         * Get direct children of the node.
+         * 
+         * @return
+         */
+        public List<? extends Node> getChildren();
+
+        /**
+         * Search the subtree of the node with patterns. One pattern, one level.
+         * 
+         * @param patterns
+         * @return
+         */
+        public List<? extends Node> searchByPatterns(Pat... patterns);
+    }
+
+    /**
+     * Abstract of the tree-like structure
+     * 
+     * @author xduo
+     * 
+     */
+    public static abstract class AbstractNode implements Node {
+
+        public List<? extends Node> searchByPatterns(Pat... patterns) {
+            if (patterns.length == 1) {
+                return findChildren(patterns[0]);
+            } else {
+                List<Node> children = new ArrayList<Node>();
+
+                for (Node child : this.findChildren(patterns[0])) {
+                    children.addAll(child.searchByPatterns(Arrays.copyOfRange(patterns, 1, patterns.length)));
+                }
+
+                return children;
+            }
+        }
+
+        private List<? extends Node> findChildren(Pat pattern) {
+            if (null == pattern.s || pattern.s.equals("%")) {
+                return this.getChildren();
+            }
+
+            List<Node> list = new ArrayList<Node>();
+
+            for (Node c : this.getChildren()) {
+                if (likeToRegex(pattern).matcher(c.getName()).matches()) {
+                    list.add(c);
+                }
+            }
+
+            return list;
+        };
+
+        /**
+         * Converts a LIKE-style pattern (where '%' represents a wild-card,
+         * escaped using '\') to a Java regex.
+         */
+        private Pattern likeToRegex(Pat pattern) {
+            StringBuilder buf = new StringBuilder("^");
+            char[] charArray = pattern.s.toCharArray();
+            int slash = -2;
+            for (int i = 0; i < charArray.length; i++) {
+                char c = charArray[i];
+                if (slash == i - 1) {
+                    buf.append('[').append(c).append(']');
+                } else {
+                    switch (c) {
+                    case '\\':
+                        slash = i;
+                        break;
+                    case '%':
+                        buf.append(".*");
+                        break;
+                    case '[':
+                        buf.append("\\[");
+                        break;
+                    case ']':
+                        buf.append("\\]");
+                        break;
+                    default:
+                        buf.append('[').append(c).append(']');
+                    }
+                }
+            }
+            buf.append("$");
+
+            return Pattern.compile(buf.toString());
+        }
+    }
+
+    public static class MetaProject extends AbstractNode {
+        public final String project;
+        public final List<MetaCatalog> catalogs;
+
+        public MetaProject(String project, List<MetaCatalog> catalogs) {
+            super();
+            this.project = project;
+            this.catalogs = catalogs;
+        }
+
+        public DataSet<MetaCatalog> getMetaCatalogs() {
+            return new DataSet<MetaCatalog>(MetaCatalog.meta, new KylinEnumerator<MetaCatalog>(catalogs));
+        }
+
+        /**
+         * facade method to search schemas in current project.
+         * 
+         * @param catalog
+         * @param schemaPattern
+         * @return
+         */
+        @SuppressWarnings("unchecked")
+        public DataSet<MetaSchema> getMetaSchemas(String catalog, Pat schemaPattern) {
+            List<? extends Node> metaSchemas = this.searchByPatterns(Pat.of(catalog), schemaPattern);
+
+            return new DataSet<MetaSchema>(MetaSchema.meta, new KylinEnumerator<MetaSchema>((Collection<MetaSchema>) metaSchemas));
+        }
+
+        /**
+         * facade method to search tables in current project
+         * 
+         * @param catalog
+         * @param schemaPattern
+         * @param tableNamePattern
+         * @return
+         */
+        @SuppressWarnings("unchecked")
+        public DataSet<MetaTable> getMetaTables(String catalog, Pat schemaPattern, Pat tableNamePattern) {
+            logger.debug("getMetaTables with catalog:" + catalog + ", schema:" + schemaPattern.s + ", table:" + tableNamePattern.s);
+            List<? extends Node> tables = this.searchByPatterns(Pat.of(catalog), schemaPattern, tableNamePattern);
+
+            return new DataSet<MetaTable>(MetaTable.meta, new KylinEnumerator<MetaTable>((Collection<MetaTable>) tables));
+        }
+
+        /**
+         * facade method to search columns in current project
+         * 
+         * @param catalog
+         * @param schemaPattern
+         * @param tableNamePattern
+         * @param columnNamePattern
+         * @return
+         */
+        @SuppressWarnings("unchecked")
+        public DataSet<MetaColumn> getMetaColumns(String catalog, Pat schemaPattern, Pat tableNamePattern, Pat columnNamePattern) {
+            logger.debug("getMetaColumns with catalog:" + catalog + ", schema:" + schemaPattern.s + ", table:" + tableNamePattern.s + ", column:" + columnNamePattern.s);
+            List<? extends Node> columns = this.searchByPatterns(Pat.of(catalog), schemaPattern, tableNamePattern, columnNamePattern);
+
+            return new DataSet<MetaColumn>(MetaColumn.meta, new KylinEnumerator<MetaColumn>((Collection<MetaColumn>) columns));
+        }
+
+        @Override
+        public String getName() {
+            return project;
+        }
+
+        @Override
+        public List<? extends Node> getChildren() {
+            return this.catalogs;
+        }
     }
 
     /** Metadata describing a catalog. */
-    public static class MetaCatalog implements Named {
+    public static class MetaCatalog extends AbstractNode {
+        public static final List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
         public final String tableCatalog;
+        public final List<MetaSchema> schemas;
 
-        public MetaCatalog(String tableCatalog) {
+        static {
+            meta.add(KylinColumnMetaData.dummy(0, "TABLE_CAT", "TABLE_CAT", ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING), true));
+        }
+
+        public MetaCatalog(String tableCatalog, List<MetaSchema> schemas) {
             this.tableCatalog = tableCatalog;
+            this.schemas = schemas;
         }
 
         public String getName() {
@@ -413,16 +555,30 @@ public class KylinMetaImpl implements Meta {
             return true;
         }
 
+        @Override
+        public List<? extends Node> getChildren() {
+            return schemas;
+        }
+
     }
 
     /** Metadata describing a schema. */
-    public static class MetaSchema implements Named {
+    public static class MetaSchema extends AbstractNode {
+        public static final List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
         public final String tableCatalog;
         public final String tableSchem;
+        public final List<MetaTable> tables;
 
-        public MetaSchema(String tableCatalog, String tableSchem) {
+        static {
+            for (ColumnMetaData cmd : SQLTypeMap.schemaMetaTypeMapping.values()) {
+                meta.add(cmd);
+            }
+        }
+
+        public MetaSchema(String tableCatalog, String tableSchem, List<MetaTable> tables) {
             this.tableCatalog = tableCatalog;
             this.tableSchem = tableSchem;
+            this.tables = tables;
         }
 
         public String getName() {
@@ -460,6 +616,10 @@ public class KylinMetaImpl implements Meta {
             return true;
         }
 
+        @Override
+        public List<MetaTable> getChildren() {
+            return this.tables;
+        }
     }
 
     /** Metadata describing a table type. */
@@ -472,7 +632,8 @@ public class KylinMetaImpl implements Meta {
     }
 
     /** Metadata describing a table. */
-    public static class MetaTable implements Named {
+    public static class MetaTable extends AbstractNode {
+        public static final List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
         public final String tableCat;
         public final String tableSchem;
         public final String tableName;
@@ -483,10 +644,15 @@ public class KylinMetaImpl implements Meta {
         public final String typeName;
         public final String selfReferencingColName;
         public final String refGeneration;
+        public final List<MetaColumn> columns;
 
-        public MetaTable(String tableCat, String tableSchem, String tableName, String tableType,
-                String remarks, String typeCat, String typeSchem, String typeName,
-                String selfReferencingColName, String refGeneration) {
+        static {
+            for (ColumnMetaData cmd : SQLTypeMap.tableMetaTypeMapping.values()) {
+                meta.add(cmd);
+            }
+        }
+
+        public MetaTable(String tableCat, String tableSchem, String tableName, String tableType, String remarks, String typeCat, String typeSchem, String typeName, String selfReferencingColName, String refGeneration, List<MetaColumn> columns) {
             this.tableCat = tableCat;
             this.tableSchem = tableSchem;
             this.tableName = tableName;
@@ -497,15 +663,22 @@ public class KylinMetaImpl implements Meta {
             this.typeName = typeName;
             this.selfReferencingColName = selfReferencingColName;
             this.refGeneration = refGeneration;
+            this.columns = columns;
         }
 
         public String getName() {
             return tableName;
         }
+
+        @Override
+        public List<? extends Node> getChildren() {
+            return this.columns;
+        }
     }
 
     /** Metadata describing a column. */
-    public static class MetaColumn implements Named {
+    public static class MetaColumn implements Node {
+        public static final List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
         public final String tableCat;
         public final String tableSchem;
         public final String tableName;
@@ -530,12 +703,13 @@ public class KylinMetaImpl implements Meta {
         public final String isAutoincrement;
         public final String isGeneratedcolumn;
 
-        public MetaColumn(String tableCat, String tableSchem, String tableName, String columnName,
-                int dataType, String typeName, int columnSize, int bufferLength, int decimalDigits,
-                int numPrecRadix, int nullable, String remarks, String columnDef, int sqlDataType,
-                int sqlDatetimeSub, int charOctetLength, int ordinalPosition, String isNullable,
-                String scopeCatalog, String scopeTable, int sourceDataType, String isAutoincrement,
-                String isGeneratedcolumn) {
+        static {
+            for (ColumnMetaData cmd : SQLTypeMap.columnMetaTypeMapping.values()) {
+                meta.add(cmd);
+            }
+        }
+
+        public MetaColumn(String tableCat, String tableSchem, String tableName, String columnName, int dataType, String typeName, int columnSize, int bufferLength, int decimalDigits, int numPrecRadix, int nullable, String remarks, String columnDef, int sqlDataType, int sqlDatetimeSub, int charOctetLength, int ordinalPosition, String isNullable, String scopeCatalog, String scopeTable, int sourceDataType, String isAutoincrement, String isGeneratedcolumn) {
             super();
             this.tableCat = tableCat;
             this.tableSchem = tableSchem;
@@ -564,6 +738,16 @@ public class KylinMetaImpl implements Meta {
 
         public String getName() {
             return columnName;
+        }
+
+        @Override
+        public List<? extends Node> getChildren() {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public List<? extends Node> searchByPatterns(Pat... patterns) {
+            return Collections.emptyList();
         }
     }
 
@@ -601,7 +785,7 @@ public class KylinMetaImpl implements Meta {
         }
 
         public Cursor cursor(Enumerator<T> enumerator) {
-            //noinspection unchecked
+            // noinspection unchecked
             return new EnumeratorCursor<T>(enumerator) {
                 protected Getter createGetter(final int ordinal) {
                     return new Getter() {

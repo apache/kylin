@@ -22,7 +22,7 @@ package com.kylinolap.kylin.jdbc;
  */
 public class KylinJdbc40Factory extends KylinJdbc41Factory {
 
-	public KylinJdbc40Factory() {
-		super(4, 0);
-	}
+    public KylinJdbc40Factory() {
+        super(4, 0);
+    }
 }

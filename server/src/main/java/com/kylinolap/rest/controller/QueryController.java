@@ -24,8 +24,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -37,6 +35,7 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -52,6 +51,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.rest.constant.Constant;
+import com.kylinolap.rest.exception.ForbiddenException;
 import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.model.SelectedColumnMeta;
 import com.kylinolap.rest.model.TableMeta;
@@ -62,6 +62,7 @@ import com.kylinolap.rest.request.SaveSqlRequest;
 import com.kylinolap.rest.response.GeneralResponse;
 import com.kylinolap.rest.response.SQLResponse;
 import com.kylinolap.rest.service.QueryService;
+import com.kylinolap.rest.util.QueryUtil;
 
 /**
  * Handle query requests.
@@ -82,7 +83,6 @@ public class QueryController extends BasicController {
     @Autowired
     private CacheManager cacheManager;
 
-    // refactor SQLResponse, drop ODBC stuff, duration type long
     @RequestMapping(value = "/query", method = RequestMethod.POST)
     @ResponseBody
     @Timed(name = "query")
@@ -93,11 +93,6 @@ public class QueryController extends BasicController {
         response.setDuration(System.currentTimeMillis() - startTimestamp);
 
         queryService.logQuery(sqlRequest, response, new Date(startTimestamp), new Date(System.currentTimeMillis()));
-
-        if (response.getIsException()) {
-            String errorMsg = response.getExceptionMessage();
-            throw new InternalErrorException(makeErrorMsgUserFriendly(errorMsg));
-        }
 
         return response;
     }
@@ -115,31 +110,10 @@ public class QueryController extends BasicController {
 
         if (response.getIsException()) {
             String errorMsg = response.getExceptionMessage();
-            throw new InternalErrorException(makeErrorMsgUserFriendly(errorMsg));
+            throw new InternalErrorException(QueryUtil.makeErrorMsgUserFriendly(errorMsg));
         }
 
         return response;
-    }
-
-    /**
-     * adjust error message order
-     * 
-     * @param errorMsg
-     * @return
-     */
-    public String makeErrorMsgUserFriendly(String errorMsg) {
-        try {
-            errorMsg = errorMsg.replaceAll("\\s", " ");// replace all invisible
-                                                       // characters
-            Pattern pattern = Pattern.compile("error while executing SQL \"(.*)\":(.*)");
-            Matcher matcher = pattern.matcher(errorMsg);
-            if (matcher.find()) {
-                return matcher.group(2).trim() + "\n" + "while executing SQL: \"" + matcher.group(1).trim() + "\"";
-            } else
-                return errorMsg;
-        } catch (Exception e) {
-            return errorMsg;
-        }
     }
 
     @RequestMapping(value = "/saved_queries", method = RequestMethod.POST)
@@ -206,73 +180,74 @@ public class QueryController extends BasicController {
         }
     }
 
-    /**
-     * @param sqlRequest
-     * @return
-     */
     private SQLResponse doQuery(SQLRequest sqlRequest) {
         String sql = sqlRequest.getSql();
         String project = sqlRequest.getProject();
         logger.info("Using project: " + project);
         logger.info("The original query:  " + sql);
 
-        // Check server mode.
         String serverMode = KylinConfig.getInstanceFromEnv().getServerMode();
         if (!(Constant.SERVER_MODE_QUERY.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase()))) {
             throw new InternalErrorException("Query is not allowed in " + serverMode + " mode.");
         }
 
-        try {
-            if (sql.toLowerCase().contains("select")) {
-                SQLResponse sqlResponse = null;
+        if (sql.toLowerCase().contains("select")) {
+            SQLResponse sqlResponse = searchQueryInCache(sqlRequest);
+            try {
+                if (null == sqlResponse) {
+                    sqlResponse = queryService.query(sqlRequest);
 
-                Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
-                Cache queryCache = cacheManager.getCache(SUCCESS_QUERY_CACHE);
-
-                if (KylinConfig.getInstanceFromEnv().isQueryCacheEnabled()) {
-                    if (null != exceptionCache.get(sqlRequest)) {
-                        Element element = exceptionCache.get(sqlRequest);
-                        SQLResponse scanExceptionRes = (SQLResponse) element.getObjectValue();
-                        scanExceptionRes.setHitCache(true);
-
-                        return scanExceptionRes;
-                    }
-
-                    if (null != queryCache.get(sqlRequest)) {
-                        Element element = queryCache.get(sqlRequest);
-                        SQLResponse cachedRes = (SQLResponse) element.getObjectValue();
-                        cachedRes.setHitCache(true);
-
-                        return cachedRes;
+                    long durationThreshold = KylinConfig.getInstanceFromEnv().getQueryDurationCacheThreshold();
+                    long scancountThreshold = KylinConfig.getInstanceFromEnv().getQueryScanCountCacheThreshold();
+                    if (!sqlResponse.getIsException() && (sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold)) {
+                        cacheManager.getCache(SUCCESS_QUERY_CACHE).put(new Element(sqlRequest, sqlResponse));
                     }
                 }
 
-                sqlResponse = queryService.query(sqlRequest);
-
-                long durationThreshold = KylinConfig.getInstanceFromEnv().getQueryDurationCacheThreshold();
-                long scancountThreshold = KylinConfig.getInstanceFromEnv().getQueryScanCountCacheThreshold();
-                if (!sqlResponse.getIsException() && (sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold)) {
-                    queryCache.put(new Element(sqlRequest, sqlResponse));
-                }
-
-                if (!sqlResponse.getIsException() && KylinConfig.getInstanceFromEnv().isQuerySecureEnabled()) {
-                    CubeInstance cubeInstance = this.queryService.getCubeManager().getCube(sqlResponse.getCube());
-                    queryService.checkAuthorization(cubeInstance);
-                }
+                checkQueryAuth(sqlResponse);
 
                 return sqlResponse;
-            } else {
-                logger.debug("Directly return expection as not supported");
-                return new SQLResponse(null, null, 0, true, "Not Supported SQL.");
+            } catch (AccessDeniedException ade) {
+                // Access exception is bind with each user, it will not be
+                // cached.
+                logger.error("Exception when execute sql", ade);
+                throw new ForbiddenException(ade.getLocalizedMessage());
+            } catch (Exception e) {
+                SQLResponse exceptionRes = new SQLResponse(null, null, 0, true, e.getMessage());
+                Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
+                exceptionCache.put(new Element(sqlRequest, exceptionRes));
+
+                logger.error("Exception when execute sql", e);
+                throw new InternalErrorException(QueryUtil.makeErrorMsgUserFriendly(e.getLocalizedMessage()));
             }
-        } catch (Exception e) {
-            SQLResponse exceptionRes = new SQLResponse(null, null, 0, true, e.getMessage());
-            Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
-            exceptionCache.put(new Element(sqlRequest, exceptionRes));
+        } else {
+            logger.debug("Directly return expection as not supported");
+            throw new InternalErrorException(QueryUtil.makeErrorMsgUserFriendly("Not Supported SQL."));
+        }
+    }
 
-            logger.error("Exception when execute sql", e);
+    private SQLResponse searchQueryInCache(SQLRequest sqlRequest) {
+        SQLResponse response = null;
+        Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
+        Cache queryCache = cacheManager.getCache(SUCCESS_QUERY_CACHE);
 
-            return new SQLResponse(null, null, 0, true, e.getMessage());
+        if (KylinConfig.getInstanceFromEnv().isQueryCacheEnabled() && null != exceptionCache.get(sqlRequest)) {
+            Element element = exceptionCache.get(sqlRequest);
+            response = (SQLResponse) element.getObjectValue();
+            response.setHitCache(true);
+        } else if (KylinConfig.getInstanceFromEnv().isQueryCacheEnabled() && null != queryCache.get(sqlRequest)) {
+            Element element = queryCache.get(sqlRequest);
+            response = (SQLResponse) element.getObjectValue();
+            response.setHitCache(true);
+        }
+
+        return response;
+    }
+
+    private void checkQueryAuth(SQLResponse sqlResponse) throws AccessDeniedException {
+        if (!sqlResponse.getIsException() && KylinConfig.getInstanceFromEnv().isQuerySecureEnabled()) {
+            CubeInstance cubeInstance = this.queryService.getCubeManager().getCube(sqlResponse.getCube());
+            queryService.checkAuthorization(cubeInstance);
         }
     }
 

@@ -16,6 +16,7 @@
 
 package com.kylinolap.kylin.jdbc;
 
+import java.util.Collection;
 import java.util.Iterator;
 
 import net.hydromatic.linq4j.Enumerator;
@@ -34,15 +35,22 @@ public class KylinEnumerator<E> implements Enumerator<E> {
     private E current;
 
     /**
+     * data collection
+     */
+    private Collection<E> dataCollection;
+
+    /**
      * result iterator
      */
     private Iterator<E> cursor;
 
-    public KylinEnumerator(Iterator<E> cursor) {
-        if (null == cursor) {
+    public KylinEnumerator(Collection<E> dataCollection) {
+        this.dataCollection = dataCollection;
+        this.cursor = this.dataCollection.iterator();
+
+        if (null == this.cursor) {
             throw new RuntimeException("Cursor can't be null");
         }
-        this.cursor = cursor;
     }
 
     @Override
@@ -53,6 +61,8 @@ public class KylinEnumerator<E> implements Enumerator<E> {
     @Override
     public boolean moveNext() {
         if (!cursor.hasNext()) {
+            this.reset();
+
             return false;
         }
 
@@ -63,11 +73,13 @@ public class KylinEnumerator<E> implements Enumerator<E> {
 
     @Override
     public void reset() {
+        this.cursor = this.dataCollection.iterator();
     }
 
     @Override
     public void close() {
-        //        cursor = null;
+        this.cursor = null;
+        this.dataCollection = null;
     }
 
 }

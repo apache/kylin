@@ -10,7 +10,7 @@
 
     <properties>
         <!-- General Properties -->
-        <javaVersion>1.7</javaVersion>
+        <javaVersion>1.6</javaVersion>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
@@ -522,6 +522,7 @@
         <module>storage</module>
         <module>query</module>
         <module>server</module>
+		<module>jdbc</module>
     </modules>
     <profiles>
         <profile>

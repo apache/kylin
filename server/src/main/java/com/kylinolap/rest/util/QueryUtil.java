@@ -147,6 +147,27 @@ public class QueryUtil {
         return null;
     }
 
+    /**
+     * adjust error message order
+     * 
+     * @param errorMsg
+     * @return
+     */
+    public static String makeErrorMsgUserFriendly(String errorMsg) {
+        try {
+            errorMsg = errorMsg.replaceAll("\\s", " ");// replace all invisible
+                                                       // characters
+            Pattern pattern = Pattern.compile("error while executing SQL \"(.*)\":(.*)");
+            Matcher matcher = pattern.matcher(errorMsg);
+            if (matcher.find()) {
+                return matcher.group(2).trim() + "\n" + "while executing SQL: \"" + matcher.group(1).trim() + "\"";
+            } else
+                return errorMsg;
+        } catch (Exception e) {
+            return errorMsg;
+        }
+    }
+    
     private static boolean isTokenWiseEqual(String[] tokens, HashSet<String> tokenSet) {
         for (String token : tokens) {
             if (!tokenSet.contains(token)) {

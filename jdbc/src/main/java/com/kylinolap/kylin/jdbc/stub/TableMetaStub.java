@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class TableMetaStub {
 
