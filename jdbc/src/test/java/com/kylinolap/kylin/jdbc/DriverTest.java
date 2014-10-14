@@ -17,7 +17,7 @@ import org.junit.Test;
  * Unit test for Driver.
  * 
  * @author xduo
- *
+ * 
  */
 public class DriverTest {
 
@@ -72,8 +72,7 @@ public class DriverTest {
 
     @Ignore
     @Test
-    public void testWithCubeData() throws SQLException, InstantiationException, IllegalAccessException,
-            ClassNotFoundException {
+    public void testWithCubeData() throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         Driver driver = (Driver) Class.forName("com.kylinolap.kylin.jdbc.Driver").newInstance();
         Properties info = new Properties();
         info.put("user", "");
@@ -116,22 +115,13 @@ public class DriverTest {
             System.out.println("Metadata:");
 
             for (int i = 0; i < metadata.getColumnCount(); i++) {
-                String metaStr =
-                        metadata.getCatalogName(i + 1) + " " + metadata.getColumnClassName(i + 1) + " "
-                                + metadata.getColumnDisplaySize(i + 1) + " " + metadata.getColumnLabel(i + 1)
-                                + " " + metadata.getColumnName(i + 1) + " " + metadata.getColumnType(i + 1)
-                                + " " + metadata.getColumnTypeName(i + 1) + " "
-                                + metadata.getPrecision(i + 1) + " " + metadata.getScale(i + 1) + " "
-                                + metadata.getSchemaName(i + 1) + " " + metadata.getTableName(i + 1);
+                String metaStr = metadata.getCatalogName(i + 1) + " " + metadata.getColumnClassName(i + 1) + " " + metadata.getColumnDisplaySize(i + 1) + " " + metadata.getColumnLabel(i + 1) + " " + metadata.getColumnName(i + 1) + " " + metadata.getColumnType(i + 1) + " " + metadata.getColumnTypeName(i + 1) + " " + metadata.getPrecision(i + 1) + " " + metadata.getScale(i + 1) + " " + metadata.getSchemaName(i + 1) + " " + metadata.getTableName(i + 1);
                 System.out.println(metaStr);
             }
 
             System.out.println("Data:");
             while (resultSet.next()) {
-                String dataStr =
-                        resultSet.getFloat(1) + " " + resultSet.getInt(2) + " " + resultSet.getInt(3) + " "
-                                + resultSet.getLong(4) + " " + resultSet.getDate(5) + " "
-                                + resultSet.getString(6);
+                String dataStr = resultSet.getFloat(1) + " " + resultSet.getInt(2) + " " + resultSet.getInt(3) + " " + resultSet.getLong(4) + " " + resultSet.getDate(5) + " " + resultSet.getString(6);
                 System.out.println(dataStr);
             }
         }
@@ -153,22 +143,13 @@ public class DriverTest {
         System.out.println("Metadata:");
 
         for (int i = 0; i < metadata.getColumnCount(); i++) {
-            String metaStr =
-                    metadata.getCatalogName(i + 1) + " " + metadata.getColumnClassName(i + 1) + " "
-                            + metadata.getColumnDisplaySize(i + 1) + " " + metadata.getColumnLabel(i + 1)
-                            + " " + metadata.getColumnName(i + 1) + " " + metadata.getColumnType(i + 1) + " "
-                            + metadata.getColumnTypeName(i + 1) + " " + metadata.getPrecision(i + 1) + " "
-                            + metadata.getScale(i + 1) + " " + metadata.getSchemaName(i + 1) + " "
-                            + metadata.getTableName(i + 1);
+            String metaStr = metadata.getCatalogName(i + 1) + " " + metadata.getColumnClassName(i + 1) + " " + metadata.getColumnDisplaySize(i + 1) + " " + metadata.getColumnLabel(i + 1) + " " + metadata.getColumnName(i + 1) + " " + metadata.getColumnType(i + 1) + " " + metadata.getColumnTypeName(i + 1) + " " + metadata.getPrecision(i + 1) + " " + metadata.getScale(i + 1) + " " + metadata.getSchemaName(i + 1) + " " + metadata.getTableName(i + 1);
             System.out.println(metaStr);
         }
 
         System.out.println("Data:");
         while (resultSet.next()) {
-            String dataStr =
-                    resultSet.getFloat(1) + " " + resultSet.getInt(2) + " " + resultSet.getInt(3) + " "
-                            + resultSet.getLong(4) + " " + resultSet.getDate(5) + " "
-                            + resultSet.getString(6);
+            String dataStr = resultSet.getFloat(1) + " " + resultSet.getInt(2) + " " + resultSet.getInt(3) + " " + resultSet.getLong(4) + " " + resultSet.getDate(5) + " " + resultSet.getString(6);
             System.out.println(dataStr);
         }
     }

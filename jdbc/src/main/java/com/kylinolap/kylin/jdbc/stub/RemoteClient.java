@@ -20,17 +20,19 @@ import java.sql.SQLException;
 
 import net.hydromatic.avatica.AvaticaStatement;
 
+import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaProject;
+
 /**
  * Remote query stub of kylin restful service
  * 
  * @author xduo
- *
+ * 
  */
 public interface RemoteClient {
 
     /**
-     * Connect to kylin restful service. 
-     * ConnectionException will be thrown if authentication failed.
+     * Connect to kylin restful service. ConnectionException will be thrown if
+     * authentication failed.
      * 
      * @throws ConnectionException
      */

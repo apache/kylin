@@ -32,42 +32,48 @@ import com.kylinolap.kylin.jdbc.stub.ConnectionException;
 import com.kylinolap.kylin.jdbc.stub.RemoteClient;
 
 /**
- * <p>Kylin JDBC Driver based on optiq avatica and kylin restful api.<br> 
- * Supported versions: </p> 
+ * <p>
+ * Kylin JDBC Driver based on optiq avatica and kylin restful api.<br>
+ * Supported versions:
+ * </p>
  * <ul>
- * 		<li>jdbc 4.0</li>
- * 		<li>jdbc 4.1</li>
+ * <li>jdbc 4.0</li>
+ * <li>jdbc 4.1</li>
  * </ul>
  * 
- * <p>Supported Statements:</p>
+ * <p>
+ * Supported Statements:
+ * </p>
  * <ul>
- * 		<li>{@link KylinStatementImpl}</li>
- * 		<li>{@link KylinPrepareStatementImpl}</li>
+ * <li>{@link KylinStatementImpl}</li>
+ * <li>{@link KylinPrepareStatementImpl}</li>
  * </ul>
  * 
  * <p>
  * Supported properties:
  * <ul>
- * 		<li>user: username</li>
- * 		<li>password: password</li>
- * 		<li>ssl: true/false</li>
+ * <li>user: username</li>
+ * <li>password: password</li>
+ * <li>ssl: true/false</li>
  * </ul>
  * </p>
  * 
  * <p>
  * Driver init code sample:<br>
+ * 
  * <pre>
- * 	Driver driver = (Driver) Class.forName("com.kylinolap.kylin.jdbc.Driver").newInstance();
-	Properties info = new Properties();
-	info.put("user", "user");
-	info.put("password", "password");
-	info.put("ssl", true);
-	Connection conn = driver.connect("jdbc:kylin://{domain}/{project}", info);
- *</pre>
+ * Driver driver = (Driver) Class.forName(&quot;com.kylinolap.kylin.jdbc.Driver&quot;).newInstance();
+ * Properties info = new Properties();
+ * info.put(&quot;user&quot;, &quot;user&quot;);
+ * info.put(&quot;password&quot;, &quot;password&quot;);
+ * info.put(&quot;ssl&quot;, true);
+ * Connection conn = driver.connect(&quot;jdbc:kylin://{domain}/{project}&quot;, info);
+ * </pre>
+ * 
  * </p>
  * 
  * @author xduo
- *
+ * 
  */
 public class Driver extends UnregisteredDriver {
     private static final Logger logger = LoggerFactory.getLogger(Driver.class);
@@ -76,8 +82,7 @@ public class Driver extends UnregisteredDriver {
 
     @Override
     protected DriverVersion createDriverVersion() {
-        return DriverVersion.load(Driver.class, "com-kylinolap-kylin-jdbc.properties", "Kylin JDBC Driver",
-                "unknown version", "Kylin", "unknown version");
+        return DriverVersion.load(Driver.class, "com-kylinolap-kylin-jdbc.properties", "Kylin JDBC Driver", "unknown version", "Kylin", "unknown version");
     }
 
     @Override
@@ -103,6 +108,7 @@ public class Driver extends UnregisteredDriver {
                 try {
                     runner.connect();
                     kylinConn.setMetaProject(runner.getMetadata(kylinConn.getProject()));
+                    logger.debug("Connection inited.");
                 } catch (ConnectionException e) {
                     logger.error(e.getLocalizedMessage(), e);
                     throw new SQLException(e.getLocalizedMessage());

@@ -29,7 +29,7 @@ import net.hydromatic.optiq.runtime.EnumeratorCursor;
  * Interface of kylin prepare statement implementation
  * 
  * @author xduo
- *
+ * 
  */
 public interface KylinPrepare {
 
@@ -46,8 +46,7 @@ public interface KylinPrepare {
         public final Enumerator<Object[]> enumerator;
         public final List<AvaticaParameter> parameterList;
 
-        public PrepareResult(String sql, List<AvaticaParameter> parameterList,
-                Enumerator<Object[]> enumerator, ColumnMetaData.StructType structType) {
+        public PrepareResult(String sql, List<AvaticaParameter> parameterList, Enumerator<Object[]> enumerator, ColumnMetaData.StructType structType) {
             super();
             this.sql = sql;
             this.parameterList = parameterList;

@@ -24,24 +24,22 @@ import net.hydromatic.avatica.ColumnMetaData;
 
 /**
  * @author xduo
- *
+ * 
  */
 public class KylinPrepareImpl implements KylinPrepare {
 
-	@Override
-	public PrepareResult prepare(String sql) {
-		List<AvaticaParameter> aps = new ArrayList<AvaticaParameter>();
+    @Override
+    public PrepareResult prepare(String sql) {
+        List<AvaticaParameter> aps = new ArrayList<AvaticaParameter>();
 
-		int startIndex = 0;
-		while (sql.indexOf("?", startIndex) >= 0) {
-			AvaticaParameter ap = new AvaticaParameter(false, 0, 0, 0, null,
-					null, null);
-			aps.add(ap);
-			startIndex = sql.indexOf("?", startIndex) + 1;
-		}
+        int startIndex = 0;
+        while (sql.indexOf("?", startIndex) >= 0) {
+            AvaticaParameter ap = new AvaticaParameter(false, 0, 0, 0, null, null, null);
+            aps.add(ap);
+            startIndex = sql.indexOf("?", startIndex) + 1;
+        }
 
-		return new KylinPrepare.PrepareResult(sql, aps, null,
-				ColumnMetaData.struct(null));
-	}
+        return new KylinPrepare.PrepareResult(sql, aps, null, ColumnMetaData.struct(new ArrayList<ColumnMetaData>()));
+    }
 
 }

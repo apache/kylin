@@ -41,6 +41,7 @@ import net.hydromatic.avatica.ColumnMetaData.Rep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.PreparedStatementSetter;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -183,7 +184,7 @@ public class QueryService extends BasicService {
      * @throws SQLException
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')" + " or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'READ')")
-    public void checkAuthorization(CubeInstance cubeInstance) {
+    public void checkAuthorization(CubeInstance cubeInstance) throws AccessDeniedException{
     }
 
     protected SQLResponse executeQuery(String sql, SQLRequest sqlRequest) throws Exception {

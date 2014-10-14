@@ -69,6 +69,7 @@ public class CacheController extends BasicController {
         case METADATA:
             logger.debug("Reload all metadata");
             cubeMgmtService.reloadMetadataCache();
+            projectService.cleanDataCache();
             cubeMgmtService.cleanDataCache();
             break;
         case CUBE:
