@@ -24,8 +24,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -64,6 +62,7 @@ import com.kylinolap.rest.request.SaveSqlRequest;
 import com.kylinolap.rest.response.GeneralResponse;
 import com.kylinolap.rest.response.SQLResponse;
 import com.kylinolap.rest.service.QueryService;
+import com.kylinolap.rest.util.QueryUtil;
 
 /**
  * Handle query requests.
@@ -111,31 +110,10 @@ public class QueryController extends BasicController {
 
         if (response.getIsException()) {
             String errorMsg = response.getExceptionMessage();
-            throw new InternalErrorException(makeErrorMsgUserFriendly(errorMsg));
+            throw new InternalErrorException(QueryUtil.makeErrorMsgUserFriendly(errorMsg));
         }
 
         return response;
-    }
-
-    /**
-     * adjust error message order
-     * 
-     * @param errorMsg
-     * @return
-     */
-    public String makeErrorMsgUserFriendly(String errorMsg) {
-        try {
-            errorMsg = errorMsg.replaceAll("\\s", " ");// replace all invisible
-                                                       // characters
-            Pattern pattern = Pattern.compile("error while executing SQL \"(.*)\":(.*)");
-            Matcher matcher = pattern.matcher(errorMsg);
-            if (matcher.find()) {
-                return matcher.group(2).trim() + "\n" + "while executing SQL: \"" + matcher.group(1).trim() + "\"";
-            } else
-                return errorMsg;
-        } catch (Exception e) {
-            return errorMsg;
-        }
     }
 
     @RequestMapping(value = "/saved_queries", method = RequestMethod.POST)
@@ -240,11 +218,11 @@ public class QueryController extends BasicController {
                 exceptionCache.put(new Element(sqlRequest, exceptionRes));
 
                 logger.error("Exception when execute sql", e);
-                throw new InternalErrorException(makeErrorMsgUserFriendly(e.getLocalizedMessage()));
+                throw new InternalErrorException(QueryUtil.makeErrorMsgUserFriendly(e.getLocalizedMessage()));
             }
         } else {
             logger.debug("Directly return expection as not supported");
-            throw new InternalErrorException(makeErrorMsgUserFriendly("Not Supported SQL."));
+            throw new InternalErrorException(QueryUtil.makeErrorMsgUserFriendly("Not Supported SQL."));
         }
     }
 
