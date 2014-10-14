@@ -1,6 +1,5 @@
-<beans xmlns="http://www.springframework.org/schema/beans" 
-	xmlns:tx="http://www.springframework.org/schema/tx" 
-	xmlns:scr="http://www.springframework.org/schema/security" 
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:scr="http://www.springframework.org/schema/security"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans
 	http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
@@ -9,7 +8,8 @@
 	http://www.springframework.org/schema/tx
     http://www.springframework.org/schema/tx/spring-tx-3.1.xsd">
 
-	<scr:global-method-security pre-post-annotations="enabled">
+	<scr:global-method-security
+		pre-post-annotations="enabled">
 		<scr:expression-handler ref="expressionHandler" />
 	</scr:global-method-security>
 
@@ -19,18 +19,21 @@
 		<scr:intercept-url pattern="/api/user/authenticate*/**"
 			access="permitAll" />
 		<scr:intercept-url pattern="/api/query*/**" access="isAuthenticated()" />
-		<scr:intercept-url pattern="/api/metadata*/**" access="isAuthenticated()" />
+		<scr:intercept-url pattern="/api/metadata*/**"
+			access="isAuthenticated()" />
 		<scr:intercept-url pattern="/api/**/metrics" access="permitAll" />
 		<scr:intercept-url pattern="/api/cubes/src/tables"
 			access="hasAnyRole('ROLE_ANALYST', 'ROLE_MODELER')" />
 		<scr:intercept-url pattern="/api/cubes*/**" access="hasRole('ROLE_MODELER')" />
 		<scr:intercept-url pattern="/api/job*/**" access="hasRole('ROLE_MODELER')" />
-		<scr:intercept-url pattern="/api/admin/config" access="permitAll" />
+		<scr:intercept-url pattern="/api/admin/config"
+			access="permitAll" />
 		<scr:intercept-url pattern="/api/admin*/**" access="hasRole('ROLE_ADMIN')" />
 		<scr:intercept-url pattern="/api/**" access="isAuthenticated()" />
 
 		<scr:logout invalidate-session="true" delete-cookies="JSESSIONID" />
-		<scr:session-management session-fixation-protection="newSession" />
+		<scr:session-management
+			session-fixation-protection="newSession" />
 	</scr:http>
 
 	<!-- user auth -->
@@ -44,8 +47,7 @@
 	</bean>
 
 	<!-- domain object acl -->
-	<bean id="aclPermissionFactory"
-		class="com.kylinolap.rest.security.AclPermissionFactory" />
+	<bean id="aclPermissionFactory" class="com.kylinolap.rest.security.AclPermissionFactory" />
 
 	<bean id="expressionHandler"
 		class="org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler">
@@ -58,16 +60,7 @@
 		<property name="permissionFactory" ref="aclPermissionFactory" />
 	</bean>
 
-	<bean id="aclService" class="com.kylinolap.rest.security.AclService">
-		<constructor-arg ref="dataSource" />
-		<constructor-arg ref="lookupStrategy" />
-		<constructor-arg ref="aclCache" />
-		<property name="classIdentityQuery" value="SELECT @@IDENTITY" />
-		<property name="sidIdentityQuery" value="SELECT @@IDENTITY" />
-	</bean>
-
-	<bean id="lookupStrategy"
-		class="com.kylinolap.rest.security.UuidLookupStrategy">
+	<bean id="lookupStrategy" class="com.kylinolap.rest.security.UuidLookupStrategy">
 		<constructor-arg ref="dataSource" />
 		<constructor-arg ref="aclCache" />
 		<constructor-arg ref="aclAuthorizationStrategy" />
@@ -80,8 +73,7 @@
 		<constructor-arg>
 			<bean class="org.springframework.cache.ehcache.EhCacheFactoryBean">
 				<property name="cacheManager">
-					<bean
-						class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" />
+					<bean class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" />
 				</property>
 				<property name="cacheName" value="aclCache" />
 			</bean>
@@ -107,22 +99,29 @@
 			</list>
 		</constructor-arg>
 	</bean>
-	
+
 	<bean id="auditLogger"
 		class="org.springframework.security.acls.domain.ConsoleAuditLogger" />
-	
+
 	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
 		<property name="dataSource" ref="dataSource" />
 	</bean>
-	
+
 	<bean id="transactionManager"
 		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
 		<property name="dataSource" ref="dataSource" />
 	</bean>
 
 	<tx:annotation-driven transaction-manager="transactionManager" />
-	
+
 	<beans profile="default">
+		<bean id="aclService" class="com.kylinolap.rest.security.AclService">
+			<constructor-arg ref="dataSource" />
+			<constructor-arg ref="lookupStrategy" />
+			<constructor-arg ref="aclCache" />
+			<property name="classIdentityQuery" value="SELECT @@IDENTITY" />
+			<property name="sidIdentityQuery" value="SELECT @@IDENTITY" />
+		</bean>
 		<bean id="ldapUserAuthProvider" class="com.kylinolap.rest.security.LdapProvider">
 			<constructor-arg>
 				<bean
@@ -131,8 +130,7 @@
 					<property name="userSearch">
 						<bean id="userSearch"
 							class="org.springframework.security.ldap.search.FilterBasedLdapUserSearch">
-							<constructor-arg index="0"
-								value="${ldap.user.searchBase}" />
+							<constructor-arg index="0" value="${ldap.user.searchBase}" />
 							<constructor-arg index="1"
 								value="${ldap.user.searchPattern}" />
 							<constructor-arg index="2" ref="ldapSource" />
@@ -195,6 +193,11 @@
 	</beans>
 
 	<beans profile="sandbox,testing">
+		<bean id="aclService" class="com.kylinolap.rest.security.AclService">
+			<constructor-arg ref="dataSource" />
+			<constructor-arg ref="lookupStrategy" />
+			<constructor-arg ref="aclCache" />
+		</bean>
 		<scr:authentication-manager alias="authenticationManager">
 			<scr:authentication-provider>
 				<scr:user-service>
