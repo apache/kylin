@@ -1,9 +1,13 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
-	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:task="http://www.springframework.org/schema/task"
-	xmlns:metrics="http://www.ryantenney.com/schema/metrics" xmlns:aop="http://www.springframework.org/schema/aop"
-	xmlns:tx="http://www.springframework.org/schema/tx"  xmlns:cache="http://www.springframework.org/schema/cache"
-	xmlns:p="http://www.springframework.org/schema/p" xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" 
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:metrics="http://www.ryantenney.com/schema/metrics" 
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:cache="http://www.springframework.org/schema/cache" 
+	xmlns:p="http://www.springframework.org/schema/p" 
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans
     http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
     http://www.springframework.org/schema/context
@@ -16,8 +20,6 @@
     http://www.ryantenney.com/schema/metrics/metrics-3.0.xsd
     http://www.springframework.org/schema/aop
     http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
-    http://www.springframework.org/schema/tx
-    http://www.springframework.org/schema/tx/spring-tx-3.1.xsd
     http://www.springframework.org/schema/cache
     http://www.springframework.org/schema/cache/spring-cache.xsd
     http://www.springframework.org/schema/jdbc  
@@ -34,9 +36,8 @@
 	<context:component-scan base-package="com.kylinolap.rest.security" />
 	<context:component-scan base-package="com.kylinolap.rest.inject" />
 
-	<!-- Start: Matric Spring -->
+	<!-- Matric Spring -->
 	<!-- Registry should be defined in only one context XML file -->
-
 	<metrics:metric-registry id="metrics" />
 
 	<!-- annotation-driven must be included in all context files -->
@@ -56,6 +57,7 @@
 		<!--<bean metrics:name="jvm.fd.usage"
 			class="com.codahale.metrics.jvm.FileDescriptorRatioGauge" />-->
 	</metrics:register>
+	<!-- Matric Spring -->
 	
 	<bean
 		class="com.kylinolap.rest.security.PasswordPlaceholderConfigurer">
@@ -70,6 +72,7 @@
 		<property name="ignoreResourceNotFound" value="true" />
 	</bean>
 
+	<!-- Rest service binding -->
 	<bean
 		class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping" />
 
@@ -116,17 +119,7 @@
 			</list>
 		</property>
 	</bean>
-
-	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
-		<property name="dataSource" ref="dataSource" />
-	</bean>
-	
-	<bean id="transactionManager"
-		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
-		<property name="dataSource" ref="dataSource" />
-	</bean>
-
-	<tx:annotation-driven transaction-manager="transactionManager" />
+	<!-- Rest service binding -->
 
 	<!-- Cache Config -->
 	<cache:annotation-driven />
@@ -136,6 +129,7 @@
 	<bean id="ehcache"
 		class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
 		p:configLocation="classpath:ehcache.xml" p:shared="true" />
+	<!-- Cache Config -->
 
 	<beans profile="default">
 		<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
