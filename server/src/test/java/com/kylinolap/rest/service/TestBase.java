@@ -27,6 +27,7 @@ import org.quartz.SchedulerException;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -41,7 +42,8 @@ import com.kylinolap.metadata.MetadataManager;
  * 
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = { "classpath:applicationContext-test.xml" })
+@ContextConfiguration(locations = { "classpath:applicationContext.xml", "classpath:kylinSecurity.xml" })
+@ActiveProfiles("testing")
 public class TestBase extends LocalFileMetadataTestCase {
 
     @BeforeClass
