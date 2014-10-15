@@ -168,7 +168,7 @@ fi
 #build one cube, this is a self-contained unit test which will do the following as preparement:
 # 1. generate synthetic fact table(test_kylin_fact) data and dump it into hive
 cd $KYLIN_HOME
-mvn test -Dtest=com.kylinolap.job.BuildOneCubeTest -DfailIfNoTests=false
+mvn test -Dtest=com.kylinolap.job.SampleCubeSetupTest -DfailIfNoTests=false
 
 sudo -i "${CATALINA_HOME}/bin/shutdown.sh" || true # avoid trapping
 cd $KYLIN_HOME/server/target
