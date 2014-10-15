@@ -45,9 +45,9 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
         if (this.tempTestMetadataUrl == null) {
             throw new IllegalArgumentException("Error while initializing metadata url");
         }
-        if (this.tempTestMetadataUrl.contains("hbase:") == false) {
-            throw new IllegalArgumentException("Excepted HBase metadata url, but got " + this.tempTestMetadataUrl);
-        }
+//        if (this.tempTestMetadataUrl.contains("hbase:") == false) {
+//            throw new IllegalArgumentException("Excepted HBase metadata url, but got " + this.tempTestMetadataUrl);
+//        }
     }
 
     /*
