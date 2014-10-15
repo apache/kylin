@@ -98,7 +98,7 @@
   </property>
   <property>
     <name>mapreduce.application.classpath</name>
-    <value>/tmp/test_kylin_cube/*,/usr/lib/hbase/lib/*</value>
+    <value>/tmp/kylin/*,/usr/lib/hbase/lib/*</value>
   </property>
   <property>
     <name>mapreduce.map.output.compress</name>
