@@ -294,13 +294,13 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         this.execHiveCommand(this.generateLoadDataHql(TABLE_SITES));
     }
 
-    protected void initEnv() throws Exception {
-    	cleanUp();
-    	
-    	// create log dir
-        this.execCommand("mkdir -p "+KylinConfig.getInstanceFromEnv().getKylinJobLogDir());
+    protected void initEnv(boolean deployConfig) throws Exception {
+        cleanUp();
+
+        // create log dir
+        this.execCommand("mkdir -p " + KylinConfig.getInstanceFromEnv().getKylinJobLogDir());
         retrieveJarName();
-        
+
 
         // install metadata to hbase
         installMetadataToHBase();
@@ -314,7 +314,8 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         deployJarToHadoopCli();
         deployJarToLocalDir();
 
-        deployConfigFile();
+        if (deployConfig)
+            deployConfigFile();
     }
 
     protected void prepareTestData(String joinType) throws Exception {
@@ -335,7 +336,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         ClasspathUtil.addClasspath(new File("../examples/test_case_data/hadoop-site").getAbsolutePath());
         this.createTestMetadata();
 
-        initEnv();
+        initEnv(true);
 
         engineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
         jobManager = new JobManager("Build_Test_Cube_Engine", engineConfig);
@@ -364,7 +365,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
      * For cube test_kylin_cube_with_slr_empty, we will create 2 segments For
      * cube test_kylin_cube_without_slr_empty, since it doesn't support
      * incremental build, we will create only 1 segment (full build)
-     * 
+     *
      * @throws Exception
      */
     private void testInnerJoinCube() throws Exception {
@@ -401,7 +402,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
      * update_insert, we will create 2 segments, and then merge these 2 segments
      * into a larger segment For cube test_kylin_cube_with_slr_left_join_empty,
      * we will create only 1 segment
-     * 
+     *
      * @throws Exception
      */
     private void testLeftJoinCube() throws Exception {

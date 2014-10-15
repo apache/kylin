@@ -110,6 +110,7 @@ source /tmp/kylin_retrieve.sh
 
 
 
+cd $KYLIN_HOME
 mkdir -p /etc/kylin
 
 HOSTNAME=`hostname`
