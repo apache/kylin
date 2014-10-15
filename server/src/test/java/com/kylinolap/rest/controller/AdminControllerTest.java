@@ -26,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.kylinolap.rest.service.AdminService;
 import com.kylinolap.rest.service.CubeService;
 import com.kylinolap.rest.service.TestBase;
-import com.kylinolap.rest.service.UserService;
 
 /**
  * @author xduo
@@ -39,8 +38,6 @@ public class AdminControllerTest extends TestBase {
     @Autowired
     private AdminService adminService;
     @Autowired
-    private UserService userService;
-    @Autowired
     private CubeService cubeService;
 
     @Before
@@ -48,7 +45,6 @@ public class AdminControllerTest extends TestBase {
         super.setUp();
         adminController = new AdminController();
         adminController.setAdminService(adminService);
-        adminController.setUserService(userService);
         adminController.setCubeMgmtService(cubeService);
     }
 
