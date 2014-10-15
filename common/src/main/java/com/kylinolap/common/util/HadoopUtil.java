@@ -94,13 +94,6 @@ public class HadoopUtil {
         if (StringUtils.isEmpty(znodePath) == false)
             conf.set("zookeeper.znode.parent", znodePath);
 
-        boolean secured = znodePath.contains("unsecure") == false; // assume
-                                                                   // "unsecure"
-                                                                   // naming
-                                                                   // convention
-        if (secured)
-            conf.set("hbase.security.authentication", "kerberos");
-
         // reduce rpc retry
         conf.set(HConstants.HBASE_CLIENT_PAUSE, "3000");
         conf.set(HConstants.HBASE_CLIENT_RETRIES_NUMBER, "5");
