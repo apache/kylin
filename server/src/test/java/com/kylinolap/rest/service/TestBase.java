@@ -32,7 +32,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.project.ProjectManager;
 import com.kylinolap.metadata.MetadataManager;
@@ -44,11 +44,11 @@ import com.kylinolap.metadata.MetadataManager;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:applicationContext.xml", "classpath:kylinSecurity.xml" })
 @ActiveProfiles("testing")
-public class TestBase extends LocalFileMetadataTestCase {
+public class TestBase extends HBaseMetadataTestCase {
 
     @BeforeClass
     public static void setupResource() throws Exception {
-        LocalFileMetadataTestCase baseTestCase = new LocalFileMetadataTestCase();
+        HBaseMetadataTestCase baseTestCase = new HBaseMetadataTestCase();
         baseTestCase.createTestMetadata();
 
         Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", "ROLE_ADMIN");

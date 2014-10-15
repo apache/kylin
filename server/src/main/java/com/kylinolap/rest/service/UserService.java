@@ -16,52 +16,57 @@
 
 package com.kylinolap.rest.service;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementSetter;
-import org.springframework.security.provisioning.JdbcUserDetailsManager;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Component;
 
-import com.kylinolap.rest.request.MetricsRequest;
-import com.kylinolap.rest.response.MetricsResponse;
+import com.kylinolap.rest.security.UserManager;
 
 /**
  * @author xduo
  * 
  */
-public class UserService extends JdbcUserDetailsManager {
+@Component("userService")
+public class UserService implements UserManager{
 
     @Autowired
-    protected JdbcTemplate jdbcTemplate;
-
-    public void hit(final String username) {
-        jdbcTemplate.update("insert into user_hits(username,hit_time) values(?,?);", new PreparedStatementSetter() {
-            @Override
-            public void setValues(PreparedStatement ps) throws SQLException {
-                ps.setString(1, username);
-                ps.setTimestamp(2, new java.sql.Timestamp(new Date().getTime()));
-            }
-        });
-    }
+    protected UserManager userManager;
 
     public List<String> getUserAuthorities() {
-        return jdbcTemplate.queryForList("select distinct authority from authorities", new String[] {}, String.class);
+       return userManager.getUserAuthorities();
     }
 
-    public MetricsResponse calculateMetrics(MetricsRequest request) {
-        MetricsResponse metrics = new MetricsResponse();
-        Date startTime = (null == request.getStartTime()) ? new Date(-1) : request.getStartTime();
-        Date endTime = (null == request.getEndTime()) ? new Date() : request.getEndTime();
-        String userCountSql = "select count(distinct username) as count from user_hits where hit_time > ? and hit_time < ?";
-
-        int userCount = (Integer) jdbcTemplate.queryForObject(userCountSql, new Object[] { startTime, endTime }, Integer.class);
-
-        metrics.increase("userCount", (float) userCount);
-
-        return metrics;
+    @Override
+    public void createUser(UserDetails user) {
+        userManager.createUser(user);
     }
+
+    @Override
+    public void updateUser(UserDetails user) {
+        userManager.updateUser(user);
+    }
+
+    @Override
+    public void deleteUser(String username) {
+        userManager.deleteUser(username);
+    }
+
+    @Override
+    public void changePassword(String oldPassword, String newPassword) {
+        userManager.changePassword(oldPassword, newPassword);
+    }
+
+    @Override
+    public boolean userExists(String username) {
+        return userManager.userExists(username);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userManager.loadUserByUsername(username);
+    }
+
 }

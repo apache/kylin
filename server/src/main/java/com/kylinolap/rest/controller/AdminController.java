@@ -29,7 +29,6 @@ import com.kylinolap.rest.response.GeneralResponse;
 import com.kylinolap.rest.response.MetricsResponse;
 import com.kylinolap.rest.service.AdminService;
 import com.kylinolap.rest.service.CubeService;
-import com.kylinolap.rest.service.UserService;
 
 /**
  * Admin Controller is defined as Restful API entrance for UI.
@@ -45,8 +44,6 @@ public class AdminController extends BasicController {
     private AdminService adminService;
     @Autowired
     private CubeService cubeMgmtService;
-    @Autowired
-    private UserService userService;
 
     @RequestMapping(value = "/env", method = { RequestMethod.GET })
     @ResponseBody
@@ -76,12 +73,6 @@ public class AdminController extends BasicController {
         return cubeMgmtService.calculateMetrics(request);
     }
 
-    @RequestMapping(value = "/metrics/user", method = { RequestMethod.GET })
-    @ResponseBody
-    public MetricsResponse userMetrics(MetricsRequest request) {
-        return userService.calculateMetrics(request);
-    }
-
     @RequestMapping(value = "/storage", method = { RequestMethod.DELETE })
     @ResponseBody
     public void cleanupStorage() {
@@ -99,10 +90,6 @@ public class AdminController extends BasicController {
 
     public void setCubeMgmtService(CubeService cubeMgmtService) {
         this.cubeMgmtService = cubeMgmtService;
-    }
-
-    public void setUserService(UserService userService) {
-        this.userService = userService;
     }
 
 }

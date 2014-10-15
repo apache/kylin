@@ -40,13 +40,10 @@
 	<bean id="passwordEncoder"
 		class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder" />
 
-	<bean id="userService" class="com.kylinolap.rest.service.UserService">
-		<property name="dataSource" ref="dataSource" />
-		<property name="enableGroups" value="true" />
-		<property name="enableAuthorities" value="true" />
+	<bean id="userManager" class="com.kylinolap.rest.security.HbaseUserManager">
 	</bean>
 
-	<!-- domain object acl -->
+	<!-- acl config -->
 	<bean id="aclPermissionFactory" class="com.kylinolap.rest.security.AclPermissionFactory" />
 
 	<bean id="expressionHandler"
@@ -60,68 +57,7 @@
 		<property name="permissionFactory" ref="aclPermissionFactory" />
 	</bean>
 
-	<bean id="lookupStrategy" class="com.kylinolap.rest.security.UuidLookupStrategy">
-		<constructor-arg ref="dataSource" />
-		<constructor-arg ref="aclCache" />
-		<constructor-arg ref="aclAuthorizationStrategy" />
-		<constructor-arg ref="auditLogger" />
-		<property name="permissionFactory" ref="aclPermissionFactory" />
-	</bean>
-
-	<bean id="aclCache"
-		class="org.springframework.security.acls.domain.EhCacheBasedAclCache">
-		<constructor-arg>
-			<bean class="org.springframework.cache.ehcache.EhCacheFactoryBean">
-				<property name="cacheManager">
-					<bean class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" />
-				</property>
-				<property name="cacheName" value="aclCache" />
-			</bean>
-		</constructor-arg>
-	</bean>
-
-	<bean id="aclAuthorizationStrategy"
-		class="org.springframework.security.acls.domain.AclAuthorizationStrategyImpl">
-		<constructor-arg>
-			<list>
-				<bean
-					class="org.springframework.security.core.authority.GrantedAuthorityImpl">
-					<constructor-arg value="ROLE_ADMIN" />
-				</bean>
-				<bean
-					class="org.springframework.security.core.authority.GrantedAuthorityImpl">
-					<constructor-arg value="ROLE_ADMIN" />
-				</bean>
-				<bean
-					class="org.springframework.security.core.authority.GrantedAuthorityImpl">
-					<constructor-arg value="ROLE_ADMIN" />
-				</bean>
-			</list>
-		</constructor-arg>
-	</bean>
-
-	<bean id="auditLogger"
-		class="org.springframework.security.acls.domain.ConsoleAuditLogger" />
-
-	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
-		<property name="dataSource" ref="dataSource" />
-	</bean>
-
-	<bean id="transactionManager"
-		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
-		<property name="dataSource" ref="dataSource" />
-	</bean>
-
-	<tx:annotation-driven transaction-manager="transactionManager" />
-
 	<beans profile="default">
-		<bean id="aclService" class="com.kylinolap.rest.security.AclService">
-			<constructor-arg ref="dataSource" />
-			<constructor-arg ref="lookupStrategy" />
-			<constructor-arg ref="aclCache" />
-			<property name="classIdentityQuery" value="SELECT @@IDENTITY" />
-			<property name="sidIdentityQuery" value="SELECT @@IDENTITY" />
-		</bean>
 		<bean id="ldapUserAuthProvider" class="com.kylinolap.rest.security.LdapProvider">
 			<constructor-arg>
 				<bean
@@ -193,11 +129,6 @@
 	</beans>
 
 	<beans profile="sandbox,testing">
-		<bean id="aclService" class="com.kylinolap.rest.security.AclService">
-			<constructor-arg ref="dataSource" />
-			<constructor-arg ref="lookupStrategy" />
-			<constructor-arg ref="aclCache" />
-		</bean>
 		<scr:authentication-manager alias="authenticationManager">
 			<scr:authentication-provider>
 				<scr:user-service>
