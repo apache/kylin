@@ -81,8 +81,7 @@ public class HBaseStorageEngine implements IStorageEngine {
     @Override
     public ITupleIterator search(Collection<TblColRef> dimensions, TupleFilter filter, Collection<TblColRef> groups, Collection<FunctionDesc> metrics, StorageContext context) {
 
-        // The columns returned from storage, can be more than query groups due
-        // to
+        // The columns returned from storage, can be more than query groups due to
         // - derived columns on query group by
         // - columns on filter that is not evaluate-able
         // - condition gets loosened and all columns in the loosened filter must

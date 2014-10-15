@@ -32,6 +32,7 @@ import com.kylinolap.storage.filter.CompareTupleFilter;
 import com.kylinolap.storage.filter.ConstantTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.filter.TupleFilterSerializer;
+import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
 import com.kylinolap.storage.filter.TupleFilterSerializer.Decorator;
 import com.kylinolap.storage.tuple.ITuple;
 
@@ -50,6 +51,9 @@ public class SRowFilter {
             public TupleFilter onSerialize(TupleFilter filter) {
                 if (filter == null)
                     return filter;
+                
+                if (filter.getOperator() == FilterOperatorEnum.NOT && TupleFilter.isEvaluableRecursively(filter) == false)
+                    return ConstantTupleFilter.TRUE;
 
                 if ((filter instanceof CompareTupleFilter) == false)
                     return filter;
