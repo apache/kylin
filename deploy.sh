@@ -96,6 +96,37 @@ echo "Kylin home folder path is $KYLIN_HOME"
 
 cd $KYLIN_HOME
 
+HOSTNAME=`hostname`
+mkdir -p /etc/kylin
+
+if [ "$HOSTNAME" == "quickstart.cloudera" ]
+then
+    echo "Running on a cloudera sandbox"
+    cat examples/test_case_data/kylin.properties | sed -e 's/kylin.job.remote.cli.hostname=sandbox.hortonworks.com/kylin.job.remote.cli.hostname=quickstart.cloudera/' | sed -e 's/kylin.job.remote.cli.password=hadoop/kylin.job.remote.cli.password=cloudera/' > /etc/kylin/kylin.properties
+elif [ "$HOSTNAME" == "sandbox.hortonworks.com" ]
+then
+    echo "Running on a hortonworks sandbox"
+    cat examples/test_case_data/kylin.properties > /etc/kylin/kylin.properties
+else
+    echo "Not running on cloudera sandbox or hortonworks sandbox, copy a template for hortonworks"
+    cat examples/test_case_data/kylin.properties > /etc/kylin/kylin.properties
+fi
+
+echo "a copy of kylin config is generated at /etc/kylin/kylin.properties:"
+echo "================================================================="
+cat /etc/kylin/kylin.properties
+echo "================================================================="
+echo ""
+
+read -p "please ensure the CLI address/username/password is correct, and press y to proceed." -n 1 -r
+echo    # (optional) move to a new line
+if [[ ! $REPLY =~ ^[Yy]$ ]]
+then
+    echo "Bye!"
+    exit 1
+fi
+
+
 echo "Building and packaging..."
 source ./package.sh
 
