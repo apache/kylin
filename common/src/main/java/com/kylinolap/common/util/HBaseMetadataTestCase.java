@@ -76,7 +76,7 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
         return KylinConfig.getInstanceFromEnv();
     }
 
-    public void installMetadataToHBase() throws IOException, Exception {
+    public void installMetadataToHBase() throws Exception {
         // install metadata to hbase
         ResourceTool.reset(KylinConfig.getInstanceFromEnv());
         ResourceTool.copy(KylinConfig.createInstanceFromUri(this.testDataFolder), KylinConfig.getInstanceFromEnv());
