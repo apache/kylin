@@ -43,7 +43,7 @@ public class BuildOneCubeTest extends BuildCubeWithEngineTest {
         }
 
         this.createTestMetadata();
-        initEnv();
+        initEnv(false);//This test case is run by deploy.sh, which will deploy the adjusted kylin.properties
 
         engineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
         jobManager = new JobManager("Build_One_Cube_Engine", engineConfig);
