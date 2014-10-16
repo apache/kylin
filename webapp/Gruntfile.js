@@ -66,7 +66,7 @@ module.exports = function (grunt) {
                     {
                         expand: true,
                         cwd: 'tmp/',
-                        src: ['htaccess.dist', 'config.json.dist'],
+                        src: ['htaccess.dist', 'config.json'],
                         dest: 'dist/',
                         rename: function (dest, src) {
                             console.log(src);
