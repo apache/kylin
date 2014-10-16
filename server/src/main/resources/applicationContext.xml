@@ -61,13 +61,6 @@
 	<!-- Matric Spring -->
 
 	<bean class="com.kylinolap.rest.security.PasswordPlaceholderConfigurer">
-		<property name="locations">
-			<list>
-				<!-- Default location inside war file -->
-				<value>classpath:kylin.properties</value>
-				<!-- Environment specific location, a fixed path on server <value>file:///etc/kylin/conf/app.properties</value> -->
-			</list>
-		</property>
 		<property name="ignoreResourceNotFound" value="true" />
 	</bean>
 
