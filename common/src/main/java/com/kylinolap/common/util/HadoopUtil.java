@@ -88,18 +88,11 @@ public class HadoopUtil {
         conf.set(HConstants.ZOOKEEPER_QUORUM, quorum);
 
         String port = m.group(2);
-        conf.set("hbase.zookeeper.property.clientPort", port);
+        conf.set(HConstants.ZOOKEEPER_CLIENT_PORT, port);
 
         String znodePath = m.group(3) == null ? "" : m.group(3);
         if (StringUtils.isEmpty(znodePath) == false)
-            conf.set("zookeeper.znode.parent", znodePath);
-
-        boolean secured = znodePath.contains("unsecure") == false; // assume
-                                                                   // "unsecure"
-                                                                   // naming
-                                                                   // convention
-        if (secured)
-            conf.set("hbase.security.authentication", "kerberos");
+            conf.set(HConstants.ZOOKEEPER_ZNODE_PARENT, znodePath);
 
         // reduce rpc retry
         conf.set(HConstants.HBASE_CLIENT_PAUSE, "3000");

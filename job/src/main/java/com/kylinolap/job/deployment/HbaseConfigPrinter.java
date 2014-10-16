@@ -4,6 +4,9 @@ import java.io.File;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HConstants;
 
 /**
  * Created by honma on 9/30/14.
@@ -22,6 +25,9 @@ public class HbaseConfigPrinter {
         System.out.println("export KYLIN_LD_LIBRARY_PATH=" + ConfigLoader.LD_LIBRARY_PATH_LOADER.loadValue());
         System.out.println("export KYLIN_HBASE_CLASSPATH=" + ConfigLoader.HBASE_CLASSPATH_LOADER.loadValue());
         System.out.println("export KYLIN_HBASE_CONF_PATH=" + ConfigLoader.HBASE_CONF_FOLDER_LOADER.loadValue());
+        System.out.println("export KYLIN_ZOOKEEPER_QUORUM=" + ConfigLoader.ZOOKEEP_QUORUM_LOADER.loadValue());
+        System.out.println("export KYLIN_ZOOKEEPER_CLIENT_PORT=" + ConfigLoader.ZOOKEEPER_CLIENT_PORT_LOADER.loadValue());
+        System.out.println("export KYLIN_ZOOKEEPER_ZNODE_PARENT=" + ConfigLoader.ZOOKEEPER_ZNODE_PARENT_LOADER.loadValue());
     }
 
     @SuppressWarnings("unused")
@@ -34,6 +40,31 @@ public class HbaseConfigPrinter {
     }
 
     enum ConfigLoader {
+
+        ZOOKEEP_QUORUM_LOADER {
+            @Override
+            public String loadValue() {
+                Configuration conf = HBaseConfiguration.create();
+                return conf.get(HConstants.ZOOKEEPER_QUORUM);
+            }
+        },
+
+        ZOOKEEPER_ZNODE_PARENT_LOADER {
+            @Override
+            public String loadValue() {
+                Configuration conf = HBaseConfiguration.create();
+                return conf.get(HConstants.ZOOKEEPER_ZNODE_PARENT);
+            }
+        },
+
+        ZOOKEEPER_CLIENT_PORT_LOADER {
+            @Override
+            public String loadValue() {
+                Configuration conf = HBaseConfiguration.create();
+                return conf.get(HConstants.ZOOKEEPER_CLIENT_PORT);
+
+            }
+        },
 
         LD_LIBRARY_PATH_LOADER {
             @Override

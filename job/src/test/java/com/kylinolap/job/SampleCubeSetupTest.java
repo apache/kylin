@@ -23,7 +23,7 @@ import com.kylinolap.job.engine.JobEngineConfig;
  * tool
  */
 
-public class BuildOneCubeTest extends BuildCubeWithEngineTest {
+public class SampleCubeSetupTest extends CubeDevelopTestCase {
 
     @Before
     public void before() throws Exception {
@@ -42,12 +42,9 @@ public class BuildOneCubeTest extends BuildCubeWithEngineTest {
             }
         }
 
-        this.createTestMetadata();
-        initEnv();
+        //this.createTestMetadata();
+        initEnv(false);//This test case is run by deploy.sh, which will deploy the adjusted kylin.properties
 
-        engineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
-        jobManager = new JobManager("Build_One_Cube_Engine", engineConfig);
-        jobManager.deleteAllJobs();
     }
 
     @After
@@ -64,17 +61,5 @@ public class BuildOneCubeTest extends BuildCubeWithEngineTest {
     public void testCubes() throws Exception {
         // start job schedule engine
         this.prepareTestData("inner");// default settings;
-        // buildOneCube();
-    }
-
-    @SuppressWarnings("unused")
-    private void buildOneCube() throws Exception {
-        jobManager.startJobEngine(10);
-        ArrayList<String> jobs = new ArrayList<String>();
-
-        jobs.addAll(this.submitJob("test_kylin_cube_without_slr_empty", 0, 0, CubeBuildTypeEnum.BUILD));
-
-        waitCubeBuilt(jobs);
-        jobManager.stopJobEngine();
     }
 }

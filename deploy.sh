@@ -17,7 +17,7 @@ echo ""
 echo "Welcome to use Kylin-Deploy script"
 echo "This script will help you:"
 echo "1. Check environment"
-echo "2. Build Kylin"
+echo "2. Build Kylin artifacts"
 echo "3. Prepare test cube related data"
 echo "4. Lauch a web service to build cube and query with (at http://localhost:8081)"
 echo "Please make sure you're running this script on a hadoop CLI machine, and you have enough permissions."
@@ -96,6 +96,7 @@ echo "Kylin home folder path is $KYLIN_HOME"
 
 cd $KYLIN_HOME
 
+
 echo "Building and packaging..."
 source ./package.sh
 
@@ -107,11 +108,67 @@ hbase org.apache.hadoop.util.RunJar $JOB_JAR_NAME com.kylinolap.job.deployment.H
 #load variables: KYLIN_LD_LIBRARY_PATH,KYLIN_HBASE_CLASSPATH,KYLIN_HBASE_CONF_PATH
 source /tmp/kylin_retrieve.sh
 
-#build one cube, this is a self-contained unit test which will do the following as preparement:
-#1. deploy kylin.properties to /etc/kylin
-#2. generate synthetic fact table(test_kylin_fact) data and dump it into hive
+
+
 cd $KYLIN_HOME
-mvn test -Dtest=com.kylinolap.job.BuildOneCubeTest -DfailIfNoTests=false
+mkdir -p /etc/kylin
+
+HOSTNAME=`hostname`
+CLI_HOSTNAME_DEFAULT="kylin.job.remote.cli.hostname=sandbox.hortonworks.com"
+CLI_USERNAME_DEFAULT="kylin.job.remote.cli.username=root"
+CLI_PASSWORD_DEFAULT="kylin.job.remote.cli.password=hadoop"
+METADATA_URL="kylin.metadata.url=kylin_metadata_qa@hbase:sandbox.hortonworks.com:2181:/hbase-unsecure"
+STORAGE_URL="kylin.storage.url=hbase:sandbox.hortonworks.com:2181:/hbase-unsecure"
+
+NEW_CLI_HOSTNAME_PREFIX="kylin.job.remote.cli.hostname="
+NEW_CLI_USERNAME_PREFIX="kylin.job.remote.cli.username="
+NEW_CLI_PASSWORD_PREFIX="kylin.job.remote.cli.password="
+NEW_METADATA_URL_PREFIX="kylin.metadata.url=kylin_metadata_qa@hbase:"
+NEW_STORAGE_URL_PREFIX="kylin.storage.url=hbase:"
+
+KYLIN_ZOOKEEPER_URL=${KYLIN_ZOOKEEPER_QUORUM}:${KYLIN_ZOOKEEPER_CLIENT_PORT}:${KYLIN_ZOOKEEPER_ZNODE_PARENT}
+
+#deploy kylin.properties to /etc/kylin
+if [ "$HOSTNAME" == "quickstart.cloudera" ]
+then
+    echo "Running on a cloudera sandbox"
+    cat examples/test_case_data/kylin.properties | \
+    sed -e "s,${CLI_HOSTNAME_DEFAULT},${NEW_CLI_HOSTNAME_PREFIX}${HOSTNAME}," | \
+    sed -e "s,${CLI_PASSWORD_DEFAULT},${NEW_CLI_PASSWORD_PREFIX}cloudera," | \
+    sed -e "s,${METADATA_URL},${NEW_METADATA_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," | \
+    sed -e "s,${STORAGE_URL},${NEW_STORAGE_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," >  /etc/kylin/kylin.properties
+elif [ "$HOSTNAME" == "sandbox.hortonworks.com" ]
+then
+    echo "Running on a hortonworks sandbox"
+    cat examples/test_case_data/kylin.properties | \
+    sed -e "s,${CLI_HOSTNAME_DEFAULT},${NEW_CLI_HOSTNAME_PREFIX}${HOSTNAME}," | \
+    sed -e "s,${CLI_PASSWORD_DEFAULT},${NEW_CLI_PASSWORD_PREFIX}hadoop," | \
+    sed -e "s,${METADATA_URL},${NEW_METADATA_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," | \
+    sed -e "s,${STORAGE_URL},${NEW_STORAGE_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," >  /etc/kylin/kylin.properties
+else
+    echo "Not running on cloudera sandbox or hortonworks sandbox, copy a template for hortonworks"
+    cat examples/test_case_data/kylin.properties > /etc/kylin/kylin.properties
+fi
+
+echo "a copy of kylin config is generated at /etc/kylin/kylin.properties:"
+echo "==================================================================="
+cat /etc/kylin/kylin.properties
+echo "==================================================================="
+echo ""
+
+read -p "please ensure the CLI address/username/password is correct, and press y to proceed: " -n 1 -r
+echo    # (optional) move to a new line
+if [[ ! $REPLY =~ ^[Yy]$ ]]
+then
+    echo "Bye!"
+    exit 1
+fi
+
+
+#build one cube, this is a self-contained unit test which will do the following as preparement:
+# 1. generate synthetic fact table(test_kylin_fact) data and dump it into hive
+cd $KYLIN_HOME
+mvn test -Dtest=com.kylinolap.job.SampleCubeSetupTest -DfailIfNoTests=false
 
 sudo -i "${CATALINA_HOME}/bin/shutdown.sh" || true # avoid trapping
 cd $KYLIN_HOME/server/target
@@ -151,4 +208,4 @@ sudo -i "${CATALINA_HOME}/bin/startup.sh"
 
 
 echo "Kylin-Deploy Success!"
-echo "Please visit http://yoursandboxip:8081 to play with the cubes!"
+echo "Please visit http://<your_sandbox_ip>:8081 to play with the cubes!"
