@@ -16,14 +16,14 @@
 
 package com.kylinolap.rest.security;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import org.springframework.ldap.core.ContextSource;
-import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
+
+import com.kylinolap.rest.constant.Constant;
 
 /**
  * @author xduo
@@ -31,20 +31,36 @@ import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopul
  */
 public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
 
+    String adminRole;
+    SimpleGrantedAuthority adminRoleAsAuthority;
+    
+    SimpleGrantedAuthority adminAuthority = new SimpleGrantedAuthority(Constant.ROLE_ADMIN);
+    SimpleGrantedAuthority modelerAuthority = new SimpleGrantedAuthority(Constant.ROLE_MODELER);
+    SimpleGrantedAuthority analystAuthority = new SimpleGrantedAuthority(Constant.ROLE_ANALYST);
+    
     /**
      * @param contextSource
      * @param groupSearchBase
      */
-    public AuthoritiesPopulator(ContextSource contextSource, String groupSearchBase) {
+    public AuthoritiesPopulator(ContextSource contextSource, String groupSearchBase, String adminRole) {
         super(contextSource, groupSearchBase);
+        this.adminRole = adminRole;
+        this.adminRoleAsAuthority = new SimpleGrantedAuthority(adminRole);
     }
 
     @Override
-    protected Set<GrantedAuthority> getAdditionalRoles(DirContextOperations user, String username) {
-        Set<GrantedAuthority> authorities = new HashSet<GrantedAuthority>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_MODELER"));
-        authorities.add(new SimpleGrantedAuthority("ROLE_ANALYST"));
-
+    public Set<GrantedAuthority> getGroupMembershipRoles(String userDn, String username) {
+        Set<GrantedAuthority> authorities = super.getGroupMembershipRoles(userDn, username);
+        
+        if (authorities.contains(adminRoleAsAuthority)) {
+            authorities.add(adminAuthority);
+        }
+        
+        authorities.add(modelerAuthority);
+        authorities.add(analystAuthority);
+        
         return authorities;
     }
+    
+    
 }
