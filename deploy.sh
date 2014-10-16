@@ -117,14 +117,17 @@ HOSTNAME=`hostname`
 CLI_HOSTNAME_DEFAULT="kylin.job.remote.cli.hostname=sandbox.hortonworks.com"
 CLI_USERNAME_DEFAULT="kylin.job.remote.cli.username=root"
 CLI_PASSWORD_DEFAULT="kylin.job.remote.cli.password=hadoop"
-METADATA_URL="kylin.metadata.url=kylin_metadata_qa@hbase:sandbox.hortonworks.com:2181:/hbase-unsecure"
-STORAGE_URL="kylin.storage.url=hbase:sandbox.hortonworks.com:2181:/hbase-unsecure"
+METADATA_URL_DEFAULT="kylin.metadata.url=kylin_metadata_qa@hbase:sandbox.hortonworks.com:2181:/hbase-unsecure"
+STORAGE_URL_DEFAULT="kylin.storage.url=hbase:sandbox.hortonworks.com:2181:/hbase-unsecure"
+CHECK_URL_DEFAULT="kylin.job.yarn.app.rest.check.status.url=http://sandbox:8088/ws/v1/cluster/apps/${job_id}?anonymous=true"
+
 
 NEW_CLI_HOSTNAME_PREFIX="kylin.job.remote.cli.hostname="
 NEW_CLI_USERNAME_PREFIX="kylin.job.remote.cli.username="
 NEW_CLI_PASSWORD_PREFIX="kylin.job.remote.cli.password="
 NEW_METADATA_URL_PREFIX="kylin.metadata.url=kylin_metadata_qa@hbase:"
 NEW_STORAGE_URL_PREFIX="kylin.storage.url=hbase:"
+NEW_CHECK_URL="kylin.job.yarn.app.rest.check.status.url=http://localhost:8088/ws/v1/cluster/apps/${job_id}?anonymous=true"
 
 KYLIN_ZOOKEEPER_URL=${KYLIN_ZOOKEEPER_QUORUM}:${KYLIN_ZOOKEEPER_CLIENT_PORT}:${KYLIN_ZOOKEEPER_ZNODE_PARENT}
 
@@ -133,18 +136,20 @@ if [ "$HOSTNAME" == "quickstart.cloudera" ]
 then
     echo "Running on a cloudera sandbox"
     cat examples/test_case_data/kylin.properties | \
+    sed -e "s,${CHECK_URL_DEFAULT},${NEW_CHECK_URL}," | \
     sed -e "s,${CLI_HOSTNAME_DEFAULT},${NEW_CLI_HOSTNAME_PREFIX}${HOSTNAME}," | \
     sed -e "s,${CLI_PASSWORD_DEFAULT},${NEW_CLI_PASSWORD_PREFIX}cloudera," | \
-    sed -e "s,${METADATA_URL},${NEW_METADATA_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," | \
-    sed -e "s,${STORAGE_URL},${NEW_STORAGE_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," >  /etc/kylin/kylin.properties
+    sed -e "s,${METADATA_URL_DEFAULT},${NEW_METADATA_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," | \
+    sed -e "s,${STORAGE_URL_DEFAULT},${NEW_STORAGE_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," >  /etc/kylin/kylin.properties
 elif [ "$HOSTNAME" == "sandbox.hortonworks.com" ]
 then
     echo "Running on a hortonworks sandbox"
     cat examples/test_case_data/kylin.properties | \
+    sed -e "s,${CHECK_URL_DEFAULT},${NEW_CHECK_URL}," | \
     sed -e "s,${CLI_HOSTNAME_DEFAULT},${NEW_CLI_HOSTNAME_PREFIX}${HOSTNAME}," | \
     sed -e "s,${CLI_PASSWORD_DEFAULT},${NEW_CLI_PASSWORD_PREFIX}hadoop," | \
-    sed -e "s,${METADATA_URL},${NEW_METADATA_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," | \
-    sed -e "s,${STORAGE_URL},${NEW_STORAGE_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," >  /etc/kylin/kylin.properties
+    sed -e "s,${METADATA_URL_DEFAULT},${NEW_METADATA_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," | \
+    sed -e "s,${STORAGE_URL_DEFAULT},${NEW_STORAGE_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," >  /etc/kylin/kylin.properties
 else
     echo "Not running on cloudera sandbox or hortonworks sandbox, copy a template for hortonworks"
     cat examples/test_case_data/kylin.properties > /etc/kylin/kylin.properties
