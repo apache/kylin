@@ -208,4 +208,4 @@ sudo -i "${CATALINA_HOME}/bin/startup.sh"
 
 
 echo "Kylin-Deploy Success!"
-echo "Please visit http://yoursandboxip:8081 to play with the cubes!"
+echo "Please visit http://<your_sandbox_ip>:8081 to play with the cubes!"
