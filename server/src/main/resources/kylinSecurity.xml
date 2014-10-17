@@ -57,6 +57,32 @@
 		<property name="permissionFactory" ref="aclPermissionFactory" />
 	</bean>
 
+	<bean id="aclAuthorizationStrategy"
+		class="org.springframework.security.acls.domain.AclAuthorizationStrategyImpl">
+		<constructor-arg>
+			<list>
+				<bean
+					class="org.springframework.security.core.authority.GrantedAuthorityImpl">
+					<constructor-arg value="ROLE_ADMIN" />
+				</bean>
+				<bean
+					class="org.springframework.security.core.authority.GrantedAuthorityImpl">
+					<constructor-arg value="ROLE_ADMIN" />
+				</bean>
+				<bean
+					class="org.springframework.security.core.authority.GrantedAuthorityImpl">
+					<constructor-arg value="ROLE_ADMIN" />
+				</bean>
+			</list>
+		</constructor-arg>
+	</bean>
+	
+	<bean id="auditLogger"
+		class="org.springframework.security.acls.domain.ConsoleAuditLogger" />
+		
+	<bean id="aclServiceImpl" class="com.kylinolap.rest.security.HbaseAclService">
+	</bean>
+
 	<beans profile="default">
 		<bean id="ldapUserAuthProvider" class="com.kylinolap.rest.security.LdapProvider">
 			<constructor-arg>

@@ -320,6 +320,12 @@ public class KylinMetaImpl implements Meta {
         return result.createCursor();
     }
 
+    /* 
+     * Client could request metadata after prepare
+     * 
+     * (non-Javadoc)
+     * @see net.hydromatic.avatica.Meta#prepare(net.hydromatic.avatica.AvaticaStatement, java.lang.String)
+     */
     public AvaticaPrepareResult prepare(AvaticaStatement statement, String sql) {
         RemoteClient client = factory.newRemoteClient(conn);
         DataSet<Object[]> result = null;

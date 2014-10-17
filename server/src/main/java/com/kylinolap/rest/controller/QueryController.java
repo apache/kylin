@@ -116,27 +116,27 @@ public class QueryController extends BasicController {
         return response;
     }
 
-    @RequestMapping(value = "/saved_queries", method = RequestMethod.POST)
-    @ResponseBody
-    @Timed(name = "saveQuery")
-    public void saveQuery(@RequestBody SaveSqlRequest sqlRequest) {
-        queryService.saveQuery(sqlRequest.getName(), sqlRequest.getProject(), sqlRequest.getSql(), sqlRequest.getDescription());
-    }
-
-    @RequestMapping(value = "/saved_queries/{id}", method = RequestMethod.DELETE)
-    @ResponseBody
-    @Timed(name = "removeQuery")
-    public void removeQuery(@PathVariable String id) {
-        queryService.removeQuery(id);
-    }
-
-    @RequestMapping(value = "/saved_queries", method = RequestMethod.GET)
-    @ResponseBody
-    @Timed(name = "getQueries")
-    public List<GeneralResponse> getQueries() {
-        String creator = SecurityContextHolder.getContext().getAuthentication().getName();
-        return queryService.getQueries(creator);
-    }
+//    @RequestMapping(value = "/saved_queries", method = RequestMethod.POST)
+//    @ResponseBody
+//    @Timed(name = "saveQuery")
+//    public void saveQuery(@RequestBody SaveSqlRequest sqlRequest) {
+//        queryService.saveQuery(sqlRequest.getName(), sqlRequest.getProject(), sqlRequest.getSql(), sqlRequest.getDescription());
+//    }
+//
+//    @RequestMapping(value = "/saved_queries/{id}", method = RequestMethod.DELETE)
+//    @ResponseBody
+//    @Timed(name = "removeQuery")
+//    public void removeQuery(@PathVariable String id) {
+//        queryService.removeQuery(id);
+//    }
+//
+//    @RequestMapping(value = "/saved_queries", method = RequestMethod.GET)
+//    @ResponseBody
+//    @Timed(name = "getQueries")
+//    public List<GeneralResponse> getQueries() {
+//        String creator = SecurityContextHolder.getContext().getAuthentication().getName();
+//        return queryService.getQueries(creator);
+//    }
 
     @RequestMapping(value = "/query/format/{format}", method = RequestMethod.GET)
     @ResponseBody

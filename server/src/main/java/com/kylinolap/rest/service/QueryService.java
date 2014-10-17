@@ -24,8 +24,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,7 +38,6 @@ import net.hydromatic.avatica.ColumnMetaData.Rep;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -58,7 +55,6 @@ import com.kylinolap.rest.model.TableMeta;
 import com.kylinolap.rest.request.PrepareSqlRequest;
 import com.kylinolap.rest.request.PrepareSqlRequest.StateParam;
 import com.kylinolap.rest.request.SQLRequest;
-import com.kylinolap.rest.response.GeneralResponse;
 import com.kylinolap.rest.response.SQLResponse;
 import com.kylinolap.rest.util.QueryUtil;
 
@@ -89,47 +85,47 @@ public class QueryService extends BasicService {
         return executeQuery(correctedSql, sqlRequest);
     }
 
-    public void saveQuery(final String name, final String project, final String sql, final String description) {
-        final String creator = SecurityContextHolder.getContext().getAuthentication().getName();
-        jdbcTemplate.update("insert into queries(name,project,sql_string,creator,description,created_date) values(?,?,?,?,?,?);", new PreparedStatementSetter() {
-            @Override
-            public void setValues(PreparedStatement ps) throws SQLException {
-                ps.setString(1, name);
-                ps.setString(2, project);
-                ps.setString(3, sql);
-                ps.setString(4, creator);
-                ps.setString(5, description);
-                ps.setTimestamp(6, new java.sql.Timestamp(new Date().getTime()));
-            }
-        });
-    }
-
-    public void removeQuery(final String id) {
-        jdbcTemplate.update("DELETE FROM queries WHERE id = ?", new Object[] { id });
-    }
-
-    public List<GeneralResponse> getQueries(final String creator) {
-        List<GeneralResponse> responses = new ArrayList<GeneralResponse>();
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("SELECT * FROM queries WHERE creator = ?", new Object[] { creator });
-
-        for (Map<String, Object> row : rows) {
-            GeneralResponse generalResponse = new GeneralResponse();
-            generalResponse.setProperty("id", String.valueOf(row.get("id")));
-            generalResponse.setProperty("name", (String) row.get("name"));
-            String project = (String) row.get("project");
-            generalResponse.setProperty("project", (null != project) ? project : "");
-            generalResponse.setProperty("sql", (String) row.get("sql_string"));
-            String description = (String) row.get("description");
-            generalResponse.setProperty("description", (null != description) ? description : "");
-            String sqlCreator = (String) row.get("creator");
-            generalResponse.setProperty("creator", (null != sqlCreator) ? sqlCreator : "");
-            generalResponse.setProperty("createdDate", (String) new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(row.get("created_date")));
-            responses.add(generalResponse);
-        }
-
-        return responses;
-    }
+//    public void saveQuery(final String name, final String project, final String sql, final String description) {
+//        final String creator = SecurityContextHolder.getContext().getAuthentication().getName();
+//        jdbcTemplate.update("insert into queries(name,project,sql_string,creator,description,created_date) values(?,?,?,?,?,?);", new PreparedStatementSetter() {
+//            @Override
+//            public void setValues(PreparedStatement ps) throws SQLException {
+//                ps.setString(1, name);
+//                ps.setString(2, project);
+//                ps.setString(3, sql);
+//                ps.setString(4, creator);
+//                ps.setString(5, description);
+//                ps.setTimestamp(6, new java.sql.Timestamp(new Date().getTime()));
+//            }
+//        });
+//    }
+//
+//    public void removeQuery(final String id) {
+//        jdbcTemplate.update("DELETE FROM queries WHERE id = ?", new Object[] { id });
+//    }
+//
+//    public List<GeneralResponse> getQueries(final String creator) {
+//        List<GeneralResponse> responses = new ArrayList<GeneralResponse>();
+//
+//        List<Map<String, Object>> rows = jdbcTemplate.queryForList("SELECT * FROM queries WHERE creator = ?", new Object[] { creator });
+//
+//        for (Map<String, Object> row : rows) {
+//            GeneralResponse generalResponse = new GeneralResponse();
+//            generalResponse.setProperty("id", String.valueOf(row.get("id")));
+//            generalResponse.setProperty("name", (String) row.get("name"));
+//            String project = (String) row.get("project");
+//            generalResponse.setProperty("project", (null != project) ? project : "");
+//            generalResponse.setProperty("sql", (String) row.get("sql_string"));
+//            String description = (String) row.get("description");
+//            generalResponse.setProperty("description", (null != description) ? description : "");
+//            String sqlCreator = (String) row.get("creator");
+//            generalResponse.setProperty("creator", (null != sqlCreator) ? sqlCreator : "");
+//            generalResponse.setProperty("createdDate", (String) new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(row.get("created_date")));
+//            responses.add(generalResponse);
+//        }
+//
+//        return responses;
+//    }
 
     public void logQuery(final SQLRequest request, final SQLResponse response, final Date startTime, final Date endTime) {
         final String user = SecurityContextHolder.getContext().getAuthentication().getName();
