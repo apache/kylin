@@ -32,6 +32,10 @@ public class Constant {
 
     public final static String IDENTITY_ROLE = "role";
 
+    public final static String ROLE_ADMIN = "ROLE_ADMIN";
+    public static final String ROLE_MODELER = "ROLE_MODELER";
+    public static final String ROLE_ANALYST = "ROLE_ANALYST";
+    
     public final static String ACCESS_HAS_ROLE_ADMIN = "hasRole('ROLE_ADMIN')";
 
     public final static String ACCESS_POST_FILTER_READ = "hasRole('ROLE_ADMIN') or hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'MANAGEMENT') " + "or hasPermission(filterObject, 'OPERATION') or hasPermission(filterObject, 'ADMINISTRATION')";
@@ -39,5 +43,7 @@ public class Constant {
     public final static String SERVER_MODE_QUERY = "query";
     public final static String SERVER_MODE_JOB = "job";
     public final static String SERVER_MODE_ALL = "all";
+
+
 
 }
