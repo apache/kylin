@@ -1,44 +1,34 @@
-<beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:scr="http://www.springframework.org/schema/security"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:tx="http://www.springframework.org/schema/tx" xmlns:scr="http://www.springframework.org/schema/security" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans
 	http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
 	http://www.springframework.org/schema/security
 	http://www.springframework.org/schema/security/spring-security-3.1.xsd
 	http://www.springframework.org/schema/tx
     http://www.springframework.org/schema/tx/spring-tx-3.1.xsd">
 
-	<scr:global-method-security
-		pre-post-annotations="enabled">
+	<scr:global-method-security pre-post-annotations="enabled">
 		<scr:expression-handler ref="expressionHandler" />
 	</scr:global-method-security>
 
 	<scr:http auto-config="true" use-expressions="true">
 		<scr:http-basic entry-point-ref="unauthorisedEntryPoint" />
 
-		<scr:intercept-url pattern="/api/user/authenticate*/**"
-			access="permitAll" />
+		<scr:intercept-url pattern="/api/user/authenticate*/**" access="permitAll" />
 		<scr:intercept-url pattern="/api/query*/**" access="isAuthenticated()" />
-		<scr:intercept-url pattern="/api/metadata*/**"
-			access="isAuthenticated()" />
+		<scr:intercept-url pattern="/api/metadata*/**" access="isAuthenticated()" />
 		<scr:intercept-url pattern="/api/**/metrics" access="permitAll" />
-		<scr:intercept-url pattern="/api/cubes/src/tables"
-			access="hasAnyRole('ROLE_ANALYST', 'ROLE_MODELER')" />
+		<scr:intercept-url pattern="/api/cubes/src/tables" access="hasAnyRole('ROLE_ANALYST', 'ROLE_MODELER')" />
 		<scr:intercept-url pattern="/api/cubes*/**" access="hasRole('ROLE_MODELER')" />
 		<scr:intercept-url pattern="/api/job*/**" access="hasRole('ROLE_MODELER')" />
-		<scr:intercept-url pattern="/api/admin/config"
-			access="permitAll" />
+		<scr:intercept-url pattern="/api/admin/config" access="permitAll" />
 		<scr:intercept-url pattern="/api/admin*/**" access="hasRole('ROLE_ADMIN')" />
 		<scr:intercept-url pattern="/api/**" access="isAuthenticated()" />
 
 		<scr:logout invalidate-session="true" delete-cookies="JSESSIONID" />
-		<scr:session-management
-			session-fixation-protection="newSession" />
+		<scr:session-management session-fixation-protection="newSession" />
 	</scr:http>
 
 	<!-- user auth -->
-	<bean id="passwordEncoder"
-		class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder" />
+	<bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder" />
 
 	<bean id="userManager" class="com.kylinolap.rest.security.HbaseUserManager">
 	</bean>
@@ -46,13 +36,11 @@
 	<!-- acl config -->
 	<bean id="aclPermissionFactory" class="com.kylinolap.rest.security.AclPermissionFactory" />
 
-	<bean id="expressionHandler"
-		class="org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler">
+	<bean id="expressionHandler" class="org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler">
 		<property name="permissionEvaluator" ref="permissionEvaluator" />
 	</bean>
 
-	<bean id="permissionEvaluator"
-		class="org.springframework.security.acls.AclPermissionEvaluator">
+	<bean id="permissionEvaluator" class="org.springframework.security.acls.AclPermissionEvaluator">
 		<constructor-arg ref="aclService" />
 		<property name="permissionFactory" ref="aclPermissionFactory" />
 	</bean>
@@ -61,16 +49,13 @@
 		class="org.springframework.security.acls.domain.AclAuthorizationStrategyImpl">
 		<constructor-arg>
 			<list>
-				<bean
-					class="org.springframework.security.core.authority.GrantedAuthorityImpl">
+				<bean class="org.springframework.security.core.authority.GrantedAuthorityImpl">
 					<constructor-arg value="ROLE_ADMIN" />
 				</bean>
-				<bean
-					class="org.springframework.security.core.authority.GrantedAuthorityImpl">
+				<bean class="org.springframework.security.core.authority.GrantedAuthorityImpl">
 					<constructor-arg value="ROLE_ADMIN" />
 				</bean>
-				<bean
-					class="org.springframework.security.core.authority.GrantedAuthorityImpl">
+				<bean class="org.springframework.security.core.authority.GrantedAuthorityImpl">
 					<constructor-arg value="ROLE_ADMIN" />
 				</bean>
 			</list>
@@ -80,21 +65,17 @@
 	<bean id="auditLogger"
 		class="org.springframework.security.acls.domain.ConsoleAuditLogger" />
 		
-	<bean id="aclServiceImpl" class="com.kylinolap.rest.security.HbaseAclService">
-	</bean>
+	<bean id="aclServiceImpl" class="com.kylinolap.rest.security.HbaseAclService" />
 
 	<beans profile="default">
 		<bean id="ldapUserAuthProvider" class="com.kylinolap.rest.security.LdapProvider">
 			<constructor-arg>
-				<bean
-					class="org.springframework.security.ldap.authentication.BindAuthenticator">
+				<bean class="org.springframework.security.ldap.authentication.BindAuthenticator">
 					<constructor-arg ref="ldapSource" />
 					<property name="userSearch">
-						<bean id="userSearch"
-							class="org.springframework.security.ldap.search.FilterBasedLdapUserSearch">
+						<bean id="userSearch" class="org.springframework.security.ldap.search.FilterBasedLdapUserSearch">
 							<constructor-arg index="0" value="${ldap.user.searchBase}" />
-							<constructor-arg index="1"
-								value="${ldap.user.searchPattern}" />
+							<constructor-arg index="1" value="${ldap.user.searchPattern}" />
 							<constructor-arg index="2" ref="ldapSource" />
 						</bean>
 					</property>
@@ -103,24 +84,20 @@
 			<constructor-arg>
 				<bean class="com.kylinolap.rest.security.AuthoritiesPopulator">
 					<constructor-arg index="0" ref="ldapSource" />
-					<constructor-arg index="1"
-						value="${ldap.user.groupSearchBase}" />
+					<constructor-arg index="1" value="${ldap.user.groupSearchBase}" />
+					<constructor-arg index="2" value="${ldap.adminRole}" />
 				</bean>
 			</constructor-arg>
 		</bean>
 
 		<bean id="ldapServiceAccountAuthProvider" class="com.kylinolap.rest.security.LdapProvider">
 			<constructor-arg>
-				<bean
-					class="org.springframework.security.ldap.authentication.BindAuthenticator">
+				<bean class="org.springframework.security.ldap.authentication.BindAuthenticator">
 					<constructor-arg ref="ldapSource" />
 					<property name="userSearch">
-						<bean id="userSearch"
-							class="org.springframework.security.ldap.search.FilterBasedLdapUserSearch">
-							<constructor-arg index="0"
-								value="${ldap.service.searchBase}" />
-							<constructor-arg index="1"
-								value="${ldap.service.searchPattern}" />
+						<bean id="userSearch" class="org.springframework.security.ldap.search.FilterBasedLdapUserSearch">
+							<constructor-arg index="0" value="${ldap.service.searchBase}" />
+							<constructor-arg index="1" value="${ldap.service.searchPattern}" />
 							<constructor-arg index="2" ref="ldapSource" />
 						</bean>
 					</property>
@@ -129,8 +106,8 @@
 			<constructor-arg>
 				<bean class="com.kylinolap.rest.security.AuthoritiesPopulator">
 					<constructor-arg index="0" ref="ldapSource" />
-					<constructor-arg index="1"
-						value="${ldap.service.groupSearchBase}" />
+					<constructor-arg index="1" value="${ldap.service.groupSearchBase}" />
+					<constructor-arg index="2" value="${ldap.adminRole}" />
 				</bean>
 			</constructor-arg>
 		</bean>
@@ -142,12 +119,10 @@
 			<!-- do service account ldap auth -->
 			<scr:authentication-provider ref="ldapServiceAccountAuthProvider"></scr:authentication-provider>
 
-			<!-- custom user provider <authentication-provider user-service-ref="userService"> 
-				<password-encoder ref="passwordEncoder" /> </authentication-provider> -->
+			<!-- custom user provider <authentication-provider user-service-ref="userService"> <password-encoder ref="passwordEncoder" /> </authentication-provider> -->
 		</scr:authentication-manager>
 
-		<bean id="ldapSource"
-			class="org.springframework.security.ldap.DefaultSpringSecurityContextSource">
+		<bean id="ldapSource" class="org.springframework.security.ldap.DefaultSpringSecurityContextSource">
 			<constructor-arg value="${ldap.server}" />
 			<property name="userDn" value="${ldap.username}" />
 			<property name="password" value="${ldap.password}" />
@@ -158,15 +133,9 @@
 		<scr:authentication-manager alias="authenticationManager">
 			<scr:authentication-provider>
 				<scr:user-service>
-					<scr:user name="MODELER"
-						password="$2a$10$Le5ernTeGNIARwMJsY0WaOLioNQdb0QD11DwjeyNqqNRp5NaDo2FG"
-						authorities="ROLE_MODELER" />
-					<scr:user name="ANALYST"
-						password="$2a$10$s4INO3XHjPP5Vm2xH027Ce9QeXWdrfq5pvzuGr9z/lQmHqi0rsbNi"
-						authorities="ROLE_ANALYST" />
-					<scr:user name="ADMIN"
-						password="$2a$10$JjFuU8Lghg8eYx/8EpIXyOlM8J3LBHwV1uueEXwNzh.jrruv52n1q"
-						authorities="ROLE_MODELER, ROLE_ANALYST, ROLE_ADMIN" />
+					<scr:user name="MODELER" password="$2a$10$Le5ernTeGNIARwMJsY0WaOLioNQdb0QD11DwjeyNqqNRp5NaDo2FG" authorities="ROLE_MODELER" />
+					<scr:user name="ANALYST" password="$2a$10$s4INO3XHjPP5Vm2xH027Ce9QeXWdrfq5pvzuGr9z/lQmHqi0rsbNi" authorities="ROLE_ANALYST" />
+					<scr:user name="ADMIN" password="$2a$10$JjFuU8Lghg8eYx/8EpIXyOlM8J3LBHwV1uueEXwNzh.jrruv52n1q" authorities="ROLE_MODELER, ROLE_ANALYST, ROLE_ADMIN" />
 				</scr:user-service>
 				<scr:password-encoder ref="passwordEncoder" />
 			</scr:authentication-provider>
