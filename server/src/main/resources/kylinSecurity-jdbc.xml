@@ -115,7 +115,7 @@
 	<tx:annotation-driven transaction-manager="transactionManager" />
 
 	<beans profile="default">
-		<bean id="aclService" class="com.kylinolap.rest.security.AclService">
+		<bean id="aclServiceImpl" class="com.kylinolap.rest.security.JdbcAclService">
 			<constructor-arg ref="dataSource" />
 			<constructor-arg ref="lookupStrategy" />
 			<constructor-arg ref="aclCache" />
@@ -193,7 +193,7 @@
 	</beans>
 
 	<beans profile="sandbox,testing">
-		<bean id="aclService" class="com.kylinolap.rest.security.AclService">
+		<bean id="aclServiceImpl" class="com.kylinolap.rest.security.JdbcAclService">
 			<constructor-arg ref="dataSource" />
 			<constructor-arg ref="lookupStrategy" />
 			<constructor-arg ref="aclCache" />
