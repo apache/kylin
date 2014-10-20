@@ -31,7 +31,7 @@ import com.kylinolap.metadata.model.cube.TblColRef;
 
 public class DictionaryGeneratorCLI {
 
-    private static final Logger logger = LoggerFactory.getLogger(DictionaryGenerator.class);
+    private static final Logger logger = LoggerFactory.getLogger(DictionaryGeneratorCLI.class);
 
     public static void processSegment(KylinConfig config, String cubeName, String segmentName, String factColumnsPath) throws IOException {
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);

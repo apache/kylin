@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <configuration>
+
 	<property>
 		<name>mapreduce.job.split.metainfo.maxsize</name>
 		<value>-1</value>
