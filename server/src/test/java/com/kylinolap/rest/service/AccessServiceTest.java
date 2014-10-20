@@ -46,7 +46,8 @@ public class AccessServiceTest extends TestBase {
         Assert.assertNotNull(AclPermissionFactory.getPermissions());
 
         AclEntity ae = new MockAclEntity("test-domain-object");
-
+        accessService.clean(ae, true);
+        
         // test getAcl
         Acl acl = accessService.getAcl(ae);
         Assert.assertNull(acl);
