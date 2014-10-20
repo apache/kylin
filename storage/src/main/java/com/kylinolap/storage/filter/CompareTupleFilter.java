@@ -22,8 +22,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.apache.hadoop.hbase.util.Pair;
-
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.storage.tuple.ITuple;
@@ -88,20 +86,6 @@ public class CompareTupleFilter extends TupleFilter {
         return operator == FilterOperatorEnum.LT || operator == FilterOperatorEnum.GT || operator == FilterOperatorEnum.LTE || operator == FilterOperatorEnum.GTE;
     }
 
-    public Pair<ColumnTupleFilter, ConstantTupleFilter> getColumnAndConstant() {
-        ColumnTupleFilter colf = null;
-        ConstantTupleFilter constf = null;
-        for (TupleFilter child : this.getChildren()) {
-            if (child instanceof ColumnTupleFilter) {
-                colf = (ColumnTupleFilter) child;
-            }
-            if (child instanceof ConstantTupleFilter) {
-                constf = (ConstantTupleFilter) child;
-            }
-        }
-        return new Pair<ColumnTupleFilter, ConstantTupleFilter>(colf, constf);
-    }
-
     @Override
     public Collection<String> getValues() {
         return conditionValues;
@@ -151,7 +135,7 @@ public class CompareTupleFilter extends TupleFilter {
         // extract tuple value
         String tupleValue = null;
         for (TupleFilter filter : this.children) {
-            if (!(filter instanceof ConstantTupleFilter)) {
+            if (filter instanceof ColumnTupleFilter) {
                 filter.evaluate(tuple);
                 tupleValue = filter.getValues().iterator().next();
             }
@@ -208,7 +192,7 @@ public class CompareTupleFilter extends TupleFilter {
 
     @Override
     public boolean isEvaluable() {
-        return true;
+        return column != null && !conditionValues.isEmpty();
     }
 
     @Override

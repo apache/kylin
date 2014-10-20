@@ -140,11 +140,10 @@ public class QueryService extends BasicService {
 
         if (!response.isHitCache() && null != OLAPContext.getThreadLocalContexts()) {
             for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
-                for (Cuboid cuboid : ctx.storageContext.getCuboids()) {
-                    String cubeName = cuboid.getCube().getName().replace("_desc", "");
-                    cubeNames.add(cubeName);
-                    cuboidIds.add(cuboid.getId());
-                }
+                Cuboid cuboid = ctx.storageContext.getCuboid();
+                String cubeName = cuboid.getCube().getName().replace("_desc", "");
+                cubeNames.add(cubeName);
+                cuboidIds.add(cuboid.getId());
                 totalScanCount += ctx.storageContext.getTotalScanCount();
             }
         }
@@ -184,7 +183,7 @@ public class QueryService extends BasicService {
      * @throws SQLException
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')" + " or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'READ')")
-    public void checkAuthorization(CubeInstance cubeInstance) throws AccessDeniedException{
+    public void checkAuthorization(CubeInstance cubeInstance) throws AccessDeniedException {
     }
 
     protected SQLResponse executeQuery(String sql, SQLRequest sqlRequest) throws Exception {
