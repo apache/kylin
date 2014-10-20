@@ -26,8 +26,6 @@ import org.apache.hadoop.io.LongWritable;
  */
 public class LDCAggregator extends MeasureAggregator<LongWritable> {
 
-    private static LongWritable ZERO = new LongWritable(0);
-
     private HLLCAggregator hllAgg = null;
     private LongWritable state = new LongWritable(0);
 
@@ -42,16 +40,18 @@ public class LDCAggregator extends MeasureAggregator<LongWritable> {
 
     @Override
     public void aggregate(LongWritable value) {
+        if (state.get() == 0)
+            state.set(value.get());
+        else
+            throw new IllegalStateException();
     }
 
     @Override
     public LongWritable getState() {
-        if (hllAgg == null) {
-            return ZERO;
-        } else {
+        if (hllAgg != null) {
             state.set(hllAgg.getState().getCountEstimate());
-            return state;
         }
+        return state;
     }
 
     @Override
