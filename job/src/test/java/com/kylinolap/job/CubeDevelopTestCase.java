@@ -6,6 +6,7 @@ import com.kylinolap.common.util.SSHClient;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.dataGen.FactTableGenerator;
+import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.hive.SqlHiveDataTypeMapping;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
@@ -209,9 +210,24 @@ public class CubeDevelopTestCase extends HBaseMetadataTestCase {
         FileUtils.copyFile(new File(".." + File.separator + "storage" + File.separator + "target" + File.separator + coprocessorJarName), targetFile);
     }
 
-    private void deployConfigFile() throws Exception {
-        scpFilesToHadoopCli(new String[] { ".." + File.separator + "examples" + File.separator + "test_case_data" + File.separator + "kylin.properties", ".." + File.separator + "examples" + File.separator + "test_case_data" + File.separator + "hadoop_job_conf.xml" }, "/etc/kylin");
+    private void deployKylinProperty() throws Exception {
+        scpFilesToHadoopCli(new String[] { ".." + File.separator + "examples" + File.separator + "test_case_data" + File.separator + "kylin.properties" }, "/etc/kylin");
     }
+
+    private void deployJobConf(boolean jobEnableLzo) throws Exception {
+        String jobConfFileName = JobEngineConfig.HADOOP_JOB_CONF_FILENAME;
+        if (jobEnableLzo) {
+            logger.info("job conf: the lzo enabled version is deployed to /etc/kylin");
+            jobConfFileName += ".xml";
+        }
+        else {
+            logger.info("job conf: the lzo disabled version is deployed to /etc/kylin");
+            jobConfFileName += ".lzo_disabled.xml";
+        }
+
+        scpFilesToHadoopCli(new String[] { ".." + File.separator + "examples" + File.separator + "test_case_data" + File.separator + jobConfFileName }, "/etc/kylin");
+    }
+
 
     private void deployTestData() throws Exception {
 
@@ -255,13 +271,12 @@ public class CubeDevelopTestCase extends HBaseMetadataTestCase {
         this.execHiveCommand(this.generateLoadDataHql(TABLE_SITES));
     }
 
-    protected void initEnv(boolean deployConfig) throws Exception {
+    protected void initEnv(boolean deployKylinProperties, boolean jobEnableLzo) throws Exception {
         cleanUp();
 
         // create log dir
         this.execCommand("mkdir -p " + KylinConfig.getInstanceFromEnv().getKylinJobLogDir());
         retrieveJarName();
-
 
         // install metadata to hbase
         installMetadataToHBase();
@@ -275,8 +290,10 @@ public class CubeDevelopTestCase extends HBaseMetadataTestCase {
         deployJarToHadoopCli();
         deployJarToLocalDir();
 
-        if (deployConfig)
-            deployConfigFile();
+        if (deployKylinProperties)
+            deployKylinProperty();
+
+        deployJobConf(jobEnableLzo);
     }
 
     protected void prepareTestData(String joinType) throws Exception {

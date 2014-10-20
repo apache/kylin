@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.hbase.io.compress.Compression;
+import org.apache.hadoop.hbase.util.CompressionTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,7 +45,8 @@ public class SampleCubeSetupTest extends CubeDevelopTestCase {
         }
 
         //this.createTestMetadata();
-        initEnv(false);//This test case is run by deploy.sh, which will deploy the adjusted kylin.properties
+        boolean lzoAvailable = CompressionTest.testCompression(Compression.Algorithm.LZO.getName());
+        initEnv(false, lzoAvailable);//This test case is run by deploy.sh, which will deploy the adjusted kylin.properties at first
 
     }
 

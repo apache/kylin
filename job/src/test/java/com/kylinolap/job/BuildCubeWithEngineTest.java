@@ -60,7 +60,7 @@ public class BuildCubeWithEngineTest extends CubeDevelopTestCase {
         ClasspathUtil.addClasspath(new File("../examples/test_case_data/hadoop-site").getAbsolutePath());
         this.createTestMetadata();
 
-        initEnv(true);
+        initEnv(true, true);
 
         engineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
         jobManager = new JobManager("Build_Test_Cube_Engine", engineConfig);
