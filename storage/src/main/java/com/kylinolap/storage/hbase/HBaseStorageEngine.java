@@ -54,14 +54,13 @@ import com.kylinolap.storage.IStorageEngine;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.ColumnTupleFilter;
 import com.kylinolap.storage.filter.CompareTupleFilter;
-import com.kylinolap.storage.filter.ConstantTupleFilter;
 import com.kylinolap.storage.filter.LogicalTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
 import com.kylinolap.storage.tuple.ITupleIterator;
 
 /**
- * @author xjiang
+ * @author xjiang, yangli9
  */
 public class HBaseStorageEngine implements IStorageEngine {
 
@@ -79,90 +78,193 @@ public class HBaseStorageEngine implements IStorageEngine {
     }
 
     @Override
-    public ITupleIterator search(Collection<TblColRef> dimensions, TupleFilter filter, Collection<TblColRef> groups, Collection<FunctionDesc> metrics, StorageContext context) {
+    public ITupleIterator search(Collection<TblColRef> dimensions, TupleFilter filter, //
+            Collection<TblColRef> groups, Collection<FunctionDesc> metrics, StorageContext context) {
 
-        // The columns returned from storage, can be more than query groups due to
-        // - derived columns on query group by
-        // - columns on filter that is not evaluate-able
-        // - condition gets loosened and all columns in the loosened filter must
-        // be returned to optiq
-        // Storage groups is less than dimensions due to
-        // - columns on filter get evaluated inside storage and aggregated away;
-        // only representative value returned to pass optiq filter
-        Set<TblColRef> storageGroupBy = Sets.newHashSet(context.getMandatoryColumns());
-        collectGroupBy(groups, storageGroupBy);
-        collectNonEvaluable(filter, storageGroupBy);
-        filter = translateDerived(filter, storageGroupBy);
-        logger.info("Storage returns " + storageGroupBy);
+        // all dimensions = groups + others
+        Set<TblColRef> others = Sets.newHashSet(dimensions);
+        others.removeAll(groups);
+
+        // expand derived
+        Set<TblColRef> derivedPostAggregation = Sets.newHashSet();
+        Set<TblColRef> groupsD = expandDerived(groups, derivedPostAggregation);
+        Set<TblColRef> othersD = expandDerived(others, derivedPostAggregation);
+        othersD.removeAll(groupsD);
+        derivedPostAggregation.removeAll(groups);
+
+        // identify cuboid
+        Set<TblColRef> dimensionsD = Sets.newHashSet();
+        dimensionsD.addAll(groupsD);
+        dimensionsD.addAll(othersD);
+        Cuboid cuboid = identifyCuboid(dimensionsD);
+        context.setCuboid(cuboid);
+
+        // isExactAggregation? meaning: tuples returned from storage requires no further aggregation in query engine
+        Set<TblColRef> singleValuesD = findSingleValueColumns(filter);
+        boolean isExactAggregation = isExactAggregation(cuboid, groups, othersD, singleValuesD, derivedPostAggregation);
+        context.setExactAggregation(isExactAggregation);
+
+        // translate filter for scan range and compose returning groups for coprocessor, note:
+        // - columns on evaluate-able filter have to return
+        // - columns on loosened filter (due to derived translation) have to return
+        Set<TblColRef> groupsCopD = Sets.newHashSet(groupsD);
+        groupsCopD.addAll(context.getOtherMandatoryColumns()); // TODO: this is tricky, to generalize
+        collectNonEvaluable(filter, groupsCopD);
+        TupleFilter filterD = translateDerived(filter, groupsCopD);
 
         // flatten to OR-AND filter, (A AND B AND ..) OR (C AND D AND ..) OR ..
-        TupleFilter flatFilter = flattenToOrAndFilter(filter);
+        TupleFilter flatFilter = flattenToOrAndFilter(filterD);
 
         // translate filter into segment scan ranges
-        List<HBaseKeyRange> scans = buildScanRanges(flatFilter, dimensions);
+        List<HBaseKeyRange> scans = buildScanRanges(flatFilter, dimensionsD);
 
         // post process filter: remove unused segment & set limit
-        postProcessFilter(scans, flatFilter, context);
+        postProcessFilter(scans, flatFilter, isExactAggregation, context);
 
-        // check involved measures, build value decoder for each each
-        // family:column
-        List<RowValueDecoder> valueDecoders = translateAggregation(cubeDesc.getHBaseMapping(), metrics, scans, context);
+        // check involved measures, build value decoder for each each family:column
+        List<RowValueDecoder> valueDecoders = translateAggregation(cubeDesc.getHBaseMapping(), metrics, scans, isExactAggregation);
 
-        setThreshold(dimensions, valueDecoders, context);
+        setThreshold(dimensionsD, valueDecoders, context);
 
         HConnection conn = HBaseConnection.get(context.getConnUrl());
-        return new SerializedHBaseTupleIterator(conn, scans, cubeInstance, dimensions, filter, storageGroupBy, valueDecoders, context);
+        return new SerializedHBaseTupleIterator(conn, scans, cubeInstance, dimensionsD, filterD, groupsCopD, valueDecoders, context);
     }
 
-    private void collectGroupBy(Collection<TblColRef> groups, Set<TblColRef> storageGroupBy) {
-        for (TblColRef g : groups) {
-            collectGroupBy(g, storageGroupBy);
+    private Cuboid identifyCuboid(Set<TblColRef> dimensions) {
+        long cuboidID = 0;
+        for (TblColRef column : dimensions) {
+            int index = cubeDesc.getRowkey().getColumnBitIndex(column);
+            cuboidID |= 1L << index;
         }
+        return Cuboid.findById(cubeDesc, cuboidID);
     }
 
-    private void collectGroupBy(TblColRef col, Set<TblColRef> storageGroupBy) {
-        if (cubeDesc.isDerived(col)) {
-            DeriveInfo hostInfo = cubeDesc.getHostInfo(col);
-            for (TblColRef h : hostInfo.columns)
-                storageGroupBy.add(h);
+    private boolean isExactAggregation(Cuboid cuboid, Collection<TblColRef> groups, Set<TblColRef> othersD, Set<TblColRef> singleValuesD, Set<TblColRef> derivedPostAggregation) {
+        boolean exact = true;
+
+        if (cuboid.requirePostAggregation()) {
+            exact = false;
+            logger.info("exactAggregation is false because cuboid " + cuboid.getInputID() + "=> " + cuboid.getId());
+        }
+
+        // derived aggregation is bad, unless expanded columns are already in group by
+        if (groups.containsAll(derivedPostAggregation) == false) {
+            exact = false;
+            logger.info("exactAggregation is false because derived column require post aggregation: " + derivedPostAggregation);
+        }
+
+        // other columns (from filter) is bad, unless they are ensured to have single value
+        if (singleValuesD.containsAll(othersD) == false) {
+            exact = false;
+            logger.info("exactAggregation is false because some column not on group by: " + othersD //
+                    + " (single value column: " + singleValuesD + ")");
+        }
+
+        if (exact) {
+            logger.info("exactAggregation is true");
+        }
+        return exact;
+    }
+
+    private Set<TblColRef> expandDerived(Collection<TblColRef> cols, Set<TblColRef> derivedPostAggregation) {
+        Set<TblColRef> expanded = Sets.newHashSet();
+        for (TblColRef col : cols) {
+            if (cubeDesc.isDerived(col)) {
+                DeriveInfo hostInfo = cubeDesc.getHostInfo(col);
+                for (TblColRef hostCol : hostInfo.columns) {
+                    expanded.add(hostCol);
+                    if (hostInfo.isOneToOne == false)
+                        derivedPostAggregation.add(hostCol);
+                }
+            } else {
+                expanded.add(col);
+            }
+        }
+        return expanded;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Set<TblColRef> findSingleValueColumns(TupleFilter filter) {
+        Collection<? extends TupleFilter> toCheck;
+        if (filter instanceof CompareTupleFilter) {
+            toCheck = Collections.singleton(filter);
+        } else if (filter instanceof LogicalTupleFilter && filter.getOperator() == FilterOperatorEnum.AND) {
+            toCheck = filter.getChildren();
         } else {
-            storageGroupBy.add(col);
+            return (Set<TblColRef>) Collections.EMPTY_SET;
         }
+
+        Set<TblColRef> result = Sets.newHashSet();
+        for (TupleFilter f : toCheck) {
+            if (f instanceof CompareTupleFilter) {
+                CompareTupleFilter compFilter = (CompareTupleFilter) f;
+                // is COL=const ?
+                if (compFilter.getOperator() == FilterOperatorEnum.EQ && compFilter.getValues().size() == 1 && compFilter.getColumn() != null) {
+                    result.add(compFilter.getColumn());
+                }
+            }
+        }
+
+        // expand derived
+        Set<TblColRef> resultD = Sets.newHashSet();
+        for (TblColRef col : result) {
+            if (cubeDesc.isDerived(col)) {
+                DeriveInfo hostInfo = cubeDesc.getHostInfo(col);
+                if (hostInfo.isOneToOne) {
+                    for (TblColRef hostCol : hostInfo.columns) {
+                        resultD.add(hostCol);
+                    }
+                }
+            } else {
+                resultD.add(col);
+            }
+        }
+        return resultD;
     }
 
-    private void collectNonEvaluable(TupleFilter filter, Set<TblColRef> storageGroupBy) {
+    private void collectNonEvaluable(TupleFilter filter, Set<TblColRef> collector) {
         if (filter == null)
             return;
 
         if (filter.isEvaluable()) {
             for (TupleFilter child : filter.getChildren())
-                collectNonEvaluable(child, storageGroupBy);
+                collectNonEvaluable(child, collector);
         } else {
-            collectColumnsRecursively(filter, storageGroupBy);
+            collectColumnsRecursively(filter, collector);
         }
     }
 
-    private void collectColumnsRecursively(TupleFilter filter, Set<TblColRef> storageGroupBy) {
+    private void collectColumnsRecursively(TupleFilter filter, Set<TblColRef> collector) {
         if (filter instanceof ColumnTupleFilter) {
-            collectGroupBy(((ColumnTupleFilter) filter).getColumn(), storageGroupBy);
+            collectColumns(((ColumnTupleFilter) filter).getColumn(), collector);
         }
         for (TupleFilter child : filter.getChildren()) {
-            collectColumnsRecursively(child, storageGroupBy);
+            collectColumnsRecursively(child, collector);
+        }
+    }
+
+    private void collectColumns(TblColRef col, Set<TblColRef> collector) {
+        if (cubeDesc.isDerived(col)) {
+            DeriveInfo hostInfo = cubeDesc.getHostInfo(col);
+            for (TblColRef h : hostInfo.columns)
+                collector.add(h);
+        } else {
+            collector.add(col);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private TupleFilter translateDerived(TupleFilter filter, Set<TblColRef> storageGroupBy) {
+    private TupleFilter translateDerived(TupleFilter filter, Set<TblColRef> collector) {
         if (filter == null)
             return filter;
 
         if (filter instanceof CompareTupleFilter) {
-            return translateDerivedInCompare((CompareTupleFilter) filter, storageGroupBy);
+            return translateDerivedInCompare((CompareTupleFilter) filter, collector);
         }
 
         List<TupleFilter> children = (List<TupleFilter>) filter.getChildren();
         for (int i = 0; i < children.size(); i++) {
-            TupleFilter translated = translateDerived(children.get(i), storageGroupBy);
+            TupleFilter translated = translateDerived(children.get(i), collector);
             if (children.get(i) != translated) {
                 if ((filter instanceof LogicalTupleFilter) == false)
                     throw new IllegalStateException("Cannot replace derived filter");
@@ -172,14 +274,11 @@ public class HBaseStorageEngine implements IStorageEngine {
         return filter;
     }
 
-    private TupleFilter translateDerivedInCompare(CompareTupleFilter compf, Set<TblColRef> storageGroupBy) {
-        Pair<ColumnTupleFilter, ConstantTupleFilter> pair = compf.getColumnAndConstant();
-        ColumnTupleFilter colf = pair.getFirst();
-        ConstantTupleFilter constf = pair.getSecond();
-        if (colf == null || constf == null)
+    private TupleFilter translateDerivedInCompare(CompareTupleFilter compf, Set<TblColRef> collector) {
+        if (compf.getColumn() == null || compf.getValues().isEmpty())
             return compf;
 
-        TblColRef derived = colf.getColumn();
+        TblColRef derived = compf.getColumn();
         if (cubeDesc.isDerived(derived) == false)
             return compf;
 
@@ -187,11 +286,11 @@ public class HBaseStorageEngine implements IStorageEngine {
         CubeManager cubeMgr = CubeManager.getInstance(this.cubeInstance.getConfig());
         CubeSegment seg = cubeInstance.getLatestReadySegment();
         LookupStringTable lookup = cubeMgr.getLookupTable(seg, hostInfo.dimension);
-        Pair<TupleFilter, Boolean> translated = DerivedFilterTranslator.translate(lookup, hostInfo, compf, colf, constf);
+        Pair<TupleFilter, Boolean> translated = DerivedFilterTranslator.translate(lookup, hostInfo, compf);
         TupleFilter translatedFilter = translated.getFirst();
         boolean loosened = translated.getSecond();
         if (loosened) {
-            collectColumnsRecursively(compf, storageGroupBy);
+            collectColumnsRecursively(compf, collector);
         }
         return translatedFilter;
     }
@@ -215,9 +314,10 @@ public class HBaseStorageEngine implements IStorageEngine {
         context.setThreshold((int) rowEst);
     }
 
-    private List<RowValueDecoder> translateAggregation(HBaseMappingDesc hbaseMapping, Collection<FunctionDesc> aggregations, List<HBaseKeyRange> scans, StorageContext context) {
+    private List<RowValueDecoder> translateAggregation(HBaseMappingDesc hbaseMapping, Collection<FunctionDesc> metrics, //
+            List<HBaseKeyRange> scans, boolean isExactAggregation) {
         Map<HBaseColumnDesc, RowValueDecoder> codecMap = Maps.newHashMap();
-        for (FunctionDesc aggrFunc : aggregations) {
+        for (FunctionDesc aggrFunc : metrics) {
             Collection<HBaseColumnDesc> hbCols = hbaseMapping.findHBaseColumnByFunction(aggrFunc);
             if (hbCols.isEmpty()) {
                 throw new IllegalStateException("can't find HBaseColumnDesc for function " + aggrFunc.getFullExpression());
@@ -228,9 +328,8 @@ public class HBaseStorageEngine implements IStorageEngine {
                 bestHBCol = hbCol;
                 bestIndex = hbCol.findMeasureIndex(aggrFunc);
                 MeasureDesc measure = hbCol.getMeasures()[bestIndex];
-                // criteria for holistic measure: Exact Aggregation && Exact
-                // Cuboid
-                if (measure.isHolisticCountDistinct() && context.requireNoPostAggregation()) {
+                // criteria for holistic measure: Exact Aggregation && Exact Cuboid
+                if (measure.isHolisticCountDistinct() && isExactAggregation) {
                     logger.info("Holistic count distinct chosen for " + aggrFunc);
                     break;
                 }
@@ -459,7 +558,8 @@ public class HBaseStorageEngine implements IStorageEngine {
         return mergedRanges;
     }
 
-    private void postProcessFilter(List<HBaseKeyRange> scans, TupleFilter flatFilter, StorageContext context) {
+    private void postProcessFilter(List<HBaseKeyRange> scans, TupleFilter flatFilter, boolean isExactAggregation, //
+            StorageContext context) {
         if (cubeDesc.getCubePartitionDesc().getPartitionDateColumn() != null) {
             Iterator<HBaseKeyRange> iterator = scans.iterator();
             while (iterator.hasNext()) {
@@ -471,12 +571,8 @@ public class HBaseStorageEngine implements IStorageEngine {
         }
 
         if (!scans.isEmpty()) {
-            // note all scans have the same cuboid, to avoid dedup
-            Cuboid cuboid = scans.get(0).getCuboid();
-            context.addCuboid(cuboid);
-            // TODO: we don't need to check filter after enable hbase
-            // coproccessor
-            if (!cuboid.requirePostAggregation() && context.isExactAggregation() && flatFilter == null && !context.hasSort()) {
+            // TODO: we don't need to check filter after enable hbase coproccessor
+            if (isExactAggregation && flatFilter == null && !context.hasSort()) {
                 logger.info("Enable limit " + context.getLimit());
                 context.enableLimit();
             }

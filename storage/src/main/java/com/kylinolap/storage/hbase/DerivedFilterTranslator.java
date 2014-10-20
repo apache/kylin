@@ -45,16 +45,18 @@ public class DerivedFilterTranslator {
 
     private static final int IN_THRESHOLD = 5;
 
-    public static Pair<TupleFilter, Boolean> translate(LookupStringTable lookup, DeriveInfo hostInfo, CompareTupleFilter compf, ColumnTupleFilter colf, ConstantTupleFilter constf) {
+    public static Pair<TupleFilter, Boolean> translate(LookupStringTable lookup, DeriveInfo hostInfo, CompareTupleFilter compf) {
 
-        TblColRef derivedCol = colf.getColumn();
+        TblColRef derivedCol = compf.getColumn();
         TblColRef[] hostCols = hostInfo.columns;
         TblColRef[] pkCols = hostInfo.dimension.getJoin().getPrimaryKeyColumns();
 
         if (hostInfo.type == DeriveType.PK_FK) {
             assert hostCols.length == 1;
-            colf.setColumn(hostCols[0]);
-            return new Pair<TupleFilter, Boolean>(compf, false);
+            CompareTupleFilter newComp = new CompareTupleFilter(compf.getOperator());
+            newComp.addChild(new ColumnTupleFilter(hostCols[0]));
+            newComp.addChild(new ConstantTupleFilter(compf.getValues()));
+            return new Pair<TupleFilter, Boolean>(newComp, false);
         }
 
         assert hostInfo.type == DeriveType.LOOKUP;
