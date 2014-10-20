@@ -26,12 +26,11 @@
 		<scr:logout invalidate-session="true" delete-cookies="JSESSIONID" />
 		<scr:session-management session-fixation-protection="newSession" />
 	</scr:http>
-
+	
 	<!-- user auth -->
 	<bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder" />
 
-	<bean id="userManager" class="com.kylinolap.rest.security.HbaseUserManager">
-	</bean>
+	<bean id="userManager" class="com.kylinolap.rest.security.HbaseUserManager"/>
 
 	<!-- acl config -->
 	<bean id="aclPermissionFactory" class="com.kylinolap.rest.security.AclPermissionFactory" />

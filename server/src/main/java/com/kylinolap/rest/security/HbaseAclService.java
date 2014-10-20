@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -45,6 +46,7 @@ import org.springframework.security.acls.model.ObjectIdentity;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.util.FieldUtils;
 import org.springframework.util.Assert;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -54,21 +56,31 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.HBaseConnection;
 
 public class HbaseAclService implements MutableAclService {
+
     private static final Logger logger = LoggerFactory.getLogger(HbaseAclService.class);
     private static final Map<ObjectIdentity, Acl> aclCache = new ConcurrentHashMap<ObjectIdentity, Acl>();
 
     private static final String DEFAULT_TABLE_PREFIX = "kylin_metadata";
-    private static final String USER_TABLE_NAME = "_user";
+    private static final String ACL_TABLE_NAME = "_acl";
     private static final String ACL_INFO_FAMILY = "i";
     private static final String ACL_ACES_FAMILY = "a";
     private static final String ACL_INFO_FAMILY_TYPE_COLUMN = "t";
     private static final String ACL_INFO_FAMILY_OWNER_COLUMN = "o";
     private static final String ACL_INFO_FAMILY_PARENT_COLUMN = "p";
     private static final String ACL_INFO_FAMILY_ENTRY_INHERIT_COLUMN = "i";
+
+    private Serializer<SidInfo> sidSerializer = new Serializer<SidInfo>(SidInfo.class);
+    private Serializer<DomainObjectInfo> domainObjSerializer = new Serializer<DomainObjectInfo>(DomainObjectInfo.class);
+    private Serializer<AceInfo> aceSerializer = new Serializer<AceInfo>(AceInfo.class);
+//    private Serializer<AceInfo[]> aceArraySerializer = new Serializer<AceInfo[]>(AceInfo[].class);
+
     private String hbaseUrl = null;
     private String tableNameBase = null;
     private String userTableName = null;
 
+    private final Field fieldAces = FieldUtils.getField(AclImpl.class, "aces");
+    private final Field fieldAcl = FieldUtils.getField(AccessControlEntryImpl.class, "acl");
+    
     @Autowired
     protected PermissionFactory aclPermissionFactory;
 
@@ -84,7 +96,10 @@ public class HbaseAclService implements MutableAclService {
         int cut = metadataUrl.indexOf('@');
         tableNameBase = cut < 0 ? DEFAULT_TABLE_PREFIX : metadataUrl.substring(0, cut);
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
-        userTableName = tableNameBase + USER_TABLE_NAME;
+        userTableName = tableNameBase + ACL_TABLE_NAME;
+        
+        fieldAces.setAccessible(true);
+        fieldAcl.setAccessible(true);
     }
 
     @Override
@@ -95,15 +110,15 @@ public class HbaseAclService implements MutableAclService {
             htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
 
             Scan scan = new Scan();
-            Serializer<DomainObjectInfo> domainObjSerializer = new Serializer<DomainObjectInfo>(DomainObjectInfo.class);
-            SingleColumnValueFilter parentFilter = new SingleColumnValueFilter(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(ACL_INFO_FAMILY_PARENT_COLUMN), CompareOp.EQUAL, domainObjSerializer.serialize(new DomainObjectInfo(parentIdentity)));
+            SingleColumnValueFilter parentFilter = new SingleColumnValueFilter(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(ACL_INFO_FAMILY_OWNER_COLUMN), CompareOp.EQUAL, domainObjSerializer.serialize(new DomainObjectInfo(parentIdentity)));
+            parentFilter.setFilterIfMissing(true);
             scan.setFilter(parentFilter);
-            
+
             ResultScanner scanner = htable.getScanner(scan);
             for (Result result = scanner.next(); result != null; result = scanner.next()) {
-                String id = String.valueOf(result.getRow());
-                String type = Bytes.toString(result.getValue(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(ACL_INFO_FAMILY_OWNER_COLUMN)));
-                
+                String id = Bytes.toString(result.getRow());
+                String type = Bytes.toString(result.getValue(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(ACL_INFO_FAMILY_TYPE_COLUMN)));
+
                 oids.add(new ObjectIdentityImpl(type, id));
             }
         } catch (IOException e) {
@@ -118,7 +133,7 @@ public class HbaseAclService implements MutableAclService {
     @Override
     public Acl readAclById(ObjectIdentity object) throws NotFoundException {
         Map<ObjectIdentity, Acl> aclsMap = readAclsById(Arrays.asList(object), null);
-        Assert.isTrue(aclsMap.containsKey(object), "There should have been an Acl entry for ObjectIdentity " + object);
+        //        Assert.isTrue(aclsMap.containsKey(object), "There should have been an Acl entry for ObjectIdentity " + object);
 
         return aclsMap.get(object);
     }
@@ -150,49 +165,19 @@ public class HbaseAclService implements MutableAclService {
                 } else {
                     result = htable.get(new Get(Bytes.toBytes(String.valueOf(object.getIdentifier()))));
 
-                    if (!result.isEmpty()) {
+                    if (null != result && !result.isEmpty()) {
                         AclImpl acl = new AclImpl(object, object.getIdentifier(), aclAuthorizationStrategy, auditLogger);
-
-                        Serializer<SidInfo> sidSerializer = new Serializer<SidInfo>(SidInfo.class);
                         SidInfo owner = sidSerializer.deserialize(result.getValue(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(ACL_INFO_FAMILY_OWNER_COLUMN)));
                         acl.setOwner((null == owner) ? null : (owner.isPrincipal() ? new PrincipalSid(owner.getSid()) : new GrantedAuthoritySid(owner.getSid())));
                         acl.setEntriesInheriting(Bytes.toBoolean(result.getValue(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(ACL_INFO_FAMILY_ENTRY_INHERIT_COLUMN))));
 
-                        Serializer<DomainObjectInfo> domainObjSerializer = new Serializer<DomainObjectInfo>(DomainObjectInfo.class);
                         DomainObjectInfo parentInfo = domainObjSerializer.deserialize(result.getValue(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(ACL_INFO_FAMILY_PARENT_COLUMN)));
-
                         if (null != parentInfo) {
                             ObjectIdentity parentObj = new ObjectIdentityImpl(parentInfo.getType(), parentInfo.getId());
-                            readAclsById(Arrays.asList(parentObj), null);
-                            acl.setParent(aclCache.get(parentObj));
+                            acl.setParent(readAclById(parentObj, null));
                         }
 
-                        Serializer<AceInfo[]> aceSerializer = new Serializer<AceInfo[]>(AceInfo[].class);
-                        AceInfo[] aces = null;
-                        if (null != sids) {
-                            // Just return aces in sids
-                            for (Sid sid : sids) {
-                                String sidName = null;
-                                if (sid instanceof PrincipalSid) {
-                                    sidName = ((PrincipalSid) sid).getPrincipal();
-                                } else if (sid instanceof GrantedAuthoritySid) {
-                                    sidName = ((GrantedAuthoritySid) sid).getGrantedAuthority();
-                                }
-
-                                aces = aceSerializer.deserialize(result.getValue(Bytes.toBytes(ACL_ACES_FAMILY), Bytes.toBytes(sidName)));
-                            }
-                        } else {
-                            NavigableMap<byte[], byte[]> familyMap = result.getFamilyMap(Bytes.toBytes(ACL_ACES_FAMILY));
-                            for (byte[] qualifier : familyMap.keySet()) {
-                                aces = aceSerializer.deserialize(familyMap.get(qualifier));
-                            }
-                        }
-
-                        for (AceInfo aceInfo : aces) {
-                            Sid sid = aceInfo.getSidInfo().isPrincipal() ? new PrincipalSid(owner.getSid()) : new GrantedAuthoritySid(owner.getSid());
-                            AccessControlEntry ace = new AccessControlEntryImpl(null, acl, sid, aclPermissionFactory.buildFromMask(aceInfo.getPermissionMask()), false, false, false);
-                            acl.getEntries().add(ace);
-                        }
+                        genAces(sids, result, acl);
 
                         aclMaps.put(object, acl);
                         aclCache.put(object, acl);
@@ -223,10 +208,7 @@ public class HbaseAclService implements MutableAclService {
             htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
             Put put = new Put(Bytes.toBytes(String.valueOf(objectIdentity.getIdentifier())));
             put.add(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(ACL_INFO_FAMILY_TYPE_COLUMN), Bytes.toBytes(objectIdentity.getType()));
-
-            Serializer<SidInfo> sidSerializer = new Serializer<SidInfo>(SidInfo.class);
             put.add(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(ACL_INFO_FAMILY_OWNER_COLUMN), sidSerializer.serialize(new SidInfo(sid)));
-
             put.add(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(ACL_INFO_FAMILY_ENTRY_INHERIT_COLUMN), Bytes.toBytes(true));
 
             htable.put(put);
@@ -248,16 +230,18 @@ public class HbaseAclService implements MutableAclService {
             Delete delete = new Delete(Bytes.toBytes(String.valueOf(objectIdentity.getIdentifier())));
 
             List<ObjectIdentity> children = findChildren(objectIdentity);
-            if (!deleteChildren && children.size()>0){
+            if (!deleteChildren && children.size() > 0) {
                 throw new ChildrenExistException("Children exists for " + objectIdentity);
             }
-            
-            for (ObjectIdentity oid: children){
+
+            for (ObjectIdentity oid : children) {
                 deleteAcl(oid, deleteChildren);
             }
-            
+
             htable.delete(delete);
             htable.flushCommits();
+
+            aclCache.remove(objectIdentity);
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
         } finally {
@@ -272,7 +256,6 @@ public class HbaseAclService implements MutableAclService {
             throw new NotFoundException("ACL of " + acl.getObjectIdentity() + " not found!");
         }
 
-        Serializer<AceInfo> aceSerializer = new Serializer<AceInfo>(AceInfo.class);
         HTableInterface htable = null;
         try {
             htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
@@ -281,13 +264,20 @@ public class HbaseAclService implements MutableAclService {
             htable.delete(delete);
 
             Put put = new Put(Bytes.toBytes(String.valueOf(acl.getObjectIdentity().getIdentifier())));
+
+            if (null != acl.getParentAcl()) {
+                put.add(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(ACL_INFO_FAMILY_PARENT_COLUMN), domainObjSerializer.serialize(new DomainObjectInfo(acl.getParentAcl().getObjectIdentity())));
+            }
+
             for (AccessControlEntry ace : acl.getEntries()) {
                 AceInfo aceInfo = new AceInfo(ace);
-                put.add(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(aceInfo.getSidInfo().getSid()), aceSerializer.serialize(aceInfo));
+                put.add(Bytes.toBytes(ACL_ACES_FAMILY), Bytes.toBytes(aceInfo.getSidInfo().getSid()), aceSerializer.serialize(aceInfo));
             }
-            htable.put(put);
 
+            htable.put(put);
             htable.flushCommits();
+
+            aclCache.remove(acl.getObjectIdentity());
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
         } finally {
@@ -297,6 +287,46 @@ public class HbaseAclService implements MutableAclService {
         return (MutableAcl) readAclById(acl.getObjectIdentity());
     }
 
+    private void genAces(List<Sid> sids, Result result, AclImpl acl) {
+        List<AceInfo> aceInfos = new ArrayList<AceInfo>();
+        if (null != sids) {
+            // Just return aces in sids
+            for (Sid sid : sids) {
+                String sidName = null;
+                if (sid instanceof PrincipalSid) {
+                    sidName = ((PrincipalSid) sid).getPrincipal();
+                } else if (sid instanceof GrantedAuthoritySid) {
+                    sidName = ((GrantedAuthoritySid) sid).getGrantedAuthority();
+                }
+
+                aceInfos.add(aceSerializer.deserialize(result.getValue(Bytes.toBytes(ACL_ACES_FAMILY), Bytes.toBytes(sidName))));
+            }
+        } else {
+            NavigableMap<byte[], byte[]> familyMap = result.getFamilyMap(Bytes.toBytes(ACL_ACES_FAMILY));
+            for (byte[] qualifier : familyMap.keySet()) {
+                aceInfos.add(aceSerializer.deserialize(familyMap.get(qualifier)));
+            }
+        }
+
+        List<AccessControlEntry> newAces = new ArrayList<AccessControlEntry>();
+        for (int i = 0; i < aceInfos.size(); i++) {
+            AceInfo aceInfo = aceInfos.get(i);
+            Sid sid = aceInfo.getSidInfo().isPrincipal() ? new PrincipalSid(aceInfo.getSidInfo().getSid()) : new GrantedAuthoritySid(aceInfo.getSidInfo().getSid());
+            AccessControlEntry ace = new AccessControlEntryImpl(Long.valueOf(i), acl, sid, aclPermissionFactory.buildFromMask(aceInfo.getPermissionMask()), false, false, false);
+            newAces.add(ace);
+        }
+        
+        this.setAces(acl, newAces);
+    }
+
+    private void setAces(AclImpl acl, List<AccessControlEntry> aces) {
+        try {
+            fieldAces.set(acl, aces);
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException("Could not set AclImpl entries", e);
+        }
+    }
+    
     protected static class DomainObjectInfo {
         private Serializable id;
         private String type;
@@ -399,7 +429,6 @@ public class HbaseAclService implements MutableAclService {
             this.type = type;
         }
 
-        @SuppressWarnings("unchecked")
         public T deserialize(byte[] value) {
             if (null == value) {
                 return null;
@@ -408,7 +437,7 @@ public class HbaseAclService implements MutableAclService {
             try {
                 ObjectMapper mapper = new ObjectMapper();
 
-                return (T) Arrays.asList(mapper.readValue(value, type));
+                return mapper.readValue(value, type);
             } catch (JsonParseException e) {
                 logger.error(e.getLocalizedMessage(), e);
             } catch (JsonMappingException e) {
