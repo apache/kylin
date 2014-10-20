@@ -19,6 +19,7 @@ package com.kylinolap.storage.hbase.coprocessor;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.ResultScanner;
@@ -28,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
@@ -54,7 +56,7 @@ public class CoprocessorEnabler {
         if (!isCoprocessorBeneficial(segment.getCubeInstance(), groupBy, rowValueDecoders, context)) {
             return table.getScanner(scan);
         }
-        
+
         SRowType type = SRowType.fromCuboid(segment, cuboid);
         SRowFilter filter = SRowFilter.fromFilter(segment, tupleFiler);
         SRowProjector projector = SRowProjector.fromColumns(segment, cuboid, groupBy);
@@ -96,13 +98,20 @@ public class CoprocessorEnabler {
             return false;
         }
 
-        // FIXME: derived columns no need to go through coprocessor
         if (context.isExactAggregation()) {
             logger.info("Coprocessor is disabled because exactAggregation is true");
             return false;
         }
 
-        logger.info("Coprocessor is enabled, group by " + groupBy);
+        Cuboid cuboid = context.getCuboid();
+        Set<TblColRef> toAggr = Sets.newHashSet(cuboid.getAggregationColumns());
+        toAggr.removeAll(groupBy);
+        if (toAggr.isEmpty()) {
+            logger.info("Coprocessor is disabled because no additional columns to aggregate");
+            return false;
+        }
+
+        logger.info("Coprocessor is enabled to aggregate " + toAggr + ", returning " + groupBy);
         return true;
     }
 
