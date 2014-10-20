@@ -56,7 +56,7 @@ public class DictionaryGeneratorCLI {
             if (dim.getTable() != null && !dim.getTable().equalsIgnoreCase(cubeSeg.getCubeDesc().getFactTable())) {
                 // CubeSegment seg = cube.getTheOnlySegment();
                 logger.info("Building snapshot of " + dim.getTable());
-                cubeMgr.buildSnapshotTable(cubeSeg, dim.getTable(), true);
+                cubeMgr.buildSnapshotTable(cubeSeg, dim.getTable());
                 logger.info("Checking snapshot of " + dim.getTable());
                 cubeMgr.getLookupTable(cubeSeg, dim); // load the table for
                                                       // sanity check
