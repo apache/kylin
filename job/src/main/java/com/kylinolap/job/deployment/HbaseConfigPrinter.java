@@ -40,15 +40,15 @@ public class HbaseConfigPrinter {
 
         StringBuilder sb = new StringBuilder();
 
-        sb.append("export KYLIN_LZO_SUPPORTED=" + ConfigLoader.LZO_INFO_LOADER.loadValue());
-        sb.append("export KYLIN_LD_LIBRARY_PATH=" + ConfigLoader.LD_LIBRARY_PATH_LOADER.loadValue());
-        sb.append("export KYLIN_HBASE_CLASSPATH=" + ConfigLoader.HBASE_CLASSPATH_LOADER.loadValue());
-        sb.append("export KYLIN_HBASE_CONF_PATH=" + ConfigLoader.HBASE_CONF_FOLDER_LOADER.loadValue());
-        sb.append("export KYLIN_ZOOKEEPER_QUORUM=" + ConfigLoader.ZOOKEEP_QUORUM_LOADER.loadValue());
-        sb.append("export KYLIN_ZOOKEEPER_CLIENT_PORT=" + ConfigLoader.ZOOKEEPER_CLIENT_PORT_LOADER.loadValue());
-        sb.append("export KYLIN_ZOOKEEPER_ZNODE_PARENT=" + ConfigLoader.ZOOKEEPER_ZNODE_PARENT_LOADER.loadValue());
+        sb.append("export KYLIN_LZO_SUPPORTED=" + ConfigLoader.LZO_INFO_LOADER.loadValue() + "\r\n");
+        sb.append("export KYLIN_LD_LIBRARY_PATH=" + ConfigLoader.LD_LIBRARY_PATH_LOADER.loadValue() + "\r\n");
+        sb.append("export KYLIN_HBASE_CLASSPATH=" + ConfigLoader.HBASE_CLASSPATH_LOADER.loadValue() + "\r\n");
+        sb.append("export KYLIN_HBASE_CONF_PATH=" + ConfigLoader.HBASE_CONF_FOLDER_LOADER.loadValue() + "\r\n");
+        sb.append("export KYLIN_ZOOKEEPER_QUORUM=" + ConfigLoader.ZOOKEEP_QUORUM_LOADER.loadValue() + "\r\n");
+        sb.append("export KYLIN_ZOOKEEPER_CLIENT_PORT=" + ConfigLoader.ZOOKEEPER_CLIENT_PORT_LOADER.loadValue() + "\r\n");
+        sb.append("export KYLIN_ZOOKEEPER_ZNODE_PARENT=" + ConfigLoader.ZOOKEEPER_ZNODE_PARENT_LOADER.loadValue() + "\r\n");
 
-        FileUtils.writeStringToFile(output,sb.toString());
+        FileUtils.writeStringToFile(output, sb.toString());
     }
 
     @SuppressWarnings("unused")
