@@ -67,5 +67,7 @@ For a hands-on tutorial please visit [Off-Hadoop-CLI installation](https://githu
 
 * Developer Mail: <kylin-olap@googlegroups.com>
 
+* How To Contribute: See [wiki](https://github.com/KylinOLAP/Kylin/wiki/How-to-Contribute)
+
 * Presentation: [Kylin Hadoop OLAP Engine v1.0](https://github.com/KylinOLAP/Kylin/blob/master/docs/Kylin_Hadoop_OLAP_Engine_v1.0.pdf?raw=true)
 
