@@ -81,10 +81,10 @@ public class QueryService extends BasicService {
     private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
     
     public static final String USER_QUERY_FAMILY = "q";
-    public static final String USER_QUERY_COLUMN = "c";
     private Serializer<Query[]> querySerializer = new Serializer<Query[]>(Query[].class);
     private static final String DEFAULT_TABLE_PREFIX = "kylin_metadata";
     private static final String USER_TABLE_NAME = "_user";
+    private static final String USER_QUERY_COLUMN = "c";
     private String hbaseUrl = null;
     private String tableNameBase = null;
     private String userTableName = null;
