@@ -29,8 +29,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.quartz.SchedulerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.ClasspathUtil;
@@ -49,7 +47,7 @@ import com.kylinolap.job.exception.InvalidJobInstanceException;
  */
 public class BuildCubeWithEngineTest extends CubeDevelopTestCase {
 
-    private static final Logger logger = LoggerFactory.getLogger(BuildCubeWithEngineTest.class);
+    // private static final Logger logger = LoggerFactory.getLogger(BuildCubeWithEngineTest.class);
 
     protected JobManager jobManager;
     protected JobEngineConfig engineConfig;
