@@ -30,8 +30,6 @@
 	<!-- user auth -->
 	<bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder" />
 
-	<bean id="userManager" class="com.kylinolap.rest.security.HbaseUserManager"/>
-
 	<!-- acl config -->
 	<bean id="aclPermissionFactory" class="com.kylinolap.rest.security.AclPermissionFactory" />
 
@@ -43,7 +41,7 @@
 		<constructor-arg ref="aclService" />
 		<property name="permissionFactory" ref="aclPermissionFactory" />
 	</bean>
-
+	
 	<bean id="aclAuthorizationStrategy"
 		class="org.springframework.security.acls.domain.AclAuthorizationStrategyImpl">
 		<constructor-arg>
@@ -63,9 +61,11 @@
 	
 	<bean id="auditLogger"
 		class="org.springframework.security.acls.domain.ConsoleAuditLogger" />
-		
-	<bean id="aclServiceImpl" class="com.kylinolap.rest.security.HbaseAclService" />
 
+	<bean id="permissionGrantingStrategy" class="org.springframework.security.acls.domain.DefaultPermissionGrantingStrategy">
+		<constructor-arg ref="auditLogger" />
+	</bean>
+	
 	<beans profile="default">
 		<bean id="ldapUserAuthProvider" class="com.kylinolap.rest.security.LdapProvider">
 			<constructor-arg>
