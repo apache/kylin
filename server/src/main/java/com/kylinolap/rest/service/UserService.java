@@ -92,17 +92,23 @@ public class UserService implements UserManager{
             get.addFamily(Bytes.toBytes(USER_AUTHORITY_FAMILY));
             Result result = htable.get(get);
             
-            byte[] gaBytes = result.getValue(Bytes.toBytes(USER_AUTHORITY_FAMILY), Bytes.toBytes(USER_AUTHORITY_COLUMN));
-            Collection<? extends GrantedAuthority> authorities = Arrays.asList(ugaSerializer.deserialize(gaBytes));
-
+            Collection<? extends GrantedAuthority> authorities = null;
+            if (null != result && !result.isEmpty())
+            {
+                byte[] gaBytes = result.getValue(Bytes.toBytes(USER_AUTHORITY_FAMILY), Bytes.toBytes(USER_AUTHORITY_COLUMN));
+                authorities = Arrays.asList(ugaSerializer.deserialize(gaBytes));
+            }
+            else{
+                throw new UsernameNotFoundException("User " + username + " not found.");
+            }
+            
             return new User(username, "N/A", authorities);
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
+            throw new RuntimeException(e);
         } finally {
             IOUtils.closeQuietly(htable);
         }
-
-        return null;
     }
 
     @Override
