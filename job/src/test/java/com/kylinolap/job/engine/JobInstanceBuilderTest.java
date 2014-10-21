@@ -82,7 +82,7 @@ public class JobInstanceBuilderTest extends LocalFileMetadataTestCase {
 
         assertEquals(13, jobInstance.getSteps().size());
 
-        assertTrue(jobInstance.getSteps().get(3).getExecCmd().contains("hadoop_job_conf_medium.xml"));
+        assertTrue(jobInstance.getSteps().get(3).getExecCmd().contains("hadoop_job_conf.xml"));
 
         JobStep jobStep;
         // check each step
