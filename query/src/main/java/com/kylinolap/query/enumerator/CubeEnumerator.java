@@ -16,12 +16,10 @@
 package com.kylinolap.query.enumerator;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 import net.hydromatic.linq4j.Enumerator;
 import net.hydromatic.optiq.DataContext;
@@ -31,8 +29,6 @@ import org.eigenbase.reltype.RelDataTypeField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
-import com.kylinolap.metadata.model.cube.CubeDesc.DeriveInfo;
 import com.kylinolap.metadata.model.cube.DimensionDesc;
 import com.kylinolap.metadata.model.cube.FunctionDesc;
 import com.kylinolap.metadata.model.cube.MeasureDesc;
@@ -41,9 +37,7 @@ import com.kylinolap.query.relnode.OLAPContext;
 import com.kylinolap.storage.IStorageEngine;
 import com.kylinolap.storage.StorageEngineFactory;
 import com.kylinolap.storage.filter.CompareTupleFilter;
-import com.kylinolap.storage.filter.LogicalTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
-import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
 import com.kylinolap.storage.tuple.ITuple;
 import com.kylinolap.storage.tuple.ITupleIterator;
 
@@ -168,9 +162,6 @@ public class CubeEnumerator implements Enumerator<Object[]> {
             }
         }
 
-        Set<TblColRef> derivedPostAggregation = Sets.newHashSet();
-        Set<TblColRef> columnNotOnGroupBy = Sets.newHashSet();
-
         if (olapContext.isSimpleQuery()) {
             // In order to prevent coprocessor from doing the real aggregating,
             // All dimensions are injected
@@ -189,73 +180,14 @@ public class CubeEnumerator implements Enumerator<Object[]> {
             }
             olapContext.storageContext.markAvoidAggregation();
         } else {
-            // any column has only a single value in result set can be excluded
-            // in check of exact aggregation
-            Set<TblColRef> singleValueCols = findSingleValueColumns(olapContext.filter);
             for (TblColRef column : olapContext.allColumns) {
                 // skip measure columns
                 if (olapContext.metricsColumns.contains(column)) {
                     continue;
                 }
-
-                if (olapContext.groupByColumns.contains(column) == false && singleValueCols.contains(column) == false) {
-                    columnNotOnGroupBy.add(column);
-                }
-
-                if (olapContext.cubeDesc.isDerived(column)) {
-                    DeriveInfo hostInfo = olapContext.cubeDesc.getHostInfo(column);
-                    if (hostInfo.isOneToOne == false && containsAll(olapContext.groupByColumns, hostInfo.columns) == false) {
-                        derivedPostAggregation.add(column);
-                    }
-                    for (TblColRef hostCol : hostInfo.columns) {
-                        dimensions.add(hostCol);
-                    }
-                } else {
-                    dimensions.add(column);
-                }
+                dimensions.add(column);
             }
         }
-
-        if (derivedPostAggregation.size() > 0) {
-            logger.info("ExactAggregation is false due to derived " + derivedPostAggregation + " require post aggregation");
-        } else if (columnNotOnGroupBy.size() > 0) {
-            logger.info("ExactAggregation is false due to " + columnNotOnGroupBy + " not on group by");
-        } else {
-            logger.info("ExactAggregation is true");
-            olapContext.storageContext.markExactAggregation();
-        }
-    }
-
-    private boolean containsAll(Collection<TblColRef> groupByColumns, TblColRef[] columns) {
-        for (TblColRef col : columns) {
-            if (groupByColumns.contains(col) == false)
-                return false;
-        }
-        return true;
-    }
-
-    @SuppressWarnings("unchecked")
-    private Set<TblColRef> findSingleValueColumns(TupleFilter filter) {
-        Collection<? extends TupleFilter> toCheck;
-        if (filter instanceof CompareTupleFilter) {
-            toCheck = Collections.singleton(filter);
-        } else if (filter instanceof LogicalTupleFilter && filter.getOperator() == FilterOperatorEnum.AND) {
-            toCheck = filter.getChildren();
-        } else {
-            return (Set<TblColRef>) Collections.EMPTY_SET;
-        }
-
-        Set<TblColRef> result = Sets.newHashSet();
-        for (TupleFilter f : toCheck) {
-            if (f instanceof CompareTupleFilter) {
-                CompareTupleFilter compFilter = (CompareTupleFilter) f;
-                // is COL=const ?
-                if (compFilter.getOperator() == FilterOperatorEnum.EQ && compFilter.getValues().size() == 1 && compFilter.getColumn() != null) {
-                    result.add(compFilter.getColumn());
-                }
-            }
-        }
-        return result;
     }
 
     private void bindVariable(TupleFilter filter) {

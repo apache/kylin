@@ -16,7 +16,6 @@
 package com.kylinolap.storage;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,18 +47,13 @@ public class StorageContext {
     private boolean acceptPartialResult;
     private BiMap<TblColRef, String> aliasMap;
 
-    // If cuboid dimensions matches group by exactly, there's no derived or any
-    // other form of post aggregation needed.
-    // In case of exactAggregation, holistic count distinct can be used and
-    // coprocessor is not beneficial.
-    private boolean exactAggregation;
-    // To hint records shall be returned at most granular level, avoid
-    // aggregation (coprocessor) wherever possible.
+    // To hint records shall be returned at most granular level, avoid aggregation (coprocessor) wherever possible.
     private boolean avoidAggregation;
-    private Set<TblColRef> mandatoryColumns;
+    private boolean exactAggregation;
+    private Set<TblColRef> otherMandatoryColumns;
 
     private long totalScanCount;
-    private Collection<Cuboid> cuboids;
+    private Cuboid cuboid;
     private boolean enableLimit;
     private boolean partialResultReturned;
 
@@ -67,15 +61,15 @@ public class StorageContext {
         this.threshold = DEFAULT_THRESHOLD;
         this.limit = DEFAULT_THRESHOLD;
         this.totalScanCount = 0;
-        this.cuboids = new HashSet<Cuboid>();
+        this.cuboid = null;
         this.aliasMap = HashBiMap.create();
         this.hasSort = false;
         this.sortOrders = new ArrayList<OrderEnum>();
         this.sortMeasures = new ArrayList<MeasureDesc>();
 
-        this.exactAggregation = false;
         this.avoidAggregation = false;
-        this.mandatoryColumns = new HashSet<TblColRef>();
+        this.exactAggregation = false;
+        this.otherMandatoryColumns = new HashSet<TblColRef>();
 
         this.enableLimit = false;
         this.acceptPartialResult = false;
@@ -149,12 +143,12 @@ public class StorageContext {
         return this.hasSort;
     }
 
-    public void addCuboid(Cuboid c) {
-        cuboids.add(c);
+    public void setCuboid(Cuboid c) {
+        cuboid = c;
     }
 
-    public Collection<Cuboid> getCuboids() {
-        return cuboids;
+    public Cuboid getCuboid() {
+        return cuboid;
     }
 
     public long getTotalScanCount() {
@@ -181,26 +175,6 @@ public class StorageContext {
         this.partialResultReturned = partialResultReturned;
     }
 
-    public boolean isExactAggregation() {
-        return exactAggregation;
-    }
-
-    public void markExactAggregation() {
-        this.exactAggregation = true;
-    }
-
-    public boolean requireNoPostAggregation() {
-        assert cuboids.size() == 1; // all scans must hit the same cuboid to
-                                    // avoid dedup overlaps of records
-        return exactAggregation // is an exact aggregation from query point of
-                                // view
-                && cuboids.iterator().next().requirePostAggregation() == false; // and
-                                                                                // use
-                                                                                // an
-                                                                                // exact
-                                                                                // cuboid
-    }
-
     public boolean isAvoidAggregation() {
         return avoidAggregation;
     }
@@ -209,11 +183,20 @@ public class StorageContext {
         this.avoidAggregation = true;
     }
 
-    public void mandateColumn(TblColRef col) {
-        this.mandatoryColumns.add(col);
+    public void setExactAggregation(boolean isExactAggregation) {
+        this.exactAggregation = isExactAggregation;
+    }
+    
+    public boolean isExactAggregation() {
+        return this.exactAggregation;
+    }
+    
+    public void addOtherMandatoryColumns(TblColRef col) {
+        this.otherMandatoryColumns.add(col);
+    }
+    
+    public Set<TblColRef> getOtherMandatoryColumns() {
+        return this.otherMandatoryColumns;
     }
 
-    public Set<TblColRef> getMandatoryColumns() {
-        return this.mandatoryColumns;
-    }
 }

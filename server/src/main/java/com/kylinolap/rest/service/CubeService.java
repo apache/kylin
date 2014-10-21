@@ -531,7 +531,7 @@ public class CubeService extends BasicService {
         CubeManager cubeMgr = getCubeManager();
         CubeInstance cube = cubeMgr.getCube(cubeName);
         CubeSegment seg = cube.getSegment(segmentName, CubeSegmentStatusEnum.READY);
-        cubeMgr.buildSnapshotTable(seg, lookupTable, false);
+        cubeMgr.buildSnapshotTable(seg, lookupTable);
 
         return cube;
     }

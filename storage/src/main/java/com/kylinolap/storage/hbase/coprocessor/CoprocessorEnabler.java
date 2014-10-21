@@ -18,8 +18,8 @@ package com.kylinolap.storage.hbase.coprocessor;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.ResultScanner;
@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
@@ -49,9 +50,10 @@ public class CoprocessorEnabler {
     static final int SERIALIZE_BUFFER_SIZE = 65536;
     static final Map<String, Boolean> CUBE_OVERRIDES = Maps.newConcurrentMap();
 
-    public static ResultScanner scanWithCoprocessorIfBeneficial(CubeSegment segment, Cuboid cuboid, TupleFilter tupleFiler, Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders, StorageContext context, HTableInterface table, Scan scan) throws IOException {
+    public static ResultScanner scanWithCoprocessorIfBeneficial(CubeSegment segment, Cuboid cuboid, TupleFilter tupleFiler, //
+            Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders, StorageContext context, HTableInterface table, Scan scan) throws IOException {
 
-        if (!isCoprocessorBeneficial(segment.getCubeInstance(), groupBy, rowValueDecoders, cuboid, context)) {
+        if (!isCoprocessorBeneficial(segment.getCubeInstance(), groupBy, rowValueDecoders, context)) {
             return table.getScanner(scan);
         }
 
@@ -74,7 +76,7 @@ public class CoprocessorEnabler {
         }
     }
 
-    private static boolean isCoprocessorBeneficial(CubeInstance cube, Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders, Cuboid cuboid, StorageContext context) {
+    private static boolean isCoprocessorBeneficial(CubeInstance cube, Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders, StorageContext context) {
 
         if (context.isAvoidAggregation()) {
             logger.info("Coprocessor is disabled because context tells to avoid aggregation");
@@ -96,14 +98,20 @@ public class CoprocessorEnabler {
             return false;
         }
 
-        HashSet<TblColRef> aggrCols = new HashSet<TblColRef>(cuboid.getColumns());
-        aggrCols.removeAll(groupBy);
-        if (aggrCols.isEmpty()) {
-            logger.info("Coprocessor is disabled because cuboid is exactly the scan group by");
+        if (context.isExactAggregation()) {
+            logger.info("Coprocessor is disabled because exactAggregation is true");
             return false;
         }
 
-        logger.info("Coprocessor is enabled to aggregate " + aggrCols);
+        Cuboid cuboid = context.getCuboid();
+        Set<TblColRef> toAggr = Sets.newHashSet(cuboid.getAggregationColumns());
+        toAggr.removeAll(groupBy);
+        if (toAggr.isEmpty()) {
+            logger.info("Coprocessor is disabled because no additional columns to aggregate");
+            return false;
+        }
+
+        logger.info("Coprocessor is enabled to aggregate " + toAggr + ", returning " + groupBy);
         return true;
     }
 
