@@ -215,17 +215,31 @@ public class CubeDevelopTestCase extends HBaseMetadataTestCase {
     }
 
     private void deployJobConf(boolean jobEnableLzo) throws Exception {
-        String jobConfFileName = JobEngineConfig.HADOOP_JOB_CONF_FILENAME;
+        String srcFile;
+
         if (jobEnableLzo) {
             logger.info("job conf: the lzo enabled version is deployed to /etc/kylin");
-            jobConfFileName += ".xml";
-        }
-        else {
+
+            srcFile = getExampleTestCaseDataFolder() + JobEngineConfig.HADOOP_JOB_CONF_FILENAME + ".xml";
+
+        } else {
             logger.info("job conf: the lzo disabled version is deployed to /etc/kylin");
-            jobConfFileName += ".lzo_disabled.xml";
+
+            File temp = File.createTempFile("temp", Long.toString(System.nanoTime()));
+            temp.delete();
+            temp.mkdir();
+            File src = new File(getExampleTestCaseDataFolder() + JobEngineConfig.HADOOP_JOB_CONF_FILENAME + ".lzo_disabled.xml");
+            File dest = new File(temp, JobEngineConfig.HADOOP_JOB_CONF_FILENAME + ".xml");
+            FileUtils.copyFile(src, dest);
+            srcFile = dest.toString();
+            dest.deleteOnExit();
         }
 
-        scpFilesToHadoopCli(new String[] { ".." + File.separator + "examples" + File.separator + "test_case_data" + File.separator + jobConfFileName }, "/etc/kylin");
+        scpFilesToHadoopCli(new String[] { srcFile }, "/etc/kylin");
+    }
+
+    private String getExampleTestCaseDataFolder() {
+        return ".." + File.separator + "examples" + File.separator + "test_case_data" + File.separator;
     }
 
 
