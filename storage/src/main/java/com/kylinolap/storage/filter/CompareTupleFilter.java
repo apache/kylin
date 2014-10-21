@@ -130,12 +130,13 @@ public class CompareTupleFilter extends TupleFilter {
         return "CompareFilter [" + column + " " + operator + " " + conditionValues + ", children=" + children + "]";
     }
 
+    // TODO requires generalize, currently only evaluates COLUMN {op} CONST
     @Override
     public boolean evaluate(ITuple tuple) {
         // extract tuple value
         String tupleValue = null;
         for (TupleFilter filter : this.children) {
-            if (filter instanceof ColumnTupleFilter) {
+            if (isConstant(filter) == false) {
                 filter.evaluate(tuple);
                 tupleValue = filter.getValues().iterator().next();
             }
@@ -156,8 +157,7 @@ public class CompareTupleFilter extends TupleFilter {
         if (firstCondValue.equals(nullString))
             return false;
 
-        // tricky here -- order is ensured by string compare (even for number
-        // columns)
+        // tricky here -- order is ensured by string compare (even for number columns)
         // because it's row key ID (not real value) being compared
         int comp = tupleValue.compareTo(firstCondValue);
 
@@ -188,6 +188,10 @@ public class CompareTupleFilter extends TupleFilter {
             result = false;
         }
         return result;
+    }
+
+    private boolean isConstant(TupleFilter filter) {
+        return (filter instanceof ConstantTupleFilter) || (filter instanceof DynamicTupleFilter);
     }
 
     @Override
