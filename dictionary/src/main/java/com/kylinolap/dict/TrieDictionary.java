@@ -26,6 +26,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 import com.kylinolap.common.util.BytesUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A dictionary based on Trie data structure that maps enumerations of byte[] to
@@ -48,6 +50,8 @@ public class TrieDictionary<T> extends Dictionary<T> {
 
     public static final int BIT_IS_LAST_CHILD = 0x80;
     public static final int BIT_IS_END_OF_VALUE = 0x40;
+
+    private static final Logger logger = LoggerFactory.getLogger(TrieDictionary.class);
 
     private byte[] trieBytes;
 
@@ -440,8 +444,10 @@ public class TrieDictionary<T> extends Dictionary<T> {
 
     @Override
     public boolean equals(Object o) {
-        if ((o instanceof TrieDictionary) == false)
+        if ((o instanceof TrieDictionary) == false) {
+            logger.info("Equals return false because o is not TrieDictionary");
             return false;
+        }
         TrieDictionary that = (TrieDictionary) o;
         return Arrays.equals(this.trieBytes, that.trieBytes);
     }
