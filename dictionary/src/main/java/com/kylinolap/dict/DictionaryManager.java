@@ -288,9 +288,13 @@ public class DictionaryManager {
             return null;
 
         for (String existing : existings) {
+            logger.info("Checking dup dict :" + existing);
             DictionaryInfo existingInfo = load(existing, true); // skip cache,
             // direct load
             // from store
+            if(existingInfo == null)
+                logger.info("existingInfo is null");
+
             if (existingInfo != null && dict.equals(existingInfo.getDictionaryObject()))
                 return existing;
         }
