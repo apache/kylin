@@ -67,8 +67,8 @@ public class DictionaryManager {
 
     private KylinConfig config;
     private ConcurrentHashMap<String, DictionaryInfo> dictCache; // resource
-                                                                 // path ==>
-                                                                 // DictionaryInfo
+    // path ==>
+    // DictionaryInfo
 
     private DictionaryManager(KylinConfig config) {
         this.config = config;
@@ -166,6 +166,14 @@ public class DictionaryManager {
         return trySaveNewDict(dict, dictInfo);
     }
 
+    /**
+     * Get column origin
+     *
+     * @return 1. source table name
+     * 2. column name
+     * 3. column cardinal in source table
+     * 4. ReadableTable object
+     */
     public Object[] decideSourceData(CubeDesc cube, TblColRef col, String factColumnsPath) throws IOException {
         String srcTable;
         String srcCol;
@@ -173,7 +181,8 @@ public class DictionaryManager {
         ReadableTable table;
         MetadataManager metaMgr = MetadataManager.getInstance(config);
 
-        if (cube == null) { // case of full table
+        // case of full table (dict on fact table)
+        if (cube == null) {
             srcTable = col.getTable();
             srcCol = col.getName();
             srcColIdx = col.getColumn().getZeroBasedIndex();
@@ -186,8 +195,6 @@ public class DictionaryManager {
         // 1. If 'useDict' specifies pre-defined data set, use that
         // 2. Otherwise find a lookup table to scan through
 
-        // Note normal column on fact table is not supported due to the size of
-        // fact table
         // Note FK on fact table is supported by scan the related PK on lookup
         // table
 
@@ -200,7 +207,7 @@ public class DictionaryManager {
                 TblColRef pkCol = cube.findPKByFK(col);
                 if (pkCol != null)
                     col = pkCol; // scan the counterparty PK on lookup table
-                                 // instead
+                // instead
             }
             srcTable = col.getTable();
             srcCol = col.getName();
@@ -264,9 +271,9 @@ public class DictionaryManager {
         TableSignature input = dictInfo.getInput();
         for (String existing : existings) {
             DictionaryInfo existingInfo = load(existing, false); // skip cache,
-                                                                 // direct
-                                                                 // load from
-                                                                 // store
+            // direct
+            // load from
+            // store
             if (input.equals(existingInfo.getInput()))
                 return existing;
         }
@@ -282,8 +289,8 @@ public class DictionaryManager {
 
         for (String existing : existings) {
             DictionaryInfo existingInfo = load(existing, true); // skip cache,
-                                                                // direct load
-                                                                // from store
+            // direct load
+            // from store
             if (existingInfo != null && dict.equals(existingInfo.getDictionaryObject()))
                 return existing;
         }

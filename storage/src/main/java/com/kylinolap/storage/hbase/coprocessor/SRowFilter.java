@@ -16,10 +16,10 @@
 
 package com.kylinolap.storage.hbase.coprocessor;
 
+import java.util.Collection;
 import java.util.Set;
 
 import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.hbase.util.Pair;
 
 import com.google.common.collect.Sets;
 import com.kylinolap.common.util.BytesUtil;
@@ -31,8 +31,8 @@ import com.kylinolap.storage.filter.ColumnTupleFilter;
 import com.kylinolap.storage.filter.CompareTupleFilter;
 import com.kylinolap.storage.filter.ConstantTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
-import com.kylinolap.storage.filter.TupleFilterSerializer;
 import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
+import com.kylinolap.storage.filter.TupleFilterSerializer;
 import com.kylinolap.storage.filter.TupleFilterSerializer.Decorator;
 import com.kylinolap.storage.tuple.ITuple;
 
@@ -63,15 +63,13 @@ public class SRowFilter {
 
                 // extract ColumnFilter & ConstantFilter
                 CompareTupleFilter compf = (CompareTupleFilter) filter;
-                Pair<ColumnTupleFilter, ConstantTupleFilter> pair = compf.getColumnAndConstant();
-                ColumnTupleFilter colf = pair.getFirst();
-                ConstantTupleFilter constf = pair.getSecond();
-                if (colf == null) {
+                TblColRef col = compf.getColumn();
+                if (col == null) {
                     return filter;
                 }
-                TblColRef col = colf.getColumn();
                 String nullString = nullString(col);
-                if (constf == null) {
+                Collection<String> constValues = compf.getValues();
+                if (constValues == null || constValues.isEmpty()) {
                     compf.setNullString(nullString); // maybe ISNULL
                     return filter;
                 }
@@ -79,16 +77,16 @@ public class SRowFilter {
                 TupleFilter result;
                 CompareTupleFilter newComp = new CompareTupleFilter(compf.getOperator());
                 newComp.setNullString(nullString);
-                newComp.addChild(colf);
-                String firstValue = constf.getValues().iterator().next();
+                newComp.addChild(new ColumnTupleFilter(col));
                 String v;
+                String firstValue = constValues.iterator().next();
 
                 // translate constant into rowkey ID
                 switch (newComp.getOperator()) {
                 case EQ:
                 case IN:
                     Set<String> newValues = Sets.newHashSet();
-                    for (String value : constf.getValues()) {
+                    for (String value : constValues) {
                         v = translate(col, value, 0);
                         if (nullString.equals(v) == false)
                             newValues.add(v);

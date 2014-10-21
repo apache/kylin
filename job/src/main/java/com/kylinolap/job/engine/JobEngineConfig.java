@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,14 +32,18 @@ import com.kylinolap.metadata.model.cube.CubeDesc.CubeCapacity;
 
 /**
  * @author ysong1
- * 
  */
 public class JobEngineConfig {
     private static final Logger logger = LoggerFactory.getLogger(JobEngineConfig.class);
-    public static String HADOOP_JOB_CONF_FILENAME = "hadoop_job_conf_";
+    public static String HADOOP_JOB_CONF_FILENAME = "hadoop_job_conf";
 
-    public String getHadoopJobConfFilePath(CubeCapacity capaticy) throws IOException {
-        String hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + capaticy.toString().toLowerCase() + ".xml");
+    private String getHadoopJobConfFilePath(CubeCapacity capaticy, boolean appendSuffix) throws IOException {
+        String hadoopJobConfFile;
+        if (appendSuffix)
+            hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + "_" + capaticy.toString().toLowerCase() + ".xml");
+        else
+            hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + ".xml");
+
         String path = System.getProperty(KylinConfig.KYLIN_CONF);
 
         if (path == null) {
@@ -73,6 +78,21 @@ public class JobEngineConfig {
         }
 
         return OptionsHelper.convertToFileURL(path);
+    }
+
+    public String getHadoopJobConfFilePath(CubeCapacity capaticy) throws IOException {
+        String path = getHadoopJobConfFilePath(capaticy, true);
+        if (!StringUtils.isEmpty(path)) {
+            logger.info("Chosen job conf is : " + path);
+            return path;
+        } else {
+            path = getHadoopJobConfFilePath(capaticy, false);
+            if (!StringUtils.isEmpty(path)) {
+                logger.info("Chosen job conf is : " + path);
+                return path;
+            }
+        }
+        return "";
     }
 
     private void inputStreamToFile(InputStream ins, File file) throws IOException {

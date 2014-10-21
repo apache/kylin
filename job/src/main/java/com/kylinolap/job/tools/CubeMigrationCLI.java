@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -25,6 +26,10 @@ import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.CubeStatusEnum;
 import com.kylinolap.cube.project.ProjectInstance;
+import com.kylinolap.dict.DictionaryInfo;
+import com.kylinolap.dict.DictionaryManager;
+import com.kylinolap.dict.lookup.SnapshotManager;
+import com.kylinolap.dict.lookup.SnapshotTable;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
@@ -80,8 +85,7 @@ public class CubeMigrationCLI {
         operations = new ArrayList<Opt>();
         copyFilesInMetaStore(cube, overwriteIfExists);
         renameFoldersInHdfs(cube);
-        renameTablesInHbase(cube);// change htable name + change name in cube
-                                  // instance + alter coprocessor
+        renameTablesInHbase(cube);// change htable name + change name in cube instance + alter coprocessor
         addCubeIntoProject(cubeName, projectName);
 
         if (realExecute.equalsIgnoreCase("true")) {
@@ -155,13 +159,19 @@ public class CubeMigrationCLI {
 
     private static void copyFilesInMetaStore(CubeInstance cube, String overwriteIfExists) throws IOException {
 
-        List<String> movingItems = listCubeRelatedResources(cube);
+        List<String> metaItems = new ArrayList<String>();
+        List<String> dictAndSnapshot = new ArrayList<String>();
+        listCubeRelatedResources(cube, metaItems, dictAndSnapshot);
 
         if (dstStore.exists(cube.getResourcePath()) && !overwriteIfExists.equalsIgnoreCase("true"))
             throw new IllegalStateException("The cube named " + cube.getName() + " already exists on target metadata store. Use overwriteIfExists to overwrite it");
 
-        for (String item : movingItems) {
+        for (String item : metaItems) {
             operations.add(new Opt(OptType.COPY_FILE_IN_META, new Object[] { item }));
+        }
+
+        for (String item : dictAndSnapshot) {
+            operations.add(new Opt(OptType.COPY_DICT_OR_SNAPSHOT, new Object[] { item, cube.getName() }));
         }
     }
 
@@ -173,28 +183,24 @@ public class CubeMigrationCLI {
         operations.add(new Opt(OptType.ADD_INTO_PROJECT, new Object[] { cubeName, projectName }));
     }
 
-    private static List<String> listCubeRelatedResources(CubeInstance cube) throws IOException {
-        List<String> items = new ArrayList<String>();
+    private static void listCubeRelatedResources(CubeInstance cube, List<String> metaResource, List<String> dictAndSnapshot) throws IOException {
 
         CubeDesc cubeDesc = cube.getDescriptor();
-
-        items.add(cube.getResourcePath());
-        items.add(cubeDesc.getResourcePath());
-
-        for (CubeSegment segment : cube.getSegments()) {
-            items.addAll(segment.getSnapshotPaths());
-            items.addAll(segment.getDictionaryPaths());
-        }
+        metaResource.add(cube.getResourcePath());
+        metaResource.add(cubeDesc.getResourcePath());
 
         for (TableDesc tableDesc : cubeDesc.listTables()) {
-            items.add(tableDesc.getResourcePath());
+            metaResource.add(tableDesc.getResourcePath());
         }
 
-        return items;
+        for (CubeSegment segment : cube.getSegments()) {
+            dictAndSnapshot.addAll(segment.getSnapshotPaths());
+            dictAndSnapshot.addAll(segment.getDictionaryPaths());
+        }
     }
 
     private static enum OptType {
-        COPY_FILE_IN_META, RENAME_FOLDER_IN_HDFS, RENAME_TABLE_IN_HBASE, ALTER_TABLE_COPROCESSOR, CHANGE_HTABLE_NAME_IN_CUBE, ADD_INTO_PROJECT
+        COPY_FILE_IN_META, COPY_DICT_OR_SNAPSHOT, RENAME_FOLDER_IN_HDFS, RENAME_TABLE_IN_HBASE, ALTER_TABLE_COPROCESSOR, CHANGE_HTABLE_NAME_IN_CUBE, ADD_INTO_PROJECT
     }
 
     private static class Opt {
@@ -260,6 +266,70 @@ public class CubeMigrationCLI {
             logger.info("Item " + item + " is copied");
             break;
         }
+        case COPY_DICT_OR_SNAPSHOT: {
+            String item = (String) opt.params[0];
+
+            if (item.toLowerCase().endsWith(".dict")) {
+                DictionaryManager dstDictMgr = DictionaryManager.getInstance(dstConfig);
+                DictionaryManager srcDicMgr = DictionaryManager.getInstance(srcConfig);
+                DictionaryInfo dictSrc = srcDicMgr.getDictionaryInfo(item);
+                DictionaryInfo dictSaved = dstDictMgr.trySaveNewDict(dictSrc.getDictionaryObject(), dictSrc);
+
+                if (dictSaved == dictSrc) {
+                    //no dup found, already saved to dest
+                    logger.info("Item " + item + " is copied");
+                } else {
+                    //dictSrc is rejected because of duplication
+                    //modify cube's dictionary path
+                    String cubeName = (String) opt.params[1];
+                    String cubeResPath = CubeInstance.concatResourcePath(cubeName);
+                    Serializer<CubeInstance> cubeSerializer = new JsonSerializer<CubeInstance>(CubeInstance.class);
+                    CubeInstance cube = dstStore.getResource(cubeResPath, CubeInstance.class, cubeSerializer);
+                    for (CubeSegment segment : cube.getSegments()) {
+                        for (Map.Entry<String, String> entry : segment.getDictionaries().entrySet()) {
+                            if (entry.getValue().equalsIgnoreCase(item)) {
+                                entry.setValue(dictSaved.getResourcePath());
+                            }
+                        }
+                    }
+                    dstStore.putResource(cubeResPath, cube, cubeSerializer);
+                    logger.info("Item " + item + " is dup, instead " + dictSaved.getResourcePath() + " is reused");
+                }
+
+            } else if (item.toLowerCase().endsWith(".snapshot")) {
+                SnapshotManager dstSnapMgr = SnapshotManager.getInstance(dstConfig);
+                SnapshotManager srcSnapMgr = SnapshotManager.getInstance(srcConfig);
+                SnapshotTable snapSrc = srcSnapMgr.getSnapshotTable(item);
+                SnapshotTable snapSaved = dstSnapMgr.trySaveNewSnapshot(snapSrc);
+
+                if (snapSaved == snapSrc) {
+                    //no dup found, already saved to dest
+                    logger.info("Item " + item + " is copied");
+
+                } else {
+                    String cubeName = (String) opt.params[1];
+                    String cubeResPath = CubeInstance.concatResourcePath(cubeName);
+                    Serializer<CubeInstance> cubeSerializer = new JsonSerializer<CubeInstance>(CubeInstance.class);
+                    CubeInstance cube = dstStore.getResource(cubeResPath, CubeInstance.class, cubeSerializer);
+                    for (CubeSegment segment : cube.getSegments()) {
+                        for (Map.Entry<String, String> entry : segment.getSnapshots().entrySet()) {
+                            if (entry.getValue().equalsIgnoreCase(item)) {
+                                entry.setValue(snapSaved.getResourcePath());
+                            }
+                        }
+                    }
+                    dstStore.putResource(cubeResPath, cube, cubeSerializer);
+                    logger.info("Item " + item + " is dup, instead " + snapSaved.getResourcePath() + " is reused");
+
+                }
+
+            } else {
+                logger.error("unknown item found: " + item);
+                logger.info("ignore it");
+            }
+
+            break;
+        }
         case RENAME_FOLDER_IN_HDFS: {
             String srcPath = (String) opt.params[0];
             String dstPath = (String) opt.params[1];
@@ -322,6 +392,10 @@ public class CubeMigrationCLI {
         case COPY_FILE_IN_META: {
             // no harm
             logger.info("Undo for COPY_FILE_IN_META is ignored");
+        }
+        case COPY_DICT_OR_SNAPSHOT: {
+            // no harm
+            logger.info("Undo for COPY_DICT_OR_SNAPSHOT is ignored");
         }
         case RENAME_FOLDER_IN_HDFS: {
             String srcPath = (String) opt.params[1];

@@ -16,8 +16,6 @@
 
 package com.kylinolap.common.util;
 
-import java.io.IOException;
-
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.ResourceTool;

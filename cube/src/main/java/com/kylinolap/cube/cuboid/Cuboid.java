@@ -210,7 +210,7 @@ public class Cuboid implements Comparable<Cuboid> {
         this.id = validID;
         this.idBytes = Bytes.toBytes(id);
         this.dimensionColumns = translateIdToColumns(this.id);
-        this.requirePostAggregation = calcPostAggregation(this.inputID, this.id);
+        this.requirePostAggregation = calcExtraAggregation(this.inputID, this.id) != 0;
     }
 
     private List<TblColRef> translateIdToColumns(long cuboidID) {
@@ -227,10 +227,13 @@ public class Cuboid implements Comparable<Cuboid> {
         return dimesnions;
     }
 
-    private boolean calcPostAggregation(long inputID, long id) {
+    private long calcExtraAggregation(long inputID, long id) {
         long diff = id ^ inputID;
-
-        // diff apart from higher hierarchy means post aggregation required
+        return eliminateHierarchyAggregation(diff);
+    }
+    
+    // higher level in hierarchy can be ignored when counting aggregation columns
+    private long eliminateHierarchyAggregation(long id) {
         List<HierarchyMask> hierarchyMaskList = cube.getRowkey().getHierarchyMasks();
         if (hierarchyMaskList != null && hierarchyMaskList.size() > 0) {
             for (HierarchyMask hierMask : hierarchyMaskList) {
@@ -238,20 +241,25 @@ public class Cuboid implements Comparable<Cuboid> {
                 for (int i = allMasks.length - 1; i > 0; i--) {
                     long bit = allMasks[i] ^ allMasks[i - 1];
                     if ((inputID & bit) != 0) {
-                        diff &= ~allMasks[i - 1];
+                        id &= ~allMasks[i - 1];
                     }
                 }
             }
         }
-        return diff != 0;
+        return id;
     }
-
+    
     public CubeDesc getCube() {
         return cube;
     }
 
     public List<TblColRef> getColumns() {
         return dimensionColumns;
+    }
+    
+    public List<TblColRef> getAggregationColumns() {
+        long aggrColsID = eliminateHierarchyAggregation(id);
+        return translateIdToColumns(aggrColsID);
     }
 
     public long getId() {

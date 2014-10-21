@@ -196,13 +196,13 @@ public class CubeManager {
         return info == null ? null : info.getDictionaryObject();
     }
 
-    public SnapshotTable buildSnapshotTable(CubeSegment cubeSeg, String lookupTable, boolean reuseExisting) throws IOException {
+    public SnapshotTable buildSnapshotTable(CubeSegment cubeSeg, String lookupTable) throws IOException {
         MetadataManager metaMgr = getMetadataManager();
         SnapshotManager snapshotMgr = getSnapshotManager();
 
         HiveTable hiveTable = new HiveTable(metaMgr, lookupTable);
         TableDesc tableDesc = metaMgr.getTableDesc(lookupTable);
-        SnapshotTable snapshot = snapshotMgr.buildSnapshot(hiveTable, tableDesc, reuseExisting);
+        SnapshotTable snapshot = snapshotMgr.buildSnapshot(hiveTable, tableDesc);
 
         cubeSeg.putSnapshotResPath(lookupTable, snapshot.getResourcePath());
 

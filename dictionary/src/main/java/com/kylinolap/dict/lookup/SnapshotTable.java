@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.fs.Path;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -115,6 +116,22 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
     @Override
     public String getColumnDelimeter() throws IOException {
         return columnDelimeter;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if ((o instanceof SnapshotTable) == false)
+            return false;
+        SnapshotTable that = (SnapshotTable) o;
+
+        //compare row by row
+        if (this.rows.size() != that.rows.size())
+            return false;
+        for (int i = 0; i < this.rows.size(); ++i) {
+            if (!ArrayUtils.isEquals(this.rows.get(i), that.rows.get(i)))
+                return false;
+        }
+        return true;
     }
 
     void writeData(DataOutput out) throws IOException {

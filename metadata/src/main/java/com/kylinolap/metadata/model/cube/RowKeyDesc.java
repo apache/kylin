@@ -137,19 +137,24 @@ public class RowKeyDesc {
     }
 
     public int getColumnBitIndex(TblColRef col) {
-        return columnMap.get(col).getBitIndex();
+        return getColDesc(col).getBitIndex();
     }
 
     public int getColumnLength(TblColRef col) {
-        return columnMap.get(col).getLength();
+        return getColDesc(col).getLength();
     }
 
     public String getDictionary(TblColRef col) {
-        if (!columnMap.containsKey(col))
-            throw new NullPointerException("Column " + col + " does not exist in row key desc");
-        return columnMap.get(col).getDictionary();
+        return getColDesc(col).getDictionary();
     }
 
+    private RowKeyColDesc getColDesc(TblColRef col) {
+        RowKeyColDesc desc = columnMap.get(col);
+        if (desc == null)
+            throw new NullPointerException("Column " + col + " does not exist in row key desc");
+        return desc;
+    }
+    
     public boolean isUseDictionary(TblColRef col) {
         String useDictionary = getDictionary(col);
         return !StringUtils.isBlank(useDictionary) && !"false".equals(useDictionary);
