@@ -242,12 +242,14 @@ public class AclService implements MutableAclService {
 
             htable.put(put);
             htable.flushCommits();
+            
+            logger.debug("ACL of " + objectIdentity + " created successfully.");
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
         } finally {
             IOUtils.closeQuietly(htable);
         }
-
+        
         return (MutableAcl) readAclById(objectIdentity);
     }
 
@@ -269,6 +271,8 @@ public class AclService implements MutableAclService {
 
             htable.delete(delete);
             htable.flushCommits();
+            
+            logger.debug("ACL of " + objectIdentity + " deleted successfully.");
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
         } finally {
@@ -305,6 +309,8 @@ public class AclService implements MutableAclService {
             if (!put.isEmpty()) {
                 htable.put(put);
                 htable.flushCommits();
+                
+                logger.debug("ACL of " + acl.getObjectIdentity() + " updated successfully.");
             }
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
