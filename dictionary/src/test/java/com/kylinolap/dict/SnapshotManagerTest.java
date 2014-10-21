@@ -55,7 +55,7 @@ public class SnapshotManagerTest extends LocalFileMetadataTestCase {
         String tableName = "TEST_SITES";
         HiveTable hiveTable = new HiveTable(MetadataManager.getInstance(this.getTestConfig()), tableName);
         TableDesc tableDesc = MetadataManager.getInstance(this.getTestConfig()).getTableDesc(tableName);
-        String snapshotPath = snapshotMgr.buildSnapshot(hiveTable, tableDesc, false).getResourcePath();
+        String snapshotPath = snapshotMgr.buildSnapshot(hiveTable, tableDesc).getResourcePath();
 
         snapshotMgr.wipeoutCache();
 

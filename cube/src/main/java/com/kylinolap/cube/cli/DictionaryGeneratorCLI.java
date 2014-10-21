@@ -31,7 +31,7 @@ import com.kylinolap.metadata.model.cube.TblColRef;
 
 public class DictionaryGeneratorCLI {
 
-    private static final Logger logger = LoggerFactory.getLogger(DictionaryGenerator.class);
+    private static final Logger logger = LoggerFactory.getLogger(DictionaryGeneratorCLI.class);
 
     public static void processSegment(KylinConfig config, String cubeName, String segmentName, String factColumnsPath) throws IOException {
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
@@ -56,7 +56,7 @@ public class DictionaryGeneratorCLI {
             if (dim.getTable() != null && !dim.getTable().equalsIgnoreCase(cubeSeg.getCubeDesc().getFactTable())) {
                 // CubeSegment seg = cube.getTheOnlySegment();
                 logger.info("Building snapshot of " + dim.getTable());
-                cubeMgr.buildSnapshotTable(cubeSeg, dim.getTable(), true);
+                cubeMgr.buildSnapshotTable(cubeSeg, dim.getTable());
                 logger.info("Checking snapshot of " + dim.getTable());
                 cubeMgr.getLookupTable(cubeSeg, dim); // load the table for
                                                       // sanity check

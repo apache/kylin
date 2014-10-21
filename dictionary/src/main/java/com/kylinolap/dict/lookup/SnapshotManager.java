@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.kylinolap.dict.Dictionary;
+import com.kylinolap.dict.DictionaryInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +32,6 @@ import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
  * @author yangli9
- * 
  */
 public class SnapshotManager {
 
@@ -52,8 +53,8 @@ public class SnapshotManager {
 
     private KylinConfig config;
     private ConcurrentHashMap<String, SnapshotTable> snapshotCache; // resource
-                                                                    // path ==>
-                                                                    // SnapshotTable
+    // path ==>
+    // SnapshotTable
 
     private SnapshotManager(KylinConfig config) {
         this.config = config;
@@ -79,27 +80,36 @@ public class SnapshotManager {
         snapshotCache.remove(resourcePath);
     }
 
-    public SnapshotTable buildSnapshot(ReadableTable table, TableDesc tableDesc, boolean reuseExisting) throws IOException {
+    public SnapshotTable buildSnapshot(ReadableTable table, TableDesc tableDesc) throws IOException {
         SnapshotTable snapshot = new SnapshotTable(table);
         snapshot.updateRandomUuid();
 
-        if (reuseExisting) {
-            String dup = checkDup(snapshot);
-            if (dup != null) {
-                logger.info("Identical input " + table.getSignature() + ", reuse existing snapshot at " + dup);
-                return getSnapshotTable(dup);
-            }
+        String dup = checkDupByInfo(snapshot);
+        if (dup != null) {
+            logger.info("Identical input " + table.getSignature() + ", reuse existing snapshot at " + dup);
+            return getSnapshotTable(dup);
         }
 
         snapshot.takeSnapshot(table, tableDesc);
 
-        save(snapshot);
-
-        snapshotCache.put(snapshot.getResourcePath(), snapshot);
-        return snapshot;
+        return trySaveNewSnapshot(snapshot);
     }
 
-    private String checkDup(SnapshotTable snapshot) throws IOException {
+    public SnapshotTable trySaveNewSnapshot(SnapshotTable snapshotTable) throws IOException {
+
+        String dupTable = checkDupByContent(snapshotTable);
+        if (dupTable != null) {
+            logger.info("Identical snapshot content " + snapshotTable + ", reuse existing snapshot at " + dupTable);
+            return getSnapshotTable(dupTable);
+        }
+
+        save(snapshotTable);
+        snapshotCache.put(snapshotTable.getResourcePath(), snapshotTable);
+
+        return snapshotTable;
+    }
+
+    private String checkDupByInfo(SnapshotTable snapshot) throws IOException {
         ResourceStore store = MetadataManager.getInstance(this.config).getStore();
         String resourceDir = snapshot.getResourceDir();
         ArrayList<String> existings = store.listResources(resourceDir);
@@ -109,10 +119,30 @@ public class SnapshotManager {
         TableSignature sig = snapshot.getSignature();
         for (String existing : existings) {
             SnapshotTable existingTable = load(existing, false); // skip cache,
-                                                                 // direct
-                                                                 // load from
-                                                                 // store
+            // direct
+            // load from
+            // store
             if (sig.equals(existingTable.getSignature()))
+                return existing;
+        }
+
+        return null;
+    }
+
+    private String checkDupByContent(SnapshotTable snapshot) throws IOException {
+        ResourceStore store = MetadataManager.getInstance(this.config).getStore();
+        String resourceDir = snapshot.getResourceDir();
+        ArrayList<String> existings = store.listResources(resourceDir);
+        if (existings == null)
+            return null;
+
+        TableSignature sig = snapshot.getSignature();
+        for (String existing : existings) {
+            SnapshotTable existingTable = load(existing, true); // skip cache,
+            // direct
+            // load from
+            // store
+            if (existingTable != null && existingTable.equals(snapshot))
                 return existing;
         }
 
