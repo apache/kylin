@@ -64,7 +64,7 @@ public class AccessService {
 
     @Transactional
     public Acl init(AclEntity ae, Permission initPermission) {
-        MutableAcl acl = null;
+        Acl acl = null;
         ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(), ae.getId());
 
         try {
@@ -77,11 +77,10 @@ public class AccessService {
         if (null != initPermission) {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             PrincipalSid sid = new PrincipalSid(auth);
-            grant(ae, initPermission, sid);
+            acl = grant(ae, initPermission, sid);
         }
-        acl.setEntriesInheriting(false);
 
-        return aclService.updateAcl(acl);
+        return acl;
     }
 
     @Transactional
