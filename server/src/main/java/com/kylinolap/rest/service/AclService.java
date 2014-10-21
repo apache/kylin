@@ -67,6 +67,7 @@ import org.springframework.util.Assert;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.HBaseConnection;
+import com.kylinolap.common.util.HadoopUtil;
 import com.kylinolap.rest.util.Serializer;
 
 /**
@@ -79,10 +80,10 @@ public class AclService implements MutableAclService {
     private static final Logger logger = LoggerFactory.getLogger(AclService.class);
     private static final Map<ObjectIdentity, Acl> aclCache = new ConcurrentHashMap<ObjectIdentity, Acl>();
 
+    public static final String ACL_INFO_FAMILY = "i";
+    public static final String ACL_ACES_FAMILY = "a";
     private static final String DEFAULT_TABLE_PREFIX = "kylin_metadata";
     private static final String ACL_TABLE_NAME = "_acl";
-    private static final String ACL_INFO_FAMILY = "i";
-    private static final String ACL_ACES_FAMILY = "a";
     private static final String ACL_INFO_FAMILY_TYPE_COLUMN = "t";
     private static final String ACL_INFO_FAMILY_OWNER_COLUMN = "o";
     private static final String ACL_INFO_FAMILY_PARENT_COLUMN = "p";
@@ -94,7 +95,7 @@ public class AclService implements MutableAclService {
 
     private String hbaseUrl = null;
     private String tableNameBase = null;
-    private String userTableName = null;
+    private String aclTableName = null;
 
     private final Field fieldAces = FieldUtils.getField(AclImpl.class, "aces");
     private final Field fieldAcl = FieldUtils.getField(AccessControlEntryImpl.class, "acl");
@@ -117,10 +118,16 @@ public class AclService implements MutableAclService {
         int cut = metadataUrl.indexOf('@');
         tableNameBase = cut < 0 ? DEFAULT_TABLE_PREFIX : metadataUrl.substring(0, cut);
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
-        userTableName = tableNameBase + ACL_TABLE_NAME;
+        aclTableName = tableNameBase + ACL_TABLE_NAME;
 
         fieldAces.setAccessible(true);
         fieldAcl.setAccessible(true);
+        
+        try {
+            HadoopUtil.createHTableIfNeeded(hbaseUrl, aclTableName, ACL_INFO_FAMILY, ACL_ACES_FAMILY);
+        } catch (IOException e) {
+            logger.error(e.getLocalizedMessage(), e);
+        }
     }
 
     @Override
@@ -128,7 +135,7 @@ public class AclService implements MutableAclService {
         List<ObjectIdentity> oids = new ArrayList<ObjectIdentity>();
         HTableInterface htable = null;
         try {
-            htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
+            htable = HBaseConnection.get(hbaseUrl).getTable(aclTableName);
 
             Scan scan = new Scan();
             SingleColumnValueFilter parentFilter = new SingleColumnValueFilter(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(ACL_INFO_FAMILY_PARENT_COLUMN), CompareOp.EQUAL, domainObjSerializer.serialize(new DomainObjectInfo(parentIdentity)));
@@ -178,10 +185,10 @@ public class AclService implements MutableAclService {
         HTableInterface htable = null;
         Result result = null;
         try {
-            htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
+            htable = HBaseConnection.get(hbaseUrl).getTable(aclTableName);
 
             for (ObjectIdentity oid : oids) {
-                if (false && aclCache.containsKey(oid)) {
+                if (aclCache.containsKey(oid)) {
                     aclMaps.put(oid, aclCache.get(oid));
                 } else {
                     result = htable.get(new Get(Bytes.toBytes(String.valueOf(oid.getIdentifier()))));
@@ -236,7 +243,7 @@ public class AclService implements MutableAclService {
 
         HTableInterface htable = null;
         try {
-            htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
+            htable = HBaseConnection.get(hbaseUrl).getTable(aclTableName);
             Put put = new Put(Bytes.toBytes(String.valueOf(objectIdentity.getIdentifier())));
             put.add(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(ACL_INFO_FAMILY_TYPE_COLUMN), Bytes.toBytes(objectIdentity.getType()));
             put.add(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(ACL_INFO_FAMILY_OWNER_COLUMN), sidSerializer.serialize(new SidInfo(sid)));
@@ -257,7 +264,7 @@ public class AclService implements MutableAclService {
     public void deleteAcl(ObjectIdentity objectIdentity, boolean deleteChildren) throws ChildrenExistException {
         HTableInterface htable = null;
         try {
-            htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
+            htable = HBaseConnection.get(hbaseUrl).getTable(aclTableName);
             Delete delete = new Delete(Bytes.toBytes(String.valueOf(objectIdentity.getIdentifier())));
 
             List<ObjectIdentity> children = findChildren(objectIdentity);
@@ -290,7 +297,7 @@ public class AclService implements MutableAclService {
 
         HTableInterface htable = null;
         try {
-            htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
+            htable = HBaseConnection.get(hbaseUrl).getTable(aclTableName);
             Delete delete = new Delete(Bytes.toBytes(String.valueOf(acl.getObjectIdentity().getIdentifier())));
             delete.deleteFamily(Bytes.toBytes(ACL_ACES_FAMILY));
             htable.delete(delete);
@@ -311,7 +318,7 @@ public class AclService implements MutableAclService {
                 htable.put(put);
                 htable.flushCommits(); 
             }
-
+            
             aclCache.remove(acl.getObjectIdentity());
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
@@ -463,7 +470,6 @@ public class AclService implements MutableAclService {
         public void setPermissionMask(int permissionMask) {
             this.permissionMask = permissionMask;
         }
-
     }
 
 }

@@ -48,6 +48,8 @@ public class AccessServiceTest extends TestBase {
 
         AclEntity ae = new MockAclEntity("test-domain-object");
         accessService.clean(ae, true);
+        AclEntity attachedEntity = new MockAclEntity("attached-domain-object");
+        accessService.clean(attachedEntity, true);
         
         // test getAcl
         Acl acl = accessService.getAcl(ae);
@@ -91,7 +93,6 @@ public class AccessServiceTest extends TestBase {
             }
         }
 
-        AclEntity attachedEntity = new MockAclEntity("attached-domain-object");
         accessService.clean(attachedEntity, true);
         
         Acl attachedEntityAcl = accessService.getAcl(attachedEntity);
