@@ -32,6 +32,7 @@ import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
 import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
 import org.apache.hadoop.hbase.regionserver.ConstantSizeRegionSplitPolicy;
 import org.apache.hadoop.hbase.security.User;
+import org.apache.hadoop.hbase.util.CompressionTest;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
@@ -92,7 +93,10 @@ public class CreateHTableJob extends AbstractHadoopJob {
             for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping().getColumnFamily()) {
                 HColumnDescriptor cf = new HColumnDescriptor(cfDesc.getName());
                 cf.setMaxVersions(1);
-                cf.setCompressionType(Algorithm.LZO);
+
+                if (CompressionTest.testCompression(Algorithm.LZO.getName()))
+                    cf.setCompressionType(Algorithm.LZO);
+
                 cf.setDataBlockEncoding(DataBlockEncoding.FAST_DIFF);
                 cf.setInMemory(true);
                 cf.setBlocksize(4 * 1024 * 1024); // set to 4MB

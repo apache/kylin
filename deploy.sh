@@ -19,7 +19,7 @@ echo "This script will help you:"
 echo "1. Check environment"
 echo "2. Build Kylin artifacts"
 echo "3. Prepare test cube related data"
-echo "4. Lauch a web service to build cube and query with (at http://localhost:8081)"
+echo "4. Lauch a web service to build cube and query with (at http://localhost:9080)"
 echo "Please make sure you're running this script on a hadoop CLI machine, and you have enough permissions."
 echo "Also, We assume you have installed: JAVA, TOMCAT, NPM and MAVEN."
 echo "[Warning] The installation may break existing tomcat applications on this CLI"
@@ -119,7 +119,7 @@ CLI_USERNAME_DEFAULT="kylin.job.remote.cli.username=root"
 CLI_PASSWORD_DEFAULT="kylin.job.remote.cli.password=hadoop"
 METADATA_URL_DEFAULT="kylin.metadata.url=kylin_metadata_qa@hbase:sandbox.hortonworks.com:2181:/hbase-unsecure"
 STORAGE_URL_DEFAULT="kylin.storage.url=hbase:sandbox.hortonworks.com:2181:/hbase-unsecure"
-CHECK_URL_DEFAULT="kylin.job.yarn.app.rest.check.status.url=http://sandbox:8088/ws/v1/cluster/apps/${job_id}?anonymous=true"
+CHECK_URL_DEFAULT="kylin.job.yarn.app.rest.check.status.url=http://sandbox"
 
 
 NEW_CLI_HOSTNAME_PREFIX="kylin.job.remote.cli.hostname="
@@ -127,7 +127,7 @@ NEW_CLI_USERNAME_PREFIX="kylin.job.remote.cli.username="
 NEW_CLI_PASSWORD_PREFIX="kylin.job.remote.cli.password="
 NEW_METADATA_URL_PREFIX="kylin.metadata.url=kylin_metadata_qa@hbase:"
 NEW_STORAGE_URL_PREFIX="kylin.storage.url=hbase:"
-NEW_CHECK_URL="kylin.job.yarn.app.rest.check.status.url=http://localhost:8088/ws/v1/cluster/apps/${job_id}?anonymous=true"
+NEW_CHECK_URL="kylin.job.yarn.app.rest.check.status.url=http://localhost"
 
 KYLIN_ZOOKEEPER_URL=${KYLIN_ZOOKEEPER_QUORUM}:${KYLIN_ZOOKEEPER_CLIENT_PORT}:${KYLIN_ZOOKEEPER_ZNODE_PARENT}
 
@@ -213,4 +213,4 @@ sudo -i "${CATALINA_HOME}/bin/startup.sh"
 
 
 echo "Kylin-Deploy Success!"
-echo "Please visit http://<your_sandbox_ip>:8081 to play with the cubes!"
+echo "Please visit http://<your_sandbox_ip>:9080 to play with the cubes!"

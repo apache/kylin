@@ -195,6 +195,7 @@ public class DeployCoprocessorCLI {
             }
 
             fileSystem.setTimes(uploadPath, localCoprocessorFile.lastModified(), System.currentTimeMillis());
+
         }
 
         uploadPath = uploadPath.makeQualified(fileSystem.getUri(), null);
