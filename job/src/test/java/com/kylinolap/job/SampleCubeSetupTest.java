@@ -42,10 +42,21 @@ public class SampleCubeSetupTest extends CubeDevelopTestCase {
         }
 
         //this.createTestMetadata();
-        boolean lzoAvailable = CompressionTest.testCompression(Compression.Algorithm.LZO.getName());
+        boolean lzoAvailable = checkLzoAvailabe();
         initEnv(false, lzoAvailable);//This test case is run by deploy.sh, which will deploy the adjusted kylin.properties at first
 
     }
+
+    private boolean checkLzoAvailabe() throws IOException {
+        File temp = File.createTempFile("test", ".tmp");
+        try {
+            CompressionTest.main(new String[] { "file://" + temp.toString(), "lzo" });
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
 
     @After
     public void after() throws IOException {
