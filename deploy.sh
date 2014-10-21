@@ -104,7 +104,7 @@ echo "retrieving classpath..."
 cd $KYLIN_HOME/job/target
 JOB_JAR_NAME="kylin-job-latest.jar"
 #generate the variables: KYLIN_LD_LIBRARY_PATH,KYLIN_HBASE_CLASSPATH,KYLIN_HBASE_CONF_PATH
-hbase org.apache.hadoop.util.RunJar $JOB_JAR_NAME com.kylinolap.job.deployment.HbaseConfigPrinter > /tmp/kylin_retrieve.sh
+hbase org.apache.hadoop.util.RunJar $JOB_JAR_NAME com.kylinolap.job.deployment.HbaseConfigPrinter /tmp/kylin_retrieve.sh
 #load variables: KYLIN_LD_LIBRARY_PATH,KYLIN_HBASE_CLASSPATH,KYLIN_HBASE_CONF_PATH
 source /tmp/kylin_retrieve.sh
 
