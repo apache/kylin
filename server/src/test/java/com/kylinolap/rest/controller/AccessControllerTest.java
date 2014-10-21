@@ -50,8 +50,6 @@ public class AccessControllerTest extends TestBase {
 
     @Test
     public void testBasics() throws IOException {
-        Assert.assertNotNull(accessController.getAccessEntities("JobInstance", ""));
-
         List<AccessEntryResponse> aes = accessController.getAccessEntities("CubeInstance", "a24ca905-1fc6-4f67-985c-38fa5aeafd92");
         Assert.assertTrue(aes.size() == 0);
 

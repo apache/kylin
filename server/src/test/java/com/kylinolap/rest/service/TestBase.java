@@ -48,9 +48,6 @@ public class TestBase extends HBaseMetadataTestCase {
 
     @BeforeClass
     public static void setupResource() throws Exception {
-        HBaseMetadataTestCase baseTestCase = new HBaseMetadataTestCase();
-        baseTestCase.createTestMetadata();
-
         Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", "ROLE_ADMIN");
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
@@ -59,6 +56,11 @@ public class TestBase extends HBaseMetadataTestCase {
     public void setUp() {
         KylinConfig.destoryInstance();
         this.createTestMetadata();
+        try {
+            this.installMetadataToHBase();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         MetadataManager.removeInstance(getTestConfig());
         CubeManager.removeInstance(this.getTestConfig());
