@@ -41,12 +41,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.HBaseConnection;
 import com.kylinolap.rest.security.UserManager;
+import com.kylinolap.rest.util.Serializer;
 
 /**
  * @author xduo
@@ -57,6 +56,8 @@ public class UserService implements UserManager{
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
+    private Serializer<UserGrantedAuthority[]> ugaSerializer = new Serializer<UserGrantedAuthority[]>(UserGrantedAuthority[].class);
+    
     private static final String DEFAULT_TABLE_PREFIX = "kylin_metadata";
     private static final String USER_TABLE_NAME = "_user";
     private static final String USER_AUTHORITY_FAMILY = "a";
@@ -83,7 +84,9 @@ public class UserService implements UserManager{
             Get get = new Get(Bytes.toBytes(username));
             get.addFamily(Bytes.toBytes(USER_AUTHORITY_FAMILY));
             Result result = htable.get(get);
-            Collection<? extends GrantedAuthority> authorities = deserialize(result.getValue(Bytes.toBytes(USER_AUTHORITY_FAMILY), Bytes.toBytes(USER_AUTHORITY_COLUMN)));
+            
+            byte[] gaBytes = result.getValue(Bytes.toBytes(USER_AUTHORITY_FAMILY), Bytes.toBytes(USER_AUTHORITY_COLUMN));
+            Collection<? extends GrantedAuthority> authorities = Arrays.asList(ugaSerializer.deserialize(gaBytes));
 
             return new User(username, "N/A", authorities);
         } catch (IOException e) {
@@ -169,7 +172,8 @@ public class UserService implements UserManager{
             scanner = htable.getScanner(s);
 
             for (Result result = scanner.next(); result != null; result = scanner.next()) {
-                Collection<? extends GrantedAuthority> authCollection = deserialize(result.getValue(Bytes.toBytes(USER_AUTHORITY_FAMILY), Bytes.toBytes(USER_AUTHORITY_COLUMN)));
+                byte[] uaBytes = result.getValue(Bytes.toBytes(USER_AUTHORITY_FAMILY), Bytes.toBytes(USER_AUTHORITY_COLUMN));
+                Collection<? extends GrantedAuthority> authCollection = Arrays.asList(ugaSerializer.deserialize(uaBytes));
                 
                 for (GrantedAuthority auth: authCollection){
                     if (!authorities.contains(auth.getAuthority())){
@@ -229,29 +233,17 @@ public class UserService implements UserManager{
         }
     }
 
-    private Collection<? extends GrantedAuthority> deserialize(byte[] value) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-
-            return Arrays.asList(mapper.readValue(value, UserGrantedAuthority[].class));
-        } catch (JsonParseException e) {
-            logger.error(e.getLocalizedMessage(), e);
-        } catch (JsonMappingException e) {
-            logger.error(e.getLocalizedMessage(), e);
-        } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
+    private byte[] serialize(Collection<? extends GrantedAuthority> auths) {
+        if (null == auths) {
+            return null;
         }
 
-        return null;
-    }
-
-    private byte[] serialize(Collection<? extends GrantedAuthority> collection) {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         DataOutputStream dout = new DataOutputStream(buf);
 
         try {
             ObjectMapper mapper = new ObjectMapper();
-            mapper.writeValue(dout, collection);
+            mapper.writeValue(dout, auths);
             dout.close();
             buf.close();
         } catch (IOException e) {
@@ -260,5 +252,4 @@ public class UserService implements UserManager{
 
         return buf.toByteArray();
     }
-
 }
