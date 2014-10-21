@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.client.Delete;
@@ -78,7 +77,6 @@ import com.kylinolap.rest.util.Serializer;
 public class AclService implements MutableAclService {
 
     private static final Logger logger = LoggerFactory.getLogger(AclService.class);
-    private static final Map<ObjectIdentity, Acl> aclCache = new ConcurrentHashMap<ObjectIdentity, Acl>();
 
     public static final String ACL_INFO_FAMILY = "i";
     public static final String ACL_ACES_FAMILY = "a";
@@ -102,7 +100,7 @@ public class AclService implements MutableAclService {
 
     @Autowired
     protected PermissionGrantingStrategy permissionGrantingStrategy;
-    
+
     @Autowired
     protected PermissionFactory aclPermissionFactory;
 
@@ -122,7 +120,7 @@ public class AclService implements MutableAclService {
 
         fieldAces.setAccessible(true);
         fieldAcl.setAccessible(true);
-        
+
         try {
             HadoopUtil.createHTableIfNeeded(hbaseUrl, aclTableName, ACL_INFO_FAMILY, ACL_ACES_FAMILY);
         } catch (IOException e) {
@@ -188,33 +186,26 @@ public class AclService implements MutableAclService {
             htable = HBaseConnection.get(hbaseUrl).getTable(aclTableName);
 
             for (ObjectIdentity oid : oids) {
-                if (aclCache.containsKey(oid)) {
-                    aclMaps.put(oid, aclCache.get(oid));
-                } else {
-                    result = htable.get(new Get(Bytes.toBytes(String.valueOf(oid.getIdentifier()))));
+                result = htable.get(new Get(Bytes.toBytes(String.valueOf(oid.getIdentifier()))));
 
-                    if (null != result && !result.isEmpty()) {
-                        
-                        SidInfo owner = sidSerializer.deserialize(result.getValue(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(ACL_INFO_FAMILY_OWNER_COLUMN)));
-                        Sid ownerSid = (null == owner) ? null : (owner.isPrincipal() ? new PrincipalSid(owner.getSid()) : new GrantedAuthoritySid(owner.getSid()));
-                        boolean entriesInheriting = Bytes.toBoolean(result.getValue(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(ACL_INFO_FAMILY_ENTRY_INHERIT_COLUMN)));
-                        
-                        Acl parentAcl = null;
-                        DomainObjectInfo parentInfo = domainObjSerializer.deserialize(result.getValue(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(ACL_INFO_FAMILY_PARENT_COLUMN)));
-                        if (null != parentInfo) {
-                            ObjectIdentity parentObj = new ObjectIdentityImpl(parentInfo.getType(), parentInfo.getId());
-                            parentAcl = readAclById(parentObj, null);
-                        }
-                        
-                        AclImpl acl = new AclImpl(oid, oid.getIdentifier(), aclAuthorizationStrategy, permissionGrantingStrategy, parentAcl, null, entriesInheriting, ownerSid);
+                if (null != result && !result.isEmpty()) {
+                    SidInfo owner = sidSerializer.deserialize(result.getValue(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(ACL_INFO_FAMILY_OWNER_COLUMN)));
+                    Sid ownerSid = (null == owner) ? null : (owner.isPrincipal() ? new PrincipalSid(owner.getSid()) : new GrantedAuthoritySid(owner.getSid()));
+                    boolean entriesInheriting = Bytes.toBoolean(result.getValue(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(ACL_INFO_FAMILY_ENTRY_INHERIT_COLUMN)));
 
-                        genAces(sids, result, acl);
-
-                        aclMaps.put(oid, acl);
-                        aclCache.put(oid, acl);
-                    } else {
-                        throw new NotFoundException("Unable to find ACL information for object identity '" + oid + "'");
+                    Acl parentAcl = null;
+                    DomainObjectInfo parentInfo = domainObjSerializer.deserialize(result.getValue(Bytes.toBytes(ACL_INFO_FAMILY), Bytes.toBytes(ACL_INFO_FAMILY_PARENT_COLUMN)));
+                    if (null != parentInfo) {
+                        ObjectIdentity parentObj = new ObjectIdentityImpl(parentInfo.getType(), parentInfo.getId());
+                        parentAcl = readAclById(parentObj, null);
                     }
+
+                    AclImpl acl = new AclImpl(oid, oid.getIdentifier(), aclAuthorizationStrategy, permissionGrantingStrategy, parentAcl, null, entriesInheriting, ownerSid);
+                    genAces(sids, result, acl);
+
+                    aclMaps.put(oid, acl);
+                } else {
+                    throw new NotFoundException("Unable to find ACL information for object identity '" + oid + "'");
                 }
             }
         } catch (IOException e) {
@@ -278,8 +269,6 @@ public class AclService implements MutableAclService {
 
             htable.delete(delete);
             htable.flushCommits();
-
-            aclCache.remove(objectIdentity);
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
         } finally {
@@ -313,13 +302,10 @@ public class AclService implements MutableAclService {
                 put.add(Bytes.toBytes(ACL_ACES_FAMILY), Bytes.toBytes(aceInfo.getSidInfo().getSid()), aceSerializer.serialize(aceInfo));
             }
 
-            if (!put.isEmpty())
-            {
+            if (!put.isEmpty()) {
                 htable.put(put);
-                htable.flushCommits(); 
+                htable.flushCommits();
             }
-            
-            aclCache.remove(acl.getObjectIdentity());
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
         } finally {
@@ -341,15 +327,17 @@ public class AclService implements MutableAclService {
                     sidName = ((GrantedAuthoritySid) sid).getGrantedAuthority();
                 }
 
-                aceInfos.add(aceSerializer.deserialize(result.getValue(Bytes.toBytes(ACL_ACES_FAMILY), Bytes.toBytes(sidName))));
+                AceInfo aceInfo = aceSerializer.deserialize(result.getValue(Bytes.toBytes(ACL_ACES_FAMILY), Bytes.toBytes(sidName)));
+                if (null != aceInfo) {
+                    aceInfos.add(aceInfo);
+                }
             }
         } else {
             NavigableMap<byte[], byte[]> familyMap = result.getFamilyMap(Bytes.toBytes(ACL_ACES_FAMILY));
             for (byte[] qualifier : familyMap.keySet()) {
                 AceInfo aceInfo = aceSerializer.deserialize(familyMap.get(qualifier));
-                
-                if (null != aceInfo)
-                {
+
+                if (null != aceInfo) {
                     aceInfos.add(aceInfo);
                 }
             }
@@ -358,9 +346,8 @@ public class AclService implements MutableAclService {
         List<AccessControlEntry> newAces = new ArrayList<AccessControlEntry>();
         for (int i = 0; i < aceInfos.size(); i++) {
             AceInfo aceInfo = aceInfos.get(i);
-            
-            if (null != aceInfo)
-            {
+
+            if (null != aceInfo) {
                 Sid sid = aceInfo.getSidInfo().isPrincipal() ? new PrincipalSid(aceInfo.getSidInfo().getSid()) : new GrantedAuthoritySid(aceInfo.getSidInfo().getSid());
                 AccessControlEntry ace = new AccessControlEntryImpl(Long.valueOf(i), acl, sid, aclPermissionFactory.buildFromMask(aceInfo.getPermissionMask()), true, false, false);
                 newAces.add(ace);
