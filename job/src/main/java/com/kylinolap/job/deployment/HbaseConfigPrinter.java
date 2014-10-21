@@ -3,10 +3,12 @@ package com.kylinolap.job.deployment;
 import java.io.File;
 import java.util.Map;
 
+import com.kylinolap.job.tools.LZOSupportnessChecker;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hbase.util.CompressionTest;
 
 /**
  * Created by honma on 9/30/14.
@@ -22,6 +24,7 @@ public class HbaseConfigPrinter {
     }
 
     private static void printConfigs() {
+        System.out.println("export KYLIN_LZO_SUPPORTED=" + ConfigLoader.LZO_INFO_LOADER.loadValue());
         System.out.println("export KYLIN_LD_LIBRARY_PATH=" + ConfigLoader.LD_LIBRARY_PATH_LOADER.loadValue());
         System.out.println("export KYLIN_HBASE_CLASSPATH=" + ConfigLoader.HBASE_CLASSPATH_LOADER.loadValue());
         System.out.println("export KYLIN_HBASE_CONF_PATH=" + ConfigLoader.HBASE_CONF_FOLDER_LOADER.loadValue());
@@ -41,7 +44,12 @@ public class HbaseConfigPrinter {
 
     enum ConfigLoader {
 
-
+        LZO_INFO_LOADER {
+            @Override
+            public String loadValue() {
+                return LZOSupportnessChecker.getSupportness() ? "true" : "false";
+            }
+        },
 
         ZOOKEEP_QUORUM_LOADER {
             @Override

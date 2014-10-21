@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.kylinolap.job.tools.LZOSupportnessChecker;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -94,8 +95,12 @@ public class CreateHTableJob extends AbstractHadoopJob {
                 HColumnDescriptor cf = new HColumnDescriptor(cfDesc.getName());
                 cf.setMaxVersions(1);
 
-                if (CompressionTest.testCompression(Algorithm.LZO.getName()))
+                if (LZOSupportnessChecker.getSupportness()) {
                     cf.setCompressionType(Algorithm.LZO);
+                    log.info("hbase will not use lzo to compress data");
+                } else {
+                    log.info("hbase will not use lzo to compress data");
+                }
 
                 cf.setDataBlockEncoding(DataBlockEncoding.FAST_DIFF);
                 cf.setInMemory(true);
