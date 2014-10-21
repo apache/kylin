@@ -29,14 +29,16 @@ public class SampleCubeSetupTest extends CubeDevelopTestCase {
 
         String confPaths = System.getenv("KYLIN_HBASE_CONF_PATH");
         System.out.println("The conf paths is " + confPaths);
-        String[] paths = confPaths.split(":");
-        for (String path : paths) {
-            if (!StringUtils.isEmpty(path)) {
-                try {
-                    ClasspathUtil.addClasspath(new File(path).getAbsolutePath());
-                } catch (Exception e) {
-                    System.out.println(e.getLocalizedMessage());
-                    System.out.println(e.getStackTrace());
+        if(confPaths!= null) {
+            String[] paths = confPaths.split(":");
+            for (String path : paths) {
+                if (!StringUtils.isEmpty(path)) {
+                    try {
+                        ClasspathUtil.addClasspath(new File(path).getAbsolutePath());
+                    } catch (Exception e) {
+                        System.out.println(e.getLocalizedMessage());
+                        System.out.println(e.getStackTrace());
+                    }
                 }
             }
         }
