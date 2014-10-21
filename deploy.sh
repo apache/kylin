@@ -145,7 +145,6 @@ elif [ "$HOSTNAME" == "sandbox.hortonworks.com" ]
 then
     echo "Running on a hortonworks sandbox"
     cat examples/test_case_data/kylin.properties | \
-    sed -e "s,${CHECK_URL_DEFAULT},${NEW_CHECK_URL}," | \
     sed -e "s,${CLI_HOSTNAME_DEFAULT},${NEW_CLI_HOSTNAME_PREFIX}${HOSTNAME}," | \
     sed -e "s,${CLI_PASSWORD_DEFAULT},${NEW_CLI_PASSWORD_PREFIX}hadoop," | \
     sed -e "s,${METADATA_URL_DEFAULT},${NEW_METADATA_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," | \
