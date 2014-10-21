@@ -25,7 +25,6 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.CubeSegmentStatusEnum;
-import com.kylinolap.dict.DictionaryGenerator;
 import com.kylinolap.metadata.model.cube.DimensionDesc;
 import com.kylinolap.metadata.model.cube.TblColRef;
 

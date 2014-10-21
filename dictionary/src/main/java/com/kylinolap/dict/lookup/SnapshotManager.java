@@ -20,8 +20,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.kylinolap.dict.Dictionary;
-import com.kylinolap.dict.DictionaryInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -136,12 +134,8 @@ public class SnapshotManager {
         if (existings == null)
             return null;
 
-        TableSignature sig = snapshot.getSignature();
         for (String existing : existings) {
-            SnapshotTable existingTable = load(existing, true); // skip cache,
-            // direct
-            // load from
-            // store
+            SnapshotTable existingTable = load(existing, true); // skip cache, direct load from store
             if (existingTable != null && existingTable.equals(snapshot))
                 return existing;
         }

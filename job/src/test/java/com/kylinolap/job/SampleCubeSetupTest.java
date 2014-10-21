@@ -2,7 +2,6 @@ package com.kylinolap.job;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hbase.io.compress.Compression;
@@ -13,10 +12,8 @@ import org.junit.Test;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.ClasspathUtil;
-import com.kylinolap.cube.CubeBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.job.engine.JobEngineConfig;
 
 /**
  * Created by honma on 9/24/14.
