@@ -44,6 +44,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.HBaseConnection;
+import com.kylinolap.common.util.HadoopUtil;
 import com.kylinolap.rest.security.UserManager;
 import com.kylinolap.rest.util.Serializer;
 
@@ -58,9 +59,9 @@ public class UserService implements UserManager{
 
     private Serializer<UserGrantedAuthority[]> ugaSerializer = new Serializer<UserGrantedAuthority[]>(UserGrantedAuthority[].class);
     
+    public static final String USER_AUTHORITY_FAMILY = "a";
     private static final String DEFAULT_TABLE_PREFIX = "kylin_metadata";
     private static final String USER_TABLE_NAME = "_user";
-    private static final String USER_AUTHORITY_FAMILY = "a";
     private static final String USER_AUTHORITY_COLUMN = "c";
     private String hbaseUrl = null;
     private String tableNameBase = null;
@@ -73,6 +74,12 @@ public class UserService implements UserManager{
         tableNameBase = cut < 0 ? DEFAULT_TABLE_PREFIX : metadataUrl.substring(0, cut);
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
         userTableName = tableNameBase + USER_TABLE_NAME;
+        
+        try {
+            HadoopUtil.createHTableIfNeeded(hbaseUrl, userTableName, USER_AUTHORITY_FAMILY, QueryService.USER_QUERY_FAMILY);
+        } catch (IOException e) {
+            logger.error(e.getLocalizedMessage(), e);
+        }
     }
 
     @Override
