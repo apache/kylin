@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.hbase.io.compress.Compression;
-import org.apache.hadoop.hbase.util.CompressionTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,22 +41,13 @@ public class SampleCubeSetupTest extends CubeDevelopTestCase {
             }
         }
 
+
         //this.createTestMetadata();
-        boolean lzoAvailable = checkLzoAvailabe();
+        String lzoSupportness = System.getenv("KYLIN_LZO_SUPPORTED");
+        boolean lzoAvailable = "true".equalsIgnoreCase(lzoSupportness);
         initEnv(false, lzoAvailable);//This test case is run by deploy.sh, which will deploy the adjusted kylin.properties at first
 
     }
-
-    private boolean checkLzoAvailabe() throws IOException {
-        File temp = File.createTempFile("test", ".tmp");
-        try {
-            CompressionTest.main(new String[] { "file://" + temp.toString(), "lzo" });
-        } catch (Exception e) {
-            return false;
-        }
-        return true;
-    }
-
 
     @After
     public void after() throws IOException {
