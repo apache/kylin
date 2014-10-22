@@ -58,7 +58,25 @@ public class CubeMigrationCLI {
     private static Path dstCoprocessorPath;
 
     public static void main(String[] args) throws IOException, JSONException, InterruptedException {
+
+        if (args.length != 6) {
+            usage();
+            System.exit(1);
+        }
+
         moveCube(args[0], args[1], args[2], args[3], args[4], args[5]);
+    }
+
+    private static void usage() {
+        System.out.println("Usage: CubeMigrationCLI srcKylinConfigUri dstKylinConfigUri cubeName projectName overwriteIfExists realExecute");
+        System.out.println(
+                " srcKylinConfigUri: The KylinConfig of the cube’s source \n" +
+                        "dstKylinConfigUri: The KylinConfig of the cube’s new home \n" +
+                        "cubeName: the name of cube to be migrated. \n" +
+                        "projectName: The target project in the target environment.(Make sure it exist) \n" +
+                        "overwriteIfExists: overwrite cube if it already exists in the target environment. \n" +
+                        "realExecute: if false, just print the operations to take, if true, do the real migration. \n");
+
     }
 
     public static void moveCube(KylinConfig srcCfg, KylinConfig dstCfg, String cubeName, String projectName, String overwriteIfExists, String realExecute) throws IOException, JSONException, InterruptedException {

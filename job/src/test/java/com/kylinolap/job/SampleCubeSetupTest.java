@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.hbase.io.compress.Compression;
-import org.apache.hadoop.hbase.util.CompressionTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,34 +27,27 @@ public class SampleCubeSetupTest extends CubeDevelopTestCase {
 
         String confPaths = System.getenv("KYLIN_HBASE_CONF_PATH");
         System.out.println("The conf paths is " + confPaths);
-        String[] paths = confPaths.split(":");
-        for (String path : paths) {
-            if (!StringUtils.isEmpty(path)) {
-                try {
-                    ClasspathUtil.addClasspath(new File(path).getAbsolutePath());
-                } catch (Exception e) {
-                    System.out.println(e.getLocalizedMessage());
-                    System.out.println(e.getStackTrace());
+        if(confPaths!= null) {
+            String[] paths = confPaths.split(":");
+            for (String path : paths) {
+                if (!StringUtils.isEmpty(path)) {
+                    try {
+                        ClasspathUtil.addClasspath(new File(path).getAbsolutePath());
+                    } catch (Exception e) {
+                        System.out.println(e.getLocalizedMessage());
+                        System.out.println(e.getStackTrace());
+                    }
                 }
             }
         }
 
+
         //this.createTestMetadata();
-        boolean lzoAvailable = checkLzoAvailabe();
+        String lzoSupportness = System.getenv("KYLIN_LZO_SUPPORTED");
+        boolean lzoAvailable = "true".equalsIgnoreCase(lzoSupportness);
         initEnv(false, lzoAvailable);//This test case is run by deploy.sh, which will deploy the adjusted kylin.properties at first
 
     }
-
-    private boolean checkLzoAvailabe() throws IOException {
-        File temp = File.createTempFile("test", ".tmp");
-        try {
-            CompressionTest.main(new String[] { "file://" + temp.toString(), "lzo" });
-        } catch (Exception e) {
-            return false;
-        }
-        return true;
-    }
-
 
     @After
     public void after() throws IOException {
