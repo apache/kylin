@@ -1,12 +1,17 @@
 package com.kylinolap.job.deployment;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
+import com.kylinolap.job.tools.LZOSupportnessChecker;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hbase.util.CompressionTest;
 
 /**
  * Created by honma on 9/30/14.
@@ -17,17 +22,33 @@ import org.apache.hadoop.hbase.HConstants;
  * visible to this class.
  */
 public class HbaseConfigPrinter {
-    public static void main(String[] args) {
-        printConfigs();
+    public static void main(String[] args) throws IOException {
+        if (args.length != 1) {
+            System.out.println("Usage: hbase org.apache.hadoop.util.RunJar kylin-job-0.5.7-SNAPSHOT-job.jar com.kylinolap.job.deployment.HadoopConfigPrinter targetFile");
+            System.exit(1);
+        }
+
+        printConfigs(args[0]);
     }
 
-    private static void printConfigs() {
-        System.out.println("export KYLIN_LD_LIBRARY_PATH=" + ConfigLoader.LD_LIBRARY_PATH_LOADER.loadValue());
-        System.out.println("export KYLIN_HBASE_CLASSPATH=" + ConfigLoader.HBASE_CLASSPATH_LOADER.loadValue());
-        System.out.println("export KYLIN_HBASE_CONF_PATH=" + ConfigLoader.HBASE_CONF_FOLDER_LOADER.loadValue());
-        System.out.println("export KYLIN_ZOOKEEPER_QUORUM=" + ConfigLoader.ZOOKEEP_QUORUM_LOADER.loadValue());
-        System.out.println("export KYLIN_ZOOKEEPER_CLIENT_PORT=" + ConfigLoader.ZOOKEEPER_CLIENT_PORT_LOADER.loadValue());
-        System.out.println("export KYLIN_ZOOKEEPER_ZNODE_PARENT=" + ConfigLoader.ZOOKEEPER_ZNODE_PARENT_LOADER.loadValue());
+    private static void printConfigs(String targetFile) throws IOException {
+
+        File output = new File(targetFile);
+        if (output.exists() && output.isDirectory()) {
+            throw new IllegalStateException("The output file: " + targetFile + " is a directory");
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("export KYLIN_LZO_SUPPORTED=" + ConfigLoader.LZO_INFO_LOADER.loadValue() + "\n");
+        sb.append("export KYLIN_LD_LIBRARY_PATH=" + ConfigLoader.LD_LIBRARY_PATH_LOADER.loadValue() + "\n");
+        sb.append("export KYLIN_HBASE_CLASSPATH=" + ConfigLoader.HBASE_CLASSPATH_LOADER.loadValue() + "\n");
+        sb.append("export KYLIN_HBASE_CONF_PATH=" + ConfigLoader.HBASE_CONF_FOLDER_LOADER.loadValue() + "\n");
+        sb.append("export KYLIN_ZOOKEEPER_QUORUM=" + ConfigLoader.ZOOKEEP_QUORUM_LOADER.loadValue() + "\n");
+        sb.append("export KYLIN_ZOOKEEPER_CLIENT_PORT=" + ConfigLoader.ZOOKEEPER_CLIENT_PORT_LOADER.loadValue() + "\n");
+        sb.append("export KYLIN_ZOOKEEPER_ZNODE_PARENT=" + ConfigLoader.ZOOKEEPER_ZNODE_PARENT_LOADER.loadValue() + "\n");
+
+        FileUtils.writeStringToFile(output, sb.toString());
     }
 
     @SuppressWarnings("unused")
@@ -40,6 +61,13 @@ public class HbaseConfigPrinter {
     }
 
     enum ConfigLoader {
+
+        LZO_INFO_LOADER {
+            @Override
+            public String loadValue() {
+                return LZOSupportnessChecker.getSupportness() ? "true" : "false";
+            }
+        },
 
         ZOOKEEP_QUORUM_LOADER {
             @Override
