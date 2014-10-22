@@ -81,22 +81,7 @@ public class KylinQueryTest extends KylinTestBase {
     public static void tearDown() throws Exception {
         printInfo("tearDown");
         printInfo("Closing connection...");
-        // printInfo("Count of compared queries: " + compQueryCount);
-        // printInfo("among which the count of zero result queries: " +
-        // zeroResultQueries.size());
-        // printInfo("Zero result queries listed:");
-        // for (int i = 0; i < zeroResultQueries.size(); ++i) {
-        // System.out.println("" + (i + 1) + ":");
-        // System.out.println(zeroResultQueries.get(i));
-        // System.out.println("");
-        // }
         clean();
-        // other test cases still need the drivers
-        // Enumeration<Driver> drivers = DriverManager.getDrivers();
-        // while (drivers.hasMoreElements()) {
-        // DriverManager.deregisterDriver(drivers.nextElement());
-        // }
-
     }
 
     protected static void clean() {
@@ -147,7 +132,7 @@ public class KylinQueryTest extends KylinTestBase {
         // String queryFileName =
         // "src/test/resources/query/sql_tableau/query22.sql.disabled";
 
-        String queryFileName = "src/test/resources/query/sql/query75.sql";
+        String queryFileName = "src/test/resources/query/sql_lookup/query04.sql";
 
         File sqlFile = new File(queryFileName);
         runSQL(sqlFile, true, false);
@@ -186,17 +171,14 @@ public class KylinQueryTest extends KylinTestBase {
     public void testOrderByQuery() throws Exception {
         execAndCompQuery("src/test/resources/query/sql_orderby", null, true);
         // FIXME
-        // as of optiq 0.8, we lost metadata type with "order by" clause, e.g.
-        // sql_orderby/query01.sql
-        // thus, temporarily the "order by" clause was cross out, and the
-        // needSort is set to true
-        // execAndCompQuery("src/test/resources/query/sql_orderby", null,
-        // false);
+        // as of optiq 0.8, we lost metadata type with "order by" clause, e.g. sql_orderby/query01.sql
+        // thus, temporarily the "order by" clause was cross out, and the needSort is set to true
+        // execAndCompQuery("src/test/resources/query/sql_orderby", null, false);
     }
 
     @Test
     public void testLookupQuery() throws Exception {
-        batchExecuteQuery("src/test/resources/query/sql_lookup");
+        execAndCompQuery("src/test/resources/query/sql_lookup", null, true);
     }
 
     @Test
