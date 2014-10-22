@@ -51,10 +51,11 @@ public class StorageContext {
     private boolean avoidAggregation;
     private boolean exactAggregation;
     private Set<TblColRef> otherMandatoryColumns;
+    private boolean enableLimit;
+    private boolean enableCoprocessor;
 
     private long totalScanCount;
     private Cuboid cuboid;
-    private boolean enableLimit;
     private boolean partialResultReturned;
 
     public StorageContext() {
@@ -70,8 +71,9 @@ public class StorageContext {
         this.avoidAggregation = false;
         this.exactAggregation = false;
         this.otherMandatoryColumns = new HashSet<TblColRef>();
-
         this.enableLimit = false;
+        this.enableCoprocessor = false;
+
         this.acceptPartialResult = false;
         this.partialResultReturned = false;
     }
@@ -116,7 +118,7 @@ public class StorageContext {
         this.enableLimit = true;
     }
 
-    public boolean isLimitEnable() {
+    public boolean isLimitEnabled() {
         return this.enableLimit;
     }
 
@@ -197,6 +199,14 @@ public class StorageContext {
     
     public Set<TblColRef> getOtherMandatoryColumns() {
         return this.otherMandatoryColumns;
+    }
+    
+    public void enableCoprocessor() {
+        this.enableCoprocessor = true;
+    }
+    
+    public boolean isCoprocessorEnabled() {
+        return this.enableCoprocessor;
     }
 
 }

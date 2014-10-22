@@ -117,7 +117,7 @@ public class ConcurrentHBaseTupleIterator implements ITupleIterator {
         this.filter = filter;
         this.rowValueDecoders = rowValueDecoders;
         this.limit = context.getLimit();
-        this.isLimitEnable = context.isLimitEnable();
+        this.isLimitEnable = context.isLimitEnabled();
         this.threshold = context.getThreshold();
         this.acceptPartialResult = context.isAcceptPartialResult();
         this.context = context;

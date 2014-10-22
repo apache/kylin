@@ -15,6 +15,8 @@
  */
 package com.kylinolap.query.test;
 
+import static org.junit.Assert.*;
+
 import java.io.File;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -33,6 +35,7 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.query.enumerator.OLAPQuery;
+import com.kylinolap.query.relnode.OLAPContext;
 import com.kylinolap.query.schema.OLAPSchemaFactory;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorEnabler;
 
@@ -132,7 +135,7 @@ public class KylinQueryTest extends KylinTestBase {
         // String queryFileName =
         // "src/test/resources/query/sql_tableau/query22.sql.disabled";
 
-        String queryFileName = "src/test/resources/query/sql_lookup/query04.sql";
+        String queryFileName = "src/test/resources/query/sql/query01.sql";
 
         File sqlFile = new File(queryFileName);
         runSQL(sqlFile, true, false);
@@ -150,7 +153,7 @@ public class KylinQueryTest extends KylinTestBase {
 
         executeQuery(kylinConn, queryFileName, sql, true);
     }
-
+    
     @Ignore
     @Test
     public void testTableauProbing() throws Exception {
@@ -242,6 +245,21 @@ public class KylinQueryTest extends KylinTestBase {
     @Test
     public void testDynamicQuery() throws Exception {
         execAndCompDynamicQuery("src/test/resources/query/sql_dynamic", null, true);
+    }
+
+    @Test
+    public void testLimitEnabled() throws Exception {
+        runSqlFile("src/test/resources/query/sql_optimize/enable-limit01.sql");
+        assertLimitWasEnabled();
+    }
+
+    private void assertLimitWasEnabled() {
+        OLAPContext context = getFirstOLAPContext();
+        assertTrue(context.storageContext.isLimitEnabled());
+    }
+
+    private OLAPContext getFirstOLAPContext() {
+        return OLAPContext.getThreadLocalContexts().iterator().next();
     }
 
 }

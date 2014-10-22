@@ -57,6 +57,7 @@ import com.kylinolap.storage.filter.CompareTupleFilter;
 import com.kylinolap.storage.filter.LogicalTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorEnabler;
 import com.kylinolap.storage.tuple.ITupleIterator;
 
 /**
@@ -118,13 +119,12 @@ public class HBaseStorageEngine implements IStorageEngine {
         // translate filter into segment scan ranges
         List<HBaseKeyRange> scans = buildScanRanges(flatFilter, dimensionsD);
 
-        // post process filter: remove unused segment & set limit
-        postProcessFilter(scans, flatFilter, isExactAggregation, context);
-
         // check involved measures, build value decoder for each each family:column
-        List<RowValueDecoder> valueDecoders = translateAggregation(cubeDesc.getHBaseMapping(), metrics, scans, isExactAggregation);
+        List<RowValueDecoder> valueDecoders = translateAggregation(cubeDesc.getHBaseMapping(), metrics, scans, context);
 
-        setThreshold(dimensionsD, valueDecoders, context);
+        setThreshold(dimensionsD, valueDecoders, context); // set cautious threshold to prevent out of memory
+        setCoprocessor(groupsCopD, valueDecoders, context); // enable coprocessor if beneficial
+        setLimit(filter, context);
 
         HConnection conn = HBaseConnection.get(context.getConnUrl());
         return new SerializedHBaseTupleIterator(conn, scans, cubeInstance, dimensionsD, filterD, groupsCopD, valueDecoders, context);
@@ -263,15 +263,27 @@ public class HBaseStorageEngine implements IStorageEngine {
         }
 
         List<TupleFilter> children = (List<TupleFilter>) filter.getChildren();
-        for (int i = 0; i < children.size(); i++) {
-            TupleFilter translated = translateDerived(children.get(i), collector);
-            if (children.get(i) != translated) {
-                if ((filter instanceof LogicalTupleFilter) == false)
-                    throw new IllegalStateException("Cannot replace derived filter");
-                children.set(i, translated);
-            }
+        List<TupleFilter> newChildren = Lists.newArrayListWithCapacity(children.size());
+        boolean modified = false;
+        for (TupleFilter child : children) {
+            TupleFilter translated = translateDerived(child, collector);
+            newChildren.add(translated);
+            if (child != translated)
+                modified = true;
+        }
+        if (modified) {
+            filter = replaceChildren(filter, newChildren);
         }
         return filter;
+    }
+
+    private TupleFilter replaceChildren(TupleFilter filter, List<TupleFilter> newChildren) {
+        if (filter instanceof LogicalTupleFilter) {
+            LogicalTupleFilter r = new LogicalTupleFilter(filter.getOperator());
+            r.addChildren(newChildren);
+            return r;
+        } else
+            throw new IllegalStateException("Cannot replaceChildren on " + filter);
     }
 
     private TupleFilter translateDerivedInCompare(CompareTupleFilter compf, Set<TblColRef> collector) {
@@ -295,27 +307,8 @@ public class HBaseStorageEngine implements IStorageEngine {
         return translatedFilter;
     }
 
-    private void setThreshold(Collection<TblColRef> dimensions, List<RowValueDecoder> valueDecoders, StorageContext context) {
-        if (RowValueDecoder.hasMemHungryCountDistinct(valueDecoders) == false) {
-            return;
-        }
-
-        int rowSizeEst = dimensions.size() * 3;
-        for (RowValueDecoder decoder : valueDecoders) {
-            MeasureDesc[] measures = decoder.getMeasures();
-            BitSet projectionIndex = decoder.getProjectionIndex();
-            for (int i = projectionIndex.nextSetBit(0); i >= 0; i = projectionIndex.nextSetBit(i + 1)) {
-                FunctionDesc func = measures[i].getFunction();
-                rowSizeEst += func.getReturnDataType().getSpaceEstimate();
-            }
-        }
-
-        long rowEst = MEM_BUDGET_PER_QUERY / rowSizeEst;
-        context.setThreshold((int) rowEst);
-    }
-
     private List<RowValueDecoder> translateAggregation(HBaseMappingDesc hbaseMapping, Collection<FunctionDesc> metrics, //
-            List<HBaseKeyRange> scans, boolean isExactAggregation) {
+            List<HBaseKeyRange> scans, StorageContext context) {
         Map<HBaseColumnDesc, RowValueDecoder> codecMap = Maps.newHashMap();
         for (FunctionDesc aggrFunc : metrics) {
             Collection<HBaseColumnDesc> hbCols = hbaseMapping.findHBaseColumnByFunction(aggrFunc);
@@ -329,7 +322,7 @@ public class HBaseStorageEngine implements IStorageEngine {
                 bestIndex = hbCol.findMeasureIndex(aggrFunc);
                 MeasureDesc measure = hbCol.getMeasures()[bestIndex];
                 // criteria for holistic measure: Exact Aggregation && Exact Cuboid
-                if (measure.isHolisticCountDistinct() && isExactAggregation) {
+                if (measure.isHolisticCountDistinct() && context.isExactAggregation()) {
                     logger.info("Holistic count distinct chosen for " + aggrFunc);
                     break;
                 }
@@ -388,6 +381,8 @@ public class HBaseStorageEngine implements IStorageEngine {
             mergedRanges = mergeTooManyRanges(mergedRanges);
             result.addAll(mergedRanges);
         }
+
+        dropUnhitSegments(result);
 
         return result;
     }
@@ -550,16 +545,14 @@ public class HBaseStorageEngine implements IStorageEngine {
         if (keyRanges.size() < MERGE_KEYRANGE_THRESHOLD) {
             return keyRanges;
         }
-        // TODO: check the distance between range. and merge the large distance
-        // range
+        // TODO: check the distance between range. and merge the large distance range
         List<HBaseKeyRange> mergedRanges = new LinkedList<HBaseKeyRange>();
         HBaseKeyRange mergedRange = mergeKeyRange(keyRanges, 0, keyRanges.size() - 1);
         mergedRanges.add(mergedRange);
         return mergedRanges;
     }
 
-    private void postProcessFilter(List<HBaseKeyRange> scans, TupleFilter flatFilter, boolean isExactAggregation, //
-            StorageContext context) {
+    private void dropUnhitSegments(List<HBaseKeyRange> scans) {
         if (cubeDesc.getCubePartitionDesc().getPartitionDateColumn() != null) {
             Iterator<HBaseKeyRange> iterator = scans.iterator();
             while (iterator.hasNext()) {
@@ -569,14 +562,39 @@ public class HBaseStorageEngine implements IStorageEngine {
                 }
             }
         }
+    }
 
-        if (!scans.isEmpty()) {
-            // TODO: we don't need to check filter after enable hbase coproccessor
-            if (isExactAggregation && flatFilter == null && !context.hasSort()) {
-                logger.info("Enable limit " + context.getLimit());
-                context.enableLimit();
+    private void setThreshold(Collection<TblColRef> dimensions, List<RowValueDecoder> valueDecoders, StorageContext context) {
+        if (RowValueDecoder.hasMemHungryCountDistinct(valueDecoders) == false) {
+            return;
+        }
+
+        int rowSizeEst = dimensions.size() * 3;
+        for (RowValueDecoder decoder : valueDecoders) {
+            MeasureDesc[] measures = decoder.getMeasures();
+            BitSet projectionIndex = decoder.getProjectionIndex();
+            for (int i = projectionIndex.nextSetBit(0); i >= 0; i = projectionIndex.nextSetBit(i + 1)) {
+                FunctionDesc func = measures[i].getFunction();
+                rowSizeEst += func.getReturnDataType().getSpaceEstimate();
             }
         }
 
+        long rowEst = MEM_BUDGET_PER_QUERY / rowSizeEst;
+        context.setThreshold((int) rowEst);
     }
+
+    private void setLimit(TupleFilter filter, StorageContext context) {
+        boolean goodAggr = context.isExactAggregation() || context.isAvoidAggregation();
+        boolean goodFilter = filter == null || (TupleFilter.isEvaluableRecursively(filter) && context.isCoprocessorEnabled());
+        boolean goodSort = context.hasSort() == false;
+        if (goodAggr && goodFilter && goodSort) {
+            logger.info("Enable limit " + context.getLimit());
+            context.enableLimit();
+        }
+    }
+
+    private void setCoprocessor(Set<TblColRef> groupsCopD, List<RowValueDecoder> valueDecoders, StorageContext context) {
+        CoprocessorEnabler.enableCoprocessorIfBeneficial(cubeInstance, groupsCopD, valueDecoders, context);
+    }
+
 }

@@ -84,8 +84,9 @@ public abstract class TupleFilter {
         children.add(child);
     }
 
-    public void addChildren(List<? extends TupleFilter> children) {
-        this.children.addAll(children);
+    final public void addChildren(List<? extends TupleFilter> children) {
+        for (TupleFilter c : children)
+            addChild(c); // subclass overrides addChild()
     }
 
     public List<? extends TupleFilter> getChildren() {
