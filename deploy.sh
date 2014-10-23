@@ -30,7 +30,7 @@ read -p "Are you sure you want to proceed?(press Y or y to confirm) " -n 1 -r
 echo    # (optional) move to a new line
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then
-    echo "Bye!"
+    echo "Not going to proceed, quit without finishing! You can rerun the script to have another try."
     exit 1
 fi
 
@@ -164,7 +164,7 @@ read -p "please ensure the CLI address/username/password is correct, and press y
 echo    # (optional) move to a new line
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then
-    echo "Bye!"
+    echo "Not going to proceed, quit without finishing! You can rerun the script to have another try."
     exit 1
 fi
 
