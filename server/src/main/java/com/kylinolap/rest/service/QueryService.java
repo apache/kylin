@@ -145,8 +145,12 @@ public class QueryService extends BasicService {
                     //Some queries do not involve cuboid, e.g. lookup table query
                     cuboidIds.add(cuboid.getId());
                 }
-                String cubeName = ctx.cubeInstance.getName();
-                cubeNames.add(cubeName);
+
+                if (ctx.cubeInstance != null) {
+                    String cubeName = ctx.cubeInstance.getName();
+                    cubeNames.add(cubeName);
+                }
+
                 totalScanCount += ctx.storageContext.getTotalScanCount();
             }
         }
