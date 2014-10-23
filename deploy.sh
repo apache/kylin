@@ -191,7 +191,6 @@ echo "Web deployed"
 
 cd $KYLIN_HOME/
 #deploy setenv.sh
-cp $CATALINA_HOME/bin/setenv.sh $CATALINA_HOME/bin/setenv.sh.bak
 rm -rf $CATALINA_HOME/bin/setenv.sh
 echo JAVA_OPTS=\"-Djava.library.path=${KYLIN_LD_LIBRARY_PATH}\" >> ${CATALINA_HOME}/bin/setenv.sh
 echo CATALINA_OPTS=\"-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true -Dspring.profiles.active=sandbox \" >> ${CATALINA_HOME}/bin/setenv.sh
@@ -199,13 +198,11 @@ echo CLASSPATH=\"${CATALINA_HOME}/lib/*:${KYLIN_HBASE_CLASSPATH}:/etc/kylin\" >>
 echo "setenv.sh created"
 
 #deploy server.xml
-cp ${CATALINA_HOME}/conf/server.xml ${CATALINA_HOME}/conf/server.xml.bak
 rm -rf ${CATALINA_HOME}/conf/server.xml
 cp deploy/server.xml ${CATALINA_HOME}/conf/server.xml
 echo "server.xml copied"
 
 #deploy web.xml
-cp ${CATALINA_HOME}/conf/web.xml ${CATALINA_HOME}/conf/web.xml.bak
 rm -rf ${CATALINA_HOME}/conf/web.xml
 cp deploy/web.xml ${CATALINA_HOME}/conf/web.xml
 echo "web.xml copied"
