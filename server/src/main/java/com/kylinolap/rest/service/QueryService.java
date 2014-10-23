@@ -141,9 +141,12 @@ public class QueryService extends BasicService {
         if (!response.isHitCache() && null != OLAPContext.getThreadLocalContexts()) {
             for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
                 Cuboid cuboid = ctx.storageContext.getCuboid();
-                String cubeName = cuboid.getCube().getName().replace("_desc", "");
+                if (cuboid != null) {
+                    //Some queries do not involve cuboid, e.g. lookup table query
+                    cuboidIds.add(cuboid.getId());
+                }
+                String cubeName = ctx.cubeInstance.getName();
                 cubeNames.add(cubeName);
-                cuboidIds.add(cuboid.getId());
                 totalScanCount += ctx.storageContext.getTotalScanCount();
             }
         }
