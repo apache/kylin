@@ -51,7 +51,6 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
 
         CubeInstance cube = olapContext.cubeInstance;
         CubeManager cubeMgr = CubeManager.getInstance(cube.getConfig());
-        // CubeSegment seg = cube.getTheOnlySegment();
         LookupStringTable table = cubeMgr.getLookupTable(cube.getLatestReadySegment(), dim);
         this.allRows = table.getAllRows();
 
