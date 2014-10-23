@@ -24,6 +24,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.kylinolap.common.util.StringUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.eigenbase.reltype.RelDataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +58,7 @@ public class QueryRouter {
             // if simple query like "select X from fact table", just return the cube with most dimensions
             // Note that this will only succeed to get best cube if the current simple query is on fact table.
             // Simple query on look up table is handled in OLAPTableScan.genExecFunc
-            // In other words, for simple query on lookup tables, bestCube here will be assigned null.
+            // In other words, for simple query on lookup tables, bestCube here will be assigned null in this method
             bestCube = findCubeWithMostDimensions(projectManager, olapContext);
         }
 
@@ -65,7 +67,11 @@ public class QueryRouter {
         }
 
         if (bestCube == null) {
-            throw new CubeNotFoundException("Can't find cube for fact table " + olapContext.firstTableScan.getCubeTable() + " in project " + olapContext.olapSchema.getProjectName() + " with dimensions " + getDimensionColumns(olapContext) + " and measures " + olapContext.aggregations + ". Also please check whether join types match what defined in Cube.");
+            throw new CubeNotFoundException("Can't find cube for fact table " +
+                    olapContext.firstTableScan.getCubeTable() + " in project " +
+                    olapContext.olapSchema.getProjectName() + " with dimensions " +
+                    getDimensionColumns(olapContext) + " and measures " + olapContext.aggregations +
+                    ". Also please check whether join types match what defined in Cube.");
         }
 
         return bestCube;
@@ -139,12 +145,7 @@ public class QueryRouter {
 
         // find cubes by table
         List<CubeInstance> candidates = projectManager.getCubesByTable(projectName, factTableName);
-        StringBuilder buf = new StringBuilder();
-        for (CubeInstance cube : candidates) {
-            buf.append(cube.getName());
-            buf.append(",");
-        }
-        logger.info("Find candidates by table " + factTableName + " and project=" + projectName + " : " + buf.toString());
+        logger.info("Find candidates by table " + factTableName + " and project=" + projectName + " : " + StringUtils.join(candidates, ","));
 
         // match dimensions & aggregations & joins
         Iterator<CubeInstance> it = candidates.iterator();
@@ -254,7 +255,7 @@ public class QueryRouter {
             if (!cubeFuncs.contains(functionDesc)) {
 
                 if (functionDesc.isCountDistinct())// optiq can not handle
-                                                   // distinct count
+                    // distinct count
                     matched = false;
 
                 ParameterDesc param = functionDesc.getParameter();
