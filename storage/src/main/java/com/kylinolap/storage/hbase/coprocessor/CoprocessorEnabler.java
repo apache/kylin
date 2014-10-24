@@ -53,7 +53,7 @@ public class CoprocessorEnabler {
     public static ResultScanner scanWithCoprocessorIfBeneficial(CubeSegment segment, Cuboid cuboid, TupleFilter tupleFiler, //
             Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders, StorageContext context, HTableInterface table, Scan scan) throws IOException {
 
-        if (!isCoprocessorBeneficial(segment.getCubeInstance(), groupBy, rowValueDecoders, context)) {
+        if (context.isCoprocessorEnabled() == false) {
             return table.getScanner(scan);
         }
 
@@ -76,6 +76,12 @@ public class CoprocessorEnabler {
         }
     }
 
+    public static void enableCoprocessorIfBeneficial(CubeInstance cube, Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders, StorageContext context) {
+        if (isCoprocessorBeneficial(cube, groupBy, rowValueDecoders, context)) {
+            context.enableCoprocessor();
+        }
+    }
+    
     private static boolean isCoprocessorBeneficial(CubeInstance cube, Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders, StorageContext context) {
 
         if (context.isAvoidAggregation()) {

@@ -30,7 +30,7 @@ read -p "Are you sure you want to proceed?(press Y or y to confirm) " -n 1 -r
 echo    # (optional) move to a new line
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then
-    echo "Bye!"
+    echo "Not going to proceed, quit without finishing! You can rerun the script to have another try."
     exit 1
 fi
 
@@ -164,7 +164,7 @@ read -p "please ensure the CLI address/username/password is correct, and press y
 echo    # (optional) move to a new line
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then
-    echo "Bye!"
+    echo "Not going to proceed, quit without finishing! You can rerun the script to have another try."
     exit 1
 fi
 
@@ -201,6 +201,11 @@ echo "setenv.sh created"
 rm -rf ${CATALINA_HOME}/conf/server.xml
 cp deploy/server.xml ${CATALINA_HOME}/conf/server.xml
 echo "server.xml copied"
+
+#deploy web.xml
+rm -rf ${CATALINA_HOME}/conf/web.xml
+cp deploy/web.xml ${CATALINA_HOME}/conf/web.xml
+echo "web.xml copied"
 
 echo "Tomcat ready"
 
