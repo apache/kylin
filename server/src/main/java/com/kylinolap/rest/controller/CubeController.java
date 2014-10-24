@@ -408,6 +408,7 @@ public class CubeController extends BasicController {
     private CubeDesc deserializeCubeDesc(CubeRequest cubeRequest) {
         CubeDesc desc = null;
         try {
+            logger.debug("Saving cube " + cubeRequest.getCubeDescData());
             desc = JsonUtil.readValue(cubeRequest.getCubeDescData(), CubeDesc.class);
         } catch (JsonParseException e) {
             logger.info("The cube definition is not valid.", e);
