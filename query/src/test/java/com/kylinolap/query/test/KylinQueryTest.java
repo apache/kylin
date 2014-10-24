@@ -15,6 +15,8 @@
  */
 package com.kylinolap.query.test;
 
+import static org.junit.Assert.*;
+
 import java.io.File;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -33,6 +35,7 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.query.enumerator.OLAPQuery;
+import com.kylinolap.query.relnode.OLAPContext;
 import com.kylinolap.query.schema.OLAPSchemaFactory;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorEnabler;
 
@@ -81,22 +84,7 @@ public class KylinQueryTest extends KylinTestBase {
     public static void tearDown() throws Exception {
         printInfo("tearDown");
         printInfo("Closing connection...");
-        // printInfo("Count of compared queries: " + compQueryCount);
-        // printInfo("among which the count of zero result queries: " +
-        // zeroResultQueries.size());
-        // printInfo("Zero result queries listed:");
-        // for (int i = 0; i < zeroResultQueries.size(); ++i) {
-        // System.out.println("" + (i + 1) + ":");
-        // System.out.println(zeroResultQueries.get(i));
-        // System.out.println("");
-        // }
         clean();
-        // other test cases still need the drivers
-        // Enumeration<Driver> drivers = DriverManager.getDrivers();
-        // while (drivers.hasMoreElements()) {
-        // DriverManager.deregisterDriver(drivers.nextElement());
-        // }
-
     }
 
     protected static void clean() {
@@ -147,7 +135,7 @@ public class KylinQueryTest extends KylinTestBase {
         // String queryFileName =
         // "src/test/resources/query/sql_tableau/query22.sql.disabled";
 
-        String queryFileName = "src/test/resources/query/sql/query75.sql";
+        String queryFileName = "src/test/resources/query/sql/0000.sql";
 
         File sqlFile = new File(queryFileName);
         runSQL(sqlFile, true, false);
@@ -165,7 +153,7 @@ public class KylinQueryTest extends KylinTestBase {
 
         executeQuery(kylinConn, queryFileName, sql, true);
     }
-
+    
     @Ignore
     @Test
     public void testTableauProbing() throws Exception {
@@ -186,17 +174,14 @@ public class KylinQueryTest extends KylinTestBase {
     public void testOrderByQuery() throws Exception {
         execAndCompQuery("src/test/resources/query/sql_orderby", null, true);
         // FIXME
-        // as of optiq 0.8, we lost metadata type with "order by" clause, e.g.
-        // sql_orderby/query01.sql
-        // thus, temporarily the "order by" clause was cross out, and the
-        // needSort is set to true
-        // execAndCompQuery("src/test/resources/query/sql_orderby", null,
-        // false);
+        // as of optiq 0.8, we lost metadata type with "order by" clause, e.g. sql_orderby/query01.sql
+        // thus, temporarily the "order by" clause was cross out, and the needSort is set to true
+        // execAndCompQuery("src/test/resources/query/sql_orderby", null, false);
     }
 
     @Test
     public void testLookupQuery() throws Exception {
-        batchExecuteQuery("src/test/resources/query/sql_lookup");
+        execAndCompQuery("src/test/resources/query/sql_lookup", null, true);
     }
 
     @Test
@@ -260,6 +245,21 @@ public class KylinQueryTest extends KylinTestBase {
     @Test
     public void testDynamicQuery() throws Exception {
         execAndCompDynamicQuery("src/test/resources/query/sql_dynamic", null, true);
+    }
+
+    @Test
+    public void testLimitEnabled() throws Exception {
+        runSqlFile("src/test/resources/query/sql_optimize/enable-limit01.sql");
+        assertLimitWasEnabled();
+    }
+
+    private void assertLimitWasEnabled() {
+        OLAPContext context = getFirstOLAPContext();
+        assertTrue(context.storageContext.isLimitEnabled());
+    }
+
+    private OLAPContext getFirstOLAPContext() {
+        return OLAPContext.getThreadLocalContexts().iterator().next();
     }
 
 }

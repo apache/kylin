@@ -57,6 +57,7 @@ public class DebugTomcat {
         webContext.addErrorPage(notFound);
         webContext.addWelcomeFile("index.html");
 
+        // tomcat start
         tomcat.start();
         tomcat.getServer().await();
     }
