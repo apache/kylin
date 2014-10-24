@@ -18,7 +18,7 @@ KylinApp.controller('LoginCtrl', function ($scope, $rootScope, $location, $base6
             $location.path(UserService.getHomePage());
         }, function (error) {
             $scope.loading = false;
-            $scope.error = "Unable to login, please check your username/password and make sure you have L2 access.";
+            $scope.error = "Unable to login, please check your username/password and make sure you have correct access rights.";
         });
 
         console.debug("Login event requested.");
