@@ -16,8 +16,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         {title: 'Refresh Setting', src: 'partials/cubeDesigner/incremental.html', isComplete: false}
     ];
     if (UserService.hasRole("ROLE_ADMIN")) {
-        $scope.wizardSteps.push({title: 'Rowkeys', src: 'partials/cubeDesigner/rowkey.html', isComplete: false});
-        $scope.wizardSteps.push({title: 'Aggreation Groups', src: 'partials/cubeDesigner/aggression_group.html', isComplete: false});
+            $scope.wizardSteps.push({title: 'Advanced Setting', src: 'partials/cubeDesigner/advanced_settings.html', isComplete: false});
     }
     $scope.wizardSteps.push({title: 'Overview', src: 'partials/cubeDesigner/overview.html', isComplete: false});
 
