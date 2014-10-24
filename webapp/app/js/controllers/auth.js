@@ -18,7 +18,7 @@ KylinApp.controller('LoginCtrl', function ($scope, $rootScope, $location, $base6
             $location.path(UserService.getHomePage());
         }, function (error) {
             $scope.loading = false;
-            $scope.error = config.errors.login;
+            $scope.error = $scope.config.errors.login;
         });
 
         console.debug("Login event requested.");
