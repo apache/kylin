@@ -20,7 +20,7 @@ Getting Started
 - HBase: 0.96.0.2.0.6.0-61-hadoop2
 
 
-_Tested with Hortonworks distribution (HDP2.1.3), not tested with others yet._
+_Tested with Hortonworks HDP 2.1.3 and Cloudera Quickstart VM 5.1._
 
 #### Misc ####
 - Command hadoop, hive, hbase is workable on your hadoop cluster
