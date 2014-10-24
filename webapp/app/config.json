@@ -19,5 +19,8 @@
       "hadoop": {"name":"hadoop", "link": null},
       "diagnostic": {"name":"diagnostic", "link": null}
   },
+  "errors": {
+      "login": "Unable to login, please check your username/password."
+  },
   "version": "1.0.10"
 }
