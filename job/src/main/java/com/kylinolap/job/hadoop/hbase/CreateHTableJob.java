@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.kylinolap.job.tools.LZOSupportnessChecker;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -33,7 +32,6 @@ import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
 import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
 import org.apache.hadoop.hbase.regionserver.ConstantSizeRegionSplitPolicy;
 import org.apache.hadoop.hbase.security.User;
-import org.apache.hadoop.hbase.util.CompressionTest;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
@@ -49,6 +47,7 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.job.tools.DeployCoprocessorCLI;
+import com.kylinolap.job.tools.LZOSupportnessChecker;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.HBaseColumnFamilyDesc;
 
