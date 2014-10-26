@@ -55,6 +55,8 @@ public class ResourceTool {
             copy(KylinConfig.getInstanceFromEnv(), KylinConfig.createInstanceFromUri(args[1]));
         else if (cmd.equals("upload"))
             copy(KylinConfig.createInstanceFromUri(args[1]), KylinConfig.getInstanceFromEnv());
+        else if (cmd.equals("remove"))
+            remove(KylinConfig.getInstanceFromEnv(), args[1]);
         else
             System.out.println("Unknown cmd: " + cmd);
     }
@@ -133,5 +135,10 @@ public class ResourceTool {
             for (String child : children)
                 resetR(store, child);
         }
+    }
+    
+    private static void remove(KylinConfig config, String path) throws IOException {
+        ResourceStore store = ResourceStore.getStore(config);
+        resetR(store, path);
     }
 }
