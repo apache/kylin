@@ -178,7 +178,8 @@ public class IIKeyValueCodec {
                 addContainer(curCol, c);
             } else {
                 assert curColValue == bitMapValues.size();
-                bitMapValues.add(v);
+                // make a copy, the value object from caller is typically reused through iteration
+                bitMapValues.add(new ImmutableBytesWritable(v));
             }
 
             lastPartition = curPartition;
