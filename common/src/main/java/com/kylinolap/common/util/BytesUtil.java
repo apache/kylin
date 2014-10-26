@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.Writable;
 
@@ -287,9 +288,18 @@ public class BytesUtil {
     }
 
     public static String toHex(byte[] array) {
-        StringBuilder sb = new StringBuilder(array.length * 4);
-        for (byte b : array)
+        return toHex(new ImmutableBytesWritable(array));
+    }
+    
+    public static String toHex(ImmutableBytesWritable bytes) {
+        byte[] array = bytes.get();
+        int offset = bytes.getOffset();
+        int length = bytes.getLength();
+        StringBuilder sb = new StringBuilder(length * 4);
+        for (int i = 0; i < length; i++) {
+            int b = array[offset + i];
             sb.append(String.format("\\x%02X", b & 0xFF));
+        }
         return sb.toString();
     }
 
