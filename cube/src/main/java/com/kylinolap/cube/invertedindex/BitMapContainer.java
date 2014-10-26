@@ -120,8 +120,7 @@ public class BitMapContainer implements ColumnValueContainer {
 
     private ImmutableBytesWritable setToBytes(ConciseSet set) {
         byte[] array;
-        if (set.isEmpty()) // ConciseSet.toByteBuffer() throws exception when
-                           // set is empty
+        if (set.isEmpty()) // ConciseSet.toByteBuffer() throws exception when set is empty
             array = BytesUtil.EMPTY_BYTE_ARRAY;
         else
             array = set.toByteBuffer().array();
