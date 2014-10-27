@@ -30,7 +30,7 @@ read -p "Are you sure you want to proceed?(press Y or y to confirm) " -n 1 -r
 echo    # (optional) move to a new line
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then
-    echo "Bye!"
+    echo "Not going to proceed, quit without finishing! You can rerun the script to have another try."
     exit 1
 fi
 
@@ -150,8 +150,13 @@ then
     sed -e "s,${METADATA_URL_DEFAULT},${NEW_METADATA_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," | \
     sed -e "s,${STORAGE_URL_DEFAULT},${NEW_STORAGE_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," >  /etc/kylin/kylin.properties
 else
-    echo "Not running on cloudera sandbox or hortonworks sandbox, copy a template for hortonworks"
-    cat examples/test_case_data/kylin.properties > /etc/kylin/kylin.properties
+    echo "Running on an unknown sandbox!!!"
+    cat examples/test_case_data/kylin.properties | \
+    sed -e "s,${CHECK_URL_DEFAULT},${NEW_CHECK_URL}," | \
+    sed -e "s,${CLI_HOSTNAME_DEFAULT},${NEW_CLI_HOSTNAME_PREFIX}${HOSTNAME}," | \
+    sed -e "s,${CLI_PASSWORD_DEFAULT},${NEW_CLI_PASSWORD_PREFIX}unknown???," | \
+    sed -e "s,${METADATA_URL_DEFAULT},${NEW_METADATA_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," | \
+    sed -e "s,${STORAGE_URL_DEFAULT},${NEW_STORAGE_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," >  /etc/kylin/kylin.properties
 fi
 
 echo "a copy of kylin config is generated at /etc/kylin/kylin.properties:"
@@ -164,7 +169,7 @@ read -p "please ensure the CLI address/username/password is correct, and press y
 echo    # (optional) move to a new line
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then
-    echo "Bye!"
+    echo "Not going to proceed, quit without finishing! You can rerun the script to have another try."
     exit 1
 fi
 
@@ -191,7 +196,6 @@ echo "Web deployed"
 
 cd $KYLIN_HOME/
 #deploy setenv.sh
-cp $CATALINA_HOME/bin/setenv.sh $CATALINA_HOME/bin/setenv.sh.bak
 rm -rf $CATALINA_HOME/bin/setenv.sh
 echo JAVA_OPTS=\"-Djava.library.path=${KYLIN_LD_LIBRARY_PATH}\" >> ${CATALINA_HOME}/bin/setenv.sh
 echo CATALINA_OPTS=\"-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true -Dspring.profiles.active=sandbox \" >> ${CATALINA_HOME}/bin/setenv.sh
@@ -199,13 +203,11 @@ echo CLASSPATH=\"${CATALINA_HOME}/lib/*:${KYLIN_HBASE_CLASSPATH}:/etc/kylin\" >>
 echo "setenv.sh created"
 
 #deploy server.xml
-cp ${CATALINA_HOME}/conf/server.xml ${CATALINA_HOME}/conf/server.xml.bak
 rm -rf ${CATALINA_HOME}/conf/server.xml
 cp deploy/server.xml ${CATALINA_HOME}/conf/server.xml
 echo "server.xml copied"
 
 #deploy web.xml
-cp ${CATALINA_HOME}/conf/web.xml ${CATALINA_HOME}/conf/web.xml.bak
 rm -rf ${CATALINA_HOME}/conf/web.xml
 cp deploy/web.xml ${CATALINA_HOME}/conf/web.xml
 echo "web.xml copied"
