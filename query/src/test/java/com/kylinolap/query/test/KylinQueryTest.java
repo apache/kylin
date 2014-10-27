@@ -132,10 +132,7 @@ public class KylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        // String queryFileName =
-        // "src/test/resources/query/sql_tableau/query22.sql.disabled";
-
-        String queryFileName = "src/test/resources/query/sql/0000.sql";
+        String queryFileName = "src/test/resources/query/sql/query39.sql";
 
         File sqlFile = new File(queryFileName);
         runSQL(sqlFile, true, false);
@@ -153,7 +150,7 @@ public class KylinQueryTest extends KylinTestBase {
 
         executeQuery(kylinConn, queryFileName, sql, true);
     }
-    
+
     @Ignore
     @Test
     public void testTableauProbing() throws Exception {
