@@ -34,10 +34,8 @@ import javax.sql.DataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import com.google.common.io.Files;
@@ -60,8 +58,8 @@ public abstract class BasicService {
 
     private static ConcurrentMap<String, DataSource> olapDataSources = new ConcurrentHashMap<String, DataSource>();
 
-    @Autowired
-    protected JdbcTemplate jdbcTemplate;
+//    @Autowired
+//    protected JdbcTemplate jdbcTemplate;
 
     public KylinConfig getConfig() {
         return KylinConfig.getInstanceFromEnv();
