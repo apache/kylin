@@ -27,6 +27,12 @@ public class SampleCubeSetupTest extends CubeDevelopTestCase {
     @Before
     public void before() throws Exception {
 
+        try {
+            this.testConnectivity();
+        } catch (Exception e) {
+            System.out.println("Failed to connect to remote CLI with given password");
+            throw e;
+        }
 
         String confPaths = System.getenv("KYLIN_HBASE_CONF_PATH");
         System.out.println("The conf paths is " + confPaths);
@@ -64,7 +70,6 @@ public class SampleCubeSetupTest extends CubeDevelopTestCase {
     @Test
     public void testCubes() throws Exception {
         // start job schedule engine
-        this.testConnectivity();
         this.prepareTestData("inner");// default settings;
     }
 
