@@ -73,7 +73,6 @@ public class AdminService extends BasicService {
             content = baos.toString();
             return content;
         } catch (ConfigurationException e) {
-            logger.debug("Failed to get Kylin Runtime env", e);
             throw new InternalErrorException("Failed to get Kylin env Config", e);
         }
     }
@@ -90,7 +89,6 @@ public class AdminService extends BasicService {
         try {
             return KylinConfig.getInstanceFromEnv().getConfigAsString();
         } catch (IOException e) {
-            logger.debug("Failed to get Kylin Runtime Config", e);
             throw new InternalErrorException("Failed to get Kylin Runtime Config", e);
         }
     }
@@ -101,8 +99,7 @@ public class AdminService extends BasicService {
         try {
             ToolRunner.run(job, args);
         } catch (Exception e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e);
+            throw new InternalErrorException(e.getMessage(), e);
         }
     }
 }

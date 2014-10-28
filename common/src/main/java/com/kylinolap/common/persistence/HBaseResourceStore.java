@@ -96,7 +96,7 @@ public class HBaseResourceStore extends ResourceStore {
     }
 
     private void createHTableIfNeeded(String tableName) throws IOException {
-        HadoopUtil.createHTableIfNeeded(getConnection(), tableName, FAMILY);
+        HBaseConnection.createHTableIfNeeded(getConnection(), tableName, FAMILY);
     }
 
     private String getTableName(String path) {

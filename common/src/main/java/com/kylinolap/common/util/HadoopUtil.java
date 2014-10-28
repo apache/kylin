@@ -27,17 +27,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.TableNotFoundException;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.client.HConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.kylinolap.common.persistence.HBaseConnection;
 
 public class HadoopUtil {
     private static final Logger logger = LoggerFactory.getLogger(HadoopUtil.class);
@@ -111,40 +103,4 @@ public class HadoopUtil {
         return conf;
     }
 
-    public static void createHTableIfNeeded(String hbaseUrl, String tableName, String... families) throws IOException {
-        createHTableIfNeeded(HBaseConnection.get(hbaseUrl), tableName, families);
-    }
-    
-    public static void createHTableIfNeeded(HConnection conn, String tableName, String... families) throws IOException {
-        HBaseAdmin hbase = new HBaseAdmin(conn);
-
-        try {
-            boolean tableExist = false;
-            try {
-                hbase.getTableDescriptor(TableName.valueOf(tableName));
-                tableExist = true;
-            } catch (TableNotFoundException e) {
-            }
-
-            if (tableExist) {
-                logger.debug("HTable '" + tableName + "' already exists");
-                return;
-            }
-
-            logger.debug("Creating HTable '" + tableName + "'");
-
-            HTableDescriptor desc = new HTableDescriptor(TableName.valueOf(tableName));
-
-            if (null != families && families.length > 0) {
-                for (String family : families) {
-                    desc.addFamily(new HColumnDescriptor(family));
-                }
-            }
-            hbase.createTable(desc);
-
-            logger.debug("HTable '" + tableName + "' created");
-        } finally {
-            hbase.close();
-        }
-    }
 }

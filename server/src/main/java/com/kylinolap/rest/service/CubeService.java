@@ -34,7 +34,6 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
@@ -400,10 +399,6 @@ public class CubeService extends BasicService {
             hr = new HBaseResponse();
             hr.setTableSize(tableSize);
             hr.setRegionCount(regionCount);
-        } catch (TableNotFoundException e) {
-            logger.error("Failed to find HTable \"" + tableName + "\"", e);
-        } catch (IOException e) {
-            logger.error("Failed to calcuate size of HTable \"" + tableName + "\"", e);
         } finally {
             if (null != table) {
                 table.close();
