@@ -66,7 +66,6 @@ import org.springframework.util.Assert;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.HBaseConnection;
-import com.kylinolap.common.util.HadoopUtil;
 import com.kylinolap.rest.util.Serializer;
 
 /**
@@ -122,7 +121,7 @@ public class AclService implements MutableAclService {
         fieldAcl.setAccessible(true);
 
         try {
-            HadoopUtil.createHTableIfNeeded(hbaseUrl, aclTableName, ACL_INFO_FAMILY, ACL_ACES_FAMILY);
+            HBaseConnection.createHTableIfNeeded(hbaseUrl, aclTableName, ACL_INFO_FAMILY, ACL_ACES_FAMILY);
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
         }
