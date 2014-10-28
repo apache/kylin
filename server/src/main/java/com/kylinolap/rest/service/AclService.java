@@ -64,6 +64,8 @@ import org.springframework.security.util.FieldUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.HBaseConnection;
 import com.kylinolap.common.util.HadoopUtil;
@@ -321,7 +323,7 @@ public class AclService implements MutableAclService {
         return (MutableAcl) readAclById(acl.getObjectIdentity());
     }
 
-    private void genAces(List<Sid> sids, Result result, AclImpl acl) {
+    private void genAces(List<Sid> sids, Result result, AclImpl acl) throws JsonParseException, JsonMappingException, IOException {
         List<AceInfo> aceInfos = new ArrayList<AceInfo>();
         if (null != sids) {
             // Just return aces in sids

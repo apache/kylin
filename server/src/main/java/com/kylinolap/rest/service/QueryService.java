@@ -79,7 +79,7 @@ import com.kylinolap.rest.util.Serializer;
 public class QueryService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
-    
+
     public static final String USER_QUERY_FAMILY = "q";
     private Serializer<Query[]> querySerializer = new Serializer<Query[]>(Query[].class);
     private static final String DEFAULT_TABLE_PREFIX = "kylin_metadata";
@@ -88,8 +88,8 @@ public class QueryService extends BasicService {
     private String hbaseUrl = null;
     private String tableNameBase = null;
     private String userTableName = null;
-    
-    public QueryService(){
+
+    public QueryService() {
         String metadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
         // split TABLE@HBASE_URL
         int cut = metadataUrl.indexOf('@');
@@ -97,7 +97,7 @@ public class QueryService extends BasicService {
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
         userTableName = tableNameBase + USER_TABLE_NAME;
     }
-    
+
     public List<TableMeta> getMetadata(String project) throws SQLException {
         return getMetadata(getCubeManager(), project, true);
     }
@@ -117,11 +117,11 @@ public class QueryService extends BasicService {
         return executeQuery(correctedSql, sqlRequest);
     }
 
-    public void saveQuery(final String creator, final Query query){
+    public void saveQuery(final String creator, final Query query) throws IOException {
         List<Query> queries = getQueries(creator);
         queries.add(query);
         Query[] queryArray = new Query[queries.size()];
-        
+
         byte[] bytes = querySerializer.serialize(queries.toArray(queryArray));
         HTableInterface htable = null;
         try {
@@ -131,31 +131,29 @@ public class QueryService extends BasicService {
 
             htable.put(put);
             htable.flushCommits();
-        } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
         } finally {
             IOUtils.closeQuietly(htable);
         }
     }
-    
-    public void removeQuery(final String creator, final String id){
+
+    public void removeQuery(final String creator, final String id) throws IOException {
         List<Query> queries = getQueries(creator);
         Iterator<Query> queryIter = queries.iterator();
-        
+
         boolean changed = false;
-        while (queryIter.hasNext()){
+        while (queryIter.hasNext()) {
             Query temp = queryIter.next();
-            if (temp.getId().equals(id)){
+            if (temp.getId().equals(id)) {
                 queryIter.remove();
                 changed = true;
                 break;
             }
         }
-        
-        if (!changed){
+
+        if (!changed) {
             return;
         }
-        
+
         Query[] queryArray = new Query[queries.size()];
         byte[] bytes = querySerializer.serialize(queries.toArray(queryArray));
         HTableInterface htable = null;
@@ -166,18 +164,16 @@ public class QueryService extends BasicService {
 
             htable.put(put);
             htable.flushCommits();
-        } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
         } finally {
             IOUtils.closeQuietly(htable);
         }
     }
-    
-    public List<Query> getQueries(final String creator){
-        if (null == creator){
+
+    public List<Query> getQueries(final String creator) throws IOException {
+        if (null == creator) {
             return null;
         }
-        
+
         List<Query> queries = new ArrayList<Query>();
         HTableInterface htable = null;
         try {
@@ -186,12 +182,10 @@ public class QueryService extends BasicService {
             get.addFamily(Bytes.toBytes(USER_QUERY_FAMILY));
             Result result = htable.get(get);
             Query[] query = querySerializer.deserialize(result.getValue(Bytes.toBytes(USER_QUERY_FAMILY), Bytes.toBytes(USER_QUERY_COLUMN)));
-            
-            if (null != query){
+
+            if (null != query) {
                 queries.addAll(Arrays.asList(query));
             }
-        } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
         } finally {
             IOUtils.closeQuietly(htable);
         }
@@ -258,7 +252,7 @@ public class QueryService extends BasicService {
      * @throws SQLException
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')" + " or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'READ')")
-    public void checkAuthorization(CubeInstance cube) throws AccessDeniedException{
+    public void checkAuthorization(CubeInstance cube) throws AccessDeniedException {
     }
 
     protected SQLResponse executeQuery(String sql, SQLRequest sqlRequest) throws Exception {
@@ -383,9 +377,6 @@ public class QueryService extends BasicService {
                 results.add(new LinkedList<String>(oneRow));
                 oneRow.clear();
             }
-        } catch (Exception e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw e;
         } finally {
             close(resultSet, stat, conn);
         }
@@ -417,7 +408,7 @@ public class QueryService extends BasicService {
         try {
             clazz = Class.forName(param.getClassName());
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e.getMessage(), e);
         }
 
         Rep rep = Rep.of(clazz);
