@@ -44,7 +44,6 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.HBaseConnection;
-import com.kylinolap.common.util.HadoopUtil;
 import com.kylinolap.rest.security.UserManager;
 import com.kylinolap.rest.util.Serializer;
 
@@ -76,7 +75,7 @@ public class UserService implements UserManager{
         userTableName = tableNameBase + USER_TABLE_NAME;
         
         try {
-            HadoopUtil.createHTableIfNeeded(hbaseUrl, userTableName, USER_AUTHORITY_FAMILY, QueryService.USER_QUERY_FAMILY);
+            HBaseConnection.createHTableIfNeeded(hbaseUrl, userTableName, USER_AUTHORITY_FAMILY, QueryService.USER_QUERY_FAMILY);
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
         }
