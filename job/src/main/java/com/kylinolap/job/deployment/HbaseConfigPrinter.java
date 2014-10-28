@@ -4,14 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-import com.kylinolap.job.tools.LZOSupportnessChecker;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hbase.util.CompressionTest;
+
+import com.kylinolap.job.tools.LZOSupportnessChecker;
 
 /**
  * Created by honma on 9/30/14.
