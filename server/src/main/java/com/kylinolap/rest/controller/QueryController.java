@@ -53,13 +53,13 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.rest.constant.Constant;
 import com.kylinolap.rest.exception.ForbiddenException;
 import com.kylinolap.rest.exception.InternalErrorException;
+import com.kylinolap.rest.model.Query;
 import com.kylinolap.rest.model.SelectedColumnMeta;
 import com.kylinolap.rest.model.TableMeta;
 import com.kylinolap.rest.request.MetaRequest;
 import com.kylinolap.rest.request.PrepareSqlRequest;
 import com.kylinolap.rest.request.SQLRequest;
 import com.kylinolap.rest.request.SaveSqlRequest;
-import com.kylinolap.rest.response.GeneralResponse;
 import com.kylinolap.rest.response.SQLResponse;
 import com.kylinolap.rest.service.QueryService;
 import com.kylinolap.rest.util.QueryUtil;
@@ -120,20 +120,24 @@ public class QueryController extends BasicController {
     @ResponseBody
     @Timed(name = "saveQuery")
     public void saveQuery(@RequestBody SaveSqlRequest sqlRequest) {
-        queryService.saveQuery(sqlRequest.getName(), sqlRequest.getProject(), sqlRequest.getSql(), sqlRequest.getDescription());
+        String creator = SecurityContextHolder.getContext().getAuthentication().getName();
+        Query newQuery = new Query(sqlRequest.getName(), sqlRequest.getProject(), sqlRequest.getSql(), sqlRequest.getDescription());
+        
+        queryService.saveQuery(creator, newQuery);
     }
 
     @RequestMapping(value = "/saved_queries/{id}", method = RequestMethod.DELETE)
     @ResponseBody
     @Timed(name = "removeQuery")
     public void removeQuery(@PathVariable String id) {
-        queryService.removeQuery(id);
+        String creator = SecurityContextHolder.getContext().getAuthentication().getName();
+        queryService.removeQuery(creator, id);
     }
 
     @RequestMapping(value = "/saved_queries", method = RequestMethod.GET)
     @ResponseBody
     @Timed(name = "getQueries")
-    public List<GeneralResponse> getQueries() {
+    public List<Query> getQueries() {
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
         return queryService.getQueries(creator);
     }

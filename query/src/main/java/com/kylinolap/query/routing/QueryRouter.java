@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.kylinolap.common.util.StringUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.eigenbase.reltype.RelDataType;
 import org.slf4j.Logger;

@@ -44,14 +44,7 @@ public class UserController {
 
     @RequestMapping(value = "/authentication", method = RequestMethod.POST, produces = "application/json")
     public UserDetails authenticate() {
-        UserDetails user = authenticatedUser();
-
-        try {
-            userService.hit(user.getUsername());
-        } catch (Exception e) {
-        }
-
-        return user;
+        return authenticatedUser();
     }
 
     @RequestMapping(value = "/authentication", method = RequestMethod.GET, produces = "application/json")
