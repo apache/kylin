@@ -25,6 +25,8 @@ public class SampleCubeSetupTest extends CubeDevelopTestCase {
     @Before
     public void before() throws Exception {
 
+
+
         String confPaths = System.getenv("KYLIN_HBASE_CONF_PATH");
         System.out.println("The conf paths is " + confPaths);
         if(confPaths!= null) {
@@ -46,7 +48,6 @@ public class SampleCubeSetupTest extends CubeDevelopTestCase {
         String lzoSupportness = System.getenv("KYLIN_LZO_SUPPORTED");
         boolean lzoAvailable = "true".equalsIgnoreCase(lzoSupportness);
         initEnv(false, lzoAvailable);//This test case is run by deploy.sh, which will deploy the adjusted kylin.properties at first
-
     }
 
     @After
