@@ -23,6 +23,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.ObjectIdentityImpl;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.AccessControlEntry;
@@ -45,7 +46,6 @@ import com.kylinolap.rest.constant.Constant;
 import com.kylinolap.rest.exception.ForbiddenException;
 import com.kylinolap.rest.response.AccessEntryResponse;
 import com.kylinolap.rest.security.AclEntityFactory;
-import com.kylinolap.rest.security.AclService;
 
 /**
  * @author xduo
@@ -64,7 +64,7 @@ public class AccessService {
 
     @Transactional
     public Acl init(AclEntity ae, Permission initPermission) {
-        MutableAcl acl = null;
+        Acl acl = null;
         ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(), ae.getId());
 
         try {
@@ -77,11 +77,10 @@ public class AccessService {
         if (null != initPermission) {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             PrincipalSid sid = new PrincipalSid(auth);
-            grant(ae, initPermission, sid);
+            acl = grant(ae, initPermission, sid);
         }
-        acl.setEntriesInheriting(false);
 
-        return aclService.updateAcl(acl);
+        return acl;
     }
 
     @Transactional
@@ -253,7 +252,11 @@ public class AccessService {
     }
 
     public Sid getSid(String sid, boolean isPrincepal) {
-        return aclService.getSid(sid, isPrincepal);
+        if (isPrincepal) {
+            return new PrincipalSid(sid);
+        } else {
+            return new GrantedAuthoritySid(sid);
+        }
     }
 
     public List<AccessEntryResponse> generateAceResponses(Acl acl) {

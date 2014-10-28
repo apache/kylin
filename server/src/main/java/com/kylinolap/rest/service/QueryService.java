@@ -15,6 +15,7 @@
  */
 package com.kylinolap.rest.service;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -24,11 +25,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -38,14 +40,21 @@ import javax.sql.DataSource;
 
 import net.hydromatic.avatica.ColumnMetaData.Rep;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.persistence.HBaseConnection;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.cuboid.Cuboid;
@@ -53,14 +62,15 @@ import com.kylinolap.query.relnode.OLAPContext;
 import com.kylinolap.rest.constant.Constant;
 import com.kylinolap.rest.metrics.QueryMetrics;
 import com.kylinolap.rest.model.ColumnMeta;
+import com.kylinolap.rest.model.Query;
 import com.kylinolap.rest.model.SelectedColumnMeta;
 import com.kylinolap.rest.model.TableMeta;
 import com.kylinolap.rest.request.PrepareSqlRequest;
 import com.kylinolap.rest.request.PrepareSqlRequest.StateParam;
 import com.kylinolap.rest.request.SQLRequest;
-import com.kylinolap.rest.response.GeneralResponse;
 import com.kylinolap.rest.response.SQLResponse;
 import com.kylinolap.rest.util.QueryUtil;
+import com.kylinolap.rest.util.Serializer;
 
 /**
  * @author xduo
@@ -69,7 +79,25 @@ import com.kylinolap.rest.util.QueryUtil;
 public class QueryService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
-
+    
+    public static final String USER_QUERY_FAMILY = "q";
+    private Serializer<Query[]> querySerializer = new Serializer<Query[]>(Query[].class);
+    private static final String DEFAULT_TABLE_PREFIX = "kylin_metadata";
+    private static final String USER_TABLE_NAME = "_user";
+    private static final String USER_QUERY_COLUMN = "c";
+    private String hbaseUrl = null;
+    private String tableNameBase = null;
+    private String userTableName = null;
+    
+    public QueryService(){
+        String metadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
+        // split TABLE@HBASE_URL
+        int cut = metadataUrl.indexOf('@');
+        tableNameBase = cut < 0 ? DEFAULT_TABLE_PREFIX : metadataUrl.substring(0, cut);
+        hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
+        userTableName = tableNameBase + USER_TABLE_NAME;
+    }
+    
     public List<TableMeta> getMetadata(String project) throws SQLException {
         return getMetadata(getCubeManager(), project, true);
     }
@@ -89,46 +117,86 @@ public class QueryService extends BasicService {
         return executeQuery(correctedSql, sqlRequest);
     }
 
-    public void saveQuery(final String name, final String project, final String sql, final String description) {
-        final String creator = SecurityContextHolder.getContext().getAuthentication().getName();
-        jdbcTemplate.update("insert into queries(name,project,sql_string,creator,description,created_date) values(?,?,?,?,?,?);", new PreparedStatementSetter() {
-            @Override
-            public void setValues(PreparedStatement ps) throws SQLException {
-                ps.setString(1, name);
-                ps.setString(2, project);
-                ps.setString(3, sql);
-                ps.setString(4, creator);
-                ps.setString(5, description);
-                ps.setTimestamp(6, new java.sql.Timestamp(new Date().getTime()));
+    public void saveQuery(final String creator, final Query query){
+        List<Query> queries = getQueries(creator);
+        queries.add(query);
+        Query[] queryArray = new Query[queries.size()];
+        
+        byte[] bytes = querySerializer.serialize(queries.toArray(queryArray));
+        HTableInterface htable = null;
+        try {
+            htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
+            Put put = new Put(Bytes.toBytes(creator));
+            put.add(Bytes.toBytes(USER_QUERY_FAMILY), Bytes.toBytes(USER_QUERY_COLUMN), bytes);
+
+            htable.put(put);
+            htable.flushCommits();
+        } catch (IOException e) {
+            logger.error(e.getLocalizedMessage(), e);
+        } finally {
+            IOUtils.closeQuietly(htable);
+        }
+    }
+    
+    public void removeQuery(final String creator, final String id){
+        List<Query> queries = getQueries(creator);
+        Iterator<Query> queryIter = queries.iterator();
+        
+        boolean changed = false;
+        while (queryIter.hasNext()){
+            Query temp = queryIter.next();
+            if (temp.getId().equals(id)){
+                queryIter.remove();
+                changed = true;
+                break;
             }
-        });
+        }
+        
+        if (!changed){
+            return;
+        }
+        
+        Query[] queryArray = new Query[queries.size()];
+        byte[] bytes = querySerializer.serialize(queries.toArray(queryArray));
+        HTableInterface htable = null;
+        try {
+            htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
+            Put put = new Put(Bytes.toBytes(creator));
+            put.add(Bytes.toBytes(USER_QUERY_FAMILY), Bytes.toBytes(USER_QUERY_COLUMN), bytes);
+
+            htable.put(put);
+            htable.flushCommits();
+        } catch (IOException e) {
+            logger.error(e.getLocalizedMessage(), e);
+        } finally {
+            IOUtils.closeQuietly(htable);
+        }
     }
-
-    public void removeQuery(final String id) {
-        jdbcTemplate.update("DELETE FROM queries WHERE id = ?", new Object[] { id });
-    }
-
-    public List<GeneralResponse> getQueries(final String creator) {
-        List<GeneralResponse> responses = new ArrayList<GeneralResponse>();
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("SELECT * FROM queries WHERE creator = ?", new Object[] { creator });
-
-        for (Map<String, Object> row : rows) {
-            GeneralResponse generalResponse = new GeneralResponse();
-            generalResponse.setProperty("id", String.valueOf(row.get("id")));
-            generalResponse.setProperty("name", (String) row.get("name"));
-            String project = (String) row.get("project");
-            generalResponse.setProperty("project", (null != project) ? project : "");
-            generalResponse.setProperty("sql", (String) row.get("sql_string"));
-            String description = (String) row.get("description");
-            generalResponse.setProperty("description", (null != description) ? description : "");
-            String sqlCreator = (String) row.get("creator");
-            generalResponse.setProperty("creator", (null != sqlCreator) ? sqlCreator : "");
-            generalResponse.setProperty("createdDate", (String) new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(row.get("created_date")));
-            responses.add(generalResponse);
+    
+    public List<Query> getQueries(final String creator){
+        if (null == creator){
+            return null;
+        }
+        
+        List<Query> queries = new ArrayList<Query>();
+        HTableInterface htable = null;
+        try {
+            htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
+            Get get = new Get(Bytes.toBytes(creator));
+            get.addFamily(Bytes.toBytes(USER_QUERY_FAMILY));
+            Result result = htable.get(get);
+            Query[] query = querySerializer.deserialize(result.getValue(Bytes.toBytes(USER_QUERY_FAMILY), Bytes.toBytes(USER_QUERY_COLUMN)));
+            
+            if (null != query){
+                queries.addAll(Arrays.asList(query));
+            }
+        } catch (IOException e) {
+            logger.error(e.getLocalizedMessage(), e);
+        } finally {
+            IOUtils.closeQuietly(htable);
         }
 
-        return responses;
+        return queries;
     }
 
     public void logQuery(final SQLRequest request, final SQLResponse response, final Date startTime, final Date endTime) {
@@ -190,7 +258,7 @@ public class QueryService extends BasicService {
      * @throws SQLException
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')" + " or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'READ')")
-    public void checkAuthorization(CubeInstance cubeInstance) throws AccessDeniedException {
+    public void checkAuthorization(CubeInstance cube) throws AccessDeniedException{
     }
 
     protected SQLResponse executeQuery(String sql, SQLRequest sqlRequest) throws Exception {
