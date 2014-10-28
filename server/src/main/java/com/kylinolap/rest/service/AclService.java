@@ -68,7 +68,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.HBaseConnection;
-import com.kylinolap.common.util.HadoopUtil;
 import com.kylinolap.rest.util.Serializer;
 
 /**
@@ -112,7 +111,7 @@ public class AclService implements MutableAclService {
     @Autowired
     protected AuditLogger auditLogger;
 
-    public AclService() {
+    public AclService() throws IOException {
         String metadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
         // split TABLE@HBASE_URL
         int cut = metadataUrl.indexOf('@');
@@ -123,11 +122,7 @@ public class AclService implements MutableAclService {
         fieldAces.setAccessible(true);
         fieldAcl.setAccessible(true);
 
-        try {
-            HadoopUtil.createHTableIfNeeded(hbaseUrl, aclTableName, ACL_INFO_FAMILY, ACL_ACES_FAMILY);
-        } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
-        }
+        HBaseConnection.createHTableIfNeeded(hbaseUrl, aclTableName, ACL_INFO_FAMILY, ACL_ACES_FAMILY);
     }
 
     @Override
@@ -150,7 +145,7 @@ public class AclService implements MutableAclService {
                 oids.add(new ObjectIdentityImpl(type, id));
             }
         } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
+            throw new RuntimeException(e.getMessage(), e);
         } finally {
             IOUtils.closeQuietly(htable);
         }
@@ -211,7 +206,7 @@ public class AclService implements MutableAclService {
                 }
             }
         } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
+            throw new RuntimeException(e.getMessage(), e);
         } finally {
             IOUtils.closeQuietly(htable);
         }
@@ -244,14 +239,14 @@ public class AclService implements MutableAclService {
 
             htable.put(put);
             htable.flushCommits();
-            
+
             logger.debug("ACL of " + objectIdentity + " created successfully.");
         } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
+            throw new RuntimeException(e.getMessage(), e);
         } finally {
             IOUtils.closeQuietly(htable);
         }
-        
+
         return (MutableAcl) readAclById(objectIdentity);
     }
 
@@ -273,10 +268,10 @@ public class AclService implements MutableAclService {
 
             htable.delete(delete);
             htable.flushCommits();
-            
+
             logger.debug("ACL of " + objectIdentity + " deleted successfully.");
         } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
+            throw new RuntimeException(e.getMessage(), e);
         } finally {
             IOUtils.closeQuietly(htable);
         }
@@ -311,11 +306,11 @@ public class AclService implements MutableAclService {
             if (!put.isEmpty()) {
                 htable.put(put);
                 htable.flushCommits();
-                
+
                 logger.debug("ACL of " + acl.getObjectIdentity() + " updated successfully.");
             }
         } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
+            throw new RuntimeException(e.getMessage(), e);
         } finally {
             IOUtils.closeQuietly(htable);
         }

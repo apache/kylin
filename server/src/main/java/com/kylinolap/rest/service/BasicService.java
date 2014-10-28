@@ -96,7 +96,7 @@ public abstract class BasicService {
                 for (String line : text)
                     logger.debug(line);
             } catch (IOException e) {
-                e.printStackTrace();
+                e.printStackTrace(); // logging failure is not critical
             }
 
             DriverManagerDataSource ds = new DriverManagerDataSource();
