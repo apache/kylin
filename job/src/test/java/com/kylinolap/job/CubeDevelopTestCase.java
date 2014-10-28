@@ -156,27 +156,19 @@ public class CubeDevelopTestCase extends HBaseMetadataTestCase {
         return ddl.toString();
     }
 
-    public void execCommand(String cmd) {
+    public void execCommand(String cmd) throws IOException {
         int exitCode = 0;
         CommandExecutor cmdExecutor = new CommandExecutor(cmd, new VerboseConsumer());
         cmdExecutor.setRunAtRemote(getHadoopCliHostname(), getHadoopCliUsername(), getHadoopCliPassword());
-        try {
-            exitCode = cmdExecutor.execute(true);
-        } catch (IOException e) {
-            logger.error("Failed to execute command", e);
-        }
+        exitCode = cmdExecutor.execute(true);
         assertEquals(0, exitCode);
     }
 
-    public void execCopy(String localFile, String destDir) {
+    public void execCopy(String localFile, String destDir) throws IOException {
         int exitCode = 0;
         CopyExecutor cpExecutor = new CopyExecutor(localFile, destDir, new VerboseConsumer());
         cpExecutor.setRunAtRemote(getHadoopCliHostname(), getHadoopCliUsername(), getHadoopCliPassword());
-        try {
-            exitCode = cpExecutor.execute(true);
-        } catch (IOException e) {
-            logger.error("Failed to execute command", e);
-        }
+        exitCode = cpExecutor.execute(true);
         assertEquals(0, exitCode);
     }
 
