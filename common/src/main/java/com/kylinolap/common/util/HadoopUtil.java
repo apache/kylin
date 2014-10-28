@@ -33,6 +33,7 @@ import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.HConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,33 +110,41 @@ public class HadoopUtil {
 
         return conf;
     }
+
+    public static void createHTableIfNeeded(String hbaseUrl, String tableName, String... families) throws IOException {
+        createHTableIfNeeded(HBaseConnection.get(hbaseUrl), tableName, families);
+    }
     
-    public static void createHTableIfNeeded(String hbaseUrl, String tableName, String ... falimies) throws IOException{
-        HBaseAdmin hbase = new HBaseAdmin(HBaseConnection.get(hbaseUrl));
-        
-        boolean tableExist = false;
+    public static void createHTableIfNeeded(HConnection conn, String tableName, String... families) throws IOException {
+        HBaseAdmin hbase = new HBaseAdmin(conn);
+
         try {
-            hbase.getTableDescriptor(TableName.valueOf(tableName));
-            tableExist = true;
-        } catch (TableNotFoundException e) {
-        }
-        
-        if (tableExist) {
-            logger.debug("HTable '" + tableName + "' already exists");
-            return;
-        }
-
-        logger.debug("Creating HTable '" + tableName + "'");
-
-        HTableDescriptor desc = new HTableDescriptor(TableName.valueOf(tableName));
-        
-        if(null != falimies && falimies.length > 0){
-            for (String family: falimies){
-                desc.addFamily(new HColumnDescriptor(family));
+            boolean tableExist = false;
+            try {
+                hbase.getTableDescriptor(TableName.valueOf(tableName));
+                tableExist = true;
+            } catch (TableNotFoundException e) {
             }
-        }
-        hbase.createTable(desc);
 
-        logger.debug("HTable '" + tableName + "' created");
+            if (tableExist) {
+                logger.debug("HTable '" + tableName + "' already exists");
+                return;
+            }
+
+            logger.debug("Creating HTable '" + tableName + "'");
+
+            HTableDescriptor desc = new HTableDescriptor(TableName.valueOf(tableName));
+
+            if (null != families && families.length > 0) {
+                for (String family : families) {
+                    desc.addFamily(new HColumnDescriptor(family));
+                }
+            }
+            hbase.createTable(desc);
+
+            logger.debug("HTable '" + tableName + "' created");
+        } finally {
+            hbase.close();
+        }
     }
 }
