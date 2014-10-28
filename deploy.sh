@@ -141,6 +141,7 @@ cat examples/test_case_data/kylin.properties | \
 echo "a copy of kylin config is generated at /etc/kylin/kylin.properties:"
 echo "==================================================================="
 cat /etc/kylin/kylin.properties
+echo ""
 echo "==================================================================="
 echo ""
 
