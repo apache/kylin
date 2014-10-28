@@ -123,12 +123,12 @@ public class JobService extends BasicService {
         return this.getJobManager().getJob(uuid);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public void resumeJob(JobInstance job) throws IOException, JobException {
         this.getJobManager().resumeJob(job.getUuid());
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public void cancelJob(JobInstance job) throws IOException, JobException, CubeIntegrityException {
         CubeInstance cube = this.getCubeManager().getCube(job.getRelatedCube());
         List<JobInstance> jobs = this.getJobManager().listJobs(cube.getName(), null);
