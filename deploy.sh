@@ -91,9 +91,7 @@ else
 fi
 
 KYLIN_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
-
 echo "Kylin home folder path is $KYLIN_HOME"
-
 cd $KYLIN_HOME
 
 
@@ -103,12 +101,10 @@ source ./package.sh
 echo "retrieving classpath..."
 cd $KYLIN_HOME/job/target
 JOB_JAR_NAME="kylin-job-latest.jar"
-#generate the variables: KYLIN_LD_LIBRARY_PATH,KYLIN_HBASE_CLASSPATH,KYLIN_HBASE_CONF_PATH
+#generate config variables
 hbase org.apache.hadoop.util.RunJar $JOB_JAR_NAME com.kylinolap.job.deployment.HbaseConfigPrinter /tmp/kylin_retrieve.sh
-#load variables: KYLIN_LD_LIBRARY_PATH,KYLIN_HBASE_CLASSPATH,KYLIN_HBASE_CONF_PATH
+#load config variables
 source /tmp/kylin_retrieve.sh
-
-
 
 cd $KYLIN_HOME
 mkdir -p /etc/kylin
@@ -125,27 +121,22 @@ NEW_CLI_HOSTNAME_PREFIX="kylin.job.remote.cli.hostname="
 NEW_CLI_PASSWORD_PREFIX="kylin.job.remote.cli.password="
 NEW_METADATA_URL_PREFIX="kylin.metadata.url=kylin_metadata_qa@hbase:"
 NEW_STORAGE_URL_PREFIX="kylin.storage.url=hbase:"
-NEW_CHECK_URL="kylin.job.yarn.app.rest.check.status.url=http://localhost"
+NEW_CHECK_URL_PREFIX="kylin.job.yarn.app.rest.check.status.url=http://"
 
 KYLIN_ZOOKEEPER_URL=${KYLIN_ZOOKEEPER_QUORUM}:${KYLIN_ZOOKEEPER_CLIENT_PORT}:${KYLIN_ZOOKEEPER_ZNODE_PARENT}
-
-#deploy kylin.properties to /etc/kylin
-CONFIG=`cat examples/test_case_data/kylin.properties`
-CONFIG=`echo ${CONFIG} | sed -e "s,${CLI_HOSTNAME_DEFAULT},${NEW_CLI_HOSTNAME_PREFIX}${HOSTNAME},"`
-CONFIG=`echo ${CONFIG} | sed -e "s,${METADATA_URL_DEFAULT},${NEW_METADATA_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," `
-CONFIG=`echo ${CONFIG} | sed -e "s,${STORAGE_URL_DEFAULT},${NEW_STORAGE_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," `
-
-if [ "$HOSTNAME" !=  "sandbox.hortonworks.com" ]
-then
-    CONFIG=`echo ${CONFIG} |  sed -e "s,${CHECK_URL_DEFAULT},${NEW_CHECK_URL}," `
-fi
 
 echo "Kylin install script requires root password for ${HOSTNAME}"
 echo "(The default root password for hortonworks VM is hadoop, and for cloudera VM is cloudera)"
 read -s -p "Enter Password for root: " rootpass
 
-CONFIG=`echo ${CONFIG} |  sed -e "s,${CLI_PASSWORD_DEFAULT},${NEW_CLI_PASSWORD_PREFIX}${rootpass}," `
-echo ${CONFIG} > /etc/kylin/kylin.properties
+#deploy kylin.properties to /etc/kylin
+cat examples/test_case_data/kylin.properties | \
+    sed -e "s,${CHECK_URL_DEFAULT},${NEW_CHECK_URL_PREFIX}${HOSTNAME}," | \
+    sed -e "s,${CLI_HOSTNAME_DEFAULT},${NEW_CLI_HOSTNAME_PREFIX}${HOSTNAME}," | \
+    sed -e "s,${CLI_PASSWORD_DEFAULT},${NEW_CLI_PASSWORD_PREFIX}${rootpass}," | \
+    sed -e "s,${METADATA_URL_DEFAULT},${NEW_METADATA_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," | \
+    sed -e "s,${STORAGE_URL_DEFAULT},${NEW_STORAGE_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," >  /etc/kylin/kylin.properties
+
 
 echo "a copy of kylin config is generated at /etc/kylin/kylin.properties:"
 echo "==================================================================="
