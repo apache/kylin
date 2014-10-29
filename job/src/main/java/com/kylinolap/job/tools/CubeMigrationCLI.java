@@ -418,10 +418,12 @@ public class CubeMigrationCLI {
         case COPY_FILE_IN_META: {
             // no harm
             logger.info("Undo for COPY_FILE_IN_META is ignored");
+            break;
         }
         case COPY_DICT_OR_SNAPSHOT: {
             // no harm
             logger.info("Undo for COPY_DICT_OR_SNAPSHOT is ignored");
+            break;
         }
         case RENAME_FOLDER_IN_HDFS: {
             String srcPath = (String) opt.params[1];
