@@ -1,13 +1,5 @@
 <div class="page-header">
     <!--Project-->
-    <span>
-        Project:
-        <select chosen ng-model="state.projectName" ng-init="newAccess.permission=permissions.READ.value"
-                ng-options="project as project for project in projects"
-                style="width: 150px" ng-change="jobs={};reload();">
-            <option value="">-- All Projects --</option>
-        </select>
-    </span>
     <a class="btn btn-xs btn-info" tooltip="Manage Project" href="/projects"><i class="fa fa-gears"></i></a>
     <a class="btn btn-xs btn-primary" tooltip="Add Project" style="width: 29px" ng-click="toCreateProj()">
         <i class="fa fa-plus"></i>

@@ -20,6 +20,7 @@
 		<scr:intercept-url pattern="/api/cubes*/**" access="hasRole('ROLE_MODELER')" />
 		<scr:intercept-url pattern="/api/job*/**" access="hasRole('ROLE_MODELER')" />
 		<scr:intercept-url pattern="/api/admin/config" access="permitAll" />
+		<scr:intercept-url pattern="/api/projects" access="permitAll" />
 		<scr:intercept-url pattern="/api/admin*/**" access="hasRole('ROLE_ADMIN')" />
 		<scr:intercept-url pattern="/api/**" access="isAuthenticated()" />
 
