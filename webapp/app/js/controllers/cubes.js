@@ -4,10 +4,10 @@ KylinApp
     .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService) {
         $scope.listParams={
             cubeName: $routeParams.cubeName,
-            projectName: null
+            projectName: $scope.project.selectedProject
         };
         $scope.cubes = [];
-        $scope.projects = [];
+//        $scope.projects = [];
         $scope.loading = false;
         $scope.action = {};
 
@@ -24,11 +24,11 @@ KylinApp
         $scope.state = { filterAttr: 'create_time', filterReverse: true, reverseColumn: 'create_time',
             dimensionFilter: '', measureFilter: ''};
 
-        ProjectService.list({}, function (projects) {
-            angular.forEach(projects, function(project, index){
-                $scope.projects.push(project.name);
-            });
-        });
+//        ProjectService.list({}, function (projects) {
+//            angular.forEach(projects, function(project, index){
+//                $scope.projects.push(project.name);
+//            });
+//        });
 
         $scope.list = function (offset, limit) {
             offset = (!!offset) ? offset : 0;
@@ -39,8 +39,8 @@ KylinApp
             if ($scope.listParams.cubeName) {
                 queryParam.cubeName = $scope.listParams.cubeName;
             }
-            if ($scope.listParams.projectName){
-                queryParam.projectName = $scope.listParams.projectName;
+            if ($scope.project.selectedProject){
+                queryParam.projectName = $scope.project.selectedProject;
             }
 
             $scope.loading = true;
@@ -65,6 +65,10 @@ KylinApp
             return defer.promise;
         }
 
+        $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+            $scope.cubes=[];
+            $scope.list();
+        });
         $scope.reload = function () {
             // trigger reload action in pagination directive
             $scope.action.reload = !$scope.action.reload;

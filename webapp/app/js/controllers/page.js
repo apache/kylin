@@ -1,6 +1,6 @@
 'use strict';
 
-KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $location, $rootScope, $routeParams, $http, UserService) {
+KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $location, $rootScope, $routeParams, $http, UserService,ProjectService) {
 
     $scope.header = {show: true};
     $scope.footer = {
@@ -116,6 +116,23 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $location, 
         return size;
     }
 
+
+
+    $scope.project = {
+        projects:[],
+        selectedProject: null
+    };
+    ProjectService.list({}, function (projects) {
+        angular.forEach(projects, function(project, index){
+            $scope.project.projects.push(project.name);
+        });
+    });
+
+//    $scope.$watch('curProject', function (newValue, oldValue) {
+//        if (newValue) {
+//            $scope.curProject = newValue;
+//        }
+//    });
 });
 
 var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService, projects, project) {
