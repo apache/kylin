@@ -290,7 +290,11 @@ public class CubeMigrationCLI {
                 DictionaryManager dstDictMgr = DictionaryManager.getInstance(dstConfig);
                 DictionaryManager srcDicMgr = DictionaryManager.getInstance(srcConfig);
                 DictionaryInfo dictSrc = srcDicMgr.getDictionaryInfo(item);
+
+                long ts = dictSrc.getLastModified();
+                dictSrc.setLastModified(0);//to avoid resource store write conflict
                 DictionaryInfo dictSaved = dstDictMgr.trySaveNewDict(dictSrc.getDictionaryObject(), dictSrc);
+                dictSrc.setLastModified(ts);
 
                 if (dictSaved == dictSrc) {
                     //no dup found, already saved to dest
@@ -317,7 +321,12 @@ public class CubeMigrationCLI {
                 SnapshotManager dstSnapMgr = SnapshotManager.getInstance(dstConfig);
                 SnapshotManager srcSnapMgr = SnapshotManager.getInstance(srcConfig);
                 SnapshotTable snapSrc = srcSnapMgr.getSnapshotTable(item);
+
+                long ts = snapSrc.getLastModified();
+                snapSrc.setLastModified(0);
                 SnapshotTable snapSaved = dstSnapMgr.trySaveNewSnapshot(snapSrc);
+                snapSrc.setLastModified(ts);
+
 
                 if (snapSaved == snapSrc) {
                     //no dup found, already saved to dest
