@@ -95,10 +95,6 @@ public class CubeMigrationCLI {
         checkAndGetHbaseUrl();
 
         Configuration conf = HBaseConfiguration.create();
-        conf.set("hbase.snapshot.master.timeoutMillis","1200000");
-        conf.set("hbase.snapshot.region.timeout","1200000");
-        conf.set("hbase.snapshot.master.timeout.millis","1200000");
-        
         hbaseAdmin = new HBaseAdmin(conf);
         hdfsFS = FileSystem.get(new Configuration());
         srcCoprocessorPath = DeployCoprocessorCLI.getNewestCoprocessorJar(srcConfig, hdfsFS);
@@ -107,7 +103,7 @@ public class CubeMigrationCLI {
         operations = new ArrayList<Opt>();
         copyFilesInMetaStore(cube, overwriteIfExists);
         renameFoldersInHdfs(cube);
-        renameTablesInHbase(cube);// change htable name + change name in cube instance + alter coprocessor
+        //renameTablesInHbase(cube);// change htable name + change name in cube instance + alter coprocessor
         addCubeIntoProject(cubeName, projectName);
 
         if (realExecute.equalsIgnoreCase("true")) {
@@ -171,9 +167,11 @@ public class CubeMigrationCLI {
             String remaining = oldHTableName.substring(srcPrefix.length());
             String newHTableName = dstPrefix + remaining;
 
+
             operations.add(new Opt(OptType.RENAME_TABLE_IN_HBASE, new Object[] { oldHTableName, newHTableName }));
             operations.add(new Opt(OptType.ALTER_TABLE_COPROCESSOR, new Object[] { newHTableName }));
             renamedHTables.put(oldHTableName, newHTableName);
+
         }
 
         operations.add(new Opt(OptType.CHANGE_HTABLE_NAME_IN_CUBE, new Object[] { cube.getName(), renamedHTables }));
