@@ -94,7 +94,12 @@ public class CubeMigrationCLI {
 
         checkAndGetHbaseUrl();
 
-        hbaseAdmin = new HBaseAdmin(HBaseConfiguration.create());
+        Configuration conf = HBaseConfiguration.create();
+        conf.set("hbase.snapshot.master.timeoutMillis","1200000");
+        conf.set("hbase.snapshot.region.timeout","1200000");
+        conf.set("hbase.snapshot.master.timeout.millis","1200000");
+        
+        hbaseAdmin = new HBaseAdmin(conf);
         hdfsFS = FileSystem.get(new Configuration());
         srcCoprocessorPath = DeployCoprocessorCLI.getNewestCoprocessorJar(srcConfig, hdfsFS);
         dstCoprocessorPath = DeployCoprocessorCLI.getNewestCoprocessorJar(dstConfig, hdfsFS);
