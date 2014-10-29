@@ -103,7 +103,6 @@ public class DictionaryManager {
         newDictInfo.setDictionaryClass(newDict.getClass().getName());
 
         save(newDictInfo);
-
         dictCache.put(newDictInfo.getResourcePath(), newDictInfo);
 
         return newDictInfo;
