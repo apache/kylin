@@ -99,7 +99,7 @@ public class CubeMigrationCLI {
 
         operations = new ArrayList<Opt>();
         copyFilesInMetaStore(cube, overwriteIfExists);
-        renameFoldersInHdfs(cube);
+        //renameFoldersInHdfs(cube);
         //renameTablesInHbase(cube);// change htable name + change name in cube instance + alter coprocessor
         addCubeIntoProject(cubeName, projectName);
 
