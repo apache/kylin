@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.kylinolap.cube.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -20,10 +21,6 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.Serializer;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.CubeStatusEnum;
 import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.dict.DictionaryInfo;
 import com.kylinolap.dict.DictionaryManager;
@@ -94,15 +91,16 @@ public class CubeMigrationCLI {
 
         checkAndGetHbaseUrl();
 
-        hbaseAdmin = new HBaseAdmin(HBaseConfiguration.create());
+        Configuration conf = HBaseConfiguration.create();
+        hbaseAdmin = new HBaseAdmin(conf);
         hdfsFS = FileSystem.get(new Configuration());
         srcCoprocessorPath = DeployCoprocessorCLI.getNewestCoprocessorJar(srcConfig, hdfsFS);
         dstCoprocessorPath = DeployCoprocessorCLI.getNewestCoprocessorJar(dstConfig, hdfsFS);
 
         operations = new ArrayList<Opt>();
         copyFilesInMetaStore(cube, overwriteIfExists);
-        renameFoldersInHdfs(cube);
-        renameTablesInHbase(cube);// change htable name + change name in cube instance + alter coprocessor
+        //renameFoldersInHdfs(cube);
+        //renameTablesInHbase(cube);// change htable name + change name in cube instance + alter coprocessor
         addCubeIntoProject(cubeName, projectName);
 
         if (realExecute.equalsIgnoreCase("true")) {
@@ -141,6 +139,9 @@ public class CubeMigrationCLI {
 
     private static void renameFoldersInHdfs(CubeInstance cube) {
         for (CubeSegment segment : cube.getSegments()) {
+            if (segment.getStatus() != CubeSegmentStatusEnum.READY)
+                throw new IllegalStateException("At least one segment is not in READY state");
+
             String jobUuid = segment.getLastBuildJobID();
             String src = JobInstance.getJobWorkingDir(jobUuid, srcConfig.getHdfsWorkingDirectory());
             String tgt = JobInstance.getJobWorkingDir(jobUuid, dstConfig.getHdfsWorkingDirectory());
@@ -166,9 +167,11 @@ public class CubeMigrationCLI {
             String remaining = oldHTableName.substring(srcPrefix.length());
             String newHTableName = dstPrefix + remaining;
 
+
             operations.add(new Opt(OptType.RENAME_TABLE_IN_HBASE, new Object[] { oldHTableName, newHTableName }));
             operations.add(new Opt(OptType.ALTER_TABLE_COPROCESSOR, new Object[] { newHTableName }));
             renamedHTables.put(oldHTableName, newHTableName);
+
         }
 
         operations.add(new Opt(OptType.CHANGE_HTABLE_NAME_IN_CUBE, new Object[] { cube.getName(), renamedHTables }));
@@ -290,7 +293,11 @@ public class CubeMigrationCLI {
                 DictionaryManager dstDictMgr = DictionaryManager.getInstance(dstConfig);
                 DictionaryManager srcDicMgr = DictionaryManager.getInstance(srcConfig);
                 DictionaryInfo dictSrc = srcDicMgr.getDictionaryInfo(item);
+
+                long ts = dictSrc.getLastModified();
+                dictSrc.setLastModified(0);//to avoid resource store write conflict
                 DictionaryInfo dictSaved = dstDictMgr.trySaveNewDict(dictSrc.getDictionaryObject(), dictSrc);
+                dictSrc.setLastModified(ts);
 
                 if (dictSaved == dictSrc) {
                     //no dup found, already saved to dest
@@ -317,7 +324,12 @@ public class CubeMigrationCLI {
                 SnapshotManager dstSnapMgr = SnapshotManager.getInstance(dstConfig);
                 SnapshotManager srcSnapMgr = SnapshotManager.getInstance(srcConfig);
                 SnapshotTable snapSrc = srcSnapMgr.getSnapshotTable(item);
+
+                long ts = snapSrc.getLastModified();
+                snapSrc.setLastModified(0);
                 SnapshotTable snapSaved = dstSnapMgr.trySaveNewSnapshot(snapSrc);
+                snapSrc.setLastModified(ts);
+
 
                 if (snapSaved == snapSrc) {
                     //no dup found, already saved to dest
@@ -409,10 +421,12 @@ public class CubeMigrationCLI {
         case COPY_FILE_IN_META: {
             // no harm
             logger.info("Undo for COPY_FILE_IN_META is ignored");
+            break;
         }
         case COPY_DICT_OR_SNAPSHOT: {
             // no harm
             logger.info("Undo for COPY_DICT_OR_SNAPSHOT is ignored");
+            break;
         }
         case RENAME_FOLDER_IN_HDFS: {
             String srcPath = (String) opt.params[1];

@@ -81,6 +81,9 @@ public class CubeManager {
             try {
                 r = new CubeManager(config);
                 CACHE.put(config, r);
+                if (CACHE.size() > 1) {
+                    logger.warn("More than one singleton exist");
+                }
                 return r;
             } catch (IOException e) {
                 throw new IllegalStateException("Failed to init CubeManager from " + config, e);
@@ -126,9 +129,8 @@ public class CubeManager {
     /**
      * Get related Cubes by cubedesc name. By default, the desc name will be
      * translated into upper case.
-     * 
-     * @param descName
-     *            CubeDesc name
+     *
+     * @param descName CubeDesc name
      * @return
      */
     public List<CubeInstance> getCubesByDesc(String descName) {
@@ -335,7 +337,7 @@ public class CubeManager {
         switch (buildType) {
         case BUILD:
             if (segmentsInNewStatus.size() == 1) {// if this the last segment in
-                                                  // status of NEW
+                // status of NEW
                 // remove all the rebuilding/impacted segments
                 cubeInstance.getSegments().removeAll(cubeInstance.getRebuildingSegments());
             }
@@ -375,7 +377,7 @@ public class CubeManager {
 
     /**
      * After cube update, reload cube related cache
-     * 
+     *
      * @param cube
      */
     public void loadCubeCache(CubeInstance cube) {
@@ -388,7 +390,7 @@ public class CubeManager {
 
     /**
      * After cube deletion, remove cube related cache
-     * 
+     *
      * @param cube
      */
     public void removeCubeCache(CubeInstance cube) {
@@ -431,7 +433,7 @@ public class CubeManager {
      * dictionaries For those dictionaries on lookup table, just copy it from
      * any one of the merging segments, it's ganranteed to be consistent(checked
      * in CubeSegmentValidator)
-     * 
+     *
      * @param cube
      * @param newSeg
      * @throws IOException
@@ -476,7 +478,7 @@ public class CubeManager {
      * make snapshots for the new segment by copying from one of the underlying
      * merging segments. it's ganranteed to be consistent(checked in
      * CubeSegmentValidator)
-     * 
+     *
      * @param cube
      * @param newSeg
      */
@@ -531,10 +533,8 @@ public class CubeManager {
 
     /**
      * @param cubeInstance
-     * @param startDate
-     *            (pass 0 if full build)
-     * @param endDate
-     *            (pass 0 if full build)
+     * @param startDate    (pass 0 if full build)
+     * @param endDate      (pass 0 if full build)
      * @return
      */
     private CubeSegment buildSegment(CubeInstance cubeInstance, long startDate, long endDate) {

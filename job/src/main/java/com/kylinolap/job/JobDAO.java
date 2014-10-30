@@ -35,7 +35,6 @@ import com.kylinolap.metadata.MetadataManager;
 
 /**
  * @author ysong1
- * 
  */
 public class JobDAO {
     private static Logger log = LoggerFactory.getLogger(JobDAO.class);
@@ -45,6 +44,8 @@ public class JobDAO {
 
     private ResourceStore store;
 
+    private static final Logger logger = LoggerFactory.getLogger(JobDAO.class);
+
     private static final ConcurrentHashMap<KylinConfig, JobDAO> CACHE = new ConcurrentHashMap<KylinConfig, JobDAO>();
 
     public static JobDAO getInstance(KylinConfig config) {
@@ -52,6 +53,10 @@ public class JobDAO {
         if (r == null) {
             r = new JobDAO(config);
             CACHE.put(config, r);
+            if (CACHE.size() > 1) {
+                logger.warn("More than one singleton exist");
+            }
+
         }
         return r;
     }
