@@ -55,6 +55,9 @@ public class DictionaryManager {
         if (r == null) {
             r = new DictionaryManager(config);
             SERVICE_CACHE.put(config, r);
+            if (SERVICE_CACHE.size() > 1) {
+                logger.warn("More than one singleton exist");
+            }
         }
         return r;
     }
@@ -103,7 +106,6 @@ public class DictionaryManager {
         newDictInfo.setDictionaryClass(newDict.getClass().getName());
 
         save(newDictInfo);
-
         dictCache.put(newDictInfo.getResourcePath(), newDictInfo);
 
         return newDictInfo;
