@@ -16,9 +16,9 @@
 		<scr:intercept-url pattern="/api/query*/**" access="isAuthenticated()" />
 		<scr:intercept-url pattern="/api/metadata*/**" access="isAuthenticated()" />
 		<scr:intercept-url pattern="/api/**/metrics" access="permitAll" />
-		<scr:intercept-url pattern="/api/cubes/src/tables" access="hasAnyRole('ROLE_ANALYST', 'ROLE_MODELER')" />
-		<scr:intercept-url pattern="/api/cubes*/**" access="hasRole('ROLE_MODELER')" />
-		<scr:intercept-url pattern="/api/job*/**" access="hasRole('ROLE_MODELER')" />
+		<scr:intercept-url pattern="/api/cubes/src/tables" access="hasAnyRole('ROLE_ANALYST')" />
+		<scr:intercept-url pattern="/api/cubes*/**" access="isAuthenticated()" />
+		<scr:intercept-url pattern="/api/job*/**" access="isAuthenticated()" />
 		<scr:intercept-url pattern="/api/admin/config" access="permitAll" />
 		<scr:intercept-url pattern="/api/admin*/**" access="hasRole('ROLE_ADMIN')" />
 		<scr:intercept-url pattern="/api/**" access="isAuthenticated()" />
@@ -84,7 +84,8 @@
 				<bean class="com.kylinolap.rest.security.AuthoritiesPopulator">
 					<constructor-arg index="0" ref="ldapSource" />
 					<constructor-arg index="1" value="${ldap.user.groupSearchBase}" />
-					<constructor-arg index="2" value="${ldap.adminRole}" />
+					<constructor-arg index="2" value="${acl.adminRole}" />
+					<constructor-arg index="3" value="${acl.defaultRole}" />
 				</bean>
 			</constructor-arg>
 		</bean>
@@ -106,7 +107,8 @@
 				<bean class="com.kylinolap.rest.security.AuthoritiesPopulator">
 					<constructor-arg index="0" ref="ldapSource" />
 					<constructor-arg index="1" value="${ldap.service.groupSearchBase}" />
-					<constructor-arg index="2" value="${ldap.adminRole}" />
+					<constructor-arg index="2" value="${acl.adminRole}" />
+					<constructor-arg index="3" value="${acl.defaultRole}" />
 				</bean>
 			</constructor-arg>
 		</bean>
