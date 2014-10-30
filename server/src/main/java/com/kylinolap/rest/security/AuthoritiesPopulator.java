@@ -62,6 +62,8 @@ public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
         
         if (authorities.contains(adminRoleAsAuthority)) {
             authorities.add(adminAuthority);
+            authorities.add(modelerAuthority);
+            authorities.add(analystAuthority);
         }
         
         authorities.addAll(defaultAuthorities);
