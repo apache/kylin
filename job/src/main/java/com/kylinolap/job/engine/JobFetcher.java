@@ -55,7 +55,7 @@ public class JobFetcher implements Job {
 
         try {
             // get all pending jobs
-            log.debug("Using metadata url: " + engineConfig.getConfig());
+            log.debug("Using metadata url: " + engineConfig.getConfig().getMetadataUrl());
             log.debug("Getting pending job list");
             List<JobInstance> pendingJobList = jobDAO.listAllJobs(JobStatusEnum.PENDING);
 

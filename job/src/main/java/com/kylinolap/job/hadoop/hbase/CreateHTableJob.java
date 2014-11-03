@@ -102,7 +102,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
                 }
 
                 cf.setDataBlockEncoding(DataBlockEncoding.FAST_DIFF);
-                cf.setInMemory(true);
+                cf.setInMemory(false);
                 cf.setBlocksize(4 * 1024 * 1024); // set to 4MB
                 tableDesc.addFamily(cf);
             }
