@@ -180,13 +180,13 @@
                                         <label class="col-sm-6">
                                             <input type="checkbox" class="ace ace-switch ace-switch-5"
                                                       ng-model="newDimension.status.useJoin"
-                                                      ng-click="toggleJoin(newDimension)" >
+                                                      ng-click="toggleJoin(newDimension,$event);" >
                                             <span class="lbl middle"></span>
                                         </label>
                                     </div>
                                 </div>
                                 <!--Join Type and Columns-->
-                                <div ng-if="newDimension.status.useJoin">
+                                <div ng-if="newDimension.join&&newDimension.join.type">
                                     <div class="form-group">
                                         <div class="row">
                                             <label class="col-sm-3 control-label font-color-default"><b>Type</b></label>
