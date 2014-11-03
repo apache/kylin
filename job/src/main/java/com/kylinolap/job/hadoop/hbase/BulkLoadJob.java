@@ -31,12 +31,16 @@ import com.kylinolap.cube.CubeManager;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.HBaseColumnFamilyDesc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author ysong1
  * 
  */
 public class BulkLoadJob extends AbstractHadoopJob {
+
+    protected static final Logger log = LoggerFactory.getLogger(BulkLoadJob.class);
 
     @Override
     public int run(String[] args) throws Exception {
@@ -71,7 +75,10 @@ public class BulkLoadJob extends AbstractHadoopJob {
             String[] newArgs = new String[2];
             newArgs[0] = input;
             newArgs[1] = tableName;
+
+            log.debug("Start to run LoadIncrementalHFiles");
             int ret = ToolRunner.run(new LoadIncrementalHFiles(conf), newArgs);
+            log.debug("End to run LoadIncrementalHFiles");
             return ret;
         } catch (Exception e) {
             printUsage(options);
