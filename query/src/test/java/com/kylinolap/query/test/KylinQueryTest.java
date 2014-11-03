@@ -132,7 +132,7 @@ public class KylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = "src/test/resources/query/sql/query39.sql";
+        String queryFileName = "src/test/resources/query/sql/query01.sql";
 
         File sqlFile = new File(queryFileName);
         runSQL(sqlFile, true, false);
