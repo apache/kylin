@@ -65,7 +65,7 @@
                     <!--Column Name -->
                     <input type="text" placeholder="Column Name.." ng-if="state.mode=='edit'"
                            tooltip="rowkey column name.." tooltip-trigger="focus"
-                           ng-model="rowkey_column.column">
+                           ng-model="rowkey_column.column" class="form-control">
 
                     <span ng-if="state.mode=='view'">{{rowkey_column.column}}</span>
                 </td>
@@ -73,7 +73,7 @@
                     <!--Column Length -->
                     <input type="text" placeholder="Column Length.." ng-if="state.mode=='edit'"
                            tooltip="rowkey column length.." tooltip-trigger="focus"
-                           ng-model="rowkey_column.length">
+                           ng-model="rowkey_column.length" class="form-control">
 
                     <span ng-if="state.mode=='view'">{{rowkey_column.length}}</span>
                 </td>
