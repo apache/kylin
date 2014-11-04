@@ -1,6 +1,6 @@
 'use strict';
 
-KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $location, $rootScope, $routeParams, $http, UserService,ProjectService) {
+KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService) {
 
     $scope.header = {show: true};
     $scope.footer = {
@@ -128,11 +128,21 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $location, 
         });
     });
 
-//    $scope.$watch('curProject', function (newValue, oldValue) {
-//        if (newValue) {
-//            $scope.curProject = newValue;
-//        }
-//    });
+    $scope.toCreateProj = function () {
+        $modal.open({
+            templateUrl: 'project.html',
+            controller: projCtrl,
+            resolve: {
+                projects: function () {
+                    return null;
+                },
+                project: function(){
+                    return null;
+                }
+            }
+        });
+    };
+
 });
 
 var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService, projects, project) {
@@ -175,7 +185,9 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
                 console.log('error');
             });
         }
-    }
+    };
+
+
 
     $scope.cancel = function () {
         $modalInstance.dismiss('cancel');

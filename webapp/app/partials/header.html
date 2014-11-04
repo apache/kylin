@@ -10,16 +10,7 @@
                 </button>
                 <a class="navbar-brand" href="/home" style="padding: 2px 10px 0px 0px"><img src="image/logo.png" height="40px" width="40px"/><small> Kylin </small></a>
             </div>
-            <form class="navbar-form navbar-left" ng-if="userService.isAuthorized()">
-                <div class="form-group">
-                                            <select chosen ng-model="project.selectedProject" ng-init="newAccess.permission=permissions.READ.value"
-                                                    ng-options="project as project for project in project.projects"
-                                                    style="width: 150px"
-                                                    class="chosen-select">
-                                                <option value="">-- All Projects --</option>
-                                            </select>
-                </div>
-            </form>
+
             <div class="navbar-collapse collapse" collapse="isCollapsed">
                 <ul class="nav navbar-nav">
                     <li class="{{activeTab=='query'?'purple':'green'}}" ng-if="userService.isAuthorized()">
@@ -61,4 +52,8 @@
             </div>
         </div>
     </div>
+
+
+
+
 </div>
