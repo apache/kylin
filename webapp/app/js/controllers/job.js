@@ -80,9 +80,10 @@ KylinApp
             $scope.action.reload = !$scope.action.reload;
         };
 
+
         $scope.$watch('project.selectedProject', function (newValue, oldValue) {
             $scope.jobs={};
-            $scope.state.projectName = $scope.project.selectedProject;
+            $scope.state.projectName = newValue;
             $scope.list();
         });
         $scope.resume = function (job) {

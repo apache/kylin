@@ -46,7 +46,12 @@ KylinApp
                 defer.resolve();
             });
             return defer.promise;
-        }
+        };
+
+
+        $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+                $scope.projectMetaLoad();
+        });
 
         $scope.trimType = function(typeName){
             if (typeName.match(/VARCHAR/i))
@@ -57,8 +62,5 @@ KylinApp
             return  typeName.trim().toLowerCase();
         }
 
-    $scope.$watch('project.selectedProject', function (newValue, oldValue) {
-            $scope.projectMetaLoad();
-    });
     });
 
