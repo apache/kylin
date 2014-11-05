@@ -65,10 +65,10 @@ KylinApp
             return defer.promise;
         }
 
-        $scope.$watch('project.selectedProject', function (newValue, oldValue) {
-            $scope.cubes=[];
-            $scope.list();
-        });
+//        $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+//            $scope.cubes=[];
+//            $scope.list();
+//        });
         $scope.reload = function () {
             // trigger reload action in pagination directive
             $scope.action.reload = !$scope.action.reload;
