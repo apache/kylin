@@ -3,7 +3,7 @@
     <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
         <div class="form-group">
             <span><b>Project: </b></span>
-            <select chosen ng-model="project.selectedProject" ng-init="newAccess.permission=permissions.READ.value"
+            <select chosen ng-model="project.selectedProject" ng-init="newAccess.permission=permissions.READ.value;project.selectedProject=project.selectedProject!=null?project.selectedProject:project.projects[0]"
                     ng-options="project as project for project in project.projects"
                     style="width: 150px"
                     data-placeholder="select a project"
@@ -53,7 +53,7 @@
                     </p>
                     <div class="pull-left">
                         <h4>
-                            Project: <span class="label label-info">{{curProject}}</span>
+                            Project: <span class="label label-info">{{project.selectedProject}}</span>
                         </h4>
                     </div>
                     <div class="pull-right">

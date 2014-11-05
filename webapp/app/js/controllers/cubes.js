@@ -57,22 +57,23 @@ KylinApp
                         $scope.loadDetail(cube);
                     }
                 });
+                $scope.cubes=[];
                 $scope.cubes = $scope.cubes.concat(cubes);
                 $scope.loading = false;
                 defer.resolve(cubes.length);
             });
 
             return defer.promise;
-        }
+        };
 
-//        $scope.$watch('project.selectedProject', function (newValue, oldValue) {
-//            $scope.cubes=[];
-//            $scope.list();
-//        });
+        $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+            $scope.cubes=[];
+            $scope.list();
+        });
         $scope.reload = function () {
             // trigger reload action in pagination directive
             $scope.action.reload = !$scope.action.reload;
-        }
+        };
 
         $scope.toCreateProj = function () {
             $modal.open({
@@ -87,7 +88,7 @@ KylinApp
                     }
                 }
             });
-        }
+        };
 
         $scope.loadDetail = function (cube) {
             if (!cube.detail) {
@@ -98,7 +99,7 @@ KylinApp
                 }, function () {
                 });
             }
-        }
+        };
 
         $scope.getTotalSize = function (cubes) {
             var size = 0;
@@ -111,7 +112,7 @@ KylinApp
                 }
                 return $scope.dataSize(size*1024);
             }
-        }
+        };
 
         $scope.enable = function (cube) {
             if (confirm("Are you sure to enable the cube? Please note: if cube schema is changed in the disabled period, all segments of the cube will be discarded due to data and schema mismatch.")) {
@@ -120,7 +121,7 @@ KylinApp
                     MessageService.sendMsg('Enable job was submitted successfully', 'success', {});
                 });
             }
-        }
+        };
 
         $scope.disable = function (cube) {
             if (confirm("Are you sure to disable the cube?")) {
@@ -129,7 +130,7 @@ KylinApp
                     MessageService.sendMsg('Disable job was submitted successfully', 'success', {});
                 });
             }
-        }
+        };
 
         $scope.dropCube = function (cube) {
             if (confirm("Are you sure to drop the cube? Once it's dropped, all the jobs and data will be cleaned up.")) {
@@ -141,7 +142,7 @@ KylinApp
                     MessageService.sendMsg('Cube drop is done successfully', 'success', {});
                 });
             }
-        }
+        };
 
         $scope.startJobSubmit = function (cube) {
             CubeDescService.get({cube_name: cube.name}, {}, function (detail) {
@@ -186,7 +187,7 @@ KylinApp
                     }
                 }
             });
-        }
+        };
 
         $scope.startRefresh = function (cube) {
             $scope.loadDetail(cube);
@@ -203,7 +204,7 @@ KylinApp
                     }
                 }
             });
-        }
+        };
 
         $scope.startMerge = function (cube) {
             $scope.loadDetail(cube);
@@ -257,7 +258,7 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
                 });
             });
         }
-    }
+    };
 
     // used by cube segment refresh
     $scope.segmentSelected = function (selectedSegment) {
@@ -271,7 +272,7 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
         if (selectedSegment.date_range_end) {
             $scope.jobBuildRequest.endTime = selectedSegment.date_range_end;
         }
-    }
+    };
 
     // used by cube segments merge
     $scope.mergeStartSelected = function (mergeStartSeg) {
@@ -280,7 +281,7 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
         if (mergeStartSeg.date_range_start) {
             $scope.jobBuildRequest.startTime = mergeStartSeg.date_range_start;
         }
-    }
+    };
 
     $scope.mergeEndSelected = function (mergeEndSeg) {
         $scope.jobBuildRequest.endTime = 0;
@@ -288,7 +289,7 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
         if (mergeEndSeg.date_range_end) {
             $scope.jobBuildRequest.endTime = mergeEndSeg.date_range_end;
         }
-    }
+    };
 
     $scope.updateDate = function() {
         if ($scope.cube.detail.cube_partition_desc.cube_partition_type=='UPDATE_INSERT')
@@ -296,17 +297,16 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
             $scope.jobBuildRequest.startTime=$scope.formatDate($scope.jobBuildRequest.startTime);
         }
         $scope.jobBuildRequest.endTime=$scope.formatDate($scope.jobBuildRequest.endTime);
-    }
+    };
 
     $scope.formatDate = function(timestemp) {
         var dateStart = new Date(timestemp);
         dateStart = (dateStart.getFullYear() + "-" + (dateStart.getMonth() + 1) + "-" + dateStart.getDate());
         //switch selected time to utc timestamp
         return new Date(moment.utc(dateStart, "YYYY-MM-DD").format()).getTime();
-    }
-
+    };
     $scope.cancel = function () {
         $modalInstance.dismiss('cancel');
-    }
+    };
 };
 
