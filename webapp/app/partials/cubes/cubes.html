@@ -10,7 +10,7 @@
         </select>
     </span>
     <a class="btn btn-xs btn-info" href="/projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
-    <a class="btn btn-xs btn-primary" style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
+    <a class="btn btn-xs btn-primary" style="width: 29px" ng-if="userService.hasRole('ROLE_MODELER')" tooltip="Add Project" ng-click="toCreateProj()">
         <i class="fa fa-plus"></i>
     </a>
     <!--Cube Name-->
@@ -24,7 +24,7 @@
     </span>
     <div class="pull-right">
         <a class="btn btn-primary btn-sm" href="/cubes/add/json" ng-if="userService.hasRole('ROLE_ADMIN')"><i class="fa fa-pencil-square-o"></i> Json Editor</a>
-        <a class="btn btn-primary btn-sm" href="/cubes/add" id="addCubeButton"><i class="fa fa-plus"></i> Cube</a>
+        <a class="btn btn-primary btn-sm" href="/cubes/add"  ng-if="userService.hasRole('ROLE_MODELER')" id="addCubeButton"><i class="fa fa-plus"></i> Cube</a>
     </div>
 </div>
 

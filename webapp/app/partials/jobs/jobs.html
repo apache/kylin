@@ -9,7 +9,7 @@
         </select>
     </span>
     <a class="btn btn-xs btn-info" tooltip="Manage Project" href="/projects"><i class="fa fa-gears"></i></a>
-    <a class="btn btn-xs btn-primary" tooltip="Add Project" style="width: 29px" ng-click="toCreateProj()">
+    <a class="btn btn-xs btn-primary" tooltip="Add Project" ng-if="userService.hasRole('ROLE_MODELER')" style="width: 29px" ng-click="toCreateProj()">
         <i class="fa fa-plus"></i>
     </a>
     <!--Cube Name-->
