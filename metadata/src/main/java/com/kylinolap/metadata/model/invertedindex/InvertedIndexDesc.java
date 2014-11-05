@@ -33,17 +33,14 @@ public class InvertedIndexDesc extends RootPersistentEntity {
     private String factTable;
     @JsonProperty("timestamp_dimension")
     private String timestampDimension;
-    @JsonProperty("low_cardinality_dimensions")
-    private String[] lowCardinalityDimensions;
-    @JsonProperty("high_cardinality_dimensions")
-    private String[] highCardinalityDimensions;
-    @JsonProperty("measures")
-    private String[] measures;
-
-    @JsonProperty("timestamp_granularity")
-    private int timestampGranularity = 1000 * 60 * 60 * 24; // milliseconds
-    @JsonProperty("slice_length")
-    private int sliceLength = 102400; // bytes
+    @JsonProperty("bitmap_dimensions")
+    private String[] bitmapDimensions;
+    @JsonProperty("value_dimensions")
+    private String[] valueDimensions;
+    @JsonProperty("sharding")
+    private short sharding = 1; // parallelism
+    @JsonProperty("slice_size")
+    private int sliceSize = 50000; // no. rows
 
     // computed
     private int tsCol;
@@ -55,19 +52,18 @@ public class InvertedIndexDesc extends RootPersistentEntity {
 
         factTable = factTable.toUpperCase();
         timestampDimension = timestampDimension.toUpperCase();
-        StringUtil.toUpperCaseArray(lowCardinalityDimensions, lowCardinalityDimensions);
-        StringUtil.toUpperCaseArray(highCardinalityDimensions, highCardinalityDimensions);
-        StringUtil.toUpperCaseArray(measures, measures);
+        StringUtil.toUpperCaseArray(bitmapDimensions, bitmapDimensions);
+        StringUtil.toUpperCaseArray(valueDimensions, valueDimensions);
 
-        bitmapCols = new int[lowCardinalityDimensions.length];
-        valueCols = new int[highCardinalityDimensions.length + measures.length];
+        bitmapCols = new int[bitmapDimensions.length];
+        valueCols = new int[valueDimensions.length];
         int i = 0, j = 0;
         TableDesc tableDesc = mgr.getTableDesc(factTable);
         for (ColumnDesc col : tableDesc.getColumns()) {
-            if (ArrayUtils.contains(lowCardinalityDimensions, col.getName())) {
+            if (ArrayUtils.contains(bitmapDimensions, col.getName())) {
                 bitmapCols[i++] = col.getZeroBasedIndex();
             }
-            if (ArrayUtils.contains(highCardinalityDimensions, col.getName()) || ArrayUtils.contains(measures, col.getName())) {
+            if (ArrayUtils.contains(valueDimensions, col.getName())) {
                 valueCols[j++] = col.getZeroBasedIndex();
             }
         }
@@ -94,6 +90,14 @@ public class InvertedIndexDesc extends RootPersistentEntity {
     public int[] getValueColumns() {
         return valueCols;
     }
+    
+    public short getSharding() {
+        return sharding;
+    }
+    
+    public int getSliceSize() {
+        return sliceSize;
+    }
 
     public String getResourcePath() {
         return ResourceStore.IIDESC_RESOURCE_ROOT + "/" + name + ".json";
@@ -118,44 +122,5 @@ public class InvertedIndexDesc extends RootPersistentEntity {
     public void setTimestampDimension(String timestampDimension) {
         this.timestampDimension = timestampDimension;
     }
-
-    public String[] getLowCardinalityDimensions() {
-        return lowCardinalityDimensions;
-    }
-
-    public void setLowCardinalityDimensions(String[] lowCardinalityDimensions) {
-        this.lowCardinalityDimensions = lowCardinalityDimensions;
-    }
-
-    public String[] getHighCardinalityDimensions() {
-        return highCardinalityDimensions;
-    }
-
-    public void setHighCardinalityDimensions(String[] highCardinalityDimensions) {
-        this.highCardinalityDimensions = highCardinalityDimensions;
-    }
-
-    public String[] getMeasures() {
-        return measures;
-    }
-
-    public void setMeasures(String[] measures) {
-        this.measures = measures;
-    }
-
-    public int getTimestampGranularity() {
-        return timestampGranularity;
-    }
-
-    public void setTimestampGranularity(int timestampGranularity) {
-        this.timestampGranularity = timestampGranularity;
-    }
-
-    public int getSliceLength() {
-        return sliceLength;
-    }
-
-    public void setSliceLength(int partitionLength) {
-        this.sliceLength = partitionLength;
-    }
+    
 }

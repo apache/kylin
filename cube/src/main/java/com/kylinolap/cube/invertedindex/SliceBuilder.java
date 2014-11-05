@@ -16,54 +16,45 @@
 
 package com.kylinolap.cube.invertedindex;
 
-import java.io.IOException;
 
 /**
  * @author yangli9
  * 
  */
-public class TimeSliceBuilder {
+public class SliceBuilder {
 
     TableRecordInfo info;
     private int nColumns;
     int nRecordsCap;
 
-    long curTimePartition;
-    int curSliceNo;
-
+    short shard;
+    long sliceTimestamp;
     int nRecords;
     private ColumnValueContainer[] containers;
 
-    public TimeSliceBuilder(TableRecordInfo info) throws IOException {
+    public SliceBuilder(TableRecordInfo info, short shard) {
         this.info = info;
         this.nColumns = info.getColumnCount();
-        this.nRecordsCap = Math.max(1, info.getDescriptor().getSliceLength() / maxDictionaryIdSize());
+        this.nRecordsCap = Math.max(1, info.getDescriptor().getSliceSize());
 
-        this.containers = null;
-        this.curTimePartition = Long.MIN_VALUE;
-        this.curSliceNo = -1;
+        this.shard = shard;
+        this.sliceTimestamp = Long.MIN_VALUE;
         this.nRecords = 0;
+        this.containers = null;
+        
+        doneSlice(); // init containers
     }
 
-    private int maxDictionaryIdSize() throws IOException {
-        int max = 0;
-        for (int i = 0; i < nColumns; i++) {
-            max = Math.max(max, info.length(i));
-        }
-        return max;
-    }
-
-    private TimeSlice doneSlice() {
-        TimeSlice r = null;
+    private Slice doneSlice() {
+        Slice r = null;
         if (nRecords > 0) {
             for (int i = 0; i < nColumns; i++) {
                 containers[i].closeForChange();
             }
-            r = new TimeSlice(info, curTimePartition, curSliceNo, containers);
+            r = new Slice(info, shard, sliceTimestamp, containers);
         }
 
         // reset for next slice
-        curSliceNo++;
         nRecords = 0;
         containers = new ColumnValueContainer[nColumns];
         for (int i : info.getDescriptor().getBitmapColumns()) {
@@ -77,20 +68,22 @@ public class TimeSliceBuilder {
 
     }
 
-    // rec must be appended in time order
-    public TimeSlice append(TableRecord rec) {
-        TimeSlice doneSlice = null;
-
-        if (curTimePartition != rec.getTimePartition()) {
+    // NOTE: record must be appended in time order
+    public Slice append(TableRecord rec) {
+        if (rec.getShard() != shard)
+            throw new IllegalStateException();
+        
+        Slice doneSlice = null;
+        
+        if (isFull()) {
             doneSlice = doneSlice();
-            curTimePartition = rec.getTimePartition();
-            curSliceNo = 0;
-        } else if (isFull()) {
-            doneSlice = doneSlice();
+        }
+        
+        if (nRecords == 0) {
+            sliceTimestamp = increaseSliceTimestamp(rec.getTimestamp());
         }
 
         nRecords++;
-
         for (int i = 0; i < nColumns; i++) {
             containers[i].append(rec.getValueID(i));
         }
@@ -98,10 +91,19 @@ public class TimeSliceBuilder {
         return doneSlice;
     }
 
-    public TimeSlice close() {
-        TimeSlice doneSlice = doneSlice();
-        this.curTimePartition = Long.MIN_VALUE;
-        this.curSliceNo = -1;
+    private long increaseSliceTimestamp(long timestamp) {
+        if (timestamp < sliceTimestamp)
+            throw new IllegalStateException();
+        
+        if (timestamp == sliceTimestamp)
+            return ++timestamp; // ensure slice timestamp increases
+        else
+            return timestamp;
+    }
+
+    public Slice close() {
+        Slice doneSlice = doneSlice();
+        this.sliceTimestamp = Long.MIN_VALUE;
         this.nRecords = 0;
         return doneSlice;
     }

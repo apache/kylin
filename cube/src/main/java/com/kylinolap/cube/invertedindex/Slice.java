@@ -16,7 +16,6 @@
 
 package com.kylinolap.cube.invertedindex;
 
-import java.util.Arrays;
 import java.util.Iterator;
 
 /**
@@ -25,20 +24,22 @@ import java.util.Iterator;
  * 
  * @author yangli9
  */
-public class TimeSlice implements Iterable<TableRecord> {
+public class Slice implements Iterable<TableRecord>, Comparable<Slice> {
 
     TableRecordInfo info;
     int nColumns;
-    long timePartition;
-    int sliceNo;
+    
+    short shard;
+    long timestamp;
     int nRecords;
     ColumnValueContainer[] containers;
 
-    TimeSlice(TableRecordInfo info, long timePartition, int sliceNo, ColumnValueContainer[] containers) {
+    Slice(TableRecordInfo info, short shard, long timestamp, ColumnValueContainer[] containers) {
         this.info = info;
         this.nColumns = info.getColumnCount();
-        this.timePartition = timePartition;
-        this.sliceNo = sliceNo;
+        
+        this.shard = shard;
+        this.timestamp = timestamp;
         this.nRecords = containers[0].getSize();
         this.containers = containers;
 
@@ -48,12 +49,12 @@ public class TimeSlice implements Iterable<TableRecord> {
         }
     }
 
-    public long getTimeParititon() {
-        return timePartition;
+    public short getShard() {
+        return shard;
     }
-
-    public int getSliceNo() {
-        return sliceNo;
+    
+    public long getTimestamp() {
+        return timestamp;
     }
 
     @Override
@@ -84,19 +85,22 @@ public class TimeSlice implements Iterable<TableRecord> {
         };
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + Arrays.hashCode(containers);
         result = prime * result + ((info == null) ? 0 : info.hashCode());
-        result = prime * result + nColumns;
-        result = prime * result + nRecords;
-        result = prime * result + sliceNo;
-        result = prime * result + (int) (timePartition ^ (timePartition >>> 32));
+        result = prime * result + shard;
+        result = prime * result + (int) (timestamp ^ (timestamp >>> 32));
         return result;
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -105,23 +109,27 @@ public class TimeSlice implements Iterable<TableRecord> {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        TimeSlice other = (TimeSlice) obj;
-        if (!Arrays.equals(containers, other.containers))
-            return false;
+        Slice other = (Slice) obj;
         if (info == null) {
             if (other.info != null)
                 return false;
         } else if (!info.equals(other.info))
             return false;
-        if (nColumns != other.nColumns)
+        if (shard != other.shard)
             return false;
-        if (nRecords != other.nRecords)
-            return false;
-        if (sliceNo != other.sliceNo)
-            return false;
-        if (timePartition != other.timePartition)
+        if (timestamp != other.timestamp)
             return false;
         return true;
+    }
+
+    @Override
+    public int compareTo(Slice o) {
+        int comp = this.shard - o.shard;
+        if (comp != 0)
+            return comp;
+        
+        comp = (int) (this.timestamp - o.timestamp);
+        return comp;
     }
 
 }

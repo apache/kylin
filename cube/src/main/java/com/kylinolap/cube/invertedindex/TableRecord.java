@@ -61,11 +61,7 @@ public class TableRecord implements Cloneable {
         String str = getValueString(info.getTimestampColumn());
         return DateStrDictionary.stringToMillis(str);
     }
-
-    public long getTimePartition() {
-        return info.calculateTimePartition(getTimestamp());
-    }
-
+    
     public int length(int col) {
         return info.length(col);
     }
@@ -89,6 +85,11 @@ public class TableRecord implements Cloneable {
 
     public int getValueID(int col) {
         return BytesUtil.readUnsigned(buf, info.offset(col), info.length(col));
+    }
+    
+    public short getShard() {
+        int timestampID = getValueID(info.getTimestampColumn());
+        return (short) (Math.abs(ShardingHash.hashInt(timestampID)) % info.getDescriptor().getSharding());
     }
 
     public TableRecordInfo info() {

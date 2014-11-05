@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
@@ -96,18 +97,18 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
     public void testCodec() throws IOException {
         List<TableRecord> records = loadRecordsSorted();
         System.out.println(records.size() + " records");
-        List<TimeSlice> slices = buildTimeSlices(records);
+        List<Slice> slices = buildTimeSlices(records);
         System.out.println(slices.size() + " slices");
 
         IIKeyValueCodec codec = new IIKeyValueCodec(info);
         List<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> kvs = encodeKVs(codec, slices);
         System.out.println(kvs.size() + " KV pairs");
 
-        List<TimeSlice> slicesCopy = decodeKVs(codec, kvs);
+        List<Slice> slicesCopy = decodeKVs(codec, kvs);
         assertEquals(slices, slicesCopy);
 
         List<TableRecord> recordsCopy = iterateRecords(slicesCopy);
-        assertEquals(records, recordsCopy);
+        assertEquals(new HashSet<TableRecord>(records), new HashSet<TableRecord>(recordsCopy));
         dump(recordsCopy);
     }
 
@@ -138,40 +139,41 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
         return records;
     }
 
-    private List<TimeSlice> buildTimeSlices(List<TableRecord> records) throws IOException {
-        TimeSliceBuilder builder = new TimeSliceBuilder(info);
-        List<TimeSlice> slices = Lists.newArrayList();
+    private List<Slice> buildTimeSlices(List<TableRecord> records) throws IOException {
+        ShardingSliceBuilder builder = new ShardingSliceBuilder(info);
+        List<Slice> slices = Lists.newArrayList();
         for (TableRecord rec : records) {
-            TimeSlice slice = builder.append(rec);
+            Slice slice = builder.append(rec);
             if (slice != null)
                 slices.add(slice);
         }
-        TimeSlice slice = builder.close();
-        if (slice != null)
-            slices.add(slice);
+        List<Slice> finals = builder.close();
+        slices.addAll(finals);
+        
+        Collections.sort(slices);
         return slices;
     }
 
-    private List<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> encodeKVs(IIKeyValueCodec codec, List<TimeSlice> slices) {
+    private List<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> encodeKVs(IIKeyValueCodec codec, List<Slice> slices) {
 
         List<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> kvs = Lists.newArrayList();
-        for (TimeSlice slice : slices) {
+        for (Slice slice : slices) {
             kvs.addAll(codec.encodeKeyValue(slice));
         }
         return kvs;
     }
 
-    private List<TimeSlice> decodeKVs(IIKeyValueCodec codec, List<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> kvs) {
-        List<TimeSlice> slices = Lists.newArrayList();
-        for (TimeSlice slice : codec.decodeKeyValue(kvs)) {
+    private List<Slice> decodeKVs(IIKeyValueCodec codec, List<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> kvs) {
+        List<Slice> slices = Lists.newArrayList();
+        for (Slice slice : codec.decodeKeyValue(kvs)) {
             slices.add(slice);
         }
         return slices;
     }
 
-    private List<TableRecord> iterateRecords(List<TimeSlice> slices) {
+    private List<TableRecord> iterateRecords(List<Slice> slices) {
         List<TableRecord> records = Lists.newArrayList();
-        for (TimeSlice slice : slices) {
+        for (Slice slice : slices) {
             for (TableRecord rec : slice) {
                 records.add((TableRecord) rec.clone());
             }

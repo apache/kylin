@@ -51,7 +51,7 @@ public class InvertedIndexCLI {
         TableRecordInfo info = new TableRecordInfo(cube.getFirstSegment());
         IIKeyValueCodec codec = new IIKeyValueCodec(info);
         int count = 0;
-        for (TimeSlice slice : codec.decodeKeyValue(readSequenceKVs(hconf, path))) {
+        for (Slice slice : codec.decodeKeyValue(readSequenceKVs(hconf, path))) {
             for (TableRecord rec : slice) {
                 System.out.println(rec);
                 count++;

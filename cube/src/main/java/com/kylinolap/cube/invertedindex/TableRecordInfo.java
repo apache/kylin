@@ -71,10 +71,6 @@ public class TableRecordInfo {
         byteFormLen = pos;
     }
 
-    public long calculateTimePartition(long ts) {
-        return ts - ts % getTimestampGranularity();
-    }
-
     public InvertedIndexDesc getDescriptor() {
         return desc;
     }
@@ -103,10 +99,6 @@ public class TableRecordInfo {
 
     public int getTimestampColumn() {
         return desc.getTimestampColumn();
-    }
-
-    public int getTimestampGranularity() {
-        return desc.getTimestampGranularity();
     }
 
     /*
