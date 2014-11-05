@@ -34,7 +34,7 @@ import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.invertedindex.IIKeyValueCodec;
 import com.kylinolap.cube.invertedindex.TableRecord;
 import com.kylinolap.cube.invertedindex.TableRecordInfo;
-import com.kylinolap.cube.invertedindex.TimeSlice;
+import com.kylinolap.cube.invertedindex.Slice;
 import com.kylinolap.metadata.model.cube.FunctionDesc;
 import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
@@ -73,7 +73,7 @@ public class InvertedIndexStorageEngine implements IStorageEngine {
         final StorageContext context;
         final HBaseKeyValueIterator kvIterator;
         final IIKeyValueCodec codec;
-        final Iterator<TimeSlice> sliceIterator;
+        final Iterator<Slice> sliceIterator;
         Iterator<TableRecord> recordIterator;
         Tuple next;
 

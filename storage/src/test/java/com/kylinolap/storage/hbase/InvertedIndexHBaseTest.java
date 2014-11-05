@@ -36,7 +36,7 @@ import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.invertedindex.IIKeyValueCodec;
 import com.kylinolap.cube.invertedindex.TableRecord;
 import com.kylinolap.cube.invertedindex.TableRecordInfo;
-import com.kylinolap.cube.invertedindex.TimeSlice;
+import com.kylinolap.cube.invertedindex.Slice;
 import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
@@ -73,10 +73,10 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
         String tableName = seg.getStorageLocationIdentifier();
         IIKeyValueCodec codec = new IIKeyValueCodec(new TableRecordInfo(seg));
 
-        List<TimeSlice> slices = Lists.newArrayList();
+        List<Slice> slices = Lists.newArrayList();
         HBaseKeyValueIterator kvIterator = new HBaseKeyValueIterator(hconn, tableName, InvertedIndexDesc.HBASE_FAMILY_BYTES, InvertedIndexDesc.HBASE_QUALIFIER_BYTES);
         try {
-            for (TimeSlice slice : codec.decodeKeyValue(kvIterator)) {
+            for (Slice slice : codec.decodeKeyValue(kvIterator)) {
                 slices.add(slice);
             }
         } finally {
@@ -88,9 +88,9 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
         System.out.println(records.size() + " records");
     }
 
-    private List<TableRecord> iterateRecords(List<TimeSlice> slices) {
+    private List<TableRecord> iterateRecords(List<Slice> slices) {
         List<TableRecord> records = Lists.newArrayList();
-        for (TimeSlice slice : slices) {
+        for (Slice slice : slices) {
             for (TableRecord rec : slice) {
                 records.add((TableRecord) rec.clone());
             }

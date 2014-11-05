@@ -4,21 +4,19 @@
   "name" : "test_kylin_cube_ii",
   "fact_table" : "TEST_KYLIN_FACT",
   "timestamp_dimension" : "CAL_DT",
-  "low_cardinality_dimensions" : [
+  "bitmap_dimensions" : [
     "LSTG_FORMAT_NAME",
     "LSTG_SITE_ID",
     "SLR_SEGMENT_CD"
   ],
-  "high_cardinality_dimensions" : [
+  "value_dimensions" : [
     "TRANS_ID",
     "CAL_DT",
     "LEAF_CATEG_ID",
-    "SELLER_ID"
-  ],
-  "measures" : [
+    "SELLER_ID",
     "PRICE",
     "ITEM_COUNT"
   ],
-  "timestamp_granularity" : 86400000,
-  "slice_length" : 102400
+  "sharding" : 4,
+  "slice_size" : 50000
 }
