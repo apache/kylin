@@ -13,6 +13,7 @@ KylinApp.controller('LoginCtrl', function ($scope, $rootScope, $location, $base6
 
         //verify project
         if(!$scope.project.selectedProject){
+            $scope.loading = false;
             $scope.error = "Unable to login, please select a project";
             return;
         }
