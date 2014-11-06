@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.storage.hbase.coprocessor;
+package com.kylinolap.storage.hbase.observer;
 
 import static org.junit.Assert.*;
 
@@ -42,7 +42,12 @@ import com.kylinolap.cube.kv.RowConstants;
 import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
-import com.kylinolap.storage.hbase.coprocessor.SRowAggregators.HCol;
+import com.kylinolap.storage.hbase.observer.AggregationScanner;
+import com.kylinolap.storage.hbase.observer.SRowAggregators;
+import com.kylinolap.storage.hbase.observer.SRowFilter;
+import com.kylinolap.storage.hbase.observer.SRowProjector;
+import com.kylinolap.storage.hbase.observer.SRowType;
+import com.kylinolap.storage.hbase.observer.SRowAggregators.HCol;
 
 /**
  * @author yangli9

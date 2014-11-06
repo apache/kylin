@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.storage.hbase.coprocessor;
+package com.kylinolap.storage.hbase.observer;
 
 import static org.junit.Assert.*;
 
@@ -23,7 +23,8 @@ import java.util.Arrays;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.Test;
 
-import com.kylinolap.storage.hbase.coprocessor.SRowAggregators.HCol;
+import com.kylinolap.storage.hbase.observer.SRowAggregators;
+import com.kylinolap.storage.hbase.observer.SRowAggregators.HCol;
 
 /**
  * @author yangli9

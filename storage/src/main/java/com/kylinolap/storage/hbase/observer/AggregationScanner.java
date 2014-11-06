@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.storage.hbase.coprocessor;
+package com.kylinolap.storage.hbase.observer;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 
 import com.kylinolap.cube.measure.MeasureAggregator;
-import com.kylinolap.storage.hbase.coprocessor.SRowProjector.AggrKey;
+import com.kylinolap.storage.hbase.observer.SRowProjector.AggrKey;
 
 /**
  * @author yangli9
