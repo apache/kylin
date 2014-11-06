@@ -2,6 +2,7 @@ package com.kylinolap.storage.hbase.coprocessor;
 
 import com.kylinolap.storage.hbase.coprocessor.example.ExampleEndpoint;
 import com.kylinolap.storage.hbase.coprocessor.example.generated.ExampleProtos;
+import com.kylinolap.storage.hbase.coprocessor.example.generated.NodeProtos;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.TableName;
@@ -13,6 +14,9 @@ import org.apache.hadoop.hbase.ipc.ServerRpcController;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.*;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Iterator;
@@ -35,9 +39,9 @@ public class ExampleEndpointTest {
 
     @BeforeClass
     public static void setupBeforeClass() throws Exception {
-        String x = InetAddress.getLocalHost().getCanonicalHostName();
 
-        System.out.println(x);
+
+
 
         TEST_UTIL = new HBaseTestingUtility();
         CONF = TEST_UTIL.getConfiguration();
@@ -58,7 +62,6 @@ public class ExampleEndpointTest {
 
         HConnection connection = HConnectionManager.createConnection(CONF);
         HTableInterface table = connection.getTable(TEST_TABLE);
-
 
         // insert some test rows
         for (int i = 0; i < 5; i++) {
