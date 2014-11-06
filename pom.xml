@@ -40,6 +40,7 @@
         <jackson.version>2.2.3</jackson.version>
         <commons-httpclient.version>3.1</commons-httpclient.version>
         <guava.version>12.0.1</guava.version>
+        <!--<protobuf.version>2.6.1</protobuf.version>-->
         <trove4j.version>3.0.3</trove4j.version>
         <httpclient.version>4.3.3</httpclient.version>
 
@@ -273,6 +274,11 @@
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
             </dependency>
+            <!--<dependency>-->
+                <!--<groupId>com.google.protobuf</groupId>-->
+                <!--<artifactId>protobuf-java</artifactId>-->
+                <!--<version>${protobuf.version}</version>-->
+            <!--</dependency>-->
             <dependency>
                 <groupId>com.jcraft</groupId>
                 <artifactId>jsch</artifactId>

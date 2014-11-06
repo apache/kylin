@@ -18,6 +18,7 @@
             <version>${project.parent.version}</version>
         </dependency>
 
+
         <!-- Env & Test -->
 
         <dependency>
@@ -42,12 +43,20 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+
+
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-testing-util</artifactId>
+            <version>${hbase-hadoop2.version}</version>
+        </dependency>
+
+
     </dependencies>
 
     <build>
