@@ -65,9 +65,10 @@ public class TableController extends BasicController {
     @RequestMapping(value = "", method = { RequestMethod.GET })
     @ResponseBody
     @Metered(name = "listSourceTables")
-    public List<TableDesc> getHiveTables(@RequestParam(value = "ext", required = false) boolean withExt) {
+    public List<TableDesc> getHiveTables(@RequestParam(value = "ext", required = false) boolean withExt,@RequestParam(value = "project", required = false) String project ) {
         long start = System.currentTimeMillis();
-        List<TableDesc> tables = cubeMgmtService.getMetadataManager().listAllTables();
+//        List<TableDesc> tables = cubeMgmtService.getMetadataManager().listAllTables();
+        List<TableDesc> tables = cubeMgmtService.getProjectManager().listExposedTables(project);
 
         if (withExt) {
             tables = cloneTableDesc(tables);

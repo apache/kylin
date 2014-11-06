@@ -3,6 +3,7 @@
 KylinApp
     .controller('ProjectMetaCtrl', function ($scope, $q, ProjectService, QueryService) {
         $scope.selectedSrcDb = [];
+        $scope.selectedSrcTable = {};
         $scope.treeOptions = {
             nodeChildren: "columns",
             injectClasses: {
@@ -16,6 +17,15 @@ KylinApp
                 labelSelected: "a8"
             }
         };
+
+        $scope.showSelected = function (table) {
+            if (table.uuid) {
+                $scope.selectedSrcTable = table;
+            }
+            else {
+                $scope.selectedSrcTable.selectedSrcColumn = table;
+            }
+        }
 
         $scope.projectMetaLoad = function () {
             var defer = $q.defer();
