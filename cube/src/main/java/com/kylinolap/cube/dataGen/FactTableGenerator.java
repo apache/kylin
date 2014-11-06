@@ -264,7 +264,7 @@ public class FactTableGenerator {
 
     /**
      * Generate the fact table and put it into a temp file
-     * 
+     *
      * @return
      * @throws Exception
      */
@@ -355,17 +355,17 @@ public class FactTableGenerator {
         } else if (s.equals("double")) {
             double low = Double.parseDouble(range.get(0));
             double high = Double.parseDouble(range.get(1));
-            return Double.toString(r.nextDouble() * (high - low) + low);
+            return String.format("%.4f", r.nextDouble() * (high - low) + low);
 
         } else if (s.equals("float")) {
             float low = Float.parseFloat(range.get(0));
             float high = Float.parseFloat(range.get(1));
-            return Double.toString(r.nextFloat() * (high - low) + low);
+            return String.format("%.4f", r.nextFloat() * (high - low) + low);
 
         } else if (s.equals("decimal")) {
             double low = Double.parseDouble(range.get(0));
             double high = Double.parseDouble(range.get(1));
-            return Double.toString(r.nextDouble() * (high - low) + low);
+            return String.format("%.4f", r.nextDouble() * (high - low) + low);
 
         } else if (s.equals("date")) {
 
@@ -394,17 +394,17 @@ public class FactTableGenerator {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < 2; i++) {
                 sb.append((char) ('a' + r.nextInt(10)));// there are 10*10
-                                                        // possible strings
+                // possible strings
             }
             return sb.toString();
         } else if (s.equals("bigint") || s.equals("int") || s.equals("tinyint") || s.equals("smallint")) {
             return Integer.toString(r.nextInt(128));
         } else if (s.equals("double")) {
-            return Double.toString(r.nextDouble() * 100);
+            return String.format("%.4f", r.nextDouble() * 100);
         } else if (s.equals("float")) {
-            return Double.toString(r.nextFloat() * 100);
+            return String.format("%.4f", r.nextFloat() * 100);
         } else if (s.equals("decimal")) {
-            return Double.toString(r.nextDouble() * 100);
+            return String.format("%.4f", r.nextDouble() * 100);
         } else if (s.equals("date")) {
             long date20131231 = 61349312153265L;
             long date20010101 = 60939158400000L;
@@ -575,7 +575,7 @@ public class FactTableGenerator {
             BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
             HashSet<String> defaultColumns = new HashSet<String>();
 
-            for (int i = 0; i < rowCount;) {
+            for (int i = 0; i < rowCount; ) {
 
                 LinkedList<String> columnValues = createRow(factTableCol2LookupCol, usedCols, defaultColumns);
 
@@ -614,16 +614,12 @@ public class FactTableGenerator {
 
     /**
      * Randomly create a fact table and put it to test_kylin_data table in hbase
-     * 
-     * @param cubeName
-     *            name of the cube
-     * @param rowCount
-     *            expected row count generated
-     * @param linkableRatio
-     *            the percentage of fact table rows that can be linked with all
-     *            lookup table by INNER join
-     * @param randomSeed
-     *            random seed
+     *
+     * @param cubeName      name of the cube
+     * @param rowCount      expected row count generated
+     * @param linkableRatio the percentage of fact table rows that can be linked with all
+     *                      lookup table by INNER join
+     * @param randomSeed    random seed
      */
     public static void generate(String cubeName, String rowCount, String linkableRatio, String randomSeed, String joinType) throws Exception {
 
