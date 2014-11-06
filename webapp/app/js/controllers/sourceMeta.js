@@ -26,10 +26,17 @@ KylinApp
        };
 
         $scope.aceSrcTbLoaded = function (forceLoad) {
+            $scope.srcTables = {};
+            $scope.selectedSrcDb = {};
+            $scope.selectedSrcTable = {};
+            $scope.srcAva = false;
             var defer = $q.defer();
 
             $scope.loading = true;
-            var param = {ext: true};
+            var param = {
+                ext: true,
+                project:$scope.project.selectedProject
+            };
             if (forceLoad)
             {
                 param.timestamp = new Date().getTime();
@@ -38,6 +45,7 @@ KylinApp
                 angular.forEach(tables, function (table) {
                     if (!$scope.srcTables[table.database]) {
                         $scope.srcTables[table.database] = [];
+                        $scope.srcAva = true;
                     }
                     angular.forEach(table.columns, function (column) {
                         if(table.cardinality[column.name]) {
@@ -65,7 +73,12 @@ KylinApp
             return defer.promise;
         }
 
-        $scope.aceSrcTbLoaded();
+        $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+            $scope.aceSrcTbLoaded();
+        });
+
+
+//        $scope.aceSrcTbLoaded();
 
         $scope.showSelected = function (table) {
             if (table.uuid) {
