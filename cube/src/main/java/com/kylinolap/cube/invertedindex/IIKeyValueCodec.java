@@ -162,10 +162,12 @@ public class IIKeyValueCodec {
             i += COLNO_LEN;
 
             if (i - k.getOffset() < k.getLength()) {
+                //bitmap
                 int colLen = info.length(curCol);
                 curColValue = BytesUtil.readUnsigned(buf, i, colLen);
                 i += colLen;
             } else {
+                //value list
                 curColValue = -1;
             }
         }

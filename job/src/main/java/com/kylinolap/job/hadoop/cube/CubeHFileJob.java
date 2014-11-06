@@ -88,6 +88,8 @@ public class CubeHFileJob extends AbstractHadoopJob {
 
             String tableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
             HTable htable = new HTable(conf, tableName);
+
+            //Automatic config !
             HFileOutputFormat.configureIncrementalLoad(job, htable);
 
             // set block replication to 3 for hfiles
