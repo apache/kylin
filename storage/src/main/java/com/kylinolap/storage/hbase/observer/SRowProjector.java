@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.storage.hbase.coprocessor;
+package com.kylinolap.storage.hbase.observer;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -41,9 +41,6 @@ public class SRowProjector {
         RowKeyEncoder rowKeyMaskEncoder = new RowKeyEncoder(cubeSegment, cuboid) {
             @Override
             protected int fillHeader(byte[] bytes, byte[][] values) {
-                // always keep header, coz with-header cube is only selected
-                // when header-column is needed
-                // (otherwise the non-header cube should be selected)
                 Arrays.fill(bytes, 0, this.headerLength, (byte) 0xff);
                 return this.headerLength;
             }
@@ -89,8 +86,7 @@ public class SRowProjector {
 
     // ============================================================================
 
-    final byte[] groupByMask; // mask out columns that are not needed (by group
-                              // by)
+    final byte[] groupByMask; // mask out columns that are not needed (by group by)
     final AggrKey aggrKey = new AggrKey();
 
     public SRowProjector(byte[] groupByMask) {

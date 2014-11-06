@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.storage.hbase.coprocessor;
+package com.kylinolap.storage.hbase.observer;
 
 import java.io.UnsupportedEncodingException;
 import java.util.List;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.storage.hbase.coprocessor;
+package com.kylinolap.storage.hbase.observer;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -37,6 +37,8 @@ import com.kylinolap.cube.kv.RowValueDecoder;
 import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.TupleFilter;
+import com.kylinolap.storage.hbase.RegionScannerAdapter;
+import com.kylinolap.storage.hbase.ResultScannerAdapter;
 
 /**
  * @author yangli9

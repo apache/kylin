@@ -37,7 +37,7 @@ import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.query.enumerator.OLAPQuery;
 import com.kylinolap.query.relnode.OLAPContext;
 import com.kylinolap.query.schema.OLAPSchemaFactory;
-import com.kylinolap.storage.hbase.coprocessor.CoprocessorEnabler;
+import com.kylinolap.storage.hbase.observer.CoprocessorEnabler;
 
 public class KylinQueryTest extends KylinTestBase {
 

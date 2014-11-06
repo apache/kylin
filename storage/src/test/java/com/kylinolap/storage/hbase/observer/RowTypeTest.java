@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.storage.hbase.coprocessor;
+package com.kylinolap.storage.hbase.observer;
 
 import static org.junit.Assert.*;
 
@@ -29,6 +29,7 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.metadata.model.cube.CubeDesc;
+import com.kylinolap.storage.hbase.observer.SRowType;
 
 /**
  * @author yangli9
