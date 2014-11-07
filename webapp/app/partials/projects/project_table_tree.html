@@ -6,7 +6,9 @@
             <treecontrol ng-if="selectedSrcDb.length > 0" class="tree-light"
                          dirSelection="true"
                          tree-model="selectedSrcDb"
-                         options="treeOptions">
+                         options="treeOptions"
+                         on-selection="showSelected(node)"
+                         selected-node="selectedSrcTable">
                 {{node.name}} {{!!(node.type_NAME)?'(' + trimType(node.type_NAME) + ')' : ''}}
             </treecontrol>
             <div no-result ng-if="selectedSrcDb.length == 0"></div>
