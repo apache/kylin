@@ -28,8 +28,8 @@ KylinApp
         $scope.aceSrcTbLoaded = function (forceLoad) {
             $scope.srcTables = {};
             $scope.selectedSrcDb = {};
+            delete $scope.selectedSrcTable;
             $scope.selectedSrcTable = {};
-            $scope.srcAva = false;
             var defer = $q.defer();
 
             $scope.loading = true;
@@ -45,7 +45,7 @@ KylinApp
                 angular.forEach(tables, function (table) {
                     if (!$scope.srcTables[table.database]) {
                         $scope.srcTables[table.database] = [];
-                        $scope.srcAva = true;
+//                        $scope.srcAva = true;
                     }
                     angular.forEach(table.columns, function (column) {
                         if(table.cardinality[column.name]) {
@@ -65,7 +65,13 @@ KylinApp
                     obj.sort(innerSort);
                 }
 
-                $scope.selectedSrcDb = $scope.srcTables['DEFAULT'];
+                for (var key in  $scope.srcTables) {
+                    $scope.selectedSrcDb = $scope.srcTables['DEFAULT'];
+                    if(!$scope.selectedSrcDb){
+                        $scope.selectedSrcDb = $scope.srcTables[key];
+                    }
+                    break;
+                }
                 $scope.loading = false;
                 defer.resolve();
             });
@@ -76,9 +82,6 @@ KylinApp
         $scope.$watch('project.selectedProject', function (newValue, oldValue) {
             $scope.aceSrcTbLoaded();
         });
-
-
-//        $scope.aceSrcTbLoaded();
 
         $scope.showSelected = function (table) {
             if (table.uuid) {

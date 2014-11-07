@@ -69,6 +69,7 @@ KylinApp
         $scope.$watch('project.selectedProject', function (newValue, oldValue) {
             $scope.cubes=[];
             $scope.list();
+            $scope.reload();
         });
         $scope.reload = function () {
             // trigger reload action in pagination directive
