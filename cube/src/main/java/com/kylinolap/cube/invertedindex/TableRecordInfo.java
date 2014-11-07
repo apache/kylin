@@ -18,6 +18,7 @@ package com.kylinolap.cube.invertedindex;
 
 import java.io.IOException;
 
+import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryManager;
