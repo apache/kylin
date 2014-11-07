@@ -29,13 +29,12 @@ import com.kylinolap.common.util.BytesUtil;
 
 /**
  * @author yangli9
- * 
  */
 public class IIKeyValueCodec {
 
-    private static final int SHARD_LEN = 2;
-    private static final int TIMEPART_LEN = 8;
-    private static final int COLNO_LEN = 2;
+    public static final int SHARD_LEN = 2;
+    public static final int TIMEPART_LEN = 8;
+    public static final int COLNO_LEN = 2;
 
     private TableRecordInfo info;
 
@@ -85,7 +84,7 @@ public class IIKeyValueCodec {
 
         BytesUtil.writeUnsigned(shard, buf, i, SHARD_LEN);
         i += SHARD_LEN;
-        
+
         BytesUtil.writeUnsignedLong(timestamp, buf, i, TIMEPART_LEN);
         i += TIMEPART_LEN;
 
@@ -154,7 +153,7 @@ public class IIKeyValueCodec {
 
             curShard = (short) BytesUtil.readUnsigned(buf, i, SHARD_LEN);
             i += SHARD_LEN;
-            
+
             curSliceTimestamp = BytesUtil.readUnsignedLong(buf, i, TIMEPART_LEN);
             i += TIMEPART_LEN;
 

@@ -18,6 +18,9 @@ package com.kylinolap.job.hadoop.invertedindex;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.invertedindex.IIKeyValueCodec;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -45,7 +48,6 @@ import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
  * @author George Song (ysong1)
- * 
  */
 public class IICreateHTableJob extends AbstractHadoopJob {
 
@@ -55,12 +57,14 @@ public class IICreateHTableJob extends AbstractHadoopJob {
 
         try {
             options.addOption(OPTION_CUBE_NAME);
-            options.addOption(OPTION_PARTITION_FILE_PATH);
             options.addOption(OPTION_HTABLE_NAME);
             parseOptions(options, args);
 
-            Path partitionFilePath = new Path(getOptionValue(OPTION_PARTITION_FILE_PATH));
             String tableName = getOptionValue(OPTION_HTABLE_NAME);
+            String cubeName = getOptionValue(OPTION_CUBE_NAME);
+
+            CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
+            int sharding = cubeInstance.getInvertedIndexDesc().getSharding();
 
             HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
             HColumnDescriptor cf = new HColumnDescriptor(InvertedIndexDesc.HBASE_FAMILY);
@@ -83,7 +87,7 @@ public class IICreateHTableJob extends AbstractHadoopJob {
             }
 
             // create table
-            byte[][] splitKeys = getSplits(conf, partitionFilePath);
+            byte[][] splitKeys = getSplits(sharding);
             if (splitKeys.length == 0)
                 splitKeys = null;
             admin.createTable(tableDesc, splitKeys);
@@ -104,25 +108,15 @@ public class IICreateHTableJob extends AbstractHadoopJob {
         }
     }
 
-    public byte[][] getSplits(Configuration conf, Path path) throws Exception {
-        List<byte[]> rowkeyList = new ArrayList<byte[]>();
-        Reader reader = new Reader(conf, SequenceFile.Reader.file(path));
-        Writable key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-        Writable value = (Writable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
-
-        try {
-            while (reader.next(key, value)) {
-                byte[] keyBytes = BytesUtil.toBytes(key);
-                rowkeyList.add(keyBytes);
-                System.out.println("key split: " + Bytes.toStringBinary(keyBytes));
-            }
-        } finally {
-            IOUtils.closeStream(reader);
+    //one region for one shard
+    private byte[][] getSplits(int shard) {
+        byte[][] result = new byte[shard - 1][];
+        for (int i = 1; i < shard; ++i) {
+            byte[] split = new byte[IIKeyValueCodec.SHARD_LEN];
+            BytesUtil.writeUnsigned(i, split, 0, IIKeyValueCodec.SHARD_LEN);
+            result[i - 1] = split;
         }
-
-        System.out.println("Total " + rowkeyList.size() + " split point, " + (rowkeyList.size() + 1) + " regions.");
-
-        return rowkeyList.toArray(new byte[rowkeyList.size()][]);
+        return result;
     }
 
     public static void main(String[] args) throws Exception {
