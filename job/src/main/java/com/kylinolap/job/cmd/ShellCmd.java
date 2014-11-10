@@ -17,6 +17,7 @@
 package com.kylinolap.job.cmd;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PipedInputStream;
@@ -50,6 +51,7 @@ public class ShellCmd implements IJobCommand {
     private final String remoteHost;
     private final String remoteUser;
     private final String remotePassword;
+    private final String identityPath;
     private final boolean isAsync;
 
     private FutureTask<Integer> future;
@@ -59,7 +61,13 @@ public class ShellCmd implements IJobCommand {
         this.output = out;
         this.remoteHost = host;
         this.remoteUser = user;
-        this.remotePassword = password;
+        if (new File(password).exists()) {
+            this.identityPath = new File(password).getAbsolutePath();
+            this.remotePassword = null;
+        } else {
+            this.remotePassword = password;
+            this.identityPath = null;
+        }
         this.isAsync = async;
     }
 
@@ -70,9 +78,10 @@ public class ShellCmd implements IJobCommand {
     @Override
     public ICommandOutput execute() throws JobException {
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
+        final ExecutorService executor = Executors.newSingleThreadExecutor();
         future = new FutureTask<Integer>(new Callable<Integer>() {
             public Integer call() throws JobException {
+                executor.shutdown();
                 return executeCommand(executeCommand);
             }
         });
@@ -155,9 +164,14 @@ public class ShellCmd implements IJobCommand {
         int exitCode = -1;
         try {
             JSch jsch = new JSch();
+            if (identityPath != null) {
+                jsch.addIdentity(identityPath);
+            }
 
             session = jsch.getSession(remoteUser, remoteHost, 22);
-            session.setPassword(remotePassword);
+            if (remotePassword != null) {
+                session.setPassword(remotePassword);
+            }
             session.setConfig("StrictHostKeyChecking", "no");
             session.connect();
 
@@ -207,5 +221,15 @@ public class ShellCmd implements IJobCommand {
     @Override
     public void cancel() throws JobException {
         future.cancel(true);
+    }
+
+    public static void main(String[] args) throws JobException {
+        ShellCmdOutput output = new ShellCmdOutput();
+        ShellCmd shellCmd = new ShellCmd(args[0], output, args[1], args[2], args[3], false);
+        shellCmd.execute();
+        
+        System.out.println("============================================================================");
+        System.out.println(output.getExitCode());
+        System.out.println(output.getOutput());
     }
 }
