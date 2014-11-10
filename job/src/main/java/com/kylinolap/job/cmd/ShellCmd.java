@@ -41,6 +41,7 @@ import com.kylinolap.job.exception.JobException;
 /**
  * @author xjiang
  * 
+ * FIXME should reuse common.util.SSHClient
  */
 public class ShellCmd implements IJobCommand {
 

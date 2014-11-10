@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 
 public class SSHClient {
@@ -39,13 +40,20 @@ public class SSHClient {
     private String hostname;
     private String username;
     private String password;
+    private String identityPath;
 
     private SSHLogger sshLogger;
 
     public SSHClient(String hostname, String username, String password, SSHLogger sshLogger) {
         this.hostname = hostname;
         this.username = username;
-        this.password = password;
+        if (new File(password).exists()) {
+            this.identityPath = new File(password).getAbsolutePath();
+            this.password = null;
+        } else {
+            this.password = password;
+            this.identityPath = null;
+        }
         this.sshLogger = sshLogger;
     }
 
@@ -54,11 +62,7 @@ public class SSHClient {
         try {
             System.out.println("SCP file " + localFile + " to " + remoteTargetDirectory);
 
-            JSch jsch = new JSch();
-            Session session = jsch.getSession(username, hostname, 22);
-
-            session.setPassword(password);
-            session.setConfig("StrictHostKeyChecking", "no");
+            Session session = newJSchSession();
             session.connect();
 
             boolean ptimestamp = false;
@@ -154,11 +158,7 @@ public class SSHClient {
             StringBuffer text = new StringBuffer();
             int exitCode = -1;
 
-            JSch jsch = new JSch();
-
-            Session session = jsch.getSession(username, hostname, 22);
-            session.setPassword(password);
-            session.setConfig("StrictHostKeyChecking", "no");
+            Session session = newJSchSession();
             session.connect();
 
             Channel channel = session.openChannel("exec");
@@ -223,6 +223,20 @@ public class SSHClient {
         } catch (Exception e) {
             throw e;
         }
+    }
+
+    private Session newJSchSession() throws JSchException {
+        JSch jsch = new JSch();
+        if (identityPath != null) {
+            jsch.addIdentity(identityPath);
+        }
+
+        Session session = jsch.getSession(username, hostname, 22);
+        if (password != null) {
+            session.setPassword(password);
+        }
+        session.setConfig("StrictHostKeyChecking", "no");
+        return session;
     }
 
     private int checkAck(InputStream in) throws IOException {
