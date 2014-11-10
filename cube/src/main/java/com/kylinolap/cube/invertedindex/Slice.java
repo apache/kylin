@@ -18,6 +18,8 @@ package com.kylinolap.cube.invertedindex;
 
 import java.util.Iterator;
 
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+
 /**
  * Within a partition (per timestampGranularity), records are further sliced
  * (per sliceLength) to fit into HBASE cell.
@@ -59,9 +61,11 @@ public class Slice implements Iterable<TableRecord>, Comparable<Slice> {
 
     @Override
     public Iterator<TableRecord> iterator() {
+
         return new Iterator<TableRecord>() {
             int i = 0;
             TableRecord rec = new TableRecord(info);
+            ImmutableBytesWritable temp = new ImmutableBytesWritable();
 
             @Override
             public boolean hasNext() {
@@ -71,7 +75,8 @@ public class Slice implements Iterable<TableRecord>, Comparable<Slice> {
             @Override
             public TableRecord next() {
                 for (int col = 0; col < nColumns; col++) {
-                    rec.setValueID(col, containers[col].getValueAt(i));
+                    containers[col].getValueAt(i, temp);
+                    rec.setValueBytes(col, temp);
                 }
                 i++;
                 return rec;

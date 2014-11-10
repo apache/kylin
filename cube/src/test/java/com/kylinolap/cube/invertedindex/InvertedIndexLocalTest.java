@@ -12,13 +12,13 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
@@ -40,7 +40,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
-
+    
     @Test
     public void testBitMapContainer() {
         // create container
@@ -60,10 +60,10 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
         // check the copy
         int i = 0;
         for (int v = dict.getMinId(); v <= dict.getMaxId(); v++) {
-            int value = container2.getValueAt(i++);
+            int value = container2.getValueIntAt(i++);
             assertEquals(v, value);
         }
-        assertEquals(Dictionary.NULL_ID[dict.getSizeOfId()], container2.getValueAt(i++));
+        assertEquals(Dictionary.NULL_ID[dict.getSizeOfId()], container2.getValueIntAt(i++));
         assertEquals(container, container2);
     }
 
@@ -72,24 +72,33 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
         // create container
         CompressedValueContainer container = new CompressedValueContainer(info, 0, 500);
         Dictionary<String> dict = info.dict(0);
+        
+        byte[] buf = new byte[dict.getSizeOfId()];
+        ImmutableBytesWritable bytes = new ImmutableBytesWritable(buf);
+        
         for (int v = dict.getMinId(); v <= dict.getMaxId(); v++) {
-            container.append(v);
+            BytesUtil.writeUnsigned(v, buf, 0, dict.getSizeOfId());
+            container.append(bytes);
         }
-        container.append(Dictionary.NULL_ID[dict.getSizeOfId()]);
+        BytesUtil.writeUnsigned(Dictionary.NULL_ID[dict.getSizeOfId()], buf, 0, dict.getSizeOfId());
+        container.append(bytes);
         container.closeForChange();
 
         // copy by serialization
-        ImmutableBytesWritable bytes = container.toBytes();
+        ImmutableBytesWritable copy = container.toBytes();
         CompressedValueContainer container2 = new CompressedValueContainer(info, 0, 500);
-        container2.fromBytes(bytes);
+        container2.fromBytes(copy);
 
         // check the copy
         int i = 0;
         for (int v = dict.getMinId(); v <= dict.getMaxId(); v++) {
-            int value = container2.getValueAt(i++);
+            container2.getValueAt(i++, bytes);
+            int value = BytesUtil.readUnsigned(bytes.get(), bytes.getOffset(), bytes.getLength());
             assertEquals(v, value);
         }
-        assertEquals(Dictionary.NULL_ID[dict.getSizeOfId()], container2.getValueAt(i++));
+        container2.getValueAt(i++, bytes);
+        int value = BytesUtil.readUnsigned(bytes.get(), bytes.getOffset(), bytes.getLength());
+        assertEquals(Dictionary.NULL_ID[dict.getSizeOfId()], value);
         assertEquals(container, container2);
     }
 
@@ -123,7 +132,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
             String[] fields = line.split(",");
             TableRecord rec = new TableRecord(info);
             for (int col = 0; col < fields.length; col++) {
-                rec.setValue(col, Bytes.toBytes(fields[col]));
+                rec.setValueString(col, fields[col]);
             }
             records.add(rec);
         }
@@ -131,8 +140,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
         Collections.sort(records, new Comparator<TableRecord>() {
             @Override
             public int compare(TableRecord a, TableRecord b) {
-                return a.getValueID(1) - b.getValueID(1); // the second column
-                                                          // is CAL_DT
+                return (int) (a.getTimestamp() - b.getTimestamp());
             }
         });
 

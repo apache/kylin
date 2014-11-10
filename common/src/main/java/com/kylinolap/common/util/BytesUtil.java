@@ -29,7 +29,7 @@ public class BytesUtil {
 
     public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
-    public static void writeUnsignedLong(long num, byte[] bytes, int offset, int size) {
+    public static void writeLong(long num, byte[] bytes, int offset, int size) {
         for (int i = offset + size - 1; i >= offset; i--) {
             bytes[i] = (byte) num;
             num >>>= 8;
@@ -43,7 +43,7 @@ public class BytesUtil {
         }
     }
 
-    public static long readUnsignedLong(byte[] bytes, int offset, int size) {
+    public static long readLong(byte[] bytes, int offset, int size) {
         long integer = 0;
         for (int i = offset, n = offset + size; i < n; i++) {
             integer <<= 8;
@@ -190,6 +190,25 @@ public class BytesUtil {
         int mask = 0xff;
         int shift = 0;
         for (int i = 0; i < size; i++) {
+            integer |= (in.get() << shift) & mask;
+            mask = mask << 8;
+            shift += 8;
+        }
+        return integer;
+    }
+
+    public static void writeLong(long num, ByteBuffer out) {
+        for (int i = 0; i < 8; i++) {
+            out.put((byte) num);
+            num >>>= 8;
+        }
+    }
+
+    public static long readLong(ByteBuffer in) {
+        long integer = 0;
+        int mask = 0xff;
+        int shift = 0;
+        for (int i = 0; i < 8; i++) {
             integer |= (in.get() << shift) & mask;
             mask = mask << 8;
             shift += 8;

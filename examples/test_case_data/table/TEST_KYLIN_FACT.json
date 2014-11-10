@@ -37,7 +37,7 @@
         {
             "id":"7",
             "name":"PRICE",
-            "datatype":"decimal(38,16)"
+            "datatype":"decimal"
         },
 		{
             "id":"8",

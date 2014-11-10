@@ -18,7 +18,10 @@ package com.kylinolap.cube.invertedindex;
 
 import java.io.IOException;
 
+import org.apache.hadoop.io.LongWritable;
+
 import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.cube.measure.fixedlen.FixedLenMeasureCodec;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.metadata.model.cube.TblColRef;
@@ -39,6 +42,7 @@ public class TableRecordInfo {
     final int nColumns;
     final String[] colNames;
     final Dictionary<?>[] dictionaries;
+    final FixedLenMeasureCodec<?>[] measureSerializers;
 
     final int byteFormLen;
     final int[] offsets;
@@ -52,21 +56,25 @@ public class TableRecordInfo {
         nColumns = tableDesc.getColumnCount();
         colNames = new String[nColumns];
         dictionaries = new Dictionary<?>[nColumns];
+        measureSerializers = new FixedLenMeasureCodec<?>[nColumns];
 
         DictionaryManager dictMgr = DictionaryManager.getInstance(desc.getConfig());
         for (ColumnDesc col : tableDesc.getColumns()) {
             int i = col.getZeroBasedIndex();
             colNames[i] = col.getName();
-            String dictPath = seg.getDictResPath(new TblColRef(col));
-            dictionaries[i] = dictMgr.getDictionary(dictPath);
+            if (desc.isMetricsCol(i)) {
+                measureSerializers[i] = FixedLenMeasureCodec.get(col.getType());
+            } else {
+                String dictPath = seg.getDictResPath(new TblColRef(col));
+                dictionaries[i] = dictMgr.getDictionary(dictPath);
+            }
         }
 
         int pos = 0;
         offsets = new int[nColumns];
         for (int i = 0; i < nColumns; i++) {
-            int size = dictionaries[i].getSizeOfId();
             offsets[i] = pos;
-            pos += size;
+            pos += length(i);
         }
         byteFormLen = pos;
     }
@@ -83,10 +91,22 @@ public class TableRecordInfo {
         return nColumns;
     }
 
+    // dimensions go with dictionary
     @SuppressWarnings("unchecked")
     public Dictionary<String> dict(int col) {
         // yes, all dictionaries are string based
         return (Dictionary<String>) dictionaries[col];
+    }
+    
+    // metrics go with fixed-len codec
+    @SuppressWarnings("unchecked")
+    public FixedLenMeasureCodec<LongWritable> codec(int col) {
+        // yes, all metrics are long currently
+        return (FixedLenMeasureCodec<LongWritable>) measureSerializers[col];
+    }
+
+    public boolean isMetrics(int col) {
+        return desc.isMetricsCol(col);
     }
 
     public int offset(int col) {
@@ -94,7 +114,7 @@ public class TableRecordInfo {
     }
 
     public int length(int col) {
-        return dictionaries[col].getSizeOfId();
+        return desc.isMetricsCol(col) ? measureSerializers[col].getLength() : dictionaries[col].getSizeOfId();
     }
 
     public int getTimestampColumn() {

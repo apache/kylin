@@ -128,7 +128,7 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
 
         SplittedBytes[] splittedByteses = rowKeySplitter.getSplitBuffers();
         int bufOffset = 0;
-        BytesUtil.writeUnsignedLong(cuboidID, newKeyBuf, bufOffset, RowConstants.ROWKEY_CUBOIDID_LEN);
+        BytesUtil.writeLong(cuboidID, newKeyBuf, bufOffset, RowConstants.ROWKEY_CUBOIDID_LEN);
         bufOffset += RowConstants.ROWKEY_CUBOIDID_LEN;
 
         for (int i = 0; i < cuboid.getColumns().size(); ++i) {
