@@ -86,7 +86,7 @@ public class IIKeyValueCodec {
         BytesUtil.writeUnsigned(shard, buf, i, SHARD_LEN);
         i += SHARD_LEN;
         
-        BytesUtil.writeUnsignedLong(timestamp, buf, i, TIMEPART_LEN);
+        BytesUtil.writeLong(timestamp, buf, i, TIMEPART_LEN);
         i += TIMEPART_LEN;
 
         BytesUtil.writeUnsigned(col, buf, i, COLNO_LEN);
@@ -155,7 +155,7 @@ public class IIKeyValueCodec {
             curShard = (short) BytesUtil.readUnsigned(buf, i, SHARD_LEN);
             i += SHARD_LEN;
             
-            curSliceTimestamp = BytesUtil.readUnsignedLong(buf, i, TIMEPART_LEN);
+            curSliceTimestamp = BytesUtil.readLong(buf, i, TIMEPART_LEN);
             i += TIMEPART_LEN;
 
             curCol = BytesUtil.readUnsigned(buf, i, COLNO_LEN);

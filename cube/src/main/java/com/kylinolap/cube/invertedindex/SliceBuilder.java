@@ -16,6 +16,8 @@
 
 package com.kylinolap.cube.invertedindex;
 
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+
 
 /**
  * @author yangli9
@@ -31,6 +33,8 @@ public class SliceBuilder {
     long sliceTimestamp;
     int nRecords;
     private ColumnValueContainer[] containers;
+    
+    transient ImmutableBytesWritable temp = new ImmutableBytesWritable();
 
     public SliceBuilder(TableRecordInfo info, short shard) {
         this.info = info;
@@ -63,6 +67,9 @@ public class SliceBuilder {
         for (int i : info.getDescriptor().getValueColumns()) {
             containers[i] = new CompressedValueContainer(info, i, nRecordsCap);
         }
+        for (int i : info.getDescriptor().getMetricsColumns()) {
+            containers[i] = new CompressedValueContainer(info, i, nRecordsCap);
+        }
 
         return r;
 
@@ -85,7 +92,8 @@ public class SliceBuilder {
 
         nRecords++;
         for (int i = 0; i < nColumns; i++) {
-            containers[i].append(rec.getValueID(i));
+            rec.getValueBytes(i, temp);
+            containers[i].append(temp);
         }
 
         return doneSlice;

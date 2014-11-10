@@ -57,4 +57,10 @@ abstract public class MeasureSerializer<T> implements BytesSerializer<T> {
 
     abstract public T valueOf(byte[] value);
 
+    public String toString(T value) {
+        if (value == null)
+            return "NULL";
+        else
+            return value.toString();
+    }
 }

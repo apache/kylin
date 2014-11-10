@@ -18,7 +18,9 @@ package com.kylinolap.cube.invertedindex;
 
 import java.util.Arrays;
 
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.io.LongWritable;
 
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.dict.DateStrDictionary;
@@ -61,32 +63,52 @@ public class TableRecord implements Cloneable {
         String str = getValueString(info.getTimestampColumn());
         return DateStrDictionary.stringToMillis(str);
     }
-    
+
     public int length(int col) {
         return info.length(col);
     }
 
-    public void setValue(int col, byte[] value, int offset, int len) {
-        int id = info.dict(col).getIdFromValueBytes(value, offset, len);
-        setValueID(col, id);
-    }
-
-    public void setValue(int col, byte[] value) {
-        setValue(col, value, 0, value.length);
-    }
-
-    public void setValueID(int col, int id) {
-        BytesUtil.writeUnsigned(id, buf, info.offset(col), info.length(col));
+    public void setValueString(int col, String value) {
+        if (info.isMetrics(col)) {
+            LongWritable v = info.codec(col).valueOf(value);
+            setValueMetrics(col, v);
+        } else {
+            int id = info.dict(col).getIdFromValue(value);
+            setValueID(col, id);
+        }
     }
 
     public String getValueString(int col) {
-        return info.dict(col).getValueFromId(getValueID(col));
+        if (info.isMetrics(col))
+            return info.codec(col).toString(getValueMetrics(col));
+        else
+            return info.dict(col).getValueFromId(getValueID(col));
     }
 
-    public int getValueID(int col) {
+    public void setValueBytes(int col, ImmutableBytesWritable bytes) {
+        System.arraycopy(bytes.get(), bytes.getOffset(), buf, info.offset(col), info.length(col));
+    }
+    
+    public void getValueBytes(int col, ImmutableBytesWritable bytes) {
+        bytes.set(buf, info.offset(col), info.length(col));
+    }
+    
+    private void setValueID(int col, int id) {
+        BytesUtil.writeUnsigned(id, buf, info.offset(col), info.length(col));
+    }
+    
+    private int getValueID(int col) {
         return BytesUtil.readUnsigned(buf, info.offset(col), info.length(col));
     }
     
+    private void setValueMetrics(int col, LongWritable value) {
+        info.codec(col).write(value, buf, info.offset(col));
+    }
+
+    private LongWritable getValueMetrics(int col) {
+        return info.codec(col).read(buf, info.offset(col));
+    }
+
     public short getShard() {
         int timestampID = getValueID(info.getTimestampColumn());
         return (short) (Math.abs(ShardingHash.hashInt(timestampID)) % info.getDescriptor().getSharding());
