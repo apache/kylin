@@ -175,7 +175,7 @@ public class ShellCmd implements IJobCommand {
             session.setConfig("StrictHostKeyChecking", "no");
             session.connect();
 
-            channel = session.openChannel("exec");
+            channel = session.openChannel("shell");
             ((ChannelExec) channel).setCommand(command);
             channel.setInputStream(null);
             PipedInputStream in = new PipedInputStream(64 * 1024);
