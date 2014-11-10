@@ -64,12 +64,12 @@ public class InvertedIndexReducer extends Reducer<LongWritable, ImmutableBytesWr
             throws IOException, InterruptedException {
         for (ImmutableBytesWritable v : values) {
             rec.setBytes(v.get(), v.getOffset(), v.getLength());
-            
+
             if (builder == null) {
                 builder = new SliceBuilder(info, rec.getShard());
             }
-System.out.println(rec.getShard() + " - " + rec);
-            
+            System.out.println(rec.getShard() + " - " + rec);
+
             Slice slice = builder.append(rec);
             if (slice != null) {
                 output(slice, context);

@@ -149,6 +149,7 @@ public class InvertedIndexJob extends AbstractHadoopJob {
         job.setNumReduceTasks(sharding);
 
         FileOutputFormat.setOutputPath(job, output);
+
         job.getConfiguration().set(BatchConstants.OUTPUT_PATH, output.toString());
 
         deletePath(job.getConfiguration(), output);
