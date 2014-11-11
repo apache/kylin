@@ -153,8 +153,7 @@ public class CubeMigrationCLI {
     private static void renameFoldersInHdfs(CubeInstance cube) {
         for (CubeSegment segment : cube.getSegments()) {
             operations.add(new Opt(OptType.CHANGE_HTABLE_HOST,
-                    new Object[] {
-                            segment.getStorageLocationIdentifier() }));
+                    new Object[] { segment.getStorageLocationIdentifier() }));
         }
     }
 
@@ -262,8 +261,8 @@ public class CubeMigrationCLI {
             String tableName = (String) opt.params[0];
             HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
             hbaseAdmin.disableTable(tableName);
-            desc.setValue(CubeManager.getHtableMetadataKey(),dstConfig.getMetadataUrlPrefix());
-            hbaseAdmin.modifyTable(tableName,desc);
+            desc.setValue(CubeManager.getHtableMetadataKey(), dstConfig.getMetadataUrlPrefix());
+            hbaseAdmin.modifyTable(tableName, desc);
             hbaseAdmin.enableTable(tableName);
         }
         case COPY_FILE_IN_META: {
@@ -378,8 +377,8 @@ public class CubeMigrationCLI {
             String tableName = (String) opt.params[0];
             HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
             hbaseAdmin.disableTable(tableName);
-            desc.setValue(CubeManager.getHtableMetadataKey(),dstConfig.getMetadataUrlPrefix());
-            hbaseAdmin.modifyTable(tableName,desc);
+            desc.setValue(CubeManager.getHtableMetadataKey(), srcConfig.getMetadataUrlPrefix());
+            hbaseAdmin.modifyTable(tableName, desc);
             hbaseAdmin.enableTable(tableName);
         }
         case COPY_FILE_IN_META: {
