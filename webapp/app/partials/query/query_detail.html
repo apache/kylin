@@ -192,7 +192,7 @@
                 <div ng-if="curQuery.graph.type.value == 'pie'">
                     <nvd3-pie-chart
                             data="curQuery.graph.data"
-                            height="{{curQuery.graph.data.length * 5 + 550}}"
+                            height="{{ curQuery.graph.data.length | resizePieHeight }}"
                             x="xFunction()"
                             y="yFunction()"
                             noData="No Graph"

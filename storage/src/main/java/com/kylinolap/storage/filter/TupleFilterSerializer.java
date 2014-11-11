@@ -25,8 +25,7 @@ import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
 
 /**
- * http://eli.thegreenplace.net/2011/09/29/an-interesting-tree-serialization-
- * algorithm-from-dwarf
+ * http://eli.thegreenplace.net/2011/09/29/an-interesting-tree-serialization-algorithm-from-dwarf
  * 
  * @author xjiang
  * 

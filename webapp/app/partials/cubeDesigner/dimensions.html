@@ -180,13 +180,13 @@
                                         <label class="col-sm-6">
                                             <input type="checkbox" class="ace ace-switch ace-switch-5"
                                                       ng-model="newDimension.status.useJoin"
-                                                      ng-click="toggleJoin(newDimension)" >
+                                                      ng-click="toggleJoin(newDimension,$event);" >
                                             <span class="lbl middle"></span>
                                         </label>
                                     </div>
                                 </div>
                                 <!--Join Type and Columns-->
-                                <div ng-if="newDimension.status.useJoin">
+                                <div ng-if="newDimension.join&&newDimension.join.type">
                                     <div class="form-group">
                                         <div class="row">
                                             <label class="col-sm-3 control-label font-color-default"><b>Type</b></label>
@@ -260,10 +260,10 @@
                                             <td style="width: 10%; vertical-align:middle; text-align: center" >
                                                 <input ng-model="newDimension.hierarchy[$index].level" placeholder="Level.."
                                                       tooltip="dimension hierarchy level.." tooltip-trigger="focus"
-                                                      style="height: 30px; text-align: center; width: 100%"/>
+                                                      style="height: 30px; text-align: center; width: 100%" class="form-control"/>
                                             </td>
                                             <td style="width: 80%">
-                                                <select style="width: 100%"
+                                                <select chosen style="width: 100%"
                                                         data-placeholder="Dimension Hierarchy Column"
                                                         ng-model="newDimension.hierarchy[$index].column"
                                                         ng-options="columns.name as columns.name for columns in getColumnsByTable(newDimension.table)" >
@@ -294,16 +294,18 @@
                             <div id="derived" class="tab-pane">
                                 <div class="form-group">
                                     <div ng-repeat="derived in newDimension.derived track by $index">
-                                        <select chosen style="width:85%"
-                                                data-placeholder="Derived Columns.."
-                                                ng-model="newDimension.derived[$index]"
-                                                ng-options="columns.name as columns.name for columns in getColumnsByTable(newDimension.table)" >
-                                        </select>
-                                        <button class="btn btn-xs btn-danger" style="cursor: pointer " tooltip="Delete"
-                                                ng-click="removeElement(newDimension.derived, newDimension.derived[$index])">
-                                                <i class="fa fa-trash-o"></i>
-                                        </button>
-                                        <div class="space-4"></div>
+                                        <div>
+                                            <select chosen style="width:85%;" width="200"
+                                                    data-placeholder="Derived Columns.."
+                                                    ng-model="newDimension.derived[$index]"
+                                                    ng-options="columns.name as columns.name for columns in getColumnsByTable(newDimension.table)" >
+                                            </select>
+                                            <button class="btn btn-xs btn-danger" style="cursor: pointer " tooltip="Delete"
+                                                    ng-click="removeElement(newDimension.derived, newDimension.derived[$index])">
+                                                    <i class="fa fa-trash-o"></i>
+                                            </button>
+                                            <div class="space-4"></div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="form-group">

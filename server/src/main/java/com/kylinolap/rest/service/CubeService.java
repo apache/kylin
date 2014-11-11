@@ -554,7 +554,7 @@ public class CubeService extends BasicService {
         CubeManager.getInstance(getConfig()).updateCube(cube);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER)
     public String[] reloadHiveTable(String tables) {
         String tableMetaDir = HiveSourceTableMgmt.reloadHiveTable(tables);
 
