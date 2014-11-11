@@ -101,12 +101,12 @@ public class StorageCleanupJob extends AbstractHadoopJob {
 
         // get all kylin hbase tables
         HBaseAdmin hbaseAdmin = new HBaseAdmin(conf);
-        String tableNamePrefix = cubeMgr.getHBaseStorageLocationPrefix();
+        String tableNamePrefix = CubeManager.getHBaseStorageLocationPrefix();
         HTableDescriptor[] tableDescriptors = hbaseAdmin.listTables(tableNamePrefix + ".*");
         List<String> allTablesNeedToBeDropped = new ArrayList<String>();
         for (HTableDescriptor desc : tableDescriptors) {
-            String host = desc.getValue(cubeMgr.getHtableMetadataKey());
-            if (cubeMgr.getMedataUrlPrefix().equalsIgnoreCase(host)) {
+            String host = desc.getValue(CubeManager.getHtableMetadataKey());
+            if (KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix().equalsIgnoreCase(host)) {
                 //only take care htables that belongs to self
                 allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
             }
