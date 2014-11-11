@@ -138,7 +138,7 @@ public class CubeMigrationCLI {
         return srcHbaseUrl.trim();
     }
 
-    private static void changeHtableHost(CubeInstance cube) {
+    private static void renameFoldersInHdfs(CubeInstance cube) {
         for (CubeSegment segment : cube.getSegments()) {
 
             String jobUuid = segment.getLastBuildJobID();
@@ -150,7 +150,7 @@ public class CubeMigrationCLI {
 
     }
 
-    private static void renameFoldersInHdfs(CubeInstance cube) {
+    private static void changeHtableHost(CubeInstance cube) {
         for (CubeSegment segment : cube.getSegments()) {
             operations.add(new Opt(OptType.CHANGE_HTABLE_HOST,
                     new Object[] { segment.getStorageLocationIdentifier() }));
