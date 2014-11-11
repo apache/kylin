@@ -43,6 +43,7 @@ import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
  * @author yangli9
  * 
  */
+@Ignore
 public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
 
     CubeInstance cube;
