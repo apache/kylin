@@ -524,6 +524,7 @@ public class KylinConfig {
     /**
      * Check if there is kylin.properties exist
      *
+     *
      * @param path
      * @param env
      * @return the properties file
@@ -535,6 +536,7 @@ public class KylinConfig {
         File propFile = new File(path, KYLIN_CONF_PROPERTIES_FILE);
         if (propFile.exists()) {
             logger.info(KYLIN_CONF_PROPERTIES_FILE + " was found at " + propFile.getAbsolutePath());
+            return propFile;
         }
         
         logger.info(KYLIN_CONF_PROPERTIES_FILE + " was NOT found at " + propFile.getAbsolutePath());
