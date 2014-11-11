@@ -259,9 +259,12 @@ public class CubeMigrationCLI {
 
         switch (opt.type) {
         case CHANGE_HTABLE_HOST: {
-//            String tableName = (String) opt.params[0];
-//            HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
-//            desc.setValue(CubeManager);
+            String tableName = (String) opt.params[0];
+            HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
+            hbaseAdmin.disableTable(tableName);
+            desc.setValue(CubeManager.getHtableMetadataKey(),dstConfig.getMetadataUrlPrefix());
+            hbaseAdmin.modifyTable(tableName,desc);
+            hbaseAdmin.enableTable(tableName);
         }
         case COPY_FILE_IN_META: {
             String item = (String) opt.params[0];
@@ -371,6 +374,14 @@ public class CubeMigrationCLI {
         logger.info("Undo operation: " + opt.toString());
 
         switch (opt.type) {
+        case CHANGE_HTABLE_HOST: {
+            String tableName = (String) opt.params[0];
+            HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
+            hbaseAdmin.disableTable(tableName);
+            desc.setValue(CubeManager.getHtableMetadataKey(),dstConfig.getMetadataUrlPrefix());
+            hbaseAdmin.modifyTable(tableName,desc);
+            hbaseAdmin.enableTable(tableName);
+        }
         case COPY_FILE_IN_META: {
             // no harm
             logger.info("Undo for COPY_FILE_IN_META is ignored");
