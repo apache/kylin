@@ -20,6 +20,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -83,7 +84,7 @@ public class InvertedIndexMapper<KEYIN> extends Mapper<KEYIN, Text, LongWritable
 
         rec.reset();
         for (int i = 0; i < nParts; i++) {
-            rec.setValue(i, parts[i].value, 0, parts[i].length);
+            rec.setValueString(i, Bytes.toString(parts[i].value, 0, parts[i].length));
         }
 
         outputKey.set(rec.getTimestamp());
