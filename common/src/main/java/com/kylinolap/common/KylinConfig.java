@@ -142,11 +142,12 @@ public class KylinConfig {
         ENV_INSTANCE = null;
     }
 
+
     /**
      * This method only for test case. You can get a KylinConfig instance by
      * path "/a/b/c", where "/a/b/c/kylin.properties" exists. By default, the
      * getInstanceFromEnv() should be called.
-     * 
+     *
      * @param confPath
      * @return
      * @deprecated
@@ -251,7 +252,7 @@ public class KylinConfig {
      * Find config from environment. The Search process: 1. Check the
      * $KYLIN_CONF/kylin.properties 2. Check the /etc/kylin/kylin.properties 3.
      * Check the kylin.properties in classpath
-     * 
+     *
      * @return
      */
     private static KylinConfig loadKylinConfig() {
@@ -522,7 +523,7 @@ public class KylinConfig {
 
     /**
      * Check if there is kylin.properties exist
-     * 
+     *
      * @param path
      * @param env
      * @return the properties file
@@ -544,13 +545,26 @@ public class KylinConfig {
         return getOptional(KYLIN_METADATA_URL);
     }
 
+    public String getMetadataUrlPrefix() {
+        String hbaseMetadataUrl = getMetadataUrl();
+        String defaultPrefix = "kylin_metadata";
+
+        if (org.apache.commons.lang3.StringUtils.containsIgnoreCase(hbaseMetadataUrl, "hbase:")) {
+            int cut = hbaseMetadataUrl.indexOf('@');
+            String tmp = cut < 0 ? defaultPrefix : hbaseMetadataUrl.substring(0, cut);
+            return tmp;
+        } else {
+            return defaultPrefix;
+        }
+    }
+
     public void setMetadataUrl(String metadataUrl) {
         kylinConfig.setProperty(KYLIN_METADATA_URL, metadataUrl);
     }
 
     /**
      * return -1 if there is no setting
-     * 
+     *
      * @return
      */
     public int getPropScanThreshold() {
@@ -563,7 +577,7 @@ public class KylinConfig {
 
     /**
      * Set a new key:value into the kylin config.
-     * 
+     *
      * @param key
      * @param value
      */
