@@ -239,14 +239,14 @@ public class CubeMigrationCLI {
                 doOpt(operations.get(index));
             }
         } catch (Exception e) {
-            logger.error(e.getLocalizedMessage());
+            logger.error("error met", e);
             logger.info("Try undoing previous changes");
             // undo:
             for (int i = index; i >= 0; --i) {
                 try {
                     undo(operations.get(i));
                 } catch (Exception ee) {
-                    logger.error(ee.getLocalizedMessage());
+                    logger.error("error met ", e);
                     logger.info("Continue undoing...");
                 }
             }
@@ -264,6 +264,8 @@ public class CubeMigrationCLI {
             desc.setValue(CubeManager.getHtableMetadataKey(), dstConfig.getMetadataUrlPrefix());
             hbaseAdmin.modifyTable(tableName, desc);
             hbaseAdmin.enableTable(tableName);
+            logger.info("CHANGE_HTABLE_HOST is completed");
+            break;
         }
         case COPY_FILE_IN_META: {
             String item = (String) opt.params[0];
