@@ -184,7 +184,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
     }
 
-    $scope.saveCube = function () {
+    $scope.saveCube = function (design_form) {
         if (!confirm('Ready to save the cube?')) {
             return;
         }
@@ -209,6 +209,9 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                             }
                         }
                     });
+                    if(design_form){
+                        design_form.$invalid = true;
+                    }
                 } else {
                     MessageService.sendMsg(request.message, 'error');
                 }
@@ -338,7 +341,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                 dimension.status.joinCount = (!!dimension.join.primary_key) ? dimension.join.primary_key.length : 0;
                 dimension.status.hierarchyCount = (!!dimension.hierarchy) ? dimension.hierarchy.length : 0;
             }
-            if(dimension.join.type) {
+            if(dimension.join&&dimension.join.type) {
                 dimension.status.useJoin = true;
             }
         });

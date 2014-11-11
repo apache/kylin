@@ -29,7 +29,7 @@
                         </div>
                     </div>
                     <div class="col-xs-4">
-                        <button class="btn btn-prev" ng-click="preView()" ng-show="curStep.title!='Cube Info'">
+                        <button class="btn btn-prev" ng-click="preView()" ng-show="curStep.title!='Cube Info'" ng-disabled="design_form.$invalid">
                             <i class="ace-icon fa fa-arrow-left"></i>
                             Prev
                         </button>
@@ -38,7 +38,7 @@
                             Next
                             <i class="ace-icon fa fa-arrow-right icon-on-right"></i>
                         </button>
-                        <button class="btn btn-primary" ng-click="prepareCube();saveCube()" ng-disabled="design_form.$invalid"
+                        <button class="btn btn-primary" ng-click="prepareCube();saveCube(design_form)" ng-disabled="design_form.$invalid"
                                 ng-if="curStep.title=='Overview' && state.mode=='edit'">
                             Save
                         </button>
