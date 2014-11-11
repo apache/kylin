@@ -23,23 +23,23 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 /**
  * Within a partition (per timestampGranularity), records are further sliced
  * (per sliceLength) to fit into HBASE cell.
- * 
+ *
  * @author yangli9
  */
-public class Slice implements Iterable<TableRecord>, Comparable<Slice> {
+public class Slice implements Iterable<TableRecordBytes>, Comparable<Slice> {
 
-    TableRecordInfo info;
+    TableRecordInfoDigest info;
     int nColumns;
-    
+
     short shard;
     long timestamp;
     int nRecords;
     ColumnValueContainer[] containers;
 
-    Slice(TableRecordInfo info, short shard, long timestamp, ColumnValueContainer[] containers) {
+    Slice(TableRecordInfoDigest info, short shard, long timestamp, ColumnValueContainer[] containers) {
         this.info = info;
         this.nColumns = info.getColumnCount();
-        
+
         this.shard = shard;
         this.timestamp = timestamp;
         this.nRecords = containers[0].getSize();
@@ -54,15 +54,50 @@ public class Slice implements Iterable<TableRecord>, Comparable<Slice> {
     public short getShard() {
         return shard;
     }
-    
+
     public long getTimestamp() {
         return timestamp;
     }
 
-    @Override
-    public Iterator<TableRecord> iterator() {
+    /**
+     * Standard iterator of Slice will return a iterator of TableRecordBytes,
+     * which cannot be printed/formated to readable text.
+     * By invoking this API client can avoid code like:
+     * <p/>
+     * for (TableRecordBytes rec : slice) {
+     * TableRecord realRecord = (TableRecord) rec.clone();
+     * }
+     * <p/>
+     * Note this API cannot be called simultaneously with iterator()
+     *
+     * @return
+     */
+    public Iterator<TableRecord> readableIterator() {
+        final Iterator<TableRecordBytes> innerIterator = iterator();
 
         return new Iterator<TableRecord>() {
+
+
+            @Override
+            public boolean hasNext() {
+                return innerIterator.hasNext();
+            }
+
+            @Override
+            public TableRecord next() {
+                return (TableRecord) innerIterator.next();
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    @Override
+    public Iterator<TableRecordBytes> iterator() {
+        return new Iterator<TableRecordBytes>() {
             int i = 0;
             TableRecord rec = new TableRecord(info);
             ImmutableBytesWritable temp = new ImmutableBytesWritable();
@@ -73,7 +108,7 @@ public class Slice implements Iterable<TableRecord>, Comparable<Slice> {
             }
 
             @Override
-            public TableRecord next() {
+            public TableRecordBytes next() {
                 for (int col = 0; col < nColumns; col++) {
                     containers[col].getValueAt(i, temp);
                     rec.setValueBytes(col, temp);
@@ -132,7 +167,7 @@ public class Slice implements Iterable<TableRecord>, Comparable<Slice> {
         int comp = this.shard - o.shard;
         if (comp != 0)
             return comp;
-        
+
         comp = (int) (this.timestamp - o.timestamp);
         return comp;
     }

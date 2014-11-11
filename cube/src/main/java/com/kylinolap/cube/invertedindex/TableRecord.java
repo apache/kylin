@@ -22,45 +22,43 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
 
-import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.dict.DateStrDictionary;
 import com.kylinolap.dict.Dictionary;
 
 /**
  * @author yangli9
- * 
  */
-public class TableRecord implements Cloneable {
+public class TableRecord extends TableRecordBytes {
 
-    TableRecordInfo info;
-    byte[] buf; // consecutive column value IDs (encoded by dictionary)
 
-    public TableRecord(TableRecordInfo info) {
+    public TableRecord(TableRecordInfoDigest info) {
+        super();
+
+        if (info instanceof TableRecordInfo) {
+        } else {
+            throw new IllegalStateException("Table Record must be initialized with a TableRecordInfo");
+        }
+
         this.info = info;
         this.buf = new byte[info.byteFormLen];
         reset();
     }
 
     public TableRecord(TableRecord another) {
+        super();
+
         this.info = another.info;
         this.buf = Bytes.copy(another.buf);
     }
 
-    public byte[] getBytes() {
-        return buf;
+    @Override
+    public Object clone() {
+        return new TableRecord(this);
     }
 
-    public void setBytes(byte[] bytes, int offset, int length) {
-        assert buf.length == length;
-        System.arraycopy(bytes, offset, buf, 0, length);
-    }
-
-    public void reset() {
-        Arrays.fill(buf, Dictionary.NULL);
-    }
 
     public long getTimestamp() {
-        String str = getValueString(info.getTimestampColumn());
+        String str = getValueString(info().getTimestampColumn());
         return DateStrDictionary.stringToMillis(str);
     }
 
@@ -110,18 +108,14 @@ public class TableRecord implements Cloneable {
     }
 
     public short getShard() {
-        int timestampID = getValueID(info.getTimestampColumn());
-        return (short) (Math.abs(ShardingHash.hashInt(timestampID)) % info.getDescriptor().getSharding());
+        int timestampID = getValueID(info().getTimestampColumn());
+        return (short) (Math.abs(ShardingHash.hashInt(timestampID)) % info().getDescriptor().getSharding());
     }
 
     public TableRecordInfo info() {
-        return info;
+        return (TableRecordInfo) info;
     }
 
-    @Override
-    public Object clone() {
-        return new TableRecord(this);
-    }
 
     @Override
     public String toString() {
@@ -135,32 +129,6 @@ public class TableRecord implements Cloneable {
         return buf.toString();
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + Arrays.hashCode(buf);
-        result = prime * result + ((info == null) ? 0 : info.hashCode());
-        return result;
-    }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        TableRecord other = (TableRecord) obj;
-        if (!Arrays.equals(buf, other.buf))
-            return false;
-        if (info == null) {
-            if (other.info != null)
-                return false;
-        } else if (!info.equals(other.info))
-            return false;
-        return true;
-    }
 
 }

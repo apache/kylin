@@ -31,21 +31,20 @@ import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
  * @author yangli9
- * 
+ *         <p/>
+ *         TableRecordInfo stores application-aware knowledges,
+ *         while TableRecordInfoDigest only stores byte level knowleges
  */
-public class TableRecordInfo {
+public class TableRecordInfo extends TableRecordInfoDigest {
 
     final CubeSegment seg;
     final InvertedIndexDesc desc;
     final TableDesc tableDesc;
 
-    final int nColumns;
     final String[] colNames;
     final Dictionary<?>[] dictionaries;
     final FixedLenMeasureCodec<?>[] measureSerializers;
 
-    final int byteFormLen;
-    final int[] offsets;
 
     public TableRecordInfo(CubeSegment cubeSeg) throws IOException {
 
@@ -70,13 +69,32 @@ public class TableRecordInfo {
             }
         }
 
+        //lengths
+        lengths = new int[nColumns];
+        for (int i = 0; i < nColumns; ++i) {
+            lengths[i] = dictionaries[i].getSizeOfId();
+        }
+
+        //dict max id
+        dictMaxIds = new int[nColumns];
+        for (int i = 0; i < nColumns; ++i) {
+            dictMaxIds[i] = dictionaries[i].getMaxId();
+        }
+
+        //offsets
         int pos = 0;
         offsets = new int[nColumns];
         for (int i = 0; i < nColumns; i++) {
             offsets[i] = pos;
             pos += length(i);
         }
+
         byteFormLen = pos;
+    }
+
+    @Override
+    public TableRecordBytes createTableRecord() {
+        return new TableRecord(this);
     }
 
     public InvertedIndexDesc getDescriptor() {
@@ -87,9 +105,6 @@ public class TableRecordInfo {
         return tableDesc.getColumns();
     }
 
-    public int getColumnCount() {
-        return nColumns;
-    }
 
     // dimensions go with dictionary
     @SuppressWarnings("unchecked")

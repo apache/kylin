@@ -52,8 +52,8 @@ public class InvertedIndexCLI {
         IIKeyValueCodec codec = new IIKeyValueCodec(info);
         int count = 0;
         for (Slice slice : codec.decodeKeyValue(readSequenceKVs(hconf, path))) {
-            for (TableRecord rec : slice) {
-                System.out.println(rec);
+            for (TableRecordBytes rec : slice) {
+                System.out.println((TableRecord)rec);
                 count++;
             }
         }

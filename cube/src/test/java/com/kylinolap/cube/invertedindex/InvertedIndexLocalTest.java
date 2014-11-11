@@ -182,7 +182,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
     private List<TableRecord> iterateRecords(List<Slice> slices) {
         List<TableRecord> records = Lists.newArrayList();
         for (Slice slice : slices) {
-            for (TableRecord rec : slice) {
+            for (TableRecordBytes rec : slice) {
                 records.add((TableRecord) rec.clone());
             }
         }

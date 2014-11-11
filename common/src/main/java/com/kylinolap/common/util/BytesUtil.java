@@ -74,7 +74,9 @@ public class BytesUtil {
         return integer;
     }
 
-    /** No. bytes needed to store a value as big as the given */
+    /**
+     * No. bytes needed to store a value as big as the given
+     */
     public static int sizeForValue(int maxValue) {
         int size = 0;
         while (maxValue > 0) {
@@ -274,6 +276,24 @@ public class BytesUtil {
         return strs;
     }
 
+    public static void writeIntArray(int[] array, ByteBuffer out) {
+        if (array == null) {
+            writeVInt(-1, out);
+            return;
+        }
+        writeVInt(array.length, out);
+        out.asIntBuffer().put(array);
+    }
+
+    public static int[] readIntArray(ByteBuffer in) {
+        int len = readVInt(in);
+        if (len < 0)
+            return null;
+        int[] array = new int[len];
+        in.asIntBuffer().get(array);
+        return array;
+    }
+
     public static void writeByteArray(byte[] array, ByteBuffer out) {
         if (array == null) {
             writeVInt(-1, out);
@@ -309,7 +329,7 @@ public class BytesUtil {
     public static String toHex(byte[] array) {
         return toHex(new ImmutableBytesWritable(array));
     }
-    
+
     public static String toHex(ImmutableBytesWritable bytes) {
         byte[] array = bytes.get();
         int offset = bytes.getOffset();
