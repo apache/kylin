@@ -250,6 +250,8 @@ public class CubeMigrationCLI {
                     logger.info("Continue undoing...");
                 }
             }
+
+            throw new RuntimeException("Cube moving failed");
         }
     }
 
