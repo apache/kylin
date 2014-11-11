@@ -58,6 +58,7 @@ import com.kylinolap.metadata.model.schema.TableDesc;
 public class CubeManager {
 
     private static String ALPHA_NUM = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
     private static int HBASE_TABLE_LENGTH = 10;
 
     private static final Serializer<CubeInstance> CUBE_SERIALIZER = new JsonSerializer<CubeInstance>(CubeInstance.class);
@@ -313,17 +314,26 @@ public class CubeManager {
     }
 
     public String getHBaseStorageLocationPrefix() {
-        return getHbaseStorageLocationPrefix(config.getMetadataUrl());
+        return "KYLIN_";
+        //return getHbaseStorageLocationPrefix(config.getMetadataUrl());
     }
 
-    public static String getHbaseStorageLocationPrefix(String hbaseMetadataUrl) {
-        String defaultPrefix = "KYLIN_CUBE_";
+    /**
+     * For each cube htable, we leverage htable's metadata to keep track of
+     * which kylin server(represented by its kylin_metadata prefix) owns this htable
+     */
+    public String getHtableMetadataKey() {
+        return "KYLIN_HOST";
+    }
+
+    public String getMedataUrlPrefix() {
+        String hbaseMetadataUrl = config.getMetadataUrl();
+        String defaultPrefix = "kylin_metadata";
 
         if (StringUtils.containsIgnoreCase(hbaseMetadataUrl, "hbase:")) {
             int cut = hbaseMetadataUrl.indexOf('@');
             String tmp = cut < 0 ? defaultPrefix : hbaseMetadataUrl.substring(0, cut);
-            String prefix = StringUtils.replace(tmp, "_metadata", "");
-            return (prefix + "_CUBE_").toUpperCase();
+            return tmp;
         } else {
             return defaultPrefix;
         }

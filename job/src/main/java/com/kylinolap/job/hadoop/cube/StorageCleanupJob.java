@@ -48,7 +48,6 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**
  * @author ysong1
- * 
  */
 public class StorageCleanupJob extends AbstractHadoopJob {
 
@@ -96,6 +95,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
 
     }
 
+
     private void cleanUnusedHBaseTables(Configuration conf) throws MasterNotRunningException, ZooKeeperConnectionException, IOException {
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
 
@@ -105,7 +105,11 @@ public class StorageCleanupJob extends AbstractHadoopJob {
         HTableDescriptor[] tableDescriptors = hbaseAdmin.listTables(tableNamePrefix + ".*");
         List<String> allTablesNeedToBeDropped = new ArrayList<String>();
         for (HTableDescriptor desc : tableDescriptors) {
-            allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
+            String host = desc.getValue(cubeMgr.getHtableMetadataKey());
+            if (cubeMgr.getMedataUrlPrefix().equalsIgnoreCase(host)) {
+                //only take care htables that belongs to self
+                allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
+            }
         }
 
         // remove every segment htable from drop list
