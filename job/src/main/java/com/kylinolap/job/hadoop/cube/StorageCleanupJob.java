@@ -93,7 +93,6 @@ public class StorageCleanupJob extends AbstractHadoopJob {
         } else {
             return false;
         }
-
     }
 
     private void cleanUnusedHBaseTables(Configuration conf) throws MasterNotRunningException, ZooKeeperConnectionException, IOException {

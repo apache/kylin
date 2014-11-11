@@ -1,0 +1,20 @@
+
+option java_package = "com.kylinolap.storage.hbase.coprocessor.generated";
+option java_outer_classname = "IIProtos";
+option java_generic_services = true;
+option java_generate_equals_and_hash = true;
+option optimize_for = SPEED;
+
+message IIRequest {
+    required bytes tableInfo = 1;
+}
+
+
+message IIResponse {
+    repeated bytes rows = 1;
+}
+
+service RowsService {
+  rpc getRows(IIRequest)
+    returns (IIResponse);
+}

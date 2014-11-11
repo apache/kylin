@@ -89,16 +89,24 @@ public class CubeMigrationCLI {
         if (cube.getStatus() != CubeStatusEnum.READY)
             throw new IllegalStateException("Cannot migrate cube that is not in READY state.");
 
+        for (CubeSegment segment : cube.getSegments()) {
+            if (segment.getStatus() != CubeSegmentStatusEnum.READY)
+                throw new IllegalStateException("The segment " + segment.getName() + " is still building, can't migrate this cube");
+        }
+
         checkAndGetHbaseUrl();
 
         Configuration conf = HBaseConfiguration.create();
         hbaseAdmin = new HBaseAdmin(conf);
+
         hdfsFS = FileSystem.get(new Configuration());
         srcCoprocessorPath = DeployCoprocessorCLI.getNewestCoprocessorJar(srcConfig, hdfsFS);
         dstCoprocessorPath = DeployCoprocessorCLI.getNewestCoprocessorJar(dstConfig, hdfsFS);
 
         operations = new ArrayList<Opt>();
+
         copyFilesInMetaStore(cube, overwriteIfExists);
+
         //renameFoldersInHdfs(cube);
         //renameTablesInHbase(cube);// change htable name + change name in cube instance + alter coprocessor
         addCubeIntoProject(cubeName, projectName);
@@ -239,6 +247,7 @@ public class CubeMigrationCLI {
                 sb.append(s).append(", ");
             return sb.toString();
         }
+
     }
 
     private static void showOpts() {
