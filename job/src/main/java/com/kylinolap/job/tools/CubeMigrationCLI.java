@@ -17,6 +17,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,8 +49,6 @@ public class CubeMigrationCLI {
     private static ResourceStore dstStore;
     private static FileSystem hdfsFS;
     private static HBaseAdmin hbaseAdmin;
-    private static Path srcCoprocessorPath;
-    private static Path dstCoprocessorPath;
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
@@ -86,6 +86,12 @@ public class CubeMigrationCLI {
         if (cube.getStatus() != CubeStatusEnum.READY)
             throw new IllegalStateException("Cannot migrate cube that is not in READY state.");
 
+        for (CubeSegment segment : cube.getSegments()) {
+            if (segment.getStatus() != CubeSegmentStatusEnum.READY) {
+                throw new IllegalStateException("At least one segment is not in READY state");
+            }
+        }
+
         checkAndGetHbaseUrl();
 
         Configuration conf = HBaseConfiguration.create();
@@ -95,6 +101,7 @@ public class CubeMigrationCLI {
         operations = new ArrayList<Opt>();
         copyFilesInMetaStore(cube, overwriteIfExists);
         renameFoldersInHdfs(cube);
+        changeHtableHost(cube);
         addCubeIntoProject(cubeName, projectName);
 
         if (realExecute.equalsIgnoreCase("true")) {
@@ -131,16 +138,23 @@ public class CubeMigrationCLI {
         return srcHbaseUrl.trim();
     }
 
-    private static void renameFoldersInHdfs(CubeInstance cube) {
+    private static void changeHtableHost(CubeInstance cube) {
         for (CubeSegment segment : cube.getSegments()) {
-            if (segment.getStatus() != CubeSegmentStatusEnum.READY)
-                throw new IllegalStateException("At least one segment is not in READY state");
 
             String jobUuid = segment.getLastBuildJobID();
             String src = JobInstance.getJobWorkingDir(jobUuid, srcConfig.getHdfsWorkingDirectory());
             String tgt = JobInstance.getJobWorkingDir(jobUuid, dstConfig.getHdfsWorkingDirectory());
 
             operations.add(new Opt(OptType.RENAME_FOLDER_IN_HDFS, new Object[] { src, tgt }));
+        }
+
+    }
+
+    private static void renameFoldersInHdfs(CubeInstance cube) {
+        for (CubeSegment segment : cube.getSegments()) {
+            operations.add(new Opt(OptType.CHANGE_HTABLE_HOST,
+                    new Object[] {
+                            segment.getStorageLocationIdentifier() }));
         }
     }
 
@@ -187,7 +201,7 @@ public class CubeMigrationCLI {
     }
 
     private static enum OptType {
-        COPY_FILE_IN_META, COPY_DICT_OR_SNAPSHOT, RENAME_FOLDER_IN_HDFS, ADD_INTO_PROJECT
+        COPY_FILE_IN_META, COPY_DICT_OR_SNAPSHOT, RENAME_FOLDER_IN_HDFS, ADD_INTO_PROJECT, CHANGE_HTABLE_HOST
     }
 
     private static class Opt {
@@ -244,6 +258,11 @@ public class CubeMigrationCLI {
         logger.info("Executing operation: " + opt.toString());
 
         switch (opt.type) {
+        case CHANGE_HTABLE_HOST: {
+//            String tableName = (String) opt.params[0];
+//            HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
+//            desc.setValue(CubeManager);
+        }
         case COPY_FILE_IN_META: {
             String item = (String) opt.params[0];
             InputStream inputStream = srcStore.getResource(item);
