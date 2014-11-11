@@ -161,6 +161,7 @@ mvn test -Dtest=com.kylinolap.job.SampleCubeSetupTest -DfailIfNoTests=false
 sudo -i "${CATALINA_HOME}/bin/shutdown.sh" || true # avoid trapping
 cd $KYLIN_HOME/server/target
 WAR_NAME="kylin.war"
+rm -rf $CATALINA_HOME/webapps/kylin
 rm -f $CATALINA_HOME/webapps/$WAR_NAME
 cp $KYLIN_HOME/server/target/$WAR_NAME $CATALINA_HOME/webapps/
 cd $CATALINA_HOME/webapps;
