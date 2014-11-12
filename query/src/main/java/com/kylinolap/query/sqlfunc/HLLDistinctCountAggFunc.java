@@ -140,7 +140,7 @@ public class HLLDistinctCountAggFunc {
             if (getClass() != obj.getClass())
                 return false;
             FixedValueHLLCMockup other = (FixedValueHLLCMockup) obj;
-            if (value != other.value)
+            if (!value.equals(other.value))
                 return false;
             return true;
         }

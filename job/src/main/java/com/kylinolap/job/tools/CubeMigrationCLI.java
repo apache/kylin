@@ -384,6 +384,7 @@ public class CubeMigrationCLI {
             desc.setValue(CubeManager.getHtableMetadataKey(), srcConfig.getMetadataUrlPrefix());
             hbaseAdmin.modifyTable(tableName, desc);
             hbaseAdmin.enableTable(tableName);
+            break;
         }
         case COPY_FILE_IN_META: {
             // no harm

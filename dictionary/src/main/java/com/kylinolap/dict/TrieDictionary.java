@@ -342,8 +342,6 @@ public class TrieDictionary<T> extends Dictionary<T> {
      *            -- the offset of current node
      * @param seq
      *            -- the code point under track
-     * @param o
-     *            -- write offset in returnValue
      * @param returnValue
      *            -- where return value is written to
      */

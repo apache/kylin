@@ -314,6 +314,7 @@ public class KylinMetaImpl implements Meta {
         return mockEmptyResultSet();
     }
 
+    @SuppressWarnings("unchecked")
     public Cursor createCursor(AvaticaResultSet resultSet) {
         KylinPrepare.PrepareResult result = ((KylinResultSet) resultSet).getPrepareResult();
 

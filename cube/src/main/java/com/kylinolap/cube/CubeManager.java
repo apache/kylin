@@ -196,7 +196,7 @@ public class CubeManager {
             throw new IllegalStateException("Failed to get dictionary for cube segment" + cubeSeg.getName() + ", col" + col, e);
         }
 
-        return info == null ? null : info.getDictionaryObject();
+        return info.getDictionaryObject();
     }
 
     public SnapshotTable buildSnapshotTable(CubeSegment cubeSeg, String lookupTable) throws IOException {

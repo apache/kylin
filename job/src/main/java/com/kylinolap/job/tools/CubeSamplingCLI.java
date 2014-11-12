@@ -46,8 +46,7 @@ public class CubeSamplingCLI {
 
     /**
      * @param cubeName
-     * @param sampleRatio
-     *            use 100 if you want to get a 1/100 sample
+     * @param sampleRatio use 100 if you want to get a 1/100 sample
      */
     public static void createSampleCube(String cubeName, int sampleRatio) throws IOException, JobException {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
@@ -105,7 +104,7 @@ public class CubeSamplingCLI {
             logger.info(line);
         }
         logger.info("end of the hive output stream");
-        is.close();
+        bufferedReader.close();
 
         return sampleTableName;
     }
