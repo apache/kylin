@@ -186,7 +186,25 @@ public class ProjectManager {
 
         return addCubeToProject(cubeName, newProjectName, owner);
     }
+    
+    public boolean isTableInProject(String projectName, CubeInstance cube) {
+        return this.listAllCubes(projectName).contains(cube);
+    }
+    
+    public ProjectInstance updateTableToProject(String tableName, String newProjectName, String owner) throws IOException {
+        removeTableFromProjects(tableName);
 
+        return addTableToProject(tableName, newProjectName, owner);
+    }    
+
+    public void removeTableFromProjects(String tableName) throws IOException {
+        for (ProjectInstance projectInstance : findProjects(tableName)) {
+            projectInstance.removeTable(tableName);
+            saveResource(projectInstance);
+        }
+    }
+    
+    
     public void removeCubeFromProjects(String cubeName) throws IOException {
         for (ProjectInstance projectInstance : findProjects(cubeName)) {
             projectInstance.removeCube(cubeName);
@@ -254,6 +272,7 @@ public class ProjectManager {
 
         return new ArrayList<CubeInstance>(ret);
     }
+    
 
     public List<CubeInstance> getCubesByTable(String project, String tableName) {
         project = ProjectInstance.getNormalizedProjectName(project);
@@ -420,6 +439,28 @@ public class ProjectManager {
 
         return newProject;
     }
+    
+    private ProjectInstance addTableToProject(String tables, String project, String user) throws IOException {
+        String newProjectName = ProjectInstance.getNormalizedProjectName(project);
+        ProjectInstance newProject = getProject(newProjectName);
+//        if (newProject == null) {
+//            newProject = this.createProject(newProjectName, user, "This is a project automatically added when adding table" + tableName);
+//        }
+//        
+        String[] tokens = StringUtils.split(tables, ",");
+        StringBuffer buff = new StringBuffer();
+        for (int i = 0; i < tokens.length; i++) {
+            String token = tokens[i].trim();
+            if (StringUtils.isNotEmpty(token)) {
+                buff.append(";");
+                buff.append("show table extended like " + token);
+            }
+            newProject.addTable(token);
+        }
+        saveResource(newProject);
+
+        return newProject;
+    }    
 
     private void saveResource(ProjectInstance proj) throws IOException {
         ResourceStore store = getStore();

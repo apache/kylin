@@ -135,9 +135,10 @@ KylinApp
                 $modalInstance.dismiss('cancel');
             };
             $scope.add = function () {
+                console.log($scope.project.selectedProject);
                 $modalInstance.dismiss();
                 MessageService.sendMsg('A sync task has been submitted, it might take 20 - 60 seconds', 'success', {});
-                TableService.loadHiveTable({tableName: $scope.tableNames}, {}, function (result) {
+                TableService.loadHiveTable({tableName: $scope.tableNames,action:$scope.project.selectedProject}, {}, function (result) {
                     MessageService.sendMsg('Below tables were synced successfully: ' + result['result'].join() + ', Click Refresh button ...', 'success', {});
                 });
             }

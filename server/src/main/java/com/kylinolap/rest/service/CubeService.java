@@ -560,7 +560,7 @@ public class CubeService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public String[] reloadHiveTable(String tables) {
+    public String[] reloadHiveTable(String tables,String project) {
         String tableMetaDir = HiveSourceTableMgmt.reloadHiveTable(tables);
 
         // Reload
@@ -574,6 +574,16 @@ public class CubeService extends BasicService {
                 return tableDir.list();
             }
         }
+        //TO-DO check is table in project
+            String owner = SecurityContextHolder.getContext().getAuthentication().getName();
+            try {
+                ProjectInstance newProject = getProjectManager().updateTableToProject(tables, project, owner);
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+//            accessService.inherit(cube, newProject);
+        
         return new String[0];
 
     }
