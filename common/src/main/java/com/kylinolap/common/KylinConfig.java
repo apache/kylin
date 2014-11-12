@@ -142,11 +142,12 @@ public class KylinConfig {
         ENV_INSTANCE = null;
     }
 
+
     /**
      * This method only for test case. You can get a KylinConfig instance by
      * path "/a/b/c", where "/a/b/c/kylin.properties" exists. By default, the
      * getInstanceFromEnv() should be called.
-     * 
+     *
      * @param confPath
      * @return
      * @deprecated
@@ -251,7 +252,7 @@ public class KylinConfig {
      * Find config from environment. The Search process: 1. Check the
      * $KYLIN_CONF/kylin.properties 2. Check the /etc/kylin/kylin.properties 3.
      * Check the kylin.properties in classpath
-     * 
+     *
      * @return
      */
     private static KylinConfig loadKylinConfig() {
@@ -489,33 +490,30 @@ public class KylinConfig {
     }
 
     public static InputStream getKylinPropertiesAsInputSteam() {
-        String env = System.getProperty(KYLIN_ENV);
-        if (env == null) {
-            env = System.getenv(KYLIN_ENV);
-        }
+        File propFile = null;
+        
         // 1st, find conf path from env
         String path = System.getProperty(KYLIN_CONF);
         if (path == null) {
             path = System.getenv(KYLIN_CONF);
         }
-        File propFile = null;
-        if (path != null) {
-            propFile = getKylinPropertiesFile(path, env);
-        }
+        propFile = getKylinPropertiesFile(path);
+        
+        // 2nd, find /etc/kylin
         if (propFile == null) {
-            // 2nd
-            propFile = getKylinPropertiesFile(KYLIN_CONF_DEFAULT, env);
+            propFile = getKylinPropertiesFile(KYLIN_CONF_DEFAULT);
         }
         if (propFile != null) {
             logger.debug("Loading property file " + propFile.getAbsolutePath());
             try {
                 return new FileInputStream(propFile);
             } catch (FileNotFoundException e) {
-                logger.warn("Failed to read properties " + KYLIN_CONF_PROPERTIES_FILE + "  and skip");
+                logger.warn("Failed to read properties " + propFile.getAbsolutePath() + " and skip");
             }
         }
-        logger.info("Search properties file " + KYLIN_CONF_PROPERTIES_FILE + "  from classpath ...");
-
+        
+        // 3rd, find classpath
+        logger.info("Search " + KYLIN_CONF_PROPERTIES_FILE + " from classpath ...");
         InputStream is = KylinConfig.class.getClassLoader().getResourceAsStream("kylin.properties");
         if (is == null) {
             logger.info("Did not find properties file " + KYLIN_CONF_PROPERTIES_FILE + " from classpath");
@@ -525,36 +523,41 @@ public class KylinConfig {
 
     /**
      * Check if there is kylin.properties exist
-     * 
+     *
+     *
      * @param path
      * @param env
      * @return the properties file
      */
-    private static File getKylinPropertiesFile(String path, String env) {
-        File dir = new File(path);
-        System.out.println(dir.getAbsolutePath());
-        if (dir.exists() && dir.isDirectory()) {
-            File propFile = new File(dir, KYLIN_CONF_PROPERTIES_FILE);
-            String fName = KYLIN_CONF_PROPERTIES_FILE;
-            File envPropFile = null;
-            if (env != null) {
-                fName = fName.replace(".", "_" + env + ".");
-                envPropFile = new File(dir, fName);
-            }
-            if (envPropFile != null && envPropFile.exists()) {
-                logger.info(fName + " found in " + path);
-                return envPropFile;
-            }
-            if (propFile != null && propFile.exists()) {
-                logger.info(KYLIN_CONF_PROPERTIES_FILE + " found in " + path);
-                return propFile;
-            }
+    private static File getKylinPropertiesFile(String path) {
+        if (path == null)
+            return null;
+        
+        File propFile = new File(path, KYLIN_CONF_PROPERTIES_FILE);
+        if (propFile.exists()) {
+            logger.info(KYLIN_CONF_PROPERTIES_FILE + " was found at " + propFile.getAbsolutePath());
+            return propFile;
         }
+        
+        logger.info(KYLIN_CONF_PROPERTIES_FILE + " was NOT found at " + propFile.getAbsolutePath());
         return null;
     }
 
     public String getMetadataUrl() {
         return getOptional(KYLIN_METADATA_URL);
+    }
+
+    public String getMetadataUrlPrefix() {
+        String hbaseMetadataUrl = getMetadataUrl();
+        String defaultPrefix = "kylin_metadata";
+
+        if (org.apache.commons.lang3.StringUtils.containsIgnoreCase(hbaseMetadataUrl, "hbase:")) {
+            int cut = hbaseMetadataUrl.indexOf('@');
+            String tmp = cut < 0 ? defaultPrefix : hbaseMetadataUrl.substring(0, cut);
+            return tmp;
+        } else {
+            return defaultPrefix;
+        }
     }
 
     public void setMetadataUrl(String metadataUrl) {
@@ -563,7 +566,7 @@ public class KylinConfig {
 
     /**
      * return -1 if there is no setting
-     * 
+     *
      * @return
      */
     public int getPropScanThreshold() {
@@ -576,7 +579,7 @@ public class KylinConfig {
 
     /**
      * Set a new key:value into the kylin config.
-     * 
+     *
      * @param key
      * @param value
      */
