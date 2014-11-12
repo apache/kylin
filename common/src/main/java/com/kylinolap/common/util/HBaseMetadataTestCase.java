@@ -25,38 +25,30 @@ import com.kylinolap.common.persistence.ResourceTool;
  */
 public class HBaseMetadataTestCase extends AbstractKylinTestCase {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.kylinolap.common.util.AbstractKylinTestCase#createTestMetadata()
-     */
-    @Override
-    public void createTestMetadata() {
+    public static void staticCreateTestMetadata() {
 
         KylinConfig.destoryInstance();
 
         if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null)
-            System.setProperty(KylinConfig.KYLIN_CONF, this.testDataFolder);
+            System.setProperty(KylinConfig.KYLIN_CONF, TEST_DATA_FOLDER);
 
     }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * com.kylinolap.common.util.AbstractKylinTestCase#cleanupTestMetadata()
-     */
-    @Override
-    public void cleanupTestMetadata() {
+    
+    public static void staticCleanupTestMetadata() {
         System.clearProperty(KylinConfig.KYLIN_CONF);
         KylinConfig.destoryInstance();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.kylinolap.common.util.AbstractKylinTestCase#getTestConfig()
-     */
+    @Override
+    public void createTestMetadata() {
+        staticCreateTestMetadata();
+    }
+
+    @Override
+    public void cleanupTestMetadata() {
+        staticCleanupTestMetadata();
+    }
+
     @Override
     public KylinConfig getTestConfig() {
         return KylinConfig.getInstanceFromEnv();
@@ -65,7 +57,7 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
     public void installMetadataToHBase() throws Exception {
         // install metadata to hbase
         ResourceTool.reset(KylinConfig.getInstanceFromEnv());
-        ResourceTool.copy(KylinConfig.createInstanceFromUri(this.testDataFolder), KylinConfig.getInstanceFromEnv());
+        ResourceTool.copy(KylinConfig.createInstanceFromUri(TEST_DATA_FOLDER), KylinConfig.getInstanceFromEnv());
     }
 
     protected ResourceStore getStore() {
