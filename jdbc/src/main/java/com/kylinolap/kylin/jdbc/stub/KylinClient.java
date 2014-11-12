@@ -217,7 +217,7 @@ public class KylinClient implements RemoteClient {
 
         for (int i = 0; i < values.size(); i++) {
             Object value = values.get(i);
-            params.add(new StateParam(value.getClass().getCanonicalName(), (null == value) ? null : String.valueOf(value)));
+            params.add(new StateParam(value.getClass().getCanonicalName(), String.valueOf(value)));
         }
 
         return params;

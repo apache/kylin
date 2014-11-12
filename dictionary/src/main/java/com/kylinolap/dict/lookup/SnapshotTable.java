@@ -118,6 +118,20 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
         return columnDelimeter;
     }
 
+    /**
+     * a naive implementation
+     *
+     * @return
+     */
+    @Override
+    public int hashCode() {
+        int[] parts = new int[this.rows.size()];
+        for (int i = 0; i < parts.length; ++i)
+            parts[i] = Arrays.hashCode(this.rows.get(i));
+        return Arrays.hashCode(parts);
+    }
+
+
     @Override
     public boolean equals(Object o) {
         if ((o instanceof SnapshotTable) == false)

@@ -183,6 +183,7 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
 
     @Override
     public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
+        @SuppressWarnings("unchecked")
         JavaImplementor javaImplementor = (JavaImplementor) implementor;
 
         int ctxId = this.context.id;
