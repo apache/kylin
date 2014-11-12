@@ -69,16 +69,23 @@ public class TableRecordInfo extends TableRecordInfoDigest {
             }
         }
 
+        //isMetric
+        isMetric = new boolean[nColumns];
+        for (int i = 0; i < nColumns; ++i) {
+            isMetric[i] = desc.isMetricsCol(i);
+        }
+
         //lengths
         lengths = new int[nColumns];
         for (int i = 0; i < nColumns; ++i) {
-            lengths[i] = desc.isMetricsCol(i) ? measureSerializers[i].getLength() : dictionaries[i].getSizeOfId();
+            lengths[i] = isMetrics(i) ? measureSerializers[i].getLength() : dictionaries[i].getSizeOfId();
         }
 
         //dict max id
         dictMaxIds = new int[nColumns];
         for (int i = 0; i < nColumns; ++i) {
-            dictMaxIds[i] = dictionaries[i].getMaxId();
+            if (!isMetrics(i))
+                dictMaxIds[i] = dictionaries[i].getMaxId();
         }
 
         //offsets
@@ -120,9 +127,6 @@ public class TableRecordInfo extends TableRecordInfoDigest {
         return (FixedLenMeasureCodec<LongWritable>) measureSerializers[col];
     }
 
-    public boolean isMetrics(int col) {
-        return desc.isMetricsCol(col);
-    }
 
     public int getTimestampColumn() {
         return desc.getTimestampColumn();

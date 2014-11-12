@@ -17,6 +17,11 @@ public class TableRecordInfoDigest implements TableRecordFactory {
     protected int[] offsets;//column offset in byte form row
     protected int[] dictMaxIds;//max id for each of the dict
     protected int[] lengths;//length of each encoded dict
+    protected boolean[] isMetric;//whether it's metric or dict
+
+    public boolean isMetrics(int col) {
+        return isMetric[col];
+    }
 
     public int getColumnCount() {
         return nColumns;
