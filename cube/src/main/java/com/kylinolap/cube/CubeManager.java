@@ -313,7 +313,7 @@ public class CubeManager {
         return segments;
     }
 
-    public String getHBaseStorageLocationPrefix() {
+    public static String getHBaseStorageLocationPrefix() {
         return "KYLIN_";
         //return getHbaseStorageLocationPrefix(config.getMetadataUrl());
     }
@@ -322,21 +322,8 @@ public class CubeManager {
      * For each cube htable, we leverage htable's metadata to keep track of
      * which kylin server(represented by its kylin_metadata prefix) owns this htable
      */
-    public String getHtableMetadataKey() {
+    public static  String getHtableMetadataKey() {
         return "KYLIN_HOST";
-    }
-
-    public String getMedataUrlPrefix() {
-        String hbaseMetadataUrl = config.getMetadataUrl();
-        String defaultPrefix = "kylin_metadata";
-
-        if (StringUtils.containsIgnoreCase(hbaseMetadataUrl, "hbase:")) {
-            int cut = hbaseMetadataUrl.indexOf('@');
-            String tmp = cut < 0 ? defaultPrefix : hbaseMetadataUrl.substring(0, cut);
-            return tmp;
-        } else {
-            return defaultPrefix;
-        }
     }
 
     public void updateSegmentOnJobSucceed(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, String segmentName, String lastBuildJobUuid, long lastBuildTime, long sizeKB, long sourceRecordCount, long sourceRecordsSize) throws IOException, CubeIntegrityException {
