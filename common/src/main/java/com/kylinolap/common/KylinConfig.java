@@ -524,6 +524,7 @@ public class KylinConfig {
     /**
      * Check if there is kylin.properties exist
      *
+     *
      * @param path
      * @param env
      * @return the properties file
