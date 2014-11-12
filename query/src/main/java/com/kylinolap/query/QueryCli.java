@@ -58,7 +58,7 @@ public class QueryCli {
         Statement stmt = null;
         ResultSet rs = null;
         try {
-            conn = DriverManager.getConnection("jdbc:optiq:model=" + olapTmp.getAbsolutePath());
+            conn = DriverManager.getConnection("jdbc:calcite:model=" + olapTmp.getAbsolutePath());
 
             stmt = conn.createStatement();
             rs = stmt.executeQuery(sql);
