@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.kylinolap</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>0.6.1-SNAPSHOT</version>
+    <version>0.6.2-SNAPSHOT</version>
     <name>Kylin:HadoopOLAPEngine</name>
 
     <properties>
@@ -57,7 +56,7 @@
         <jersey.version>1.1.5</jersey.version>
 
         <!-- Optiq Version -->
-        <optiq.version>0.8</optiq.version>
+        <optiq.version>0.9.1-incubating</optiq.version>
         <linq4j.version>0.4</linq4j.version>
 
         <!-- Quartz Version -->
@@ -177,13 +176,13 @@
 
             <!-- optiq dependencies -->
             <dependency>
-                <groupId>net.hydromatic</groupId>
-                <artifactId>optiq-core</artifactId>
+                <groupId>org.apache.calcite</groupId>
+                <artifactId>calcite-core</artifactId>
                 <version>${optiq.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.hydromatic</groupId>
-                <artifactId>optiq-avatica</artifactId>
+                <groupId>org.apache.calcite</groupId>
+                <artifactId>calcite-avatica</artifactId>
                 <version>${optiq.version}</version>
             </dependency>
             <dependency>
