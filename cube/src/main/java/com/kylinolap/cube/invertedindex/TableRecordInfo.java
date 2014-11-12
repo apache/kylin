@@ -72,7 +72,7 @@ public class TableRecordInfo extends TableRecordInfoDigest {
         //lengths
         lengths = new int[nColumns];
         for (int i = 0; i < nColumns; ++i) {
-            lengths[i] = dictionaries[i].getSizeOfId();
+            lengths[i] = desc.isMetricsCol(i) ? measureSerializers[i].getLength() : dictionaries[i].getSizeOfId();
         }
 
         //dict max id
@@ -112,7 +112,7 @@ public class TableRecordInfo extends TableRecordInfoDigest {
         // yes, all dictionaries are string based
         return (Dictionary<String>) dictionaries[col];
     }
-    
+
     // metrics go with fixed-len codec
     @SuppressWarnings("unchecked")
     public FixedLenMeasureCodec<LongWritable> codec(int col) {
@@ -122,14 +122,6 @@ public class TableRecordInfo extends TableRecordInfoDigest {
 
     public boolean isMetrics(int col) {
         return desc.isMetricsCol(col);
-    }
-
-    public int offset(int col) {
-        return offsets[col];
-    }
-
-    public int length(int col) {
-        return desc.isMetricsCol(col) ? measureSerializers[col].getLength() : dictionaries[col].getSizeOfId();
     }
 
     public int getTimestampColumn() {

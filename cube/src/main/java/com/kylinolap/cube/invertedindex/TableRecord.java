@@ -16,14 +16,10 @@
 
 package com.kylinolap.cube.invertedindex;
 
-import java.util.Arrays;
-
+import com.kylinolap.dict.DateStrDictionary;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
-
-import com.kylinolap.dict.DateStrDictionary;
-import com.kylinolap.dict.Dictionary;
 
 /**
  * @author yangli9
@@ -67,20 +63,20 @@ public class TableRecord extends TableRecordBytes {
     }
 
     public void setValueString(int col, String value) {
-        if (info.isMetrics(col)) {
-            LongWritable v = info.codec(col).valueOf(value);
+        if (info().isMetrics(col)) {
+            LongWritable v = info().codec(col).valueOf(value);
             setValueMetrics(col, v);
         } else {
-            int id = info.dict(col).getIdFromValue(value);
+            int id = info().dict(col).getIdFromValue(value);
             setValueID(col, id);
         }
     }
 
     public String getValueString(int col) {
-        if (info.isMetrics(col))
-            return info.codec(col).toString(getValueMetrics(col));
+        if (info().isMetrics(col))
+            return info().codec(col).toString(getValueMetrics(col));
         else
-            return info.dict(col).getValueFromId(getValueID(col));
+            return info().dict(col).getValueFromId(getValueID(col));
     }
 
     public void setValueBytes(int col, ImmutableBytesWritable bytes) {
@@ -90,21 +86,13 @@ public class TableRecord extends TableRecordBytes {
     public void getValueBytes(int col, ImmutableBytesWritable bytes) {
         bytes.set(buf, info.offset(col), info.length(col));
     }
-    
-    private void setValueID(int col, int id) {
-        BytesUtil.writeUnsigned(id, buf, info.offset(col), info.length(col));
-    }
-    
-    private int getValueID(int col) {
-        return BytesUtil.readUnsigned(buf, info.offset(col), info.length(col));
-    }
-    
+
     private void setValueMetrics(int col, LongWritable value) {
-        info.codec(col).write(value, buf, info.offset(col));
+        info().codec(col).write(value, buf, info.offset(col));
     }
 
     private LongWritable getValueMetrics(int col) {
-        return info.codec(col).read(buf, info.offset(col));
+        return info().codec(col).read(buf, info.offset(col));
     }
 
     public short getShard() {
