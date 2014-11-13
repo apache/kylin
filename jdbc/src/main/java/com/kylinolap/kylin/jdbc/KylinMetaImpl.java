@@ -50,9 +50,8 @@ import com.kylinolap.kylin.jdbc.util.SQLTypeMap;
 
 /**
  * Implementation of avatica interface
- * 
+ *
  * @author xduo
- * 
  */
 public class KylinMetaImpl implements Meta {
 
@@ -315,6 +314,10 @@ public class KylinMetaImpl implements Meta {
     }
 
     public Cursor createCursor(AvaticaResultSet resultSet) {
+
+        if (!(resultSet instanceof KylinResultSet))
+            throw new IllegalStateException("resultSet is not KylinResultSet");
+
         KylinPrepare.PrepareResult result = ((KylinResultSet) resultSet).getPrepareResult();
 
         return result.createCursor();
@@ -342,28 +345,27 @@ public class KylinMetaImpl implements Meta {
 
     /**
      * Tree node used by project tree-like structure
-     * 
+     *
      * @author xduo
-     * 
      */
     interface Node {
         /**
          * Get the node name
-         * 
+         *
          * @return
          */
         public String getName();
 
         /**
          * Get direct children of the node.
-         * 
+         *
          * @return
          */
         public List<? extends Node> getChildren();
 
         /**
          * Search the subtree of the node with patterns. One pattern, one level.
-         * 
+         *
          * @param patterns
          * @return
          */
@@ -372,9 +374,8 @@ public class KylinMetaImpl implements Meta {
 
     /**
      * Abstract of the tree-like structure
-     * 
+     *
      * @author xduo
-     * 
      */
     public static abstract class AbstractNode implements Node {
 
@@ -406,7 +407,9 @@ public class KylinMetaImpl implements Meta {
             }
 
             return list;
-        };
+        }
+
+        ;
 
         /**
          * Converts a LIKE-style pattern (where '%' represents a wild-card,
@@ -461,7 +464,7 @@ public class KylinMetaImpl implements Meta {
 
         /**
          * facade method to search schemas in current project.
-         * 
+         *
          * @param catalog
          * @param schemaPattern
          * @return
@@ -475,7 +478,7 @@ public class KylinMetaImpl implements Meta {
 
         /**
          * facade method to search tables in current project
-         * 
+         *
          * @param catalog
          * @param schemaPattern
          * @param tableNamePattern
@@ -491,7 +494,7 @@ public class KylinMetaImpl implements Meta {
 
         /**
          * facade method to search columns in current project
-         * 
+         *
          * @param catalog
          * @param schemaPattern
          * @param tableNamePattern
@@ -517,7 +520,9 @@ public class KylinMetaImpl implements Meta {
         }
     }
 
-    /** Metadata describing a catalog. */
+    /**
+     * Metadata describing a catalog.
+     */
     public static class MetaCatalog extends AbstractNode {
         public static final List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
         public final String tableCatalog;
@@ -568,7 +573,9 @@ public class KylinMetaImpl implements Meta {
 
     }
 
-    /** Metadata describing a schema. */
+    /**
+     * Metadata describing a schema.
+     */
     public static class MetaSchema extends AbstractNode {
         public static final List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
         public final String tableCatalog;
@@ -628,7 +635,9 @@ public class KylinMetaImpl implements Meta {
         }
     }
 
-    /** Metadata describing a table type. */
+    /**
+     * Metadata describing a table type.
+     */
     public static class MetaTableType {
         public final String tableType;
 
@@ -637,7 +646,9 @@ public class KylinMetaImpl implements Meta {
         }
     }
 
-    /** Metadata describing a table. */
+    /**
+     * Metadata describing a table.
+     */
     public static class MetaTable extends AbstractNode {
         public static final List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
         public final String tableCat;
@@ -682,7 +693,9 @@ public class KylinMetaImpl implements Meta {
         }
     }
 
-    /** Metadata describing a column. */
+    /**
+     * Metadata describing a column.
+     */
     public static class MetaColumn implements Node {
         public static final List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
         public final String tableCat;
@@ -757,7 +770,9 @@ public class KylinMetaImpl implements Meta {
         }
     }
 
-    /** Accesses fields by name. */
+    /**
+     * Accesses fields by name.
+     */
     private static class NamedFieldGetter<T> {
         private final List<Field> fields = new ArrayList<Field>();
         private final ColumnMetaData.StructType structType;

@@ -92,11 +92,19 @@ public class JobInstanceBuilder {
         this.jobWorkingDir = JobInstance.getJobWorkingDir(jobInstance, engineConfig);
     }
 
-    private String appendMapReduceParameters(String cmd) throws IOException {
+    private String appendMapReduceParameters(String cmd, JobInstance jobInstance) throws IOException {
         StringBuffer buf = new StringBuffer(cmd);
-        String jobConf = this.engineConfig.getHadoopJobConfFilePath(cube.getDescriptor().getCapacity());
-        if (jobConf != null && jobConf.equals("") == false) {
+        String jobConf = engineConfig.getHadoopJobConfFilePath(cube.getDescriptor().getCapacity());
+        if (StringUtils.isBlank(jobConf) == false) {
             buf.append(" -conf " + jobConf);
+        }
+        
+        String extraArgs = engineConfig.getMapReduceCmdExtraArgs();
+        if (StringUtils.isBlank(extraArgs) == false) {
+            extraArgs = extraArgs.replace("${CUBE}", jobInstance.getRelatedCube());
+            extraArgs = extraArgs.replace("${TYPE}", jobInstance.getType().toString());
+            extraArgs = extraArgs.replace("${UUID}", jobInstance.getUuid());
+            buf.append(" ").append(extraArgs);
         }
 
         return buf.toString();
@@ -295,7 +303,7 @@ public class JobInstanceBuilder {
         String cmd = "";
 
         inputLocation = getIntermediateHiveTablePath();
-        cmd = appendMapReduceParameters(cmd);
+        cmd = appendMapReduceParameters(cmd, jobInstance);
 
         factDistinctColumnsStep.setName(JobConstants.STEP_NAME_FACT_DISTINCT_COLUMNS);
 
@@ -322,11 +330,11 @@ public class JobInstanceBuilder {
 
         if (this.engineConfig.isFlatTableByHive()) {
             inputLocation = getIntermediateHiveTablePath();
-            cmd = appendMapReduceParameters(cmd);
+            cmd = appendMapReduceParameters(cmd, jobInstance);
         } else {
             HiveTable factTableInHive = new HiveTable(MetadataManager.getInstance(this.engineConfig.getConfig()), cube.getDescriptor().getFactTable());
             inputLocation = factTableInHive.getHDFSLocation(false);
-            cmd = appendMapReduceParameters(cmd);
+            cmd = appendMapReduceParameters(cmd, jobInstance);
             cmd = appendExecCmdParameters(cmd, "inputformat", "TextInputFormat");
         }
 
@@ -355,7 +363,7 @@ public class JobInstanceBuilder {
         ndCuboidStep.setName(JobConstants.STEP_NAME_BUILD_N_D_CUBOID + " : " + dimNum + "-Dimension");
         String cmd = "";
 
-        cmd = appendMapReduceParameters(cmd);
+        cmd = appendMapReduceParameters(cmd, jobInstance);
         cmd = appendExecCmdParameters(cmd, "cubename", cubeName);
         cmd = appendExecCmdParameters(cmd, "segmentname", segmentName);
         cmd = appendExecCmdParameters(cmd, "input", cuboidOutputTempPath[totalRowkeyColumnCount - dimNum - 1]);
@@ -377,7 +385,7 @@ public class JobInstanceBuilder {
         rowkeyDistributionStep.setName(JobConstants.STEP_NAME_GET_CUBOID_KEY_DISTRIBUTION);
         String cmd = "";
 
-        cmd = appendMapReduceParameters(cmd);
+        cmd = appendMapReduceParameters(cmd, jobInstance);
         cmd = appendExecCmdParameters(cmd, "input", inputPath);
         cmd = appendExecCmdParameters(cmd, "output", getRowkeyDistributionOutputPath());
         cmd = appendExecCmdParameters(cmd, "jobname", "Kylin_Region_Splits_Calculator_" + jobInstance.getRelatedCube() + "_Step_" + stepSeqNum);
@@ -397,7 +405,7 @@ public class JobInstanceBuilder {
         mergeCuboidDataStep.setName(JobConstants.STEP_NAME_MERGE_CUBOID);
         String cmd = "";
 
-        cmd = appendMapReduceParameters(cmd);
+        cmd = appendMapReduceParameters(cmd, jobInstance);
         cmd = appendExecCmdParameters(cmd, "cubename", cubeName);
         cmd = appendExecCmdParameters(cmd, "segmentname", segmentName);
         cmd = appendExecCmdParameters(cmd, "input", inputPath);
@@ -435,7 +443,7 @@ public class JobInstanceBuilder {
         createHFilesStep.setName(JobConstants.STEP_NAME_CONVERT_CUBOID_TO_HFILE);
         String cmd = "";
 
-        cmd = appendMapReduceParameters(cmd);
+        cmd = appendMapReduceParameters(cmd, jobInstance);
         cmd = appendExecCmdParameters(cmd, "cubename", cubeName);
         cmd = appendExecCmdParameters(cmd, "input", inputPath);
         cmd = appendExecCmdParameters(cmd, "output", jobWorkingDir + "/" + cubeName + "/hfile");

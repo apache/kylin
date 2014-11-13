@@ -404,7 +404,7 @@ public class QueryService extends BasicService {
     private void setParam(PreparedStatement preparedState, int index, StateParam param) throws SQLException {
         boolean isNull = (null == param.getValue());
 
-        Class<?> clazz = Object.class;
+        Class<?> clazz;
         try {
             clazz = Class.forName(param.getClassName());
         } catch (ClassNotFoundException e) {
@@ -421,31 +421,31 @@ public class QueryService extends BasicService {
             break;
         case PRIMITIVE_INT:
         case INTEGER:
-            preparedState.setInt(index, isNull ? null : Integer.valueOf(param.getValue()));
+            preparedState.setInt(index, isNull ? 0 : Integer.valueOf(param.getValue()));
             break;
         case PRIMITIVE_SHORT:
         case SHORT:
-            preparedState.setShort(index, isNull ? null : Short.valueOf(param.getValue()));
+            preparedState.setShort(index, isNull ? 0 : Short.valueOf(param.getValue()));
             break;
         case PRIMITIVE_LONG:
         case LONG:
-            preparedState.setLong(index, isNull ? null : Long.valueOf(param.getValue()));
+            preparedState.setLong(index, isNull ? 0 : Long.valueOf(param.getValue()));
             break;
         case PRIMITIVE_FLOAT:
         case FLOAT:
-            preparedState.setFloat(index, isNull ? null : Float.valueOf(param.getValue()));
+            preparedState.setFloat(index, isNull ? 0 : Float.valueOf(param.getValue()));
             break;
         case PRIMITIVE_DOUBLE:
         case DOUBLE:
-            preparedState.setDouble(index, isNull ? null : Double.valueOf(param.getValue()));
+            preparedState.setDouble(index, isNull ? 0 : Double.valueOf(param.getValue()));
             break;
         case PRIMITIVE_BOOLEAN:
         case BOOLEAN:
-            preparedState.setBoolean(index, isNull ? null : Boolean.parseBoolean(param.getValue()));
+            preparedState.setBoolean(index, !isNull && Boolean.parseBoolean(param.getValue()));
             break;
         case PRIMITIVE_BYTE:
         case BYTE:
-            preparedState.setByte(index, isNull ? null : Byte.valueOf(param.getValue()));
+            preparedState.setByte(index, isNull ? 0 : Byte.valueOf(param.getValue()));
             break;
         case JAVA_UTIL_DATE:
         case JAVA_SQL_DATE:
