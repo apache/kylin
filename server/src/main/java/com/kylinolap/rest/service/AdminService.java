@@ -64,10 +64,13 @@ public class AdminService extends BasicService {
             }
 
             // properties
-            Properties properteis = System.getProperties();
-            for (Object propName : properteis.keySet()) {
-                tempConfig.setProperty((String) propName, properteis.get(propName));
+            Properties proterties = System.getProperties();
+
+            for(Map.Entry<Object,Object> entry : proterties.entrySet())
+            {
+                tempConfig.setProperty((String) entry.getKey(), entry.getValue());
             }
+
 
             // do save
             tempConfig.save(baos);
