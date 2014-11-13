@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.kylin.jdbc.util;
+package com.kylinolap.jdbc.util;
 
 import java.security.KeyStore;
 import java.security.KeyStoreException;

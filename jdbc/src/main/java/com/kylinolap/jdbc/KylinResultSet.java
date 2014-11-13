@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.kylin.jdbc;
+package com.kylinolap.jdbc;
 
 import java.sql.ResultSetMetaData;
 import java.util.TimeZone;
@@ -23,7 +23,7 @@ import net.hydromatic.avatica.AvaticaPrepareResult;
 import net.hydromatic.avatica.AvaticaResultSet;
 import net.hydromatic.avatica.AvaticaStatement;
 
-import com.kylinolap.kylin.jdbc.KylinPrepare.PrepareResult;
+import com.kylinolap.jdbc.KylinPrepare.PrepareResult;
 
 /**
  * Kylin query result set

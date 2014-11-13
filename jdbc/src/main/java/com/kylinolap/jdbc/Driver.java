@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.kylin.jdbc;
+package com.kylinolap.jdbc;
 
 import java.sql.SQLException;
 
@@ -28,8 +28,8 @@ import net.hydromatic.avatica.UnregisteredDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kylinolap.kylin.jdbc.stub.ConnectionException;
-import com.kylinolap.kylin.jdbc.stub.RemoteClient;
+import com.kylinolap.jdbc.stub.ConnectionException;
+import com.kylinolap.jdbc.stub.RemoteClient;
 
 /**
  * <p>

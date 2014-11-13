@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.kylin.jdbc;
+package com.kylinolap.jdbc;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -35,8 +35,8 @@ import net.hydromatic.avatica.UnregisteredDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaProject;
-import com.kylinolap.kylin.jdbc.KylinPrepare.PrepareResult;
+import com.kylinolap.jdbc.KylinMetaImpl.MetaProject;
+import com.kylinolap.jdbc.KylinPrepare.PrepareResult;
 
 /**
  * Kylin connection implementation

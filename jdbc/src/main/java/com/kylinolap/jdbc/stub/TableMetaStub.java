@@ -1,4 +1,4 @@
-package com.kylinolap.kylin.jdbc.stub;
+package com.kylinolap.jdbc.stub;
 
 import java.util.ArrayList;
 import java.util.List;
