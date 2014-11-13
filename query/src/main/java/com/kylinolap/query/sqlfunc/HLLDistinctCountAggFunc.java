@@ -26,7 +26,6 @@ import com.kylinolap.common.hll.HyperLogLogPlusCounter;
 
 /**
  * @author xjiang
- * 
  */
 public class HLLDistinctCountAggFunc {
 
@@ -52,6 +51,9 @@ public class HLLDistinctCountAggFunc {
             if (counter == null) {
                 return new FixedValueHLLCMockup(l);
             } else {
+                if (!(counter instanceof FixedValueHLLCMockup))
+                    throw new IllegalStateException("counter is not FixedValueHLLCMockup");
+
                 ((FixedValueHLLCMockup) counter).set(l);
                 return counter;
             }
