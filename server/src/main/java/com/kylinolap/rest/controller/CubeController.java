@@ -215,12 +215,6 @@ public class CubeController extends BasicController {
         return jobInstance;
     }
 
-    /**
-     * Get available table list of the input database
-     * 
-     * @return true
-     * @throws IOException
-     */
     @RequestMapping(value = "/{cubeName}/disable", method = { RequestMethod.PUT })
     @ResponseBody
     @Metered(name = "disableCube")
@@ -240,12 +234,26 @@ public class CubeController extends BasicController {
         }
     }
 
-    /**
-     * Get available table list of the input database
-     * 
-     * @return true
-     * @throws IOException
-     */
+    @RequestMapping(value = "/{cubeName}/purge", method = { RequestMethod.PUT })
+    @ResponseBody
+    @Metered(name = "purgeCube")
+    public CubeInstance purgeCube(@PathVariable String cubeName) {
+        try {
+            CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+
+            if (cube == null) {
+                throw new InternalErrorException("Cannot find cube " + cubeName);
+            }
+
+            return cubeService.purgeCube(cube);
+        } catch (Exception e) {
+            String message = "Failed to purge cube: " + cubeName;
+            logger.error(message, e);
+            throw new InternalErrorException(message + " Caused by: " + e.getMessage(), e);
+        }
+    }
+
+
     @RequestMapping(value = "/{cubeName}/enable", method = { RequestMethod.PUT })
     @ResponseBody
     @Metered(name = "enableCube")
