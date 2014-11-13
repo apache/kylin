@@ -74,6 +74,8 @@ public class KylinConfig {
     public static final String KYLIN_JOB_REMOTE_CLI_HOSTNAME = "kylin.job.remote.cli.hostname";
 
     public static final String KYLIN_JOB_REMOTE_CLI_WORKING_DIR = "kylin.job.remote.cli.working.dir";
+    
+    public static final String KYLIN_JOB_CMD_EXTRA_ARGS = "kylin.job.cmd.extra.args";
     /**
      * Toggle to indicate whether to use hive for table flattening. Default
      * true.
@@ -361,6 +363,10 @@ public class KylinConfig {
 
     public String getCliWorkingDir() {
         return getOptional(KYLIN_JOB_REMOTE_CLI_WORKING_DIR);
+    }
+
+    public String getMapReduceCmdExtraArgs() {
+        return getOptional(KYLIN_JOB_CMD_EXTRA_ARGS);
     }
 
     public boolean getFlatTableByHive() {
