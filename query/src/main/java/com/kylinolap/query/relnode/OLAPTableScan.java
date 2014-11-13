@@ -117,14 +117,12 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
         planner.removeRule(PushFilterPastJoinRule.FILTER_ON_JOIN);
         planner.removeRule(PushFilterPastJoinRule.JOIN);
 
-        // TODO : since we don't have statistic of table, the optimization of
-        // join is too cost
+        // TODO : since we don't have statistic of table, the optimization of join is too cost
         planner.removeRule(SwapJoinRule.INSTANCE);
         planner.removeRule(PushJoinThroughJoinRule.LEFT);
         planner.removeRule(PushJoinThroughJoinRule.RIGHT);
-
-        // distinct count will be split into a separated query that is joined
-        // with the left query
+        
+        // distinct count will be split into a separated query that is joined with the left query
         planner.removeRule(RemoveDistinctAggregateRule.INSTANCE);
     }
 
@@ -183,7 +181,6 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
     public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
         if (!(implementor instanceof JavaImplementor))
             throw new IllegalStateException("implementor is not JavaImplementor");
-
         JavaImplementor javaImplementor = (JavaImplementor) implementor;
 
         int ctxId = this.context.id;
