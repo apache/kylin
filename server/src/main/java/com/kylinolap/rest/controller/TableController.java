@@ -114,10 +114,10 @@ public class TableController extends BasicController {
     @RequestMapping(value = "/{tables}/{project}", method = { RequestMethod.POST })
     @ResponseBody
     public Map<String, String[]> loadHiveTable(@PathVariable String tables,@PathVariable String project) {
-//        String[] arr = cubeMgmtService.reloadHiveTable(tables);
+        String[] arr = cubeMgmtService.reloadHiveTable(tables);
         cubeMgmtService.syncTableToProject(tables, project);
         Map<String, String[]> result = new HashMap<String, String[]>();
-//        result.put("result", arr);
+        result.put("result", arr);
         return result;
     }
 
