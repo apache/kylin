@@ -14,7 +14,7 @@ ense.
  * limitations under the License.
  */
 
-package com.kylinolap.kylin.jdbc;
+package com.kylinolap.jdbc;
 
 import net.hydromatic.avatica.AvaticaConnection;
 import net.hydromatic.avatica.AvaticaResultSet;
