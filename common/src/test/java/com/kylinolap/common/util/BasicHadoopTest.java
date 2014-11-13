@@ -6,9 +6,6 @@ import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.io.compress.Compression;
-import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -44,6 +41,7 @@ public class BasicHadoopTest {
         Configuration conf = HBaseConfiguration.create();
         HBaseAdmin admin = new HBaseAdmin(conf);
         admin.createTable(tableDesc);
+        admin.close();
     }
 
     @Test
@@ -62,5 +60,6 @@ public class BasicHadoopTest {
                 hbaseAdmin.enableTable(table.getTableName());
             }
         }
+        hbaseAdmin.close();
     }
 }

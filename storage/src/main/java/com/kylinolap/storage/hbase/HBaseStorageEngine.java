@@ -215,6 +215,7 @@ public class HBaseStorageEngine implements IStorageEngine {
                         resultD.add(hostCol);
                     }
                 }
+                //if not one2one, it will be pruned
             } else {
                 resultD.add(col);
             }
@@ -391,7 +392,7 @@ public class HBaseStorageEngine implements IStorageEngine {
         List<Collection<ColumnValueRange>> result = Lists.newArrayList();
 
         if (flatFilter == null) {
-            result.add(Collections.<ColumnValueRange> emptyList());
+            result.add(Collections.<ColumnValueRange>emptyList());
             return result;
         }
 
@@ -431,7 +432,7 @@ public class HBaseStorageEngine implements IStorageEngine {
         }
         if (globalAlwaysTrue) {
             orAndRanges.clear();
-            orAndRanges.add(Collections.<ColumnValueRange> emptyList());
+            orAndRanges.add(Collections.<ColumnValueRange>emptyList());
         }
         return orAndRanges;
     }
@@ -536,7 +537,7 @@ public class HBaseStorageEngine implements IStorageEngine {
             partitionColumnEndDate = (partitionColumnEndDate == 0) ? Long.MAX_VALUE : partitionColumnEndDate;
             keyRange =
 
-            new HBaseKeyRange(cubeSegment, cuboid, startKey, stopKey, newFuzzyKeys, newFlatOrAndFilter, partitionColumnStartDate, partitionColumnEndDate);
+                    new HBaseKeyRange(cubeSegment, cuboid, startKey, stopKey, newFuzzyKeys, newFlatOrAndFilter, partitionColumnStartDate, partitionColumnEndDate);
         }
         return keyRange;
     }

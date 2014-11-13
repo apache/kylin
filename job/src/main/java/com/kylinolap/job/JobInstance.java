@@ -33,7 +33,7 @@ import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class JobInstance extends RootPersistentEntity {
+public class JobInstance extends RootPersistentEntity implements Comparable<JobInstance>{
 
     public static final String JOB_WORKING_DIR_PREFIX = "kylin-";
 
@@ -458,6 +458,11 @@ public class JobInstance extends RootPersistentEntity {
                 return 0;
             }
         }
+    }
+
+    @Override
+    public int compareTo(JobInstance o) {
+        return (int) (o.lastModified - this.lastModified);
     }
 
 }
