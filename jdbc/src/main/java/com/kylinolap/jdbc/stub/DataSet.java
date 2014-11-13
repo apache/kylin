@@ -14,32 +14,40 @@
  * limitations under the License.
  */
 
-package com.kylinolap.kylin.jdbc;
+package com.kylinolap.jdbc.stub;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import net.hydromatic.avatica.AvaticaParameter;
 import net.hydromatic.avatica.ColumnMetaData;
+import net.hydromatic.linq4j.Enumerator;
 
 /**
+ * Data set wrapper.
+ * 
  * @author xduo
  * 
  */
-public class KylinPrepareImpl implements KylinPrepare {
+public class DataSet<E> {
 
-    @Override
-    public PrepareResult prepare(String sql) {
-        List<AvaticaParameter> aps = new ArrayList<AvaticaParameter>();
+    private final List<ColumnMetaData> meta;
 
-        int startIndex = 0;
-        while (sql.indexOf("?", startIndex) >= 0) {
-            AvaticaParameter ap = new AvaticaParameter(false, 0, 0, 0, null, null, null);
-            aps.add(ap);
-            startIndex = sql.indexOf("?", startIndex) + 1;
-        }
+    private final Enumerator<E> enumerator;
 
-        return new KylinPrepare.PrepareResult(sql, aps, null, ColumnMetaData.struct(new ArrayList<ColumnMetaData>()));
+    /**
+     * @param meta
+     * @param enumerator
+     */
+    public DataSet(List<ColumnMetaData> meta, Enumerator<E> enumerator) {
+        this.meta = meta;
+        this.enumerator = enumerator;
+    }
+
+    public List<ColumnMetaData> getMeta() {
+        return meta;
+    }
+
+    public Enumerator<E> getEnumerator() {
+        return enumerator;
     }
 
 }

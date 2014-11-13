@@ -1,6 +1,8 @@
-package com.kylinolap.kylin.jdbc;
+package com.kylinolap.jdbc;
 
-import com.kylinolap.kylin.jdbc.stub.RemoteClient;
+import com.kylinolap.jdbc.KylinConnectionImpl;
+import com.kylinolap.jdbc.KylinJdbc41Factory;
+import com.kylinolap.jdbc.stub.RemoteClient;
 
 /**
  * @author xduo

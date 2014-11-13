@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.kylin.jdbc;
+package com.kylinolap.jdbc;
 
 import java.util.List;
 
