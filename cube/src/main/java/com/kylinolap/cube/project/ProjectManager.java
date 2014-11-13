@@ -444,6 +444,7 @@ public class ProjectManager {
     private ProjectInstance addTableToProject(String tables, String project, String user) throws IOException {
         String newProjectName = ProjectInstance.getNormalizedProjectName(project);
         ProjectInstance newProject = getProject(newProjectName);
+        
 //        if (newProject == null) {
 //            newProject = this.createProject(newProjectName, user, "This is a project automatically added when adding table" + tableName);
 //        }

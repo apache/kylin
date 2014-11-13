@@ -181,10 +181,14 @@ public class ProjectInstance extends RootPersistentEntity {
 
     public void addTable(String tableName) {
        tableName = tableName.toUpperCase();
-        this.tables.add(tableName);
+        this.getTables().add(tableName);
     }
 
+    //will return new list for null
     public List<String> getTables() {
+        if(tables==null){
+            tables = new ArrayList<String>();
+        }
         return tables;
     }
 
