@@ -127,11 +127,8 @@ public class CubeSegmentValidator {
                 } else {
                     Collection<String> a = firstSegment.getSnapshots().values();
                     Collection<String> b = segment.getSnapshots().values();
-                    if ((a.size() == b.size()) && a.containsAll(b)) {
-                        // good
-                    } else {
+                    if (!((a.size() == b.size()) && a.containsAll(b)))
                         throw new CubeIntegrityException("Segments with different snapshots cannot be merged");
-                    }
                 }
             }
 
@@ -147,7 +144,7 @@ public class CubeSegmentValidator {
     public class IncrementalBuildOperationValidator extends CubeSegmentValidator {
         /*
          * (non-Javadoc)
-         * 
+         *
          * @see
          * com.kylinolap.cube.CubeSegmentValidator#validate(com.kylinolap.cube
          * .CubeInstance, java.util.List)
@@ -194,7 +191,7 @@ public class CubeSegmentValidator {
 
         /*
          * (non-Javadoc)
-         * 
+         *
          * @see
          * com.kylinolap.cube.CubeSegmentValidator#validate(com.kylinolap.cube
          * .CubeInstance, java.util.List)

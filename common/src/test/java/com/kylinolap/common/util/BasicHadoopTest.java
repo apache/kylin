@@ -41,6 +41,7 @@ public class BasicHadoopTest {
         Configuration conf = HBaseConfiguration.create();
         HBaseAdmin admin = new HBaseAdmin(conf);
         admin.createTable(tableDesc);
+        admin.close();
     }
 
     @Test
@@ -59,5 +60,6 @@ public class BasicHadoopTest {
                 hbaseAdmin.enableTable(table.getTableName());
             }
         }
+        hbaseAdmin.close();
     }
 }

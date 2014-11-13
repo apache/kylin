@@ -26,13 +26,13 @@ echo "[Warning] The installation may break existing tomcat applications on this 
 echo ""
 
 
-read -p "Are you sure you want to proceed?(press Y or y to confirm) " -n 1 -r
+[[ "$SILENT" ]] || ( read -p "Are you sure you want to proceed?(press Y or y to confirm) " -n 1 -r
 echo    # (optional) move to a new line
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then
     echo "Not going to proceed, quit without finishing! You can rerun the script to have another try."
     exit 1
-fi
+fi )
 
 echo "Checking JAVA status..."
 
@@ -127,13 +127,14 @@ KYLIN_ZOOKEEPER_URL=${KYLIN_ZOOKEEPER_QUORUM}:${KYLIN_ZOOKEEPER_CLIENT_PORT}:${K
 
 echo "Kylin install script requires root password for ${HOSTNAME}"
 echo "(The default root password for hortonworks VM is hadoop, and for cloudera VM is cloudera)"
-read -s -p "Enter Password for root: " rootpass
+
+[[ "$SILENT" ]] || read -s -p "Enter Password for root: " ROOTPASS
 
 #deploy kylin.properties to /etc/kylin
 cat examples/test_case_data/kylin.properties | \
     sed -e "s,${CHECK_URL_DEFAULT},${NEW_CHECK_URL_PREFIX}${HOSTNAME}," | \
     sed -e "s,${CLI_HOSTNAME_DEFAULT},${NEW_CLI_HOSTNAME_PREFIX}${HOSTNAME}," | \
-    sed -e "s,${CLI_PASSWORD_DEFAULT},${NEW_CLI_PASSWORD_PREFIX}${rootpass}," | \
+    sed -e "s,${CLI_PASSWORD_DEFAULT},${NEW_CLI_PASSWORD_PREFIX}${ROOTPASS}," | \
     sed -e "s,${METADATA_URL_DEFAULT},${NEW_METADATA_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," | \
     sed -e "s,${STORAGE_URL_DEFAULT},${NEW_STORAGE_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," >  /etc/kylin/kylin.properties
 
@@ -145,13 +146,13 @@ echo ""
 echo "==================================================================="
 echo ""
 
-read -p "please ensure the CLI address/username/password is correct, and press y to proceed: " -n 1 -r
+[[ "$SILENT" ]] || ( read -p "please ensure the CLI address/username/password is correct, and press y to proceed: " -n 1 -r
 echo    # (optional) move to a new line
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then
     echo "Not going to proceed, quit without finishing! You can rerun the script to have another try."
     exit 1
-fi
+fi )
 
 # 1. generate synthetic fact table(test_kylin_fact) data and dump it into hive
 # 2. create empty cubes on these data, ready to be built
@@ -202,4 +203,4 @@ sudo -i "${CATALINA_HOME}/bin/startup.sh"
 
 
 echo "Kylin-Deploy Success!"
-echo "Please visit http://<your_sandbox_ip>:9080 to play with the cubes!"
+echo "Please visit http://<your_sandbox_ip>:9080 to play with the cubes! (Useranme: ADMIN, Password: KYLIN)"

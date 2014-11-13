@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.kylinolap</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>0.6.1-SNAPSHOT</version>
+    <version>0.6.2-SNAPSHOT</version>
     <name>Kylin:HadoopOLAPEngine</name>
 
     <properties>
@@ -40,8 +39,6 @@
         <jackson.version>2.2.3</jackson.version>
         <commons-httpclient.version>3.1</commons-httpclient.version>
         <guava.version>12.0.1</guava.version>
-        <trove4j.version>3.0.3</trove4j.version>
-        <httpclient.version>4.3.3</httpclient.version>
 
         <jsch.version>0.1.51</jsch.version>
         <dbunit.version>2.5.0</dbunit.version>
@@ -54,17 +51,16 @@
 
         <!-- REST Service -->
         <spring.framework.version>3.1.2.RELEASE</spring.framework.version>
-        <jersey.version>1.1.5</jersey.version>
 
         <!-- Optiq Version -->
-        <optiq.version>0.8</optiq.version>
+        <optiq.version>0.9.1-incubating</optiq.version>
         <linq4j.version>0.4</linq4j.version>
-
-        <!-- Quartz Version -->
-        <quartz.version>2.2.1</quartz.version>
 
         <!-- Metrics Codahale Version -->
         <metrics.version>3.0.1</metrics.version>
+
+        <!-- Quartz Version -->
+        <quartz.version>2.2.1</quartz.version>
 
         <!-- Curator.version Version -->
         <curator.version>2.6.0</curator.version>
@@ -177,13 +173,13 @@
 
             <!-- optiq dependencies -->
             <dependency>
-                <groupId>net.hydromatic</groupId>
-                <artifactId>optiq-core</artifactId>
+                <groupId>org.apache.calcite</groupId>
+                <artifactId>calcite-core</artifactId>
                 <version>${optiq.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.hydromatic</groupId>
-                <artifactId>optiq-avatica</artifactId>
+                <groupId>org.apache.calcite</groupId>
+                <artifactId>calcite-avatica</artifactId>
                 <version>${optiq.version}</version>
             </dependency>
             <dependency>
@@ -304,11 +300,6 @@
                 <version>${xalan.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.sf.trove4j</groupId>
-                <artifactId>trove4j</artifactId>
-                <version>${trove4j.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>com.ning</groupId>
                 <artifactId>compress-lzf</artifactId>
                 <version>${compress-lzf.version}</version>
@@ -347,11 +338,6 @@
                 <version>${curator.version}</version>
             </dependency>
 
-            <dependency>
-                <groupId>org.apache.httpcomponents</groupId>
-                <artifactId>httpclient</artifactId>
-                <version>${httpclient.version}</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
