@@ -122,6 +122,9 @@ KylinApp
                     tableNames: function () {
                         return $scope.tableNames;
                     },
+                    projectName:function(){
+                      return  $scope.project.selectedProject;
+                    },
                     scope: function () {
                         return $scope;
                     }
@@ -129,16 +132,16 @@ KylinApp
             });
         }
 
-        var ModalInstanceCtrl = function ($scope, $modalInstance, tableNames, MessageService) {
+        var ModalInstanceCtrl = function ($scope, $modalInstance, tableNames, MessageService,projectName) {
             $scope.tableNames = "";
             $scope.cancel = function () {
                 $modalInstance.dismiss('cancel');
             };
             $scope.add = function () {
-                console.log($scope.project.selectedProject);
+                console.log(projectName);
                 $modalInstance.dismiss();
                 MessageService.sendMsg('A sync task has been submitted, it might take 20 - 60 seconds', 'success', {});
-                TableService.loadHiveTable({tableName: $scope.tableNames,action:$scope.project.selectedProject}, {}, function (result) {
+                TableService.loadHiveTable({tableName: $scope.tableNames,action:projectName}, {}, function (result) {
                     MessageService.sendMsg('Below tables were synced successfully: ' + result['result'].join() + ', Click Refresh button ...', 'success', {});
                 });
             }
