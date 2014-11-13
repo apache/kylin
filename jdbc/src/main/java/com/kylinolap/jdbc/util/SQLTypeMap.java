@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.kylin.jdbc.util;
+package com.kylinolap.jdbc.util;
 
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -27,7 +27,7 @@ import java.util.Map;
 import net.hydromatic.avatica.ColumnMetaData;
 import net.hydromatic.avatica.ColumnMetaData.Rep;
 
-import com.kylinolap.kylin.jdbc.stub.KylinColumnMetaData;
+import com.kylinolap.jdbc.stub.KylinColumnMetaData;
 
 /**
  * Util class to handle type gap between sql types and java types.

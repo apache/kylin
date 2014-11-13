@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.kylin.jdbc.stub;
+package com.kylinolap.jdbc.stub;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -41,17 +41,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.HashMultimap;
-import com.kylinolap.kylin.jdbc.KylinConnectionImpl;
-import com.kylinolap.kylin.jdbc.KylinEnumerator;
-import com.kylinolap.kylin.jdbc.KylinJdbc41Factory.KylinJdbc41PreparedStatement;
-import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaCatalog;
-import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaColumn;
-import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaProject;
-import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaSchema;
-import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaTable;
-import com.kylinolap.kylin.jdbc.stub.TableMetaStub.ColumnMetaStub;
-import com.kylinolap.kylin.jdbc.util.DefaultSslProtocolSocketFactory;
-import com.kylinolap.kylin.jdbc.util.SQLTypeMap;
+import com.kylinolap.jdbc.KylinConnectionImpl;
+import com.kylinolap.jdbc.KylinEnumerator;
+import com.kylinolap.jdbc.KylinJdbc41Factory.KylinJdbc41PreparedStatement;
+import com.kylinolap.jdbc.KylinMetaImpl.MetaCatalog;
+import com.kylinolap.jdbc.KylinMetaImpl.MetaColumn;
+import com.kylinolap.jdbc.KylinMetaImpl.MetaProject;
+import com.kylinolap.jdbc.KylinMetaImpl.MetaSchema;
+import com.kylinolap.jdbc.KylinMetaImpl.MetaTable;
+import com.kylinolap.jdbc.stub.TableMetaStub.ColumnMetaStub;
+import com.kylinolap.jdbc.util.DefaultSslProtocolSocketFactory;
+import com.kylinolap.jdbc.util.SQLTypeMap;
 
 /**
  * @author xduo
