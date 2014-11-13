@@ -191,10 +191,11 @@ public class ProjectManager {
         return this.listAllCubes(projectName).contains(cube);
     }
     
-    public ProjectInstance updateTableToProject(String tableName, String newProjectName, String owner) throws IOException {
-        removeTableFromProjects(tableName);
-
-        return addTableToProject(tableName, newProjectName, owner);
+    public ProjectInstance updateTableToProject(String tables, String newProjectName, String owner) throws IOException {
+       
+//        removeTableFromProjects(tables);
+        
+        return addTableToProject(tables, newProjectName, owner);
     }    
 
     public void removeTableFromProjects(String tableName) throws IOException {
