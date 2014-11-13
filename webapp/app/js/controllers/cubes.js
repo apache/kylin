@@ -118,6 +118,14 @@ KylinApp
             }
         }
 
+        $scope.purge = function (cube) {
+            if (confirm("Are you sure to purge the cube? ")) {
+                CubeService.purge({cubeId: cube.name}, {}, function (result) {
+                    MessageService.sendMsg('Purge job was submitted successfully', 'success', {});
+                });
+            }
+        }
+
         $scope.disable = function (cube) {
             if (confirm("Are you sure to disable the cube?")) {
                 CubeService.disable({cubeId: cube.name}, {}, function (result) {
