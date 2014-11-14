@@ -17,6 +17,8 @@ package com.kylinolap.cube.project;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -39,7 +41,7 @@ public class ProjectInstance extends RootPersistentEntity {
     private List<String> cubes;
 
     @JsonProperty("tables")
-    private List<String> tables;
+    private Set<String> tables;
         
     
     @JsonProperty("owner")
@@ -161,7 +163,7 @@ public class ProjectInstance extends RootPersistentEntity {
         this.cubes = cubes;
     }    
         
-    public void setTables(List<String> tables) {
+    public void setTables(Set<String> tables) {
         this.tables = tables;
     }
 
@@ -184,12 +186,9 @@ public class ProjectInstance extends RootPersistentEntity {
         this.getTables().add(tableName);
     }
 
-    //will return new list for null
-    public List<String> getTables() {
-        if(tables==null){
-            tables = new ArrayList<String>();
-        }
-        return tables;
+    //will return new Set for null
+    public Set<String> getTables() {
+        return tables==null?new TreeSet<String>():tables;
     }
 
     public String getOwner() {

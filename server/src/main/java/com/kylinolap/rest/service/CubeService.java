@@ -562,10 +562,8 @@ public class CubeService extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public String[] reloadHiveTable(String tables) {
         String tableMetaDir = HiveSourceTableMgmt.reloadHiveTable(tables);
-
         // Reload
         getMetadataManager().reload();
-
         File metaDir = new File(tableMetaDir);
         if (metaDir.exists()) {
             File tableDir = new File(metaDir, HiveSourceTableMgmt.TABLE_FOLDER_NAME);
@@ -581,16 +579,12 @@ public class CubeService extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void syncTableToProject(String tables,String project){
 
-//        if (!getProjectManager().isCubeInProject(newProjectName, cube)) {
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
         try {
-            ProjectInstance newProject = getProjectManager().updateTableToProject(tables, project, owner);
+            ProjectInstance newProject = getProjectManager().updateTableToProject(tables, project);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             throw new InternalErrorException("Failed to deal with the request.", e);
         }
-//        accessService.inherit(cube, newProject);
-//        }       
 
     }    
 }

@@ -334,7 +334,6 @@ public class HiveSourceTableMgmt {
             cmd[0] = "/bin/bash";
             cmd[1] = "-c";
         }
-
         // hive command output
         // String hiveOutputPath = tempDir + File.separator +
         // "tmp_kylin_output";
@@ -344,15 +343,13 @@ public class HiveSourceTableMgmt {
         dir.delete();
         dir.mkdir();
         String tableMetaOutcomeDir = dir.getAbsolutePath();
-
-        ProcessBuilder pb = null;
-
+        
         if (osName.startsWith("Windows")) {
 //            pb = new ProcessBuilder(cmd[0], cmd[1], "ssh root@sandbox 'hive -e \"" + hiveCommd + "\"' > " + hiveOutputPath);
             SSHClient client = new SSHClient("sandbox", "root", "hadoop", null);
             SSHClientOutput output  = null;
             try {
-            output =  client.execCommand("hive -e \"" + hiveCommd + "\"");
+            output =  client.execCommand("hive -e \"" + hiveCommd + "\" 2>/dev/null");
             } catch (Exception e) {
                 // TODO Auto-generated catch block
                 logger.error("Failed to execute hive cmd", e);
@@ -373,6 +370,7 @@ public class HiveSourceTableMgmt {
             }
             
         } else {
+            ProcessBuilder pb = null;
             pb = new ProcessBuilder(cmd[0], cmd[1], "hive -e \"" + hiveCommd + "\" > " + hiveOutputPath);
             // Run hive
             pb.directory(new File(tempDir));
@@ -394,13 +392,9 @@ public class HiveSourceTableMgmt {
                     br.close();
                 }
             }
-            
-            
         }
 
-
         logger.info("Hive execution completed!");
-
         HiveSourceTableMgmt rssMgmt = new HiveSourceTableMgmt();
         rssMgmt.extractTableDescFromFile(hiveOutputPath, tableMetaOutcomeDir);
         return tableMetaOutcomeDir;

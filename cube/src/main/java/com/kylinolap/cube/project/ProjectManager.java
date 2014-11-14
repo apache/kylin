@@ -190,21 +190,26 @@ public class ProjectManager {
     public boolean isTableInProject(String projectName, CubeInstance cube) {
         return this.listAllCubes(projectName).contains(cube);
     }
-    
-    public ProjectInstance updateTableToProject(String tables, String newProjectName, String owner) throws IOException {
-       
-//        removeTableFromProjects(tables);
-        
-        return addTableToProject(tables, newProjectName, owner);
-    }    
 
-    public void removeTableFromProjects(String tableName) throws IOException {
-        for (ProjectInstance projectInstance : findProjects(tableName)) {
-            projectInstance.removeTable(tableName);
-            saveResource(projectInstance);
+    public ProjectInstance updateTableToProject(String tables,String projectName) throws IOException {
+        ProjectInstance projectInstance = getProject(projectName);
+        String[] tokens = StringUtils.split(tables, ",");
+        for (int i = 0; i < tokens.length; i++) {
+            String token = tokens[i].trim();
+            if (StringUtils.isNotEmpty(token)) {
+                projectInstance.addTable(token);
+            }
         }
+        
+        List<TableDesc> exposedTables = listExposedTables(projectName);
+        for(TableDesc table : exposedTables){
+            projectInstance.addTable(table.getName());
+        }
+        
+        saveResource(projectInstance);
+        return projectInstance;
     }
-    
+   
     
     public void removeCubeFromProjects(String cubeName) throws IOException {
         for (ProjectInstance projectInstance : findProjects(cubeName)) {
@@ -228,6 +233,30 @@ public class ProjectManager {
         return tables;
     }
 
+    
+    
+    public List<TableDesc> listDefinedTablesInProject(String project) throws IOException {
+        project = ProjectInstance.getNormalizedProjectName(project);
+        ProjectInstance projectInstance = getProject(project);
+        
+        //sync exposed table to project when list
+        List<TableDesc> exposedTables = listExposedTables(project);
+        for(TableDesc table : exposedTables){
+            projectInstance.addTable(table.getName());
+        }
+        saveResource(projectInstance);
+        
+        List<TableDesc> tables = Lists.newArrayList();
+        for (String table : projectInstance.getTables()) {
+            TableDesc tableDesc = getMetadataManager().getTableDesc(table);
+            if (tableDesc != null) {
+                tables.add(tableDesc);
+            }
+        }
+
+        return tables;
+    }   
+    
     public List<ColumnDesc> listExposedColumns(String project, String table) {
         project = ProjectInstance.getNormalizedProjectName(project);
 
@@ -441,29 +470,6 @@ public class ProjectManager {
         return newProject;
     }
     
-    private ProjectInstance addTableToProject(String tables, String project, String user) throws IOException {
-        String newProjectName = ProjectInstance.getNormalizedProjectName(project);
-        ProjectInstance newProject = getProject(newProjectName);
-        
-//        if (newProject == null) {
-//            newProject = this.createProject(newProjectName, user, "This is a project automatically added when adding table" + tableName);
-//        }
-//        
-        String[] tokens = StringUtils.split(tables, ",");
-        StringBuffer buff = new StringBuffer();
-        for (int i = 0; i < tokens.length; i++) {
-            String token = tokens[i].trim();
-            if (StringUtils.isNotEmpty(token)) {
-                buff.append(";");
-                buff.append("show table extended like " + token);
-            }
-            newProject.addTable(token);
-        }
-        saveResource(newProject);
-
-        return newProject;
-    }    
-
     private void saveResource(ProjectInstance proj) throws IOException {
         ResourceStore store = getStore();
         store.putResource(proj.getResourcePath(), proj, PROJECT_SERIALIZER);
