@@ -2,23 +2,24 @@ package com.kylinolap.storage.hbase.coprocessor;
 
 import com.kylinolap.storage.hbase.coprocessor.example.ExampleEndpoint;
 import com.kylinolap.storage.hbase.coprocessor.example.generated.ExampleProtos;
-import com.kylinolap.storage.hbase.coprocessor.example.generated.NodeProtos;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.HConnectionManager;
+import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.coprocessor.CoprocessorHost;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -39,10 +40,6 @@ public class ExampleEndpointTest {
 
     @BeforeClass
     public static void setupBeforeClass() throws Exception {
-
-
-
-
         TEST_UTIL = new HBaseTestingUtility();
         CONF = TEST_UTIL.getConfiguration();
         CONF.setStrings(CoprocessorHost.REGION_COPROCESSOR_CONF_KEY,
@@ -50,6 +47,7 @@ public class ExampleEndpointTest {
 
         TEST_UTIL.startMiniCluster();
         TEST_UTIL.createTable(TEST_TABLE, new byte[][] { TEST_FAMILY });
+
     }
 
     @AfterClass
