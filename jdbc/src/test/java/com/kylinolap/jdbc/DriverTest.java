@@ -1,4 +1,4 @@
-package com.kylinolap.kylin.jdbc;
+package com.kylinolap.jdbc;
 
 import static org.junit.Assert.*;
 
@@ -12,6 +12,8 @@ import java.util.Properties;
 
 import org.junit.Ignore;
 import org.junit.Test;
+
+import com.kylinolap.jdbc.Driver;
 
 /**
  * Unit test for Driver.

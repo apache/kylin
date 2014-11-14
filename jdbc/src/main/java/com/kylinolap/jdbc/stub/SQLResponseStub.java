@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kylinolap.kylin.jdbc.stub;
+package com.kylinolap.jdbc.stub;
 
 import java.io.Serializable;
 import java.util.List;
