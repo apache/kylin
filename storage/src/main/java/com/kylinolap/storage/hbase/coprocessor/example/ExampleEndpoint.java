@@ -76,7 +76,8 @@ public class ExampleEndpoint extends ExampleProtos.RowCountService
             if (scanner != null) {
                 try {
                     scanner.close();
-                } catch (IOException ignored) {}
+                } catch (IOException ignored) {
+                }
             }
         }
         done.run(response);
@@ -111,7 +112,8 @@ public class ExampleEndpoint extends ExampleProtos.RowCountService
             if (scanner != null) {
                 try {
                     scanner.close();
-                } catch (IOException ignored) {}
+                } catch (IOException ignored) {
+                }
             }
         }
         done.run(response);
@@ -123,14 +125,15 @@ public class ExampleEndpoint extends ExampleProtos.RowCountService
      * coprocessor is loaded.  Since this is a coprocessor endpoint, it always expects to be loaded
      * on a table region, so always expects this to be an instance of
      * {@link RegionCoprocessorEnvironment}.
+     *
      * @param env the environment provided by the coprocessor host
      * @throws IOException if the provided environment is not an instance of
-     * {@code RegionCoprocessorEnvironment}
+     *                     {@code RegionCoprocessorEnvironment}
      */
     @Override
     public void start(CoprocessorEnvironment env) throws IOException {
         if (env instanceof RegionCoprocessorEnvironment) {
-            this.env = (RegionCoprocessorEnvironment)env;
+            this.env = (RegionCoprocessorEnvironment) env;
         } else {
             throw new CoprocessorException("Must be loaded on a table region!");
         }
