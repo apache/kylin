@@ -15,6 +15,7 @@
  */
 package com.kylinolap.job;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
@@ -237,6 +238,10 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
             steps = new Vector<JobStep>();
         }
         return steps.iterator();
+    }
+
+    public void addSteps(Collection<JobStep> steps) {
+        this.getSteps().addAll(steps);
     }
 
     public void addSteps(JobStep step) {
