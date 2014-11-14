@@ -2,6 +2,7 @@ package com.kylinolap.job.coprocessor;
 
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.cube.invertedindex.IIKeyValueCodec;
+import com.kylinolap.job.hadoop.hbase.BulkLoadJob;
 import com.kylinolap.job.hadoop.invertedindex.IICreateHTableJob;
 import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 import com.kylinolap.storage.hbase.coprocessor.IIEndpoint;
@@ -24,8 +25,8 @@ import org.junit.Test;
  */
 public class IIEndpointTest {
 
-    private static final TableName TEST_TABLE = TableName.valueOf("II_cube_htable");
-    private static final byte[] TEST_COLUMN = Bytes.toBytes("col");
+    private static final TableName TEST_TABLE = TableName.valueOf("tt");
+    private static final byte[] TEST_COLUMN = Bytes.toBytes("f");
 
     private static HBaseTestingUtility TEST_UTIL = null;
     private static Configuration CONF = null;
@@ -42,6 +43,7 @@ public class IIEndpointTest {
         //create table and bulk load data
         TEST_UTIL.startMiniCluster();
         //TEST_UTIL.createTable(TEST_TABLE, new byte[][] { TEST_FAMILY });
+
 
 
         int sharding = 4;
@@ -63,9 +65,16 @@ public class IIEndpointTest {
         if (splitKeys.length == 0)
             splitKeys = null;
 
-        TEST_UTIL.createTable(tableDesc, splitKeys, CONF);
+        TEST_UTIL.createTable(tableDesc.getTableName(),TEST_COLUMN, splitKeys);
+
         HBaseAdmin hBaseAdmin = new HBaseAdmin(CONF);
-        hBaseAdmin.listTableNames();
+        TableName[] tables = hBaseAdmin.listTableNames();
+
+
+        //String temp = "-cubename \"test_kylin_cube_ii\"    -htablename \"test_III\"";
+        String temp  = "-cubename \"test_kylin_cube_ii\"  -input \"/tmp/test_III_hfile\"  -htablename \"test_III\""
+
+        ToolRunner.run(CONF,new BulkLoadJob(),)
     }
 
     //one region for one shard
