@@ -16,11 +16,11 @@
 
 package com.kylinolap.storage.hbase.observer;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 
+import com.kylinolap.dict.Dictionary;
 import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.storage.tuple.ITuple;
 
@@ -70,21 +70,10 @@ public class SRowTuple implements ITuple {
             return null;
 
         if (values[i] == null) {
-            values[i] = dictIdToString(rowkey.get(), rowkey.getOffset() + type.columnOffsets[i], type.columnSizes[i]);
+            values[i] = Dictionary.dictIdToString(rowkey.get(), rowkey.getOffset() + type.columnOffsets[i], type.columnSizes[i]);
         }
 
         return values[i];
-    }
-
-    // a special string encoding for dictionary ID that maintains order and
-    // equality
-    public static String dictIdToString(byte[] idBytes, int offset, int length) {
-        try {
-            return new String(idBytes, offset, length, "ISO-8859-1");
-        } catch (UnsupportedEncodingException e) {
-            // never happen
-            return null;
-        }
     }
 
     @Override

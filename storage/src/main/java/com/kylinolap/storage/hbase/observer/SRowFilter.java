@@ -154,14 +154,14 @@ public class SRowFilter {
                 for (int i = 0; i < id.length; i++) {
                     id[i] = Dictionary.NULL;
                 }
-                return SRowTuple.dictIdToString(id, 0, id.length);
+                return Dictionary.dictIdToString(id, 0, id.length);
             }
 
             private String translate(TblColRef column, String v, int roundingFlag) {
                 byte[] value = Bytes.toBytes(v);
                 byte[] id = new byte[columnIO.getColumnLength(column)];
                 columnIO.writeColumn(column, value, value.length, roundingFlag, Dictionary.NULL, id, 0);
-                return SRowTuple.dictIdToString(id, 0, id.length);
+                return Dictionary.dictIdToString(id, 0, id.length);
             }
 
         });

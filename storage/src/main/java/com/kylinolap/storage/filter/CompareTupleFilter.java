@@ -90,6 +90,10 @@ public class CompareTupleFilter extends TupleFilter {
     public Collection<String> getValues() {
         return conditionValues;
     }
+    
+    public String getFirstValue() {
+        return firstCondValue;
+    }
 
     public TblColRef getColumn() {
         return column;
@@ -183,6 +187,9 @@ public class CompareTupleFilter extends TupleFilter {
             break;
         case IN:
             result = conditionValues.contains(tupleValue);
+            break;
+        case NOTIN:
+            result = !conditionValues.contains(tupleValue);
             break;
         default:
             result = false;
