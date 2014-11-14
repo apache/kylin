@@ -8,6 +8,7 @@ KylinApp.factory('CubeService', ['$resource', function ($resource, config) {
         rebuildCube: {method: 'PUT', params: {action: 'rebuild'}, isArray: false},
         disable: {method: 'PUT', params: {action: 'disable'}, isArray: false},
         enable: {method: 'PUT', params: {action: 'enable'}, isArray: false},
+        purge: {method: 'PUT', params: {action: 'purge'}, isArray: false},
         drop: {method: 'DELETE', params: {}, isArray: false},
         save: {method: 'POST', params: {}, isArray: false},
         update: {method: 'PUT', params: {}, isArray: false},
