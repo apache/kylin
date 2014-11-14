@@ -16,14 +16,10 @@
 
 package com.kylinolap.rest.service;
 
-import java.io.IOException;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.quartz.SchedulerException;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -75,7 +71,4 @@ public class TestBase extends HBaseMetadataTestCase {
         this.cleanupTestMetadata();
     }
 
-    @Test
-    public void test() throws SchedulerException, IOException {
-    }
 }
