@@ -14,40 +14,15 @@
  * limitations under the License.
  */
 
-package com.kylinolap.kylin.jdbc.stub;
+package com.kylinolap.jdbc;
 
 /**
  * @author xduo
  * 
  */
-public class ConnectionException extends Exception {
+public class KylinJdbc40Factory extends KylinJdbc41Factory {
 
-    private static final long serialVersionUID = 1L;
-
-    public ConnectionException() {
-        super();
+    public KylinJdbc40Factory() {
+        super(4, 0);
     }
-
-    /**
-     * @param message
-     * @param cause
-     */
-    public ConnectionException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    /**
-     * @param message
-     */
-    public ConnectionException(String message) {
-        super(message);
-    }
-
-    /**
-     * @param cause
-     */
-    public ConnectionException(Throwable cause) {
-        super(cause);
-    }
-
 }

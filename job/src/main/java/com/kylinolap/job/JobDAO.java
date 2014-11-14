@@ -180,9 +180,10 @@ public class JobDAO {
             updatedJob.setType(jobInstance.getType());
 
             updatedJob.clearSteps();
-            for (int i = 0; i < jobInstance.getSteps().size(); i++) {
-                updatedJob.addStep(i, jobInstance.getSteps().get(i));
-            }
+            updatedJob.addSteps(jobInstance.getSteps());
+//            for (int i = 0; i < jobInstance.getSteps().size(); i++) {
+//                updatedJob.addSteps(i, jobInstance.getSteps().get(i));
+//            }
 
             saveJob(updatedJob);
         } catch (IOException e) {

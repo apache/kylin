@@ -97,6 +97,8 @@
                         <li><a ng-click="startMerge(cube)">Merge</a></li>
                         <li ng-if="cube.status!='DISABLED'"><a ng-click="disable(cube)">Disable</a></li>
                         <li ng-if="cube.status=='DISABLED'"><a ng-click="enable(cube)">Enable</a></li>
+                        <li ng-if="cube.status=='DISABLED'"><a ng-click="purge(cube)">Purge</a></li>
+
                     </ul>
                 </div>
                 <span ng-if="!(userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))">

@@ -1,4 +1,6 @@
-package com.kylinolap.kylin.jdbc;
+package com.kylinolap.jdbc;
+
+import com.kylinolap.jdbc.Driver;
 
 /**
  * @author xduo

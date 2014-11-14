@@ -1,4 +1,4 @@
-package com.kylinolap.kylin.jdbc;
+package com.kylinolap.jdbc;
 
 import java.sql.Types;
 import java.util.ArrayList;
@@ -9,14 +9,16 @@ import net.hydromatic.avatica.ColumnMetaData;
 import net.hydromatic.avatica.ColumnMetaData.Rep;
 import net.hydromatic.linq4j.Enumerator;
 
-import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaCatalog;
-import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaColumn;
-import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaProject;
-import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaSchema;
-import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaTable;
-import com.kylinolap.kylin.jdbc.stub.ConnectionException;
-import com.kylinolap.kylin.jdbc.stub.DataSet;
-import com.kylinolap.kylin.jdbc.stub.RemoteClient;
+import com.kylinolap.jdbc.KylinConnectionImpl;
+import com.kylinolap.jdbc.KylinEnumerator;
+import com.kylinolap.jdbc.KylinMetaImpl.MetaCatalog;
+import com.kylinolap.jdbc.KylinMetaImpl.MetaColumn;
+import com.kylinolap.jdbc.KylinMetaImpl.MetaProject;
+import com.kylinolap.jdbc.KylinMetaImpl.MetaSchema;
+import com.kylinolap.jdbc.KylinMetaImpl.MetaTable;
+import com.kylinolap.jdbc.stub.ConnectionException;
+import com.kylinolap.jdbc.stub.DataSet;
+import com.kylinolap.jdbc.stub.RemoteClient;
 
 /**
  * @author xduo
