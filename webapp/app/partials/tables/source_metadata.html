@@ -25,7 +25,7 @@
     </div>
     <!--Tab-->
     <div class="col-xs-9">
-        <h3 class="text-info">Table Schema: {{ selectedSrcTable.name}}</h3>
+        <h3 class="text-info">Table Schema:{{ selectedSrcTable.name}}</h3>
         <div class="tabbable nav-tabs-custom">
             <ul class="nav nav-tabs">
                 <li class="active">
@@ -151,7 +151,8 @@
                 <h4>Load Hive Table Metadata</h4>
             </div>
             <div class="modal-body">
-                <label for="tables">Table Names:(Seperate with comma)</label>
+                <span><strong>Project: </strong>{{ $parent.projectName }}</span>
+                <label for="tables"> Table Names:(Seperate with comma)</label>
                 <textarea ng-model="$parent.tableNames" class="form-control" id="tables"
                           placeholder="table1,table2"></textarea>
             </div>

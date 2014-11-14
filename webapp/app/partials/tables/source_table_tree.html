@@ -7,14 +7,18 @@
                     ng-model="selectedSrcDb"
                     ng-options="tables as srcDb for (srcDb, tables) in srcTables">
                 </select>
+
             </div>
+
             <!--button-->
-            <div class="col-xs-5">
+            <div class="col-xs-5" style="padding-left: 0px;">
+                <span ng-show="hiveTbLoad.status==='loading'" class="ng-hide"><img src="../../image/ajax-loader.gif"> Loading...</span>
                 <div class="pull-right">
-                    <a class="btn btn-xs btn-primary" tooltip="Load Hive Table" ng-click="openModal()"><i class="fa fa-download"></i></a>
-                    <a class="btn btn-xs btn-success" tooltip="Refresh Tables" ng-click="aceSrcTbChanged()"><i class="fa fa-refresh"></i></a>
+                    <a class="btn btn-xs btn-primary" ng-disabled="hiveTbLoad.status==='loading'" tooltip="Load Hive Table" ng-click="openModal()"><i class="fa fa-download"></i></a>
+                    <a class="btn btn-xs btn-success" ng-disabled="hiveTbLoad.status==='loading'" tooltip="Refresh Tables" ng-click="aceSrcTbChanged()"><i class="fa fa-refresh"></i></a>
                 </div>
             </div>
+
         </div>
         <div class="space-4"></div>
         <!--tree-->
