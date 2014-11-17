@@ -19,6 +19,7 @@ package com.kylinolap.rest.service;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -35,18 +36,18 @@ import com.kylinolap.metadata.MetadataManager;
 
 /**
  * @author xduo
- * 
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:applicationContext.xml", "classpath:kylinSecurity.xml" })
 @ActiveProfiles("testing")
 public class TestBase extends HBaseMetadataTestCase {
 
+
     @BeforeClass
     public static void setupResource() throws Exception {
-        
+
         staticCreateTestMetadata();
-        
+
         Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", "ROLE_ADMIN");
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
@@ -71,4 +72,11 @@ public class TestBase extends HBaseMetadataTestCase {
         this.cleanupTestMetadata();
     }
 
+    /**
+     * better keep this method, otherwise cause error
+     * com.kylinolap.rest.service.TestBase.initializationError
+     */
+    @Test
+    public void test() {
+    }
 }
