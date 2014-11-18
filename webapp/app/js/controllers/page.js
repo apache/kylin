@@ -42,11 +42,11 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
     Messenger.options = {
         extraClasses: 'messenger-fixed messenger-on-bottom messenger-on-right',
         theme: 'air'
-    }
+    };
 
     $scope.getInt = function (ivalue) {
         return parseInt(ivalue);
-    }
+    };
 
     $scope.getLength = function (obj) {
         if (!obj) {
@@ -57,7 +57,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
             if (obj.hasOwnProperty(key)) size++;
         }
         return size;
-    }
+    };
 
     // common acl methods
     $scope.hasPermission = function (entity) {
@@ -86,7 +86,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
         }
 
         return hasPermission;
-    }
+    };
 
     $scope.listAccess = function (entity, type) {
         var defer = $q.defer();
@@ -99,7 +99,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
         });
 
         return defer.promise;
-    }
+    };
 
     // Compute data size so as to auto convert to KB/MB/GB/TB)
     $scope.dataSize = function (data) {
@@ -114,7 +114,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
             size = (data/1024).toFixed(2) + ' KB';
         }
         return size;
-    }
+    };
 
 
 
