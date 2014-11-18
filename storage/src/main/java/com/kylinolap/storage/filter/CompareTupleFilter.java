@@ -64,8 +64,7 @@ public class CompareTupleFilter extends TupleFilter {
                 throw new IllegalStateException("Duplicate columns! old is " + column.getName() + " and new is " + columnFilter.getColumn().getName());
             }
             this.column = columnFilter.getColumn();
-            // if value is before column, we need to reverse the operator. e.g.
-            // "1 >= c1" => "c1 <= 1"
+            // if value is before column, we need to reverse the operator. e.g. "1 >= c1" => "c1 <= 1"
             if (!this.conditionValues.isEmpty() && needSwapOperator()) {
                 this.operator = SWAP_OP_MAP.get(this.operator);
             }

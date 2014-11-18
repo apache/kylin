@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.kylin.jdbc.stub;
+package com.kylinolap.jdbc.stub;
 
 import java.sql.DatabaseMetaData;
 

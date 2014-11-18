@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.kylinolap.kylin.jdbc.stub;
+package com.kylinolap.jdbc.stub;
 
 import java.sql.SQLException;
 
 import net.hydromatic.avatica.AvaticaStatement;
 
-import com.kylinolap.kylin.jdbc.KylinMetaImpl.MetaProject;
+import com.kylinolap.jdbc.KylinMetaImpl.MetaProject;
 
 /**
  * Remote query stub of kylin restful service
