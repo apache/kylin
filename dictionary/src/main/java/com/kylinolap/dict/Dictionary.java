@@ -16,8 +16,11 @@
 package com.kylinolap.dict;
 
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 
 import org.apache.hadoop.io.Writable;
+
+import com.kylinolap.common.util.BytesUtil;
 
 /**
  * A bi-way dictionary that maps from dimension/column values to IDs and vice
@@ -155,4 +158,24 @@ abstract public class Dictionary<T> implements Writable {
         return (nullId & id) == nullId;
     }
 
+    /** utility that converts a dictionary ID to string, preserving order */
+    public static String dictIdToString(byte[] idBytes, int offset, int length) {
+        try {
+            return new String(idBytes, offset, length, "ISO-8859-1");
+        } catch (UnsupportedEncodingException e) {
+            // never happen
+            return null;
+        }
+    }
+
+    /** the reverse of dictIdToString(), returns integer ID */
+    public static int stringToDictId(String str) {
+        try {
+            byte[] bytes = str.getBytes("ISO-8859-1");
+            return BytesUtil.readUnsigned(bytes, 0, bytes.length);
+        } catch (UnsupportedEncodingException e) {
+            // never happen
+            return 0;
+        }
+    }
 }
