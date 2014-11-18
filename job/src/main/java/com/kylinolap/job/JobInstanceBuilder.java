@@ -16,11 +16,9 @@
 package com.kylinolap.job;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,9 +62,9 @@ public class JobInstanceBuilder {
         init(jobInstance);
         switch (jobInstance.getType()) {
         case BUILD:
-            return buildCreateBuildCubeSegmentSteps(jobInstance);
+            return createBuildCubeSegmentSteps(jobInstance);
         case MERGE:
-            return buildCreateMergeCubeSegmentsSteps(jobInstance);
+            return createMergeCubeSegmentsSteps(jobInstance);
         default:
             throw new IllegalArgumentException("job type:" + jobInstance.getType() + " not supported");
         }
@@ -145,7 +143,7 @@ public class JobInstanceBuilder {
         return jobWorkingDir + "/" + cubeName + "/rowkey_stats";
     }
 
-    private List<JobStep> buildCreateMergeCubeSegmentsSteps(JobInstance jobInstance) throws IOException {
+    private List<JobStep> createMergeCubeSegmentsSteps(JobInstance jobInstance) throws IOException {
 
         if (cube.getMergingSegments() == null || cube.getMergingSegments().size() < 2) {
             throw new IllegalArgumentException("Merging segments count should be more than 2");
@@ -187,7 +185,7 @@ public class JobInstanceBuilder {
         return result;
     }
 
-    private List<JobStep> buildCreateBuildCubeSegmentSteps(JobInstance jobInstance) throws IOException {
+    private List<JobStep> createBuildCubeSegmentSteps(JobInstance jobInstance) throws IOException {
 
         // clear existing steps
 //        jobInstance.clearSteps();
