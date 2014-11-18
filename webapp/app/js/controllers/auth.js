@@ -18,7 +18,6 @@ KylinApp.controller('LoginCtrl', function ($scope, $rootScope, $location, $base6
             return;
         }
 
-        $scope.username = $scope.username.toUpperCase();
         AuthenticationService.login({}, {}, function (data) {
             $scope.loading = false;
             $rootScope.$broadcast('event:loginConfirmed');
