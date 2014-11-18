@@ -188,8 +188,8 @@ public class ProjectInstance extends RootPersistentEntity {
 
     //will return new Set for null
     public Set<String> getTables() {
-        return tables==null?new TreeSet<String>():tables;
-    }
+        tables = tables==null?new TreeSet<String>():tables;
+        return tables;    }
 
     public String getOwner() {
         return owner;
