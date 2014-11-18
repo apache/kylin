@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.kylin.jdbc;
+package com.kylinolap.jdbc;
 
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -33,8 +33,8 @@ import net.hydromatic.avatica.AvaticaStatement;
 import net.hydromatic.avatica.ColumnMetaData;
 import net.hydromatic.avatica.UnregisteredDriver;
 
-import com.kylinolap.kylin.jdbc.stub.KylinClient;
-import com.kylinolap.kylin.jdbc.stub.RemoteClient;
+import com.kylinolap.jdbc.stub.KylinClient;
+import com.kylinolap.jdbc.stub.RemoteClient;
 
 /**
  * Kylin JDBC factory.
