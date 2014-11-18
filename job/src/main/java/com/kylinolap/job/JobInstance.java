@@ -224,7 +224,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         this.mrWaiting = mrWaiting;
     }
 
-    List<JobStep> getSteps() {
+    public List<JobStep> getSteps() {
         if (steps == null) {
             steps = Lists.newArrayList();
         }

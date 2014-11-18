@@ -5,7 +5,7 @@
             <b>Fact Table</b>
         </label>
         <div class="col-xs-12 col-sm-6">
-            <typeahead ng-if="state.mode=='edit'" items="srcTables" prompt="Fact Table Name.."
+            <typeahead ng-if="state.mode=='edit'" items="srcTablesInProject" prompt="Fact Table Name.."
                        title="name" model="cubeMetaFrame.fact_table" required="true"></typeahead>
             <span ng-if="state.mode=='view'">{{cubeMetaFrame.fact_table}}</span>
         </div>
@@ -137,7 +137,7 @@
                         <div class="row">
                             <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Table Name</b></label>
                             <div class="col-xs-12 col-sm-6">
-                                <typeahead ng-if="state.mode=='edit'" items="srcTables"
+                                <typeahead ng-if="state.mode=='edit'" items="srcTablesInProject"
                                            prompt="Table Name.." title="name" model="newDimension.table" required="true"></typeahead>
                             </div>
                         </div>

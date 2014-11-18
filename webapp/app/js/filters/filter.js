@@ -54,7 +54,6 @@ KylinApp
             }
         }
     })
-
     .filter('range', function () {
         return function (input, total) {
             total = parseInt(total);
@@ -79,10 +78,10 @@ KylinApp
             return (bytes / Math.pow(1024, Math.floor(number))).toFixed(precision) +  ' ' + units[number];
         }
     }).filter('resizePieHeight',function(){
-    return function(item){
-        if(item<150){
+        return function(item){
+            if(item<150){
+                return 1300;
+            }
             return 1300;
         }
-        return 1300;
-    }
     });

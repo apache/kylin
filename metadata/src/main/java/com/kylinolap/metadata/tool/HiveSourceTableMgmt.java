@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -39,6 +40,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceTool;
 import com.kylinolap.common.util.JsonUtil;
+import com.kylinolap.common.util.SSHClient;
+import com.kylinolap.common.util.SSHClientOutput;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
 
@@ -331,7 +334,6 @@ public class HiveSourceTableMgmt {
             cmd[0] = "/bin/bash";
             cmd[1] = "-c";
         }
-
         // hive command output
         // String hiveOutputPath = tempDir + File.separator +
         // "tmp_kylin_output";
@@ -341,37 +343,58 @@ public class HiveSourceTableMgmt {
         dir.delete();
         dir.mkdir();
         String tableMetaOutcomeDir = dir.getAbsolutePath();
-
-        ProcessBuilder pb = null;
-
+        
         if (osName.startsWith("Windows")) {
-            pb = new ProcessBuilder(cmd[0], cmd[1], "ssh root@sandbox 'hive -e \"" + hiveCommd + "\"' > " + hiveOutputPath);
+//            pb = new ProcessBuilder(cmd[0], cmd[1], "ssh root@sandbox 'hive -e \"" + hiveCommd + "\"' > " + hiveOutputPath);
+            SSHClient client = new SSHClient("sandbox", "root", "hadoop", null);
+            SSHClientOutput output  = null;
+            try {
+            output =  client.execCommand("hive -e \"" + hiveCommd + "\" 2>/dev/null");
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                logger.error("Failed to execute hive cmd", e);
+                e.printStackTrace();
+            }
+            
+            FileWriter fw = null;
+            try {
+                fw = new FileWriter(hiveOutputPath);
+                fw.write(output.getText());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            } finally {
+                if (fw != null) {
+                    fw.close();
+                    fw = null;
+                }
+            }
+            
         } else {
+            ProcessBuilder pb = null;
             pb = new ProcessBuilder(cmd[0], cmd[1], "hive -e \"" + hiveCommd + "\" > " + hiveOutputPath);
+            // Run hive
+            pb.directory(new File(tempDir));
+            pb.redirectErrorStream(true);
+            Process p = pb.start();
+            InputStream is = p.getInputStream();
+            InputStreamReader isr = new InputStreamReader(is);
+            BufferedReader br = null;
+
+            try {
+                br = new BufferedReader(isr);
+                String line = null;
+                logger.info("Execute : " + pb.command().get(0));
+                while ((line = br.readLine()) != null) {
+                    logger.info(line);
+                }
+            } finally {
+                if (null != br) {
+                    br.close();
+                }
+            }
         }
 
-        // Run hive
-        pb.directory(new File(tempDir));
-        pb.redirectErrorStream(true);
-        Process p = pb.start();
-        InputStream is = p.getInputStream();
-        InputStreamReader isr = new InputStreamReader(is);
-        BufferedReader br = null;
-
-        try {
-            br = new BufferedReader(isr);
-            String line = null;
-            logger.info("Execute : " + pb.command().get(0));
-            while ((line = br.readLine()) != null) {
-                logger.info(line);
-            }
-        } finally {
-            if (null != br) {
-                br.close();
-            }
-        }
         logger.info("Hive execution completed!");
-
         HiveSourceTableMgmt rssMgmt = new HiveSourceTableMgmt();
         rssMgmt.extractTableDescFromFile(hiveOutputPath, tableMetaOutcomeDir);
         return tableMetaOutcomeDir;
