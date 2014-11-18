@@ -1,12 +1,15 @@
 'use strict';
 
 KylinApp
-    .controller('SourceMetaCtrl', function ($scope, $q, $window, $routeParams, CubeService, $modal, TableService) {
+    .controller('SourceMetaCtrl', function ($scope, $q, $window, $routeParams, CubeService, $modal, TableService,$route) {
         $scope.srcTables = {};
         $scope.srcDbs = [];
         $scope.selectedSrcDb = {};
         $scope.selectedSrcTable = {};
         $scope.window = 0.68 * $window.innerHeight;
+        $scope.hiveTbLoad = {
+            status:'init'
+        };
         $scope.theaditems = [
             {attr: 'id', name: 'ID'},
             {attr: 'name', name: 'Name'},
@@ -26,10 +29,17 @@ KylinApp
        };
 
         $scope.aceSrcTbLoaded = function (forceLoad) {
+            $scope.srcTables = {};
+            $scope.selectedSrcDb = {};
+            delete $scope.selectedSrcTable;
+            $scope.selectedSrcTable = {};
             var defer = $q.defer();
 
             $scope.loading = true;
-            var param = {ext: true};
+            var param = {
+                ext: true,
+                project:$scope.project.selectedProject
+            };
             if (forceLoad)
             {
                 param.timestamp = new Date().getTime();
@@ -57,7 +67,13 @@ KylinApp
                     obj.sort(innerSort);
                 }
 
-                $scope.selectedSrcDb = $scope.srcTables['DEFAULT'];
+                for (var key in  $scope.srcTables) {
+                    $scope.selectedSrcDb = $scope.srcTables['DEFAULT'];
+                    if(!$scope.selectedSrcDb){
+                        $scope.selectedSrcDb = $scope.srcTables[key];
+                    }
+                    break;
+                }
                 $scope.loading = false;
                 defer.resolve();
             });
@@ -65,7 +81,18 @@ KylinApp
             return defer.promise;
         }
 
-        $scope.aceSrcTbLoaded();
+        $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+            if(newValue){
+                $scope.aceSrcTbLoaded();
+            }
+
+        });
+        $scope.$watch('hiveTbLoad.status', function (newValue, oldValue) {
+            if(newValue=="success"){
+                $scope.aceSrcTbLoaded(true);
+            }
+
+        });
 
         $scope.showSelected = function (table) {
             if (table.uuid) {
@@ -104,7 +131,13 @@ KylinApp
                 controller: ModalInstanceCtrl,
                 resolve: {
                     tableNames: function () {
-                        return $scope.tableNames;
+                      return $scope.tableNames;
+                    },
+                    projectName:function(){
+                      return  $scope.project.selectedProject;
+                    },
+                    hiveTbLoad:function(){
+                      return $scope.hiveTbLoad;
                     },
                     scope: function () {
                         return $scope;
@@ -113,15 +146,19 @@ KylinApp
             });
         }
 
-        var ModalInstanceCtrl = function ($scope, $modalInstance, tableNames, MessageService) {
+        var ModalInstanceCtrl = function ($scope,$location, $modalInstance, tableNames, MessageService,projectName,hiveTbLoad) {
+            hiveTbLoad.status = "init";
             $scope.tableNames = "";
+            $scope.projectName = projectName;
             $scope.cancel = function () {
                 $modalInstance.dismiss('cancel');
             };
             $scope.add = function () {
-                $modalInstance.dismiss();
+                hiveTbLoad.status="loading";
                 MessageService.sendMsg('A sync task has been submitted, it might take 20 - 60 seconds', 'success', {});
-                TableService.loadHiveTable({tableName: $scope.tableNames}, {}, function (result) {
+                $scope.cancel();
+                TableService.loadHiveTable({tableName: $scope.tableNames,action:projectName}, {}, function (result) {
+                    hiveTbLoad.status = "success";
                     MessageService.sendMsg('Below tables were synced successfully: ' + result['result'].join() + ', Click Refresh button ...', 'success', {});
                 });
             }

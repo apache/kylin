@@ -19,7 +19,6 @@
         <hbase-hadoop2.version>0.98.0-hadoop2</hbase-hadoop2.version>
         <zookeeper.version>3.4.5</zookeeper.version>
         <hive.version>0.13.0</hive.version>
-        <lzo.version>1.0.0</lzo.version>
 
         <!-- Dependency versions -->
         <antlr.version>3.4</antlr.version>
@@ -320,12 +319,6 @@
                 <groupId>org.quartz-scheduler</groupId>
                 <artifactId>quartz-jobs</artifactId>
                 <version>${quartz.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.anarres.lzo</groupId>
-                <artifactId>lzo-hadoop</artifactId>
-                <version>${lzo.version}</version>
             </dependency>
 
             <dependency>
