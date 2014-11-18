@@ -135,7 +135,6 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
             TblColRef col = cuboid.getColumns().get(i);
 
             if (this.checkNeedMerging(col)) {
-                System.out.println("The col is " + col);
                 // if dictionary on fact table column, needs rewrite
                 DictionaryManager dictMgr = DictionaryManager.getInstance(config);
                 Dictionary<?> sourceDict = dictMgr.getDictionary(sourceCubeSegment.getDictResPath(col));
