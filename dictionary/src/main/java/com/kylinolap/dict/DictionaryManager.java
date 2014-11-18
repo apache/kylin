@@ -79,6 +79,7 @@ public class DictionaryManager {
     }
 
     public Dictionary<?> getDictionary(String resourcePath) throws IOException {
+        logger.info("Getting dictionary: " + resourcePath);
         DictionaryInfo dictInfo = getDictionaryInfo(resourcePath);
         return dictInfo == null ? null : dictInfo.getDictionaryObject();
     }
