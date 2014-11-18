@@ -18,7 +18,6 @@ package com.kylinolap.rest.service;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.AccessControlEntry;
@@ -41,7 +40,7 @@ public class AccessServiceTest extends TestBase {
     AccessService accessService;
 
     @Test
-    public void testBasics() throws JsonProcessingException, SchedulerException {
+    public void testBasics() throws JsonProcessingException {
         Sid adminSid = accessService.getSid("ADMIN", true);
         Assert.assertNotNull(adminSid);
         Assert.assertNotNull(AclPermissionFactory.getPermissions());
