@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.kylin.jdbc;
+package com.kylinolap.jdbc;
 
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
@@ -43,10 +43,10 @@ import org.eigenbase.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kylinolap.kylin.jdbc.stub.DataSet;
-import com.kylinolap.kylin.jdbc.stub.KylinColumnMetaData;
-import com.kylinolap.kylin.jdbc.stub.RemoteClient;
-import com.kylinolap.kylin.jdbc.util.SQLTypeMap;
+import com.kylinolap.jdbc.stub.DataSet;
+import com.kylinolap.jdbc.stub.KylinColumnMetaData;
+import com.kylinolap.jdbc.stub.RemoteClient;
+import com.kylinolap.jdbc.util.SQLTypeMap;
 
 /**
  * Implementation of avatica interface

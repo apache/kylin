@@ -35,7 +35,7 @@ public class CacheIntercaptor {
     public void flush(JoinPoint joinPoint) {
         String methodName = joinPoint.getSignature().getName();
 
-        if (methodName.matches("(update|create|save|disable|enable|delete|drop)")) {
+        if (methodName.matches("(update|create|save|disable|enable|delete|drop|purge)")) {
             Broadcaster.flush();
         }
     }
