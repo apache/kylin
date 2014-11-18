@@ -40,16 +40,13 @@ import com.kylinolap.metadata.validation.ValidateContext;
 /**
  * Validate function parameter. Ticket:
  * https://github.scm.corp.ebay.com/Kylin/Kylin/issues/268
- * 
+ * <p/>
  * if type is column, check values are valid fact table columns if type is
  * constant, the value only can be numberic
- * 
+ * <p/>
  * the return type only can be int/bigint/long/double/decimal
- * 
- * 
- * 
+ *
  * @author jianliu
- * 
  */
 public class FunctionRule implements IValidatorRule<CubeDesc> {
 
@@ -159,6 +156,7 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
         TableDesc table = MetadataManager.getInstance(cube.getConfig()).getTableDesc(factTable);
         if (table == null) {
             context.addResult(ResultLevel.ERROR, "Fact table can not be found: " + cube);
+            return;
         }
         // Prepare column set
         Set<String> set = new HashSet<String>();

@@ -113,12 +113,6 @@ public class OLAPSortRel extends SortRel implements EnumerableRel, OLAPRel {
         return null;
     }
 
-    /**
-     * NOTE: We can't use EnumerableSortRel directly since it will check the
-     * convention of child. We have to copy the code from
-     * EnumerableSortRel.implement(). So, We need to check the code during
-     * upgrade.
-     */
     @Override
     public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
         OLAPRel childRel = (OLAPRel) getChild();

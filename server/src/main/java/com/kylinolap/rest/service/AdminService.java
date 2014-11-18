@@ -36,7 +36,6 @@ import com.kylinolap.rest.exception.InternalErrorException;
 
 /**
  * @author jianliu
- * 
  */
 @Component("adminService")
 public class AdminService extends BasicService {
@@ -44,7 +43,7 @@ public class AdminService extends BasicService {
 
     /**
      * Get Java Env info as string
-     * 
+     *
      * @return
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
@@ -59,28 +58,32 @@ public class AdminService extends BasicService {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             // env
             Map<String, String> env = System.getenv();
-            for (String envName : env.keySet()) {
-                tempConfig.addProperty(envName, env.get(envName));
+
+            for (Map.Entry<String, String> entry : env.entrySet()) {
+                tempConfig.addProperty(entry.getKey(), entry.getValue());
             }
+
             // properties
-            Properties properteis = System.getProperties();
-            for (Object propName : properteis.keySet()) {
-                tempConfig.setProperty((String) propName, properteis.get(propName));
+            Properties proterties = System.getProperties();
+
+            for(Map.Entry<Object,Object> entry : proterties.entrySet())
+            {
+                tempConfig.setProperty((String) entry.getKey(), entry.getValue());
             }
+
 
             // do save
             tempConfig.save(baos);
             content = baos.toString();
             return content;
         } catch (ConfigurationException e) {
-            logger.debug("Failed to get Kylin Runtime env", e);
             throw new InternalErrorException("Failed to get Kylin env Config", e);
         }
     }
 
     /**
      * Get Java config info as String
-     * 
+     *
      * @return
      */
     // @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
@@ -90,7 +93,6 @@ public class AdminService extends BasicService {
         try {
             return KylinConfig.getInstanceFromEnv().getConfigAsString();
         } catch (IOException e) {
-            logger.debug("Failed to get Kylin Runtime Config", e);
             throw new InternalErrorException("Failed to get Kylin Runtime Config", e);
         }
     }
@@ -101,8 +103,7 @@ public class AdminService extends BasicService {
         try {
             ToolRunner.run(job, args);
         } catch (Exception e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e);
+            throw new InternalErrorException(e.getMessage(), e);
         }
     }
 }

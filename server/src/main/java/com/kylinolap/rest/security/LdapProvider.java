@@ -64,7 +64,7 @@ public class LdapProvider extends LdapAuthenticationProvider {
         try {
             md = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException e) {
-            logger.error("Failed to init Message Digest ", e);
+            throw new RuntimeException("Failed to init Message Digest ", e);
         }
     }
 
@@ -91,14 +91,10 @@ public class LdapProvider extends LdapAuthenticationProvider {
 
             UserDetails user = new User(authentication.getName(), "skippped-ldap", authed.getAuthorities());
 
-            try {
-                if (!userService.userExists(authentication.getName())) {
-                    userService.createUser(user);
-                } else {
-                    userService.updateUser(user);
-                }
-            } catch (Exception e) {
-                logger.error(e.getLocalizedMessage(), e);
+            if (!userService.userExists(authentication.getName())) {
+                userService.createUser(user);
+            } else {
+                userService.updateUser(user);
             }
         }
 

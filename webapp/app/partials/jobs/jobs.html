@@ -11,7 +11,7 @@
             </select>
             <!--Project-->
             <a class="btn btn-xs btn-info" href="/projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
-            <a class="btn btn-xs btn-primary" style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
+            <a class="btn btn-xs btn-primary" style="width: 29px"  ng-if="userService.hasRole('ROLE_MODELER')"  tooltip="Add Project" ng-click="toCreateProj()">
                 <i class="fa fa-plus"></i>
             </a>
         </div>
@@ -95,7 +95,7 @@
                             </div>
                             <div ng-switch-when="PENDING">
                                 <progressbar class="progress-striped active" value="job.progress"
-                                             type="info">{{job.job_status}}
+                                             type="pending">{{job.job_status}}
                                 </progressbar>
                             </div>
                             <div ng-switch-when="RUNNING">

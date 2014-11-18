@@ -65,7 +65,7 @@ abstract public class RootPersistentEntity implements AclEntity {
         return lastModified;
     }
 
-    void setLastModified(long lastModified) {
+    public void setLastModified(long lastModified) {
         this.lastModified = lastModified;
     }
 

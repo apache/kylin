@@ -24,7 +24,7 @@ import com.kylinolap.common.KylinConfig;
  */
 public abstract class AbstractKylinTestCase {
 
-    public final String testDataFolder = "../examples/test_case_data";
+    public static final String TEST_DATA_FOLDER = "../examples/test_case_data";
 
     public abstract void createTestMetadata();
 

@@ -73,7 +73,7 @@ public abstract class BasicService {
         olapDataSources.remove(project);
     }
 
-    public void resetOLAPDataSources() {
+    public static void resetOLAPDataSources() {
         // brutal, yet simplest way
         logger.info("resetOLAPDataSources is called.");
         olapDataSources = new ConcurrentHashMap<String, DataSource>();
@@ -96,7 +96,7 @@ public abstract class BasicService {
                 for (String line : text)
                     logger.debug(line);
             } catch (IOException e) {
-                e.printStackTrace();
+                e.printStackTrace(); // logging failure is not critical
             }
 
             DriverManagerDataSource ds = new DriverManagerDataSource();
@@ -124,7 +124,7 @@ public abstract class BasicService {
     public void cleanDataCache() {
         CubeManager.removeInstance(getConfig());
         ProjectManager.removeInstance(getConfig());
-        this.resetOLAPDataSources();
+        BasicService.resetOLAPDataSources();
     }
 
     /**

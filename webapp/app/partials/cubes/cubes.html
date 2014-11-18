@@ -1,5 +1,6 @@
 <div class="page-header">
     <!--Project-->
+<<<<<<< HEAD
     <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
         <div class="form-group">
             <span><b>Project: </b></span>
@@ -16,6 +17,21 @@
             </a>
         </div>
     </form>
+=======
+    <span>
+        Project:
+        <select chosen ng-model="listParams.projectName" ng-init="newAccess.permission=permissions.READ.value"
+                ng-options="project as project for project in projects"
+                style="width: 150px" ng-change="cubes=[];reload()"
+                class="chosen-select">
+            <option value="">-- All Projects --</option>
+        </select>
+    </span>
+    <a class="btn btn-xs btn-info" href="/projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
+    <a class="btn btn-xs btn-primary" style="width: 29px" ng-if="userService.hasRole('ROLE_MODELER')" tooltip="Add Project" ng-click="toCreateProj()">
+        <i class="fa fa-plus"></i>
+    </a>
+>>>>>>> 5a19293e191a7ee2b8a4c6aed5013d90ea64725b
     <!--Cube Name-->
     <span style="padding-left: 40px" >
         <form ng-submit="cubes=[];list()" style="display: inline" >
@@ -27,7 +43,7 @@
     </span>
     <div class="pull-right">
         <a class="btn btn-primary btn-sm" href="/cubes/add/json" ng-if="userService.hasRole('ROLE_ADMIN')"><i class="fa fa-pencil-square-o"></i> Json Editor</a>
-        <a class="btn btn-primary btn-sm" href="/cubes/add" id="addCubeButton"><i class="fa fa-plus"></i> Cube</a>
+        <a class="btn btn-primary btn-sm" href="/cubes/add"  ng-if="userService.hasRole('ROLE_MODELER')" id="addCubeButton"><i class="fa fa-plus"></i> Cube</a>
     </div>
 </div>
 
@@ -100,6 +116,8 @@
                         <li><a ng-click="startMerge(cube)">Merge</a></li>
                         <li ng-if="cube.status!='DISABLED'"><a ng-click="disable(cube)">Disable</a></li>
                         <li ng-if="cube.status=='DISABLED'"><a ng-click="enable(cube)">Enable</a></li>
+                        <li ng-if="cube.status=='DISABLED'"><a ng-click="purge(cube)">Purge</a></li>
+
                     </ul>
                 </div>
                 <span ng-if="!(userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))">

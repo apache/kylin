@@ -37,7 +37,6 @@ import com.kylinolap.storage.tuple.ITupleIterator;
 
 /**
  * @author xjiang
- * 
  */
 public class SerializedHBaseTupleIterator implements ITupleIterator {
 
@@ -59,9 +58,8 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
 
         this.segmentIteratorList = new ArrayList<CubeSegmentTupleIterator>(segmentKeyRanges.size());
         Map<CubeSegment, List<HBaseKeyRange>> rangesMap = makeRangesMap(segmentKeyRanges);
-        for (CubeSegment cubeSeg : rangesMap.keySet()) {
-            List<HBaseKeyRange> keyRanges = rangesMap.get(cubeSeg);
-            CubeSegmentTupleIterator segIter = new CubeSegmentTupleIterator(cubeSeg, keyRanges, conn, dimensions, filter, groupBy, rowValueDecoders, context);
+        for (Map.Entry<CubeSegment, List<HBaseKeyRange>> entry : rangesMap.entrySet()) {
+            CubeSegmentTupleIterator segIter = new CubeSegmentTupleIterator(entry.getKey(), entry.getValue(), conn, dimensions, filter, groupBy, rowValueDecoders, context);
             this.segmentIteratorList.add(segIter);
         }
 

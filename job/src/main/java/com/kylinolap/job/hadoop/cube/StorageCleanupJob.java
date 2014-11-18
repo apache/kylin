@@ -18,11 +18,16 @@ package com.kylinolap.job.hadoop.cube;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
+import com.kylinolap.common.util.StringUtil;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -48,7 +53,6 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**
  * @author ysong1
- * 
  */
 public class StorageCleanupJob extends AbstractHadoopJob {
 
@@ -96,16 +100,31 @@ public class StorageCleanupJob extends AbstractHadoopJob {
 
     }
 
+
     private void cleanUnusedHBaseTables(Configuration conf) throws MasterNotRunningException, ZooKeeperConnectionException, IOException {
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
 
         // get all kylin hbase tables
         HBaseAdmin hbaseAdmin = new HBaseAdmin(conf);
-        String tableNamePrefix = cubeMgr.getHBaseStorageLocationPrefix();
+        String tableNamePrefix = CubeManager.getHBaseStorageLocationPrefix();
         HTableDescriptor[] tableDescriptors = hbaseAdmin.listTables(tableNamePrefix + ".*");
+
+        int count = 0;
         List<String> allTablesNeedToBeDropped = new ArrayList<String>();
         for (HTableDescriptor desc : tableDescriptors) {
-            allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
+            String host = desc.getValue(CubeManager.getHtableMetadataKey());
+
+            if (StringUtils.isEmpty(host)) {
+                allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
+            } else {
+                System.out.println("Htable " + desc.getTableName() + " is excluded because its host is " + host + " id is " + (++count));
+            }
+
+
+//            if (KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix().equalsIgnoreCase(host)) {
+//                //only take care htables that belongs to self
+//                allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
+//            }
         }
 
         // remove every segment htable from drop list

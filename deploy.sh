@@ -20,19 +20,19 @@ echo "1. Check environment"
 echo "2. Build Kylin artifacts"
 echo "3. Prepare test cube related data"
 echo "4. Lauch a web service to build cube and query with (at http://localhost:9080)"
-echo "Please make sure you're running this script on a hadoop CLI machine, and you have enough permissions."
+echo "Please make sure you are running this script on a hadoop CLI machine, and you have enough permissions."
 echo "Also, We assume you have installed: JAVA, TOMCAT, NPM and MAVEN."
 echo "[Warning] The installation may break existing tomcat applications on this CLI"
 echo ""
 
 
-read -p "Are you sure you want to proceed?(press Y or y to confirm) " -n 1 -r
+[[ "$SILENT" ]] || ( read -p "Are you sure you want to proceed?(press Y or y to confirm) " -n 1 -r
 echo    # (optional) move to a new line
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then
     echo "Not going to proceed, quit without finishing! You can rerun the script to have another try."
     exit 1
-fi
+fi )
 
 echo "Checking JAVA status..."
 
@@ -91,9 +91,7 @@ else
 fi
 
 KYLIN_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
-
 echo "Kylin home folder path is $KYLIN_HOME"
-
 cd $KYLIN_HOME
 
 
@@ -103,19 +101,16 @@ source ./package.sh
 echo "retrieving classpath..."
 cd $KYLIN_HOME/job/target
 JOB_JAR_NAME="kylin-job-latest.jar"
-#generate the variables: KYLIN_LD_LIBRARY_PATH,KYLIN_HBASE_CLASSPATH,KYLIN_HBASE_CONF_PATH
+#generate config variables
 hbase org.apache.hadoop.util.RunJar $JOB_JAR_NAME com.kylinolap.job.deployment.HbaseConfigPrinter /tmp/kylin_retrieve.sh
-#load variables: KYLIN_LD_LIBRARY_PATH,KYLIN_HBASE_CLASSPATH,KYLIN_HBASE_CONF_PATH
+#load config variables
 source /tmp/kylin_retrieve.sh
-
-
 
 cd $KYLIN_HOME
 mkdir -p /etc/kylin
 
 HOSTNAME=`hostname`
 CLI_HOSTNAME_DEFAULT="kylin.job.remote.cli.hostname=sandbox.hortonworks.com"
-CLI_USERNAME_DEFAULT="kylin.job.remote.cli.username=root"
 CLI_PASSWORD_DEFAULT="kylin.job.remote.cli.password=hadoop"
 METADATA_URL_DEFAULT="kylin.metadata.url=kylin_metadata_qa@hbase:sandbox.hortonworks.com:2181:/hbase-unsecure"
 STORAGE_URL_DEFAULT="kylin.storage.url=hbase:sandbox.hortonworks.com:2181:/hbase-unsecure"
@@ -123,65 +118,51 @@ CHECK_URL_DEFAULT="kylin.job.yarn.app.rest.check.status.url=http://sandbox"
 
 
 NEW_CLI_HOSTNAME_PREFIX="kylin.job.remote.cli.hostname="
-NEW_CLI_USERNAME_PREFIX="kylin.job.remote.cli.username="
 NEW_CLI_PASSWORD_PREFIX="kylin.job.remote.cli.password="
 NEW_METADATA_URL_PREFIX="kylin.metadata.url=kylin_metadata_qa@hbase:"
 NEW_STORAGE_URL_PREFIX="kylin.storage.url=hbase:"
-NEW_CHECK_URL="kylin.job.yarn.app.rest.check.status.url=http://localhost"
+NEW_CHECK_URL_PREFIX="kylin.job.yarn.app.rest.check.status.url=http://"
 
 KYLIN_ZOOKEEPER_URL=${KYLIN_ZOOKEEPER_QUORUM}:${KYLIN_ZOOKEEPER_CLIENT_PORT}:${KYLIN_ZOOKEEPER_ZNODE_PARENT}
 
+echo "Kylin install script requires root password for ${HOSTNAME}"
+echo "(The default root password for hortonworks VM is hadoop, and for cloudera VM is cloudera)"
+
+[[ "$SILENT" ]] || read -s -p "Enter Password for root: " ROOTPASS
+
 #deploy kylin.properties to /etc/kylin
-if [ "$HOSTNAME" == "quickstart.cloudera" ]
-then
-    echo "Running on a cloudera sandbox"
-    cat examples/test_case_data/kylin.properties | \
-    sed -e "s,${CHECK_URL_DEFAULT},${NEW_CHECK_URL}," | \
+cat examples/test_case_data/kylin.properties | \
+    sed -e "s,${CHECK_URL_DEFAULT},${NEW_CHECK_URL_PREFIX}${HOSTNAME}," | \
     sed -e "s,${CLI_HOSTNAME_DEFAULT},${NEW_CLI_HOSTNAME_PREFIX}${HOSTNAME}," | \
-    sed -e "s,${CLI_PASSWORD_DEFAULT},${NEW_CLI_PASSWORD_PREFIX}cloudera," | \
+    sed -e "s,${CLI_PASSWORD_DEFAULT},${NEW_CLI_PASSWORD_PREFIX}${ROOTPASS}," | \
     sed -e "s,${METADATA_URL_DEFAULT},${NEW_METADATA_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," | \
     sed -e "s,${STORAGE_URL_DEFAULT},${NEW_STORAGE_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," >  /etc/kylin/kylin.properties
-elif [ "$HOSTNAME" == "sandbox.hortonworks.com" ]
-then
-    echo "Running on a hortonworks sandbox"
-    cat examples/test_case_data/kylin.properties | \
-    sed -e "s,${CLI_HOSTNAME_DEFAULT},${NEW_CLI_HOSTNAME_PREFIX}${HOSTNAME}," | \
-    sed -e "s,${CLI_PASSWORD_DEFAULT},${NEW_CLI_PASSWORD_PREFIX}hadoop," | \
-    sed -e "s,${METADATA_URL_DEFAULT},${NEW_METADATA_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," | \
-    sed -e "s,${STORAGE_URL_DEFAULT},${NEW_STORAGE_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," >  /etc/kylin/kylin.properties
-else
-    echo "Running on an unknown sandbox!!!"
-    cat examples/test_case_data/kylin.properties | \
-    sed -e "s,${CHECK_URL_DEFAULT},${NEW_CHECK_URL}," | \
-    sed -e "s,${CLI_HOSTNAME_DEFAULT},${NEW_CLI_HOSTNAME_PREFIX}${HOSTNAME}," | \
-    sed -e "s,${CLI_PASSWORD_DEFAULT},${NEW_CLI_PASSWORD_PREFIX}unknown???," | \
-    sed -e "s,${METADATA_URL_DEFAULT},${NEW_METADATA_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," | \
-    sed -e "s,${STORAGE_URL_DEFAULT},${NEW_STORAGE_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," >  /etc/kylin/kylin.properties
-fi
+
 
 echo "a copy of kylin config is generated at /etc/kylin/kylin.properties:"
 echo "==================================================================="
 cat /etc/kylin/kylin.properties
+echo ""
 echo "==================================================================="
 echo ""
 
-read -p "please ensure the CLI address/username/password is correct, and press y to proceed: " -n 1 -r
+[[ "$SILENT" ]] || ( read -p "please ensure the CLI address/username/password is correct, and press y to proceed: " -n 1 -r
 echo    # (optional) move to a new line
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then
     echo "Not going to proceed, quit without finishing! You can rerun the script to have another try."
     exit 1
-fi
+fi )
 
-
-#build one cube, this is a self-contained unit test which will do the following as preparement:
 # 1. generate synthetic fact table(test_kylin_fact) data and dump it into hive
+# 2. create empty cubes on these data, ready to be built
 cd $KYLIN_HOME
 mvn test -Dtest=com.kylinolap.job.SampleCubeSetupTest -DfailIfNoTests=false
 
 sudo -i "${CATALINA_HOME}/bin/shutdown.sh" || true # avoid trapping
 cd $KYLIN_HOME/server/target
 WAR_NAME="kylin.war"
+rm -rf $CATALINA_HOME/webapps/kylin
 rm -f $CATALINA_HOME/webapps/$WAR_NAME
 cp $KYLIN_HOME/server/target/$WAR_NAME $CATALINA_HOME/webapps/
 cd $CATALINA_HOME/webapps;
@@ -222,4 +203,4 @@ sudo -i "${CATALINA_HOME}/bin/startup.sh"
 
 
 echo "Kylin-Deploy Success!"
-echo "Please visit http://<your_sandbox_ip>:9080 to play with the cubes!"
+echo "Please visit http://<your_sandbox_ip>:9080 to play with the cubes! (Useranme: ADMIN, Password: KYLIN)"
