@@ -23,7 +23,7 @@ import java.util.Map;
 
 import com.google.protobuf.ByteString;
 import com.kylinolap.cube.invertedindex.*;
-import com.kylinolap.storage.hbase.coprocessor.generated.IIProtos;
+import com.kylinolap.storage.hbase.endpoint.generated.IIProtos;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;

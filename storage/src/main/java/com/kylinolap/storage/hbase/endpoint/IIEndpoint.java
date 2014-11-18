@@ -1,11 +1,11 @@
-package com.kylinolap.storage.hbase.coprocessor;
+package com.kylinolap.storage.hbase.endpoint;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
 import com.kylinolap.cube.invertedindex.*;
-import com.kylinolap.storage.hbase.coprocessor.generated.IIProtos;
+import com.kylinolap.storage.hbase.endpoint.generated.IIProtos;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.Coprocessor;
 import org.apache.hadoop.hbase.CoprocessorEnvironment;
