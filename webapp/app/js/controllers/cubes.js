@@ -83,21 +83,6 @@ KylinApp
             $scope.action.reload = !$scope.action.reload;
         };
 
-        $scope.toCreateProj = function () {
-            $modal.open({
-                templateUrl: 'project.html',
-                controller: projCtrl,
-                resolve: {
-                    projects: function () {
-                        return null;
-                    },
-                    project: function(){
-                        return null;
-                    }
-                }
-            });
-        };
-
         $scope.loadDetail = function (cube) {
             if (!cube.detail) {
                 CubeDescService.get({cube_name: cube.name}, {}, function (detail) {
