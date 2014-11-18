@@ -75,11 +75,11 @@ public class CompareTupleFilter extends TupleFilter {
         } else if (child instanceof DynamicTupleFilter) {
             DynamicTupleFilter dynamicFilter = (DynamicTupleFilter) child;
             this.dynamicVariables.put(dynamicFilter.getVariableName(), null);
-        } else if (child instanceof ExtractTupleFilter) {
-            // TODO
-        } else if (child instanceof CaseTupleFilter) {
-
         }
+        //TODO
+//        else if (child instanceof ExtractTupleFilter) {
+//        } else if (child instanceof CaseTupleFilter) {
+//        }
     }
 
     private boolean needSwapOperator() {

@@ -65,7 +65,7 @@ public class TrieDictionaryBuilder<T> {
         }
     }
 
-    public interface Visitor {
+    public static interface Visitor {
         void visit(Node n, int level);
     }
 

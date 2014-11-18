@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.kylinolap.common.util.StringUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.eigenbase.reltype.RelDataType;
 import org.slf4j.Logger;
@@ -67,11 +66,10 @@ public class QueryRouter {
         }
 
         if (bestCube == null) {
-            throw new CubeNotFoundException("Can't find cube for fact table " +
-                    olapContext.firstTableScan.getCubeTable() + " in project " +
-                    olapContext.olapSchema.getProjectName() + " with dimensions " +
-                    getDimensionColumns(olapContext) + " and measures " + olapContext.aggregations +
-                    ". Also please check whether join types match what defined in Cube.");
+            throw new CubeNotFoundException("Can't find cube for fact table " + olapContext.firstTableScan.getCubeTable() //
+                    + " in project " + olapContext.olapSchema.getProjectName() + " with dimensions " //
+                    + getDimensionColumns(olapContext) + " and measures " + olapContext.aggregations //
+                    + ". Also please check whether join types match what defined in Cube.");
         }
 
         return bestCube;
@@ -252,21 +250,19 @@ public class QueryRouter {
 
         boolean matched = true;
         for (FunctionDesc functionDesc : aggregations) {
-            if (!cubeFuncs.contains(functionDesc)) {
+            if (cubeFuncs.contains(functionDesc))
+                continue;
 
-                if (functionDesc.isCountDistinct())// optiq can not handle
-                    // distinct count
-                    matched = false;
+            // only inverted-index cube does not have count, and let calcite handle in this case
+            if (functionDesc.isCount())
+                continue;
 
-                ParameterDesc param = functionDesc.getParameter();
-                if (param != null) {
-                    TblColRef col = findTblColByColumnName(metricColumns, param.getValue());
-                    if (col == null || !cubeDesc.listDimensionColumnsIncludingDerived().contains(col)) {
-                        matched = false;
-                    }
-                } else {
-                    matched = false;
-                }
+            if (functionDesc.isCountDistinct()) // calcite can not handle distinct count
+                matched = false;
+
+            TblColRef col = findTblColByMetrics(metricColumns, functionDesc);
+            if (col == null || !cubeDesc.listDimensionColumnsIncludingDerived().contains(col)) {
+                matched = false;
             }
         }
         return matched;
@@ -282,7 +278,7 @@ public class QueryRouter {
             FunctionDesc functionDesc = it.next();
             if (!cubeFuncs.contains(functionDesc)) {
                 // try to convert the metric to dimension to see if it works
-                TblColRef col = findTblColByColumnName(metricColumns, functionDesc.getParameter().getValue());
+                TblColRef col = findTblColByMetrics(metricColumns, functionDesc);
                 functionDesc.setAppliedOnDimension(true);
                 rewriteFields.remove(functionDesc.getRewriteFieldName());
                 if (col != null) {
@@ -295,8 +291,16 @@ public class QueryRouter {
         }
     }
 
-    private static TblColRef findTblColByColumnName(Collection<TblColRef> metricColumns, String columnName) {
-        for (TblColRef col : metricColumns) {
+    private static TblColRef findTblColByMetrics(Collection<TblColRef> dimensionColumns, FunctionDesc func) {
+        if (func.isCount())
+            return null; // count is not about any column but the whole row
+
+        ParameterDesc parameter = func.getParameter();
+        if (parameter == null)
+            return null;
+
+        String columnName = parameter.getValue();
+        for (TblColRef col : dimensionColumns) {
             String name = col.getName();
             if (name != null && name.equals(columnName))
                 return col;

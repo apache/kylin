@@ -30,12 +30,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.Delete;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
@@ -44,16 +39,12 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.KeyOnlyFilter;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.common.util.HadoopUtil;
 
 public class HBaseResourceStore extends ResourceStore {
-
-    private static final Logger logger = LoggerFactory.getLogger(HBaseResourceStore.class);
 
     private static final String DEFAULT_TABLE_NAME = "kylin_metadata";
     private static final String FAMILY = "f";
@@ -105,29 +96,7 @@ public class HBaseResourceStore extends ResourceStore {
     }
 
     private void createHTableIfNeeded(String tableName) throws IOException {
-
-        HBaseAdmin hbase = new HBaseAdmin(getConnection());
-        if (tableExist(hbase, tableName)) {
-            logger.debug("HTable '" + tableName + "' already exists");
-            return;
-        }
-
-        logger.debug("Creating HTable '" + tableName + "'");
-
-        HTableDescriptor desc = new HTableDescriptor(TableName.valueOf(tableName));
-        desc.addFamily(new HColumnDescriptor(FAMILY));
-        hbase.createTable(desc);
-
-        logger.debug("HTable '" + tableName + "' created");
-    }
-
-    private static boolean tableExist(HBaseAdmin hbase, String table) throws IOException {
-        try {
-            hbase.getTableDescriptor(TableName.valueOf(table));
-            return true;
-        } catch (TableNotFoundException e) {
-            return false;
-        }
+        HBaseConnection.createHTableIfNeeded(getConnection(), tableName, FAMILY);
     }
 
     private String getTableName(String path) {

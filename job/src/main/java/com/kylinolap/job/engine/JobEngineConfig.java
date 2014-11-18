@@ -108,139 +108,112 @@ public class JobEngineConfig {
 
     // there should be no setters
     private final KylinConfig config;
-    private final String hdfsWorkingDirectory;
-    private final String kylinJobJarPath;
-    private final boolean runAsRemoteCommand;
-    private final String zookeeperString;
-    private final String remoteHadoopCliHostname;
-    private final String remoteHadoopCliUsername;
-    private final String remoteHadoopCliPassword;
-    private final String yarnStatusServiceUrl;
-    private final int maxConcurrentJobLimit;
-    private final String timeZone;
-    private final String adminDls;
-    private final long jobStepTimeout;
-    private final int asyncJobCheckInterval;
-    private final boolean flatTableByHive;
 
-    public JobEngineConfig(KylinConfig kylinConfig) {
-        this.config = kylinConfig;
-        this.hdfsWorkingDirectory = kylinConfig.getHdfsWorkingDirectory();
-        this.kylinJobJarPath = kylinConfig.getKylinJobJarPath();
-        this.runAsRemoteCommand = kylinConfig.getRunAsRemoteCommand();
-        this.zookeeperString = kylinConfig.getZookeeperString();
-        this.remoteHadoopCliHostname = kylinConfig.getRemoteHadoopCliHostname();
-        this.remoteHadoopCliUsername = kylinConfig.getRemoteHadoopCliUsername();
-        this.remoteHadoopCliPassword = kylinConfig.getRemoteHadoopCliPassword();
-        this.yarnStatusServiceUrl = kylinConfig.getYarnStatusServiceUrl();
-        this.maxConcurrentJobLimit = kylinConfig.getMaxConcurrentJobLimit();
-        this.timeZone = kylinConfig.getTimeZone();
-        this.adminDls = kylinConfig.getAdminDls();
-        this.jobStepTimeout = kylinConfig.getJobStepTimeout();
-        this.asyncJobCheckInterval = kylinConfig.getYarnStatusCheckIntervalSeconds();
-        this.flatTableByHive = kylinConfig.getFlatTableByHive();
+    public JobEngineConfig(KylinConfig config) {
+        this.config = config;
     }
 
     public KylinConfig getConfig() {
         return config;
     }
 
-    /**
-     * @return the hdfsWorkingDirectory
-     */
     public String getHdfsWorkingDirectory() {
-        return hdfsWorkingDirectory;
+        return config.getHdfsWorkingDirectory();
     }
 
     /**
      * @return the kylinJobJarPath
      */
     public String getKylinJobJarPath() {
-        return kylinJobJarPath;
+        return config.getKylinJobJarPath();
     }
 
     /**
      * @return the runAsRemoteCommand
      */
     public boolean isRunAsRemoteCommand() {
-        return runAsRemoteCommand;
+        return config.getRunAsRemoteCommand();
     }
 
     /**
      * @return the zookeeperString
      */
     public String getZookeeperString() {
-        return zookeeperString;
+        return config.getZookeeperString();
     }
 
     /**
      * @return the remoteHadoopCliHostname
      */
     public String getRemoteHadoopCliHostname() {
-        return remoteHadoopCliHostname;
+        return config.getRemoteHadoopCliHostname();
     }
 
     /**
      * @return the remoteHadoopCliUsername
      */
     public String getRemoteHadoopCliUsername() {
-        return remoteHadoopCliUsername;
+        return config.getRemoteHadoopCliUsername();
     }
 
     /**
      * @return the remoteHadoopCliPassword
      */
     public String getRemoteHadoopCliPassword() {
-        return remoteHadoopCliPassword;
+        return config.getRemoteHadoopCliPassword();
+    }
+    
+    public String getMapReduceCmdExtraArgs() {
+        return config.getMapReduceCmdExtraArgs();
     }
 
     /**
      * @return the yarnStatusServiceUrl
      */
     public String getYarnStatusServiceUrl() {
-        return yarnStatusServiceUrl;
+        return config.getYarnStatusServiceUrl();
     }
 
     /**
      * @return the maxConcurrentJobLimit
      */
     public int getMaxConcurrentJobLimit() {
-        return maxConcurrentJobLimit;
+        return config.getMaxConcurrentJobLimit();
     }
 
     /**
      * @return the timeZone
      */
     public String getTimeZone() {
-        return timeZone;
+        return config.getTimeZone();
     }
 
     /**
      * @return the adminDls
      */
     public String getAdminDls() {
-        return adminDls;
+        return config.getAdminDls();
     }
 
     /**
      * @return the jobStepTimeout
      */
     public long getJobStepTimeout() {
-        return jobStepTimeout;
-    }
-
-    /**
-     * @return the flatTableByHive
-     */
-    public boolean isFlatTableByHive() {
-        return flatTableByHive;
+        return config.getJobStepTimeout();
     }
 
     /**
      * @return the asyncJobCheckInterval
      */
     public int getAsyncJobCheckInterval() {
-        return asyncJobCheckInterval;
+        return config.getYarnStatusCheckIntervalSeconds();
+    }
+
+    /**
+     * @return the flatTableByHive
+     */
+    public boolean isFlatTableByHive() {
+        return config.getFlatTableByHive();
     }
 
     /*

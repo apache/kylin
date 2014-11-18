@@ -113,7 +113,7 @@ public class OLAPContext {
     public Map<String, RelDataType> rewriteFields = new HashMap<String, RelDataType>();
 
     // hive query
-    public String sql = null;
+    public String sql = "";
 
     public boolean isSimpleQuery() {
         return (joins.size() == 0) && (groupByColumns.size() == 0) && (aggregations.size() == 0);

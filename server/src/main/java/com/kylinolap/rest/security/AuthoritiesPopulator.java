@@ -16,6 +16,7 @@
 
 package com.kylinolap.rest.security;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.springframework.ldap.core.ContextSource;
@@ -38,14 +39,21 @@ public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
     SimpleGrantedAuthority modelerAuthority = new SimpleGrantedAuthority(Constant.ROLE_MODELER);
     SimpleGrantedAuthority analystAuthority = new SimpleGrantedAuthority(Constant.ROLE_ANALYST);
     
+    Set<GrantedAuthority> defaultAuthorities = new HashSet<GrantedAuthority>();
+    
     /**
      * @param contextSource
      * @param groupSearchBase
      */
-    public AuthoritiesPopulator(ContextSource contextSource, String groupSearchBase, String adminRole) {
+    public AuthoritiesPopulator(ContextSource contextSource, String groupSearchBase, String adminRole, String defaultRole) {
         super(contextSource, groupSearchBase);
         this.adminRole = adminRole;
         this.adminRoleAsAuthority = new SimpleGrantedAuthority(adminRole);
+        
+        if (defaultRole.contains(Constant.ROLE_MODELER))
+            this.defaultAuthorities.add(modelerAuthority);
+        if (defaultRole.contains(Constant.ROLE_ANALYST))
+            this.defaultAuthorities.add(analystAuthority);
     }
 
     @Override
@@ -54,10 +62,11 @@ public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
         
         if (authorities.contains(adminRoleAsAuthority)) {
             authorities.add(adminAuthority);
+            authorities.add(modelerAuthority);
+            authorities.add(analystAuthority);
         }
         
-        authorities.add(modelerAuthority);
-        authorities.add(analystAuthority);
+        authorities.addAll(defaultAuthorities);
         
         return authorities;
     }

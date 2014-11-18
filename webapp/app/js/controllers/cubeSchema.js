@@ -93,6 +93,9 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
     $scope.addNewDimension = function (dimension) {
         $scope.newDimension = (!!dimension)? dimension: Dimension.createNew();
+        if($scope.newDimension.status.useJoin||$scope.newDimension.join.foreign_key.length!=0){
+            $scope.newDimension.status.useJoin = true;
+        }
     }
 
     $scope.clearNewDimension = function () {
@@ -154,11 +157,17 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         dimension.derived.push("");
     }
 
-    $scope.toggleJoin = function (dimension) {
-        if (dimension.status.useJoin) {
-            dimension.join.type = '';
+    $scope.toggleJoin = function (dimension,$event) {
+        if (dimension.join&&dimension.join.type!='') {
+            if(!confirm('Delete the join relation?')){
+                $event.preventDefault();
+                return;
+            }else{
+                delete dimension.join;
+            }
         }
         else {
+            dimension.join = dimension.join==undefined?{}:dimension.join;
             dimension.join.type = 'left';
         }
     }

@@ -34,7 +34,6 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
@@ -84,7 +83,7 @@ import com.kylinolap.rest.security.AclPermission;
 
 /**
  * Stateless & lightweight service facade of cube management functions.
- * 
+ *
  * @author yangli9
  */
 @Component("cubeMgmtService")
@@ -268,9 +267,36 @@ public class CubeService extends BasicService {
     }
 
     /**
+     * Stop all jobs belonging to this cube and clean out all segments
+     *
+     * @param cube
+     * @return
+     * @throws IOException
+     * @throws CubeIntegrityException
+     * @throws JobException
+     */
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
+    @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
+    public CubeInstance purgeCube(CubeInstance cube) throws IOException, CubeIntegrityException, JobException {
+        String cubeName = cube.getName();
+
+        CubeStatusEnum ostatus = cube.getStatus();
+        if (null != ostatus && !CubeStatusEnum.DISABLED.equals(ostatus)) {
+            throw new InternalErrorException("Only disabled cube can be purged, status of " + cubeName + " is " + ostatus);
+        }
+
+        try {
+            this.releaseAllSegments(cube);
+            return cube;
+        } catch (IOException e) {
+            throw e;
+        }
+
+    }
+
+    /**
      * Update a cube status from ready to disabled.
-     * 
-     * @param cubeName
+     *
      * @return
      * @throws CubeIntegrityException
      * @throws IOException
@@ -298,7 +324,7 @@ public class CubeService extends BasicService {
 
     /**
      * Update a cube status from disable to ready.
-     * 
+     *
      * @return
      * @throws CubeIntegrityException
      * @throws IOException
@@ -366,13 +392,11 @@ public class CubeService extends BasicService {
     /**
      * Calculate size of each region for given table and other info of the
      * table.
-     * 
-     * @param tableName
-     *            The table name.
+     *
+     * @param tableName The table name.
      * @return The HBaseResponse object contains table size, region count. null
-     *         if error happens.
-     * @throws IOException
-     *             Exception when HTable resource is not closed correctly.
+     * if error happens.
+     * @throws IOException Exception when HTable resource is not closed correctly.
      */
     public HBaseResponse getHTableInfo(String tableName) throws IOException {
         // Get HBase storage conf.
@@ -400,10 +424,6 @@ public class CubeService extends BasicService {
             hr = new HBaseResponse();
             hr.setTableSize(tableSize);
             hr.setRegionCount(regionCount);
-        } catch (TableNotFoundException e) {
-            logger.error("Failed to find HTable \"" + tableName + "\"", e);
-        } catch (IOException e) {
-            logger.error("Failed to calcuate size of HTable \"" + tableName + "\"", e);
         } finally {
             if (null != table) {
                 table.close();
@@ -416,7 +436,7 @@ public class CubeService extends BasicService {
     /**
      * Generate cardinality for table This will trigger a hadoop job and nothing
      * The result will be merged into table exd info
-     * 
+     *
      * @param tableName
      * @param delimiter
      * @param format
@@ -537,7 +557,8 @@ public class CubeService extends BasicService {
     }
 
     /**
-     * @param cube
+     * purge the cube
+     *
      * @throws IOException
      * @throws JobException
      * @throws UnknownHostException
@@ -559,7 +580,7 @@ public class CubeService extends BasicService {
         CubeManager.getInstance(getConfig()).updateCube(cube);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER)
     public String[] reloadHiveTable(String tables) {
         String tableMetaDir = HiveSourceTableMgmt.reloadHiveTable(tables);
         // Reload

@@ -21,8 +21,15 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HColumnDescriptor;
+import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.TableNotFoundException;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HConnectionManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.util.HadoopUtil;
 
@@ -32,8 +39,9 @@ import com.kylinolap.common.util.HadoopUtil;
  */
 public class HBaseConnection {
 
-    private static final Map<String, Configuration> ConfigCache = new ConcurrentHashMap<String, Configuration>();
+    private static final Logger logger = LoggerFactory.getLogger(HBaseConnection.class);
 
+    private static final Map<String, Configuration> ConfigCache = new ConcurrentHashMap<String, Configuration>();
     private static final Map<String, HConnection> ConnPool = new ConcurrentHashMap<String, HConnection>();
 
     static {
@@ -73,4 +81,40 @@ public class HBaseConnection {
         return connection;
     }
 
+    public static void createHTableIfNeeded(String hbaseUrl, String tableName, String... families) throws IOException {
+        createHTableIfNeeded(HBaseConnection.get(hbaseUrl), tableName, families);
+    }
+    
+    public static void createHTableIfNeeded(HConnection conn, String tableName, String... families) throws IOException {
+        HBaseAdmin hbase = new HBaseAdmin(conn);
+
+        try {
+            boolean tableExist = false;
+            try {
+                hbase.getTableDescriptor(TableName.valueOf(tableName));
+                tableExist = true;
+            } catch (TableNotFoundException e) {
+            }
+
+            if (tableExist) {
+                logger.debug("HTable '" + tableName + "' already exists");
+                return;
+            }
+
+            logger.debug("Creating HTable '" + tableName + "'");
+
+            HTableDescriptor desc = new HTableDescriptor(TableName.valueOf(tableName));
+
+            if (null != families && families.length > 0) {
+                for (String family : families) {
+                    desc.addFamily(new HColumnDescriptor(family));
+                }
+            }
+            hbase.createTable(desc);
+
+            logger.debug("HTable '" + tableName + "' created");
+        } finally {
+            hbase.close();
+        }
+    }
 }

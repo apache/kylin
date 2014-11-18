@@ -30,13 +30,13 @@ import net.hydromatic.optiq.rules.java.PhysType;
 import net.hydromatic.optiq.rules.java.PhysTypeImpl;
 
 import org.eigenbase.rel.InvalidRelException;
+import org.eigenbase.rel.JoinInfo;
 import org.eigenbase.rel.JoinRelType;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelOptTable;
-import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelTrait;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
@@ -47,6 +47,7 @@ import org.eigenbase.rex.RexCall;
 import org.eigenbase.rex.RexInputRef;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.SqlKind;
+import org.eigenbase.util.ImmutableIntList;
 
 import com.google.common.base.Preconditions;
 import com.kylinolap.metadata.model.cube.JoinDesc;
@@ -65,23 +66,23 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
     private boolean isTopJoin;
     private boolean hasSubQuery;
 
-    public OLAPJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition, JoinRelType joinType, Set<String> variablesStopped) throws InvalidRelException {
-        super(cluster, traits, left, right, condition, joinType, variablesStopped);
+    public OLAPJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, //
+            RexNode condition, ImmutableIntList leftKeys, ImmutableIntList rightKeys, //
+            JoinRelType joinType, Set<String> variablesStopped) throws InvalidRelException {
+        super(cluster, traits, left, right, condition, leftKeys, rightKeys, joinType, variablesStopped);
         Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
         this.rowType = getRowType();
-        List<Integer> leftKeys = new ArrayList<Integer>();
-        List<Integer> rightKeys = new ArrayList<Integer>();
-        RexNode remaining = RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
-        if (!remaining.isAlwaysTrue()) {
-            logger.warn("OLAPJoinRel only supports equi-join, but " + condition + " looks is not");
-        }
         this.isTopJoin = false;
     }
 
     @Override
-    public EnumerableJoinRel copy(RelTraitSet traitSet, RexNode conditionExpr, RelNode left, RelNode right, JoinRelType joinType) {
+    public EnumerableJoinRel copy(RelTraitSet traitSet, RexNode conditionExpr, RelNode left, RelNode right, //
+            JoinRelType joinType, boolean semiJoinDone) {
+
+        final JoinInfo joinInfo = JoinInfo.of(left, right, condition);
+        assert joinInfo.isEqui();
         try {
-            return new OLAPJoinRel(getCluster(), traitSet, left, right, conditionExpr, joinType, variablesStopped);
+            return new OLAPJoinRel(getCluster(), traitSet, left, right, condition, joinInfo.leftKeys, joinInfo.rightKeys, joinType, variablesStopped);
         } catch (InvalidRelException e) {
             // Semantic error not possible. Must be a bug. Convert to
             // internal error.
@@ -174,7 +175,7 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
         for (Map.Entry<TblColRef, TblColRef> columnPair : joinColumns.entrySet()) {
             TblColRef fromCol = columnPair.getKey();
             TblColRef toCol = columnPair.getValue();
-            if (factTable.equals(fromCol)) {
+            if (factTable.equalsIgnoreCase(fromCol.getTable())) {
                 fks.add(fromCol.getName());
                 fkCols.add(fromCol);
                 pks.add(toCol.getName());

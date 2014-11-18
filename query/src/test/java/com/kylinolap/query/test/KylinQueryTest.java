@@ -69,7 +69,7 @@ public class KylinQueryTest extends KylinTestBase {
         File olapTmp = OLAPSchemaFactory.createTempOLAPJson(ProjectInstance.DEFAULT_PROJECT_NAME, config);
         Properties props = new Properties();
         props.setProperty(OLAPQuery.PROP_SCAN_THRESHOLD, "10000");
-        cubeConnection = DriverManager.getConnection("jdbc:optiq:model=" + olapTmp.getAbsolutePath(), props);
+        cubeConnection = DriverManager.getConnection("jdbc:calcite:model=" + olapTmp.getAbsolutePath(), props);
     }
 
     private static void setUpH2Conn() throws SQLException {
@@ -132,7 +132,7 @@ public class KylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = "src/test/resources/query/sql/query39.sql";
+        String queryFileName = "src/test/resources/query/sql/query37.sql";
 
         File sqlFile = new File(queryFileName);
         runSQL(sqlFile, true, false);

@@ -51,9 +51,8 @@ public class PasswordPlaceholderConfigurer extends PropertyPlaceholderConfigurer
             final String encryptedString = Base64.encodeBase64String(cipher.doFinal(strToEncrypt.getBytes()));
             return encryptedString;
         } catch (Exception e) {
+            throw new RuntimeException(e.getMessage(), e);
         }
-        return null;
-
     }
 
     public static String decrypt(String strToDecrypt) {
@@ -64,8 +63,8 @@ public class PasswordPlaceholderConfigurer extends PropertyPlaceholderConfigurer
             final String decryptedString = new String(cipher.doFinal(Base64.decodeBase64(strToDecrypt)));
             return decryptedString;
         } catch (Exception e) {
+            throw new RuntimeException(e.getMessage(), e);
         }
-        return null;
     }
 
     protected String resolvePlaceholder(String placeholder, Properties props) {

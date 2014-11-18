@@ -16,8 +16,6 @@
 
 package com.kylinolap.rest.service;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,18 +31,16 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.HBaseConnection;
-import com.kylinolap.common.util.HadoopUtil;
+import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.rest.security.UserManager;
 import com.kylinolap.rest.util.Serializer;
 
@@ -53,12 +49,10 @@ import com.kylinolap.rest.util.Serializer;
  * 
  */
 @Component("userService")
-public class UserService implements UserManager{
-
-    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
+public class UserService implements UserManager {
 
     private Serializer<UserGrantedAuthority[]> ugaSerializer = new Serializer<UserGrantedAuthority[]>(UserGrantedAuthority[].class);
-    
+
     public static final String USER_AUTHORITY_FAMILY = "a";
     private static final String DEFAULT_TABLE_PREFIX = "kylin_metadata";
     private static final String USER_TABLE_NAME = "_user";
@@ -67,19 +61,14 @@ public class UserService implements UserManager{
     private String tableNameBase = null;
     private String userTableName = null;
 
-    public UserService() {
+    public UserService() throws IOException {
         String metadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
         // split TABLE@HBASE_URL
         int cut = metadataUrl.indexOf('@');
         tableNameBase = cut < 0 ? DEFAULT_TABLE_PREFIX : metadataUrl.substring(0, cut);
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
         userTableName = tableNameBase + USER_TABLE_NAME;
-        
-        try {
-            HadoopUtil.createHTableIfNeeded(hbaseUrl, userTableName, USER_AUTHORITY_FAMILY, QueryService.USER_QUERY_FAMILY);
-        } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
-        }
+        HBaseConnection.createHTableIfNeeded(hbaseUrl, userTableName, USER_AUTHORITY_FAMILY, QueryService.USER_QUERY_FAMILY);
     }
 
     @Override
@@ -87,25 +76,22 @@ public class UserService implements UserManager{
         HTableInterface htable = null;
         try {
             htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
-            
+
             Get get = new Get(Bytes.toBytes(username));
             get.addFamily(Bytes.toBytes(USER_AUTHORITY_FAMILY));
             Result result = htable.get(get);
-            
+
             Collection<? extends GrantedAuthority> authorities = null;
-            if (null != result && !result.isEmpty())
-            {
+            if (null != result && !result.isEmpty()) {
                 byte[] gaBytes = result.getValue(Bytes.toBytes(USER_AUTHORITY_FAMILY), Bytes.toBytes(USER_AUTHORITY_COLUMN));
                 authorities = Arrays.asList(ugaSerializer.deserialize(gaBytes));
-            }
-            else{
+            } else {
                 throw new UsernameNotFoundException("User " + username + " not found.");
             }
-            
+
             return new User(username, "N/A", authorities);
         } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw new RuntimeException(e);
+            throw new RuntimeException(e.getMessage(), e);
         } finally {
             IOUtils.closeQuietly(htable);
         }
@@ -118,9 +104,9 @@ public class UserService implements UserManager{
 
     @Override
     public void updateUser(UserDetails user) {
-        byte[] userAuthorities = serialize(user.getAuthorities());
         HTableInterface htable = null;
         try {
+            byte[] userAuthorities = serialize(user.getAuthorities());
             htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
             Put put = new Put(Bytes.toBytes(user.getUsername()));
             put.add(Bytes.toBytes(USER_AUTHORITY_FAMILY), Bytes.toBytes(USER_AUTHORITY_COLUMN), userAuthorities);
@@ -128,7 +114,7 @@ public class UserService implements UserManager{
             htable.put(put);
             htable.flushCommits();
         } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
+            throw new RuntimeException(e.getMessage(), e);
         } finally {
             IOUtils.closeQuietly(htable);
         }
@@ -144,7 +130,7 @@ public class UserService implements UserManager{
             htable.delete(delete);
             htable.flushCommits();
         } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
+            throw new RuntimeException(e.getMessage(), e);
         } finally {
             IOUtils.closeQuietly(htable);
         }
@@ -164,12 +150,10 @@ public class UserService implements UserManager{
 
             return null != result && !result.isEmpty();
         } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
+            throw new RuntimeException(e.getMessage(), e);
         } finally {
             IOUtils.closeQuietly(htable);
         }
-
-        return false;
     }
 
     @Override
@@ -187,15 +171,15 @@ public class UserService implements UserManager{
             for (Result result = scanner.next(); result != null; result = scanner.next()) {
                 byte[] uaBytes = result.getValue(Bytes.toBytes(USER_AUTHORITY_FAMILY), Bytes.toBytes(USER_AUTHORITY_COLUMN));
                 Collection<? extends GrantedAuthority> authCollection = Arrays.asList(ugaSerializer.deserialize(uaBytes));
-                
-                for (GrantedAuthority auth: authCollection){
-                    if (!authorities.contains(auth.getAuthority())){
+
+                for (GrantedAuthority auth : authCollection) {
+                    if (!authorities.contains(auth.getAuthority())) {
                         authorities.add(auth.getAuthority());
                     }
                 }
             }
         } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
+            throw new RuntimeException(e.getMessage(), e);
         } finally {
             IOUtils.closeQuietly(scanner);
             IOUtils.closeQuietly(htable);
@@ -246,23 +230,11 @@ public class UserService implements UserManager{
         }
     }
 
-    private byte[] serialize(Collection<? extends GrantedAuthority> auths) {
+    private byte[] serialize(Collection<? extends GrantedAuthority> auths) throws JsonProcessingException {
         if (null == auths) {
             return null;
         }
 
-        ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        DataOutputStream dout = new DataOutputStream(buf);
-
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.writeValue(dout, auths);
-            dout.close();
-            buf.close();
-        } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
-        }
-
-        return buf.toByteArray();
+        return JsonUtil.writeValueAsBytes(auths);
     }
 }

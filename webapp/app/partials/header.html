@@ -16,13 +16,13 @@
                     <li class="{{activeTab=='query'?'purple':'green'}}" ng-if="userService.isAuthorized()">
                         <a href="/query">Query</a>
                     </li>
-                    <li class="{{activeTab=='cubes'?'purple':'green'}}" ng-if="userService.hasRole('ROLE_MODELER')">
+                    <li class="{{activeTab=='cubes'?'purple':'green'}}" ng-if="userService.isAuthorized()">
                         <a href="/cubes">Cubes</a>
                     </li>
-                    <li class="{{activeTab=='jobs'?'purple':'green'}}" ng-if="userService.hasRole('ROLE_MODELER')">
+                    <li class="{{activeTab=='jobs'?'purple':'green'}}" ng-if="userService.isAuthorized()">
                         <a href="/jobs">Jobs</a>
                     </li>
-                    <li class="{{activeTab=='sourceMeta'?'purple':'green'}}" ng-if="userService.hasRole('ROLE_MODELER')">
+                    <li class="{{activeTab=='sourceMeta'?'purple':'green'}}" ng-if="userService.isAuthorized()">
                         <a href="/sourceMeta">Tables</a>
                     </li>
                     <li class="{{activeTab=='admin'?'purple':'green'}}" ng-if="userService.hasRole('ROLE_ADMIN')">

@@ -9,17 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
@@ -122,6 +112,7 @@ public class FactTableGenerator {
             String path = "/data/" + lookupTableName + ".csv";
             tableStream = store.getResource(path);
             tableReader = new BufferedReader(new InputStreamReader(tableStream));
+            tableReader.mark(0);
             int rowCount = 0;
             int curRowNum = 0;
             String curRow;
@@ -132,12 +123,15 @@ public class FactTableGenerator {
             HashSet<Integer> rows = new HashSet<Integer>();
             distinctRowCount = (distinctRowCount < rowCount) ? distinctRowCount : rowCount;
             while (rows.size() < distinctRowCount) {
-                rows.add(new Integer(r.nextInt(rowCount)));
+                rows.add(r.nextInt(rowCount));
             }
 
             // reopen the stream
             tableStream.close();
             tableReader.close();
+            tableStream = null;
+            tableReader = null;
+
             tableStream = store.getResource(path);
             tableReader = new BufferedReader(new InputStreamReader(tableStream));
 
@@ -226,7 +220,7 @@ public class FactTableGenerator {
             public int compare(DimensionDesc o1, DimensionDesc o2) {
                 JoinDesc j1 = o2.getJoin();
                 JoinDesc j2 = o1.getJoin();
-                return new Integer(j1 != null ? j1.getPrimaryKey().length : 0).compareTo(j2 != null ? j2.getPrimaryKey().length : 0);
+                return Integer.compare(j1 != null ? j1.getPrimaryKey().length : 0, j2 != null ? j2.getPrimaryKey().length : 0);
             }
         });
         return dimensions;
@@ -264,7 +258,7 @@ public class FactTableGenerator {
 
     /**
      * Generate the fact table and put it into a temp file
-     * 
+     *
      * @return
      * @throws Exception
      */
@@ -282,9 +276,7 @@ public class FactTableGenerator {
         List<DimensionDesc> dimensions = getSortedDimentsionDescs();
         for (DimensionDesc dim : dimensions) {
             JoinDesc jDesc = dim.getJoin();
-            if (jDesc == null) {
-                // deal with it in next round
-            } else {
+            if (jDesc != null) {
                 String[] fks = jDesc.getForeignKey();
                 String[] pks = jDesc.getPrimaryKey();
                 int num = fks.length;
@@ -302,6 +294,7 @@ public class FactTableGenerator {
                     factTableCol2LookupCol.put(fks[i], value);
                 }
             }
+            //else, deal with it in next roung
         }
 
         // find fact table columns in direct dimension
@@ -394,7 +387,7 @@ public class FactTableGenerator {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < 2; i++) {
                 sb.append((char) ('a' + r.nextInt(10)));// there are 10*10
-                                                        // possible strings
+                // possible strings
             }
             return sb.toString();
         } else if (s.equals("bigint") || s.equals("int") || s.equals("tinyint") || s.equals("smallint")) {
@@ -450,8 +443,8 @@ public class FactTableGenerator {
         System.out.format("%-30s %s", "FACT_TABLE_COLUMN", "MAPPING");
         System.out.println();
         System.out.println();
-        for (String key : factTableCol2LookupCol.keySet()) {
-            System.out.format("%-30s %s", key, factTableCol2LookupCol.get(key));
+        for (Map.Entry<String, String> entry : factTableCol2LookupCol.entrySet()) {
+            System.out.format("%-30s %s", entry.getKey(), entry.getValue());
             System.out.println();
         }
         for (String key : usedCols) {
@@ -545,7 +538,6 @@ public class FactTableGenerator {
 
         for (ColumnDesc cDesc : MetadataManager.getInstance(config).getTableDesc(factTableName).getColumns()) {
 
-            int seed = r.nextInt();
 
             String colName = cDesc.getName();
 
@@ -553,7 +545,8 @@ public class FactTableGenerator {
 
                 // if the current column is a fk column in fact table
                 ArrayList<String> candidates = this.feasibleValues.get(factTableCol2LookupCol.get(colName));
-                columnValues.add(candidates.get(Math.abs(seed) % candidates.size()));
+
+                columnValues.add(candidates.get(r.nextInt(candidates.size())));
             } else if (usedCols.contains(colName)) {
 
                 // if the current column is a metric column in fact table
@@ -575,7 +568,7 @@ public class FactTableGenerator {
             BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
             HashSet<String> defaultColumns = new HashSet<String>();
 
-            for (int i = 0; i < rowCount;) {
+            for (int i = 0; i < rowCount; ) {
 
                 LinkedList<String> columnValues = createRow(factTableCol2LookupCol, usedCols, defaultColumns);
 
@@ -614,16 +607,12 @@ public class FactTableGenerator {
 
     /**
      * Randomly create a fact table and put it to test_kylin_data table in hbase
-     * 
-     * @param cubeName
-     *            name of the cube
-     * @param rowCount
-     *            expected row count generated
-     * @param linkableRatio
-     *            the percentage of fact table rows that can be linked with all
-     *            lookup table by INNER join
-     * @param randomSeed
-     *            random seed
+     *
+     * @param cubeName      name of the cube
+     * @param rowCount      expected row count generated
+     * @param linkableRatio the percentage of fact table rows that can be linked with all
+     *                      lookup table by INNER join
+     * @param randomSeed    random seed
      */
     public static void generate(String cubeName, String rowCount, String linkableRatio, String randomSeed, String joinType) throws Exception {
 
@@ -633,8 +622,9 @@ public class FactTableGenerator {
             rowCount = "10000";
         if (linkableRatio == null)
             linkableRatio = "0.6";
-        if (randomSeed == null)
-            ;// don't give it value
+
+        //if (randomSeed == null)
+        // don't give it value
 
         // String conflictRatio = "5";//this parameter do not allow configuring
         // any more

@@ -96,12 +96,6 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel, EnumerableRel {
         this.columnRowType = buildColumnRowType();
     }
 
-    /**
-     * NOTE: We can't use EnumerableLimitRel directly since it will check the
-     * convention of child. We have to copy the code from
-     * EnumerableLimitRel.implement(). So, We need to check the code during
-     * upgrade.
-     */
     @Override
     public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
         OLAPRel childRel = (OLAPRel) getChild();
