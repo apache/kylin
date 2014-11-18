@@ -52,11 +52,13 @@ For a hands-on tutorial please visit [On-Hadoop-CLI installation](https://github
 
 #### Off-Hadoop-CLI Installation ####
 
+This is typically for development environment setup.
+
 Applications does not necessarily mean Kylin Web, it can also be any test cases or java applications running at your local IDE(query engine and cube build engine can be launched programmatically in your code). In this case, it is no longer reasonable to assume that all the Kylin components reside in the same machine as your Hadoop CLI.  Fortunately, Kylin still works under such condition with proper settings on your CLI machine.
 
 ![Off-CLI Installation](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/installation/Picture2.png)
 
-For a hands-on tutorial please visit [Off-Hadoop-CLI installation](https://github.com/KylinOLAP/Kylin/wiki/Off-Hadoop-CLI-Installation)
+For a hands-on tutorial please visit [Off-Hadoop-CLI installation](https://github.com/KylinOLAP/Kylin/wiki/Off-Hadoop-CLI-Installation-(Dev-Env-Setup))
 
 
 ### Resources ###

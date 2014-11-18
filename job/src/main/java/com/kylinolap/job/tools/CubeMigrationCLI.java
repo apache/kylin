@@ -1,26 +1,10 @@
 package com.kylinolap.job.tools;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import com.kylinolap.cube.*;
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.Serializer;
+import com.kylinolap.cube.*;
 import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.dict.DictionaryInfo;
 import com.kylinolap.dict.DictionaryManager;
@@ -29,6 +13,21 @@ import com.kylinolap.dict.lookup.SnapshotTable;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by honma on 9/3/14.
@@ -50,8 +49,6 @@ public class CubeMigrationCLI {
     private static ResourceStore dstStore;
     private static FileSystem hdfsFS;
     private static HBaseAdmin hbaseAdmin;
-    private static Path srcCoprocessorPath;
-    private static Path dstCoprocessorPath;
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
@@ -89,18 +86,24 @@ public class CubeMigrationCLI {
         if (cube.getStatus() != CubeStatusEnum.READY)
             throw new IllegalStateException("Cannot migrate cube that is not in READY state.");
 
+        for (CubeSegment segment : cube.getSegments()) {
+            if (segment.getStatus() != CubeSegmentStatusEnum.READY) {
+                throw new IllegalStateException("At least one segment is not in READY state");
+            }
+        }
+
         checkAndGetHbaseUrl();
 
         Configuration conf = HBaseConfiguration.create();
         hbaseAdmin = new HBaseAdmin(conf);
+
         hdfsFS = FileSystem.get(new Configuration());
-        srcCoprocessorPath = DeployCoprocessorCLI.getNewestCoprocessorJar(srcConfig, hdfsFS);
-        dstCoprocessorPath = DeployCoprocessorCLI.getNewestCoprocessorJar(dstConfig, hdfsFS);
 
         operations = new ArrayList<Opt>();
+
         copyFilesInMetaStore(cube, overwriteIfExists);
-        //renameFoldersInHdfs(cube);
-        //renameTablesInHbase(cube);// change htable name + change name in cube instance + alter coprocessor
+        renameFoldersInHdfs(cube);
+        changeHtableHost(cube);
         addCubeIntoProject(cubeName, projectName);
 
         if (realExecute.equalsIgnoreCase("true")) {
@@ -139,8 +142,6 @@ public class CubeMigrationCLI {
 
     private static void renameFoldersInHdfs(CubeInstance cube) {
         for (CubeSegment segment : cube.getSegments()) {
-            if (segment.getStatus() != CubeSegmentStatusEnum.READY)
-                throw new IllegalStateException("At least one segment is not in READY state");
 
             String jobUuid = segment.getLastBuildJobID();
             String src = JobInstance.getJobWorkingDir(jobUuid, srcConfig.getHdfsWorkingDirectory());
@@ -148,33 +149,14 @@ public class CubeMigrationCLI {
 
             operations.add(new Opt(OptType.RENAME_FOLDER_IN_HDFS, new Object[] { src, tgt }));
         }
+
     }
 
-    private static void renameTablesInHbase(CubeInstance cube) {
-        HashMap<String, String> renamedHTables = new HashMap<String, String>();
-
+    private static void changeHtableHost(CubeInstance cube) {
         for (CubeSegment segment : cube.getSegments()) {
-            String oldHTableName = segment.getStorageLocationIdentifier().trim();
-            String srcPrefix = CubeManager.getHbaseStorageLocationPrefix(srcConfig.getMetadataUrl());
-            String dstPrefix = CubeManager.getHbaseStorageLocationPrefix(dstConfig.getMetadataUrl());
-
-            logger.info("Hbase table path in the current segment: " + oldHTableName);
-            if (StringUtils.isEmpty(oldHTableName))
-                throw new IllegalStateException("current hbase table is blank");
-            if (oldHTableName.indexOf(srcPrefix) != 0)
-                throw new IllegalStateException("current hbase table is not starting with " + srcPrefix);
-
-            String remaining = oldHTableName.substring(srcPrefix.length());
-            String newHTableName = dstPrefix + remaining;
-
-
-            operations.add(new Opt(OptType.RENAME_TABLE_IN_HBASE, new Object[] { oldHTableName, newHTableName }));
-            operations.add(new Opt(OptType.ALTER_TABLE_COPROCESSOR, new Object[] { newHTableName }));
-            renamedHTables.put(oldHTableName, newHTableName);
-
+            operations.add(new Opt(OptType.CHANGE_HTABLE_HOST,
+                    new Object[] { segment.getStorageLocationIdentifier() }));
         }
-
-        operations.add(new Opt(OptType.CHANGE_HTABLE_NAME_IN_CUBE, new Object[] { cube.getName(), renamedHTables }));
     }
 
     private static void copyFilesInMetaStore(CubeInstance cube, String overwriteIfExists) throws IOException {
@@ -220,7 +202,7 @@ public class CubeMigrationCLI {
     }
 
     private static enum OptType {
-        COPY_FILE_IN_META, COPY_DICT_OR_SNAPSHOT, RENAME_FOLDER_IN_HDFS, RENAME_TABLE_IN_HBASE, ALTER_TABLE_COPROCESSOR, CHANGE_HTABLE_NAME_IN_CUBE, ADD_INTO_PROJECT
+        COPY_FILE_IN_META, COPY_DICT_OR_SNAPSHOT, RENAME_FOLDER_IN_HDFS, ADD_INTO_PROJECT, CHANGE_HTABLE_HOST
     }
 
     private static class Opt {
@@ -239,6 +221,7 @@ public class CubeMigrationCLI {
                 sb.append(s).append(", ");
             return sb.toString();
         }
+
     }
 
     private static void showOpts() {
@@ -259,17 +242,19 @@ public class CubeMigrationCLI {
                 doOpt(operations.get(index));
             }
         } catch (Exception e) {
-            logger.error(e.getLocalizedMessage());
+            logger.error("error met", e);
             logger.info("Try undoing previous changes");
             // undo:
             for (int i = index; i >= 0; --i) {
                 try {
                     undo(operations.get(i));
                 } catch (Exception ee) {
-                    logger.error(ee.getLocalizedMessage());
+                    logger.error("error met ", e);
                     logger.info("Continue undoing...");
                 }
             }
+
+            throw new RuntimeException("Cube moving failed");
         }
     }
 
@@ -277,6 +262,16 @@ public class CubeMigrationCLI {
         logger.info("Executing operation: " + opt.toString());
 
         switch (opt.type) {
+        case CHANGE_HTABLE_HOST: {
+            String tableName = (String) opt.params[0];
+            HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
+            hbaseAdmin.disableTable(tableName);
+            desc.setValue(CubeManager.getHtableMetadataKey(), dstConfig.getMetadataUrlPrefix());
+            hbaseAdmin.modifyTable(tableName, desc);
+            hbaseAdmin.enableTable(tableName);
+            logger.info("CHANGE_HTABLE_HOST is completed");
+            break;
+        }
         case COPY_FILE_IN_META: {
             String item = (String) opt.params[0];
             InputStream inputStream = srcStore.getResource(item);
@@ -366,33 +361,6 @@ public class CubeMigrationCLI {
             logger.info("HDFS Folder renamed from " + srcPath + " to " + dstPath);
             break;
         }
-        case RENAME_TABLE_IN_HBASE: {
-            String oldTableName = (String) opt.params[0];
-            String newTableName = (String) opt.params[1];
-            String snapshotName = "_snapshot_" + oldTableName;
-            hbaseAdmin.disableTable(oldTableName);
-            hbaseAdmin.snapshot(snapshotName, oldTableName);
-            hbaseAdmin.cloneSnapshot(snapshotName, newTableName);
-            hbaseAdmin.deleteSnapshot(snapshotName);
-            hbaseAdmin.deleteTable(oldTableName);
-            logger.info("Hbase table renamed from " + oldTableName + " to " + newTableName);
-            break;
-        }
-        case CHANGE_HTABLE_NAME_IN_CUBE: {
-            String cubeName = (String) opt.params[0];
-            @SuppressWarnings("unchecked")
-            HashMap<String, String> renamedHtables = (HashMap<String, String>) opt.params[1];
-            String cubeResPath = CubeInstance.concatResourcePath(cubeName);
-            Serializer<CubeInstance> cubeSerializer = new JsonSerializer<CubeInstance>(CubeInstance.class);
-            CubeInstance cube = dstStore.getResource(cubeResPath, CubeInstance.class, cubeSerializer);
-            for (CubeSegment segment : cube.getSegments()) {
-                String htable = segment.getStorageLocationIdentifier().trim();
-                segment.setStorageLocationIdentifier(renamedHtables.get(htable));
-            }
-            dstStore.putResource(cubeResPath, cube, cubeSerializer);
-            logger.info("CubeInstance for " + cubeName + " is corrected");
-            break;
-        }
         case ADD_INTO_PROJECT: {
             String cubeName = (String) opt.params[0];
             String projectName = (String) opt.params[1];
@@ -405,12 +373,6 @@ public class CubeMigrationCLI {
             logger.info("Project instance for " + projectName + " is corrected");
             break;
         }
-        case ALTER_TABLE_COPROCESSOR: {
-            String htableName = (String) opt.params[0];
-            DeployCoprocessorCLI.resetCoprocessor(htableName, hbaseAdmin, dstCoprocessorPath);
-            logger.info("The hbase table " + htableName + " is bound with new coprocessor " + dstCoprocessorPath);
-            break;
-        }
         }
     }
 
@@ -418,6 +380,15 @@ public class CubeMigrationCLI {
         logger.info("Undo operation: " + opt.toString());
 
         switch (opt.type) {
+        case CHANGE_HTABLE_HOST: {
+            String tableName = (String) opt.params[0];
+            HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
+            hbaseAdmin.disableTable(tableName);
+            desc.setValue(CubeManager.getHtableMetadataKey(), srcConfig.getMetadataUrlPrefix());
+            hbaseAdmin.modifyTable(tableName, desc);
+            hbaseAdmin.enableTable(tableName);
+            break;
+        }
         case COPY_FILE_IN_META: {
             // no harm
             logger.info("Undo for COPY_FILE_IN_META is ignored");
@@ -438,32 +409,8 @@ public class CubeMigrationCLI {
             }
             break;
         }
-        case RENAME_TABLE_IN_HBASE: {
-            String oldTableName = (String) opt.params[1];
-            String newTableName = (String) opt.params[0];
-            if (hbaseAdmin.tableExists(oldTableName) && !hbaseAdmin.tableExists(newTableName)) {
-                String snapshotName = "_snapshot_" + oldTableName;
-                hbaseAdmin.disableTable(oldTableName);
-                hbaseAdmin.snapshot(snapshotName, oldTableName);
-                hbaseAdmin.cloneSnapshot(snapshotName, newTableName);
-                hbaseAdmin.deleteSnapshot(snapshotName);
-                hbaseAdmin.deleteTable(oldTableName);
-                logger.info("Hbase table renamed from " + oldTableName + " to " + newTableName);
-            }
-            break;
-        }
-        case CHANGE_HTABLE_NAME_IN_CUBE: {
-            logger.info("Undo for CHANGE_HTABLE_NAME_IN_CUBE is ignored");
-            break;
-        }
         case ADD_INTO_PROJECT: {
             logger.info("Undo for ADD_INTO_PROJECT is ignored");
-            break;
-        }
-        case ALTER_TABLE_COPROCESSOR: {
-            String htableName = (String) opt.params[0];
-            DeployCoprocessorCLI.resetCoprocessor(htableName, hbaseAdmin, srcCoprocessorPath);
-            logger.info("The hbase table " + htableName + " is bound with new coprocessor " + srcCoprocessorPath);
             break;
         }
         }

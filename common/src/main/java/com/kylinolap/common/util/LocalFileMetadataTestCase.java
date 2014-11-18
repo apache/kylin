@@ -42,7 +42,7 @@ public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
         this.tempTestMetadataUrl = "../examples/test_metadata";
         try {
             FileUtils.deleteDirectory(new File(tempTestMetadataUrl));
-            FileUtils.copyDirectory(new File(testDataFolder), new File(tempTestMetadataUrl));
+            FileUtils.copyDirectory(new File(TEST_DATA_FOLDER), new File(tempTestMetadataUrl));
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
