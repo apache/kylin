@@ -282,7 +282,9 @@ public class BytesUtil {
             return;
         }
         writeVInt(array.length, out);
-        out.asIntBuffer().put(array);
+        for (int i = 0; i < array.length; ++i) {
+            writeVInt(array[i], out);
+        }
     }
 
     public static int[] readIntArray(ByteBuffer in) {
@@ -290,7 +292,10 @@ public class BytesUtil {
         if (len < 0)
             return null;
         int[] array = new int[len];
-        in.asIntBuffer().get(array);
+
+        for (int i = 0; i < len; ++i) {
+            array[i] = readVInt(in);
+        }
         return array;
     }
 
