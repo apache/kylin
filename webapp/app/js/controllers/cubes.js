@@ -48,9 +48,16 @@ KylinApp
                 angular.forEach(cubes, function (cube, index) {
                     $scope.listAccess(cube, 'CubeInstance');
                     if (cube.segments && cube.segments.length > 0) {
-                        cube.last_build_time = cube.segments[cube.segments.length - 1].last_build_time;
+                        for(var i= cube.segments.length-1;i>=0;i--){
+                            if(cube.segments[i].status==="READY"){
+                                cube.last_build_time = cube.segments[i].last_build_time;
+                                break;
+                            }else if(i===0){
+                                cube.last_build_time = cube.create_time;
+                            }
+                        }
                     } else {
-                        cube.last_build_time = 0;
+                        cube.last_build_time = cube.create_time;
                     }
                     if($routeParams.showDetail == 'true'){
                         cube.showDetail = true;
