@@ -1,4 +1,4 @@
-package com.kylinolap.storage.hbase.coprocessor;
+package com.kylinolap.storage.hbase.endpoint;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.Cell;

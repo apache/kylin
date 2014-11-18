@@ -1,7 +1,7 @@
-package com.kylinolap.storage.hbase.coprocessor;
+package com.kylinolap.storage.hbase.endpoint;
 
-import com.kylinolap.storage.hbase.coprocessor.example.ExampleEndpoint;
-import com.kylinolap.storage.hbase.coprocessor.example.generated.ExampleProtos;
+import com.kylinolap.storage.hbase.endpoint.example.ExampleEndpoint;
+import com.kylinolap.storage.hbase.endpoint.example.generated.ExampleProtos;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.TableName;

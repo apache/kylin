@@ -1,9 +1,9 @@
-package com.kylinolap.storage.hbase.coprocessor.example;
+package com.kylinolap.storage.hbase.endpoint.example;
 
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
-import com.kylinolap.storage.hbase.coprocessor.example.generated.ExampleProtos;
+import com.kylinolap.storage.hbase.endpoint.example.generated.ExampleProtos;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.Coprocessor;

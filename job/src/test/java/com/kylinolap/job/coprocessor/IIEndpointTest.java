@@ -1,10 +1,8 @@
 package com.kylinolap.job.coprocessor;
 
 import com.google.protobuf.ByteString;
-import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
-import com.kylinolap.common.util.HadoopUtil;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
@@ -12,16 +10,12 @@ import com.kylinolap.cube.invertedindex.IIKeyValueCodec;
 import com.kylinolap.cube.invertedindex.TableRecord;
 import com.kylinolap.cube.invertedindex.TableRecordInfo;
 import com.kylinolap.cube.invertedindex.TableRecordInfoDigest;
-import com.kylinolap.job.hadoop.hbase.BulkLoadJob;
 import com.kylinolap.job.hadoop.invertedindex.IIBulkLoadJob;
-import com.kylinolap.job.hadoop.invertedindex.IICreateHTableJob;
 import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
-import com.kylinolap.storage.hbase.coprocessor.IIEndpoint;
-import com.kylinolap.storage.hbase.coprocessor.generated.IIProtos;
+import com.kylinolap.storage.hbase.endpoint.IIEndpoint;
+import com.kylinolap.storage.hbase.endpoint.generated.IIProtos;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
@@ -38,7 +32,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
