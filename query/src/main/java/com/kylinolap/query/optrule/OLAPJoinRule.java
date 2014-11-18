@@ -16,12 +16,16 @@
 package com.kylinolap.query.optrule;
 
 import org.eigenbase.rel.InvalidRelException;
+import org.eigenbase.rel.JoinInfo;
 import org.eigenbase.rel.JoinRel;
+import org.eigenbase.rel.JoinRelType;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.convert.ConverterRule;
 import org.eigenbase.relopt.Convention;
+import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
 
+import com.kylinolap.query.relnode.OLAPFilterRel;
 import com.kylinolap.query.relnode.OLAPJoinRel;
 import com.kylinolap.query.relnode.OLAPRel;
 
@@ -40,17 +44,38 @@ public class OLAPJoinRule extends ConverterRule {
 
     @Override
     public RelNode convert(RelNode rel) {
-        JoinRel joinRel = (JoinRel) rel;
-        RelNode leftRel = joinRel.getInput(0);
-        RelNode rightRel = joinRel.getInput(1);
-        RelTraitSet traitSet = joinRel.getTraitSet().replace(OLAPRel.CONVENTION);
+        JoinRel join = (JoinRel) rel;
+        RelNode left = join.getInput(0);
+        RelNode right = join.getInput(1);
+
+        RelTraitSet traitSet = join.getTraitSet().replace(OLAPRel.CONVENTION);
+        left = convert(left, traitSet);
+        right = convert(right, traitSet);
+
+        final JoinInfo info = JoinInfo.of(left, right, join.getCondition());
+        if (!info.isEqui() && join.getJoinType() != JoinRelType.INNER) {
+            // EnumerableJoinRel only supports equi-join. We can put a filter on top
+            // if it is an inner join.
+            return null;
+        }
+
+        RelOptCluster cluster = join.getCluster();
+        RelNode newRel;
         try {
-            return new OLAPJoinRel(joinRel.getCluster(), traitSet, convert(leftRel, traitSet), convert(rightRel, traitSet), joinRel.getCondition(), joinRel.getJoinType(), joinRel.getVariablesStopped());
+            newRel = new OLAPJoinRel(cluster, traitSet, left, right, //
+                    info.getEquiCondition(left, right, cluster.getRexBuilder()), //
+                    info.leftKeys, info.rightKeys, join.getJoinType(), join.getVariablesStopped());
         } catch (InvalidRelException e) {
             // Semantic error not possible. Must be a bug. Convert to
             // internal error.
             throw new AssertionError(e);
+            // LOGGER.fine(e.toString());
+            // return null;
         }
+        if (!info.isEqui()) {
+            newRel = new OLAPFilterRel(cluster, newRel.getTraitSet(), newRel, info.getRemaining(cluster.getRexBuilder()));
+        }
+        return newRel;
     }
 
 }

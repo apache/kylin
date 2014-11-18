@@ -104,7 +104,7 @@ public abstract class BasicService {
             props.setProperty(OLAPQuery.PROP_SCAN_THRESHOLD, String.valueOf(KylinConfig.getInstanceFromEnv().getScanThreshold()));
             ds.setConnectionProperties(props);
             ds.setDriverClassName("net.hydromatic.optiq.jdbc.Driver");
-            ds.setUrl("jdbc:optiq:model=" + modelJson.getAbsolutePath());
+            ds.setUrl("jdbc:calcite:model=" + modelJson.getAbsolutePath());
 
             ret = olapDataSources.putIfAbsent(project, ds);
             if (ret == null) {

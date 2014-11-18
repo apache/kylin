@@ -45,7 +45,7 @@ public class KylinQueryTest extends KylinTestBase {
     public static void setUp() throws Exception {
         printInfo("setUp in KylinQueryTest");
 
-        joinType = "inner";
+        joinType = "left";
         setupAll();
         preferCubeOf(joinType);
     }
@@ -69,7 +69,7 @@ public class KylinQueryTest extends KylinTestBase {
         File olapTmp = OLAPSchemaFactory.createTempOLAPJson(ProjectInstance.DEFAULT_PROJECT_NAME, config);
         Properties props = new Properties();
         props.setProperty(OLAPQuery.PROP_SCAN_THRESHOLD, "10000");
-        cubeConnection = DriverManager.getConnection("jdbc:optiq:model=" + olapTmp.getAbsolutePath(), props);
+        cubeConnection = DriverManager.getConnection("jdbc:calcite:model=" + olapTmp.getAbsolutePath(), props);
     }
 
     private static void setUpH2Conn() throws SQLException {

@@ -246,8 +246,8 @@ public class OLAPFilterRel extends FilterRelBase implements OLAPRel, EnumerableR
     }
 
     @Override
-    public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-        return new OLAPFilterRel(getCluster(), traitSet, sole(inputs), condition);
+    public FilterRelBase copy(RelTraitSet traitSet, RelNode input, RexNode condition) {
+        return new OLAPFilterRel(getCluster(), traitSet, input, condition);
     }
 
     @Override
