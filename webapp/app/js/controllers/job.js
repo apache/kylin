@@ -128,21 +128,6 @@ KylinApp
             }
         }
 
-        $scope.toCreateProj = function () {
-            $modal.open({
-                templateUrl: 'project.html',
-                controller: projCtrl,
-                resolve: {
-                    projects: function () {
-                        return null;
-                    },
-                    project: function(){
-                        return null;
-                    }
-                }
-            });
-        }
-
         function internalOpenModal() {
             $modal.open({
                 templateUrl: 'jobStepDetail.html',
