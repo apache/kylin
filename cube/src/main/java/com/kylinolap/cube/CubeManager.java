@@ -59,6 +59,7 @@ import com.kylinolap.metadata.model.schema.TableDesc;
 public class CubeManager {
 
     private static String ALPHA_NUM = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
     private static int HBASE_TABLE_LENGTH = 10;
 
     private static final Serializer<CubeInstance> CUBE_SERIALIZER = new JsonSerializer<CubeInstance>(CubeInstance.class);
@@ -199,7 +200,7 @@ public class CubeManager {
             throw new IllegalStateException("Failed to get dictionary for cube segment" + cubeSeg.getName() + ", col" + col, e);
         }
 
-        return info == null ? null : info.getDictionaryObject();
+        return info.getDictionaryObject();
     }
 
     public SnapshotTable buildSnapshotTable(CubeSegment cubeSeg, String lookupTable) throws IOException {
@@ -316,21 +317,17 @@ public class CubeManager {
         return segments;
     }
 
-    public String getHBaseStorageLocationPrefix() {
-        return getHbaseStorageLocationPrefix(config.getMetadataUrl());
+    public static String getHBaseStorageLocationPrefix() {
+        return "KYLIN_";
+        //return getHbaseStorageLocationPrefix(config.getMetadataUrl());
     }
 
-    public static String getHbaseStorageLocationPrefix(String hbaseMetadataUrl) {
-        String defaultPrefix = "KYLIN_CUBE_";
-
-        if (StringUtils.containsIgnoreCase(hbaseMetadataUrl, "hbase:")) {
-            int cut = hbaseMetadataUrl.indexOf('@');
-            String tmp = cut < 0 ? defaultPrefix : hbaseMetadataUrl.substring(0, cut);
-            String prefix = StringUtils.replace(tmp, "_metadata", "");
-            return (prefix + "_CUBE_").toUpperCase();
-        } else {
-            return defaultPrefix;
-        }
+    /**
+     * For each cube htable, we leverage htable's metadata to keep track of
+     * which kylin server(represented by its kylin_metadata prefix) owns this htable
+     */
+    public static  String getHtableMetadataKey() {
+        return "KYLIN_HOST";
     }
 
     public void updateSegmentOnJobSucceed(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, String segmentName, String lastBuildJobUuid, long lastBuildTime, long sizeKB, long sourceRecordCount, long sourceRecordsSize) throws IOException, CubeIntegrityException {

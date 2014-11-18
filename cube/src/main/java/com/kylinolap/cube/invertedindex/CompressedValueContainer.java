@@ -37,7 +37,7 @@ public class CompressedValueContainer implements ColumnValueContainer {
     byte[] uncompressed;
     byte[] compressed;
 
-    public CompressedValueContainer(TableRecordInfo info, int col, int cap) {
+    public CompressedValueContainer(TableRecordInfoDigest info, int col, int cap) {
         this.valueLen = info.length(col);
         this.cap = cap;
         this.size = 0;

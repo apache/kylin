@@ -86,7 +86,12 @@ public class DictionaryInfo extends RootPersistentEntity {
     // to decide if two dictionaries are built on the same table/column,
     // regardless of their signature
     public boolean isDictOnSameColumn(DictionaryInfo other) {
-        return this.sourceTable.equalsIgnoreCase(other.sourceTable) && this.sourceColumn.equalsIgnoreCase(other.sourceColumn) && this.sourceColumnIndex == other.sourceColumnIndex && this.dataType.equalsIgnoreCase(other.dataType) && this.inputDelimeter.equalsIgnoreCase(other.inputDelimeter) && this.dictionaryClass.equalsIgnoreCase(other.dictionaryClass);
+        return this.sourceTable.equalsIgnoreCase(other.sourceTable) &&
+                this.sourceColumn.equalsIgnoreCase(other.sourceColumn) &&
+                this.sourceColumnIndex == other.sourceColumnIndex &&
+                this.dataType.equalsIgnoreCase(other.dataType) &&
+                this.inputDelimeter.equalsIgnoreCase(other.inputDelimeter) &&
+                this.dictionaryClass.equalsIgnoreCase(other.dictionaryClass);
     }
 
     public String getSourceTable() {

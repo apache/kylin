@@ -36,10 +36,10 @@ public class IIKeyValueCodec {
     public static final int TIMEPART_LEN = 8;
     public static final int COLNO_LEN = 2;
 
-    private TableRecordInfo info;
+    private TableRecordInfoDigest infoDigest;
 
-    public IIKeyValueCodec(TableRecordInfo info) {
-        this.info = info;
+    public IIKeyValueCodec(TableRecordInfoDigest info) {
+        this.infoDigest = info;
     }
 
     public Collection<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> encodeKeyValue(Slice slice) {
@@ -91,7 +91,7 @@ public class IIKeyValueCodec {
         i += COLNO_LEN;
 
         if (colValue >= 0) {
-            int colLen = info.length(col);
+            int colLen = infoDigest.length(col);
             BytesUtil.writeUnsigned(colValue, buf, i, colLen);
             i += colLen;
         }
@@ -100,12 +100,12 @@ public class IIKeyValueCodec {
     }
 
     public Iterable<Slice> decodeKeyValue(Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> kvs) {
-        return new Decoder(info, kvs);
+        return new Decoder(infoDigest, kvs);
     }
 
     private static class Decoder implements Iterable<Slice> {
 
-        TableRecordInfo info;
+        TableRecordInfoDigest info;
         Iterator<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> iterator;
 
         Slice next = null;
@@ -119,7 +119,7 @@ public class IIKeyValueCodec {
         ColumnValueContainer[] containers = null;
         List<ImmutableBytesWritable> bitMapValues = Lists.newArrayList();
 
-        Decoder(TableRecordInfo info, Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> kvs) {
+        Decoder(TableRecordInfoDigest info, Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> kvs) {
             this.info = info;
             this.iterator = kvs.iterator();
         }

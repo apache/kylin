@@ -174,7 +174,7 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
         for (Map.Entry<TblColRef, TblColRef> columnPair : joinColumns.entrySet()) {
             TblColRef fromCol = columnPair.getKey();
             TblColRef toCol = columnPair.getValue();
-            if (factTable.equals(fromCol)) {
+            if (factTable.equalsIgnoreCase(fromCol.getTable())) {
                 fks.add(fromCol.getName());
                 fkCols.add(fromCol);
                 pks.add(toCol.getName());

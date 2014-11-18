@@ -58,9 +58,7 @@ import com.kylinolap.query.schema.OLAPSchema;
 import com.kylinolap.query.schema.OLAPTable;
 
 /**
- * 
  * @author xjiang
- * 
  */
 public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, EnumerableRel {
 
@@ -183,6 +181,9 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
 
     @Override
     public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
+        if (!(implementor instanceof JavaImplementor))
+            throw new IllegalStateException("implementor is not JavaImplementor");
+
         JavaImplementor javaImplementor = (JavaImplementor) implementor;
 
         int ctxId = this.context.id;
@@ -216,7 +217,7 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
     /**
      * Because OLAPTableScan is reused for the same table, we can't use
      * this.context and have to use parent context
-     **/
+     */
     @Override
     public void implementRewrite(RewriteImplementor implementor) {
         Map<String, RelDataType> rewriteFields = this.context.rewriteFields;

@@ -35,7 +35,7 @@ import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
  * @author yangli9
  * 
  */
-public class HBaseKeyValueIterator implements Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>>, Closeable {
+public class HBaseClientKVIterator implements Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>>, Closeable {
 
     byte[] family;
     byte[] qualifier;
@@ -44,7 +44,7 @@ public class HBaseKeyValueIterator implements Iterable<Pair<ImmutableBytesWritab
     ResultScanner scanner;
     Iterator<Result> iterator;
 
-    public HBaseKeyValueIterator(HConnection hconn, String tableName, byte[] family, byte[] qualifier) throws IOException {
+    public HBaseClientKVIterator(HConnection hconn, String tableName, byte[] family, byte[] qualifier) throws IOException {
         this.family = family;
         this.qualifier = qualifier;
 

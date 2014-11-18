@@ -188,11 +188,7 @@ public class CubeDevelopTestCase extends HBaseMetadataTestCase {
         this.execCommand("rm -rf " + this.getHadoopCliWorkingDir());
     }
 
-    private void deployJarToHadoopCli() throws Exception {
-        scpFilesToHadoopCli(new String[] { ".." + File.separator + "job" + File.separator + "target" + File.separator + jobJarName }, this.getHadoopCliWorkingDir());
-    }
-
-    private void deployJarToLocalDir() throws IOException {
+    private void deployCoprocessorJarToLocalDir() throws IOException {
         File targetFile = new File(KylinConfig.getInstanceFromEnv().getCoprocessorLocalJar());
         File parent = targetFile.getParentFile();
         if (!parent.exists() && !parent.mkdirs()) {
@@ -202,11 +198,22 @@ public class CubeDevelopTestCase extends HBaseMetadataTestCase {
         FileUtils.copyFile(new File(".." + File.separator + "storage" + File.separator + "target" + File.separator + coprocessorJarName), targetFile);
     }
 
-    private void deployKylinProperty() throws Exception {
-        scpFilesToHadoopCli(new String[] { ".." + File.separator + "examples" + File.separator + "test_case_data" + File.separator + "kylin.properties" }, "/etc/kylin");
+    private void deployJobJarToLocalDir() throws IOException {
+        File targetFile = new File(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
+        File parent = targetFile.getParentFile();
+        if (!parent.exists() && !parent.mkdirs()) {
+            throw new IllegalStateException("Couldn't create dir: " + parent);
+        }
+
+        FileUtils.copyFile(new File(".." + File.separator + "job" + File.separator + "target" + File.separator + jobJarName), targetFile);
     }
 
-    private void deployJobConf(boolean jobEnableLzo) throws Exception {
+    private void deployKylinPropertyToLocalDir() throws Exception {
+        String srcPath = ".." + File.separator + "examples" + File.separator + "test_case_data" + File.separator + "kylin.properties";
+        FileUtils.copyFileToDirectory(new File(srcPath), new File("/etc/kylin"));
+    }
+
+    private void deployJobConfToLocalDir(boolean jobEnableLzo) throws Exception {
         String srcFile;
 
         if (jobEnableLzo) {
@@ -227,7 +234,7 @@ public class CubeDevelopTestCase extends HBaseMetadataTestCase {
             dest.deleteOnExit();
         }
 
-        scpFilesToHadoopCli(new String[] { srcFile }, "/etc/kylin");
+        FileUtils.copyFileToDirectory(new File(srcFile), new File("/etc/kylin"));
     }
 
     private String getExampleTestCaseDataFolder() {
@@ -293,13 +300,13 @@ public class CubeDevelopTestCase extends HBaseMetadataTestCase {
             CubeManager.getInstance(this.getTestConfig()).updateCube(cube);
         }
 
-        deployJarToHadoopCli();
-        deployJarToLocalDir();
+        deployJobJarToLocalDir();
+        deployCoprocessorJarToLocalDir();
 
         if (deployKylinProperties)
-            deployKylinProperty();
+            deployKylinPropertyToLocalDir();
 
-        deployJobConf(jobEnableLzo);
+        deployJobConfToLocalDir(jobEnableLzo);
     }
 
     protected void prepareTestData(String joinType) throws Exception {
