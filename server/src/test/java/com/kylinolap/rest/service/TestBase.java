@@ -56,11 +56,12 @@ public class TestBase extends HBaseMetadataTestCase {
     public void setUp() {
         KylinConfig.destoryInstance();
         this.createTestMetadata();
-        try {
-            this.installMetadataToHBase();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
+//        try {
+//            this.installMetadataToHBase();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
 
         MetadataManager.removeInstance(getTestConfig());
         CubeManager.removeInstance(this.getTestConfig());
