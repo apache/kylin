@@ -187,10 +187,6 @@ public class ProjectManager {
         return addCubeToProject(cubeName, newProjectName, owner);
     }
     
-    public boolean isTableInProject(String projectName, CubeInstance cube) {
-        return this.listAllCubes(projectName).contains(cube);
-    }
-
     public ProjectInstance updateTableToProject(String tables,String projectName) throws IOException {
         ProjectInstance projectInstance = getProject(projectName);
         String[] tokens = StringUtils.split(tables, ",");

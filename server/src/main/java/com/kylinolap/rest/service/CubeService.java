@@ -578,8 +578,6 @@ public class CubeService extends BasicService {
     
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void syncTableToProject(String tables,String project){
-
-        String owner = SecurityContextHolder.getContext().getAuthentication().getName();
         try {
             ProjectInstance newProject = getProjectManager().updateTableToProject(tables, project);
         } catch (IOException e) {

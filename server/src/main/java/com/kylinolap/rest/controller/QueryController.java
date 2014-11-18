@@ -119,17 +119,17 @@ public class QueryController extends BasicController {
     @RequestMapping(value = "/saved_queries", method = RequestMethod.POST)
     @ResponseBody
     @Timed(name = "saveQuery")
-    public void saveQuery(@RequestBody SaveSqlRequest sqlRequest) {
+    public void saveQuery(@RequestBody SaveSqlRequest sqlRequest) throws IOException {
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
         Query newQuery = new Query(sqlRequest.getName(), sqlRequest.getProject(), sqlRequest.getSql(), sqlRequest.getDescription());
-        
+
         queryService.saveQuery(creator, newQuery);
     }
 
     @RequestMapping(value = "/saved_queries/{id}", method = RequestMethod.DELETE)
     @ResponseBody
     @Timed(name = "removeQuery")
-    public void removeQuery(@PathVariable String id) {
+    public void removeQuery(@PathVariable String id) throws IOException {
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
         queryService.removeQuery(creator, id);
     }
@@ -137,7 +137,7 @@ public class QueryController extends BasicController {
     @RequestMapping(value = "/saved_queries", method = RequestMethod.GET)
     @ResponseBody
     @Timed(name = "getQueries")
-    public List<Query> getQueries() {
+    public List<Query> getQueries() throws IOException {
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
         return queryService.getQueries(creator);
     }
