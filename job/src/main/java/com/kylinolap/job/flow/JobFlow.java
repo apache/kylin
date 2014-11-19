@@ -153,6 +153,7 @@ public class JobFlow {
         }
         String log = config.getKylinJobLogDir() + "/" + job.getUuid() + "_" + suffix + ".log";
 
-        return "set -o pipefail; " + cmd + " 2>&1 | tee " + log;
+        String mkLogDir = "mkdir -p " + config.getKylinJobLogDir();
+        return mkLogDir + ";" + "set -o pipefail; " + cmd + " 2>&1 | tee " + log;
     }
 }
