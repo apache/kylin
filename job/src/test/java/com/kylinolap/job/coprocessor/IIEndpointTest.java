@@ -62,33 +62,28 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
 
         //create table and bulk load data
         TEST_UTIL.startMiniCluster();
-        //TEST_UTIL.createTable(TEST_TABLE, new byte[][] { TEST_FAMILY });
 
+        //simulate bulk load
+        mockCubeHtable();
+
+        hconn = HConnectionManager.createConnection(CONF);
+    }
+
+    private static void mockCubeHtable() throws Exception {
         org.apache.hadoop.fs.FileSystem fs = org.apache.hadoop.fs.FileSystem.get(CONF);
         fs.copyFromLocalFile(false, new Path("../examples/test_case_cube/II_hfile/"), new Path("/tmp/test_III_hfile"));
-
-
-//        RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(new Path("/tmp/test_III_hfile"), true);
-//        while (iterator.hasNext()) {
-//            LocatedFileStatus a = iterator.next();
-//            System.out.println(a.getPath());
-//        }
-
 
         int sharding = 4;
 
         HTableDescriptor tableDesc = new HTableDescriptor(TEST_TABLE);
         HColumnDescriptor cf = new HColumnDescriptor(InvertedIndexDesc.HBASE_FAMILY);
         cf.setMaxVersions(1);
-        //cf.setCompressionType(Compression.Algorithm.LZO);
-        //cf.setDataBlockEncoding(DataBlockEncoding.FAST_DIFF);
         tableDesc.addFamily(cf);
 
         if (User.isHBaseSecurityEnabled(CONF)) {
             // add coprocessor for bulk load
             tableDesc.addCoprocessor("org.apache.hadoop.hbase.security.access.SecureBulkLoadEndpoint");
         }
-
 
         byte[][] splitKeys = getSplits(sharding);
         if (splitKeys.length == 0)
@@ -99,30 +94,13 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         HBaseAdmin hBaseAdmin = new HBaseAdmin(CONF);
         TableName[] tables = hBaseAdmin.listTableNames();
 
-
         String temp = "-cubename \"test_kylin_cube_ii\"  -input \"/tmp/test_III_hfile\"  -htablename \"test_III\"";
         ToolRunner.run(CONF, new IIBulkLoadJob(), temp.split("\\s+"));
-        //String temp = "-cubename \"test_kylin_cube_ii\"    -htablename \"test_III\"";
-
-        hconn = HConnectionManager.createConnection(CONF);
-//        HTableInterface hTableInterface = conn.getTable("tt");
-//        ResultScanner scanner = hTableInterface.getScanner(new Scan());
-//        Iterator<Result> resultIterator = scanner.iterator();
-//        int count = 0;
-//        while (resultIterator.hasNext()) {
-//            resultIterator.next();
-//            count++;
-//        }
-//
-//        System.out.println(count);
-
-
     }
 
     @Before
     public void setup() throws Exception {
         this.createTestMetadata();
-
         this.cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_ii");
         this.seg = cube.getFirstSegment();
     }
