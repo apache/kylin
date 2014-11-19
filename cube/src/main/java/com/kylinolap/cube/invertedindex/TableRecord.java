@@ -17,7 +17,6 @@
 package com.kylinolap.cube.invertedindex;
 
 import com.kylinolap.dict.DateStrDictionary;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
 

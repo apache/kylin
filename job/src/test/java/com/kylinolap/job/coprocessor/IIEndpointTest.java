@@ -176,7 +176,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
                 });
 
         for (Map.Entry<byte[], List<TableRecord>> entry : results.entrySet()) {
-            System.out.println("result count : " + entry.getValue());
+            System.out.println("result count : " + entry.getValue().size());
         }
     }
 }
