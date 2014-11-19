@@ -48,7 +48,7 @@ public class HbaseServerKVIterator implements Iterable<Pair<ImmutableBytesWritab
 
             @Override
             public Pair<ImmutableBytesWritable, ImmutableBytesWritable> next() {
-                if (!hasNext()) {
+                if (hasNext()) {
                     try {
                         hasMore = innerScaner.nextRaw(results);
                     } catch (IOException e) {
@@ -56,7 +56,7 @@ public class HbaseServerKVIterator implements Iterable<Pair<ImmutableBytesWritab
                     }
 
                     if (results.size() < 1)
-                        throw new IllegalStateException("Hbase row contains less than 1 row");
+                        throw new IllegalStateException("Hbase row contains less than 1 cell");
 
                     Cell c = results.get(0);
                     key.set(c.getRowArray(), c.getRowOffset(), c.getRowLength());
