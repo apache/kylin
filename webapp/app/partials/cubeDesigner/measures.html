@@ -143,12 +143,14 @@
                                     ng-init="newMeasure.function.returntype = (!!newMeasure.function.returntype)?newMeasure.function.returntype:dftSelections.measureDataType.value"
                                     chosen ng-model="newMeasure.function.returntype" required
                                     ng-options="mdt.value as mdt.name for mdt in measureDataTypes">
+                                    <option value=""></option>
                                 </select>
                                 <select class="form-control"
                                     ng-if="newMeasure.function.expression == 'COUNT_DISTINCT'"
                                     ng-init="newMeasure.function.returntype = (!!newMeasure.function.returntype)?newMeasure.function.returntype:dftSelections.distinctDataType.value"
                                     chosen ng-model="newMeasure.function.returntype" required
                                     ng-options="ddt.value as ddt.name for ddt in distinctDataTypes">
+                                    <option value=""></option>
                                 </select>
                                 <span class="font-color-default"
                                     ng-if="newMeasure.function.expression == 'COUNT'"
