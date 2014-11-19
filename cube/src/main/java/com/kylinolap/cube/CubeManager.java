@@ -428,7 +428,7 @@ public class CubeManager {
      * For the new segment, we need to create dictionaries for it, too. For
      * those dictionaries on fact table, create it by merging underlying
      * dictionaries For those dictionaries on lookup table, just copy it from
-     * any one of the merging segments, it's ganranteed to be consistent(checked
+     * any one of the merging segments, it's guaranteed to be consistent(checked
      * in CubeSegmentValidator)
      *
      * @param cube

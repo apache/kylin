@@ -145,14 +145,15 @@ public class JobInstanceBuilder {
 
     private List<JobStep> createMergeCubeSegmentsSteps(JobInstance jobInstance) throws IOException {
 
-        if (cube.getMergingSegments() == null || cube.getMergingSegments().size() < 2) {
+        List<CubeSegment> mergingSegments = cube.getMergingSegments();
+        if (mergingSegments == null || mergingSegments.size() < 2) {
             throw new IllegalArgumentException("Merging segments count should be more than 2");
         }
 
 
-        String[] cuboidPaths = new String[cube.getMergingSegments().size()];
-        for (int i = 0; i < cube.getMergingSegments().size(); i++) {
-            CubeSegment seg = cube.getMergingSegments().get(i);
+        String[] cuboidPaths = new String[mergingSegments.size()];
+        for (int i = 0; i < mergingSegments.size(); i++) {
+            CubeSegment seg = mergingSegments.get(i);
             cuboidPaths[i] = JobInstance.getJobWorkingDir(seg.getLastBuildJobID(), engineConfig.getHdfsWorkingDirectory()) + "/" + jobInstance.getRelatedCube() + "/cuboid/*";
         }
         String formattedPath = formatPaths(cuboidPaths);
@@ -238,6 +239,10 @@ public class JobInstanceBuilder {
     }
 
     private String formatPaths(String[] paths) {
+        return StringUtils.join(paths, ",");
+    }
+
+    private String formatPaths(List<String> paths) {
         return StringUtils.join(paths, ",");
     }
 
