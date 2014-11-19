@@ -79,7 +79,7 @@ KylinApp
             });
 
             return defer.promise;
-        }
+        };
 
         $scope.$watch('project.selectedProject', function (newValue, oldValue) {
             if(newValue){
@@ -101,7 +101,7 @@ KylinApp
             else {
                 $scope.selectedSrcTable.selectedSrcColumn = table;
             }
-        }
+        };
 
         $scope.aceSrcTbChanged = function () {
             $scope.srcTables = {};
@@ -109,7 +109,7 @@ KylinApp
             $scope.selectedSrcDb = {};
             $scope.selectedSrcTable = {};
             $scope.aceSrcTbLoaded(true);
-        }
+        };
 
         $scope.treeOptions = {
             nodeChildren: "columns",
@@ -123,7 +123,7 @@ KylinApp
                 label: "a6",
                 labelSelected: "a8"
             }
-        }
+        };
 
         $scope.openModal = function () {
             $modal.open({
@@ -144,7 +144,7 @@ KylinApp
                     }
                 }
             });
-        }
+        };
 
         var ModalInstanceCtrl = function ($scope,$location, $modalInstance, tableNames, MessageService,projectName,hiveTbLoad) {
             hiveTbLoad.status = "init";
