@@ -79,9 +79,7 @@ public class HiveSourceTableLoader {
         Set<String> loadedTables = Sets.newHashSet();
         for (String database : db2tables.keySet()) {
             List<String> loaded = extractHiveTables(database, db2tables.get(database), metaTmpDir, config);
-            for (String tableName : loaded) {
-                loadedTables.add(database + tableName);
-            }
+            loadedTables.addAll(loaded);
         }
 
         // save loaded tables
@@ -132,7 +130,7 @@ public class HiveSourceTableLoader {
         for (TableDesc table : tableDescList) {
             File file = new File(tableDescDir, table.getName().toUpperCase() + "." + OUTPUT_SURFIX);
             JsonUtil.writeValueIndent(new FileOutputStream(file), table);
-            loadedTables.add(table.getName());
+            loadedTables.add(table.getDatabase() + "." + table.getName());
         }
 
         for (Map<String, String> tableAttrs : tableAttrsList) {
