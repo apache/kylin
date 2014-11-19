@@ -24,11 +24,6 @@ KylinApp
         $scope.state = { filterAttr: 'create_time', filterReverse: true, reverseColumn: 'create_time',
             dimensionFilter: '', measureFilter: ''};
 
-//        ProjectService.list({}, function (projects) {
-//            angular.forEach(projects, function(project, index){
-//                $scope.projects.push(project.name);
-//            });
-//        });
 
         $scope.list = function (offset, limit) {
             offset = (!!offset) ? offset : 0;

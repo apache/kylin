@@ -134,6 +134,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         });
     } else {
         $scope.cubeMetaFrame = CubeMeta.createNew();
+        $scope.cubeMetaFrame.project = $scope.project.selectedProject;
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
     }
 
