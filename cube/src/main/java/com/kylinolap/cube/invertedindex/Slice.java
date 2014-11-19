@@ -99,7 +99,7 @@ public class Slice implements Iterable<TableRecordBytes>, Comparable<Slice> {
     public Iterator<TableRecordBytes> iterator() {
         return new Iterator<TableRecordBytes>() {
             int i = 0;
-            TableRecord rec = new TableRecord(info);
+            TableRecordBytes rec = info.createTableRecord();
             ImmutableBytesWritable temp = new ImmutableBytesWritable();
 
             @Override

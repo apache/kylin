@@ -1,5 +1,6 @@
 package com.kylinolap.storage.hbase.endpoint;
 
+import com.kylinolap.common.util.BytesUtil;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
@@ -61,6 +62,8 @@ public class HbaseServerKVIterator implements Iterable<Pair<ImmutableBytesWritab
                     Cell c = results.get(0);
                     key.set(c.getRowArray(), c.getRowOffset(), c.getRowLength());
                     value.set(c.getValueArray(), c.getValueOffset(), c.getValueLength());
+
+                    results.clear();
                     return pair;
                 } else {
                     return null;
