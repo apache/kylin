@@ -23,6 +23,7 @@ import com.kylinolap.metadata.model.cube.JoinDesc;
 import com.kylinolap.metadata.model.cube.MeasureDesc;
 import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
+import com.kylinolap.metadata.model.schema.DataType;
 
 /**
  * Created by hongbin on 5/20/14.
@@ -335,32 +336,31 @@ public class FactTableGenerator {
     }
 
     private String createRandomCell(ColumnDesc cDesc, ArrayList<String> range) throws Exception {
-        String type = cDesc.getTypeName();
-        String s = type.toLowerCase();
-        if (s.equals("string") || s.equals("char") || s.equals("varchar")) {
+        DataType type = cDesc.getType();
+        if (type.isStringFamily()) {
             throw new Exception("Can't handle range values for string");
 
-        } else if (s.equals("bigint") || s.equals("int") || s.equals("tinyint") || s.equals("smallint")) {
+        } else if (type.isIntegerFamily()) {
             int low = Integer.parseInt(range.get(0));
             int high = Integer.parseInt(range.get(1));
             return Integer.toString(r.nextInt(high - low) + low);
 
-        } else if (s.equals("double")) {
+        } else if (type.isDouble()) {
             double low = Double.parseDouble(range.get(0));
             double high = Double.parseDouble(range.get(1));
             return Double.toString(r.nextDouble() * (high - low) + low);
 
-        } else if (s.equals("float")) {
+        } else if (type.isFloat()) {
             float low = Float.parseFloat(range.get(0));
             float high = Float.parseFloat(range.get(1));
             return Double.toString(r.nextFloat() * (high - low) + low);
 
-        } else if (s.equals("decimal")) {
+        } else if (type.isDecimal()) {
             double low = Double.parseDouble(range.get(0));
             double high = Double.parseDouble(range.get(1));
             return Double.toString(r.nextDouble() * (high - low) + low);
 
-        } else if (s.equals("date")) {
+        } else if (type.isDateTimeFamily()) {
 
             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
             Date start = format.parse(range.get(0));
