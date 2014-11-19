@@ -162,10 +162,8 @@ public class JobDAO {
     }
 
     public void updateJobInstance(JobInstance jobInstance) throws IOException {
-        JobInstance updatedJob = null;
-
         try {
-            updatedJob = getJob(jobInstance.getUuid());
+            JobInstance updatedJob = getJob(jobInstance.getUuid());
             if (updatedJob == null) {
                 saveJob(jobInstance);
                 return;
@@ -181,9 +179,6 @@ public class JobDAO {
 
             updatedJob.clearSteps();
             updatedJob.addSteps(jobInstance.getSteps());
-//            for (int i = 0; i < jobInstance.getSteps().size(); i++) {
-//                updatedJob.addSteps(i, jobInstance.getSteps().get(i));
-//            }
 
             saveJob(updatedJob);
         } catch (IOException e) {
