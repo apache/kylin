@@ -79,13 +79,6 @@ public class TableRecord extends TableRecordBytes {
             return info().dict(col).getValueFromId(getValueID(col));
     }
 
-    public void setValueBytes(int col, ImmutableBytesWritable bytes) {
-        System.arraycopy(bytes.get(), bytes.getOffset(), buf, info.offset(col), info.length(col));
-    }
-    
-    public void getValueBytes(int col, ImmutableBytesWritable bytes) {
-        bytes.set(buf, info.offset(col), info.length(col));
-    }
 
     private void setValueMetrics(int col, LongWritable value) {
         info().codec(col).write(value, buf, info.offset(col));

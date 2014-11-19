@@ -54,6 +54,7 @@ public class IIEndpoint extends IIProtos.RowsService
             innerScanner = region.getScanner(buildScan());
             region.startRegionOperation();
 
+
             synchronized (innerScanner) {
                 IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
 
