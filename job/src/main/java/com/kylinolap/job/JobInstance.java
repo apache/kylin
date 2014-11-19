@@ -16,9 +16,7 @@
 package com.kylinolap.job;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
