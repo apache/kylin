@@ -11,7 +11,7 @@
                 </label>
                 <div class="col-xs-12 col-sm-6">
                     <div ng-if="state.mode=='edit'">
-                        <select class="form-control" ng-model="cubeMetaFrame.project" required
+                        <select chosen class="form-control" ng-model="cubeMetaFrame.project" required
                                 ng-options="project.name as project.name for project in projects | filter: filterProj">
                             <option value="">-- Select Project --</option>
                         </select>
