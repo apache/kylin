@@ -60,7 +60,7 @@ public class HiveSourceTableLoader {
         Map<String, Set<String>> db2tables = Maps.newHashMap();
         for (String table : hiveTables) {
             int cut = table.indexOf('.');
-            String database = cut >= 0 ? table.substring(0, cut).trim() : "";
+            String database = cut >= 0 ? table.substring(0, cut).trim() : "DEFAULT";
             String tableName = cut >= 0 ? table.substring(cut + 1).trim() : table.trim();
             Set<String> set = db2tables.get(database);
             if (set == null) {
