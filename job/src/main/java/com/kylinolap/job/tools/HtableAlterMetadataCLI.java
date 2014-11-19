@@ -62,6 +62,7 @@ public class HtableAlterMetadataCLI extends AbstractHadoopJob {
         table.setValue(metadataKey, metadataValue);
         hbaseAdmin.modifyTable(table.getTableName(), table);
         hbaseAdmin.enableTable(table.getTableName());
+        hbaseAdmin.close();
     }
 
     public static void main(String[] args) throws Exception {

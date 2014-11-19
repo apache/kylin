@@ -119,7 +119,7 @@ public class TableController extends BasicController {
 
     @RequestMapping(value = "/{tables}/{project}", method = { RequestMethod.POST })
     @ResponseBody
-    public Map<String, String[]> loadHiveTable(@PathVariable String tables,@PathVariable String project) {
+    public Map<String, String[]> loadHiveTable(@PathVariable String tables,@PathVariable String project) throws IOException {
         String[] arr = cubeMgmtService.reloadHiveTable(tables);
         cubeMgmtService.syncTableToProject(tables, project);
         Map<String, String[]> result = new HashMap<String, String[]>();
