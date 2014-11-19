@@ -5,6 +5,8 @@ import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
 import com.kylinolap.cube.invertedindex.*;
+import com.kylinolap.cube.kv.RowValueDecoder;
+import com.kylinolap.metadata.model.cube.HBaseColumnDesc;
 import com.kylinolap.storage.hbase.endpoint.generated.IIProtos;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.Coprocessor;
@@ -16,6 +18,7 @@ import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
+import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -31,6 +34,13 @@ public class IIEndpoint extends IIProtos.RowsService
     public IIEndpoint() {
     }
 
+    private Scan buildScan() {
+        Scan scan = new Scan();
+        scan.addColumn(Bytes.toBytes("f"), Bytes.toBytes("c"));
+
+        return scan;
+    }
+
     @Override
     public void getRows(RpcController controller, IIProtos.IIRequest request, RpcCallback<IIProtos.IIResponse> done) {
         IIProtos.IIResponse response = null;
@@ -41,7 +51,7 @@ public class IIEndpoint extends IIProtos.RowsService
             TableRecordInfoDigest tableInfo = TableRecordInfoDigest.deserialize(byteBuffer);
 
             region = env.getRegion();
-            innerScanner = region.getScanner(new Scan());
+            innerScanner = region.getScanner(buildScan());
             region.startRegionOperation();
 
             synchronized (innerScanner) {
