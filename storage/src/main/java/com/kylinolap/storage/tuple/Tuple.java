@@ -87,6 +87,8 @@ public class Tuple implements ITuple {
         // BigDecimal during cube build for best precision
         if ("double".equals(dataType) && fieldValue instanceof BigDecimal) {
             fieldValue = ((BigDecimal) fieldValue).doubleValue();
+        } else if ("integer".equals(dataType) && !(fieldValue instanceof Integer)) {
+            fieldValue = ((Number) fieldValue).intValue();
         }
         setFieldObjectValue(fieldName, fieldValue);
     }
