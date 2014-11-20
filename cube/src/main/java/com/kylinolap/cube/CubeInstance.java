@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
@@ -322,6 +323,16 @@ public class CubeInstance extends RootPersistentEntity {
         return segments;
     }
 
+    public List<CubeSegment> getSegment(CubeSegmentStatusEnum status) {
+        List<CubeSegment> result = Lists.newArrayList();
+        for (CubeSegment segment: getSegments()) {
+            if (segment.getStatus() == status) {
+                result.add(segment);
+            }
+        }
+        return result;
+    }
+
     public CubeSegment getSegment(String name, CubeSegmentStatusEnum status) {
         for (CubeSegment segment : this.getSegments()) {
             if ((null != segment.getName() && segment.getName().equals(name)) && segment.getStatus() == status) {
@@ -342,6 +353,28 @@ public class CubeInstance extends RootPersistentEntity {
 
     public void setCreateTime(String createTime) {
         this.createTime = createTime;
+    }
+
+    public long[] getDateRange() {
+        List<CubeSegment> readySegments = getSegment(CubeSegmentStatusEnum.READY);
+        if (readySegments.isEmpty()) {
+            return new long[]{0L, 0L};
+        }
+        long start = Long.MAX_VALUE;
+        long end = Long.MIN_VALUE;
+        for (CubeSegment segment: readySegments) {
+            if (segment.getDateRangeStart() < start) {
+                start = segment.getDateRangeStart();
+            }
+            if (segment.getDateRangeEnd() > end) {
+                end = segment.getDateRangeEnd();
+            }
+        }
+        return new long[]{start, end};
+    }
+
+    public boolean incrementalBuildOnHll() {
+        return (!getSegment(CubeSegmentStatusEnum.READY).isEmpty()) && true;//FIXME && true for test only
     }
 
 }

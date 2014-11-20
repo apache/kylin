@@ -154,29 +154,32 @@ public class CubeSegmentValidator {
             if (newSegments.size() != 1) {
                 throw new CubeIntegrityException("Invalid date range.");
             }
+            if (cubeInstance.incrementalBuildOnHll()) {
 
-            CubeSegment newSegment = newSegments.get(0);
-            // check if user will rebuild one specified segment
-            boolean hasMatchSegment = false;
-            for (CubeSegment segment : cubeInstance.getSegments()) {
-                if (segment.getDateRangeStart() == newSegment.getDateRangeStart()) {
-                    if (segment.getDateRangeEnd() == newSegment.getDateRangeEnd()) {
-                        hasMatchSegment = true;
-                    } else {
-                        throw new CubeIntegrityException("Invalid date range.");
+            } else {
+                CubeSegment newSegment = newSegments.get(0);
+                // check if user will rebuild one specified segment
+                boolean hasMatchSegment = false;
+                for (CubeSegment segment : cubeInstance.getSegments()) {
+                    if (segment.getDateRangeStart() == newSegment.getDateRangeStart()) {
+                        if (segment.getDateRangeEnd() == newSegment.getDateRangeEnd()) {
+                            hasMatchSegment = true;
+                        } else {
+                            throw new CubeIntegrityException("Invalid date range.");
+                        }
                     }
                 }
-            }
 
-            if (!hasMatchSegment) {
-                if (cubeInstance.getSegments().size() == 0) {
-                    if (cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateStart() != newSegment.getDateRangeStart()) {
-                        throw new CubeIntegrityException("Invalid start date.");
-                    }
-                } else {
-                    CubeSegment lastSegment = cubeInstance.getSegments().get(cubeInstance.getSegments().size() - 1);
-                    if (newSegment.getDateRangeStart() != lastSegment.getDateRangeEnd()) {
-                        throw new CubeIntegrityException("Invalid start date.");
+                if (!hasMatchSegment) {
+                    if (cubeInstance.getSegments().size() == 0) {
+                        if (cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateStart() != newSegment.getDateRangeStart()) {
+                            throw new CubeIntegrityException("Invalid start date.");
+                        }
+                    } else {
+                        CubeSegment lastSegment = cubeInstance.getSegments().get(cubeInstance.getSegments().size() - 1);
+                        if (newSegment.getDateRangeStart() != lastSegment.getDateRangeEnd()) {
+                            throw new CubeIntegrityException("Invalid start date.");
+                        }
                     }
                 }
             }
