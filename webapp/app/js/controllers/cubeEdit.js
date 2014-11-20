@@ -152,6 +152,8 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         // generate default rowkey and aggregation groups.
         if ($scope.cubeMetaFrame.rowkey.rowkey_columns.length == 0 && $scope.cubeMetaFrame.rowkey.aggregation_groups.length == 0) {
             generateDefaultRowkey();
+        }else{
+            reGenerateRowKey();
         }
 
         // Clean up objects used in cube creation
@@ -164,6 +166,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                 }
             }
         });
+
 
         if ($scope.cubeMetaFrame.cube_partition_desc.partition_date_start) {
             var dateStart = new Date($scope.cubeMetaFrame.cube_partition_desc.partition_date_start);
@@ -238,6 +241,178 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         }
     }
 
+
+    function reGenerateRowKey(){
+        var tmpRowKeyColumns = [];
+        var tmpAggretationItems = [];
+
+        angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
+            if (dimension.column == '{FK}' && dimension.join && dimension.join.foreign_key.length > 0) {
+                angular.forEach(dimension.join.foreign_key, function (fk, index) {
+                    for (var i = 0; i < tmpRowKeyColumns.length; i++) {
+                        if(tmpRowKeyColumns[i].column == fk)
+                            break;
+                    }
+                    if(i == tmpRowKeyColumns.length) {
+                        tmpRowKeyColumns.push({
+                            "column": fk,
+                            "length": 30,
+                            "dictionary": true,
+                            "mandatory": false
+                        });
+                    }
+                    tmpAggretationItems.push(fk);
+                });
+            }
+            else if (dimension.column) {
+                for (var i = 0; i < tmpRowKeyColumns.length; i++) {
+                    if(tmpRowKeyColumns.column == dimension.column)
+                        break;
+                }
+                if(i == tmpRowKeyColumns.length) {
+                    tmpRowKeyColumns.push({
+                        "column": dimension.column,
+                        "length": 30,
+                        "dictionary": true,
+                        "mandatory": false
+                    });
+                }
+                tmpAggretationItems.push(dimension.column);
+            }
+            if (dimension.hierarchy && dimension.hierarchy.length > 0) {
+                angular.forEach(dimension.hierarchy, function (hierarchy, index) {
+                    for (var i = 0; i < tmpRowKeyColumns.length; i++) {
+                        if(tmpRowKeyColumns.column == hierarchy.column)
+                            break;
+                    }
+                    if(i == tmpRowKeyColumns.length) {
+                        tmpRowKeyColumns.push({
+                            "column": hierarchy.column,
+                            "length": 30,
+                            "dictionary": true,
+                            "mandatory": false
+                        });
+                    }
+
+                    tmpAggretationItems.push(hierarchy.column);
+                });
+            }
+
+        });
+
+        var rowkeyColumns = $scope.cubeMetaFrame.rowkey.rowkey_columns;
+        var newRowKeyColumns = sortSharedData(rowkeyColumns,tmpRowKeyColumns);
+        var increasedColumns = increasedColumn(rowkeyColumns,tmpRowKeyColumns);
+        newRowKeyColumns = newRowKeyColumns.concat(increasedColumns);
+
+        //! here get the latest rowkey_columns
+        $scope.cubeMetaFrame.rowkey.rowkey_columns = newRowKeyColumns;
+
+
+        var aggregationGroups = $scope.cubeMetaFrame.rowkey.aggregation_groups;
+        // rm unused item from group
+        angular.forEach(aggregationGroups, function (group, index) {
+            for(var j = 0;j<group.length;j++){
+                var elemStillExist = false;
+                for(var k = 0;k<tmpAggretationItems.length;k++){
+                    if(group[j]==tmpAggretationItems[k]){
+                        elemStillExist = true;
+                        break;
+                    }
+                }
+                if(!elemStillExist){
+                    group.splice(j,1);
+                }
+            }
+        });
+
+        var uniqGroupItem = [];
+        angular.forEach(aggregationGroups, function (group, index) {
+            for(var j = 0;j<group.length;j++){
+                if (uniqGroupItem.indexOf(group[j]) == -1) {
+                    uniqGroupItem.push(group[j]);
+                }
+            }
+        });
+
+        var increasedGroupItem = increasedData(uniqGroupItem,tmpAggretationItems);
+        var increasedDataGroups = sliceGroupItemToGroups(increasedGroupItem);
+
+        //! here get the latest aggregation groups
+        $scope.cubeMetaFrame.rowkey.aggregation_groups.concat(increasedDataGroups);
+
+
+    }
+
+    function sortSharedData(oldArray,tmpArr){
+        var newArr = [];
+        for(var j=0;j<oldArray.length;j++){
+            var unit = oldArray[j];
+            for(var k=0;k<tmpArr.length;k++){
+                if(unit.column==tmpArr[k].column){
+                    newArr.push(unit);
+                }
+            }
+        }
+        return newArr;
+    }
+
+    function increasedData(oldArray,tmpArr){
+        var increasedData = [];
+        for(var j=0;j<tmpArr.length;j++){
+            var unit = tmpArr[j];
+            var exist = false;
+            for(var k=0;k<oldArray.length;k++){
+                if(unit==oldArray[k]){
+                    exist = true;
+                    break;
+                }
+            }
+            if(!exist){
+                increasedData.push(unit);
+            }
+        }
+        return increasedData;
+    }
+
+    function increasedColumn(oldArray,tmpArr){
+        var increasedData = [];
+        for(var j=0;j<tmpArr.length;j++){
+            var unit = tmpArr[j];
+            var exist = false;
+            for(var k=0;k<oldArray.length;k++){
+                if(unit.column==oldArray[k].column){
+                    exist = true;
+                    break;
+                }
+            }
+            if(!exist){
+                increasedData.push(unit);
+            }
+        }
+        return increasedData;
+    }
+
+    function sliceGroupItemToGroups(groupItems){
+        if(!groupItems.length){
+            return;
+        }
+        var groups = [];
+        var j = -1;
+        for(var i = 0;i<groupItems.length;i++){
+            if(i%10==0){
+                j++;
+                groups[j]=[];
+            }
+            groups[j].push(groupItems[i]);
+        }
+        if(groups[groups.length-1].length<10){
+            groups.pop();
+        }
+        return groups;
+    }
+
+
     // ~ private methods
     function generateColumnFamily() {
         $scope.cubeMetaFrame.hbase_mapping.column_family = [];
@@ -280,7 +455,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         $scope.cubeMetaFrame.rowkey.rowkey_columns.push({
                             "column": fk,
                             "length": 30,
-                            "dictionary": null,
+                            "dictionary": true,
                             "mandatory": false
                         });
                     }
@@ -297,7 +472,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                     $scope.cubeMetaFrame.rowkey.rowkey_columns.push({
                         "column": dimension.column,
                         "length": 30,
-                        "dictionary": null,
+                        "dictionary": true,
                         "mandatory": false
                     });
                 }
@@ -315,7 +490,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         $scope.cubeMetaFrame.rowkey.rowkey_columns.push({
                             "column": hierarchy.column,
                             "length": 30,
-                            "dictionary": null,
+                            "dictionary": true,
                             "mandatory": false
                         });
                     }
@@ -330,7 +505,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         $scope.cubeMetaFrame.project = $scope.state.project;
         angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
             dimension.status = {};
-            if (dimension.hierarchy.length) {
+            if (dimension.hierarchy&&dimension.hierarchy.length) {
                 dimension.status.useHierarchy = true;
                 dimension.status.joinCount = (!!dimension.join.primary_key) ? dimension.join.primary_key.length : 0;
                 dimension.status.hierarchyCount = (!!dimension.hierarchy) ? dimension.hierarchy.length : 0;
