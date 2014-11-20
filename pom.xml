@@ -4,7 +4,7 @@
     <groupId>com.kylinolap</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>0.6.2-SNAPSHOT</version>
+    <version>0.6.2</version>
     <name>Kylin:HadoopOLAPEngine</name>
 
     <properties>
@@ -493,7 +493,8 @@
         <connection>scm:git:git@github.com:KylinOLAP/Kylin.git</connection>
         <url>scm:git:git@github.com:KylinOLAP/Kylin.git</url>
         <developerConnection>scm:git:git@github.com:KylinOLAP/Kylin.git</developerConnection>
-    </scm>
+      <tag>kylin-0.6.2</tag>
+  </scm>
 
     <modules>
         <module>common</module>
