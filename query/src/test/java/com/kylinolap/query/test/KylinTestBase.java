@@ -406,7 +406,7 @@ public class KylinTestBase {
     
     protected int runSQL(File sqlFile, boolean debug, boolean explain) throws Exception {
         if (debug) {
-            System.setProperty("optiq.debug", "true");
+            System.setProperty("calcite.debug", "true");
             InputStream inputStream = new FileInputStream("src/test/resources/logging.properties");
             LogManager.getLogManager().readConfiguration(inputStream);
         }

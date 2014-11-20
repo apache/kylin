@@ -138,7 +138,7 @@ public class FunctionDesc {
         if (isCountDistinct())
             return "any";
         else if (isSum() || isMax() || isMin())
-            return parameter.getColRefs().get(0).getDatatype();
+            return parameter.getColRefs().get(0).getType().getName();
         else
             return returnType;
     }

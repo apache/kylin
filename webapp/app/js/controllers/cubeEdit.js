@@ -46,12 +46,11 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     };
 
     $scope.dictionaries = ['date(yyyy-mm-dd)', 'string'];
-    $scope.srcTables = [];
-
+    $scope.srcTablesInProject = [];
 
     $scope.getColumnsByTable = function (name) {
         var temp = null;
-        angular.forEach($scope.srcTables, function (table) {
+        angular.forEach($scope.srcTablesInProject, function (table) {
             if (table.name == name) {
                 temp = table.columns;
             }
@@ -135,14 +134,9 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         });
     } else {
         $scope.cubeMetaFrame = CubeMeta.createNew();
+        $scope.cubeMetaFrame.project = $scope.project.selectedProject;
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
     }
-
-    TableService.list({ext: true}, function (tables) {
-        angular.forEach(tables, function (table) {
-            $scope.srcTables.push(table);
-        });
-    });
 
     // ~ public methods
     $scope.aceChanged = function () {
@@ -346,4 +340,20 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
             }
         });
     }
+
+    $scope.$watch('cubeMetaFrame.project', function (newValue, oldValue) {
+        $scope.srcTablesInProject=[];
+        var param = {
+            ext: true,
+            project:newValue
+        };
+        if(newValue){
+            TableService.list(param, function (tables) {
+                angular.forEach(tables, function (table) {
+                    $scope.srcTablesInProject.push(table);
+                });
+            });
+        }
+    });
+
 });

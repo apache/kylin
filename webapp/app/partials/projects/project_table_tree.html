@@ -1,29 +1,14 @@
 <div ng-animate="{enter: 'fadeInDown animated'}">
     <div class="tree-border">
-        <div class="row">
-            <div class="col-xs-2">
-                <h5>Project</h5>
-            </div>
-            <div class="col-xs-8 no-padding-left">
-                <select class="form-control"
-                    ng-model="state.selectedProject"
-                    ng-options="project as project for project in projects"
-                    ng-change="projectMetaLoad()" >
-                </select>
-            </div>
-            <div class="col-xs-2">
-                <div class="pull-right">
-                    <a class="btn btn-sm btn-info" href="/projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
-                </div>
-            </div>
-        </div>
         <div class="space-4"></div>
 
         <div style="width:310px; height:800px; overflow:auto">
             <treecontrol ng-if="selectedSrcDb.length > 0" class="tree-light"
                          dirSelection="true"
                          tree-model="selectedSrcDb"
-                         options="treeOptions">
+                         options="treeOptions"
+                         on-selection="showSelected(node)"
+                         selected-node="selectedSrcTable">
                 {{node.name}} {{!!(node.type_NAME)?'(' + trimType(node.type_NAME) + ')' : ''}}
             </treecontrol>
             <div no-result ng-if="selectedSrcDb.length == 0"></div>

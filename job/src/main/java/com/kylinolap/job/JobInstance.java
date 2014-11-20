@@ -15,8 +15,8 @@
  */
 package com.kylinolap.job;
 
-import java.util.Iterator;
-import java.util.Vector;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Lists;
 import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.cube.CubeBuildTypeEnum;
 import com.kylinolap.job.constant.JobStatusEnum;
@@ -82,7 +83,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
 
     @JsonManagedReference
     @JsonProperty("steps")
-    private Vector<JobStep> steps;
+    private List<JobStep> steps;
 
     public JobStep getRunningStep() {
         for (JobStep step : this.getSteps()) {
@@ -221,9 +222,9 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         this.mrWaiting = mrWaiting;
     }
 
-    public Vector<JobStep> getSteps() {
+    public List<JobStep> getSteps() {
         if (steps == null) {
-            steps = new Vector<JobStep>();
+            steps = Lists.newArrayList();
         }
         return steps;
     }
@@ -232,14 +233,11 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         getSteps().clear();
     }
 
-    public Iterator<JobStep> getStepsIterator() {
-        if (steps == null) {
-            steps = new Vector<JobStep>();
-        }
-        return steps.iterator();
+    public void addSteps(Collection<JobStep> steps) {
+        this.getSteps().addAll(steps);
     }
 
-    public void addSteps(JobStep step) {
+    public void addStep(JobStep step) {
         getSteps().add(step);
     }
 

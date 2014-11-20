@@ -24,6 +24,18 @@
                                         <i class="ace-icon fa fa-lock"></i>
                                     </span>
                                 </div>
+                                <div class="form-group">
+                                    <span>
+
+                                        <select  ng-required="project.projects.length" chosen ng-model="project.selectedProject" ng-init="newAccess.permission=permissions.READ.value"
+                                                ng-options="project as project for project in project.projects"
+                                                style="width: 100% !important;"
+                                                data-placeholder="select a project"
+                                                class="chosen-select">
+                                            <option value=""></option>
+                                        </select>
+                                    </span>
+                                </div>
                                 <div class="space"></div>
                                 <div class="form-group">
                                     <a href="https://groups.google.com/forum/#!forum/kylin-olap" target="_blank" class="text-muted">Login Issue?</a>

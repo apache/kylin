@@ -173,7 +173,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
         byte[][] retValue = rowkeyList.toArray(new byte[rowkeyList.size()][]);
         if (retValue.length == 0) {
-            throw new IllegalStateException("Expected split number should be greater than 1, but got " + retValue.length);
+            throw new IllegalStateException("Split number is 0, no records in cube??");
         }
 
         return retValue;

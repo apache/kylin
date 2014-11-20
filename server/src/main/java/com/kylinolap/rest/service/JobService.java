@@ -43,7 +43,6 @@ import com.kylinolap.rest.response.MetricsResponse;
 
 /**
  * @author ysong1
- * 
  */
 @Component("jobService")
 public class JobService extends BasicService {
@@ -58,7 +57,7 @@ public class JobService extends BasicService {
         Integer offset = (null == offsetValue) ? 0 : offsetValue;
         List<JobInstance> jobs = listAllJobs(cubeName, projectName, statusList);
         Collections.sort(jobs);
-        
+
         if (jobs.size() <= offset) {
             return Collections.emptyList();
         }
@@ -101,7 +100,7 @@ public class JobService extends BasicService {
         List<JobInstance> jobInstances = this.getJobManager().listJobs(cube.getName(), null);
         for (JobInstance jobInstance : jobInstances) {
             if (jobInstance.getStatus() == JobStatusEnum.PENDING || jobInstance.getStatus() == JobStatusEnum.RUNNING) {
-                throw new JobException("The cube " + cube.getName() + " has running job, please discard it and try again.");
+                throw new JobException("The cube " + cube.getName() + " has running job(" + jobInstance.getUuid() + ") please discard it and try again.");
             }
         }
 
