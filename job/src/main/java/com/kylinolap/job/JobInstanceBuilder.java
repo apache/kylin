@@ -162,7 +162,7 @@ public class JobInstanceBuilder {
 //        jobInstance.clearSteps();
         int stepSeqNum = 0;
         List<JobStep> result = Lists.newArrayList();
-        final String mergedCuboidPath = jobWorkingDir + "/" + cubeName + "/merged_cuboid";
+        final String mergedCuboidPath = jobWorkingDir + "/" + cubeName + "/cuboid";
 
         // merge cuboid data of ancestor segments
         result.add(createMergeCuboidDataStep(jobInstance, stepSeqNum++, formattedPath, mergedCuboidPath));
@@ -212,8 +212,10 @@ public class JobInstanceBuilder {
         result.add(createBuildDictionaryStep(jobInstance, stepSeqNum++));
 
         final String cuboidRootPath = jobWorkingDir + "/" + cubeName + "/cuboid/";
+        final String cuboidTmpRootPath = jobWorkingDir + "/" + cubeName + "/tmp_cuboid/";
+        final boolean incBuildMerge = cube.incrementalBuildOnHll();
 
-        String[] cuboidOutputTempPath = getCuboidOutputPaths(cuboidRootPath, totalRowkeyColumnsCount, groupRowkeyColumnsCount);
+        String[] cuboidOutputTempPath = getCuboidOutputPaths(incBuildMerge?cuboidTmpRootPath:cuboidRootPath, totalRowkeyColumnsCount, groupRowkeyColumnsCount);
         // base cuboid step
         result.add(createBaseCuboidStep(jobInstance, stepSeqNum++, cuboidOutputTempPath));
 
@@ -223,13 +225,24 @@ public class JobInstanceBuilder {
             result.add(createNDimensionCuboidStep(jobInstance, stepSeqNum++, cuboidOutputTempPath, dimNum, totalRowkeyColumnsCount));
         }
 
+        if (incBuildMerge) {
+            List<String> pathToMerge = Lists.newArrayList();
+            for (CubeSegment segment: cube.getSegments(CubeSegmentStatusEnum.READY)) {
+                String path = JobInstance.getJobWorkingDir(segment.getLastBuildJobID(), engineConfig.getHdfsWorkingDirectory()) + "/" + jobInstance.getRelatedCube() + "/cuboid/*";
+                pathToMerge.add(path);
+            }
+            pathToMerge.add(cuboidTmpRootPath + "*");
+            result.add(createMergeCuboidDataStep(jobInstance, stepSeqNum++, formatPaths(pathToMerge), cuboidRootPath));
+        }
+        String cuboidPath = incBuildMerge?cuboidRootPath:cuboidRootPath+"*";
+
         // get output distribution step
-        result.add(createRangeRowkeyDistributionStep(jobInstance, stepSeqNum++, cuboidRootPath + "*"));
+        result.add(createRangeRowkeyDistributionStep(jobInstance, stepSeqNum++, cuboidPath));
 
         // create htable step
         result.add(createCreateHTableStep(jobInstance, stepSeqNum++));
         // generate hfiles step
-        result.add(createConvertCuboidToHfileStep(jobInstance, stepSeqNum++, cuboidRootPath + "*"));
+        result.add(createConvertCuboidToHfileStep(jobInstance, stepSeqNum++, cuboidPath));
         // bulk load step
         result.add(createBulkLoadStep(jobInstance, stepSeqNum++));
 
