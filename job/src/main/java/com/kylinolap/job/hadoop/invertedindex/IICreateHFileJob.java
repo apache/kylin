@@ -38,7 +38,7 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
  * @author yangli9
  * 
  */
-
+@SuppressWarnings("deprecation")
 public class IICreateHFileJob extends AbstractHadoopJob {
 
     protected static final Logger log = LoggerFactory.getLogger(IICreateHFileJob.class);
