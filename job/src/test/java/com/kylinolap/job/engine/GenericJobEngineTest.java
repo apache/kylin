@@ -30,6 +30,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.common.util.SSHClient;
 import com.kylinolap.cube.CubeBuildTypeEnum;
@@ -113,7 +114,7 @@ public class GenericJobEngineTest {
         FileUtils.forceMkdir(new File("/tmp/kylin/logs/"));
 
         FileUtils.deleteDirectory(new File(tempTestMetadataUrl));
-        FileUtils.copyDirectory(new File("../examples/test_case_data"), new File(tempTestMetadataUrl));
+        FileUtils.copyDirectory(new File(AbstractKylinTestCase.LOCALMETA_TEST_DATA), new File(tempTestMetadataUrl));
         System.setProperty(KylinConfig.KYLIN_CONF, tempTestMetadataUrl);
 
         // deploy files to hdfs

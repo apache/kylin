@@ -1,6 +1,7 @@
 package com.kylinolap.job;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.common.util.SSHClient;
 import com.kylinolap.cube.CubeInstance;
@@ -11,6 +12,7 @@ import com.kylinolap.job.hadoop.hive.SqlHiveDataTypeMapping;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.model.Model;
@@ -209,7 +211,7 @@ public class CubeDevelopTestCase extends HBaseMetadataTestCase {
     }
 
     private void deployKylinPropertyToLocalDir() throws Exception {
-        String srcPath = ".." + File.separator + "examples" + File.separator + "test_case_data" + File.separator + "kylin.properties";
+        String srcPath = AbstractKylinTestCase.SANDBOX_TEST_DATA + "/" + "kylin.properties";
         FileUtils.copyFileToDirectory(new File(srcPath), new File("/etc/kylin"));
     }
 
@@ -238,7 +240,7 @@ public class CubeDevelopTestCase extends HBaseMetadataTestCase {
     }
 
     private String getExampleTestCaseDataFolder() {
-        return ".." + File.separator + "examples" + File.separator + "test_case_data" + File.separator;
+        return AbstractKylinTestCase.SANDBOX_TEST_DATA + "/";
     }
 
 
