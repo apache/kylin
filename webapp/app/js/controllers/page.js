@@ -1,6 +1,6 @@
 'use strict';
 
-KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $location, $rootScope, $routeParams, $http, UserService) {
+KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService) {
 
     $scope.header = {show: true};
     $scope.footer = {
@@ -42,11 +42,11 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $location, 
     Messenger.options = {
         extraClasses: 'messenger-fixed messenger-on-bottom messenger-on-right',
         theme: 'air'
-    }
+    };
 
     $scope.getInt = function (ivalue) {
         return parseInt(ivalue);
-    }
+    };
 
     $scope.getLength = function (obj) {
         if (!obj) {
@@ -57,7 +57,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $location, 
             if (obj.hasOwnProperty(key)) size++;
         }
         return size;
-    }
+    };
 
     // common acl methods
     $scope.hasPermission = function (entity) {
@@ -86,7 +86,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $location, 
         }
 
         return hasPermission;
-    }
+    };
 
     $scope.listAccess = function (entity, type) {
         var defer = $q.defer();
@@ -99,7 +99,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $location, 
         });
 
         return defer.promise;
-    }
+    };
 
     // Compute data size so as to auto convert to KB/MB/GB/TB)
     $scope.dataSize = function (data) {
@@ -114,7 +114,34 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $location, 
             size = (data/1024).toFixed(2) + ' KB';
         }
         return size;
-    }
+    };
+
+
+
+    $scope.project = {
+        projects:[],
+        selectedProject: null
+    };
+    ProjectService.list({}, function (projects) {
+        angular.forEach(projects, function(project, index){
+            $scope.project.projects.push(project.name);
+        });
+    });
+
+    $scope.toCreateProj = function () {
+        $modal.open({
+            templateUrl: 'project.html',
+            controller: projCtrl,
+            resolve: {
+                projects: function () {
+                    return null;
+                },
+                project: function(){
+                    return null;
+                }
+            }
+        });
+    };
 
 });
 
@@ -158,9 +185,9 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
                 console.log('error');
             });
         }
-    }
+    };
 
     $scope.cancel = function () {
         $modalInstance.dismiss('cancel');
-    }
+    };
 };

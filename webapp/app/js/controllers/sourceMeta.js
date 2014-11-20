@@ -1,12 +1,15 @@
 'use strict';
 
 KylinApp
-    .controller('SourceMetaCtrl', function ($scope, $q, $window, $routeParams, CubeService, $modal, TableService) {
+    .controller('SourceMetaCtrl', function ($scope, $q, $window, $routeParams, CubeService, $modal, TableService,$route) {
         $scope.srcTables = {};
         $scope.srcDbs = [];
-        $scope.selectedSrcDb = {};
+        $scope.selectedSrcDb = [];
         $scope.selectedSrcTable = {};
         $scope.window = 0.68 * $window.innerHeight;
+        $scope.hiveTbLoad = {
+            status:'init'
+        };
         $scope.theaditems = [
             {attr: 'id', name: 'ID'},
             {attr: 'name', name: 'Name'},
@@ -17,7 +20,7 @@ KylinApp
             dimensionFilter: '', measureFilter: ''};
 
        function innerSort(a, b) {
-            var nameA = a.name.toLowerCase(), nameB = b.name.toLowerCase()
+            var nameA = a.name.toLowerCase(), nameB = b.name.toLowerCase();
             if (nameA < nameB) //sort string ascending
                 return -1;
             if (nameA > nameB)
@@ -26,18 +29,39 @@ KylinApp
        };
 
         $scope.aceSrcTbLoaded = function (forceLoad) {
+            $scope.srcTables = {};
+            $scope.selectedSrcDb = [];
+            $scope.treeOptions = {
+                nodeChildren: "columns",
+                injectClasses: {
+                    ul: "a1",
+                    li: "a2",
+                    liSelected: "a7",
+                    iExpanded: "a3",
+                    iCollapsed: "a4",
+                    iLeaf: "a5",
+                    label: "a6",
+                    labelSelected: "a8"
+                }
+            };
+
+            $scope.selectedSrcTable = {};
             var defer = $q.defer();
 
             $scope.loading = true;
-            var param = {ext: true};
+            var param = {
+                ext: true,
+                project:$scope.project.selectedProject
+            };
             if (forceLoad)
             {
                 param.timestamp = new Date().getTime();
             }
             TableService.list(param, function (tables) {
+                var tableMap = [];
                 angular.forEach(tables, function (table) {
-                    if (!$scope.srcTables[table.database]) {
-                        $scope.srcTables[table.database] = [];
+                    if (!tableMap[table.database]) {
+                        tableMap[table.database] = [];
                     }
                     angular.forEach(table.columns, function (column) {
                         if(table.cardinality[column.name]) {
@@ -47,25 +71,41 @@ KylinApp
                         }
                         column.id = parseInt(column.id);
                     });
-
-                    $scope.srcTables[table.database].push(table);
+                    tableMap[table.database].push(table);
                 });
 
-                //Sort Table
-                for (var key in  $scope.srcTables) {
-                    var obj = $scope.srcTables[key];
+//                Sort Table
+                for (var key in  tableMap) {
+                    var obj = tableMap[key];
                     obj.sort(innerSort);
                 }
 
-                $scope.selectedSrcDb = $scope.srcTables['DEFAULT'];
+                for (var key in  tableMap) {
+                    var tables = tableMap[key];
+                    $scope.selectedSrcDb.push({
+                        "name": key,
+                        "columns": tables
+                    });
+                }
                 $scope.loading = false;
                 defer.resolve();
             });
 
             return defer.promise;
-        }
+        };
 
-        $scope.aceSrcTbLoaded();
+        $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+            if(newValue){
+                $scope.aceSrcTbLoaded();
+            }
+
+        });
+        $scope.$watch('hiveTbLoad.status', function (newValue, oldValue) {
+            if(newValue=="success"){
+                $scope.aceSrcTbLoaded(true);
+            }
+
+        });
 
         $scope.showSelected = function (table) {
             if (table.uuid) {
@@ -74,29 +114,16 @@ KylinApp
             else {
                 $scope.selectedSrcTable.selectedSrcColumn = table;
             }
-        }
+        };
 
         $scope.aceSrcTbChanged = function () {
             $scope.srcTables = {};
             $scope.srcDbs = [];
-            $scope.selectedSrcDb = {};
+            $scope.selectedSrcDb = [];
             $scope.selectedSrcTable = {};
             $scope.aceSrcTbLoaded(true);
-        }
+        };
 
-        $scope.treeOptions = {
-            nodeChildren: "columns",
-            injectClasses: {
-                ul: "a1",
-                li: "a2",
-                liSelected: "a7",
-                iExpanded: "a3",
-                iCollapsed: "a4",
-                iLeaf: "a5",
-                label: "a6",
-                labelSelected: "a8"
-            }
-        }
 
         $scope.openModal = function () {
             $modal.open({
@@ -104,28 +131,45 @@ KylinApp
                 controller: ModalInstanceCtrl,
                 resolve: {
                     tableNames: function () {
-                        return $scope.tableNames;
+                      return $scope.tableNames;
+                    },
+                    projectName:function(){
+                      return  $scope.project.selectedProject;
+                    },
+                    hiveTbLoad:function(){
+                      return $scope.hiveTbLoad;
                     },
                     scope: function () {
                         return $scope;
                     }
                 }
             });
-        }
+        };
 
-        var ModalInstanceCtrl = function ($scope, $modalInstance, tableNames, MessageService) {
+        var ModalInstanceCtrl = function ($scope,$location, $modalInstance, tableNames, MessageService,projectName,hiveTbLoad) {
+            hiveTbLoad.status = "init";
             $scope.tableNames = "";
+            $scope.projectName = projectName;
             $scope.cancel = function () {
                 $modalInstance.dismiss('cancel');
             };
             $scope.add = function () {
-                $modalInstance.dismiss();
+                hiveTbLoad.status="loading";
                 MessageService.sendMsg('A sync task has been submitted, it might take 20 - 60 seconds', 'success', {});
-                TableService.loadHiveTable({tableName: $scope.tableNames}, {}, function (result) {
+                $scope.cancel();
+                TableService.loadHiveTable({tableName: $scope.tableNames,action:projectName}, {}, function (result) {
+                    hiveTbLoad.status = "success";
                     MessageService.sendMsg('Below tables were synced successfully: ' + result['result'].join() + ', Click Refresh button ...', 'success', {});
                 });
             }
         };
+        $scope.trimType = function(typeName){
+            if (typeName.match(/VARCHAR/i))
+            {
+                typeName = "VARCHAR";
+            }
 
+            return  typeName.trim().toLowerCase();
+        }
     });
 

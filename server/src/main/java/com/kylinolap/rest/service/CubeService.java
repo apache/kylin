@@ -17,7 +17,6 @@ package com.kylinolap.rest.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.UnknownHostException;
@@ -30,6 +29,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -72,7 +72,7 @@ import com.kylinolap.metadata.MetadataConstances;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
-import com.kylinolap.metadata.tool.HiveSourceTableMgmt;
+import com.kylinolap.metadata.tool.HiveSourceTableLoader;
 import com.kylinolap.rest.constant.Constant;
 import com.kylinolap.rest.controller.QueryController;
 import com.kylinolap.rest.exception.InternalErrorException;
@@ -522,7 +522,7 @@ public class CubeService extends BasicService {
             JsonUtil.writeValueIndent(bos, tableExd);
             System.out.println(bos.toString());
             ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
-            String xPath = ResourceStore.TABLE_EXD_RESOURCE_ROOT + "/" + tableName.toUpperCase() + "." + HiveSourceTableMgmt.OUTPUT_SURFIX;
+            String xPath = ResourceStore.TABLE_EXD_RESOURCE_ROOT + "/" + tableName.toUpperCase() + "." + HiveSourceTableLoader.OUTPUT_SURFIX;
             writeResource(bis, KylinConfig.getInstanceFromEnv(), xPath);
         } catch (JsonGenerationException e) {
             e.printStackTrace();
@@ -581,21 +581,14 @@ public class CubeService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER)
-    public String[] reloadHiveTable(String tables) {
-        String tableMetaDir = HiveSourceTableMgmt.reloadHiveTable(tables);
-
-        // Reload
+    public String[] reloadHiveTable(String tables) throws IOException {
+        Set<String> loaded = HiveSourceTableLoader.reloadHiveTables(tables.split(","), getConfig());
         getMetadataManager().reload();
-
-        File metaDir = new File(tableMetaDir);
-        if (metaDir.exists()) {
-            File tableDir = new File(metaDir, HiveSourceTableMgmt.TABLE_FOLDER_NAME);
-            if (tableDir.exists()) {
-                // return tokens;
-                return tableDir.list();
-            }
-        }
-        return new String[0];
-
+        return (String[]) loaded.toArray(new String[loaded.size()]);
     }
+    
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    public void syncTableToProject(String tables,String project) throws IOException {
+        getProjectManager().updateTableToProject(tables, project);
+    }    
 }
