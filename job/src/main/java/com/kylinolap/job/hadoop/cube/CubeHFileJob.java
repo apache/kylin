@@ -43,6 +43,7 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
  * 
  */
 
+@SuppressWarnings("deprecation")
 public class CubeHFileJob extends AbstractHadoopJob {
 
     protected static final Logger log = LoggerFactory.getLogger(CubeHFileJob.class);
