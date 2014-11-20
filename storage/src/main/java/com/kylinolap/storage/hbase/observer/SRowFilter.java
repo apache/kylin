@@ -38,7 +38,8 @@ import com.kylinolap.storage.tuple.ITuple;
 
 /**
  * @author yangli9
- * 
+ *
+ * S for storage
  */
 public class SRowFilter {
 
