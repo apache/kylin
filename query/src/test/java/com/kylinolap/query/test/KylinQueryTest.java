@@ -57,10 +57,6 @@ public class KylinQueryTest extends KylinTestBase {
     }
 
     private static void setUpEnv() {
-
-        if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null)
-            System.setProperty(KylinConfig.KYLIN_CONF, "../examples/test_case_data");
-
         config = KylinConfig.getInstanceFromEnv();
     }
 

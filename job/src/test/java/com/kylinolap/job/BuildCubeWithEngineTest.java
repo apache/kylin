@@ -31,6 +31,7 @@ import org.junit.Test;
 import org.quartz.SchedulerException;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.ClasspathUtil;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.cube.CubeBuildTypeEnum;
@@ -55,7 +56,7 @@ public class BuildCubeWithEngineTest extends CubeDevelopTestCase {
 
     @Before
     public void before() throws Exception {
-        ClasspathUtil.addClasspath(new File("../examples/test_case_data/hadoop-site").getAbsolutePath());
+        ClasspathUtil.addClasspath(new File(AbstractKylinTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         this.createTestMetadata();
 
         initEnv(true, true);
