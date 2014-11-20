@@ -11,6 +11,7 @@
         <!-- General Properties -->
         <javaVersion>1.7</javaVersion>
         <maven-model.version>3.1.1</maven-model.version>
+         <maven-release.version>2.5.1</maven-release.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
@@ -465,7 +466,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>
-                    <version>2.1</version>
+                    <version>${maven-release.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.jacoco</groupId>
