@@ -24,7 +24,7 @@
                     <tbody>
                         <tr ng-repeat="cube in project.cubes" >
                             <td>{{cube}}</td>
-                            <td><a href='/cubes/{{cube}}?showDetail=true' style="color: #428BCA">Detail</a></td>
+                            <td><a href='/cubes/{{project.name}}/{{cube}}?showDetail=true' style="color: #428BCA">Detail</a></td>
                         </tr>
                     </tbody>
                 </table>
