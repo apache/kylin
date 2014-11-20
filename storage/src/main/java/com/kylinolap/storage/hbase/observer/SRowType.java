@@ -40,7 +40,7 @@ public class SRowType {
 
     public static SRowType fromCuboid(CubeSegment seg, Cuboid cuboid) {
         List<TblColRef> colList = cuboid.getColumns();
-        TblColRef[] cols = (TblColRef[]) colList.toArray(new TblColRef[colList.size()]);
+        TblColRef[] cols = colList.toArray(new TblColRef[colList.size()]);
         RowKeyColumnIO colIO = new RowKeyColumnIO(seg);
         int[] colSizes = new int[cols.length];
         for (int i = 0; i < cols.length; i++) {

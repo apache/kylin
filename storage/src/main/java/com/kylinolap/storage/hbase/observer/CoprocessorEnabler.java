@@ -62,7 +62,7 @@ public class CoprocessorEnabler {
         SRowType type = SRowType.fromCuboid(segment, cuboid);
         SRowFilter filter = SRowFilter.fromFilter(segment, tupleFiler);
         SRowProjector projector = SRowProjector.fromColumns(segment, cuboid, groupBy);
-        SRowAggregators aggrs = SRowAggregators.fromValuDecoders(rowValueDecoders);
+        SRowAggregators aggrs = SRowAggregators.fromValueDecoders(rowValueDecoders);
 
         if (DEBUG_LOCAL_COPROCESSOR) {
             RegionScanner innerScanner = new RegionScannerAdapter(table.getScanner(scan));
