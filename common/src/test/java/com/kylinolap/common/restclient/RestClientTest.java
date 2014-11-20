@@ -13,7 +13,7 @@ public class RestClientTest {
         //a.wipeCache("metadata", "a", "a");
         //String aa = a.getKylinProperties();
         //System.out.println(aa);
-        RestClient b = new RestClient("sandbox.hortonworks.com:9080");
+        RestClient b = new RestClient("sandbox.hortonworks.com:7070");
         //b.wipeCache("metadata", "a", "a");
         //String bb = b.getKylinProperties();
         //System.out.println(bb);
