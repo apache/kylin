@@ -187,9 +187,7 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
         }
     };
 
-
-
     $scope.cancel = function () {
         $modalInstance.dismiss('cancel');
-    }
+    };
 };
