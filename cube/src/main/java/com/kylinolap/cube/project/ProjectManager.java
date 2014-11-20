@@ -189,7 +189,27 @@ public class ProjectManager {
 
         return addCubeToProject(cubeName, newProjectName, owner);
     }
-
+    
+    public ProjectInstance updateTableToProject(String tables,String projectName) throws IOException {
+        ProjectInstance projectInstance = getProject(projectName);
+        String[] tokens = StringUtils.split(tables, ",");
+        for (int i = 0; i < tokens.length; i++) {
+            String token = tokens[i].trim();
+            if (StringUtils.isNotEmpty(token)) {
+                projectInstance.addTable(token);
+            }
+        }
+        
+        List<TableDesc> exposedTables = listExposedTables(projectName);
+        for(TableDesc table : exposedTables){
+            projectInstance.addTable(table.getName());
+        }
+        
+        saveResource(projectInstance);
+        return projectInstance;
+    }
+   
+    
     public void removeCubeFromProjects(String cubeName) throws IOException {
         for (ProjectInstance projectInstance : findProjects(cubeName)) {
             projectInstance.removeCube(cubeName);
@@ -212,6 +232,30 @@ public class ProjectManager {
         return tables;
     }
 
+    
+    
+    public List<TableDesc> listDefinedTablesInProject(String project) throws IOException {
+        project = ProjectInstance.getNormalizedProjectName(project);
+        ProjectInstance projectInstance = getProject(project);
+        
+        //sync exposed table to project when list
+        List<TableDesc> exposedTables = listExposedTables(project);
+        for(TableDesc table : exposedTables){
+            projectInstance.addTable(table.getName());
+        }
+        saveResource(projectInstance);
+        
+        List<TableDesc> tables = Lists.newArrayList();
+        for (String table : projectInstance.getTables()) {
+            TableDesc tableDesc = getMetadataManager().getTableDesc(table);
+            if (tableDesc != null) {
+                tables.add(tableDesc);
+            }
+        }
+
+        return tables;
+    }   
+    
     public List<ColumnDesc> listExposedColumns(String project, String table) {
         project = ProjectInstance.getNormalizedProjectName(project);
 
@@ -257,6 +301,7 @@ public class ProjectManager {
 
         return new ArrayList<CubeInstance>(ret);
     }
+    
 
     public List<CubeInstance> getCubesByTable(String project, String tableName) {
         project = ProjectInstance.getNormalizedProjectName(project);
@@ -423,7 +468,7 @@ public class ProjectManager {
 
         return newProject;
     }
-
+    
     private void saveResource(ProjectInstance proj) throws IOException {
         ResourceStore store = getStore();
         store.putResource(proj.getResourcePath(), proj, PROJECT_SERIALIZER);

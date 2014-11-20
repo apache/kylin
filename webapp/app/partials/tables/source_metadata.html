@@ -1,3 +1,23 @@
+<div class="page-header" style="height: 50px;">
+    <!--Project-->
+    <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
+        <div class="form-group">
+            <span><b>Project: </b></span>
+            <select chosen ng-model="project.selectedProject" ng-init="newAccess.permission=permissions.READ.value;project.selectedProject=project.selectedProject!=null?project.selectedProject:project.projects[0]"
+                    ng-options="project as project for project in project.projects"
+                    style="width: 150px"
+                    data-placeholder="select a project"
+                    class="chosen-select">
+            </select>
+            <!--Project-->
+            <a class="btn btn-xs btn-info" href="/projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
+            <a class="btn btn-xs btn-primary" style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
+                <i class="fa fa-plus"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
 <div class="row" ng-controller="SourceMetaCtrl">
     <!--table_tree-->
     <div class="col-xs-3">
@@ -5,7 +25,7 @@
     </div>
     <!--Tab-->
     <div class="col-xs-9">
-        <h3 class="text-info">Table Schema: {{ selectedSrcTable.name}}</h3>
+        <h3 class="text-info">Table Schema:{{ selectedSrcTable.name}}</h3>
         <div class="tabbable nav-tabs-custom">
             <ul class="nav nav-tabs">
                 <li class="active">
@@ -131,7 +151,8 @@
                 <h4>Load Hive Table Metadata</h4>
             </div>
             <div class="modal-body">
-                <label for="tables">Table Names:(Seperate with comma)</label>
+                <span><strong>Project: </strong>{{ $parent.projectName }}</span>
+                <label for="tables"> Table Names:(Seperate with comma)</label>
                 <textarea ng-model="$parent.tableNames" class="form-control" id="tables"
                           placeholder="table1,table2"></textarea>
             </div>
@@ -142,3 +163,5 @@
         </script>
     </div>
 </div>
+
+<div ng-include="'partials/projects/project_create.html'"></div>

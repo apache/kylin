@@ -78,7 +78,7 @@ public class JobManager {
 
         // create job steps based on job type
         JobInstanceBuilder stepBuilder = new JobInstanceBuilder(this.engineConfig);
-        stepBuilder.buildSteps(jobInstance);
+        jobInstance.addSteps(stepBuilder.buildSteps(jobInstance));
 
         return jobInstance;
     }
