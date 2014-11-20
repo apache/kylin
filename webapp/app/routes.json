@@ -63,7 +63,7 @@
         }
     },
     {
-        "url": "/cubes/:cubeName",
+        "url": "/cubes/:projectName/:cubeName",
         "params": {
             "templateUrl": "partials/cubes/cubes.html",
             "tab": "cubes",

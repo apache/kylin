@@ -2,12 +2,12 @@
 
 KylinApp
     .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService) {
+        $scope.project.selectedProject = $routeParams.projectName;
         $scope.listParams={
             cubeName: $routeParams.cubeName,
             projectName: $scope.project.selectedProject
         };
         $scope.cubes = [];
-//        $scope.projects = [];
         $scope.loading = false;
         $scope.action = {};
 
