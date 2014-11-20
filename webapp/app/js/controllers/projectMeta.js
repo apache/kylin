@@ -2,8 +2,8 @@
 
 KylinApp
     .controller('ProjectMetaCtrl', function ($scope, $q, ProjectService, QueryService) {
-        $scope.projects = [];
         $scope.selectedSrcDb = [];
+        $scope.selectedSrcTable = {};
         $scope.treeOptions = {
             nodeChildren: "columns",
             injectClasses: {
@@ -16,30 +16,22 @@ KylinApp
                 label: "a6",
                 labelSelected: "a8"
             }
+        };
+
+        $scope.showSelected = function (table) {
+            if (table.uuid) {
+                $scope.selectedSrcTable = table;
+            }
+            else {
+                $scope.selectedSrcTable.selectedSrcColumn = table;
+            }
         }
 
-        ProjectService.list({}, function (projects) {
-            angular.forEach(projects, function (project, index) {
-                $scope.projects.push(project.name);
-            });
-
-            if ($scope.projects.length > 0)
-            {
-                $scope.state.selectedProject=$scope.projects[0];
-                $scope.projectMetaLoad();
-            }
-        });
-
         $scope.projectMetaLoad = function () {
-            if (!$scope.state.selectedProject)
-            {
-                return;
-            }
             var defer = $q.defer();
             $scope.selectedSrcDb = [];
-
             $scope.loading = true;
-            QueryService.getTables({project: $scope.state.selectedProject}, {}, function (tables) {
+            QueryService.getTables({project: $scope.project.selectedProject}, {}, function (tables) {
                 var tableMap = [];
                 angular.forEach(tables, function (table) {
                     if (!tableMap[table.table_SCHEM]) {
@@ -63,9 +55,13 @@ KylinApp
                 $scope.loading = false;
                 defer.resolve();
             });
-
             return defer.promise;
-        }
+        };
+
+
+        $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+                $scope.projectMetaLoad();
+        });
 
         $scope.trimType = function(typeName){
             if (typeName.match(/VARCHAR/i))
@@ -75,5 +71,6 @@ KylinApp
 
             return  typeName.trim().toLowerCase();
         }
+
     });
 

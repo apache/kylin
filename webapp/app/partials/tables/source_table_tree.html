@@ -1,31 +1,31 @@
 <div ng-animate="{enter: 'fadeInDown animated'}">
-    <h3 class="text-info">Source Tables</h3>
+    <h3 class="text-info">Tables</h3>
     <div class="tree-border">
         <div class="row">
             <div class="col-xs-7">
-                <select class="form-control"
-                    ng-model="selectedSrcDb"
-                    ng-options="tables as srcDb for (srcDb, tables) in srcTables">
-                </select>
+
             </div>
+
             <!--button-->
-            <div class="col-xs-5">
+            <div class="col-xs-5" style="padding-left: 0px;">
+                <span ng-show="hiveTbLoad.status==='loading'" class="ng-hide"><img src="../../image/ajax-loader.gif"> Loading...</span>
                 <div class="pull-right">
-                    <a class="btn btn-sm btn-primary" tooltip="Load Hive Table" ng-if="userService.hasRole('ROLE_MODELER')"  ng-click="openModal()"><i class="fa fa-plus"></i></a>
-                    <a class="btn btn-sm btn-success" tooltip="Refresh Tables" ng-click="aceSrcTbChanged()"><i class="fa fa-refresh"></i></a>
+                    <a class="btn btn-xs btn-primary" ng-disabled="hiveTbLoad.status==='loading'" tooltip="Load Hive Table"  ng-if="userService.hasRole('ROLE_MODELER')"  ng-click="openModal()"><i class="fa fa-download"></i></a>
+                    <a class="btn btn-xs btn-success" ng-disabled="hiveTbLoad.status==='loading'" tooltip="Refresh Tables" ng-click="aceSrcTbChanged()"><i class="fa fa-refresh"></i></a>
                 </div>
             </div>
+
         </div>
         <div class="space-4"></div>
         <!--tree-->
         <div style="width:100%; height:{{window}}px; overflow:auto;">
-            <treecontrol class="tree-light"
+            <treecontrol ng-if="selectedSrcDb.length > 0" class="tree-light"
                          dirSelection="true"
                          tree-model="selectedSrcDb"
                          options="treeOptions"
                          on-selection="showSelected(node)"
                          selected-node="selectedSrcTable">
-                {{node.name}} {{angular.isDefined(node.datatype) && '(' + node.datatype + ')' || ''}}
+                {{node.name}} {{!!(node.datatype)?'(' + trimType(node.datatype) + ')' : ''}}
             </treecontrol>
         </div>
     </div>

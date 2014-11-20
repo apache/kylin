@@ -40,6 +40,7 @@ import com.codahale.metrics.annotation.Metered;
 import com.kylinolap.metadata.MetadataConstances;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.request.CardinalityRequest;
 import com.kylinolap.rest.response.TableDescResponse;
 import com.kylinolap.rest.service.CubeService;
@@ -65,9 +66,15 @@ public class TableController extends BasicController {
     @RequestMapping(value = "", method = { RequestMethod.GET })
     @ResponseBody
     @Metered(name = "listSourceTables")
-    public List<TableDesc> getHiveTables(@RequestParam(value = "ext", required = false) boolean withExt) {
+    public List<TableDesc> getHiveTables(@RequestParam(value = "ext", required = false) boolean withExt,@RequestParam(value = "project", required = false) String project ) {
         long start = System.currentTimeMillis();
-        List<TableDesc> tables = cubeMgmtService.getMetadataManager().listAllTables();
+        List<TableDesc> tables = null;
+        try {
+                tables = cubeMgmtService.getProjectManager().listDefinedTablesInProject(project);
+        } catch (Exception e) {
+            logger.error("Failed to deal with the request.", e);
+            throw new InternalErrorException(e.getLocalizedMessage());
+        }
 
         if (withExt) {
             tables = cloneTableDesc(tables);
@@ -110,10 +117,11 @@ public class TableController extends BasicController {
         return "ok";
     }
 
-    @RequestMapping(value = "/{tables}", method = { RequestMethod.POST })
+    @RequestMapping(value = "/{tables}/{project}", method = { RequestMethod.POST })
     @ResponseBody
-    public Map<String, String[]> loadHiveTable(@PathVariable String tables) {
+    public Map<String, String[]> loadHiveTable(@PathVariable String tables,@PathVariable String project) throws IOException {
         String[] arr = cubeMgmtService.reloadHiveTable(tables);
+        cubeMgmtService.syncTableToProject(tables, project);
         Map<String, String[]> result = new HashMap<String, String[]>();
         result.put("result", arr);
         return result;
