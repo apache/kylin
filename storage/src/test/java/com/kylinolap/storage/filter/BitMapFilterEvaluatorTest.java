@@ -43,7 +43,7 @@ public class BitMapFilterEvaluatorTest {
 
         @Override
         public ConciseSet getBitMap(TblColRef col, int valueId) {
-            if (col.equals(colA) == false)
+            if (!col.equals(colA))
                 return null;
             
             // i-th record has value ID i, and last record has value null

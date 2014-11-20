@@ -136,14 +136,14 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
                     public List<TableRecord> call(IIProtos.RowsService counter) throws IOException {
                         ServerRpcController controller = new ServerRpcController();
                         BlockingRpcCallback<IIProtos.IIResponse> rpcCallback =
-                                new BlockingRpcCallback<IIProtos.IIResponse>();
+                                new BlockingRpcCallback<>();
                         counter.getRows(controller, request, rpcCallback);
                         IIProtos.IIResponse response = rpcCallback.get();
                         if (controller.failedOnException()) {
                             throw controller.getFailedOn();
                         }
 
-                        List<TableRecord> records = new ArrayList<TableRecord>();
+                        List<TableRecord> records = new ArrayList<>();
                         for (ByteString raw : response.getRowsList()) {
                             TableRecord record = new TableRecord(recordInfo);
                             record.setBytes(raw.toByteArray(), 0, raw.size());
