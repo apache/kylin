@@ -22,7 +22,8 @@ KylinApp
             {attr: 'duration', name: 'Duration'}
         ];
         $scope.status = [$scope.allStatus[0], $scope.allStatus[1], $scope.allStatus[2], $scope.allStatus[3], $scope.allStatus[4], $scope.allStatus[5]];
-        $scope.state = {loading: false, refreshing: false, filterAttr: 'last_modified', filterReverse: true, reverseColumn: 'last_modified', projectName:null};
+        // projectName from page ctrl
+        $scope.state = {loading: false, refreshing: false, filterAttr: 'last_modified', filterReverse: true, reverseColumn: 'last_modified', projectName:$scope.project.selectedProject};
 
         ProjectService.list({}, function (projects) {
             angular.forEach(projects, function(project, index){
@@ -77,8 +78,14 @@ KylinApp
         $scope.reload = function () {
             // trigger reload action in pagination directive
             $scope.action.reload = !$scope.action.reload;
-        }
+        };
 
+
+        $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+            $scope.jobs={};
+            $scope.state.projectName = newValue;
+            $scope.list();
+        });
         $scope.resume = function (job) {
             if (confirm("Are you sure to resume the job?")) {
                 JobService.resume({jobId: job.uuid}, {}, function (job) {
@@ -119,21 +126,6 @@ KylinApp
                     internalOpenModal();
                 }
             }
-        }
-
-        $scope.toCreateProj = function () {
-            $modal.open({
-                templateUrl: 'project.html',
-                controller: projCtrl,
-                resolve: {
-                    projects: function () {
-                        return null;
-                    },
-                    project: function(){
-                        return null;
-                    }
-                }
-            });
         }
 
         function internalOpenModal() {

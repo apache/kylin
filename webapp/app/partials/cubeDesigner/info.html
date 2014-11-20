@@ -4,18 +4,14 @@
         <div class="form-group">
             <div class="row">
                 <label class="col-xs-12 col-sm-3 control-label no-padding-right">
-                    <a ng-if="state.mode=='edit'" href="/projects" tooltip="Click to create a new Project">
-                        <b>Project</b> <i class="fa fa-question-circle"></i>
+                    <a ng-if="state.mode=='edit'" href="/projects">
+                        <b>Project</b>
                     </a>
                     <b ng-if="state.mode=='view'" class="font-color-default">Project</b>
                 </label>
                 <div class="col-xs-12 col-sm-6">
-                    <div ng-if="state.mode=='edit'">
-                        <select class="form-control" ng-model="cubeMetaFrame.project" required
-                                ng-options="project.name as project.name for project in projects | filter: filterProj">
-                            <option value="">-- Select Project --</option>
-                        </select>
-                    </div>
+                    <input ng-if="state.mode=='edit'" name="project_name" type="text" class="form-control"
+                           ng-model="cubeMetaFrame.project" disabled/>
                     <span ng-if="state.mode=='view'">
                         {{cubeMetaFrame.project}}
                     </span>
