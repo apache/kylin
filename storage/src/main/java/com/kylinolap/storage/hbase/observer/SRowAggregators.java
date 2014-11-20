@@ -41,7 +41,7 @@ import com.kylinolap.metadata.model.cube.MeasureDesc;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class SRowAggregators {
 
-    public static SRowAggregators fromValuDecoders(Collection<RowValueDecoder> rowValueDecoders) {
+    public static SRowAggregators fromValueDecoders(Collection<RowValueDecoder> rowValueDecoders) {
 
         // each decoder represents one HBase column
         HCol[] hcols = new HCol[rowValueDecoders.size()];
