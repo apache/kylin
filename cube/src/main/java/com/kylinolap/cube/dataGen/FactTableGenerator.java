@@ -220,7 +220,7 @@ public class FactTableGenerator {
             public int compare(DimensionDesc o1, DimensionDesc o2) {
                 JoinDesc j1 = o2.getJoin();
                 JoinDesc j2 = o1.getJoin();
-                return Integer.compare(j1 != null ? j1.getPrimaryKey().length : 0, j2 != null ? j2.getPrimaryKey().length : 0);
+                return Integer.valueOf(j1 != null ? j1.getPrimaryKey().length : 0).compareTo(j2 != null ? j2.getPrimaryKey().length : 0);
             }
         });
         return dimensions;
