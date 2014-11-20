@@ -16,8 +16,9 @@
 package com.kylinolap.job;
 
 import java.io.IOException;
+import java.util.List;
 
-import org.apache.commons.lang.ArrayUtils;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,15 +58,15 @@ public class JobInstanceBuilder {
         this.engineConfig = engineCfg;
     }
 
-    public void buildSteps(JobInstance jobInstance) throws IOException {
+    public List<JobStep> buildSteps(JobInstance jobInstance) throws IOException {
         init(jobInstance);
         switch (jobInstance.getType()) {
         case BUILD:
-            createBuildCubeSegmentSteps(jobInstance);
-            break;
+            return createBuildCubeSegmentSteps(jobInstance);
         case MERGE:
-            createMergeCubeSegmentsSteps(jobInstance);
-            break;
+            return createMergeCubeSegmentsSteps(jobInstance);
+        default:
+            throw new IllegalArgumentException("job type:" + jobInstance.getType() + " not supported");
         }
     }
 
@@ -142,11 +143,12 @@ public class JobInstanceBuilder {
         return jobWorkingDir + "/" + cubeName + "/rowkey_stats";
     }
 
-    private void createMergeCubeSegmentsSteps(JobInstance jobInstance) throws IOException {
+    private List<JobStep> createMergeCubeSegmentsSteps(JobInstance jobInstance) throws IOException {
 
         if (cube.getMergingSegments() == null || cube.getMergingSegments().size() < 2) {
             throw new IllegalArgumentException("Merging segments count should be more than 2");
         }
+
 
         String[] cuboidPaths = new String[cube.getMergingSegments().size()];
         for (int i = 0; i < cube.getMergingSegments().size(); i++) {
@@ -156,103 +158,90 @@ public class JobInstanceBuilder {
         String formattedPath = formatPaths(cuboidPaths);
 
         // clear existing steps
-        jobInstance.clearSteps();
+//        jobInstance.clearSteps();
         int stepSeqNum = 0;
+        List<JobStep> result = Lists.newArrayList();
 
         // merge cuboid data of ancestor segments
-        addMergeCuboidDataStep(jobInstance, stepSeqNum, formattedPath);
-        stepSeqNum++;
+        result.add(createMergeCuboidDataStep(jobInstance, stepSeqNum++, formattedPath));
 
         // get output distribution step
-        addRangeRowkeyDistributionStep(jobInstance, stepSeqNum, jobWorkingDir + "/" + cubeName + "/merged_cuboid");
-        stepSeqNum++;
+        result.add(createRangeRowkeyDistributionStep(jobInstance, stepSeqNum++, jobWorkingDir + "/" + cubeName + "/merged_cuboid"));
 
         // create htable step
-        addCreateHTableStep(jobInstance, stepSeqNum);
-        stepSeqNum++;
+        result.add(createCreateHTableStep(jobInstance, stepSeqNum++));
 
         // generate hfiles step
-        addConvertCuboidToHfileStep(jobInstance, stepSeqNum, jobWorkingDir + "/" + cubeName + "/merged_cuboid");
-        stepSeqNum++;
+        result.add(createConvertCuboidToHfileStep(jobInstance, stepSeqNum++, jobWorkingDir + "/" + cubeName + "/merged_cuboid"));
 
         // bulk load step
-        addBulkLoadStep(jobInstance, stepSeqNum);
-        stepSeqNum++;
+        result.add(createBulkLoadStep(jobInstance, stepSeqNum++));
 
         try {
             log.debug(JsonUtil.writeValueAsIndentString(jobInstance));
         } catch (Exception e) {
             log.error(e.getMessage());
         }
+        return result;
     }
 
-    private void createBuildCubeSegmentSteps(JobInstance jobInstance) throws IOException {
+    private List<JobStep> createBuildCubeSegmentSteps(JobInstance jobInstance) throws IOException {
 
         // clear existing steps
-        jobInstance.clearSteps();
+//        jobInstance.clearSteps();
 
-        int stepSeqNum = 0;
         int groupRowkeyColumnsCount = cube.getDescriptor().getRowkey().getNCuboidBuildLevels();
         int totalRowkeyColumnsCount = cube.getDescriptor().getRowkey().getRowKeyColumns().length;
 
         String[] cuboidOutputTempPath = getCuboidOutputPaths(cubeName, totalRowkeyColumnsCount, groupRowkeyColumnsCount);
 
+        int stepSeqNum = 0;
+        List<JobStep> result = Lists.newArrayList();
         if (this.engineConfig.isFlatTableByHive()) {
             // by default in here
 
             // flat hive table step
-            addIntermediateHiveTableStep(jobInstance, stepSeqNum, cuboidOutputTempPath);
-            stepSeqNum++;
+            result.add(createIntermediateHiveTableStep(jobInstance, stepSeqNum++, cuboidOutputTempPath));
         }
 
         // fact distinct columns step
-        addFactDistinctColumnsStep(jobInstance, stepSeqNum, cuboidOutputTempPath);
-        stepSeqNum++;
+        result.add(createFactDistinctColumnsStep(jobInstance, stepSeqNum++, cuboidOutputTempPath));
 
         // build dictionary step
-        addBuildDictionaryStep(jobInstance, stepSeqNum);
-        stepSeqNum++;
+        result.add(createBuildDictionaryStep(jobInstance, stepSeqNum++));
 
         // base cuboid step
-        addBaseCuboidStep(jobInstance, stepSeqNum, cuboidOutputTempPath);
-        stepSeqNum++;
+        result.add(createBaseCuboidStep(jobInstance, stepSeqNum++, cuboidOutputTempPath));
 
         // n dim cuboid steps
         for (int i = 1; i <= groupRowkeyColumnsCount; i++) {
             int dimNum = totalRowkeyColumnsCount - i;
-            addNDimensionCuboidStep(jobInstance, stepSeqNum, cuboidOutputTempPath, dimNum, totalRowkeyColumnsCount);
-            stepSeqNum++;
+            result.add(createNDimensionCuboidStep(jobInstance, stepSeqNum++, cuboidOutputTempPath, dimNum, totalRowkeyColumnsCount));
         }
 
         // get output distribution step
-        addRangeRowkeyDistributionStep(jobInstance, stepSeqNum, jobWorkingDir + "/" + cubeName + "/cuboid/*");
-        stepSeqNum++;
+        result.add(createRangeRowkeyDistributionStep(jobInstance, stepSeqNum++, jobWorkingDir + "/" + cubeName + "/cuboid/*"));
 
         // create htable step
-        addCreateHTableStep(jobInstance, stepSeqNum);
-        stepSeqNum++;
+        result.add(createCreateHTableStep(jobInstance, stepSeqNum++));
         // generate hfiles step
-        addConvertCuboidToHfileStep(jobInstance, stepSeqNum, jobWorkingDir + "/" + cubeName + "/cuboid/*");
-        stepSeqNum++;
+        result.add(createConvertCuboidToHfileStep(jobInstance, stepSeqNum++, jobWorkingDir + "/" + cubeName + "/cuboid/*"));
         // bulk load step
-        addBulkLoadStep(jobInstance, stepSeqNum);
-        stepSeqNum++;
+        result.add(createBulkLoadStep(jobInstance, stepSeqNum++));
 
         try {
             log.debug(JsonUtil.writeValueAsIndentString(jobInstance));
         } catch (Exception e) {
             log.error(e.getMessage());
         }
+        return result;
     }
 
     private String formatPaths(String[] paths) {
-        String retVal = ArrayUtils.toString(paths);
-        retVal = StringUtils.remove(retVal, "{");
-        retVal = StringUtils.remove(retVal, "}");
-        return retVal;
+        return StringUtils.join(paths, ",");
     }
 
-    private void addBuildDictionaryStep(JobInstance jobInstance, int stepSeqNum) {
+    private JobStep createBuildDictionaryStep(JobInstance jobInstance, int stepSeqNum) {
         // base cuboid job
         JobStep buildDictionaryStep = new JobStep();
         buildDictionaryStep.setName(JobConstants.STEP_NAME_BUILD_DICTIONARY);
@@ -266,11 +255,10 @@ public class JobInstanceBuilder {
         buildDictionaryStep.setStatus(JobStepStatusEnum.PENDING);
         buildDictionaryStep.setRunAsync(false);
         buildDictionaryStep.setCmdType(JobStepCmdTypeEnum.JAVA_CMD_HADOOP_NO_MR_DICTIONARY);
-
-        jobInstance.addStep(stepSeqNum, buildDictionaryStep);
+        return buildDictionaryStep;
     }
 
-    private void addIntermediateHiveTableStep(JobInstance jobInstance, int stepSeqNum, String[] cuboidOutputTempPath) throws IOException {
+    private JobStep createIntermediateHiveTableStep(JobInstance jobInstance, int stepSeqNum, String[] cuboidOutputTempPath) throws IOException {
         JoinedFlatTableDesc intermediateTableDesc = new JoinedFlatTableDesc(cube.getDescriptor(), this.cubeSegment);
         String dropTableHql = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc, jobUUID);
         String createTableHql = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, jobWorkingDir, jobUUID);
@@ -291,11 +279,10 @@ public class JobInstanceBuilder {
         intermediateHiveTableStep.setStatus(JobStepStatusEnum.PENDING);
         intermediateHiveTableStep.setRunAsync(false);
         intermediateHiveTableStep.setCmdType(JobStepCmdTypeEnum.SHELL_CMD_HADOOP);
-
-        jobInstance.addStep(stepSeqNum, intermediateHiveTableStep);
+        return intermediateHiveTableStep;
     }
 
-    private void addFactDistinctColumnsStep(JobInstance jobInstance, int stepSeqNum, String[] cuboidOutputTempPath) throws IOException {
+    private JobStep createFactDistinctColumnsStep(JobInstance jobInstance, int stepSeqNum, String[] cuboidOutputTempPath) throws IOException {
         // base cuboid job
         JobStep factDistinctColumnsStep = new JobStep();
 
@@ -317,11 +304,10 @@ public class JobInstanceBuilder {
         factDistinctColumnsStep.setStatus(JobStepStatusEnum.PENDING);
         factDistinctColumnsStep.setRunAsync(true);
         factDistinctColumnsStep.setCmdType(JobStepCmdTypeEnum.JAVA_CMD_HADOOP_FACTDISTINCT);
-
-        jobInstance.addStep(stepSeqNum, factDistinctColumnsStep);
+        return factDistinctColumnsStep;
     }
 
-    private void addBaseCuboidStep(JobInstance jobInstance, int stepSeqNum, String[] cuboidOutputTempPath) throws IOException {
+    private JobStep createBaseCuboidStep(JobInstance jobInstance, int stepSeqNum, String[] cuboidOutputTempPath) throws IOException {
         // base cuboid job
         JobStep baseCuboidStep = new JobStep();
 
@@ -352,11 +338,10 @@ public class JobInstanceBuilder {
         baseCuboidStep.setStatus(JobStepStatusEnum.PENDING);
         baseCuboidStep.setRunAsync(true);
         baseCuboidStep.setCmdType(JobStepCmdTypeEnum.JAVA_CMD_HADOOP_BASECUBOID);
-
-        jobInstance.addStep(stepSeqNum, baseCuboidStep);
+        return baseCuboidStep;
     }
 
-    private void addNDimensionCuboidStep(JobInstance jobInstance, int stepSeqNum, String[] cuboidOutputTempPath, int dimNum, int totalRowkeyColumnCount) throws IOException {
+    private JobStep createNDimensionCuboidStep(JobInstance jobInstance, int stepSeqNum, String[] cuboidOutputTempPath, int dimNum, int totalRowkeyColumnCount) throws IOException {
         // ND cuboid job
         JobStep ndCuboidStep = new JobStep();
 
@@ -376,11 +361,10 @@ public class JobInstanceBuilder {
         ndCuboidStep.setStatus(JobStepStatusEnum.PENDING);
         ndCuboidStep.setRunAsync(true);
         ndCuboidStep.setCmdType(JobStepCmdTypeEnum.JAVA_CMD_HADOOP_NDCUBOID);
-
-        jobInstance.addStep(stepSeqNum, ndCuboidStep);
+        return ndCuboidStep;
     }
 
-    private void addRangeRowkeyDistributionStep(JobInstance jobInstance, int stepSeqNum, String inputPath) throws IOException {
+    private JobStep createRangeRowkeyDistributionStep(JobInstance jobInstance, int stepSeqNum, String inputPath) throws IOException {
         JobStep rowkeyDistributionStep = new JobStep();
         rowkeyDistributionStep.setName(JobConstants.STEP_NAME_GET_CUBOID_KEY_DISTRIBUTION);
         String cmd = "";
@@ -396,11 +380,10 @@ public class JobInstanceBuilder {
         rowkeyDistributionStep.setStatus(JobStepStatusEnum.PENDING);
         rowkeyDistributionStep.setRunAsync(true);
         rowkeyDistributionStep.setCmdType(JobStepCmdTypeEnum.JAVA_CMD_HADOOP_RANGEKEYDISTRIBUTION);
-
-        jobInstance.addStep(stepSeqNum, rowkeyDistributionStep);
+        return rowkeyDistributionStep;
     }
 
-    private void addMergeCuboidDataStep(JobInstance jobInstance, int stepSeqNum, String inputPath) throws IOException {
+    private JobStep createMergeCuboidDataStep(JobInstance jobInstance, int stepSeqNum, String inputPath) throws IOException {
         JobStep mergeCuboidDataStep = new JobStep();
         mergeCuboidDataStep.setName(JobConstants.STEP_NAME_MERGE_CUBOID);
         String cmd = "";
@@ -417,11 +400,10 @@ public class JobInstanceBuilder {
         mergeCuboidDataStep.setStatus(JobStepStatusEnum.PENDING);
         mergeCuboidDataStep.setRunAsync(true);
         mergeCuboidDataStep.setCmdType(JobStepCmdTypeEnum.JAVA_CMD_HADOOP_MERGECUBOID);
-
-        jobInstance.addStep(stepSeqNum, mergeCuboidDataStep);
+        return mergeCuboidDataStep;
     }
 
-    private void addCreateHTableStep(JobInstance jobInstance, int stepSeqNum) {
+    private JobStep createCreateHTableStep(JobInstance jobInstance, int stepSeqNum) {
         JobStep createHtableStep = new JobStep();
         createHtableStep.setName(JobConstants.STEP_NAME_CREATE_HBASE_TABLE);
         String cmd = "";
@@ -435,10 +417,10 @@ public class JobInstanceBuilder {
         createHtableStep.setRunAsync(false);
         createHtableStep.setCmdType(JobStepCmdTypeEnum.JAVA_CMD_HADDOP_NO_MR_CREATEHTABLE);
 
-        jobInstance.addStep(stepSeqNum, createHtableStep);
+        return createHtableStep;
     }
 
-    private void addConvertCuboidToHfileStep(JobInstance jobInstance, int stepSeqNum, String inputPath) throws IOException {
+    private JobStep createConvertCuboidToHfileStep(JobInstance jobInstance, int stepSeqNum, String inputPath) throws IOException {
         JobStep createHFilesStep = new JobStep();
         createHFilesStep.setName(JobConstants.STEP_NAME_CONVERT_CUBOID_TO_HFILE);
         String cmd = "";
@@ -456,10 +438,11 @@ public class JobInstanceBuilder {
         createHFilesStep.setRunAsync(true);
         createHFilesStep.setCmdType(JobStepCmdTypeEnum.JAVA_CMD_HADOOP_CONVERTHFILE);
 
-        jobInstance.addStep(stepSeqNum, createHFilesStep);
+        return createHFilesStep;
+
     }
 
-    private void addBulkLoadStep(JobInstance jobInstance, int stepSeqNum) {
+    private JobStep createBulkLoadStep(JobInstance jobInstance, int stepSeqNum) {
         JobStep bulkLoadStep = new JobStep();
         bulkLoadStep.setName(JobConstants.STEP_NAME_BULK_LOAD_HFILE);
 
@@ -474,6 +457,7 @@ public class JobInstanceBuilder {
         bulkLoadStep.setRunAsync(false);
         bulkLoadStep.setCmdType(JobStepCmdTypeEnum.JAVA_CMD_HADOOP_NO_MR_BULKLOAD);
 
-        jobInstance.addStep(stepSeqNum, bulkLoadStep);
+        return bulkLoadStep;
+
     }
 }

@@ -17,6 +17,8 @@ package com.kylinolap.cube.project;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -38,6 +40,10 @@ public class ProjectInstance extends RootPersistentEntity {
     @JsonProperty("cubes")
     private List<String> cubes;
 
+    @JsonProperty("tables")
+    private Set<String> tables;
+        
+    
     @JsonProperty("owner")
     private String owner;
 
@@ -152,9 +158,38 @@ public class ProjectInstance extends RootPersistentEntity {
         return cubes;
     }
 
+
     public void setCubes(List<String> cubes) {
         this.cubes = cubes;
+    }    
+        
+    public void setTables(Set<String> tables) {
+        this.tables = tables;
     }
+
+    public boolean containsTable(String tableName) {
+        tableName = tableName.toUpperCase();
+        return tables.contains(tableName);
+    }
+
+    public void removeTable(String tableName) {
+        tableName = tableName.toUpperCase();
+        tables.remove(tableName);
+    }
+
+    public int getTablesCount() {
+        return cubes.size();
+    }
+
+    public void addTable(String tableName) {
+       tableName = tableName.toUpperCase();
+        this.getTables().add(tableName);
+    }
+
+    //will return new Set for null
+    public Set<String> getTables() {
+        tables = tables==null?new TreeSet<String>():tables;
+        return tables;    }
 
     public String getOwner() {
         return owner;
@@ -175,6 +210,7 @@ public class ProjectInstance extends RootPersistentEntity {
     public void recordUpdateTime(long timeMillis) {
         this.lastUpdateTime = formatTime(timeMillis);
     }
+    
 
     public void init() {
         if (name == null)
