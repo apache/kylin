@@ -122,7 +122,7 @@ public class Broadcaster {
             try {
                 restClient.wipeCache(this.type, this.action, this.name);
             } catch (IOException e) {
-                logger.error("Thread failed during wipe cache at " + type + "." + action + "." + name, e);
+                logger.warn("Thread failed during wipe cache at " + type + "." + action + "." + name + ", " + e.toString());
             }
         }
     }
