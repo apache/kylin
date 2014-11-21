@@ -131,7 +131,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         $scope.cubeMetaFrame.rowkey.rowkey_columns.push({
             "column": "",
             "length": 0,
-            "dictionary": null,
+            "dictionary": true,
             "mandatory": false
         });
     }
