@@ -34,13 +34,13 @@ import com.kylinolap.rest.request.JobBuildRequest;
 import com.kylinolap.rest.request.JobListRequest;
 import com.kylinolap.rest.service.CubeService;
 import com.kylinolap.rest.service.JobService;
-import com.kylinolap.rest.service.TestBase;
+import com.kylinolap.rest.service.ServiceTestBase;
 
 /**
  * @author xduo
  * 
  */
-public class JobControllerTest extends TestBase {
+public class JobControllerTest extends ServiceTestBase {
 
     private JobController jobSchedulerController;
     private CubeController cubeController;

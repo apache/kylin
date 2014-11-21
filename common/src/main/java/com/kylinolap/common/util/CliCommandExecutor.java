@@ -17,26 +17,24 @@
 package com.kylinolap.common.util;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.hbase.util.Pair;
 
 /**
  * @author yangli9
  */
-public class OSCommandExecutor {
+public class CliCommandExecutor {
 
-    private String command;
     private String remoteHost;
     private String remoteUser;
     private String remotePwd;
     private int remoteTimeoutSeconds = 3600;
 
-    private String output;
-    private int exitCode;
-
-    public OSCommandExecutor(String command) {
-        this.command = command;
+    public CliCommandExecutor() {
     }
 
     public void setRunAtRemote(String host, String user, String pwd) {
@@ -50,34 +48,61 @@ public class OSCommandExecutor {
         this.remoteUser = null;
         this.remotePwd = null;
     }
-
-    public String execute() throws IOException {
+    
+    public void copyFile(String localFile, String destDir) throws IOException {
         if (remoteHost == null)
-            runNativeCommand();
+            copyNative(localFile, destDir);
         else
-            runRemoteCommand();
-
-        if (exitCode != 0)
-            throw new IOException("OS command error exit with " + exitCode + " -- " + command);
-
-        return output;
+            copyRemote(localFile, destDir);
     }
 
-    private void runRemoteCommand() throws IOException {
+    private void copyNative(String localFile, String destDir) throws IOException {
+        File src = new File(localFile);
+        File dest = new File(destDir, src.getName());
+        FileUtils.copyFile(src, dest);
+    }
+
+    private void copyRemote(String localFile, String destDir) throws IOException {
+        SSHClient ssh = new SSHClient(remoteHost, remoteUser, remotePwd, null);
+        try {
+            ssh.scpFileToRemote(localFile, destDir);
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IOException(e.getMessage(), e);
+        }
+    }
+
+    public String execute(String command) throws IOException {
+        Pair<Integer, String> r;
+        if (remoteHost == null)
+            r = runNativeCommand(command);
+        else
+            r = runRemoteCommand(command);
+
+        if (r.getFirst() != 0)
+            throw new IOException("OS command error exit with " + r.getFirst() + " -- " + command);
+
+        return r.getSecond();
+    }
+
+    private Pair<Integer, String> runRemoteCommand(String command) throws IOException {
         SSHClient ssh = new SSHClient(remoteHost, remoteUser, remotePwd, null);
 
         SSHClientOutput sshOutput;
         try {
             sshOutput = ssh.execCommand(command, remoteTimeoutSeconds);
-            exitCode = sshOutput.getExitCode();
-            output = sshOutput.getText();
+            int exitCode = sshOutput.getExitCode();
+            String output = sshOutput.getText();
+            return new Pair<Integer, String>(exitCode, output);
+        } catch (IOException e) {
+            throw e;
         } catch (Exception e) {
-            throw new IOException(e);
+            throw new IOException(e.getMessage(), e);
         }
-
     }
 
-    private void runNativeCommand() throws IOException {
+    private Pair<Integer, String> runNativeCommand(String command) throws IOException {
         String[] cmd = new String[3];
         String osName = System.getProperty("os.name");
         if (osName.startsWith("Windows")) {
@@ -95,10 +120,11 @@ public class OSCommandExecutor {
 
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         IOUtils.copy(proc.getInputStream(), buf);
-        output = buf.toString("UTF-8");
+        String output = buf.toString("UTF-8");
 
         try {
-            exitCode = proc.waitFor();
+            int exitCode = proc.waitFor();
+            return new Pair<Integer, String>(exitCode, output);
         } catch (InterruptedException e) {
             throw new IOException(e);
         }

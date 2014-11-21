@@ -61,14 +61,6 @@ public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
         this.tempTestMetadataUrl = null;
     }
 
-    @Override
-    public KylinConfig getTestConfig() {
-        if (this.tempTestMetadataUrl == null) {
-            throw new IllegalArgumentException("Call createTestMetadata() method to initialize TestMetadataUrl");
-        }
-        return KylinConfig.getInstanceFromEnv();
-    }
-
     protected ResourceStore getStore() {
         return ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
     }

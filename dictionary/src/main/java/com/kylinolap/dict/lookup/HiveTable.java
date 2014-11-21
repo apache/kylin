@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.HadoopUtil;
-import com.kylinolap.common.util.OSCommandExecutor;
+import com.kylinolap.common.util.CliCommandExecutor;
 import com.kylinolap.metadata.MetadataManager;
 
 /**
@@ -89,8 +89,9 @@ public class HiveTable implements ReadableTable {
             return override;
         }
 
-        OSCommandExecutor exec = KylinConfig.getInstanceFromEnv().getOSCommandExecutor("hive -e \"describe extended " + hiveTable + ";\"");
-        String output = exec.execute();
+        String cmd = "hive -e \"describe extended " + hiveTable + ";\"";
+        CliCommandExecutor exec = KylinConfig.getInstanceFromEnv().getCliCommandExecutor();
+        String output = exec.execute(cmd);
 
         Pattern ptn = Pattern.compile("location:(.*?),");
         Matcher m = ptn.matcher(output);
