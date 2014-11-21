@@ -22,7 +22,6 @@
                             ng-change="refreshAggregationGroup(cubeMetaFrame.rowkey.aggregation_groups, $index, aggregation_groups)"
                             ng-options="dimension.name as dimension.name for dimension in cubeMetaFrame.dimensions">
                     </select>
-
                     <p ng-if="state.mode=='view'" style="word-wrap: break-word; word-break: normal;max-width: 1000px ">{{aggregation_groups}}</p>
                 </td>
                 <td ng-if="state.mode=='edit'" class="col-xs-1">
@@ -110,9 +109,7 @@
         </table>
 
         <button class="btn btn-sm btn-info" style="margin-left:42px"
-                ng-click="addNewRowkeyColumn()" ng-show="state.mode=='edit'">New Rowkey
-            Column<i
-                    class="fa fa-plus"></i></button>
+                ng-click="addNewRowkeyColumn()" ng-show="state.mode=='edit'">New Rowkey Column<i class="fa fa-plus"></i></button>
     </div>
 </div>
 
