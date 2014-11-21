@@ -4,10 +4,12 @@ KylinApp
     .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService) {
         $scope.listParams={
             cubeName: $routeParams.cubeName,
-            projectName: $scope.project.selectedProject
+            projectName: $routeParams.projectName
         };
+        if($routeParams.projectName){
+            $scope.project.selectedProject = $routeParams.projectName;
+        }
         $scope.cubes = [];
-//        $scope.projects = [];
         $scope.loading = false;
         $scope.action = {};
 
@@ -24,11 +26,6 @@ KylinApp
         $scope.state = { filterAttr: 'create_time', filterReverse: true, reverseColumn: 'create_time',
             dimensionFilter: '', measureFilter: ''};
 
-//        ProjectService.list({}, function (projects) {
-//            angular.forEach(projects, function(project, index){
-//                $scope.projects.push(project.name);
-//            });
-//        });
 
         $scope.list = function (offset, limit) {
             offset = (!!offset) ? offset : 0;

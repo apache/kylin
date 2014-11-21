@@ -1,7 +1,8 @@
 'use strict';
 
 KylinApp
-    .controller('SourceMetaCtrl', function ($scope, $q, $window, $routeParams, CubeService, $modal, TableService,$route) {
+    .controller('SourceMetaCtrl', function ($scope,$cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService,$route) {
+        var $httpDefaultCache = $cacheFactory.get('$http');
         $scope.srcTables = {};
         $scope.srcDbs = [];
         $scope.selectedSrcDb = [];
@@ -55,7 +56,8 @@ KylinApp
             };
             if (forceLoad)
             {
-                param.timestamp = new Date().getTime();
+//                param.timestamp = new Date().getTime();
+                $httpDefaultCache.removeAll();
             }
             TableService.list(param, function (tables) {
                 var tableMap = [];
