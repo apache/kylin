@@ -93,7 +93,10 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
     $scope.addNewDimension = function (dimension) {
         $scope.newDimension = (!!dimension)? dimension: Dimension.createNew();
-        if($scope.newDimension.status.useJoin||$scope.newDimension.join.foreign_key.length!=0){
+        if(!$scope.newDimension.join){
+            $scope.newDimension.join = { "type": "","primary_key": [],"foreign_key": []}
+        }
+        if($scope.newDimension.status&&$scope.newDimension.status.useJoin||$scope.newDimension.join.foreign_key.length!=0){
             $scope.newDimension.status.useJoin = true;
         }
     }
@@ -154,6 +157,9 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     }
 
     $scope.addNewDerived = function (dimension) {
+        if(!dimension.derived){
+            dimension.derived = [];
+        }
         dimension.derived.push("");
     }
 

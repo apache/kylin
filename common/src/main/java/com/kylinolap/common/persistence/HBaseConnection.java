@@ -107,7 +107,9 @@ public class HBaseConnection {
 
             if (null != families && families.length > 0) {
                 for (String family : families) {
-                    desc.addFamily(new HColumnDescriptor(family));
+                    HColumnDescriptor fd = new HColumnDescriptor(family);
+                    fd.setInMemory(true); // metadata tables are best in memory
+                    desc.addFamily(fd);
                 }
             }
             hbase.createTable(desc);

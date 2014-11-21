@@ -122,7 +122,7 @@ public class QueryController extends BasicController {
     public void saveQuery(@RequestBody SaveSqlRequest sqlRequest) throws IOException {
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
         Query newQuery = new Query(sqlRequest.getName(), sqlRequest.getProject(), sqlRequest.getSql(), sqlRequest.getDescription());
-        
+
         queryService.saveQuery(creator, newQuery);
     }
 
