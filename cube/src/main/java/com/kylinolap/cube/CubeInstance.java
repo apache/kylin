@@ -374,7 +374,7 @@ public class CubeInstance extends RootPersistentEntity {
     }
 
     public boolean incrementalBuildOnHll() {
-        return (!getSegment(CubeSegmentStatusEnum.READY).isEmpty()) && true;//FIXME && true for test only
+        return (!getSegment(CubeSegmentStatusEnum.READY).isEmpty()) && getDescriptor().hasHolisticCountDistinctMeasures();
     }
 
 }
