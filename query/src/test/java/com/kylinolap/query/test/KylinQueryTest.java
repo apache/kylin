@@ -32,6 +32,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.query.enumerator.OLAPQuery;
@@ -57,6 +58,7 @@ public class KylinQueryTest extends KylinTestBase {
     }
 
     private static void setUpEnv() {
+        HBaseMetadataTestCase.staticCreateTestMetadata();
         config = KylinConfig.getInstanceFromEnv();
     }
 
@@ -89,9 +91,8 @@ public class KylinQueryTest extends KylinTestBase {
         if (h2Connection != null)
             closeConnection(h2Connection);
 
-        System.clearProperty(KylinConfig.KYLIN_CONF);
-        KylinConfig.destoryInstance();
         CoprocessorEnabler.forceCoprocessorUnset();
+        HBaseMetadataTestCase.staticCleanupTestMetadata();
     }
 
     protected static void preferCubeOf(String joinType) {
