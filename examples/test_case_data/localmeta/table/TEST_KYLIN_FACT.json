@@ -3,7 +3,6 @@
     "name":"test_kylin_fact",
     "database":"edw",
     "columns":[
-
         {
             "id":"1",
             "name":"TRANS_ID",
@@ -37,7 +36,7 @@
         {
             "id":"7",
             "name":"PRICE",
-            "datatype":"decimal"
+            "datatype":"decimal(19,4)"
         },
 		{
             "id":"8",
