@@ -27,12 +27,13 @@ import java.util.TimeZone;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.quartz.SchedulerException;
 
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.ClasspathUtil;
+import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.cube.CubeBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
@@ -46,20 +47,24 @@ import com.kylinolap.job.exception.InvalidJobInstanceException;
 /**
  * @author ysong1
  */
-public class BuildCubeWithEngineTest extends CubeDevelopTestCase {
-
-    // private static final Logger logger = LoggerFactory.getLogger(BuildCubeWithEngineTest.class);
+public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
 
     protected JobManager jobManager;
     protected JobEngineConfig engineConfig;
 
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        ClasspathUtil.addClasspath(new File(SANDBOX_TEST_DATA).getAbsolutePath());
+    }
 
     @Before
     public void before() throws Exception {
-        ClasspathUtil.addClasspath(new File(AbstractKylinTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         this.createTestMetadata();
 
-        initEnv(true, true);
+        DeployUtil.initCliWorkDir();
+        DeployUtil.deployMetadata();
+        DeployUtil.overrideJobJarLocations();
+        DeployUtil.overrideJobConf(SANDBOX_TEST_DATA);
 
         engineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
         jobManager = new JobManager("Build_Test_Cube_Engine", engineConfig);
@@ -69,6 +74,7 @@ public class BuildCubeWithEngineTest extends CubeDevelopTestCase {
     @After
     public void after() throws IOException {
         // jobManager.deleteAllJobs();
+        this.cleanupTestMetadata();
     }
 
     @Test
@@ -92,7 +98,7 @@ public class BuildCubeWithEngineTest extends CubeDevelopTestCase {
      * @throws Exception
      */
     private void testInnerJoinCube() throws Exception {
-        this.prepareTestData("inner");// default settings;
+        DeployUtil.prepareTestData("inner", "test_kylin_cube_with_slr_empty");
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -129,7 +135,7 @@ public class BuildCubeWithEngineTest extends CubeDevelopTestCase {
      * @throws Exception
      */
     private void testLeftJoinCube() throws Exception {
-        this.prepareTestData("left");// default settings;
+        DeployUtil.prepareTestData("left", "test_kylin_cube_with_slr_left_join_empty");
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));

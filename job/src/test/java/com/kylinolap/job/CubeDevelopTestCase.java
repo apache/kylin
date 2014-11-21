@@ -1,6 +1,7 @@
 package com.kylinolap.job;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.persistence.ResourceTool;
 import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.common.util.SSHClient;
@@ -32,7 +33,6 @@ import static org.junit.Assert.assertEquals;
  */
 public class CubeDevelopTestCase extends HBaseMetadataTestCase {
     private static final Logger logger = LoggerFactory.getLogger(CubeDevelopTestCase.class);
-
 
     protected static final String TABLE_CAL_DT = "test_cal_dt";
     protected static final String TABLE_CATEGORY_GROUPINGS = "test_category_groupings";
@@ -294,7 +294,8 @@ public class CubeDevelopTestCase extends HBaseMetadataTestCase {
         retrieveJarName();
 
         // install metadata to hbase
-        installMetadataToHBase();
+        ResourceTool.reset(KylinConfig.getInstanceFromEnv());
+        ResourceTool.copy(KylinConfig.createInstanceFromUri(LOCALMETA_TEST_DATA), KylinConfig.getInstanceFromEnv());
 
         // update cube desc signature.
         for (CubeInstance cube : CubeManager.getInstance(this.getTestConfig()).listAllCubes()) {

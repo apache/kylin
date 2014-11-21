@@ -25,13 +25,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.kylinolap.rest.service.AdminService;
 import com.kylinolap.rest.service.CubeService;
-import com.kylinolap.rest.service.TestBase;
+import com.kylinolap.rest.service.ServiceTestBase;
 
 /**
  * @author xduo
  * 
  */
-public class AdminControllerTest extends TestBase {
+public class AdminControllerTest extends ServiceTestBase {
 
     private AdminController adminController;
 
