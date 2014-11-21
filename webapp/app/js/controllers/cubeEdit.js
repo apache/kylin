@@ -176,7 +176,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         }
 
         $scope.state.project = $scope.cubeMetaFrame.project;
-        delete $scope.cubeMetaFrame.project;
+//        delete $scope.cubeMetaFrame.project;
 
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
     }
@@ -516,7 +516,10 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         });
     }
 
-    $scope.$watch('cubeMetaFrame.project', function (newValue, oldValue) {
+    $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+        if(!newValue){
+            return;
+        }
         $scope.srcTablesInProject=[];
         var param = {
             ext: true,
