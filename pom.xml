@@ -4,12 +4,14 @@
     <groupId>com.kylinolap</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>0.6.2-SNAPSHOT</version>
+    <version>0.6.3-SNAPSHOT</version>
     <name>Kylin:HadoopOLAPEngine</name>
 
     <properties>
         <!-- General Properties -->
         <javaVersion>1.7</javaVersion>
+        <maven-model.version>3.1.1</maven-model.version>
+         <maven-release.version>2.5.1</maven-release.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
@@ -24,25 +26,24 @@
         <antlr.version>3.4</antlr.version>
         <junit.version>4.11</junit.version>
         <mrunit.version>1.0.0</mrunit.version>
+        <dbunit.version>2.5.0</dbunit.version>
+        <h2.version>1.3.174</h2.version>
 
+        <!-- Commons -->
         <commons-cli.version>1.2</commons-cli.version>
         <commons-lang.version>2.6</commons-lang.version>
         <commons-lang3.version>3.1</commons-lang3.version>
         <commons-io.version>2.4</commons-io.version>
         <commons-configuration.version>1.9</commons-configuration.version>
         <commons-daemon.version>1.0.15</commons-daemon.version>
+        <commons-httpclient.version>3.1</commons-httpclient.version>
 
-
+        <!-- Utility -->
         <log4j.version>1.2.17</log4j.version>
         <slf4j.version>1.6.4</slf4j.version>
         <jackson.version>2.2.3</jackson.version>
-        <commons-httpclient.version>3.1</commons-httpclient.version>
         <guava.version>12.0.1</guava.version>
-
         <jsch.version>0.1.51</jsch.version>
-        <dbunit.version>2.5.0</dbunit.version>
-        <maven-model.version>3.1.1</maven-model.version>
-        <h2.version>1.3.174</h2.version>
         <xerces.version>2.9.1</xerces.version>
         <xalan.version>2.7.1</xalan.version>
         <compress-lzf.version>0.8.4</compress-lzf.version>
@@ -465,7 +466,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>
-                    <version>2.1</version>
+                    <version>${maven-release.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.jacoco</groupId>
@@ -492,7 +493,8 @@
         <connection>scm:git:git@github.com:KylinOLAP/Kylin.git</connection>
         <url>scm:git:git@github.com:KylinOLAP/Kylin.git</url>
         <developerConnection>scm:git:git@github.com:KylinOLAP/Kylin.git</developerConnection>
-    </scm>
+      <tag>HEAD</tag>
+  </scm>
 
     <modules>
         <module>common</module>
