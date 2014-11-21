@@ -238,12 +238,16 @@ public class ProjectManager {
         project = ProjectInstance.getNormalizedProjectName(project);
         ProjectInstance projectInstance = getProject(project);
         
+        int originTableCount = projectInstance.getTablesCount();
         //sync exposed table to project when list
         List<TableDesc> exposedTables = listExposedTables(project);
         for(TableDesc table : exposedTables){
             projectInstance.addTable(table.getName());
         }
-        saveResource(projectInstance);
+        
+        if (originTableCount < projectInstance.getTablesCount()) {
+            saveResource(projectInstance);
+        }
         
         List<TableDesc> tables = Lists.newArrayList();
         for (String table : projectInstance.getTables()) {
