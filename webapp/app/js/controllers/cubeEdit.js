@@ -256,7 +256,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                     if(i == tmpRowKeyColumns.length) {
                         tmpRowKeyColumns.push({
                             "column": fk,
-                            "length": 30,
+                            "length": 0,
                             "dictionary": true,
                             "mandatory": false
                         });
@@ -272,7 +272,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                 if(i == tmpRowKeyColumns.length) {
                     tmpRowKeyColumns.push({
                         "column": dimension.column,
-                        "length": 30,
+                        "length": 0,
                         "dictionary": true,
                         "mandatory": false
                     });
@@ -288,7 +288,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                     if(i == tmpRowKeyColumns.length) {
                         tmpRowKeyColumns.push({
                             "column": hierarchy.column,
-                            "length": 30,
+                            "length": 0,
                             "dictionary": true,
                             "mandatory": false
                         });
@@ -454,7 +454,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                     if(i == $scope.cubeMetaFrame.rowkey.rowkey_columns.length) {
                         $scope.cubeMetaFrame.rowkey.rowkey_columns.push({
                             "column": fk,
-                            "length": 30,
+                            "length": 0,
                             "dictionary": true,
                             "mandatory": false
                         });
@@ -471,7 +471,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                 if(i == $scope.cubeMetaFrame.rowkey.rowkey_columns.length) {
                     $scope.cubeMetaFrame.rowkey.rowkey_columns.push({
                         "column": dimension.column,
-                        "length": 30,
+                        "length": 0,
                         "dictionary": true,
                         "mandatory": false
                     });
@@ -489,7 +489,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                     if(i == $scope.cubeMetaFrame.rowkey.rowkey_columns.length) {
                         $scope.cubeMetaFrame.rowkey.rowkey_columns.push({
                             "column": hierarchy.column,
-                            "length": 30,
+                            "length": 0,
                             "dictionary": true,
                             "mandatory": false
                         });
