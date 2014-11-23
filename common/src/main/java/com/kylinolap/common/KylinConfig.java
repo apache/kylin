@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.restclient.RestClient;
-import com.kylinolap.common.util.OSCommandExecutor;
+import com.kylinolap.common.util.CliCommandExecutor;
 
 /**
  * @author yangli9
@@ -269,8 +269,8 @@ public class KylinConfig {
 
     private PropertiesConfiguration kylinConfig = new PropertiesConfiguration();
 
-    public OSCommandExecutor getOSCommandExecutor(String command) throws IOException {
-        OSCommandExecutor exec = new OSCommandExecutor(command);
+    public CliCommandExecutor getCliCommandExecutor() throws IOException {
+        CliCommandExecutor exec = new CliCommandExecutor();
         if (getRunAsRemoteCommand()) {
             exec.setRunAtRemote(getRemoteHadoopCliHostname(), getRemoteHadoopCliUsername(), getRemoteHadoopCliPassword());
         }
@@ -324,9 +324,17 @@ public class KylinConfig {
     public String getKylinJobJarPath() {
         return getRequired(KYLIN_JOB_JAR);
     }
+    
+    public void overrideKylinJobJarPath(String path) {
+        kylinConfig.setProperty(KYLIN_JOB_JAR, path);
+    }
 
     public String getCoprocessorLocalJar() {
         return getRequired(COPROCESSOR_LOCAL_JAR);
+    }
+
+    public void overrideCoprocessorLocalJar(String path) {
+        kylinConfig.setProperty(COPROCESSOR_LOCAL_JAR, path);
     }
 
     public int getCoprocessorScanBitsThreshold() {

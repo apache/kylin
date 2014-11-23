@@ -11,7 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
-public class UserServiceTest extends TestBase{
+public class UserServiceTest extends ServiceTestBase{
 
     @Autowired
     UserService userService;

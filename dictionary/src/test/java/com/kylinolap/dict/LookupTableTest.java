@@ -52,12 +52,12 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
 
         System.out.println("============================================================================");
 
-        lookup = new LookupBytesTable(siteTable, new String[] { "SITE_ID" }, new FileTable(TEST_DATA_FOLDER + "/data/TEST_SITES.csv", 10));
+        lookup = new LookupBytesTable(siteTable, new String[] { "SITE_ID" }, new FileTable(LOCALMETA_TEST_DATA + "/data/TEST_SITES.csv", 10));
         lookup.dump();
 
         System.out.println("============================================================================");
 
-        lookup = new LookupBytesTable(categoryTable, new String[] { "leaf_categ_id", "site_id" }, new FileTable(TEST_DATA_FOLDER + "/data/TEST_CATEGORY_GROUPINGS.csv", 36));
+        lookup = new LookupBytesTable(categoryTable, new String[] { "leaf_categ_id", "site_id" }, new FileTable(LOCALMETA_TEST_DATA + "/data/TEST_CATEGORY_GROUPINGS.csv", 36));
         lookup.dump();
 
         System.out.println("============================================================================");

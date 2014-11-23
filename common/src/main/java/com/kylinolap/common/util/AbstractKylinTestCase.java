@@ -24,11 +24,18 @@ import com.kylinolap.common.KylinConfig;
  */
 public abstract class AbstractKylinTestCase {
 
-    public static final String TEST_DATA_FOLDER = "../examples/test_case_data";
+    public static final String LOCALMETA_TEST_DATA = "../examples/test_case_data/localmeta";
 
+    public static final String MINICLUSTER_TEST_DATA = "../examples/test_case_data/minicluster";
+    
+    public static final String SANDBOX_TEST_DATA = "../examples/test_case_data/sandbox";
+    
     public abstract void createTestMetadata();
 
     public abstract void cleanupTestMetadata();
 
-    public abstract KylinConfig getTestConfig();
+    public KylinConfig getTestConfig() {
+        return KylinConfig.getInstanceFromEnv();
+    }
+
 }

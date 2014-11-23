@@ -49,6 +49,7 @@ import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.DimensionDesc;
 import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
 
@@ -150,12 +151,15 @@ public class CubeManager {
     }
 
     public void buildInvertedIndexDictionary(CubeSegment cubeSeg, String factColumnsPath) throws IOException {
-        MetadataManager metaMgr = getMetadataManager();
         DictionaryManager dictMgr = getDictionaryManager();
 
-        TableDesc tableDesc = metaMgr.getTableDesc(cubeSeg.getCubeDesc().getFactTable());
+        InvertedIndexDesc iiDesc = cubeSeg.getCubeInstance().getInvertedIndexDesc();
+        TableDesc tableDesc = iiDesc.getFactTableDesc();
         for (ColumnDesc colDesc : tableDesc.getColumns()) {
             TblColRef col = new TblColRef(colDesc);
+            if (iiDesc.isMetricsCol(col))
+                continue;
+            
             DictionaryInfo dict = dictMgr.buildDictionary(null, col, factColumnsPath);
             cubeSeg.putDictResPath(col, dict.getResourcePath());
         }

@@ -96,9 +96,11 @@ public class CubeMigrationCLI {
 
         Configuration conf = HBaseConfiguration.create();
         hbaseAdmin = new HBaseAdmin(conf);
+
         hdfsFS = FileSystem.get(new Configuration());
 
         operations = new ArrayList<Opt>();
+
         copyFilesInMetaStore(cube, overwriteIfExists);
         renameFoldersInHdfs(cube);
         changeHtableHost(cube);
@@ -219,6 +221,7 @@ public class CubeMigrationCLI {
                 sb.append(s).append(", ");
             return sb.toString();
         }
+
     }
 
     private static void showOpts() {

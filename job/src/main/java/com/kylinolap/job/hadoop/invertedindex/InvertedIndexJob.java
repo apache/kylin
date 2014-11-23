@@ -40,7 +40,6 @@ import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
  * @author yangli9
@@ -71,10 +70,12 @@ public class InvertedIndexJob extends AbstractHadoopJob {
             // ----------------------------------------------------------------------------
 
             System.out.println("Starting: " + job.getJobName());
+            
+            CubeInstance cube = getCube(cubeName);
 
             setupMapInput(input, inputFormat, inputDelim);
-            setupReduceOutput(output);
-            attachMetadata(cubeName);
+            setupReduceOutput(output, cube.getInvertedIndexDesc().getSharding());
+            attachMetadata(cube);
 
             return waitForCompletion(job);
 
@@ -86,20 +87,26 @@ public class InvertedIndexJob extends AbstractHadoopJob {
 
     }
 
-    private void attachMetadata(String cubeName) throws IOException {
+    /**
+     * @param cubeName
+     * @return
+     */
+    private CubeInstance getCube(String cubeName) {
         CubeManager mgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         CubeInstance cube = mgr.getCube(cubeName);
         if (cube == null)
             throw new IllegalArgumentException("No Inverted Index Cubefound by name " + cubeName);
+        return cube;
+    }
+
+    private void attachMetadata(CubeInstance cube) throws IOException {
 
         Configuration conf = job.getConfiguration();
         attachKylinPropsAndMetadata(cube, conf);
 
         CubeSegment seg = cube.getFirstSegment();
-        InvertedIndexDesc desc = cube.getInvertedIndexDesc();
-        conf.set(BatchConstants.CFG_CUBE_NAME, cubeName);
+        conf.set(BatchConstants.CFG_CUBE_NAME, cube.getName());
         conf.set(BatchConstants.CFG_CUBE_SEGMENT_NAME, seg.getName());
-        conf.set(BatchConstants.TIMESTAMP_GRANULARITY, "" + desc.getTimestampGranularity());
     }
 
     private void setupMapInput(Path input, String inputFormat, String inputDelim) throws IOException {
@@ -133,13 +140,16 @@ public class InvertedIndexJob extends AbstractHadoopJob {
         job.setPartitionerClass(InvertedIndexPartitioner.class);
     }
 
-    private void setupReduceOutput(Path output) throws IOException {
+    private void setupReduceOutput(Path output, short sharding) throws IOException {
         job.setReducerClass(InvertedIndexReducer.class);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
         job.setOutputKeyClass(ImmutableBytesWritable.class);
         job.setOutputValueClass(ImmutableBytesWritable.class);
+        
+        job.setNumReduceTasks(sharding);
 
         FileOutputFormat.setOutputPath(job, output);
+
         job.getConfiguration().set(BatchConstants.OUTPUT_PATH, output.toString());
 
         deletePath(job.getConfiguration(), output);

@@ -16,7 +16,7 @@
         <!-- Hadoop versions -->
         <hadoop2.version>2.4.1</hadoop2.version>
         <yarn.version>2.4.1</yarn.version>
-        <hbase-hadoop2.version>0.98.0-hadoop2</hbase-hadoop2.version>
+        <hbase-hadoop2.version>0.98.8-hadoop2</hbase-hadoop2.version>
         <zookeeper.version>3.4.5</zookeeper.version>
         <hive.version>0.13.0</hive.version>
 
@@ -269,6 +269,11 @@
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
             </dependency>
+            <!--<dependency>-->
+                <!--<groupId>com.google.protobuf</groupId>-->
+                <!--<artifactId>protobuf-java</artifactId>-->
+                <!--<version>${protobuf.version}</version>-->
+            <!--</dependency>-->
             <dependency>
                 <groupId>com.jcraft</groupId>
                 <artifactId>jsch</artifactId>
@@ -519,8 +524,11 @@
                         <version>2.16</version>
                         <configuration>
                             <excludes>
+                                <exclude>**/com/kylinolap/job/**</exclude>
                                 <exclude>**/BuildCubeWithEngineTest.java</exclude>
                                 <exclude>**/SampleCubeSetupTest.java</exclude>
+                                <exclude>**/InvertedIndexHBaseTest.java</exclude>
+                                <exclude>**/StorageTest.java</exclude>
                                 <exclude>**/KylinQueryTest.java</exclude>
                             </excludes>
                         </configuration>

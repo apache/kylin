@@ -131,7 +131,7 @@ echo "(The default root password for hortonworks VM is hadoop, and for cloudera 
 [[ "$SILENT" ]] || read -s -p "Enter Password for root: " ROOTPASS
 
 #deploy kylin.properties to /etc/kylin
-cat examples/test_case_data/kylin.properties | \
+cat examples/test_case_data/sandbox/kylin.properties | \
     sed -e "s,${CHECK_URL_DEFAULT},${NEW_CHECK_URL_PREFIX}${HOSTNAME}," | \
     sed -e "s,${CLI_HOSTNAME_DEFAULT},${NEW_CLI_HOSTNAME_PREFIX}${HOSTNAME}," | \
     sed -e "s,${CLI_PASSWORD_DEFAULT},${NEW_CLI_PASSWORD_PREFIX}${ROOTPASS}," | \

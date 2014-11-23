@@ -92,8 +92,6 @@ public class H2Database {
             e.printStackTrace();
         }
 
-        // String cvsFilePath = "../examples/sample_cube/data/" +
-        // tableDesc.getName() + ".csv";
         String cvsFilePath = tempFile.getPath();
         Statement stmt = h2Connection.createStatement();
         String sql = generateCreateH2TableSql(tableDesc, cvsFilePath);
