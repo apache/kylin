@@ -55,7 +55,7 @@ import com.kylinolap.metadata.model.cube.MeasureDesc;
 import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.TupleFilter;
-import com.kylinolap.storage.hbase.coprocessor.CoprocessorEnabler;
+import com.kylinolap.storage.hbase.observer.CoprocessorEnabler;
 import com.kylinolap.storage.tuple.ITupleIterator;
 import com.kylinolap.storage.tuple.Tuple;
 import com.kylinolap.storage.tuple.Tuple.IDerivedColumnFiller;
@@ -360,7 +360,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
             HBaseColumnDesc hbaseColumn = rowValueDecoder.getHBaseColumn();
             String columnFamily = hbaseColumn.getColumnFamilyName();
             String qualifier = hbaseColumn.getQualifier();
-            // FIXME: avoidable bytes array creation
+            // FIXME: avoidable bytes array creation, why not use res.getValueAsByteBuffer directly?
             byte[] valueBytes = res.getValue(Bytes.toBytes(columnFamily), Bytes.toBytes(qualifier));
             rowValueDecoder.decode(valueBytes);
             List<String> measureNames = rowValueDecoder.getNames();

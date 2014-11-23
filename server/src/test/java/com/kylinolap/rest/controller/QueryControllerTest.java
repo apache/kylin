@@ -26,14 +26,14 @@ import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.rest.request.MetaRequest;
 import com.kylinolap.rest.request.SQLRequest;
 import com.kylinolap.rest.service.QueryService;
-import com.kylinolap.rest.service.TestBase;
+import com.kylinolap.rest.service.ServiceTestBase;
 import com.kylinolap.rest.util.QueryUtil;
 
 /**
  * @author xduo
  * 
  */
-public class QueryControllerTest extends TestBase {
+public class QueryControllerTest extends ServiceTestBase {
 
     private QueryController queryController;
     @Autowired

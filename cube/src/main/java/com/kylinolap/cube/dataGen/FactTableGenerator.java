@@ -348,17 +348,17 @@ public class FactTableGenerator {
         } else if (type.isDouble()) {
             double low = Double.parseDouble(range.get(0));
             double high = Double.parseDouble(range.get(1));
-            return Double.toString(r.nextDouble() * (high - low) + low);
+            return String.format("%.4f", r.nextDouble() * (high - low) + low);
 
         } else if (type.isFloat()) {
             float low = Float.parseFloat(range.get(0));
             float high = Float.parseFloat(range.get(1));
-            return Double.toString(r.nextFloat() * (high - low) + low);
+            return String.format("%.4f", r.nextFloat() * (high - low) + low);
 
         } else if (type.isDecimal()) {
             double low = Double.parseDouble(range.get(0));
             double high = Double.parseDouble(range.get(1));
-            return Double.toString(r.nextDouble() * (high - low) + low);
+            return String.format("%.4f", r.nextDouble() * (high - low) + low);
 
         } else if (type.isDateTimeFamily()) {
 
@@ -393,11 +393,11 @@ public class FactTableGenerator {
         } else if (s.equals("bigint") || s.equals("int") || s.equals("tinyint") || s.equals("smallint")) {
             return Integer.toString(r.nextInt(128));
         } else if (s.equals("double")) {
-            return Double.toString(r.nextDouble() * 100);
+            return String.format("%.4f", r.nextDouble() * 100);
         } else if (s.equals("float")) {
-            return Double.toString(r.nextFloat() * 100);
+            return String.format("%.4f", r.nextFloat() * 100);
         } else if (s.equals("decimal")) {
-            return Double.toString(r.nextDouble() * 100);
+            return String.format("%.4f", r.nextDouble() * 100);
         } else if (s.equals("date")) {
             long date20131231 = 61349312153265L;
             long date20010101 = 60939158400000L;

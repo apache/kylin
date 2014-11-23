@@ -29,13 +29,13 @@ import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.rest.request.CubeRequest;
 import com.kylinolap.rest.service.CubeService;
 import com.kylinolap.rest.service.JobService;
-import com.kylinolap.rest.service.TestBase;
+import com.kylinolap.rest.service.ServiceTestBase;
 
 /**
  * @author xduo
  * 
  */
-public class CubeControllerTest extends TestBase {
+public class CubeControllerTest extends ServiceTestBase {
 
     private CubeController cubeController;
     private CubeDescController cubeDescController;

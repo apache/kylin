@@ -26,9 +26,6 @@ public class ResourceTool {
 
     private static String[] excludes = null;
 
-    // reset hbase:kylin-local.corp.ebay.com:2181:/hbase-unsecure
-    // copy ../examples/kylin_local
-    // hbase:kylin-local.corp.ebay.com:2181:/hbase-unsecure
     public static void main(String[] args) throws IOException {
         args = StringUtil.filterSystemArgs(args);
 

@@ -1,6 +1,8 @@
 package com.kylinolap.job;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.persistence.ResourceTool;
+import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.common.util.SSHClient;
 import com.kylinolap.cube.CubeInstance;
@@ -11,6 +13,7 @@ import com.kylinolap.job.hadoop.hive.SqlHiveDataTypeMapping;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.model.Model;
@@ -30,7 +33,6 @@ import static org.junit.Assert.assertEquals;
  */
 public class CubeDevelopTestCase extends HBaseMetadataTestCase {
     private static final Logger logger = LoggerFactory.getLogger(CubeDevelopTestCase.class);
-
 
     protected static final String TABLE_CAL_DT = "test_cal_dt";
     protected static final String TABLE_CATEGORY_GROUPINGS = "test_category_groupings";
@@ -209,7 +211,7 @@ public class CubeDevelopTestCase extends HBaseMetadataTestCase {
     }
 
     private void deployKylinPropertyToLocalDir() throws Exception {
-        String srcPath = ".." + File.separator + "examples" + File.separator + "test_case_data" + File.separator + "kylin.properties";
+        String srcPath = AbstractKylinTestCase.SANDBOX_TEST_DATA + "/" + "kylin.properties";
         FileUtils.copyFileToDirectory(new File(srcPath), new File("/etc/kylin"));
     }
 
@@ -238,7 +240,7 @@ public class CubeDevelopTestCase extends HBaseMetadataTestCase {
     }
 
     private String getExampleTestCaseDataFolder() {
-        return ".." + File.separator + "examples" + File.separator + "test_case_data" + File.separator;
+        return AbstractKylinTestCase.SANDBOX_TEST_DATA + "/";
     }
 
 
@@ -292,7 +294,8 @@ public class CubeDevelopTestCase extends HBaseMetadataTestCase {
         retrieveJarName();
 
         // install metadata to hbase
-        installMetadataToHBase();
+        ResourceTool.reset(KylinConfig.getInstanceFromEnv());
+        ResourceTool.copy(KylinConfig.createInstanceFromUri(LOCALMETA_TEST_DATA), KylinConfig.getInstanceFromEnv());
 
         // update cube desc signature.
         for (CubeInstance cube : CubeManager.getInstance(this.getTestConfig()).listAllCubes()) {

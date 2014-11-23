@@ -32,7 +32,7 @@ import com.kylinolap.job.exception.JobException;
  * @author xduo
  * 
  */
-public class CubeServiceTest extends TestBase {
+public class CubeServiceTest extends ServiceTestBase {
 
     @Autowired
     CubeService cubeService;
