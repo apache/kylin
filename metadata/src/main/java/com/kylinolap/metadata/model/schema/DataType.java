@@ -33,7 +33,8 @@ import com.kylinolap.metadata.model.cube.TblColRef.InnerDataTypeEnum;
  */
 public class DataType {
 
-    public static final String VALID_TYPES_STRING = "any|char|varchar|boolean|integer|tinyint|smallint|bigint|decimal|numeric|float|real|double" //
+    public static final String VALID_TYPES_STRING = "any|char|varchar|boolean|binary" //
+            + "|integer|tinyint|smallint|bigint|decimal|numeric|float|real|double" //
             + "|date|time|datetime|timestamp|byte|int|short|long|string|hllc" //
             + "|" + InnerDataTypeEnum.LITERAL.getDataType() //
             + "|" + InnerDataTypeEnum.DERIVED.getDataType();
@@ -67,7 +68,7 @@ public class DataType {
         DATETIME_FAMILY.add("time");
         DATETIME_FAMILY.add("datetime");
         DATETIME_FAMILY.add("timestamp");
-        
+
         STRING_FAMILY.add("varchar");
         STRING_FAMILY.add("char");
 
@@ -187,7 +188,7 @@ public class DataType {
     public boolean isStringFamily() {
         return STRING_FAMILY.contains(name);
     }
-    
+
     public boolean isIntegerFamily() {
         return INTEGER_FAMILY.contains(name);
     }
