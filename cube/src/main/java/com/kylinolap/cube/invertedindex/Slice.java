@@ -59,41 +59,6 @@ public class Slice implements Iterable<TableRecordBytes>, Comparable<Slice> {
         return timestamp;
     }
 
-    /**
-     * Standard iterator of Slice will return a iterator of TableRecordBytes,
-     * which cannot be printed/formated to readable text.
-     * By invoking this API client can avoid code like:
-     * <p/>
-     * for (TableRecordBytes rec : slice) {
-     * TableRecord realRecord = (TableRecord) rec.clone();
-     * }
-     * <p/>
-     * Note this API cannot be called simultaneously with iterator()
-     *
-     * @return
-     */
-    public Iterator<TableRecord> readableIterator() {
-        final Iterator<TableRecordBytes> innerIterator = iterator();
-
-        return new Iterator<TableRecord>() {
-
-
-            @Override
-            public boolean hasNext() {
-                return innerIterator.hasNext();
-            }
-
-            @Override
-            public TableRecord next() {
-                return (TableRecord) innerIterator.next();
-            }
-
-            @Override
-            public void remove() {
-                throw new UnsupportedOperationException();
-            }
-        };
-    }
 
     @Override
     public Iterator<TableRecordBytes> iterator() {
