@@ -36,7 +36,6 @@ import com.kylinolap.metadata.model.cube.MeasureDesc;
 
 /**
  * @author yangli9
- * 
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class SRowAggregators {
@@ -47,7 +46,7 @@ public class SRowAggregators {
         HCol[] hcols = new HCol[rowValueDecoders.size()];
         int i = 0;
         for (RowValueDecoder rowValueDecoder : rowValueDecoders) {
-            hcols[i++] = buildHCol(rowValueDecoder);
+            hcols[i++] = buildHCol(rowValueDecoder.getHBaseColumn());
         }
 
         SRowAggregators aggrs = new SRowAggregators(hcols);
@@ -55,8 +54,7 @@ public class SRowAggregators {
 
     }
 
-    private static HCol buildHCol(RowValueDecoder rowValueDecoder) {
-        HBaseColumnDesc desc = rowValueDecoder.getHBaseColumn();
+    private static HCol buildHCol(HBaseColumnDesc desc) {
         byte[] family = Bytes.toBytes(desc.getColumnFamilyName());
         byte[] qualifier = Bytes.toBytes(desc.getQualifier());
         MeasureDesc[] measures = desc.getMeasures();
