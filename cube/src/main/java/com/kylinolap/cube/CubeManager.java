@@ -17,14 +17,10 @@
 package com.kylinolap.cube;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.kylinolap.dict.DateStrDictionary;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -535,17 +531,19 @@ public class CubeManager {
      * @return
      */
     private CubeSegment buildSegment(CubeInstance cubeInstance, long startDate, long endDate) {
-        CubeSegment incrementalSeg = new CubeSegment();
+        CubeSegment segment = new CubeSegment();
         String incrementalSegName = CubeSegment.getSegmentName(startDate, endDate);
-        incrementalSeg.setName(incrementalSegName);
-        incrementalSeg.setDateRangeStart(startDate);
-        incrementalSeg.setDateRangeEnd(endDate);
-        incrementalSeg.setStatus(CubeSegmentStatusEnum.NEW);
-        incrementalSeg.setStorageLocationIdentifier(generateStorageLocation());
+        segment.setUuid(UUID.randomUUID().toString());
+        segment.setName(incrementalSegName);
+        segment.setCreateTime(DateStrDictionary.dateToString(new Date()));
+        segment.setDateRangeStart(startDate);
+        segment.setDateRangeEnd(endDate);
+        segment.setStatus(CubeSegmentStatusEnum.NEW);
+        segment.setStorageLocationIdentifier(generateStorageLocation());
 
-        incrementalSeg.setCubeInstance(cubeInstance);
+        segment.setCubeInstance(cubeInstance);
 
-        return incrementalSeg;
+        return segment;
     }
 
     private String generateStorageLocation() {
