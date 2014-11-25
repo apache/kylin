@@ -57,7 +57,7 @@ public class DeployCoprocessorCLI {
 
     private static final Logger logger = LoggerFactory.getLogger(DeployCoprocessorCLI.class);
 
-    public static final String AGGR_COPROCESSOR_CLS_NAME = "com.kylinolap.storage.hbase.coprocessor.AggregateRegionObserver";
+    public static final String AGGR_COPROCESSOR_CLS_NAME = "com.kylinolap.storage.hbase.observer.AggregateRegionObserver";
 
     public static void main(String[] args) throws IOException {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();

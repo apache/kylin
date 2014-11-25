@@ -96,8 +96,7 @@ public class SSHClient {
                 }
             }
 
-            // send "C0644 filesize filename", where filename should not include
-            // '/'
+            // send "C0644 filesize filename", where filename should not include '/'
             long filesize = _lfile.length();
             command = "C0644 " + filesize + " ";
             if (localFile.lastIndexOf("/") > 0) {

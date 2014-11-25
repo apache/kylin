@@ -4,10 +4,12 @@ KylinApp
     .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService) {
         $scope.listParams={
             cubeName: $routeParams.cubeName,
-            projectName: $scope.project.selectedProject
+            projectName: $routeParams.projectName
         };
+        if($routeParams.projectName){
+            $scope.project.selectedProject = $routeParams.projectName;
+        }
         $scope.cubes = [];
-//        $scope.projects = [];
         $scope.loading = false;
         $scope.action = {};
 
@@ -36,6 +38,8 @@ KylinApp
             }
             if ($scope.project.selectedProject){
                 queryParam.projectName = $scope.project.selectedProject;
+            }else{
+                queryParam.projectName = $scope.project.projects[0];
             }
 
             $scope.loading = true;
@@ -69,9 +73,12 @@ KylinApp
         };
 
         $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+           if(newValue){
             $scope.cubes=[];
             $scope.list();
             $scope.reload();
+           }
+
         });
         $scope.reload = function () {
             // trigger reload action in pagination directive

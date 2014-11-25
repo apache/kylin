@@ -16,14 +16,21 @@
 
 package com.kylinolap.storage.hbase;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import com.google.protobuf.ByteString;
+import com.kylinolap.cube.invertedindex.*;
+import com.kylinolap.storage.hbase.coprocessor.generated.IIProtos;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HConnectionManager;
+import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.client.coprocessor.Batch;
+import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
+import org.apache.hadoop.hbase.ipc.ServerRpcController;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -33,17 +40,11 @@ import com.kylinolap.common.util.HadoopUtil;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.invertedindex.IIKeyValueCodec;
-import com.kylinolap.cube.invertedindex.TableRecord;
-import com.kylinolap.cube.invertedindex.TableRecordInfo;
-import com.kylinolap.cube.invertedindex.TimeSlice;
 import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
  * @author yangli9
- * 
  */
-@Ignore
 public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
 
     CubeInstance cube;
@@ -73,10 +74,10 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
         String tableName = seg.getStorageLocationIdentifier();
         IIKeyValueCodec codec = new IIKeyValueCodec(new TableRecordInfo(seg));
 
-        List<TimeSlice> slices = Lists.newArrayList();
-        HBaseKeyValueIterator kvIterator = new HBaseKeyValueIterator(hconn, tableName, InvertedIndexDesc.HBASE_FAMILY_BYTES, InvertedIndexDesc.HBASE_QUALIFIER_BYTES);
+        List<Slice> slices = Lists.newArrayList();
+        HBaseClientKVIterator kvIterator = new HBaseClientKVIterator(hconn, tableName, InvertedIndexDesc.HBASE_FAMILY_BYTES, InvertedIndexDesc.HBASE_QUALIFIER_BYTES);
         try {
-            for (TimeSlice slice : codec.decodeKeyValue(kvIterator)) {
+            for (Slice slice : codec.decodeKeyValue(kvIterator)) {
                 slices.add(slice);
             }
         } finally {
@@ -88,10 +89,46 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
         System.out.println(records.size() + " records");
     }
 
-    private List<TableRecord> iterateRecords(List<TimeSlice> slices) {
+    @Test
+    public void testEndpoint() throws Throwable {
+        String tableName = seg.getStorageLocationIdentifier();
+        HTableInterface table = hconn.getTable(tableName);
+        final TableRecordInfoDigest recordInfo = new TableRecordInfo(seg);
+        final IIProtos.IIRequest request = IIProtos.IIRequest.newBuilder().setTableInfo(
+                ByteString.copyFrom(TableRecordInfoDigest.serialize(recordInfo))).build();
+
+        Map<byte[], List<TableRecord>> results = table.coprocessorService(IIProtos.RowsService.class,
+                null, null,
+                new Batch.Call<IIProtos.RowsService, List<TableRecord>>() {
+                    public List<TableRecord> call(IIProtos.RowsService counter) throws IOException {
+                        ServerRpcController controller = new ServerRpcController();
+                        BlockingRpcCallback<IIProtos.IIResponse> rpcCallback =
+                                new BlockingRpcCallback<IIProtos.IIResponse>();
+                        counter.getRows(controller, request, rpcCallback);
+                        IIProtos.IIResponse response = rpcCallback.get();
+                        if (controller.failedOnException()) {
+                            throw controller.getFailedOn();
+                        }
+
+                        List<TableRecord> records = new ArrayList<TableRecord>();
+                        for (ByteString raw : response.getRowsList()) {
+                            TableRecord record = new TableRecord(recordInfo);
+                            record.setBytes(raw.toByteArray(), 0, raw.size());
+                            records.add(record);
+                        }
+                        return records;
+                    }
+                });
+
+        for (Map.Entry<byte[], List<TableRecord>> entry : results.entrySet()) {
+            System.out.println("result count : " + entry.getValue());
+        }
+    }
+
+    private List<TableRecord> iterateRecords(List<Slice> slices) {
         List<TableRecord> records = Lists.newArrayList();
-        for (TimeSlice slice : slices) {
-            for (TableRecord rec : slice) {
+        for (Slice slice : slices) {
+            for (TableRecordBytes rec : slice) {
                 records.add((TableRecord) rec.clone());
             }
         }

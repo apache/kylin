@@ -36,8 +36,7 @@ public class DebugTomcat {
             port = Integer.parseInt(args[1]);
         }
 
-        ClasspathUtil.addClasspath(new File("../examples/test_case_data").getAbsolutePath());
-        ClasspathUtil.addClasspath(new File("../examples/test_case_data/hadoop-site").getAbsolutePath());
+        ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox").getAbsolutePath());
         String webBase = new File("../webapp/app").getAbsolutePath();
         String apiBase = new File("src/main/webapp").getAbsolutePath();
 

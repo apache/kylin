@@ -41,7 +41,11 @@ public class CompareTupleFilter extends TupleFilter {
         super(new ArrayList<TupleFilter>(2), op);
         this.conditionValues = new HashSet<String>();
         this.dynamicVariables = new HashMap<String, String>();
-        boolean opGood = (op == FilterOperatorEnum.EQ || op == FilterOperatorEnum.NEQ || op == FilterOperatorEnum.LT || op == FilterOperatorEnum.LTE || op == FilterOperatorEnum.GT || op == FilterOperatorEnum.GTE || op == FilterOperatorEnum.IN || op == FilterOperatorEnum.ISNULL || op == FilterOperatorEnum.ISNOTNULL);
+        boolean opGood = (op == FilterOperatorEnum.EQ || op == FilterOperatorEnum.NEQ //
+                || op == FilterOperatorEnum.LT || op == FilterOperatorEnum.LTE //
+                || op == FilterOperatorEnum.GT || op == FilterOperatorEnum.GTE //
+                || op == FilterOperatorEnum.IN || op == FilterOperatorEnum.NOTIN //
+                || op == FilterOperatorEnum.ISNULL || op == FilterOperatorEnum.ISNOTNULL);
         if (opGood == false)
             throw new IllegalArgumentException("Unsupported operator " + op);
     }
@@ -88,6 +92,10 @@ public class CompareTupleFilter extends TupleFilter {
     @Override
     public Collection<String> getValues() {
         return conditionValues;
+    }
+    
+    public String getFirstValue() {
+        return firstCondValue;
     }
 
     public TblColRef getColumn() {
@@ -182,6 +190,9 @@ public class CompareTupleFilter extends TupleFilter {
             break;
         case IN:
             result = conditionValues.contains(tupleValue);
+            break;
+        case NOTIN:
+            result = !conditionValues.contains(tupleValue);
             break;
         default:
             result = false;

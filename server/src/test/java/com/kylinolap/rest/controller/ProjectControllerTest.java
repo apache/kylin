@@ -14,12 +14,12 @@ import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.request.CreateProjectRequest;
 import com.kylinolap.rest.request.UpdateProjectRequest;
 import com.kylinolap.rest.service.ProjectService;
-import com.kylinolap.rest.service.TestBase;
+import com.kylinolap.rest.service.ServiceTestBase;
 
 /**
  * Created by honma on 8/7/14.
  */
-public class ProjectControllerTest extends TestBase {
+public class ProjectControllerTest extends ServiceTestBase {
 
     private ProjectController projectController;
 

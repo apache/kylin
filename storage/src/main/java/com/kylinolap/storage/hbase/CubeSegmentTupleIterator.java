@@ -55,7 +55,7 @@ import com.kylinolap.metadata.model.cube.MeasureDesc;
 import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.TupleFilter;
-import com.kylinolap.storage.hbase.coprocessor.CoprocessorEnabler;
+import com.kylinolap.storage.hbase.observer.CoprocessorEnabler;
 import com.kylinolap.storage.tuple.ITupleIterator;
 import com.kylinolap.storage.tuple.Tuple;
 import com.kylinolap.storage.tuple.Tuple.IDerivedColumnFiller;
@@ -295,7 +295,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
                 continue;
             }
             // add normal column
-            info.setField(colNames.get(i), rowColumns.get(i), rowColumns.get(i).getDatatype(), index++);
+            info.setField(colNames.get(i), rowColumns.get(i), rowColumns.get(i).getType().getName(), index++);
         }
 
         // derived columns and filler
@@ -306,7 +306,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
                 // mark name for each derived field
                 for (TblColRef derivedCol : deriveInfo.columns) {
                     String derivedField = getFieldName(derivedCol, context.getAliasMap());
-                    info.setField(derivedField, derivedCol, derivedCol.getDatatype(), index++);
+                    info.setField(derivedField, derivedCol, derivedCol.getType().getName(), index++);
                 }
                 // add filler
                 info.addDerivedColumnFiller(Tuple.newDerivedColumnFiller(rowColumns, hostCols, deriveInfo, info, CubeManager.getInstance(this.cube.getConfig()), cubeSeg));
@@ -360,7 +360,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
             HBaseColumnDesc hbaseColumn = rowValueDecoder.getHBaseColumn();
             String columnFamily = hbaseColumn.getColumnFamilyName();
             String qualifier = hbaseColumn.getQualifier();
-            // FIXME: avoidable bytes array creation
+            // FIXME: avoidable bytes array creation, why not use res.getValueAsByteBuffer directly?
             byte[] valueBytes = res.getValue(Bytes.toBytes(columnFamily), Bytes.toBytes(qualifier));
             rowValueDecoder.decode(valueBytes);
             List<String> measureNames = rowValueDecoder.getNames();

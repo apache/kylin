@@ -18,7 +18,10 @@ package com.kylinolap.cube.invertedindex;
 
 import java.io.IOException;
 
+import org.apache.hadoop.io.LongWritable;
+
 import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.cube.measure.fixedlen.FixedLenMeasureCodec;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.metadata.model.cube.TblColRef;
@@ -28,20 +31,20 @@ import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
  * @author yangli9
- * 
+ *         <p/>
+ *         TableRecordInfo stores application-aware knowledges,
+ *         while TableRecordInfoDigest only stores byte level knowleges
  */
-public class TableRecordInfo {
+public class TableRecordInfo extends TableRecordInfoDigest {
 
     final CubeSegment seg;
     final InvertedIndexDesc desc;
     final TableDesc tableDesc;
 
-    final int nColumns;
     final String[] colNames;
     final Dictionary<?>[] dictionaries;
+    final FixedLenMeasureCodec<?>[] measureSerializers;
 
-    final int byteFormLen;
-    final int[] offsets;
 
     public TableRecordInfo(CubeSegment cubeSeg) throws IOException {
 
@@ -52,27 +55,53 @@ public class TableRecordInfo {
         nColumns = tableDesc.getColumnCount();
         colNames = new String[nColumns];
         dictionaries = new Dictionary<?>[nColumns];
+        measureSerializers = new FixedLenMeasureCodec<?>[nColumns];
 
         DictionaryManager dictMgr = DictionaryManager.getInstance(desc.getConfig());
         for (ColumnDesc col : tableDesc.getColumns()) {
             int i = col.getZeroBasedIndex();
             colNames[i] = col.getName();
-            String dictPath = seg.getDictResPath(new TblColRef(col));
-            dictionaries[i] = dictMgr.getDictionary(dictPath);
+            if (desc.isMetricsCol(i)) {
+                measureSerializers[i] = FixedLenMeasureCodec.get(col.getType());
+            } else {
+                String dictPath = seg.getDictResPath(new TblColRef(col));
+                dictionaries[i] = dictMgr.getDictionary(dictPath);
+            }
         }
 
+        //isMetric
+        isMetric = new boolean[nColumns];
+        for (int i = 0; i < nColumns; ++i) {
+            isMetric[i] = desc.isMetricsCol(i);
+        }
+
+        //lengths
+        lengths = new int[nColumns];
+        for (int i = 0; i < nColumns; ++i) {
+            lengths[i] = isMetrics(i) ? measureSerializers[i].getLength() : dictionaries[i].getSizeOfId();
+        }
+
+        //dict max id
+        dictMaxIds = new int[nColumns];
+        for (int i = 0; i < nColumns; ++i) {
+            if (!isMetrics(i))
+                dictMaxIds[i] = dictionaries[i].getMaxId();
+        }
+
+        //offsets
         int pos = 0;
         offsets = new int[nColumns];
         for (int i = 0; i < nColumns; i++) {
-            int size = dictionaries[i].getSizeOfId();
             offsets[i] = pos;
-            pos += size;
+            pos += length(i);
         }
+
         byteFormLen = pos;
     }
 
-    public long calculateTimePartition(long ts) {
-        return ts - ts % getTimestampGranularity();
+    @Override
+    public TableRecordBytes createTableRecord() {
+        return new TableRecord(this);
     }
 
     public InvertedIndexDesc getDescriptor() {
@@ -83,30 +112,24 @@ public class TableRecordInfo {
         return tableDesc.getColumns();
     }
 
-    public int getColumnCount() {
-        return nColumns;
-    }
 
+    // dimensions go with dictionary
     @SuppressWarnings("unchecked")
     public Dictionary<String> dict(int col) {
         // yes, all dictionaries are string based
         return (Dictionary<String>) dictionaries[col];
     }
 
-    public int offset(int col) {
-        return offsets[col];
+    // metrics go with fixed-len codec
+    @SuppressWarnings("unchecked")
+    public FixedLenMeasureCodec<LongWritable> codec(int col) {
+        // yes, all metrics are long currently
+        return (FixedLenMeasureCodec<LongWritable>) measureSerializers[col];
     }
 
-    public int length(int col) {
-        return dictionaries[col].getSizeOfId();
-    }
 
     public int getTimestampColumn() {
         return desc.getTimestampColumn();
-    }
-
-    public int getTimestampGranularity() {
-        return desc.getTimestampGranularity();
     }
 
     /*

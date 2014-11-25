@@ -38,10 +38,11 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
  */
 @SuppressWarnings("static-access")
 public class RandomKeyDistributionJob extends AbstractHadoopJob {
+
     protected static final Logger log = LoggerFactory.getLogger(RandomKeyDistributionJob.class);
 
     static final Option OPTION_KEY_CLASS = OptionBuilder.withArgName("keyclass").hasArg().isRequired(true).withDescription("Key Class").create("keyclass");
-    static final Option OPTION_REGION_MB = OptionBuilder.withArgName("regionmb").hasArg().isRequired(true).withDescription("GB per Region").create("regionmb");
+    static final Option OPTION_REGION_MB = OptionBuilder.withArgName("regionmb").hasArg().isRequired(true).withDescription("MB per Region").create("regionmb");
 
     @Override
     public int run(String[] args) throws Exception {

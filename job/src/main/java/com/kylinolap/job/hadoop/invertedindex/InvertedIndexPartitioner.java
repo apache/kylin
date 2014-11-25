@@ -16,13 +16,23 @@
 
 package com.kylinolap.job.hadoop.invertedindex;
 
+import java.io.IOException;
+
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Partitioner;
 
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.cube.CubeSegmentStatusEnum;
+import com.kylinolap.cube.invertedindex.TableRecord;
+import com.kylinolap.cube.invertedindex.TableRecordInfo;
 import com.kylinolap.job.constant.BatchConstants;
+import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**
  * @author yangli9
@@ -30,19 +40,29 @@ import com.kylinolap.job.constant.BatchConstants;
  */
 public class InvertedIndexPartitioner extends Partitioner<LongWritable, ImmutableBytesWritable> implements Configurable {
 
-    Configuration conf;
-    long timestampGranularity;
+    private Configuration conf;
+    private TableRecordInfo info;
+    private TableRecord rec;
 
     @Override
     public int getPartition(LongWritable key, ImmutableBytesWritable value, int numPartitions) {
-        long ts = key.get();
-        return (int) (ts / timestampGranularity) % numPartitions;
+        rec.setBytes(value.get(), value.getOffset(), value.getLength());
+        return rec.getShard();
     }
 
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        this.timestampGranularity = Long.parseLong(conf.get(BatchConstants.TIMESTAMP_GRANULARITY));
+        try {
+            KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
+            CubeManager mgr = CubeManager.getInstance(config);
+            CubeInstance cube = mgr.getCube(conf.get(BatchConstants.CFG_CUBE_NAME));
+            CubeSegment seg = cube.getSegment(conf.get(BatchConstants.CFG_CUBE_SEGMENT_NAME), CubeSegmentStatusEnum.NEW);
+            this.info = new TableRecordInfo(seg);
+            this.rec = new TableRecord(this.info);
+        } catch (IOException e) {
+            throw new RuntimeException("", e);
+        }
     }
 
     @Override
