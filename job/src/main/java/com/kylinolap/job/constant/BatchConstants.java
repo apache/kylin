@@ -41,7 +41,5 @@ public interface BatchConstants {
     public static final String REGION_NUMBER = "region.number";
     public static final String CUBE_CAPACITY = "cube.capacity";
 
-    public static final String TIMESTAMP_GRANULARITY = "timestampGranularity";
-
     public static final int COUNTER_MAX = 100000;
 }

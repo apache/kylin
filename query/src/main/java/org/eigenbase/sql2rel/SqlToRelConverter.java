@@ -44,7 +44,6 @@ import org.eigenbase.util.mapping.Mappings;
 import org.eigenbase.util14.*;
 
 import net.hydromatic.linq4j.Ord;
-
 import net.hydromatic.optiq.ModifiableTable;
 import net.hydromatic.optiq.TranslatableTable;
 import net.hydromatic.optiq.prepare.Prepare;
@@ -65,6 +64,7 @@ import static org.eigenbase.util.Static.RESOURCE;
  * <p>The public entry points are: {@link #convertQuery},
  * {@link #convertExpression(SqlNode)}.
  */
+@SuppressWarnings({"unused", "rawtypes", "unchecked", "incomplete-switch", "deprecation"})
 public class SqlToRelConverter {
   //~ Static fields/initializers ---------------------------------------------
 
@@ -1486,7 +1486,7 @@ public class SqlToRelConverter {
    *                                     node, only register it if it's a scalar
    *                                     subquery
    */
-  private void findSubqueries(
+private void findSubqueries(
       Blackboard bb,
       SqlNode node,
       RelOptUtil.Logic logic,

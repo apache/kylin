@@ -18,6 +18,7 @@ package com.kylinolap.cube.project;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -233,16 +234,17 @@ public class ProjectManager {
 
 
     public List<TableDesc> listDefinedTablesInProject(String project) throws IOException {
+        if(null==project){
+            return Collections.emptyList();
+        }
         project = ProjectInstance.getNormalizedProjectName(project);
         ProjectInstance projectInstance = getProject(project);
-
         int originTableCount = projectInstance.getTablesCount();
         //sync exposed table to project when list
         List<TableDesc> exposedTables = listExposedTables(project);
         for (TableDesc table : exposedTables) {
             projectInstance.addTable(table.getName());
         }
-
         //only save project json if new tables are sync in
         if (originTableCount < projectInstance.getTablesCount()) {
             saveResource(projectInstance);

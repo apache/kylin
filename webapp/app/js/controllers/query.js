@@ -39,32 +39,6 @@ KylinApp
         $scope.state = {
             selectedProject: null
         };
-//        var param = {
-//            ext: true,
-//            quertTb:true,
-//            project:'onlyinner'
-//        };
-//        TableService.list(param, function (tables) {
-//            $scope.srcTables = [];
-//            $scope.srcColumns = [];
-//            angular.forEach(tables, function (table) {
-//                $scope.srcTables.push({
-//                    meta: 'table',
-//                    name: table.name,
-//                    score: 0,
-//                    value: table.name
-//                });
-//
-//                angular.forEach(table.columns, function (column) {
-//                    $scope.srcColumns.push({
-//                        meta: 'column',
-//                        name: table.name + '.' + column.name,
-//                        score: 0,
-//                        value: table.name + '.' + column.name
-//                    });
-//                });
-//            });
-//        });
 
         var Query = {
             createNew: function (sql, project) {
