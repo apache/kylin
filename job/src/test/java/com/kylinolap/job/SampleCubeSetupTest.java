@@ -58,6 +58,7 @@ public class SampleCubeSetupTest extends HBaseMetadataTestCase {
     public void testCubes() throws Exception {
         DeployUtil.initCliWorkDir();
         DeployUtil.deployMetadata();
+        DeployUtil.deployJobJars();
         deployJobConfToEtc();
         DeployUtil.prepareTestData("inner", "test_kylin_cube_with_slr_empty");
 

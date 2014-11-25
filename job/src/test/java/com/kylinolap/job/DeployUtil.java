@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.hbase.util.Pair;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.FileUtils;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceTool;
 import com.kylinolap.common.util.AbstractKylinTestCase;
+import com.kylinolap.common.util.CliCommandExecutor;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.dataGen.FactTableGenerator;
@@ -48,6 +50,37 @@ public class DeployUtil {
     }
 
     public static void overrideJobJarLocations() {
+        Pair<File, File> files = getJobJarFiles();
+        File jobJar = files.getFirst();
+        File coprocessorJar = files.getSecond();
+
+        config().overrideKylinJobJarPath(jobJar.getAbsolutePath());
+        config().overrideCoprocessorLocalJar(coprocessorJar.getAbsolutePath());
+    }
+    
+    public static void deployJobJars() throws IOException {
+        Pair<File, File> files = getJobJarFiles();
+        File jobJar = files.getFirst();
+        File coprocessorJar = files.getSecond();
+
+        File jobJarRemote = new File(config().getKylinJobJarPath());
+        File jobJarLocal = new File(jobJar.getParentFile(), jobJarRemote.getName());
+        if (jobJar.equals(jobJarLocal) == false) {
+            FileUtils.copyFile(jobJar, jobJarLocal);
+        }
+        
+        File coprocessorJarRemote = new File(config().getCoprocessorLocalJar());
+        File coprocessorJarLocal = new File(coprocessorJar.getParentFile(), coprocessorJarRemote.getName());
+        if (coprocessorJar.equals(coprocessorJarLocal) == false) {
+            FileUtils.copyFile(coprocessorJar, coprocessorJarLocal);
+        }
+        
+        CliCommandExecutor cmdExec = config().getCliCommandExecutor();
+        cmdExec.copyFile(jobJarLocal.getAbsolutePath(), jobJarRemote.getParent());
+        cmdExec.copyFile(coprocessorJar.getAbsolutePath(), coprocessorJarRemote.getParent());
+    }
+    
+    private static Pair<File, File> getJobJarFiles() {
         String version;
         try {
             MavenXpp3Reader pomReader = new MavenXpp3Reader();
@@ -60,9 +93,7 @@ public class DeployUtil {
         String jobTargetDir = "../job/target";
         File jobJar = new File(jobTargetDir, "kylin-job-" + version + "-job.jar");
         File coprocessorJar = new File(jobTargetDir, "kylin-storage-" + version + "-coprocessor.jar");
-
-        config().overrideKylinJobJarPath(jobJar.getAbsolutePath());
-        config().overrideCoprocessorLocalJar(coprocessorJar.getAbsolutePath());
+        return new Pair<File, File>(jobJar, coprocessorJar);
     }
     
     public static void overrideJobConf(String confDir) throws IOException {
