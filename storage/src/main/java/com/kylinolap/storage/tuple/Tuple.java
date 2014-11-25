@@ -135,6 +135,8 @@ public class Tuple implements ITuple {
             return Double.valueOf(strValue);
         } else if ("decimal".equals(dataType)) {
             return new BigDecimal(strValue);
+        } else if ("timestamp".equals(dataType)) {
+            return Long.valueOf(DateStrDictionary.stringToMillis(strValue));
         } else {
             return strValue;
         }
