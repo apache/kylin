@@ -6,14 +6,25 @@ import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.invertedindex.IIKeyValueCodec;
 import com.kylinolap.cube.invertedindex.TableRecord;
 import com.kylinolap.cube.invertedindex.TableRecordInfo;
 import com.kylinolap.cube.invertedindex.TableRecordInfoDigest;
 import com.kylinolap.job.hadoop.invertedindex.IIBulkLoadJob;
+import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
+import com.kylinolap.metadata.model.schema.ColumnDesc;
+import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.storage.filter.ColumnTupleFilter;
+import com.kylinolap.storage.filter.CompareTupleFilter;
+import com.kylinolap.storage.filter.ConstantTupleFilter;
+import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.hbase.endpoint.IIEndpoint;
 import com.kylinolap.storage.hbase.endpoint.generated.IIProtos;
+import com.kylinolap.storage.hbase.observer.SRowFilter;
+import com.kylinolap.storage.hbase.observer.SRowType;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.*;
@@ -34,6 +45,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
 
 
 /**
@@ -122,14 +135,43 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         TEST_UTIL.shutdownMiniCluster();
     }
 
-    @Test
-    public void testEndpoint() throws Throwable {
-        String tableName = seg.getStorageLocationIdentifier();
-        HTableInterface table = hconn.getTable(tableName);
-        final TableRecordInfoDigest recordInfo = new TableRecordInfo(seg);
-        final IIProtos.IIRequest request = IIProtos.IIRequest.newBuilder().setTableInfo(
-                ByteString.copyFrom(TableRecordInfoDigest.serialize(recordInfo))).build();
+    private IIProtos.IIRequest prepareRequest(TupleFilter rootFilter) throws IOException {
 
+        long baseCuboidId = Cuboid.getBaseCuboidId(this.cube.getDescriptor());
+        SRowType type = SRowType.fromCuboid(this.seg, Cuboid.findById(cube.getDescriptor(), baseCuboidId));
+
+        SRowFilter filter = SRowFilter.fromFilter(this.seg, rootFilter);
+
+        //SRowProjector projector = SRowProjector.fromColumns(segment, cuboid, groupBy);
+        //SRowAggregators aggrs = SRowAggregators.fromValueDecoders(rowValueDecoders);
+
+
+        TableRecordInfoDigest recordInfo = new TableRecordInfo(seg);
+        IIProtos.IIRequest request = IIProtos.IIRequest.newBuilder().
+                setTableInfo(ByteString.copyFrom(TableRecordInfoDigest.serialize(recordInfo))).
+                setSRowType(ByteString.copyFrom(SRowType.serialize(type))).
+                setSRowFilter(ByteString.copyFrom(SRowFilter.serialize(filter))).
+                build();
+
+        return request;
+    }
+
+
+    private TupleFilter mockEQFiter(String value, TblColRef tblColRef) throws IOException {
+        CompareTupleFilter filter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
+        filter.addChild(new ColumnTupleFilter(tblColRef));
+        filter.addChild(new ConstantTupleFilter(value));
+        return filter;
+    }
+
+    private TupleFilter mockNEQFiter(String value, TblColRef tblColRef) throws IOException {
+        CompareTupleFilter filter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.NEQ);
+        filter.addChild(new ColumnTupleFilter(tblColRef));
+        filter.addChild(new ConstantTupleFilter(value));
+        return filter;
+    }
+
+    private List<TableRecord> getResults(final IIProtos.IIRequest request, HTableInterface table) throws Throwable {
         Map<byte[], List<TableRecord>> results = table.coprocessorService(IIProtos.RowsService.class,
                 null, null,
                 new Batch.Call<IIProtos.RowsService, List<TableRecord>>() {
@@ -144,17 +186,44 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
                         }
 
                         List<TableRecord> records = new ArrayList<>();
+                        TableRecordInfoDigest recordInfo = new TableRecordInfo(seg);
                         for (ByteString raw : response.getRowsList()) {
                             TableRecord record = new TableRecord(recordInfo);
                             record.setBytes(raw.toByteArray(), 0, raw.size());
+                            System.out.println(record);
                             records.add(record);
                         }
                         return records;
                     }
                 });
 
+        List<TableRecord> ret = new ArrayList<TableRecord>();
         for (Map.Entry<byte[], List<TableRecord>> entry : results.entrySet()) {
             System.out.println("result count : " + entry.getValue().size());
+            ret.addAll(entry.getValue());
         }
+        return ret;
+    }
+
+    @Test
+    public void testEndpoint() throws Throwable {
+
+        String tableName = seg.getStorageLocationIdentifier();
+        HTableInterface table = hconn.getTable(tableName);
+
+        TableDesc tableDesc = MetadataManager.getInstance(getTestConfig()).getTableDesc("test_kylin_fact");
+        ColumnDesc columnDesc = tableDesc.findColumnByName("LSTG_FORMAT_NAME");
+        TblColRef lfn = new TblColRef(columnDesc);
+        TupleFilter filterA = mockEQFiter("ABIN", lfn);
+        TupleFilter filterB = mockNEQFiter("ABIN", lfn);
+
+        IIProtos.IIRequest requestA = prepareRequest(filterA);
+        IIProtos.IIRequest requestB = prepareRequest(filterB);
+
+        int resultA = getResults(requestA, table).size();
+        int resultB = getResults(requestB, table).size();
+
+
+        assertEquals(resultA + resultB, 10000);
     }
 }

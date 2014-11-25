@@ -18,6 +18,7 @@ package com.kylinolap.cube.invertedindex;
 
 import java.util.Iterator;
 
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 
 /**
@@ -51,6 +52,10 @@ public class Slice implements Iterable<TableRecordBytes>, Comparable<Slice> {
         }
     }
 
+    public int getRecordCount() {
+        return this.nRecords;
+    }
+
     public short getShard() {
         return shard;
     }
@@ -59,6 +64,46 @@ public class Slice implements Iterable<TableRecordBytes>, Comparable<Slice> {
         return timestamp;
     }
 
+    public ColumnValueContainer getColumnValueContainer(int col) {
+        return containers[col];
+    }
+
+    private Iterator<TableRecordBytes> iteratorWithBitmap(final ConciseSet bitmap) {
+
+        return new Iterator<TableRecordBytes>() {
+            int i = 0;
+            int iteratedCount = 0;
+            int resultSize = bitmap.size();
+
+            TableRecordBytes rec = info.createTableRecord();
+            ImmutableBytesWritable temp = new ImmutableBytesWritable();
+
+            @Override
+            public boolean hasNext() {
+                return iteratedCount < resultSize;
+            }
+
+            @Override
+            public TableRecordBytes next() {
+                while (!bitmap.contains(i) && i < nRecords - 1) {
+                    i++;
+                }
+                for (int col = 0; col < nColumns; col++) {
+                    containers[col].getValueAt(i, temp);
+                    rec.setValueBytes(col, temp);
+                }
+                iteratedCount++;
+
+                return rec;
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+
+        };
+    }
 
     @Override
     public Iterator<TableRecordBytes> iterator() {
