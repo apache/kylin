@@ -19,7 +19,6 @@ package com.kylinolap.rest.controller;
 import java.io.IOException;
 import java.io.StringWriter;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
