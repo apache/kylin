@@ -149,6 +149,13 @@ public class JobManager {
                 CubeManager.getInstance(config).updateSegmentOnJobDiscard(cube, jobInstance.getRelatedSegment());
             }
             break;
+        case PENDING:
+            try {
+                killRunningJob(jobInstance);
+            } finally {
+                CubeManager.getInstance(config).updateSegmentOnJobDiscard(cube, jobInstance.getRelatedSegment());
+            }
+            break;
         case ERROR:
             try {
                 for (JobStep jobStep : jobInstance.getSteps()) {
