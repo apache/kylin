@@ -29,7 +29,7 @@ import com.kylinolap.job.exception.JobException;
  * @author xduo
  * 
  */
-public class JobServiceTest extends TestBase {
+public class JobServiceTest extends ServiceTestBase {
 
     @Autowired
     JobService jobService;

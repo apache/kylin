@@ -34,6 +34,7 @@ import com.kylinolap.common.KylinConfig;
  */
 public class SSHClientTest extends LocalFileMetadataTestCase {
 
+    private boolean isRemote;
     private String hostname;
     private String username;
     private String password;
@@ -42,6 +43,7 @@ public class SSHClientTest extends LocalFileMetadataTestCase {
 
         KylinConfig cfg = KylinConfig.getInstanceFromEnv();
 
+        this.isRemote = cfg.getRunAsRemoteCommand();
         this.hostname = cfg.getRemoteHadoopCliHostname();
         this.username = cfg.getRemoteHadoopCliUsername();
         this.password = cfg.getRemoteHadoopCliPassword();
@@ -60,6 +62,9 @@ public class SSHClientTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testCmd() throws Exception {
+        if (isRemote == false)
+            return;
+        
         SSHClient ssh = new SSHClient(this.hostname, this.username, this.password, null);
         SSHClientOutput output = ssh.execCommand("echo hello");
         assertEquals(0, output.getExitCode());
@@ -68,6 +73,9 @@ public class SSHClientTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testScp() throws Exception {
+        if (isRemote == false)
+            return;
+        
         SSHClient ssh = new SSHClient(this.hostname, this.username, this.password, null);
         File tmpFile = FileUtil.createLocalTempFile(new File("/tmp/test_scp"), "temp_", false);
         ssh.scpFileToRemote(tmpFile.getAbsolutePath(), "/tmp");

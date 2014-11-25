@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.ClasspathUtil;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 
@@ -20,7 +21,7 @@ public class CubeMigrationTests extends LocalFileMetadataTestCase {
     @Before
     public void setup() throws Exception {
         super.createTestMetadata();
-        ClasspathUtil.addClasspath(new File("../examples/test_case_data/hadoop-site").getAbsolutePath());
+        ClasspathUtil.addClasspath(new File(AbstractKylinTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
     }
 
     @After

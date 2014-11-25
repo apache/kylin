@@ -33,7 +33,7 @@ import com.kylinolap.rest.response.SQLResponse;
  * @author xduo
  * 
  */
-public class QueryServiceTest extends TestBase {
+public class QueryServiceTest extends ServiceTestBase {
 
     @Autowired
     QueryService queryService;

@@ -52,7 +52,7 @@ import java.util.regex.Pattern;
  * If null arguments are possible, the code-generation framework checks for
  * nulls before calling the functions.</p>
  */
-@SuppressWarnings("UnnecessaryUnboxing")
+@SuppressWarnings({"unused", "rawtypes", "unchecked"})
 @Deterministic
 public class SqlFunctions {
   private static final DecimalFormat DOUBLE_FORMAT =

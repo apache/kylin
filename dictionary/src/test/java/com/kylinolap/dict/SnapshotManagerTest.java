@@ -22,7 +22,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.dict.lookup.HiveTable;
 import com.kylinolap.dict.lookup.SnapshotManager;
 import com.kylinolap.dict.lookup.SnapshotTable;
@@ -34,7 +34,7 @@ import com.kylinolap.metadata.model.schema.TableDesc;
  * @author yangli9
  * 
  */
-public class SnapshotManagerTest extends LocalFileMetadataTestCase {
+public class SnapshotManagerTest extends HBaseMetadataTestCase {
 
     SnapshotManager snapshotMgr;
 

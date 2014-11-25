@@ -35,7 +35,7 @@ import com.kylinolap.metadata.model.cube.CubeDesc.CubeCapacity;
  */
 public class JobEngineConfig {
     private static final Logger logger = LoggerFactory.getLogger(JobEngineConfig.class);
-    public static String HADOOP_JOB_CONF_FILENAME = "hadoop_job_conf";
+    public static String HADOOP_JOB_CONF_FILENAME = "kylin_job_conf";
 
     private String getHadoopJobConfFilePath(CubeCapacity capaticy, boolean appendSuffix) throws IOException {
         String hadoopJobConfFile;
@@ -66,7 +66,7 @@ public class JobEngineConfig {
                     logger.debug("Can't get " + hadoopJobConfFile + " from classpath");
                     logger.debug("No " + hadoopJobConfFile + " file were found");
                 } else {
-                    File tmp = File.createTempFile("hadoop_job_conf", ".xml");
+                    File tmp = File.createTempFile(HADOOP_JOB_CONF_FILENAME, ".xml");
                     inputStreamToFile(is, tmp);
                     path = tmp.getAbsolutePath();
                 }

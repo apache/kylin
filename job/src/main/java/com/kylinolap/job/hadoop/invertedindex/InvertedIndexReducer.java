@@ -31,8 +31,8 @@ import com.kylinolap.cube.CubeSegmentStatusEnum;
 import com.kylinolap.cube.invertedindex.IIKeyValueCodec;
 import com.kylinolap.cube.invertedindex.TableRecord;
 import com.kylinolap.cube.invertedindex.TableRecordInfo;
-import com.kylinolap.cube.invertedindex.TimeSlice;
-import com.kylinolap.cube.invertedindex.TimeSliceBuilder;
+import com.kylinolap.cube.invertedindex.Slice;
+import com.kylinolap.cube.invertedindex.SliceBuilder;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
@@ -43,7 +43,7 @@ public class InvertedIndexReducer extends Reducer<LongWritable, ImmutableBytesWr
 
     private TableRecordInfo info;
     private TableRecord rec;
-    private TimeSliceBuilder builder;
+    private SliceBuilder builder;
     private IIKeyValueCodec kv;
 
     @Override
@@ -55,15 +55,22 @@ public class InvertedIndexReducer extends Reducer<LongWritable, ImmutableBytesWr
         CubeSegment seg = cube.getSegment(conf.get(BatchConstants.CFG_CUBE_SEGMENT_NAME), CubeSegmentStatusEnum.NEW);
         info = new TableRecordInfo(seg);
         rec = new TableRecord(info);
-        builder = new TimeSliceBuilder(info);
+        builder = null;
         kv = new IIKeyValueCodec(info);
     }
 
     @Override
-    public void reduce(LongWritable key, Iterable<ImmutableBytesWritable> values, Context context) throws IOException, InterruptedException {
+    public void reduce(LongWritable key, Iterable<ImmutableBytesWritable> values, Context context) //
+            throws IOException, InterruptedException {
         for (ImmutableBytesWritable v : values) {
             rec.setBytes(v.get(), v.getOffset(), v.getLength());
-            TimeSlice slice = builder.append(rec);
+
+            if (builder == null) {
+                builder = new SliceBuilder(info, rec.getShard());
+            }
+            System.out.println(rec.getShard() + " - " + rec);
+
+            Slice slice = builder.append(rec);
             if (slice != null) {
                 output(slice, context);
             }
@@ -72,13 +79,13 @@ public class InvertedIndexReducer extends Reducer<LongWritable, ImmutableBytesWr
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
-        TimeSlice slice = builder.close();
+        Slice slice = builder.close();
         if (slice != null) {
             output(slice, context);
         }
     }
 
-    private void output(TimeSlice slice, Context context) throws IOException, InterruptedException {
+    private void output(Slice slice, Context context) throws IOException, InterruptedException {
         for (Pair<ImmutableBytesWritable, ImmutableBytesWritable> pair : kv.encodeKeyValue(slice)) {
             context.write(pair.getFirst(), pair.getSecond());
         }

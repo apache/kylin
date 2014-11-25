@@ -92,7 +92,6 @@ public class StorageCleanupJob extends AbstractHadoopJob {
         } else {
             return false;
         }
-
     }
 
 
