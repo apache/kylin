@@ -224,7 +224,8 @@ public class HiveSourceTableLoader {
             return "smallint";
         } else if ("byte".equals(colType)) {
             return "tinyint";
-        }
+        } else if ("bool".equals(colType))
+            return "boolean";
         return colType;
     }
 

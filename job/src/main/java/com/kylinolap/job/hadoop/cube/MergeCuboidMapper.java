@@ -65,6 +65,8 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
 
     private HashMap<TblColRef, Boolean> dictsNeedMerging = new HashMap<TblColRef, Boolean>();
 
+    private static final Pattern JOB_NAME_PATTERN = Pattern.compile("kylin-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})");
+
     private Boolean checkNeedMerging(TblColRef col) throws IOException {
         Boolean ret = dictsNeedMerging.get(col);
         if (ret != null)
@@ -77,8 +79,7 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
     }
 
     private String extractJobIDFromPath(String path) {
-        Pattern pattern = Pattern.compile("kylin-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})");
-        Matcher matcher = pattern.matcher(path);
+        Matcher matcher = JOB_NAME_PATTERN.matcher(path);
         // check the first occurance
         if (matcher.find()) {
             return matcher.group(1);
