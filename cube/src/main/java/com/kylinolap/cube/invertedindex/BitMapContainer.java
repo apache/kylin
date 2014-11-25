@@ -40,16 +40,25 @@ public class BitMapContainer implements ColumnValueContainer {
     int size;
     ConciseSet[] sets;
     boolean closedForChange;
+    
+    transient byte[] temp;
 
-    public BitMapContainer(TableRecordInfo info, int col) {
+    public BitMapContainer(TableRecordInfoDigest info, int col) {
         this.valueLen = info.length(col);
         this.size = 0;
-        this.nValues = info.dict(col).getMaxId() + 1;
+        this.nValues = info.getMaxID(col) + 1;
         this.sets = null;
         this.closedForChange = false;
+        
+        this.temp = new byte[valueLen];
     }
 
     @Override
+    public void append(ImmutableBytesWritable valueBytes) {
+        int value = BytesUtil.readUnsigned(valueBytes.get(), valueBytes.getOffset(), valueLen);
+        append(value);
+    }
+
     public void append(int value) {
         checkUpdateMode();
         if (value == Dictionary.NULL_ID[valueLen]) {
@@ -58,9 +67,15 @@ public class BitMapContainer implements ColumnValueContainer {
         sets[value].add(size);
         size++;
     }
-
+    
     @Override
-    public int getValueAt(int i) {
+    public void getValueAt(int i, ImmutableBytesWritable valueBytes) {
+        int value = getValueIntAt(i);
+        BytesUtil.writeUnsigned(value, temp, 0, valueLen);
+        valueBytes.set(temp, 0, valueLen);
+    }
+    
+    public int getValueIntAt(int i) {
         for (int v = 0; v < nValues; v++) {
             if (sets[v].contains(i)) {
                 return v;

@@ -19,7 +19,7 @@ echo "This script will help you:"
 echo "1. Check environment"
 echo "2. Build Kylin artifacts"
 echo "3. Prepare test cube related data"
-echo "4. Lauch a web service to build cube and query with (at http://localhost:9080)"
+echo "4. Lauch a web service to build cube and query with (at http://localhost:7070)"
 echo "Please make sure you are running this script on a hadoop CLI machine, and you have enough permissions."
 echo "Also, We assume you have installed: JAVA, TOMCAT, NPM and MAVEN."
 echo "[Warning] The installation may break existing tomcat applications on this CLI"
@@ -131,7 +131,7 @@ echo "(The default root password for hortonworks VM is hadoop, and for cloudera 
 [[ "$SILENT" ]] || read -s -p "Enter Password for root: " ROOTPASS
 
 #deploy kylin.properties to /etc/kylin
-cat examples/test_case_data/kylin.properties | \
+cat examples/test_case_data/sandbox/kylin.properties | \
     sed -e "s,${CHECK_URL_DEFAULT},${NEW_CHECK_URL_PREFIX}${HOSTNAME}," | \
     sed -e "s,${CLI_HOSTNAME_DEFAULT},${NEW_CLI_HOSTNAME_PREFIX}${HOSTNAME}," | \
     sed -e "s,${CLI_PASSWORD_DEFAULT},${NEW_CLI_PASSWORD_PREFIX}${ROOTPASS}," | \
@@ -203,4 +203,4 @@ sudo -i "${CATALINA_HOME}/bin/startup.sh"
 
 
 echo "Kylin-Deploy Success!"
-echo "Please visit http://<your_sandbox_ip>:9080 to play with the cubes! (Useranme: ADMIN, Password: KYLIN)"
+echo "Please visit http://<your_sandbox_ip>:7070 to play with the cubes! (Useranme: ADMIN, Password: KYLIN)"

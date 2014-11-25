@@ -29,7 +29,7 @@ public class BytesUtil {
 
     public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
-    public static void writeUnsignedLong(long num, byte[] bytes, int offset, int size) {
+    public static void writeLong(long num, byte[] bytes, int offset, int size) {
         for (int i = offset + size - 1; i >= offset; i--) {
             bytes[i] = (byte) num;
             num >>>= 8;
@@ -43,7 +43,7 @@ public class BytesUtil {
         }
     }
 
-    public static long readUnsignedLong(byte[] bytes, int offset, int size) {
+    public static long readLong(byte[] bytes, int offset, int size) {
         long integer = 0;
         for (int i = offset, n = offset + size; i < n; i++) {
             integer <<= 8;
@@ -74,7 +74,9 @@ public class BytesUtil {
         return integer;
     }
 
-    /** No. bytes needed to store a value as big as the given */
+    /**
+     * No. bytes needed to store a value as big as the given
+     */
     public static int sizeForValue(int maxValue) {
         int size = 0;
         while (maxValue > 0) {
@@ -197,6 +199,25 @@ public class BytesUtil {
         return integer;
     }
 
+    public static void writeLong(long num, ByteBuffer out) {
+        for (int i = 0; i < 8; i++) {
+            out.put((byte) num);
+            num >>>= 8;
+        }
+    }
+
+    public static long readLong(ByteBuffer in) {
+        long integer = 0;
+        int mask = 0xff;
+        int shift = 0;
+        for (int i = 0; i < 8; i++) {
+            integer |= (in.get() << shift) & mask;
+            mask = mask << 8;
+            shift += 8;
+        }
+        return integer;
+    }
+
     public static void writeUTFString(String str, ByteBuffer out) {
         byte[] bytes = str == null ? null : Bytes.toBytes(str);
         writeByteArray(bytes, out);
@@ -255,6 +276,24 @@ public class BytesUtil {
         return strs;
     }
 
+    public static void writeIntArray(int[] array, ByteBuffer out) {
+        if (array == null) {
+            writeVInt(-1, out);
+            return;
+        }
+        writeVInt(array.length, out);
+        out.asIntBuffer().put(array);
+    }
+
+    public static int[] readIntArray(ByteBuffer in) {
+        int len = readVInt(in);
+        if (len < 0)
+            return null;
+        int[] array = new int[len];
+        in.asIntBuffer().get(array);
+        return array;
+    }
+
     public static void writeByteArray(byte[] array, ByteBuffer out) {
         if (array == null) {
             writeVInt(-1, out);
@@ -290,7 +329,7 @@ public class BytesUtil {
     public static String toHex(byte[] array) {
         return toHex(new ImmutableBytesWritable(array));
     }
-    
+
     public static String toHex(ImmutableBytesWritable bytes) {
         byte[] array = bytes.get();
         int offset = bytes.getOffset();

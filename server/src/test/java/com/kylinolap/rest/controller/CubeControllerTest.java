@@ -19,6 +19,7 @@ package com.kylinolap.rest.controller;
 import java.io.IOException;
 import java.io.StringWriter;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,13 +30,12 @@ import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.rest.request.CubeRequest;
 import com.kylinolap.rest.service.CubeService;
 import com.kylinolap.rest.service.JobService;
-import com.kylinolap.rest.service.TestBase;
+import com.kylinolap.rest.service.ServiceTestBase;
 
 /**
  * @author xduo
- * 
  */
-public class CubeControllerTest extends TestBase {
+public class CubeControllerTest extends ServiceTestBase {
 
     private CubeController cubeController;
     private CubeDescController cubeDescController;
@@ -65,7 +65,8 @@ public class CubeControllerTest extends TestBase {
 
         CubeDesc cube = cubes[0];
         CubeDesc newCube = new CubeDesc();
-        newCube.setName(cube.getName() + "_test_save");
+        String newCubeName = cube.getName() + "_test_save";
+        newCube.setName(newCubeName);
         newCube.setDimensions(cube.getDimensions());
         newCube.setHBaseMapping(cube.getHBaseMapping());
         newCube.setMeasures(cube.getMeasures());
@@ -80,5 +81,8 @@ public class CubeControllerTest extends TestBase {
         CubeRequest cubeRequest = new CubeRequest();
         cubeRequest.setCubeDescData(stringWriter.toString());
         cubeRequest = cubeController.saveCubeDesc(cubeRequest);
+
+        cubeController.deleteCube(newCubeName);
     }
+
 }

@@ -59,7 +59,7 @@ import com.kylinolap.rest.response.GeneralResponse;
 import com.kylinolap.rest.response.HBaseResponse;
 import com.kylinolap.rest.service.CubeService;
 import com.kylinolap.rest.service.JobService;
-import com.kylinolap.storage.hbase.coprocessor.CoprocessorEnabler;
+import com.kylinolap.storage.hbase.observer.CoprocessorEnabler;
 
 /**
  * CubeController is defined as Restful API entrance for UI.

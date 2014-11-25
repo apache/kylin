@@ -16,19 +16,21 @@
 
 package com.kylinolap.cube.invertedindex;
 
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+
 /**
  * @author yangli9
  * 
  */
 public interface ColumnValueContainer {
 
-    void append(int value);
+    void append(ImmutableBytesWritable valueBytes);
 
     void closeForChange();
 
     int getSize();
 
     // works only after closeForChange()
-    int getValueAt(int i);
+    void getValueAt(int i, ImmutableBytesWritable valueBytes);
 
 }

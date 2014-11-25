@@ -37,7 +37,7 @@ public class CompressedValueContainer implements ColumnValueContainer {
     byte[] uncompressed;
     byte[] compressed;
 
-    public CompressedValueContainer(TableRecordInfo info, int col, int cap) {
+    public CompressedValueContainer(TableRecordInfoDigest info, int col, int cap) {
         this.valueLen = info.length(col);
         this.cap = cap;
         this.size = 0;
@@ -46,15 +46,15 @@ public class CompressedValueContainer implements ColumnValueContainer {
     }
 
     @Override
-    public void append(int value) {
+    public void append(ImmutableBytesWritable valueBytes) {
         checkUpdateMode();
-        BytesUtil.writeUnsigned(value, uncompressed, valueLen * size, valueLen);
+        System.arraycopy(valueBytes.get(), valueBytes.getOffset(), uncompressed, valueLen * size, valueLen);
         size++;
     }
 
     @Override
-    public int getValueAt(int i) {
-        return BytesUtil.readUnsigned(uncompressed, valueLen * i, valueLen);
+    public void getValueAt(int i, ImmutableBytesWritable valueBytes) {
+        valueBytes.set(uncompressed, valueLen * i, valueLen);
     }
 
     private void checkUpdateMode() {

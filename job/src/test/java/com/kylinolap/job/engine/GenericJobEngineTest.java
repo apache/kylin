@@ -30,6 +30,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.common.util.SSHClient;
 import com.kylinolap.cube.CubeBuildTypeEnum;
@@ -52,7 +53,6 @@ import com.kylinolap.metadata.MetadataManager;
 
 /**
  * @author ysong1
- * 
  */
 public class GenericJobEngineTest {
     private static String cubeName = "test_kylin_cube_with_slr_empty";
@@ -110,10 +110,10 @@ public class GenericJobEngineTest {
     @BeforeClass
     public static void beforeClass() throws Exception {
 
-        FileUtils.forceMkdir(new File("/tmp/kylin/logs/"));
+        FileUtils.forceMkdir(new File(KylinConfig.getInstanceFromEnv().getKylinJobLogDir()));
 
         FileUtils.deleteDirectory(new File(tempTestMetadataUrl));
-        FileUtils.copyDirectory(new File("../examples/test_case_data"), new File(tempTestMetadataUrl));
+        FileUtils.copyDirectory(new File(AbstractKylinTestCase.LOCALMETA_TEST_DATA), new File(tempTestMetadataUrl));
         System.setProperty(KylinConfig.KYLIN_CONF, tempTestMetadataUrl);
 
         // deploy files to hdfs
@@ -124,7 +124,7 @@ public class GenericJobEngineTest {
         hadoopCli.scpFileToRemote("src/test/resources/jarfile/SampleBadJavaProgram.jarfile", "/tmp");
 
         // create log dir
-        hadoopCli.execCommand("mkdir -p /tmp/kylin/logs/");
+        hadoopCli.execCommand("mkdir -p " + KylinConfig.getInstanceFromEnv().getKylinJobLogDir());
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         kylinConfig.setMetadataUrl(tempTestMetadataUrl);
 

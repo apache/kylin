@@ -34,7 +34,7 @@ import com.kylinolap.rest.security.AclPermissionFactory;
  * @author xduo
  * 
  */
-public class AccessServiceTest extends TestBase {
+public class AccessServiceTest extends ServiceTestBase {
 
     @Autowired
     AccessService accessService;

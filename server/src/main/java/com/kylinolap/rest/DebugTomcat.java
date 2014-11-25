@@ -31,13 +31,12 @@ public class DebugTomcat {
         if (args.length >= 1) {
             System.setProperty("kylin.metadata.url", args[0]);
         }
-        int port = 80;
+        int port = 7070;
         if (args.length >= 2) {
             port = Integer.parseInt(args[1]);
         }
 
-        ClasspathUtil.addClasspath(new File("../examples/test_case_data").getAbsolutePath());
-        ClasspathUtil.addClasspath(new File("../examples/test_case_data/hadoop-site").getAbsolutePath());
+        ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox").getAbsolutePath());
         String webBase = new File("../webapp/app").getAbsolutePath();
         String apiBase = new File("src/main/webapp").getAbsolutePath();
 
