@@ -7,7 +7,13 @@ import com.google.protobuf.Service;
 import com.kylinolap.cube.invertedindex.*;
 import com.kylinolap.cube.kv.RowValueDecoder;
 import com.kylinolap.metadata.model.cube.HBaseColumnDesc;
+import com.kylinolap.storage.filter.BitMapFilterEvaluator;
 import com.kylinolap.storage.hbase.endpoint.generated.IIProtos;
+import com.kylinolap.storage.hbase.observer.SRowAggregators;
+import com.kylinolap.storage.hbase.observer.SRowFilter;
+import com.kylinolap.storage.hbase.observer.SRowProjector;
+import com.kylinolap.storage.hbase.observer.SRowType;
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.Coprocessor;
 import org.apache.hadoop.hbase.CoprocessorEnvironment;
@@ -43,6 +49,26 @@ public class IIEndpoint extends IIProtos.RowsService
 
     @Override
     public void getRows(RpcController controller, IIProtos.IIRequest request, RpcCallback<IIProtos.IIResponse> done) {
+
+        SRowType type = null;
+        SRowProjector projector = null;
+        SRowAggregators aggregators = null;
+        SRowFilter filter = null;
+
+        if (request.hasSRowType()) {
+            type = SRowType.deserialize(request.getSRowType().toByteArray());
+        }
+        if (request.hasSRowProjector()) {
+            projector = SRowProjector.deserialize(request.getSRowProjector().toByteArray());
+        }
+        if (request.hasSRowAggregator()) {
+            aggregators = SRowAggregators.deserialize(request.getSRowAggregator().toByteArray());
+        }
+        if (request.hasSRowFilter()) {
+            filter = SRowFilter.deserialize(request.getSRowFilter().toByteArray());
+        }
+
+
         IIProtos.IIResponse response = null;
         RegionScanner innerScanner = null;
         HRegion region = null;
@@ -60,8 +86,20 @@ public class IIEndpoint extends IIProtos.RowsService
 
                 IIKeyValueCodec codec = new IIKeyValueCodec(tableInfo);
                 for (Slice slice : codec.decodeKeyValue(new HbaseServerKVIterator(innerScanner))) {
-                    for (TableRecordBytes recordBytes : slice) {
-                        responseBuilder.addRows(ByteString.copyFrom(recordBytes.getBytes()));
+                    if (filter != null) {
+                        ConciseSet result = new BitMapFilterEvaluator(new SliceBitMapProvider(slice, type)).evaluate(filter.getFilter());
+                        int index = 0;
+                        //TODO: should not use iterator mode for performance
+                        for (TableRecordBytes recordBytes : slice) {
+                            if (result.contains(index)) {
+                                responseBuilder.addRows(ByteString.copyFrom(recordBytes.getBytes()));
+                            }
+                            index++;
+                        }
+                    } else {
+                        for (TableRecordBytes recordBytes : slice) {
+                            responseBuilder.addRows(ByteString.copyFrom(recordBytes.getBytes()));
+                        }
                     }
                 }
 
