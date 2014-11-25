@@ -30,10 +30,7 @@ import net.hydromatic.optiq.rules.java.PhysTypeImpl;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.RelWriter;
 import org.eigenbase.rel.TableAccessRelBase;
-import org.eigenbase.rel.rules.PushFilterPastJoinRule;
-import org.eigenbase.rel.rules.PushJoinThroughJoinRule;
-import org.eigenbase.rel.rules.RemoveDistinctAggregateRule;
-import org.eigenbase.rel.rules.SwapJoinRule;
+import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
@@ -121,7 +118,10 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
         planner.removeRule(SwapJoinRule.INSTANCE);
         planner.removeRule(PushJoinThroughJoinRule.LEFT);
         planner.removeRule(PushJoinThroughJoinRule.RIGHT);
-        
+
+        // for columns in having clause will enable table scan filter rule
+        // cause kylin does not depend on MPP
+        planner.removeRule(PushFilterPastProjectRule.INSTANCE);
         // distinct count will be split into a separated query that is joined with the left query
         planner.removeRule(RemoveDistinctAggregateRule.INSTANCE);
     }
