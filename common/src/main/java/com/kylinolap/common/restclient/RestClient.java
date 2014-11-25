@@ -44,7 +44,7 @@ public class RestClient {
     String password;
     HttpClient client;
 
-    private static Pattern fullRestPattern = Pattern.compile("([^:]+)[:]([^@]+)[@]([^:]+)(?:[:](\\d+))?");
+    private static Pattern fullRestPattern = Pattern.compile("(?:([^:]+)[:]([^@]+)[@])?([^:]+)(?:[:](\\d+))?");
 
     public static boolean matchFullRestPattern(String uri) {
         Matcher m = fullRestPattern.matcher(uri);
