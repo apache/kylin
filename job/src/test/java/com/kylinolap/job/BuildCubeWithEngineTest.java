@@ -24,6 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.UUID;
 
 import org.junit.After;
 import org.junit.Before;
@@ -200,7 +201,7 @@ public class BuildCubeWithEngineTest extends CubeDevelopTestCase {
         System.out.println(JsonUtil.writeValueAsIndentString(cube));
 
         for (CubeSegment seg : newSegments) {
-            JobInstance newJob = jobManager.createJob(cubename, seg.getName(), jobType);
+            JobInstance newJob = jobManager.createJob(cubename, seg.getName(), UUID.randomUUID().toString(), jobType);
             // submit job to store
             String jobUuid = jobManager.submitJob(newJob);
             jobList.add(jobUuid);

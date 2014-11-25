@@ -107,8 +107,9 @@ public class JobService extends BasicService {
         String uuid = null;
         try {
             for (CubeSegment segment : this.getCubeManager().allocateSegments(cube, buildType, startDate, endDate)) {
-                JobInstance job = this.getJobManager().createJob(cube.getName(), segment.getName(), buildType);
-                uuid = this.getJobManager().submitJob(job);
+                uuid = segment.getUuid();
+                JobInstance job = this.getJobManager().createJob(cube.getName(), segment.getName(), uuid, buildType);
+                this.getJobManager().submitJob(job);
                 permissionService.init(job, null);
                 permissionService.inherit(job, cube);
             }
