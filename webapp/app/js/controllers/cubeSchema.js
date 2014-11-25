@@ -108,6 +108,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     $scope.saveNewDimension = function () {
         if ($scope.cubeMetaFrame.dimensions.indexOf($scope.newDimension) === -1) {
             $scope.cubeMetaFrame.dimensions.push($scope.newDimension);
+            $scope.editFlag.dimensionEdited=$scope.editFlag.dimensionEdited==true?false:true;
         }
         $scope.newDimension = null;
     }
@@ -188,6 +189,14 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         var index = arr.indexOf(element);
         if (index > -1) {
             arr.splice(index, 1);
+        }
+    }
+
+    $scope.removeDimension = function (arr, element) {
+        var index = arr.indexOf(element);
+        if (index > -1) {
+            arr.splice(index, 1);
+            $scope.editFlag.dimensionEdited=$scope.editFlag.dimensionEdited==true?false:true;
         }
     }
 

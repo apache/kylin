@@ -3,6 +3,13 @@
 
 KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, MessageService, TableService, CubeDescService, CubeService) {
 
+    //add or edit ?
+    var absUrl = $location.absUrl();
+    $scope.cubeMode = absUrl.indexOf("/cubes/add")!=-1?'addNewCube':absUrl.indexOf("/cubes/edit")!=-1?'editExistCube':'default';
+    // use this flag to listen when rm or add dimension edited,used in sub-controller cube-schema
+    $scope.editFlag ={
+        dimensionEdited:"init"
+    };
     //~ Define metadata & class
     $scope.measureParamType = ['column', 'constant'];
     $scope.measureExpressions = ['SUM', 'MIN', 'MAX', 'COUNT', 'COUNT_DISTINCT'];
@@ -148,10 +155,9 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     $scope.prepareCube = function () {
         // generate column family
         generateColumnFamily();
-        generateDefaultRowkey();
-
-        // generate default rowkey and aggregation groups.
-//        if ($scope.cubeMetaFrame.rowkey.aggregation_groups.length == 0) {
+        if($scope.cubeMode==="addNewCube"){
+            generateDefaultRowkey();
+        }
 
         // Clean up objects used in cube creation
         angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
@@ -239,12 +245,12 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     }
 
 
-    function reGenerateRowKey(dimensions){
+    function reGenerateRowKey(){
         console.log("reGen rowkey & agg group");
         var tmpRowKeyColumns = [];
         var tmpAggregationItems = [];
 
-        angular.forEach(dimensions, function (dimension, index) {
+        angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
             if (dimension.column == '{FK}' && dimension.join && dimension.join.foreign_key.length > 0) {
                 angular.forEach(dimension.join.foreign_key, function (fk, index) {
                     for (var i = 0; i < tmpRowKeyColumns.length; i++) {
@@ -310,41 +316,50 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         var aggregationGroups = $scope.cubeMetaFrame.rowkey.aggregation_groups;
         // rm unused item from group
         angular.forEach(aggregationGroups, function (group, index) {
-            for(var j = 0;j<group.length;j++){
-                var elemStillExist = false;
-                for(var k = 0;k<tmpAggregationItems.length;k++){
-                    if(group[j]==tmpAggregationItems[k]){
-                        elemStillExist = true;
-                        break;
+            if(group){
+                for(var j = 0;j<group.length;j++){
+                    var elemStillExist = false;
+                    for(var k = 0;k<tmpAggregationItems.length;k++){
+                        if(group[j]==tmpAggregationItems[k]){
+                            elemStillExist = true;
+                            break;
+                        }
+                    }
+                    if(!elemStillExist){
+                        group.splice(j,1);
+                        j--;
                     }
                 }
-                if(!elemStillExist){
-                    group.splice(j,1);
-                    j--;
+                if(!group.length){
+                    aggregationGroups.splice(index,1);
+                    index--;
                 }
             }
-            if(!group.length){
+            else{
                 aggregationGroups.splice(index,1);
                 index--;
             }
         });
 
+        if($scope.cubeMode==="addNewCube"){
+            // to-do for increased group item
+            var uniqGroupItem = [];
+            angular.forEach(aggregationGroups, function (group, index) {
+                if(group){
+                for(var j = 0;j<group.length;j++){
+                    if (uniqGroupItem.indexOf(group[j]) == -1) {
+                        uniqGroupItem.push(group[j]);
+                    }
+                }
+                }
+            });
 
-        // to-do for increased group item
-//        var uniqGroupItem = [];
-//        angular.forEach(aggregationGroups, function (group, index) {
-//            for(var j = 0;j<group.length;j++){
-//                if (uniqGroupItem.indexOf(group[j]) == -1) {
-//                    uniqGroupItem.push(group[j]);
-//                }
-//            }
-//        });
+            var increasedGroupItem = increasedData(uniqGroupItem,tmpAggregationItems);
+            var increasedDataGroups = sliceGroupItemToGroups(increasedGroupItem);
 
-//        var increasedGroupItem = increasedData(uniqGroupItem,tmpAggretationItems);
-//        var increasedDataGroups = sliceGroupItemToGroups(increasedGroupItem);
-
-        //! here get the latest aggregation groups
-//        $scope.cubeMetaFrame.rowkey.aggregation_groups.concat(increasedDataGroups);
+            //! here get the latest aggregation groups,only effect when add newCube
+            $scope.cubeMetaFrame.rowkey.aggregation_groups = increasedDataGroups;
+        }
 
 
     }
@@ -551,9 +566,13 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         }
     });
 
-    $scope.$watchCollection('cubeMetaFrame.dimensions', function (newValue, oldValue) {
-        if(newValue){
-            reGenerateRowKey(newValue);
+
+    $scope.$watchCollection('editFlag.dimensionEdited', function (newValue, oldValue) {
+        if(newValue=="init"){
+            return;
+        }
+        if($scope.cubeMetaFrame){
+            reGenerateRowKey();
         }
     });
 
