@@ -68,41 +68,44 @@ public class Slice implements Iterable<TableRecordBytes>, Comparable<Slice> {
         return containers[col];
     }
 
-    private Iterator<TableRecordBytes> iteratorWithBitmap(final ConciseSet bitmap) {
+    public Iterator<TableRecordBytes> iterateWithBitmap(final ConciseSet resultBitMap) {
+        if (resultBitMap == null) {
+            return this.iterator();
+        } else {
+            return new Iterator<TableRecordBytes>() {
+                int i = 0;
+                int iteratedCount = 0;
+                int resultSize = resultBitMap.size();
 
-        return new Iterator<TableRecordBytes>() {
-            int i = 0;
-            int iteratedCount = 0;
-            int resultSize = bitmap.size();
+                TableRecordBytes rec = info.createTableRecord();
+                ImmutableBytesWritable temp = new ImmutableBytesWritable();
 
-            TableRecordBytes rec = info.createTableRecord();
-            ImmutableBytesWritable temp = new ImmutableBytesWritable();
-
-            @Override
-            public boolean hasNext() {
-                return iteratedCount < resultSize;
-            }
-
-            @Override
-            public TableRecordBytes next() {
-                while (!bitmap.contains(i) && i < nRecords - 1) {
-                    i++;
+                @Override
+                public boolean hasNext() {
+                    return iteratedCount < resultSize;
                 }
-                for (int col = 0; col < nColumns; col++) {
-                    containers[col].getValueAt(i, temp);
-                    rec.setValueBytes(col, temp);
+
+                @Override
+                public TableRecordBytes next() {
+                    while (!resultBitMap.contains(i) && i < nRecords - 1) {
+                        i++;
+                    }
+                    for (int col = 0; col < nColumns; col++) {
+                        containers[col].getValueAt(i, temp);
+                        rec.setValueBytes(col, temp);
+                    }
+                    iteratedCount++;
+
+                    return rec;
                 }
-                iteratedCount++;
 
-                return rec;
-            }
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
 
-            @Override
-            public void remove() {
-                throw new UnsupportedOperationException();
-            }
-
-        };
+            };
+        }
     }
 
     @Override

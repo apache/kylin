@@ -30,6 +30,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Iterator;
 
 /**
  * Created by honma on 11/7/14.
@@ -88,20 +89,14 @@ public class IIEndpoint extends IIProtos.RowsService
 
                 IIKeyValueCodec codec = new IIKeyValueCodec(tableInfo);
                 for (Slice slice : codec.decodeKeyValue(new HbaseServerKVIterator(innerScanner))) {
+                    ConciseSet result = null;
                     if (filter != null) {
-                        ConciseSet result = new BitMapFilterEvaluator(new SliceBitMapProvider(slice, type)).evaluate(filter.getFilter());
-                        int index = 0;
-                        //TODO: should not use iterator mode for performance
-                        for (TableRecordBytes recordBytes : slice) {
-                            if (result.contains(index)) {
-                                responseBuilder.addRows(ByteString.copyFrom(recordBytes.getBytes()));
-                            }
-                            index++;
-                        }
-                    } else {
-                        for (TableRecordBytes recordBytes : slice) {
-                            responseBuilder.addRows(ByteString.copyFrom(recordBytes.getBytes()));
-                        }
+                        result = new BitMapFilterEvaluator(new SliceBitMapProvider(slice, type)).evaluate(filter.getFilter());
+                    }
+
+                    Iterator<TableRecordBytes> iterator = slice.iterateWithBitmap(result);
+                    while (iterator.hasNext()) {
+                        responseBuilder.addRows(ByteString.copyFrom(iterator.next().getBytes()));
                     }
                 }
 
