@@ -22,6 +22,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import com.google.common.collect.Lists;
+import com.kylinolap.cube.CubeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +45,6 @@ import com.kylinolap.rest.response.MetricsResponse;
 
 /**
  * @author ysong1
- * 
  */
 @Component("jobService")
 public class JobService extends BasicService {
@@ -58,7 +59,7 @@ public class JobService extends BasicService {
         Integer offset = (null == offsetValue) ? 0 : offsetValue;
         List<JobInstance> jobs = listAllJobs(cubeName, projectName, statusList);
         Collections.sort(jobs);
-        
+
         if (jobs.size() <= offset) {
             return Collections.emptyList();
         }
@@ -101,15 +102,23 @@ public class JobService extends BasicService {
         List<JobInstance> jobInstances = this.getJobManager().listJobs(cube.getName(), null);
         for (JobInstance jobInstance : jobInstances) {
             if (jobInstance.getStatus() == JobStatusEnum.PENDING || jobInstance.getStatus() == JobStatusEnum.RUNNING) {
-                throw new JobException("The cube " + cube.getName() + " has running job, please discard it and try again.");
+                throw new JobException("The cube " + cube.getName() + " has running job(" + jobInstance.getUuid() + ") please discard it and try again.");
             }
         }
 
         String uuid = null;
         try {
-            for (CubeSegment segment : this.getCubeManager().allocateSegments(cube, buildType, startDate, endDate)) {
+            List<CubeSegment> cubeSegments = this.getCubeManager().allocateSegments(cube, buildType, startDate, endDate);
+            List<JobInstance> jobs = Lists.newArrayListWithExpectedSize(cubeSegments.size());
+            for (CubeSegment segment : cubeSegments) {
                 JobInstance job = this.getJobManager().createJob(cube.getName(), segment.getName(), buildType);
-                uuid = this.getJobManager().submitJob(job);
+                jobs.add(job);
+                uuid = job.getUuid();
+                segment.setLastBuildJobID(uuid);
+            }
+            getCubeManager().updateCube(cube);
+            for (JobInstance job: jobs) {
+                this.getJobManager().submitJob(job);
                 permissionService.init(job, null);
                 permissionService.inherit(job, cube);
             }
