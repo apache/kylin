@@ -221,6 +221,13 @@ public class MetadataManager {
 
         return cubeDesc;
     }
+    
+    // remove cubeDesc
+    public void removeCubeDesc(CubeDesc cubeDesc) throws IOException{
+        String path = cubeDesc.getResourcePath();
+        getStore().deleteResource(path);
+        cubeDescMap.remove(cubeDesc.getName());
+    }
 
     // sync on update
     private void init(KylinConfig config) throws IOException {

@@ -473,7 +473,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     function generateDefaultRowkey() {
         console.log("gen default rowkey");
         var tmpAggregationGroups = []
-        $scope.cubeMetaFrame.rowkey.aggregation_groups.push([]);
         angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
             if (dimension.column == '{FK}' && dimension.join && dimension.join.foreign_key.length > 0) {
                 angular.forEach(dimension.join.foreign_key, function (fk, index) {
