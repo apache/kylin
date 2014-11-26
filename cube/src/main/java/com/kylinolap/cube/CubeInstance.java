@@ -313,20 +313,20 @@ public class CubeInstance extends RootPersistentEntity {
     }
 
     public List<CubeSegment> getSegments(CubeSegmentStatusEnum status) {
-        List<CubeSegment> segments = new ArrayList<CubeSegment>();
+        List<CubeSegment> result = new ArrayList<CubeSegment>();
 
         for (CubeSegment segment : segments) {
             if (segment.getStatus() == status) {
-                segments.add(segment);
+                result.add(segment);
             }
         }
 
-        return segments;
+        return result;
     }
 
     public List<CubeSegment> getSegment(CubeSegmentStatusEnum status) {
         List<CubeSegment> result = Lists.newArrayList();
-        for (CubeSegment segment: segments) {
+        for (CubeSegment segment : segments) {
             if (segment.getStatus() == status) {
                 result.add(segment);
             }
@@ -349,7 +349,7 @@ public class CubeInstance extends RootPersistentEntity {
     }
 
     public CubeSegment getSegmentById(String segmentId) {
-        for (CubeSegment segment: segments) {
+        for (CubeSegment segment : segments) {
             if (Objects.equal(segment.getUuid(), segmentId)) {
                 return segment;
             }
@@ -372,7 +372,7 @@ public class CubeInstance extends RootPersistentEntity {
         }
         long start = Long.MAX_VALUE;
         long end = Long.MIN_VALUE;
-        for (CubeSegment segment: readySegments) {
+        for (CubeSegment segment : readySegments) {
             if (segment.getDateRangeStart() < start) {
                 start = segment.getDateRangeStart();
             }
