@@ -17,10 +17,10 @@
 package com.kylinolap.cube;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.kylinolap.dict.DateStrDictionary;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -191,9 +191,9 @@ public class CubeManager {
 
             info = dictMgr.getDictionaryInfo(dictResPath);
             if (info == null)
-                throw new IllegalStateException("No dictionary found by " + dictResPath + ", invalid cube state; cube segment" + cubeSeg.getName() + ", col " + col);
+                throw new IllegalStateException("No dictionary found by " + dictResPath + ", invalid cube state; cube segment" + cubeSeg + ", col " + col);
         } catch (IOException e) {
-            throw new IllegalStateException("Failed to get dictionary for cube segment" + cubeSeg.getName() + ", col" + col, e);
+            throw new IllegalStateException("Failed to get dictionary for cube segment" + cubeSeg + ", col" + col, e);
         }
 
         return info.getDictionaryObject();
@@ -418,7 +418,7 @@ public class CubeManager {
         if (r == null) {
             String snapshotResPath = cubeSegment.getSnapshotResPath(tableName);
             if (snapshotResPath == null)
-                throw new IllegalStateException("No snaphot for table '" + tableName + "' found on cube segment" + cubeSegment.getCubeInstance().getName() + "/" + cubeSegment.getName());
+                throw new IllegalStateException("No snaphot for table '" + tableName + "' found on cube segment" + cubeSegment.getCubeInstance().getName() + "/" + cubeSegment);
 
             try {
                 SnapshotTable snapshot = getSnapshotManager().getSnapshotTable(snapshotResPath);
@@ -468,7 +468,7 @@ public class CubeManager {
             logger.info("Merging fact table dictionary on : " + col);
             List<DictionaryInfo> dictInfos = new ArrayList<DictionaryInfo>();
             for (CubeSegment segment : mergingSegments) {
-                logger.info("Including fact table dictionary of segment : " + segment.getName());
+                logger.info("Including fact table dictionary of segment : " + segment);
                 DictionaryInfo dictInfo = dictMgr.getDictionaryInfo(segment.getDictResPath(col));
                 dictInfos.add(dictInfo);
             }
@@ -545,17 +545,19 @@ public class CubeManager {
      * @return
      */
     private CubeSegment buildSegment(CubeInstance cubeInstance, long startDate, long endDate) {
-        CubeSegment incrementalSeg = new CubeSegment();
+        CubeSegment segment = new CubeSegment();
         String incrementalSegName = CubeSegment.getSegmentName(startDate, endDate);
-        incrementalSeg.setName(incrementalSegName);
-        incrementalSeg.setDateRangeStart(startDate);
-        incrementalSeg.setDateRangeEnd(endDate);
-        incrementalSeg.setStatus(CubeSegmentStatusEnum.NEW);
-        incrementalSeg.setStorageLocationIdentifier(generateStorageLocation());
+        segment.setUuid(UUID.randomUUID().toString());
+        segment.setName(incrementalSegName);
+        segment.setCreateTime(DateStrDictionary.dateToString(new Date()));
+        segment.setDateRangeStart(startDate);
+        segment.setDateRangeEnd(endDate);
+        segment.setStatus(CubeSegmentStatusEnum.NEW);
+        segment.setStorageLocationIdentifier(generateStorageLocation());
 
-        incrementalSeg.setCubeInstance(cubeInstance);
+        segment.setCubeInstance(cubeInstance);
 
-        return incrementalSeg;
+        return segment;
     }
 
     private String generateStorageLocation() {

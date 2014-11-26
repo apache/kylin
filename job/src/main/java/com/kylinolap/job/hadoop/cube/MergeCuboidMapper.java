@@ -88,10 +88,11 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
         }
     }
 
-    private CubeSegment findSegmentWithJobID(String jobID, CubeInstance cubeInstance) {
+    private CubeSegment findSegmentWithUuid(String jobID, CubeInstance cubeInstance) {
         for (CubeSegment segment : cubeInstance.getSegments()) {
-            if (segment.getLastBuildJobID().equalsIgnoreCase(jobID))
+            if (segment.getUuid().equalsIgnoreCase(jobID)) {
                 return segment;
+            }
         }
 
         throw new IllegalStateException("No merging segment's last build job ID equals " + jobID);
@@ -117,7 +118,7 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
         org.apache.hadoop.mapreduce.InputSplit inputSplit = context.getInputSplit();
         String filePath = ((FileSplit) inputSplit).getPath().toString();
         String jobID = extractJobIDFromPath(filePath);
-        sourceCubeSegment = findSegmentWithJobID(jobID, cube);
+        sourceCubeSegment = findSegmentWithUuid(jobID, cube);
 
         this.rowKeySplitter = new RowKeySplitter(sourceCubeSegment, 65, 255);
     }

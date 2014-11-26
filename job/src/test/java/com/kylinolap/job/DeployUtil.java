@@ -90,9 +90,8 @@ public class DeployUtil {
             throw new RuntimeException(e.getMessage(), e);
         }
 
-        String jobTargetDir = "../job/target";
-        File jobJar = new File(jobTargetDir, "kylin-job-" + version + "-job.jar");
-        File coprocessorJar = new File(jobTargetDir, "kylin-storage-" + version + "-coprocessor.jar");
+        File jobJar = new File("../job/target", "kylin-job-" + version + "-job.jar");
+        File coprocessorJar = new File("../storage/target", "kylin-storage-" + version + "-coprocessor.jar");
         return new Pair<File, File>(jobJar, coprocessorJar);
     }
     
