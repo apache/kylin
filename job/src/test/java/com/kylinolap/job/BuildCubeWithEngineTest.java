@@ -170,10 +170,11 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         waitCubeBuilt(jobs);
 
         jobs.clear();
+
         // final submit a merge job, start date is 0, end date is 20220101000000
-        dateEnd = f.parse("2022-01-01").getTime();
-        jobs.addAll(this.submitJob("test_kylin_cube_without_slr_left_join_empty", 0, dateEnd, CubeBuildTypeEnum.MERGE));
-        waitCubeBuilt(jobs);
+        //dateEnd = f.parse("2022-01-01").getTime();
+        //jobs.addAll(this.submitJob("test_kylin_cube_without_slr_left_join_empty", 0, dateEnd, CubeBuildTypeEnum.MERGE));
+        //waitCubeBuilt(jobs);
     }
 
     @SuppressWarnings("unused")

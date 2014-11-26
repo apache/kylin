@@ -132,7 +132,8 @@ public class CuboidCLI {
         
         long nonUniqueMask = groupMask & (~aggrGroupMask.uniqueMask);
         if (nonUniqueMask > 0) {
-            // FIXME this assumes non-unique masks consolidates in ONE following group which maybe not true
+            // exclude duplicates caused by non-unique columns
+            // FIXME this assumes non-unique masks consolidates in ONE following group which maybe not be true
             n -= mathCalcCuboidCount_combination(rowkey, nonUniqueMask) - 1; // exclude all 0
         }
         
