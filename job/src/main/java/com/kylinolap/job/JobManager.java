@@ -72,9 +72,9 @@ public class JobManager {
         this.jobEngine = JobEngine.getInstance(engineID, engineCfg);
     }
 
-    public JobInstance createJob(String cubeName, String segmentName, CubeBuildTypeEnum jobType) throws IOException {
+    public JobInstance createJob(String cubeName, String segmentName, String uuid, CubeBuildTypeEnum jobType) throws IOException {
         // build job instance
-        JobInstance jobInstance = buildJobInstance(cubeName, segmentName, jobType);
+        JobInstance jobInstance = buildJobInstance(cubeName, segmentName, uuid, jobType);
 
         // create job steps based on job type
         JobInstanceBuilder stepBuilder = new JobInstanceBuilder(this.engineConfig);
@@ -83,12 +83,12 @@ public class JobManager {
         return jobInstance;
     }
 
-    private JobInstance buildJobInstance(String cubeName, String segmentName, CubeBuildTypeEnum jobType) {
+    private JobInstance buildJobInstance(String cubeName, String segmentName, String uuid, CubeBuildTypeEnum jobType) {
         SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss");
         format.setTimeZone(TimeZone.getTimeZone(this.engineConfig.getTimeZone()));
 
         JobInstance jobInstance = new JobInstance();
-        jobInstance.setUuid(UUID.randomUUID().toString());
+        jobInstance.setUuid(uuid);
         jobInstance.setType(jobType);
         jobInstance.setRelatedCube(cubeName);
         jobInstance.setRelatedSegment(segmentName);

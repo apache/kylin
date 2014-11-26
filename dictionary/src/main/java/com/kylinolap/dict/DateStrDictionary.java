@@ -66,7 +66,7 @@ public class DateStrDictionary extends Dictionary<String> {
     }
 
     public static String dateToString(Date date) {
-        return dateToString(date, DEFAULT_DATE_PATTERN);
+        return dateToString(date, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
     }
 
     public static String dateToString(Date date, String pattern) {
