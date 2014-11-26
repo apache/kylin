@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
@@ -314,7 +315,7 @@ public class CubeInstance extends RootPersistentEntity {
     public List<CubeSegment> getSegments(CubeSegmentStatusEnum status) {
         List<CubeSegment> segments = new ArrayList<CubeSegment>();
 
-        for (CubeSegment segment : this.getSegments()) {
+        for (CubeSegment segment : segments) {
             if (segment.getStatus() == status) {
                 segments.add(segment);
             }
@@ -325,7 +326,7 @@ public class CubeInstance extends RootPersistentEntity {
 
     public List<CubeSegment> getSegment(CubeSegmentStatusEnum status) {
         List<CubeSegment> result = Lists.newArrayList();
-        for (CubeSegment segment: getSegments()) {
+        for (CubeSegment segment: segments) {
             if (segment.getStatus() == status) {
                 result.add(segment);
             }
@@ -334,7 +335,7 @@ public class CubeInstance extends RootPersistentEntity {
     }
 
     public CubeSegment getSegment(String name, CubeSegmentStatusEnum status) {
-        for (CubeSegment segment : this.getSegments()) {
+        for (CubeSegment segment : segments) {
             if ((null != segment.getName() && segment.getName().equals(name)) && segment.getStatus() == status) {
                 return segment;
             }
@@ -345,6 +346,15 @@ public class CubeInstance extends RootPersistentEntity {
 
     public void setSegments(List<CubeSegment> segments) {
         this.segments = segments;
+    }
+
+    public CubeSegment getSegmentById(String segmentId) {
+        for (CubeSegment segment: segments) {
+            if (Objects.equal(segment.getUuid(), segmentId)) {
+                return segment;
+            }
+        }
+        return null;
     }
 
     public String getCreateTime() {
