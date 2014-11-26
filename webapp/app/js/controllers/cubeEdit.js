@@ -156,11 +156,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         // generate column family
         generateColumnFamily();
 
-        //remove generageDefaultRowKey ,will generate when edit dimension
-//        if($scope.cubeMode==="addNewCube"){
-//            generateDefaultRowkey();
-//        }
-
         // Clean up objects used in cube creation
         angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
             delete dimension.status;
@@ -345,17 +340,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         });
 
         if($scope.cubeMode==="addNewCube"){
-            // to-do for increased group item
-//            var uniqGroupItem = [];
-//            angular.forEach(aggregationGroups, function (group, index) {
-//                if(group){
-//                for(var j = 0;j<group.length;j++){
-//                    if (uniqGroupItem.indexOf(group[j]) == -1) {
-//                        uniqGroupItem.push(group[j]);
-//                    }
-//                }
-//                }
-//            });
 
             var newUniqAggregationItem = [];
             angular.forEach(tmpAggregationItems, function (item, index) {
@@ -485,67 +469,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         }
     }
 
-    function generateDefaultRowkey() {
-        console.log("gen default rowkey");
-        var tmpAggregationGroups = [];
-        angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
-            if (dimension.column == '{FK}' && dimension.join && dimension.join.foreign_key.length > 0) {
-                angular.forEach(dimension.join.foreign_key, function (fk, index) {
-                    for (var i = 0; i < $scope.cubeMetaFrame.rowkey.rowkey_columns.length; i++) {
-                        if($scope.cubeMetaFrame.rowkey.rowkey_columns[i].column == fk)
-                            break;
-                    }
-                    if(i == $scope.cubeMetaFrame.rowkey.rowkey_columns.length) {
-                        $scope.cubeMetaFrame.rowkey.rowkey_columns.push({
-                            "column": fk,
-                            "length": 0,
-                            "dictionary": true,
-                            "mandatory": false
-                        });
-                    }
-
-                    tmpAggregationGroups.push(fk);
-                });
-            }
-            else if (dimension.column) {
-                for (var i = 0; i < $scope.cubeMetaFrame.rowkey.rowkey_columns.length; i++) {
-                    if($scope.cubeMetaFrame.rowkey.rowkey_columns[i].column == dimension.column)
-                        break;
-                }
-                if(i == $scope.cubeMetaFrame.rowkey.rowkey_columns.length) {
-                    $scope.cubeMetaFrame.rowkey.rowkey_columns.push({
-                        "column": dimension.column,
-                        "length": 0,
-                        "dictionary": true,
-                        "mandatory": false
-                    });
-                }
-
-                tmpAggregationGroups.push(dimension.column);
-            }
-
-            if (dimension.hierarchy && dimension.hierarchy.length > 0) {
-                angular.forEach(dimension.hierarchy, function (hierarchy, index) {
-                    for (var i = 0; i < $scope.cubeMetaFrame.rowkey.rowkey_columns.length; i++) {
-                        if($scope.cubeMetaFrame.rowkey.rowkey_columns[i].column == hierarchy.column)
-                            break;
-                    }
-                    if(i == $scope.cubeMetaFrame.rowkey.rowkey_columns.length) {
-                        $scope.cubeMetaFrame.rowkey.rowkey_columns.push({
-                            "column": hierarchy.column,
-                            "length": 0,
-                            "dictionary": true,
-                            "mandatory": false
-                        });
-                    }
-
-                 tmpAggregationGroups.push(hierarchy.column);
-                });
-            }
-        });
-        var increasedDataGroups = sliceGroupItemToGroups(tmpAggregationGroups);
-        $scope.cubeMetaFrame.rowkey.aggregation_groups = increasedDataGroups;
-    }
 
     function recoveryCubeStatus() {
         $scope.cubeMetaFrame.project = $scope.state.project;
