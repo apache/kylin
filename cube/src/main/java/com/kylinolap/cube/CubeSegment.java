@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.TblColRef;
 
@@ -297,4 +298,13 @@ public class CubeSegment implements Comparable<CubeSegment> {
         return true;
     }
 
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+                .add("uuid", uuid)
+                .add("create_time:", createTime)
+                .add("name", name)
+                .add("last_build_job_id", lastBuildJobID)
+                .toString();
+    }
 }

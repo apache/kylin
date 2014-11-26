@@ -191,9 +191,9 @@ public class CubeManager {
 
             info = dictMgr.getDictionaryInfo(dictResPath);
             if (info == null)
-                throw new IllegalStateException("No dictionary found by " + dictResPath + ", invalid cube state; cube segment" + cubeSeg.getName() + ", col " + col);
+                throw new IllegalStateException("No dictionary found by " + dictResPath + ", invalid cube state; cube segment" + cubeSeg + ", col " + col);
         } catch (IOException e) {
-            throw new IllegalStateException("Failed to get dictionary for cube segment" + cubeSeg.getName() + ", col" + col, e);
+            throw new IllegalStateException("Failed to get dictionary for cube segment" + cubeSeg + ", col" + col, e);
         }
 
         return info.getDictionaryObject();
@@ -418,7 +418,7 @@ public class CubeManager {
         if (r == null) {
             String snapshotResPath = cubeSegment.getSnapshotResPath(tableName);
             if (snapshotResPath == null)
-                throw new IllegalStateException("No snaphot for table '" + tableName + "' found on cube segment" + cubeSegment.getCubeInstance().getName() + "/" + cubeSegment.getName());
+                throw new IllegalStateException("No snaphot for table '" + tableName + "' found on cube segment" + cubeSegment.getCubeInstance().getName() + "/" + cubeSegment);
 
             try {
                 SnapshotTable snapshot = getSnapshotManager().getSnapshotTable(snapshotResPath);
@@ -468,7 +468,7 @@ public class CubeManager {
             logger.info("Merging fact table dictionary on : " + col);
             List<DictionaryInfo> dictInfos = new ArrayList<DictionaryInfo>();
             for (CubeSegment segment : mergingSegments) {
-                logger.info("Including fact table dictionary of segment : " + segment.getName());
+                logger.info("Including fact table dictionary of segment : " + segment);
                 DictionaryInfo dictInfo = dictMgr.getDictionaryInfo(segment.getDictResPath(col));
                 dictInfos.add(dictInfo);
             }
