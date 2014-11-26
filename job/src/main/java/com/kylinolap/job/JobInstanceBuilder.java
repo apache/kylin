@@ -154,7 +154,7 @@ public class JobInstanceBuilder {
         String[] cuboidPaths = new String[mergingSegments.size()];
         for (int i = 0; i < mergingSegments.size(); i++) {
             CubeSegment seg = mergingSegments.get(i);
-            cuboidPaths[i] = JobInstance.getJobWorkingDir(seg.getLastBuildJobID(), engineConfig.getHdfsWorkingDirectory()) + "/" + jobInstance.getRelatedCube() + "/cuboid/*";
+            cuboidPaths[i] = JobInstance.getJobWorkingDir(seg.getUuid(), engineConfig.getHdfsWorkingDirectory()) + "/" + jobInstance.getRelatedCube() + "/cuboid/*";
         }
         String formattedPath = formatPaths(cuboidPaths);
 
@@ -228,7 +228,7 @@ public class JobInstanceBuilder {
         if (incBuildMerge) {
             List<String> pathToMerge = Lists.newArrayList();
             for (CubeSegment segment: cube.getSegments(CubeSegmentStatusEnum.READY)) {
-                String path = JobInstance.getJobWorkingDir(segment.getLastBuildJobID(), engineConfig.getHdfsWorkingDirectory()) + "/" + jobInstance.getRelatedCube() + "/cuboid/*";
+                String path = JobInstance.getJobWorkingDir(segment.getUuid(), engineConfig.getHdfsWorkingDirectory()) + "/" + jobInstance.getRelatedCube() + "/cuboid/*";
                 pathToMerge.add(path);
             }
             pathToMerge.add(cuboidTmpRootPath + "*");
