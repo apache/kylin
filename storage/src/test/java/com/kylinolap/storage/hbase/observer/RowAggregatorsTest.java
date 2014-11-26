@@ -23,8 +23,7 @@ import java.util.Arrays;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.Test;
 
-import com.kylinolap.storage.hbase.observer.SRowAggregators;
-import com.kylinolap.storage.hbase.observer.SRowAggregators.HCol;
+import com.kylinolap.storage.hbase.observer.ObserverAggregators.HCol;
 
 /**
  * @author yangli9
@@ -37,10 +36,10 @@ public class RowAggregatorsTest {
         HCol[] hcols = new HCol[] { //
         newHCol("f", "c1", new String[] { "SUM", "COUNT" }, new String[] { "decimal", "long" }), //
                 newHCol("f", "c2", new String[] { "SUM", "SUM" }, new String[] { "long", "long" }) };
-        SRowAggregators sample = new SRowAggregators(hcols);
+        ObserverAggregators sample = new ObserverAggregators(hcols);
 
-        byte[] bytes = SRowAggregators.serialize(sample);
-        SRowAggregators copy = SRowAggregators.deserialize(bytes);
+        byte[] bytes = ObserverAggregators.serialize(sample);
+        ObserverAggregators copy = ObserverAggregators.deserialize(bytes);
 
         assertTrue(sample.nHCols == copy.nHCols);
         assertTrue(sample.nTotalMeasures == copy.nTotalMeasures);

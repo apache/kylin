@@ -38,12 +38,10 @@ import com.kylinolap.storage.tuple.ITuple;
 
 /**
  * @author yangli9
- *         <p/>
- *         S for storage
  */
-public class SRowFilter {
+public class ObserverFilter {
 
-    public static SRowFilter fromFilter(final CubeSegment seg, TupleFilter rootFilter) {
+    public static ObserverFilter fromFilter(final CubeSegment seg, TupleFilter rootFilter) {
         // translate constants into dictionary IDs via a serialize copy
         byte[] bytes = TupleFilterSerializer.serialize(rootFilter, new Decorator() {
             RowKeyColumnIO columnIO = new RowKeyColumnIO(seg);
@@ -167,18 +165,18 @@ public class SRowFilter {
 
         });
         TupleFilter copy = TupleFilterSerializer.deserialize(bytes);
-        return new SRowFilter(copy);
+        return new ObserverFilter(copy);
     }
 
-    public static byte[] serialize(SRowFilter o) {
+    public static byte[] serialize(ObserverFilter o) {
         return (o.filter == null) ? BytesUtil.EMPTY_BYTE_ARRAY : TupleFilterSerializer.serialize(o.filter);
     }
 
-    public static SRowFilter deserialize(byte[] filterBytes) {
+    public static ObserverFilter deserialize(byte[] filterBytes) {
         TupleFilter filter = (filterBytes == null || filterBytes.length == 0) //
                 ? null //
                 : TupleFilterSerializer.deserialize(filterBytes);
-        return new SRowFilter(filter);
+        return new ObserverFilter(filter);
     }
 
     // ============================================================================
@@ -189,7 +187,7 @@ public class SRowFilter {
 
     private final TupleFilter filter;
 
-    public SRowFilter(TupleFilter filter) {
+    public ObserverFilter(TupleFilter filter) {
         this.filter = filter;
     }
 

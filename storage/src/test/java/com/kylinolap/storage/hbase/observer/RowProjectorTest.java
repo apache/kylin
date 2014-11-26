@@ -28,8 +28,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
-import com.kylinolap.storage.hbase.observer.SRowProjector;
-import com.kylinolap.storage.hbase.observer.SRowProjector.AggrKey;
+import com.kylinolap.storage.hbase.observer.ObserverProjector.AggrKey;
 
 /**
  * @author yangli9
@@ -38,13 +37,13 @@ import com.kylinolap.storage.hbase.observer.SRowProjector.AggrKey;
 public class RowProjectorTest {
 
     byte[] mask = new byte[] { (byte) 0xff, 0x00, 0x00, (byte) 0xff };
-    SRowProjector sample = new SRowProjector(mask);
+    ObserverProjector sample = new ObserverProjector(mask);
 
     @Test
     public void testSerialize() {
 
-        byte[] bytes = SRowProjector.serialize(sample);
-        SRowProjector copy = SRowProjector.deserialize(bytes);
+        byte[] bytes = ObserverProjector.serialize(sample);
+        ObserverProjector copy = ObserverProjector.deserialize(bytes);
 
         assertTrue(Arrays.equals(sample.groupByMask, copy.groupByMask));
     }

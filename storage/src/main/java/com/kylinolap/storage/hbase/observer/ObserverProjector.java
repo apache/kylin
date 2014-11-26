@@ -33,9 +33,9 @@ import com.kylinolap.metadata.model.realization.TblColRef;
 /**
  * @author yangli9
  */
-public class SRowProjector {
+public class ObserverProjector {
 
-    public static SRowProjector fromColumns(final CubeSegment cubeSegment, final Cuboid cuboid, final Collection<TblColRef> dimensionColumns) {
+    public static ObserverProjector fromColumns(final CubeSegment cubeSegment, final Cuboid cuboid, final Collection<TblColRef> dimensionColumns) {
 
         RowKeyEncoder rowKeyMaskEncoder = new RowKeyEncoder(cubeSegment, cuboid) {
             @Override
@@ -52,10 +52,10 @@ public class SRowProjector {
         };
 
         byte[] mask = rowKeyMaskEncoder.encode(new byte[cuboid.getColumns().size()][]);
-        return new SRowProjector(mask);
+        return new ObserverProjector(mask);
     }
 
-    public static byte[] serialize(SRowProjector o) {
+    public static byte[] serialize(ObserverProjector o) {
         ByteBuffer buf = ByteBuffer.allocate(CoprocessorEnabler.SERIALIZE_BUFFER_SIZE);
         serializer.serialize(o, buf);
         byte[] result = new byte[buf.position()];
@@ -63,23 +63,23 @@ public class SRowProjector {
         return result;
     }
 
-    public static SRowProjector deserialize(byte[] bytes) {
+    public static ObserverProjector deserialize(byte[] bytes) {
         return serializer.deserialize(ByteBuffer.wrap(bytes));
     }
 
     private static final Serializer serializer = new Serializer();
 
-    private static class Serializer implements BytesSerializer<SRowProjector> {
+    private static class Serializer implements BytesSerializer<ObserverProjector> {
 
         @Override
-        public void serialize(SRowProjector value, ByteBuffer out) {
+        public void serialize(ObserverProjector value, ByteBuffer out) {
             BytesUtil.writeByteArray(value.groupByMask, out);
         }
 
         @Override
-        public SRowProjector deserialize(ByteBuffer in) {
+        public ObserverProjector deserialize(ByteBuffer in) {
             byte[] mask = BytesUtil.readByteArray(in);
-            return new SRowProjector(mask);
+            return new ObserverProjector(mask);
         }
     }
 
@@ -88,7 +88,7 @@ public class SRowProjector {
     final byte[] groupByMask; // mask out columns that are not needed (by group by)
     final AggrKey aggrKey = new AggrKey();
 
-    public SRowProjector(byte[] groupByMask) {
+    public ObserverProjector(byte[] groupByMask) {
         this.groupByMask = groupByMask;
     }
 

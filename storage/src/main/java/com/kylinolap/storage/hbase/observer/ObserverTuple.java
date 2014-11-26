@@ -30,14 +30,14 @@ import com.kylinolap.storage.tuple.ITuple;
  *
  * @author yangli9
  */
-public class SRowTuple implements ITuple {
+public class ObserverTuple implements ITuple {
 
-    final SRowType type;
+    final ObserverRowType type;
 
     ImmutableBytesWritable rowkey;
     String[] values;
 
-    public SRowTuple(SRowType type) {
+    public ObserverTuple(ObserverRowType type) {
         this.type = type;
         this.rowkey = new ImmutableBytesWritable();
         this.values = new String[type.getColumnCount()];

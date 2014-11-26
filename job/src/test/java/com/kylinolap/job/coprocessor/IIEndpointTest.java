@@ -23,9 +23,8 @@ import com.kylinolap.storage.filter.ConstantTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.hbase.endpoint.IIEndpoint;
 import com.kylinolap.storage.hbase.endpoint.generated.IIProtos;
-import com.kylinolap.storage.hbase.observer.SRowFilter;
-import com.kylinolap.storage.hbase.observer.SRowType;
-
+import com.kylinolap.storage.hbase.observer.ObserverFilter;
+import com.kylinolap.storage.hbase.observer.ObserverRowType;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.*;
@@ -139,9 +138,9 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
     private IIProtos.IIRequest prepareRequest(TupleFilter rootFilter) throws IOException {
 
         long baseCuboidId = Cuboid.getBaseCuboidId(this.cube.getDescriptor());
-        SRowType type = SRowType.fromCuboid(this.seg, Cuboid.findById(cube.getDescriptor(), baseCuboidId));
+        ObserverRowType type = ObserverRowType.fromCuboid(this.seg, Cuboid.findById(cube.getDescriptor(), baseCuboidId));
 
-        SRowFilter filter = SRowFilter.fromFilter(this.seg, rootFilter);
+        ObserverFilter filter = ObserverFilter.fromFilter(this.seg, rootFilter);
 
         //SRowProjector projector = SRowProjector.fromColumns(segment, cuboid, groupBy);
         //SRowAggregators aggrs = SRowAggregators.fromValueDecoders(rowValueDecoders);
@@ -150,8 +149,8 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         TableRecordInfoDigest recordInfo = new TableRecordInfo(seg);
         IIProtos.IIRequest request = IIProtos.IIRequest.newBuilder().
                 setTableInfo(ByteString.copyFrom(TableRecordInfoDigest.serialize(recordInfo))).
-                setSRowType(ByteString.copyFrom(SRowType.serialize(type))).
-                setSRowFilter(ByteString.copyFrom(SRowFilter.serialize(filter))).
+                setSRowType(ByteString.copyFrom(ObserverRowType.serialize(type))).
+                setSRowFilter(ByteString.copyFrom(ObserverFilter.serialize(filter))).
                 build();
 
         return request;

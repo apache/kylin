@@ -120,7 +120,7 @@ public class HBaseStorageEngine implements IStorageEngine {
         List<HBaseKeyRange> scans = buildScanRanges(flatFilter, dimensionsD);
 
         // check involved measures, build value decoder for each each family:column
-        List<RowValueDecoder> valueDecoders = translateAggregation(cubeDesc.getHBaseMapping(), metrics, scans, context);
+        List<RowValueDecoder> valueDecoders = translateAggregation(cubeDesc.getHBaseMapping(), metrics, context);
 
         setThreshold(dimensionsD, valueDecoders, context); // set cautious threshold to prevent out of memory
         setCoprocessor(groupsCopD, valueDecoders, context); // enable coprocessor if beneficial
@@ -309,7 +309,7 @@ public class HBaseStorageEngine implements IStorageEngine {
     }
 
     private List<RowValueDecoder> translateAggregation(HBaseMappingDesc hbaseMapping, Collection<FunctionDesc> metrics, //
-            List<HBaseKeyRange> scans, StorageContext context) {
+             StorageContext context) {
         Map<HBaseColumnDesc, RowValueDecoder> codecMap = Maps.newHashMap();
         for (FunctionDesc aggrFunc : metrics) {
             Collection<HBaseColumnDesc> hbCols = hbaseMapping.findHBaseColumnByFunction(aggrFunc);

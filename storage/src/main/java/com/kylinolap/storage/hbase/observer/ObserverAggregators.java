@@ -38,9 +38,9 @@ import com.kylinolap.metadata.model.cube.MeasureDesc;
  * @author yangli9
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class SRowAggregators {
+public class ObserverAggregators {
 
-    public static SRowAggregators fromValueDecoders(Collection<RowValueDecoder> rowValueDecoders) {
+    public static ObserverAggregators fromValueDecoders(Collection<RowValueDecoder> rowValueDecoders) {
 
         // each decoder represents one HBase column
         HCol[] hcols = new HCol[rowValueDecoders.size()];
@@ -49,7 +49,7 @@ public class SRowAggregators {
             hcols[i++] = buildHCol(rowValueDecoder.getHBaseColumn());
         }
 
-        SRowAggregators aggrs = new SRowAggregators(hcols);
+        ObserverAggregators aggrs = new ObserverAggregators(hcols);
         return aggrs;
 
     }
@@ -70,7 +70,7 @@ public class SRowAggregators {
         return new HCol(family, qualifier, funcNames, dataTypes);
     }
 
-    public static byte[] serialize(SRowAggregators o) {
+    public static byte[] serialize(ObserverAggregators o) {
         ByteBuffer buf = ByteBuffer.allocate(CoprocessorEnabler.SERIALIZE_BUFFER_SIZE);
         serializer.serialize(o, buf);
         byte[] result = new byte[buf.position()];
@@ -78,16 +78,16 @@ public class SRowAggregators {
         return result;
     }
 
-    public static SRowAggregators deserialize(byte[] bytes) {
+    public static ObserverAggregators deserialize(byte[] bytes) {
         return serializer.deserialize(ByteBuffer.wrap(bytes));
     }
 
     private static final Serializer serializer = new Serializer();
 
-    private static class Serializer implements BytesSerializer<SRowAggregators> {
+    private static class Serializer implements BytesSerializer<ObserverAggregators> {
 
         @Override
-        public void serialize(SRowAggregators value, ByteBuffer out) {
+        public void serialize(ObserverAggregators value, ByteBuffer out) {
             BytesUtil.writeVInt(value.nHCols, out);
             for (int i = 0; i < value.nHCols; i++) {
                 HCol col = value.hcols[i];
@@ -99,7 +99,7 @@ public class SRowAggregators {
         }
 
         @Override
-        public SRowAggregators deserialize(ByteBuffer in) {
+        public ObserverAggregators deserialize(ByteBuffer in) {
             int nHCols = BytesUtil.readVInt(in);
             HCol[] hcols = new HCol[nHCols];
             for (int i = 0; i < nHCols; i++) {
@@ -109,7 +109,7 @@ public class SRowAggregators {
                 String[] dataTypes = BytesUtil.readAsciiStringArray(in);
                 hcols[i] = new HCol(family, qualifier, funcNames, dataTypes);
             }
-            return new SRowAggregators(hcols);
+            return new ObserverAggregators(hcols);
         }
 
     }
@@ -121,7 +121,7 @@ public class SRowAggregators {
     final ByteBuffer[] hColValues;
     final int nTotalMeasures;
 
-    public SRowAggregators(HCol[] _hcols) {
+    public ObserverAggregators(HCol[] _hcols) {
         this.hcols = sort(_hcols);
         this.nHCols = hcols.length;
         this.hColValues = new ByteBuffer[nHCols];

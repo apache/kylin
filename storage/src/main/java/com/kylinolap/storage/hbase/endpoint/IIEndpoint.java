@@ -5,15 +5,12 @@ import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
 import com.kylinolap.cube.invertedindex.*;
-import com.kylinolap.cube.kv.RowValueDecoder;
-import com.kylinolap.metadata.model.cube.HBaseColumnDesc;
 import com.kylinolap.storage.filter.BitMapFilterEvaluator;
 import com.kylinolap.storage.hbase.endpoint.generated.IIProtos;
-import com.kylinolap.storage.hbase.observer.SRowAggregators;
-import com.kylinolap.storage.hbase.observer.SRowFilter;
-import com.kylinolap.storage.hbase.observer.SRowProjector;
-import com.kylinolap.storage.hbase.observer.SRowType;
-
+import com.kylinolap.storage.hbase.observer.ObserverAggregators;
+import com.kylinolap.storage.hbase.observer.ObserverFilter;
+import com.kylinolap.storage.hbase.observer.ObserverProjector;
+import com.kylinolap.storage.hbase.observer.ObserverRowType;
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 import org.apache.commons.io.IOUtils;
@@ -53,22 +50,22 @@ public class IIEndpoint extends IIProtos.RowsService
     @Override
     public void getRows(RpcController controller, IIProtos.IIRequest request, RpcCallback<IIProtos.IIResponse> done) {
 
-        SRowType type = null;
-        SRowProjector projector = null;
-        SRowAggregators aggregators = null;
-        SRowFilter filter = null;
+        ObserverRowType type = null;
+        ObserverProjector projector = null;
+        ObserverAggregators aggregators = null;
+        ObserverFilter filter = null;
 
         if (request.hasSRowType()) {
-            type = SRowType.deserialize(request.getSRowType().toByteArray());
+            type = ObserverRowType.deserialize(request.getSRowType().toByteArray());
         }
         if (request.hasSRowProjector()) {
-            projector = SRowProjector.deserialize(request.getSRowProjector().toByteArray());
+            projector = ObserverProjector.deserialize(request.getSRowProjector().toByteArray());
         }
         if (request.hasSRowAggregator()) {
-            aggregators = SRowAggregators.deserialize(request.getSRowAggregator().toByteArray());
+            aggregators = ObserverAggregators.deserialize(request.getSRowAggregator().toByteArray());
         }
         if (request.hasSRowFilter()) {
-            filter = SRowFilter.deserialize(request.getSRowFilter().toByteArray());
+            filter = ObserverFilter.deserialize(request.getSRowFilter().toByteArray());
         }
 
 
