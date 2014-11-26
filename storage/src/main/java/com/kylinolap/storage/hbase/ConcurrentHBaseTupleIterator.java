@@ -33,6 +33,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Result;
@@ -68,7 +69,6 @@ import com.kylinolap.metadata.model.cube.CubeDesc.DeriveInfo;
 import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.TupleFilter;
-import com.kylinolap.storage.hbase.observer.CoprocessorEnabler;
 import com.kylinolap.storage.tuple.ITupleIterator;
 import com.kylinolap.storage.tuple.Tuple;
 import com.kylinolap.storage.tuple.Tuple.IDerivedColumnFiller;
@@ -289,7 +289,7 @@ public class ConcurrentHBaseTupleIterator implements ITupleIterator {
             try {
                 Scan scan = buildScan(keyRange);
                 applyFuzzyFilter(scan, keyRange);
-                scanner = CoprocessorEnabler.scanWithCoprocessorIfBeneficial(cubeSeg, keyRange.getCuboid(), filter, groupBy, rowValueDecoders, context, table, scan);
+                scanner = ObserverEnabler.scanWithCoprocessorIfBeneficial(cubeSeg, keyRange.getCuboid(), filter, groupBy, rowValueDecoders, context, table, scan);
                 iter = scanner.iterator();
             } catch (Throwable t) {
                 String msg = MessageFormat.format("Error when scan from lower key {1} to upper key {2} on table {0}.", tableName, Bytes.toString(keyRange.getStartKey()), Bytes.toString(keyRange.getStopKey()));

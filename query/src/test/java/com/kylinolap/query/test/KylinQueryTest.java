@@ -23,6 +23,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;
 
+import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
 import org.apache.commons.lang3.StringUtils;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
@@ -38,7 +39,6 @@ import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.query.enumerator.OLAPQuery;
 import com.kylinolap.query.relnode.OLAPContext;
 import com.kylinolap.query.schema.OLAPSchemaFactory;
-import com.kylinolap.storage.hbase.observer.CoprocessorEnabler;
 
 public class KylinQueryTest extends KylinTestBase {
 

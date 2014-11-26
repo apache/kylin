@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
@@ -57,7 +58,6 @@ import com.kylinolap.storage.filter.CompareTupleFilter;
 import com.kylinolap.storage.filter.LogicalTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
-import com.kylinolap.storage.hbase.observer.CoprocessorEnabler;
 import com.kylinolap.storage.tuple.ITupleIterator;
 
 /**
@@ -595,7 +595,7 @@ public class HBaseStorageEngine implements IStorageEngine {
     }
 
     private void setCoprocessor(Set<TblColRef> groupsCopD, List<RowValueDecoder> valueDecoders, StorageContext context) {
-        CoprocessorEnabler.enableCoprocessorIfBeneficial(cubeInstance, groupsCopD, valueDecoders, context);
+        ObserverEnabler.enableCoprocessorIfBeneficial(cubeInstance, groupsCopD, valueDecoders, context);
     }
 
 }
