@@ -33,6 +33,8 @@ public class CubeSegment implements Comparable<CubeSegment> {
 
     @JsonBackReference
     private CubeInstance cubeInstance;
+    @JsonProperty("uuid")
+    private String uuid;
     @JsonProperty("name")
     private String name;
     @JsonProperty("storage_location_identifier")
@@ -53,6 +55,8 @@ public class CubeSegment implements Comparable<CubeSegment> {
     private long lastBuildTime;
     @JsonProperty("last_build_job_id")
     private String lastBuildJobID;
+    @JsonProperty("create_time")
+    private String createTime;
 
     @JsonProperty("binary_signature")
     private String binarySignature; // a hash of cube schema and dictionary ID,
@@ -89,6 +93,15 @@ public class CubeSegment implements Comparable<CubeSegment> {
     }
 
     // ============================================================================
+
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String id) {
+        this.uuid = id;
+    }
 
     public String getName() {
         return name;
@@ -160,6 +173,14 @@ public class CubeSegment implements Comparable<CubeSegment> {
 
     public void setLastBuildJobID(String lastBuildJobID) {
         this.lastBuildJobID = lastBuildJobID;
+    }
+
+    public String getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(String createTime) {
+        this.createTime = createTime;
     }
 
     public String getBinarySignature() {
