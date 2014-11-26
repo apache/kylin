@@ -29,7 +29,6 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.storage.hbase.observer.SRowType;
 
 /**
  * @author yangli9
@@ -55,9 +54,9 @@ public class RowTypeTest extends LocalFileMetadataTestCase {
         long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         Cuboid cuboid = Cuboid.findById(cubeDesc, baseCuboidId);
 
-        SRowType rowType = SRowType.fromCuboid(cube.getLatestReadySegment(), cuboid);
-        byte[] bytes = SRowType.serialize(rowType);
-        SRowType copy = SRowType.deserialize(bytes);
+        ObserverRowType rowType = ObserverRowType.fromCuboid(cube.getLatestReadySegment(), cuboid);
+        byte[] bytes = ObserverRowType.serialize(rowType);
+        ObserverRowType copy = ObserverRowType.deserialize(bytes);
 
         assertTrue(Arrays.equals(rowType.columns, copy.columns));
         assertTrue(Arrays.equals(rowType.columnSizes, copy.columnSizes));

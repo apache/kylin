@@ -59,10 +59,10 @@ public class CoprocessorEnabler {
             return table.getScanner(scan);
         }
 
-        SRowType type = SRowType.fromCuboid(segment, cuboid);
-        SRowFilter filter = SRowFilter.fromFilter(segment, tupleFiler);
-        SRowProjector projector = SRowProjector.fromColumns(segment, cuboid, groupBy);
-        SRowAggregators aggrs = SRowAggregators.fromValueDecoders(rowValueDecoders);
+        ObserverRowType type = ObserverRowType.fromCuboid(segment, cuboid);
+        ObserverFilter filter = ObserverFilter.fromFilter(segment, tupleFiler);
+        ObserverProjector projector = ObserverProjector.fromColumns(segment, cuboid, groupBy);
+        ObserverAggregators aggrs = ObserverAggregators.fromValueDecoders(rowValueDecoders);
 
         if (DEBUG_LOCAL_COPROCESSOR) {
             RegionScanner innerScanner = new RegionScannerAdapter(table.getScanner(scan));
@@ -70,10 +70,10 @@ public class CoprocessorEnabler {
             return new ResultScannerAdapter(aggrScanner);
         } else {
             scan.setAttribute(AggregateRegionObserver.COPROCESSOR_ENABLE, new byte[] { 0x01 });
-            scan.setAttribute(AggregateRegionObserver.TYPE, SRowType.serialize(type));
-            scan.setAttribute(AggregateRegionObserver.PROJECTOR, SRowProjector.serialize(projector));
-            scan.setAttribute(AggregateRegionObserver.AGGREGATORS, SRowAggregators.serialize(aggrs));
-            scan.setAttribute(AggregateRegionObserver.FILTER, SRowFilter.serialize(filter));
+            scan.setAttribute(AggregateRegionObserver.TYPE, ObserverRowType.serialize(type));
+            scan.setAttribute(AggregateRegionObserver.PROJECTOR, ObserverProjector.serialize(projector));
+            scan.setAttribute(AggregateRegionObserver.AGGREGATORS, ObserverAggregators.serialize(aggrs));
+            scan.setAttribute(AggregateRegionObserver.FILTER, ObserverFilter.serialize(filter));
             return table.getScanner(scan);
         }
     }

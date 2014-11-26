@@ -35,9 +35,9 @@ import com.kylinolap.metadata.model.realization.TblColRef;
 /**
  * @author yangli9
  */
-public class SRowType {
+public class ObserverRowType {
 
-    public static SRowType fromCuboid(CubeSegment seg, Cuboid cuboid) {
+    public static ObserverRowType fromCuboid(CubeSegment seg, Cuboid cuboid) {
         List<TblColRef> colList = cuboid.getColumns();
         TblColRef[] cols = colList.toArray(new TblColRef[colList.size()]);
         RowKeyColumnIO colIO = new RowKeyColumnIO(seg);
@@ -45,10 +45,10 @@ public class SRowType {
         for (int i = 0; i < cols.length; i++) {
             colSizes[i] = colIO.getColumnLength(cols[i]);
         }
-        return new SRowType(cols, colSizes);
+        return new ObserverRowType(cols, colSizes);
     }
 
-    public static byte[] serialize(SRowType o) {
+    public static byte[] serialize(ObserverRowType o) {
         ByteBuffer buf = ByteBuffer.allocate(CoprocessorEnabler.SERIALIZE_BUFFER_SIZE);
         serializer.serialize(o, buf);
         byte[] result = new byte[buf.position()];
@@ -56,16 +56,16 @@ public class SRowType {
         return result;
     }
 
-    public static SRowType deserialize(byte[] bytes) {
+    public static ObserverRowType deserialize(byte[] bytes) {
         return serializer.deserialize(ByteBuffer.wrap(bytes));
     }
 
     private static final Serializer serializer = new Serializer();
 
-    private static class Serializer implements BytesSerializer<SRowType> {
+    private static class Serializer implements BytesSerializer<ObserverRowType> {
 
         @Override
-        public void serialize(SRowType o, ByteBuffer out) {
+        public void serialize(ObserverRowType o, ByteBuffer out) {
             int n = o.columns.length;
             BytesUtil.writeVInt(o.columns.length, out);
             for (int i = 0; i < n; i++) {
@@ -76,7 +76,7 @@ public class SRowType {
         }
 
         @Override
-        public SRowType deserialize(ByteBuffer in) {
+        public ObserverRowType deserialize(ByteBuffer in) {
             int n = BytesUtil.readVInt(in);
             TblColRef[] cols = new TblColRef[n];
             int[] colSizes = new int[n];
@@ -93,7 +93,7 @@ public class SRowType {
                 int colSize = BytesUtil.readVInt(in);
                 colSizes[i] = colSize;
             }
-            return new SRowType(cols, colSizes);
+            return new ObserverRowType(cols, colSizes);
         }
     }
 
@@ -106,7 +106,7 @@ public class SRowType {
     List<TblColRef> columnsAsList;
     HashMap<TblColRef, Integer> columnIdxMap;
 
-    public SRowType(TblColRef[] columns, int[] columnSizes) {
+    public ObserverRowType(TblColRef[] columns, int[] columnSizes) {
         this.columns = columns;
         this.columnSizes = columnSizes;
         init();

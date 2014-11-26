@@ -67,16 +67,16 @@ public class AggregateRegionObserver extends BaseRegionObserver {
         }
 
         byte[] typeBytes = scan.getAttribute(TYPE);
-        SRowType type = SRowType.deserialize(typeBytes);
+        ObserverRowType type = ObserverRowType.deserialize(typeBytes);
 
         byte[] projectorBytes = scan.getAttribute(PROJECTOR);
-        SRowProjector projector = SRowProjector.deserialize(projectorBytes);
+        ObserverProjector projector = ObserverProjector.deserialize(projectorBytes);
 
         byte[] aggregatorBytes = scan.getAttribute(AGGREGATORS);
-        SRowAggregators aggregators = SRowAggregators.deserialize(aggregatorBytes);
+        ObserverAggregators aggregators = ObserverAggregators.deserialize(aggregatorBytes);
 
         byte[] filterBytes = scan.getAttribute(FILTER);
-        SRowFilter filter = SRowFilter.deserialize(filterBytes);
+        ObserverFilter filter = ObserverFilter.deserialize(filterBytes);
 
         // start/end region operation & sync on scanner is suggested by the
         // javadoc of RegionScanner.nextRaw()

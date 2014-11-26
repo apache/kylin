@@ -25,7 +25,7 @@ import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 
 import com.kylinolap.cube.measure.MeasureAggregator;
-import com.kylinolap.storage.hbase.observer.SRowProjector.AggrKey;
+import com.kylinolap.storage.hbase.observer.ObserverProjector.AggrKey;
 
 /**
  * @author yangli9
@@ -35,7 +35,7 @@ public class AggregationScanner implements RegionScanner {
 
     private RegionScanner outerScanner;
 
-    public AggregationScanner(SRowType type, SRowFilter filter, SRowProjector groupBy, SRowAggregators aggrs, RegionScanner innerScanner) throws IOException {
+    public AggregationScanner(ObserverRowType type, ObserverFilter filter, ObserverProjector groupBy, ObserverAggregators aggrs, RegionScanner innerScanner) throws IOException {
 
         AggregateRegionObserver.LOG.info("Kylin Coprocessor start");
 
@@ -50,11 +50,11 @@ public class AggregationScanner implements RegionScanner {
     }
 
     @SuppressWarnings("rawtypes")
-    AggregationCache buildAggrCache(final RegionScanner innerScanner, SRowType type, SRowProjector projector, SRowAggregators aggregators, SRowFilter filter, Stats stats) throws IOException {
+    AggregationCache buildAggrCache(final RegionScanner innerScanner, ObserverRowType type, ObserverProjector projector, ObserverAggregators aggregators, ObserverFilter filter, Stats stats) throws IOException {
 
-        AggregationCache aggCache = new AggregationCache(aggregators, 0);
+        AggregationCache aggCache = new AggregationCache(aggregators);
 
-        SRowTuple tuple = new SRowTuple(type);
+        ObserverTuple tuple = new ObserverTuple(type);
         boolean hasMore = true;
         List<Cell> results = new ArrayList<Cell>();
         while (hasMore) {

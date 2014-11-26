@@ -39,15 +39,10 @@ import org.junit.Test;
 
 import com.google.common.collect.Lists;
 import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.metadata.model.ColumnDesc;
-import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
-import com.kylinolap.storage.hbase.observer.AggregationScanner;
-import com.kylinolap.storage.hbase.observer.SRowAggregators;
-import com.kylinolap.storage.hbase.observer.SRowFilter;
-import com.kylinolap.storage.hbase.observer.SRowProjector;
-import com.kylinolap.storage.hbase.observer.SRowType;
-import com.kylinolap.storage.hbase.observer.SRowAggregators.HCol;
+import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.schema.ColumnDesc;
+import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.storage.hbase.observer.ObserverAggregators.HCol;
 
 /**
  * @author yangli9
@@ -107,10 +102,10 @@ public class AggregateRegionObserverTest {
     @Test
     public void test() throws IOException {
 
-        SRowType rowType = newRowType();
-        SRowProjector projector = new SRowProjector(mask);
-        SRowAggregators aggregators = new SRowAggregators(new HCol[] { c1, c2 });
-        SRowFilter filter = SRowFilter.deserialize(null); // a default,
+        ObserverRowType rowType = newRowType();
+        ObserverProjector projector = new ObserverProjector(mask);
+        ObserverAggregators aggregators = new ObserverAggregators(new HCol[] { c1, c2 });
+        ObserverFilter filter = ObserverFilter.deserialize(null); // a default,
                                                           // always-true,
                                                           // filter
         HashSet<String> expectedResult = new HashSet<String>();
@@ -133,9 +128,9 @@ public class AggregateRegionObserverTest {
 
             Cell cell = result.get(0);
             HCol hcol = null;
-            if (SRowAggregators.match(c1, cell)) {
+            if (ObserverAggregators.match(c1, cell)) {
                 hcol = c1;
-            } else if (SRowAggregators.match(c2, cell)) {
+            } else if (ObserverAggregators.match(c2, cell)) {
                 hcol = c2;
             } else
                 fail();
@@ -158,10 +153,10 @@ public class AggregateRegionObserverTest {
     @Test
     public void testNoMeasure() throws IOException {
 
-        SRowType rowType = newRowType();
-        SRowProjector projector = new SRowProjector(mask);
-        SRowAggregators aggregators = new SRowAggregators(new HCol[] {});
-        SRowFilter filter = SRowFilter.deserialize(null); // a default,
+        ObserverRowType rowType = newRowType();
+        ObserverProjector projector = new ObserverProjector(mask);
+        ObserverAggregators aggregators = new ObserverAggregators(new HCol[] {});
+        ObserverFilter filter = ObserverFilter.deserialize(null); // a default,
                                                           // always-true,
                                                           // filter
         HashSet<String> expectedResult = new HashSet<String>();
@@ -198,12 +193,12 @@ public class AggregateRegionObserverTest {
         return result.toString();
     }
 
-    private SRowType newRowType() {
+    private ObserverRowType newRowType() {
         TableDesc t = new TableDesc();
         t.setName("TABLE");
         TblColRef[] cols = new TblColRef[] { newCol("A", t), newCol("B", t), newCol("C", t), newCol("D", t) };
         int[] sizes = new int[] { 1, 1, 1, 1 };
-        return new SRowType(cols, sizes);
+        return new ObserverRowType(cols, sizes);
     }
 
     private TblColRef newCol(String name, TableDesc t) {

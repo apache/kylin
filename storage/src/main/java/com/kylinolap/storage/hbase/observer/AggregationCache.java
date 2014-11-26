@@ -32,7 +32,7 @@ import org.apache.hadoop.hbase.regionserver.RegionScanner;
 
 import com.google.common.collect.Maps;
 import com.kylinolap.cube.measure.MeasureAggregator;
-import com.kylinolap.storage.hbase.observer.SRowProjector.AggrKey;
+import com.kylinolap.storage.hbase.observer.ObserverProjector.AggrKey;
 
 /**
  * @author yangli9
@@ -44,11 +44,11 @@ public class AggregationCache {
     static final int MEMORY_USAGE_CAP = 500 * 1024 * 1024; // 500 MB
 
     private final SortedMap<AggrKey, MeasureAggregator[]> aggBufMap;
-    private final SRowAggregators aggregators;
+    private final ObserverAggregators aggregators;
 
     transient int rowMemBytes;
 
-    public AggregationCache(SRowAggregators aggregators, int estSize) {
+    public AggregationCache(ObserverAggregators aggregators) {
         this.aggregators = aggregators;
         this.aggBufMap = Maps.newTreeMap();
     }
