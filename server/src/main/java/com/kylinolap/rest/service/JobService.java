@@ -112,8 +112,10 @@ public class JobService extends BasicService {
             for (CubeSegment segment : cubeSegments) {
                 uuid = segment.getUuid();
                 JobInstance job = this.getJobManager().createJob(cube.getName(), segment.getName(), segment.getUuid(), buildType);
+                segment.setLastBuildJobID(uuid);
                 jobs.add(job);
             }
+            getCubeManager().updateCube(cube);
             for (JobInstance job: jobs) {
                 this.getJobManager().submitJob(job);
                 permissionService.init(job, null);
