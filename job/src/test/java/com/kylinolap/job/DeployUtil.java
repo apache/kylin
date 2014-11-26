@@ -91,7 +91,7 @@ public class DeployUtil {
         }
 
         File jobJar = new File("../job/target", "kylin-job-" + version + "-job.jar");
-        File coprocessorJar = new File("../job/storage", "kylin-storage-" + version + "-coprocessor.jar");
+        File coprocessorJar = new File("../storage/target", "kylin-storage-" + version + "-coprocessor.jar");
         return new Pair<File, File>(jobJar, coprocessorJar);
     }
     
