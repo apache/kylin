@@ -52,7 +52,7 @@ public class AggregationGroupSizeRule implements IValidatorRule<CubeDesc> {
         for (int i = 0; i < groups.length; i++) {
             String[] group = groups[i];
             if (group.length >= maxSize) {
-                context.addResult(ResultLevel.ERROR, "Length of the number " + i + " aggregation group's length should be less that " + maxSize);
+                context.addResult(ResultLevel.ERROR, "Length of the number " + i + " aggregation group's length should be less than " + maxSize);
             }
         }
     }
