@@ -20,6 +20,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.mapred.jobcontrol.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -153,8 +154,7 @@ public class JobInstanceBuilder {
 
         String[] cuboidPaths = new String[mergingSegments.size()];
         for (int i = 0; i < mergingSegments.size(); i++) {
-            CubeSegment seg = mergingSegments.get(i);
-            cuboidPaths[i] = JobInstance.getJobWorkingDir(seg.getLastBuildJobID(), engineConfig.getHdfsWorkingDirectory()) + "/" + jobInstance.getRelatedCube() + "/cuboid/*";
+            cuboidPaths[i] = getPathToMerge(jobInstance, mergingSegments.get(i));
         }
         String formattedPath = formatPaths(cuboidPaths);
 
@@ -228,8 +228,7 @@ public class JobInstanceBuilder {
         if (incBuildMerge) {
             List<String> pathToMerge = Lists.newArrayList();
             for (CubeSegment segment: cube.getSegments(CubeSegmentStatusEnum.READY)) {
-                String path = JobInstance.getJobWorkingDir(segment.getLastBuildJobID(), engineConfig.getHdfsWorkingDirectory()) + "/" + jobInstance.getRelatedCube() + "/cuboid/*";
-                pathToMerge.add(path);
+                pathToMerge.add(getPathToMerge(jobInstance, segment));
             }
             pathToMerge.add(cuboidTmpRootPath + "*");
             result.add(createMergeCuboidDataStep(jobInstance, stepSeqNum++, formatPaths(pathToMerge), cuboidRootPath));
@@ -252,6 +251,14 @@ public class JobInstanceBuilder {
             log.error(e.getMessage());
         }
         return result;
+    }
+
+    private String getPathToMerge(JobInstance jobInstance, CubeSegment segment) {
+        String uuid = segment.getUuid();
+        if (uuid == null) {
+            uuid = segment.getLastBuildJobID();
+        }
+        return JobInstance.getJobWorkingDir(uuid, engineConfig.getHdfsWorkingDirectory()) + "/" + jobInstance.getRelatedCube() + "/cuboid/*";
     }
 
     private String formatPaths(String[] paths) {

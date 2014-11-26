@@ -23,7 +23,6 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.kylinolap.cube.CubeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -111,10 +110,10 @@ public class JobService extends BasicService {
             List<CubeSegment> cubeSegments = this.getCubeManager().allocateSegments(cube, buildType, startDate, endDate);
             List<JobInstance> jobs = Lists.newArrayListWithExpectedSize(cubeSegments.size());
             for (CubeSegment segment : cubeSegments) {
-                JobInstance job = this.getJobManager().createJob(cube.getName(), segment.getName(), buildType);
-                jobs.add(job);
-                uuid = job.getUuid();
+                uuid = segment.getUuid();
+                JobInstance job = this.getJobManager().createJob(cube.getName(), segment.getName(), segment.getUuid(), buildType);
                 segment.setLastBuildJobID(uuid);
+                jobs.add(job);
             }
             getCubeManager().updateCube(cube);
             for (JobInstance job: jobs) {

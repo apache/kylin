@@ -7,6 +7,7 @@ import java.io.IOException;
 
 public class RestClientTest {
 
+    @SuppressWarnings("unused")
     @Test
     public void basicTests() throws IOException {
         RestClient a = new RestClient("prod01:80");
