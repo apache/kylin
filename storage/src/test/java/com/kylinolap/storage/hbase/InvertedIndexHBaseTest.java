@@ -16,19 +16,11 @@
 
 package com.kylinolap.storage.hbase;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import com.google.protobuf.ByteString;
 import com.kylinolap.cube.invertedindex.*;
-import com.kylinolap.storage.hbase.endpoint.generated.IIProtos;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.*;
-import org.apache.hadoop.hbase.client.coprocessor.Batch;
-import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
-import org.apache.hadoop.hbase.ipc.ServerRpcController;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

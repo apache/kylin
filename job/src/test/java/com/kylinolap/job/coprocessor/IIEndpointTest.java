@@ -21,10 +21,10 @@ import com.kylinolap.storage.filter.ColumnTupleFilter;
 import com.kylinolap.storage.filter.CompareTupleFilter;
 import com.kylinolap.storage.filter.ConstantTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
-import com.kylinolap.storage.hbase.endpoint.IIEndpoint;
-import com.kylinolap.storage.hbase.endpoint.generated.IIProtos;
-import com.kylinolap.storage.hbase.observer.ObserverFilter;
-import com.kylinolap.storage.hbase.observer.ObserverRowType;
+import com.kylinolap.storage.hbase.coprocessor.endpoint.IIEndpoint;
+import com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos;
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
+import com.kylinolap.storage.hbase.coprocessor.observer.ObserverRowType;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.*;
@@ -140,7 +140,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         long baseCuboidId = Cuboid.getBaseCuboidId(this.cube.getDescriptor());
         ObserverRowType type = ObserverRowType.fromCuboid(this.seg, Cuboid.findById(cube.getDescriptor(), baseCuboidId));
 
-        ObserverFilter filter = ObserverFilter.fromFilter(this.seg, rootFilter);
+        CoprocessorFilter filter = CoprocessorFilter.fromFilter(this.seg, rootFilter);
 
         //SRowProjector projector = SRowProjector.fromColumns(segment, cuboid, groupBy);
         //SRowAggregators aggrs = SRowAggregators.fromValueDecoders(rowValueDecoders);
@@ -150,7 +150,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         IIProtos.IIRequest request = IIProtos.IIRequest.newBuilder().
                 setTableInfo(ByteString.copyFrom(TableRecordInfoDigest.serialize(recordInfo))).
                 setSRowType(ByteString.copyFrom(ObserverRowType.serialize(type))).
-                setSRowFilter(ByteString.copyFrom(ObserverFilter.serialize(filter))).
+                setSRowFilter(ByteString.copyFrom(CoprocessorFilter.serialize(filter))).
                 build();
 
         return request;
