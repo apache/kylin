@@ -166,12 +166,18 @@ public class CubeService extends BasicService {
         createdDesc = getMetadataManager().createCubeDesc(desc);
 
         if (!createdDesc.getError().isEmpty()) {
+            getMetadataManager().removeCubeDesc(createdDesc);
             throw new InternalErrorException(createdDesc.getError().get(0));
         }
-
-        int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc);
-        logger.info("New cube " + cubeName + " has " + cuboidCount + " cuboids");
-
+        
+        try{
+            int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc);
+            logger.info("New cube " + cubeName + " has " + cuboidCount + " cuboids");
+        }catch(Exception e){
+            getMetadataManager().removeCubeDesc(createdDesc);
+            throw new InternalErrorException("Failed to deal with the request.", e);
+        }
+        
         createdCube = getCubeManager().createCube(cubeName, projectName, createdDesc, owner);
         accessService.init(createdCube, AclPermission.ADMINISTRATION);
 
@@ -194,10 +200,12 @@ public class CubeService extends BasicService {
             if (!cube.getDescriptor().calculateSignature().equals(cube.getDescriptor().getSignature())) {
                 this.releaseAllSegments(cube);
             }
+            
             CubeDesc updatedCubeDesc = getMetadataManager().updateCubeDesc(desc);
+            
             int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc);
             logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
-
+            
             if (!getProjectManager().isCubeInProject(newProjectName, cube)) {
                 String owner = SecurityContextHolder.getContext().getAuthentication().getName();
                 ProjectInstance newProject = getProjectManager().updateCubeToProject(cube.getName(), newProjectName, owner);
