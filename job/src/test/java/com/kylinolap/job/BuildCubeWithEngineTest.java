@@ -239,13 +239,10 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         List<JobInstance> jobs = Lists.newArrayList();
         for (CubeSegment seg : newSegments) {
             String uuid = seg.getUuid();
-            seg.setLastBuildJobID(uuid);
-
             jobUuids.add(uuid);
             jobs.add(jobManager.createJob(cubename, seg.getName(), uuid, jobType));
             // submit job to store
         }
-        cubeMgr.updateCube(cube);
         for (JobInstance job: jobs) {
             jobManager.submitJob(job);
         }
