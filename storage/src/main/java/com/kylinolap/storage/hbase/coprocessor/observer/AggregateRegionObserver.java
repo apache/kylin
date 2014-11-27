@@ -19,6 +19,7 @@ package com.kylinolap.storage.hbase.coprocessor.observer;
 import java.io.IOException;
 
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.client.Scan;
@@ -71,7 +72,7 @@ public class AggregateRegionObserver extends BaseRegionObserver {
         ObserverRowType type = ObserverRowType.deserialize(typeBytes);
 
         byte[] projectorBytes = scan.getAttribute(PROJECTOR);
-        ObserverProjector projector = ObserverProjector.deserialize(projectorBytes);
+        CoprocessorProjector projector = CoprocessorProjector.deserialize(projectorBytes);
 
         byte[] aggregatorBytes = scan.getAttribute(AGGREGATORS);
         ObserverAggregators aggregators = ObserverAggregators.deserialize(aggregatorBytes);

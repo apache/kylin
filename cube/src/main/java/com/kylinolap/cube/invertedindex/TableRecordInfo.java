@@ -18,7 +18,6 @@ package com.kylinolap.cube.invertedindex;
 
 import java.io.IOException;
 
-import org.apache.hadoop.io.LongWritable;
 
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.measure.fixedlen.FixedLenMeasureCodec;
@@ -43,8 +42,6 @@ public class TableRecordInfo extends TableRecordInfoDigest {
 
     final String[] colNames;
     final Dictionary<?>[] dictionaries;
-    final FixedLenMeasureCodec<?>[] measureSerializers;
-
 
     public TableRecordInfo(CubeSegment cubeSeg) throws IOException {
 
@@ -120,12 +117,6 @@ public class TableRecordInfo extends TableRecordInfoDigest {
         return (Dictionary<String>) dictionaries[col];
     }
 
-    // metrics go with fixed-len codec
-    @SuppressWarnings("unchecked")
-    public FixedLenMeasureCodec<LongWritable> codec(int col) {
-        // yes, all metrics are long currently
-        return (FixedLenMeasureCodec<LongWritable>) measureSerializers[col];
-    }
 
 
     public int getTimestampColumn() {

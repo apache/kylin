@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.HRegionInfo;
@@ -42,7 +43,7 @@ public class AggregationCache {
 
     static final int MEMORY_USAGE_CAP = 500 * 1024 * 1024; // 500 MB
 
-    private final SortedMap<ObserverProjector.AggrKey, MeasureAggregator[]> aggBufMap;
+    private final SortedMap<CoprocessorProjector.AggrKey, MeasureAggregator[]> aggBufMap;
     private final ObserverAggregators aggregators;
 
     transient int rowMemBytes;
@@ -52,7 +53,7 @@ public class AggregationCache {
         this.aggBufMap = Maps.newTreeMap();
     }
 
-    public MeasureAggregator[] getBuffer(ObserverProjector.AggrKey aggkey) {
+    public MeasureAggregator[] getBuffer(CoprocessorProjector.AggrKey aggkey) {
         MeasureAggregator[] aggBuf = aggBufMap.get(aggkey);
         if (aggBuf == null) {
             aggBuf = aggregators.createBuffer();
@@ -91,7 +92,7 @@ public class AggregationCache {
     private class AggregationRegionScanner implements RegionScanner {
 
         private final RegionScanner innerScanner;
-        private final Iterator<Entry<ObserverProjector.AggrKey, MeasureAggregator[]>> iterator;
+        private final Iterator<Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]>> iterator;
 
         public AggregationRegionScanner(RegionScanner innerScanner) {
             this.innerScanner = innerScanner;
@@ -103,7 +104,7 @@ public class AggregationCache {
             // AggregateRegionObserver.LOG.info("Kylin Scanner next()");
             boolean hasMore = false;
             if (iterator.hasNext()) {
-                Entry<ObserverProjector.AggrKey, MeasureAggregator[]> entry = iterator.next();
+                Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]> entry = iterator.next();
                 makeCells(entry, results);
                 hasMore = iterator.hasNext();
             }
@@ -111,12 +112,12 @@ public class AggregationCache {
             return hasMore;
         }
 
-        private void makeCells(Entry<ObserverProjector.AggrKey, MeasureAggregator[]> entry, List<Cell> results) {
+        private void makeCells(Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]> entry, List<Cell> results) {
             byte[][] families = aggregators.getHColFamilies();
             byte[][] qualifiers = aggregators.getHColQualifiers();
             int nHCols = aggregators.getHColsNum();
 
-            ObserverProjector.AggrKey rowKey = entry.getKey();
+            CoprocessorProjector.AggrKey rowKey = entry.getKey();
             MeasureAggregator[] aggBuf = entry.getValue();
             ByteBuffer[] rowValues = aggregators.getHColValues(aggBuf);
 
