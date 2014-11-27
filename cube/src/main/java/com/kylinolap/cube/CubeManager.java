@@ -270,10 +270,10 @@ public class CubeManager {
         }
         List<CubeSegment> segments = new ArrayList<CubeSegment>();
 
+        boolean needMergeImmediately = cubeInstance.needMergeImmediately(startDate, endDate);
         if (null != cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateColumn()) {
-            if (cubeInstance.incrementalBuildOnHll()) {
-                long[] dateRange = cubeInstance.getDateRange();
-                segments.add(buildSegment(cubeInstance, dateRange[0], endDate));
+            if (needMergeImmediately) {
+                segments.add(buildSegment(cubeInstance, startDate, endDate));
             } else {
 
                 if (startDate == 0 && cubeInstance.getSegments().size() == 0) {
@@ -306,7 +306,7 @@ public class CubeManager {
 
         validateNewSegments(cubeInstance, buildType, segments);
 
-        if (buildType == CubeBuildTypeEnum.MERGE || cubeInstance.incrementalBuildOnHll()) {
+        if (buildType == CubeBuildTypeEnum.MERGE || needMergeImmediately) {
             this.makeDictForNewSegment(cubeInstance, segments.get(0));
             this.makeSnapshotForNewSegment(cubeInstance, segments.get(0));
         }
@@ -339,7 +339,7 @@ public class CubeManager {
 
         switch (buildType) {
         case BUILD:
-            if (cubeInstance.incrementalBuildOnHll()) {
+            if (cubeInstance.needMergeImmediately(cubeInstance.getSegmentById(lastBuildJobUuid))) {
                 cubeInstance.getSegments().removeAll(cubeInstance.getMergingSegments());
             } else {
                 if (segmentsInNewStatus.size() == 1) {// if this the last segment in
