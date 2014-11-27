@@ -138,7 +138,7 @@
             </table>
         </div>
 
-        <kylin-pagination data="jobs" load-func="list" action="action"/>
+        <kylin-pagination data="jobs" load-func="list" auto-load="false" action="action"/>
     </div>
     <div class="col-xs-4" ng-if="state.showSteps" ng-animate="{enter: 'animated fadeInRight'}">
         <div ng-include src="'partials/jobs/job_steps.html'"></div>

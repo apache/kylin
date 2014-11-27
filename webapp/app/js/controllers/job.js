@@ -85,7 +85,7 @@ KylinApp
             if(newValue){
                 $scope.jobs={};
                 $scope.state.projectName = newValue;
-            $scope.list();
+                $scope.list();
             }
 
         });

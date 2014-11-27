@@ -76,7 +76,6 @@ KylinApp
            if(newValue){
             $scope.cubes=[];
             $scope.list();
-            $scope.reload();
            }
 
         });
