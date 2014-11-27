@@ -39,7 +39,7 @@ import com.kylinolap.dict.lookup.ReadableTable;
 import com.kylinolap.dict.lookup.TableSignature;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 public class DictionaryManager {
 

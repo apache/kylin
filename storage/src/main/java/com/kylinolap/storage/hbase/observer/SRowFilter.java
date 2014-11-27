@@ -26,7 +26,7 @@ import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.kv.RowKeyColumnIO;
 import com.kylinolap.dict.Dictionary;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.filter.ColumnTupleFilter;
 import com.kylinolap.storage.filter.CompareTupleFilter;
 import com.kylinolap.storage.filter.ConstantTupleFilter;

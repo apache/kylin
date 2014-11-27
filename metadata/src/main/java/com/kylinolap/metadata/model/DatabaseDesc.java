@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.metadata.model.schema;
+package com.kylinolap.metadata.model;
 
 import java.util.HashMap;
 import java.util.HashSet;

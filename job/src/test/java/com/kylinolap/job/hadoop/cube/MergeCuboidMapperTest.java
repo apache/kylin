@@ -47,7 +47,7 @@ import com.kylinolap.dict.TrieDictionary;
 import com.kylinolap.dict.lookup.TableSignature;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * @author honma

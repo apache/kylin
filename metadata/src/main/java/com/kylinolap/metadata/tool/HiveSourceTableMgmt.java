@@ -39,8 +39,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceTool;
 import com.kylinolap.common.util.JsonUtil;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
 
 /**
  * Management class to sync hive table metadata with command See main method for

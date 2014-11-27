@@ -27,9 +27,9 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 
 import com.kylinolap.cube.measure.MeasureCodec;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
 import com.kylinolap.metadata.model.cube.HBaseColumnDesc;
 import com.kylinolap.metadata.model.cube.MeasureDesc;
+import com.kylinolap.metadata.model.realization.FunctionDesc;
 
 /**
  * 

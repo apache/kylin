@@ -29,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kylinolap.common.util.StringUtil;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * Created by lukhan on 1/2/14.

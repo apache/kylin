@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kylinolap.metadata.model.cube;
+package com.kylinolap.metadata.model;
 
 import java.util.Arrays;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 10/14/13 Time: 2:16 PM To

@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kylinolap.metadata.model.cube;
+package com.kylinolap.metadata.model.realization;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.kylinolap.metadata.model.schema.DataType;
+import com.kylinolap.metadata.model.DataType;
 
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 9/26/13 Time: 1:30 PM To
@@ -130,7 +130,7 @@ public class FunctionDesc {
         return returnDataType;
     }
 
-    void setReturnDataType(DataType returnDataType) {
+    public void setReturnDataType(DataType returnDataType) {
         this.returnDataType = returnDataType;
     }
 

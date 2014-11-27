@@ -55,7 +55,7 @@ import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.tools.OptionsHelper;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.TableDesc;
 
 @SuppressWarnings("static-access")
 public abstract class AbstractHadoopJob extends Configured implements Tool {

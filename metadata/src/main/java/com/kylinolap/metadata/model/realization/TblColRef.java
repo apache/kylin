@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kylinolap.metadata.model.cube;
+package com.kylinolap.metadata.model.realization;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.DataType;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.DataType;
+import com.kylinolap.metadata.model.TableDesc;
 
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 9/26/13 Time: 1:30 PM To

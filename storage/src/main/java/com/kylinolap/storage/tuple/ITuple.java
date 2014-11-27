@@ -18,7 +18,7 @@ package com.kylinolap.storage.tuple;
 
 import java.util.List;
 
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * Tuple is a record row, contains multiple values being lookup by either field

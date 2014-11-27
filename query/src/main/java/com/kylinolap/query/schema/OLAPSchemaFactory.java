@@ -31,8 +31,8 @@ import org.eigenbase.util14.ConversionUtil;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.cube.project.ProjectManager;
-import com.kylinolap.metadata.model.schema.DatabaseDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.DatabaseDesc;
+import com.kylinolap.metadata.model.TableDesc;
 
 /**
  * @author xjiang

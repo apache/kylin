@@ -38,8 +38,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.codahale.metrics.annotation.Metered;
 import com.kylinolap.metadata.MetadataConstances;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.rest.request.CardinalityRequest;
 import com.kylinolap.rest.response.TableDescResponse;
 import com.kylinolap.rest.service.CubeService;
