@@ -310,34 +310,35 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         //! here get the latest rowkey_columns
         $scope.cubeMetaFrame.rowkey.rowkey_columns = newRowKeyColumns;
 
-
-        var aggregationGroups = $scope.cubeMetaFrame.rowkey.aggregation_groups;
-        // rm unused item from group
-        angular.forEach(aggregationGroups, function (group, index) {
-            if(group){
-                for(var j = 0;j<group.length;j++){
-                    var elemStillExist = false;
-                    for(var k = 0;k<tmpAggregationItems.length;k++){
-                        if(group[j]==tmpAggregationItems[k]){
-                            elemStillExist = true;
-                            break;
+        if($scope.cubeMode==="editExistCube") {
+            var aggregationGroups = $scope.cubeMetaFrame.rowkey.aggregation_groups;
+            // rm unused item from group
+            angular.forEach(aggregationGroups, function (group, index) {
+                if (group) {
+                    for (var j = 0; j < group.length; j++) {
+                        var elemStillExist = false;
+                        for (var k = 0; k < tmpAggregationItems.length; k++) {
+                            if (group[j] == tmpAggregationItems[k]) {
+                                elemStillExist = true;
+                                break;
+                            }
+                        }
+                        if (!elemStillExist) {
+                            group.splice(j, 1);
+                            j--;
                         }
                     }
-                    if(!elemStillExist){
-                        group.splice(j,1);
-                        j--;
+                    if (!group.length) {
+                        aggregationGroups.splice(index, 1);
+                        index--;
                     }
                 }
-                if(!group.length){
-                    aggregationGroups.splice(index,1);
+                else {
+                    aggregationGroups.splice(index, 1);
                     index--;
                 }
-            }
-            else{
-                aggregationGroups.splice(index,1);
-                index--;
-            }
-        });
+            });
+        }
 
         if($scope.cubeMode==="addNewCube"){
 
