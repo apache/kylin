@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.common.base.Preconditions;
 import com.kylinolap.dict.DateStrDictionary;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -306,9 +307,16 @@ public class CubeManager {
 
         validateNewSegments(cubeInstance, buildType, segments);
 
-        if (buildType == CubeBuildTypeEnum.MERGE || needMergeImmediately) {
-            this.makeDictForNewSegment(cubeInstance, segments.get(0));
-            this.makeSnapshotForNewSegment(cubeInstance, segments.get(0));
+        if (buildType == CubeBuildTypeEnum.MERGE) {
+            CubeSegment newSeg = segments.get(0);
+            List<CubeSegment> mergingSegments = cubeInstance.getMergingSegments(newSeg);
+            this.makeDictForNewSegment(cubeInstance, newSeg, mergingSegments);
+            this.makeSnapshotForNewSegment(newSeg, mergingSegments);
+        } else if (needMergeImmediately) {
+            CubeSegment newSeg = segments.get(0);
+            List<CubeSegment> mergingSegments = cubeInstance.getSegment(CubeSegmentStatusEnum.READY);
+            this.makeDictForNewSegment(cubeInstance, newSeg, mergingSegments);
+            this.makeSnapshotForNewSegment(newSeg, mergingSegments);
         }
 
         cubeInstance.getSegments().addAll(segments);
@@ -332,15 +340,20 @@ public class CubeManager {
         return "KYLIN_HOST";
     }
 
-    public void updateSegmentOnJobSucceed(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, String segmentName, String lastBuildJobUuid, long lastBuildTime, long sizeKB, long sourceRecordCount, long sourceRecordsSize) throws IOException, CubeIntegrityException {
+    public void updateSegmentOnJobSucceed(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, String segmentName, String jobUuid, long lastBuildTime, long sizeKB, long sourceRecordCount, long sourceRecordsSize) throws IOException, CubeIntegrityException {
 
         List<CubeSegment> segmentsInNewStatus = cubeInstance.getSegments(CubeSegmentStatusEnum.NEW);
-        CubeSegment cubeSegment = cubeInstance.getSegment(segmentName, CubeSegmentStatusEnum.NEW);
+        CubeSegment cubeSegment = cubeInstance.getSegmentById(jobUuid);
+        if (cubeSegment == null) {
+            cubeSegment = cubeInstance.getSegment(segmentName, CubeSegmentStatusEnum.NEW);
+        }
+        Preconditions.checkNotNull(cubeSegment);
+        Preconditions.checkArgument(cubeSegment.getStatus() == CubeSegmentStatusEnum.NEW, "invalid status of Segment:" + cubeSegment);
 
         switch (buildType) {
         case BUILD:
-            if (cubeInstance.needMergeImmediately(cubeInstance.getSegmentById(lastBuildJobUuid))) {
-                cubeInstance.getSegments().removeAll(cubeInstance.getMergingSegments());
+            if (cubeInstance.needMergeImmediately(cubeSegment)) {
+                cubeInstance.getSegments().removeAll(cubeInstance.getSegment(CubeSegmentStatusEnum.READY));
             } else {
                 if (segmentsInNewStatus.size() == 1) {// if this the last segment in
                     // status of NEW
@@ -354,7 +367,7 @@ public class CubeManager {
             break;
         }
 
-        cubeSegment.setLastBuildJobID(lastBuildJobUuid);
+        cubeSegment.setLastBuildJobID(jobUuid);
         cubeSegment.setLastBuildTime(lastBuildTime);
         cubeSegment.setSizeKB(sizeKB);
         cubeSegment.setSourceRecords(sourceRecordCount);
@@ -445,17 +458,16 @@ public class CubeManager {
      * @param newSeg
      * @throws IOException
      */
-    private void makeDictForNewSegment(CubeInstance cube, CubeSegment newSeg) throws IOException {
-        List<CubeSegment> mergingSegments = cube.getMergingSegments(newSeg);
-
+    private void makeDictForNewSegment(CubeInstance cube, CubeSegment newSeg, List<CubeSegment> mergingSegments) throws IOException {
         HashSet<TblColRef> colsNeedMeringDict = new HashSet<TblColRef>();
         HashSet<TblColRef> colsNeedCopyDict = new HashSet<TblColRef>();
         DictionaryManager dictMgr = this.getDictionaryManager();
 
-        for (DimensionDesc dim : cube.getDescriptor().getDimensions()) {
+        CubeDesc descriptor = cube.getDescriptor();
+        for (DimensionDesc dim : descriptor.getDimensions()) {
             for (TblColRef col : dim.getColumnRefs()) {
                 if (newSeg.getCubeDesc().getRowkey().isUseDictionary(col)) {
-                    if (cube.getDescriptor().getFactTable().equalsIgnoreCase((String) dictMgr.decideSourceData(cube.getDescriptor(), col, null)[0])) {
+                    if (descriptor.getFactTable().equalsIgnoreCase((String) dictMgr.decideSourceData(descriptor, col, null)[0])) {
                         colsNeedMeringDict.add(col);
                     } else {
                         colsNeedCopyDict.add(col);
@@ -489,8 +501,7 @@ public class CubeManager {
      * @param cube
      * @param newSeg
      */
-    private void makeSnapshotForNewSegment(CubeInstance cube, CubeSegment newSeg) {
-        List<CubeSegment> mergingSegments = cube.getMergingSegments(newSeg);
+    private void makeSnapshotForNewSegment(CubeSegment newSeg, List<CubeSegment> mergingSegments) {
         for (Map.Entry<String, String> entry : mergingSegments.get(0).getSnapshots().entrySet()) {
             newSeg.putSnapshotResPath(entry.getKey(), entry.getValue());
         }
