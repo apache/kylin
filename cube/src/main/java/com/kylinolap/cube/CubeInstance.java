@@ -31,6 +31,7 @@ import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.cube.CubeDesc;
+import com.kylinolap.metadata.model.cube.CubePartitionDesc;
 import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
@@ -395,6 +396,9 @@ public class CubeInstance extends RootPersistentEntity {
     }
 
     public boolean needMergeImmediately(long newSegmentRangeStart, long newSegmentRangeEnd) {
+        if (this.getDescriptor().getCubePartitionDesc().getCubePartitionType() != CubePartitionDesc.CubePartitionType.APPEND) {
+            return false;
+        }
         if (!getDescriptor().hasHolisticCountDistinctMeasures()) {
             return false;
         }
