@@ -364,7 +364,7 @@ public class ConcurrentHBaseTupleIterator implements ITupleIterator {
                     continue;
                 }
                 // add normal column
-                info.setField(colNames.get(i), rowColumns.get(i), rowColumns.get(i).getDatatype(), index++);
+                info.setField(colNames.get(i), rowColumns.get(i), rowColumns.get(i).getType().getName(), index++);
             }
 
             // derived columns and filler
@@ -375,7 +375,7 @@ public class ConcurrentHBaseTupleIterator implements ITupleIterator {
                     // mark name for each derived field
                     for (TblColRef derivedCol : deriveInfo.columns) {
                         String derivedField = getFieldName(derivedCol, aliasMap);
-                        info.setField(derivedField, derivedCol, derivedCol.getDatatype(), index++);
+                        info.setField(derivedField, derivedCol, derivedCol.getType().getName(), index++);
                     }
                     // add filler
                     info.addDerivedColumnFiller(Tuple.newDerivedColumnFiller(rowColumns, hostCols, deriveInfo, info, CubeManager.getInstance(cube.getConfig()), cubeSeg));
