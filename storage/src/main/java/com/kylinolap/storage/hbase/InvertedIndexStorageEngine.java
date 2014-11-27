@@ -91,7 +91,7 @@ public class InvertedIndexStorageEngine implements IStorageEngine {
             ColumnDesc[] columns = recInfo.getColumns();
             for (int i = 0; i < columns.length; i++) {
                 TblColRef col = new TblColRef(columns[i]);
-                info.setField(context.getFieldName(col), col, col.getDatatype(), i);
+                info.setField(context.getFieldName(col), col, col.getType().getName(), i);
             }
             return info;
         }

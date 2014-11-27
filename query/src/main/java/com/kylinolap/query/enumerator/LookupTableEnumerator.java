@@ -70,7 +70,7 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
                 ColumnDesc colDesc = colDescs.get(i);
                 int colIdx = colDesc.getZeroBasedIndex();
                 if (colIdx >= 0) {
-                    current[i] = Tuple.convertOptiqCellValue(row[colIdx], colDesc.getDatatype());
+                    current[i] = Tuple.convertOptiqCellValue(row[colIdx], colDesc.getType().getName());
                 } else {
                     current[i] = null; // fake column
                 }

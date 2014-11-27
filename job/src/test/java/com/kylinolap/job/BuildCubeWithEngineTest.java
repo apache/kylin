@@ -83,6 +83,8 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         // start job schedule engine
         jobManager.startJobEngine(10);
 
+//        testSimpleLeftJoinCube();
+        
         // keep this order.
         testLeftJoinCube();
         testInnerJoinCube();
@@ -173,6 +175,31 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         waitCubeBuilt(jobs);
     }
 
+    @SuppressWarnings("unused")
+    private void testSimpleLeftJoinCube() throws Exception {
+        DeployUtil.prepareTestData("left", "test_kylin_cube_with_slr_left_join_empty");
+        
+        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
+        f.setTimeZone(TimeZone.getTimeZone("GMT"));
+        long dateStart;
+        long dateEnd;
+        
+        ArrayList<String> jobs = new ArrayList<String>();
+        
+        // this cube's start date is 0, end date is 20501112000000
+        CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
+        dateStart = cubeMgr.getCube("test_kylin_cube_with_slr_left_join_empty").getDescriptor().getCubePartitionDesc().getPartitionDateStart();
+        dateEnd = f.parse("2050-11-12").getTime();
+        jobs.addAll(this.submitJob("test_kylin_cube_with_slr_left_join_empty", dateStart, dateEnd, CubeBuildTypeEnum.BUILD));
+        
+        // this cube's start date is 0, end date is 20501112000000
+        dateStart = cubeMgr.getCube("test_kylin_cube_without_slr_left_join_empty").getDescriptor().getCubePartitionDesc().getPartitionDateStart();
+        dateEnd = f.parse("2050-11-12").getTime();
+        jobs.addAll(this.submitJob("test_kylin_cube_without_slr_left_join_empty", dateStart, dateEnd, CubeBuildTypeEnum.BUILD));
+        
+        waitCubeBuilt(jobs);
+    }
+    
     protected void waitCubeBuilt(List<String> jobs) throws Exception {
 
         boolean allFinished = false;
