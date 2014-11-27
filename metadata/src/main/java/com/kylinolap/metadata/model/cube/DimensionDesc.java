@@ -22,7 +22,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kylinolap.common.util.StringUtil;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.JoinDesc;
+import com.kylinolap.metadata.model.TableDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 9/24/13 Time: 10:40 AM To

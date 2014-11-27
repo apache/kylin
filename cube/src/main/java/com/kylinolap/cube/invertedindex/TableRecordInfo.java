@@ -24,10 +24,10 @@ import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.measure.fixedlen.FixedLenMeasureCodec;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryManager;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * @author yangli9

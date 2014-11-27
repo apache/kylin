@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.TableDesc;
 
 /**
  * @author yangli9

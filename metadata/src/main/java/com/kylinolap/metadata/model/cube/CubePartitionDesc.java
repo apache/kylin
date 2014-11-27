@@ -21,6 +21,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * @author xduo

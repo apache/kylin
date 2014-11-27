@@ -20,6 +20,7 @@ import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kylinolap.metadata.model.realization.FunctionDesc;
 
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 9/30/13 Time: 10:57 AM To

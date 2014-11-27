@@ -39,9 +39,9 @@ import org.junit.Test;
 
 import com.google.common.collect.Lists;
 import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.hbase.observer.AggregationScanner;
 import com.kylinolap.storage.hbase.observer.SRowAggregators;
 import com.kylinolap.storage.hbase.observer.SRowFilter;

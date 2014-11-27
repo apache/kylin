@@ -32,12 +32,12 @@ import org.slf4j.LoggerFactory;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.project.ProjectManager;
+import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.DimensionDesc;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.JoinDesc;
-import com.kylinolap.metadata.model.cube.ParameterDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.realization.FunctionDesc;
+import com.kylinolap.metadata.model.realization.ParameterDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.query.relnode.OLAPContext;
 
 /**

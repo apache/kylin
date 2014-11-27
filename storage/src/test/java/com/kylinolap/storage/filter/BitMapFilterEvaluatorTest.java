@@ -10,9 +10,9 @@ import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 import com.google.common.collect.Lists;
 import com.kylinolap.dict.Dictionary;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.filter.BitMapFilterEvaluator.BitMapProvider;
 import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
 

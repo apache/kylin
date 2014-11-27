@@ -23,8 +23,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
 
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 9/24/13 Time: 2:38 PM To

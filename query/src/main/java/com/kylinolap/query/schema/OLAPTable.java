@@ -43,10 +43,10 @@ import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.type.SqlTypeUtil;
 
 import com.kylinolap.cube.project.ProjectManager;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.cube.MeasureDesc;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.realization.FunctionDesc;
 import com.kylinolap.query.enumerator.OLAPQuery;
 import com.kylinolap.query.enumerator.OLAPQuery.EnumeratorTypeEnum;
 import com.kylinolap.query.relnode.OLAPTableScan;

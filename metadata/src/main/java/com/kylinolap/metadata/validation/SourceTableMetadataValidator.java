@@ -15,7 +15,7 @@
  */
 package com.kylinolap.metadata.validation;
 
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.TableDesc;
 
 /**
  * Validate Table metadata from source.

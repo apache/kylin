@@ -31,7 +31,7 @@ import com.kylinolap.metadata.model.cube.RowKeyColDesc;
 import com.kylinolap.metadata.model.cube.RowKeyDesc;
 import com.kylinolap.metadata.model.cube.RowKeyDesc.AggrGroupMask;
 import com.kylinolap.metadata.model.cube.RowKeyDesc.HierarchyMask;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * @author George Song (ysong1)

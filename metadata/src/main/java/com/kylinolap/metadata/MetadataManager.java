@@ -37,9 +37,9 @@ import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.common.restclient.Broadcaster;
 import com.kylinolap.common.restclient.SingleValueCache;
 import com.kylinolap.common.util.JsonUtil;
+import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
 import com.kylinolap.metadata.validation.CubeMetadataValidator;
 import com.kylinolap.metadata.validation.ValidateContext;
 

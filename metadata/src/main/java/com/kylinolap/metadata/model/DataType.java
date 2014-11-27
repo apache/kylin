@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.metadata.model.schema;
+package com.kylinolap.metadata.model;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.kylinolap.metadata.model.cube.TblColRef.InnerDataTypeEnum;
+import com.kylinolap.metadata.model.realization.TblColRef.InnerDataTypeEnum;
 
 /**
  * @author yangli9

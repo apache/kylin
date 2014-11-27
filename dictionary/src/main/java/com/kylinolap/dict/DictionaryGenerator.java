@@ -32,7 +32,7 @@ import com.google.common.collect.Lists;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.dict.lookup.ReadableTable;
 import com.kylinolap.dict.lookup.TableReader;
-import com.kylinolap.metadata.model.schema.DataType;
+import com.kylinolap.metadata.model.DataType;
 
 /**
  * @author yangli9
