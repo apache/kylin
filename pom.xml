@@ -521,8 +521,11 @@
                         <version>2.16</version>
                         <configuration>
                             <excludes>
+                                <exclude>**/com/kylinolap/job/**</exclude>
                                 <exclude>**/BuildCubeWithEngineTest.java</exclude>
                                 <exclude>**/SampleCubeSetupTest.java</exclude>
+                                <exclude>**/InvertedIndexHBaseTest.java</exclude>
+                                <exclude>**/StorageTest.java</exclude>
                                 <exclude>**/KylinQueryTest.java</exclude>
                             </excludes>
                         </configuration>
