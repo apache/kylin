@@ -577,6 +577,11 @@ public class KylinConfig {
     public void setMetadataUrl(String metadataUrl) {
         kylinConfig.setProperty(KYLIN_METADATA_URL, metadataUrl);
     }
+    
+    public void setStorageUrl(String storageUrl) {
+        kylinConfig.setProperty(KYLIN_STORAGE_URL, storageUrl);
+    }
+
 
     /**
      * return -1 if there is no setting
