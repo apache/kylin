@@ -55,15 +55,8 @@ public class CubeSegmentValidator {
     }
 
     public static class MergeOperationValidator extends CubeSegmentValidator {
-        private void checkContingency(CubeInstance cubeInstance, List<CubeSegment> newSegments) throws CubeIntegrityException {
-            if (cubeInstance.getSegments().size() < 2) {
-                throw new CubeIntegrityException("No segments to merge.");
-            }
-            if (newSegments.size() != 1) {
-                throw new CubeIntegrityException("Invalid date range.");
-            }
+        private void checkContingency(CubeInstance cubeInstance, CubeSegment newSegment) throws CubeIntegrityException {
 
-            CubeSegment newSegment = newSegments.get(0);
             CubeSegment startSeg = null;
             CubeSegment endSeg = null;
             for (CubeSegment segment : cubeInstance.getSegments()) {
@@ -80,9 +73,8 @@ public class CubeSegmentValidator {
             }
         }
 
-        private void checkLoopTableConsistency(CubeInstance cube, List<CubeSegment> newSegments) throws CubeIntegrityException {
-
-            CubeSegment cubeSeg = newSegments.get(0);
+        private void checkLoopTableConsistency(CubeInstance cube, CubeSegment newSegment) throws CubeIntegrityException {
+            CubeSegment cubeSeg = newSegment;
             DictionaryManager dictMgr = DictionaryManager.getInstance(cube.getConfig());
             List<CubeSegment> segmentList = cube.getMergingSegments(cubeSeg);
 
@@ -136,8 +128,15 @@ public class CubeSegmentValidator {
 
         @Override
         public void validate(CubeInstance cubeInstance, List<CubeSegment> newSegments) throws CubeIntegrityException {
-            this.checkContingency(cubeInstance, newSegments);
-            this.checkLoopTableConsistency(cubeInstance, newSegments);
+            if (cubeInstance.getSegments().size() < 2) {
+                throw new CubeIntegrityException("No segments to merge.");
+            }
+            if (newSegments.size() != 1) {
+                throw new CubeIntegrityException("Invalid date range.");
+            }
+            CubeSegment newSegment = newSegments.get(0);
+            this.checkContingency(cubeInstance, newSegment);
+            this.checkLoopTableConsistency(cubeInstance, newSegment);
         }
     }
 
@@ -154,7 +153,7 @@ public class CubeSegmentValidator {
             if (newSegments.size() != 1) {
                 throw new CubeIntegrityException("Invalid date range.");
             }
-            if (cubeInstance.incrementalBuildOnHll()) {
+            if (cubeInstance.needMergeImmediately(newSegments.get(0))) {
 
             } else {
                 CubeSegment newSegment = newSegments.get(0);
