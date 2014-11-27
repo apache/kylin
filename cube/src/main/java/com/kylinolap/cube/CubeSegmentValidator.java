@@ -73,8 +73,7 @@ public class CubeSegmentValidator {
             }
         }
 
-        private void checkLoopTableConsistency(CubeInstance cube, CubeSegment newSegment) throws CubeIntegrityException {
-            CubeSegment cubeSeg = newSegment;
+        private void checkLoopTableConsistency(CubeInstance cube, CubeSegment cubeSeg) throws CubeIntegrityException {
             DictionaryManager dictMgr = DictionaryManager.getInstance(cube.getConfig());
             List<CubeSegment> segmentList = cube.getMergingSegments(cubeSeg);
 
