@@ -154,7 +154,7 @@ public class CubeSegmentValidator {
             if (newSegments.size() != 1) {
                 throw new CubeIntegrityException("Invalid date range.");
             }
-            if (cubeInstance.incrementalBuildOnHll()) {
+            if (cubeInstance.needMergeImmediately(newSegments.get(0))) {
 
             } else {
                 CubeSegment newSegment = newSegments.get(0);
