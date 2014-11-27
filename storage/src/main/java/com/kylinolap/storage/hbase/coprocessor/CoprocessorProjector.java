@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package com.kylinolap.storage.hbase.coprocessor.observer;
+package com.kylinolap.storage.hbase.coprocessor;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import com.kylinolap.storage.hbase.coprocessor.CoprocessorConstants;
 import org.apache.hadoop.hbase.Cell;
 
 import com.kylinolap.common.util.BytesSerializer;
@@ -34,9 +33,9 @@ import com.kylinolap.metadata.model.realization.TblColRef;
 /**
  * @author yangli9
  */
-public class ObserverProjector {
+public class CoprocessorProjector {
 
-    public static ObserverProjector fromColumns(final CubeSegment cubeSegment, final Cuboid cuboid, final Collection<TblColRef> dimensionColumns) {
+    public static CoprocessorProjector fromColumns(final CubeSegment cubeSegment, final Cuboid cuboid, final Collection<TblColRef> dimensionColumns) {
 
         RowKeyEncoder rowKeyMaskEncoder = new RowKeyEncoder(cubeSegment, cuboid) {
             @Override
@@ -53,10 +52,10 @@ public class ObserverProjector {
         };
 
         byte[] mask = rowKeyMaskEncoder.encode(new byte[cuboid.getColumns().size()][]);
-        return new ObserverProjector(mask);
+        return new CoprocessorProjector(mask);
     }
 
-    public static byte[] serialize(ObserverProjector o) {
+    public static byte[] serialize(CoprocessorProjector o) {
         ByteBuffer buf = ByteBuffer.allocate(CoprocessorConstants.SERIALIZE_BUFFER_SIZE);
         serializer.serialize(o, buf);
         byte[] result = new byte[buf.position()];
@@ -64,23 +63,23 @@ public class ObserverProjector {
         return result;
     }
 
-    public static ObserverProjector deserialize(byte[] bytes) {
+    public static CoprocessorProjector deserialize(byte[] bytes) {
         return serializer.deserialize(ByteBuffer.wrap(bytes));
     }
 
     private static final Serializer serializer = new Serializer();
 
-    private static class Serializer implements BytesSerializer<ObserverProjector> {
+    private static class Serializer implements BytesSerializer<CoprocessorProjector> {
 
         @Override
-        public void serialize(ObserverProjector value, ByteBuffer out) {
+        public void serialize(CoprocessorProjector value, ByteBuffer out) {
             BytesUtil.writeByteArray(value.groupByMask, out);
         }
 
         @Override
-        public ObserverProjector deserialize(ByteBuffer in) {
+        public CoprocessorProjector deserialize(ByteBuffer in) {
             byte[] mask = BytesUtil.readByteArray(in);
-            return new ObserverProjector(mask);
+            return new CoprocessorProjector(mask);
         }
     }
 
@@ -89,7 +88,7 @@ public class ObserverProjector {
     final byte[] groupByMask; // mask out columns that are not needed (by group by)
     final AggrKey aggrKey = new AggrKey();
 
-    public ObserverProjector(byte[] groupByMask) {
+    public CoprocessorProjector(byte[] groupByMask) {
         this.groupByMask = groupByMask;
     }
 
@@ -99,6 +98,13 @@ public class ObserverProjector {
         assert length == cell.getRowLength();
 
         aggrKey.set(cell.getRowArray(), cell.getRowOffset());
+        return aggrKey;
+    }
+
+    public AggrKey getAggrKey(byte[] row) {
+        int length = groupByMask.length;
+        assert length == row.length;
+        aggrKey.set(row, 0);
         return aggrKey;
     }
 

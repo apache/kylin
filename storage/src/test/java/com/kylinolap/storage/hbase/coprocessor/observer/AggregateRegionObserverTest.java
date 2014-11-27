@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.storage.hbase.observer;
+package com.kylinolap.storage.hbase.coprocessor.observer;
 
 import static org.junit.Assert.*;
 
@@ -26,6 +26,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.HRegionInfo;
@@ -42,7 +44,7 @@ import com.kylinolap.cube.kv.RowConstants;
 import com.kylinolap.metadata.model.cube.TblColRef;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;
-import com.kylinolap.storage.hbase.observer.ObserverAggregators.HCol;
+import com.kylinolap.storage.hbase.coprocessor.observer.ObserverAggregators.HCol;
 
 /**
  * @author yangli9
@@ -103,9 +105,9 @@ public class AggregateRegionObserverTest {
     public void test() throws IOException {
 
         ObserverRowType rowType = newRowType();
-        ObserverProjector projector = new ObserverProjector(mask);
+        CoprocessorProjector projector = new CoprocessorProjector(mask);
         ObserverAggregators aggregators = new ObserverAggregators(new HCol[] { c1, c2 });
-        ObserverFilter filter = ObserverFilter.deserialize(null); // a default,
+        CoprocessorFilter filter = CoprocessorFilter.deserialize(null); // a default,
                                                           // always-true,
                                                           // filter
         HashSet<String> expectedResult = new HashSet<String>();
@@ -154,9 +156,9 @@ public class AggregateRegionObserverTest {
     public void testNoMeasure() throws IOException {
 
         ObserverRowType rowType = newRowType();
-        ObserverProjector projector = new ObserverProjector(mask);
+        CoprocessorProjector projector = new CoprocessorProjector(mask);
         ObserverAggregators aggregators = new ObserverAggregators(new HCol[] {});
-        ObserverFilter filter = ObserverFilter.deserialize(null); // a default,
+        CoprocessorFilter filter = CoprocessorFilter.deserialize(null); // a default,
                                                           // always-true,
                                                           // filter
         HashSet<String> expectedResult = new HashSet<String>();

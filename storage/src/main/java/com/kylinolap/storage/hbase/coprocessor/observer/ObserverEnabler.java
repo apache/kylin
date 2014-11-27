@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
@@ -61,7 +62,7 @@ public class ObserverEnabler {
 
         ObserverRowType type = ObserverRowType.fromCuboid(segment, cuboid);
         CoprocessorFilter filter = CoprocessorFilter.fromFilter(segment, tupleFiler);
-        ObserverProjector projector = ObserverProjector.fromColumns(segment, cuboid, groupBy);
+        CoprocessorProjector projector = CoprocessorProjector.fromColumns(segment, cuboid, groupBy);
         ObserverAggregators aggrs = ObserverAggregators.fromValueDecoders(rowValueDecoders);
 
         if (DEBUG_LOCAL_COPROCESSOR) {
@@ -71,7 +72,7 @@ public class ObserverEnabler {
         } else {
             scan.setAttribute(AggregateRegionObserver.COPROCESSOR_ENABLE, new byte[] { 0x01 });
             scan.setAttribute(AggregateRegionObserver.TYPE, ObserverRowType.serialize(type));
-            scan.setAttribute(AggregateRegionObserver.PROJECTOR, ObserverProjector.serialize(projector));
+            scan.setAttribute(AggregateRegionObserver.PROJECTOR, CoprocessorProjector.serialize(projector));
             scan.setAttribute(AggregateRegionObserver.AGGREGATORS, ObserverAggregators.serialize(aggrs));
             scan.setAttribute(AggregateRegionObserver.FILTER, CoprocessorFilter.serialize(filter));
             return table.getScanner(scan);

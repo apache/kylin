@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
@@ -35,7 +36,7 @@ public class AggregationScanner implements RegionScanner {
 
     private RegionScanner outerScanner;
 
-    public AggregationScanner(ObserverRowType type, CoprocessorFilter filter, ObserverProjector groupBy, ObserverAggregators aggrs, RegionScanner innerScanner) throws IOException {
+    public AggregationScanner(ObserverRowType type, CoprocessorFilter filter, CoprocessorProjector groupBy, ObserverAggregators aggrs, RegionScanner innerScanner) throws IOException {
 
         AggregateRegionObserver.LOG.info("Kylin Coprocessor start");
 
@@ -50,7 +51,7 @@ public class AggregationScanner implements RegionScanner {
     }
 
     @SuppressWarnings("rawtypes")
-    AggregationCache buildAggrCache(final RegionScanner innerScanner, ObserverRowType type, ObserverProjector projector, ObserverAggregators aggregators, CoprocessorFilter filter, Stats stats) throws IOException {
+    AggregationCache buildAggrCache(final RegionScanner innerScanner, ObserverRowType type, CoprocessorProjector projector, ObserverAggregators aggregators, CoprocessorFilter filter, Stats stats) throws IOException {
 
         AggregationCache aggCache = new AggregationCache(aggregators);
 
@@ -71,7 +72,7 @@ public class AggregationScanner implements RegionScanner {
             if (filter != null && filter.evaluate(tuple) == false)
                 continue;
 
-            ObserverProjector.AggrKey aggKey = projector.getRowKey(results);
+            CoprocessorProjector.AggrKey aggKey = projector.getRowKey(results);
             MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
             aggregators.aggregate(bufs, results);
 

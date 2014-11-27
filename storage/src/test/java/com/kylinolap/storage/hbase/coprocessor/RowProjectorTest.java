@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.storage.hbase.coprocessor.observer;
+package com.kylinolap.storage.hbase.coprocessor;
 
 import static org.junit.Assert.*;
 
@@ -22,14 +22,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.kylinolap.storage.hbase.coprocessor.observer.ObserverProjector;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
-import com.kylinolap.storage.hbase.coprocessor.observer.ObserverProjector.AggrKey;
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector.AggrKey;
 
 /**
  * @author yangli9
@@ -38,13 +37,13 @@ import com.kylinolap.storage.hbase.coprocessor.observer.ObserverProjector.AggrKe
 public class RowProjectorTest {
 
     byte[] mask = new byte[] { (byte) 0xff, 0x00, 0x00, (byte) 0xff };
-    ObserverProjector sample = new ObserverProjector(mask);
+    CoprocessorProjector sample = new CoprocessorProjector(mask);
 
     @Test
     public void testSerialize() {
 
-        byte[] bytes = ObserverProjector.serialize(sample);
-        ObserverProjector copy = ObserverProjector.deserialize(bytes);
+        byte[] bytes = CoprocessorProjector.serialize(sample);
+        CoprocessorProjector copy = CoprocessorProjector.deserialize(bytes);
 
         assertTrue(Arrays.equals(sample.groupByMask, copy.groupByMask));
     }

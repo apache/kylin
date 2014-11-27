@@ -6,10 +6,10 @@ import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
 import com.kylinolap.cube.invertedindex.*;
 import com.kylinolap.storage.filter.BitMapFilterEvaluator;
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
 import com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
 import com.kylinolap.storage.hbase.coprocessor.observer.ObserverAggregators;
-import com.kylinolap.storage.hbase.coprocessor.observer.ObserverProjector;
 import com.kylinolap.storage.hbase.coprocessor.observer.ObserverRowType;
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
@@ -51,7 +51,7 @@ public class IIEndpoint extends IIProtos.RowsService
     public void getRows(RpcController controller, IIProtos.IIRequest request, RpcCallback<IIProtos.IIResponse> done) {
 
         ObserverRowType type = null;
-        ObserverProjector projector = null;
+        CoprocessorProjector projector = null;
         ObserverAggregators aggregators = null;
         CoprocessorFilter filter = null;
 
@@ -59,7 +59,7 @@ public class IIEndpoint extends IIProtos.RowsService
             type = ObserverRowType.deserialize(request.getSRowType().toByteArray());
         }
         if (request.hasSRowProjector()) {
-            projector = ObserverProjector.deserialize(request.getSRowProjector().toByteArray());
+            projector = CoprocessorProjector.deserialize(request.getSRowProjector().toByteArray());
         }
         if (request.hasSRowAggregator()) {
             aggregators = ObserverAggregators.deserialize(request.getSRowAggregator().toByteArray());
