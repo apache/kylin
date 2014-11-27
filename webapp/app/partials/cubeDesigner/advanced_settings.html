@@ -62,7 +62,7 @@
                 </td>
                 <td>
                     <!--Column Name -->
-                    <input type="text" placeholder="Column Name.." ng-if="state.mode=='edit'"
+                    <input type="text" class="form-control" placeholder="Column Name.." ng-if="state.mode=='edit'"
                            tooltip="rowkey column name.." tooltip-trigger="focus"
                            ng-model="rowkey_column.column" class="form-control">
 
@@ -70,7 +70,7 @@
                 </td>
                 <td>
                     <!--Column Length -->
-                    <input type="text" placeholder="Column Length.." ng-if="state.mode=='edit'"
+                    <input type="text" class="form-control" placeholder="Column Length.." ng-if="state.mode=='edit'"
                            tooltip="rowkey column length.." tooltip-trigger="focus"
                            ng-model="rowkey_column.length" class="form-control">
 
@@ -79,10 +79,9 @@
                 <td>
                     <!--Use Dictionary-->
                     <div>
-                        <select ng-if="state.mode=='edit'"
+                        <select ng-if="state.mode=='edit'" style="width:60px;"  ng-init="true"
                                 chosen ng-model="rowkey_column.dictionary"
                                 ng-options="dt as dt for dt in dictionaries">
-                            <option value="">-- choose dictionary --</option>
                         </select>
 
                         <span ng-if="state.mode=='view'">{{rowkey_column.dictionary}}</span>
