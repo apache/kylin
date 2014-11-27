@@ -73,7 +73,6 @@ import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.tool.HiveSourceTableLoader;
-import com.kylinolap.metadata.tool.HiveSourceTableMgmt;
 import com.kylinolap.rest.constant.Constant;
 import com.kylinolap.rest.controller.QueryController;
 import com.kylinolap.rest.exception.InternalErrorException;
