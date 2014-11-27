@@ -301,6 +301,7 @@ public class CubeDevelopTestCase extends HBaseMetadataTestCase {
             CubeManager.getInstance(this.getTestConfig()).updateCube(cube);
         }
 
+
         deployJobJarToLocalDir();
         deployCoprocessorJarToLocalDir();
 

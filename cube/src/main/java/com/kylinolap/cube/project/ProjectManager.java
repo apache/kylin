@@ -51,7 +51,6 @@ import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * @author xduo
- * 
  */
 public class ProjectManager {
     private static final Logger logger = LoggerFactory.getLogger(ProjectManager.class);
@@ -64,7 +63,7 @@ public class ProjectManager {
     // project name => ProjrectDesc
     private SingleValueCache<String, ProjectInstance> projectMap = new SingleValueCache<String, ProjectInstance>(Broadcaster.TYPE.PROJECT);
     // project name => tables
-    private Multimap<String, ProjectTable> projectTables = Multimaps.synchronizedMultimap(HashMultimap.<String, ProjectTable> create());
+    private Multimap<String, ProjectTable> projectTables = Multimaps.synchronizedMultimap(HashMultimap.<String, ProjectTable>create());
 
     public static ProjectManager getInstance(KylinConfig config) {
         ProjectManager r = CACHE.get(config);
@@ -190,6 +189,26 @@ public class ProjectManager {
         return addCubeToProject(cubeName, newProjectName, owner);
     }
 
+    public ProjectInstance updateTableToProject(String tables, String projectName) throws IOException {
+        ProjectInstance projectInstance = getProject(projectName);
+        String[] tokens = StringUtils.split(tables, ",");
+        for (int i = 0; i < tokens.length; i++) {
+            String token = tokens[i].trim();
+            if (StringUtils.isNotEmpty(token)) {
+                projectInstance.addTable(token);
+            }
+        }
+
+        List<TableDesc> exposedTables = listExposedTables(projectName);
+        for (TableDesc table : exposedTables) {
+            projectInstance.addTable(table.getName());
+        }
+
+        saveResource(projectInstance);
+        return projectInstance;
+    }
+
+
     public void removeCubeFromProjects(String cubeName) throws IOException {
         for (ProjectInstance projectInstance : findProjects(cubeName)) {
             projectInstance.removeCube(cubeName);
@@ -204,6 +223,34 @@ public class ProjectManager {
 
         for (ProjectTable table : projectTables.get(project)) {
             TableDesc tableDesc = getMetadataManager().getTableDesc(table.getName());
+            if (tableDesc != null) {
+                tables.add(tableDesc);
+            }
+        }
+
+        return tables;
+    }
+
+
+    public List<TableDesc> listDefinedTablesInProject(String project) throws IOException {
+        project = ProjectInstance.getNormalizedProjectName(project);
+        ProjectInstance projectInstance = getProject(project);
+
+        int originTableCount = projectInstance.getTablesCount();
+        //sync exposed table to project when list
+        List<TableDesc> exposedTables = listExposedTables(project);
+        for (TableDesc table : exposedTables) {
+            projectInstance.addTable(table.getName());
+        }
+
+        //only save project json if new tables are sync in
+        if (originTableCount < projectInstance.getTablesCount()) {
+            saveResource(projectInstance);
+        }
+
+        List<TableDesc> tables = Lists.newArrayList();
+        for (String table : projectInstance.getTables()) {
+            TableDesc tableDesc = getMetadataManager().getTableDesc(table);
             if (tableDesc != null) {
                 tables.add(tableDesc);
             }
@@ -257,6 +304,7 @@ public class ProjectManager {
 
         return new ArrayList<CubeInstance>(ret);
     }
+
 
     public List<CubeInstance> getCubesByTable(String project, String tableName) {
         project = ProjectInstance.getNormalizedProjectName(project);

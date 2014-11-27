@@ -1,3 +1,22 @@
+<div class="page-header" style="height: 50px;">
+    <!--Project-->
+    <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
+        <div class="form-group">
+            <span><b>Project: </b></span>
+            <select chosen ng-model="project.selectedProject" ng-init="newAccess.permission=permissions.READ.value;project.selectedProject=project.selectedProject!=null?project.selectedProject:project.projects[0]"
+                    ng-options="project as project for project in project.projects"
+                    style="width: 150px"
+                    data-placeholder="select a project"
+                    class="chosen-select">
+            </select>
+            <!--Project-->
+            <a class="btn btn-xs btn-info" href="/projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
+            <a class="btn btn-xs btn-primary" style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
+                <i class="fa fa-plus"></i>
+            </a>
+        </div>
+    </form>
+</div>
 <div class="row">
     <div class="{{fullsql?'hidden':'col-md-3'}}">
         <div ng-include src="'partials/projects/project_table_tree.html'" ng-controller="ProjectMetaCtrl"></div>
@@ -34,7 +53,7 @@
                     </p>
                     <div class="pull-left">
                         <h4>
-                            Project: <span class="label label-info">{{curProject}}</span>
+                            Project: <span class="label label-info">{{project.selectedProject}}</span>
                         </h4>
                     </div>
                     <div class="pull-right">

@@ -27,7 +27,7 @@ import com.kylinolap.storage.tuple.ITuple;
 /**
  * A special kind of tuple that exposes column value (dictionary ID) directly on
  * top of row key.
- * 
+ *
  * @author yangli9
  */
 public class SRowTuple implements ITuple {
@@ -76,9 +76,10 @@ public class SRowTuple implements ITuple {
         return values[i];
     }
 
+
     @Override
     public Object getValue(TblColRef col) {
-        int i = type.columnIdxMap.get(col);
+        int i = type.getColIndexByTblColRef(col);
         return getValueAt(i);
     }
 

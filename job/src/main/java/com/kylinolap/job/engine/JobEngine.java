@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.kylinolap.common.KylinConfig;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.math.stat.descriptive.rank.Percentile;
 import org.apache.curator.RetryPolicy;
@@ -121,8 +122,8 @@ public class JobEngine implements ConnectionStateListener {
     }
 
     private void startScheduler() throws JobException, IOException {
-        // FIXME hard code
-        new File("/tmp/kylin/logs/").mkdirs();
+        String logDir = KylinConfig.getInstanceFromEnv().getKylinJobLogDir();
+        new File(logDir).mkdirs();
 
         log.info("Starting scheduler.");
         this.scheduler.start();

@@ -1,22 +1,25 @@
 <div class="page-header">
     <!--Project-->
-    <span>
-        Project:
-        <select chosen ng-model="listParams.projectName" ng-init="newAccess.permission=permissions.READ.value"
-                ng-options="project as project for project in projects"
-                style="width: 150px" ng-change="cubes=[];reload()"
-                class="chosen-select">
-            <option value="">-- All Projects --</option>
-        </select>
-    </span>
-    <a class="btn btn-xs btn-info" href="/projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
-    <a class="btn btn-xs btn-primary" style="width: 29px" ng-if="userService.hasRole('ROLE_MODELER')" tooltip="Add Project" ng-click="toCreateProj()">
-        <i class="fa fa-plus"></i>
-    </a>
+    <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
+        <div class="form-group">
+            <span><b>Project: </b></span>
+            <select chosen ng-model="project.selectedProject" ng-init="newAccess.permission=permissions.READ.value;project.selectedProject=project.selectedProject!=null?project.selectedProject:project.projects[0]"
+                    ng-options="project as project for project in project.projects"
+                    style="width: 150px"
+                    data-placeholder="select a project"
+                    class="chosen-select">
+            </select>
+            <!--Project-->
+            <a class="btn btn-xs btn-info" href="/projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
+            <a class="btn btn-xs btn-primary" style="width: 29px" ng-if="userService.hasRole('ROLE_MODELER')"  tooltip="Add Project" ng-click="toCreateProj()">
+                <i class="fa fa-plus"></i>
+            </a>
+        </div>
+    </form>
     <!--Cube Name-->
     <span style="padding-left: 40px" >
         <form ng-submit="cubes=[];list()" style="display: inline" >
-            <span class="input-icon input-icon-right nav-search">Cube Name:
+            <span class="input-icon input-icon-right nav-search"><b>Cube Name:</b>
                 <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="listParams.cubeName" />
                 <i class="ace-icon fa fa-search blue" ng-click="cubes=[];list()"></i>
             </span>
@@ -138,3 +141,4 @@
 <div ng-include="'partials/jobs/job_refresh.html'"></div>
 <div ng-include="'partials/jobs/job_merge.html'"></div>
 <div ng-include="'partials/projects/project_create.html'"></div>
+

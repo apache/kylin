@@ -28,7 +28,6 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.eclipse.jdt.internal.core.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,13 +93,13 @@ public class NewBaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> 
     private HashMap<String, LookupBytesTable> lookupTables;// name -> table
     private LinkedList<TableJoin> tableJoins;
     private LinkedList<Pair<Integer, Integer>> factTblColAsRowKey;// similar as
-                                                                  // TableJoin.dimTblColAsRowKey
+    // TableJoin.dimTblColAsRowKey
     private int[][] measureColumnIndice;
     private byte[] nullValue;
 
     private class TableJoin {
         public LinkedList<Integer> fkIndice;// zero-based join columns on fact
-                                            // table
+        // table
         public String lookupTableName;
         public String joinType;
 
@@ -146,8 +145,8 @@ public class NewBaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> 
         bytesSplitter = new BytesSplitter(factTableDesc.getColumns().length, 4096);
 
         nullValue = new byte[] { (byte) '\\', (byte) 'N' };// As in Hive, null
-                                                           // value is
-                                                           // represented by \N
+        // value is
+        // represented by \N
 
         prepareJoins();
         prepareMetrics();
@@ -264,7 +263,7 @@ public class NewBaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> 
             filledDimension++;
         }
 
-        Assert.isTrue(filledDimension == keyBytesBuf.length);
+        assert filledDimension == keyBytesBuf.length;
 
         // all the row key slots(keyBytesBuf) should be complete now
         return rowKeyEncoder.encode(keyBytesBuf);

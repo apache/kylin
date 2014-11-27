@@ -18,6 +18,7 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.DataType;
 import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.DimensionDesc;
@@ -220,7 +221,7 @@ public class FactTableGenerator {
             public int compare(DimensionDesc o1, DimensionDesc o2) {
                 JoinDesc j1 = o2.getJoin();
                 JoinDesc j2 = o1.getJoin();
-                return Integer.compare(j1 != null ? j1.getPrimaryKey().length : 0, j2 != null ? j2.getPrimaryKey().length : 0);
+                return Integer.valueOf(j1 != null ? j1.getPrimaryKey().length : 0).compareTo(j2 != null ? j2.getPrimaryKey().length : 0);
             }
         });
         return dimensions;
@@ -335,32 +336,31 @@ public class FactTableGenerator {
     }
 
     private String createRandomCell(ColumnDesc cDesc, ArrayList<String> range) throws Exception {
-        String type = cDesc.getTypeName();
-        String s = type.toLowerCase();
-        if (s.equals("string") || s.equals("char") || s.equals("varchar")) {
+        DataType type = cDesc.getType();
+        if (type.isStringFamily()) {
             throw new Exception("Can't handle range values for string");
 
-        } else if (s.equals("bigint") || s.equals("int") || s.equals("tinyint") || s.equals("smallint")) {
+        } else if (type.isIntegerFamily()) {
             int low = Integer.parseInt(range.get(0));
             int high = Integer.parseInt(range.get(1));
             return Integer.toString(r.nextInt(high - low) + low);
 
-        } else if (s.equals("double")) {
+        } else if (type.isDouble()) {
             double low = Double.parseDouble(range.get(0));
             double high = Double.parseDouble(range.get(1));
             return String.format("%.4f", r.nextDouble() * (high - low) + low);
 
-        } else if (s.equals("float")) {
+        } else if (type.isFloat()) {
             float low = Float.parseFloat(range.get(0));
             float high = Float.parseFloat(range.get(1));
             return String.format("%.4f", r.nextFloat() * (high - low) + low);
 
-        } else if (s.equals("decimal")) {
+        } else if (type.isDecimal()) {
             double low = Double.parseDouble(range.get(0));
             double high = Double.parseDouble(range.get(1));
             return String.format("%.4f", r.nextDouble() * (high - low) + low);
 
-        } else if (s.equals("date")) {
+        } else if (type.isDateTimeFamily()) {
 
             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
             Date start = format.parse(range.get(0));

@@ -34,13 +34,12 @@ import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * @author yangli9
- * 
  */
 public class SRowType {
 
     public static SRowType fromCuboid(CubeSegment seg, Cuboid cuboid) {
         List<TblColRef> colList = cuboid.getColumns();
-        TblColRef[] cols = (TblColRef[]) colList.toArray(new TblColRef[colList.size()]);
+        TblColRef[] cols = colList.toArray(new TblColRef[colList.size()]);
         RowKeyColumnIO colIO = new RowKeyColumnIO(seg);
         int[] colSizes = new int[cols.length];
         for (int i = 0; i < cols.length; i++) {
@@ -111,6 +110,10 @@ public class SRowType {
         this.columns = columns;
         this.columnSizes = columnSizes;
         init();
+    }
+
+    public int getColIndexByTblColRef(TblColRef colRef) {
+        return columnIdxMap.get(colRef);
     }
 
     private void init() {
