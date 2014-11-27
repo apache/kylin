@@ -413,10 +413,7 @@ public class CubeInstance extends RootPersistentEntity {
                 return false;
             }
         }
-        if (getDateRange()[1] == newSegmentRangeStart) {
-            return true;
-        }
-        return false;
+        return true;
     }
 
 }
