@@ -23,7 +23,7 @@ import java.util.Map;
 
 import com.google.protobuf.ByteString;
 import com.kylinolap.cube.invertedindex.*;
-import com.kylinolap.storage.hbase.coprocessor.generated.IIProtos;
+import com.kylinolap.storage.hbase.endpoint.generated.IIProtos;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
@@ -89,41 +89,6 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
         System.out.println(records.size() + " records");
     }
 
-    @Test
-    public void testEndpoint() throws Throwable {
-        String tableName = seg.getStorageLocationIdentifier();
-        HTableInterface table = hconn.getTable(tableName);
-        final TableRecordInfoDigest recordInfo = new TableRecordInfo(seg);
-        final IIProtos.IIRequest request = IIProtos.IIRequest.newBuilder().setTableInfo(
-                ByteString.copyFrom(TableRecordInfoDigest.serialize(recordInfo))).build();
-
-        Map<byte[], List<TableRecord>> results = table.coprocessorService(IIProtos.RowsService.class,
-                null, null,
-                new Batch.Call<IIProtos.RowsService, List<TableRecord>>() {
-                    public List<TableRecord> call(IIProtos.RowsService counter) throws IOException {
-                        ServerRpcController controller = new ServerRpcController();
-                        BlockingRpcCallback<IIProtos.IIResponse> rpcCallback =
-                                new BlockingRpcCallback<IIProtos.IIResponse>();
-                        counter.getRows(controller, request, rpcCallback);
-                        IIProtos.IIResponse response = rpcCallback.get();
-                        if (controller.failedOnException()) {
-                            throw controller.getFailedOn();
-                        }
-
-                        List<TableRecord> records = new ArrayList<TableRecord>();
-                        for (ByteString raw : response.getRowsList()) {
-                            TableRecord record = new TableRecord(recordInfo);
-                            record.setBytes(raw.toByteArray(), 0, raw.size());
-                            records.add(record);
-                        }
-                        return records;
-                    }
-                });
-
-        for (Map.Entry<byte[], List<TableRecord>> entry : results.entrySet()) {
-            System.out.println("result count : " + entry.getValue());
-        }
-    }
 
     private List<TableRecord> iterateRecords(List<Slice> slices) {
         List<TableRecord> records = Lists.newArrayList();

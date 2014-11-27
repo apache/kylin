@@ -47,6 +47,7 @@ public class DataType {
     public static final Set<String> INTEGER_FAMILY = new HashSet<String>();
     public static final Set<String> NUMBER_FAMILY = new HashSet<String>();
     public static final Set<String> DATETIME_FAMILY = new HashSet<String>();
+    public static final Set<String> STRING_FAMILY = new HashSet<String>();
     private static final Set<Integer> HLLC_PRECISIONS = new HashSet<Integer>();
     private static final Map<String, String> LEGACY_TYPE_MAP = new HashMap<String, String>();
     static {
@@ -66,6 +67,9 @@ public class DataType {
         DATETIME_FAMILY.add("time");
         DATETIME_FAMILY.add("datetime");
         DATETIME_FAMILY.add("timestamp");
+        
+        STRING_FAMILY.add("varchar");
+        STRING_FAMILY.add("char");
 
         LEGACY_TYPE_MAP.put("byte", "tinyint");
         LEGACY_TYPE_MAP.put("int", "integer");
@@ -180,6 +184,10 @@ public class DataType {
         throw new IllegalStateException("The return type : " + name + " is not recognized;");
     }
 
+    public boolean isStringFamily() {
+        return STRING_FAMILY.contains(name);
+    }
+    
     public boolean isIntegerFamily() {
         return INTEGER_FAMILY.contains(name);
     }
@@ -201,7 +209,7 @@ public class DataType {
     }
 
     public boolean isInt() {
-        return name.equals("int");
+        return name.equals("integer");
     }
 
     public boolean isBigInt() {

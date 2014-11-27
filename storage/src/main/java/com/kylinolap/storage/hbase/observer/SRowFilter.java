@@ -38,7 +38,8 @@ import com.kylinolap.storage.tuple.ITuple;
 
 /**
  * @author yangli9
- * 
+ *         <p/>
+ *         S for storage
  */
 public class SRowFilter {
 
@@ -51,7 +52,7 @@ public class SRowFilter {
             public TupleFilter onSerialize(TupleFilter filter) {
                 if (filter == null)
                     return filter;
-                
+
                 if (filter.getOperator() == FilterOperatorEnum.NOT && TupleFilter.isEvaluableRecursively(filter) == false)
                     return ConstantTupleFilter.TRUE;
 
@@ -175,16 +176,20 @@ public class SRowFilter {
 
     public static SRowFilter deserialize(byte[] filterBytes) {
         TupleFilter filter = (filterBytes == null || filterBytes.length == 0) //
-        ? null //
+                ? null //
                 : TupleFilterSerializer.deserialize(filterBytes);
         return new SRowFilter(filter);
     }
 
     // ============================================================================
 
-    protected final TupleFilter filter;
+    public TupleFilter getFilter() {
+        return filter;
+    }
 
-    protected SRowFilter(TupleFilter filter) {
+    private final TupleFilter filter;
+
+    public SRowFilter(TupleFilter filter) {
         this.filter = filter;
     }
 

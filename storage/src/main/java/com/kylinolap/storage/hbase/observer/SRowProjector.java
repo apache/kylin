@@ -32,7 +32,6 @@ import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * @author yangli9
- * 
  */
 public class SRowProjector {
 

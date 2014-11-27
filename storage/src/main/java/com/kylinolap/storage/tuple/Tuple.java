@@ -87,6 +87,8 @@ public class Tuple implements ITuple {
         // BigDecimal during cube build for best precision
         if ("double".equals(dataType) && fieldValue instanceof BigDecimal) {
             fieldValue = ((BigDecimal) fieldValue).doubleValue();
+        } else if ("integer".equals(dataType) && !(fieldValue instanceof Integer)) {
+            fieldValue = ((Number) fieldValue).intValue();
         }
         setFieldObjectValue(fieldName, fieldValue);
     }
@@ -117,19 +119,15 @@ public class Tuple implements ITuple {
         // TODO use data type enum instead of string comparison
         if ("date".equals(dataType)) {
             // convert epoch time
-            Date dateValue = DateStrDictionary.stringToDate(strValue); // NOTE:
-                                                                       // forces
-                                                                       // GMT
-                                                                       // timezone
+            Date dateValue = DateStrDictionary.stringToDate(strValue); // NOTE: forces GMT timezone
             long millis = dateValue.getTime();
             long days = millis / (1000 * 3600 * 24);
-            return Integer.valueOf((int) days); // Optiq expects Integer instead
-                                                // of Long. by honma
+            return Integer.valueOf((int) days); // Optiq expects Integer instead of Long. by honma
         } else if ("tinyint".equals(dataType)) {
             return Byte.valueOf(strValue);
         } else if ("short".equals(dataType) || "smallint".equals(dataType)) {
             return Short.valueOf(strValue);
-        } else if ("int".equals(dataType)) {
+        } else if ("integer".equals(dataType)) {
             return Integer.valueOf(strValue);
         } else if ("long".equals(dataType) || "bigint".equals(dataType)) {
             return Long.valueOf(strValue);

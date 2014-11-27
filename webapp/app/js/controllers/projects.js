@@ -59,21 +59,6 @@ KylinApp
                 });
             }
         }
-
-        $scope.toCreateProj = function () {
-            $modal.open({
-                templateUrl: 'project.html',
-                controller: projCtrl,
-                resolve: {
-                    projects: function () {
-                        return $scope.projects;
-                    },
-                    project: function(){
-                        return null;
-                    }
-                }
-            });
-        }
     }
 );
 

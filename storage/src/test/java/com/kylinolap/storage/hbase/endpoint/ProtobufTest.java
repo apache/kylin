@@ -1,6 +1,6 @@
-package com.kylinolap.storage.hbase.coprocessor;
+package com.kylinolap.storage.hbase.endpoint;
 
-import com.kylinolap.storage.hbase.coprocessor.example.generated.NodeProtos;
+import com.kylinolap.storage.hbase.endpoint.example.generated.NodeProtos;
 import org.junit.Assert;
 import org.junit.Test;
 

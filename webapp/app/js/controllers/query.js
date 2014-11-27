@@ -39,35 +39,39 @@ KylinApp
         $scope.state = {
             selectedProject: null
         };
-
-        TableService.list({}, function (tables) {
-            $scope.srcTables = [];
-            $scope.srcColumns = [];
-            angular.forEach(tables, function (table) {
-                $scope.srcTables.push({
-                    meta: 'table',
-                    name: table.name,
-                    score: 0,
-                    value: table.name
-                });
-
-                angular.forEach(table.columns, function (column) {
-                    $scope.srcColumns.push({
-                        meta: 'column',
-                        name: table.name + '.' + column.name,
-                        score: 0,
-                        value: table.name + '.' + column.name
-                    });
-                });
-            });
-        });
+//        var param = {
+//            ext: true,
+//            quertTb:true,
+//            project:'onlyinner'
+//        };
+//        TableService.list(param, function (tables) {
+//            $scope.srcTables = [];
+//            $scope.srcColumns = [];
+//            angular.forEach(tables, function (table) {
+//                $scope.srcTables.push({
+//                    meta: 'table',
+//                    name: table.name,
+//                    score: 0,
+//                    value: table.name
+//                });
+//
+//                angular.forEach(table.columns, function (column) {
+//                    $scope.srcColumns.push({
+//                        meta: 'column',
+//                        name: table.name + '.' + column.name,
+//                        score: 0,
+//                        value: table.name + '.' + column.name
+//                    });
+//                });
+//            });
+//        });
 
         var Query = {
             createNew: function (sql, project) {
                 var query = {
                     originSql: sql,
                     sql: sql,
-                    project: (!!project)? project:$scope.state.selectedProject,
+                    project: (!!project)? project:$scope.project.selectedProject,
                     status: 'executing',
                     acceptPartial: true,
                     result: {
@@ -112,12 +116,6 @@ KylinApp
                 query.startTime = new Date();
             }
         }
-
-        $scope.$watch('state.selectedProject', function (newValue, oldValue) {
-            if (newValue) {
-                $scope.curProject = newValue;
-            }
-        });
 
         $scope.checkLimit = function () {
             if (!$scope.rowsPerPage) {
@@ -407,6 +405,8 @@ KylinApp
                 }
             }
         });
+
+
     })
     .controller('QueryResultCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, GraphService) {
         $scope.buildGraphMetadata = function (query) {
