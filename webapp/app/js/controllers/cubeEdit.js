@@ -52,7 +52,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         cubePartitionType: 'APPEND'
     };
 
-    $scope.dictionaries = ['date(yyyy-mm-dd)', 'string'];
+    $scope.dictionaries = ['true', 'false'];
     $scope.srcTablesInProject = [];
 
     $scope.getColumnsByTable = function (name) {
