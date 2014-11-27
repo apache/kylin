@@ -62,7 +62,7 @@ public class ShellCmd implements IJobCommand {
         this.output = out;
         this.remoteHost = host;
         this.remoteUser = user;
-        if (new File(password).exists()) {
+        if (password != null && new File(password).exists()) {
             this.identityPath = new File(password).getAbsolutePath();
             this.remotePassword = null;
         } else {
