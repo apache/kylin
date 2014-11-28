@@ -87,8 +87,10 @@ public class HiveMiniClusterTest extends HiveJDBCClientTest {
             String[] racks = null;
             String[] hosts = null;
             miniMR = new MiniMRCluster(numTaskTrackers, miniDFS.getFileSystem().getUri().toString(), numTaskTrackerDirectories, racks, hosts, new JobConf(conf));
-
-            System.setProperty("mapred.job.tracker", miniMR.createJobConf(new JobConf(conf)).get("mapred.job.tracker"));
+            JobConf jobConf = miniMR.createJobConf(new JobConf(conf));
+            System.out.println("-------" + jobConf.get("fs.defaultFS"));
+            System.out.println("-------" + miniDFS.getFileSystem().getUri().toString());
+            System.setProperty("mapred.job.tracker",jobConf.get("mapred.job.tracker"));
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
