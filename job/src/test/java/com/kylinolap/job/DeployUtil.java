@@ -25,8 +25,8 @@ import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.hive.SqlHiveDataTypeMapping;
 import com.kylinolap.job.tools.LZOSupportnessChecker;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
 
 public class DeployUtil {
     @SuppressWarnings("unused")
