@@ -187,7 +187,7 @@ public class JoinedFlatTable {
             long dateStart = cubeSegment.getDateRangeStart();
             long dateEnd = cubeSegment.getDateRangeEnd();
 
-            if (cubeSegment.getCubeInstance().needMergeImmediatelyAfterBuild()) {
+            if (cubeSegment.getCubeInstance().needMergeImmediatelyAfterBuild(cubeSegment)) {
                 dateStart = cubeSegment.getCubeInstance().getDateRange()[1];
             }
             if (!(dateStart == 0 && dateEnd == 0)) {
