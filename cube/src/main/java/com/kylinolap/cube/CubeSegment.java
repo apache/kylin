@@ -305,6 +305,7 @@ public class CubeSegment implements Comparable<CubeSegment> {
                 .add("create_time:", createTime)
                 .add("name", name)
                 .add("last_build_job_id", lastBuildJobID)
+                .add("status", status)
                 .toString();
     }
 }
