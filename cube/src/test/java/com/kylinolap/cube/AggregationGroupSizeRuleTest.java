@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.metadata.validation.rule;
+package com.kylinolap.cube;
 
 import static org.junit.Assert.*;
 

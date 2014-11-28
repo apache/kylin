@@ -325,7 +325,7 @@ public class ProjectManager {
         List<CubeInstance> cubes = new ArrayList<CubeInstance>();
         ProjectTable projectTable = this.getProjectTable(project, factTableName);
         for (CubeInstance cube : projectTable.getCubes()) {
-            if (cube.getDescriptor().isFactTable(factTableName) && cube.isReady()) {
+            if (cube.getDescriptor().getModel().isFactTable(factTableName) && cube.isReady()) {
                 cubes.add(cube);
             }
         }
@@ -340,7 +340,7 @@ public class ProjectManager {
         for (CubeInstance cube : getProjectTable(project, factTable).getCubes()) {
             if (cube.isReady() == false)
                 continue;
-            if (cube.getDescriptor().isFactTable(factTable) == false)
+            if (cube.getDescriptor().getModel().isFactTable(factTable) == false)
                 continue;
 
             relatedDesc.add(cube.getDescriptor());

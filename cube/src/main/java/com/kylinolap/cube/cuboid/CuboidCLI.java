@@ -22,11 +22,11 @@ import java.util.LinkedList;
 import java.util.TreeSet;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.RowKeyDesc;
 import com.kylinolap.cube.model.RowKeyDesc.AggrGroupMask;
 import com.kylinolap.cube.model.RowKeyDesc.HierarchyMask;
-import com.kylinolap.metadata.MetadataManager;
 
 /**
  * @author yangli9
@@ -35,7 +35,7 @@ import com.kylinolap.metadata.MetadataManager;
 public class CuboidCLI {
 
     public static void main(String[] args) throws IOException {
-        MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        CubeManager metaMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
 
         if ("test".equals(args[0])) {
             CubeDesc cubeDesc = metaMgr.getCubeDesc(args[1]);

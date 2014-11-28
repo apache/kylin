@@ -335,7 +335,7 @@ public class CubeManager {
             if (iiDesc.isMetricsCol(col))
                 continue;
             
-            DictionaryInfo dict = dictMgr.buildDictionary(null, col, factColumnsPath);
+            DictionaryInfo dict = dictMgr.buildDictionary(null, null, col, factColumnsPath);
             cubeSeg.putDictResPath(col, dict.getResourcePath());
         }
 
@@ -343,11 +343,12 @@ public class CubeManager {
     }
 
     public DictionaryInfo buildDictionary(CubeSegment cubeSeg, TblColRef col, String factColumnsPath) throws IOException {
-        if (!cubeSeg.getCubeDesc().getRowkey().isUseDictionary(col))
+        CubeDesc cubeDesc = cubeSeg.getCubeDesc();
+        if (!cubeDesc.getRowkey().isUseDictionary(col))
             return null;
 
         DictionaryManager dictMgr = getDictionaryManager();
-        DictionaryInfo dictInfo = dictMgr.buildDictionary(cubeSeg.getCubeDesc(), col, factColumnsPath);
+        DictionaryInfo dictInfo = dictMgr.buildDictionary(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, factColumnsPath);
         cubeSeg.putDictResPath(col, dictInfo.getResourcePath());
 
         saveResource(cubeSeg.getCubeInstance());
@@ -639,10 +640,12 @@ public class CubeManager {
         HashSet<TblColRef> colsNeedCopyDict = new HashSet<TblColRef>();
         DictionaryManager dictMgr = this.getDictionaryManager();
 
-        for (DimensionDesc dim : cube.getDescriptor().getDimensions()) {
+        CubeDesc cubeDesc = cube.getDescriptor();
+        for (DimensionDesc dim : cubeDesc.getDimensions()) {
             for (TblColRef col : dim.getColumnRefs()) {
                 if (newSeg.getCubeDesc().getRowkey().isUseDictionary(col)) {
-                    if (cube.getDescriptor().getFactTable().equalsIgnoreCase((String) dictMgr.decideSourceData(cube.getDescriptor(), col, null)[0])) {
+                    String dictTable = (String) dictMgr.decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null)[0];
+                    if (cubeDesc.getFactTable().equalsIgnoreCase(dictTable)) {
                         colsNeedMeringDict.add(col);
                     } else {
                         colsNeedCopyDict.add(col);
