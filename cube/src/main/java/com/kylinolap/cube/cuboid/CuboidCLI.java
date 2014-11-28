@@ -24,6 +24,7 @@ import java.util.TreeSet;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.cube.CubeDesc;
+import com.kylinolap.metadata.model.cube.RowKeyDesc;
 import com.kylinolap.metadata.model.cube.RowKeyDesc.AggrGroupMask;
 import com.kylinolap.metadata.model.cube.RowKeyDesc.HierarchyMask;
 
@@ -112,34 +113,45 @@ public class CuboidCLI {
     }
 
     public static int mathCalcCuboidCount(CubeDesc cube) {
-        int result = 0;
-        int lastAggrGroupCount = 0;
-        for (AggrGroupMask aggrGroupMask : cube.getRowkey().getAggrGroupMasks()) {
-            lastAggrGroupCount = mathCalcCuboidCount_aggrGroup(cube, aggrGroupMask);
-            result += lastAggrGroupCount;
+        int result = 1; // 1 for base cuboid
+
+        RowKeyDesc rowkey = cube.getRowkey();
+        AggrGroupMask[] aggrGroupMasks = rowkey.getAggrGroupMasks();
+        for (int i = 0; i < aggrGroupMasks.length; i++) {
+            boolean hasTail = i < aggrGroupMasks.length - 1 || rowkey.getTailMask() > 0;
+            result += mathCalcCuboidCount_aggrGroup(rowkey, aggrGroupMasks[i], hasTail);
         }
-        result *= 2; // for zero-tail
-        if (cube.getRowkey().getTailMask() == 0) { // last group may not have
-                                                   // zero-tail cuboid
-            result -= lastAggrGroupCount;
-        }
-        result--; // minus the all-zero cuboid
+
         return result;
     }
 
-    private static int mathCalcCuboidCount_aggrGroup(CubeDesc cube, AggrGroupMask aggrGroupMask) {
+    private static int mathCalcCuboidCount_aggrGroup(RowKeyDesc rowkey, AggrGroupMask aggrGroupMask, boolean hasTail) {
         long groupMask = aggrGroupMask.groupMask;
+        int n = mathCalcCuboidCount_combination(rowkey, groupMask);
+        n -= 2; // exclude group all 1 and all 0
+        
         long nonUniqueMask = groupMask & (~aggrGroupMask.uniqueMask);
-        return mathCalcCuboidCount_combination(cube, groupMask) - mathCalcCuboidCount_combination(cube, nonUniqueMask);
+        if (nonUniqueMask > 0) {
+            // exclude duplicates caused by non-unique columns
+            // FIXME this assumes non-unique masks consolidates in ONE following group which maybe not be true
+            n -= mathCalcCuboidCount_combination(rowkey, nonUniqueMask) - 1; // exclude all 0
+        }
+        
+        if (hasTail) {
+            n *= 2; // tail being 1 and 0
+            n += 2; // +1 for group all 1 and tail 0; +1 for group all 0 and tail 1
+        }
+
+        return n;
     }
 
-    private static int mathCalcCuboidCount_combination(CubeDesc cube, long colMask) {
+    private static int mathCalcCuboidCount_combination(RowKeyDesc rowkey, long colMask) {
         if (colMask == 0) // no column selected
             return 0;
 
         int count = 1;
 
-        for (HierarchyMask hierMask : cube.getRowkey().getHierarchyMasks()) {
+        for (HierarchyMask hierMask : rowkey.getHierarchyMasks()) {
             long hierBits = colMask & hierMask.fullMask;
             if (hierBits != 0) {
                 count *= Long.bitCount(hierBits) + 1; // +1 is for all-zero case

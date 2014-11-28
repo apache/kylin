@@ -19,6 +19,7 @@ import static org.junit.Assert.*;
 
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
+import java.util.UUID;
 
 import org.junit.After;
 import org.junit.Before;
@@ -75,14 +76,14 @@ public class JobInstanceBuilderTest extends LocalFileMetadataTestCase {
         // initial segment
         CubeSegment segment = cubeManager.allocateSegments(cube, CubeBuildTypeEnum.BUILD, 0, dateEnd).get(0);
 
-        JobInstance jobInstance = jobManager.createJob(cubeName, segment.getName(), CubeBuildTypeEnum.BUILD);
+        JobInstance jobInstance = jobManager.createJob(cubeName, segment.getName(), UUID.randomUUID().toString(), CubeBuildTypeEnum.BUILD);
 
         String actual = JsonUtil.writeValueAsIndentString(jobInstance);
         System.out.println(actual);
 
         assertEquals(13, jobInstance.getSteps().size());
 
-        assertTrue(jobInstance.getSteps().get(3).getExecCmd().contains("hadoop_job_conf.xml"));
+        assertTrue(jobInstance.getSteps().get(3).getExecCmd().contains(JobEngineConfig.HADOOP_JOB_CONF_FILENAME + ".xml"));
 
         JobStep jobStep;
         // check each step
@@ -150,7 +151,7 @@ public class JobInstanceBuilderTest extends LocalFileMetadataTestCase {
         // initial segment
         CubeSegment segment = CubeManager.getInstance(this.getTestConfig()).allocateSegments(cube, CubeBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L).get(0);
 
-        JobInstance jobInstance = jobManager.createJob(cubeName, segment.getName(), CubeBuildTypeEnum.MERGE);
+        JobInstance jobInstance = jobManager.createJob(cubeName, segment.getName(), UUID.randomUUID().toString(), CubeBuildTypeEnum.MERGE);
 
         String actual = JsonUtil.writeValueAsIndentString(jobInstance);
         System.out.println(actual);

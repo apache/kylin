@@ -42,7 +42,8 @@ import org.apache.commons.lang.StringUtils;
 public class DateStrDictionary extends Dictionary<String> {
 
     static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd";
-    static final String DEFAULT_DATETIME_PATTERN = "yyyy-MM-dd HH:mm:ss.SSS";
+    static final String DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS = "yyyy-MM-dd HH:mm:ss";
+    static final String DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS = "yyyy-MM-dd HH:mm:ss.SSS";
 
     static final private Map<String, ThreadLocal<SimpleDateFormat>> threadLocalMap = new ConcurrentHashMap<String, ThreadLocal<SimpleDateFormat>>();
 
@@ -65,7 +66,7 @@ public class DateStrDictionary extends Dictionary<String> {
     }
 
     public static String dateToString(Date date) {
-        return dateToString(date, DEFAULT_DATE_PATTERN);
+        return dateToString(date, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
     }
 
     public static String dateToString(Date date, String pattern) {
@@ -87,10 +88,15 @@ public class DateStrDictionary extends Dictionary<String> {
     }
 
     public static long stringToMillis(String str) {
-        if (str.length() == 10)
+        if (str.length() == 10) {
             return stringToDate(str, DEFAULT_DATE_PATTERN).getTime();
-        else
-            return stringToDate(str, DEFAULT_DATETIME_PATTERN).getTime();
+        } else if (str.length() == 19) {
+            return stringToDate(str, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS).getTime();
+        } else if (str.length() == 23) {
+            return stringToDate(str, DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS).getTime();
+        } else {
+            throw new IllegalArgumentException("there is no valid date pattern for:" + str);
+        }
     }
 
     // ============================================================================

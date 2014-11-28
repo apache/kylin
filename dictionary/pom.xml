@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.kylinolap</groupId>
         <artifactId>kylin</artifactId>
-        <version>0.6.2-SNAPSHOT</version>
+        <version>0.6.3-SNAPSHOT</version>
     </parent>
 
     <properties>
@@ -61,6 +61,11 @@
         <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-common</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-client</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>

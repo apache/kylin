@@ -93,7 +93,10 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
     $scope.addNewDimension = function (dimension) {
         $scope.newDimension = (!!dimension)? dimension: Dimension.createNew();
-        if($scope.newDimension.status.useJoin||$scope.newDimension.join.foreign_key.length!=0){
+        if(!$scope.newDimension.join){
+            $scope.newDimension.join = { "type": "","primary_key": [],"foreign_key": []}
+        }
+        if($scope.newDimension.status&&$scope.newDimension.status.useJoin||$scope.newDimension.join.foreign_key.length!=0){
             $scope.newDimension.status.useJoin = true;
         }
     }
@@ -103,6 +106,12 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     }
 
     $scope.saveNewDimension = function () {
+        if($scope.editFlag.dimensionEdited=="init"){
+            $scope.editFlag.dimensionEdited = false;
+        }else{
+            $scope.editFlag.dimensionEdited=!$scope.editFlag.dimensionEdited;
+        }
+
         if ($scope.cubeMetaFrame.dimensions.indexOf($scope.newDimension) === -1) {
             $scope.cubeMetaFrame.dimensions.push($scope.newDimension);
         }
@@ -128,7 +137,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         $scope.cubeMetaFrame.rowkey.rowkey_columns.push({
             "column": "",
             "length": 0,
-            "dictionary": null,
+            "dictionary": true,
             "mandatory": false
         });
     }
@@ -154,6 +163,9 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     }
 
     $scope.addNewDerived = function (dimension) {
+        if(!dimension.derived){
+            dimension.derived = [];
+        }
         dimension.derived.push("");
     }
 
@@ -182,6 +194,18 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         var index = arr.indexOf(element);
         if (index > -1) {
             arr.splice(index, 1);
+        }
+    }
+
+    $scope.removeDimension = function (arr, element) {
+        var index = arr.indexOf(element);
+        if (index > -1) {
+            arr.splice(index, 1);
+            if($scope.editFlag.dimensionEdited=="init"){
+                $scope.editFlag.dimensionEdited = false;
+            }else{
+                $scope.editFlag.dimensionEdited=!$scope.editFlag.dimensionEdited;
+            }
         }
     }
 

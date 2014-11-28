@@ -179,7 +179,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
                 if (jobUuid != null && jobUuid.equals("") == false) {
                     String path = JobInstance.getJobWorkingDir(jobUuid, engineConfig.getHdfsWorkingDirectory());
                     allHdfsPathsNeedToBeDeleted.remove(path);
-                    log.info("Remove " + path + " from deletion list, as the path belongs to segment " + seg.getName() + " of cube " + cube.getName());
+                    log.info("Remove " + path + " from deletion list, as the path belongs to segment " + seg + " of cube " + cube.getName());
                 }
             }
         }

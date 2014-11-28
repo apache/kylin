@@ -27,13 +27,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.kylinolap.rest.request.AccessRequest;
 import com.kylinolap.rest.response.AccessEntryResponse;
 import com.kylinolap.rest.service.AccessService;
-import com.kylinolap.rest.service.TestBase;
+import com.kylinolap.rest.service.ServiceTestBase;
 
 /**
  * @author xduo
  * 
  */
-public class AccessControllerTest extends TestBase {
+public class AccessControllerTest extends ServiceTestBase {
 
     private AccessController accessController;
 

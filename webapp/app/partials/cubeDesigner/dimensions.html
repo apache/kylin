@@ -27,7 +27,7 @@
                 <th>Name</th>
                 <th>Table Name</th>
                 <th>Column Name</th>
-                <th>Data Type</th>
+                <!--<th>Data Type</th>-->
                 <th>Join</th>
                 <th>Derived</th>
                 <th>Hierarchy</th>
@@ -53,9 +53,9 @@
                 <span tooltip="dimension column name..">{{dimension.column}}</span>
                 </td>
                 <!--Data Type -->
-                <td>
-                    <span>{{dimension.datatype}}</span>
-                </td>
+                <!--<td>-->
+                    <!--<span>{{dimension.datatype}}</span>-->
+                <!--</td>-->
                 <!--Join Type -->
                 <td>
                     <span tooltip-html-unsafe="{{getJoinToolTip(dimension)}}">{{dimension.join.type}}</span>
@@ -77,7 +77,7 @@
                     </button>
                     <!-- remove button-->
                     <button class="btn btn-xs btn-danger"
-                            ng-click="removeElement(cubeMetaFrame.dimensions, dimension)"><i class="fa fa-trash-o"></i>
+                            ng-click="removeDimension(cubeMetaFrame.dimensions, dimension)"><i class="fa fa-trash-o"></i>
                     </button>
                 </td>
             </tr>
@@ -119,12 +119,12 @@
                     </div>
 
                     <!--Data Type-->
-                    <div class="form-group" ng-if="state.mode=='edit'">
+                    <div class="form-group" ng-if="state.mode=='edit'" ng-hide="true">
                         <div class="row">
                             <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Data Type</b></label>
                             <div class="col-xs-12 col-sm-6">
                                 <select class="form-control" ng-if="state.mode=='edit'"
-                                        chosen ng-model="newDimension.datatype"
+                                        chosen ng-model="string"
                                         ng-options="ddt as ddt for ddt in dimensionDataTypes">
                                     <option value="">-- Select a Data Type --</option>
                                 </select>
@@ -350,7 +350,7 @@
     </div>
     <div class="box-footer">
         <button class="btn btn-sm btn-info" ng-disabled="edit_dim_form.$invalid"
-                ng-click="saveNewDimension()" ng-show="state.mode=='edit'">Save</button>
+                ng-click="saveNewDimension()" ng-show="state.mode=='edit'">OK</button>
         <button class="btn btn-link" ng-click="clearNewDimension()">Cancel</button>
     </div>
 </div>

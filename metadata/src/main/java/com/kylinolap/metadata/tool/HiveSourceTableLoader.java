@@ -38,8 +38,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceTool;
+import com.kylinolap.common.util.CliCommandExecutor;
 import com.kylinolap.common.util.JsonUtil;
-import com.kylinolap.common.util.OSCommandExecutor;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
 
@@ -99,8 +99,8 @@ public class HiveSourceTableLoader {
         }
         cmd.append("\"");
 
-        OSCommandExecutor cmdExec = config.getOSCommandExecutor(cmd.toString());
-        String output = cmdExec.execute();
+        CliCommandExecutor cmdExec = config.getCliCommandExecutor();
+        String output = cmdExec.execute(cmd.toString());
 
         return extractTableDescFromHiveOutput(database, output, metaTmpDir);
     }
@@ -224,7 +224,8 @@ public class HiveSourceTableLoader {
             return "smallint";
         } else if ("byte".equals(colType)) {
             return "tinyint";
-        }
+        } else if ("bool".equals(colType))
+            return "boolean";
         return colType;
     }
 
