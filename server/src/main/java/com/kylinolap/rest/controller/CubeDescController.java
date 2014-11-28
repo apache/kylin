@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.metadata.model.cube.CubeDesc;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.rest.service.CubeService;
 
 /**

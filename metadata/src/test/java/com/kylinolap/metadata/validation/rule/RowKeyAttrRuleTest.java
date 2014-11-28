@@ -22,9 +22,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.kylinolap.common.util.JsonUtil;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.validation.IValidatorRule;
-import com.kylinolap.metadata.validation.ValidateContext;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.validation.IValidatorRule;
+import com.kylinolap.cube.model.validation.ValidateContext;
+import com.kylinolap.cube.model.validation.rule.RowKeyAttrRule;
 
 /**
  * @author jianliu

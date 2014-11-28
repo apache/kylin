@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kylinolap.metadata.validation;
+package com.kylinolap.cube.model.validation;
 
 import com.kylinolap.metadata.model.TableDesc;
 

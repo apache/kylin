@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.metadata.model.cube;
+package com.kylinolap.cube.model;
 
 import java.util.Map;
 

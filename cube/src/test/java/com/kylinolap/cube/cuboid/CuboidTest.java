@@ -22,8 +22,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
 
 /**
  * @author yangli9

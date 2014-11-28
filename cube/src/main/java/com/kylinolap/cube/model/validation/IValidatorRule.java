@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-package com.kylinolap.metadata.validation.rule;
+package com.kylinolap.cube.model.validation;
 
-import com.kylinolap.metadata.MetadataConstances;
+import com.kylinolap.cube.model.validation.rule.IKylinValidationConstances;
 
 /**
  * @author jianliu
  * 
  */
-public interface IKylinValidationConstances extends MetadataConstances {
+public interface IValidatorRule<T> extends IKylinValidationConstances {
 
-    public static final int DEFAULT_MAX_AGR_GROUP_SIZE = 20;
-    public static final String KEY_MAX_AGR_GROUP_SIZE = "rule_max.arggregation.group.size";
-    public static final String KEY_IGNORE_UNKNOWN_FUNC = "rule_ignore_unknown_func";
-
+    public void validate(T element, ValidateContext context);
 }

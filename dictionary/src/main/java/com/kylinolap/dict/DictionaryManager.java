@@ -33,12 +33,12 @@ import org.slf4j.LoggerFactory;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.util.HadoopUtil;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.dict.lookup.FileTable;
 import com.kylinolap.dict.lookup.HiveTable;
 import com.kylinolap.dict.lookup.ReadableTable;
 import com.kylinolap.dict.lookup.TableSignature;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.realization.TblColRef;
 
 public class DictionaryManager {

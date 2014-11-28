@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kylinolap.metadata.validation;
+package com.kylinolap.cube.model.validation;
 
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.validation.ValidateContext.Result;
-import com.kylinolap.metadata.validation.rule.AggregationGroupSizeRule;
-import com.kylinolap.metadata.validation.rule.FunctionRule;
-import com.kylinolap.metadata.validation.rule.MandatoryColumnRule;
-import com.kylinolap.metadata.validation.rule.RowKeyAttrRule;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.validation.ValidateContext.Result;
+import com.kylinolap.cube.model.validation.rule.AggregationGroupSizeRule;
+import com.kylinolap.cube.model.validation.rule.FunctionRule;
+import com.kylinolap.cube.model.validation.rule.MandatoryColumnRule;
+import com.kylinolap.cube.model.validation.rule.RowKeyAttrRule;
 
 /**
  * For cube metadata validator

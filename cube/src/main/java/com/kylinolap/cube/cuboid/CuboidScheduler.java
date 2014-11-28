@@ -26,9 +26,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.RowKeyDesc;
-import com.kylinolap.metadata.model.cube.RowKeyDesc.AggrGroupMask;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.RowKeyDesc;
+import com.kylinolap.cube.model.RowKeyDesc.AggrGroupMask;
 
 public class CuboidScheduler {
 

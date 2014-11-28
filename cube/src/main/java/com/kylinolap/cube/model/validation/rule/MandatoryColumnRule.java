@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.kylinolap.metadata.validation.rule;
+package com.kylinolap.cube.model.validation.rule;
 
 import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
 
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.RowKeyColDesc;
-import com.kylinolap.metadata.validation.IValidatorRule;
-import com.kylinolap.metadata.validation.ResultLevel;
-import com.kylinolap.metadata.validation.ValidateContext;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.RowKeyColDesc;
+import com.kylinolap.cube.model.validation.IValidatorRule;
+import com.kylinolap.cube.model.validation.ResultLevel;
+import com.kylinolap.cube.model.validation.ValidateContext;
 
 /**
  * Validate that mandatory column must NOT appear in aggregation group.

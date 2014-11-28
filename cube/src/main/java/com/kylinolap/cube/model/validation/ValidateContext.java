@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.metadata.validation;
+package com.kylinolap.cube.model.validation;
 
 import java.io.PrintStream;
 import java.util.ArrayList;

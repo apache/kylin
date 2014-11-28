@@ -26,8 +26,8 @@ import org.junit.Test;
 
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.realization.TblColRef;
 
 public class DictionaryManagerTest extends LocalFileMetadataTestCase {

@@ -21,7 +21,7 @@ import java.util.Collection;
 
 import org.apache.hadoop.io.Text;
 
-import com.kylinolap.metadata.model.cube.MeasureDesc;
+import com.kylinolap.cube.model.MeasureDesc;
 
 /**
  * @author yangli9

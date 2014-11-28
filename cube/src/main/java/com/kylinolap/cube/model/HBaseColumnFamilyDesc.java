@@ -13,54 +13,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kylinolap.metadata.model.cube;
+package com.kylinolap.cube.model;
+
+import java.util.Arrays;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
- * Created with IntelliJ IDEA. User: lukhan Date: 9/24/13 Time: 10:46 AM To
+ * Created with IntelliJ IDEA. User: lukhan Date: 9/30/13 Time: 10:41 AM To
  * change this template use File | Settings | File Templates.
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class HierarchyDesc {
+public class HBaseColumnFamilyDesc {
 
-    @JsonProperty("level")
-    private String level;
-    @JsonProperty("column")
-    private String column;
+    @JsonProperty("name")
+    private String name;
+    @JsonProperty("columns")
+    private HBaseColumnDesc[] columns;
 
-    private TblColRef columnRef;
-
-    public String getLevel() {
-        return level;
+    public String getName() {
+        return name;
     }
 
-    public void setLevel(String level) {
-        this.level = level;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public TblColRef getColumnRef() {
-        return columnRef;
+    public HBaseColumnDesc[] getColumns() {
+        return columns;
     }
 
-    public void setColumnRef(TblColRef column) {
-        this.columnRef = column;
-    }
-
-    public String getColumn() {
-        return column;
-    }
-
-    public void setColumn(String columnName) {
-        this.column = columnName;
+    public void setColumns(HBaseColumnDesc[] columns) {
+        this.columns = columns;
     }
 
     @Override
     public String toString() {
-        return "HierarchyDesc [level=" + level + ", column=" + column + "]";
+        return "HBaseColumnFamilyDesc [name=" + name + ", columns=" + Arrays.toString(columns) + "]";
     }
 
 }

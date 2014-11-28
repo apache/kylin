@@ -22,9 +22,9 @@ import java.util.HashSet;
 import java.util.List;
 
 import com.kylinolap.cube.exception.CubeIntegrityException;
+import com.kylinolap.cube.model.DimensionDesc;
+import com.kylinolap.cube.model.CubePartitionDesc.CubePartitionType;
 import com.kylinolap.dict.DictionaryManager;
-import com.kylinolap.metadata.model.cube.DimensionDesc;
-import com.kylinolap.metadata.model.cube.CubePartitionDesc.CubePartitionType;
 import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
