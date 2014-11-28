@@ -22,11 +22,11 @@ import java.util.LinkedList;
 import java.util.TreeSet;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.RowKeyDesc;
+import com.kylinolap.cube.model.RowKeyDesc.AggrGroupMask;
+import com.kylinolap.cube.model.RowKeyDesc.HierarchyMask;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.RowKeyDesc;
-import com.kylinolap.metadata.model.cube.RowKeyDesc.AggrGroupMask;
-import com.kylinolap.metadata.model.cube.RowKeyDesc.HierarchyMask;
 
 /**
  * @author yangli9

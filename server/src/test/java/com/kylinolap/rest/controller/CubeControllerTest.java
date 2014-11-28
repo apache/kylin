@@ -25,7 +25,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kylinolap.metadata.model.cube.CubeDesc;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.rest.request.CubeRequest;
 import com.kylinolap.rest.service.CubeService;
 import com.kylinolap.rest.service.JobService;

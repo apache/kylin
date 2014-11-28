@@ -20,7 +20,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.kylinolap.metadata.model.cube.MeasureDesc;
+import com.kylinolap.cube.model.MeasureDesc;
 import com.kylinolap.metadata.model.realization.FunctionDesc;
 
 /**

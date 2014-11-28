@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
+
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Result;
@@ -50,9 +51,9 @@ import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowKeyDecoder;
 import com.kylinolap.cube.kv.RowValueDecoder;
-import com.kylinolap.metadata.model.cube.HBaseColumnDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
-import com.kylinolap.metadata.model.cube.CubeDesc.DeriveInfo;
+import com.kylinolap.cube.model.HBaseColumnDesc;
+import com.kylinolap.cube.model.MeasureDesc;
+import com.kylinolap.cube.model.CubeDesc.DeriveInfo;
 import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.TupleFilter;

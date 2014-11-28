@@ -25,10 +25,10 @@ import org.junit.Test;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.cube.project.ProjectManager;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
 
 /**
  * @author yangli9

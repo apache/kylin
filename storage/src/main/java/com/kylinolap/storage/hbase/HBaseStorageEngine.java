@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
+
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
@@ -43,12 +44,12 @@ import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.CubeSegmentStatusEnum;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowValueDecoder;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.HBaseColumnDesc;
+import com.kylinolap.cube.model.HBaseMappingDesc;
+import com.kylinolap.cube.model.MeasureDesc;
+import com.kylinolap.cube.model.CubeDesc.DeriveInfo;
 import com.kylinolap.dict.lookup.LookupStringTable;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.HBaseColumnDesc;
-import com.kylinolap.metadata.model.cube.HBaseMappingDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
-import com.kylinolap.metadata.model.cube.CubeDesc.DeriveInfo;
 import com.kylinolap.metadata.model.realization.FunctionDesc;
 import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.IStorageEngine;

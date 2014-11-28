@@ -27,8 +27,8 @@ import java.util.Map;
 import org.eigenbase.reltype.RelDataType;
 
 import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.metadata.model.JoinDesc;
-import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.realization.FunctionDesc;
 import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.query.schema.OLAPSchema;

@@ -40,13 +40,13 @@ import com.kylinolap.common.restclient.Broadcaster;
 import com.kylinolap.common.restclient.SingleValueCache;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.DimensionDesc;
+import com.kylinolap.cube.model.MeasureDesc;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.DimensionDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
 import com.kylinolap.metadata.model.realization.FunctionDesc;
 import com.kylinolap.metadata.model.realization.TblColRef;
 

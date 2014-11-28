@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import java.util.Arrays;
 
 import com.kylinolap.storage.hbase.coprocessor.observer.ObserverRowType;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,7 +30,7 @@ import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.cuboid.Cuboid;
-import com.kylinolap.metadata.model.cube.CubeDesc;
+import com.kylinolap.cube.model.CubeDesc;
 
 /**
  * @author yangli9

@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
+
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,11 +46,11 @@ import com.kylinolap.cube.CubeBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.exception.CubeIntegrityException;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.exception.InvalidJobInstanceException;
 import com.kylinolap.job.exception.JobException;
-import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.rest.exception.BadRequestException;
 import com.kylinolap.rest.exception.ForbiddenException;
 import com.kylinolap.rest.exception.InternalErrorException;

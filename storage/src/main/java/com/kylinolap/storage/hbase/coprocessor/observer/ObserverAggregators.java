@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorConstants;
+
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.util.Bytes;
 
@@ -32,8 +33,8 @@ import com.kylinolap.cube.kv.RowConstants;
 import com.kylinolap.cube.kv.RowValueDecoder;
 import com.kylinolap.cube.measure.MeasureAggregator;
 import com.kylinolap.cube.measure.MeasureCodec;
-import com.kylinolap.metadata.model.cube.HBaseColumnDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
+import com.kylinolap.cube.model.HBaseColumnDesc;
+import com.kylinolap.cube.model.MeasureDesc;
 
 /**
  * @author yangli9

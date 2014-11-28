@@ -33,13 +33,13 @@ import org.xml.sax.SAXException;
 
 import com.kylinolap.common.util.StringUtil;
 import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.DimensionDesc;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc;
 import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc.IntermediateColumnDesc;
 import com.kylinolap.job.hadoop.hive.SqlHiveDataTypeMapping;
 import com.kylinolap.metadata.model.JoinDesc;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.DimensionDesc;
 import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**

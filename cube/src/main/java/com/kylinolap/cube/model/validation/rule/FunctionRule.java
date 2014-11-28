@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.metadata.validation.rule;
+package com.kylinolap.cube.model.validation.rule;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -25,17 +25,17 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.MeasureDesc;
+import com.kylinolap.cube.model.validation.IValidatorRule;
+import com.kylinolap.cube.model.validation.ResultLevel;
+import com.kylinolap.cube.model.validation.ValidateContext;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.DataType;
 import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
 import com.kylinolap.metadata.model.realization.FunctionDesc;
 import com.kylinolap.metadata.model.realization.ParameterDesc;
-import com.kylinolap.metadata.validation.IValidatorRule;
-import com.kylinolap.metadata.validation.ResultLevel;
-import com.kylinolap.metadata.validation.ValidateContext;
 
 /**
  * Validate function parameter. Ticket:

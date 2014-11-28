@@ -30,12 +30,12 @@ import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.common.BytesSplitter;
 import com.kylinolap.cube.common.SplittedBytes;
 import com.kylinolap.cube.cuboid.Cuboid;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.RowKeyDesc;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.RowKeyDesc;
 import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**

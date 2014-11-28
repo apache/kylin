@@ -14,15 +14,23 @@
  * limitations under the License.
  */
 
-package com.kylinolap.metadata.validation;
-
-import com.kylinolap.metadata.validation.rule.IKylinValidationConstances;
+package com.kylinolap.cube.model.validation;
 
 /**
+ * Validation result level
+ * 
  * @author jianliu
  * 
  */
-public interface IValidatorRule<T> extends IKylinValidationConstances {
+public enum ResultLevel {
+    ERROR("ERROR"), WARN("WARN");
+    private String level;
 
-    public void validate(T element, ValidateContext context);
+    ResultLevel(String level) {
+        this.level = level;
+    }
+
+    public String toString() {
+        return level;
+    }
 }
