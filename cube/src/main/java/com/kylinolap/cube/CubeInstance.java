@@ -425,7 +425,7 @@ public class CubeInstance extends RootPersistentEntity {
             return false;
         }
         for (CubeSegment readySegment: readySegments) {
-            if (readySegment.getDateRangeEnd() < segment.getDateRangeStart()) {
+            if (readySegment.getDateRangeEnd() > segment.getDateRangeStart()) {
                 //has overlap and not refresh
                 return true;
             }
