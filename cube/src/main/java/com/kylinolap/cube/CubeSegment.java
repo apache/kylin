@@ -64,13 +64,9 @@ public class CubeSegment implements Comparable<CubeSegment> {
                                     // used for sanity check
 
     @JsonProperty("dictionaries")
-    private ConcurrentHashMap<String, String> dictionaries; // table/column ==>
-                                                            // dictionary
-                                                            // resource path
+    private ConcurrentHashMap<String, String> dictionaries; // table/column ==> dictionary resource path
     @JsonProperty("snapshots")
-    private ConcurrentHashMap<String, String> snapshots; // table name ==>
-                                                         // snapshot resource
-                                                         // path
+    private ConcurrentHashMap<String, String> snapshots; // table name ==> snapshot resource path
 
     public CubeDesc getCubeDesc() {
         return getCubeInstance().getDescriptor();
