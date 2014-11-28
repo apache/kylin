@@ -357,6 +357,7 @@ public class CubeController extends BasicController {
             throw new ForbiddenException("You don't have right to update this cube.");
         } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);
+            e.printStackTrace();
             throw new InternalErrorException("Failed to deal with the request.", e);
         }
 
