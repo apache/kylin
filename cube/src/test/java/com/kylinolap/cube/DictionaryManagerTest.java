@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kylinolap.dict;
+package com.kylinolap.cube;
 
 import static org.junit.Assert.*;
 
@@ -27,7 +27,9 @@ import org.junit.Test;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.dict.Dictionary;
+import com.kylinolap.dict.DictionaryInfo;
+import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.metadata.model.realization.TblColRef;
 
 public class DictionaryManagerTest extends LocalFileMetadataTestCase {
@@ -48,13 +50,13 @@ public class DictionaryManagerTest extends LocalFileMetadataTestCase {
     @Test
     @Ignore
     public void basic() throws Exception {
-        CubeDesc cubeDesc = MetadataManager.getInstance(this.getTestConfig()).getCubeDesc("test_kylin_cube_without_slr_desc");
+        CubeDesc cubeDesc = CubeManager.getInstance(this.getTestConfig()).getCubeDesc("test_kylin_cube_without_slr_desc");
         TblColRef col = cubeDesc.findColumnRef("TEST_SITES", "SITE_NAME");
 
-        DictionaryInfo info1 = dictMgr.buildDictionary(cubeDesc, col, null);
+        DictionaryInfo info1 = dictMgr.buildDictionary(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null);
         System.out.println(JsonUtil.writeValueAsIndentString(info1));
 
-        DictionaryInfo info2 = dictMgr.buildDictionary(cubeDesc, col, null);
+        DictionaryInfo info2 = dictMgr.buildDictionary(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null);
         System.out.println(JsonUtil.writeValueAsIndentString(info2));
 
         assertTrue(info1.getUuid() == info2.getUuid());

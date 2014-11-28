@@ -149,7 +149,7 @@ public abstract class BasicService {
     public MetadataManager getMetadataManager() {
         return MetadataManager.getInstance(getConfig());
     }
-
+    
     public CubeManager getCubeManager() {
         return CubeManager.getInstance(getConfig());
     }

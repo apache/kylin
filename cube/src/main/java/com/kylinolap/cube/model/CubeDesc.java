@@ -91,11 +91,12 @@ public class CubeDesc extends RootPersistentEntity {
     }
 
     private KylinConfig config;
-
+    private DataModelDesc model;
+    
     @JsonProperty("name")
     private String name;
-    @JsonProperty("data_model")
-    private DataModelDesc model;
+    @JsonProperty("model_name")
+    private String modelName;
     @JsonProperty("description")
     private String description;
     @JsonProperty("fact_table")
@@ -204,27 +205,27 @@ public class CubeDesc extends RootPersistentEntity {
         return null;
     }
 
-    public TblColRef findPKByFK(TblColRef fk) {
-        assert isFactTable(fk.getTable());
-
-        TblColRef candidate = null;
-
-        for (DimensionDesc dim : dimensions) {
-            JoinDesc join = dim.getJoin();
-            if (join == null)
-                continue;
-
-            int find = ArrayUtils.indexOf(join.getForeignKeyColumns(), fk);
-            if (find >= 0) {
-                candidate = join.getPrimaryKeyColumns()[find];
-                if (join.getForeignKeyColumns().length == 1) { // is single
-                                                               // column join?
-                    break;
-                }
-            }
-        }
-        return candidate;
-    }
+//    public TblColRef findPKByFK(TblColRef fk) {
+//        assert isFactTable(fk.getTable());
+//
+//        TblColRef candidate = null;
+//
+//        for (DimensionDesc dim : dimensions) {
+//            JoinDesc join = dim.getJoin();
+//            if (join == null)
+//                continue;
+//
+//            int find = ArrayUtils.indexOf(join.getForeignKeyColumns(), fk);
+//            if (find >= 0) {
+//                candidate = join.getPrimaryKeyColumns()[find];
+//                if (join.getForeignKeyColumns().length == 1) { // is single
+//                                                               // column join?
+//                    break;
+//                }
+//            }
+//        }
+//        return candidate;
+//    }
 
     /**
      * Get all functions from each measure.
@@ -258,9 +259,9 @@ public class CubeDesc extends RootPersistentEntity {
         return result;
     }
 
-    public boolean isFactTable(String factTable) {
-        return this.factTable.equalsIgnoreCase(factTable);
-    }
+//    public boolean isFactTable(String factTable) {
+//        return this.factTable.equalsIgnoreCase(factTable);
+//    }
 
     public boolean isDerived(TblColRef col) {
         return derivedToHostMap.containsKey(col);
@@ -327,6 +328,22 @@ public class CubeDesc extends RootPersistentEntity {
         this.name = name;
     }
 
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
+    }
+
+    public DataModelDesc getModel() {
+        return model;
+    }
+
+    public void setModel(DataModelDesc model) {
+        this.model = model;
+    }
+
     public String getDescription() {
         return description;
     }
@@ -336,11 +353,7 @@ public class CubeDesc extends RootPersistentEntity {
     }
 
     public String getFactTable() {
-        return factTable;
-    }
-
-    public void setFactTable(String factTable) {
-        this.factTable = factTable;
+        return model.getFactTable();
     }
 
     public String[] getNullStrings() {
@@ -481,6 +494,8 @@ public class CubeDesc extends RootPersistentEntity {
         initJoinColumns(tables);
         initDimensionColumns(tables);
         initMeasureColumns(tables);
+        
+        //TODO create the DataModel object from MetadataManager and then set here; 
 
         rowkey.init(this);
         if (hbaseMapping != null) {
