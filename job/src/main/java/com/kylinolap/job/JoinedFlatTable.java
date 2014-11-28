@@ -27,7 +27,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import com.kylinolap.cube.CubeInstance;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -188,6 +187,9 @@ public class JoinedFlatTable {
             long dateStart = cubeSegment.getDateRangeStart();
             long dateEnd = cubeSegment.getDateRangeEnd();
 
+            if (cubeSegment.getCubeInstance().incrementalBuildOnHll()) {
+                dateStart = cubeSegment.getCubeInstance().getDateRange()[1];
+            }
             if (!(dateStart == 0 && dateEnd == 0)) {
                 String partitionColumnName = cubeDesc.getCubePartitionDesc().getPartitionDateColumn();
 
