@@ -497,6 +497,7 @@
   </scm>
 
     <modules>
+        <module>atopcalcite</module>
         <module>common</module>
         <module>metadata</module>
         <module>dictionary</module>
