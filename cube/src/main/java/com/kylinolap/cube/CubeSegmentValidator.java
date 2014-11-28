@@ -23,8 +23,8 @@ import java.util.List;
 
 import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.dict.DictionaryManager;
-import com.kylinolap.metadata.model.cube.CubePartitionDesc.CubePartitionType;
 import com.kylinolap.metadata.model.cube.DimensionDesc;
+import com.kylinolap.metadata.model.cube.CubePartitionDesc.CubePartitionType;
 import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
