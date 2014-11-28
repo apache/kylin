@@ -398,7 +398,7 @@ public class JobFlowListener implements JobListener {
             }
 
             if (users.size() > 0) {
-                mailService.sendMail(users, "[Kylin Cube Build Job]-" + cubeName + "-" + finalStatus, content);
+                mailService.sendMail(users, "["+ finalStatus + "] - [Kylin Cube Build Job]-" + cubeName, content);
             }
         } catch (IOException e) {
             log.error(e.getLocalizedMessage(), e);
