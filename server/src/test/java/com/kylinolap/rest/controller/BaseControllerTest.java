@@ -28,13 +28,13 @@ import com.kylinolap.rest.exception.ForbiddenException;
 import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.exception.NotFoundException;
 import com.kylinolap.rest.response.ErrorResponse;
-import com.kylinolap.rest.service.TestBase;
+import com.kylinolap.rest.service.ServiceTestBase;
 
 /**
  * @author xduo
  * 
  */
-public class BaseControllerTest extends TestBase {
+public class BaseControllerTest extends ServiceTestBase {
 
     private BasicController basicController;
 

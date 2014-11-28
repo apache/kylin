@@ -23,7 +23,7 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
             });
 
             var autoLoad = $parse(attrs.autoLoad)(scope.$parent);
-            if (autoLoad) {
+            if (autoLoad==false) {
                 scope.autoLoad = autoLoad;
             }
 

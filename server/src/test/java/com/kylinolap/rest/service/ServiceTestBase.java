@@ -40,8 +40,7 @@ import com.kylinolap.metadata.MetadataManager;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:applicationContext.xml", "classpath:kylinSecurity.xml" })
 @ActiveProfiles("testing")
-public class TestBase extends HBaseMetadataTestCase {
-
+public class ServiceTestBase extends HBaseMetadataTestCase {
 
     @BeforeClass
     public static void setupResource() throws Exception {

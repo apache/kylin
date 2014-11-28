@@ -24,11 +24,15 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.cube.CubeDesc;
+import com.kylinolap.metadata.model.cube.CubePartitionDesc;
 import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
@@ -311,19 +315,29 @@ public class CubeInstance extends RootPersistentEntity {
     }
 
     public List<CubeSegment> getSegments(CubeSegmentStatusEnum status) {
-        List<CubeSegment> segments = new ArrayList<CubeSegment>();
+        List<CubeSegment> result = new ArrayList<CubeSegment>();
 
-        for (CubeSegment segment : this.getSegments()) {
+        for (CubeSegment segment : segments) {
             if (segment.getStatus() == status) {
-                segments.add(segment);
+                result.add(segment);
             }
         }
 
-        return segments;
+        return result;
+    }
+
+    public List<CubeSegment> getSegment(CubeSegmentStatusEnum status) {
+        List<CubeSegment> result = Lists.newArrayList();
+        for (CubeSegment segment : segments) {
+            if (segment.getStatus() == status) {
+                result.add(segment);
+            }
+        }
+        return result;
     }
 
     public CubeSegment getSegment(String name, CubeSegmentStatusEnum status) {
-        for (CubeSegment segment : this.getSegments()) {
+        for (CubeSegment segment : segments) {
             if ((null != segment.getName() && segment.getName().equals(name)) && segment.getStatus() == status) {
                 return segment;
             }
@@ -336,12 +350,87 @@ public class CubeInstance extends RootPersistentEntity {
         this.segments = segments;
     }
 
+    public CubeSegment getSegmentById(String segmentId) {
+        for (CubeSegment segment : segments) {
+            if (Objects.equal(segment.getUuid(), segmentId)) {
+                return segment;
+            }
+        }
+        return null;
+    }
+
     public String getCreateTime() {
         return createTime;
     }
 
     public void setCreateTime(String createTime) {
         this.createTime = createTime;
+    }
+
+    public long[] getDateRange() {
+        List<CubeSegment> readySegments = getSegment(CubeSegmentStatusEnum.READY);
+        if (readySegments.isEmpty()) {
+            return new long[]{0L, 0L};
+        }
+        long start = Long.MAX_VALUE;
+        long end = Long.MIN_VALUE;
+        for (CubeSegment segment : readySegments) {
+            if (segment.getDateRangeStart() < start) {
+                start = segment.getDateRangeStart();
+            }
+            if (segment.getDateRangeEnd() > end) {
+                end = segment.getDateRangeEnd();
+            }
+        }
+        return new long[]{start, end};
+    }
+
+    private boolean appendOnHll() {
+        CubePartitionDesc cubePartitionDesc = getDescriptor().getCubePartitionDesc();
+        if (cubePartitionDesc == null) {
+            return false;
+        }
+        if (cubePartitionDesc.getPartitionDateColumn() == null) {
+            return false;
+        }
+        if (cubePartitionDesc.getCubePartitionType() != CubePartitionDesc.CubePartitionType.APPEND) {
+            return false;
+        }
+        return getDescriptor().hasHolisticCountDistinctMeasures();
+    }
+
+    public boolean appendBuildOnHllMeasure(long startDate, long endDate) {
+        if (!appendOnHll()) {
+            return false;
+        }
+        List<CubeSegment> readySegments = getSegment(CubeSegmentStatusEnum.READY);
+        if (readySegments.isEmpty()) {
+            return false;
+        }
+        for (CubeSegment readySegment: readySegments) {
+            if (readySegment.getDateRangeStart() == startDate && readySegment.getDateRangeEnd() == endDate) {
+                //refresh build
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean needMergeImmediatelyAfterBuild(CubeSegment segment) {
+        if (!appendOnHll()) {
+            return false;
+        }
+        List<CubeSegment> readySegments = getSegment(CubeSegmentStatusEnum.READY);
+        if (readySegments.isEmpty()) {
+            return false;
+        }
+        for (CubeSegment readySegment: readySegments) {
+            if (readySegment.getDateRangeEnd() > segment.getDateRangeStart()) {
+                //has overlap and not refresh
+                return true;
+            }
+        }
+        return false;
     }
 
 }

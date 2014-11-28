@@ -26,6 +26,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 
 /**
@@ -69,7 +70,7 @@ public class BaseCuboidJobTest extends LocalFileMetadataTestCase {
 
         final String input = "src/test/resources/data/flat_table/";
         final String output = "target/test-output/base_cuboid/";
-        final String metadata = "../examples/test_case_data";
+        final String metadata = AbstractKylinTestCase.LOCALMETA_TEST_DATA;
 
         FileUtil.fullyDelete(new File(output));
 

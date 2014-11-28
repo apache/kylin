@@ -17,14 +17,10 @@
 package com.kylinolap.cube;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.kylinolap.dict.DateStrDictionary;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -195,9 +191,9 @@ public class CubeManager {
 
             info = dictMgr.getDictionaryInfo(dictResPath);
             if (info == null)
-                throw new IllegalStateException("No dictionary found by " + dictResPath + ", invalid cube state; cube segment" + cubeSeg.getName() + ", col " + col);
+                throw new IllegalStateException("No dictionary found by " + dictResPath + ", invalid cube state; cube segment" + cubeSeg + ", col " + col);
         } catch (IOException e) {
-            throw new IllegalStateException("Failed to get dictionary for cube segment" + cubeSeg.getName() + ", col" + col, e);
+            throw new IllegalStateException("Failed to get dictionary for cube segment" + cubeSeg + ", col" + col, e);
         }
 
         return info.getDictionaryObject();
@@ -270,33 +266,40 @@ public class CubeManager {
 
     public List<CubeSegment> allocateSegments(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, long startDate, long endDate) throws IOException, CubeIntegrityException {
         if (cubeInstance.getBuildingSegments().size() > 0) {
-            throw new RuntimeException("There is already a allocating segment!");
+            throw new RuntimeException("There is already an allocating segment!");
         }
         List<CubeSegment> segments = new ArrayList<CubeSegment>();
 
+        final boolean appendBuildOnHllMeasure = cubeInstance.appendBuildOnHllMeasure(startDate, endDate);
         if (null != cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateColumn()) {
-            if (startDate == 0 && cubeInstance.getSegments().size() == 0) {
-                startDate = cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateStart();
-            }
+            if (appendBuildOnHllMeasure) {
+                long[] dateRange = cubeInstance.getDateRange();
+                segments.add(buildSegment(cubeInstance, dateRange[0], endDate));
+            } else {
 
-            // incremental build
-            CubeSegment lastSegment = null;
-            for (CubeSegment segment : cubeInstance.getSegments()) {
-                if (segment.getDateRangeStart() == startDate) {
-                    // refresh or merge
+                if (startDate == 0 && cubeInstance.getSegments().size() == 0) {
+                    startDate = cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateStart();
+                }
+
+                // incremental build
+                CubeSegment lastSegment = null;
+                for (CubeSegment segment : cubeInstance.getSegments()) {
+                    if (segment.getDateRangeStart() == startDate) {
+                        // refresh or merge
+                        segments.add(buildSegment(cubeInstance, startDate, endDate));
+                    }
+                    if (segment.getDateRangeStart() < startDate && startDate < segment.getDateRangeEnd()) {
+                        // delete-insert
+                        segments.add(buildSegment(cubeInstance, segment.getDateRangeStart(), startDate));
+                        segments.add(buildSegment(cubeInstance, startDate, endDate));
+                    }
+                    lastSegment = segment;
+                }
+
+                // append
+                if (null == lastSegment || (lastSegment.getDateRangeEnd() == startDate)) {
                     segments.add(buildSegment(cubeInstance, startDate, endDate));
                 }
-                if (segment.getDateRangeStart() < startDate && startDate < segment.getDateRangeEnd()) {
-                    // delete-insert
-                    segments.add(buildSegment(cubeInstance, segment.getDateRangeStart(), startDate));
-                    segments.add(buildSegment(cubeInstance, startDate, endDate));
-                }
-                lastSegment = segment;
-            }
-
-            // append
-            if (null == lastSegment || (lastSegment.getDateRangeEnd() == startDate)) {
-                segments.add(buildSegment(cubeInstance, startDate, endDate));
             }
         } else {
             segments.add(buildSegment(cubeInstance, 0, 0));
@@ -304,9 +307,15 @@ public class CubeManager {
 
         validateNewSegments(cubeInstance, buildType, segments);
 
+        CubeSegment newSeg = segments.get(0);
         if (buildType == CubeBuildTypeEnum.MERGE) {
-            this.makeDictForNewSegment(cubeInstance, segments.get(0));
-            this.makeSnapshotForNewSegment(cubeInstance, segments.get(0));
+            List<CubeSegment> mergingSegments = cubeInstance.getMergingSegments(newSeg);
+            this.makeDictForNewSegment(cubeInstance, newSeg, mergingSegments);
+            this.makeSnapshotForNewSegment(cubeInstance, newSeg, mergingSegments);
+        } else if (appendBuildOnHllMeasure) {
+            List<CubeSegment> mergingSegments = cubeInstance.getSegment(CubeSegmentStatusEnum.READY);
+            this.makeDictForNewSegment(cubeInstance, newSeg, mergingSegments);
+            this.makeSnapshotForNewSegment(cubeInstance, newSeg, mergingSegments);
         }
 
         cubeInstance.getSegments().addAll(segments);
@@ -330,17 +339,24 @@ public class CubeManager {
         return "KYLIN_HOST";
     }
 
-    public void updateSegmentOnJobSucceed(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, String segmentName, String lastBuildJobUuid, long lastBuildTime, long sizeKB, long sourceRecordCount, long sourceRecordsSize) throws IOException, CubeIntegrityException {
+    public void updateSegmentOnJobSucceed(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, String segmentName, String jobUuid, long lastBuildTime, long sizeKB, long sourceRecordCount, long sourceRecordsSize) throws IOException, CubeIntegrityException {
 
         List<CubeSegment> segmentsInNewStatus = cubeInstance.getSegments(CubeSegmentStatusEnum.NEW);
-        CubeSegment cubeSegment = cubeInstance.getSegment(segmentName, CubeSegmentStatusEnum.NEW);
+        CubeSegment cubeSegment = cubeInstance.getSegmentById(jobUuid);
+        if (cubeSegment == null) {
+            cubeSegment = cubeInstance.getSegment(segmentName, CubeSegmentStatusEnum.NEW);
+        }
 
         switch (buildType) {
         case BUILD:
-            if (segmentsInNewStatus.size() == 1) {// if this the last segment in
-                // status of NEW
-                // remove all the rebuilding/impacted segments
-                cubeInstance.getSegments().removeAll(cubeInstance.getRebuildingSegments());
+            if (cubeInstance.needMergeImmediatelyAfterBuild(cubeSegment)) {
+                cubeInstance.getSegments().removeAll(cubeInstance.getMergingSegments());
+            } else {
+                if (segmentsInNewStatus.size() == 1) {// if this the last segment in
+                    // status of NEW
+                    // remove all the rebuilding/impacted segments
+                    cubeInstance.getSegments().removeAll(cubeInstance.getRebuildingSegments());
+                }
             }
             break;
         case MERGE:
@@ -348,7 +364,7 @@ public class CubeManager {
             break;
         }
 
-        cubeSegment.setLastBuildJobID(lastBuildJobUuid);
+        cubeSegment.setLastBuildJobID(jobUuid);
         cubeSegment.setLastBuildTime(lastBuildTime);
         cubeSegment.setSizeKB(sizeKB);
         cubeSegment.setSourceRecords(sourceRecordCount);
@@ -412,7 +428,7 @@ public class CubeManager {
         if (r == null) {
             String snapshotResPath = cubeSegment.getSnapshotResPath(tableName);
             if (snapshotResPath == null)
-                throw new IllegalStateException("No snaphot for table '" + tableName + "' found on cube segment" + cubeSegment.getCubeInstance().getName() + "/" + cubeSegment.getName());
+                throw new IllegalStateException("No snaphot for table '" + tableName + "' found on cube segment" + cubeSegment.getCubeInstance().getName() + "/" + cubeSegment);
 
             try {
                 SnapshotTable snapshot = getSnapshotManager().getSnapshotTable(snapshotResPath);
@@ -432,16 +448,14 @@ public class CubeManager {
      * For the new segment, we need to create dictionaries for it, too. For
      * those dictionaries on fact table, create it by merging underlying
      * dictionaries For those dictionaries on lookup table, just copy it from
-     * any one of the merging segments, it's ganranteed to be consistent(checked
+     * any one of the merging segments, it's guaranteed to be consistent(checked
      * in CubeSegmentValidator)
      *
      * @param cube
      * @param newSeg
      * @throws IOException
      */
-    private void makeDictForNewSegment(CubeInstance cube, CubeSegment newSeg) throws IOException {
-        List<CubeSegment> mergingSegments = cube.getMergingSegments(newSeg);
-
+    private void makeDictForNewSegment(CubeInstance cube, CubeSegment newSeg, List<CubeSegment> mergingSegments) throws IOException {
         HashSet<TblColRef> colsNeedMeringDict = new HashSet<TblColRef>();
         HashSet<TblColRef> colsNeedCopyDict = new HashSet<TblColRef>();
         DictionaryManager dictMgr = this.getDictionaryManager();
@@ -462,7 +476,7 @@ public class CubeManager {
             logger.info("Merging fact table dictionary on : " + col);
             List<DictionaryInfo> dictInfos = new ArrayList<DictionaryInfo>();
             for (CubeSegment segment : mergingSegments) {
-                logger.info("Including fact table dictionary of segment : " + segment.getName());
+                logger.info("Including fact table dictionary of segment : " + segment);
                 DictionaryInfo dictInfo = dictMgr.getDictionaryInfo(segment.getDictResPath(col));
                 dictInfos.add(dictInfo);
             }
@@ -483,8 +497,7 @@ public class CubeManager {
      * @param cube
      * @param newSeg
      */
-    private void makeSnapshotForNewSegment(CubeInstance cube, CubeSegment newSeg) {
-        List<CubeSegment> mergingSegments = cube.getMergingSegments(newSeg);
+    private void makeSnapshotForNewSegment(CubeInstance cube, CubeSegment newSeg, List<CubeSegment> mergingSegments) {
         for (Map.Entry<String, String> entry : mergingSegments.get(0).getSnapshots().entrySet()) {
             newSeg.putSnapshotResPath(entry.getKey(), entry.getValue());
         }
@@ -539,17 +552,19 @@ public class CubeManager {
      * @return
      */
     private CubeSegment buildSegment(CubeInstance cubeInstance, long startDate, long endDate) {
-        CubeSegment incrementalSeg = new CubeSegment();
+        CubeSegment segment = new CubeSegment();
         String incrementalSegName = CubeSegment.getSegmentName(startDate, endDate);
-        incrementalSeg.setName(incrementalSegName);
-        incrementalSeg.setDateRangeStart(startDate);
-        incrementalSeg.setDateRangeEnd(endDate);
-        incrementalSeg.setStatus(CubeSegmentStatusEnum.NEW);
-        incrementalSeg.setStorageLocationIdentifier(generateStorageLocation());
+        segment.setUuid(UUID.randomUUID().toString());
+        segment.setName(incrementalSegName);
+        segment.setCreateTime(DateStrDictionary.dateToString(new Date()));
+        segment.setDateRangeStart(startDate);
+        segment.setDateRangeEnd(endDate);
+        segment.setStatus(CubeSegmentStatusEnum.NEW);
+        segment.setStorageLocationIdentifier(generateStorageLocation());
 
-        incrementalSeg.setCubeInstance(cubeInstance);
+        segment.setCubeInstance(cubeInstance);
 
-        return incrementalSeg;
+        return segment;
     }
 
     private String generateStorageLocation() {
