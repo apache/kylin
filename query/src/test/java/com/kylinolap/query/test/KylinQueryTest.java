@@ -91,7 +91,7 @@ public class KylinQueryTest extends KylinTestBase {
         if (h2Connection != null)
             closeConnection(h2Connection);
 
-        CoprocessorEnabler.forceCoprocessorUnset();
+        ObserverEnabler.forceCoprocessorUnset();
         HBaseMetadataTestCase.staticCleanupTestMetadata();
     }
 

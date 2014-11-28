@@ -21,8 +21,8 @@ import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.cube.invertedindex.TableRecordInfoDigest;
 import com.kylinolap.cube.measure.MeasureAggregator;
 import com.kylinolap.cube.measure.fixedlen.FixedLenMeasureCodec;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.schema.DataType;
+import com.kylinolap.metadata.model.DataType;
+import com.kylinolap.metadata.model.realization.FunctionDesc;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorConstants;
 
 import java.nio.ByteBuffer;

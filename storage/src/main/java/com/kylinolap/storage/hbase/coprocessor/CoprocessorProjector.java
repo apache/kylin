@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.List;
 
 import com.kylinolap.cube.invertedindex.TableRecordInfo;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
 import org.apache.hadoop.hbase.Cell;
 
 import com.kylinolap.common.util.BytesSerializer;
