@@ -46,12 +46,11 @@ public class EndpointAggregators {
         return new EndpointAggregators(funcNames, dataTypes, tableInfo);
     }
 
-
     final String[] funcNames;
     final String[] dataTypes;
     final TableRecordInfoDigest tableInfo;
 
-    final transient FixedLenMeasureCodec<?>[] measureSerializers;
+    final transient FixedLenMeasureCodec[] measureSerializers;
     final transient Object[] metricValues;
     final transient byte[] metricBytes;
     transient int metricBytesOffset = 0;
@@ -63,22 +62,22 @@ public class EndpointAggregators {
 
         this.metricBytes = new byte[CoprocessorConstants.SERIALIZE_BUFFER_SIZE];
         this.metricValues = new Object[funcNames.length];
-        this.measureSerializers = new FixedLenMeasureCodec<?>[funcNames.length];
+        this.measureSerializers = new FixedLenMeasureCodec[funcNames.length];
         for (int i = 0; i < this.measureSerializers.length; ++i) {
             this.measureSerializers[i] = FixedLenMeasureCodec.get(DataType.getInstance(dataTypes[i]));
         }
     }
 
-
     public MeasureAggregator[] createBuffer() {
         MeasureAggregator[] aggrs = new MeasureAggregator[funcNames.length];
-        for (int j = 0; j < aggrs.length; j++)
-            aggrs[j++] = MeasureAggregator.create(funcNames[j], dataTypes[j]);
+        for (int j = 0; j < aggrs.length; j++) {
+            //all fixed length measures can be aggregated as long
+            aggrs[j++] = MeasureAggregator.create(funcNames[j], "long");
+        }
         return aggrs;
     }
 
     public void aggregate(MeasureAggregator[] measureAggrs, byte[] row) {
-
         int rawIndex = 0;
         int metricIndex = 0;
         int columnCount = tableInfo.getColumnCount();
@@ -103,21 +102,6 @@ public class EndpointAggregators {
         }
         return metricBytes;
     }
-
-    public ByteBuffer[] getHColValues(MeasureAggregator[] aggrs) {
-        int i = 0;
-        for (int ci = 0; ci < nHCols; ci++) {
-            IIMetrics col = hcols[ci];
-            for (int j = 0; j < col.nMeasures; j++)
-                col.measureValues[j] = aggrs[i++].getState();
-
-            col.measureBuf.clear();
-            col.measureCodec.encode(col.measureValues, col.measureBuf);
-            metricBytes[ci] = col.measureBuf;
-        }
-        return metricBytes;
-    }
-
 
     public static byte[] serialize(EndpointAggregators o) {
         ByteBuffer buf = ByteBuffer.allocate(CoprocessorConstants.SERIALIZE_BUFFER_SIZE);

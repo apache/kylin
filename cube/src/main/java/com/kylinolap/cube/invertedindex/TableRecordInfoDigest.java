@@ -24,6 +24,10 @@ public class TableRecordInfoDigest implements TableRecordFactory {
 
     protected FixedLenMeasureCodec<?>[] measureSerializers;
 
+    public int getByteFormLen() {
+        return byteFormLen;
+    }
+
     public boolean isMetrics(int col) {
         return isMetric[col];
     }

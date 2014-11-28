@@ -40,7 +40,7 @@ public class AggregationScanner implements RegionScanner {
 
         AggregateRegionObserver.LOG.info("Kylin Coprocessor start");
 
-        AggregationCache aggCache;
+        ObserverAggregationCache aggCache;
         Stats stats = new Stats();
 
         aggCache = buildAggrCache(innerScanner, type, groupBy, aggrs, filter, stats);
@@ -51,9 +51,9 @@ public class AggregationScanner implements RegionScanner {
     }
 
     @SuppressWarnings("rawtypes")
-    AggregationCache buildAggrCache(final RegionScanner innerScanner, ObserverRowType type, CoprocessorProjector projector, ObserverAggregators aggregators, CoprocessorFilter filter, Stats stats) throws IOException {
+    ObserverAggregationCache buildAggrCache(final RegionScanner innerScanner, ObserverRowType type, CoprocessorProjector projector, ObserverAggregators aggregators, CoprocessorFilter filter, Stats stats) throws IOException {
 
-        AggregationCache aggCache = new AggregationCache(aggregators);
+        ObserverAggregationCache aggCache = new ObserverAggregationCache(aggregators);
 
         ObserverTuple tuple = new ObserverTuple(type);
         boolean hasMore = true;
@@ -72,7 +72,7 @@ public class AggregationScanner implements RegionScanner {
             if (filter != null && filter.evaluate(tuple) == false)
                 continue;
 
-            CoprocessorProjector.AggrKey aggKey = projector.getRowKey(results);
+            CoprocessorProjector.AggrKey aggKey = projector.getAggrKey(results);
             MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
             aggregators.aggregate(bufs, results);
 

@@ -18,6 +18,7 @@ package com.kylinolap.storage.hbase;
 
 import java.util.List;
 
+import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.cube.invertedindex.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.*;
@@ -95,6 +96,11 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
     private void dump(Iterable<TableRecord> records) {
         for (TableRecord rec : records) {
             System.out.println(rec.toString());
+
+            byte[] x = rec.getBytes();
+            String y = BytesUtil.toReadableText(x);
+            System.out.println(y);
+            System.out.println();
         }
     }
 

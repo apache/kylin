@@ -142,7 +142,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
 
         CoprocessorFilter filter = CoprocessorFilter.fromFilter(this.seg, rootFilter);
 
-        //SRowProjector projector = SRowProjector.fromColumns(segment, cuboid, groupBy);
+        //SRowProjector projector = SRowProjector.makeForObserver(segment, cuboid, groupBy);
         //SRowAggregators aggrs = SRowAggregators.fromValueDecoders(rowValueDecoders);
 
 
