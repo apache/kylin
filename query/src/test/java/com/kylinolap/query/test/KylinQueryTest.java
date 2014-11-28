@@ -32,6 +32,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.project.ProjectInstance;
@@ -58,7 +59,7 @@ public class KylinQueryTest extends KylinTestBase {
     }
 
     private static void setUpEnv() {
-        HBaseMetadataTestCase.staticCreateTestMetadata();
+        HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
         config = KylinConfig.getInstanceFromEnv();
     }
 
