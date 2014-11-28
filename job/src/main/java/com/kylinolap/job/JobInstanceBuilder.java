@@ -213,7 +213,7 @@ public class JobInstanceBuilder {
 
         final String cuboidRootPath = jobWorkingDir + "/" + cubeName + "/cuboid/";
         final String cuboidTmpRootPath = jobWorkingDir + "/" + cubeName + "/tmp_cuboid/";
-        final boolean incBuildMerge = cube.needMergeImmediately(cube.getSegmentById(jobInstance.getUuid()));
+        final boolean incBuildMerge = cube.incrementalBuildOnHll();
 
         String[] cuboidOutputTempPath = getCuboidOutputPaths(incBuildMerge?cuboidTmpRootPath:cuboidRootPath, totalRowkeyColumnsCount, groupRowkeyColumnsCount);
         // base cuboid step

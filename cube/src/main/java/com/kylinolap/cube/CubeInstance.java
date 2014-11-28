@@ -31,7 +31,6 @@ import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.CubePartitionDesc;
 import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
@@ -384,36 +383,8 @@ public class CubeInstance extends RootPersistentEntity {
         return new long[]{start, end};
     }
 
-
-    public boolean needMergeImmediately(CubeSegment segment) {
-        if (segment == null) {
-            return false;
-        }
-        if (!(segment.getStatus() == CubeSegmentStatusEnum.NEW)) {
-            return false;
-        }
-        return needMergeImmediately(segment.getDateRangeStart(), segment.getDateRangeEnd());
-    }
-
-    public boolean needMergeImmediately(long newSegmentRangeStart, long newSegmentRangeEnd) {
-        if (this.getDescriptor().getCubePartitionDesc().getCubePartitionType() != CubePartitionDesc.CubePartitionType.APPEND) {
-            return false;
-        }
-        if (!getDescriptor().hasHolisticCountDistinctMeasures()) {
-            return false;
-        }
-        List<CubeSegment> readySegments = getSegments(CubeSegmentStatusEnum.READY);
-        if (readySegments.isEmpty()) {
-            return false;
-        }
-        for (CubeSegment readySegment : readySegments) {
-            if (readySegment.getDateRangeStart() == newSegmentRangeStart
-                    && readySegment.getDateRangeEnd() == newSegmentRangeEnd) {
-                //refresh
-                return false;
-            }
-        }
-        return true;
+    public boolean incrementalBuildOnHll() {
+        return (!getSegment(CubeSegmentStatusEnum.READY).isEmpty()) && getDescriptor().hasHolisticCountDistinctMeasures();
     }
 
 }
