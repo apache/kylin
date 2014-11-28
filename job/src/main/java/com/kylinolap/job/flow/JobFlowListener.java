@@ -278,7 +278,7 @@ public class JobFlowListener implements JobListener {
                     log.info("No step with name '" + JobConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE + "' is found");
                 }
 
-                if (cubeInstance.incrementalBuildOnHll()) {
+                if (cubeInstance.needMergeImmediatelyAfterBuild()) {
                     for (CubeSegment seg : cubeInstance.getMergingSegments()) {
                         sourceCount += seg.getSourceRecords();
                         sourceSize += seg.getSourceRecordsSize();

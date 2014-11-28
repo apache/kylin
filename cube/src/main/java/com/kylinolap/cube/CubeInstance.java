@@ -25,12 +25,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.cube.CubeDesc;
+import com.kylinolap.metadata.model.cube.CubePartitionDesc;
 import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
@@ -383,8 +385,52 @@ public class CubeInstance extends RootPersistentEntity {
         return new long[]{start, end};
     }
 
-    public boolean incrementalBuildOnHll() {
-        return (!getSegment(CubeSegmentStatusEnum.READY).isEmpty()) && getDescriptor().hasHolisticCountDistinctMeasures();
+    private boolean appendOnHll() {
+        CubePartitionDesc cubePartitionDesc = getDescriptor().getCubePartitionDesc();
+        if (cubePartitionDesc == null) {
+            return false;
+        }
+        if (cubePartitionDesc.getPartitionDateColumn() == null) {
+            return false;
+        }
+        if (cubePartitionDesc.getCubePartitionType() != CubePartitionDesc.CubePartitionType.APPEND) {
+            return false;
+        }
+        return getDescriptor().hasHolisticCountDistinctMeasures();
+    }
+
+    public boolean appendBuildOnHllMeasure(long startDate, long endDate) {
+        if (!appendOnHll()) {
+            return false;
+        }
+        List<CubeSegment> readySegments = getSegment(CubeSegmentStatusEnum.READY);
+        if (readySegments.isEmpty()) {
+            return false;
+        }
+        for (CubeSegment readySegment: readySegments) {
+            if (readySegment.getDateRangeStart() == startDate && readySegment.getDateRangeEnd() == endDate) {
+                //refresh build
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean needMergeImmediatelyAfterBuild(CubeSegment segment) {
+        if (!appendOnHll()) {
+            return false;
+        }
+        List<CubeSegment> readySegments = getSegment(CubeSegmentStatusEnum.READY);
+        if (readySegments.isEmpty()) {
+            return false;
+        }
+        for (CubeSegment readySegment: readySegments) {
+            if (readySegment.getDateRangeEnd() < segment.getDateRangeStart()) {
+                //has overlap and not refresh
+                return true;
+            }
+        }
+        return false;
     }
 
 }
