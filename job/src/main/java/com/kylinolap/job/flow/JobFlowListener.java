@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.kylinolap.cube.CubeSegmentStatusEnum;
+
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -38,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.MailService;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
@@ -49,7 +51,6 @@ import com.kylinolap.job.constant.JobConstants;
 import com.kylinolap.job.constant.JobStatusEnum;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job.tools.MailService;
 
 /**
  * Handle kylin job and cube change update.
