@@ -20,7 +20,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.mapred.jobcontrol.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -213,7 +212,7 @@ public class JobInstanceBuilder {
 
         final String cuboidRootPath = jobWorkingDir + "/" + cubeName + "/cuboid/";
         final String cuboidTmpRootPath = jobWorkingDir + "/" + cubeName + "/tmp_cuboid/";
-        final boolean incBuildMerge = cube.needMergeImmediately(cube.getSegmentById(jobInstance.getUuid()));
+        final boolean incBuildMerge = cube.needMergeImmediatelyAfterBuild();
 
         String[] cuboidOutputTempPath = getCuboidOutputPaths(incBuildMerge?cuboidTmpRootPath:cuboidRootPath, totalRowkeyColumnsCount, groupRowkeyColumnsCount);
         // base cuboid step
