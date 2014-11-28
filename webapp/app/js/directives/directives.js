@@ -16,6 +16,7 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
             scope.loadFunc = $parse(attrs.loadFunc)(scope.$parent);
             scope.autoLoad = true;
 
+
             scope.$watch("action.reload", function (newValue, oldValue) {
                 if (newValue != oldValue) {
                     scope.reload();
