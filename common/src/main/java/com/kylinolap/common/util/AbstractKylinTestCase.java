@@ -37,5 +37,15 @@ public abstract class AbstractKylinTestCase {
     public KylinConfig getTestConfig() {
         return KylinConfig.getInstanceFromEnv();
     }
+    
+    public static void staticCreateTestMetadata(String kylinConfigFolder) {
+
+        KylinConfig.destoryInstance();
+
+        if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null)
+            System.setProperty(KylinConfig.KYLIN_CONF, kylinConfigFolder);
+        
+    }
+    
 
 }
