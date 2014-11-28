@@ -57,12 +57,20 @@ public class MailService {
         }
     }
 
-    public void sendMail(List<String> receivers, String subject, String content) throws IOException {
+    /**
+     * 
+     * @param receivers
+     * @param subject
+     * @param content
+     * @return true or false indicating whether the email was delivered successfully
+     * @throws IOException
+     */
+    public boolean sendMail(List<String> receivers, String subject, String content) throws IOException {
 
         if (!enabled) {
             logger.info("Email service is disabled; this mail will not be delivered: " + subject);
             logger.info("To enable mail service, set 'mail.enabled=true' in kylin.properties");
-            return;
+            return false;
         }
 
         Email email = new HtmlEmail();
@@ -71,7 +79,7 @@ public class MailService {
             email.setAuthentication(username, password);
         }
 
-        email.setDebug(true);
+        //email.setDebug(true);
         try {
             for (String receiver : receivers) {
                 email.addTo(receiver);
@@ -86,6 +94,9 @@ public class MailService {
 
         } catch (EmailException e) {
             logger.error(e);
+            return false;
         }
+        
+        return true;
     }
 }
