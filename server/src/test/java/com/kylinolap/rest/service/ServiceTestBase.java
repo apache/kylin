@@ -29,6 +29,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.project.ProjectManager;
@@ -45,7 +46,7 @@ public class ServiceTestBase extends HBaseMetadataTestCase {
     @BeforeClass
     public static void setupResource() throws Exception {
 
-        staticCreateTestMetadata();
+        staticCreateTestMetadata(SANDBOX_TEST_DATA);
 
         Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", "ROLE_ADMIN");
         SecurityContextHolder.getContext().setAuthentication(authentication);
