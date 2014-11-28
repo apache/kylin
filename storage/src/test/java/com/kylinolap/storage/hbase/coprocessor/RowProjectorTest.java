@@ -55,25 +55,25 @@ public class RowProjectorTest {
         byte[] bytes3 = new byte[] { 1, 99, 100, 4 };
         byte[] bytes4 = new byte[] { 1, 1, 1, 5 };
 
-        AggrKey rowKey = sample.getRowKey(newCellWithRowKey(bytes1));
-        AggrKey rowKey2 = sample.getRowKey(newCellWithRowKey(bytes2));
+        AggrKey rowKey = sample.getAggrKey(newCellWithRowKey(bytes1));
+        AggrKey rowKey2 = sample.getAggrKey(newCellWithRowKey(bytes2));
         assertTrue(rowKey == rowKey2); // no extra object creation
         assertTrue(Bytes.equals(rowKey.get(), rowKey.offset(), rowKey.length(), bytes2, 0, bytes2.length));
 
         rowKey2 = rowKey.copy(); // explicit object creation
         assertTrue(rowKey != rowKey2);
 
-        rowKey = sample.getRowKey(newCellWithRowKey(bytes1));
+        rowKey = sample.getAggrKey(newCellWithRowKey(bytes1));
         assertTrue(rowKey.hashCode() != rowKey2.hashCode());
         assertTrue(rowKey.equals(rowKey2) == false);
         assertTrue(rowKey.compareTo(rowKey2) > 0); // unsigned compare
 
-        rowKey = sample.getRowKey(newCellWithRowKey(bytes3));
+        rowKey = sample.getAggrKey(newCellWithRowKey(bytes3));
         assertTrue(rowKey.hashCode() == rowKey2.hashCode());
         assertTrue(rowKey.equals(rowKey2) == true);
         assertTrue(rowKey.compareTo(rowKey2) == 0);
 
-        rowKey = sample.getRowKey(newCellWithRowKey(bytes4));
+        rowKey = sample.getAggrKey(newCellWithRowKey(bytes4));
         assertTrue(rowKey.hashCode() != rowKey2.hashCode());
         assertTrue(rowKey.equals(rowKey2) == false);
         assertTrue(rowKey.compareTo(rowKey2) > 0);

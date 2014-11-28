@@ -21,6 +21,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import com.kylinolap.cube.invertedindex.TableRecordInfo;
+import com.kylinolap.metadata.model.schema.ColumnDesc;
 import org.apache.hadoop.hbase.Cell;
 
 import com.kylinolap.common.util.BytesSerializer;
@@ -35,7 +37,7 @@ import com.kylinolap.metadata.model.realization.TblColRef;
  */
 public class CoprocessorProjector {
 
-    public static CoprocessorProjector fromColumns(final CubeSegment cubeSegment, final Cuboid cuboid, final Collection<TblColRef> dimensionColumns) {
+    public static CoprocessorProjector makeForObserver(final CubeSegment cubeSegment, final Cuboid cuboid, final Collection<TblColRef> dimensionColumns) {
 
         RowKeyEncoder rowKeyMaskEncoder = new RowKeyEncoder(cubeSegment, cuboid) {
             @Override
@@ -52,6 +54,22 @@ public class CoprocessorProjector {
         };
 
         byte[] mask = rowKeyMaskEncoder.encode(new byte[cuboid.getColumns().size()][]);
+        return new CoprocessorProjector(mask);
+    }
+
+    public static CoprocessorProjector makeForEndpoint(final TableRecordInfo tableInfo, final Collection<TblColRef> dimensionColumns) {
+        byte[] mask = new byte[tableInfo.getByteFormLen()];
+        int maskIdx = 0;
+        for (int i = 0; i < tableInfo.getColumnCount(); ++i) {
+            for (ColumnDesc columnDesc : tableInfo.getColumns()) {
+                TblColRef tblColRef = new TblColRef(columnDesc);
+                int length = tableInfo.length(i);
+                byte bits = dimensionColumns.contains(tblColRef) ? (byte) 0xff : 0x00;
+                for (int j = 0; j < length; ++j) {
+                    mask[maskIdx++] = bits;
+                }
+            }
+        }
         return new CoprocessorProjector(mask);
     }
 
@@ -92,7 +110,7 @@ public class CoprocessorProjector {
         this.groupByMask = groupByMask;
     }
 
-    public AggrKey getRowKey(List<Cell> rowCells) {
+    public AggrKey getAggrKey(List<Cell> rowCells) {
         int length = groupByMask.length;
         Cell cell = rowCells.get(0);
         assert length == cell.getRowLength();

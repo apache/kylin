@@ -23,7 +23,9 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 
+import com.kylinolap.storage.hbase.coprocessor.AggregationCache;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
+import com.kylinolap.storage.hbase.coprocessor.observer.ObserverAggregators;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.HRegionInfo;
@@ -31,62 +33,27 @@ import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValue.Type;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 
-import com.google.common.collect.Maps;
 import com.kylinolap.cube.measure.MeasureAggregator;
 
 /**
  * @author yangli9
- * 
  */
 @SuppressWarnings("rawtypes")
-public class AggregationCache {
+public class ObserverAggregationCache extends AggregationCache {
 
-    static final int MEMORY_USAGE_CAP = 500 * 1024 * 1024; // 500 MB
-
-    private final SortedMap<CoprocessorProjector.AggrKey, MeasureAggregator[]> aggBufMap;
     private final ObserverAggregators aggregators;
 
-    transient int rowMemBytes;
-
-    public AggregationCache(ObserverAggregators aggregators) {
+    public ObserverAggregationCache(ObserverAggregators aggregators) {
         this.aggregators = aggregators;
-        this.aggBufMap = Maps.newTreeMap();
-    }
-
-    public MeasureAggregator[] getBuffer(CoprocessorProjector.AggrKey aggkey) {
-        MeasureAggregator[] aggBuf = aggBufMap.get(aggkey);
-        if (aggBuf == null) {
-            aggBuf = aggregators.createBuffer();
-            aggBufMap.put(aggkey.copy(), aggBuf);
-        }
-        return aggBuf;
     }
 
     public RegionScanner getScanner(RegionScanner innerScanner) {
         return new AggregationRegionScanner(innerScanner);
     }
 
-    public long getSize() {
-        return aggBufMap.size();
-    }
-
-    public void checkMemoryUsage() {
-        // about memory calculation,
-        // http://seniorjava.wordpress.com/2013/09/01/java-objects-memory-size-reference/
-        if (rowMemBytes <= 0) {
-            if (aggBufMap.size() > 0) {
-                rowMemBytes = 0;
-                MeasureAggregator[] measureAggregators = aggBufMap.get(aggBufMap.firstKey());
-                for (MeasureAggregator agg : measureAggregators) {
-                    rowMemBytes += agg.getMemBytes();
-                }
-            }
-        }
-        int size = aggBufMap.size();
-        int memUsage = (40 + rowMemBytes) * size;
-        if (memUsage > MEMORY_USAGE_CAP) {
-            throw new RuntimeException("Kylin coprocess memory usage goes beyond cap, (40 + " + rowMemBytes + ") * " + size + " > " + MEMORY_USAGE_CAP + ". Abord coprocessor.");
-        }
+    @Override
+    public MeasureAggregator[] createBuffer() {
+        return aggregators.createBuffer();
     }
 
     private class AggregationRegionScanner implements RegionScanner {
