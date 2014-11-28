@@ -181,10 +181,6 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
         if (aggFunc.needRewrite()) {
             ColumnDesc column = new ColumnDesc();
             column.setName(aggFunc.getRewriteFieldName());
-            logger.info(""+this.context);
-            logger.info(""+this.context.firstTableScan);
-            logger.info(""+this.context.firstTableScan.getOlapTable());
-            logger.info(""+this.context.firstTableScan.getOlapTable().getSourceTable());
             TableDesc table = this.context.firstTableScan.getOlapTable().getSourceTable();
             column.setTable(table);
             colRef = new TblColRef(column);
