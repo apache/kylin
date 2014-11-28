@@ -12,5 +12,22 @@ public class LookupDesc {
 
     @JsonProperty("join")
     private JoinDesc join;
+
+    public String getTable() {
+        return table;
+    }
+
+    public void setTable(String table) {
+        this.table = table;
+    }
+
+    public JoinDesc getJoin() {
+        return join;
+    }
+
+    public void setJoin(JoinDesc join) {
+        this.join = join;
+    }
+    
     
 }

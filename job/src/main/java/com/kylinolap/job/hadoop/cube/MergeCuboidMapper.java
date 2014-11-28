@@ -72,7 +72,8 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
         if (ret != null)
             return ret;
         else {
-            ret = cubeDesc.getRowkey().isUseDictionary(col) && cubeDesc.getFactTable().equalsIgnoreCase((String) DictionaryManager.getInstance(config).decideSourceData(cubeDesc, col, null)[0]);
+            String dictTable = (String) DictionaryManager.getInstance(config).decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null)[0];
+            ret = cubeDesc.getRowkey().isUseDictionary(col) && cubeDesc.getFactTable().equalsIgnoreCase(dictTable);
             dictsNeedMerging.put(col, ret);
             return ret;
         }

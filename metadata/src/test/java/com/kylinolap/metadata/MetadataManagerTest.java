@@ -23,7 +23,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.metadata.model.TableDesc;
 
 /**
@@ -62,12 +61,6 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
         Assert.assertNotNull(MetadataManager.getInstance(this.getTestConfig()));
         Assert.assertNotNull(MetadataManager.getInstance(this.getTestConfig()).listAllTables());
         Assert.assertTrue(MetadataManager.getInstance(this.getTestConfig()).listAllTables().size() > 0);
-    }
-
-    @Test
-    public void testGetCubeDesc() throws Exception {
-        CubeDesc cubeDesc = MetadataManager.getInstance(this.getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
-        Assert.assertNotNull(cubeDesc);
     }
 
 }
