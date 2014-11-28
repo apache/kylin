@@ -270,8 +270,9 @@ public class CubeManager {
         }
         List<CubeSegment> segments = new ArrayList<CubeSegment>();
 
+        final boolean appendBuildOnHllMeasure = cubeInstance.appendBuildOnHllMeasure(startDate, endDate);
         if (null != cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateColumn()) {
-            if (cubeInstance.incrementalBuildOnHll()) {
+            if (appendBuildOnHllMeasure) {
                 long[] dateRange = cubeInstance.getDateRange();
                 segments.add(buildSegment(cubeInstance, dateRange[0], endDate));
             } else {
@@ -306,9 +307,15 @@ public class CubeManager {
 
         validateNewSegments(cubeInstance, buildType, segments);
 
-        if (buildType == CubeBuildTypeEnum.MERGE || cubeInstance.incrementalBuildOnHll()) {
-            this.makeDictForNewSegment(cubeInstance, segments.get(0));
-            this.makeSnapshotForNewSegment(cubeInstance, segments.get(0));
+        CubeSegment newSeg = segments.get(0);
+        if (buildType == CubeBuildTypeEnum.MERGE) {
+            List<CubeSegment> mergingSegments = cubeInstance.getMergingSegments(newSeg);
+            this.makeDictForNewSegment(cubeInstance, newSeg, mergingSegments);
+            this.makeSnapshotForNewSegment(cubeInstance, newSeg, mergingSegments);
+        } else if (appendBuildOnHllMeasure) {
+            List<CubeSegment> mergingSegments = cubeInstance.getSegment(CubeSegmentStatusEnum.READY);
+            this.makeDictForNewSegment(cubeInstance, newSeg, mergingSegments);
+            this.makeSnapshotForNewSegment(cubeInstance, newSeg, mergingSegments);
         }
 
         cubeInstance.getSegments().addAll(segments);
@@ -332,14 +339,17 @@ public class CubeManager {
         return "KYLIN_HOST";
     }
 
-    public void updateSegmentOnJobSucceed(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, String segmentName, String lastBuildJobUuid, long lastBuildTime, long sizeKB, long sourceRecordCount, long sourceRecordsSize) throws IOException, CubeIntegrityException {
+    public void updateSegmentOnJobSucceed(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, String segmentName, String jobUuid, long lastBuildTime, long sizeKB, long sourceRecordCount, long sourceRecordsSize) throws IOException, CubeIntegrityException {
 
         List<CubeSegment> segmentsInNewStatus = cubeInstance.getSegments(CubeSegmentStatusEnum.NEW);
-        CubeSegment cubeSegment = cubeInstance.getSegment(segmentName, CubeSegmentStatusEnum.NEW);
+        CubeSegment cubeSegment = cubeInstance.getSegmentById(jobUuid);
+        if (cubeSegment == null) {
+            cubeSegment = cubeInstance.getSegment(segmentName, CubeSegmentStatusEnum.NEW);
+        }
 
         switch (buildType) {
         case BUILD:
-            if (cubeInstance.incrementalBuildOnHll()) {
+            if (cubeInstance.needMergeImmediatelyAfterBuild(cubeSegment)) {
                 cubeInstance.getSegments().removeAll(cubeInstance.getMergingSegments());
             } else {
                 if (segmentsInNewStatus.size() == 1) {// if this the last segment in
@@ -354,7 +364,7 @@ public class CubeManager {
             break;
         }
 
-        cubeSegment.setLastBuildJobID(lastBuildJobUuid);
+        cubeSegment.setLastBuildJobID(jobUuid);
         cubeSegment.setLastBuildTime(lastBuildTime);
         cubeSegment.setSizeKB(sizeKB);
         cubeSegment.setSourceRecords(sourceRecordCount);
@@ -445,9 +455,7 @@ public class CubeManager {
      * @param newSeg
      * @throws IOException
      */
-    private void makeDictForNewSegment(CubeInstance cube, CubeSegment newSeg) throws IOException {
-        List<CubeSegment> mergingSegments = cube.getMergingSegments(newSeg);
-
+    private void makeDictForNewSegment(CubeInstance cube, CubeSegment newSeg, List<CubeSegment> mergingSegments) throws IOException {
         HashSet<TblColRef> colsNeedMeringDict = new HashSet<TblColRef>();
         HashSet<TblColRef> colsNeedCopyDict = new HashSet<TblColRef>();
         DictionaryManager dictMgr = this.getDictionaryManager();
@@ -489,8 +497,7 @@ public class CubeManager {
      * @param cube
      * @param newSeg
      */
-    private void makeSnapshotForNewSegment(CubeInstance cube, CubeSegment newSeg) {
-        List<CubeSegment> mergingSegments = cube.getMergingSegments(newSeg);
+    private void makeSnapshotForNewSegment(CubeInstance cube, CubeSegment newSeg, List<CubeSegment> mergingSegments) {
         for (Map.Entry<String, String> entry : mergingSegments.get(0).getSnapshots().entrySet()) {
             newSeg.putSnapshotResPath(entry.getKey(), entry.getValue());
         }
