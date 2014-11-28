@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.kylinolap.cube.CubeSegmentStatusEnum;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -251,6 +252,7 @@ public class JobFlowListener implements JobListener {
 
             CubeManager cubeMgr = CubeManager.getInstance(engineConfig.getConfig());
             CubeInstance cubeInstance = cubeMgr.getCube(jobInstance.getRelatedCube());
+            CubeSegment newSegment = cubeInstance.getSegmentById(jobInstance.getUuid());
 
             long sourceCount = 0;
             long sourceSize = 0;
@@ -278,8 +280,8 @@ public class JobFlowListener implements JobListener {
                     log.info("No step with name '" + JobConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE + "' is found");
                 }
 
-                if (cubeInstance.needMergeImmediatelyAfterBuild()) {
-                    for (CubeSegment seg : cubeInstance.getMergingSegments()) {
+                if (cubeInstance.needMergeImmediatelyAfterBuild(newSegment)) {
+                    for (CubeSegment seg : cubeInstance.getSegment(CubeSegmentStatusEnum.READY)) {
                         sourceCount += seg.getSourceRecords();
                         sourceSize += seg.getSourceRecordsSize();
                     }
