@@ -26,6 +26,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
 import org.apache.hadoop.hbase.Cell;
@@ -41,9 +44,6 @@ import org.junit.Test;
 
 import com.google.common.collect.Lists;
 import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
 import com.kylinolap.storage.hbase.coprocessor.observer.ObserverAggregators.HCol;
 
 /**

@@ -1,6 +1,6 @@
 package com.kylinolap.cube.measure.fixedlen;
 
-import com.kylinolap.metadata.model.schema.DataType;
+import com.kylinolap.metadata.model.DataType;
 import org.apache.hadoop.io.LongWritable;
 
 import com.kylinolap.common.util.BytesUtil;

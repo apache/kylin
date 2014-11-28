@@ -4,7 +4,7 @@ package com.kylinolap.cube.invertedindex;
 import com.kylinolap.common.util.BytesSerializer;
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.cube.measure.fixedlen.FixedLenMeasureCodec;
-import com.kylinolap.metadata.model.schema.DataType;
+import com.kylinolap.metadata.model.DataType;
 import org.apache.hadoop.io.LongWritable;
 
 import java.nio.ByteBuffer;
