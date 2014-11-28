@@ -81,8 +81,8 @@ public class FactDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, Text, ShortW
             if (rowkey.isUseDictionary(col) == false)
                 continue;
 
-            String scanTable = (String) dictMgr.decideSourceData(cubeDesc, col, null)[0];
-            if (cubeDesc.isFactTable(scanTable)) {
+            String scanTable = (String) dictMgr.decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null)[0];
+            if (cubeDesc.getModel().isFactTable(scanTable)) {
                 System.out.println(col + " -- " + i);
                 factDictCols.add(i);
             }

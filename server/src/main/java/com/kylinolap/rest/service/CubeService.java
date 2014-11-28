@@ -163,10 +163,10 @@ public class CubeService extends BasicService {
         CubeDesc createdDesc = null;
         CubeInstance createdCube = null;
 
-        createdDesc = getMetadataManager().createCubeDesc(desc);
+        createdDesc = getCubeManager().createCubeDesc(desc);
 
         if (!createdDesc.getError().isEmpty()) {
-            getMetadataManager().removeCubeDesc(createdDesc);
+            getCubeManager().removeCubeDesc(createdDesc);
             throw new InternalErrorException(createdDesc.getError().get(0));
         }
         
@@ -174,7 +174,7 @@ public class CubeService extends BasicService {
             int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc);
             logger.info("New cube " + cubeName + " has " + cuboidCount + " cuboids");
         }catch(Exception e){
-            getMetadataManager().removeCubeDesc(createdDesc);
+            getCubeManager().removeCubeDesc(createdDesc);
             throw new InternalErrorException("Failed to deal with the request.", e);
         }
         
@@ -201,7 +201,7 @@ public class CubeService extends BasicService {
                 this.releaseAllSegments(cube);
             }
             
-            CubeDesc updatedCubeDesc = getMetadataManager().updateCubeDesc(desc);
+            CubeDesc updatedCubeDesc = getCubeManager().updateCubeDesc(desc);
             
             int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc);
             logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
@@ -552,7 +552,7 @@ public class CubeService extends BasicService {
     public void updateCubeNotifyList(CubeInstance cube, List<String> notifyList) throws IOException, CubeIntegrityException {
         CubeDesc desc = cube.getDescriptor();
         desc.setNotifyList(notifyList);
-        getMetadataManager().updateCubeDesc(desc);
+        getCubeManager().updateCubeDesc(desc);
     }
 
     public CubeInstance rebuildLookupSnapshot(String cubeName, String segmentName, String lookupTable) throws IOException {

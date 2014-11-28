@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.kylinolap.metadata;
+package com.kylinolap.cube;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,10 +42,18 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testSerialize() throws Exception {
-        CubeDesc desc = MetadataManager.getInstance(this.getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
+        CubeDesc desc = CubeManager.getInstance(this.getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         String str = JsonUtil.writeValueAsIndentString(desc);
         System.out.println(str);
         @SuppressWarnings("unused")
         CubeDesc desc2 = JsonUtil.readValue(str, CubeDesc.class);
     }
+    
+
+    @Test
+    public void testGetCubeDesc() throws Exception {
+        CubeDesc cubeDesc = CubeManager.getInstance(this.getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
+        Assert.assertNotNull(cubeDesc);
+    }
+
 }
