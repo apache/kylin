@@ -14,14 +14,18 @@
  * limitations under the License.
  */
 
-package com.kylinolap.job.tools;
+package com.kylinolap.common.util;
 
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
+
+import com.kylinolap.common.KylinConfig;
 
 /**
  * @author xduo
@@ -29,47 +33,44 @@ import org.apache.commons.mail.HtmlEmail;
  */
 public class MailService {
 
-    private String host = "atom.corp.ebay.com";
-    private String username = "_kylin_ldap";
+    private Boolean enabled = Boolean.TRUE;
+    private String host;
+    private String username;
     private String password;
-    private String sender = "DL-eBay-Kylin@corp.ebay.com";
+    private String sender;
 
-    public String getHost() {
-        return host;
+    private static final Log logger = LogFactory.getLog(MailService.class);
+
+    public MailService() {
+        this(KylinConfig.getInstanceFromEnv());
     }
 
-    public void setHost(String host) {
-        this.host = host;
-    }
+    public MailService(KylinConfig config) {
+        enabled = "true".equalsIgnoreCase(config.getProperty(KylinConfig.MAIL_ENABLED, "true"));
+        host = config.getProperty(KylinConfig.MAIL_HOST, "");
+        username = config.getProperty(KylinConfig.MAIL_USERNAME, "");
+        password = config.getProperty(KylinConfig.MAIL_PASSWORD, "");
+        sender = config.getProperty(KylinConfig.MAIL_SENDER, "");
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getSender() {
-        return sender;
-    }
-
-    public void setSender(String sender) {
-        this.sender = sender;
+        if (enabled) {
+            assert !host.isEmpty();
+        }
     }
 
     public void sendMail(List<String> receivers, String subject, String content) throws IOException {
 
+        if (!enabled) {
+            logger.info("Email service is disabled; this mail will not be delivered: " + subject);
+            logger.info("To enable mail service, set 'mail.enabled=true' in kylin.properties");
+            return;
+        }
+
         Email email = new HtmlEmail();
         email.setHostName(host);
+        if (username != null && username.trim().length() > 0) {
+            email.setAuthentication(username, password);
+        }
+
         email.setDebug(true);
         try {
             for (String receiver : receivers) {
@@ -83,9 +84,8 @@ public class MailService {
             email.send();
             email.getMailSession();
 
-            System.out.println("!!");
         } catch (EmailException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
     }
 }
