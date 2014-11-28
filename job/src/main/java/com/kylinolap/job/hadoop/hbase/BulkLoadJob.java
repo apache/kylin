@@ -31,6 +31,7 @@ import com.kylinolap.cube.CubeManager;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.HBaseColumnFamilyDesc;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

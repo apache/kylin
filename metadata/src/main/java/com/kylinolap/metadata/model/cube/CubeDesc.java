@@ -47,6 +47,7 @@ import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.metadata.MetadataConstances;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.DataModelDesc;
 import com.kylinolap.metadata.model.DataType;
 import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.TableDesc;
@@ -93,6 +94,8 @@ public class CubeDesc extends RootPersistentEntity {
 
     @JsonProperty("name")
     private String name;
+    @JsonProperty("data_model")
+    private DataModelDesc model;
     @JsonProperty("description")
     private String description;
     @JsonProperty("fact_table")
