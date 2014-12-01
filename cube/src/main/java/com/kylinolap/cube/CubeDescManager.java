@@ -91,7 +91,7 @@ public class CubeDescManager {
     private CubeDescManager(KylinConfig config) throws IOException {
         logger.info("Initializing CubeDescManager with config " + config);
         this.config = config;
-
+        reloadAllCubeDesc();
     }
 
     public CubeDesc getCubeDesc(String name) {

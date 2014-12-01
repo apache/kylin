@@ -479,6 +479,7 @@ public class CubeDesc extends RootPersistentEntity {
     public void init(KylinConfig config, Map<String, TableDesc> tables) {
         this.errors.clear();
         this.config = config;
+        this.model = MetadataManager.getInstance(config).getDataModelDesc(this.modelName);
 
         for (DimensionDesc dim : dimensions) {
             dim.init(this, tables);
@@ -489,8 +490,6 @@ public class CubeDesc extends RootPersistentEntity {
         initJoinColumns(tables);
         initDimensionColumns(tables);
         initMeasureColumns(tables);
-        
-        //TODO create the DataModel object from MetadataManager and then set here; 
 
         rowkey.init(this);
         if (hbaseMapping != null) {
