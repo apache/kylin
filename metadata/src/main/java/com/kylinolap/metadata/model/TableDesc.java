@@ -40,6 +40,12 @@ public class TableDesc extends RootPersistentEntity {
     private DatabaseDesc database;
 
     public ColumnDesc findColumnByName(String name) {
+        //ignore the db name and table name
+        int lastIndexOfDot = name.lastIndexOf(".");
+        if (lastIndexOfDot >= 0) {
+            name = name.substring(lastIndexOfDot + 1);
+        }
+        
         for (ColumnDesc c : columns) {
             // return first matched column
             if (name.equalsIgnoreCase(c.getName())) {
