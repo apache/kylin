@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kylinolap.common.util.StringUtil;
 import com.kylinolap.metadata.model.JoinDesc;
+import com.kylinolap.metadata.model.LookupDesc;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.realization.TblColRef;
 
@@ -37,16 +38,12 @@ public class DimensionDesc {
     private int id;
     @JsonProperty("name")
     private String name;
-    @JsonProperty("join")
     private JoinDesc join;
     @JsonProperty("hierarchy")
     private HierarchyDesc[] hierarchy;
-    @JsonProperty("table")
     private String table;
     @JsonProperty("column")
     private String column;
-    @JsonProperty("datatype")
-    private String datatype;
     @JsonProperty("derived")
     private String[] derived;
 
@@ -65,20 +62,9 @@ public class DimensionDesc {
         return false;
     }
 
-    public String getDatatype() {
-        return datatype;
-    }
-
-    public void setDatatype(String datatype) {
-        this.datatype = datatype;
-    }
 
     public String getTable() {
         return table.toUpperCase();
-    }
-
-    public void setTable(String table) {
-        this.table = table;
     }
 
     public int getId() {
@@ -91,10 +77,6 @@ public class DimensionDesc {
 
     public JoinDesc getJoin() {
         return join;
-    }
-
-    public void setJoin(JoinDesc join) {
-        this.join = join;
     }
 
     public String getName() {
@@ -173,25 +155,42 @@ public class DimensionDesc {
 
     @Override
     public String toString() {
-        return "DimensionDesc [name=" + name + ", join=" + join + ", hierarchy=" + Arrays.toString(hierarchy) + ", table=" + table + ", column=" + column + ", datatype=" + datatype + ", derived=" + Arrays.toString(derived) + "]";
+        return "DimensionDesc [name=" + name + ", join=" + join + ", hierarchy=" + Arrays.toString(hierarchy) + ", table=" + table + ", column=" + column + ", derived=" + Arrays.toString(derived) + "]";
     }
 
-    public void init(Map<String, TableDesc> tables) {
+    public void init(CubeDesc cubeDesc, Map<String, TableDesc> tables) {
         if (name != null)
             name = name.toUpperCase();
-        if (table != null)
-            table = table.toUpperCase();
         if (column != null)
             column = column.toUpperCase();
+        
+        // parse 'column' to get the table name; if table name is not appeared, use fact table;
+        String[] splits = this.column.split(".");
+        if (splits.length > 1) {
+            table = splits[splits.length - 2].toUpperCase();
+        } else {
+            table = cubeDesc.getFactTable().toUpperCase();
+        }
 
         TableDesc tableDesc = tables.get(table);
         if (tableDesc == null)
             throw new IllegalStateException("Can't find table " + table + " on dimension " + name);
 
+        boolean isOnFactTable = table.equalsIgnoreCase(cubeDesc.getFactTable());
+
         if (hierarchy != null && hierarchy.length == 0)
             hierarchy = null;
         if (derived != null && derived.length == 0)
             derived = null;
+        
+        if(!isOnFactTable) {
+            for(LookupDesc lookup: cubeDesc.getModel().getLookups()) {
+                if(lookup.getTable().equals(table)) {
+                    join = lookup.getJoin();
+                    break;
+                }
+            }
+        }
 
         if (join != null) {
             StringUtil.toUpperCaseArray(join.getForeignKey(), join.getForeignKey());
