@@ -102,7 +102,11 @@ public class TableRecordInfoDigest implements TableRecordFactory {
             BytesUtil.writeIntArray(value.lengths, out);
 
             for (int i = 0; i < value.measureSerializers.length; ++i) {
-                BytesUtil.writeAsciiString(value.measureSerializers[i].getDataType().toString(), out);
+                if (value.isMetrics(i)) {
+                    BytesUtil.writeAsciiString(value.measureSerializers[i].getDataType().toString(), out);
+                } else {
+                    BytesUtil.writeAsciiString(null, out);
+                }
             }
         }
 
