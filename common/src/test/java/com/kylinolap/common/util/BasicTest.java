@@ -2,6 +2,7 @@ package com.kylinolap.common.util;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
@@ -12,6 +13,7 @@ import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.hbase.util.Threads;
 import org.junit.Ignore;
 import org.junit.Test;
+import sun.jvm.hotspot.oops.BitData;
 
 /**
  * Created by honma on 10/17/14.
@@ -23,9 +25,21 @@ import org.junit.Test;
 public class BasicTest {
     @Test
     public void test() throws IOException {
-        for (String s : ManagementFactory.getRuntimeMXBean().getInputArguments())
-            System.out.println(s);
-        return;
+
+        BigDecimal scalePower = new BigDecimal(1000000);
+        String value = "2.09";
+        BigDecimal a = new BigDecimal(value);
+        BigDecimal b = a.multiply(scalePower);
+        long xb = b.longValue();
+        System.out.println(xb);
+
+        System.out.println(b.divide(scalePower));
+
+
+//        for (String s : ManagementFactory.getRuntimeMXBean().getInputArguments())
+//            System.out.println(s);
+//        return;
+
 //        //BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(1000000);
 //        BlockingQueue<Runnable> workQueue = new SynchronousQueue<>();
 //
