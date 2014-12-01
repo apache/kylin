@@ -18,9 +18,11 @@ package com.kylinolap.storage.hbase.coprocessor.endpoint;
 
 import com.kylinolap.common.util.BytesSerializer;
 import com.kylinolap.common.util.BytesUtil;
+import com.kylinolap.cube.invertedindex.TableRecordInfo;
 import com.kylinolap.cube.invertedindex.TableRecordInfoDigest;
 import com.kylinolap.cube.measure.MeasureAggregator;
 import com.kylinolap.cube.measure.fixedlen.FixedLenMeasureCodec;
+import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.DataType;
 import com.kylinolap.metadata.model.realization.FunctionDesc;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorConstants;
@@ -34,20 +36,31 @@ import java.util.List;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class EndpointAggregators {
 
-    public static EndpointAggregators fromFunctions(List<FunctionDesc> metrics, TableRecordInfoDigest tableInfo) {
+    public static EndpointAggregators fromFunctions(List<FunctionDesc> metrics, TableRecordInfo tableInfo) {
         String[] funcNames = new String[metrics.size()];
         String[] dataTypes = new String[metrics.size()];
+        int[] refColIndex = new int[metrics.size()];
 
         for (int i = 0; i < metrics.size(); i++) {
-            funcNames[i] = metrics.get(i).getExpression();
-            dataTypes[i] = metrics.get(i).getReturnType();
+            FunctionDesc functionDesc = metrics.get(i);
+
+            if (!functionDesc.getParameter().isColumnType()) {
+                throw new IllegalStateException("Endpoint does not support non-column metrics for now");
+            }
+            funcNames[i] = functionDesc.getExpression();
+            dataTypes[i] = functionDesc.getReturnType();
+            refColIndex[i] = tableInfo.findMetric(functionDesc.getParameter().getValue());
+            if (refColIndex[i] < 0) {
+                throw new IllegalStateException("Column " + functionDesc.getParameter().getColRefs().get(0) + " is not found in II");
+            }
         }
 
-        return new EndpointAggregators(funcNames, dataTypes, tableInfo);
+        return new EndpointAggregators(funcNames, dataTypes, refColIndex, tableInfo);
     }
 
     final String[] funcNames;
     final String[] dataTypes;
+    final int[] refColIndex;
     final TableRecordInfoDigest tableInfo;
 
     final transient FixedLenMeasureCodec[] measureSerializers;
@@ -55,9 +68,10 @@ public class EndpointAggregators {
     final transient byte[] metricBytes;
     transient int metricBytesOffset = 0;
 
-    public EndpointAggregators(String[] funcNames, String[] dataTypes, TableRecordInfoDigest tableInfo) {
+    public EndpointAggregators(String[] funcNames, String[] dataTypes, int[] refColIndex, TableRecordInfoDigest tableInfo) {
         this.funcNames = funcNames;
         this.dataTypes = dataTypes;
+        this.refColIndex = refColIndex;
         this.tableInfo = tableInfo;
 
         this.metricBytes = new byte[CoprocessorConstants.SERIALIZE_BUFFER_SIZE];
@@ -72,22 +86,24 @@ public class EndpointAggregators {
         MeasureAggregator[] aggrs = new MeasureAggregator[funcNames.length];
         for (int j = 0; j < aggrs.length; j++) {
             //all fixed length measures can be aggregated as long
-            aggrs[j++] = MeasureAggregator.create(funcNames[j], "long");
+            aggrs[j] = MeasureAggregator.create(funcNames[j], "long");
         }
         return aggrs;
     }
 
     public void aggregate(MeasureAggregator[] measureAggrs, byte[] row) {
         int rawIndex = 0;
-        int metricIndex = 0;
         int columnCount = tableInfo.getColumnCount();
 
-        for (int i = 0; i < columnCount; ++i) {
-            if (tableInfo.isMetrics(i)) {
-                measureAggrs[metricIndex].aggregate(measureSerializers[metricIndex].read(row, rawIndex));
-                metricIndex++;
+        for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex) {
+            if (tableInfo.isMetrics(columnIndex)) {
+                for (int metricIndex = 0; metricIndex < refColIndex.length; ++metricIndex) {
+                    if (refColIndex[metricIndex] == columnIndex) {
+                        measureAggrs[metricIndex].aggregate(measureSerializers[metricIndex].read(row, rawIndex));
+                    }
+                }
             }
-            rawIndex += tableInfo.length(i);
+            rawIndex += tableInfo.length(columnIndex);
         }
     }
 
@@ -123,16 +139,17 @@ public class EndpointAggregators {
         public void serialize(EndpointAggregators value, ByteBuffer out) {
             BytesUtil.writeAsciiStringArray(value.funcNames, out);
             BytesUtil.writeAsciiStringArray(value.dataTypes, out);
+            BytesUtil.writeIntArray(value.refColIndex, out);
             BytesUtil.writeByteArray(TableRecordInfoDigest.serialize(value.tableInfo), out);
-
         }
 
         @Override
         public EndpointAggregators deserialize(ByteBuffer in) {
             String[] funcNames = BytesUtil.readAsciiStringArray(in);
             String[] dataTypes = BytesUtil.readAsciiStringArray(in);
+            int[] refColIndex = BytesUtil.readIntArray(in);
             TableRecordInfoDigest tableInfo = TableRecordInfoDigest.deserialize(in);
-            return new EndpointAggregators(funcNames, dataTypes, tableInfo);
+            return new EndpointAggregators(funcNames, dataTypes, refColIndex, tableInfo);
         }
 
     }
