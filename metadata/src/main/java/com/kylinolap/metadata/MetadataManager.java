@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.kylinolap.metadata.model.DataModelDesc;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -309,6 +310,22 @@ public class MetadataManager {
     public void reload() {
         removeInstance(config);
         getInstance(config);
+    }
+
+    public DataModelDesc getDataModelDesc(String name) {
+        return null;
+    }
+
+    public void updateDataModelDesc(DataModelDesc dataModelDesc) {
+        throw new UnsupportedOperationException();
+    }
+
+    public DataModelDesc createDataModelDesc(DataModelDesc dataModelDesc) {
+        return dataModelDesc;
+    }
+
+    public boolean deleteDataModelDesc(DataModelDesc dataModelDesc) {
+        throw new UnsupportedOperationException();
     }
 
 }
