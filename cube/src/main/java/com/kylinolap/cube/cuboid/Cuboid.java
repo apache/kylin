@@ -57,6 +57,7 @@ public class Cuboid implements Comparable<Cuboid> {
             cubeCache.put(cuboidID, cuboid);
         }
         return cuboid;
+        
     }
 
     public static boolean isValid(CubeDesc cube, long cuboidID) {
