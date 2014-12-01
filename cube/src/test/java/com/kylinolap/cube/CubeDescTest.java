@@ -42,7 +42,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testSerialize() throws Exception {
-        CubeDesc desc = CubeManager.getInstance(this.getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
+        CubeDesc desc = CubeDescManager.getInstance(this.getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         String str = JsonUtil.writeValueAsIndentString(desc);
         System.out.println(str);
         @SuppressWarnings("unused")
@@ -52,7 +52,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testGetCubeDesc() throws Exception {
-        CubeDesc cubeDesc = CubeManager.getInstance(this.getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
+        CubeDesc cubeDesc = CubeDescManager.getInstance(this.getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         Assert.assertNotNull(cubeDesc);
     }
 
