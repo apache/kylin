@@ -99,8 +99,6 @@ public class CubeDesc extends RootPersistentEntity {
     private String modelName;
     @JsonProperty("description")
     private String description;
-    @JsonProperty("fact_table")
-    private String factTable;
     @JsonProperty("null_string")
     private String[] nullStrings;
     @JsonProperty("filter_condition")
@@ -245,7 +243,7 @@ public class CubeDesc extends RootPersistentEntity {
         HashSet<String> tableNames = new HashSet<String>();
         List<TableDesc> result = new ArrayList<TableDesc>();
 
-        tableNames.add(factTable.toUpperCase());
+        tableNames.add(this.getFactTable().toUpperCase());
         for (DimensionDesc dim : dimensions) {
             String table = dim.getTable();
             if (table != null)
@@ -435,7 +433,7 @@ public class CubeDesc extends RootPersistentEntity {
 
         if (!name.equals(cubeDesc.name))
             return false;
-        if (!factTable.equals(cubeDesc.factTable))
+        if (!getFactTable().equals(cubeDesc.getFactTable()))
             return false;
 
         return true;
@@ -445,13 +443,13 @@ public class CubeDesc extends RootPersistentEntity {
     public int hashCode() {
         int result = 0;
         result = 31 * result + name.hashCode();
-        result = 31 * result + factTable.hashCode();
+        result = 31 * result + getFactTable().hashCode();
         return result;
     }
 
     @Override
     public String toString() {
-        return "CubeDesc [name=" + name + ", factTable=" + factTable + ", cubePartitionDesc=" + cubePartitionDesc + ", dimensions=" + dimensions + ", measures=" + measures + ", rowkey=" + rowkey + ", hbaseMapping=" + hbaseMapping + "]";
+        return "CubeDesc [name=" + name + ", factTable=" + getFactTable() + ", cubePartitionDesc=" + cubePartitionDesc + ", dimensions=" + dimensions + ", measures=" + measures + ", rowkey=" + rowkey + ", hbaseMapping=" + hbaseMapping + "]";
     }
 
     public String calculateSignature() {
@@ -459,7 +457,7 @@ public class CubeDesc extends RootPersistentEntity {
         try {
             md = MessageDigest.getInstance("MD5");
             StringBuilder sigString = new StringBuilder();
-            sigString.append(this.name).append("|").append(this.factTable).append("|").append(JsonUtil.writeValueAsString(this.cubePartitionDesc)).append("|").append(JsonUtil.writeValueAsString(this.dimensions)).append("|").append(JsonUtil.writeValueAsString(this.measures)).append("|").append(JsonUtil.writeValueAsString(this.rowkey)).append("|").append(JsonUtil.writeValueAsString(this.hbaseMapping));
+            sigString.append(this.name).append("|").append(this.getFactTable()).append("|").append(JsonUtil.writeValueAsString(this.cubePartitionDesc)).append("|").append(JsonUtil.writeValueAsString(this.dimensions)).append("|").append(JsonUtil.writeValueAsString(this.measures)).append("|").append(JsonUtil.writeValueAsString(this.rowkey)).append("|").append(JsonUtil.writeValueAsString(this.hbaseMapping));
 
             byte[] signature = md.digest(sigString.toString().getBytes());
             return new String(Base64.encodeBase64(signature));
@@ -482,11 +480,8 @@ public class CubeDesc extends RootPersistentEntity {
         this.errors.clear();
         this.config = config;
 
-        if (factTable != null)
-            factTable = factTable.toUpperCase();
-
         for (DimensionDesc dim : dimensions) {
-            dim.init(tables);
+            dim.init(this, tables);
         }
 
         sortDimAndMeasure();
@@ -680,16 +675,16 @@ public class CubeDesc extends RootPersistentEntity {
             }
             join.setPrimaryKeyColumns(pkCols);
             // foreign key
-            TableDesc factTable = tables.get(this.factTable);
+            TableDesc factTable = tables.get(this.getFactTable());
             if (factTable == null) {
-                addError("Fact table does not exist:" + this.factTable);
+                addError("Fact table does not exist:" + this.getFactTable());
             }
             String[] fks = join.getForeignKey();
             TblColRef[] fkCols = new TblColRef[fks.length];
             for (int i = 0; i < fks.length; i++) {
                 ColumnDesc col = factTable.findColumnByName(fks[i]);
                 if (col == null) {
-                    addError("Can't find column " + fks[i] + " in table " + this.factTable);
+                    addError("Can't find column " + fks[i] + " in table " + this.getFactTable());
                 }
                 TblColRef colRef = new TblColRef(col);
                 fks[i] = colRef.getName();
@@ -698,11 +693,11 @@ public class CubeDesc extends RootPersistentEntity {
             join.setForeignKeyColumns(fkCols);
             // Validate join in dimension
             if (pkCols.length != fkCols.length) {
-                addError("Primary keys(" + dim.getTable() + ")" + Arrays.toString(pks) + " are not consistent with Foreign keys(" + this.factTable + ") " + Arrays.toString(fks));
+                addError("Primary keys(" + dim.getTable() + ")" + Arrays.toString(pks) + " are not consistent with Foreign keys(" + this.getFactTable() + ") " + Arrays.toString(fks));
             }
             for (int i = 0; i < fkCols.length; i++) {
                 if (!fkCols[i].getDatatype().equals(pkCols[i].getDatatype())) {
-                    addError("Primary key " + dim.getTable() + "." + pkCols[i].getName() + "." + pkCols[i].getDatatype() + " are not consistent with Foreign key " + this.factTable + "." + fkCols[i].getName() + "." + fkCols[i].getDatatype());
+                    addError("Primary key " + dim.getTable() + "." + pkCols[i].getName() + "." + pkCols[i].getDatatype() + " are not consistent with Foreign key " + this.getFactTable() + "." + fkCols[i].getName() + "." + fkCols[i].getDatatype());
                 }
             }
 
