@@ -47,7 +47,7 @@ public class MailServiceTest {
     private boolean sendTestEmail(MailService mailservice) {
 
         List<String> receivers = new ArrayList<String>(1);
-        receivers.add("shaoshi@ebay.com");
+        receivers.add("foobar@foobar.com");
         try {
             return mailservice.sendMail(receivers, "A test email from Kylin", "Hello!");
         } catch (IOException e) {
