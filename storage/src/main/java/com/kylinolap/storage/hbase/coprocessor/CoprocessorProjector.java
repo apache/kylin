@@ -61,13 +61,12 @@ public class CoprocessorProjector {
         byte[] mask = new byte[tableInfo.getByteFormLen()];
         int maskIdx = 0;
         for (int i = 0; i < tableInfo.getColumnCount(); ++i) {
-            for (ColumnDesc columnDesc : tableInfo.getColumns()) {
-                TblColRef tblColRef = new TblColRef(columnDesc);
-                int length = tableInfo.length(i);
-                byte bits = dimensionColumns.contains(tblColRef) ? (byte) 0xff : 0x00;
-                for (int j = 0; j < length; ++j) {
-                    mask[maskIdx++] = bits;
-                }
+            ColumnDesc columnDesc = tableInfo.getColumns()[i];
+            TblColRef tblColRef = new TblColRef(columnDesc);
+            int length = tableInfo.length(i);
+            byte bits = dimensionColumns.contains(tblColRef) ? (byte) 0xff : 0x00;
+            for (int j = 0; j < length; ++j) {
+                mask[maskIdx++] = bits;
             }
         }
         return new CoprocessorProjector(mask);
