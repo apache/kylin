@@ -27,6 +27,7 @@ import org.junit.Test;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.cube.CubeDescManager;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.model.CubeDesc;
@@ -71,8 +72,8 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
         // clean legacy in case last run failed
         store.deleteResource("/cube/cube_in_alien_project.json");
 
-        CubeManager metaMgr = getCubeManager();
-        CubeDesc desc = metaMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
+        CubeDescManager cubeDescMgr = getCubeDescManager();
+        CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
         CubeInstance createdCube = CubeManager.getInstance(this.getTestConfig()).createCube("cube_in_alien_project", "alien", desc, null);
         assertTrue(createdCube == CubeManager.getInstance(this.getTestConfig()).getCube("cube_in_alien_project"));
         assertTrue(ProjectManager.getInstance(getTestConfig()).listAllCubes("alien").contains(createdCube));
@@ -115,8 +116,8 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
         // clean legacy in case last run failed
         store.deleteResource("/cube/new_cube_in_default.json");
 
-        CubeManager metaMgr = getCubeManager();
-        CubeDesc desc = metaMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
+        CubeDescManager cubeDescMgr = getCubeDescManager();
+        CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
         CubeInstance createdCube = CubeManager.getInstance(this.getTestConfig()).createCube("new_cube_in_default", ProjectInstance.DEFAULT_PROJECT_NAME, desc, null);
         assertTrue(createdCube == CubeManager.getInstance(this.getTestConfig()).getCube("new_cube_in_default"));
 
@@ -165,5 +166,9 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
     
     private CubeManager getCubeManager() {
         return CubeManager.getInstance(getTestConfig());
+    }
+
+    public CubeDescManager getCubeDescManager() {
+        return CubeDescManager.getInstance(getTestConfig());
     }
 }

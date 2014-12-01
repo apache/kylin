@@ -40,6 +40,7 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import com.google.common.io.Files;
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.cube.CubeDescManager;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.cube.project.ProjectManager;
@@ -154,6 +155,10 @@ public abstract class BasicService {
         return CubeManager.getInstance(getConfig());
     }
 
+    public CubeDescManager getCubeDescManager() {
+        return CubeDescManager.getInstance(getConfig());
+    }
+    
     public ProjectManager getProjectManager() {
         return ProjectManager.getInstance(getConfig());
     }
