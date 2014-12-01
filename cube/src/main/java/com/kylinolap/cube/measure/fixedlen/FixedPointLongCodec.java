@@ -5,12 +5,14 @@ import org.apache.hadoop.io.LongWritable;
 
 import com.kylinolap.common.util.BytesUtil;
 
+import java.math.BigDecimal;
+
 public class FixedPointLongCodec extends FixedLenMeasureCodec<LongWritable> {
 
     private static final int SIZE = 8;
     // number of digits after decimal point
     int scale;
-    double scalePower;
+    BigDecimal scalePower;
     DataType type;
     // avoid mass object creation
     LongWritable current = new LongWritable();
@@ -19,7 +21,7 @@ public class FixedPointLongCodec extends FixedLenMeasureCodec<LongWritable> {
     public FixedPointLongCodec(DataType type) {
         this.type = type;
         this.scale = Math.max(0, type.getScale());
-        this.scalePower = Math.pow(10, scale);
+        this.scalePower = new BigDecimal((long) Math.pow(10, scale));
     }
 
     @Override
@@ -37,7 +39,7 @@ public class FixedPointLongCodec extends FixedLenMeasureCodec<LongWritable> {
         if (value == null)
             current.set(0L);
         else
-            current.set((long) (Double.parseDouble(value) * scalePower));
+            current.set((new BigDecimal(value).multiply(scalePower).longValue()));
         return current;
     }
 
@@ -46,7 +48,7 @@ public class FixedPointLongCodec extends FixedLenMeasureCodec<LongWritable> {
         if (scale == 0)
             return value.toString();
         else
-            return "" + (value.get() / scalePower);
+            return "" + (new BigDecimal(value.get()).divide(scalePower));
     }
 
     @Override

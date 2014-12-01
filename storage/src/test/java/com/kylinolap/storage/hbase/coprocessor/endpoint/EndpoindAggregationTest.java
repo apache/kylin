@@ -6,8 +6,10 @@ import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.invertedindex.TableRecord;
 import com.kylinolap.cube.invertedindex.TableRecordInfo;
 import com.kylinolap.cube.measure.MeasureAggregator;
+import com.kylinolap.metadata.model.DataType;
 import com.kylinolap.metadata.model.realization.FunctionDesc;
 import com.kylinolap.metadata.model.realization.ParameterDesc;
 import com.kylinolap.metadata.model.realization.TblColRef;
@@ -17,6 +19,7 @@ import com.kylinolap.storage.filter.ConstantTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
+import org.apache.hadoop.io.LongWritable;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +40,7 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
 
     EndpointAggregationCache aggCache;
 
-    byte[][] data;
+    List<TableRecord> tableData;
 
 
     @Before
@@ -45,8 +48,8 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
         this.createTestMetadata();
         this.cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_ii");
         this.tableRecordInfo = new TableRecordInfo(cube.getFirstSegment());
-        TblColRef formatName = this.cube.getDescriptor().findColumnRef("test_kylin_fact", "LSTG_FORMAT_NAME");
-        TblColRef siteId = this.cube.getDescriptor().findColumnRef("test_kylin_fact", "LSTG_SITE_ID");
+        TblColRef formatName = this.cube.getDescriptor().findColumnRef("TEST_KYLIN_FACT", "LSTG_FORMAT_NAME");
+        TblColRef siteId = this.cube.getDescriptor().findColumnRef("TEST_KYLIN_FACT", "LSTG_SITE_ID");
 
         Collection<TblColRef> dims = new HashSet<>();
         dims.add(formatName);
@@ -54,35 +57,60 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
         aggregators = EndpointAggregators.fromFunctions(buildAggregations(), tableRecordInfo);
 
         CompareTupleFilter rawFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
-        rawFilter.addChild(new ColumnTupleFilter(formatName));
-        rawFilter.addChild(new ConstantTupleFilter("Others"));
+        rawFilter.addChild(new ColumnTupleFilter(siteId));
+        rawFilter.addChild(new ConstantTupleFilter("0"));
         filter = CoprocessorFilter.fromFilter(this.cube.getFirstSegment(), rawFilter);
 
         aggCache = new EndpointAggregationCache(aggregators);
-
-        /**
-         [0,2012-10-08,Auction,16145,3,12,85.0913662952116,0,10000036]
-         [0,2012-10-08,FP-non GTC,20865,0,-99,44.721564542590485,0,10000328]
-         [0,2012-10-08,Others,75665,0,-99,15.583138983388148,0,10000809]
-         [0,2012-10-08,Others,2023,0,15,57.67495843017063,0,10000149]
-         [0,2012-10-13,FP-GTC,50508,0,5,96.04012848965151,0,10000559]
-         */
-        String[] dataInHex = new String[] {
-                "\\x00\\x0B\\x37\\xAF\\x01\\x21\\x02\\x03\\x0B\\xCF\\x0D\\x77\\xD6\\xC9\\x8F\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x24",
-                "\\x00\\x0B\\x37\\xAF\\x03\\x25\\x00\\x00\\x06\\x34\\xD4\\x42\\x93\\x9B\\xAC\\xC0\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x48",
-                "\\x00\\x0B\\x37\\xAF\\x04\\x58\\x00\\x00\\x02\\x29\\x9F\\xD2\\xCB\\xE7\\x67\\x80\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x03\\x29",
-                "\\x00\\x0B\\x37\\xAF\\x04\\x0F\\x00\\x06\\x08\\x01\\x06\\xB0\\xF0\\xA8\\x4C\\x80\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x95",
-                "\\x00\\x0B\\x37\\xB4\\x02\\x45\\x00\\x01\\x0D\\x54\\x07\\xE1\\x54\\x15\\xE4\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x02\\x2F",
-        };
-        data = new byte[dataInHex.length][];
-        for (int i = 0; i < dataInHex.length; ++i) {
-            data[i] = BytesUtil.fromReadableText(dataInHex[i]);
-        }
+        tableData = mockTable();
     }
+
 
     @After
     public void cleanUp() {
         cleanupTestMetadata();
+    }
+
+    private List<TableRecord> mockTable() {
+
+        TableRecord temp1 = (TableRecord) tableRecordInfo.createTableRecord();
+        temp1.setValueString(0, "10000000252");
+        temp1.setValueString(1, "2012-03-22");
+        temp1.setValueString(2, "Auction");
+        temp1.setValueString(3, "80135");
+        temp1.setValueString(4, "0");
+        temp1.setValueString(5, "14");
+        temp1.setValueString(6, "199.99");
+        temp1.setValueString(7, "1");
+        temp1.setValueString(8, "10000005");
+
+        TableRecord temp2 = (TableRecord) tableRecordInfo.createTableRecord();
+        temp2.setValueString(0, "10000000242");
+        temp2.setValueString(1, "2012-11-11");
+        temp2.setValueString(2, "Auction");
+        temp2.setValueString(3, "16509");
+        temp2.setValueString(4, "101");
+        temp2.setValueString(5, "12");
+        temp2.setValueString(6, "2.09");
+        temp2.setValueString(7, "1");
+        temp2.setValueString(8, "10000004");
+
+        TableRecord temp3 = (TableRecord) tableRecordInfo.createTableRecord();
+        temp3.setValueString(0, "10000000258");
+        temp3.setValueString(1, "2012-07-12");
+        temp3.setValueString(2, "Others");
+        temp3.setValueString(3, "15687");
+        temp3.setValueString(4, "0");
+        temp3.setValueString(5, "14");
+        temp3.setValueString(6, "100");
+        temp3.setValueString(7, "1");
+        temp3.setValueString(8, "10000020");
+
+        List<TableRecord> ret = new ArrayList<TableRecord>();
+        ret.add(temp1);
+        ret.add(temp2);
+        ret.add(temp3);
+        return ret;
     }
 
 
@@ -95,14 +123,16 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
         p1.setType("column");
         p1.setValue("PRICE");
         f1.setParameter(p1);
+        f1.setReturnType("decimal");
         functions.add(f1);
 
         FunctionDesc f2 = new FunctionDesc();
         f2.setExpression("MIN");
         ParameterDesc p2 = new ParameterDesc();
-        p1.setType("column");
-        p1.setValue("PRICE");
+        p2.setType("column");
+        p2.setValue("PRICE");
         f2.setParameter(p2);
+        f2.setReturnType("decimal");
         functions.add(f2);
 
         return functions;
@@ -111,17 +141,26 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
     @Test
     public void basicTest() {
 
-        for (int i = 0; i < data.length; ++i) {
-            CoprocessorProjector.AggrKey aggKey = projector.getAggrKey(data[i]);
+        for (int i = 0; i < tableData.size(); ++i) {
+            byte[] data = tableData.get(i).getBytes();
+            CoprocessorProjector.AggrKey aggKey = projector.getAggrKey(data);
             MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
-            aggregators.aggregate(bufs, data[i]);
+            aggregators.aggregate(bufs, data);
             aggCache.checkMemoryUsage();
         }
 
-        assertEquals(aggCache.getAllEntries().size(), 4);
-        for (Map.Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
+        assertEquals(aggCache.getAllEntries().size(), 2);
 
+
+        long sumTotal = 0;
+        long minTotal = 0;
+        for (Map.Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
+            sumTotal += ((LongWritable) entry.getValue()[0].getState()).get();
+            minTotal += ((LongWritable) entry.getValue()[1].getState()).get();
         }
+        assertEquals(sumTotal, 302080000);
+        assertEquals(minTotal, 102090000);
 
     }
+
 }

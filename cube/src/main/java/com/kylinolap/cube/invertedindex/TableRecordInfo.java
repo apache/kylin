@@ -109,6 +109,17 @@ public class TableRecordInfo extends TableRecordInfoDigest {
         return tableDesc.getColumns();
     }
 
+    public int findMetric(String name) {
+        if (name == null)
+            return -1;
+        for (int i = 0; i < colNames.length; ++i) {
+            if (isMetrics(i) && name.equals(colNames[i]))
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
 
     // dimensions go with dictionary
     @SuppressWarnings("unchecked")
@@ -116,7 +127,6 @@ public class TableRecordInfo extends TableRecordInfoDigest {
         // yes, all dictionaries are string based
         return (Dictionary<String>) dictionaries[col];
     }
-
 
 
     public int getTimestampColumn() {
