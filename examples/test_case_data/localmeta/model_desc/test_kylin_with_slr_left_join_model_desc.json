@@ -1,11 +1,11 @@
 {
-  "name": "test_kylin_with_slr_model_desc",
+  "name": "test_kylin_with_slr_left_join_model_desc",
   "fact_table": "test_kylin_fact",
   "lookups": [
     {
       "table": "test_cal_dt",
       "join": {
-        "type": "inner",
+        "type": "left",
         "primary_key": ["cal_dt"],
         "foreign_key": ["cal_dt"]
       }
@@ -13,7 +13,15 @@
     {
       "table": "test_category_groupings",
       "join": {
-        "type": "inner",
+        "type": "left",
+        "primary_key": ["leaf_categ_id", "site_id"],
+        "foreign_key": ["leaf_categ_id", "lstg_site_id"]
+      }
+    },
+    {
+      "table": "test_category_groupings",
+      "join": {
+        "type": "left",
         "primary_key": ["leaf_categ_id", "site_id"],
         "foreign_key": ["leaf_categ_id", "lstg_site_id"]
       }
@@ -21,7 +29,7 @@
     {
       "table": "test_sites",
       "join": {
-        "type": "inner",
+        "type": "left",
         "primary_key": ["site_id"],
         "foreign_key": ["lstg_site_id"]
       }
@@ -29,7 +37,7 @@
     {
       "table": "test_seller_type_dim",
       "join": {
-        "type": "inner",
+        "type": "left",
         "primary_key": ["seller_type_cd"],
         "foreign_key": ["slr_segment_cd"]
       }
