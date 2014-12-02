@@ -116,6 +116,9 @@ public class DictionaryGenerator {
             matchPattern = ptn; // be optimistic
             SimpleDateFormat sdf = new SimpleDateFormat(ptn);
             for (byte[] value : values) {
+                if (value.length == 0)
+                    continue;
+                
                 String str = Bytes.toString(value);
                 try {
                     sdf.parse(str);
