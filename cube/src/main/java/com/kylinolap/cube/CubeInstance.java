@@ -166,7 +166,7 @@ public class CubeInstance extends RootPersistentEntity {
     }
 
     public CubeDesc getDescriptor() {
-        return CubeManager.getInstance(config).getCubeDesc(descName);
+        return CubeDescManager.getInstance(config).getCubeDesc(descName);
     }
 
     public InvertedIndexDesc getInvertedIndexDesc() {

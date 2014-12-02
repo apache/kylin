@@ -22,7 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.CubeDescManager;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.metadata.MetadataManager;
 
@@ -35,25 +35,20 @@ public class CuboidTest extends LocalFileMetadataTestCase {
         return Long.parseLong(bin, 2);
     }
 
-    private MetadataManager getMetadataManager() {
-        return MetadataManager.getInstance(getTestConfig());
+    public CubeDescManager getCubeDescManager() {
+        return CubeDescManager.getInstance(getTestConfig());
     }
-
-    private CubeManager getCubeManager() {
-        return CubeManager.getInstance(getTestConfig());
-    }
-
 
     private CubeDesc getTestKylinCubeII() {
-        return getCubeManager().getCubeDesc("test_kylin_cube_ii");
+        return getCubeDescManager().getCubeDesc("test_kylin_cube_ii");
     }
 
     private CubeDesc getTestKylinCubeWithoutSeller() {
-        return getCubeManager().getCubeDesc("test_kylin_cube_without_slr_desc");
+        return getCubeDescManager().getCubeDesc("test_kylin_cube_without_slr_desc");
     }
 
     private CubeDesc getTestKylinCubeWithSeller() {
-        return getCubeManager().getCubeDesc("test_kylin_cube_with_slr_desc");
+        return getCubeDescManager().getCubeDesc("test_kylin_cube_with_slr_desc");
     }
 
     @Before

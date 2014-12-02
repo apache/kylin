@@ -15,12 +15,15 @@
  */
 package com.kylinolap.cube.model;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kylinolap.common.util.StringSplitter;
 import com.kylinolap.common.util.StringUtil;
 import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.LookupDesc;
@@ -39,11 +42,13 @@ public class DimensionDesc {
     @JsonProperty("name")
     private String name;
     private JoinDesc join;
-    @JsonProperty("hierarchy")
     private HierarchyDesc[] hierarchy;
+    @JsonProperty("hierarchy")
+    private boolean isHierarchy;
     private String table;
+    private String database;
     @JsonProperty("column")
-    private String column;
+    private String[] column;
     @JsonProperty("derived")
     private String[] derived;
 
@@ -95,14 +100,12 @@ public class DimensionDesc {
         this.columnRefs = colRefs;
     }
 
-    public String getColumn() {
+    public String[] getColumn() {
         return this.column;
     }
 
-    public void setColumn(String column) {
+    public void setColumn(String[] column) {
         this.column = column;
-        if (this.column != null)
-            this.column = this.column.toUpperCase();
     }
 
     public HierarchyDesc[] getHierarchy() {
@@ -128,6 +131,7 @@ public class DimensionDesc {
     public void setDerivedColRefs(TblColRef[] derivedColRefs) {
         this.derivedColRefs = derivedColRefs;
     }
+    
 
     @Override
     public boolean equals(Object o) {
@@ -155,47 +159,68 @@ public class DimensionDesc {
 
     @Override
     public String toString() {
-        return "DimensionDesc [name=" + name + ", join=" + join + ", hierarchy=" + Arrays.toString(hierarchy) + ", table=" + table + ", column=" + column + ", derived=" + Arrays.toString(derived) + "]";
+        return "DimensionDesc [name=" + name + ", join=" + join + ", hierarchy=" + Arrays.toString(hierarchy) + ", table=" + table + ", column=" + Arrays.toString(column) + ", derived=" + Arrays.toString(derived) + "]";
     }
 
     public void init(CubeDesc cubeDesc, Map<String, TableDesc> tables) {
         if (name != null)
             name = name.toUpperCase();
-        if (column != null)
-            column = column.toUpperCase();
         
-        // parse 'column' to get the table name; if table name is not appeared, use fact table;
-        String[] splits = this.column.split(".");
-        if (splits.length > 1) {
-            table = splits[splits.length - 2].toUpperCase();
-        } else {
-            table = cubeDesc.getFactTable().toUpperCase();
+        this.table = null;
+        this.database = null;
+        this.join = null;
+        
+        for(int i=0, n = this.column.length; i<n; i++) {
+            String thisColumn = this.column[i];
+            String[] splits = StringSplitter.split(thisColumn, ".");
+            if (splits.length > 1) {
+                String thisTable = splits[splits.length - 2].toUpperCase();
+                if(table == null) {
+                    table = thisTable;
+                } else if (thisTable != null && !table.equalsIgnoreCase(thisTable)) {
+                    throw new IllegalStateException("One dimension can only refer to the columns on the same table.");
+                }
+                    
+                if (database == null && splits.length > 2) {
+                    database = splits[splits.length - 3].toUpperCase();
+                } 
+                
+                this.column[i] = splits[splits.length - 1].toUpperCase();
+            } else {
+                // if no table specified, assume it is on fact table
+                table = cubeDesc.getFactTable();
+            }
         }
-
+        
         TableDesc tableDesc = tables.get(table);
         if (tableDesc == null)
             throw new IllegalStateException("Can't find table " + table + " on dimension " + name);
+        
+        for(LookupDesc lookup : cubeDesc.getModel().getLookups()) {
+            if(lookup.getTable().equalsIgnoreCase(table)) {
+                this.join = lookup.getJoin();
+                break;
+            }
+        }
 
-        boolean isOnFactTable = table.equalsIgnoreCase(cubeDesc.getFactTable());
+        if (isHierarchy && this.column.length > 0) {
+            List<HierarchyDesc> hierarchyList = new ArrayList<HierarchyDesc>(3);
+            for (int i = 0, n = this.column.length; i < n; i++) {
+                String aColumn = this.column[i];
+                HierarchyDesc aHierarchy = new HierarchyDesc();
+                aHierarchy.setLevel(String.valueOf(i + 1));
+                aHierarchy.setColumn(aColumn);
+                hierarchyList.add(aHierarchy);
+            }
+
+            this.hierarchy = hierarchyList.toArray(new HierarchyDesc[hierarchyList.size()]);
+        }
 
         if (hierarchy != null && hierarchy.length == 0)
             hierarchy = null;
         if (derived != null && derived.length == 0)
             derived = null;
         
-        if(!isOnFactTable) {
-            for(LookupDesc lookup: cubeDesc.getModel().getLookups()) {
-                if(lookup.getTable().equals(table)) {
-                    join = lookup.getJoin();
-                    break;
-                }
-            }
-        }
-
-        if (join != null) {
-            StringUtil.toUpperCaseArray(join.getForeignKey(), join.getForeignKey());
-            StringUtil.toUpperCaseArray(join.getPrimaryKey(), join.getPrimaryKey());
-        }
 
         if (hierarchy != null) {
             for (HierarchyDesc h : hierarchy)

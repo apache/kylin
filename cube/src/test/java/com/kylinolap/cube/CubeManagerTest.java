@@ -67,8 +67,8 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         // clean legacy in case last run failed
         store.deleteResource("/cube/a_whole_new_cube.json");
 
-        CubeManager metaMgr = getCubeManager();
-        CubeDesc desc = metaMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
+        CubeDescManager cubeDescMgr = getCubeDescManager();
+        CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
         CubeInstance createdCube = CubeManager.getInstance(this.getTestConfig()).createCube("a_whole_new_cube", ProjectInstance.DEFAULT_PROJECT_NAME, desc, null);
         assertTrue(createdCube == CubeManager.getInstance(this.getTestConfig()).getCube("a_whole_new_cube"));
 
@@ -82,7 +82,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         assertNull(CubeManager.getInstance(this.getTestConfig()).getCube("a_whole_new_cube"));
     }
 
-    private CubeManager getCubeManager() {
-        return CubeManager.getInstance(getTestConfig());
+    public CubeDescManager getCubeDescManager() {
+        return CubeDescManager.getInstance(getTestConfig());
     }
 }
