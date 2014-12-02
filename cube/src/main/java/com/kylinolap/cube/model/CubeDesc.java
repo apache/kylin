@@ -203,28 +203,6 @@ public class CubeDesc extends RootPersistentEntity {
         return null;
     }
 
-//    public TblColRef findPKByFK(TblColRef fk) {
-//        assert isFactTable(fk.getTable());
-//
-//        TblColRef candidate = null;
-//
-//        for (DimensionDesc dim : dimensions) {
-//            JoinDesc join = dim.getJoin();
-//            if (join == null)
-//                continue;
-//
-//            int find = ArrayUtils.indexOf(join.getForeignKeyColumns(), fk);
-//            if (find >= 0) {
-//                candidate = join.getPrimaryKeyColumns()[find];
-//                if (join.getForeignKeyColumns().length == 1) { // is single
-//                                                               // column join?
-//                    break;
-//                }
-//            }
-//        }
-//        return candidate;
-//    }
-
     /**
      * Get all functions from each measure.
      * 
@@ -479,15 +457,21 @@ public class CubeDesc extends RootPersistentEntity {
     public void init(KylinConfig config, Map<String, TableDesc> tables) {
         this.errors.clear();
         this.config = config;
+        if(this.modelName == null || this.modelName.length() ==0) {
+            this.addError("The cubeDesc '" + this.getName() + "' doesn't have data model specified.");
+        }
+        
         this.model = MetadataManager.getInstance(config).getDataModelDesc(this.modelName);
+        
+        if(this.model == null) {
+            this.addError("No data model found with name '" + modelName + "'.");
+        }
 
         for (DimensionDesc dim : dimensions) {
             dim.init(this, tables);
         }
 
         sortDimAndMeasure();
-
-        initJoinColumns(tables);
         initDimensionColumns(tables);
         initMeasureColumns(tables);
 
@@ -520,16 +504,19 @@ public class CubeDesc extends RootPersistentEntity {
 
             // dimension column
             if (dim.getColumn() != null) {
-                if ("{FK}".equals(dim.getColumn())) {
+                //if ("{FK}".equals(dim.getColumn())) {
+                if (join != null) {    
                     for (TblColRef ref : join.getForeignKeyColumns()) {
                         TblColRef inited = initDimensionColRef(ref);
                         dimColList.add(inited);
                         hostColList.add(inited);
                     }
                 } else {
-                    TblColRef ref = initDimensionColRef(dimTable, dim.getColumn());
-                    dimColList.add(ref);
-                    hostColList.add(ref);
+                    for (String aColumn : dim.getColumn()) {
+                        TblColRef ref = initDimensionColRef(dimTable, aColumn);
+                        dimColList.add(ref);
+                        hostColList.add(ref);
+                    }
                 }
             }
             // hierarchy columns
@@ -647,60 +634,6 @@ public class CubeDesc extends RootPersistentEntity {
         }
         cols.put(ref.getName(), ref);
         return ref;
-    }
-
-    private void initJoinColumns(Map<String, TableDesc> tables) {
-        // join columns may or may not present in cube;
-        // here we don't modify 'allColumns' and 'dimensionColumns';
-        // initDimensionColumns() will do the update
-        for (DimensionDesc dim : dimensions) {
-            TableDesc dimTable = tables.get(dim.getTable());
-
-            JoinDesc join = dim.getJoin();
-            if (join == null)
-                continue;
-
-            // primary key
-            String[] pks = join.getPrimaryKey();
-            TblColRef[] pkCols = new TblColRef[pks.length];
-            for (int i = 0; i < pks.length; i++) {
-                ColumnDesc col = dimTable.findColumnByName(pks[i]);
-                if (col == null) {
-                    addError("Can't find column " + pks[i] + " in table " + dimTable.getName());
-                }
-                TblColRef colRef = new TblColRef(col);
-                pks[i] = colRef.getName();
-                pkCols[i] = colRef;
-            }
-            join.setPrimaryKeyColumns(pkCols);
-            // foreign key
-            TableDesc factTable = tables.get(this.getFactTable());
-            if (factTable == null) {
-                addError("Fact table does not exist:" + this.getFactTable());
-            }
-            String[] fks = join.getForeignKey();
-            TblColRef[] fkCols = new TblColRef[fks.length];
-            for (int i = 0; i < fks.length; i++) {
-                ColumnDesc col = factTable.findColumnByName(fks[i]);
-                if (col == null) {
-                    addError("Can't find column " + fks[i] + " in table " + this.getFactTable());
-                }
-                TblColRef colRef = new TblColRef(col);
-                fks[i] = colRef.getName();
-                fkCols[i] = colRef;
-            }
-            join.setForeignKeyColumns(fkCols);
-            // Validate join in dimension
-            if (pkCols.length != fkCols.length) {
-                addError("Primary keys(" + dim.getTable() + ")" + Arrays.toString(pks) + " are not consistent with Foreign keys(" + this.getFactTable() + ") " + Arrays.toString(fks));
-            }
-            for (int i = 0; i < fkCols.length; i++) {
-                if (!fkCols[i].getDatatype().equals(pkCols[i].getDatatype())) {
-                    addError("Primary key " + dim.getTable() + "." + pkCols[i].getName() + "." + pkCols[i].getDatatype() + " are not consistent with Foreign key " + this.getFactTable() + "." + fkCols[i].getName() + "." + fkCols[i].getDatatype());
-                }
-            }
-
-        }
     }
 
     private void initMeasureColumns(Map<String, TableDesc> tables) {
