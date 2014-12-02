@@ -126,6 +126,7 @@ public class DictionaryGenerator {
                         samples.add(str);
                 } catch (ParseException e) {
                     // not match pattern, try next
+                    logger.info("Unrecognized datetime value: " + str);
                     matchPattern = null;
                     break;
                 }
@@ -133,7 +134,7 @@ public class DictionaryGenerator {
             if (matchPattern != null)
                 return new DateStrDictionary(matchPattern, baseId);
         }
-        throw new IllegalStateException("Unrecognized datetime values: " + samples);
+        throw new IllegalStateException("Unrecognized datetime value");
     }
 
     private static Dictionary buildStringDict(List<byte[]> values, int baseId, int nSamples, ArrayList samples) {
