@@ -1,7 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('SourceMetaCtrl', function ($scope,$cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService,$route) {
+    .controller('SourceMetaCtrl', function ($scope,$cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService,$route,rainbowBar) {
         var $httpDefaultCache = $cacheFactory.get('$http');
         $scope.srcTables = {};
         $scope.srcDbs = [];
@@ -148,7 +148,7 @@ KylinApp
             });
         };
 
-        var ModalInstanceCtrl = function ($scope,$location, $modalInstance, tableNames, MessageService,projectName,hiveTbLoad) {
+        var ModalInstanceCtrl = function ($scope,$location, $modalInstance, tableNames, MessageService,projectName,hiveTbLoad,rainbowBar) {
             hiveTbLoad.status = "init";
             $scope.tableNames = "";
             $scope.projectName = projectName;
@@ -156,12 +156,21 @@ KylinApp
                 $modalInstance.dismiss('cancel');
             };
             $scope.add = function () {
-                hiveTbLoad.status="loading";
+//                hiveTbLoad.status="loading";
                 MessageService.sendMsg('A sync task has been submitted, it might take 20 - 60 seconds', 'success', {});
                 $scope.cancel();
+                rainbowBar.show();
+                $(".loadingOverlay").css({'display':'block','opacity':'0.8'});
+                $(".showbox").stop(true).animate({'margin-top':'300px','opacity':'1'},200);
                 TableService.loadHiveTable({tableName: $scope.tableNames,action:projectName}, {}, function (result) {
                     hiveTbLoad.status = "success";
                     MessageService.sendMsg('Below tables were synced successfully: ' + result['result'].join() + ', Click Refresh button ...', 'success', {});
+                    rainbowBar.hide();
+
+                    //end loading
+                    $(".showbox").stop(true).animate({'margin-top':'250px','opacity':'0'},2000);
+                    $(".loadingOverlay").css({'display':'none','opacity':'0'});
+
                 });
             }
         };
