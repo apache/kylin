@@ -38,7 +38,7 @@ echo "Checking JAVA status..."
 
 if [ -z "$JAVA_HOME" ]
 then
-    echo "Please set $JAVA_HOME so that Kylin-Deploy can proceed"
+    echo "Please set JAVA_HOME so that Kylin-Deploy can proceed"
     exit 1
 else
     echo "JAVA_HOME is set to $JAVA_HOME"
