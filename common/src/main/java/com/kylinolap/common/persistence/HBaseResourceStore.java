@@ -70,7 +70,7 @@ public class HBaseResourceStore extends ResourceStore {
     final String tableNameBase;
     final String hbaseUrl;
 
-    final Map<String, String> tableNameMap; // path prefix ==> HBase table name
+//    final Map<String, String> tableNameMap; // path prefix ==> HBase table name
 
     private HConnection getConnection() throws IOException {
         return HBaseConnection.get(hbaseUrl);
@@ -85,13 +85,15 @@ public class HBaseResourceStore extends ResourceStore {
         tableNameBase = cut < 0 ? DEFAULT_TABLE_NAME : metadataUrl.substring(0, cut);
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
 
-        tableNameMap = new LinkedHashMap<String, String>();
-        for (Entry<String, String> entry : TABLE_SUFFIX_MAP.entrySet()) {
-            String pathPrefix = entry.getKey();
-            String tableName = tableNameBase + entry.getValue();
-            tableNameMap.put(pathPrefix, tableName);
-            createHTableIfNeeded(tableName);
-        }
+        createHTableIfNeeded(getAllInOneTableName());
+
+//        tableNameMap = new LinkedHashMap<String, String>();
+//        for (Entry<String, String> entry : TABLE_SUFFIX_MAP.entrySet()) {
+//            String pathPrefix = entry.getKey();
+//            String tableName = tableNameBase + entry.getValue();
+//            tableNameMap.put(pathPrefix, tableName);
+//            createHTableIfNeeded(tableName);
+//        }
 
     }
 
@@ -99,13 +101,8 @@ public class HBaseResourceStore extends ResourceStore {
         HBaseConnection.createHTableIfNeeded(getConnection(), tableName, FAMILY);
     }
 
-    private String getTableName(String path) {
-        for (Entry<String, String> entry : tableNameMap.entrySet()) {
-            String pathPrefix = entry.getKey();
-            if (path.startsWith(pathPrefix))
-                return entry.getValue();
-        }
-        throw new IllegalStateException("failed to find HBase table for path -- " + path);
+    private String getAllInOneTableName() {
+        return tableNameBase;
     }
 
     @Override
@@ -118,30 +115,21 @@ public class HBaseResourceStore extends ResourceStore {
 
         ArrayList<String> result = new ArrayList<String>();
 
-        for (Entry<String, String> entry : tableNameMap.entrySet()) {
-            String pathPrefix = entry.getKey();
-            String tableName = entry.getValue();
-
-            if ((pathPrefix.startsWith(lookForPrefix) || lookForPrefix.startsWith(pathPrefix)) == false)
-                continue;
-
-            HTableInterface table = getConnection().getTable(tableName);
-
-            Scan scan = new Scan(startRow, endRow);
-            scan.setFilter(new KeyOnlyFilter());
-            try {
-                ResultScanner scanner = table.getScanner(scan);
-                for (Result r : scanner) {
-                    String path = Bytes.toString(r.getRow());
-                    assert path.startsWith(lookForPrefix);
-                    int cut = path.indexOf('/', lookForPrefix.length());
-                    String child = cut < 0 ? path : path.substring(0, cut);
-                    if (result.contains(child) == false)
-                        result.add(child);
-                }
-            } finally {
-                IOUtils.closeQuietly(table);
+        HTableInterface table = getConnection().getTable(getAllInOneTableName());
+        Scan scan = new Scan(startRow, endRow);
+        scan.setFilter(new KeyOnlyFilter());
+        try {
+            ResultScanner scanner = table.getScanner(scan);
+            for (Result r : scanner) {
+                String path = Bytes.toString(r.getRow());
+                assert path.startsWith(lookForPrefix);
+                int cut = path.indexOf('/', lookForPrefix.length());
+                String child = cut < 0 ? path : path.substring(0, cut);
+                if (result.contains(child) == false)
+                    result.add(child);
             }
+        } finally {
+            IOUtils.closeQuietly(table);
         }
         // return null to indicate not a folder
         return result.isEmpty() ? null : result;
@@ -186,7 +174,7 @@ public class HBaseResourceStore extends ResourceStore {
         IOUtils.copy(content, bout);
         bout.close();
 
-        HTableInterface table = getConnection().getTable(getTableName(resPath));
+        HTableInterface table = getConnection().getTable(getAllInOneTableName());
         try {
             byte[] row = Bytes.toBytes(resPath);
             Put put = buildPut(resPath, ts, row, bout.toByteArray(), table);
@@ -200,7 +188,7 @@ public class HBaseResourceStore extends ResourceStore {
 
     @Override
     protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS) throws IOException, IllegalStateException {
-        HTableInterface table = getConnection().getTable(getTableName(resPath));
+        HTableInterface table = getConnection().getTable(getAllInOneTableName());
         try {
             byte[] row = Bytes.toBytes(resPath);
             byte[] bOldTS = oldTS == 0 ? null : Bytes.toBytes(oldTS);
@@ -220,7 +208,7 @@ public class HBaseResourceStore extends ResourceStore {
 
     @Override
     protected void deleteResourceImpl(String resPath) throws IOException {
-        HTableInterface table = getConnection().getTable(getTableName(resPath));
+        HTableInterface table = getConnection().getTable(getAllInOneTableName());
         try {
             Delete del = new Delete(Bytes.toBytes(resPath));
             table.delete(del);
@@ -232,7 +220,7 @@ public class HBaseResourceStore extends ResourceStore {
 
     @Override
     protected String getReadableResourcePathImpl(String resPath) {
-        return tableNameBase + "(key='" + resPath + "')@" + kylinConfig.getMetadataUrl();
+        return getAllInOneTableName() + "(key='" + resPath + "')@" + kylinConfig.getMetadataUrl();
     }
 
     private Result getByScan(String path, byte[] family, byte[] column) throws IOException {
@@ -246,7 +234,7 @@ public class HBaseResourceStore extends ResourceStore {
             scan.addColumn(family, column);
         }
 
-        HTableInterface table = getConnection().getTable(getTableName(path));
+        HTableInterface table = getConnection().getTable(getAllInOneTableName());
         try {
             ResultScanner scanner = table.getScanner(scan);
             Result result = null;
