@@ -1,7 +1,7 @@
 'use strict';
 
 
-KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, MessageService, TableService, CubeDescService, CubeService) {
+KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, MessageService, TableService, CubeDescService, CubeService,rainbowBar) {
 
     //add or edit ?
     var absUrl = $location.absUrl();
@@ -193,6 +193,11 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
             return;
         }
 
+        rainbowBar.show();
+
+        $(".loadingOverlay").css({'display':'block','opacity':'0.8'});
+        $(".showbox").stop(true).animate({'margin-top':'300px','opacity':'1'},200);
+
         if ($scope.isEdit) {
             CubeService.update({}, {cubeDescData: $scope.state.cubeSchema, cubeName: $routeParams.cubeName, project: $scope.state.project}, function (request) {
                 if (request.successful) {
@@ -212,6 +217,12 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                 } else {
                     MessageService.sendMsg(request.message, 'error');
                 }
+                rainbowBar.hide();
+
+                //end loading
+                $(".showbox").stop(true).animate({'margin-top':'250px','opacity':'0'},2000);
+                $(".loadingOverlay").css({'display':'none','opacity':'0'});
+
                 recoveryCubeStatus();
             }, function () {
                 recoveryCubeStatus();
