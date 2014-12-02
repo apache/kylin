@@ -356,13 +356,13 @@ public class CubeController extends BasicController {
         } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException("You don't have right to update this cube.");
         } catch (Exception e) {
-            logger.error("Failed to deal with the request.", e);
             throw new InternalErrorException("Failed to deal with the request.", e);
         }
 
         if (desc.getError().isEmpty()) {
             cubeRequest.setSuccessful(true);
         } else {
+            logger.warn("Cube " + desc.getName() + " fail to create because " + desc.getError());
             updateRequest(cubeRequest, false, omitMessage(desc.getError()));
         }
         String descData = JsonUtil.writeValueAsIndentString(desc);
