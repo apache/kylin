@@ -28,7 +28,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.CubeDescManager;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.metadata.MetadataManager;
 
@@ -69,15 +69,15 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     }
 
     private CubeDesc getTestKylinCubeWithoutSeller() {
-        return getCubeManager().getCubeDesc("test_kylin_cube_without_slr_desc");
+        return getCubeDescManager().getCubeDesc("test_kylin_cube_without_slr_desc");
     }
 
     private CubeDesc getTestKylinCubeWithSeller() {
-        return getCubeManager().getCubeDesc("test_kylin_cube_with_slr_desc");
+        return getCubeDescManager().getCubeDesc("test_kylin_cube_with_slr_desc");
     }
 
     private CubeDesc getTestKylinCubeWithoutSellerLeftJoin() {
-        return getCubeManager().getCubeDesc("test_kylin_cube_without_slr_left_join_desc");
+        return getCubeDescManager().getCubeDesc("test_kylin_cube_without_slr_left_join_desc");
     }
 
     @Test
@@ -249,28 +249,28 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     @Test
     @Ignore
     public void testCuboidGeneration4() {
-        CubeDesc cube = getCubeManager().getCubeDesc("geox_trans_mtrc_sd_cube_desc");
+        CubeDesc cube = getCubeDescManager().getCubeDesc("geox_trans_mtrc_sd_cube_desc");
         CuboidCLI.simulateCuboidGeneration(cube);
     }
 
     @Test
     @Ignore
     public void testCuboidGeneration5() {
-        CubeDesc cube = getCubeManager().getCubeDesc("clsfd_ga_dayweek");
+        CubeDesc cube = getCubeDescManager().getCubeDesc("clsfd_ga_dayweek");
         CuboidCLI.simulateCuboidGeneration(cube);
     }
 
     @Test
     @Ignore
     public void testCuboidGeneration6() {
-        CubeDesc cube = getCubeManager().getCubeDesc("clsfd_ga_day");
+        CubeDesc cube = getCubeDescManager().getCubeDesc("clsfd_ga_day");
         CuboidCLI.simulateCuboidGeneration(cube);
     }
 
     @Test
     @Ignore
     public void testCuboidGeneration7() {
-        CubeDesc cube = getCubeManager().getCubeDesc("clsfd_ga_week");
+        CubeDesc cube = getCubeDescManager().getCubeDesc("clsfd_ga_week");
         CuboidCLI.simulateCuboidGeneration(cube);
     }
 
@@ -297,12 +297,8 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
         return copy.toString();
     }
 
-    private MetadataManager getMetadataManager() {
-        return MetadataManager.getInstance(getTestConfig());
-    }
-    
-    private CubeManager getCubeManager() {
-        return CubeManager.getInstance(getTestConfig());
+    public CubeDescManager getCubeDescManager() {
+        return CubeDescManager.getInstance(getTestConfig());
     }
 
     private void printCount(int[] counts) {

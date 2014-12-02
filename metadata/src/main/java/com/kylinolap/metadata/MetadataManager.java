@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.kylinolap.metadata.model.DataModelDesc;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,14 +38,15 @@ import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.common.restclient.Broadcaster;
 import com.kylinolap.common.restclient.SingleValueCache;
 import com.kylinolap.common.util.JsonUtil;
+import com.kylinolap.metadata.model.DataModelDesc;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
- * Serves (and caches) cube metadata for Kylin instance.
+ * Serves (and caches) metadata for Kylin instance.
  * <p/>
- * Also provides a ResourceStore for general purpose data persistence. Cube
- * metadata is serialized as JSON and stored in ResourceStore.
+ * Also provides a ResourceStore for general purpose data persistence. 
+ * Metadata is serialized as JSON and stored in ResourceStore.
  * 
  * @author yangli9
  */
@@ -56,6 +56,7 @@ public class MetadataManager {
 
     private static final Serializer<TableDesc> TABLE_SERIALIZER = new JsonSerializer<TableDesc>(TableDesc.class);
     private static final Serializer<InvertedIndexDesc> IIDESC_SERIALIZER = new JsonSerializer<InvertedIndexDesc>(InvertedIndexDesc.class);
+    private static final Serializer<DataModelDesc> MODELDESC_SERIALIZER = new JsonSerializer<DataModelDesc>(DataModelDesc.class);
 
     TypeReference<HashMap<String, Object>> typeRef = new TypeReference<HashMap<String, Object>>() {
     };
@@ -83,7 +84,7 @@ public class MetadataManager {
 
                 return r;
             } catch (IOException e) {
-                throw new IllegalStateException("Failed to init CubeManager from " + config, e);
+                throw new IllegalStateException("Failed to init MetadataManager from " + config, e);
             }
         }
     }
@@ -105,6 +106,8 @@ public class MetadataManager {
     private SingleValueCache<String, InvertedIndexDesc> iiDescMap = new SingleValueCache<String, InvertedIndexDesc>(Broadcaster.TYPE.METADATA);
     // name => value
     private SingleValueCache<String, Map<String, String>> srcTableExdMap = new SingleValueCache<String, Map<String, String>>(Broadcaster.TYPE.METADATA);
+    // name => DataModelDesc
+    private SingleValueCache<String, DataModelDesc> dataModelDescMap = new SingleValueCache<String, DataModelDesc>(Broadcaster.TYPE.METADATA);
 
     private MetadataManager(KylinConfig config) throws IOException {
         init(config);
@@ -186,6 +189,7 @@ public class MetadataManager {
         reloadAllSourceTable();
         reloadAllSourceTableExd();
         reloadAllInvertedIndexDesc();
+        reloadAllDataModel();
     }
 
     private void reloadAllSourceTableExd() throws IOException {
@@ -300,7 +304,7 @@ public class MetadataManager {
     }
 
     /**
-     * Tell CubeManager that the cube instance has changed. The cube info will
+     * Tell MetadataManager that the instance has changed. The cube info will
      * be stored Reload the cube desc and source table A broadcast must be sent
      * out
      * 
@@ -313,19 +317,112 @@ public class MetadataManager {
     }
 
     public DataModelDesc getDataModelDesc(String name) {
-        return null;
+        return dataModelDescMap.get(name);
+    }
+    
+
+    private void reloadAllDataModel() throws IOException {
+        ResourceStore store = getStore();
+        logger.debug("Reloading DataModel from folder " + store.getReadableResourcePath(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT));
+
+        this.dataModelDescMap.clear();
+
+        List<String> paths = store.collectResourceRecursively(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT, MetadataConstances.FILE_SURFIX);
+        for (String path : paths) {
+            DataModelDesc modelDesc = this.loadDataModelDesc(path);
+            dataModelDescMap.putLocal(modelDesc.getName(), modelDesc);
+        }
+
+        logger.debug("Loaded " + paths.size() + " DataModel(s)");
     }
 
-    public void updateDataModelDesc(DataModelDesc dataModelDesc) {
-        throw new UnsupportedOperationException();
-    }
+    public DataModelDesc createDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
+        if (dataModelDescMap.containsKey(dataModelDesc.getName()))
+            throw new IllegalArgumentException("DataModelDesc '" + dataModelDesc.getName() + "' already exists");
 
-    public DataModelDesc createDataModelDesc(DataModelDesc dataModelDesc) {
+        try {
+            dataModelDesc.init(this.getAllTablesMap());
+        } catch (IllegalStateException e) {
+            dataModelDesc.addError(e.getMessage(), true);
+        }
+        // Check base validation
+        if (!dataModelDesc.getError().isEmpty()) {
+            return dataModelDesc;
+        }
+
+        String path = dataModelDesc.getResourcePath();
+        getStore().putResource(path, dataModelDesc, MODELDESC_SERIALIZER);
+        dataModelDescMap.put(dataModelDesc.getName(), dataModelDesc);
+
         return dataModelDesc;
     }
+    
+    /**
+     * Update DataModelDesc with the input. Broadcast the event into cluster
+     * 
+     * @param desc
+     * @return
+     * @throws IOException
+     */
+    public DataModelDesc updateDataModelDesc(DataModelDesc desc) throws IOException {
+        String name = desc.getName();
+        if (!dataModelDescMap.containsKey(name)) {
+            throw new IllegalArgumentException("DataModelDesc '" + name + "' does not exist.");
+        }
 
-    public boolean deleteDataModelDesc(DataModelDesc dataModelDesc) {
-        throw new UnsupportedOperationException();
+        try {
+            desc.init(this.getAllTablesMap());
+        } catch (IllegalStateException e) {
+            desc.addError(e.getMessage(), true);
+            return desc;
+        } catch (IllegalArgumentException e) {
+            desc.addError(e.getMessage(), true);
+            return desc;
+        }
+
+
+        // Save Source
+        String path = desc.getResourcePath();
+        getStore().putResource(path, desc, MODELDESC_SERIALIZER);
+
+        // Reload the DataModelDesc
+        DataModelDesc ndesc = loadDataModelDesc(path);
+        // Here replace the old one
+        dataModelDescMap.put(ndesc.getName(), desc);
+
+        return ndesc;
+    }
+
+    private DataModelDesc loadDataModelDesc(String path) throws IOException {
+        ResourceStore store = getStore();
+        logger.debug("Loading DataModelDesc " + store.getReadableResourcePath(path));
+        DataModelDesc ndesc = null;
+        try {
+            ndesc = store.getResource(path, DataModelDesc.class, MODELDESC_SERIALIZER);
+
+        } catch (IOException e) {
+            System.err.println("Error to load" + path + ", exception is " + e.toString());
+            throw e;
+        }
+        if (StringUtils.isBlank(ndesc.getName())) {
+            throw new IllegalStateException("DataModelDesc name must not be blank");
+        }
+
+        ndesc.init(this.getAllTablesMap());
+
+        if (ndesc.getError().isEmpty() == false) {
+            throw new IllegalStateException("DataModelDesc at " + path + " has issues: " + ndesc.getError());
+        }
+
+        return ndesc;
+    }
+
+
+    public void deleteDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
+        // remove dataModelDesc
+        String path = dataModelDesc.getResourcePath();
+        getStore().deleteResource(path);
+        dataModelDescMap.remove(dataModelDesc.getName());
     }
 
 }

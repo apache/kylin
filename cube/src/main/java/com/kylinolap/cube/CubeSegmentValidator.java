@@ -93,9 +93,11 @@ public class CubeSegmentValidator {
                 for (TblColRef col : dim.getColumnRefs()) {
                     // include those dictionaries that do not need mergning
                     try {
-                        String dictTable = (String) dictMgr.decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null)[0];
-                        if (cubeSeg.getCubeDesc().getRowkey().isUseDictionary(col) && !cubeDesc.getFactTable().equalsIgnoreCase(dictTable)) {
-                            cols.add(col);
+                        if (cubeSeg.getCubeDesc().getRowkey().isUseDictionary(col)) {
+                            String dictTable = (String) dictMgr.decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null)[0];
+                            if (!cubeDesc.getFactTable().equalsIgnoreCase(dictTable)) {
+                                cols.add(col);
+                            }
                         }
                     } catch (IOException e) {
                         throw new CubeIntegrityException("checkLoopTableConsistency not passed when allocating a new segment.");
