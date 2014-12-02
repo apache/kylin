@@ -2,6 +2,7 @@
   "uuid" : "9c53506d-d7b9-4ad4-b3b1-53ea42673c4b",
   "last_modified" : 1401429176099,
   "name" : "TEST1_desc",
+  "model_name": "TEST1_model_desc",
   "fact_table" : "TEST_KYLIN_FACT",
   "dimensions" : [ {
     "id" : 1,
@@ -13,8 +14,7 @@
     },
     "hierarchy" : null,
     "table" : "TEST_CAL_DT",
-    "column" : "CAL_DT",
-    "datatype" : "date",
+    "column" : ["TEST_CAL_DT.CAL_DT"],
     "derived" : [ "WEEK_BEG_DT" ]
   }, {
     "id" : 2,
@@ -24,18 +24,9 @@
       "primary_key" : [ "LEAF_CATEG_ID", "SITE_ID" ],
       "foreign_key" : [ "LEAF_CATEG_ID", "LSTG_SITE_ID" ]
     },
-    "hierarchy" : [ {
-      "level" : "1",
-      "column" : "META_CATEG_NAME"
-    }, {
-      "level" : "2",
-      "column" : "CATEG_LVL2_NAME"
-    }, {
-      "level" : "3",
-      "column" : "CATEG_LVL3_NAME"
-    } ],
+    "hierarchy" : true,
     "table" : "TEST_CATEGORY_GROUPINGS",
-    "column" : null,
+    "column" : ["TEST_CATEGORY_GROUPINGS.META_CATEG_NAME", "TEST_CATEGORY_GROUPINGS.CATEG_LVL2_NAME", "TEST_CATEGORY_GROUPINGS.CATEG_LVL3_NAME"],
     "datatype" : null,
     "derived" : null
   }, {
@@ -44,7 +35,7 @@
     "join" : null,
     "hierarchy" : null,
     "table" : "TEST_KYLIN_FACT",
-    "column" : "LSTG_FORMAT_NAME",
+    "column" : ["TEST_KYLIN_FACT.LSTG_FORMAT_NAME"],
     "datatype" : "string",
     "derived" : null
   }, {
@@ -57,7 +48,7 @@
     },
     "hierarchy" : null,
     "table" : "TEST_SITES",
-    "column" : "SITE_ID",
+    "column" : ["TEST_SITES.SITE_ID"],
     "datatype" : "string",
     "derived" : [ "SITE_NAME", "CRE_USER" ]
   }, {
@@ -70,7 +61,7 @@
     },
     "hierarchy" : null,
     "table" : "TEST_SELLER_TYPE_DIM",
-    "column" : "SELLER_TYPE_CD",
+    "column" : ["TEST_SELLER_TYPE_DIM.SELLER_TYPE_CD"],
     "datatype" : "string",
     "derived" : [ "SELLER_TYPE_DESC" ]
   } ],
