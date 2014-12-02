@@ -64,9 +64,10 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testNewProject() throws Exception {
-        int originalProjectCount = ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size();
+        ProjectManager projectmanager = ProjectManager.getInstance(this.getTestConfig());
+        int originalProjectCount = projectmanager.listAllProjects().size();
         int originalCubeCount = CubeManager.getInstance(this.getTestConfig()).listAllCubes().size();
-        int originalCubeCountInDefault = ProjectManager.getInstance(this.getTestConfig()).listAllCubes("default").size();
+        int originalCubeCountInDefault = projectmanager.listAllCubes("default").size();
         ResourceStore store = getStore();
 
         // clean legacy in case last run failed
@@ -80,31 +81,31 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
 
         System.out.println(JsonUtil.writeValueAsIndentString(createdCube));
 
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size() == originalProjectCount + 1);
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllCubes("ALIEN").get(0).getName().equalsIgnoreCase("CUBE_IN_ALIEN_PROJECT"));
+        assertTrue(projectmanager.listAllProjects().size() == originalProjectCount + 1);
+        assertTrue(projectmanager.listAllCubes("ALIEN").get(0).getName().equalsIgnoreCase("CUBE_IN_ALIEN_PROJECT"));
         assertTrue(CubeManager.getInstance(this.getTestConfig()).listAllCubes().size() == originalCubeCount + 1);
 
-        ProjectManager.getInstance(this.getTestConfig()).updateCubeToProject("cube_in_alien_project", "default", null);
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllCubes("ALIEN").size() == 0);
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllCubes("default").size() == originalCubeCountInDefault + 1);
+        projectmanager.updateCubeToProject("cube_in_alien_project", "default", null);
+        assertTrue(projectmanager.listAllCubes("ALIEN").size() == 0);
+        assertTrue(projectmanager.listAllCubes("default").size() == originalCubeCountInDefault + 1);
         assertTrue(ProjectManager.getInstance(getTestConfig()).listAllCubes("default").contains(createdCube));
 
-        ProjectManager.getInstance(this.getTestConfig()).updateCubeToProject("cube_in_alien_project", "alien", null);
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllCubes("ALIEN").size() == 1);
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllCubes("default").size() == originalCubeCountInDefault);
+        projectmanager.updateCubeToProject("cube_in_alien_project", "alien", null);
+        assertTrue(projectmanager.listAllCubes("ALIEN").size() == 1);
+        assertTrue(projectmanager.listAllCubes("default").size() == originalCubeCountInDefault);
         assertTrue(ProjectManager.getInstance(getTestConfig()).listAllCubes("alien").contains(createdCube));
 
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).isCubeInProject("alien", createdCube));
+        assertTrue(projectmanager.isCubeInProject("alien", createdCube));
 
         CubeInstance droppedCube = CubeManager.getInstance(this.getTestConfig()).dropCube("cube_in_alien_project", true);
 
         assertTrue(createdCube == droppedCube);
         assertNull(CubeManager.getInstance(this.getTestConfig()).getCube("cube_in_alien_project"));
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size() == originalProjectCount + 1);
+        assertTrue(projectmanager.listAllProjects().size() == originalProjectCount + 1);
         assertTrue(CubeManager.getInstance(this.getTestConfig()).listAllCubes().size() == originalCubeCount);
 
-        ProjectManager.getInstance(this.getTestConfig()).dropProject("alien");
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size() == originalProjectCount);
+        projectmanager.dropProject("alien");
+        assertTrue(projectmanager.listAllProjects().size() == originalProjectCount);
     }
 
     @Test
