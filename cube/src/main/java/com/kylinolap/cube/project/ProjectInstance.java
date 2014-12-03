@@ -182,14 +182,15 @@ public class ProjectInstance extends RootPersistentEntity {
     }
 
     public void addTable(String tableName) {
-       tableName = tableName.toUpperCase();
+        tableName = tableName.toUpperCase();
         this.getTables().add(tableName);
     }
 
     //will return new Set for null
     public Set<String> getTables() {
-        tables = tables==null?new TreeSet<String>():tables;
-        return tables;    }
+        tables = tables == null ? new TreeSet<String>() : tables;
+        return tables;
+    }
 
     public String getOwner() {
         return owner;
