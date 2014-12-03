@@ -158,14 +158,20 @@ KylinApp
                 $(".loadingOverlay").css({'display':'block','opacity':'0.8'});
                 $(".showbox").stop(true).animate({'margin-top':'300px','opacity':'1'},200);
                 TableService.loadHiveTable({tableName: $scope.tableNames,action:projectName}, {}, function (result) {
-                    MessageService.sendMsg('Below tables were synced successfully: ' + result['result'].join() + ', Click Refresh button ...', 'success', {});
-                    rainbowBar.hide();
+                        MessageService.sendMsg('Below tables were synced successfully: ' + result['result'].join() + ', Click Refresh button ...', 'success', {});
 
+                        MessageService.sendMsg(request.message, 'error');
+                    rainbowBar.hide();
                     //end loading
                     $(".showbox").stop(true).animate({'margin-top':'250px','opacity':'0'},2000);
                     $(".loadingOverlay").css({'display':'none','opacity':'0'});
 
-                });
+                },function(){
+                    rainbowBar.hide();
+                    //end loading
+                    $(".showbox").stop(true).animate({'margin-top':'250px','opacity':'0'},2000);
+                    $(".loadingOverlay").css({'display':'none','opacity':'0'});
+                })
             }
         };
         $scope.trimType = function(typeName){
