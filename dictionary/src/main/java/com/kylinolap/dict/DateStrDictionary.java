@@ -138,6 +138,11 @@ public class DateStrDictionary extends Dictionary<String> {
     }
 
     @Override
+    protected boolean isNullByteForm(byte[] value, int offset, int len) {
+        return value == null || len == 0;
+    }
+
+    @Override
     final protected int getIdFromValueImpl(String value, int roundFlag) {
         Date date = stringToDate(value, pattern);
         int id = calcIdFromSeqNo(getNumOfDaysSince0000(date));
