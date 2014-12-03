@@ -1,7 +1,7 @@
 'use strict';
 
 
-KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, MessageService, TableService, CubeDescService, CubeService,rainbowBar) {
+KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, MessageService, TableService, CubeDescService, CubeService,rainbowBar,loadingRequest) {
 
     //add or edit ?
     var absUrl = $location.absUrl();
@@ -194,9 +194,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         }
 
         rainbowBar.show();
-
-        $(".loadingOverlay").css({'display':'block','opacity':'0.8'});
-        $(".showbox").stop(true).animate({'margin-top':'300px','opacity':'1'},200);
+        loadingRequest.show();
 
         if ($scope.isEdit) {
             CubeService.update({}, {cubeDescData: $scope.state.cubeSchema, cubeName: $routeParams.cubeName, project: $scope.state.project}, function (request) {
@@ -220,15 +218,12 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
                 rainbowBar.hide();
                 //end loading
-                $(".showbox").stop(true).animate({'margin-top':'250px','opacity':'0'},1500);
-                $(".loadingOverlay").css({'display':'none','opacity':'0'});
+                loadingRequest.hide();
 
                 recoveryCubeStatus();
             }, function () {
                 rainbowBar.hide();
-                //end loading
-                $(".showbox").stop(true).animate({'margin-top':'250px','opacity':'0'},1500);
-                $(".loadingOverlay").css({'display':'none','opacity':'0'});
+                loadingRequest.hide();
                 recoveryCubeStatus();
             });
         }
@@ -253,15 +248,13 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
                 rainbowBar.hide();
                 //end loading
-                $(".showbox").stop(true).animate({'margin-top':'250px','opacity':'0'},1500);
-                $(".loadingOverlay").css({'display':'none','opacity':'0'});
+                loadingRequest.hide();
                 recoveryCubeStatus();
             }, function () {
 
                 rainbowBar.hide();
                 //end loading
-                $(".showbox").stop(true).animate({'margin-top':'250px','opacity':'0'},1500);
-                $(".loadingOverlay").css({'display':'none','opacity':'0'});
+                loadingRequest.hide();
                 recoveryCubeStatus();
             });
         }

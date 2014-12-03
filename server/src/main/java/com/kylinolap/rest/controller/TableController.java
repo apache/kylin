@@ -123,6 +123,10 @@ public class TableController extends BasicController {
         Map<String, String[]> result = new HashMap<String, String[]>();
         try{ 
             String[] arr = cubeMgmtService.reloadHiveTable(tables);
+            if(arr.length==0){
+                throw new InternalErrorException("No Table Loaded! Please check the table name.");
+            }
+            
             cubeMgmtService.syncTableToProject(tables, project);
             result.put("result", arr);
        }catch(Exception e){
