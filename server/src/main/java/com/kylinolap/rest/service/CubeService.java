@@ -169,15 +169,15 @@ public class CubeService extends BasicService {
             getMetadataManager().removeCubeDesc(createdDesc);
             throw new InternalErrorException(createdDesc.getError().get(0));
         }
-        
-        try{
+
+        try {
             int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc);
             logger.info("New cube " + cubeName + " has " + cuboidCount + " cuboids");
-        }catch(Exception e){
+        } catch (Exception e) {
             getMetadataManager().removeCubeDesc(createdDesc);
             throw new InternalErrorException("Failed to deal with the request.", e);
         }
-        
+
         createdCube = getCubeManager().createCube(cubeName, projectName, createdDesc, owner);
         accessService.init(createdCube, AclPermission.ADMINISTRATION);
 
@@ -188,7 +188,7 @@ public class CubeService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public CubeDesc updateCubeAndDesc(CubeInstance cube, CubeDesc desc, String newProjectName) throws UnknownHostException, IOException, JobException {
+    public CubeDesc updateCubeAndDesc(CubeInstance cube, CubeDesc desc, String newProjectName) throws Exception {
         List<JobInstance> jobInstances = this.getJobManager().listJobs(cube.getName(), null);
         for (JobInstance jobInstance : jobInstances) {
             if (jobInstance.getStatus() == JobStatusEnum.PENDING || jobInstance.getStatus() == JobStatusEnum.RUNNING) {
@@ -196,28 +196,24 @@ public class CubeService extends BasicService {
             }
         }
 
-        try {
-            if (!cube.getDescriptor().calculateSignature().equals(cube.getDescriptor().getSignature())) {
-                this.releaseAllSegments(cube);
-            }
-            
-            CubeDesc updatedCubeDesc = getMetadataManager().updateCubeDesc(desc);
-            
-            int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc);
-            logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
-            
-            if (!getProjectManager().isCubeInProject(newProjectName, cube)) {
-                String owner = SecurityContextHolder.getContext().getAuthentication().getName();
-                ProjectInstance newProject = getProjectManager().updateCubeToProject(cube.getName(), newProjectName, owner);
-                accessService.inherit(cube, newProject);
-            }
-
-            return updatedCubeDesc;
-        } catch (IOException e) {
-            throw new InternalErrorException("Failed to deal with the request.", e);
-        } catch (CubeIntegrityException e) {
-            throw new InternalErrorException("Failed to deal with the request.", e);
+        if (!cube.getDescriptor().calculateSignature().equals(cube.getDescriptor().getSignature())) {
+            this.releaseAllSegments(cube);
         }
+
+        CubeDesc updatedCubeDesc = getMetadataManager().updateCubeDesc(desc);
+        if (updatedCubeDesc.getError().size() > 0)
+            return updatedCubeDesc;
+
+        int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc);
+        logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
+
+        if (!getProjectManager().isCubeInProject(newProjectName, cube)) {
+            String owner = SecurityContextHolder.getContext().getAuthentication().getName();
+            ProjectInstance newProject = getProjectManager().updateCubeToProject(cube.getName(), newProjectName, owner);
+            accessService.inherit(cube, newProject);
+        }
+
+        return updatedCubeDesc;
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
@@ -594,9 +590,9 @@ public class CubeService extends BasicService {
         getMetadataManager().reload();
         return (String[]) loaded.toArray(new String[loaded.size()]);
     }
-    
+
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public void syncTableToProject(String tables,String project) throws IOException {
+    public void syncTableToProject(String tables, String project) throws IOException {
         getProjectManager().updateTableToProject(tables, project);
-    }    
+    }
 }

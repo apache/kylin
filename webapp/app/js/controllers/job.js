@@ -82,10 +82,10 @@ KylinApp
 
 
         $scope.$watch('project.selectedProject', function (newValue, oldValue) {
-            if(newValue){
+            if(oldValue){
                 $scope.jobs={};
                 $scope.state.projectName = newValue;
-                $scope.list();
+                $scope.reload();
             }
 
         });
