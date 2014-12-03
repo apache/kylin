@@ -66,11 +66,12 @@ public class CubeControllerTest extends ServiceTestBase {
         CubeDesc newCube = new CubeDesc();
         String newCubeName = cube.getName() + "_test_save";
         newCube.setName(newCubeName);
+        newCube.setModelName(cube.getModelName());
+        newCube.setModel(cube.getModel());
         newCube.setDimensions(cube.getDimensions());
         newCube.setHBaseMapping(cube.getHBaseMapping());
         newCube.setMeasures(cube.getMeasures());
         newCube.setConfig(cube.getConfig());
-        newCube.getModel().setFactTable(cube.getFactTable());
         newCube.setRowkey(cube.getRowkey());
 
         ObjectMapper mapper = new ObjectMapper();
