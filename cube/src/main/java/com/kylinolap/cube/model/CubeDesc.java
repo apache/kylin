@@ -466,9 +466,24 @@ public class CubeDesc extends RootPersistentEntity {
         if(this.model == null) {
             this.addError("No data model found with name '" + modelName + "'.");
         }
+        
+        Map<String, List<String>> columnTableMap = new HashMap<String, List<String>>();
+        
+        String colName;
+        for(TableDesc table : tables.values()) {
+            for(ColumnDesc col : table.getColumns()) {
+                colName = col.getName();
+                List<String> tableNames = columnTableMap.get(colName);
+                if(tableNames == null) {
+                    tableNames = new ArrayList<String>(3);
+                    columnTableMap.put(colName, tableNames);
+                } 
+                tableNames.add(table.getName());
+            }
+        }
 
         for (DimensionDesc dim : dimensions) {
-            dim.init(this, tables);
+            dim.init(this, tables, columnTableMap);
         }
 
         sortDimAndMeasure();
