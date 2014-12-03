@@ -18,6 +18,7 @@ package com.kylinolap.storage.hbase.coprocessor.observer;
 
 import java.util.List;
 
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorRowType;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 
 import com.kylinolap.dict.Dictionary;
@@ -32,12 +33,12 @@ import com.kylinolap.storage.tuple.ITuple;
  */
 public class ObserverTuple implements ITuple {
 
-    final ObserverRowType type;
+    final CoprocessorRowType type;
 
     ImmutableBytesWritable rowkey;
     String[] values;
 
-    public ObserverTuple(ObserverRowType type) {
+    public ObserverTuple(CoprocessorRowType type) {
         this.type = type;
         this.rowkey = new ImmutableBytesWritable();
         this.values = new String[type.getColumnCount()];
