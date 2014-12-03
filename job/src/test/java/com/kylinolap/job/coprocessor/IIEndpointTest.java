@@ -1,41 +1,40 @@
 package com.kylinolap.job.coprocessor;
 
-import com.google.protobuf.ByteString;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.invertedindex.IIKeyValueCodec;
-import com.kylinolap.cube.invertedindex.TableRecord;
-import com.kylinolap.cube.invertedindex.TableRecordInfo;
-import com.kylinolap.cube.invertedindex.TableRecordInfoDigest;
 import com.kylinolap.job.hadoop.invertedindex.IIBulkLoadJob;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 import com.kylinolap.metadata.model.realization.FunctionDesc;
+import com.kylinolap.metadata.model.realization.ParameterDesc;
 import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.ColumnTupleFilter;
 import com.kylinolap.storage.filter.CompareTupleFilter;
 import com.kylinolap.storage.filter.ConstantTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
-import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
-import com.kylinolap.storage.hbase.coprocessor.endpoint.EndpointAggregators;
+import com.kylinolap.storage.hbase.coprocessor.endpoint.EndpointTupleIterator;
 import com.kylinolap.storage.hbase.coprocessor.endpoint.IIEndpoint;
-import com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos;
-import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
-import com.kylinolap.storage.hbase.coprocessor.CoprocessorRowType;
+import com.kylinolap.storage.tuple.ITuple;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.*;
-import org.apache.hadoop.hbase.client.*;
-import org.apache.hadoop.hbase.client.coprocessor.Batch;
+import org.apache.hadoop.hbase.HBaseTestingUtility;
+import org.apache.hadoop.hbase.HColumnDescriptor;
+import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.HConnectionManager;
+import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.coprocessor.CoprocessorHost;
-import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
-import org.apache.hadoop.hbase.ipc.ServerRpcController;
 import org.apache.hadoop.hbase.security.User;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.util.ToolRunner;
@@ -48,9 +47,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
 
 
 /**
@@ -140,7 +136,6 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
     }
 
 
-
     private TupleFilter mockEQFiter(String value, TblColRef tblColRef) throws IOException {
         CompareTupleFilter filter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
         filter.addChild(new ColumnTupleFilter(tblColRef));
@@ -155,6 +150,33 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         return filter;
     }
 
+    private List<FunctionDesc> buildAggregations(ColumnDesc columnDesc) {
+        List<FunctionDesc> functions = new ArrayList<FunctionDesc>();
+
+        FunctionDesc f1 = new FunctionDesc();
+        f1.setExpression("SUM");
+        ParameterDesc p1 = new ParameterDesc();
+        p1.setType("column");
+        p1.setValue("PRICE");
+        p1.setColRefs(ImmutableList.of(new TblColRef(columnDesc)));
+        f1.setParameter(p1);
+        f1.setReturnType("decimal");
+        functions.add(f1);
+
+        FunctionDesc f2 = new FunctionDesc();
+        f2.setExpression("MIN");
+        ParameterDesc p2 = new ParameterDesc();
+        p2.setType("column");
+        p2.setValue("PRICE");
+        p2.setColRefs(ImmutableList.of(new TblColRef(columnDesc)));
+        f2.setParameter(p2);
+        f2.setReturnType("decimal");
+
+        functions.add(f2);
+
+        return functions;
+    }
+
     @Test
     public void testEndpoint() throws Throwable {
 
@@ -167,13 +189,28 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         TupleFilter filterA = mockEQFiter("ABIN", lfn);
         TupleFilter filterB = mockNEQFiter("ABIN", lfn);
 
-        IIProtos.IIRequest requestA = prepareRequest(filterA);
-        IIProtos.IIRequest requestB = prepareRequest(filterB);
+        ColumnDesc priceColumn = tableDesc.findColumnByName("PRICE");
+        List<FunctionDesc> measures = buildAggregations(priceColumn);
+        Collection<TblColRef> groupby = ImmutableSet.of(lfn);
+        StorageContext context = new StorageContext();
+        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc, filterA, groupby, measures, context, table);
 
-        int resultA = getResults(requestA, table).size();
-        int resultB = getResults(requestB, table).size();
+        int counterA = 0;
+        while (iterator.hasNext()) {
+            ITuple tuple = iterator.next();
+            System.out.println(tuple);
+            counterA++;
+        }
+        System.out.println(counterA);
 
 
-        assertEquals(resultA + resultB, 10000);
+//        IIProtos.IIRequest requestA = prepareRequest(filterA);
+//        IIProtos.IIRequest requestB = prepareRequest(filterB);
+//
+//        int resultA = getResults(requestA, table).size();
+//        int resultB = getResults(requestB, table).size();
+//
+//
+//        assertEquals(resultA + resultB, 10000);
     }
 }
