@@ -140,8 +140,7 @@ public class MetadataManager {
      * @return
      */
     public TableDesc getTableDesc(String tableName) {
-        tableName = tableName.toUpperCase();
-        return srcTableMap.get(tableName);
+        return srcTableMap.get(TableDesc.getTableIdentity(tableName));
     }
 
     /**
@@ -151,10 +150,10 @@ public class MetadataManager {
      * @return
      */
     public Map<String, String> getTableDescExd(String tableName) {
-        tableName = tableName.toUpperCase();
+        String tableIdentity = TableDesc.getTableIdentity(tableName);
         Map<String, String> result = new HashMap<String, String>();
-        if (srcTableExdMap.containsKey(tableName)) {
-            Map<String, String> tmp = srcTableExdMap.get(tableName);
+        if (srcTableExdMap.containsKey(tableIdentity)) {
+            Map<String, String> tmp = srcTableExdMap.get(tableIdentity);
             Iterator<Entry<String, String>> it = tmp.entrySet().iterator();
             while (it.hasNext()) {
                 Entry<String, String> entry = it.next();
@@ -168,15 +167,18 @@ public class MetadataManager {
     }
 
     public void createSourceTable(TableDesc srcTable) throws IOException {
-        if (srcTable.getUuid() == null || srcTable.getName() == null)
+        if (srcTable.getUuid() == null || srcTable.getName() == null) {
             throw new IllegalArgumentException();
-        if (srcTableMap.containsKey(srcTable.getName()))
+        }
+        String tableIdentity = TableDesc.getTableIdentity(srcTable);
+        if (srcTableMap.containsKey(tableIdentity)) {
             throw new IllegalArgumentException("SourceTable '" + srcTable.getName() + "' already exists");
+        }
 
         String path = srcTable.getResourcePath();
         getStore().putResource(path, srcTable, TABLE_SERIALIZER);
 
-        srcTableMap.put(srcTable.getName(), srcTable);
+        srcTableMap.put(tableIdentity, srcTable);
     }
 
     public InvertedIndexDesc getInvertedIndexDesc(String name) {
@@ -202,7 +204,7 @@ public class MetadataManager {
         for (String path : paths) {
             Map<String, String> attrContainer = new HashMap<String, String>();
             String tableName = loadSourceTableExd(getStore(), path, attrContainer);
-            srcTableExdMap.putLocal(tableName.toUpperCase(), attrContainer);
+            srcTableExdMap.putLocal(TableDesc.getTableIdentity(tableName), attrContainer);
         }
         logger.debug("Loaded " + paths.size() + " SourceTable EXD(s)");
     }
@@ -249,12 +251,15 @@ public class MetadataManager {
         TableDesc t = store.getResource(path, TableDesc.class, TABLE_SERIALIZER);
         t.init();
 
-        if (StringUtils.isBlank(t.getName()))
+        String tableIdentity = TableDesc.getTableIdentity(t);
+        if (StringUtils.isBlank(tableIdentity)) {
             throw new IllegalStateException("SourceTable name must not be blank");
-        if (srcTableMap.containsKey(t.getName()))
-            throw new IllegalStateException("Dup SourceTable name '" + t.getName() + "'");
+        }
+        if (srcTableMap.containsKey(tableIdentity)) {
+            throw new IllegalStateException("Dup SourceTable name '" + tableIdentity + "'");
+        }
 
-        srcTableMap.putLocal(t.getName(), t);
+        srcTableMap.putLocal(tableIdentity, t);
 
         return t;
     }
