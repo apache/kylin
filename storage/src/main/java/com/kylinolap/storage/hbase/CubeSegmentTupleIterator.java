@@ -72,21 +72,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
 
     public static final int SCAN_CACHE = 1024;
 
-    public static final ITupleIterator EMPTY_TUPLE_ITERATOR = new ITupleIterator() {
-        @Override
-        public boolean hasNext() {
-            return false;
-        }
 
-        @Override
-        public Tuple next() {
-            return null;
-        }
-
-        @Override
-        public void close() {
-        }
-    };
 
     private final CubeInstance cube;
     private final CubeSegment cubeSeg;

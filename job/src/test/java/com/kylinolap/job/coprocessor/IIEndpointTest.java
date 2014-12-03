@@ -16,15 +16,18 @@ import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
+import com.kylinolap.metadata.model.realization.FunctionDesc;
 import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.filter.ColumnTupleFilter;
 import com.kylinolap.storage.filter.CompareTupleFilter;
 import com.kylinolap.storage.filter.ConstantTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
+import com.kylinolap.storage.hbase.coprocessor.endpoint.EndpointAggregators;
 import com.kylinolap.storage.hbase.coprocessor.endpoint.IIEndpoint;
 import com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
-import com.kylinolap.storage.hbase.coprocessor.observer.ObserverRowType;
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorRowType;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.*;
@@ -43,6 +46,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -135,26 +139,6 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         TEST_UTIL.shutdownMiniCluster();
     }
 
-    private IIProtos.IIRequest prepareRequest(TupleFilter rootFilter) throws IOException {
-
-        long baseCuboidId = Cuboid.getBaseCuboidId(this.cube.getDescriptor());
-        ObserverRowType type = ObserverRowType.fromCuboid(this.seg, Cuboid.findById(cube.getDescriptor(), baseCuboidId));
-
-        CoprocessorFilter filter = CoprocessorFilter.fromFilter(this.seg, rootFilter);
-
-        //SRowProjector projector = SRowProjector.makeForObserver(segment, cuboid, groupBy);
-        //SRowAggregators aggrs = SRowAggregators.fromValueDecoders(rowValueDecoders);
-
-
-        TableRecordInfoDigest recordInfo = new TableRecordInfo(seg);
-        IIProtos.IIRequest request = IIProtos.IIRequest.newBuilder().
-                setTableInfo(ByteString.copyFrom(TableRecordInfoDigest.serialize(recordInfo))).
-                setSRowType(ByteString.copyFrom(ObserverRowType.serialize(type))).
-                setSRowFilter(ByteString.copyFrom(CoprocessorFilter.serialize(filter))).
-                build();
-
-        return request;
-    }
 
 
     private TupleFilter mockEQFiter(String value, TblColRef tblColRef) throws IOException {
@@ -169,40 +153,6 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         filter.addChild(new ColumnTupleFilter(tblColRef));
         filter.addChild(new ConstantTupleFilter(value));
         return filter;
-    }
-
-    private List<TableRecord> getResults(final IIProtos.IIRequest request, HTableInterface table) throws Throwable {
-        Map<byte[], List<TableRecord>> results = table.coprocessorService(IIProtos.RowsService.class,
-                null, null,
-                new Batch.Call<IIProtos.RowsService, List<TableRecord>>() {
-                    public List<TableRecord> call(IIProtos.RowsService counter) throws IOException {
-                        ServerRpcController controller = new ServerRpcController();
-                        BlockingRpcCallback<IIProtos.IIResponse> rpcCallback =
-                                new BlockingRpcCallback<>();
-                        counter.getRows(controller, request, rpcCallback);
-                        IIProtos.IIResponse response = rpcCallback.get();
-                        if (controller.failedOnException()) {
-                            throw controller.getFailedOn();
-                        }
-
-                        List<TableRecord> records = new ArrayList<>();
-                        TableRecordInfoDigest recordInfo = new TableRecordInfo(seg);
-                        for (ByteString raw : response.getRowsList()) {
-                            TableRecord record = new TableRecord(recordInfo);
-                            record.setBytes(raw.toByteArray(), 0, raw.size());
-                            System.out.println(record);
-                            records.add(record);
-                        }
-                        return records;
-                    }
-                });
-
-        List<TableRecord> ret = new ArrayList<TableRecord>();
-        for (Map.Entry<byte[], List<TableRecord>> entry : results.entrySet()) {
-            System.out.println("result count : " + entry.getValue().size());
-            ret.addAll(entry.getValue());
-        }
-        return ret;
     }
 
     @Test
