@@ -100,6 +100,7 @@ public class TableRecordInfoDigest implements TableRecordFactory {
             BytesUtil.writeIntArray(value.offsets, out);
             BytesUtil.writeIntArray(value.dictMaxIds, out);
             BytesUtil.writeIntArray(value.lengths, out);
+            BytesUtil.writeBooleanArray(value.isMetric, out);
 
             for (int i = 0; i < value.measureSerializers.length; ++i) {
                 if (value.isMetrics(i)) {
@@ -118,6 +119,7 @@ public class TableRecordInfoDigest implements TableRecordFactory {
             result.offsets = BytesUtil.readIntArray(in);
             result.dictMaxIds = BytesUtil.readIntArray(in);
             result.lengths = BytesUtil.readIntArray(in);
+            result.isMetric = BytesUtil.readBooleanArray(in);
 
             result.measureSerializers = new FixedLenMeasureCodec<?>[result.nColumns];
             for (int i = 0; i < result.nColumns; ++i) {

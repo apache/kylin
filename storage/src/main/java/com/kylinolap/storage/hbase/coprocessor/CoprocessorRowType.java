@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.kylinolap.common.util.BytesSerializer;
 import com.kylinolap.common.util.BytesUtil;
@@ -36,6 +37,22 @@ import com.kylinolap.metadata.model.realization.TblColRef;
  * @author yangli9
  */
 public class CoprocessorRowType {
+
+    public static CoprocessorRowType fromTableDesc(CubeSegment seg, TableDesc tableDesc) {
+
+        ColumnDesc[] columnDescs = tableDesc.getColumns();
+        TblColRef[] cols = new TblColRef[columnDescs.length];
+        for (int i = 0; i < columnDescs.length; ++i) {
+            cols[i] = new TblColRef(columnDescs[i]);
+        }
+
+        RowKeyColumnIO colIO = new RowKeyColumnIO(seg);
+        int[] colSizes = new int[cols.length];
+        for (int i = 0; i < cols.length; i++) {
+            colSizes[i] = colIO.getColumnLength(cols[i]);
+        }
+        return new CoprocessorRowType(cols, colSizes);
+    }
 
     public static CoprocessorRowType fromCuboid(CubeSegment seg, Cuboid cuboid) {
         List<TblColRef> colList = cuboid.getColumns();

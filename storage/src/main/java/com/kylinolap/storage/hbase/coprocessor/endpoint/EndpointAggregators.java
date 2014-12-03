@@ -109,7 +109,7 @@ public class EndpointAggregators {
 
     public byte[] serializeMetricValues(MeasureAggregator[] aggrs) {
         for (int i = 0; i < funcNames.length; i++) {
-            metricValues[i] = aggrs[i++].getState();
+            metricValues[i] = aggrs[i].getState();
         }
 
         int metricBytesOffset = 0;
@@ -120,9 +120,9 @@ public class EndpointAggregators {
         return metricBytes;
     }
 
-    public List<String> deserializeMetricValues(byte[] metricBytes) {
+    public List<String> deserializeMetricValues(byte[] metricBytes,int offset) {
         List<String> ret = Lists.newArrayList();
-        int metricBytesOffset = 0;
+        int metricBytesOffset = offset;
         for (int i = 0; i < measureSerializers.length; i++) {
             String valueString = measureSerializers[i].toString(measureSerializers[i].read(metricBytes, metricBytesOffset));
             metricBytesOffset += measureSerializers[i].getLength();
@@ -160,7 +160,8 @@ public class EndpointAggregators {
             String[] funcNames = BytesUtil.readAsciiStringArray(in);
             String[] dataTypes = BytesUtil.readAsciiStringArray(in);
             int[] refColIndex = BytesUtil.readIntArray(in);
-            TableRecordInfoDigest tableInfo = TableRecordInfoDigest.deserialize(in);
+            byte[] temp = BytesUtil.readByteArray(in);
+            TableRecordInfoDigest tableInfo = TableRecordInfoDigest.deserialize(temp);
             return new EndpointAggregators(funcNames, dataTypes, refColIndex, tableInfo);
         }
 
