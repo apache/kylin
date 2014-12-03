@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.storage.hbase.coprocessor.observer;
+package com.kylinolap.storage.hbase.coprocessor;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -31,14 +31,13 @@ import com.kylinolap.cube.kv.RowKeyColumnIO;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.realization.TblColRef;
-import com.kylinolap.storage.hbase.coprocessor.CoprocessorConstants;
 
 /**
  * @author yangli9
  */
-public class ObserverRowType {
+public class CoprocessorRowType {
 
-    public static ObserverRowType fromCuboid(CubeSegment seg, Cuboid cuboid) {
+    public static CoprocessorRowType fromCuboid(CubeSegment seg, Cuboid cuboid) {
         List<TblColRef> colList = cuboid.getColumns();
         TblColRef[] cols = colList.toArray(new TblColRef[colList.size()]);
         RowKeyColumnIO colIO = new RowKeyColumnIO(seg);
@@ -46,10 +45,10 @@ public class ObserverRowType {
         for (int i = 0; i < cols.length; i++) {
             colSizes[i] = colIO.getColumnLength(cols[i]);
         }
-        return new ObserverRowType(cols, colSizes);
+        return new CoprocessorRowType(cols, colSizes);
     }
 
-    public static byte[] serialize(ObserverRowType o) {
+    public static byte[] serialize(CoprocessorRowType o) {
         ByteBuffer buf = ByteBuffer.allocate(CoprocessorConstants.SERIALIZE_BUFFER_SIZE);
         serializer.serialize(o, buf);
         byte[] result = new byte[buf.position()];
@@ -57,16 +56,16 @@ public class ObserverRowType {
         return result;
     }
 
-    public static ObserverRowType deserialize(byte[] bytes) {
+    public static CoprocessorRowType deserialize(byte[] bytes) {
         return serializer.deserialize(ByteBuffer.wrap(bytes));
     }
 
     private static final Serializer serializer = new Serializer();
 
-    private static class Serializer implements BytesSerializer<ObserverRowType> {
+    private static class Serializer implements BytesSerializer<CoprocessorRowType> {
 
         @Override
-        public void serialize(ObserverRowType o, ByteBuffer out) {
+        public void serialize(CoprocessorRowType o, ByteBuffer out) {
             int n = o.columns.length;
             BytesUtil.writeVInt(o.columns.length, out);
             for (int i = 0; i < n; i++) {
@@ -77,7 +76,7 @@ public class ObserverRowType {
         }
 
         @Override
-        public ObserverRowType deserialize(ByteBuffer in) {
+        public CoprocessorRowType deserialize(ByteBuffer in) {
             int n = BytesUtil.readVInt(in);
             TblColRef[] cols = new TblColRef[n];
             int[] colSizes = new int[n];
@@ -94,20 +93,19 @@ public class ObserverRowType {
                 int colSize = BytesUtil.readVInt(in);
                 colSizes[i] = colSize;
             }
-            return new ObserverRowType(cols, colSizes);
+            return new CoprocessorRowType(cols, colSizes);
         }
     }
 
     // ============================================================================
 
-    TblColRef[] columns;
-    int[] columnSizes;
+    public TblColRef[] columns;
+    public int[] columnSizes;
+    public int[] columnOffsets;
+    public List<TblColRef> columnsAsList;
+    public HashMap<TblColRef, Integer> columnIdxMap;
 
-    int[] columnOffsets;
-    List<TblColRef> columnsAsList;
-    HashMap<TblColRef, Integer> columnIdxMap;
-
-    public ObserverRowType(TblColRef[] columns, int[] columnSizes) {
+    public CoprocessorRowType(TblColRef[] columns, int[] columnSizes) {
         this.columns = columns;
         this.columnSizes = columnSizes;
         init();

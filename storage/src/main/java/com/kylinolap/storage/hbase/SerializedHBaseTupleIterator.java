@@ -67,7 +67,7 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
         if (this.segmentIteratorIterator.hasNext()) {
             this.segmentIterator = this.segmentIteratorIterator.next();
         } else {
-            this.segmentIterator = CubeSegmentTupleIterator.EMPTY_TUPLE_ITERATOR;
+            this.segmentIterator = ITupleIterator.EMPTY_TUPLE_ITERATOR;
         }
     }
 

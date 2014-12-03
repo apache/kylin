@@ -16,6 +16,7 @@
 
 package com.kylinolap.storage.hbase.coprocessor.endpoint;
 
+import com.google.common.collect.Lists;
 import com.kylinolap.common.util.BytesSerializer;
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.cube.invertedindex.TableRecordInfo;
@@ -66,7 +67,6 @@ public class EndpointAggregators {
     final transient FixedLenMeasureCodec[] measureSerializers;
     final transient Object[] metricValues;
     final transient byte[] metricBytes;
-    transient int metricBytesOffset = 0;
 
     public EndpointAggregators(String[] funcNames, String[] dataTypes, int[] refColIndex, TableRecordInfoDigest tableInfo) {
         this.funcNames = funcNames;
@@ -107,16 +107,28 @@ public class EndpointAggregators {
         }
     }
 
-    public byte[] getMetricValues(MeasureAggregator[] aggrs) {
+    public byte[] serializeMetricValues(MeasureAggregator[] aggrs) {
         for (int i = 0; i < funcNames.length; i++) {
             metricValues[i] = aggrs[i++].getState();
         }
 
-        metricBytesOffset = 0;
-        for (int i = 0; i < funcNames.length; i++) {
+        int metricBytesOffset = 0;
+        for (int i = 0; i < measureSerializers.length; i++) {
             measureSerializers[i].write(metricValues[i], metricBytes, metricBytesOffset);
+            metricBytesOffset += measureSerializers[i].getLength();
         }
         return metricBytes;
+    }
+
+    public List<String> deserializeMetricValues(byte[] metricBytes) {
+        List<String> ret = Lists.newArrayList();
+        int metricBytesOffset = 0;
+        for (int i = 0; i < measureSerializers.length; i++) {
+            String valueString = measureSerializers[i].toString(measureSerializers[i].read(metricBytes, metricBytesOffset));
+            metricBytesOffset += measureSerializers[i].getLength();
+            ret.add(valueString);
+        }
+        return ret;
     }
 
     public static byte[] serialize(EndpointAggregators o) {

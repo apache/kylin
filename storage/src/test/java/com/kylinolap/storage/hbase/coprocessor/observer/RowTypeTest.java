@@ -20,8 +20,7 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
-import com.kylinolap.storage.hbase.coprocessor.observer.ObserverRowType;
-
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorRowType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,9 +55,9 @@ public class RowTypeTest extends LocalFileMetadataTestCase {
         long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         Cuboid cuboid = Cuboid.findById(cubeDesc, baseCuboidId);
 
-        ObserverRowType rowType = ObserverRowType.fromCuboid(cube.getLatestReadySegment(), cuboid);
-        byte[] bytes = ObserverRowType.serialize(rowType);
-        ObserverRowType copy = ObserverRowType.deserialize(bytes);
+        CoprocessorRowType rowType = CoprocessorRowType.fromCuboid(cube.getLatestReadySegment(), cuboid);
+        byte[] bytes = CoprocessorRowType.serialize(rowType);
+        CoprocessorRowType copy = CoprocessorRowType.deserialize(bytes);
 
         assertTrue(Arrays.equals(rowType.columns, copy.columns));
         assertTrue(Arrays.equals(rowType.columnSizes, copy.columnSizes));

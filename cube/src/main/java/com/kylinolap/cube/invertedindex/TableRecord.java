@@ -16,9 +16,12 @@
 
 package com.kylinolap.cube.invertedindex;
 
+import com.google.common.collect.Lists;
 import com.kylinolap.dict.DateStrDictionary;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
+
+import java.util.List;
 
 /**
  * @author yangli9
@@ -59,6 +62,14 @@ public class TableRecord extends TableRecordBytes {
 
     public int length(int col) {
         return info.length(col);
+    }
+
+    public List<String> getValueList() {
+        List<String> ret = Lists.newArrayList();
+        for (int i = 0; i < info.nColumns; ++i) {
+            ret.add(getValueString(i));
+        }
+        return ret;
     }
 
     public void setValueString(int col, String value) {
@@ -108,7 +119,6 @@ public class TableRecord extends TableRecordBytes {
         buf.append("]");
         return buf.toString();
     }
-
 
 
 }
