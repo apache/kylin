@@ -1,59 +1,65 @@
-<div class="page-header">
-    <!--Project-->
-    <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
-        <div class="form-group">
-            <span><b>Project: </b></span>
-            <select chosen ng-model="project.selectedProject" ng-init="newAccess.permission=permissions.READ.value;project.selectedProject=project.selectedProject!=null?project.selectedProject:project.projects[0]"
-                    ng-options="project as project for project in project.projects"
-                    style="width: 150px"
-                    data-placeholder="select a project"
-                    class="chosen-select">
-            </select>
-            <!--Project-->
-            <a class="btn btn-xs btn-info" href="/projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
-            <a class="btn btn-xs btn-primary" style="width: 29px"  ng-if="userService.hasRole('ROLE_MODELER')"  tooltip="Add Project" ng-click="toCreateProj()">
-                <i class="fa fa-plus"></i>
-            </a>
-        </div>
-    </form>
-    <!--Cube Name-->
-    <span style="padding-left: 40px" >
+<div class="page-header row">
+    <!--Project: -->
+    <div class="col-xs-3">
+        <form ng-if="userService.isAuthorized()">
+            <div class="form-group">
+                <span><b>Project: </b></span>
+                <select chosen ng-model="project.selectedProject" ng-init="newAccess.permission=permissions.READ.value;project.selectedProject=project.selectedProject!=null?project.selectedProject:project.projects[0]"
+                        ng-options="project as project for project in project.projects"
+                        style="width: 150px"
+                        data-placeholder="select a project"
+                        class="chosen-select">
+                </select>
+                <!--Project-->
+                <a class="btn btn-xs btn-info" href="/projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
+                <a class="btn btn-xs btn-primary" style="width: 29px" ng-if="userService.hasRole('ROLE_MODELER')"  tooltip="Add Project" ng-click="toCreateProj()">
+                    <i class="fa fa-plus"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+    <!--Cube Name: -->
+    <div class="col-xs-3">
         <form ng-submit="jobs={};reload()" style="display: inline" >
             <span class="input-icon input-icon-right nav-search"><b>Cube Name:</b>
                 <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="cubeName" />
                 <i class="ace-icon fa fa-search blue" ng-click="jobs={};reload()"></i>
             </span>
         </form>
-    </span>
-    <div class="pull-right">
-        <!--Job Status-->
-        <span>
-            Job Status:
-            <select chosen multiple style="min-width: 500px"
-                    ng-model="status" ng-change="jobs={};reload();"
-                    ng-options="s as s.name for s in allStatus">
-                <option value="">ALL</option>
-            </select>
-        </span>
-        <!--Refresh Jobs-->
-        <button class="btn btn-success btn-xs" ng-click="jobs={};reload();"><i class="fa fa-refresh"></i></button>
     </div>
 </div>
 
 <!--Jobs Table-->
 <div class="row">
     <div ng-class="{'col-xs-8': state.showSteps, 'col-xs-12': !state.showSteps}" ng-animate="{enter: 'animated fadeInLeft'}">
-        <div ng-if="!state.loading && getLength(jobs)==0">
-            <div no-result text="No Job."></div>
-        </div>
-        <div ng-if="state.loading">
-            <loading text="Loading Jobs ..."></loading>
-        </div>
-        <div ng-if="getLength(jobs)>0" class="dataTables_wrapper form-inline no-footer" >
+        <div  class="dataTables_wrapper form-inline no-footer" >
+            <!--Jobs Table Header-->
             <div class="row">
-                <div class="col-xs-12"><label class="table-header-text">Jobs</label></div>
+                <div class="col-xs-2"><label class="table-header-text">Jobs</label></div>
+                <div class="col-xs-10">
+                    <!--STATUS-->
+                    <div class="pull-right">
+                      <label ng-repeat="s in allStatus" class="checkbox-inline" >
+                        <input  type="checkbox"
+                                value="{{s.name}}"
+                                ng-checked="status.indexOf(s) > -1"
+                                ng-click="toggleSelection(s);" />{{s.name}}
+                      </label>
+                      <!--Refresh Jobs-->
+                      <button class="btn btn-success btn-xs" style="margin-left: 10px" ng-click="jobs={};reload();"><i class="fa fa-refresh"></i></button>
+                    </div>
+                </div>
             </div>
-            <table class="table table-striped table-bordered table-hover dataTable no-footer">
+            <!--No Job-->
+            <div ng-if="!state.loading && getLength(jobs)==0">
+              <div no-result text="No Job."></div>
+            </div>
+            <!--Loading Jobs-->
+            <div ng-if="state.loading">
+              <loading text="Loading Jobs ..."></loading>
+            </div>
+            <!--Jobs Table Content-->
+            <table ng-if="getLength(jobs)>0" class="table table-striped table-bordered table-hover dataTable no-footer">
                 <thead>
                     <tr style="cursor: pointer">
                         <th ng-repeat="theaditem in theaditems"

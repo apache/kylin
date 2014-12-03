@@ -1,30 +1,32 @@
-<div class="page-header">
+<div class="page-header row">
     <!--Project-->
-    <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
-        <div class="form-group">
-            <span><b>Project: </b></span>
-            <select chosen ng-model="project.selectedProject" ng-init="newAccess.permission=permissions.READ.value;project.selectedProject=project.selectedProject!=null?project.selectedProject:project.projects[0]"
-                    ng-options="project as project for project in project.projects"
-                    style="width: 150px"
-                    data-placeholder="select a project"
-                    class="chosen-select">
-            </select>
-            <!--Project-->
-            <a class="btn btn-xs btn-info" href="/projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
-            <a class="btn btn-xs btn-primary" style="width: 29px" ng-if="userService.hasRole('ROLE_MODELER')"  tooltip="Add Project" ng-click="toCreateProj()">
-                <i class="fa fa-plus"></i>
-            </a>
-        </div>
-    </form>
+    <div class="col-xs-3">
+        <form ng-if="userService.isAuthorized()">
+            <div class="form-group">
+                <span><b>Project: </b></span>
+                <select chosen ng-model="project.selectedProject" ng-init="newAccess.permission=permissions.READ.value;project.selectedProject=project.selectedProject!=null?project.selectedProject:project.projects[0]"
+                        ng-options="project as project for project in project.projects"
+                        style="width: 150px"
+                        data-placeholder="select a project"
+                        class="chosen-select">
+                </select>
+                <!--Project-->
+                <a class="btn btn-xs btn-info" href="/projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
+                <a class="btn btn-xs btn-primary" style="width: 29px" ng-if="userService.hasRole('ROLE_MODELER')"  tooltip="Add Project" ng-click="toCreateProj()">
+                    <i class="fa fa-plus"></i>
+                </a>
+            </div>
+        </form>
+    </div>
     <!--Cube Name-->
-    <span style="padding-left: 40px" >
+    <div class="col-xs-3">
         <form ng-submit="cubes=[];list()" style="display: inline" >
             <span class="input-icon input-icon-right nav-search"><b>Cube Name:</b>
                 <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="listParams.cubeName" />
                 <i class="ace-icon fa fa-search blue" ng-click="cubes=[];list()"></i>
             </span>
         </form>
-    </span>
+    </div>
     <div class="pull-right">
         <a class="btn btn-primary btn-sm" href="/cubes/add/json" ng-if="userService.hasRole('ROLE_ADMIN')"><i class="fa fa-pencil-square-o"></i> Json Editor</a>
         <a class="btn btn-primary btn-sm" href="/cubes/add"  ng-if="userService.hasRole('ROLE_MODELER')" id="addCubeButton"><i class="fa fa-plus"></i> Cube</a>
