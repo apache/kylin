@@ -1,7 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('SourceMetaCtrl', function ($scope,$cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService,$route,rainbowBar) {
+    .controller('SourceMetaCtrl', function ($scope,$cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService,$route,rainbowBar,loadingRequest) {
         var $httpDefaultCache = $cacheFactory.get('$http');
         $scope.srcTables = {};
         $scope.srcDbs = [];
@@ -152,25 +152,16 @@ KylinApp
                 $modalInstance.dismiss('cancel');
             };
             $scope.add = function () {
-                MessageService.sendMsg('A sync task has been submitted, it might take 20 - 60 seconds', 'success', {});
                 $scope.cancel();
                 rainbowBar.show();
-                $(".loadingOverlay").css({'display':'block','opacity':'0.8'});
-                $(".showbox").stop(true).animate({'margin-top':'300px','opacity':'1'},200);
+                loadingRequest.show();
                 TableService.loadHiveTable({tableName: $scope.tableNames,action:projectName}, {}, function (result) {
-                        MessageService.sendMsg('Below tables were synced successfully: ' + result['result'].join() + ', Click Refresh button ...', 'success', {});
-
-                        MessageService.sendMsg(request.message, 'error');
+                    MessageService.sendMsg('Below tables were synced successfully: ' + result['result'].join() + ', Click Refresh button ...', 'success', {});
                     rainbowBar.hide();
-                    //end loading
-                    $(".showbox").stop(true).animate({'margin-top':'250px','opacity':'0'},2000);
-                    $(".loadingOverlay").css({'display':'none','opacity':'0'});
-
+                    loadingRequest.hide();
                 },function(){
                     rainbowBar.hide();
-                    //end loading
-                    $(".showbox").stop(true).animate({'margin-top':'250px','opacity':'0'},2000);
-                    $(".loadingOverlay").css({'display':'none','opacity':'0'});
+                    loadingRequest.hide();
                 })
             }
         };

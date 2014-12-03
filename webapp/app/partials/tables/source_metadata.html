@@ -154,7 +154,7 @@
                 <span><strong>Project: </strong>{{ $parent.projectName }}</span>
                 <label for="tables"> Table Names:(Seperate with comma)</label>
                 <textarea ng-model="$parent.tableNames" class="form-control" id="tables"
-                          placeholder="table1,table2"></textarea>
+                          placeholder="table1,table2  By default,system will choose 'Default' as database,you can specify database like this 'database.table'"></textarea>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-primary" ng-click="add()">Sync</button>
@@ -165,4 +165,4 @@
 </div>
 
 <div ng-include="'partials/projects/project_create.html'"></div>
-<div ng-include="'partials/common/loading.html'"></div>
+<!--<div ng-include="'partials/common/loading.html'"></div>-->
