@@ -17,11 +17,7 @@
 package com.kylinolap.cube.project;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.StringUtils;
@@ -243,7 +239,7 @@ public class ProjectManager {
         //sync exposed table to project when list
         List<TableDesc> exposedTables = listExposedTables(project);
         for (TableDesc table : exposedTables) {
-            projectInstance.addTable(table.getName());
+            projectInstance.addTable(TableDesc.getTableIdentity(table));
         }
         //only save project json if new tables are sync in
         if (originTableCount < projectInstance.getTablesCount()) {
@@ -420,8 +416,9 @@ public class ProjectManager {
         ProjectInstance projectInstance = store.getResource(path, ProjectInstance.class, PROJECT_SERIALIZER);
         projectInstance.init();
 
-        if (StringUtils.isBlank(projectInstance.getName()))
+        if (StringUtils.isBlank(projectInstance.getName())) {
             throw new IllegalStateException("Project name must not be blank");
+        }
 
         if (triggerUpdate) {
             projectMap.put(projectInstance.getName().toUpperCase(), projectInstance);
@@ -532,15 +529,17 @@ public class ProjectManager {
     private void markExposedTableAndColumn(String project, String table, String column, Object refObj) {
         project = ProjectInstance.getNormalizedProjectName(project);
         TableDesc t = this.getMetadataManager().getTableDesc(table);
-        if (t == null)
+        if (t == null) {
             throw new IllegalStateException("No SourceTable found by name '" + table + "', ref by " + refObj);
+        }
         table = t.getName(); // ensures upper case
 
         ProjectTable projTable = getProjectTable(project, table, true);
 
         ColumnDesc srcCol = t.findColumnByName(column);
-        if (srcCol == null)
+        if (srcCol == null) {
             throw new IllegalStateException("No SourceColumn found by name '" + table + "/" + column + "', ref by " + refObj);
+        }
 
         if (!projTable.getColumns().contains(srcCol.getName())) {
             projTable.getColumns().add(srcCol.getName());
@@ -556,11 +555,10 @@ public class ProjectManager {
         project = ProjectInstance.getNormalizedProjectName(project);
 
         if (this.projectTables.containsEntry(project, new ProjectTable(table))) {
-            Iterator<ProjectTable> projsIter = this.projectTables.get(project).iterator();
-            while (projsIter.hasNext()) {
-                ProjectTable oneTable = projsIter.next();
-                if (oneTable.getName().equalsIgnoreCase(table)) {
-                    projectTable = oneTable;
+            Collection<ProjectTable> projects = this.projectTables.get(project);
+            for (ProjectTable pt : projects) {
+                if (pt.getName().equalsIgnoreCase(table)) {
+                    projectTable = pt;
                     break;
                 }
             }
