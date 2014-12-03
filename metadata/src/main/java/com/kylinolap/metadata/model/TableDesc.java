@@ -17,6 +17,7 @@ package com.kylinolap.metadata.model;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -56,7 +57,7 @@ public class TableDesc extends RootPersistentEntity {
     }
 
     public String getResourcePath() {
-        return ResourceStore.TABLE_RESOURCE_ROOT + "/" + name + ".json";
+        return ResourceStore.TABLE_RESOURCE_ROOT + "/" + getTableIdentity(this) + ".json";
     }
 
     // ============================================================================
@@ -129,7 +130,23 @@ public class TableDesc extends RootPersistentEntity {
 
     @Override
     public String toString() {
-        return "TableDesc [name=" + name + "]";
+        return "TableDesc [database=" + getDatabase() + " name=" + name + "]";
+    }
+
+    private static final Pattern TABLE_IDENTITY_PATTERN = Pattern.compile("^\\w+\\.\\w+$");
+
+    public static String getTableIdentity(TableDesc tableDesc) {
+        return String.format("%s.%s", tableDesc.getDatabase(), tableDesc.getName()).toUpperCase();
+    }
+
+    public static String getTableIdentity(String tableName) {
+        if (!tableName.contains(".")) {
+            tableName = "DEFAULT." + tableName;
+        }
+        if (!TABLE_IDENTITY_PATTERN.matcher(tableName).matches()) {
+            throw new IllegalArgumentException("invalid tableName:" + tableName);
+        }
+        return tableName.toUpperCase();
     }
 
 }

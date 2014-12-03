@@ -1,9 +1,9 @@
 {
   "name" : "test_kylin_ii_model_desc",
-  "fact_table": "TEST_KYLIN_FACT",
+  "fact_table": "DEFAULT.TEST_KYLIN_FACT",
   "lookups": [ 
   {
-    "table" : "TEST_CAL_DT",
+    "table" : "EDW.TEST_CAL_DT",
     "join" : {
       "type" : "left",
       "primary_key" : [ "CAL_DT" ],
@@ -11,7 +11,7 @@
     }
   },
   {
-    "table" : "TEST_CATEGORY_GROUPINGS",
+    "table" : "DEFAULT.TEST_CATEGORY_GROUPINGS",
     "join" : {
       "type" : "left",
       "primary_key" : [ "LEAF_CATEG_ID", "SITE_ID" ],
@@ -19,7 +19,7 @@
     }
   }, 
   {
-    "table" : "TEST_SITES",
+    "table" : "EDW.TEST_SITES",
     "join" : {
       "type" : "left",
       "primary_key" : [ "SITE_ID" ],
@@ -27,7 +27,7 @@
     }
   }, 
   {
-    "table" : "TEST_SELLER_TYPE_DIM",
+    "table" : "EDW.TEST_SELLER_TYPE_DIM",
     "join" : {
       "type" : "left",
       "primary_key" : [ "SELLER_TYPE_CD" ],

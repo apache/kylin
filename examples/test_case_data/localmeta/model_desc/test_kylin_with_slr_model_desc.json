@@ -1,9 +1,9 @@
 {
   "name": "test_kylin_with_slr_model_desc",
-  "fact_table": "test_kylin_fact",
+  "fact_table": "DEFAULT.test_kylin_fact",
   "lookups": [
     {
-      "table": "test_cal_dt",
+      "table": "EDW.test_cal_dt",
       "join": {
         "type": "inner",
         "primary_key": ["cal_dt"],
@@ -11,7 +11,7 @@
       }
     },
     {
-      "table": "test_category_groupings",
+      "table": "DEFAULT.test_category_groupings",
       "join": {
         "type": "inner",
         "primary_key": ["leaf_categ_id", "site_id"],
@@ -19,7 +19,7 @@
       }
     },
     {
-      "table": "test_sites",
+      "table": "EDW.test_sites",
       "join": {
         "type": "inner",
         "primary_key": ["site_id"],
@@ -27,7 +27,7 @@
       }
     },
     {
-      "table": "test_seller_type_dim",
+      "table": "EDW.test_seller_type_dim",
       "join": {
         "type": "inner",
         "primary_key": ["seller_type_cd"],
