@@ -121,10 +121,13 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
         }
 
         AbstractRowKeyEncoder encoder = AbstractRowKeyEncoder.createInstance(cubeSeg, cuboid);
+
         encoder.setBlankByte(RowConstants.ROWKEY_LOWER_BYTE);
+
         this.startKey = encoder.encode(startValues);
 
         encoder.setBlankByte(RowConstants.ROWKEY_UPPER_BYTE);
+
         // In order to make stopRow inclusive add a trailing 0 byte. #See
         // Scan.setStopRow(byte [] stopRow)
         this.stopKey = Bytes.add(encoder.encode(stopValues), ZERO_TAIL_BYTES);

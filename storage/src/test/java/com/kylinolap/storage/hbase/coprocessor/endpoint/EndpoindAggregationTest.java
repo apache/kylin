@@ -2,14 +2,12 @@ package com.kylinolap.storage.hbase.coprocessor.endpoint;
 
 import static org.junit.Assert.*;
 
-import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.invertedindex.TableRecord;
 import com.kylinolap.cube.invertedindex.TableRecordInfo;
 import com.kylinolap.cube.measure.MeasureAggregator;
-import com.kylinolap.metadata.model.DataType;
 import com.kylinolap.metadata.model.realization.FunctionDesc;
 import com.kylinolap.metadata.model.realization.ParameterDesc;
 import com.kylinolap.metadata.model.realization.TblColRef;

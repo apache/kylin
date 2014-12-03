@@ -2,7 +2,7 @@
 // usage:
 // protoc  --java_out=./storage/src/main/java  ./storage/src/main/java/com/kylinolap/storage/hbase/coprocessor/endpoint/protobuf/II.proto
 
-option java_package = "com.kylinolap.storage.hbase.endpoint.generated";
+option java_package = "com.kylinolap.storage.hbase.coprocessor.endpoint.generated";
 option java_outer_classname = "IIProtos";
 option java_generic_services = true;
 option java_generate_equals_and_hash = true;
@@ -10,14 +10,18 @@ option optimize_for = SPEED;
 
 message IIRequest {
     required bytes tableInfo = 1;
-    required bytes sRowType = 2;
-    optional bytes sRowFilter = 3;
-    optional bytes sRowProjector = 4;
-    optional bytes sRowAggregator = 5;
+    required bytes type = 2;
+    optional bytes filter = 3;
+    optional bytes projector = 4;
+    optional bytes aggregator = 5;
 }
 
 message IIResponse {
-    repeated bytes rows = 1;
+  message IIRow {
+    required bytes columns = 1;
+    required bytes measures = 2;
+  }
+  repeated IIRow rows = 1;
 }
 
 service RowsService {

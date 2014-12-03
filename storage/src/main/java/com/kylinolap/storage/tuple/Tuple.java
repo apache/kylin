@@ -52,6 +52,10 @@ public class Tuple implements ITuple {
         return values;
     }
 
+    public TupleInfo getInfo() {
+        return info;
+    }
+
     public String getFieldName(TblColRef col) {
         return info.getFieldName(col);
     }
@@ -73,6 +77,10 @@ public class Tuple implements ITuple {
     private void setFieldObjectValue(String fieldName, Object fieldValue) {
         int index = info.getFieldIndex(fieldName);
         values[index] = fieldValue;
+    }
+
+    public void setValue(String fieldName, String fieldValue) {
+        this.setDimensionValue(fieldName, fieldValue);
     }
 
     public void setDimensionValue(String fieldName, String fieldValue) {
