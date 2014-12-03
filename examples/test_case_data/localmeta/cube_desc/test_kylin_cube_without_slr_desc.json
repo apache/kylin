@@ -19,7 +19,6 @@
     },
     {
       "name": "category",
-      "table": "test_category_groupings",
       "column": ["test_category_groupings.meta_categ_name", "test_category_groupings.categ_lvl2_name", "test_category_groupings.categ_lvl3_name"],
       "derived": [
         "USER_DEFINED_FIELD1",
