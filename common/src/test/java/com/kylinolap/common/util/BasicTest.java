@@ -3,6 +3,8 @@ package com.kylinolap.common.util;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
@@ -23,17 +25,20 @@ import sun.jvm.hotspot.oops.BitData;
  */
 @Ignore
 public class BasicTest {
+    private void log(ByteBuffer a) {
+
+        System.out.println("");
+        System.out.println("position: " + a.position());
+        System.out.println("limit: " + a.limit());
+        System.out.println("mark: " + a.mark());
+        System.out.println("remaining: " + a.remaining());
+        System.out.println("arrayoffset: " + a.arrayOffset());
+    }
+
     @Test
     public void test() throws IOException {
 
-        BigDecimal scalePower = new BigDecimal(1000000);
-        String value = "2.09";
-        BigDecimal a = new BigDecimal(value);
-        BigDecimal b = a.multiply(scalePower);
-        long xb = b.longValue();
-        System.out.println(xb);
 
-        System.out.println(b.divide(scalePower));
 
 
 //        for (String s : ManagementFactory.getRuntimeMXBean().getInputArguments())

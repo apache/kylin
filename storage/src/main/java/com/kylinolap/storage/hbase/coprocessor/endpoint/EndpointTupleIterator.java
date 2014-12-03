@@ -1,14 +1,15 @@
 package com.kylinolap.storage.hbase.coprocessor.endpoint;
 
+import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.invertedindex.TableRecord;
 import com.kylinolap.cube.invertedindex.TableRecordInfo;
 import com.kylinolap.cube.invertedindex.TableRecordInfoDigest;
-import com.kylinolap.cube.kv.RowValueDecoder;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.HBaseColumnDesc;
 import com.kylinolap.metadata.model.realization.FunctionDesc;
 import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.StorageContext;
@@ -17,18 +18,15 @@ import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorRowType;
 import com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos;
-import com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse;
 import com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow;
 import com.kylinolap.storage.tuple.ITuple;
 import com.kylinolap.storage.tuple.ITupleIterator;
 import com.kylinolap.storage.tuple.Tuple;
 import com.kylinolap.storage.tuple.TupleInfo;
 import org.apache.hadoop.hbase.client.HTableInterface;
-import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
-import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
 import java.util.*;
@@ -39,55 +37,90 @@ import java.util.*;
 public class EndpointTupleIterator implements ITupleIterator {
 
     private final CubeSegment seg;
-    private final CubeDesc cubeDesc;
-    private final Collection<TblColRef> dimensions;
-    private final TupleFilter filter;
+    private final TableDesc tableDesc;
+    private final TupleFilter rootFilter;
     private final Collection<TblColRef> groupBy;
     private final StorageContext context;
     private final List<FunctionDesc> measures;
 
-    Iterator<List<IIRow>> regionResponsesIterator = null;
-    Iterator<ITuple> tupleIterator = null;
+    private final List<TblColRef> columns;
+    private final List<String> columnNames;
+    private final TupleInfo tupleInfo;
+    private final TableRecordInfo tableRecordInfo;
 
-    //TODO what exactly is dimension here?
-    public EndpointTupleIterator(CubeSegment cubeSegment, CubeDesc cubeDesc, Collection<TblColRef> dimensions,
-            TupleFilter filter, Collection<TblColRef> groupBy, List<FunctionDesc> measures, StorageContext context, HTableInterface table) throws Throwable {
+    private final CoprocessorRowType pushedDownRowType;
+    private final CoprocessorFilter pushedDownFilter;
+    private final CoprocessorProjector pushedDownProjector;
+    private final EndpointAggregators pushedDownAggregators;
+
+    Iterator<List<IIRow>> regionResponsesIterator = null;
+    ITupleIterator tupleIterator = null;
+
+    //TODO  is "dimentsions" useful here?
+    public EndpointTupleIterator(CubeSegment cubeSegment, TableDesc tableDesc,
+            TupleFilter rootFilter, Collection<TblColRef> groupBy, List<FunctionDesc> measures, StorageContext context, HTableInterface table) throws Throwable {
+
+
         this.seg = cubeSegment;
-        this.cubeDesc = cubeDesc;
-        this.dimensions = dimensions;
-        this.filter = filter;
+        this.tableDesc = tableDesc;
+        this.rootFilter = rootFilter;
         this.groupBy = groupBy;
         this.context = context;
         this.measures = measures;
 
-        IIProtos.IIRequest endpointRequest = prepareRequest(filter, dimensions, measures);
+        this.columns = Lists.newArrayList();
+        for (ColumnDesc columnDesc : tableDesc.getColumns()) {
+            columns.add(new TblColRef(columnDesc));
+        }
+        columnNames = getColumnNames(columns);
+
+        this.tupleInfo = buildTupleInfo();
+        this.tableRecordInfo = new TableRecordInfo(this.seg);
+
+        this.pushedDownRowType = CoprocessorRowType.fromTableDesc(this.seg, tableDesc);
+        this.pushedDownFilter = CoprocessorFilter.fromFilter(this.seg, rootFilter);
+        this.pushedDownProjector = CoprocessorProjector.makeForEndpoint(tableRecordInfo, groupBy);
+        this.pushedDownAggregators = EndpointAggregators.fromFunctions(measures, tableRecordInfo);
+
+        IIProtos.IIRequest endpointRequest = prepareRequest();
         regionResponsesIterator = getResults(endpointRequest, table);
 
         if (this.regionResponsesIterator.hasNext()) {
-            this.tupleIterator = this.segmentIteratorIterator.next();
+            this.tupleIterator = new SingleRegionTupleIterator(this.regionResponsesIterator.next());
         } else {
             this.tupleIterator = ITupleIterator.EMPTY_TUPLE_ITERATOR;
         }
     }
 
+    @Override
+    public boolean hasNext() {
+        return this.regionResponsesIterator.hasNext() || this.tupleIterator.hasNext();
+    }
 
-    private IIProtos.IIRequest prepareRequest(TupleFilter rootFilter, final Collection<TblColRef> dimensionColumns, final List<FunctionDesc> metrics) throws IOException {
+    @Override
+    public ITuple next() {
+        if (!hasNext()) {
+            throw new IllegalStateException("No more ITuple in EndpointTupleIterator");
+        }
 
-        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        CoprocessorRowType type = CoprocessorRowType.fromCuboid(this.seg, Cuboid.findById(cubeDesc, baseCuboidId));
-        CoprocessorFilter filter = CoprocessorFilter.fromFilter(this.seg, rootFilter);
+        if (!this.tupleIterator.hasNext()) {
+            this.tupleIterator = new SingleRegionTupleIterator(this.regionResponsesIterator.next());
+        }
+        return this.tupleIterator.next();
+    }
+
+    @Override
+    public void close() {
+    }
 
 
-        TableRecordInfo recordInfo = new TableRecordInfo(seg);
-        CoprocessorProjector projector = CoprocessorProjector.makeForEndpoint(recordInfo, dimensionColumns);
-        EndpointAggregators aggregators = EndpointAggregators.fromFunctions(metrics, recordInfo);
-
+    private IIProtos.IIRequest prepareRequest() throws IOException {
         IIProtos.IIRequest request = IIProtos.IIRequest.newBuilder().
-                setTableInfo(ByteString.copyFrom(TableRecordInfoDigest.serialize(recordInfo))).
-                setType(ByteString.copyFrom(CoprocessorRowType.serialize(type))).
-                setFilter(ByteString.copyFrom(CoprocessorFilter.serialize(filter))).
-                setProjector(ByteString.copyFrom(CoprocessorProjector.serialize(projector))).
-                setAggregator(ByteString.copyFrom(EndpointAggregators.serialize(aggregators))).
+                setTableInfo(ByteString.copyFrom(TableRecordInfoDigest.serialize(tableRecordInfo))).
+                setType(ByteString.copyFrom(CoprocessorRowType.serialize(pushedDownRowType))).
+                setFilter(ByteString.copyFrom(CoprocessorFilter.serialize(pushedDownFilter))).
+                setProjector(ByteString.copyFrom(CoprocessorProjector.serialize(pushedDownProjector))).
+                setAggregator(ByteString.copyFrom(EndpointAggregators.serialize(pushedDownAggregators))).
                 build();
 
         return request;
@@ -115,32 +148,9 @@ public class EndpointTupleIterator implements ITupleIterator {
         return results.values().iterator();
     }
 
-
-    private void translateResult(TableRecord tableRecord, List<FunctionDesc> measures, List<String> measureValues, Tuple tuple) throws IOException {
-        // groups
-        List<TblColRef> columns = new ArrayList<>(this.cubeDesc.listDimensionColumnsIncludingDerived());
-        List<String> columnNames = getColumnNames(columns);
-        List<String> columnValues = tableRecord.getValueList();
-        for (int i = 0; i < columnNames.size(); i++) {
-            TblColRef column = columns.get(i);
-            if (!tuple.hasColumn(column)) {
-                continue;
-            }
-            tuple.setValue(columnNames.get(i), columnValues.get(i));
-        }
-
-        for (int i = 0; i < measures.size(); ++i) {
-            tuple.setValue(measures.get(i).getRewriteFieldName(), measureValues.get(i));
-        }
-
-    }
-
     private TupleInfo buildTupleInfo() {
         TupleInfo info = new TupleInfo();
         int index = 0;
-        List<TblColRef> columns = new ArrayList<>(this.cubeDesc.listDimensionColumnsIncludingDerived());
-        List<String> columnNames = getColumnNames(columns);
-
 
         for (int i = 0; i < columns.size(); i++) {
             TblColRef column = columns.get(i);
@@ -159,7 +169,6 @@ public class EndpointTupleIterator implements ITupleIterator {
         return info;
     }
 
-
     private List<String> getColumnNames(List<TblColRef> dimensionColumns) {
         Map<TblColRef, String> aliasMap = context.getAliasMap();
         List<String> result = new ArrayList<String>(dimensionColumns.size());
@@ -177,21 +186,78 @@ public class EndpointTupleIterator implements ITupleIterator {
             name = column.getName();
         }
         return name;
+
     }
 
 
-    @Override
-    public boolean hasNext() {
-        return false;
-    }
+    /**
+     * Internal class to handle iterators for a single region's returned rows
+     */
+    class SingleRegionTupleIterator implements ITupleIterator {
+        private List<IIRow> rows;
+        private int index = 0;
 
-    @Override
-    public ITuple next() {
-        return null;
-    }
+        //not thread safe!
+        private TableRecord tableRecord;
+        private List<String> measureValues;
+        private Tuple tuple;
 
-    @Override
-    public void close() {
+        public SingleRegionTupleIterator(List<IIProtos.IIResponse.IIRow> rows) {
+            this.rows = rows;
+            this.index = 0;
+            this.tableRecord = new TableRecord(tableRecordInfo);
+            this.tuple = new Tuple(tupleInfo);
+        }
+
+        @Override
+        public boolean hasNext() {
+            return index < rows.size();
+        }
+
+        @Override
+        public ITuple next() {
+            if (!hasNext()) {
+                throw new IllegalStateException("No more Tuple in the SingleRegionTupleIterator");
+            }
+
+            IIRow currentRow = rows.get(index);
+            //ByteBuffer columnsBuffer = currentRow.getColumns().asReadOnlyByteBuffer();//avoid creating byte[], if possible
+            //this.tableRecord.setBytes(columnsBuffer.array(), columnsBuffer.position(), columnsBuffer.limit());
+            byte[] columnsBytes = currentRow.getColumns().toByteArray();
+            this.tableRecord.setBytes(columnsBytes, 0, columnsBytes.length);
+
+//            ByteBuffer measuresBuffer = currentRow.getMeasures().asReadOnlyByteBuffer();
+//            this.measureValues = pushedDownAggregators.deserializeMetricValues(measuresBuffer.array(), measuresBuffer.position());
+            byte[] measuresBytes = currentRow.getMeasures().toByteArray();
+            this.measureValues = pushedDownAggregators.deserializeMetricValues(measuresBytes, 0);
+
+            index++;
+
+            return makeTuple(this.tableRecord, this.measureValues);
+        }
+
+        @Override
+        public void close() {
+
+        }
+
+        private ITuple makeTuple(TableRecord tableRecord, List<String> measureValues) {
+            // groups
+            List<String> columnValues = tableRecord.getValueList();
+            for (int i = 0; i < columnNames.size(); i++) {
+                TblColRef column = columns.get(i);
+                if (!tuple.hasColumn(column)) {
+                    continue;
+                }
+                tuple.setValue(columnNames.get(i), columnValues.get(i));
+            }
+
+            for (int i = 0; i < measures.size(); ++i) {
+                tuple.setValue(measures.get(i).getRewriteFieldName(), measureValues.get(i));
+            }
+            return tuple;
+        }
+
 
     }
 }
