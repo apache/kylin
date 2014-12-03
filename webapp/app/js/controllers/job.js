@@ -7,12 +7,12 @@ KylinApp
         $scope.projects = [];
         $scope.action = {};
         $scope.allStatus = [
-            {name: 'new', value: 0},
-            {name: 'pending', value: 1},
-            {name: 'running', value: 2},
-            {name: 'finished', value: 4},
-            {name: 'error', value: 8},
-            {name: 'discarded', value: 16}
+            {name: 'NEW', value: 0},
+            {name: 'PENDING', value: 1},
+            {name: 'RUNNING', value: 2},
+            {name: 'FINISHED', value: 4},
+            {name: 'ERROR', value: 8},
+            {name: 'DISCARDED', value: 16}
         ];
         $scope.theaditems = [
             {attr: 'name', name: 'Job Name'},
@@ -21,7 +21,16 @@ KylinApp
             {attr: 'last_modified', name: 'Last Modified Time'},
             {attr: 'duration', name: 'Duration'}
         ];
-        $scope.status = [$scope.allStatus[0], $scope.allStatus[1], $scope.allStatus[2], $scope.allStatus[3], $scope.allStatus[4], $scope.allStatus[5]];
+        $scope.status = [];
+        $scope.toggleSelection = function toggleSelection(current) {
+            var idx = $scope.status.indexOf(current);
+            if (idx > -1) {
+              $scope.status.splice(idx, 1);
+            }else {
+              $scope.status.push(current);
+            }
+        };
+
         // projectName from page ctrl
         $scope.state = {loading: false, refreshing: false, filterAttr: 'last_modified', filterReverse: true, reverseColumn: 'last_modified', projectName:$scope.project.selectedProject};
 
