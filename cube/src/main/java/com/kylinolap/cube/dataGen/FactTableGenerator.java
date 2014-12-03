@@ -305,6 +305,11 @@ public class FactTableGenerator {
             if (jDesc == null) {
                 // column on fact table used directly as a dimension
                 for (String aColumn : dim.getColumn()) {
+                    int lastIndexOfDot = aColumn.lastIndexOf(".");
+                    if (lastIndexOfDot >= 0) {
+                        aColumn = aColumn.substring(lastIndexOfDot + 1);
+                    }
+                    
                     if (!factTableCol2LookupCol.containsKey(aColumn))
                         usedCols.add(aColumn);
                 }

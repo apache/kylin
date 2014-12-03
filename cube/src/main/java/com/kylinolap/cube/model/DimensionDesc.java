@@ -45,6 +45,7 @@ public class DimensionDesc {
     private HierarchyDesc[] hierarchy;
     @JsonProperty("hierarchy")
     private boolean isHierarchy;
+    @JsonProperty("table")
     private String table;
     private String database;
     @JsonProperty("column")
@@ -66,7 +67,6 @@ public class DimensionDesc {
         }
         return false;
     }
-
 
     public String getTable() {
         return table.toUpperCase();
@@ -131,7 +131,6 @@ public class DimensionDesc {
     public void setDerivedColRefs(TblColRef[] derivedColRefs) {
         this.derivedColRefs = derivedColRefs;
     }
-    
 
     @Override
     public boolean equals(Object o) {
@@ -162,42 +161,50 @@ public class DimensionDesc {
         return "DimensionDesc [name=" + name + ", join=" + join + ", hierarchy=" + Arrays.toString(hierarchy) + ", table=" + table + ", column=" + Arrays.toString(column) + ", derived=" + Arrays.toString(derived) + "]";
     }
 
-    public void init(CubeDesc cubeDesc, Map<String, TableDesc> tables) {
+    public void init(CubeDesc cubeDesc, Map<String, TableDesc> tables, Map<String, List<String>> columnTableMap) {
         if (name != null)
             name = name.toUpperCase();
-        
+
         this.table = null;
         this.database = null;
         this.join = null;
-        
-        for(int i=0, n = this.column.length; i<n; i++) {
+
+        for (int i = 0, n = this.column.length; i < n; i++) {
             String thisColumn = this.column[i];
             String[] splits = StringSplitter.split(thisColumn, ".");
             if (splits.length > 1) {
                 String thisTable = splits[splits.length - 2].toUpperCase();
-                if(table == null) {
+                if (table == null) {
                     table = thisTable;
                 } else if (thisTable != null && !table.equalsIgnoreCase(thisTable)) {
-                    throw new IllegalStateException("One dimension can only refer to the columns on the same table.");
+                    throw new IllegalStateException("One dimension can only refer to the columns on the same table: '" + table + "' and '" + thisTable + "'.");
                 }
-                    
+
                 if (database == null && splits.length > 2) {
                     database = splits[splits.length - 3].toUpperCase();
-                } 
-                
-                this.column[i] = splits[splits.length - 1].toUpperCase();
+                }
+
+                //this.column[i] = splits[splits.length - 1].toUpperCase();
             } else {
-                // if no table specified, assume it is on fact table
-                table = cubeDesc.getFactTable();
+                // if no table specified, seek the table among all tables
+                List<String> tableNames = columnTableMap.get(thisColumn);
+                if (tableNames != null && tableNames.size() == 1) {
+                    table = tableNames.get(0);
+                } else {
+                    if (tableNames == null)
+                        throw new IllegalStateException("The column '" + thisColumn + "' doesn't belong to any table.");
+                    if (tableNames.size() > 1)
+                        throw new IllegalStateException("The column '" + thisColumn + "' is ambiguous; the name appeared in more than one tables, please specify table name together with the column name.");
+                }
             }
         }
-        
+
         TableDesc tableDesc = tables.get(table);
         if (tableDesc == null)
             throw new IllegalStateException("Can't find table " + table + " on dimension " + name);
-        
-        for(LookupDesc lookup : cubeDesc.getModel().getLookups()) {
-            if(lookup.getTable().equalsIgnoreCase(table)) {
+
+        for (LookupDesc lookup : cubeDesc.getModel().getLookups()) {
+            if (lookup.getTable().equalsIgnoreCase(table)) {
                 this.join = lookup.getJoin();
                 break;
             }
@@ -220,7 +227,6 @@ public class DimensionDesc {
             hierarchy = null;
         if (derived != null && derived.length == 0)
             derived = null;
-        
 
         if (hierarchy != null) {
             for (HierarchyDesc h : hierarchy)
