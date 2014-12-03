@@ -1,43 +1,56 @@
-<div class="page-header">
-    <!--Project-->
-    <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
-        <div class="form-group">
-            <span><b>Project: </b></span>
-            <select chosen ng-model="project.selectedProject" ng-init="newAccess.permission=permissions.READ.value;project.selectedProject=project.selectedProject!=null?project.selectedProject:project.projects[0]"
-                    ng-options="project as project for project in project.projects"
-                    style="width: 150px"
-                    data-placeholder="select a project"
-                    class="chosen-select">
-            </select>
-            <!--Project-->
-            <a class="btn btn-xs btn-info" href="/projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
-            <a class="btn btn-xs btn-primary" style="width: 29px"  ng-if="userService.hasRole('ROLE_MODELER')"  tooltip="Add Project" ng-click="toCreateProj()">
-                <i class="fa fa-plus"></i>
-            </a>
-        </div>
-    </form>
-    <!--Cube Name-->
-    <span style="padding-left: 40px" >
+<div class="page-header row">
+    <!--Project: -->
+    <div class="col-xs-3">
+        <form ng-if="userService.isAuthorized()">
+            <div class="form-group">
+                <span><b>Project: </b></span>
+                <select chosen ng-model="project.selectedProject" ng-init="newAccess.permission=permissions.READ.value;project.selectedProject=project.selectedProject!=null?project.selectedProject:project.projects[0]"
+                        ng-options="project as project for project in project.projects"
+                        style="width: 150px"
+                        data-placeholder="select a project"
+                        class="chosen-select">
+                </select>
+                <!--Project-->
+                <a class="btn btn-xs btn-info" href="/projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
+                <a class="btn btn-xs btn-primary" style="width: 29px"  ng-if="userService.hasRole('ROLE_MODELER')"  tooltip="Add Project" ng-click="toCreateProj()">
+                    <i class="fa fa-plus"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+    <!--Cube Name: -->
+    <div class="col-xs-3">
         <form ng-submit="jobs={};reload()" style="display: inline" >
             <span class="input-icon input-icon-right nav-search"><b>Cube Name:</b>
                 <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="cubeName" />
                 <i class="ace-icon fa fa-search blue" ng-click="jobs={};reload()"></i>
             </span>
         </form>
-    </span>
-    <div class="pull-right">
-        <!--Job Status-->
-        <span>
-            Job Status:
-            <select chosen multiple style="min-width: 500px"
-                    ng-model="status" ng-change="jobs={};reload();"
-                    ng-options="s as s.name for s in allStatus">
-                <option value="">ALL</option>
-            </select>
-        </span>
+  </div>
+  <!--Job Status: -->
+    <span >
+        <span><b>Job Status: </b></span>
+          <!--ALL-->
+          <label class="checkbox-inline">
+            <input
+              type="checkbox"
+              ng-model="isAll"
+              ng-click="toggleSelection('ALL');"
+              >ALL
+          </label>
+          <!--STATUS-->
+          <label ng-repeat="s in allStatus" class="checkbox-inline disabled" >
+            <input  ng-disabled="isAll"
+              type="checkbox"
+              name="selectedStatus[]"
+              value="{{s.name}}"
+              ng-checked="status.indexOf(s) > -1"
+              ng-click="toggleSelection(s);"
+            >{{s.name}}
+          </label>
         <!--Refresh Jobs-->
         <button class="btn btn-success btn-xs" ng-click="jobs={};reload();"><i class="fa fa-refresh"></i></button>
-    </div>
+    </span>
 </div>
 
 <!--Jobs Table-->
