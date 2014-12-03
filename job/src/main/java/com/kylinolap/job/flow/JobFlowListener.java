@@ -24,6 +24,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.kylinolap.cube.CubeSegmentStatusEnum;
+
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -37,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.MailService;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
@@ -48,7 +51,6 @@ import com.kylinolap.job.constant.JobConstants;
 import com.kylinolap.job.constant.JobStatusEnum;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job.tools.MailService;
 
 /**
  * Handle kylin job and cube change update.
@@ -251,6 +253,7 @@ public class JobFlowListener implements JobListener {
 
             CubeManager cubeMgr = CubeManager.getInstance(engineConfig.getConfig());
             CubeInstance cubeInstance = cubeMgr.getCube(jobInstance.getRelatedCube());
+            CubeSegment newSegment = cubeInstance.getSegmentById(jobInstance.getUuid());
 
             long sourceCount = 0;
             long sourceSize = 0;
@@ -278,8 +281,8 @@ public class JobFlowListener implements JobListener {
                     log.info("No step with name '" + JobConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE + "' is found");
                 }
 
-                if (cubeInstance.incrementalBuildOnHll()) {
-                    for (CubeSegment seg : cubeInstance.getMergingSegments()) {
+                if (cubeInstance.needMergeImmediatelyAfterBuild(newSegment)) {
+                    for (CubeSegment seg : cubeInstance.getSegment(CubeSegmentStatusEnum.READY)) {
                         sourceCount += seg.getSourceRecords();
                         sourceSize += seg.getSourceRecordsSize();
                     }
@@ -396,7 +399,7 @@ public class JobFlowListener implements JobListener {
             }
 
             if (users.size() > 0) {
-                mailService.sendMail(users, "[Kylin Cube Build Job]-" + cubeName + "-" + finalStatus, content);
+                mailService.sendMail(users, "["+ finalStatus + "] - [Kylin Cube Build Job]-" + cubeName, content);
             }
         } catch (IOException e) {
             log.error(e.getLocalizedMessage(), e);
