@@ -1,12 +1,14 @@
 package com.kylinolap.storage.hbase.coprocessor.endpoint;
 
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.invertedindex.TableRecord;
 import com.kylinolap.cube.invertedindex.TableRecordInfo;
+import com.kylinolap.cube.invertedindex.TableRecordInfoDigest;
 import com.kylinolap.cube.measure.MeasureAggregator;
 import com.kylinolap.metadata.model.realization.FunctionDesc;
 import com.kylinolap.metadata.model.realization.ParameterDesc;
@@ -137,6 +139,13 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
     }
 
     @Test
+    public void testSerializeAggreagtor() {
+        EndpointAggregators endpointAggregators = EndpointAggregators.fromFunctions(buildAggregations(),tableRecordInfo);
+        byte[] x = EndpointAggregators.serialize(endpointAggregators);
+        EndpointAggregators d = EndpointAggregators.deserialize(x);
+    }
+
+    @Test
     public void basicTest() {
 
         for (int i = 0; i < tableData.size(); ++i) {
@@ -149,16 +158,15 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
 
         assertEquals(aggCache.getAllEntries().size(), 2);
 
-
         long sumTotal = 0;
         long minTotal = 0;
         for (Map.Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
             sumTotal += ((LongWritable) entry.getValue()[0].getState()).get();
             minTotal += ((LongWritable) entry.getValue()[1].getState()).get();
+
         }
         assertEquals(sumTotal, 302080000);
         assertEquals(minTotal, 102090000);
-
     }
 
 }
