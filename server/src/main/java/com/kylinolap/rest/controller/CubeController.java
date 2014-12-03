@@ -195,7 +195,6 @@ public class CubeController extends BasicController {
     @ResponseBody
     public JobInstance rebuild(@PathVariable String cubeName, @RequestBody JobBuildRequest jobBuildRequest) {
         JobInstance jobInstance = null;
-
         try {
             CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
             String jobId = jobService.submitJob(cube, jobBuildRequest.getStartTime(), jobBuildRequest.getEndTime(), CubeBuildTypeEnum.valueOf(jobBuildRequest.getBuildType()));
@@ -357,7 +356,7 @@ public class CubeController extends BasicController {
             throw new ForbiddenException("You don't have right to update this cube.");
         } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);
-            throw new InternalErrorException("Failed to deal with the request.", e);
+            throw new InternalErrorException("Failed to deal with the request: " + e.getMessage());
         }
 
         if (desc.getError().isEmpty()) {
@@ -425,7 +424,7 @@ public class CubeController extends BasicController {
             updateRequest(cubeRequest, false, e.getMessage());
         } catch (IOException e) {
             logger.error("Failed to deal with the request.", e);
-            throw new InternalErrorException("Failed to deal with the request.", e);
+            throw new InternalErrorException("Failed to deal with the request:"+e.getMessage(), e);
         }
         return desc;
     }

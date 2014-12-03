@@ -217,14 +217,18 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                 } else {
                     MessageService.sendMsg(request.message, 'error');
                 }
-                rainbowBar.hide();
 
+                rainbowBar.hide();
                 //end loading
-                $(".showbox").stop(true).animate({'margin-top':'250px','opacity':'0'},2000);
+                $(".showbox").stop(true).animate({'margin-top':'250px','opacity':'0'},1500);
                 $(".loadingOverlay").css({'display':'none','opacity':'0'});
 
                 recoveryCubeStatus();
             }, function () {
+                rainbowBar.hide();
+                //end loading
+                $(".showbox").stop(true).animate({'margin-top':'250px','opacity':'0'},1500);
+                $(".loadingOverlay").css({'display':'none','opacity':'0'});
                 recoveryCubeStatus();
             });
         }
@@ -242,11 +246,22 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         }
                     });
                 } else {
+
                     $scope.cubeMetaFrame.project = $scope.state.project;
                     MessageService.sendMsg(request.message, 'error');
                 }
+
+                rainbowBar.hide();
+                //end loading
+                $(".showbox").stop(true).animate({'margin-top':'250px','opacity':'0'},1500);
+                $(".loadingOverlay").css({'display':'none','opacity':'0'});
                 recoveryCubeStatus();
             }, function () {
+
+                rainbowBar.hide();
+                //end loading
+                $(".showbox").stop(true).animate({'margin-top':'250px','opacity':'0'},1500);
+                $(".loadingOverlay").css({'display':'none','opacity':'0'});
                 recoveryCubeStatus();
             });
         }
