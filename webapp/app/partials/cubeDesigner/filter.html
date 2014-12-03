@@ -1,10 +1,15 @@
 <div class="row">
     <div class="col-xs-8">
-        <div class="form-group" ng-if="state.mode=='edit'">
-            <label for="filter_condition" class="control-label no-padding-right font-color-default"><b>Condition Filter</b></label>
-            <textarea id="filter_condition" type="text" style="height:163px;" class="form-control box-default"
-                placeholder="Condition Filter.."
-                ng-model="cubeMetaFrame.filter_condition"></textarea>
+        <div class="form-group" ng-if="state.mode=='edit'"
+             style="font-family:'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro'">
+            <label for="filter_condition"
+                   style="color: #930f80;"><b>WHERE</b></label>
+            <textarea id="filter_condition" type="text"
+                      style="height:150px"
+                      class="form-control box-default"
+                      placeholder="Please input WHERE clause without typing 'WHERE'"
+                      ng-model="cubeMetaFrame.filter_condition">
+            </textarea>
         </div>
         <div class="form-group" ng-if="state.mode=='view'">
             <div ng-if="cubeMetaFrame.filter_condition">
