@@ -36,9 +36,16 @@ _Tested with Hortonworks HDP 2.1.3 and Cloudera Quickstart VM 5.1._
 
 ### Installation ###
 
-Depending on different use cases Kylin can be installed differently. There are two major scenarios:
+It is very easy to install Kylin for exploration/development. There are 3 possible ways:
 
-#### On-Hadoop-CLI installation ####
+1. Quick Start (Docker)
+2. Sandbox     (HDP or CDH sandbox)
+3. Dev Environment (IDE + Sandbox)
+
+#### Quick Start using Docker ####
+
+
+#### Sandbox (On-Hadoop-CLI installation) ####
 
 If you are free to install Kylin on your hadoop CLI machine or Hadoop sandbox, this is the most convenient scenario, for it puts everything in a single machine.
 
@@ -50,7 +57,7 @@ For normal users, the application in the above picture means `Kylin Web`, which 
 
 For a hands-on tutorial please visit [On-Hadoop-CLI installation](https://github.com/KylinOLAP/Kylin/wiki/On-Hadoop-CLI-installation).
 
-#### Off-Hadoop-CLI Installation ####
+#### Dev Environment (Off-Hadoop-CLI Installation) ####
 
 This is typically for development environment setup.
 
