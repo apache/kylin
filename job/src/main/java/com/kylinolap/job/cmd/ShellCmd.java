@@ -90,9 +90,8 @@ public class ShellCmd implements IJobCommand {
 
     protected int executeCommand(String command) throws JobException, IOException {
         output.reset();
-        cliCommandExecutor.execute(command);
-        //if cliCommandExecutor doesn't throw IOException, it means command is executed correctly
-        return 0;
+        output.setStatus(JobStepStatusEnum.RUNNING);
+        return cliCommandExecutor.execute(command).getFirst();
     }
 
     @Override
