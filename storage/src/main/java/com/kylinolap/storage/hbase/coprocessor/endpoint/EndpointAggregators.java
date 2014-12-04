@@ -88,6 +88,10 @@ public class EndpointAggregators {
         }
     }
 
+    public boolean isEmpty() {
+        return !((funcNames != null) && (funcNames.length != 0));
+    }
+
     public MeasureAggregator[] createBuffer() {
         MeasureAggregator[] aggrs = new MeasureAggregator[funcNames.length];
         for (int j = 0; j < aggrs.length; j++) {

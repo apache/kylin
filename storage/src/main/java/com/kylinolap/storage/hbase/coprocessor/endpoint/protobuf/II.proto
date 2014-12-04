@@ -19,7 +19,7 @@ message IIRequest {
 message IIResponse {
   message IIRow {
     required bytes columns = 1;
-    required bytes measures = 2;
+    optional bytes measures = 2;
   }
   repeated IIRow rows = 1;
 }
