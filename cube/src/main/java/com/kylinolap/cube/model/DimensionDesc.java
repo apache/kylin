@@ -53,6 +53,8 @@ public class DimensionDesc {
     @JsonProperty("derived")
     private String[] derived;
 
+    private TableDesc tableDesc;
+
     // computed
     private TblColRef[] columnRefs;
     private TblColRef[] derivedColRefs;
@@ -68,6 +70,10 @@ public class DimensionDesc {
         return false;
     }
 
+    /**
+     * @deprecated use getTableDesc() to get accurate table info
+     * @return
+     */
     public String getTable() {
         return table.toUpperCase();
     }
@@ -132,6 +138,10 @@ public class DimensionDesc {
         this.derivedColRefs = derivedColRefs;
     }
 
+    public TableDesc getTableDesc() {
+        return this.tableDesc;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)
@@ -161,7 +171,54 @@ public class DimensionDesc {
         return "DimensionDesc [name=" + name + ", join=" + join + ", hierarchy=" + Arrays.toString(hierarchy) + ", table=" + table + ", column=" + Arrays.toString(column) + ", derived=" + Arrays.toString(derived) + "]";
     }
 
-    public void init(CubeDesc cubeDesc, Map<String, TableDesc> tables, Map<String, List<String>> columnTableMap) {
+    /**
+     * parse column to get db name and table name
+     * @return an array carries db name + table name
+     * @throws IllegalStateException if the column name or name is incorrect or inaccurate
+     */
+    private String[] parseTableDBName(String thisColumn, Map<String, List<TableDesc>> columnTableMap, Map<String, List<String>> tableDatabaseMap) {
+        String tableName = null, dbName = null;
+        String[] splits = StringSplitter.split(thisColumn, ".");
+        int length = splits.length;
+        if (length > 3 || length == 0) {
+            throw new IllegalStateException("The column name should be {db-name}.{table-name}.{column-name} (the {db-name} and {table-name} is optional); The given column value is: " + thisColumn);
+        } else if (length == 3) {
+            dbName = splits[0];
+            tableName = splits[1];
+        } else if (length == 2) {
+            tableName = splits[0];
+        }
+
+        if (tableName == null) {
+            List<TableDesc> tables = columnTableMap.get(thisColumn);
+            if (tables == null) {
+                throw new IllegalStateException("The column '" + thisColumn + "' isn't appeared on any table.");
+            } else if (tables.size() > 1) {
+                throw new IllegalStateException("The column '" + thisColumn + "' is ambiguous; it appeared in more than one tables, please specify table name together with the column name.");
+            } else {
+                tableName = tables.get(0).getName();
+                dbName = tables.get(0).getDatabase();
+            }
+        } else if (dbName == null) {
+            List<String> dbs = tableDatabaseMap.get(tableName);
+            if (dbs == null) {
+                throw new IllegalStateException("The table '" + tableName + "' isn't appeared on any database.");
+            } else if (dbs.size() > 1) {
+                throw new IllegalStateException("The table '" + tableName + "' is ambiguous; it appeared in more than one databases, please specify db name together with the table name.");
+            } else {
+                dbName = dbs.get(0);
+            }
+        } else {
+            List<String> dbs = tableDatabaseMap.get(tableName);
+            if (!dbs.contains(dbName)) {
+                throw new IllegalStateException("The database '" + dbName + "' isn't appeared.");
+            }
+        }
+
+        return new String[] { dbName, tableName };
+    }
+
+    public void init(CubeDesc cubeDesc, Map<String, TableDesc> tables, Map<String, List<TableDesc>> columnTableMap, Map<String, List<String>> tableDatabaseMap) {
         if (name != null)
             name = name.toUpperCase();
 
@@ -170,36 +227,24 @@ public class DimensionDesc {
         this.join = null;
 
         for (int i = 0, n = this.column.length; i < n; i++) {
-            String thisColumn = this.column[i];
-            String[] splits = StringSplitter.split(thisColumn, ".");
-            if (splits.length > 1) {
-                String thisTable = splits[splits.length - 2].toUpperCase();
-                if (table == null) {
-                    table = thisTable;
-                } else if (thisTable != null && !table.equalsIgnoreCase(thisTable)) {
-                    throw new IllegalStateException("One dimension can only refer to the columns on the same table: '" + table + "' and '" + thisTable + "'.");
-                }
+            String thisColumn = this.column[i].toUpperCase();
+            String[] dbTableNames = parseTableDBName(thisColumn, columnTableMap, tableDatabaseMap);
 
-                if (database == null && splits.length > 2) {
-                    database = splits[splits.length - 3].toUpperCase();
-                }
-
-                //this.column[i] = splits[splits.length - 1].toUpperCase();
-            } else {
-                // if no table specified, seek the table among all tables
-                List<String> tableNames = columnTableMap.get(thisColumn);
-                if (tableNames != null && tableNames.size() == 1) {
-                    table = tableNames.get(0);
-                } else {
-                    if (tableNames == null)
-                        throw new IllegalStateException("The column '" + thisColumn + "' doesn't belong to any table.");
-                    if (tableNames.size() > 1)
-                        throw new IllegalStateException("The column '" + thisColumn + "' is ambiguous; the name appeared in more than one tables, please specify table name together with the column name.");
-                }
+            if (database == null) {
+                database = dbTableNames[0];
+            } else if (!database.equals(dbTableNames[0])) {
+                throw new IllegalStateException("One dimension can only refer to the tables in the same db: '" + database + "' and '" + dbTableNames[0] + "'.");
             }
+
+            if (table == null) {
+                table = dbTableNames[1];
+            } else if (!table.equalsIgnoreCase(dbTableNames[1])) {
+                throw new IllegalStateException("One dimension can only refer to the columns on the same table: '" + table + "' and '" + dbTableNames[1] + "'.");
+            }
+
         }
 
-        TableDesc tableDesc = tables.get(table);
+        tableDesc = tables.get(database + "." + table);
         if (tableDesc == null)
             throw new IllegalStateException("Can't find table " + table + " on dimension " + name);
 

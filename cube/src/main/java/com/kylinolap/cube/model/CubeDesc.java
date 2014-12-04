@@ -25,6 +25,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -467,23 +468,39 @@ public class CubeDesc extends RootPersistentEntity {
             this.addError("No data model found with name '" + modelName + "'.");
         }
         
-        Map<String, List<String>> columnTableMap = new HashMap<String, List<String>>();
+        //key: column name; value: list of tables;
+        Map<String, List<TableDesc>> columnTableMap = new HashMap<String, List<TableDesc>>();
         
         String colName;
         for(TableDesc table : tables.values()) {
             for(ColumnDesc col : table.getColumns()) {
                 colName = col.getName();
-                List<String> tableNames = columnTableMap.get(colName);
+                List<TableDesc> tableNames = columnTableMap.get(colName);
                 if(tableNames == null) {
-                    tableNames = new ArrayList<String>(3);
+                    tableNames = new LinkedList<TableDesc>();
                     columnTableMap.put(colName, tableNames);
                 } 
-                tableNames.add(table.getName());
+                tableNames.add(table);
             }
+        }
+        
+
+        // key: table name; value: list of databases;
+        Map<String, List<String>> tableDatabaseMap = new HashMap<String, List<String>>();
+        
+        String tableName;
+        for(TableDesc table : tables.values()) {
+            tableName = table.getName();
+                List<String> dbNames = tableDatabaseMap.get(tableName);
+                if(dbNames == null) {
+                    dbNames = new LinkedList<String>();
+                    tableDatabaseMap.put(tableName, dbNames);
+                } 
+                dbNames.add(table.getDatabase());
         }
 
         for (DimensionDesc dim : dimensions) {
-            dim.init(this, tables, columnTableMap);
+            dim.init(this, tables, columnTableMap, tableDatabaseMap);
         }
 
         sortDimAndMeasure();
@@ -511,7 +528,7 @@ public class CubeDesc extends RootPersistentEntity {
     private void initDimensionColumns(Map<String, TableDesc> tables) {
         // fill back ColRefDesc
         for (DimensionDesc dim : dimensions) {
-            TableDesc dimTable = tables.get(dim.getTable());
+            TableDesc dimTable = dim.getTableDesc();
             JoinDesc join = dim.getJoin();
 
             ArrayList<TblColRef> dimColList = new ArrayList<TblColRef>();
