@@ -167,12 +167,12 @@ public class MetadataManager {
     }
 
     public void createSourceTable(TableDesc srcTable) throws IOException {
-        if (srcTable.getUuid() == null || srcTable.getName() == null) {
+        if (srcTable.getUuid() == null || srcTable.getIdentity() == null) {
             throw new IllegalArgumentException();
         }
         String tableIdentity = TableDesc.getTableIdentity(srcTable);
         if (srcTableMap.containsKey(tableIdentity)) {
-            throw new IllegalArgumentException("SourceTable '" + srcTable.getName() + "' already exists");
+            throw new IllegalArgumentException("SourceTable '" + srcTable.getIdentity() + "' already exists");
         }
 
         String path = srcTable.getResourcePath();

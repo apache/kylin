@@ -3,21 +3,21 @@
   "name": "test_kylin_cube_without_slr_left_join_desc",
   "model_name": "test_kylin_without_slr_left_join_model_desc",
   "cube_partition_desc": {
-    "partition_date_column": "test_kylin_fact.cal_dt",
+    "partition_date_column": "default.test_kylin_fact.cal_dt",
     "partition_date_start": 0,
     "cube_partition_type": "UPDATE_INSERT"
   },
   "dimensions": [
     {
       "name": "cal_dt",
-      "column": ["test_cal_dt.cal_dt"],
+      "column": ["edw.test_cal_dt.cal_dt"],
       "derived": [
         "week_beg_dt"
       ]
     },
     {
       "name": "category",
-      "column": ["test_category_groupings.meta_categ_name", "test_category_groupings.categ_lvl2_name", "test_category_groupings.categ_lvl3_name"],
+      "column": ["default.test_category_groupings.meta_categ_name", "default.test_category_groupings.categ_lvl2_name", "default.test_category_groupings.categ_lvl3_name"],
       "derived": [
         "USER_DEFINED_FIELD1",
         "USER_DEFINED_FIELD3",
@@ -28,11 +28,11 @@
     },
     {
       "name": "lstg_format_name",
-      "column": ["test_kylin_fact.lstg_format_name"]
+      "column": ["default.test_kylin_fact.lstg_format_name"]
     },
     {
       "name": "site_id",
-      "column": ["test_sites.site_id"],
+      "column": ["edw.test_sites.site_id"],
       "derived": [
         "site_name",
         "cre_user"
@@ -40,7 +40,7 @@
     },
     {
       "name": "seller_type_cd",
-      "column": ["test_seller_type_dim.seller_type_cd"],
+      "column": ["edw.test_seller_type_dim.seller_type_cd"],
       "derived": [
         "seller_type_desc"
       ]

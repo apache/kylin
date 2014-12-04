@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.kylinolap.common.util.CaseInsensitiveStringMap;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.net.util.Base64;
 
@@ -329,7 +330,7 @@ public class CubeDesc extends RootPersistentEntity {
     }
 
     public String getFactTable() {
-        return model.getFactTable();
+        return model.getFactTable().toUpperCase();
     }
 
     public String[] getNullStrings() {
@@ -447,7 +448,7 @@ public class CubeDesc extends RootPersistentEntity {
     }
 
     public Map<String, TblColRef> buildColumnNameAbbreviation() {
-        Map<String, TblColRef> r = new HashMap<String, TblColRef>();
+        Map<String, TblColRef> r = new CaseInsensitiveStringMap<TblColRef>();
         for (TblColRef col : listDimensionColumnsExcludingDerived()) {
             r.put(col.getName(), col);
         }
@@ -478,7 +479,7 @@ public class CubeDesc extends RootPersistentEntity {
                     tableNames = new ArrayList<String>(3);
                     columnTableMap.put(colName, tableNames);
                 } 
-                tableNames.add(table.getName());
+                tableNames.add(table.getIdentity());
             }
         }
 

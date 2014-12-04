@@ -128,9 +128,9 @@ public class HiveSourceTableLoader {
         List<String> loadedTables = Lists.newArrayList();
         
         for (TableDesc table : tableDescList) {
-            File file = new File(tableDescDir, table.getName().toUpperCase() + "." + OUTPUT_SURFIX);
+            File file = new File(tableDescDir, table.getIdentity().toUpperCase() + "." + OUTPUT_SURFIX);
             JsonUtil.writeValueIndent(new FileOutputStream(file), table);
-            loadedTables.add(table.getDatabase() + "." + table.getName());
+            loadedTables.add(table.getIdentity());
         }
 
         for (Map<String, String> tableAttrs : tableAttrsList) {
