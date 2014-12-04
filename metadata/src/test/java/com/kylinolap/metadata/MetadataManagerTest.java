@@ -50,9 +50,9 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testFindTableByName() throws Exception {
-        TableDesc table = MetadataManager.getInstance(this.getTestConfig()).getTableDesc("TEST_CAL_DT");
+        TableDesc table = MetadataManager.getInstance(this.getTestConfig()).getTableDesc("EDW.TEST_CAL_DT");
         Assert.assertNotNull(table);
-        Assert.assertEquals("TEST_CAL_DT", table.getIdentity());
+        Assert.assertEquals("EDW.TEST_CAL_DT", table.getIdentity());
     }
 
     @Test

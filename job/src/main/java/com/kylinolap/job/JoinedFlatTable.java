@@ -128,7 +128,8 @@ public class JoinedFlatTable {
             if (i > 0) {
                 sql.append(",");
             }
-            sql.append(col.getTableName() + "." + col.getColumnName() + "\n");
+            String tableAlias = intermediateTableDesc.getTableAlias(col.getTableName());
+            sql.append(tableAlias + "." + col.getColumnName() + "\n");
         }
         appendJoinStatement(intermediateTableDesc, sql);
         appendWhereStatement(intermediateTableDesc, sql);
@@ -140,7 +141,8 @@ public class JoinedFlatTable {
 
         CubeDesc cubeDesc = intermediateTableDesc.getCubeDesc();
         String factTableName = cubeDesc.getFactTable();
-        sql.append("FROM " + factTableName + "\n");
+        String factTableAlias = intermediateTableDesc.getTableAlias(factTableName);
+        sql.append("FROM " + factTableName + " as " + factTableAlias + " \n");
 
         for (DimensionDesc dim : cubeDesc.getDimensions()) {
             JoinDesc join = dim.getJoin();
@@ -153,13 +155,13 @@ public class JoinedFlatTable {
                     if (pk.length != fk.length) {
                         throw new RuntimeException("Invalid join condition of dimension " + dim.getName());
                     }
-                    sql.append(joinType + " JOIN " + dimTableName + "\n");
+                    sql.append(joinType + " JOIN " + dimTableName + " as " + intermediateTableDesc.getTableAlias(dimTableName) +  "\n");
                     sql.append("ON ");
                     for (int i = 0; i < pk.length; i++) {
                         if (i > 0) {
                             sql.append(" AND ");
                         }
-                        sql.append(factTableName + "." + fk[i].getName() + " = " + dimTableName + "." + pk[i].getName());
+                        sql.append(factTableAlias + "." + fk[i].getName() + " = " + intermediateTableDesc.getTableAlias(dimTableName) + "." + pk[i].getName());
                     }
                     sql.append("\n");
 
@@ -192,7 +194,16 @@ public class JoinedFlatTable {
             }
             if (!(dateStart == 0 && dateEnd == 0)) {
                 String partitionColumnName = cubeDesc.getCubePartitionDesc().getPartitionDateColumn();
-
+                int indexOfDot = partitionColumnName.lastIndexOf(".");
+                
+                // convert to use table alias;
+                if(indexOfDot >0) {
+                    String partitionTableName = partitionColumnName.substring(0, indexOfDot);
+                    String columeOnly = partitionColumnName.substring(indexOfDot);
+                    String partitionTableAlias = intermediateTableDesc.getTableAlias(partitionTableName);
+                    partitionColumnName = partitionTableAlias + columeOnly;
+                }
+                        
                 whereBuilder.append(hasCondition ? " AND (" : " (");
                 if (dateStart > 0) {
                     whereBuilder.append(partitionColumnName + " >= '" + formatDateTimeInWhereClause(dateStart) + "' ");
