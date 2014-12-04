@@ -87,7 +87,7 @@ public class Slice implements Iterable<TableRecordBytes>, Comparable<Slice> {
 
                 @Override
                 public TableRecordBytes next() {
-                    while (!resultBitMap.contains(i) && i < nRecords - 1) {
+                    while (!resultBitMap.contains(i)) {
                         i++;
                     }
                     for (int col = 0; col < nColumns; col++) {
@@ -95,6 +95,7 @@ public class Slice implements Iterable<TableRecordBytes>, Comparable<Slice> {
                         rec.setValueBytes(col, temp);
                     }
                     iteratedCount++;
+                    i++;
 
                     return rec;
                 }

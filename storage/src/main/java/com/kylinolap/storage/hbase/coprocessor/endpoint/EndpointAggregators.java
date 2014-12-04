@@ -27,6 +27,7 @@ import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.DataType;
 import com.kylinolap.metadata.model.realization.FunctionDesc;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorConstants;
+import org.apache.hadoop.io.LongWritable;
 
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -37,7 +38,7 @@ import java.util.List;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class EndpointAggregators {
 
-    public static EndpointAggregators fromFunctions(List<FunctionDesc> metrics, TableRecordInfo tableInfo) {
+    public static EndpointAggregators fromFunctions(TableRecordInfo tableInfo, List<FunctionDesc> metrics) {
         String[] funcNames = new String[metrics.size()];
         String[] dataTypes = new String[metrics.size()];
         int[] refColIndex = new int[metrics.size()];
@@ -45,14 +46,17 @@ public class EndpointAggregators {
         for (int i = 0; i < metrics.size(); i++) {
             FunctionDesc functionDesc = metrics.get(i);
 
-            if (!functionDesc.getParameter().isColumnType()) {
-                throw new IllegalStateException("Endpoint does not support non-column metrics for now");
-            }
+            //TODO: what if funcionDesc's type is different from tablDesc? cause scale difference
             funcNames[i] = functionDesc.getExpression();
             dataTypes[i] = functionDesc.getReturnType();
-            refColIndex[i] = tableInfo.findMetric(functionDesc.getParameter().getValue());
-            if (refColIndex[i] < 0) {
-                throw new IllegalStateException("Column " + functionDesc.getParameter().getColRefs().get(0) + " is not found in II");
+
+            if (functionDesc.isCount()) {
+                refColIndex[i] = -1;
+            } else {
+                refColIndex[i] = tableInfo.findMetric(functionDesc.getParameter().getValue());
+                if (refColIndex[i] < 0) {
+                    throw new IllegalStateException("Column " + functionDesc.getParameter().getColRefs().get(0) + " is not found in II");
+                }
             }
         }
 
@@ -67,6 +71,8 @@ public class EndpointAggregators {
     final transient FixedLenMeasureCodec[] measureSerializers;
     final transient Object[] metricValues;
     final transient byte[] metricBytes;
+
+    final LongWritable one = new LongWritable(1);
 
     public EndpointAggregators(String[] funcNames, String[] dataTypes, int[] refColIndex, TableRecordInfoDigest tableInfo) {
         this.funcNames = funcNames;
@@ -95,6 +101,7 @@ public class EndpointAggregators {
         int rawIndex = 0;
         int columnCount = tableInfo.getColumnCount();
 
+        //normal column values to aggregate
         for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex) {
             if (tableInfo.isMetrics(columnIndex)) {
                 for (int metricIndex = 0; metricIndex < refColIndex.length; ++metricIndex) {
@@ -104,6 +111,13 @@ public class EndpointAggregators {
                 }
             }
             rawIndex += tableInfo.length(columnIndex);
+        }
+
+        //aggregate for "count"
+        for (int i = 0; i < refColIndex.length; ++i) {
+            if (refColIndex[i] == -1) {
+                measureAggrs[i].aggregate(one);
+            }
         }
     }
 
@@ -120,7 +134,7 @@ public class EndpointAggregators {
         return metricBytes;
     }
 
-    public List<String> deserializeMetricValues(byte[] metricBytes,int offset) {
+    public List<String> deserializeMetricValues(byte[] metricBytes, int offset) {
         List<String> ret = Lists.newArrayList();
         int metricBytesOffset = offset;
         for (int i = 0; i < measureSerializers.length; i++) {

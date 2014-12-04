@@ -113,8 +113,7 @@ public class TableRecordInfo extends TableRecordInfoDigest {
         if (name == null)
             return -1;
         for (int i = 0; i < colNames.length; ++i) {
-            if (isMetrics(i) && name.equals(colNames[i]))
-            {
+            if (isMetrics(i) && name.equals(colNames[i])) {
                 return i;
             }
         }
