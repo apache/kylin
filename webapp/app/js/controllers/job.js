@@ -1,7 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,sweet) {
+    .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,sweet,SweetAlert) {
         $scope.cubeName = null;
         $scope.jobs = {};
         $scope.projects = [];
@@ -106,7 +106,7 @@ KylinApp
                         $scope.state.selectedJob = $scope.jobs[ $scope.state.selectedJob.uuid];
                     }
 //                    MessageService.sendMsg('Job was resumed successfully', 'success', {});
-                    sweet.show('Success!', 'TJob was resumed successfully', 'success');
+                    SweetAlert.swal('Success!', 'TJob was resumed successfully', 'success');
                 });
             }
         }
@@ -119,7 +119,7 @@ KylinApp
                         $scope.state.selectedJob = $scope.jobs[ $scope.state.selectedJob.uuid];
                     }
 //                    MessageService.sendMsg('Job was cancelled successfully', 'success', {});
-                    sweet.show('Success!', 'Job was cancelled successfully', 'success');
+                    SweetAlert.swal('Success!', 'Job was cancelled successfully', 'success');
                 });
             }
         }

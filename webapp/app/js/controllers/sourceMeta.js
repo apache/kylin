@@ -1,7 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('SourceMetaCtrl', function ($scope,$cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService,$route,rainbowBar,loadingRequest,sweet) {
+    .controller('SourceMetaCtrl', function ($scope,$cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService,$route,rainbowBar,loadingRequest,sweet,SweetAlert) {
         var $httpDefaultCache = $cacheFactory.get('$http');
         $scope.srcTables = {};
         $scope.srcDbs = [];
@@ -157,7 +157,7 @@ KylinApp
                 loadingRequest.show();
                 TableService.loadHiveTable({tableName: $scope.tableNames,action:projectName}, {}, function (result) {
 //                    MessageService.sendMsg('Below tables were synced successfully: ' + result['result'].join() + ', Click Refresh button ...', 'success', {});
-                    sweet.show('Success!','Below tables were synced successfully: ' + result['result'].join() , 'success');
+                    SweetAlert.swal('Success!','Below tables were synced successfully: ' + result['result'].join() , 'success');
                     rainbowBar.hide();
                     loadingRequest.hide();
                 },function(){
