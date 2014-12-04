@@ -21,6 +21,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kylinolap.common.util.StringSplitter;
 import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
@@ -45,12 +46,14 @@ public class CubePartitionDesc {
 
     public void init(Map<String, Map<String, TblColRef>> columnMap) {
         if (null != partitionDateColumn) {
-            String[] columns = partitionDateColumn.split("\\.");
+            partitionDateColumn = partitionDateColumn.toUpperCase();
+            
+            String[] columns = StringSplitter.split(partitionDateColumn, ".");
 
-            if (null != columns && columns.length == 2) {
-                Map<String, TblColRef> cols = columnMap.get(columns[0].toUpperCase());
+            if (null != columns && columns.length == 3) {
+                Map<String, TblColRef> cols = columnMap.get(columns[0].toUpperCase() + "." + columns[1].toUpperCase());
                 if (cols != null)
-                    partitionDateColumnRef = cols.get(columns[1].toUpperCase());
+                    partitionDateColumnRef = cols.get(columns[2].toUpperCase());
 
             }
         }
