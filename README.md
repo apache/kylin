@@ -38,8 +38,8 @@ Installation
 ------------
 It is very easy to install Kylin for exploration/development. There are 3 supported options:
 
-1. Quick Start (Docker)
-2. Sandbox     (HDP or CDH sandbox)
+1. Quick Start     (Docker)
+2. Sandbox         (HDP or CDH sandbox)
 3. Dev Environment (IDE + Sandbox)
 
 #### Quick Start (using Docker) ####
@@ -50,6 +50,9 @@ Features:
 - Size            - Light weight compared to downloading and setting up HDP or CDH sandbox.
 - Cluster support - Supports multi node installation. 
 - Fully Automated - No manual steps. One command does it all 
+
+For a hands-on tutorial please visit [Kylin Docker installation](https://github.com/KylinOLAP/Kylin/wiki/On-Hadoop-Kylin-installation-using-Docker). 
+
 
 #### Sandbox (On-Hadoop-CLI installation) ####
 
@@ -85,4 +88,6 @@ For a hands-on tutorial please visit [Off-Hadoop-CLI installation](https://githu
 * How To Contribute: See [wiki](https://github.com/KylinOLAP/Kylin/wiki/How-to-Contribute)
 
 * Presentation: [Kylin Hadoop OLAP Engine v1.0](https://github.com/KylinOLAP/Kylin/blob/master/docs/Kylin_Hadoop_OLAP_Engine_v1.0.pdf?raw=true)
+
+*  Apache Proposal: [Apache Kylin](https://wiki.apache.org/incubator/KylinProposal)
 
