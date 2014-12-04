@@ -85,37 +85,15 @@ public class IIEndpoint extends IIProtos.RowsService
             innerScanner = region.getScanner(buildScan());
             region.startRegionOperation();
 
-
             synchronized (innerScanner) {
-                IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
-
-                EndpointAggregationCache aggCache = new EndpointAggregationCache(aggregators);
                 IIKeyValueCodec codec = new IIKeyValueCodec(tableInfo);
-                for (Slice slice : codec.decodeKeyValue(new HbaseServerKVIterator(innerScanner))) {
-                    ConciseSet result = null;
-                    if (filter != null) {
-                        result = new BitMapFilterEvaluator(new SliceBitMapProvider(slice, type)).evaluate(filter.getFilter());
-                    }
+                Iterable<Slice> slices = codec.decodeKeyValue(new HbaseServerKVIterator(innerScanner));
 
-                    Iterator<TableRecordBytes> iterator = slice.iterateWithBitmap(result);
-                    while (iterator.hasNext()) {
-                        byte[] data = iterator.next().getBytes();
-                        CoprocessorProjector.AggrKey aggKey = projector.getAggrKey(data);
-                        MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
-                        aggregators.aggregate(bufs, data);
-                        aggCache.checkMemoryUsage();
-                    }
+                if (aggregators.isEmpty()) {
+                    response = getNonAggregatedResponse(slices, filter, type);
+                } else {
+                    response = getAggregatedResponse(slices, filter, type, projector, aggregators);
                 }
-
-                for (Map.Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
-                    CoprocessorProjector.AggrKey aggrKey = entry.getKey();
-                    IIRow.Builder rowBuilder = IIRow.newBuilder().
-                            setColumns(ByteString.copyFrom(aggrKey.get(), aggrKey.offset(), aggrKey.length())).
-                            setMeasures(ByteString.copyFrom(aggregators.serializeMetricValues(entry.getValue())));
-                    responseBuilder.addRows(rowBuilder.build());
-                }
-
-                response = responseBuilder.build();
             }
 
         } catch (IOException ioe) {
@@ -133,6 +111,58 @@ public class IIEndpoint extends IIProtos.RowsService
         }
 
         done.run(response);
+    }
+
+    private IIProtos.IIResponse getAggregatedResponse(Iterable<Slice> slices, CoprocessorFilter filter, CoprocessorRowType type,
+            CoprocessorProjector projector, EndpointAggregators aggregators) {
+        EndpointAggregationCache aggCache = new EndpointAggregationCache(aggregators);
+        IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
+        for (Slice slice : slices) {
+            ConciseSet result = null;
+            if (filter != null) {
+                result = new BitMapFilterEvaluator(new SliceBitMapProvider(slice, type)).evaluate(filter.getFilter());
+            }
+
+            Iterator<TableRecordBytes> iterator = slice.iterateWithBitmap(result);
+            while (iterator.hasNext()) {
+                byte[] data = iterator.next().getBytes();
+                CoprocessorProjector.AggrKey aggKey = projector.getAggrKey(data);
+                MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
+                aggregators.aggregate(bufs, data);
+                aggCache.checkMemoryUsage();
+            }
+        }
+
+        for (Map.Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
+            CoprocessorProjector.AggrKey aggrKey = entry.getKey();
+            IIRow.Builder rowBuilder = IIRow.newBuilder().
+                    setColumns(ByteString.copyFrom(aggrKey.get(), aggrKey.offset(), aggrKey.length())).
+                    setMeasures(ByteString.copyFrom(aggregators.serializeMetricValues(entry.getValue())));
+            responseBuilder.addRows(rowBuilder.build());
+        }
+
+        return responseBuilder.build();
+    }
+
+    //TODO check memory usage
+    private IIProtos.IIResponse getNonAggregatedResponse(Iterable<Slice> slices, CoprocessorFilter filter, CoprocessorRowType type) {
+        IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
+        for (Slice slice : slices) {
+            ConciseSet result = null;
+            if (filter != null) {
+                result = new BitMapFilterEvaluator(new SliceBitMapProvider(slice, type)).evaluate(filter.getFilter());
+            }
+
+            Iterator<TableRecordBytes> iterator = slice.iterateWithBitmap(result);
+            while (iterator.hasNext()) {
+                byte[] data = iterator.next().getBytes();
+                IIRow.Builder rowBuilder = IIRow.newBuilder().
+                        setColumns(ByteString.copyFrom(data));
+                responseBuilder.addRows(rowBuilder.build());
+            }
+        }
+
+        return responseBuilder.build();
     }
 
     @Override
