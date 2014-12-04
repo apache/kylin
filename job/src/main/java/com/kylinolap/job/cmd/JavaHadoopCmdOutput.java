@@ -37,7 +37,7 @@ import com.kylinolap.job.tools.HadoopStatusChecker;
  * @author xduo
  * 
  */
-public class JavaHadoopCmdOutput implements ICommandOutput {
+public class JavaHadoopCmdOutput extends BaseCommandOutput implements ICommandOutput {
 
     protected static final Logger log = LoggerFactory.getLogger(JavaHadoopCmdOutput.class);
 
