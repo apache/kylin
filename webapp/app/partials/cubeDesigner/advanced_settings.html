@@ -79,11 +79,10 @@
                 <td>
                     <!--Use Dictionary-->
                     <div>
-                        <select ng-if="state.mode=='edit'" style="width:60px;"  ng-init="rowkey_column.dictionary='true'"
+                        <select ng-if="state.mode=='edit'" style="width:80px;"
                                 chosen ng-model="rowkey_column.dictionary"
                                 ng-options="dt as dt for dt in dictionaries">
                         </select>
-
                         <span ng-if="state.mode=='view'">{{rowkey_column.dictionary}}</span>
                     </div>
                 </td>

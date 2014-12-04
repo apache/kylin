@@ -277,7 +277,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         tmpRowKeyColumns.push({
                             "column": fk,
                             "length": 0,
-                            "dictionary": true,
+                            "dictionary": "true",
                             "mandatory": false
                         });
                     }
@@ -293,7 +293,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                     tmpRowKeyColumns.push({
                         "column": dimension.column,
                         "length": 0,
-                        "dictionary": true,
+                        "dictionary": "true",
                         "mandatory": false
                     });
                 }
@@ -309,7 +309,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         tmpRowKeyColumns.push({
                             "column": hierarchy.column,
                             "length": 0,
-                            "dictionary": true,
+                            "dictionary": "true",
                             "mandatory": false
                         });
                     }
