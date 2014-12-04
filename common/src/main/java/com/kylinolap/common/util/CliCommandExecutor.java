@@ -73,17 +73,18 @@ public class CliCommandExecutor {
         }
     }
 
-    public String execute(String command) throws IOException {
+    public Pair<Integer, String> execute(String command) throws IOException {
         Pair<Integer, String> r;
-        if (remoteHost == null)
+        if (remoteHost == null) {
             r = runNativeCommand(command);
-        else
+        } else {
             r = runRemoteCommand(command);
+        }
 
-        if (r.getFirst() != 0)
+        if (r.getFirst() != 0) {
             throw new IOException("OS command error exit with " + r.getFirst() + " -- " + command + "\n" + r.getSecond());
-
-        return r.getSecond();
+        }
+        return r;
     }
 
     private Pair<Integer, String> runRemoteCommand(String command) throws IOException {
