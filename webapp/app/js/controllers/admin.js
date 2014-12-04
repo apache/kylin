@@ -1,6 +1,6 @@
 'use strict';
 
-KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, TableService, MessageService, $modal) {
+KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, TableService, MessageService, $modal,sweet,SweetAlert) {
     $scope.configStr = "";
     $scope.envStr = "";
 
@@ -8,6 +8,7 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
         AdminService.env({}, function(env){
             $scope.envStr = env.env;
             MessageService.sendMsg('Server environment get successfully', 'success', {});
+//            SweetAlert.swal('Success!', 'Server environment get successfully', 'success');
         });
     }
 
@@ -19,11 +20,22 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
     }
 
     $scope.reloadMeta = function(){
-        if(confirm("Are you sure to reload metadata and clean cache?")) {
-            CacheService.clean({}, function () {
-                MessageService.sendMsg('Cache reload successfully', 'success', {});
-            });
-        }
+        SweetAlert.swal({
+            title: '',
+            text: 'Are you sure to reload metadata and clean cache?',
+            type: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#DD6B55',
+            confirmButtonText: "Yes",
+            closeOnConfirm: false
+        }, function(isConfirm) {
+            if(isConfirm){
+                CacheService.clean({}, function () {
+                    SweetAlert.swal('Success!', 'Cache reload successfully', 'success');
+                });
+            }
+
+        });
     }
 
     $scope.calCardinality = function (tableName) {
@@ -42,19 +54,41 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
     }
 
     $scope.cleanStorage = function(){
-        if(confirm("Are you sure to clean up unused HDFS and HBase space?")) {
+        SweetAlert.swal({
+            title: '',
+            text: 'Are you sure to clean up unused HDFS and HBase space?',
+            type: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#DD6B55',
+            confirmButtonText: "Yes",
+            closeOnConfirm: false
+        }, function(isConfirm) {
+            if(isConfirm){
             AdminService.cleanStorage({}, function () {
-                MessageService.sendMsg('Storage cleaned successfully!', 'success', {});
+                SweetAlert.swal('Success!', 'Storage cleaned successfully!', 'success');
             });
-        }
+            }
+        });
     }
 
     $scope.disableCache = function(){
-        if(confirm("Are you sure to disable query cache?")) {
+        SweetAlert.swal({
+            title: '',
+            text: 'Are you sure to disable query cache?',
+            type: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#DD6B55',
+            confirmButtonText: "Yes",
+            closeOnConfirm: false
+        }, function(isConfirm) {
+            if(isConfirm){
             AdminService.updateConfig({}, {key: 'kylin.query.cache.enabled',value:false}, function () {
-                MessageService.sendMsg('Cache disabled successfully!', 'success', {});
+                SweetAlert.swal('Success!', 'Cache disabled successfully!', 'success');
             });
-        }
+            }
+
+        });
+
     }
 
     $scope.toSetConfig = function(){
@@ -75,9 +109,10 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
         };
         $scope.calculate = function () {
             $modalInstance.dismiss();
-            MessageService.sendMsg('A cardinality task has been submitted.', 'success', {});
+            SweetAlert.swal('Success!', 'A cardinality task has been submitted', 'success');
             TableService.genCardinality({tableName: $scope.tableName}, {delimiter: $scope.delimiter, format: $scope.format}, function (result) {
-                MessageService.sendMsg('Cardinality job was calculated successfully. Click Refresh button ...', 'success', {});
+//                MessageService.sendMsg('Cardinality job was calculated successfully. Click Refresh button ...', 'success', {});
+                SweetAlert.swal('Success!', 'Cardinality job was calculated successfully. . Click Refresh button ...', 'success');
             });
         }
     };
@@ -91,12 +126,25 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
             $modalInstance.dismiss('cancel');
         };
         $scope.update = function () {
-            if(confirm("Are you sure to update config?")) {
+
+            SweetAlert.swal({
+                title: '',
+                text: 'Are you sure to update config?',
+                type: 'info',
+                showCancelButton: true,
+                confirmButtonColor: '#DD6B55',
+                confirmButtonText: "Yes",
+                closeOnConfirm: false
+            }, function(isConfirm) {
+                if(isConfirm){
                 AdminService.updateConfig({}, {key: $scope.state.key, value: $scope.state.value}, function (result) {
-                    MessageService.sendMsg('Config updated successfully!', 'success', {});
+                    SweetAlert.swal('Success!', 'Config updated successfully!', 'success');
                     $modalInstance.dismiss();
                 });
-            }
+                }
+
+            });
+
         }
     };
 

@@ -380,6 +380,7 @@ public class JobFlowListener implements JobListener {
         content = content.replaceAll("\\$\\{duration\\}", jobInstance.getDuration() / 60 + "mins");
         content = content.replaceAll("\\$\\{mr_waiting\\}", jobInstance.getMrWaiting() / 60 + "mins");
         content = content.replaceAll("\\$\\{last_update_time\\}", new Date(jobInstance.getLastModified()).toString());
+        content = content.replaceAll("\\$\\{submitter\\}", jobInstance.getSubmitter());
         content = content.replaceAll("\\$\\{error_log\\}", logMsg);
 
         MailService mailService = new MailService();

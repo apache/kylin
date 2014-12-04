@@ -1,7 +1,7 @@
 'use strict';
 
 
-KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, MessageService, TableService, CubeDescService, CubeService) {
+KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, MessageService, TableService, CubeDescService, CubeService,rainbowBar,loadingRequest,sweet,SweetAlert) {
 
     //add or edit ?
     var absUrl = $location.absUrl();
@@ -52,7 +52,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         cubePartitionType: 'APPEND'
     };
 
-    $scope.dictionaries = ['true', 'false'];
+    $scope.dictionaries = ["true", "false"];
     $scope.srcTablesInProject = [];
 
     $scope.getColumnsByTable = function (name) {
@@ -182,64 +182,80 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     }
 
     $scope.saveCube = function (design_form) {
-        if (!confirm('Ready to save the cube?')) {
-            return;
-        }
 
-        try {
-            angular.fromJson($scope.state.cubeSchema);
-        } catch (e) {
-            MessageService.sendMsg('Invalid cube json format..', 'error');
-            return;
-        }
-
-        if ($scope.isEdit) {
-            CubeService.update({}, {cubeDescData: $scope.state.cubeSchema, cubeName: $routeParams.cubeName, project: $scope.state.project}, function (request) {
-                if (request.successful) {
-                    $scope.state.cubeSchema = request.cubeDescData;
-                    MessageService.sendMsg("Update cube successful.", 'success', {
-                        cancel: {
-                            label: 'View Cube',
-                            action: function () {
-                                $location.path('/cubes');
-                                $scope.$apply();
-                            }
-                        }
-                    });
-                    if(design_form){
-                        design_form.$invalid = true;
+                    try {
+                        angular.fromJson($scope.state.cubeSchema);
+                    } catch (e) {
+                        SweetAlert.swal('Oops...', 'Invalid cube json format..', 'error');
+                        return;
                     }
-                } else {
-                    MessageService.sendMsg(request.message, 'error');
-                }
-                recoveryCubeStatus();
-            }, function () {
-                recoveryCubeStatus();
-            });
-        }
-        else {
-            CubeService.save({}, {cubeDescData: $scope.state.cubeSchema, project: $scope.state.project}, function (request) {
-                if (request.successful) {
-                    $scope.state.cubeSchema = request.cubeDescData;
-                    MessageService.sendMsg("Created cube successful.", 'success', {
-                        cancel: {
-                            label: 'View Cube',
-                            action: function () {
-                                $location.path('/cubes');
-                                $scope.$apply();
+
+                    rainbowBar.show();
+                    loadingRequest.show();
+
+                    if ($scope.isEdit) {
+                        CubeService.update({}, {cubeDescData: $scope.state.cubeSchema, cubeName: $routeParams.cubeName, project: $scope.state.project}, function (request) {
+                            if (request.successful) {
+                                $scope.state.cubeSchema = request.cubeDescData;
+                                MessageService.sendMsg("Update cube successful.", 'success', {
+                                    cancel: {
+                                        label: 'View Cube',
+                                        action: function () {
+                                            $location.path('/cubes');
+                                            $scope.$apply();
+                                        }
+                                    }
+                                });
+                                if(design_form){
+                                    design_form.$invalid = true;
+                                }
+                            } else {
+                                SweetAlert.swal('Oops...', request.message, 'error');
                             }
-                        }
-                    });
-                } else {
-                    $scope.cubeMetaFrame.project = $scope.state.project;
-                    MessageService.sendMsg(request.message, 'error');
+                            rainbowBar.hide();
+                            //end loading
+                            loadingRequest.hide();
+                            recoveryCubeStatus();
+                        }, function () {
+//                            SweetAlert.swal('Oops...', 'Action Failed: ' + msg, 'error');
+                            rainbowBar.hide();
+                            loadingRequest.hide();
+                            recoveryCubeStatus();
+                        });
+                    }
+                    else {
+                        CubeService.save({}, {cubeDescData: $scope.state.cubeSchema, project: $scope.state.project}, function (request) {
+                            if (request.successful) {
+                                $scope.state.cubeSchema = request.cubeDescData;
+                                MessageService.sendMsg("Created cube successful.", 'success', {
+                                    cancel: {
+                                        label: 'View Cube',
+                                        action: function () {
+                                            $location.path('/cubes');
+                                            $scope.$apply();
+                                        }
+                                    }
+                                });
+                            } else {
+                                $scope.cubeMetaFrame.project = $scope.state.project;
+                                SweetAlert.swal('Oops...', request.message, 'error');
+                            }
+
+                            rainbowBar.hide();
+                            //end loading
+                            loadingRequest.hide();
+                            recoveryCubeStatus();
+                        }, function () {
+
+                            rainbowBar.hide();
+                            //end loading
+                            loadingRequest.hide();
+                            recoveryCubeStatus();
+                        });
+                    }
+
+
                 }
-                recoveryCubeStatus();
-            }, function () {
-                recoveryCubeStatus();
-            });
-        }
-    }
 
 
     function reGenerateRowKey(){
@@ -258,7 +274,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         tmpRowKeyColumns.push({
                             "column": fk,
                             "length": 0,
-                            "dictionary": true,
+                            "dictionary": "true",
                             "mandatory": false
                         });
                     }
@@ -274,7 +290,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                     tmpRowKeyColumns.push({
                         "column": dimension.column,
                         "length": 0,
-                        "dictionary": true,
+                        "dictionary": "true",
                         "mandatory": false
                     });
                 }
@@ -290,7 +306,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         tmpRowKeyColumns.push({
                             "column": hierarchy.column,
                             "length": 0,
-                            "dictionary": true,
+                            "dictionary": "true",
                             "mandatory": false
                         });
                     }
