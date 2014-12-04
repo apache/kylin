@@ -1,0 +1,41 @@
+::selection:window-inactive {
+    background: #999;
+}
+
+pre[class*="language-"]{
+    word-wrap: normal;
+}
+.footer{
+    text-align: center;
+}
+.get {
+    background: #FC7312;
+    color: #fff;
+    text-align: center;
+    padding: 30px 0;
+}
+
+.get-btn {
+    background: #fff;
+}
+
+.detail {
+    background: #fff;
+}
+
+.detail-p {
+    text-align: center;
+}
+
+.detail-mb{
+    margin-bottom: 30px;
+}
+
+.detail-h2 {
+    text-align: center;
+    font-size: 150%;
+    margin: 40px 0;
+}
+.detail-h3 {
+    color: #1f8dd6;
+}

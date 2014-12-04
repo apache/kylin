@@ -119,11 +119,20 @@ public class TableController extends BasicController {
 
     @RequestMapping(value = "/{tables}/{project}", method = { RequestMethod.POST })
     @ResponseBody
-    public Map<String, String[]> loadHiveTable(@PathVariable String tables,@PathVariable String project) throws IOException {
-        String[] arr = cubeMgmtService.reloadHiveTable(tables);
-        cubeMgmtService.syncTableToProject(tables, project);
+    public Map<String, String[]> loadHiveTable(@PathVariable String tables,@PathVariable String project){
         Map<String, String[]> result = new HashMap<String, String[]>();
-        result.put("result", arr);
+        try{ 
+            String[] arr = cubeMgmtService.reloadHiveTable(tables);
+            if(arr.length==0){
+                throw new InternalErrorException("No Table Loaded! Please check the table name.");
+            }
+            
+            cubeMgmtService.syncTableToProject(tables, project);
+            result.put("result", arr);
+       }catch(Exception e){
+           logger.error("Failed to deal with the request.", e);
+           throw new InternalErrorException(e.getLocalizedMessage());
+       }
         return result;
     }
 

@@ -1,6 +1,6 @@
 'use strict';
 
-KylinApp.controller('AccessCtrl', function ($scope,AccessService, MessageService, AuthenticationService) {
+KylinApp.controller('AccessCtrl', function ($scope,AccessService, MessageService, AuthenticationService,sweet,SweetAlert) {
 
     $scope.accessTooltip = "<div style='text-align: left'>" +
         "<label>What does access mean to cube?</label>" +
@@ -34,10 +34,12 @@ KylinApp.controller('AccessCtrl', function ($scope,AccessService, MessageService
         AccessService.grant({type: type, uuid: uuid}, grantRequst, function (accessEntities) {
             entity.accessEntities = accessEntities;
             $scope.resetNewAcess();
-            MessageService.sendMsg('Access granted!', 'success', {});
+//            MessageService.sendMsg('Access granted!', 'success', {});
+            SweetAlert.swal('Success!', 'Access granted!', 'success');
         }, function (e) {
             if (e.status == 404) {
-                MessageService.sendMsg('User not found!', 'error', {});
+//                MessageService.sendMsg('User not found!', 'error', {});
+                SweetAlert.swal('Oops...', 'User not found!!', 'error');
             }
         });
     }
@@ -49,12 +51,22 @@ KylinApp.controller('AccessCtrl', function ($scope,AccessService, MessageService
         };
         AccessService.update({type: type, uuid: entity.uuid}, updateRequst, function (accessEntities) {
             entity.accessEntities = accessEntities;
-            MessageService.sendMsg('Access granted!', 'success', {});
+//            MessageService.sendMsg('Access granted!', 'success', {});
+            SweetAlert.swal('', 'Access granted!', 'success');
         });
+
     }
 
     $scope.revoke = function (type, access, entity) {
-        if (confirm("Are you sure to revoke the access?")) {
+        SweetAlert.swal({
+            title: 'Confirm',
+            text: 'Are you sure to revoke the access?',
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#DD6B55',
+            confirmButtonText: "Yes",
+            closeOnConfirm: false
+        }, function() {
             var revokeRequst = {
                 type: type,
                 uuid: entity.uuid,
@@ -62,9 +74,11 @@ KylinApp.controller('AccessCtrl', function ($scope,AccessService, MessageService
             };
             AccessService.revoke(revokeRequst, function (accessEntities) {
                 entity.accessEntities = accessEntities.accessEntryResponseList;
-                MessageService.sendMsg('Access revoked!', 'success', {});
+                SweetAlert.swal('Success!', 'The access has been revoked.', 'success');
             });
-        }
+
+        });
+
     }
 });
 

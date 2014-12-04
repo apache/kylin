@@ -1,16 +1,13 @@
 'use strict';
 
 KylinApp
-    .controller('SourceMetaCtrl', function ($scope,$cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService,$route) {
+    .controller('SourceMetaCtrl', function ($scope,$cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService,$route,rainbowBar,loadingRequest,sweet,SweetAlert) {
         var $httpDefaultCache = $cacheFactory.get('$http');
         $scope.srcTables = {};
         $scope.srcDbs = [];
         $scope.selectedSrcDb = [];
         $scope.selectedSrcTable = {};
         $scope.window = 0.68 * $window.innerHeight;
-        $scope.hiveTbLoad = {
-            status:'init'
-        };
         $scope.theaditems = [
             {attr: 'id', name: 'ID'},
             {attr: 'name', name: 'Name'},
@@ -148,21 +145,25 @@ KylinApp
             });
         };
 
-        var ModalInstanceCtrl = function ($scope,$location, $modalInstance, tableNames, MessageService,projectName,hiveTbLoad) {
-            hiveTbLoad.status = "init";
+        var ModalInstanceCtrl = function ($scope,$location, $modalInstance, tableNames, MessageService,projectName,hiveTbLoad,rainbowBar) {
             $scope.tableNames = "";
             $scope.projectName = projectName;
             $scope.cancel = function () {
                 $modalInstance.dismiss('cancel');
             };
             $scope.add = function () {
-                hiveTbLoad.status="loading";
-                MessageService.sendMsg('A sync task has been submitted, it might take 20 - 60 seconds', 'success', {});
                 $scope.cancel();
+                rainbowBar.show();
+                loadingRequest.show();
                 TableService.loadHiveTable({tableName: $scope.tableNames,action:projectName}, {}, function (result) {
-                    hiveTbLoad.status = "success";
-                    MessageService.sendMsg('Below tables were synced successfully: ' + result['result'].join() + ', Click Refresh button ...', 'success', {});
-                });
+//                    MessageService.sendMsg('Below tables were synced successfully: ' + result['result'].join() + ', Click Refresh button ...', 'success', {});
+                    SweetAlert.swal('Success!','Below tables were synced successfully: ' + result['result'].join() , 'success');
+                    rainbowBar.hide();
+                    loadingRequest.hide();
+                },function(){
+                    rainbowBar.hide();
+                    loadingRequest.hide();
+                })
             }
         };
         $scope.trimType = function(typeName){

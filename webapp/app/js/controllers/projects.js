@@ -1,7 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('ProjectCtrl', function ($scope, $modal, $q, ProjectService, MessageService) {
+    .controller('ProjectCtrl', function ($scope, $modal, $q, ProjectService, MessageService,sweet,SweetAlert) {
         $scope.projects = [];
         $scope.loading = false;
         $scope.theaditems = [
@@ -48,16 +48,27 @@ KylinApp
         }
 
         $scope.delete = function(project){
-            if (confirm("Are you sure to delete "))
-            {
+            SweetAlert.swal({
+                title: 'Confirm',
+                text: 'Are you sure to delete ?',
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#DD6B55',
+                confirmButtonText: "Yes, delete it!",
+//                timer:0,
+                closeOnConfirm: false
+            }, function(isConfirm) {
+                if(isConfirm){
                 ProjectService.delete({projecId: project.name}, function(){
                     var pIndex = $scope.projects.indexOf(project);
                     if (pIndex > -1) {
                         $scope.projects.splice(pIndex, 1);
                     }
-                    MessageService.sendMsg("Project " + project.name + " deleted successfully!", 'success');
+//                    MessageService.sendMsg("Project " + project.name + " deleted successfully!", 'success');
+                SweetAlert.swal('Success!',"Project " + project.name + " deleted successfully!", 'success');
                 });
-            }
+                }
+            });
         }
     }
 );
