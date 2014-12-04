@@ -204,6 +204,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         return functions;
     }
 
+
     //TODO: queries like select count(*) on II can be optimized
     @Test
     public void testSimpleCount() throws Throwable {
@@ -216,8 +217,6 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
             count++;
         }
         assertEquals(count, 10000);
-
-
     }
 
     private int filteredCount(TupleFilter tupleFilter) throws Throwable {

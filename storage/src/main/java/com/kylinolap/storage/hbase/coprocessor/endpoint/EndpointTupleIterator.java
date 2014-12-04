@@ -62,12 +62,8 @@ public class EndpointTupleIterator implements ITupleIterator {
             rootFilter = ConstantTupleFilter.TRUE;
         }
 
-        //TODO too heavy for cache at server
         if (groupBy == null) {
             groupBy = Lists.newArrayList();
-            for (ColumnDesc columnDesc : tableDesc.getColumns()) {
-                groupBy.add(new TblColRef(columnDesc));
-            }
         }
 
         if (measures == null) {
@@ -242,8 +238,10 @@ public class EndpointTupleIterator implements ITupleIterator {
 
 //            ByteBuffer measuresBuffer = currentRow.getMeasures().asReadOnlyByteBuffer();
 //            this.measureValues = pushedDownAggregators.deserializeMetricValues(measuresBuffer.array(), measuresBuffer.position());
-            byte[] measuresBytes = currentRow.getMeasures().toByteArray();
-            this.measureValues = pushedDownAggregators.deserializeMetricValues(measuresBytes, 0);
+            if (currentRow.hasMeasures()) {
+                byte[] measuresBytes = currentRow.getMeasures().toByteArray();
+                this.measureValues = pushedDownAggregators.deserializeMetricValues(measuresBytes, 0);
+            }
 
             index++;
 
@@ -266,8 +264,10 @@ public class EndpointTupleIterator implements ITupleIterator {
                 tuple.setValue(columnNames.get(i), columnValues.get(i));
             }
 
-            for (int i = 0; i < measures.size(); ++i) {
-                tuple.setValue(measures.get(i).getRewriteFieldName(), measureValues.get(i));
+            if (measureValues != null) {
+                for (int i = 0; i < measures.size(); ++i) {
+                    tuple.setValue(measures.get(i).getRewriteFieldName(), measureValues.get(i));
+                }
             }
             return tuple;
         }

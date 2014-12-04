@@ -975,13 +975,13 @@ public final class IIProtos {
        */
       com.google.protobuf.ByteString getColumns();
 
-      // required bytes measures = 2;
+      // optional bytes measures = 2;
       /**
-       * <code>required bytes measures = 2;</code>
+       * <code>optional bytes measures = 2;</code>
        */
       boolean hasMeasures();
       /**
-       * <code>required bytes measures = 2;</code>
+       * <code>optional bytes measures = 2;</code>
        */
       com.google.protobuf.ByteString getMeasures();
     }
@@ -1102,17 +1102,17 @@ public final class IIProtos {
         return columns_;
       }
 
-      // required bytes measures = 2;
+      // optional bytes measures = 2;
       public static final int MEASURES_FIELD_NUMBER = 2;
       private com.google.protobuf.ByteString measures_;
       /**
-       * <code>required bytes measures = 2;</code>
+       * <code>optional bytes measures = 2;</code>
        */
       public boolean hasMeasures() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>required bytes measures = 2;</code>
+       * <code>optional bytes measures = 2;</code>
        */
       public com.google.protobuf.ByteString getMeasures() {
         return measures_;
@@ -1128,10 +1128,6 @@ public final class IIProtos {
         if (isInitialized != -1) return isInitialized == 1;
 
         if (!hasColumns()) {
-          memoizedIsInitialized = 0;
-          return false;
-        }
-        if (!hasMeasures()) {
           memoizedIsInitialized = 0;
           return false;
         }
@@ -1399,10 +1395,6 @@ public final class IIProtos {
             
             return false;
           }
-          if (!hasMeasures()) {
-            
-            return false;
-          }
           return true;
         }
 
@@ -1461,22 +1453,22 @@ public final class IIProtos {
           return this;
         }
 
-        // required bytes measures = 2;
+        // optional bytes measures = 2;
         private com.google.protobuf.ByteString measures_ = com.google.protobuf.ByteString.EMPTY;
         /**
-         * <code>required bytes measures = 2;</code>
+         * <code>optional bytes measures = 2;</code>
          */
         public boolean hasMeasures() {
           return ((bitField0_ & 0x00000002) == 0x00000002);
         }
         /**
-         * <code>required bytes measures = 2;</code>
+         * <code>optional bytes measures = 2;</code>
          */
         public com.google.protobuf.ByteString getMeasures() {
           return measures_;
         }
         /**
-         * <code>required bytes measures = 2;</code>
+         * <code>optional bytes measures = 2;</code>
          */
         public Builder setMeasures(com.google.protobuf.ByteString value) {
           if (value == null) {
@@ -1488,7 +1480,7 @@ public final class IIProtos {
           return this;
         }
         /**
-         * <code>required bytes measures = 2;</code>
+         * <code>optional bytes measures = 2;</code>
          */
         public Builder clearMeasures() {
           bitField0_ = (bitField0_ & ~0x00000002);
@@ -2362,7 +2354,7 @@ public final class IIProtos {
       "(\014\022\014\n\004type\030\002 \002(\014\022\016\n\006filter\030\003 \001(\014\022\021\n\tproj" +
       "ector\030\004 \001(\014\022\022\n\naggregator\030\005 \001(\014\"Y\n\nIIRes" +
       "ponse\022\037\n\004rows\030\001 \003(\0132\021.IIResponse.IIRow\032*" +
-      "\n\005IIRow\022\017\n\007columns\030\001 \002(\014\022\020\n\010measures\030\002 \002" +
+      "\n\005IIRow\022\017\n\007columns\030\001 \002(\014\022\020\n\010measures\030\002 \001" +
       "(\01421\n\013RowsService\022\"\n\007getRows\022\n.IIRequest" +
       "\032\013.IIResponseBN\n:com.kylinolap.storage.h" +
       "base.coprocessor.endpoint.generatedB\010IIP",
