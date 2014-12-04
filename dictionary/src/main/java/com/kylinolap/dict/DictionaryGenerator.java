@@ -130,7 +130,7 @@ public class DictionaryGenerator {
                 } catch (ParseException e) {
                     logger.info("Unrecognized datetime value: " + str);
                     badCount++;
-                    if (badCount >= BAD_THRESHOLD) {
+                    if (badCount > BAD_THRESHOLD) {
                         matchPattern = null;
                         break;
                     }
