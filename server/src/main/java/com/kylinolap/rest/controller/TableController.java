@@ -156,7 +156,7 @@ public class TableController extends BasicController {
         Iterator<TableDesc> it = tables.iterator();
         while (it.hasNext()) {
             TableDesc table = it.next();
-            Map<String, String> exd = cubeMgmtService.getMetadataManager().getTableDescExd(table.getName());
+            Map<String, String> exd = cubeMgmtService.getMetadataManager().getTableDescExd(table.getIdentity());
             if (exd == null) {
                 descs.add(table);
             } else {
