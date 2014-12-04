@@ -106,7 +106,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
     }
 
     public String getTableName() {
-        return this.sourceTable.getName();
+        return this.sourceTable.getIdentity();
     }
 
     public List<ColumnDesc> getExposedColumns() {
@@ -162,9 +162,9 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
 
     private List<ColumnDesc> listSourceColumns() {
         ProjectManager projectMgr = olapSchema.getProjectManager();
-        List<ColumnDesc> exposedColumns = projectMgr.listExposedColumns(olapSchema.getProjectName(), sourceTable.getName());
+        List<ColumnDesc> exposedColumns = projectMgr.listExposedColumns(olapSchema.getProjectName(), sourceTable.getIdentity());
 
-        List<MeasureDesc> countMeasures = projectMgr.listEffectiveRewriteMeasures(olapSchema.getProjectName(), sourceTable.getName());
+        List<MeasureDesc> countMeasures = projectMgr.listEffectiveRewriteMeasures(olapSchema.getProjectName(), sourceTable.getIdentity());
         HashSet<String> metFields = new HashSet<String>();
         for (MeasureDesc m : countMeasures) {
             FunctionDesc func = m.getFunction();

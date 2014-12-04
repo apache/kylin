@@ -119,7 +119,7 @@ public class ColumnDesc {
 
     @Override
     public String toString() {
-        return "ColumnDesc [name=" + name + ",table=" + table.getName() + "]";
+        return "ColumnDesc [name=" + name + ",table=" + table.getIdentity() + "]";
     }
 
 }

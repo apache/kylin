@@ -68,7 +68,7 @@ public class OLAPSchema extends AbstractSchema {
         List<TableDesc> projectTables = getProjectManager().listExposedTables(projectName);
 
         for (TableDesc tableDesc : projectTables) {
-            final String tableName = tableDesc.getName();
+            final String tableName = tableDesc.getIdentity();
             final OLAPTable table = new OLAPTable(this, tableDesc);
             olapTables.put(tableName, table);
 //            logger.debug("Project " + projectName + " exposes table " + tableName);

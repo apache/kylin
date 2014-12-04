@@ -69,7 +69,11 @@ public class DimensionDesc {
     }
 
     public String getTable() {
-        return table.toUpperCase();
+        if (database == null) {
+            return ("DEFAULT." + table).toUpperCase();
+        } else {
+            return (database + "." + table).toUpperCase();
+        }
     }
 
     public int getId() {
@@ -199,7 +203,7 @@ public class DimensionDesc {
             }
         }
 
-        TableDesc tableDesc = tables.get(table);
+        TableDesc tableDesc = tables.get(getTable());
         if (tableDesc == null)
             throw new IllegalStateException("Can't find table " + table + " on dimension " + name);
 
