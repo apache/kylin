@@ -38,15 +38,14 @@ import org.apache.hadoop.hbase.coprocessor.CoprocessorHost;
 import org.apache.hadoop.hbase.security.User;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.util.ToolRunner;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 
 /**
@@ -61,11 +60,18 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
     private static Configuration CONF = null;
     private static HConnection hconn;
 
+    private static StorageContext context = new StorageContext();
+
     private CubeInstance cube;
     private CubeSegment seg;
+    private TableDesc tableDesc;
+    String tableName;
+    HTableInterface table;
 
     @BeforeClass
     public static void setupBeforeClass() throws Exception {
+        staticCreateTestMetadata();
+
         TEST_UTIL = new HBaseTestingUtility();
         CONF = TEST_UTIL.getConfiguration();
 
@@ -80,6 +86,14 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         mockCubeHtable();
 
         hconn = HConnectionManager.createConnection(CONF);
+    }
+
+    @AfterClass
+    public static void cleanUpAfterClass() throws Exception {
+        staticCleanupTestMetadata();
+
+        hconn.close();
+        TEST_UTIL.shutdownMiniCluster();
     }
 
     private static void mockCubeHtable() throws Exception {
@@ -113,9 +127,19 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
 
     @Before
     public void setup() throws Exception {
-        this.createTestMetadata();
+
         this.cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_ii");
         this.seg = cube.getFirstSegment();
+        this.tableDesc = MetadataManager.getInstance(getTestConfig()).getTableDesc("test_kylin_fact");
+
+        this.tableName = seg.getStorageLocationIdentifier();
+        this.table = hconn.getTable(tableName);
+
+    }
+
+    @After
+    public void cleanup() throws IOException {
+        this.table.close();
     }
 
 
@@ -128,11 +152,6 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
             result[i - 1] = split;
         }
         return result;
-    }
-
-    @AfterClass
-    public static void tearDownAfterClass() throws Exception {
-        TEST_UTIL.shutdownMiniCluster();
     }
 
 
@@ -150,15 +169,15 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         return filter;
     }
 
-    private List<FunctionDesc> buildAggregations(ColumnDesc columnDesc) {
+    private List<FunctionDesc> buildAggregations(ColumnDesc priceColumn) {
         List<FunctionDesc> functions = new ArrayList<FunctionDesc>();
 
         FunctionDesc f1 = new FunctionDesc();
-        f1.setExpression("SUM");
+        f1.setExpression("MAX");
         ParameterDesc p1 = new ParameterDesc();
         p1.setType("column");
         p1.setValue("PRICE");
-        p1.setColRefs(ImmutableList.of(new TblColRef(columnDesc)));
+        p1.setColRefs(ImmutableList.of(new TblColRef(priceColumn)));
         f1.setParameter(p1);
         f1.setReturnType("decimal");
         functions.add(f1);
@@ -168,49 +187,95 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         ParameterDesc p2 = new ParameterDesc();
         p2.setType("column");
         p2.setValue("PRICE");
-        p2.setColRefs(ImmutableList.of(new TblColRef(columnDesc)));
+        p2.setColRefs(ImmutableList.of(new TblColRef(priceColumn)));
         f2.setParameter(p2);
         f2.setReturnType("decimal");
-
         functions.add(f2);
+
+        FunctionDesc f3 = new FunctionDesc();
+        f3.setExpression("COUNT");
+        ParameterDesc p3 = new ParameterDesc();
+        p3.setType("constant");
+        p3.setValue("1");
+        f3.setParameter(p3);
+        f3.setReturnType("bigint");
+        functions.add(f3);
 
         return functions;
     }
 
+    //TODO: queries like select count(*) on II can be optimized
     @Test
-    public void testEndpoint() throws Throwable {
+    public void testSimpleCount() throws Throwable {
+        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc, null, null, null, context, table);
 
-        String tableName = seg.getStorageLocationIdentifier();
-        HTableInterface table = hconn.getTable(tableName);
+        int count = 0;
+        while (iterator.hasNext()) {
+            ITuple tuple = iterator.next();
+            System.out.println(tuple);
+            count++;
+        }
+        assertEquals(count, 10000);
 
-        TableDesc tableDesc = MetadataManager.getInstance(getTestConfig()).getTableDesc("test_kylin_fact");
+
+    }
+
+    private int filteredCount(TupleFilter tupleFilter) throws Throwable {
+
+        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc, tupleFilter, null, null, context, table);
+
+        int count = 0;
+        while (iterator.hasNext()) {
+            ITuple tuple = iterator.next();
+            System.out.println(tuple);
+            count++;
+        }
+
+        return count;
+    }
+
+    @Test
+    public void testFilteredCount() throws Throwable {
         ColumnDesc columnDesc = tableDesc.findColumnByName("LSTG_FORMAT_NAME");
         TblColRef lfn = new TblColRef(columnDesc);
         TupleFilter filterA = mockEQFiter("ABIN", lfn);
         TupleFilter filterB = mockNEQFiter("ABIN", lfn);
 
+        int countA = filteredCount(filterA);
+        int countB = filteredCount(filterB);
+        assertEquals(countA + countB, 10000);
+    }
+
+    private int filteredGrouByCount(TupleFilter tupleFilter) throws Throwable {
+
+        ColumnDesc columnDesc = tableDesc.findColumnByName("LSTG_FORMAT_NAME");
+        TblColRef lfn = new TblColRef(columnDesc);
+        Collection<TblColRef> groupby = ImmutableSet.of(lfn);
+
         ColumnDesc priceColumn = tableDesc.findColumnByName("PRICE");
         List<FunctionDesc> measures = buildAggregations(priceColumn);
-        Collection<TblColRef> groupby = ImmutableSet.of(lfn);
-        StorageContext context = new StorageContext();
-        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc, filterA, groupby, measures, context, table);
 
-        int counterA = 0;
+        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc, tupleFilter, groupby, measures, context, table);
+
+        int count = 0;
         while (iterator.hasNext()) {
             ITuple tuple = iterator.next();
-            System.out.println(tuple);
-            counterA++;
+            count += (Long) tuple.getValue("COUNT__");
         }
-        System.out.println(counterA);
 
+        return count;
+    }
 
-//        IIProtos.IIRequest requestA = prepareRequest(filterA);
-//        IIProtos.IIRequest requestB = prepareRequest(filterB);
-//
-//        int resultA = getResults(requestA, table).size();
-//        int resultB = getResults(requestB, table).size();
-//
-//
-//        assertEquals(resultA + resultB, 10000);
+    @Test
+    public void testFilterGroupByCount() throws Throwable {
+
+        ColumnDesc columnDesc = tableDesc.findColumnByName("LSTG_FORMAT_NAME");
+        TblColRef lfn = new TblColRef(columnDesc);
+        TupleFilter filterA = mockEQFiter("ABIN", lfn);
+        TupleFilter filterB = mockNEQFiter("ABIN", lfn);
+
+        int countA = filteredGrouByCount(filterA);
+        int countB = filteredGrouByCount(filterB);
+        assertEquals(countA + countB, 10000);
     }
 }

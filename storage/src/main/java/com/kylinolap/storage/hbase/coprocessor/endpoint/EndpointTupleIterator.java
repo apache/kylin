@@ -3,16 +3,15 @@ package com.kylinolap.storage.hbase.coprocessor.endpoint;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.invertedindex.TableRecord;
 import com.kylinolap.cube.invertedindex.TableRecordInfo;
 import com.kylinolap.cube.invertedindex.TableRecordInfoDigest;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.realization.FunctionDesc;
 import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.StorageContext;
+import com.kylinolap.storage.filter.ConstantTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
@@ -56,9 +55,24 @@ public class EndpointTupleIterator implements ITupleIterator {
     Iterator<List<IIRow>> regionResponsesIterator = null;
     ITupleIterator tupleIterator = null;
 
-    //TODO  is "dimentsions" useful here?
     public EndpointTupleIterator(CubeSegment cubeSegment, TableDesc tableDesc,
             TupleFilter rootFilter, Collection<TblColRef> groupBy, List<FunctionDesc> measures, StorageContext context, HTableInterface table) throws Throwable {
+
+        if (rootFilter == null) {
+            rootFilter = ConstantTupleFilter.TRUE;
+        }
+
+        //TODO too heavy for cache at server
+        if (groupBy == null) {
+            groupBy = Lists.newArrayList();
+            for (ColumnDesc columnDesc : tableDesc.getColumns()) {
+                groupBy.add(new TblColRef(columnDesc));
+            }
+        }
+
+        if (measures == null) {
+            measures = Lists.newArrayList();
+        }
 
 
         this.seg = cubeSegment;
@@ -80,7 +94,7 @@ public class EndpointTupleIterator implements ITupleIterator {
         this.pushedDownRowType = CoprocessorRowType.fromTableDesc(this.seg, tableDesc);
         this.pushedDownFilter = CoprocessorFilter.fromFilter(this.seg, rootFilter);
         this.pushedDownProjector = CoprocessorProjector.makeForEndpoint(tableRecordInfo, groupBy);
-        this.pushedDownAggregators = EndpointAggregators.fromFunctions(measures, tableRecordInfo);
+        this.pushedDownAggregators = EndpointAggregators.fromFunctions(tableRecordInfo, measures);
 
         IIProtos.IIRequest endpointRequest = prepareRequest();
         regionResponsesIterator = getResults(endpointRequest, table);
