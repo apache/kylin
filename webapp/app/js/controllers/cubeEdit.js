@@ -183,19 +183,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
     $scope.saveCube = function (design_form) {
 
-
-        SweetAlert.swal({
-                title: "",
-                text: 'Ready to save the cube?',
-                type: 'info',
-                showCancelButton: true,
-                confirmButtonColor: "#DD6B55",confirmButtonText: "Yes",
-                cancelButtonText: "No",
-                closeOnConfirm: true,
-                closeOnCancel: true },
-            function(isConfirm){
-                if (isConfirm) {
-
                     try {
                         angular.fromJson($scope.state.cubeSchema);
                     } catch (e) {
@@ -230,10 +217,10 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                             loadingRequest.hide();
                             recoveryCubeStatus();
                         }, function () {
-                            SweetAlert.swal('Oops...', 'Action Failed: ' + msg, 'error');
-//                    rainbowBar.hide();
-//                    loadingRequest.hide();
-//                    recoveryCubeStatus();
+//                            SweetAlert.swal('Oops...', 'Action Failed: ' + msg, 'error');
+                            rainbowBar.hide();
+                            loadingRequest.hide();
+                            recoveryCubeStatus();
                         });
                     }
                     else {
@@ -269,12 +256,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
 
                 }
-//                else {
-//                    SweetAlert.swal("Cancelled", "Your imaginary file is safe :)", "error");
-//                }
-            });
-
-    }
 
 
     function reGenerateRowKey(){
