@@ -189,17 +189,19 @@ public class RowKeyDesc {
         mandatoryColumnMask = 0;
 
         for (int i = 0; i < rowkeyColumns.length; i++) {
-            RowKeyColDesc col = rowkeyColumns[i];
-            col.setColumn(col.getColumn().toUpperCase());
-            col.setBitIndex(rowkeyColumns.length - i - 1);
-            col.setColRef(colNameAbbr.get(col.getColumn()));
-            if (col.getColRef() == null)
-                throw new IllegalArgumentException("Cannot find rowkey column " + col.getColumn() + " in cube " + cubeRef);
+            RowKeyColDesc rowKeyColDesc = rowkeyColumns[i];
+            String column = rowKeyColDesc.getColumn();
+            rowKeyColDesc.setColumn(column.toUpperCase());
+            rowKeyColDesc.setBitIndex(rowkeyColumns.length - i - 1);
+            rowKeyColDesc.setColRef(colNameAbbr.get(column));
+            if (rowKeyColDesc.getColRef() == null) {
+                throw new IllegalArgumentException("Cannot find rowkey column " + column + " in cube " + cubeRef);
+            }
 
-            columnMap.put(col.getColRef(), col);
+            columnMap.put(rowKeyColDesc.getColRef(), rowKeyColDesc);
 
-            if (col.isMandatory()) {
-                mandatoryColumnMask |= 1L << col.getBitIndex();
+            if (rowKeyColDesc.isMandatory()) {
+                mandatoryColumnMask |= 1L << rowKeyColDesc.getBitIndex();
             }
         }
     }

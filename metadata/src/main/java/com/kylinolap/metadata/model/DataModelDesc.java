@@ -108,7 +108,7 @@ public class DataModelDesc extends RootPersistentEntity {
             for (int i = 0; i < pks.length; i++) {
                 ColumnDesc col = dimTable.findColumnByName(pks[i]);
                 if (col == null) {
-                    addError("Can't find column " + pks[i] + " in table " + dimTable.getName());
+                    addError("Can't find column " + pks[i] + " in table " + dimTable.getIdentity());
                 }
                 TblColRef colRef = new TblColRef(col);
                 pks[i] = colRef.getName();
