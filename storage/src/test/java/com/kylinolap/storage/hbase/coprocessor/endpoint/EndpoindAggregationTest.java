@@ -1,6 +1,5 @@
 package com.kylinolap.storage.hbase.coprocessor.endpoint;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
@@ -8,7 +7,6 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.invertedindex.TableRecord;
 import com.kylinolap.cube.invertedindex.TableRecordInfo;
-import com.kylinolap.cube.invertedindex.TableRecordInfoDigest;
 import com.kylinolap.cube.measure.MeasureAggregator;
 import com.kylinolap.metadata.model.realization.FunctionDesc;
 import com.kylinolap.metadata.model.realization.ParameterDesc;
@@ -54,7 +52,7 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
         Collection<TblColRef> dims = new HashSet<>();
         dims.add(formatName);
         projector = CoprocessorProjector.makeForEndpoint(tableRecordInfo, dims);
-        aggregators = EndpointAggregators.fromFunctions(buildAggregations(), tableRecordInfo);
+        aggregators = EndpointAggregators.fromFunctions(tableRecordInfo, buildAggregations());
 
         CompareTupleFilter rawFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
         rawFilter.addChild(new ColumnTupleFilter(siteId));
@@ -140,7 +138,7 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testSerializeAggreagtor() {
-        EndpointAggregators endpointAggregators = EndpointAggregators.fromFunctions(buildAggregations(),tableRecordInfo);
+        EndpointAggregators endpointAggregators = EndpointAggregators.fromFunctions(tableRecordInfo, buildAggregations());
         byte[] x = EndpointAggregators.serialize(endpointAggregators);
         EndpointAggregators d = EndpointAggregators.deserialize(x);
     }
