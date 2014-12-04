@@ -31,7 +31,7 @@
     },
     {
       "name": "seller_type_cd",
-      "column": ["edw.test_seller_type_dim.slr_segment_cd"],
+      "column": ["edw.test_seller_type_dim.seller_type_cd"],
       "derived": ["seller_type_desc"]
     },
     {
