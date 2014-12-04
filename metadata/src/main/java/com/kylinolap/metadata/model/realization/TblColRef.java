@@ -84,7 +84,7 @@ public class TblColRef {
         if (column.getTable() == null) {
             return null;
         }
-        return column.getTable().getName();
+        return column.getTable().getIdentity();
     }
 
     public String getDatatype() {
@@ -113,7 +113,7 @@ public class TblColRef {
         final int prime = 31;
         int result = 1;
 
-        result = prime * result + column.getTable().getName().hashCode();
+        result = prime * result + column.getTable().getIdentity().hashCode();
         result = prime * result + column.getName().hashCode();
         return result;
     }
@@ -127,7 +127,7 @@ public class TblColRef {
         if (getClass() != obj.getClass())
             return false;
         TblColRef other = (TblColRef) obj;
-        if (!StringUtils.equals(column.getTable().getName(), other.column.getTable().getName()))
+        if (!StringUtils.equals(TableDesc.getTableIdentity(column.getTable()), TableDesc.getTableIdentity(other.column.getTable())))
             return false;
         if (!StringUtils.equals(column.getName(), other.column.getName()))
             return false;
@@ -136,6 +136,6 @@ public class TblColRef {
 
     @Override
     public String toString() {
-        return (column.getTable() == null ? null : column.getTable().getName()) + "." + column.getName();
+        return (column.getTable() == null ? null : column.getTable().getIdentity()) + "." + column.getName();
     }
 }

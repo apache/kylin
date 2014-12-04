@@ -71,7 +71,7 @@ public class H2Database {
         try {
             tempFile = File.createTempFile("tmp_h2", ".csv");
             FileOutputStream tempFileStream = new FileOutputStream(tempFile);
-            String normalPath = "/data/" + tableDesc.getName() + ".csv";
+            String normalPath = "/data/" + tableDesc.getIdentity() + ".csv";
 
             // If it's the fact table, there will be a facttable.csv.inner or
             // facttable.csv.left in hbase
@@ -80,7 +80,7 @@ public class H2Database {
             if (csvStream == null) {
                 csvStream = metaMgr.getStore().getResource(normalPath);
             } else {
-                logger.info("H2 decides to load " + (normalPath + fileNameSuffix) + " for table " + tableDesc.getName());
+                logger.info("H2 decides to load " + (normalPath + fileNameSuffix) + " for table " + tableDesc.getIdentity());
             }
 
             org.apache.commons.io.IOUtils.copy(csvStream, tempFileStream);
@@ -105,7 +105,7 @@ public class H2Database {
         StringBuilder ddl = new StringBuilder();
         StringBuilder csvColumns = new StringBuilder();
 
-        ddl.append("CREATE TABLE " + tableDesc.getName() + "\n");
+        ddl.append("CREATE TABLE " + tableDesc.getIdentity() + "\n");
         ddl.append("(" + "\n");
 
         for (int i = 0; i < tableDesc.getColumns().length; i++) {

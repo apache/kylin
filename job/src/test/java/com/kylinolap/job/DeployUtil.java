@@ -194,8 +194,8 @@ public class DeployUtil {
     private static String generateCreateTableHql(TableDesc tableDesc) {
         StringBuilder ddl = new StringBuilder();
 
-        ddl.append("DROP TABLE IF EXISTS " + tableDesc.getName() + ";\n");
-        ddl.append("CREATE TABLE " + tableDesc.getName() + "\n");
+        ddl.append("DROP TABLE IF EXISTS " + tableDesc.getIdentity() + ";\n");
+        ddl.append("CREATE TABLE " + tableDesc.getIdentity() + "\n");
         ddl.append("(" + "\n");
 
         for (int i = 0; i < tableDesc.getColumns().length; i++) {

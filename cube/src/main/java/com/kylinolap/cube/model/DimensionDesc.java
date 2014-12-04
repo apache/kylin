@@ -75,7 +75,11 @@ public class DimensionDesc {
      * @return
      */
     public String getTable() {
-        return table.toUpperCase();
+        if (database == null) {
+            return ("DEFAULT." + table).toUpperCase();
+        } else {
+            return (database + "." + table).toUpperCase();
+        }
     }
 
     public int getId() {

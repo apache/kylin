@@ -198,7 +198,7 @@ public class ProjectManager {
 
         List<TableDesc> exposedTables = listExposedTables(projectName);
         for (TableDesc table : exposedTables) {
-            projectInstance.addTable(table.getName());
+            projectInstance.addTable(table.getIdentity());
         }
 
         saveResource(projectInstance);
@@ -532,7 +532,7 @@ public class ProjectManager {
         if (t == null) {
             throw new IllegalStateException("No SourceTable found by name '" + table + "', ref by " + refObj);
         }
-        table = t.getName(); // ensures upper case
+        table = t.getIdentity(); // ensures upper case
 
         ProjectTable projTable = getProjectTable(project, table, true);
 

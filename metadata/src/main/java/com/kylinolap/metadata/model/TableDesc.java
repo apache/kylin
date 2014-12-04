@@ -60,6 +60,10 @@ public class TableDesc extends RootPersistentEntity {
         return ResourceStore.TABLE_RESOURCE_ROOT + "/" + getTableIdentity(this) + ".json";
     }
 
+    public String getIdentity() {
+        return TableDesc.getTableIdentity(this);
+    }
+
     // ============================================================================
 
     public String getName() {
