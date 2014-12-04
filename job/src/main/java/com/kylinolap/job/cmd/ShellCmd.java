@@ -91,7 +91,7 @@ public class ShellCmd implements IJobCommand {
     protected int executeCommand(String command) throws JobException, IOException {
         output.reset();
         output.setStatus(JobStepStatusEnum.RUNNING);
-        return cliCommandExecutor.execute(command).getFirst();
+        return cliCommandExecutor.execute(command, output).getFirst();
     }
 
     @Override
