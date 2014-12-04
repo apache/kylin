@@ -1,7 +1,7 @@
 'use strict';
 
 
-KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, MessageService, TableService, CubeDescService, CubeService,rainbowBar,loadingRequest) {
+KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, MessageService, TableService, CubeDescService, CubeService,rainbowBar,loadingRequest,sweet) {
 
     //add or edit ?
     var absUrl = $location.absUrl();
@@ -182,82 +182,88 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     }
 
     $scope.saveCube = function (design_form) {
-        if (!confirm('Ready to save the cube?')) {
-            return;
-        }
 
-        try {
-            angular.fromJson($scope.state.cubeSchema);
-        } catch (e) {
-            MessageService.sendMsg('Invalid cube json format..', 'error');
-            return;
-        }
+        sweet.show({
+            title: '',
+            text: 'Ready to save the cube?',
+            type: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#DD6B55',
+            confirmButtonText: "Yes",
+            closeOnConfirm: true
+        }, function() {
 
-        rainbowBar.show();
-        loadingRequest.show();
+            try {
+                angular.fromJson($scope.state.cubeSchema);
+            } catch (e) {
+                sweet.show('Oops...', 'Invalid cube json format..', 'error');
+                return;
+            }
 
-        if ($scope.isEdit) {
-            CubeService.update({}, {cubeDescData: $scope.state.cubeSchema, cubeName: $routeParams.cubeName, project: $scope.state.project}, function (request) {
-                if (request.successful) {
-                    $scope.state.cubeSchema = request.cubeDescData;
-                    MessageService.sendMsg("Update cube successful.", 'success', {
-                        cancel: {
-                            label: 'View Cube',
-                            action: function () {
-                                $location.path('/cubes');
-                                $scope.$apply();
+            rainbowBar.show();
+            loadingRequest.show();
+
+            if ($scope.isEdit) {
+                CubeService.update({}, {cubeDescData: $scope.state.cubeSchema, cubeName: $routeParams.cubeName, project: $scope.state.project}, function (request) {
+                    if (request.successful) {
+                        $scope.state.cubeSchema = request.cubeDescData;
+                        MessageService.sendMsg("Update cube successful.", 'success', {
+                            cancel: {
+                                label: 'View Cube',
+                                action: function () {
+                                    $location.path('/cubes');
+                                    $scope.$apply();
+                                }
                             }
+                        });
+                        if(design_form){
+                            design_form.$invalid = true;
                         }
-                    });
-                    if(design_form){
-                        design_form.$invalid = true;
+                    } else {
+                            sweet.show('Oops...', request.message, 'error');
                     }
-                } else {
-                    MessageService.sendMsg(request.message, 'error');
-                }
-
-                rainbowBar.hide();
-                //end loading
-                loadingRequest.hide();
-
-                recoveryCubeStatus();
-            }, function () {
-                rainbowBar.hide();
-                loadingRequest.hide();
-                recoveryCubeStatus();
-            });
-        }
-        else {
-            CubeService.save({}, {cubeDescData: $scope.state.cubeSchema, project: $scope.state.project}, function (request) {
-                if (request.successful) {
-                    $scope.state.cubeSchema = request.cubeDescData;
-                    MessageService.sendMsg("Created cube successful.", 'success', {
-                        cancel: {
-                            label: 'View Cube',
-                            action: function () {
-                                $location.path('/cubes');
-                                $scope.$apply();
+                    rainbowBar.hide();
+                    //end loading
+                    loadingRequest.hide();
+                    recoveryCubeStatus();
+                }, function () {
+                    sweet.show('Oops...', 'Action Failed: ' + msg, 'error');
+//                    rainbowBar.hide();
+//                    loadingRequest.hide();
+//                    recoveryCubeStatus();
+                });
+            }
+            else {
+                CubeService.save({}, {cubeDescData: $scope.state.cubeSchema, project: $scope.state.project}, function (request) {
+                    if (request.successful) {
+                        $scope.state.cubeSchema = request.cubeDescData;
+                        MessageService.sendMsg("Created cube successful.", 'success', {
+                            cancel: {
+                                label: 'View Cube',
+                                action: function () {
+                                    $location.path('/cubes');
+                                    $scope.$apply();
+                                }
                             }
-                        }
-                    });
-                } else {
+                        });
+                    } else {
+                        $scope.cubeMetaFrame.project = $scope.state.project;
+                        sweet.show('Oops...', request.message, 'error');
+                    }
 
-                    $scope.cubeMetaFrame.project = $scope.state.project;
-                    MessageService.sendMsg(request.message, 'error');
-                }
+                    rainbowBar.hide();
+                    //end loading
+                    loadingRequest.hide();
+                    recoveryCubeStatus();
+                }, function () {
 
-                rainbowBar.hide();
-                //end loading
-                loadingRequest.hide();
-                recoveryCubeStatus();
-            }, function () {
-
-                rainbowBar.hide();
-                //end loading
-                loadingRequest.hide();
-                recoveryCubeStatus();
-            });
-        }
+                    rainbowBar.hide();
+                    //end loading
+                    loadingRequest.hide();
+                    recoveryCubeStatus();
+                });
+            }
+        });
     }
 
 

@@ -1,7 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService) {
+    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,sweet) {
         $scope.listParams={
             cubeName: $routeParams.cubeName,
             projectName: $routeParams.projectName
@@ -110,43 +110,89 @@ KylinApp
         };
 
         $scope.enable = function (cube) {
-            if (confirm("Are you sure to enable the cube? Please note: if cube schema is changed in the disabled period, all segments of the cube will be discarded due to data and schema mismatch.")) {
+            sweet.show({
+                title: '',
+                text: 'Are you sure to enable the cube? Please note: if cube schema is changed in the disabled period, all segments of the cube will be discarded due to data and schema mismatch.',
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#DD6B55',
+                confirmButtonText: "Yes",
+                closeOnConfirm: false
+            }, function() {
                 CubeService.enable({cubeId: cube.name}, {}, function (result) {
                     cube.status = 'READY';
-                    MessageService.sendMsg('Enable job was submitted successfully', 'success', {});
+//                    MessageService.sendMsg('Enable job was submitted successfully', 'success', {});
+                    sweet.show('Success!', 'Enable job was submitted successfully', 'success');
                 });
-            }
+
+            });
+//            if (confirm("Are you sure to enable the cube? Please note: if cube schema is changed in the disabled period, all segments of the cube will be discarded due to data and schema mismatch.")) {
+//                CubeService.enable({cubeId: cube.name}, {}, function (result) {
+//                    cube.status = 'READY';
+//                    MessageService.sendMsg('Enable job was submitted successfully', 'success', {});
+//                });
+//            }
         };
 
         $scope.purge = function (cube) {
-            if (confirm("Are you sure to purge the cube? ")) {
+            sweet.show({
+                title: '',
+                text: 'Are you sure to purge the cube? ',
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#DD6B55',
+                confirmButtonText: "Yes",
+                closeOnConfirm: false
+            }, function() {
                 CubeService.purge({cubeId: cube.name}, {}, function (result) {
                     $scope.cubes=[];
                     $scope.reload();
-                    MessageService.sendMsg('Purge job was submitted successfully', 'success', {});
+                    sweet.show('Success!', 'Purge job was submitted successfully', 'success');
                 });
-            }
+
+            });
         }
 
         $scope.disable = function (cube) {
-            if (confirm("Are you sure to disable the cube?")) {
+
+            sweet.show({
+                title: '',
+                text: 'Are you sure to disable the cube? ',
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#DD6B55',
+                confirmButtonText: "Yes",
+                closeOnConfirm: false
+            }, function() {
                 CubeService.disable({cubeId: cube.name}, {}, function (result) {
                     cube.status = 'DISABLED';
-                    MessageService.sendMsg('Disable job was submitted successfully', 'success', {});
+                    sweet.show('Success!', 'Disable job was submitted successfully', 'success');
                 });
-            }
+
+            });
         };
 
         $scope.dropCube = function (cube) {
-            if (confirm("Are you sure to drop the cube? Once it's dropped, all the jobs and data will be cleaned up.")) {
+
+            sweet.show({
+                title: '',
+                text: "Are you sure to drop the cube? Once it's dropped, all the jobs and data will be cleaned up. ",
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#DD6B55',
+                confirmButtonText: "Yes",
+                closeOnConfirm: false
+            }, function() {
                 CubeService.drop({cubeId: cube.name}, {}, function (result) {
                     var cubeIndex = $scope.cubes.indexOf(cube);
                     if (cubeIndex > -1) {
                         $scope.cubes.splice(cubeIndex, 1);
                     }
-                    MessageService.sendMsg('Cube drop is done successfully', 'success', {});
+                    sweet.show('Success!', 'Cube drop is done successfully', 'success');
+
                 });
-            }
+
+            });
         };
 
         $scope.startJobSubmit = function (cube) {
@@ -168,7 +214,16 @@ KylinApp
                         });
                     }
                     else {
-                        if (confirm("Are you sure to start the build?")) {
+
+                        sweet.show({
+                            title: '',
+                            text: "Are you sure to start the build? ",
+                            type: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#DD6B55',
+                            confirmButtonText: "Yes",
+                            closeOnConfirm: false
+                        }, function() {
                             CubeService.rebuildCube(
                                 {
                                     cubeId: cube.name
@@ -188,7 +243,8 @@ KylinApp
                                         }
                                     });
                                 });
-                        }
+
+                        });
                     }
                 }
             });

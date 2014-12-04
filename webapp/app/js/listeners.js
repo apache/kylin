@@ -1,4 +1,4 @@
-KylinApp.run(function ($rootScope, $http, $location, UserService, AuthenticationService, MessageService) {
+KylinApp.run(function ($rootScope, $http, $location, UserService, AuthenticationService, MessageService,sweet) {
 
     $rootScope.permissions = {
         READ: {name: 'CUBE QUERY', value: 'READ', mask: 1},
@@ -70,7 +70,9 @@ KylinApp.run(function ($rootScope, $http, $location, UserService, Authentication
      */
     $rootScope.$on('event:forbidden', function (event, message) {
         var msg = !!(message) ? message : 'You don\' have right to take the action.';
-        MessageService.sendMsg('Permission Denied: ' + msg, 'error', {});
+//        MessageService.sendMsg('Permission Denied: ' + msg, 'error', {});
+        sweet.show('Oops...', 'Permission Denied: ' + msg, 'error');
+
     });
 
     /**
@@ -78,6 +80,8 @@ KylinApp.run(function ($rootScope, $http, $location, UserService, Authentication
      */
     $rootScope.$on('event:error', function (event, message) {
         var msg = !!(message) ? message : 'Failed to take action.';
+        sweet.show('Oops...', 'Action Failed: ' + msg, 'error');
         MessageService.sendMsg('Action Failed: ' + msg, 'error', {});
+
     });
 });
