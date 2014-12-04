@@ -1,6 +1,6 @@
 'use strict';
 
-KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService) {
+KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService,sweet) {
 
     $scope.header = {show: true};
     $scope.footer = {
@@ -169,14 +169,16 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
                 newDescription: $scope.proj.description
             };
             ProjectService.update({}, requestBody, function (newProj) {
-                MessageService.sendMsg("Project update successfully!", 'success');
+//                MessageService.sendMsg("Project update successfully!", 'success');
+                sweet.show('Success!', 'Project update successfully!', 'success');
                 $modalInstance.dismiss('cancel');
             });
         }
         else
         {
             ProjectService.save({}, $scope.proj, function (newProj) {
-                MessageService.sendMsg("New project created successfully", 'success');
+//                MessageService.sendMsg("New project created successfully", 'success');
+                sweet.show('Success!', 'New project created successfully!', 'success');
                 $modalInstance.dismiss('cancel');
                 if(projects) {
                     projects.push(newProj);

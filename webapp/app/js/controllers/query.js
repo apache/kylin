@@ -1,7 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('QueryCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, $modal, MessageService, $domUtilityService, $timeout, TableService) {
+    .controller('QueryCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, $modal, MessageService, $domUtilityService, $timeout, TableService,sweet) {
         $scope.mainPanel = 'query';
         $scope.rowsPerPage = 50000;
         $scope.base64 = $base64;
@@ -359,7 +359,7 @@ KylinApp
 
             $scope.saveQuery = function (query) {
                 QueryService.save({}, {name: query.name, project: query.project, sql: query.sql, description: query.description}, function () {
-                    MessageService.sendMsg('New query saved.', 'success', {});
+                    sweet.show('Success!', 'New query saved..', 'success');
                     $modalInstance.dismiss('cancel');
                 });
             }
