@@ -65,7 +65,7 @@ KylinApp.controller('AccessCtrl', function ($scope,AccessService, MessageService
             showCancelButton: true,
             confirmButtonColor: '#DD6B55',
             confirmButtonText: "Yes",
-            closeOnConfirm: false
+            closeOnConfirm: true
         }, function() {
             var revokeRequst = {
                 type: type,

@@ -143,7 +143,7 @@ KylinApp
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes",
-                closeOnConfirm: false
+                closeOnConfirm: true
             }, function(isConfirm) {
                 if(isConfirm){
                 CubeService.purge({cubeId: cube.name}, {}, function (result) {
@@ -164,7 +164,7 @@ KylinApp
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes",
-                closeOnConfirm: false
+                closeOnConfirm: true
             }, function(isConfirm) {
                 if(isConfirm){
                 CubeService.disable({cubeId: cube.name}, {}, function (result) {
@@ -185,7 +185,7 @@ KylinApp
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes",
-                closeOnConfirm: false
+                closeOnConfirm: true
             }, function(isConfirm) {
                 if(isConfirm){
                 CubeService.drop({cubeId: cube.name}, {}, function (result) {
@@ -228,7 +228,7 @@ KylinApp
                             showCancelButton: true,
                             confirmButtonColor: '#DD6B55',
                             confirmButtonText: "Yes",
-                            closeOnConfirm: false
+                            closeOnConfirm: true
                         }, function(isConfirm) {
                             if(isConfirm){
                             CubeService.rebuildCube(
@@ -293,7 +293,7 @@ KylinApp
         }
     });
 
-var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube, buildType) {
+var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube, buildType,SweetAlert) {
     $scope.cube = cube;
 
     $scope.jobBuildRequest = {
@@ -304,29 +304,41 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
     $scope.message = "";
 
     $scope.rebuild = function () {
-        if (confirm("Are you sure to rebuild the cube?")) {
-            $scope.message = null;
-            $scope.jobBuildRequest.startTime = new Date($scope.jobBuildRequest.startTime).getTime();
-            $scope.jobBuildRequest.endTime = new Date($scope.jobBuildRequest.endTime).getTime();
 
-            if ($scope.jobBuildRequest.startTime >= $scope.jobBuildRequest.endTime) {
-                $scope.message = "WARNING: End time should be later than the start time.";
-                return;
+        SweetAlert.swal({
+            title: '',
+            text: "Are you sure to rebuild the cube? ",
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#DD6B55',
+            confirmButtonText: "Yes",
+            closeOnConfirm: true
+        }, function(isConfirm) {
+            if(isConfirm){
+                $scope.message = null;
+                $scope.jobBuildRequest.startTime = new Date($scope.jobBuildRequest.startTime).getTime();
+                $scope.jobBuildRequest.endTime = new Date($scope.jobBuildRequest.endTime).getTime();
+
+                if ($scope.jobBuildRequest.startTime >= $scope.jobBuildRequest.endTime) {
+                    $scope.message = "WARNING: End time should be later than the start time.";
+                    return;
+                }
+
+                CubeService.rebuildCube({cubeId: cube.name}, $scope.jobBuildRequest, function (job) {
+                    $modalInstance.dismiss('cancel');
+                    MessageService.sendMsg('Rebuild job was submitted successfully', 'success', {
+                        cancel: {
+                            label: 'View Jobs',
+                            action: function () {
+                                $location.path('/jobs');
+                                $scope.$apply();
+                            }
+                        }
+                    });
+                });
             }
 
-            CubeService.rebuildCube({cubeId: cube.name}, $scope.jobBuildRequest, function (job) {
-                $modalInstance.dismiss('cancel');
-                MessageService.sendMsg('Rebuild job was submitted successfully', 'success', {
-                    cancel: {
-                        label: 'View Jobs',
-                        action: function () {
-                            $location.path('/jobs');
-                            $scope.$apply();
-                        }
-                    }
-                });
-            });
-        }
+        });
     };
 
     // used by cube segment refresh
