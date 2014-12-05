@@ -55,8 +55,7 @@ KylinApp
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes, delete it!",
-//                timer:0,
-                closeOnConfirm: false
+                closeOnConfirm: true
             }, function(isConfirm) {
                 if(isConfirm){
                 ProjectService.delete({projecId: project.name}, function(){
@@ -64,7 +63,6 @@ KylinApp
                     if (pIndex > -1) {
                         $scope.projects.splice(pIndex, 1);
                     }
-//                    MessageService.sendMsg("Project " + project.name + " deleted successfully!", 'success');
                 SweetAlert.swal('Success!',"Project " + project.name + " deleted successfully!", 'success');
                 });
                 }
