@@ -47,14 +47,19 @@ public class CubePartitionDesc {
     public void init(Map<String, Map<String, TblColRef>> columnMap) {
         if (null != partitionDateColumn) {
             partitionDateColumn = partitionDateColumn.toUpperCase();
-            
+
             String[] columns = StringSplitter.split(partitionDateColumn, ".");
 
             if (null != columns && columns.length == 3) {
-                Map<String, TblColRef> cols = columnMap.get(columns[0].toUpperCase() + "." + columns[1].toUpperCase());
-                if (cols != null)
+                String tableName = columns[0].toUpperCase() + "." + columns[1].toUpperCase();
+                Map<String, TblColRef> cols = columnMap.get(tableName);
+                if (cols != null) {
                     partitionDateColumnRef = cols.get(columns[2].toUpperCase());
-
+                } else {
+                    throw new IllegalStateException("The table '" + tableName + "' provided in 'partition_date_column' doesn't exist.");
+                }
+            } else {
+                throw new IllegalStateException("The 'partition_date_column' format is invalid: " + partitionDateColumn + ", it should be {db}.{table}.{column}.");
             }
         }
     }

@@ -41,7 +41,7 @@ public class TableDesc extends RootPersistentEntity {
     private DatabaseDesc database;
 
     public ColumnDesc findColumnByName(String name) {
-        //ignore the db name and table name
+        //ignore the db name and table name if exists
         int lastIndexOfDot = name.lastIndexOf(".");
         if (lastIndexOfDot >= 0) {
             name = name.substring(lastIndexOfDot + 1);

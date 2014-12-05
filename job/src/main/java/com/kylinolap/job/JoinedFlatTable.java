@@ -123,12 +123,13 @@ public class JoinedFlatTable {
     public static String generateSelectDataStatement(JoinedFlatTableDesc intermediateTableDesc) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT" + "\n");
+        String tableAlias;
         for (int i = 0; i < intermediateTableDesc.getColumnList().size(); i++) {
             IntermediateColumnDesc col = intermediateTableDesc.getColumnList().get(i);
             if (i > 0) {
                 sql.append(",");
             }
-            String tableAlias = intermediateTableDesc.getTableAlias(col.getTableName());
+            tableAlias = intermediateTableDesc.getTableAlias(col.getTableName());
             sql.append(tableAlias + "." + col.getColumnName() + "\n");
         }
         appendJoinStatement(intermediateTableDesc, sql);

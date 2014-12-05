@@ -47,7 +47,6 @@ public class DimensionDesc {
     private boolean isHierarchy;
     @JsonProperty("table")
     private String table;
-    private String database;
     @JsonProperty("column")
     private String[] column;
     @JsonProperty("derived")
@@ -78,11 +77,7 @@ public class DimensionDesc {
      * @return
      */
     public String getTable() {
-        if (database == null) {
-            return ("DEFAULT." + table).toUpperCase();
-        } else {
-            return (database + "." + table).toUpperCase();
-        }
+        return table;
     }
 
     public int getId() {
@@ -182,6 +177,7 @@ public class DimensionDesc {
      * parse column to get db name and table name
      * @return an array carries db name + table name
      * @throws IllegalStateException if the column name or name is incorrect or inaccurate
+     * @deprecated 
      */
     private String[] parseTableDBName(String thisColumn, Map<String, List<TableDesc>> columnTableMap, Map<String, List<String>> tableDatabaseMap) {
         String tableName = null, dbName = null;
@@ -228,35 +224,13 @@ public class DimensionDesc {
     public void init(CubeDesc cubeDesc, Map<String, TableDesc> tables, Map<String, List<TableDesc>> columnTableMap, Map<String, List<String>> tableDatabaseMap) {
         if (name != null)
             name = name.toUpperCase();
-
-        this.table = null;
-        this.database = null;
-        this.join = null;
-
-        for (int i = 0, n = this.column.length; i < n; i++) {
-            String thisColumn = this.column[i].toUpperCase();
-
-            if (this.table == null || this.database == null) {
-                String[] dbTableNames = parseTableDBName(thisColumn, columnTableMap, tableDatabaseMap);
-
-                if (database == null) {
-                    database = dbTableNames[0];
-                } else if (!database.equals(dbTableNames[0])) {
-                    throw new IllegalStateException("One dimension can only refer to the tables in the same db: '" + database + "' and '" + dbTableNames[0] + "'.");
-                }
-
-                if (table == null) {
-                    table = dbTableNames[1];
-                } else if (!table.equalsIgnoreCase(dbTableNames[1])) {
-                    throw new IllegalStateException("One dimension can only refer to the columns on the same table: '" + table + "' and '" + dbTableNames[1] + "'.");
-                }
-            }
-
-        }
+        
+        if (table != null)
+            table = table.toUpperCase();
 
         tableDesc = tables.get(this.getTable());
         if (tableDesc == null)
-            throw new IllegalStateException("Can't find table " + table + " on dimension " + name);
+            throw new IllegalStateException("Can't find table " + table + " for dimension " + name);
 
         for (LookupDesc lookup : cubeDesc.getModel().getLookups()) {
             if (lookup.getTable().equalsIgnoreCase(this.getTable())) {
