@@ -69,9 +69,12 @@ public class DimensionDesc {
         }
         return false;
     }
+    
+    public boolean isHierarchy() {
+        return isHierarchy;
+    }
 
     /**
-     * @deprecated use getTableDesc() to get accurate table info
      * @return
      */
     public String getTable() {
@@ -196,7 +199,7 @@ public class DimensionDesc {
         if (tableName == null) {
             List<TableDesc> tables = columnTableMap.get(thisColumn);
             if (tables == null) {
-                throw new IllegalStateException("The column '" + thisColumn + "' isn't appeared on any table.");
+                throw new IllegalStateException("The column '" + thisColumn + "' isn't appeared in any table.");
             } else if (tables.size() > 1) {
                 throw new IllegalStateException("The column '" + thisColumn + "' is ambiguous; it appeared in more than one tables, please specify table name together with the column name.");
             } else {
@@ -232,28 +235,31 @@ public class DimensionDesc {
 
         for (int i = 0, n = this.column.length; i < n; i++) {
             String thisColumn = this.column[i].toUpperCase();
-            String[] dbTableNames = parseTableDBName(thisColumn, columnTableMap, tableDatabaseMap);
 
-            if (database == null) {
-                database = dbTableNames[0];
-            } else if (!database.equals(dbTableNames[0])) {
-                throw new IllegalStateException("One dimension can only refer to the tables in the same db: '" + database + "' and '" + dbTableNames[0] + "'.");
-            }
+            if (this.table == null || this.database == null) {
+                String[] dbTableNames = parseTableDBName(thisColumn, columnTableMap, tableDatabaseMap);
 
-            if (table == null) {
-                table = dbTableNames[1];
-            } else if (!table.equalsIgnoreCase(dbTableNames[1])) {
-                throw new IllegalStateException("One dimension can only refer to the columns on the same table: '" + table + "' and '" + dbTableNames[1] + "'.");
+                if (database == null) {
+                    database = dbTableNames[0];
+                } else if (!database.equals(dbTableNames[0])) {
+                    throw new IllegalStateException("One dimension can only refer to the tables in the same db: '" + database + "' and '" + dbTableNames[0] + "'.");
+                }
+
+                if (table == null) {
+                    table = dbTableNames[1];
+                } else if (!table.equalsIgnoreCase(dbTableNames[1])) {
+                    throw new IllegalStateException("One dimension can only refer to the columns on the same table: '" + table + "' and '" + dbTableNames[1] + "'.");
+                }
             }
 
         }
 
-        tableDesc = tables.get(database + "." + table);
+        tableDesc = tables.get(this.getTable());
         if (tableDesc == null)
             throw new IllegalStateException("Can't find table " + table + " on dimension " + name);
 
         for (LookupDesc lookup : cubeDesc.getModel().getLookups()) {
-            if (lookup.getTable().equalsIgnoreCase(table)) {
+            if (lookup.getTable().equalsIgnoreCase(this.getTable())) {
                 this.join = lookup.getJoin();
                 break;
             }

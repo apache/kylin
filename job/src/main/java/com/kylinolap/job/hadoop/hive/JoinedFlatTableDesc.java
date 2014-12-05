@@ -23,7 +23,9 @@ import java.util.Map;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.DimensionDesc;
 import com.kylinolap.cube.model.MeasureDesc;
+import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.realization.FunctionDesc;
 import com.kylinolap.metadata.model.realization.TblColRef;
 
@@ -39,6 +41,9 @@ public class JoinedFlatTableDesc {
     private int[] rowKeyColumnIndexes; // the column index on flat table
     private int[][] measureColumnIndexes; // [i] is the i.th measure related
                                           // column index on flat table
+    
+    // Map for table alais; key: table name; value: alias;
+    private Map<String, String> tableAliasMap;
 
     public JoinedFlatTableDesc(CubeDesc cubeDesc, CubeSegment cubeSegment) {
         this.cubeDesc = cubeDesc;
@@ -112,6 +117,28 @@ public class JoinedFlatTableDesc {
                 }
             }
         }
+        
+        buileTableAliasMap();
+    }
+    
+    private void buileTableAliasMap() {
+        tableAliasMap = new HashMap<String, String>();
+        
+        tableAliasMap.put(cubeDesc.getFactTable(), "FACT_TABLE");
+        
+        int i=1;
+        for (DimensionDesc dim : cubeDesc.getDimensions()) {
+            JoinDesc join = dim.getJoin();
+            if(join != null) {
+                tableAliasMap.put(dim.getTable(), "LOOKUP_" + i);
+                i++;
+            }
+            
+        }
+    }
+    
+    public String getTableAlias(String tableName) {
+        return tableAliasMap.get(tableName);
     }
 
     private int contains(List<IntermediateColumnDesc> columnList, TblColRef c) {
@@ -144,6 +171,7 @@ public class JoinedFlatTableDesc {
         private String columnName;
         private String dataType;
         private String tableName;
+        private String databaseName;
 
         public IntermediateColumnDesc(String id, String columnName, String dataType, String tableName) {
             this.id = id;
@@ -166,6 +194,10 @@ public class JoinedFlatTableDesc {
 
         public String getTableName() {
             return tableName;
+        }
+        
+        public String getDatabaseName() {
+            return databaseName;
         }
     }
 }
