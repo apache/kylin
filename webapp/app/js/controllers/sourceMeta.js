@@ -14,6 +14,9 @@ KylinApp
             {attr: 'datatype', name: 'Data Type'},
             {attr: 'cardinality', name: 'Cardinality'}
         ];
+        $scope.hiveTbLoad={
+            status:"init"
+        }
        $scope.state = { filterAttr: 'id', filterReverse:false, reverseColumn: 'id',
             dimensionFilter: '', measureFilter: ''};
 
@@ -160,9 +163,11 @@ KylinApp
                     SweetAlert.swal('Success!','Below tables were synced successfully: ' + result['result'].join() , 'success');
                     rainbowBar.hide();
                     loadingRequest.hide();
+                    hiveTbLoad.status="success";
                 },function(){
                     rainbowBar.hide();
                     loadingRequest.hide();
+                    hiveTbLoad.status="init";
                 })
             }
         };
