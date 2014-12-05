@@ -27,7 +27,7 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
             showCancelButton: true,
             confirmButtonColor: '#DD6B55',
             confirmButtonText: "Yes",
-            closeOnConfirm: false
+            closeOnConfirm: true
         }, function(isConfirm) {
             if(isConfirm){
                 CacheService.clean({}, function () {
@@ -61,7 +61,7 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
             showCancelButton: true,
             confirmButtonColor: '#DD6B55',
             confirmButtonText: "Yes",
-            closeOnConfirm: false
+            closeOnConfirm: true
         }, function(isConfirm) {
             if(isConfirm){
             AdminService.cleanStorage({}, function () {
@@ -79,7 +79,7 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
             showCancelButton: true,
             confirmButtonColor: '#DD6B55',
             confirmButtonText: "Yes",
-            closeOnConfirm: false
+            closeOnConfirm: true
         }, function(isConfirm) {
             if(isConfirm){
             AdminService.updateConfig({}, {key: 'kylin.query.cache.enabled',value:false}, function () {
@@ -134,7 +134,7 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes",
-                closeOnConfirm: false
+                closeOnConfirm: true
             }, function(isConfirm) {
                 if(isConfirm){
                 AdminService.updateConfig({}, {key: $scope.state.key, value: $scope.state.value}, function (result) {
