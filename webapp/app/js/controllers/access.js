@@ -1,6 +1,6 @@
 'use strict';
 
-KylinApp.controller('AccessCtrl', function ($scope,AccessService, MessageService, AuthenticationService,sweet,SweetAlert) {
+KylinApp.controller('AccessCtrl', function ($scope,AccessService, MessageService, AuthenticationService,SweetAlert) {
 
     $scope.accessTooltip = "<div style='text-align: left'>" +
         "<label>What does access mean to cube?</label>" +
