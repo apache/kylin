@@ -100,7 +100,7 @@ public class HiveSourceTableLoader {
         cmd.append("\"");
 
         CliCommandExecutor cmdExec = config.getCliCommandExecutor();
-        String output = cmdExec.execute(cmd.toString());
+        String output = cmdExec.execute(cmd.toString()).getSecond();
 
         return extractTableDescFromHiveOutput(database, output, metaTmpDir);
     }
