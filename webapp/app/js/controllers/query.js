@@ -1,7 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('QueryCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, $modal, MessageService, $domUtilityService, $timeout, TableService,sweet,SweetAlert) {
+    .controller('QueryCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, $modal, MessageService, $domUtilityService, $timeout, TableService,SweetAlert) {
         $scope.mainPanel = 'query';
         $scope.rowsPerPage = 50000;
         $scope.base64 = $base64;

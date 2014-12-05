@@ -1,7 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,sweet,SweetAlert) {
+    .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,SweetAlert) {
         $scope.cubeName = null;
         $scope.jobs = {};
         $scope.projects = [];

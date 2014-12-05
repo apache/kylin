@@ -1,6 +1,6 @@
 'use strict';
 
-KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService, CubeService, TableService, CubeGraphService, UserService, AuthenticationService,sweet,SweetAlert) {
+KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService, CubeService, TableService, CubeGraphService, UserService, AuthenticationService,SweetAlert) {
     $scope.newAccess = null;
     $scope.state = {jsonEdit: false};
 
