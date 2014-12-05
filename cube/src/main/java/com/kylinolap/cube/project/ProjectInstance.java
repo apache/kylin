@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
+import com.kylinolap.metadata.project.ProjectDataModel;
 
 /**
  * Project is a concept in Kylin similar to schema in DBMS
@@ -58,6 +59,9 @@ public class ProjectInstance extends RootPersistentEntity {
 
     @JsonProperty("description")
     private String description;
+
+    @JsonProperty("datamodels")
+    private List<ProjectDataModel> dataModels;
 
     public String getResourcePath() {
         return concatResourcePath(name);
@@ -211,7 +215,14 @@ public class ProjectInstance extends RootPersistentEntity {
     public void recordUpdateTime(long timeMillis) {
         this.lastUpdateTime = formatTime(timeMillis);
     }
-    
+
+    public List<ProjectDataModel> getDataModels() {
+        return dataModels;
+    }
+
+    public void setDataModels(List<ProjectDataModel> dataModels) {
+        this.dataModels = dataModels;
+    }
 
     public void init() {
         if (name == null)
