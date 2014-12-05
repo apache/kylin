@@ -12,14 +12,16 @@
   "dimensions": [
     {
       "name": "cal_dt",
-      "column": ["edw.test_cal_dt.cal_dt"],
+      "table": "edw.test_cal_dt",
+      "column": ["cal_dt"],
       "derived": [
         "week_beg_dt"
       ]
     },
     {
       "name": "category",
-      "column": ["default.test_category_groupings.meta_categ_name", "default.test_category_groupings.categ_lvl2_name", "default.test_category_groupings.categ_lvl3_name"],
+      "table": "default.test_category_groupings",
+      "column": ["meta_categ_name", "categ_lvl2_name", "categ_lvl3_name"],
       "derived": [
         "USER_DEFINED_FIELD1",
         "USER_DEFINED_FIELD3",
@@ -30,11 +32,13 @@
     },
     {
       "name": "lstg_format_name",
-      "column": ["default.test_kylin_fact.lstg_format_name"]
+      "table": "default.test_kylin_fact",
+      "column": ["lstg_format_name"]
     },
     {
       "name": "site_id",
-      "column": ["edw.test_sites.site_id"],
+      "table": "edw.test_sites",
+      "column": ["site_id"],
       "derived": [
         "site_name",
         "cre_user"
@@ -42,7 +46,8 @@
     },
     {
       "name": "seller_type_cd",
-      "column": ["edw.test_seller_type_dim.seller_type_cd"],
+      "table": "edw.test_seller_type_dim",
+      "column": ["seller_type_cd"],
       "derived": [
         "seller_type_desc"
       ]
