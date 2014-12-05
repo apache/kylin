@@ -94,7 +94,7 @@ public class CubeDesc extends RootPersistentEntity {
 
     private KylinConfig config;
     private DataModelDesc model;
-    
+
     @JsonProperty("name")
     private String name;
     @JsonProperty("model_name")
@@ -237,9 +237,9 @@ public class CubeDesc extends RootPersistentEntity {
         return result;
     }
 
-//    public boolean isFactTable(String factTable) {
-//        return this.factTable.equalsIgnoreCase(factTable);
-//    }
+    //    public boolean isFactTable(String factTable) {
+    //        return this.factTable.equalsIgnoreCase(factTable);
+    //    }
 
     public boolean isDerived(TblColRef col) {
         return derivedToHostMap.containsKey(col);
@@ -459,45 +459,44 @@ public class CubeDesc extends RootPersistentEntity {
     public void init(KylinConfig config, Map<String, TableDesc> tables) {
         this.errors.clear();
         this.config = config;
-        if(this.modelName == null || this.modelName.length() ==0) {
+        if (this.modelName == null || this.modelName.length() == 0) {
             this.addError("The cubeDesc '" + this.getName() + "' doesn't have data model specified.");
         }
-        
+
         this.model = MetadataManager.getInstance(config).getDataModelDesc(this.modelName);
-        
-        if(this.model == null) {
+
+        if (this.model == null) {
             this.addError("No data model found with name '" + modelName + "'.");
         }
-        
+
         //key: column name; value: list of tables;
         Map<String, List<TableDesc>> columnTableMap = new HashMap<String, List<TableDesc>>();
-        
+
         String colName;
-        for(TableDesc table : tables.values()) {
-            for(ColumnDesc col : table.getColumns()) {
+        for (TableDesc table : tables.values()) {
+            for (ColumnDesc col : table.getColumns()) {
                 colName = col.getName();
                 List<TableDesc> tableNames = columnTableMap.get(colName);
-                if(tableNames == null) {
+                if (tableNames == null) {
                     tableNames = new LinkedList<TableDesc>();
                     columnTableMap.put(colName, tableNames);
-                } 
+                }
                 tableNames.add(table);
             }
         }
-        
 
         // key: table name; value: list of databases;
         Map<String, List<String>> tableDatabaseMap = new HashMap<String, List<String>>();
-        
+
         String tableName;
-        for(TableDesc table : tables.values()) {
+        for (TableDesc table : tables.values()) {
             tableName = table.getName();
-                List<String> dbNames = tableDatabaseMap.get(tableName);
-                if(dbNames == null) {
-                    dbNames = new LinkedList<String>();
-                    tableDatabaseMap.put(tableName, dbNames);
-                } 
-                dbNames.add(table.getDatabase());
+            List<String> dbNames = tableDatabaseMap.get(tableName);
+            if (dbNames == null) {
+                dbNames = new LinkedList<String>();
+                tableDatabaseMap.put(tableName, dbNames);
+            }
+            dbNames.add(table.getDatabase());
         }
 
         for (DimensionDesc dim : dimensions) {
@@ -538,26 +537,32 @@ public class CubeDesc extends RootPersistentEntity {
             // dimension column
             if (dim.getColumn() != null) {
                 //if ("{FK}".equals(dim.getColumn())) {
-                if (join != null) {    
+                if (join != null) {
+                    // this dimension is defined on lookup table
                     for (TblColRef ref : join.getForeignKeyColumns()) {
                         TblColRef inited = initDimensionColRef(ref);
                         dimColList.add(inited);
                         hostColList.add(inited);
                     }
                 } else {
+                    // this dimension is defined on fact table
                     for (String aColumn : dim.getColumn()) {
                         TblColRef ref = initDimensionColRef(dimTable, aColumn);
-                        dimColList.add(ref);
-                        hostColList.add(ref);
+                        if (!dimColList.contains(ref)) {
+                            dimColList.add(ref);
+                           //hostColList.add(ref);
+                        }
                     }
                 }
             }
+
             // hierarchy columns
             if (dim.getHierarchy() != null) {
                 for (HierarchyDesc hier : dim.getHierarchy()) {
                     TblColRef ref = initDimensionColRef(dimTable, hier.getColumn());
                     hier.setColumnRef(ref);
-                    dimColList.add(ref);
+                    if (!dimColList.contains(ref))
+                        dimColList.add(ref);
                 }
                 if (hostColList.isEmpty()) { // the last hierarchy could serve
                                              // as host when col is
