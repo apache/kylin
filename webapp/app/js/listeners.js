@@ -1,4 +1,4 @@
-KylinApp.run(function ($rootScope, $http, $location, UserService, AuthenticationService, MessageService,sweet,SweetAlert) {
+KylinApp.run(function ($rootScope, $http, $location, UserService, AuthenticationService, MessageService,SweetAlert) {
 
     $rootScope.permissions = {
         READ: {name: 'CUBE QUERY', value: 'READ', mask: 1},
