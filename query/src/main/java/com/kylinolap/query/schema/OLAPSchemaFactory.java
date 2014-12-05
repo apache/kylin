@@ -69,12 +69,20 @@ public class OLAPSchemaFactory implements SchemaFactory {
         project = ProjectInstance.getNormalizedProjectName(project);
 
         List<TableDesc> tables = ProjectManager.getInstance(config).listExposedTables(project);
-        // "database" in TableDesc correspond to our schema
-        HashMap<String, Integer> schemaCounts = DatabaseDesc.extractDatabaseOccurenceCounts(tables);
 
+        // "database" in TableDesc correspond to our schema
+        // the logic to decide which schema to be "default" in calcite:
+        // if some schema are named "default", use it.
+        // other wise use the schema with most tables
+        HashMap<String, Integer> schemaCounts = DatabaseDesc.extractDatabaseOccurenceCounts(tables);
         String majoritySchemaName = "";
         int majoritySchemaCount = 0;
         for (Map.Entry<String, Integer> e : schemaCounts.entrySet()) {
+            if (e.getKey().equalsIgnoreCase("default")) {
+                majoritySchemaCount = Integer.MAX_VALUE;
+                majoritySchemaName = e.getKey();
+            }
+
             if (e.getValue() >= majoritySchemaCount) {
                 majoritySchemaCount = e.getValue();
                 majoritySchemaName = e.getKey();
