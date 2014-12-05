@@ -20,6 +20,6 @@ package com.kylinolap.common.util;
  * @author ysong1
  * 
  */
-public interface SSHLogger {
+public interface Logger {
     public void log(String message);
 }

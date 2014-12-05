@@ -91,12 +91,13 @@ public class HiveTable implements ReadableTable {
 
         String cmd = "hive -e \"describe extended " + hiveTable + ";\"";
         CliCommandExecutor exec = KylinConfig.getInstanceFromEnv().getCliCommandExecutor();
-        String output = exec.execute(cmd);
+        String output = exec.execute(cmd).getSecond();
 
         Pattern ptn = Pattern.compile("location:(.*?),");
         Matcher m = ptn.matcher(output);
-        if (m.find() == false)
+        if (m.find() == false) {
             throw new IOException("Failed to find HDFS location for hive table " + hiveTable + " from output -- " + output);
+        }
 
         String hdfsDir = m.group(1);
 
