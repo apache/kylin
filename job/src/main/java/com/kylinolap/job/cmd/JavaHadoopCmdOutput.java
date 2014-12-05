@@ -16,6 +16,7 @@
 
 package com.kylinolap.job.cmd;
 
+import java.io.IOException;
 import java.util.Map;
 
 import org.apache.hadoop.mapreduce.Counters;
@@ -36,7 +37,7 @@ import com.kylinolap.job.tools.HadoopStatusChecker;
  * @author xduo
  * 
  */
-public class JavaHadoopCmdOutput implements ICommandOutput {
+public class JavaHadoopCmdOutput extends BaseCommandOutput implements ICommandOutput {
 
     protected static final Logger log = LoggerFactory.getLogger(JavaHadoopCmdOutput.class);
 
@@ -124,9 +125,6 @@ public class JavaHadoopCmdOutput implements ICommandOutput {
         status = JobStepStatusEnum.NEW;
     }
 
-    /**
-     * @param jobStatus
-     */
     private void updateHadoopJobInfo() {
         try {
             Map<String, String> jobInfo = job.getInfo();
@@ -185,4 +183,5 @@ public class JavaHadoopCmdOutput implements ICommandOutput {
             output.append(e.getLocalizedMessage());
         }
     }
+
 }
