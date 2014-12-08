@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
 
 import org.apache.commons.lang.StringUtils;
@@ -48,7 +49,6 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.exception.InvalidJobInstanceException;
 import com.kylinolap.job.exception.JobException;

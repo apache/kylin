@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.kylinolap.cube.project.CubeRealizationManager;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -39,7 +40,6 @@ import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.CubeSegmentStatusEnum;
 import com.kylinolap.cube.exception.CubeIntegrityException;
-import com.kylinolap.cube.project.ProjectManager;
 import com.kylinolap.job.JobDAO;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.JobInstance.JobStep;
@@ -162,7 +162,7 @@ public class GenericJobEngineTest {
 
         MetadataManager.removeInstance(KylinConfig.getInstanceFromEnv());
         CubeManager.removeInstance(KylinConfig.getInstanceFromEnv());
-        ProjectManager.removeInstance(KylinConfig.getInstanceFromEnv());
+        CubeRealizationManager.removeInstance(KylinConfig.getInstanceFromEnv());
     }
 
     @Test(expected = InvalidJobInstanceException.class)

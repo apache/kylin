@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.kylinolap.cube.project.CubeRealizationManager;
+import com.kylinolap.metadata.project.ProjectInstance;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaFactory;
 import net.hydromatic.optiq.SchemaPlus;
@@ -29,8 +31,6 @@ import net.hydromatic.optiq.SchemaPlus;
 import org.eigenbase.util14.ConversionUtil;
 
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.cube.project.ProjectInstance;
-import com.kylinolap.cube.project.ProjectManager;
 import com.kylinolap.metadata.model.DatabaseDesc;
 import com.kylinolap.metadata.model.TableDesc;
 
@@ -68,7 +68,7 @@ public class OLAPSchemaFactory implements SchemaFactory {
     public static File createTempOLAPJson(String project, KylinConfig config) {
         project = ProjectInstance.getNormalizedProjectName(project);
 
-        List<TableDesc> tables = ProjectManager.getInstance(config).listExposedTables(project);
+        List<TableDesc> tables = CubeRealizationManager.getInstance(config).listExposedTables(project);
 
         // "database" in TableDesc correspond to our schema
         // the logic to decide which schema to be "default" in calcite:

@@ -19,13 +19,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.kylinolap.cube.project.CubeRealizationManager;
+import com.kylinolap.metadata.project.ProjectInstance;
 import net.hydromatic.optiq.Table;
 import net.hydromatic.optiq.impl.AbstractSchema;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.project.ProjectInstance;
-import com.kylinolap.cube.project.ProjectManager;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.TableDesc;
 
@@ -70,7 +70,7 @@ public class OLAPSchema extends AbstractSchema {
 
     private Map<String, Table> buildTableMap() {
         Map<String, Table> olapTables = new HashMap<String, Table>();
-        List<TableDesc> projectTables = getProjectManager().listExposedTables(projectName);
+        List<TableDesc> projectTables = CubeRealizationManager.getInstance(config).listExposedTables(projectName);
 
         for (TableDesc tableDesc : projectTables) {
             if (tableDesc.getDatabase().equals(schemaName)) {
@@ -124,7 +124,4 @@ public class OLAPSchema extends AbstractSchema {
         return CubeManager.getInstance(config);
     }
 
-    public ProjectManager getProjectManager() {
-        return ProjectManager.getInstance(config);
-    }
 }
