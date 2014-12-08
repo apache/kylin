@@ -1,4 +1,4 @@
-KylinApp.run(function ($rootScope, $http, $location, UserService, AuthenticationService, MessageService,SweetAlert) {
+KylinApp.run(function ($rootScope, $http, $location, UserService, AuthenticationService, MessageService,rainbowBar,loadingRequest,SweetAlert) {
 
     $rootScope.permissions = {
         READ: {name: 'CUBE QUERY', value: 'READ', mask: 1},
@@ -28,8 +28,9 @@ KylinApp.run(function ($rootScope, $http, $location, UserService, Authentication
 
     $rootScope.$on('event:loginRequired', function () {
         $rootScope.requests401 = [];
-
         $location.path('/login');
+        rainbowBar.hide();
+        loadingRequest.hide();
     });
 
     /**

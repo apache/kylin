@@ -41,6 +41,9 @@ KylinApp
         });
 
         $scope.list = function (offset, limit) {
+
+
+
             offset = (!!offset) ? offset : 0;
             var selectedJob = null;
             if (angular.isDefined($scope.state.selectedJob)) {
@@ -99,29 +102,44 @@ KylinApp
 
         });
         $scope.resume = function (job) {
-            if (confirm("Are you sure to resume the job?")) {
+            SweetAlert.swal({
+                title: 'Confirm',
+                text: 'Are you sure to resume the job?',
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#DD6B55',
+                confirmButtonText: "Yes",
+                closeOnConfirm: true
+            }, function() {
                 JobService.resume({jobId: job.uuid}, {}, function (job) {
                     $scope.jobs[job.uuid] = job;
                     if (angular.isDefined($scope.state.selectedJob)) {
                         $scope.state.selectedJob = $scope.jobs[ $scope.state.selectedJob.uuid];
                     }
 //                    MessageService.sendMsg('Job was resumed successfully', 'success', {});
-                    SweetAlert.swal('Success!', 'TJob was resumed successfully', 'success');
+                    SweetAlert.swal('Success!', 'Job was resumed successfully', 'success');
                 });
-            }
+            });
         }
 
         $scope.cancel = function (job) {
-            if (confirm("Are you sure to discard the job?")) {
+            SweetAlert.swal({
+                title: 'Confirm',
+                text: 'Are you sure to discard the job?',
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#DD6B55',
+                confirmButtonText: "Yes",
+                closeOnConfirm: true
+            }, function() {
                 JobService.cancel({jobId: job.uuid}, {}, function (job) {
                     $scope.jobs[job.uuid] = job;
                     if (angular.isDefined($scope.state.selectedJob)) {
                         $scope.state.selectedJob = $scope.jobs[ $scope.state.selectedJob.uuid];
                     }
-//                    MessageService.sendMsg('Job was cancelled successfully', 'success', {});
                     SweetAlert.swal('Success!', 'Job was cancelled successfully', 'success');
                 });
-            }
+            });
         }
 
         $scope.openModal = function () {
