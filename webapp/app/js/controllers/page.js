@@ -123,9 +123,13 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
         selectedProject: null
     };
     ProjectService.list({}, function (projects) {
+
         angular.forEach(projects, function(project, index){
             $scope.project.projects.push(project.name);
         });
+
+        $scope.project.selectedProject=$scope.project.selectedProject!=null?$scope.project.selectedProject:$scope.project.projects[0]
+
     });
 
     $scope.toCreateProj = function () {
