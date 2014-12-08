@@ -169,6 +169,18 @@ public class ProjectManager {
         }
     }
 
+    public void removeCubeFromProjects(String cubeName) throws IOException {
+        for (ProjectInstance projectInstance : findProjects(cubeName)) {
+            projectInstance.removeCube(cubeName);
+            saveResource(projectInstance);
+        }
+    }
+
+    public ProjectInstance updateCubeToProject(String cubeName, String newProjectName, String owner) throws IOException {
+        removeCubeFromProjects(cubeName);
+        return addCubeToProject(cubeName, newProjectName, owner);
+    }
+
     public boolean containsRealization(String projectName, DataModelRealizationType realization, String name) {
         ProjectInstance project = getProject(projectName);
         if (project == null) {

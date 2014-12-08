@@ -70,7 +70,7 @@ public class TableController extends BasicController {
         long start = System.currentTimeMillis();
         List<TableDesc> tables = null;
         try {
-                tables = cubeMgmtService.getProjectManager().listDefinedTablesInProject(project);
+            tables = cubeMgmtService.getProjectManager().listDefinedTablesInProject(project);
         } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);
             throw new InternalErrorException(e.getLocalizedMessage());

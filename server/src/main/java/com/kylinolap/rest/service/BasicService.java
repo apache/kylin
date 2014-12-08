@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.sql.DataSource;
 
+import com.kylinolap.cube.project.CubeRealizationManager;
 import com.kylinolap.metadata.project.ProjectInstance;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -43,7 +44,6 @@ import com.google.common.io.Files;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeDescManager;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.project.ProjectManager;
 import com.kylinolap.job.JobManager;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.exception.JobException;
@@ -118,20 +118,18 @@ public abstract class BasicService {
     /**
      * Reload changed cube into cache
      * 
-     * @param name
      * @throws IOException
      */
     @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
     public void cleanDataCache() {
         CubeManager.removeInstance(getConfig());
-        ProjectManager.removeInstance(getConfig());
+        CubeRealizationManager.removeInstance(getConfig());
         BasicService.resetOLAPDataSources();
     }
 
     /**
      * Reload the cube desc with name {name} into cache
      * 
-     * @param name
      */
     public void reloadMetadataCache() {
         MetadataManager.getInstance(getConfig()).reload();
@@ -159,8 +157,8 @@ public abstract class BasicService {
         return CubeDescManager.getInstance(getConfig());
     }
     
-    public ProjectManager getProjectManager() {
-        return ProjectManager.getInstance(getConfig());
+    public CubeRealizationManager getProjectManager() {
+        return CubeRealizationManager.getInstance(getConfig());
     }
 
     public JobManager getJobManager() throws JobException, UnknownHostException {
