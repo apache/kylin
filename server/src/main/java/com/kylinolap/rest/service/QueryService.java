@@ -384,10 +384,12 @@ public class QueryService extends BasicService {
         boolean isPartialResult = false;
         String cube = "";
         long totalScanCount = 0;
-        for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
-            isPartialResult |= ctx.storageContext.isPartialResultReturned();
-            cube = ctx.cubeInstance.getName();
-            totalScanCount += ctx.storageContext.getTotalScanCount();
+        if (OLAPContext.getThreadLocalContexts() != null) { // contexts can be null in case of 'explain plan for'
+            for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
+                isPartialResult |= ctx.storageContext.isPartialResultReturned();
+                cube = ctx.cubeInstance.getName();
+                totalScanCount += ctx.storageContext.getTotalScanCount();
+            }
         }
 
         SQLResponse response = new SQLResponse(columnMetas, results, cube, 0, false, null, isPartialResult);

@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.codahale.metrics.annotation.Metered;
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.cube.CubeBuildTypeEnum;
@@ -316,7 +317,7 @@ public class CubeController extends BasicController {
             cubeService.createCubeAndDesc(name, projectName, desc);
         } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(),e);
         }
 
         cubeRequest.setUuid(desc.getUuid());
@@ -328,12 +329,13 @@ public class CubeController extends BasicController {
      * Get available table list of the input database
      * 
      * @return Table metadata array
+     * @throws JsonProcessingException 
      * @throws IOException
      */
     @RequestMapping(value = "", method = { RequestMethod.PUT })
     @ResponseBody
     @Metered(name = "updateCube")
-    public CubeRequest updateCubeDesc(@RequestBody CubeRequest cubeRequest) {
+    public CubeRequest updateCubeDesc(@RequestBody CubeRequest cubeRequest) throws JsonProcessingException {
         CubeDesc desc = deserializeCubeDesc(cubeRequest);
 
         if (desc == null) {
@@ -347,25 +349,24 @@ public class CubeController extends BasicController {
             return cubeRequest;
         }
 
-        String descData = "";
         try {
             CubeInstance cube = cubeService.getCubeManager().getCube(cubeRequest.getCubeName());
             String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest.getProject();
             desc = cubeService.updateCubeAndDesc(cube, desc, projectName);
 
-            descData = JsonUtil.writeValueAsIndentString(desc);
         } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException("You don't have right to update this cube.");
         } catch (Exception e) {
-            logger.error("Failed to deal with the request.", e);
             throw new InternalErrorException("Failed to deal with the request.", e);
         }
 
         if (desc.getError().isEmpty()) {
             cubeRequest.setSuccessful(true);
         } else {
+            logger.warn("Cube " + desc.getName() + " fail to create because " + desc.getError());
             updateRequest(cubeRequest, false, omitMessage(desc.getError()));
         }
+        String descData = JsonUtil.writeValueAsIndentString(desc);
         cubeRequest.setCubeDescData(descData);
 
         return cubeRequest;

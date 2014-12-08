@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.kylinolap.metadata.MetadataManager;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -74,6 +75,20 @@ public class HiveSourceTableLoader {
         File metaTmpDir = File.createTempFile("meta_tmp", null);
         metaTmpDir.delete();
         metaTmpDir.mkdirs();
+
+        for (String database: db2tables.keySet()) {
+            for (String table: db2tables.get(database)) {
+                TableDesc tableDesc = MetadataManager.getInstance(config).getTableDesc(table);
+                if (tableDesc == null) {
+                    continue;
+                }
+                if (tableDesc.getDatabase().equalsIgnoreCase(database)) {
+                    continue;
+                } else {
+                    throw new UnsupportedOperationException(String.format("there is already a table[%s] in database[%s]", tableDesc.getName(), tableDesc.getDatabase()));
+                }
+            }
+        }
 
         // extract from hive
         Set<String> loadedTables = Sets.newHashSet();

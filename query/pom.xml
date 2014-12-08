@@ -19,16 +19,13 @@
     <dependencies>
         <dependency>
             <groupId>com.kylinolap</groupId>
-            <artifactId>kylin-storage</artifactId>
+            <artifactId>atopcalcite</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.calcite</groupId>
-            <artifactId>calcite-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.calcite</groupId>
-            <artifactId>calcite-avatica</artifactId>
+            <groupId>com.kylinolap</groupId>
+            <artifactId>kylin-storage</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>net.hydromatic</groupId>
