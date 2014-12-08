@@ -20,7 +20,6 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.*;
 import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.cube.project.ProjectManager;
 import com.kylinolap.job.JobInstance.JobStep;
 import com.kylinolap.job.constant.JobConstants;
 import com.kylinolap.job.constant.JobStatusEnum;
@@ -31,6 +30,7 @@ import com.kylinolap.job.exception.InvalidJobInstanceException;
 import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc;
 import com.kylinolap.metadata.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

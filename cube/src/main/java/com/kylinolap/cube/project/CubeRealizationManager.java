@@ -50,11 +50,11 @@ import com.kylinolap.metadata.model.realization.TblColRef;
 /**
  * @author xduo
  */
-public class ProjectManager {
-    private static final Logger logger = LoggerFactory.getLogger(ProjectManager.class);
+public class CubeRealizationManager {
+    private static final Logger logger = LoggerFactory.getLogger(CubeRealizationManager.class);
 
     // static cached instances
-    private static final ConcurrentHashMap<KylinConfig, ProjectManager> CACHE = new ConcurrentHashMap<KylinConfig, ProjectManager>();
+    private static final ConcurrentHashMap<KylinConfig, CubeRealizationManager> CACHE = new ConcurrentHashMap<KylinConfig, CubeRealizationManager>();
     private static final Serializer<ProjectInstance> PROJECT_SERIALIZER = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
 
     private KylinConfig config;
@@ -63,19 +63,19 @@ public class ProjectManager {
     // project name => tables
     private Multimap<String, ProjectTable> projectTables = Multimaps.synchronizedMultimap(HashMultimap.<String, ProjectTable>create());
 
-    public static ProjectManager getInstance(KylinConfig config) {
-        ProjectManager r = CACHE.get(config);
+    public static CubeRealizationManager getInstance(KylinConfig config) {
+        CubeRealizationManager r = CACHE.get(config);
         if (r != null) {
             return r;
         }
 
-        synchronized (ProjectManager.class) {
+        synchronized (CubeRealizationManager.class) {
             r = CACHE.get(config);
             if (r != null) {
                 return r;
             }
             try {
-                r = new ProjectManager(config);
+                r = new CubeRealizationManager(config);
                 CACHE.put(config, r);
                 if (CACHE.size() > 1) {
                     logger.warn("More than one singleton exist");
@@ -91,7 +91,7 @@ public class ProjectManager {
         CACHE.remove(config);
     }
 
-    private ProjectManager(KylinConfig config) throws IOException {
+    private CubeRealizationManager(KylinConfig config) throws IOException {
         logger.info("Initializing CubeManager with metadata url " + config);
         this.config = config;
 
