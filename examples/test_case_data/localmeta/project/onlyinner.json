@@ -4,12 +4,12 @@
   "datamodels": [
     {
       "name": "test_kylin_with_slr_model_desc",
-      "type": "cube",
+      "type": "CUBE",
       "realization": "test_kylin_cube_with_slr_empty"
     },
     {
       "name": "test_kylin_without_slr_model_desc",
-      "type": "cube",
+      "type": "CUBE",
       "realization": "test_kylin_cube_without_slr_empty"
     }
   ],
