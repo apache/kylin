@@ -13,19 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kylinolap.cube.project;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+package com.kylinolap.metadata.project;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
-import com.kylinolap.metadata.project.ProjectDataModel;
+import com.kylinolap.metadata.model.realization.DataModelRealization;
+
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Project is a concept in Kylin similar to schema in DBMS
@@ -236,6 +240,27 @@ public class ProjectInstance extends RootPersistentEntity {
             if (cubes.get(i) != null)
                 cubes.set(i, cubes.get(i).toUpperCase());
         }
+    }
+
+    public boolean containsRealization(DataModelRealization realization, String name) {
+        if (dataModels == null) {
+            return false;
+        }
+        for (ProjectDataModel dataModel: dataModels) {
+            if (dataModel.getType() == realization && dataModel.getName().equalsIgnoreCase(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public List<ProjectDataModel> getDataModels(final DataModelRealization dataModelRealization) {
+        return ImmutableList.copyOf(Iterables.filter(dataModels, new Predicate<ProjectDataModel>() {
+            @Override
+            public boolean apply(@Nullable ProjectDataModel input) {
+                return input.getType() == dataModelRealization;
+            }
+        }));
     }
 
     @Override

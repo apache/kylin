@@ -2,6 +2,7 @@ package com.kylinolap.metadata.project;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kylinolap.metadata.model.realization.DataModelRealization;
 
 /**
  * Created by qianzhou on 12/5/14.
@@ -13,7 +14,7 @@ public class ProjectDataModel {
     private String name;
 
     @JsonProperty("type")
-    private String type;
+    private DataModelRealization type;
 
     @JsonProperty("realization")
     private String realization;
@@ -26,11 +27,11 @@ public class ProjectDataModel {
         this.name = name;
     }
 
-    public String getType() {
+    public DataModelRealization getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(DataModelRealization type) {
         this.type = type;
     }
 
