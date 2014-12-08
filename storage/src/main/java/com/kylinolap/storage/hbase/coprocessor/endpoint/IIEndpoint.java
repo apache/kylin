@@ -60,33 +60,23 @@ public class IIEndpoint extends IIProtos.RowsService
         EndpointAggregators aggregators = null;
         CoprocessorFilter filter = null;
 
-        if (request.hasType()) {
-            type = CoprocessorRowType.deserialize(request.getType().toByteArray());
-        }
-        if (request.hasProjector()) {
-            projector = CoprocessorProjector.deserialize(request.getProjector().toByteArray());
-        }
-        if (request.hasAggregator()) {
-            aggregators = EndpointAggregators.deserialize(request.getAggregator().toByteArray());
-        }
-        if (request.hasFilter()) {
-            filter = CoprocessorFilter.deserialize(request.getFilter().toByteArray());
-        }
+        type = CoprocessorRowType.deserialize(request.getType().toByteArray());
+        projector = CoprocessorProjector.deserialize(request.getProjector().toByteArray());
+        aggregators = EndpointAggregators.deserialize(request.getAggregator().toByteArray());
+        filter = CoprocessorFilter.deserialize(request.getFilter().toByteArray());
 
+        TableRecordInfoDigest tableRecordInfoDigest = aggregators.getTableRecordInfo();
 
         IIProtos.IIResponse response = null;
         RegionScanner innerScanner = null;
         HRegion region = null;
         try {
-            ByteBuffer byteBuffer = request.getTableInfo().asReadOnlyByteBuffer();
-            TableRecordInfoDigest tableInfo = TableRecordInfoDigest.deserialize(byteBuffer);
-
             region = env.getRegion();
             innerScanner = region.getScanner(buildScan());
             region.startRegionOperation();
 
             synchronized (innerScanner) {
-                IIKeyValueCodec codec = new IIKeyValueCodec(tableInfo);
+                IIKeyValueCodec codec = new IIKeyValueCodec(tableRecordInfoDigest);
                 Iterable<Slice> slices = codec.decodeKeyValue(new HbaseServerKVIterator(innerScanner));
 
                 if (aggregators.isEmpty()) {

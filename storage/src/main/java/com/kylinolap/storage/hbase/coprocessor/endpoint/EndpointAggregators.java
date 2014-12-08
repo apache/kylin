@@ -23,7 +23,6 @@ import com.kylinolap.cube.invertedindex.TableRecordInfo;
 import com.kylinolap.cube.invertedindex.TableRecordInfoDigest;
 import com.kylinolap.cube.measure.MeasureAggregator;
 import com.kylinolap.cube.measure.fixedlen.FixedLenMeasureCodec;
-import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.DataType;
 import com.kylinolap.metadata.model.realization.FunctionDesc;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorConstants;
@@ -66,7 +65,7 @@ public class EndpointAggregators {
     final String[] funcNames;
     final String[] dataTypes;
     final int[] refColIndex;
-    final TableRecordInfoDigest tableInfo;
+    final TableRecordInfoDigest tableRecordInfo;
 
     final transient FixedLenMeasureCodec[] measureSerializers;
     final transient Object[] metricValues;
@@ -78,7 +77,7 @@ public class EndpointAggregators {
         this.funcNames = funcNames;
         this.dataTypes = dataTypes;
         this.refColIndex = refColIndex;
-        this.tableInfo = tableInfo;
+        this.tableRecordInfo = tableInfo;
 
         this.metricBytes = new byte[CoprocessorConstants.SERIALIZE_BUFFER_SIZE];
         this.metricValues = new Object[funcNames.length];
@@ -86,6 +85,11 @@ public class EndpointAggregators {
         for (int i = 0; i < this.measureSerializers.length; ++i) {
             this.measureSerializers[i] = FixedLenMeasureCodec.get(DataType.getInstance(dataTypes[i]));
         }
+    }
+
+    public TableRecordInfoDigest getTableRecordInfo()
+    {
+        return tableRecordInfo;
     }
 
     public boolean isEmpty() {
@@ -103,18 +107,18 @@ public class EndpointAggregators {
 
     public void aggregate(MeasureAggregator[] measureAggrs, byte[] row) {
         int rawIndex = 0;
-        int columnCount = tableInfo.getColumnCount();
+        int columnCount = tableRecordInfo.getColumnCount();
 
         //normal column values to aggregate
         for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex) {
-            if (tableInfo.isMetrics(columnIndex)) {
+            if (tableRecordInfo.isMetrics(columnIndex)) {
                 for (int metricIndex = 0; metricIndex < refColIndex.length; ++metricIndex) {
                     if (refColIndex[metricIndex] == columnIndex) {
                         measureAggrs[metricIndex].aggregate(measureSerializers[metricIndex].read(row, rawIndex));
                     }
                 }
             }
-            rawIndex += tableInfo.length(columnIndex);
+            rawIndex += tableRecordInfo.length(columnIndex);
         }
 
         //aggregate for "count"
@@ -170,7 +174,7 @@ public class EndpointAggregators {
             BytesUtil.writeAsciiStringArray(value.funcNames, out);
             BytesUtil.writeAsciiStringArray(value.dataTypes, out);
             BytesUtil.writeIntArray(value.refColIndex, out);
-            BytesUtil.writeByteArray(TableRecordInfoDigest.serialize(value.tableInfo), out);
+            BytesUtil.writeByteArray(TableRecordInfoDigest.serialize(value.tableRecordInfo), out);
         }
 
         @Override

@@ -163,8 +163,9 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
             minTotal += ((LongWritable) entry.getValue()[1].getState()).get();
 
         }
-        assertEquals(sumTotal, 302080000);
-        assertEquals(minTotal, 102090000);
+        assertEquals(3020800,sumTotal);
+        assertEquals(1020900,minTotal);
+
     }
 
 }
