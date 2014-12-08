@@ -2,6 +2,7 @@ package com.kylinolap.job.coprocessor;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.kylinolap.common.persistence.HBaseConnection;
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.cube.CubeInstance;
@@ -85,7 +86,8 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         //simulate bulk load
         mockCubeHtable();
 
-        hconn = HConnectionManager.createConnection(CONF);
+        //hconn = HConnectionManager.createConnection(CONF);
+        hconn = HBaseConnection.get("hbase:sandbox.hortonworks.com:2181:/hbase-unsecure");
     }
 
     @AfterClass
@@ -208,7 +210,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
     //TODO: queries like select count(*) on II can be optimized
     @Test
     public void testSimpleCount() throws Throwable {
-        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc, null, null, null, context, table);
+        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc.getColumns(), null, null, null, context, table);
 
         int count = 0;
         while (iterator.hasNext()) {
@@ -221,7 +223,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
 
     private int filteredCount(TupleFilter tupleFilter) throws Throwable {
 
-        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc, tupleFilter, null, null, context, table);
+        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc.getColumns(), tupleFilter, null, null, context, table);
 
         int count = 0;
         while (iterator.hasNext()) {
@@ -254,7 +256,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         ColumnDesc priceColumn = tableDesc.findColumnByName("PRICE");
         List<FunctionDesc> measures = buildAggregations(priceColumn);
 
-        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc, tupleFilter, groupby, measures, context, table);
+        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc.getColumns(), tupleFilter, groupby, measures, context, table);
 
         int count = 0;
         while (iterator.hasNext()) {

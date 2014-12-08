@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.kylinolap.common.KylinConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.eigenbase.reltype.RelDataType;
 import org.slf4j.Logger;
@@ -64,6 +65,9 @@ public class QueryRouter {
         if (bestCube == null) {
             bestCube = findBestMatchCube(projectManager, olapContext);
         }
+
+        //TODO: to refine
+        bestCube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube("test_kylin_cube_ii");
 
         if (bestCube == null) {
             throw new CubeNotFoundException("Can't find cube for fact table " + olapContext.firstTableScan.getCubeTable() //
