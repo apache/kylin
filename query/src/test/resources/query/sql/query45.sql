@@ -1,4 +1,4 @@
-select count(*) as CNT from test_cal_dt
+select count(*) as CNT from edw.test_cal_dt 
 
 
 

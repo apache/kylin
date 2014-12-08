@@ -138,27 +138,27 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
     @Test
     public void testProjectsDrop() throws IOException {
         CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_empty");
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).getCubesByTable("default", "test_kylin_fact").contains(cube));
+        assertTrue(ProjectManager.getInstance(this.getTestConfig()).getCubesByTable("default", "default.test_kylin_fact").contains(cube));
         assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllCubes("default").contains(cube));
 
         CubeManager.getInstance(getTestConfig()).dropCube(cube.getName(), true);
 
-        assertTrue(!ProjectManager.getInstance(this.getTestConfig()).getCubesByTable("default", "test_kylin_fact").contains(cube));
+        assertTrue(!ProjectManager.getInstance(this.getTestConfig()).getCubesByTable("default", "default.test_kylin_fact").contains(cube));
         assertTrue(!ProjectManager.getInstance(this.getTestConfig()).listAllCubes("default").contains(cube));
     }
 
     @Test
     public void testProjectsLoadAfterProjectChange() throws IOException {
         CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_empty");
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).getCubesByTable("default", "test_kylin_fact").contains(cube));
+        assertTrue(ProjectManager.getInstance(this.getTestConfig()).getCubesByTable("default", "default.test_kylin_fact").contains(cube));
 
         ProjectManager.getInstance(getTestConfig()).removeCubeFromProjects(cube.getName());
 
-        assertTrue(!ProjectManager.getInstance(this.getTestConfig()).getCubesByTable("default", "test_kylin_fact").contains(cube));
+        assertTrue(!ProjectManager.getInstance(this.getTestConfig()).getCubesByTable("default", "default.test_kylin_fact").contains(cube));
 
         ProjectManager.getInstance(getTestConfig()).updateCubeToProject(cube.getName(), "default", "tester");
 
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).getCubesByTable("default", "test_kylin_fact").contains(cube));
+        assertTrue(ProjectManager.getInstance(this.getTestConfig()).getCubesByTable("default", "default.test_kylin_fact").contains(cube));
     }
 
     private MetadataManager getMetadataManager() {

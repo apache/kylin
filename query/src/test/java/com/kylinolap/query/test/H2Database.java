@@ -36,7 +36,7 @@ import com.kylinolap.metadata.model.TableDesc;
 public class H2Database {
     private static final Logger logger = LoggerFactory.getLogger(H2Database.class);
 
-    private static final String[] ALL_TABLES = new String[] { "test_cal_dt", "test_category_groupings", "test_kylin_fact", "test_seller_type_dim", "test_sites" };
+    private static final String[] ALL_TABLES = new String[] { "edw.test_cal_dt", "default.test_category_groupings", "default.test_kylin_fact", "edw.test_seller_type_dim", "edw.test_sites" };
     private static final Map<String, String> javaToH2DataTypeMapping = new HashMap<String, String>();
 
     static {
@@ -94,6 +94,10 @@ public class H2Database {
 
         String cvsFilePath = tempFile.getPath();
         Statement stmt = h2Connection.createStatement();
+
+        String createDBSql = "CREATE SCHEMA IF NOT EXISTS DEFAULT;\nCREATE SCHEMA IF NOT EXISTS EDW;\nSET SCHEMA DEFAULT;\n";
+        stmt.executeUpdate(createDBSql);
+
         String sql = generateCreateH2TableSql(tableDesc, cvsFilePath);
         stmt.executeUpdate(sql);
 

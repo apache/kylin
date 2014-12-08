@@ -1,1 +1,1 @@
-select count(*) as c from test_cal_dt where extract(YEAR from test_cal_dt.cal_dt) = 2012
+select count(*) as c from edw.test_cal_dt as test_cal_dt where extract(YEAR from test_cal_dt.cal_dt) = 2012
