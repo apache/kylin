@@ -1,0 +1,1 @@
+select count(*) from test_kylin_fact

@@ -5,9 +5,7 @@ import com.google.protobuf.ByteString;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.invertedindex.TableRecord;
 import com.kylinolap.cube.invertedindex.TableRecordInfo;
-import com.kylinolap.cube.invertedindex.TableRecordInfoDigest;
 import com.kylinolap.metadata.model.ColumnDesc;
-import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.realization.FunctionDesc;
 import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.StorageContext;
@@ -36,9 +34,6 @@ import java.util.*;
 public class EndpointTupleIterator implements ITupleIterator {
 
     private final CubeSegment seg;
-    private final TableDesc tableDesc;
-    private final TupleFilter rootFilter;
-    private final Collection<TblColRef> groupBy;
     private final StorageContext context;
     private final List<FunctionDesc> measures;
 
@@ -55,7 +50,7 @@ public class EndpointTupleIterator implements ITupleIterator {
     Iterator<List<IIRow>> regionResponsesIterator = null;
     ITupleIterator tupleIterator = null;
 
-    public EndpointTupleIterator(CubeSegment cubeSegment, TableDesc tableDesc,
+    public EndpointTupleIterator(CubeSegment cubeSegment, ColumnDesc[] columnDescs,
             TupleFilter rootFilter, Collection<TblColRef> groupBy, List<FunctionDesc> measures, StorageContext context, HTableInterface table) throws Throwable {
 
         if (rootFilter == null) {
@@ -72,14 +67,11 @@ public class EndpointTupleIterator implements ITupleIterator {
 
 
         this.seg = cubeSegment;
-        this.tableDesc = tableDesc;
-        this.rootFilter = rootFilter;
-        this.groupBy = groupBy;
         this.context = context;
         this.measures = measures;
 
         this.columns = Lists.newArrayList();
-        for (ColumnDesc columnDesc : tableDesc.getColumns()) {
+        for (ColumnDesc columnDesc : columnDescs) {
             columns.add(new TblColRef(columnDesc));
         }
         columnNames = getColumnNames(columns);
@@ -87,7 +79,7 @@ public class EndpointTupleIterator implements ITupleIterator {
         this.tupleInfo = buildTupleInfo();
         this.tableRecordInfo = new TableRecordInfo(this.seg);
 
-        this.pushedDownRowType = CoprocessorRowType.fromTableDesc(this.seg, tableDesc);
+        this.pushedDownRowType = CoprocessorRowType.fromColumnDescs(this.seg, columnDescs);
         this.pushedDownFilter = CoprocessorFilter.fromFilter(this.seg, rootFilter);
         this.pushedDownProjector = CoprocessorProjector.makeForEndpoint(tableRecordInfo, groupBy);
         this.pushedDownAggregators = EndpointAggregators.fromFunctions(tableRecordInfo, measures);
