@@ -29,10 +29,10 @@
                                     <span class="label"
                                             ng-class="{
                                             'label-default' : state.selectedJob.job_status=='PENDING',
-                                            'label-warning' : state.selectedJob.job_status=='RUNNING',
+                                            'label bg-aqua' : state.selectedJob.job_status=='RUNNING',
                                             'label-success' : state.selectedJob.job_status=='FINISHED',
                                             'label-danger' : state.selectedJob.job_status=='ERROR',
-                                            'label-inverse' : state.selectedJob.job_status=='DISCARDED'}"
+                                            'label bg-navy' : state.selectedJob.job_status=='DISCARDED'}"
                                     >{{state.selectedJob.job_status}}</span>
                                 </td>
                             </tr>
@@ -70,7 +70,7 @@
                         {{step.info.mr_job_id ? ('MR Job: <br>' + step.info.mr_job_id + '<br>') :''}}</div>"
                     ng-class="{
                         'fa fa-ellipsis-h bg-gray' : step.step_status=='PENDING',
-                        'fa fa-spinner fa-spin btn-yellow' : step.step_status=='WAITING' || step.step_status=='RUNNING',
+                        'fa fa-spinner fa-spin bg-aqua' : step.step_status=='WAITING' || step.step_status=='RUNNING',
                         'fa fa-check bg-green' : step.step_status=='FINISHED',
                         'fa fa-warning bg-red' : step.step_status=='ERROR',
                         'fa fa-ban bg-navy' : step.step_status=='DISCARDED'

@@ -43,8 +43,8 @@ public class ProjectInstance extends RootPersistentEntity {
 
     @JsonProperty("tables")
     private Set<String> tables;
-        
-    
+
+
     @JsonProperty("owner")
     private String owner;
 
@@ -165,8 +165,8 @@ public class ProjectInstance extends RootPersistentEntity {
 
     public void setCubes(List<String> cubes) {
         this.cubes = cubes;
-    }    
-        
+    }
+
     public void setTables(Set<String> tables) {
         this.tables = tables;
     }
@@ -182,7 +182,7 @@ public class ProjectInstance extends RootPersistentEntity {
     }
 
     public int getTablesCount() {
-        return cubes.size();
+        return this.getTables().size();
     }
 
     public void addTable(String tableName) {

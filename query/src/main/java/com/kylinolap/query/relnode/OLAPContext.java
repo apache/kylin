@@ -64,7 +64,8 @@ public class OLAPContext {
     }
 
     public static Collection<OLAPContext> getThreadLocalContexts() {
-        return _localContexts.get().values();
+        Map<Integer, OLAPContext> map = _localContexts.get();
+        return map == null ? null : map.values();
     }
 
     public static OLAPContext getThreadLocalContextById(int id) {
