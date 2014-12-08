@@ -34,11 +34,27 @@ _Tested with Hortonworks HDP 2.1.3 and Cloudera Quickstart VM 5.1._
 - For the quick tutorial, we assume that your hadoop has priviledges disabled which means any user could run hadoop and hive command
 
 
-### Installation ###
+Installation 
+------------
+It is very easy to install Kylin for exploration/development. There are 3 supported options:
 
-Depending on different use cases Kylin can be installed differently. There are two major scenarios:
+1. Quick Start     (Docker)
+2. Sandbox         (HDP or CDH sandbox)
+3. Dev Environment (IDE + Sandbox)
 
-#### On-Hadoop-CLI installation ####
+#### Quick Start (using Docker) ####
+This is the easiest option to try Kylin. We have created docker container for Kylin (along with Hadoop, HBase and Hive) with help of SequenceIQ.  The only thing you will need to do is to pull the container from the official Docker repository to be up and running in few minutes. 
+
+Features:
+
+- Size            - Light weight compared to downloading and setting up HDP or CDH sandbox.
+- Cluster support - Supports multi node installation. 
+- Fully Automated - No manual steps. One command does it all 
+
+For a hands-on tutorial please visit [Kylin Docker installation](https://github.com/KylinOLAP/Kylin/wiki/On-Hadoop-Kylin-installation-using-Docker). 
+
+
+#### Sandbox (On-Hadoop-CLI installation) ####
 
 If you are free to install Kylin on your hadoop CLI machine or Hadoop sandbox, this is the most convenient scenario, for it puts everything in a single machine.
 
@@ -50,7 +66,7 @@ For normal users, the application in the above picture means `Kylin Web`, which 
 
 For a hands-on tutorial please visit [On-Hadoop-CLI installation](https://github.com/KylinOLAP/Kylin/wiki/On-Hadoop-CLI-installation).
 
-#### Off-Hadoop-CLI Installation ####
+#### Dev Environment (Off-Hadoop-CLI Installation) ####
 
 This is typically for development environment setup.
 
@@ -72,4 +88,6 @@ For a hands-on tutorial please visit [Off-Hadoop-CLI installation](https://githu
 * How To Contribute: See [wiki](https://github.com/KylinOLAP/Kylin/wiki/How-to-Contribute)
 
 * Presentation: [Kylin Hadoop OLAP Engine v1.0](https://github.com/KylinOLAP/Kylin/blob/master/docs/Kylin_Hadoop_OLAP_Engine_v1.0.pdf?raw=true)
+
+*  Apache Proposal: [Apache Kylin](https://wiki.apache.org/incubator/KylinProposal)
 
