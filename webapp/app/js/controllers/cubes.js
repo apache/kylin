@@ -26,7 +26,6 @@ KylinApp
         $scope.state = { filterAttr: 'create_time', filterReverse: true, reverseColumn: 'create_time',
             dimensionFilter: '', measureFilter: ''};
 
-
         $scope.list = function (offset, limit) {
             offset = (!!offset) ? offset : 0;
             limit = (!!limit) ? limit : 20;
