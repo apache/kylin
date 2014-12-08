@@ -99,12 +99,15 @@ public class ColumnTupleFilter extends TupleFilter {
 
     @Override
     public void deserialize(byte[] bytes) {
-        ByteBuffer buffer = ByteBuffer.wrap(bytes);
-        TableDesc table = new TableDesc();
-        table.setName(BytesUtil.readUTFString(buffer));
-
         ColumnDesc column = new ColumnDesc();
-        column.setTable(table);
+        ByteBuffer buffer = ByteBuffer.wrap(bytes);
+        String tableName = BytesUtil.readUTFString(buffer);
+        if(tableName != null) {
+            TableDesc table = new TableDesc();
+            table.setName(tableName);
+            column.setTable(table);
+        }
+
         column.setName(BytesUtil.readUTFString(buffer));
         column.setDatatype(BytesUtil.readUTFString(buffer));
 

@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
+import com.kylinolap.common.util.StringSplitter;
 
 /**
  * Table Metadata from Source. All name should be uppercase.
@@ -71,7 +72,17 @@ public class TableDesc extends RootPersistentEntity {
     }
 
     public void setName(String name) {
-        this.name = name;
+        if (name != null) {
+            String[] splits = StringSplitter.split(name, ".");
+            if (splits.length == 2) {
+                this.setDatabase(splits[0]);
+                this.name = splits[1];
+            } else if (splits.length == 1) {
+                this.name = splits[0];
+            }
+        } else {
+            this.name = name;
+        }
     }
 
     @JsonProperty("database")

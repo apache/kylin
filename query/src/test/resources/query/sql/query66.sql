@@ -1,2 +1,2 @@
-select test_kylin_fact.cal_dt, max(test_kylin_fact.cal_dt) as mmm from test_kylin_fact left join test_cal_dt
+select test_kylin_fact.cal_dt, max(test_kylin_fact.cal_dt) as mmm from test_kylin_fact left join edw.test_cal_dt as test_cal_dt 
 	on test_kylin_fact.cal_dt=test_cal_dt.cal_dt group by test_kylin_fact.cal_dt order by 2 desc limit 7
