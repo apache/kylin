@@ -123,13 +123,13 @@ public class KylinQueryTest extends KylinTestBase {
     @Ignore
     @Test
     public void testTempQuery() throws Exception {
-        execAndCompQuery("src/test/resources/query/temp", null, true);
+       execAndCompQuery("src/test/resources/query/temp", null, true);
     }
 
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = "src/test/resources/query/sql/query02.sql";
+        String queryFileName = "src/test/resources/query/sql_orderby/query01.sql";
 
         File sqlFile = new File(queryFileName);
         runSQL(sqlFile, true, true);
@@ -211,7 +211,7 @@ public class KylinQueryTest extends KylinTestBase {
 
     @Test
     public void testH2Query() throws Exception {
-        this.execQueryUsingH2("src/test/resources/query/h2", false);
+        this.execQueryUsingH2("src/test/resources/query/sql_orderby", false);
     }
 
     @Test
