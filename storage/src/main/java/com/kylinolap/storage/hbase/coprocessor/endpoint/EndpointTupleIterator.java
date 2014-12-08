@@ -126,7 +126,6 @@ public class EndpointTupleIterator implements ITupleIterator {
 
     private IIProtos.IIRequest prepareRequest() throws IOException {
         IIProtos.IIRequest request = IIProtos.IIRequest.newBuilder().
-                setTableInfo(ByteString.copyFrom(TableRecordInfoDigest.serialize(tableRecordInfo))).
                 setType(ByteString.copyFrom(CoprocessorRowType.serialize(pushedDownRowType))).
                 setFilter(ByteString.copyFrom(CoprocessorFilter.serialize(pushedDownFilter))).
                 setProjector(ByteString.copyFrom(CoprocessorProjector.serialize(pushedDownProjector))).
