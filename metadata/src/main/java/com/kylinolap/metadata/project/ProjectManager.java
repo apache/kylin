@@ -16,13 +16,15 @@
 
 package com.kylinolap.metadata.project;
 
+import com.google.common.collect.Maps;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.common.restclient.Broadcaster;
 import com.kylinolap.common.restclient.SingleValueCache;
-import com.kylinolap.metadata.model.realization.DataModelRealization;
+import com.kylinolap.metadata.model.realization.DataModelRealizationType;
+import com.kylinolap.metadata.model.realization.IDataModelRealization;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +33,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author xduo
@@ -41,6 +44,7 @@ public class ProjectManager {
     // static cached instances
     private static final ConcurrentHashMap<KylinConfig, ProjectManager> CACHE = new ConcurrentHashMap<KylinConfig, ProjectManager>();
     private static final Serializer<ProjectInstance> PROJECT_SERIALIZER = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
+    private ConcurrentMap<Class<? extends IDataModelRealization>, Class<? extends IDataModelRealization>> realizations = Maps.newConcurrentMap();
 
     private KylinConfig config;
     // project name => ProjrectDesc
@@ -80,6 +84,13 @@ public class ProjectManager {
         this.config = config;
 
         loadAllProjects();
+    }
+
+    public void registerDataModelRealization(Class<? extends IDataModelRealization> realization) {
+        if (realization == null) {
+            throw new NullPointerException("realization cannot be null");
+        }
+        realizations.putIfAbsent(realization, realization);
     }
 
     public List<ProjectInstance> listAllProjects() {
@@ -158,7 +169,7 @@ public class ProjectManager {
         }
     }
 
-    public boolean containsRealization(String projectName, DataModelRealization realization, String name) {
+    public boolean containsRealization(String projectName, DataModelRealizationType realization, String name) {
         ProjectInstance project = getProject(projectName);
         if (project == null) {
             return false;
