@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
-import com.kylinolap.metadata.model.realization.DataModelRealization;
+import com.kylinolap.metadata.model.realization.DataModelRealizationType;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -242,7 +242,7 @@ public class ProjectInstance extends RootPersistentEntity {
         }
     }
 
-    public boolean containsRealization(DataModelRealization realization, String name) {
+    public boolean containsRealization(DataModelRealizationType realization, String name) {
         if (dataModels == null) {
             return false;
         }
@@ -254,11 +254,11 @@ public class ProjectInstance extends RootPersistentEntity {
         return false;
     }
 
-    public List<ProjectDataModel> getDataModels(final DataModelRealization dataModelRealization) {
+    public List<ProjectDataModel> getDataModels(final DataModelRealizationType dataModelRealizationType) {
         return ImmutableList.copyOf(Iterables.filter(dataModels, new Predicate<ProjectDataModel>() {
             @Override
             public boolean apply(@Nullable ProjectDataModel input) {
-                return input.getType() == dataModelRealization;
+                return input.getType() == dataModelRealizationType;
             }
         }));
     }
@@ -267,4 +267,5 @@ public class ProjectInstance extends RootPersistentEntity {
     public String toString() {
         return "ProjectDesc [name=" + name + "]";
     }
+
 }

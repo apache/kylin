@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.job.exception.JobException;
 
 /**
