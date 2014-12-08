@@ -71,7 +71,7 @@ public class TableController extends BasicController {
         List<TableDesc> tables = null;
         try {
                 tables = cubeMgmtService.getProjectManager().listDefinedTablesInProject(project);
-        } catch (Exception e) {
+        } catch (IOException e) {
             logger.error("Failed to deal with the request.", e);
             throw new InternalErrorException(e.getLocalizedMessage());
         }
@@ -129,9 +129,9 @@ public class TableController extends BasicController {
             
             cubeMgmtService.syncTableToProject(tables, project);
             result.put("result", arr);
-       }catch(Exception e){
+       }catch(IOException e){
            logger.error("Failed to deal with the request.", e);
-           throw new InternalErrorException(e.getLocalizedMessage());
+           throw new InternalErrorException("Failed to load table,Please check the table name.");
        }
         return result;
     }
