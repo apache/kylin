@@ -35,7 +35,7 @@ import org.junit.Test;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.query.enumerator.OLAPQuery;
 import com.kylinolap.query.relnode.OLAPContext;
 import com.kylinolap.query.schema.OLAPSchemaFactory;

@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.kylinolap.metadata.project.ProjectInstance;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaFactory;
 import net.hydromatic.optiq.SchemaPlus;
@@ -29,7 +30,6 @@ import net.hydromatic.optiq.SchemaPlus;
 import org.eigenbase.util14.ConversionUtil;
 
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.cube.project.ProjectManager;
 import com.kylinolap.metadata.model.DatabaseDesc;
 import com.kylinolap.metadata.model.TableDesc;

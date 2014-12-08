@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.sql.DataSource;
 
+import com.kylinolap.metadata.project.ProjectInstance;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +43,6 @@ import com.google.common.io.Files;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeDescManager;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.cube.project.ProjectManager;
 import com.kylinolap.job.JobManager;
 import com.kylinolap.job.engine.JobEngineConfig;

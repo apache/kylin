@@ -19,6 +19,7 @@ package com.kylinolap.rest.controller;
 import java.io.IOException;
 import java.util.List;
 
+import com.kylinolap.metadata.project.ProjectInstance;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +33,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.codahale.metrics.annotation.Metered;
-import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.request.CreateProjectRequest;
 import com.kylinolap.rest.request.UpdateProjectRequest;
