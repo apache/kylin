@@ -33,6 +33,7 @@ import javax.sql.DataSource;
 
 import com.kylinolap.cube.project.CubeRealizationManager;
 import com.kylinolap.metadata.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectManager;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -157,7 +158,11 @@ public abstract class BasicService {
         return CubeDescManager.getInstance(getConfig());
     }
     
-    public CubeRealizationManager getProjectManager() {
+    public ProjectManager getProjectManager() {
+        return ProjectManager.getInstance(getConfig());
+    }
+
+    public CubeRealizationManager getCubeRealizationManager() {
         return CubeRealizationManager.getInstance(getConfig());
     }
 

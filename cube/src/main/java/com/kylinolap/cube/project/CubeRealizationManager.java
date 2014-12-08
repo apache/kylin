@@ -181,11 +181,10 @@ public class CubeRealizationManager {
         return this.listAllCubes(projectName).contains(cube);
     }
 
-    public ProjectInstance updateCubeToProject(String cubeName, String newProjectName, String owner) throws IOException {
-        removeCubeFromProjects(cubeName);
-
-        return addCubeToProject(cubeName, newProjectName, owner);
-    }
+//    public ProjectInstance updateCubeToProject(String cubeName, String newProjectName, String owner) throws IOException {
+//        removeCubeFromProjects(cubeName);
+//        return addCubeToProject(cubeName, newProjectName, owner);
+//    }
 
     public ProjectInstance updateTableToProject(String tables, String projectName) throws IOException {
         ProjectInstance projectInstance = getProject(projectName);
@@ -207,13 +206,13 @@ public class CubeRealizationManager {
     }
 
 
-    public void removeCubeFromProjects(String cubeName) throws IOException {
-        for (ProjectInstance projectInstance : findProjects(cubeName)) {
-            projectInstance.removeCube(cubeName);
-
-            saveResource(projectInstance);
-        }
-    }
+//    public void removeCubeFromProjects(String cubeName) throws IOException {
+//        for (ProjectInstance projectInstance : findProjects(cubeName)) {
+//            projectInstance.removeCube(cubeName);
+//
+//            saveResource(projectInstance);
+//        }
+//    }
 
     public List<TableDesc> listExposedTables(String project) {
         project = ProjectInstance.getNormalizedProjectName(project);
