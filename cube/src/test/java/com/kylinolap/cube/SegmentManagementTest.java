@@ -34,7 +34,7 @@ import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.cube.project.ProjectManager;
+import com.kylinolap.cube.project.CubeRealizationManager;
 import com.kylinolap.metadata.MetadataManager;
 
 /**
@@ -50,7 +50,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         this.createTestMetadata();
         MetadataManager.removeInstance(this.getTestConfig());
         CubeManager.removeInstance(this.getTestConfig());
-        ProjectManager.removeInstance(this.getTestConfig());
+        CubeRealizationManager.removeInstance(this.getTestConfig());
         cubeMgr = CubeManager.getInstance(this.getTestConfig());
     }
 
