@@ -22,13 +22,13 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
     // Set up common methods
     $scope.logout = function () {
         $scope.$emit('event:logoutRequest');
-
         $http.get(Config.service.base + 'j_spring_security_logout').success(function () {
             UserService.setCurUser({});
             $scope.username = $scope.password = null;
             $location.path('/login');
 
             console.debug("Logout Completed.");
+            $scope.project.selectedProject = null;
         }).error(function () {
             UserService.setCurUser({});
             $scope.username = $scope.password = null;
@@ -128,7 +128,10 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
             $scope.project.projects.push(project.name);
         });
 
-        $scope.project.selectedProject=$scope.project.selectedProject!=null?$scope.project.selectedProject:$scope.project.projects[0]
+        var absUrl = $location.absUrl();
+        if(absUrl.indexOf("/login")==-1){
+            $scope.project.selectedProject=$scope.project.selectedProject!=null?$scope.project.selectedProject:$scope.project.projects[0]
+        }
 
     });
 
@@ -149,7 +152,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
 
 });
 
-var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService, projects, project) {
+var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService, projects, project,SweetAlert) {
     $scope.state = {
         isEdit: false,
         oldProjName: null
