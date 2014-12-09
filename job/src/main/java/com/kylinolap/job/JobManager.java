@@ -16,27 +16,10 @@
 
 package com.kylinolap.job;
 
-import java.io.IOException;
-import java.net.UnknownHostException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
-import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.cube.CubeBuildTypeEnum;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.CubeSegmentStatusEnum;
+import com.kylinolap.cube.*;
 import com.kylinolap.cube.exception.CubeIntegrityException;
-import com.kylinolap.cube.project.ProjectInstance;
-import com.kylinolap.cube.project.ProjectManager;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.JobInstance.JobStep;
 import com.kylinolap.job.constant.JobConstants;
 import com.kylinolap.job.constant.JobStatusEnum;
@@ -46,7 +29,18 @@ import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.exception.InvalidJobInstanceException;
 import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc;
-import com.kylinolap.metadata.model.cube.CubeDesc;
+import com.kylinolap.metadata.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 
 /**
  * @author xjiang, ysong1
@@ -72,9 +66,9 @@ public class JobManager {
         this.jobEngine = JobEngine.getInstance(engineID, engineCfg);
     }
 
-    public JobInstance createJob(String cubeName, String segmentName, CubeBuildTypeEnum jobType) throws IOException {
+    public JobInstance createJob(String cubeName, String segmentName, String segmentId, CubeBuildTypeEnum jobType) throws IOException {
         // build job instance
-        JobInstance jobInstance = buildJobInstance(cubeName, segmentName, jobType);
+        JobInstance jobInstance = buildJobInstance(cubeName, segmentName, segmentId, jobType);
 
         // create job steps based on job type
         JobInstanceBuilder stepBuilder = new JobInstanceBuilder(this.engineConfig);
@@ -83,12 +77,12 @@ public class JobManager {
         return jobInstance;
     }
 
-    private JobInstance buildJobInstance(String cubeName, String segmentName, CubeBuildTypeEnum jobType) {
+    private JobInstance buildJobInstance(String cubeName, String segmentName, String segmentId, CubeBuildTypeEnum jobType) {
         SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss");
         format.setTimeZone(TimeZone.getTimeZone(this.engineConfig.getTimeZone()));
 
         JobInstance jobInstance = new JobInstance();
-        jobInstance.setUuid(UUID.randomUUID().toString());
+        jobInstance.setUuid(segmentId);
         jobInstance.setType(jobType);
         jobInstance.setRelatedCube(cubeName);
         jobInstance.setRelatedSegment(segmentName);
@@ -149,6 +143,13 @@ public class JobManager {
                 CubeManager.getInstance(config).updateSegmentOnJobDiscard(cube, jobInstance.getRelatedSegment());
             }
             break;
+        case PENDING:
+            try {
+                killRunningJob(jobInstance);
+            } finally {
+                CubeManager.getInstance(config).updateSegmentOnJobDiscard(cube, jobInstance.getRelatedSegment());
+            }
+            break;
         case ERROR:
             try {
                 for (JobStep jobStep : jobInstance.getSteps()) {
@@ -167,7 +168,6 @@ public class JobManager {
     }
 
     /**
-     * @param uuid
      * @param jobInstance
      * @throws IOException
      * @throws JobException

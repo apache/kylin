@@ -33,8 +33,8 @@ import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
 
 import com.google.common.base.Preconditions;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.cube.model.MeasureDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.StorageContext;
 
 /**

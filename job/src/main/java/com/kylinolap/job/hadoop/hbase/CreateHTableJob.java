@@ -45,11 +45,11 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.HadoopUtil;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.HBaseColumnFamilyDesc;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.job.tools.DeployCoprocessorCLI;
 import com.kylinolap.job.tools.LZOSupportnessChecker;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.HBaseColumnFamilyDesc;
 
 /**
  * @author George Song (ysong1)

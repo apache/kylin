@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.kylinolap.cube.project.CubeRealizationManager;
 import org.apache.commons.lang3.StringUtils;
 import org.eigenbase.reltype.RelDataType;
 import org.slf4j.Logger;
@@ -31,13 +32,12 @@ import org.slf4j.LoggerFactory;
 
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.project.ProjectManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.DimensionDesc;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.JoinDesc;
-import com.kylinolap.metadata.model.cube.ParameterDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.DimensionDesc;
+import com.kylinolap.metadata.model.JoinDesc;
+import com.kylinolap.metadata.model.realization.FunctionDesc;
+import com.kylinolap.metadata.model.realization.ParameterDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.query.relnode.OLAPContext;
 
 /**
@@ -51,18 +51,18 @@ public class QueryRouter {
 
         CubeInstance bestCube = null;
         // NOTE: since some query has no groups and projections are the superset of groups, we choose projections.
-        ProjectManager projectManager = ProjectManager.getInstance(olapContext.olapSchema.getConfig());
+        CubeRealizationManager cubeRealizationManager = CubeRealizationManager.getInstance(olapContext.olapSchema.getConfig());
 
         if (olapContext.isSimpleQuery()) {
             // if simple query like "select X from fact table", just return the cube with most dimensions
             // Note that this will only succeed to get best cube if the current simple query is on fact table.
             // Simple query on look up table is handled in OLAPTableScan.genExecFunc
             // In other words, for simple query on lookup tables, bestCube here will be assigned null in this method
-            bestCube = findCubeWithMostDimensions(projectManager, olapContext);
+            bestCube = findCubeWithMostDimensions(cubeRealizationManager, olapContext);
         }
 
         if (bestCube == null) {
-            bestCube = findBestMatchCube(projectManager, olapContext);
+            bestCube = findBestMatchCube(cubeRealizationManager, olapContext);
         }
 
         if (bestCube == null) {
@@ -75,7 +75,7 @@ public class QueryRouter {
         return bestCube;
     }
 
-    private static CubeInstance findCubeWithMostDimensions(ProjectManager projectManager, OLAPContext olapContext) {
+    private static CubeInstance findCubeWithMostDimensions(CubeRealizationManager projectManager, OLAPContext olapContext) {
         List<CubeInstance> candidates = projectManager.getOnlineCubesByFactTable(olapContext.olapSchema.getProjectName(), olapContext.firstTableScan.getCubeTable());
         if (candidates.isEmpty()) {
             return null;
@@ -130,7 +130,7 @@ public class QueryRouter {
         return null;
     }
 
-    static CubeInstance findBestMatchCube(ProjectManager projectManager, OLAPContext olapContext) throws CubeNotFoundException {
+    static CubeInstance findBestMatchCube(CubeRealizationManager cubeRealizationManager, OLAPContext olapContext) throws CubeNotFoundException {
 
         // retrieve members from olapContext
         String factTableName = olapContext.firstTableScan.getCubeTable();
@@ -142,7 +142,7 @@ public class QueryRouter {
         Map<String, RelDataType> rewriteFields = olapContext.rewriteFields;
 
         // find cubes by table
-        List<CubeInstance> candidates = projectManager.getCubesByTable(projectName, factTableName);
+        List<CubeInstance> candidates = cubeRealizationManager.getCubesByTable(projectName, factTableName);
         logger.info("Find candidates by table " + factTableName + " and project=" + projectName + " : " + StringUtils.join(candidates, ","));
 
         // match dimensions & aggregations & joins

@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.tuple.Tuple;
 
 /**

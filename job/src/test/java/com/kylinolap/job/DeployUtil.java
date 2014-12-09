@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.hbase.util.Pair;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.FileUtils;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceTool;
 import com.kylinolap.common.util.AbstractKylinTestCase;
+import com.kylinolap.common.util.CliCommandExecutor;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.dataGen.FactTableGenerator;
@@ -23,8 +25,8 @@ import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.hive.SqlHiveDataTypeMapping;
 import com.kylinolap.job.tools.LZOSupportnessChecker;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
 
 public class DeployUtil {
     @SuppressWarnings("unused")
@@ -48,6 +50,37 @@ public class DeployUtil {
     }
 
     public static void overrideJobJarLocations() {
+        Pair<File, File> files = getJobJarFiles();
+        File jobJar = files.getFirst();
+        File coprocessorJar = files.getSecond();
+
+        config().overrideKylinJobJarPath(jobJar.getAbsolutePath());
+        config().overrideCoprocessorLocalJar(coprocessorJar.getAbsolutePath());
+    }
+    
+    public static void deployJobJars() throws IOException {
+        Pair<File, File> files = getJobJarFiles();
+        File jobJar = files.getFirst();
+        File coprocessorJar = files.getSecond();
+
+        File jobJarRemote = new File(config().getKylinJobJarPath());
+        File jobJarLocal = new File(jobJar.getParentFile(), jobJarRemote.getName());
+        if (jobJar.equals(jobJarLocal) == false) {
+            FileUtils.copyFile(jobJar, jobJarLocal);
+        }
+        
+        File coprocessorJarRemote = new File(config().getCoprocessorLocalJar());
+        File coprocessorJarLocal = new File(coprocessorJar.getParentFile(), coprocessorJarRemote.getName());
+        if (coprocessorJar.equals(coprocessorJarLocal) == false) {
+            FileUtils.copyFile(coprocessorJar, coprocessorJarLocal);
+        }
+        
+        CliCommandExecutor cmdExec = config().getCliCommandExecutor();
+        cmdExec.copyFile(jobJarLocal.getAbsolutePath(), jobJarRemote.getParent());
+        cmdExec.copyFile(coprocessorJar.getAbsolutePath(), coprocessorJarRemote.getParent());
+    }
+    
+    private static Pair<File, File> getJobJarFiles() {
         String version;
         try {
             MavenXpp3Reader pomReader = new MavenXpp3Reader();
@@ -57,12 +90,9 @@ public class DeployUtil {
             throw new RuntimeException(e.getMessage(), e);
         }
 
-        String jobTargetDir = "../job/target";
-        File jobJar = new File(jobTargetDir, "kylin-job-" + version + "-job.jar");
-        File coprocessorJar = new File(jobTargetDir, "kylin-storage-" + version + "-coprocessor.jar");
-
-        config().overrideKylinJobJarPath(jobJar.getAbsolutePath());
-        config().overrideCoprocessorLocalJar(coprocessorJar.getAbsolutePath());
+        File jobJar = new File("../job/target", "kylin-job-" + version + "-job.jar");
+        File coprocessorJar = new File("../storage/target", "kylin-storage-" + version + "-coprocessor.jar");
+        return new Pair<File, File>(jobJar, coprocessorJar);
     }
     
     public static void overrideJobConf(String confDir) throws IOException {
@@ -90,11 +120,11 @@ public class DeployUtil {
 
     // ============================================================================
 
-    static final String TABLE_CAL_DT = "test_cal_dt";
-    static final String TABLE_CATEGORY_GROUPINGS = "test_category_groupings";
-    static final String TABLE_KYLIN_FACT = "test_kylin_fact";
-    static final String TABLE_SELLER_TYPE_DIM = "test_seller_type_dim";
-    static final String TABLE_SITES = "test_sites";
+    static final String TABLE_CAL_DT = "edw.test_cal_dt";
+    static final String TABLE_CATEGORY_GROUPINGS = "default.test_category_groupings";
+    static final String TABLE_KYLIN_FACT = "default.test_kylin_fact";
+    static final String TABLE_SELLER_TYPE_DIM = "edw.test_seller_type_dim";
+    static final String TABLE_SITES = "edw.test_sites";
 
     static final String[] TABLE_NAMES = new String[] { TABLE_CAL_DT, TABLE_CATEGORY_GROUPINGS, TABLE_KYLIN_FACT, TABLE_SELLER_TYPE_DIM, TABLE_SITES };
 
@@ -137,6 +167,7 @@ public class DeployUtil {
         temp.delete();
 
         // create hive tables
+        execHiveCommand("CREATE DATABASE IF NOT EXISTS EDW;");
         execHiveCommand(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CAL_DT.toUpperCase())));
         execHiveCommand(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CATEGORY_GROUPINGS.toUpperCase())));
         execHiveCommand(generateCreateTableHql(metaMgr.getTableDesc(TABLE_KYLIN_FACT.toUpperCase())));
@@ -164,8 +195,8 @@ public class DeployUtil {
     private static String generateCreateTableHql(TableDesc tableDesc) {
         StringBuilder ddl = new StringBuilder();
 
-        ddl.append("DROP TABLE IF EXISTS " + tableDesc.getName() + ";\n");
-        ddl.append("CREATE TABLE " + tableDesc.getName() + "\n");
+        ddl.append("DROP TABLE IF EXISTS " + tableDesc.getIdentity() + ";\n");
+        ddl.append("CREATE TABLE " + tableDesc.getIdentity() + "\n");
         ddl.append("(" + "\n");
 
         for (int i = 0; i < tableDesc.getColumns().length; i++) {

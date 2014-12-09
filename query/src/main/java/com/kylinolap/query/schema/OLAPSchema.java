@@ -19,15 +19,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.kylinolap.cube.project.CubeRealizationManager;
+import com.kylinolap.metadata.project.ProjectInstance;
 import net.hydromatic.optiq.Table;
 import net.hydromatic.optiq.impl.AbstractSchema;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.project.ProjectInstance;
-import com.kylinolap.cube.project.ProjectManager;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.TableDesc;
 
 /**
  * @author xjiang
@@ -58,6 +58,11 @@ public class OLAPSchema extends AbstractSchema {
         init();
     }
 
+    /**
+     * It is intended to skip caching, because underlying project/tables might change.
+     *
+     * @return
+     */
     @Override
     protected Map<String, Table> getTableMap() {
         return buildTableMap();
@@ -65,13 +70,15 @@ public class OLAPSchema extends AbstractSchema {
 
     private Map<String, Table> buildTableMap() {
         Map<String, Table> olapTables = new HashMap<String, Table>();
-        List<TableDesc> projectTables = getProjectManager().listExposedTables(projectName);
+        List<TableDesc> projectTables = CubeRealizationManager.getInstance(config).listExposedTables(projectName);
 
         for (TableDesc tableDesc : projectTables) {
-            final String tableName = tableDesc.getName();
-            final OLAPTable table = new OLAPTable(this, tableDesc);
-            olapTables.put(tableName, table);
+            if (tableDesc.getDatabase().equals(schemaName)) {
+                final String tableName = tableDesc.getName();
+                final OLAPTable table = new OLAPTable(this, tableDesc);
+                olapTables.put(tableName, table);
 //            logger.debug("Project " + projectName + " exposes table " + tableName);
+            }
         }
 
         return olapTables;
@@ -117,7 +124,4 @@ public class OLAPSchema extends AbstractSchema {
         return CubeManager.getInstance(config);
     }
 
-    public ProjectManager getProjectManager() {
-        return ProjectManager.getInstance(config);
-    }
 }

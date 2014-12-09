@@ -23,8 +23,8 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.util.StringUtils;
 
+import com.kylinolap.cube.model.CubeDesc.CubeCapacity;
 import com.kylinolap.job.constant.BatchConstants;
-import com.kylinolap.metadata.model.cube.CubeDesc.CubeCapacity;
 
 /**
  * @author ysong1

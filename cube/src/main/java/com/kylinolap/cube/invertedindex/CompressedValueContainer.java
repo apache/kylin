@@ -19,6 +19,7 @@ package com.kylinolap.cube.invertedindex;
 import java.io.IOException;
 import java.util.Arrays;
 
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Bytes;
 
@@ -28,10 +29,10 @@ import com.ning.compress.lzf.LZFEncoder;
 
 /**
  * @author yangli9
- * 
  */
 public class CompressedValueContainer implements ColumnValueContainer {
     int valueLen;
+    int nValues;
     int cap;
     int size;
     byte[] uncompressed;
@@ -39,6 +40,7 @@ public class CompressedValueContainer implements ColumnValueContainer {
 
     public CompressedValueContainer(TableRecordInfoDigest info, int col, int cap) {
         this.valueLen = info.length(col);
+        this.nValues = info.getMaxID(col) + 1;
         this.cap = cap;
         this.size = 0;
         this.uncompressed = null;
@@ -55,6 +57,17 @@ public class CompressedValueContainer implements ColumnValueContainer {
     @Override
     public void getValueAt(int i, ImmutableBytesWritable valueBytes) {
         valueBytes.set(uncompressed, valueLen * i, valueLen);
+    }
+
+    @Override
+    public ConciseSet getBitMap(int valueId) {
+        createBitMapWrapperIfNecessary();
+        return wrapper.getBitMap(valueId);
+    }
+
+    @Override
+    public int getMaxValueId() {
+        return nValues - 1;
     }
 
     private void checkUpdateMode() {
@@ -129,4 +142,42 @@ public class CompressedValueContainer implements ColumnValueContainer {
         return true;
     }
 
+    private BitmapWrapper wrapper = null;
+
+    private void createBitMapWrapperIfNecessary() {
+        if (wrapper == null)
+            wrapper = new BitmapWrapper();
+    }
+
+    private class BitmapWrapper {
+        private ConciseSet[] sets;
+
+        BitmapWrapper() {
+            sets = new ConciseSet[nValues + 1];
+            for (int i = 0; i < sets.length; ++i) {
+                sets[i] = new ConciseSet();
+            }
+
+            for (int i = 0; i < size; ++i) {
+                int valueID = BytesUtil.readUnsigned(uncompressed, i * valueLen, valueLen);
+                if (notNullValue(valueID)) {
+                    sets[valueID].add(i);
+                } else {
+                    sets[nValues].add(i);
+                }
+            }
+        }
+
+        private boolean notNullValue(int valueId) {
+            return valueId >= 0 && valueId <= getMaxValueId();
+        }
+
+        ConciseSet getBitMap(int valueId) {
+            if (notNullValue(valueId)) {
+                return sets[valueId];
+            } else {
+                return sets[nValues];
+            }
+        }
+    }
 }

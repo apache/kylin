@@ -38,6 +38,8 @@ KylinApp
             }
             if ($scope.project.selectedProject){
                 queryParam.projectName = $scope.project.selectedProject;
+            }else{
+                queryParam.projectName = $scope.project.projects[0];
             }
 
             $scope.loading = true;
@@ -71,9 +73,12 @@ KylinApp
         };
 
         $scope.$watch('project.selectedProject', function (newValue, oldValue) {
-            $scope.cubes=[];
-            $scope.list();
-            $scope.reload();
+            //exclude when refresh page oldValue=null,first time set value for project (will have page auto reload ,incase duplicate) oldvalue is null
+           if(oldValue){
+                $scope.cubes=[];
+                $scope.reload();
+           }
+
         });
         $scope.reload = function () {
             // trigger reload action in pagination directive

@@ -123,6 +123,16 @@ public class KylinConfig {
      */
     public static final String KYLIN_CONF_PROPERTIES_FILE = "kylin.properties";
 
+    public static final String MAIL_ENABLED = "mail.enabled";
+    
+    public static final String MAIL_HOST = "mail.host";
+    
+    public static final String MAIL_USERNAME = "mail.username";
+    
+    public static final String MAIL_PASSWORD = "mail.password";
+    
+    public static final String MAIL_SENDER = "mail.sender";
+
     private static final Logger logger = LoggerFactory.getLogger(KylinConfig.class);
 
     // static cached instances

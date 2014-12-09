@@ -16,10 +16,13 @@
 
 package com.kylinolap.job.flow;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -35,7 +38,6 @@ import com.kylinolap.job.engine.JobEngineConfig;
 
 /**
  * @author xduo
- * 
  */
 public class JobFlow {
 
@@ -144,8 +146,14 @@ public class JobFlow {
             return cmd;
 
         KylinConfig config = KylinConfig.getInstanceFromEnv();
+        try {
+            FileUtils.forceMkdir(new File(config.getKylinJobLogDir()));
+        } catch (IOException e) {
+            throw new RuntimeException("Create log dir " + config.getKylinJobLogDir() + " failed.", e);
+        }
         String log = config.getKylinJobLogDir() + "/" + job.getUuid() + "_" + suffix + ".log";
 
-        return "set -o pipefail; " + cmd + " 2>&1 | tee " + log;
+        String mkLogDir = "mkdir -p " + config.getKylinJobLogDir();
+        return mkLogDir + ";" + "set -o pipefail; " + cmd + " 2>&1 | tee " + log;
     }
 }
