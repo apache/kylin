@@ -80,7 +80,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     });
 
     $scope.$watch('cubeMetaFrame', function (newValue, oldValue) {
-        if (newValue && !newValue.project) {
+        if ($scope.cubeMode=="editExistCube"&&newValue && !newValue.project) {
             initProject();
             generateCubeStatus($scope.cubeMetaFrame);
         }
