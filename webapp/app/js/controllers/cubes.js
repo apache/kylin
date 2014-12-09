@@ -27,6 +27,9 @@ KylinApp
             dimensionFilter: '', measureFilter: ''};
 
         $scope.list = function (offset, limit) {
+            if(!$scope.project.selectedProject){
+                return;
+            }
             offset = (!!offset) ? offset : 0;
             limit = (!!limit) ? limit : 20;
             var defer = $q.defer();
@@ -73,7 +76,7 @@ KylinApp
 
         $scope.$watch('project.selectedProject', function (newValue, oldValue) {
             //exclude when refresh page oldValue=null,first time set value for project (will have page auto reload ,incase duplicate) oldvalue is null
-           if(oldValue){
+           if(newValue){
                 $scope.cubes=[];
                 $scope.reload();
            }

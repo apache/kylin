@@ -41,9 +41,9 @@ KylinApp
         });
 
         $scope.list = function (offset, limit) {
-
-
-
+            if(!$scope.project.selectedProject){
+                return;
+            }
             offset = (!!offset) ? offset : 0;
             var selectedJob = null;
             if (angular.isDefined($scope.state.selectedJob)) {
@@ -94,7 +94,7 @@ KylinApp
 
 
         $scope.$watch('project.selectedProject', function (newValue, oldValue) {
-            if(oldValue){
+            if(newValue){
                 $scope.jobs={};
                 $scope.state.projectName = newValue;
                 $scope.reload();
