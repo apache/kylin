@@ -33,7 +33,7 @@
                 "app/components/d3/d3.min.js",
                 "app/components/nvd3/nv.d3.min.js",
                 "app/components/angularjs-nvd3-directives/dist/angularjs-nvd3-directives.js",
-                "app/components/sweetalert/lib/sweet-alert.js",
+                "app/components/bootstrap-sweetalert/lib/sweet-alert.js",
                 "app/components/angular-sweetalert/SweetAlert.js",
                 "tmp/js/scripts.js"
             ],
@@ -54,7 +54,7 @@
                 "app/components/angular-chosen-localytics/chosen-spinner.css",
                 "app/components/nvd3/nv.d3.min.css",
                 "app/components/ace/css/AdminLTE.css",
-                "app/components/sweetalert/lib/sweet-alert.css",
+                "app/components/bootstrap-sweetalert/lib/sweet-alert.css",
                 "tmp/css/styles.css"
             ],
             "dest": "tmp/css/styles.min.css"
