@@ -144,13 +144,11 @@ public class ProjectInstance extends RootPersistentEntity {
     }
 
     public boolean containsCube(String cubeName) {
-        cubeName = cubeName.toUpperCase();
-        return cubes.contains(cubeName);
+        return cubes.contains(cubeName.toUpperCase());
     }
 
     public void removeCube(String cubeName) {
-        cubeName = cubeName.toUpperCase();
-        cubes.remove(cubeName);
+        cubes.remove(cubeName.toUpperCase());
     }
 
     public int getCubesCount() {
@@ -158,8 +156,7 @@ public class ProjectInstance extends RootPersistentEntity {
     }
 
     public void addCube(String cubeName) {
-        cubeName = cubeName.toUpperCase();
-        this.cubes.add(cubeName);
+        this.cubes.add(cubeName.toUpperCase());
     }
 
     public List<String> getCubes() {
@@ -176,13 +173,11 @@ public class ProjectInstance extends RootPersistentEntity {
     }
 
     public boolean containsTable(String tableName) {
-        tableName = tableName.toUpperCase();
-        return tables.contains(tableName);
+        return tables.contains(tableName.toUpperCase());
     }
 
     public void removeTable(String tableName) {
-        tableName = tableName.toUpperCase();
-        tables.remove(tableName);
+        tables.remove(tableName.toUpperCase());
     }
 
     public int getTablesCount() {
@@ -190,8 +185,7 @@ public class ProjectInstance extends RootPersistentEntity {
     }
 
     public void addTable(String tableName) {
-        tableName = tableName.toUpperCase();
-        this.getTables().add(tableName);
+        this.getTables().add(tableName.toUpperCase());
     }
 
     //will return new Set for null
