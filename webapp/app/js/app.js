@@ -3,6 +3,6 @@ KylinApp = angular.module('kylin', ['ngRoute', 'ngResource', 'ngGrid', 'ui.boots
 KylinApp.config(['rainbowBarProvider', function(rainbowBarProvider) {
     "use strict";
     rainbowBarProvider.configure({
-        barThickness: 5
+        barThickness: 10
     });
 }]);

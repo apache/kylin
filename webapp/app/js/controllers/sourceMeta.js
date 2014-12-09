@@ -159,8 +159,26 @@ KylinApp
                 rainbowBar.show();
                 loadingRequest.show();
                 TableService.loadHiveTable({tableName: $scope.tableNames,action:projectName}, {}, function (result) {
-//                    MessageService.sendMsg('Below tables were synced successfully: ' + result['result'].join() + ', Click Refresh button ...', 'success', {});
-                    SweetAlert.swal('Success!','Below tables were synced successfully: ' + result['result'].join() , 'success');
+                    var loadTableInfo="";
+                    angular.forEach(result['result.loaded'],function(table){
+                        loadTableInfo+="\n"+table;
+                    })
+                    var unloadedTableInfo="";
+                    angular.forEach(result['result.unloaded'],function(table){
+                        unloadedTableInfo+="\n"+table;
+                    })
+
+                    if(result['result.unloaded'].length!=0&&result['result.loaded'].length==0){
+                        SweetAlert.swal('Failed!','Failed to synchronize following table(s): ' + unloadedTableInfo , 'error');
+                    }
+                    if(result['result.loaded'].length!=0&&result['result.unloaded'].length==0){
+                        SweetAlert.swal('Success!','The following table(s) have been successfully synchronized: ' + loadTableInfo , 'success');
+                    }
+                    if(result['result.loaded'].length!=0&&result['result.unloaded'].length!=0){
+                        SweetAlert.swal('Partial loaded!','The following table(s) have been successfully synchronized: ' + loadTableInfo+"\n Failed to synchronize following table(s):"  + unloadedTableInfo, 'warning');
+                    }
+
+
                     rainbowBar.hide();
                     loadingRequest.hide();
                     hiveTbLoad.status="success";
