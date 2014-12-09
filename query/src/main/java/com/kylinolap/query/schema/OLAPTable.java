@@ -163,13 +163,13 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
     private List<ColumnDesc> listSourceColumns() {
         ProjectManager projectMgr = olapSchema.getProjectManager();
         List<ColumnDesc> exposedColumns = projectMgr.listExposedColumns(olapSchema.getProjectName(), sourceTable.getName());
-
         List<MeasureDesc> countMeasures = projectMgr.listEffectiveRewriteMeasures(olapSchema.getProjectName(), sourceTable.getName());
+
         HashSet<String> metFields = new HashSet<String>();
         for (MeasureDesc m : countMeasures) {
             FunctionDesc func = m.getFunction();
             String fieldName = func.getRewriteFieldName();
-            if (metFields.contains(fieldName) == false) {
+            if (!metFields.contains(fieldName)) {
                 metFields.add(fieldName);
                 ColumnDesc fakeCountCol = new ColumnDesc();
                 fakeCountCol.setName(fieldName);

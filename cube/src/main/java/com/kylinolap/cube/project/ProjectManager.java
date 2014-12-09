@@ -24,14 +24,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.common.collect.*;
+import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
@@ -234,7 +232,7 @@ public class ProjectManager {
 
 
     public List<TableDesc> listDefinedTablesInProject(String project) throws IOException {
-        if(null==project){
+        if (null == project) {
             return Collections.emptyList();
         }
         project = ProjectInstance.getNormalizedProjectName(project);
@@ -336,19 +334,35 @@ public class ProjectManager {
     public List<MeasureDesc> listEffectiveRewriteMeasures(String project, String factTable) {
         factTable = factTable.toUpperCase();
 
-        HashSet<CubeDesc> relatedDesc = new HashSet<CubeDesc>();
+        HashSet<CubeDesc> relatedCubeDesc = Sets.newHashSet();
+        HashSet<InvertedIndexDesc> relatedIIDesc = Sets.newHashSet();
+
         for (CubeInstance cube : getProjectTable(project, factTable).getCubes()) {
-            if (cube.isReady() == false)
+            if (!cube.isReady())
                 continue;
-            if (cube.getDescriptor().isFactTable(factTable) == false)
+            if (!cube.getDescriptor().isFactTable(factTable))
                 continue;
 
-            relatedDesc.add(cube.getDescriptor());
+            relatedCubeDesc.add(cube.getDescriptor());
+
+            if (cube.getInvertedIndexDesc() != null) {
+                relatedIIDesc.add(cube.getInvertedIndexDesc());
+            }
         }
 
         List<MeasureDesc> result = Lists.newArrayList();
-        for (CubeDesc desc : relatedDesc) {
+        //cube
+        for (CubeDesc desc : relatedCubeDesc) {
             for (MeasureDesc m : desc.getMeasures()) {
+                FunctionDesc func = m.getFunction();
+                if (func.needRewrite())
+                    result.add(m);
+            }
+        }
+
+        //II
+        for (InvertedIndexDesc desc : relatedIIDesc) {
+            for (MeasureDesc m : desc.getMeasureDescs()) {
                 FunctionDesc func = m.getFunction();
                 if (func.needRewrite())
                     result.add(m);
