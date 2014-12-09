@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.kylinolap.cube.project.CubeRealizationManager;
 import com.kylinolap.metadata.model.realization.DataModelRealizationType;
 import com.kylinolap.metadata.project.ProjectDataModel;
 import com.kylinolap.metadata.project.ProjectInstance;
@@ -249,6 +248,7 @@ public class CubeService extends BasicService {
             if (!isCubeInProject(newProjectName, cube)) {
                 String owner = SecurityContextHolder.getContext().getAuthentication().getName();
                 ProjectInstance newProject = projectManager.updateCubeToProject(cube.getName(), newProjectName, owner);
+                getCubeRealizationManager().loadProject(getProjectManager().getProject(newProjectName));
                 accessService.inherit(cube, newProject);
             }
 
@@ -637,6 +637,6 @@ public class CubeService extends BasicService {
     
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void syncTableToProject(String tables,String project) throws IOException {
-        getCubeRealizationManager().updateTableToProject(tables, project);
+        getCubeRealizationManager().addTablesToProject(tables, project);
     }    
 }
