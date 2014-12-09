@@ -26,12 +26,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.hadoop.hbase.util.Bytes;
 
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.RowKeyColDesc;
-import com.kylinolap.metadata.model.cube.RowKeyDesc;
-import com.kylinolap.metadata.model.cube.RowKeyDesc.AggrGroupMask;
-import com.kylinolap.metadata.model.cube.RowKeyDesc.HierarchyMask;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.RowKeyColDesc;
+import com.kylinolap.cube.model.RowKeyDesc;
+import com.kylinolap.cube.model.RowKeyDesc.AggrGroupMask;
+import com.kylinolap.cube.model.RowKeyDesc.HierarchyMask;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * @author George Song (ysong1)
@@ -57,6 +57,7 @@ public class Cuboid implements Comparable<Cuboid> {
             cubeCache.put(cuboidID, cuboid);
         }
         return cuboid;
+        
     }
 
     public static boolean isValid(CubeDesc cube, long cuboidID) {

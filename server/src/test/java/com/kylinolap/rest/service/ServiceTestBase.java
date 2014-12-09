@@ -16,6 +16,7 @@
 
 package com.kylinolap.rest.service;
 
+import com.kylinolap.cube.project.CubeRealizationManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -32,7 +33,6 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.project.ProjectManager;
 import com.kylinolap.metadata.MetadataManager;
 
 /**
@@ -65,7 +65,7 @@ public class ServiceTestBase extends HBaseMetadataTestCase {
 
         MetadataManager.removeInstance(getTestConfig());
         CubeManager.removeInstance(this.getTestConfig());
-        ProjectManager.removeInstance(this.getTestConfig());
+        CubeRealizationManager.removeInstance(this.getTestConfig());
     }
 
     @After

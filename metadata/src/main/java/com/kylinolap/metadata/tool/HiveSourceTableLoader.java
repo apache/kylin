@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.kylinolap.metadata.MetadataManager;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -40,8 +41,8 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceTool;
 import com.kylinolap.common.util.CliCommandExecutor;
 import com.kylinolap.common.util.JsonUtil;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
 
 /**
  * Management class to sync hive table metadata with command See main method for
@@ -75,6 +76,20 @@ public class HiveSourceTableLoader {
         metaTmpDir.delete();
         metaTmpDir.mkdirs();
 
+        for (String database: db2tables.keySet()) {
+            for (String table: db2tables.get(database)) {
+                TableDesc tableDesc = MetadataManager.getInstance(config).getTableDesc(table);
+                if (tableDesc == null) {
+                    continue;
+                }
+                if (tableDesc.getDatabase().equalsIgnoreCase(database)) {
+                    continue;
+                } else {
+                    throw new UnsupportedOperationException(String.format("there is already a table[%s] in database[%s]", tableDesc.getName(), tableDesc.getDatabase()));
+                }
+            }
+        }
+
         // extract from hive
         Set<String> loadedTables = Sets.newHashSet();
         for (String database : db2tables.keySet()) {
@@ -100,7 +115,7 @@ public class HiveSourceTableLoader {
         cmd.append("\"");
 
         CliCommandExecutor cmdExec = config.getCliCommandExecutor();
-        String output = cmdExec.execute(cmd.toString());
+        String output = cmdExec.execute(cmd.toString()).getSecond();
 
         return extractTableDescFromHiveOutput(database, output, metaTmpDir);
     }
@@ -128,9 +143,9 @@ public class HiveSourceTableLoader {
         List<String> loadedTables = Lists.newArrayList();
         
         for (TableDesc table : tableDescList) {
-            File file = new File(tableDescDir, table.getName().toUpperCase() + "." + OUTPUT_SURFIX);
+            File file = new File(tableDescDir, table.getIdentity().toUpperCase() + "." + OUTPUT_SURFIX);
             JsonUtil.writeValueIndent(new FileOutputStream(file), table);
-            loadedTables.add(table.getDatabase() + "." + table.getName());
+            loadedTables.add(table.getIdentity());
         }
 
         for (Map<String, String> tableAttrs : tableAttrsList) {
@@ -224,7 +239,8 @@ public class HiveSourceTableLoader {
             return "smallint";
         } else if ("byte".equals(colType)) {
             return "tinyint";
-        }
+        } else if ("bool".equals(colType))
+            return "boolean";
         return colType;
     }
 

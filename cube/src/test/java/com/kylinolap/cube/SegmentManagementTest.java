@@ -24,6 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.TimeZone;
 
+import com.kylinolap.metadata.project.ProjectInstance;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,10 +33,9 @@ import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.exception.CubeIntegrityException;
-import com.kylinolap.cube.project.ProjectInstance;
-import com.kylinolap.cube.project.ProjectManager;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.project.CubeRealizationManager;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
 
 /**
  * @author ysong1
@@ -50,7 +50,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         this.createTestMetadata();
         MetadataManager.removeInstance(this.getTestConfig());
         CubeManager.removeInstance(this.getTestConfig());
-        ProjectManager.removeInstance(this.getTestConfig());
+        CubeRealizationManager.removeInstance(this.getTestConfig());
         cubeMgr = CubeManager.getInstance(this.getTestConfig());
     }
 
@@ -73,8 +73,8 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
     @Test
     public void testInitialAndAppend() throws ParseException, IOException, CubeIntegrityException {
         // create a new cube
-        MetadataManager metaMgr = getMetadataManager();
-        CubeDesc desc = metaMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
+        CubeDescManager cubeDescMgr = getCubeDescManager();
+        CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
         createNewCube(desc);
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
@@ -212,8 +212,8 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
     @Test
     public void testNonPartitionedCube() throws ParseException, IOException, CubeIntegrityException {
         // create a new cube
-        MetadataManager metaMgr = getMetadataManager();
-        CubeDesc desc = metaMgr.getCubeDesc("test_kylin_cube_without_slr_desc");
+        CubeDescManager cubeDescMgr = getCubeDescManager();
+        CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_without_slr_desc");
         createNewCube(desc);
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
@@ -283,8 +283,8 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
     @Test(expected = CubeIntegrityException.class)
     public void testInvalidAppend() throws ParseException, IOException, CubeIntegrityException {
         // create a new cube
-        MetadataManager metaMgr = getMetadataManager();
-        CubeDesc desc = metaMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
+        CubeDescManager cubeDescMgr = getCubeDescManager();
+        CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
         createNewCube(desc);
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
@@ -332,8 +332,8 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
     @Test
     public void testInitialAndUpsert() throws ParseException, IOException, CubeIntegrityException {
         // create a new cube
-        MetadataManager metaMgr = getMetadataManager();
-        CubeDesc desc = metaMgr.getCubeDesc("test_kylin_cube_without_slr_left_join_desc");
+        CubeDescManager cubeDescMgr = getCubeDescManager();
+        CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_without_slr_left_join_desc");
         createNewCube(desc);
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
@@ -488,8 +488,8 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
     @Test
     public void testInitialAndUpsert2() throws ParseException, IOException, CubeIntegrityException {
         // create a new cube
-        MetadataManager metaMgr = getMetadataManager();
-        CubeDesc desc = metaMgr.getCubeDesc("test_kylin_cube_without_slr_left_join_desc");
+        CubeDescManager cubeDescMgr = getCubeDescManager();
+        CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_without_slr_left_join_desc");
         createNewCube(desc);
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
@@ -603,8 +603,8 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
     @Test(expected = CubeIntegrityException.class)
     public void testInvalidUpsert() throws IOException, CubeIntegrityException, ParseException {
         // create a new cube
-        MetadataManager metaMgr = getMetadataManager();
-        CubeDesc desc = metaMgr.getCubeDesc("test_kylin_cube_without_slr_left_join_desc");
+        CubeDescManager cubeDescMgr = getCubeDescManager();
+        CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_without_slr_left_join_desc");
         createNewCube(desc);
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
@@ -654,8 +654,8 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
     @Test(expected = CubeIntegrityException.class)
     public void testInvalidUpsert2() throws IOException, CubeIntegrityException, ParseException {
         // create a new cube
-        MetadataManager metaMgr = getMetadataManager();
-        CubeDesc desc = metaMgr.getCubeDesc("test_kylin_cube_without_slr_left_join_desc");
+        CubeDescManager cubeDescMgr = getCubeDescManager();
+        CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_without_slr_left_join_desc");
         createNewCube(desc);
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
@@ -704,7 +704,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
     }
 
-    private MetadataManager getMetadataManager() {
-        return MetadataManager.getInstance(getTestConfig());
+    public CubeDescManager getCubeDescManager() {
+        return CubeDescManager.getInstance(getTestConfig());
     }
 }

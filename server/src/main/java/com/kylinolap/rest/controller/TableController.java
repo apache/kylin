@@ -38,8 +38,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.codahale.metrics.annotation.Metered;
 import com.kylinolap.metadata.MetadataConstances;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.request.CardinalityRequest;
 import com.kylinolap.rest.response.TableDescResponse;
@@ -70,7 +70,7 @@ public class TableController extends BasicController {
         long start = System.currentTimeMillis();
         List<TableDesc> tables = null;
         try {
-                tables = cubeMgmtService.getProjectManager().listDefinedTablesInProject(project);
+            tables = cubeMgmtService.getCubeRealizationManager().listDefinedTablesInProject(project);
         } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);
             throw new InternalErrorException(e.getLocalizedMessage());
@@ -156,7 +156,7 @@ public class TableController extends BasicController {
         Iterator<TableDesc> it = tables.iterator();
         while (it.hasNext()) {
             TableDesc table = it.next();
-            Map<String, String> exd = cubeMgmtService.getMetadataManager().getTableDescExd(table.getName());
+            Map<String, String> exd = cubeMgmtService.getMetadataManager().getTableDescExd(table.getIdentity());
             if (exd == null) {
                 descs.add(table);
             } else {

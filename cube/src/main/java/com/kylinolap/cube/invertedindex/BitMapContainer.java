@@ -31,7 +31,6 @@ import com.kylinolap.dict.Dictionary;
 
 /**
  * @author yangli9
- * 
  */
 public class BitMapContainer implements ColumnValueContainer {
 
@@ -40,7 +39,7 @@ public class BitMapContainer implements ColumnValueContainer {
     int size;
     ConciseSet[] sets;
     boolean closedForChange;
-    
+
     transient byte[] temp;
 
     public BitMapContainer(TableRecordInfoDigest info, int col) {
@@ -49,7 +48,7 @@ public class BitMapContainer implements ColumnValueContainer {
         this.nValues = info.getMaxID(col) + 1;
         this.sets = null;
         this.closedForChange = false;
-        
+
         this.temp = new byte[valueLen];
     }
 
@@ -67,14 +66,27 @@ public class BitMapContainer implements ColumnValueContainer {
         sets[value].add(size);
         size++;
     }
-    
+
     @Override
     public void getValueAt(int i, ImmutableBytesWritable valueBytes) {
         int value = getValueIntAt(i);
         BytesUtil.writeUnsigned(value, temp, 0, valueLen);
         valueBytes.set(temp, 0, valueLen);
     }
-    
+
+    @Override
+    public ConciseSet getBitMap(int valueId) {
+        if (valueId >= 0 && valueId <= getMaxValueId())
+            return sets[valueId];
+        else
+            return sets[this.nValues];
+    }
+
+    @Override
+    public int getMaxValueId() {
+        return this.nValues - 1;
+    }
+
     public int getValueIntAt(int i) {
         for (int v = 0; v < nValues; v++) {
             if (sets[v].contains(i)) {

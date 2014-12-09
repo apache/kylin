@@ -17,8 +17,8 @@ package com.kylinolap.storage;
 
 import java.util.Collection;
 
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.realization.FunctionDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.tuple.ITupleIterator;
 

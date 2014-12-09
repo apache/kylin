@@ -23,8 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.TableDesc;
 
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 9/24/13 Time: 2:38 PM To
@@ -51,9 +50,9 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testFindTableByName() throws Exception {
-        TableDesc table = MetadataManager.getInstance(this.getTestConfig()).getTableDesc("TEST_CAL_DT");
+        TableDesc table = MetadataManager.getInstance(this.getTestConfig()).getTableDesc("EDW.TEST_CAL_DT");
         Assert.assertNotNull(table);
-        Assert.assertEquals("TEST_CAL_DT", table.getName());
+        Assert.assertEquals("EDW.TEST_CAL_DT", table.getIdentity());
     }
 
     @Test
@@ -62,12 +61,6 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
         Assert.assertNotNull(MetadataManager.getInstance(this.getTestConfig()));
         Assert.assertNotNull(MetadataManager.getInstance(this.getTestConfig()).listAllTables());
         Assert.assertTrue(MetadataManager.getInstance(this.getTestConfig()).listAllTables().size() > 0);
-    }
-
-    @Test
-    public void testGetCubeDesc() throws Exception {
-        CubeDesc cubeDesc = MetadataManager.getInstance(this.getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
-        Assert.assertNotNull(cubeDesc);
     }
 
 }

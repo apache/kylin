@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.jcraft.jsch.Channel;
@@ -36,16 +35,14 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 
 public class SSHClient {
-    protected static final Logger logger = LoggerFactory.getLogger(SSHClient.class);
+    protected static final org.slf4j.Logger logger = LoggerFactory.getLogger(SSHClient.class);
 
     private String hostname;
     private String username;
     private String password;
     private String identityPath;
 
-    private SSHLogger sshLogger;
-
-    public SSHClient(String hostname, String username, String password, SSHLogger sshLogger) {
+    public SSHClient(String hostname, String username, String password) {
         this.hostname = hostname;
         this.username = username;
         if (new File(password).exists()) {
@@ -55,7 +52,6 @@ public class SSHClient {
             this.password = password;
             this.identityPath = null;
         }
-        this.sshLogger = sshLogger;
     }
 
     public void scpFileToRemote(String localFile, String remoteTargetDirectory) throws Exception {
@@ -257,10 +253,10 @@ public class SSHClient {
     }
 
     public SSHClientOutput execCommand(String command) throws Exception {
-        return execCommand(command, 7200);
+        return execCommand(command, 7200, null);
     }
 
-    public SSHClientOutput execCommand(String command, int timeoutSeconds) throws Exception {
+    public SSHClientOutput execCommand(String command, int timeoutSeconds, Logger logAppender) throws Exception {
         try {
             System.out.println("[" + username + "@" + hostname + "] Execute command: " + command);
 
@@ -295,8 +291,8 @@ public class SSHClient {
 
                     String line = new String(tmp, 0, i);
                     text.append(line);
-                    if (this.sshLogger != null) {
-                        this.sshLogger.log(line);
+                    if (logAppender != null) {
+                        logAppender.log(line);
                     }
                 }
                 while (err.available() > 0) {
@@ -306,8 +302,8 @@ public class SSHClient {
 
                     String line = new String(tmp, 0, i);
                     text.append(line);
-                    if (this.sshLogger != null) {
-                        this.sshLogger.log(line);
+                    if (logAppender != null) {
+                        logAppender.log(line);
                     }
                 }
                 if (channel.isClosed()) {

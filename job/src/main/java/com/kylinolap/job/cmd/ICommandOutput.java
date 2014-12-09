@@ -16,13 +16,14 @@
 
 package com.kylinolap.job.cmd;
 
+import com.kylinolap.common.util.Logger;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 
 /**
  * @author xjiang
  * 
  */
-public interface ICommandOutput {
+public interface ICommandOutput extends Logger {
 
     public void setStatus(JobStepStatusEnum status);
 

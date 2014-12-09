@@ -36,8 +36,8 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.kv.RowKeyDecoder;
 import com.kylinolap.cube.measure.MeasureCodec;
+import com.kylinolap.cube.model.MeasureDesc;
 import com.kylinolap.job.constant.BatchConstants;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
 
 /**
  * @author George Song (ysong1)

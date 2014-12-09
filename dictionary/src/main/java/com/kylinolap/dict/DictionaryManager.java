@@ -38,8 +38,8 @@ import com.kylinolap.dict.lookup.HiveTable;
 import com.kylinolap.dict.lookup.ReadableTable;
 import com.kylinolap.dict.lookup.TableSignature;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.DataModelDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 public class DictionaryManager {
 
@@ -147,9 +147,9 @@ public class DictionaryManager {
         return trySaveNewDict(newDict, newDictInfo);
     }
 
-    public DictionaryInfo buildDictionary(CubeDesc cube, TblColRef col, String factColumnsPath) throws IOException {
+    public DictionaryInfo buildDictionary(DataModelDesc model, String dict, TblColRef col, String factColumnsPath) throws IOException {
 
-        Object[] tmp = decideSourceData(cube, col, factColumnsPath);
+        Object[] tmp = decideSourceData(model, dict, col, factColumnsPath);
         String srcTable = (String) tmp[0];
         String srcCol = (String) tmp[1];
         int srcColIdx = (Integer) tmp[2];
@@ -163,9 +163,9 @@ public class DictionaryManager {
             return getDictionaryInfo(dupDict);
         }
 
-        Dictionary<?> dict = DictionaryGenerator.buildDictionary(dictInfo, inpTable);
+        Dictionary<?> dictionary = DictionaryGenerator.buildDictionary(dictInfo, inpTable);
 
-        return trySaveNewDict(dict, dictInfo);
+        return trySaveNewDict(dictionary, dictInfo);
     }
 
     /**
@@ -176,7 +176,7 @@ public class DictionaryManager {
      * 3. column cardinal in source table
      * 4. ReadableTable object
      */
-    public Object[] decideSourceData(CubeDesc cube, TblColRef col, String factColumnsPath) throws IOException {
+    public Object[] decideSourceData(DataModelDesc model, String dict, TblColRef col, String factColumnsPath) throws IOException {
         String srcTable;
         String srcCol;
         int srcColIdx;
@@ -184,7 +184,7 @@ public class DictionaryManager {
         MetadataManager metaMgr = MetadataManager.getInstance(config);
 
         // case of full table (dict on fact table)
-        if (cube == null) {
+        if (model == null) {
             srcTable = col.getTable();
             srcCol = col.getName();
             srcColIdx = col.getColumn().getZeroBasedIndex();
@@ -200,13 +200,13 @@ public class DictionaryManager {
         // Note FK on fact table is supported by scan the related PK on lookup
         // table
 
-        String useDict = cube.getRowkey().getDictionary(col);
+        //String useDict = cube.getRowkey().getDictionary(col);
 
         // normal case, source from lookup table
-        if ("true".equals(useDict) || "string".equals(useDict) || "number".equals(useDict) || "any".equals(useDict)) {
+        if ("true".equals(dict) || "string".equals(dict) || "number".equals(dict) || "any".equals(dict)) {
             // FK on fact table, use PK from lookup instead
-            if (cube.isFactTable(col.getTable())) {
-                TblColRef pkCol = cube.findPKByFK(col);
+            if (model.isFactTable(col.getTable())) {
+                TblColRef pkCol = model.findPKByFK(col);
                 if (pkCol != null)
                     col = pkCol; // scan the counterparty PK on lookup table
                 // instead
@@ -214,7 +214,7 @@ public class DictionaryManager {
             srcTable = col.getTable();
             srcCol = col.getName();
             srcColIdx = col.getColumn().getZeroBasedIndex();
-            if (cube.isFactTable(col.getTable())) {
+            if (model.isFactTable(col.getTable())) {
                 table = new FileTable(factColumnsPath + "/" + col.getName(), -1);
             } else {
                 table = new HiveTable(metaMgr, col.getTable());
@@ -223,11 +223,11 @@ public class DictionaryManager {
         // otherwise could refer to a data set, e.g. common_indicators.txt
         // (LEGACY PATH, since distinct values are collected from fact table)
         else {
-            String dictDataSetPath = unpackDataSet(this.config.getTempHDFSDir(), useDict);
+            String dictDataSetPath = unpackDataSet(this.config.getTempHDFSDir(), dict);
             if (dictDataSetPath == null)
-                throw new IllegalArgumentException("Unknown dictionary data set '" + useDict + "', referred from " + col);
+                throw new IllegalArgumentException("Unknown dictionary data set '" + dict + "', referred from " + col);
             srcTable = "PREDEFINED";
-            srcCol = useDict;
+            srcCol = dict;
             srcColIdx = 0;
             table = new FileTable(dictDataSetPath, -1);
         }

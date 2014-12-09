@@ -23,6 +23,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;
 
+import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
 import org.apache.commons.lang3.StringUtils;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
@@ -35,11 +36,10 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.query.enumerator.OLAPQuery;
 import com.kylinolap.query.relnode.OLAPContext;
 import com.kylinolap.query.schema.OLAPSchemaFactory;
-import com.kylinolap.storage.hbase.observer.CoprocessorEnabler;
 
 public class KylinQueryTest extends KylinTestBase {
 
@@ -92,7 +92,7 @@ public class KylinQueryTest extends KylinTestBase {
         if (h2Connection != null)
             closeConnection(h2Connection);
 
-        CoprocessorEnabler.forceCoprocessorUnset();
+        ObserverEnabler.forceCoprocessorUnset();
         HBaseMetadataTestCase.staticCleanupTestMetadata();
     }
 
@@ -124,17 +124,17 @@ public class KylinQueryTest extends KylinTestBase {
     @Ignore
     @Test
     public void testTempQuery() throws Exception {
-        execAndCompQuery("src/test/resources/query/temp", null, true);
+       execAndCompQuery("src/test/resources/query/temp", null, true);
     }
 
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = "src/test/resources/query/sql/query37.sql";
+        String queryFileName = "src/test/resources/query/sql_orderby/query01.sql";
 
         File sqlFile = new File(queryFileName);
+        runSQL(sqlFile, true, true);
         runSQL(sqlFile, true, false);
-        // runSQL(sqlFile, false, true);
     }
 
     @Test
@@ -212,7 +212,7 @@ public class KylinQueryTest extends KylinTestBase {
 
     @Test
     public void testH2Query() throws Exception {
-        this.execQueryUsingH2("src/test/resources/query/h2", false);
+        this.execQueryUsingH2("src/test/resources/query/sql_orderby", false);
     }
 
     @Test

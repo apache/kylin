@@ -19,7 +19,7 @@ package com.kylinolap.cube.kv;
 import java.util.Collection;
 import java.util.Comparator;
 
-import com.kylinolap.metadata.model.schema.DataType;
+import com.kylinolap.metadata.model.DataType;
 
 /**
  * @author yangli9

@@ -1,1 +1,1 @@
-select count(*) as CNT from test_sites
+select count(*) as CNT from edw.test_sites
