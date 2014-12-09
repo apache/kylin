@@ -33,7 +33,6 @@ import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.coprocessor.CoprocessorHost;
 import org.apache.hadoop.hbase.security.User;
@@ -157,15 +156,22 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
     }
 
 
-    private TupleFilter mockEQFiter(String value, TblColRef tblColRef) throws IOException {
+    private TupleFilter mockEQFiter(TblColRef tblColRef, String value) throws IOException {
         CompareTupleFilter filter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
         filter.addChild(new ColumnTupleFilter(tblColRef));
         filter.addChild(new ConstantTupleFilter(value));
         return filter;
     }
 
-    private TupleFilter mockNEQFiter(String value, TblColRef tblColRef) throws IOException {
+    private TupleFilter mockNEQFiter(TblColRef tblColRef, String value) throws IOException {
         CompareTupleFilter filter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.NEQ);
+        filter.addChild(new ColumnTupleFilter(tblColRef));
+        filter.addChild(new ConstantTupleFilter(value));
+        return filter;
+    }
+
+    private TupleFilter mockGTFiter(TblColRef tblColRef, String value) throws IOException {
+        CompareTupleFilter filter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.GT);
         filter.addChild(new ColumnTupleFilter(tblColRef));
         filter.addChild(new ConstantTupleFilter(value));
         return filter;
@@ -236,11 +242,35 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
     }
 
     @Test
-    public void testFilteredCount() throws Throwable {
+    public void testFilterOnMetric() throws Throwable {
+        ColumnDesc priceDesc = tableDesc.findColumnByName("PRICE");
+        TblColRef priceColumn = new TblColRef(priceDesc);
+        TupleFilter tupleFilter = mockGTFiter(priceColumn, "50");
+
         ColumnDesc columnDesc = tableDesc.findColumnByName("LSTG_FORMAT_NAME");
         TblColRef lfn = new TblColRef(columnDesc);
-        TupleFilter filterA = mockEQFiter("ABIN", lfn);
-        TupleFilter filterB = mockNEQFiter("ABIN", lfn);
+        Collection<TblColRef> groupby = ImmutableSet.of(lfn);
+
+        List<FunctionDesc> measures = buildAggregations(priceDesc);
+        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc.getColumns(), tupleFilter, groupby, measures, context, table);
+
+        int count = 0;
+        while (iterator.hasNext()) {
+            ITuple tuple = iterator.next();
+            count += (Long) tuple.getValue("COUNT__");
+        }
+
+        System.out.printf("Count: " + count);
+    }
+
+
+    @Test
+    public void testFilteredCount() throws Throwable {
+        ColumnDesc lstgDesc = tableDesc.findColumnByName("LSTG_FORMAT_NAME");
+        TblColRef lstg = new TblColRef(lstgDesc);
+
+        TupleFilter filterA = mockEQFiter(lstg, "ABIN");
+        TupleFilter filterB = mockNEQFiter(lstg, "ABIN");
 
         int countA = filteredCount(filterA);
         int countB = filteredCount(filterB);
@@ -272,8 +302,8 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
 
         ColumnDesc columnDesc = tableDesc.findColumnByName("LSTG_FORMAT_NAME");
         TblColRef lfn = new TblColRef(columnDesc);
-        TupleFilter filterA = mockEQFiter("ABIN", lfn);
-        TupleFilter filterB = mockNEQFiter("ABIN", lfn);
+        TupleFilter filterA = mockEQFiter(lfn, "ABIN");
+        TupleFilter filterB = mockNEQFiter(lfn, "ABIN");
 
         int countA = filteredGrouByCount(filterA);
         int countB = filteredGrouByCount(filterB);

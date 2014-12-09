@@ -78,6 +78,7 @@ public class CoprocessorFilter {
                 newComp.setNullString(nullString);
                 newComp.addChild(new ColumnTupleFilter(col));
                 String v;
+                //TODO: seems not working when CompareTupleFilter has multiple values, like IN
                 String firstValue = constValues.iterator().next();
 
                 // translate constant into rowkey ID

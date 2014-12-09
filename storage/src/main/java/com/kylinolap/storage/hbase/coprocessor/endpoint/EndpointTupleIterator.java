@@ -1,11 +1,13 @@
 package com.kylinolap.storage.hbase.coprocessor.endpoint;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.invertedindex.TableRecord;
 import com.kylinolap.cube.invertedindex.TableRecordInfo;
 import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.DataType;
 import com.kylinolap.metadata.model.realization.FunctionDesc;
 import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.StorageContext;
@@ -24,6 +26,8 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
@@ -32,6 +36,8 @@ import java.util.*;
  * Created by Hongbin Ma(Binmahone) on 12/2/14.
  */
 public class EndpointTupleIterator implements ITupleIterator {
+
+    private final static Logger logger = LoggerFactory.getLogger(EndpointTupleIterator.class);
 
     private final CubeSegment seg;
     private final StorageContext context;
@@ -50,6 +56,8 @@ public class EndpointTupleIterator implements ITupleIterator {
     Iterator<List<IIRow>> regionResponsesIterator = null;
     ITupleIterator tupleIterator = null;
 
+    int rowsInAllMetric = 0;
+
     public EndpointTupleIterator(CubeSegment cubeSegment, ColumnDesc[] columnDescs,
             TupleFilter rootFilter, Collection<TblColRef> groupBy, List<FunctionDesc> measures, StorageContext context, HTableInterface table) throws Throwable {
 
@@ -64,6 +72,7 @@ public class EndpointTupleIterator implements ITupleIterator {
         if (measures == null) {
             measures = Lists.newArrayList();
         }
+        initMeaureParameters(measures, columnDescs);
 
 
         this.seg = cubeSegment;
@@ -94,6 +103,30 @@ public class EndpointTupleIterator implements ITupleIterator {
         }
     }
 
+    /**
+     * measure comes from query engine, does not contain enough information
+     *
+     * @param measures
+     * @param columns
+     */
+    private void initMeaureParameters(List<FunctionDesc> measures, ColumnDesc[] columns) {
+        for (FunctionDesc functionDesc : measures) {
+            if (functionDesc.isCount()) {
+                functionDesc.setReturnType("bigint");
+                functionDesc.setReturnDataType(DataType.getInstance(functionDesc.getReturnType()));
+            } else {
+                for (ColumnDesc columnDesc : columns) {
+                    if (functionDesc.getParameter().getValue().equalsIgnoreCase(columnDesc.getName())) {
+                        functionDesc.setReturnType(columnDesc.getTypeName());
+                        functionDesc.setReturnDataType(DataType.getInstance(functionDesc.getReturnType()));
+                        functionDesc.getParameter().setColRefs(ImmutableList.of(new TblColRef(columnDesc)));
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     @Override
     public boolean hasNext() {
         return this.regionResponsesIterator.hasNext() || this.tupleIterator.hasNext();
@@ -101,6 +134,8 @@ public class EndpointTupleIterator implements ITupleIterator {
 
     @Override
     public ITuple next() {
+        rowsInAllMetric++;
+
         if (!hasNext()) {
             throw new IllegalStateException("No more ITuple in EndpointTupleIterator");
         }
@@ -113,6 +148,7 @@ public class EndpointTupleIterator implements ITupleIterator {
 
     @Override
     public void close() {
+        logger.info("Closed after " + rowsInAllMetric + " rows are fetched");
     }
 
 
@@ -164,6 +200,7 @@ public class EndpointTupleIterator implements ITupleIterator {
         }
 
         for (FunctionDesc measure : measures) {
+
             info.setField(measure.getRewriteFieldName(), null, measure.getSQLType(), index++);
         }
 

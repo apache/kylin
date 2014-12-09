@@ -1,7 +1,13 @@
 package com.kylinolap.metadata.model.invertedindex;
 
 import java.util.BitSet;
+import java.util.List;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.kylinolap.metadata.model.cube.MeasureDesc;
+import com.kylinolap.metadata.model.realization.FunctionDesc;
+import com.kylinolap.metadata.model.realization.ParameterDesc;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.hbase.util.Bytes;
 
@@ -54,6 +60,8 @@ public class InvertedIndexDesc extends RootPersistentEntity {
     private int[] valueCols;
     private int[] metricsCols;
     private BitSet metricsColSet;
+    private List<MeasureDesc> measureDescs;
+
 
     public void init(MetadataManager mgr) {
         config = mgr.getConfig();
@@ -69,6 +77,7 @@ public class InvertedIndexDesc extends RootPersistentEntity {
         valueCols = new int[valueDimensions.length];
         metricsCols = new int[metrics.length];
         metricsColSet = new BitSet(tableDesc.getColumnCount());
+        measureDescs = Lists.newArrayList();
         int i = 0, j = 0, k = 0;
         for (ColumnDesc col : tableDesc.getColumns()) {
             if (ArrayUtils.contains(bitmapDimensions, col.getName())) {
@@ -80,10 +89,34 @@ public class InvertedIndexDesc extends RootPersistentEntity {
             if (ArrayUtils.contains(metrics, col.getName())) {
                 metricsCols[k++] = col.getZeroBasedIndex();
                 metricsColSet.set(col.getZeroBasedIndex());
+                measureDescs.add(makeMeasureDescs("SUM", col));
+                measureDescs.add(makeMeasureDescs("MIN", col));
+                measureDescs.add(makeMeasureDescs("MAX", col));
+                //TODO support for HLL
             }
         }
 
         tsCol = tableDesc.findColumnByName(timestampDimension).getZeroBasedIndex();
+    }
+
+    public List<MeasureDesc> getMeasureDescs() {
+        return measureDescs;
+    }
+
+    private MeasureDesc makeMeasureDescs(String func, ColumnDesc columnDesc) {
+        String columnName = columnDesc.getName();
+        String returnType = columnDesc.getTypeName();
+        MeasureDesc measureDesc = new MeasureDesc();
+        FunctionDesc f1 = new FunctionDesc();
+        f1.setExpression(func);
+        ParameterDesc p1 = new ParameterDesc();
+        p1.setType("column");
+        p1.setValue(columnName);
+        p1.setColRefs(ImmutableList.of(new TblColRef(columnDesc)));
+        f1.setParameter(p1);
+        f1.setReturnType(returnType);
+        measureDesc.setFunction(f1);
+        return measureDesc;
     }
 
     public KylinConfig getConfig() {
@@ -105,15 +138,15 @@ public class InvertedIndexDesc extends RootPersistentEntity {
     public int[] getValueColumns() {
         return valueCols;
     }
-    
+
     public int[] getMetricsColumns() {
         return metricsCols;
     }
-    
+
     public short getSharding() {
         return sharding;
     }
-    
+
     public int getSliceSize() {
         return sliceSize;
     }
@@ -142,5 +175,5 @@ public class InvertedIndexDesc extends RootPersistentEntity {
     public String getTimestampDimension() {
         return timestampDimension;
     }
-    
+
 }
