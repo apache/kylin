@@ -176,7 +176,6 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
                 newDescription: $scope.proj.description
             };
             ProjectService.update({}, requestBody, function (newProj) {
-//                MessageService.sendMsg("Project update successfully!", 'success');
                 SweetAlert.swal('Success!', 'Project update successfully!', 'success');
                 $modalInstance.dismiss('cancel');
             });
@@ -184,7 +183,6 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
         else
         {
             ProjectService.save({}, $scope.proj, function (newProj) {
-//                MessageService.sendMsg("New project created successfully", 'success');
                 SweetAlert.swal('Success!', 'New project created successfully!', 'success');
                 $modalInstance.dismiss('cancel');
                 if(projects) {

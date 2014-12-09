@@ -122,13 +122,29 @@ public class TableController extends BasicController {
     public Map<String, String[]> loadHiveTable(@PathVariable String tables,@PathVariable String project){
         Map<String, String[]> result = new HashMap<String, String[]>();
         try{ 
-            String[] arr = cubeMgmtService.reloadHiveTable(tables);
-            if(arr.length==0){
-                throw new InternalErrorException("No Table Loaded! Please check the table name.");
+            String[] loadedTables = cubeMgmtService.reloadHiveTable(tables);
+
+            String inputTables[] = tables.split(",");
+            ArrayList<String> unloadedTables = new ArrayList<String>();
+            for (String inputTable : inputTables) {
+                boolean tableLoaded = false;
+                for (String loadedTable : loadedTables) {
+                    int cut = loadedTable.indexOf('.');
+                    String tableName = cut >= 0 ? loadedTable.substring(cut + 1).trim() : loadedTable.trim();
+                    if (inputTable.toUpperCase().equals(tableName)||inputTable.toUpperCase().equals(loadedTable)) {
+                        tableLoaded = true;
+                        continue;
+                    }
+                }
+                if(!tableLoaded){
+                    unloadedTables.add(inputTable);
+                }
             }
-            
+           
             cubeMgmtService.syncTableToProject(tables, project);
-            result.put("result", arr);
+            result.put("result.loaded", loadedTables);
+            result.put("result.unloaded",unloadedTables.toArray(new String[unloadedTables.size()]) );
+            
        }catch(IOException e){
            logger.error("Failed to deal with the request.", e);
            throw new InternalErrorException("Failed to load table,Please check the table name.");

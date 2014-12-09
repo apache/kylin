@@ -195,8 +195,10 @@ public class ProjectManager {
         String[] tokens = StringUtils.split(tables, ",");
         for (int i = 0; i < tokens.length; i++) {
             String token = tokens[i].trim();
-            if (StringUtils.isNotEmpty(token)) {
-                projectInstance.addTable(token);
+            int cut = token.indexOf('.');
+            String tableName = cut >= 0 ? token.substring(cut + 1).trim() : token.trim();
+            if (StringUtils.isNotEmpty(tableName)) {
+                projectInstance.addTable(tableName);
             }
         }
 
