@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.kylinolap.cube.project.CubeRealizationManager;
 import com.kylinolap.metadata.project.ProjectInstance;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -239,6 +240,7 @@ public class CubeManager {
 
         // delete cube from project
         ProjectManager.getInstance(config).removeCubeFromProjects(cubeName);
+        CubeRealizationManager.getInstance(config).loadAllProjects();
 
         // clean cube cache
         this.afterCubeDroped(cube, projects);
@@ -256,6 +258,7 @@ public class CubeManager {
         saveResource(cube);
 
         ProjectManager.getInstance(config).updateCubeToProject(cubeName, projectName, owner);
+        CubeRealizationManager.getInstance(config).loadProject(ProjectManager.getInstance(config).getProject(projectName));
 
         return cube;
     }
