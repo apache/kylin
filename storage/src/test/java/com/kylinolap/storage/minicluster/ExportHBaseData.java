@@ -6,9 +6,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HConnection;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.HBaseConnection;
@@ -23,14 +20,13 @@ public class ExportHBaseData extends HBaseMetadataTestCase {
     Configuration config;
     HBaseAdmin hbase;
     CliCommandExecutor cli = null;
-    String exportRemoteDiskFolder = "/tmp/hbase-export";
+    String exportFolder = "/tmp/hbase-export";
     String backupArchive = null;
     String tableNameBase;
 
-    @Before
     public void setup() throws IOException {
         long currentTIME = System.currentTimeMillis();
-        exportRemoteDiskFolder = "/tmp/hbase-export/" + currentTIME + "/";
+        exportFolder = "/tmp/hbase-export/" + currentTIME + "/";
         backupArchive = "/tmp/kylin_" + currentTIME + ".tar.gz";
         this.createTestMetadata();
 
@@ -55,48 +51,51 @@ public class ExportHBaseData extends HBaseMetadataTestCase {
 
     }
 
-    @After
     public void tearDown() {
 
-/*
+        // cleanup hdfs
         try {
-            if (cli != null && exportRemoteDiskFolder != null) {
-                cli.execute("hadoop fs -rm -r " + exportRemoteDiskFolder);
-            }
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        try {
-            if (cli != null && exportRemoteDiskFolder != null) {
-                cli.execute("rm -r " + exportRemoteDiskFolder);
+            if (cli != null && exportFolder != null) {
+                cli.execute("hadoop fs -rm -r " + exportFolder);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        */
+        
+        // cleanup sandbox disk
+        try {
+            if (cli != null && exportFolder != null) {
+                cli.execute("rm -r " + exportFolder);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        // delete archive file on sandbox
+        try {
+            if (cli != null && backupArchive != null) {
+                cli.execute("rm " + backupArchive);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-//        if (backupArchive != null) {
-//            new File(backupArchive).delete();
-//        }
     }
 
-    @Test
     public void exportTables() throws IOException {
         for (HTableDescriptor table : allTables) {
             String tName = table.getNameAsString();
             if (!tName.startsWith(tableNameBase) && !tName.startsWith("KYLIN_"))
-//                if (!tName.equals(tableNameBase))
                 continue;
             
-            cli.execute("hbase org.apache.hadoop.hbase.mapreduce.Export " + tName + " " + exportRemoteDiskFolder + tName);
+            cli.execute("hbase org.apache.hadoop.hbase.mapreduce.Export " + tName + " " + exportFolder + tName);
         }
         
         
-        cli.execute("mkdir -p "  + exportRemoteDiskFolder);
+        cli.execute("mkdir -p "  + exportFolder);
 
-        cli.execute("hadoop fs -copyToLocal " + exportRemoteDiskFolder + " " + exportRemoteDiskFolder);
-        cli.execute("tar -zcvf " + backupArchive + " --directory=" + exportRemoteDiskFolder + " .");
+        cli.execute("hadoop fs -copyToLocal " + exportFolder + " " + exportFolder);
+        cli.execute("tar -zcvf " + backupArchive + " --directory=" + exportFolder + " .");
         downloadToLocal();
     }
 
@@ -106,8 +105,19 @@ public class ExportHBaseData extends HBaseMetadataTestCase {
         try {
             ssh.scpFileToLocal(backupArchive, "../examples/test_case_data/minicluster/hbase-export.tar.gz");
         } catch (Exception e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
+        }
+    }
+    
+    public static void main(String[] args) {
+        ExportHBaseData export = new ExportHBaseData();
+        try {
+            export.setup();
+            export.exportTables();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            export.tearDown();
         }
     }
 }
