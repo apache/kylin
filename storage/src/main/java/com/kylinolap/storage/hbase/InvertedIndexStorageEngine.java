@@ -26,11 +26,11 @@ import com.kylinolap.cube.invertedindex.*;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.storage.hbase.coprocessor.endpoint.EndpointTupleIterator;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.client.HConnection;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.HBaseConnection;
-import com.kylinolap.common.persistence.StorageException;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.metadata.model.ColumnDesc;
@@ -42,7 +42,6 @@ import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.tuple.ITupleIterator;
 import com.kylinolap.storage.tuple.Tuple;
 import com.kylinolap.storage.tuple.TupleInfo;
-import org.apache.hadoop.hbase.client.HTableInterface;
 
 /**
  * @author yangli9
@@ -64,12 +63,12 @@ public class InvertedIndexStorageEngine implements IStorageEngine {
 
     @Override
     public ITupleIterator search(Collection<TblColRef> dimensions, TupleFilter filter, Collection<TblColRef> groups, Collection<FunctionDesc> metrics, StorageContext context) {
-        HConnection conn = HBaseConnection.get(context.getConnUrl());
         String tableName = seg.getStorageLocationIdentifier();
-        HTableInterface htable = null;
+
+        //HConnection is cached, so need not be closed
+        HConnection conn = HBaseConnection.get(context.getConnUrl());
         try {
-            htable = conn.getTable(tableName);
-            return new EndpointTupleIterator(seg, columnDescs, filter, groups, new ArrayList(metrics), context, htable);
+            return new EndpointTupleIterator(seg, columnDescs, filter, groups, new ArrayList(metrics), context, conn);
         } catch (Throwable e) {
             e.printStackTrace();
             throw new IllegalStateException("Error when connecting to II htable " + tableName, e);
