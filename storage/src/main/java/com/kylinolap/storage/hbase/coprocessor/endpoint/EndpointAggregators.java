@@ -69,7 +69,13 @@ public class EndpointAggregators {
 
     final transient FixedLenMeasureCodec[] measureSerializers;
     final transient Object[] metricValues;
-    final transient byte[] metricBytes;
+
+    final private static ThreadLocal<byte[]> metricBytes = new ThreadLocal<byte[]>() {
+        @Override
+        protected byte[] initialValue() {
+            return new byte[CoprocessorConstants.SERIALIZE_BUFFER_SIZE];
+        }
+    };
 
     final LongWritable one = new LongWritable(1);
 
@@ -79,7 +85,6 @@ public class EndpointAggregators {
         this.refColIndex = refColIndex;
         this.tableRecordInfo = tableInfo;
 
-        this.metricBytes = new byte[CoprocessorConstants.SERIALIZE_BUFFER_SIZE];
         this.metricValues = new Object[funcNames.length];
         this.measureSerializers = new FixedLenMeasureCodec[funcNames.length];
         for (int i = 0; i < this.measureSerializers.length; ++i) {
@@ -87,8 +92,7 @@ public class EndpointAggregators {
         }
     }
 
-    public TableRecordInfoDigest getTableRecordInfo()
-    {
+    public TableRecordInfoDigest getTableRecordInfo() {
         return tableRecordInfo;
     }
 
@@ -136,10 +140,10 @@ public class EndpointAggregators {
 
         int metricBytesOffset = 0;
         for (int i = 0; i < measureSerializers.length; i++) {
-            measureSerializers[i].write(metricValues[i], metricBytes, metricBytesOffset);
+            measureSerializers[i].write(metricValues[i], metricBytes.get(), metricBytesOffset);
             metricBytesOffset += measureSerializers[i].getLength();
         }
-        return metricBytes;
+        return metricBytes.get();
     }
 
     public List<String> deserializeMetricValues(byte[] metricBytes, int offset) {
