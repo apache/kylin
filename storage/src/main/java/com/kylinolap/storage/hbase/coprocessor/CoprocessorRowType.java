@@ -38,9 +38,8 @@ import com.kylinolap.metadata.model.realization.TblColRef;
  */
 public class CoprocessorRowType {
 
-    public static CoprocessorRowType fromTableDesc(CubeSegment seg, TableDesc tableDesc) {
+    public static CoprocessorRowType fromColumnDescs(CubeSegment seg, ColumnDesc[] columnDescs) {
 
-        ColumnDesc[] columnDescs = tableDesc.getColumns();
         TblColRef[] cols = new TblColRef[columnDescs.length];
         for (int i = 0; i < columnDescs.length; ++i) {
             cols[i] = new TblColRef(columnDescs[i]);

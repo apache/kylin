@@ -19,18 +19,18 @@ package com.kylinolap.storage.hbase;
 import static com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc.*;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 import com.kylinolap.cube.invertedindex.*;
 
+import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.cube.CubeDesc;
+import com.kylinolap.storage.hbase.coprocessor.endpoint.EndpointTupleIterator;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.client.HConnection;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.HBaseConnection;
-import com.kylinolap.common.persistence.StorageException;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.metadata.model.ColumnDesc;
@@ -50,19 +50,28 @@ public class InvertedIndexStorageEngine implements IStorageEngine {
 
     private String hbaseUrl;
     private CubeSegment seg;
+    private ColumnDesc[] columnDescs;
 
     public InvertedIndexStorageEngine(CubeInstance cube) {
         this.seg = cube.getFirstSegment();
+        //TODO: to refine
+        CubeDesc cubeDesc = this.seg.getCubeDesc();
+        this.columnDescs = MetadataManager.getInstance(cubeDesc.getConfig()).
+                getTableDesc(cubeDesc.getFactTable()).getColumns();
         this.hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
     }
 
     @Override
     public ITupleIterator search(Collection<TblColRef> dimensions, TupleFilter filter, Collection<TblColRef> groups, Collection<FunctionDesc> metrics, StorageContext context) {
+        String tableName = seg.getStorageLocationIdentifier();
 
+        //HConnection is cached, so need not be closed
+        HConnection conn = HBaseConnection.get(context.getConnUrl());
         try {
-            return new IISegmentTupleIterator(context);
-        } catch (IOException e) {
-            throw new StorageException(e.getMessage(), e);
+            return new EndpointTupleIterator(seg, columnDescs, filter, groups, new ArrayList(metrics), context, conn);
+        } catch (Throwable e) {
+            e.printStackTrace();
+            throw new IllegalStateException("Error when connecting to II htable " + tableName, e);
         }
     }
 

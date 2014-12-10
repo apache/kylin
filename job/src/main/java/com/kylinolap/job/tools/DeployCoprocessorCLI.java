@@ -57,7 +57,8 @@ public class DeployCoprocessorCLI {
 
     private static final Logger logger = LoggerFactory.getLogger(DeployCoprocessorCLI.class);
 
-    public static final String AGGR_COPROCESSOR_CLS_NAME = "com.kylinolap.storage.hbase.coprocessor.observer.AggregateRegionObserver";
+    public static final String OBSERVER_CLS_NAME = "com.kylinolap.storage.hbase.coprocessor.observer.AggregateRegionObserver";
+    public static final String ENDPOINT_CLS_NAMAE = "com.kylinolap.storage.hbase.coprocessor.endpoint.IIEndpoint";
 
     public static void main(String[] args) throws IOException {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -90,7 +91,8 @@ public class DeployCoprocessorCLI {
 
     public static void setCoprocessorOnHTable(HTableDescriptor desc, Path hdfsCoprocessorJar) throws IOException {
         logger.info("Set coprocessor on " + desc.getNameAsString());
-        desc.addCoprocessor(AGGR_COPROCESSOR_CLS_NAME, hdfsCoprocessorJar, 1001, null);
+        desc.addCoprocessor(ENDPOINT_CLS_NAMAE, hdfsCoprocessorJar, 1000, null);
+        desc.addCoprocessor(OBSERVER_CLS_NAME, hdfsCoprocessorJar, 1001, null);
     }
 
     public static void resetCoprocessor(String tableName, HBaseAdmin hbaseAdmin, Path hdfsCoprocessorJar) throws IOException {
@@ -99,8 +101,11 @@ public class DeployCoprocessorCLI {
 
         logger.info("Unset coprocessor on " + tableName);
         HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
-        while (desc.hasCoprocessor(AGGR_COPROCESSOR_CLS_NAME)) {
-            desc.removeCoprocessor(AGGR_COPROCESSOR_CLS_NAME);
+        while (desc.hasCoprocessor(OBSERVER_CLS_NAME)) {
+            desc.removeCoprocessor(OBSERVER_CLS_NAME);
+        }
+        while (desc.hasCoprocessor(ENDPOINT_CLS_NAMAE)) {
+            desc.removeCoprocessor(ENDPOINT_CLS_NAMAE);
         }
 
         setCoprocessorOnHTable(desc, hdfsCoprocessorJar);
@@ -244,7 +249,7 @@ public class DeployCoprocessorCLI {
                 String jarPath = valueMatcher.group(1).trim();
                 String clsName = valueMatcher.group(2).trim();
 
-                if (AGGR_COPROCESSOR_CLS_NAME.equals(clsName)) {
+                if (OBSERVER_CLS_NAME.equals(clsName)) {
                     result.add(jarPath);
                 }
             }

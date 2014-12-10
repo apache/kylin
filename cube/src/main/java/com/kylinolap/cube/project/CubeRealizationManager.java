@@ -26,10 +26,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
@@ -232,19 +228,35 @@ public class CubeRealizationManager {
     public List<MeasureDesc> listEffectiveRewriteMeasures(String project, String factTable) {
         factTable = factTable.toUpperCase();
 
-        HashSet<CubeDesc> relatedDesc = new HashSet<CubeDesc>();
+        HashSet<CubeDesc> relatedCubeDesc = Sets.newHashSet();
+        HashSet<InvertedIndexDesc> relatedIIDesc = Sets.newHashSet();
+
         for (CubeInstance cube : getProjectTable(project, factTable).getCubes()) {
-            if (cube.isReady() == false)
+            if (!cube.isReady())
                 continue;
             if (cube.getDescriptor().getModel().isFactTable(factTable) == false)
                 continue;
 
-            relatedDesc.add(cube.getDescriptor());
+            relatedCubeDesc.add(cube.getDescriptor());
+
+            if (cube.getInvertedIndexDesc() != null) {
+                relatedIIDesc.add(cube.getInvertedIndexDesc());
+            }
         }
 
         List<MeasureDesc> result = Lists.newArrayList();
-        for (CubeDesc desc : relatedDesc) {
+        //cube
+        for (CubeDesc desc : relatedCubeDesc) {
             for (MeasureDesc m : desc.getMeasures()) {
+                FunctionDesc func = m.getFunction();
+                if (func.needRewrite())
+                    result.add(m);
+            }
+        }
+
+        //II
+        for (InvertedIndexDesc desc : relatedIIDesc) {
+            for (MeasureDesc m : desc.getMeasureDescs()) {
                 FunctionDesc func = m.getFunction();
                 if (func.needRewrite())
                     result.add(m);

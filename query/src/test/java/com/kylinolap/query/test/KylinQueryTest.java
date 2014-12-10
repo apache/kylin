@@ -44,6 +44,7 @@ public class KylinQueryTest extends KylinTestBase {
 
     @BeforeClass
     public static void setUp() throws Exception {
+
         printInfo("setUp in KylinQueryTest");
 
         joinType = "left";
@@ -129,11 +130,13 @@ public class KylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = "src/test/resources/query/sql_orderby/query01.sql";
+        for (int i = 0; i < 100; ++i) {
+            String queryFileName = "src/test/resources/query/sql_ii/query05.sql";
 
-        File sqlFile = new File(queryFileName);
-        runSQL(sqlFile, true, true);
-        runSQL(sqlFile, true, false);
+            File sqlFile = new File(queryFileName);
+            //runSQL(sqlFile, true, true);
+            runSQL(sqlFile, true, false);
+        }
     }
 
     @Test
@@ -157,6 +160,11 @@ public class KylinQueryTest extends KylinTestBase {
     @Test
     public void testCommonQuery() throws Exception {
         execAndCompQuery("src/test/resources/query/sql", null, true);
+    }
+
+    @Test
+    public void testIIQuery() throws Exception {
+        execAndCompQuery("src/test/resources/query/sql_ii", null, true);
     }
 
     @Test

@@ -66,11 +66,10 @@ public class EndpointAggregators {
     final String[] funcNames;
     final String[] dataTypes;
     final int[] refColIndex;
-    final TableRecordInfoDigest tableInfo;
+    final TableRecordInfoDigest tableRecordInfo;
 
     final transient FixedLenMeasureCodec[] measureSerializers;
     final transient Object[] metricValues;
-    final transient byte[] metricBytes;
 
     final LongWritable one = new LongWritable(1);
 
@@ -78,14 +77,17 @@ public class EndpointAggregators {
         this.funcNames = funcNames;
         this.dataTypes = dataTypes;
         this.refColIndex = refColIndex;
-        this.tableInfo = tableInfo;
+        this.tableRecordInfo = tableInfo;
 
-        this.metricBytes = new byte[CoprocessorConstants.SERIALIZE_BUFFER_SIZE];
         this.metricValues = new Object[funcNames.length];
         this.measureSerializers = new FixedLenMeasureCodec[funcNames.length];
         for (int i = 0; i < this.measureSerializers.length; ++i) {
             this.measureSerializers[i] = FixedLenMeasureCodec.get(DataType.getInstance(dataTypes[i]));
         }
+    }
+
+    public TableRecordInfoDigest getTableRecordInfo() {
+        return tableRecordInfo;
     }
 
     public boolean isEmpty() {
@@ -103,18 +105,18 @@ public class EndpointAggregators {
 
     public void aggregate(MeasureAggregator[] measureAggrs, byte[] row) {
         int rawIndex = 0;
-        int columnCount = tableInfo.getColumnCount();
+        int columnCount = tableRecordInfo.getColumnCount();
 
         //normal column values to aggregate
         for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex) {
-            if (tableInfo.isMetrics(columnIndex)) {
+            if (tableRecordInfo.isMetrics(columnIndex)) {
                 for (int metricIndex = 0; metricIndex < refColIndex.length; ++metricIndex) {
                     if (refColIndex[metricIndex] == columnIndex) {
                         measureAggrs[metricIndex].aggregate(measureSerializers[metricIndex].read(row, rawIndex));
                     }
                 }
             }
-            rawIndex += tableInfo.length(columnIndex);
+            rawIndex += tableRecordInfo.length(columnIndex);
         }
 
         //aggregate for "count"
@@ -125,17 +127,23 @@ public class EndpointAggregators {
         }
     }
 
-    public byte[] serializeMetricValues(MeasureAggregator[] aggrs) {
+    /**
+     *
+     * @param aggrs
+     * @param buffer byte buffer to get the metric data
+     * @return length of metric data
+     */
+    public int serializeMetricValues(MeasureAggregator[] aggrs, byte[] buffer) {
         for (int i = 0; i < funcNames.length; i++) {
             metricValues[i] = aggrs[i].getState();
         }
 
         int metricBytesOffset = 0;
         for (int i = 0; i < measureSerializers.length; i++) {
-            measureSerializers[i].write(metricValues[i], metricBytes, metricBytesOffset);
+            measureSerializers[i].write(metricValues[i], buffer, metricBytesOffset);
             metricBytesOffset += measureSerializers[i].getLength();
         }
-        return metricBytes;
+        return metricBytesOffset;
     }
 
     public List<String> deserializeMetricValues(byte[] metricBytes, int offset) {
@@ -170,7 +178,7 @@ public class EndpointAggregators {
             BytesUtil.writeAsciiStringArray(value.funcNames, out);
             BytesUtil.writeAsciiStringArray(value.dataTypes, out);
             BytesUtil.writeIntArray(value.refColIndex, out);
-            BytesUtil.writeByteArray(TableRecordInfoDigest.serialize(value.tableInfo), out);
+            BytesUtil.writeByteArray(TableRecordInfoDigest.serialize(value.tableRecordInfo), out);
         }
 
         @Override

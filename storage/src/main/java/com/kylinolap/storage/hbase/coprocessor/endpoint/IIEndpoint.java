@@ -7,6 +7,7 @@ import com.google.protobuf.Service;
 import com.kylinolap.cube.invertedindex.*;
 import com.kylinolap.cube.measure.MeasureAggregator;
 import com.kylinolap.storage.filter.BitMapFilterEvaluator;
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorConstants;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
 import com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos;
 
@@ -29,7 +30,6 @@ import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -60,33 +60,23 @@ public class IIEndpoint extends IIProtos.RowsService
         EndpointAggregators aggregators = null;
         CoprocessorFilter filter = null;
 
-        if (request.hasType()) {
-            type = CoprocessorRowType.deserialize(request.getType().toByteArray());
-        }
-        if (request.hasProjector()) {
-            projector = CoprocessorProjector.deserialize(request.getProjector().toByteArray());
-        }
-        if (request.hasAggregator()) {
-            aggregators = EndpointAggregators.deserialize(request.getAggregator().toByteArray());
-        }
-        if (request.hasFilter()) {
-            filter = CoprocessorFilter.deserialize(request.getFilter().toByteArray());
-        }
+        type = CoprocessorRowType.deserialize(request.getType().toByteArray());
+        projector = CoprocessorProjector.deserialize(request.getProjector().toByteArray());
+        aggregators = EndpointAggregators.deserialize(request.getAggregator().toByteArray());
+        filter = CoprocessorFilter.deserialize(request.getFilter().toByteArray());
 
+        TableRecordInfoDigest tableRecordInfoDigest = aggregators.getTableRecordInfo();
 
         IIProtos.IIResponse response = null;
         RegionScanner innerScanner = null;
         HRegion region = null;
         try {
-            ByteBuffer byteBuffer = request.getTableInfo().asReadOnlyByteBuffer();
-            TableRecordInfoDigest tableInfo = TableRecordInfoDigest.deserialize(byteBuffer);
-
             region = env.getRegion();
             innerScanner = region.getScanner(buildScan());
             region.startRegionOperation();
 
             synchronized (innerScanner) {
-                IIKeyValueCodec codec = new IIKeyValueCodec(tableInfo);
+                IIKeyValueCodec codec = new IIKeyValueCodec(tableRecordInfoDigest);
                 Iterable<Slice> slices = codec.decodeKeyValue(new HbaseServerKVIterator(innerScanner));
 
                 if (aggregators.isEmpty()) {
@@ -133,11 +123,13 @@ public class IIEndpoint extends IIProtos.RowsService
             }
         }
 
+        byte[] metricBuffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
         for (Map.Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
             CoprocessorProjector.AggrKey aggrKey = entry.getKey();
             IIRow.Builder rowBuilder = IIRow.newBuilder().
-                    setColumns(ByteString.copyFrom(aggrKey.get(), aggrKey.offset(), aggrKey.length())).
-                    setMeasures(ByteString.copyFrom(aggregators.serializeMetricValues(entry.getValue())));
+                    setColumns(ByteString.copyFrom(aggrKey.get(), aggrKey.offset(), aggrKey.length()));
+            int length = aggregators.serializeMetricValues(entry.getValue(), metricBuffer);
+            rowBuilder.setMeasures(ByteString.copyFrom(metricBuffer, 0, length));
             responseBuilder.addRows(rowBuilder.build());
         }
 

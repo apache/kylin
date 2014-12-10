@@ -11,53 +11,43 @@ public final class IIProtos {
   public interface IIRequestOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
-    // required bytes tableInfo = 1;
+    // required bytes type = 1;
     /**
-     * <code>required bytes tableInfo = 1;</code>
-     */
-    boolean hasTableInfo();
-    /**
-     * <code>required bytes tableInfo = 1;</code>
-     */
-    com.google.protobuf.ByteString getTableInfo();
-
-    // required bytes type = 2;
-    /**
-     * <code>required bytes type = 2;</code>
+     * <code>required bytes type = 1;</code>
      */
     boolean hasType();
     /**
-     * <code>required bytes type = 2;</code>
+     * <code>required bytes type = 1;</code>
      */
     com.google.protobuf.ByteString getType();
 
-    // optional bytes filter = 3;
+    // required bytes filter = 2;
     /**
-     * <code>optional bytes filter = 3;</code>
+     * <code>required bytes filter = 2;</code>
      */
     boolean hasFilter();
     /**
-     * <code>optional bytes filter = 3;</code>
+     * <code>required bytes filter = 2;</code>
      */
     com.google.protobuf.ByteString getFilter();
 
-    // optional bytes projector = 4;
+    // required bytes projector = 3;
     /**
-     * <code>optional bytes projector = 4;</code>
+     * <code>required bytes projector = 3;</code>
      */
     boolean hasProjector();
     /**
-     * <code>optional bytes projector = 4;</code>
+     * <code>required bytes projector = 3;</code>
      */
     com.google.protobuf.ByteString getProjector();
 
-    // optional bytes aggregator = 5;
+    // required bytes aggregator = 4;
     /**
-     * <code>optional bytes aggregator = 5;</code>
+     * <code>required bytes aggregator = 4;</code>
      */
     boolean hasAggregator();
     /**
-     * <code>optional bytes aggregator = 5;</code>
+     * <code>required bytes aggregator = 4;</code>
      */
     com.google.protobuf.ByteString getAggregator();
   }
@@ -114,26 +104,21 @@ public final class IIProtos {
             }
             case 10: {
               bitField0_ |= 0x00000001;
-              tableInfo_ = input.readBytes();
+              type_ = input.readBytes();
               break;
             }
             case 18: {
               bitField0_ |= 0x00000002;
-              type_ = input.readBytes();
+              filter_ = input.readBytes();
               break;
             }
             case 26: {
               bitField0_ |= 0x00000004;
-              filter_ = input.readBytes();
+              projector_ = input.readBytes();
               break;
             }
             case 34: {
               bitField0_ |= 0x00000008;
-              projector_ = input.readBytes();
-              break;
-            }
-            case 42: {
-              bitField0_ |= 0x00000010;
               aggregator_ = input.readBytes();
               break;
             }
@@ -177,88 +162,71 @@ public final class IIProtos {
     }
 
     private int bitField0_;
-    // required bytes tableInfo = 1;
-    public static final int TABLEINFO_FIELD_NUMBER = 1;
-    private com.google.protobuf.ByteString tableInfo_;
+    // required bytes type = 1;
+    public static final int TYPE_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString type_;
     /**
-     * <code>required bytes tableInfo = 1;</code>
+     * <code>required bytes type = 1;</code>
      */
-    public boolean hasTableInfo() {
+    public boolean hasType() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>required bytes tableInfo = 1;</code>
-     */
-    public com.google.protobuf.ByteString getTableInfo() {
-      return tableInfo_;
-    }
-
-    // required bytes type = 2;
-    public static final int TYPE_FIELD_NUMBER = 2;
-    private com.google.protobuf.ByteString type_;
-    /**
-     * <code>required bytes type = 2;</code>
-     */
-    public boolean hasType() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>required bytes type = 2;</code>
+     * <code>required bytes type = 1;</code>
      */
     public com.google.protobuf.ByteString getType() {
       return type_;
     }
 
-    // optional bytes filter = 3;
-    public static final int FILTER_FIELD_NUMBER = 3;
+    // required bytes filter = 2;
+    public static final int FILTER_FIELD_NUMBER = 2;
     private com.google.protobuf.ByteString filter_;
     /**
-     * <code>optional bytes filter = 3;</code>
+     * <code>required bytes filter = 2;</code>
      */
     public boolean hasFilter() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>optional bytes filter = 3;</code>
+     * <code>required bytes filter = 2;</code>
      */
     public com.google.protobuf.ByteString getFilter() {
       return filter_;
     }
 
-    // optional bytes projector = 4;
-    public static final int PROJECTOR_FIELD_NUMBER = 4;
+    // required bytes projector = 3;
+    public static final int PROJECTOR_FIELD_NUMBER = 3;
     private com.google.protobuf.ByteString projector_;
     /**
-     * <code>optional bytes projector = 4;</code>
+     * <code>required bytes projector = 3;</code>
      */
     public boolean hasProjector() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
-     * <code>optional bytes projector = 4;</code>
+     * <code>required bytes projector = 3;</code>
      */
     public com.google.protobuf.ByteString getProjector() {
       return projector_;
     }
 
-    // optional bytes aggregator = 5;
-    public static final int AGGREGATOR_FIELD_NUMBER = 5;
+    // required bytes aggregator = 4;
+    public static final int AGGREGATOR_FIELD_NUMBER = 4;
     private com.google.protobuf.ByteString aggregator_;
     /**
-     * <code>optional bytes aggregator = 5;</code>
+     * <code>required bytes aggregator = 4;</code>
      */
     public boolean hasAggregator() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
-     * <code>optional bytes aggregator = 5;</code>
+     * <code>required bytes aggregator = 4;</code>
      */
     public com.google.protobuf.ByteString getAggregator() {
       return aggregator_;
     }
 
     private void initFields() {
-      tableInfo_ = com.google.protobuf.ByteString.EMPTY;
       type_ = com.google.protobuf.ByteString.EMPTY;
       filter_ = com.google.protobuf.ByteString.EMPTY;
       projector_ = com.google.protobuf.ByteString.EMPTY;
@@ -269,11 +237,19 @@ public final class IIProtos {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized != -1) return isInitialized == 1;
 
-      if (!hasTableInfo()) {
+      if (!hasType()) {
         memoizedIsInitialized = 0;
         return false;
       }
-      if (!hasType()) {
+      if (!hasFilter()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasProjector()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasAggregator()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -285,19 +261,16 @@ public final class IIProtos {
                         throws java.io.IOException {
       getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, tableInfo_);
+        output.writeBytes(1, type_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, type_);
+        output.writeBytes(2, filter_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeBytes(3, filter_);
+        output.writeBytes(3, projector_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeBytes(4, projector_);
-      }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeBytes(5, aggregator_);
+        output.writeBytes(4, aggregator_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -310,23 +283,19 @@ public final class IIProtos {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, tableInfo_);
+          .computeBytesSize(1, type_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, type_);
+          .computeBytesSize(2, filter_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(3, filter_);
+          .computeBytesSize(3, projector_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(4, projector_);
-      }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(5, aggregator_);
+          .computeBytesSize(4, aggregator_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -351,11 +320,6 @@ public final class IIProtos {
       com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIRequest other = (com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIRequest) obj;
 
       boolean result = true;
-      result = result && (hasTableInfo() == other.hasTableInfo());
-      if (hasTableInfo()) {
-        result = result && getTableInfo()
-            .equals(other.getTableInfo());
-      }
       result = result && (hasType() == other.hasType());
       if (hasType()) {
         result = result && getType()
@@ -389,10 +353,6 @@ public final class IIProtos {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptorForType().hashCode();
-      if (hasTableInfo()) {
-        hash = (37 * hash) + TABLEINFO_FIELD_NUMBER;
-        hash = (53 * hash) + getTableInfo().hashCode();
-      }
       if (hasType()) {
         hash = (37 * hash) + TYPE_FIELD_NUMBER;
         hash = (53 * hash) + getType().hashCode();
@@ -518,16 +478,14 @@ public final class IIProtos {
 
       public Builder clear() {
         super.clear();
-        tableInfo_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000001);
         type_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000002);
+        bitField0_ = (bitField0_ & ~0x00000001);
         filter_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000002);
         projector_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000004);
         aggregator_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -559,21 +517,17 @@ public final class IIProtos {
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
-        result.tableInfo_ = tableInfo_;
+        result.type_ = type_;
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
-        result.type_ = type_;
+        result.filter_ = filter_;
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
           to_bitField0_ |= 0x00000004;
         }
-        result.filter_ = filter_;
+        result.projector_ = projector_;
         if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
           to_bitField0_ |= 0x00000008;
-        }
-        result.projector_ = projector_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
-          to_bitField0_ |= 0x00000010;
         }
         result.aggregator_ = aggregator_;
         result.bitField0_ = to_bitField0_;
@@ -592,9 +546,6 @@ public final class IIProtos {
 
       public Builder mergeFrom(com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIRequest other) {
         if (other == com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIRequest.getDefaultInstance()) return this;
-        if (other.hasTableInfo()) {
-          setTableInfo(other.getTableInfo());
-        }
         if (other.hasType()) {
           setType(other.getType());
         }
@@ -612,11 +563,19 @@ public final class IIProtos {
       }
 
       public final boolean isInitialized() {
-        if (!hasTableInfo()) {
+        if (!hasType()) {
           
           return false;
         }
-        if (!hasType()) {
+        if (!hasFilter()) {
+          
+          return false;
+        }
+        if (!hasProjector()) {
+          
+          return false;
+        }
+        if (!hasAggregator()) {
           
           return false;
         }
@@ -642,181 +601,145 @@ public final class IIProtos {
       }
       private int bitField0_;
 
-      // required bytes tableInfo = 1;
-      private com.google.protobuf.ByteString tableInfo_ = com.google.protobuf.ByteString.EMPTY;
+      // required bytes type = 1;
+      private com.google.protobuf.ByteString type_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes tableInfo = 1;</code>
+       * <code>required bytes type = 1;</code>
        */
-      public boolean hasTableInfo() {
+      public boolean hasType() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>required bytes tableInfo = 1;</code>
-       */
-      public com.google.protobuf.ByteString getTableInfo() {
-        return tableInfo_;
-      }
-      /**
-       * <code>required bytes tableInfo = 1;</code>
-       */
-      public Builder setTableInfo(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        tableInfo_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required bytes tableInfo = 1;</code>
-       */
-      public Builder clearTableInfo() {
-        bitField0_ = (bitField0_ & ~0x00000001);
-        tableInfo_ = getDefaultInstance().getTableInfo();
-        onChanged();
-        return this;
-      }
-
-      // required bytes type = 2;
-      private com.google.protobuf.ByteString type_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes type = 2;</code>
-       */
-      public boolean hasType() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>required bytes type = 2;</code>
+       * <code>required bytes type = 1;</code>
        */
       public com.google.protobuf.ByteString getType() {
         return type_;
       }
       /**
-       * <code>required bytes type = 2;</code>
+       * <code>required bytes type = 1;</code>
        */
       public Builder setType(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000002;
+  bitField0_ |= 0x00000001;
         type_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes type = 2;</code>
+       * <code>required bytes type = 1;</code>
        */
       public Builder clearType() {
-        bitField0_ = (bitField0_ & ~0x00000002);
+        bitField0_ = (bitField0_ & ~0x00000001);
         type_ = getDefaultInstance().getType();
         onChanged();
         return this;
       }
 
-      // optional bytes filter = 3;
+      // required bytes filter = 2;
       private com.google.protobuf.ByteString filter_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>optional bytes filter = 3;</code>
+       * <code>required bytes filter = 2;</code>
        */
       public boolean hasFilter() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>optional bytes filter = 3;</code>
+       * <code>required bytes filter = 2;</code>
        */
       public com.google.protobuf.ByteString getFilter() {
         return filter_;
       }
       /**
-       * <code>optional bytes filter = 3;</code>
+       * <code>required bytes filter = 2;</code>
        */
       public Builder setFilter(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000004;
+  bitField0_ |= 0x00000002;
         filter_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional bytes filter = 3;</code>
+       * <code>required bytes filter = 2;</code>
        */
       public Builder clearFilter() {
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000002);
         filter_ = getDefaultInstance().getFilter();
         onChanged();
         return this;
       }
 
-      // optional bytes projector = 4;
+      // required bytes projector = 3;
       private com.google.protobuf.ByteString projector_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>optional bytes projector = 4;</code>
+       * <code>required bytes projector = 3;</code>
        */
       public boolean hasProjector() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
-       * <code>optional bytes projector = 4;</code>
+       * <code>required bytes projector = 3;</code>
        */
       public com.google.protobuf.ByteString getProjector() {
         return projector_;
       }
       /**
-       * <code>optional bytes projector = 4;</code>
+       * <code>required bytes projector = 3;</code>
        */
       public Builder setProjector(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000008;
+  bitField0_ |= 0x00000004;
         projector_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional bytes projector = 4;</code>
+       * <code>required bytes projector = 3;</code>
        */
       public Builder clearProjector() {
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000004);
         projector_ = getDefaultInstance().getProjector();
         onChanged();
         return this;
       }
 
-      // optional bytes aggregator = 5;
+      // required bytes aggregator = 4;
       private com.google.protobuf.ByteString aggregator_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>optional bytes aggregator = 5;</code>
+       * <code>required bytes aggregator = 4;</code>
        */
       public boolean hasAggregator() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
-       * <code>optional bytes aggregator = 5;</code>
+       * <code>required bytes aggregator = 4;</code>
        */
       public com.google.protobuf.ByteString getAggregator() {
         return aggregator_;
       }
       /**
-       * <code>optional bytes aggregator = 5;</code>
+       * <code>required bytes aggregator = 4;</code>
        */
       public Builder setAggregator(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000010;
+  bitField0_ |= 0x00000008;
         aggregator_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional bytes aggregator = 5;</code>
+       * <code>required bytes aggregator = 4;</code>
        */
       public Builder clearAggregator() {
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000008);
         aggregator_ = getDefaultInstance().getAggregator();
         onChanged();
         return this;
@@ -1978,6 +1901,68 @@ public final class IIProtos {
       }
       /**
        * <code>repeated .IIResponse.IIRow rows = 1;</code>
+<<<<<<< HEAD
+       */
+      public Builder addRows(com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow value) {
+        if (rowsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureRowsIsMutable();
+          rows_.add(value);
+          onChanged();
+        } else {
+          rowsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .IIResponse.IIRow rows = 1;</code>
+       */
+      public Builder addRows(
+          int index, com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow value) {
+        if (rowsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureRowsIsMutable();
+          rows_.add(index, value);
+          onChanged();
+        } else {
+          rowsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .IIResponse.IIRow rows = 1;</code>
+       */
+      public Builder addRows(
+          com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.Builder builderForValue) {
+        if (rowsBuilder_ == null) {
+          ensureRowsIsMutable();
+          rows_.add(builderForValue.build());
+          onChanged();
+        } else {
+          rowsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .IIResponse.IIRow rows = 1;</code>
+       */
+      public Builder addRows(
+          int index, com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.Builder builderForValue) {
+        if (rowsBuilder_ == null) {
+          ensureRowsIsMutable();
+          rows_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          rowsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .IIResponse.IIRow rows = 1;</code>
        */
       public Builder addAllRows(
           java.lang.Iterable<? extends com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow> values) {
@@ -2350,15 +2335,14 @@ public final class IIProtos {
     java.lang.String[] descriptorData = {
       "\nXstorage/src/main/java/com/kylinolap/st" +
       "orage/hbase/coprocessor/endpoint/protobu" +
-      "f/II.proto\"c\n\tIIRequest\022\021\n\ttableInfo\030\001 \002" +
-      "(\014\022\014\n\004type\030\002 \002(\014\022\016\n\006filter\030\003 \001(\014\022\021\n\tproj" +
-      "ector\030\004 \001(\014\022\022\n\naggregator\030\005 \001(\014\"Y\n\nIIRes" +
-      "ponse\022\037\n\004rows\030\001 \003(\0132\021.IIResponse.IIRow\032*" +
-      "\n\005IIRow\022\017\n\007columns\030\001 \002(\014\022\020\n\010measures\030\002 \001" +
-      "(\01421\n\013RowsService\022\"\n\007getRows\022\n.IIRequest" +
-      "\032\013.IIResponseBN\n:com.kylinolap.storage.h" +
-      "base.coprocessor.endpoint.generatedB\010IIP",
-      "rotosH\001\210\001\001\240\001\001"
+      "f/II.proto\"P\n\tIIRequest\022\014\n\004type\030\001 \002(\014\022\016\n" +
+      "\006filter\030\002 \002(\014\022\021\n\tprojector\030\003 \002(\014\022\022\n\naggr" +
+      "egator\030\004 \002(\014\"Y\n\nIIResponse\022\037\n\004rows\030\001 \003(\013" +
+      "2\021.IIResponse.IIRow\032*\n\005IIRow\022\017\n\007columns\030" +
+      "\001 \002(\014\022\020\n\010measures\030\002 \001(\01421\n\013RowsService\022\"" +
+      "\n\007getRows\022\n.IIRequest\032\013.IIResponseBN\n:co" +
+      "m.kylinolap.storage.hbase.coprocessor.en" +
+      "dpoint.generatedB\010IIProtosH\001\210\001\001\240\001\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -2370,7 +2354,7 @@ public final class IIProtos {
           internal_static_IIRequest_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_IIRequest_descriptor,
-              new java.lang.String[] { "TableInfo", "Type", "Filter", "Projector", "Aggregator", });
+              new java.lang.String[] { "Type", "Filter", "Projector", "Aggregator", });
           internal_static_IIResponse_descriptor =
             getDescriptor().getMessageTypes().get(1);
           internal_static_IIResponse_fieldAccessorTable = new
