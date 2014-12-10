@@ -33,6 +33,7 @@ import com.kylinolap.rest.service.ServiceTestBase;
 
 /**
  * @author xduo
+ * @deprecated method has been merged into #ServiceTestAllInOne
  */
 public class CubeControllerTest extends ServiceTestBase {
 
