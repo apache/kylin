@@ -117,7 +117,7 @@ KylinApp
                         $scope.state.selectedJob = $scope.jobs[ $scope.state.selectedJob.uuid];
                     }
 //                    MessageService.sendMsg('Job was resumed successfully', 'success', {});
-                    SweetAlert.swal('Success!', 'Job was resumed successfully', 'success');
+                    SweetAlert.swal('Success!', 'Job has been resumed successfully!', 'success');
                 });
             });
         }
@@ -137,7 +137,7 @@ KylinApp
                     if (angular.isDefined($scope.state.selectedJob)) {
                         $scope.state.selectedJob = $scope.jobs[ $scope.state.selectedJob.uuid];
                     }
-                    SweetAlert.swal('Success!', 'Job was cancelled successfully', 'success');
+                    SweetAlert.swal('Success!', 'Job has been discarded successfully!', 'success');
                 });
             });
         }
