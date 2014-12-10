@@ -21,10 +21,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeDescManager;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.job.JobDAO;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.exception.NotFoundException;
@@ -77,11 +79,12 @@ public class JobControllerTest extends ServiceTestBase {
     @Test
     public void testBasics() throws IOException {
 
-        CubeManager cubeManager = CubeManager.getInstance(getTestConfig());
+        KylinConfig testConfig = getTestConfig();
+        CubeManager cubeManager = CubeManager.getInstance(testConfig);
         if (cubeManager.getCube(CUBE_NAME) != null) {
             cubeManager.dropCube(CUBE_NAME, false);
         }
-        CubeDescManager cubeDescManager = CubeDescManager.getInstance(getTestConfig());
+        CubeDescManager cubeDescManager = CubeDescManager.getInstance(testConfig);
         CubeDesc cubeDesc = cubeDescManager.getCubeDesc("test_kylin_cube_with_slr_left_join_desc");
         CubeInstance cube = cubeManager.createCube(CUBE_NAME, "DEFAULT", cubeDesc, "test");
         assertNotNull(cube);
@@ -91,7 +94,7 @@ public class JobControllerTest extends ServiceTestBase {
 
         JobBuildRequest jobBuildRequest = new JobBuildRequest();
         jobBuildRequest.setBuildType("BUILD");
-        jobBuildRequest.setStartTime(1386806400000L);
+        jobBuildRequest.setStartTime(0L);
         jobBuildRequest.setEndTime(new Date().getTime());
         JobInstance job = cubeController.rebuild(CUBE_NAME, jobBuildRequest);
 
@@ -99,11 +102,7 @@ public class JobControllerTest extends ServiceTestBase {
         Assert.assertNotNull(jobSchedulerController.get(job.getId()));
         Map<String, String> output = jobSchedulerController.getStepOutput(job.getId(), 0);
         Assert.assertNotNull(output);
-        try {
-            jobSchedulerController.cancel(job.getId());
-        } catch (InternalErrorException e) {
-
-        }
+        JobDAO.getInstance(testConfig).deleteJob(job);
 
         // jobSchedulerController.cancel(job.getId());
     }
