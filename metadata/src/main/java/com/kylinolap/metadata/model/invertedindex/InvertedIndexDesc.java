@@ -13,9 +13,9 @@ import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.common.util.StringUtil;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * @author yangli9

@@ -25,8 +25,8 @@ import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.hive.SqlHiveDataTypeMapping;
 import com.kylinolap.job.tools.LZOSupportnessChecker;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
 
 public class DeployUtil {
     @SuppressWarnings("unused")
@@ -120,11 +120,11 @@ public class DeployUtil {
 
     // ============================================================================
 
-    static final String TABLE_CAL_DT = "test_cal_dt";
-    static final String TABLE_CATEGORY_GROUPINGS = "test_category_groupings";
-    static final String TABLE_KYLIN_FACT = "test_kylin_fact";
-    static final String TABLE_SELLER_TYPE_DIM = "test_seller_type_dim";
-    static final String TABLE_SITES = "test_sites";
+    static final String TABLE_CAL_DT = "edw.test_cal_dt";
+    static final String TABLE_CATEGORY_GROUPINGS = "default.test_category_groupings";
+    static final String TABLE_KYLIN_FACT = "default.test_kylin_fact";
+    static final String TABLE_SELLER_TYPE_DIM = "edw.test_seller_type_dim";
+    static final String TABLE_SITES = "edw.test_sites";
 
     static final String[] TABLE_NAMES = new String[] { TABLE_CAL_DT, TABLE_CATEGORY_GROUPINGS, TABLE_KYLIN_FACT, TABLE_SELLER_TYPE_DIM, TABLE_SITES };
 
@@ -167,6 +167,7 @@ public class DeployUtil {
         temp.delete();
 
         // create hive tables
+        execHiveCommand("CREATE DATABASE IF NOT EXISTS EDW;");
         execHiveCommand(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CAL_DT.toUpperCase())));
         execHiveCommand(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CATEGORY_GROUPINGS.toUpperCase())));
         execHiveCommand(generateCreateTableHql(metaMgr.getTableDesc(TABLE_KYLIN_FACT.toUpperCase())));
@@ -194,8 +195,8 @@ public class DeployUtil {
     private static String generateCreateTableHql(TableDesc tableDesc) {
         StringBuilder ddl = new StringBuilder();
 
-        ddl.append("DROP TABLE IF EXISTS " + tableDesc.getName() + ";\n");
-        ddl.append("CREATE TABLE " + tableDesc.getName() + "\n");
+        ddl.append("DROP TABLE IF EXISTS " + tableDesc.getIdentity() + ";\n");
+        ddl.append("CREATE TABLE " + tableDesc.getIdentity() + "\n");
         ddl.append("(" + "\n");
 
         for (int i = 0; i < tableDesc.getColumns().length; i++) {

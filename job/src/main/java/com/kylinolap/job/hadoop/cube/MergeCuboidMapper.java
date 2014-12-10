@@ -36,12 +36,12 @@ import com.kylinolap.cube.common.RowKeySplitter;
 import com.kylinolap.cube.common.SplittedBytes;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowConstants;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * @author ysong1, honma
@@ -72,7 +72,8 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
         if (ret != null)
             return ret;
         else {
-            ret = cubeDesc.getRowkey().isUseDictionary(col) && cubeDesc.getFactTable().equalsIgnoreCase((String) DictionaryManager.getInstance(config).decideSourceData(cubeDesc, col, null)[0]);
+            String dictTable = (String) DictionaryManager.getInstance(config).decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null)[0];
+            ret = cubeDesc.getRowkey().isUseDictionary(col) && cubeDesc.getFactTable().equalsIgnoreCase(dictTable);
             dictsNeedMerging.put(col, ret);
             return ret;
         }

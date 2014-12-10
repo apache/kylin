@@ -36,8 +36,8 @@ import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.kv.RowConstants;
 import com.kylinolap.cube.measure.MeasureCodec;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.constant.BatchConstants;
-import com.kylinolap.metadata.model.cube.CubeDesc;
 
 /**
  * @author George Song (ysong1)

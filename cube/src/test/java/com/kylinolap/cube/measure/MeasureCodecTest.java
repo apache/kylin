@@ -28,8 +28,8 @@ import org.junit.Test;
 
 import com.kylinolap.common.hll.HyperLogLogPlusCounter;
 import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
+import com.kylinolap.cube.model.MeasureDesc;
+import com.kylinolap.metadata.model.realization.FunctionDesc;
 
 /**
  * @author yangli9

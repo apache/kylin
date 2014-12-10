@@ -29,9 +29,9 @@ import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.CubePartitionDesc;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.CubePartitionDesc;
 import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
@@ -165,7 +165,7 @@ public class CubeInstance extends RootPersistentEntity {
     }
 
     public CubeDesc getDescriptor() {
-        return MetadataManager.getInstance(config).getCubeDesc(descName);
+        return CubeDescManager.getInstance(config).getCubeDesc(descName);
     }
 
     public InvertedIndexDesc getInvertedIndexDesc() {

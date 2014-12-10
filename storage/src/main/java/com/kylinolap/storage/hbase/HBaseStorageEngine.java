@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
+
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
@@ -42,14 +44,14 @@ import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.CubeSegmentStatusEnum;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowValueDecoder;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.HBaseColumnDesc;
+import com.kylinolap.cube.model.HBaseMappingDesc;
+import com.kylinolap.cube.model.MeasureDesc;
+import com.kylinolap.cube.model.CubeDesc.DeriveInfo;
 import com.kylinolap.dict.lookup.LookupStringTable;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.CubeDesc.DeriveInfo;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.HBaseColumnDesc;
-import com.kylinolap.metadata.model.cube.HBaseMappingDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.realization.FunctionDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.IStorageEngine;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.ColumnTupleFilter;
@@ -57,7 +59,6 @@ import com.kylinolap.storage.filter.CompareTupleFilter;
 import com.kylinolap.storage.filter.LogicalTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
-import com.kylinolap.storage.hbase.observer.CoprocessorEnabler;
 import com.kylinolap.storage.tuple.ITupleIterator;
 
 /**
@@ -120,7 +121,7 @@ public class HBaseStorageEngine implements IStorageEngine {
         List<HBaseKeyRange> scans = buildScanRanges(flatFilter, dimensionsD);
 
         // check involved measures, build value decoder for each each family:column
-        List<RowValueDecoder> valueDecoders = translateAggregation(cubeDesc.getHBaseMapping(), metrics, scans, context);
+        List<RowValueDecoder> valueDecoders = translateAggregation(cubeDesc.getHBaseMapping(), metrics, context);
 
         setThreshold(dimensionsD, valueDecoders, context); // set cautious threshold to prevent out of memory
         setCoprocessor(groupsCopD, valueDecoders, context); // enable coprocessor if beneficial
@@ -309,7 +310,7 @@ public class HBaseStorageEngine implements IStorageEngine {
     }
 
     private List<RowValueDecoder> translateAggregation(HBaseMappingDesc hbaseMapping, Collection<FunctionDesc> metrics, //
-            List<HBaseKeyRange> scans, StorageContext context) {
+             StorageContext context) {
         Map<HBaseColumnDesc, RowValueDecoder> codecMap = Maps.newHashMap();
         for (FunctionDesc aggrFunc : metrics) {
             Collection<HBaseColumnDesc> hbCols = hbaseMapping.findHBaseColumnByFunction(aggrFunc);
@@ -595,7 +596,7 @@ public class HBaseStorageEngine implements IStorageEngine {
     }
 
     private void setCoprocessor(Set<TblColRef> groupsCopD, List<RowValueDecoder> valueDecoders, StorageContext context) {
-        CoprocessorEnabler.enableCoprocessorIfBeneficial(cubeInstance, groupsCopD, valueDecoders, context);
+        ObserverEnabler.enableCoprocessorIfBeneficial(cubeInstance, groupsCopD, valueDecoders, context);
     }
 
 }

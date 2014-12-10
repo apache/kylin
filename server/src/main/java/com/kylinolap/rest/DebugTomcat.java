@@ -28,12 +28,9 @@ import com.kylinolap.rest.util.ClasspathUtil;
 public class DebugTomcat {
 
     public static void main(String[] args) throws Exception {
-        if (args.length >= 1) {
-            System.setProperty("kylin.metadata.url", args[0]);
-        }
         int port = 7070;
-        if (args.length >= 2) {
-            port = Integer.parseInt(args[1]);
+        if (args.length >= 1) {
+            port = Integer.parseInt(args[0]);
         }
 
         ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox").getAbsolutePath());

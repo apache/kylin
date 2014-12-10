@@ -55,7 +55,7 @@ import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.tools.OptionsHelper;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.TableDesc;
 
 @SuppressWarnings("static-access")
 public abstract class AbstractHadoopJob extends Configured implements Tool {
@@ -170,9 +170,10 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         File kylinPropsFile = new File(metaDir, "kylin.properties");
         kylinConfig.writeProperties(kylinPropsFile);
 
-        // write cube / cube_desc / dict / table
+        // write cube / model_desc / cube_desc / dict / table
         ArrayList<String> dumpList = new ArrayList<String>();
         dumpList.add(cube.getResourcePath());
+        dumpList.add(cube.getDescriptor().getModel().getResourcePath());
         dumpList.add(cube.getDescriptor().getResourcePath());
         if (cube.isInvertedIndex()) {
             dumpList.add(cube.getInvertedIndexDesc().getResourcePath());

@@ -21,6 +21,7 @@ import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 import java.util.UUID;
 
+import com.kylinolap.cube.project.CubeRealizationManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +33,6 @@ import com.kylinolap.cube.CubeBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.project.ProjectManager;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.JobInstance.JobStep;
@@ -51,7 +51,7 @@ public class JobInstanceBuilderTest extends LocalFileMetadataTestCase {
         this.createTestMetadata();
         MetadataManager.removeInstance(this.getTestConfig());
         CubeManager.removeInstance(this.getTestConfig());
-        ProjectManager.removeInstance(this.getTestConfig());
+        CubeRealizationManager.removeInstance(this.getTestConfig());
         DictionaryManager.removeInstance(this.getTestConfig());
     }
 

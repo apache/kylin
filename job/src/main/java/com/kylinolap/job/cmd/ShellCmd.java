@@ -16,32 +16,18 @@
 
 package com.kylinolap.job.cmd;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
-
+import com.kylinolap.common.util.CliCommandExecutor;
+import com.kylinolap.job.constant.JobStepStatusEnum;
+import com.kylinolap.job.exception.JobException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.jcraft.jsch.Channel;
-import com.jcraft.jsch.ChannelExec;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.Session;
-import com.kylinolap.job.constant.JobStepStatusEnum;
-import com.kylinolap.job.exception.JobException;
+import java.io.IOException;
+import java.util.concurrent.*;
 
 /**
  * @author xjiang
  * 
- * FIXME should reuse common.util.SSHClient
  */
 public class ShellCmd implements IJobCommand {
 
@@ -49,26 +35,16 @@ public class ShellCmd implements IJobCommand {
 
     private final String executeCommand;
     private final ICommandOutput output;
-    private final String remoteHost;
-    private final String remoteUser;
-    private final String remotePassword;
-    private final String identityPath;
     private final boolean isAsync;
+    private final CliCommandExecutor cliCommandExecutor;
 
     private FutureTask<Integer> future;
 
     protected ShellCmd(String executeCmd, ICommandOutput out, String host, String user, String password, boolean async) {
         this.executeCommand = executeCmd;
         this.output = out;
-        this.remoteHost = host;
-        this.remoteUser = user;
-        if (new File(password).exists()) {
-            this.identityPath = new File(password).getAbsolutePath();
-            this.remotePassword = null;
-        } else {
-            this.remotePassword = password;
-            this.identityPath = null;
-        }
+        cliCommandExecutor = new CliCommandExecutor();
+        cliCommandExecutor.setRunAtRemote(host, user, password);
         this.isAsync = async;
     }
 
@@ -81,7 +57,7 @@ public class ShellCmd implements IJobCommand {
 
         final ExecutorService executor = Executors.newSingleThreadExecutor();
         future = new FutureTask<Integer>(new Callable<Integer>() {
-            public Integer call() throws JobException {
+            public Integer call() throws JobException, IOException {
                 executor.shutdown();
                 return executeCommand(executeCommand);
             }
@@ -112,111 +88,10 @@ public class ShellCmd implements IJobCommand {
         return output;
     }
 
-    protected int executeCommand(String command) throws JobException {
+    protected int executeCommand(String command) throws JobException, IOException {
         output.reset();
-        if (remoteHost != null) {
-            log.debug("Executing remote cmd: " + command);
-            return remoteExec(command);
-        } else {
-            log.debug("Executing local cmd: " + command);
-            return localExec(command);
-        }
-    }
-
-    private int localExec(String command) throws JobException {
         output.setStatus(JobStepStatusEnum.RUNNING);
-        String[] cmd = new String[3];
-        cmd[0] = "/bin/bash";
-        cmd[1] = "-c";
-        cmd[2] = command;
-
-        BufferedReader reader = null;
-        int exitCode = -1;
-        try {
-            ProcessBuilder builder = new ProcessBuilder(cmd);
-            builder.redirectErrorStream(true);
-            Process proc = builder.start();
-
-            reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            String line = null;
-            while ((line = reader.readLine()) != null) {
-                output.appendOutput(line);
-            }
-
-            exitCode = proc.waitFor();
-        } catch (Exception e) {
-            throw new JobException(e);
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    throw new JobException(e);
-                }
-            }
-        }
-        return exitCode;
-    }
-
-    private int remoteExec(String command) throws JobException {
-        output.setStatus(JobStepStatusEnum.RUNNING);
-        Session session = null;
-        Channel channel = null;
-        int exitCode = -1;
-        try {
-            JSch jsch = new JSch();
-            if (identityPath != null) {
-                jsch.addIdentity(identityPath);
-            }
-
-            session = jsch.getSession(remoteUser, remoteHost, 22);
-            if (remotePassword != null) {
-                session.setPassword(remotePassword);
-            }
-            session.setConfig("StrictHostKeyChecking", "no");
-            session.connect();
-
-            channel = session.openChannel("exec");
-            ((ChannelExec) channel).setCommand(command);
-            channel.setInputStream(null);
-            PipedInputStream in = new PipedInputStream(64 * 1024);
-            PipedOutputStream out = new PipedOutputStream(in);
-            channel.setOutputStream(out);
-            ((ChannelExec) channel).setErrStream(out); // redirect error to out
-            channel.connect();
-
-            byte[] tmp = new byte[1024];
-            while (true) {
-                while (in.available() > 0) {
-                    int i = in.read(tmp, 0, 1024);
-                    if (i < 0)
-                        break;
-                    output.appendOutput(new String(tmp, 0, i));
-                }
-                if (channel.isClosed()) {
-                    if (in.available() > 0) {
-                        continue;
-                    }
-                    exitCode = channel.getExitStatus();
-                    break;
-                }
-                try {
-                    Thread.sleep(1000);
-                } catch (Exception ee) {
-                    throw ee;
-                }
-            }
-        } catch (Exception e) {
-            throw new JobException(e);
-        } finally {
-            if (channel != null) {
-                channel.disconnect();
-            }
-            if (session != null) {
-                session.disconnect();
-            }
-        }
-        return exitCode;
+        return cliCommandExecutor.execute(command, output).getFirst();
     }
 
     @Override

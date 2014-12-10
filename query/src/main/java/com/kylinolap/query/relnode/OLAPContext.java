@@ -27,10 +27,10 @@ import java.util.Map;
 import org.eigenbase.reltype.RelDataType;
 
 import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.JoinDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.metadata.model.JoinDesc;
+import com.kylinolap.metadata.model.realization.FunctionDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.query.schema.OLAPSchema;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.TupleFilter;

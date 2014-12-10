@@ -17,10 +17,18 @@
 package com.kylinolap.cube;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.kylinolap.dict.DateStrDictionary;
+import com.kylinolap.cube.project.CubeRealizationManager;
+import com.kylinolap.metadata.project.ProjectInstance;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,8 +40,10 @@ import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.common.restclient.Broadcaster;
 import com.kylinolap.common.restclient.SingleValueCache;
 import com.kylinolap.cube.exception.CubeIntegrityException;
-import com.kylinolap.cube.project.ProjectInstance;
-import com.kylinolap.cube.project.ProjectManager;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.DimensionDesc;
+import com.kylinolap.metadata.project.ProjectManager;
+import com.kylinolap.dict.DateStrDictionary;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryInfo;
 import com.kylinolap.dict.DictionaryManager;
@@ -42,12 +52,10 @@ import com.kylinolap.dict.lookup.LookupStringTable;
 import com.kylinolap.dict.lookup.SnapshotManager;
 import com.kylinolap.dict.lookup.SnapshotTable;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.DimensionDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * @author yangli9
@@ -57,7 +65,6 @@ public class CubeManager {
     private static String ALPHA_NUM = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     private static int HBASE_TABLE_LENGTH = 10;
-
     private static final Serializer<CubeInstance> CUBE_SERIALIZER = new JsonSerializer<CubeInstance>(CubeInstance.class);
 
     private static final Logger logger = LoggerFactory.getLogger(CubeManager.class);
@@ -156,7 +163,7 @@ public class CubeManager {
             if (iiDesc.isMetricsCol(col))
                 continue;
             
-            DictionaryInfo dict = dictMgr.buildDictionary(null, col, factColumnsPath);
+            DictionaryInfo dict = dictMgr.buildDictionary(null, null, col, factColumnsPath);
             cubeSeg.putDictResPath(col, dict.getResourcePath());
         }
 
@@ -164,11 +171,12 @@ public class CubeManager {
     }
 
     public DictionaryInfo buildDictionary(CubeSegment cubeSeg, TblColRef col, String factColumnsPath) throws IOException {
-        if (!cubeSeg.getCubeDesc().getRowkey().isUseDictionary(col))
+        CubeDesc cubeDesc = cubeSeg.getCubeDesc();
+        if (!cubeDesc.getRowkey().isUseDictionary(col))
             return null;
 
         DictionaryManager dictMgr = getDictionaryManager();
-        DictionaryInfo dictInfo = dictMgr.buildDictionary(cubeSeg.getCubeDesc(), col, factColumnsPath);
+        DictionaryInfo dictInfo = dictMgr.buildDictionary(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, factColumnsPath);
         cubeSeg.putDictResPath(col, dictInfo.getResourcePath());
 
         saveResource(cubeSeg.getCubeInstance());
@@ -232,6 +240,7 @@ public class CubeManager {
 
         // delete cube from project
         ProjectManager.getInstance(config).removeCubeFromProjects(cubeName);
+        CubeRealizationManager.getInstance(config).loadAllProjects();
 
         // clean cube cache
         this.afterCubeDroped(cube, projects);
@@ -249,6 +258,7 @@ public class CubeManager {
         saveResource(cube);
 
         ProjectManager.getInstance(config).updateCubeToProject(cubeName, projectName, owner);
+        CubeRealizationManager.getInstance(config).loadProject(ProjectManager.getInstance(config).getProject(projectName));
 
         return cube;
     }
@@ -460,10 +470,12 @@ public class CubeManager {
         HashSet<TblColRef> colsNeedCopyDict = new HashSet<TblColRef>();
         DictionaryManager dictMgr = this.getDictionaryManager();
 
-        for (DimensionDesc dim : cube.getDescriptor().getDimensions()) {
+        CubeDesc cubeDesc = cube.getDescriptor();
+        for (DimensionDesc dim : cubeDesc.getDimensions()) {
             for (TblColRef col : dim.getColumnRefs()) {
                 if (newSeg.getCubeDesc().getRowkey().isUseDictionary(col)) {
-                    if (cube.getDescriptor().getFactTable().equalsIgnoreCase((String) dictMgr.decideSourceData(cube.getDescriptor(), col, null)[0])) {
+                    String dictTable = (String) dictMgr.decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null)[0];
+                    if (cubeDesc.getFactTable().equalsIgnoreCase(dictTable)) {
                         colsNeedMeringDict.add(col);
                     } else {
                         colsNeedCopyDict.add(col);

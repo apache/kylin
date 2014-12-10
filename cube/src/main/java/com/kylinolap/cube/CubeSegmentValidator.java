@@ -22,10 +22,11 @@ import java.util.HashSet;
 import java.util.List;
 
 import com.kylinolap.cube.exception.CubeIntegrityException;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.DimensionDesc;
+import com.kylinolap.cube.model.CubePartitionDesc.CubePartitionType;
 import com.kylinolap.dict.DictionaryManager;
-import com.kylinolap.metadata.model.cube.CubePartitionDesc.CubePartitionType;
-import com.kylinolap.metadata.model.cube.DimensionDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * @author xduo
@@ -87,12 +88,16 @@ public class CubeSegmentValidator {
             List<CubeSegment> segmentList = cube.getMergingSegments(cubeSeg);
 
             HashSet<TblColRef> cols = new HashSet<TblColRef>();
-            for (DimensionDesc dim : cube.getDescriptor().getDimensions()) {
+            CubeDesc cubeDesc = cube.getDescriptor();
+            for (DimensionDesc dim : cubeDesc.getDimensions()) {
                 for (TblColRef col : dim.getColumnRefs()) {
                     // include those dictionaries that do not need mergning
                     try {
-                        if (cubeSeg.getCubeDesc().getRowkey().isUseDictionary(col) && !cube.getDescriptor().getFactTable().equalsIgnoreCase((String) dictMgr.decideSourceData(cube.getDescriptor(), col, null)[0])) {
-                            cols.add(col);
+                        if (cubeSeg.getCubeDesc().getRowkey().isUseDictionary(col)) {
+                            String dictTable = (String) dictMgr.decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null)[0];
+                            if (!cubeDesc.getFactTable().equalsIgnoreCase(dictTable)) {
+                                cols.add(col);
+                            }
                         }
                     } catch (IOException e) {
                         throw new CubeIntegrityException("checkLoopTableConsistency not passed when allocating a new segment.");

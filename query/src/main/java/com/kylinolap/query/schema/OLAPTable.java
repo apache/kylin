@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import com.kylinolap.cube.project.CubeRealizationManager;
 import net.hydromatic.linq4j.Enumerable;
 import net.hydromatic.linq4j.Enumerator;
 import net.hydromatic.linq4j.QueryProvider;
@@ -42,11 +43,10 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.type.SqlTypeUtil;
 
-import com.kylinolap.cube.project.ProjectManager;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.cube.model.MeasureDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
+import com.kylinolap.metadata.model.realization.FunctionDesc;
 import com.kylinolap.query.enumerator.OLAPQuery;
 import com.kylinolap.query.enumerator.OLAPQuery.EnumeratorTypeEnum;
 import com.kylinolap.query.relnode.OLAPTableScan;
@@ -106,7 +106,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
     }
 
     public String getTableName() {
-        return this.sourceTable.getName();
+        return this.sourceTable.getIdentity();
     }
 
     public List<ColumnDesc> getExposedColumns() {
@@ -161,10 +161,10 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
     }
 
     private List<ColumnDesc> listSourceColumns() {
-        ProjectManager projectMgr = olapSchema.getProjectManager();
-        List<ColumnDesc> exposedColumns = projectMgr.listExposedColumns(olapSchema.getProjectName(), sourceTable.getName());
+        CubeRealizationManager projectMgr = CubeRealizationManager.getInstance(olapSchema.getConfig());
+        List<ColumnDesc> exposedColumns = projectMgr.listExposedColumns(olapSchema.getProjectName(), sourceTable.getIdentity());
 
-        List<MeasureDesc> countMeasures = projectMgr.listEffectiveRewriteMeasures(olapSchema.getProjectName(), sourceTable.getName());
+        List<MeasureDesc> countMeasures = projectMgr.listEffectiveRewriteMeasures(olapSchema.getProjectName(), sourceTable.getIdentity());
         HashSet<String> metFields = new HashSet<String>();
         for (MeasureDesc m : countMeasures) {
             FunctionDesc func = m.getFunction();

@@ -16,8 +16,8 @@
 
 package com.kylinolap.cube.measure;
 
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.schema.DataType;
+import com.kylinolap.metadata.model.DataType;
+import com.kylinolap.metadata.model.realization.FunctionDesc;
 
 /**
  * @author yangli9

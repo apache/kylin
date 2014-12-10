@@ -22,9 +22,9 @@ import java.util.Collections;
 import java.util.List;
 
 import com.kylinolap.common.util.BytesUtil;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.tuple.ITuple;
 
 /**
@@ -99,12 +99,15 @@ public class ColumnTupleFilter extends TupleFilter {
 
     @Override
     public void deserialize(byte[] bytes) {
-        ByteBuffer buffer = ByteBuffer.wrap(bytes);
-        TableDesc table = new TableDesc();
-        table.setName(BytesUtil.readUTFString(buffer));
-
         ColumnDesc column = new ColumnDesc();
-        column.setTable(table);
+        ByteBuffer buffer = ByteBuffer.wrap(bytes);
+        String tableName = BytesUtil.readUTFString(buffer);
+        if(tableName != null) {
+            TableDesc table = new TableDesc();
+            table.setName(tableName);
+            column.setTable(table);
+        }
+
         column.setName(BytesUtil.readUTFString(buffer));
         column.setDatatype(BytesUtil.readUTFString(buffer));
 

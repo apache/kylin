@@ -44,19 +44,19 @@ import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.AbstractRowKeyEncoder;
 import com.kylinolap.cube.kv.RowConstants;
 import com.kylinolap.cube.measure.MeasureCodec;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.DimensionDesc;
+import com.kylinolap.cube.model.MeasureDesc;
 import com.kylinolap.dict.lookup.HiveTable;
 import com.kylinolap.dict.lookup.LookupBytesTable;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.DimensionDesc;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.JoinDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
-import com.kylinolap.metadata.model.cube.ParameterDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.JoinDesc;
+import com.kylinolap.metadata.model.TableDesc;
+import com.kylinolap.metadata.model.realization.FunctionDesc;
+import com.kylinolap.metadata.model.realization.ParameterDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * @author George Song (ysong1),honma
