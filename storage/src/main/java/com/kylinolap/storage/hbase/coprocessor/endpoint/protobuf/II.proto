@@ -9,11 +9,10 @@ option java_generate_equals_and_hash = true;
 option optimize_for = SPEED;
 
 message IIRequest {
-    required bytes tableInfo = 1;
-    required bytes type = 2;
-    optional bytes filter = 3;
-    optional bytes projector = 4;
-    optional bytes aggregator = 5;
+    required bytes type = 1;
+    required bytes filter = 2;
+    required bytes projector = 3;
+    required bytes aggregator = 4;
 }
 
 message IIResponse {

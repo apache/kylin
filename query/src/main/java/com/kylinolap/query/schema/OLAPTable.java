@@ -169,7 +169,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         for (MeasureDesc m : countMeasures) {
             FunctionDesc func = m.getFunction();
             String fieldName = func.getRewriteFieldName();
-            if (metFields.contains(fieldName) == false) {
+            if (!metFields.contains(fieldName)) {
                 metFields.add(fieldName);
                 ColumnDesc fakeCountCol = new ColumnDesc();
                 fakeCountCol.setName(fieldName);

@@ -50,7 +50,7 @@ public class ObserverEnabler {
 
     private static final Logger logger = LoggerFactory.getLogger(ObserverEnabler.class);
 
-    static final String FORCE_COPROCESSOR = "forceCoprocessor";
+    static final String FORCE_COPROCESSOR = "forceObserver";
     static final boolean DEBUG_LOCAL_COPROCESSOR = false;
     static final Map<String, Boolean> CUBE_OVERRIDES = Maps.newConcurrentMap();
 
