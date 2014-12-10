@@ -7,6 +7,7 @@ import com.google.protobuf.Service;
 import com.kylinolap.cube.invertedindex.*;
 import com.kylinolap.cube.measure.MeasureAggregator;
 import com.kylinolap.storage.filter.BitMapFilterEvaluator;
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorConstants;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
 import com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos;
 
@@ -122,11 +123,13 @@ public class IIEndpoint extends IIProtos.RowsService
             }
         }
 
+        byte[] metricBuffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
         for (Map.Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
             CoprocessorProjector.AggrKey aggrKey = entry.getKey();
             IIRow.Builder rowBuilder = IIRow.newBuilder().
-                    setColumns(ByteString.copyFrom(aggrKey.get(), aggrKey.offset(), aggrKey.length())).
-                    setMeasures(ByteString.copyFrom(aggregators.serializeMetricValues(entry.getValue())));
+                    setColumns(ByteString.copyFrom(aggrKey.get(), aggrKey.offset(), aggrKey.length()));
+            int length = aggregators.serializeMetricValues(entry.getValue(), metricBuffer);
+            rowBuilder.setMeasures(ByteString.copyFrom(metricBuffer, 0, length));
             responseBuilder.addRows(rowBuilder.build());
         }
 
