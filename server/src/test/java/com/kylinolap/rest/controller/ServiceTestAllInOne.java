@@ -17,9 +17,12 @@ package com.kylinolap.rest.controller;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import net.sf.ehcache.CacheManager;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -29,26 +32,38 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.JobInstance;
+import com.kylinolap.metadata.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectManager;
 import com.kylinolap.rest.exception.BadRequestException;
 import com.kylinolap.rest.exception.ForbiddenException;
 import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.exception.NotFoundException;
 import com.kylinolap.rest.request.AccessRequest;
+import com.kylinolap.rest.request.CreateProjectRequest;
 import com.kylinolap.rest.request.CubeRequest;
 import com.kylinolap.rest.request.JobBuildRequest;
 import com.kylinolap.rest.request.JobListRequest;
+import com.kylinolap.rest.request.MetaRequest;
+import com.kylinolap.rest.request.SQLRequest;
+import com.kylinolap.rest.request.UpdateProjectRequest;
 import com.kylinolap.rest.response.AccessEntryResponse;
 import com.kylinolap.rest.response.ErrorResponse;
 import com.kylinolap.rest.service.AccessService;
 import com.kylinolap.rest.service.AdminService;
 import com.kylinolap.rest.service.CubeService;
 import com.kylinolap.rest.service.JobService;
+import com.kylinolap.rest.service.ProjectService;
+import com.kylinolap.rest.service.QueryService;
 import com.kylinolap.rest.service.ServiceTestBase;
+import com.kylinolap.rest.util.QueryUtil;
 
 /**
  * 
@@ -186,12 +201,6 @@ public class ServiceTestAllInOne extends ServiceTestBase {
     
     private JobController jobSchedulerController;
 
-    @BeforeClass
-    public static void setupResource() throws Exception {
-        Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", "ROLE_ADMIN");
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-    }
-
 
     @Test
     public void testJobControllerBasics() throws IOException {
@@ -216,6 +225,7 @@ public class ServiceTestAllInOne extends ServiceTestBase {
             e.printStackTrace();
         }
 
+        Assert.assertNotNull(job);
         Assert.assertNotNull(jobSchedulerController.get(job.getId()));
         Map<String, String> output = jobSchedulerController.getStepOutput(job.getId(), 0);
         Assert.assertNotNull(output);
@@ -238,6 +248,111 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         jobBuildRequest.setEndTime(20131212080000L);
         JobInstance job = cubeController.rebuild("test_kylin_cube_with_slr_ready", jobBuildRequest);
 
+        Assert.assertNotNull(job);
         jobSchedulerController.resume(job.getId());
+    }
+    
+    private ProjectController projectController;
+
+    @Autowired
+    ProjectService projectService;
+
+    @Test
+    public void testAddUpdateProject() throws IOException {
+        projectController = new ProjectController();
+        projectController.setProjectService(projectService);
+
+        List<ProjectInstance> projects = projectController.getProjects(null, null);
+
+        int originalProjectCount = projects.size();
+        CreateProjectRequest request = new CreateProjectRequest();
+        request.setName("new_project");
+        ProjectInstance ret = projectController.saveProject(request);
+
+        Assert.assertEquals(ret.getOwner(), "ADMIN");
+        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size(), originalProjectCount + 1);
+
+        UpdateProjectRequest updateR = new UpdateProjectRequest();
+        updateR.setFormerProjectName("new_project");
+        updateR.setNewProjectName("new_project_2");
+        projectController.updateProject(updateR);
+
+        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size(), originalProjectCount + 1);
+        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project"), null);
+
+        Assert.assertNotEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project_2"), null);
+
+        // only update desc:
+        updateR = new UpdateProjectRequest();
+        updateR.setFormerProjectName("new_project_2");
+        updateR.setNewProjectName("new_project_2");
+        updateR.setNewDescription("hello world");
+        projectController.updateProject(updateR);
+
+        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size(), originalProjectCount + 1);
+        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project"), null);
+        Assert.assertNotEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project_2"), null);
+        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project_2").getDescription(), "hello world");
+    }
+
+    @Test(expected = InternalErrorException.class)
+    public void testAddExistingProject() throws IOException {
+        projectController = new ProjectController();
+        projectController.setProjectService(projectService);
+        
+        CreateProjectRequest request = new CreateProjectRequest();
+        request.setName("default");
+        projectController.saveProject(request);
+    }
+    
+    private QueryController queryController;
+    @Autowired
+    QueryService queryService;
+    @Autowired
+    private CacheManager cacheManager;
+
+    @Test(expected = Exception.class)
+    public void testQueryException() throws Exception {
+        queryController = new QueryController();
+        queryController.setQueryService(queryService);
+        queryController.setCacheManager(cacheManager);
+        
+        SQLRequest sqlRequest = new SQLRequest();
+        sqlRequest.setSql("select * from not_exist_table");
+        sqlRequest.setProject("default");
+        queryController.query(sqlRequest);
+    }
+
+    @Test
+    public void testErrorMsg() {
+        String errorMsg = "error while executing SQL \"select lkp.clsfd_ga_prfl_id, ga.sum_dt, sum(ga.bounces) as bounces, sum(ga.exits) as exits, sum(ga.entrances) as entrances, sum(ga.pageviews) as pageviews, count(distinct ga.GA_VSTR_ID, ga.GA_VST_ID) as visits, count(distinct ga.GA_VSTR_ID) as uniqVistors from CLSFD_GA_PGTYPE_CATEG_LOC ga left join clsfd_ga_prfl_lkp lkp on ga.SRC_GA_PRFL_ID = lkp.SRC_GA_PRFL_ID group by lkp.clsfd_ga_prfl_id,ga.sum_dt order by lkp.clsfd_ga_prfl_id,ga.sum_dt LIMIT 50000\": From line 14, column 14 to line 14, column 29: Column 'CLSFD_GA_PRFL_ID' not found in table 'LKP'";
+        assert QueryUtil.makeErrorMsgUserFriendly(errorMsg).equals("From line 14, column 14 to line 14, column 29: Column 'CLSFD_GA_PRFL_ID' not found in table 'LKP'\n" + "while executing SQL: \"select lkp.clsfd_ga_prfl_id, ga.sum_dt, sum(ga.bounces) as bounces, sum(ga.exits) as exits, sum(ga.entrances) as entrances, sum(ga.pageviews) as pageviews, count(distinct ga.GA_VSTR_ID, ga.GA_VST_ID) as visits, count(distinct ga.GA_VSTR_ID) as uniqVistors from CLSFD_GA_PGTYPE_CATEG_LOC ga left join clsfd_ga_prfl_lkp lkp on ga.SRC_GA_PRFL_ID = lkp.SRC_GA_PRFL_ID group by lkp.clsfd_ga_prfl_id,ga.sum_dt order by lkp.clsfd_ga_prfl_id,ga.sum_dt LIMIT 50000\"");
+    }
+
+    @Test
+    public void testGetMetadata() {
+        queryController = new QueryController();
+        queryController.setQueryService(queryService);
+        queryController.setCacheManager(cacheManager);
+        
+        queryController.getMetadata(new MetaRequest(ProjectInstance.DEFAULT_PROJECT_NAME));
+    }
+    
+    private UserController userController;
+
+
+    @Test
+    public void testUserControllerBasics() throws IOException {
+        List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
+        User user = new User("ADMIN", "ADMIN", authorities);
+        Authentication authentication = new TestingAuthenticationToken(user, "ADMIN", "ROLE_ADMIN");
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+ 
+        
+        userController = new UserController();
+        
+        UserDetails userdetail = userController.authenticate();
+        Assert.assertNotNull(userdetail);
+        Assert.assertTrue(user.getUsername().equals("ADMIN"));
     }
 }
