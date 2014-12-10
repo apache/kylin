@@ -131,9 +131,9 @@ public class TableController extends BasicController {
                 for (String loadedTable : loadedTables) {
                     int cut = loadedTable.indexOf('.');
                     String tableName = cut >= 0 ? loadedTable.substring(cut + 1).trim() : loadedTable.trim();
-                    if (inputTable.toUpperCase().equals(tableName)||inputTable.toUpperCase().equals(loadedTable)) {
+                    if (inputTable.trim().toUpperCase().equals(tableName)||inputTable.trim().toUpperCase().equals(loadedTable)) {
                         tableLoaded = true;
-                        continue;
+                        break;
                     }
                 }
                 if(!tableLoaded){
@@ -141,7 +141,7 @@ public class TableController extends BasicController {
                 }
             }
            
-            cubeMgmtService.syncTableToProject(tables, project);
+            cubeMgmtService.syncTableToProject(loadedTables, project);
             result.put("result.loaded", loadedTables);
             result.put("result.unloaded",unloadedTables.toArray(new String[unloadedTables.size()]) );
             
