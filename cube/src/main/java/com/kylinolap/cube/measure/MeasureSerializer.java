@@ -19,7 +19,7 @@ package com.kylinolap.cube.measure;
 import java.util.HashMap;
 
 import com.kylinolap.common.util.BytesSerializer;
-import com.kylinolap.metadata.model.schema.DataType;
+import com.kylinolap.metadata.model.DataType;
 
 /**
  * @author yangli9

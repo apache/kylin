@@ -41,8 +41,8 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceTool;
 import com.kylinolap.common.util.CliCommandExecutor;
 import com.kylinolap.common.util.JsonUtil;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
 
 /**
  * Management class to sync hive table metadata with command See main method for
@@ -115,7 +115,7 @@ public class HiveSourceTableLoader {
         cmd.append("\"");
 
         CliCommandExecutor cmdExec = config.getCliCommandExecutor();
-        String output = cmdExec.execute(cmd.toString());
+        String output = cmdExec.execute(cmd.toString()).getSecond();
 
         return extractTableDescFromHiveOutput(database, output, metaTmpDir);
     }
@@ -143,9 +143,9 @@ public class HiveSourceTableLoader {
         List<String> loadedTables = Lists.newArrayList();
         
         for (TableDesc table : tableDescList) {
-            File file = new File(tableDescDir, table.getName().toUpperCase() + "." + OUTPUT_SURFIX);
+            File file = new File(tableDescDir, table.getIdentity().toUpperCase() + "." + OUTPUT_SURFIX);
             JsonUtil.writeValueIndent(new FileOutputStream(file), table);
-            loadedTables.add(table.getDatabase() + "." + table.getName());
+            loadedTables.add(table.getIdentity());
         }
 
         for (Map<String, String> tableAttrs : tableAttrsList) {

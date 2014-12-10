@@ -27,8 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.cube.model.CubeDesc.CubeCapacity;
 import com.kylinolap.job.tools.OptionsHelper;
-import com.kylinolap.metadata.model.cube.CubeDesc.CubeCapacity;
 
 /**
  * @author ysong1

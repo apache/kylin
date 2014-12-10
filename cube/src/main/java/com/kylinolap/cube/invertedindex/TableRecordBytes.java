@@ -2,6 +2,7 @@ package com.kylinolap.cube.invertedindex;
 
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.dict.Dictionary;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.util.Arrays;
@@ -47,6 +48,14 @@ public class TableRecordBytes implements Cloneable {
     public TableRecordBytes(TableRecordBytes another) {
         this.info = another.info;
         this.buf = Bytes.copy(another.buf);
+    }
+
+    public void setValueBytes(int col, ImmutableBytesWritable bytes) {
+        System.arraycopy(bytes.get(), bytes.getOffset(), buf, info.offset(col), info.length(col));
+    }
+
+    public void getValueBytes(int col, ImmutableBytesWritable bytes) {
+        bytes.set(buf, info.offset(col), info.length(col));
     }
 
     @Override

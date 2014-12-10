@@ -1,102 +1,53 @@
 {
   "uuid": "bbbba905-1fc6-4f67-985c-38fa5aeafd92",
   "name": "test_kylin_cube_with_slr_left_join_desc",
-  "fact_table": "test_kylin_fact",
+  "model_name": "test_kylin_with_slr_left_join_model_desc",
   "cube_partition_desc": {
-    "partition_date_column": "test_kylin_fact.cal_dt",
+    "partition_date_column": "default.test_kylin_fact.cal_dt",
     "partition_date_start": 0,
     "cube_partition_type": "APPEND"
   },
   "filter_condition": null,
   "dimensions": [
     {
-      "id": "1",
       "name": "cal_dt",
-      "datatype": "date",
-      "table": "test_cal_dt",
-      "column": "{FK}",
-      "derived": ["week_beg_dt"],
-      "join": {
-        "type": "left",
-        "primary_key": ["cal_dt"],
-        "foreign_key": ["cal_dt"]
-      }
+      "table": "edw.test_cal_dt",
+      "column": ["cal_dt"],
+      "derived": ["week_beg_dt"]
     },
     {
-      "id": "2",
       "name": "category",
-      "table": "test_category_groupings",
-      "join": {
-        "type": "left",
-        "primary_key": ["leaf_categ_id", "site_id"],
-        "foreign_key": ["leaf_categ_id", "lstg_site_id"]
-      },
-      "hierarchy": [
-        {
-          "level": "1",
-          "column": "meta_categ_name"
-        },
-        {
-          "level": "2",
-          "column": "categ_lvl2_name"
-        },
-        {
-          "level": "3",
-          "column": "categ_lvl3_name"
-        }
-      ]
+      "table": "default.test_category_groupings",
+      "column": ["meta_categ_name", "categ_lvl2_name", "categ_lvl3_name"],
+      "hierarchy": true
     },
     {
-      "id": "3",
       "name": "category_derived",
-      "table": "test_category_groupings",
-      "column": "{FK}",
-      "derived": ["USER_DEFINED_FIELD1", "USER_DEFINED_FIELD3", "UPD_DATE", "UPD_USER"],
-      "join": {
-        "type": "left",
-        "primary_key": ["leaf_categ_id", "site_id"],
-        "foreign_key": ["leaf_categ_id", "lstg_site_id"]
-      }
+      "table": "default.test_category_groupings",
+      "column": ["leaf_categ_id", "site_id"],
+      "derived": ["USER_DEFINED_FIELD1", "USER_DEFINED_FIELD3", "UPD_DATE", "UPD_USER"]
     },
     {
-      "id": "4",
       "name": "lstg_format_name",
-      "datatype": "string",
-      "table": "test_kylin_fact",
-      "column": "lstg_format_name"
+      "table": "default.test_kylin_fact",
+      "column": ["lstg_format_name"]
     },
     {
-      "id": "5",
       "name": "site_id",
-      "datatype": "string",
-      "table": "test_sites",
-      "column": "{FK}",
-      "derived": ["site_name", "cre_user"],
-      "join": {
-        "type": "left",
-        "primary_key": ["site_id"],
-        "foreign_key": ["lstg_site_id"]
-      }
+      "table": "edw.test_sites",
+      "column": ["site_id"],
+      "derived": ["site_name", "cre_user"]
     },
     {
-      "id": "6",
       "name": "seller_type_cd",
-      "datatype": "string",
-      "table": "test_seller_type_dim",
-      "column": "{FK}",
-      "derived": ["seller_type_desc"],
-      "join": {
-        "type": "left",
-        "primary_key": ["seller_type_cd"],
-        "foreign_key": ["slr_segment_cd"]
-      }
+      "table": "edw.test_seller_type_dim",
+      "column": ["seller_type_cd"],
+      "derived": ["seller_type_desc"]
     },
     {
-      "id": "7",
       "name": "seller_id",
-      "datatype": "string",
-      "table": "test_kylin_fact",
-      "column": "seller_id"
+      "table": "default.test_kylin_fact",
+      "column": ["seller_id"]
     }
   ],
   "measures": [

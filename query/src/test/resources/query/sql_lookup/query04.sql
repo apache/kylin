@@ -1,1 +1,1 @@
-select SITE_NAME, SITE_ID from test_sites
+select SITE_NAME, SITE_ID from edw.test_sites

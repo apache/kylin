@@ -16,14 +16,14 @@ import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.util.Array;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.DimensionDesc;
+import com.kylinolap.cube.model.MeasureDesc;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.DimensionDesc;
-import com.kylinolap.metadata.model.cube.JoinDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.DataType;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.DataType;
+import com.kylinolap.metadata.model.JoinDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * Created by hongbin on 5/20/14.
@@ -304,8 +304,10 @@ public class FactTableGenerator {
             JoinDesc jDesc = dim.getJoin();
             if (jDesc == null) {
                 // column on fact table used directly as a dimension
-                if (!factTableCol2LookupCol.containsKey(dim.getColumn()))
-                    usedCols.add(dim.getColumn());
+                for (String aColumn : dim.getColumn()) {
+                    if (!factTableCol2LookupCol.containsKey(aColumn))
+                        usedCols.add(aColumn);
+                }
             }
         }
 

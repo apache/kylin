@@ -23,6 +23,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.kylinolap.metadata.project.ProjectInstance;
+import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
+
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,11 +48,10 @@ import com.kylinolap.cube.CubeBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.exception.CubeIntegrityException;
-import com.kylinolap.cube.project.ProjectInstance;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.exception.InvalidJobInstanceException;
 import com.kylinolap.job.exception.JobException;
-import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.rest.exception.BadRequestException;
 import com.kylinolap.rest.exception.ForbiddenException;
 import com.kylinolap.rest.exception.InternalErrorException;
@@ -60,7 +62,6 @@ import com.kylinolap.rest.response.GeneralResponse;
 import com.kylinolap.rest.response.HBaseResponse;
 import com.kylinolap.rest.service.CubeService;
 import com.kylinolap.rest.service.JobService;
-import com.kylinolap.storage.hbase.observer.CoprocessorEnabler;
 
 /**
  * CubeController is defined as Restful API entrance for UI.
@@ -157,8 +158,8 @@ public class CubeController extends BasicController {
     @ResponseBody
     public Map<String, Boolean> updateCubeCoprocessor(@PathVariable String cubeName, @RequestParam(value = "force") String force) {
         try {
-            CoprocessorEnabler.updateCubeOverride(cubeName, force);
-            return CoprocessorEnabler.getCubeOverrides();
+            ObserverEnabler.updateCubeOverride(cubeName, force);
+            return ObserverEnabler.getCubeOverrides();
         } catch (Exception e) {
             String message = "Failed to update cube coprocessor: " + cubeName + " : " + force;
             logger.error(message, e);

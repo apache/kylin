@@ -11,13 +11,13 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.cuboid.CuboidScheduler;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.DimensionDesc;
-import com.kylinolap.metadata.model.cube.HierarchyDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
-import com.kylinolap.metadata.model.cube.RowKeyColDesc;
-import com.kylinolap.metadata.model.cube.RowKeyDesc;
-import com.kylinolap.metadata.model.schema.DataType;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.DimensionDesc;
+import com.kylinolap.cube.model.HierarchyDesc;
+import com.kylinolap.cube.model.MeasureDesc;
+import com.kylinolap.cube.model.RowKeyColDesc;
+import com.kylinolap.cube.model.RowKeyDesc;
+import com.kylinolap.metadata.model.DataType;
 
 /**
  * Created by honma on 9/1/14.

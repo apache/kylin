@@ -32,9 +32,9 @@ import com.kylinolap.cube.common.RowKeySplitter;
 import com.kylinolap.cube.common.SplittedBytes;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.cuboid.CuboidScheduler;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.model.cube.CubeDesc;
 
 /**
  * @author George Song (ysong1)

@@ -1,27 +1,35 @@
 package com.kylinolap.cube.measure.fixedlen;
 
+import com.kylinolap.metadata.model.DataType;
 import org.apache.hadoop.io.LongWritable;
 
 import com.kylinolap.common.util.BytesUtil;
 
 public class FixedPointLongCodec extends FixedLenMeasureCodec<LongWritable> {
-    
+
     private static final int SIZE = 8;
     // number of digits after decimal point
     int scale;
     double scalePower;
+    DataType type;
     // avoid mass object creation
     LongWritable current = new LongWritable();
 
-    public FixedPointLongCodec(int scale) {
-        scale = Math.max(0, scale);
-        this.scale = scale;
+
+    public FixedPointLongCodec(DataType type) {
+        this.type = type;
+        this.scale = Math.max(0, type.getScale());
         this.scalePower = Math.pow(10, scale);
     }
 
     @Override
     public int getLength() {
         return SIZE;
+    }
+
+    @Override
+    public DataType getDataType() {
+        return type;
     }
 
     @Override

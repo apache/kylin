@@ -27,9 +27,9 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 
 import com.kylinolap.cube.measure.MeasureCodec;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.HBaseColumnDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
+import com.kylinolap.cube.model.HBaseColumnDesc;
+import com.kylinolap.cube.model.MeasureDesc;
+import com.kylinolap.metadata.model.realization.FunctionDesc;
 
 /**
  * 
@@ -79,13 +79,13 @@ public class RowValueDecoder implements Cloneable {
             Object o = mapredObjs[i];
 
             if (o instanceof LongWritable)
-                o = Long.valueOf(((LongWritable) o).get());
+                o = ((LongWritable) o).get();
             else if (o instanceof IntWritable)
-                o = Integer.valueOf(((IntWritable) o).get());
+                o = ((IntWritable) o).get();
             else if (o instanceof DoubleWritable)
-                o = Double.valueOf(((DoubleWritable) o).get());
+                o = ((DoubleWritable) o).get();
             else if (o instanceof FloatWritable)
-                o = Float.valueOf(((FloatWritable) o).get());
+                o = ((FloatWritable) o).get();
 
             results[i] = o;
         }

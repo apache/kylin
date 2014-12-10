@@ -247,10 +247,6 @@ public class QueryService extends BasicService {
         logger.info(stringBuilder.toString());
     }
 
-    /**
-     * @param sql
-     * @throws SQLException
-     */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')" + " or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'READ')")
     public void checkAuthorization(CubeInstance cube) throws AccessDeniedException {
     }
@@ -301,7 +297,7 @@ public class QueryService extends BasicService {
                 // PostgreSQL has only 5
                 TableMeta tblMeta = new TableMeta(catalogName == null ? Constant.FakeCatalogName : catalogName, schemaName == null ? Constant.FakeSchemaName : schemaName, JDBCTableMeta.getString(3), JDBCTableMeta.getString(4), JDBCTableMeta.getString(5), null, null, null, null, null);
 
-                if (!cubedOnly || getProjectManager().isExposedTable(project, tblMeta.getTABLE_NAME())) {
+                if (!cubedOnly || getCubeRealizationManager().isExposedTable(project, schemaName + "." + tblMeta.getTABLE_NAME())) {
                     tableMetas.add(tblMeta);
                     tableMap.put(tblMeta.getTABLE_SCHEM() + "#" + tblMeta.getTABLE_NAME(), tblMeta);
                 }
@@ -317,7 +313,7 @@ public class QueryService extends BasicService {
                 // kylin(optiq) is not strictly following JDBC specification
                 ColumnMeta colmnMeta = new ColumnMeta(catalogName == null ? Constant.FakeCatalogName : catalogName, schemaName == null ? Constant.FakeSchemaName : schemaName, columnMeta.getString(3), columnMeta.getString(4), columnMeta.getInt(5), columnMeta.getString(6), columnMeta.getInt(7), getInt(columnMeta.getString(8)), columnMeta.getInt(9), columnMeta.getInt(10), columnMeta.getInt(11), columnMeta.getString(12), columnMeta.getString(13), getInt(columnMeta.getString(14)), getInt(columnMeta.getString(15)), columnMeta.getInt(16), columnMeta.getInt(17), columnMeta.getString(18), columnMeta.getString(19), columnMeta.getString(20), columnMeta.getString(21), getShort(columnMeta.getString(22)), columnMeta.getString(23));
 
-                if (!cubedOnly || getProjectManager().isExposedColumn(project, colmnMeta.getTABLE_NAME(), colmnMeta.getCOLUMN_NAME())) {
+                if (!cubedOnly || getCubeRealizationManager().isExposedColumn(project, schemaName + "." +colmnMeta.getTABLE_NAME(), colmnMeta.getCOLUMN_NAME())) {
                     tableMap.get(colmnMeta.getTABLE_SCHEM() + "#" + colmnMeta.getTABLE_NAME()).addColumn(colmnMeta);
                 }
             }
@@ -331,7 +327,7 @@ public class QueryService extends BasicService {
 
     /**
      * @param sql
-     * @param project
+     * @param sqlRequest
      * @return
      * @throws Exception
      */

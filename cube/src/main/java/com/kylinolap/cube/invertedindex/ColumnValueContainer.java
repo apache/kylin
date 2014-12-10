@@ -16,11 +16,11 @@
 
 package com.kylinolap.cube.invertedindex;
 
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 
 /**
  * @author yangli9
- * 
  */
 public interface ColumnValueContainer {
 
@@ -32,5 +32,10 @@ public interface ColumnValueContainer {
 
     // works only after closeForChange()
     void getValueAt(int i, ImmutableBytesWritable valueBytes);
+
+    ConciseSet getBitMap(int valueId);
+
+    int getMaxValueId();
+
 
 }

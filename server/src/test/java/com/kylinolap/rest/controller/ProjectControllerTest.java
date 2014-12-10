@@ -3,13 +3,13 @@ package com.kylinolap.rest.controller;
 import java.io.IOException;
 import java.util.List;
 
+import com.kylinolap.metadata.project.ProjectManager;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.kylinolap.cube.project.ProjectInstance;
-import com.kylinolap.cube.project.ProjectManager;
+import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.request.CreateProjectRequest;
 import com.kylinolap.rest.request.UpdateProjectRequest;
@@ -32,6 +32,17 @@ public class ProjectControllerTest extends ServiceTestBase {
 
         projectController = new ProjectController();
         projectController.setProjectService(projectService);
+        try {
+            projectController.deleteProject("new_project");
+        } catch (InternalErrorException e) {
+            //project doesn't exist
+        }
+        try {
+            projectController.deleteProject("new_project_2");
+        } catch (InternalErrorException e) {
+            //project doesn't exist
+        }
+
     }
 
     @Test

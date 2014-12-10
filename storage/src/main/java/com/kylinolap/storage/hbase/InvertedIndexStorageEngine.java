@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import com.kylinolap.cube.invertedindex.*;
+
 import org.apache.hadoop.hbase.client.HConnection;
 
 import com.kylinolap.common.KylinConfig;
@@ -32,9 +33,9 @@ import com.kylinolap.common.persistence.HBaseConnection;
 import com.kylinolap.common.persistence.StorageException;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.realization.FunctionDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.IStorageEngine;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.TupleFilter;
