@@ -155,6 +155,10 @@ KylinApp
                 $modalInstance.dismiss('cancel');
             };
             $scope.add = function () {
+                if($scope.tableNames.trim()===""){
+                    SweetAlert.swal('','Please input table(s) you want to synchronize.', 'info');
+                  return;
+                }
                 $scope.cancel();
                 rainbowBar.show();
                 loadingRequest.show();
@@ -175,7 +179,7 @@ KylinApp
                         SweetAlert.swal('Success!','The following table(s) have been successfully synchronized: ' + loadTableInfo , 'success');
                     }
                     if(result['result.loaded'].length!=0&&result['result.unloaded'].length!=0){
-                        SweetAlert.swal('Partial loaded!','The following table(s) have been successfully synchronized: ' + loadTableInfo+"\n Failed to synchronize following table(s):"  + unloadedTableInfo, 'warning');
+                        SweetAlert.swal('Partial loaded!','The following table(s) have been successfully synchronized: ' + loadTableInfo+"\n\n Failed to synchronize following table(s):"  + unloadedTableInfo, 'warning');
                     }
 
 
