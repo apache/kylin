@@ -19,54 +19,63 @@ package com.kylinolap.common.util;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.MiniHBaseCluster;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.mapred.MiniMRCluster;
+import org.apache.hadoop.hbase.mapreduce.Import;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.util.GenericOptionsParser;
 
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.persistence.ResourceTool;
+import com.kylinolap.common.persistence.HBaseConnection;
+import com.kylinolap.common.persistence.HBaseResourceStore;
 
 /**
+ * A base class for running unit tests with HBase minicluster;
  * @author shaoshi
  */
 public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
-    
-    private static HBaseTestingUtility testUtil ;
 
-    protected static MiniDFSCluster dfsCluster = null;
-    protected static MiniMRCluster mrCluster = null;
+    private static HBaseTestingUtility UTIL = new HBaseTestingUtility();
+
     protected static MiniHBaseCluster hbaseCluster = null;
-    
-    public static void staticCleanupTestMetadata() {
-        System.clearProperty(KylinConfig.KYLIN_CONF);
-        KylinConfig.destoryInstance();
-        
-    }
+
+    protected static Configuration config = null;
+
+    protected static String hbaseconnectionUrl = "";
+
+    private static final Log logger = LogFactory.getLog(HBaseMiniclusterMetadataTestCase.class);
 
     @Override
     public void createTestMetadata() {
+        // do nothing, as the Test metadata has been initialized in BeforeClass
         staticCreateTestMetadata(MINICLUSTER_TEST_DATA);
 
-        startupMinicluster();
-        importHBaseData();
+        // Overwrite the hbase url with the minicluster's
+        KylinConfig.getInstanceFromEnv().setMetadataUrl("kylin_metadata_qa@" + hbaseconnectionUrl);
+        KylinConfig.getInstanceFromEnv().setStorageUrl(hbaseconnectionUrl);
     }
-    
-    public void startupMinicluster() {
 
-        if(testUtil == null) {
-            testUtil = new HBaseTestingUtility();
-        }
-        
+    /**
+     * Start the minicluster; Sub-classes should invoke this in BeforeClass method.
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws InterruptedException
+     */
+    public static void startupMinicluster() throws IOException, ClassNotFoundException, InterruptedException {
+        staticCreateTestMetadata(MINICLUSTER_TEST_DATA);
+
         try {
-            hbaseCluster = testUtil.startMiniCluster();
+            hbaseCluster = UTIL.startMiniCluster();
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        Configuration config = hbaseCluster.getConf();
+        config = hbaseCluster.getConf();
         String host = config.get(HConstants.ZOOKEEPER_QUORUM);
         String port = config.get(HConstants.ZOOKEEPER_CLIENT_PORT);
         String parent = config.get(HConstants.ZOOKEEPER_ZNODE_PARENT);
@@ -76,38 +85,132 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
         config.set(HConstants.HBASE_CLIENT_RETRIES_NUMBER, "5");
         config.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
 
-        String hbaseconnectionUrl = "hbase:" + host + ":" + port + ":" + parent;
-        
-        KylinConfig.getInstanceFromEnv().setMetadataUrl(hbaseconnectionUrl);
+        hbaseconnectionUrl = "hbase:" + host + ":" + port + ":" + parent;
+        UTIL.startMiniMapReduceCluster();
+
+        KylinConfig.getInstanceFromEnv().setMetadataUrl("kylin_metadata_qa@" + hbaseconnectionUrl);
         KylinConfig.getInstanceFromEnv().setStorageUrl(hbaseconnectionUrl);
+
+        // create the metadata htables;
+        HBaseResourceStore store = new HBaseResourceStore(KylinConfig.getInstanceFromEnv());
+
+        // import the table content
+        importHBaseData(true, true);
     }
-    
-    public void importHBaseData() {
-        File dataFolder = new File(MINICLUSTER_TEST_DATA + File.separator + "b-kylin" + File.separator + "meta");
-        try {
-            ResourceTool.copy(KylinConfig.createInstanceFromUri(dataFolder.getAbsolutePath()), KylinConfig.getInstanceFromEnv());
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+
+    public static void importHBaseData(boolean importMetadataTables, boolean importCubeTables) throws IOException, ClassNotFoundException, InterruptedException {
+
+        if (!importMetadataTables && !importCubeTables)
+            return;
+
+        if (System.getenv("JAVA_HOME") == null) {
+            System.err.println("Didn't find $JAVA_HOME, this will cause HBase data import failed. Please set $JAVA_HOME.");
+            System.err.println("Skip table import...");
+            return;
         }
-        
+        File exportFile = new File("../examples/test_case_data/minicluster/hbase-export.tar.gz");
+
+        if (!exportFile.exists()) {
+            logger.error("Didn't find the export archieve file on " + exportFile.getAbsolutePath());
+            return;
+        }
+
+        File folder = new File("/tmp/hbase-export/");
+
+        if (folder.exists()) {
+            folder.delete();
+        }
+
+        folder.mkdirs();
+        folder.deleteOnExit();
+
+        TarGZUtil.uncompressTarGZ(exportFile, folder);
+
+        String[] child = folder.list();
+
+        assert child.length == 1;
+
+        String backupTime = child[0];
+
+        File backupFolder = new File(folder, backupTime);
+
+        String[] tableNames = backupFolder.list();
+
+        for (String table : tableNames) {
+
+            if (!(table.equals("kylin_metadata_qa") && importMetadataTables || table.startsWith("KYLIN_") && importCubeTables)) {
+                continue;
+            }
+
+            if (table.startsWith("KYLIN_")) {
+                // create the cube table; otherwise the import will fail.
+                HBaseConnection.createHTableIfNeeded(KylinConfig.getInstanceFromEnv().getStorageUrl(), table, "F1", "F2");
+            }
+            // directly import from local fs, no need to copy to hdfs
+            //String importLocation = copyTableBackupToHDFS(backupFolder, table);
+            String importLocation = "file://" + backupFolder.getAbsolutePath() + "/" + table;
+            String[] args = new String[] { table, importLocation };
+
+            boolean result = runImport(args);
+            System.out.println("---- import table '" + table + "' result:" + result);
+            if (!result)
+                break;
+        }
+
+    }
+
+    private String copyTableBackupToHDFS(File backupFolder, String tableName) throws IOException {
+        File tableExportFolder = new File(backupFolder, tableName);
+        org.apache.hadoop.fs.FileSystem fs = org.apache.hadoop.fs.FileSystem.get(UTIL.getConfiguration());
+        Path tableExportPath = new Path("/tmp/hbase-export/");
+        fs.delete(tableExportPath, true);
+        fs.mkdirs(tableExportPath);
+        fs.copyFromLocalFile(false, new Path(tableExportFolder.getAbsolutePath()), tableExportPath);
+        return tableExportPath.makeQualified(FileSystem.get(UTIL.getConfiguration())).toString() + "/" + tableName;
+    }
+
+    private static boolean runImport(String[] args) throws IOException, InterruptedException, ClassNotFoundException {
+        // need to make a copy of the configuration because to make sure different temp dirs are used.
+        GenericOptionsParser opts = new GenericOptionsParser(new Configuration(UTIL.getConfiguration()), args);
+        Configuration conf = opts.getConfiguration();
+        args = opts.getRemainingArgs();
+        Job job = Import.createSubmittableJob(conf, args);
+        job.waitForCompletion(false);
+        return job.isSuccessful();
     }
 
     @Override
     public void cleanupTestMetadata() {
         staticCleanupTestMetadata();
-        
+    }
+
+    /**
+     * Shutdown the minicluster; Sub-classes should invoke this method in AfterClass method.
+     */
+    public static void shutdownMiniCluster() {
         try {
-            testUtil.shutdownMiniCluster();
+            UTIL.shutdownMiniMapReduceCluster();
         } catch (Exception e) {
-            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        try {
+            UTIL.shutdownMiniCluster();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         HBaseMiniclusterMetadataTestCase t = new HBaseMiniclusterMetadataTestCase();
-        t.createTestMetadata();
-        t.cleanupTestMetadata();
+        try {
+            HBaseMiniclusterMetadataTestCase.startupMinicluster();
+            t.createTestMetadata();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            t.cleanupTestMetadata();
+            HBaseMiniclusterMetadataTestCase.shutdownMiniCluster();
+        }
     }
 }

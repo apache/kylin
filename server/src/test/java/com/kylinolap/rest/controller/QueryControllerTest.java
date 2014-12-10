@@ -31,6 +31,7 @@ import com.kylinolap.rest.util.QueryUtil;
 
 /**
  * @author xduo
+ * @deprecated method has been merged into #ServiceTestAllInOne
  * 
  */
 public class QueryControllerTest extends ServiceTestBase {

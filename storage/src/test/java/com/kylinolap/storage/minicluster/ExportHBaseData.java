@@ -9,18 +9,18 @@ import org.apache.hadoop.hbase.client.HConnection;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.HBaseConnection;
+import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.CliCommandExecutor;
-import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.common.util.SSHClient;
 
-public class ExportHBaseData extends HBaseMetadataTestCase {
+public class ExportHBaseData {
 
     KylinConfig kylinConfig;
     HTableDescriptor[] allTables;
     Configuration config;
     HBaseAdmin hbase;
     CliCommandExecutor cli = null;
-    String exportFolder = "/tmp/hbase-export";
+    String exportFolder;
     String backupArchive = null;
     String tableNameBase;
 
@@ -28,7 +28,9 @@ public class ExportHBaseData extends HBaseMetadataTestCase {
         long currentTIME = System.currentTimeMillis();
         exportFolder = "/tmp/hbase-export/" + currentTIME + "/";
         backupArchive = "/tmp/kylin_" + currentTIME + ".tar.gz";
-        this.createTestMetadata();
+        
+        KylinConfig.destoryInstance();
+        System.setProperty(KylinConfig.KYLIN_CONF, AbstractKylinTestCase.SANDBOX_TEST_DATA);
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
         cli = kylinConfig.getCliCommandExecutor();
@@ -61,7 +63,6 @@ public class ExportHBaseData extends HBaseMetadataTestCase {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
         // cleanup sandbox disk
         try {
             if (cli != null && exportFolder != null) {
@@ -79,21 +80,24 @@ public class ExportHBaseData extends HBaseMetadataTestCase {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        
+
+        KylinConfig.destoryInstance();
 
     }
 
     public void exportTables() throws IOException {
+        cli.execute("mkdir -p "  + exportFolder);
+        
         for (HTableDescriptor table : allTables) {
             String tName = table.getNameAsString();
             if (!tName.startsWith(tableNameBase) && !tName.startsWith("KYLIN_"))
+//                if (!tName.equals(tableNameBase) ) // this is for debug
                 continue;
             
             cli.execute("hbase org.apache.hadoop.hbase.mapreduce.Export " + tName + " " + exportFolder + tName);
         }
         
-        
-        cli.execute("mkdir -p "  + exportFolder);
-
         cli.execute("hadoop fs -copyToLocal " + exportFolder + " " + exportFolder);
         cli.execute("tar -zcvf " + backupArchive + " --directory=" + exportFolder + " .");
         downloadToLocal();

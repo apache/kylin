@@ -47,5 +47,9 @@ public abstract class AbstractKylinTestCase {
         
     }
     
+    public static void staticCleanupTestMetadata() {
+        System.clearProperty(KylinConfig.KYLIN_CONF);
+        KylinConfig.destoryInstance();
 
+    }
 }

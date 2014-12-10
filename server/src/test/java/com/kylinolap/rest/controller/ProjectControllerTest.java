@@ -18,6 +18,7 @@ import com.kylinolap.rest.service.ServiceTestBase;
 
 /**
  * Created by honma on 8/7/14.
+ * @deprecated method has been merged into #ServiceTestAllInOne
  */
 public class ProjectControllerTest extends ServiceTestBase {
 

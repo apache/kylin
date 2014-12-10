@@ -87,7 +87,7 @@
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-testing-util</artifactId>
             <version>${hbase-hadoop2.version}</version>
-            <scope>test</scope>
+            <scope>provided</scope>
             <exclusions>
                 <exclusion>
                     <groupId>javax.servlet</groupId>
@@ -100,12 +100,10 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.2</version>
         </dependency>
     </dependencies>
-
-
 </project>
 
