@@ -33,7 +33,7 @@ import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.hadoop.hbase.coprocessor.CoprocessorHost;
 import org.apache.hadoop.hbase.security.User;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -66,7 +66,6 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
     private CubeSegment seg;
     private TableDesc tableDesc;
     String tableName;
-    HTableInterface table;
 
     @BeforeClass
     public static void setupBeforeClass() throws Exception {
@@ -85,8 +84,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         //simulate bulk load
         mockCubeHtable();
 
-        //hconn = HConnectionManager.createConnection(CONF);
-        hconn = HBaseConnection.get("hbase:sandbox.hortonworks.com:2181:/hbase-unsecure");
+        hconn = HConnectionManager.createConnection(CONF);
     }
 
     @AfterClass
@@ -134,13 +132,11 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         this.tableDesc = MetadataManager.getInstance(getTestConfig()).getTableDesc("test_kylin_fact");
 
         this.tableName = seg.getStorageLocationIdentifier();
-        this.table = hconn.getTable(tableName);
 
     }
 
     @After
     public void cleanup() throws IOException {
-        this.table.close();
     }
 
 
@@ -213,10 +209,9 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
     }
 
 
-    //TODO: queries like select count(*) on II can be optimized
     @Test
     public void testSimpleCount() throws Throwable {
-        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc.getColumns(), null, null, null, context, table);
+        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc.getColumns(), null, null, null, context, hconn);
 
         int count = 0;
         while (iterator.hasNext()) {
@@ -225,11 +220,12 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
             count++;
         }
         assertEquals(count, 10000);
+        iterator.close();
     }
 
     private int filteredCount(TupleFilter tupleFilter) throws Throwable {
 
-        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc.getColumns(), tupleFilter, null, null, context, table);
+        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc.getColumns(), tupleFilter, null, null, context, hconn);
 
         int count = 0;
         while (iterator.hasNext()) {
@@ -238,9 +234,11 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
             count++;
         }
 
+        iterator.close();
         return count;
     }
 
+    @Ignore
     @Test
     public void testFilterOnMetric() throws Throwable {
         ColumnDesc priceDesc = tableDesc.findColumnByName("PRICE");
@@ -252,7 +250,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         Collection<TblColRef> groupby = ImmutableSet.of(lfn);
 
         List<FunctionDesc> measures = buildAggregations(priceDesc);
-        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc.getColumns(), tupleFilter, groupby, measures, context, table);
+        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc.getColumns(), tupleFilter, groupby, measures, context, hconn);
 
         int count = 0;
         while (iterator.hasNext()) {
@@ -261,6 +259,29 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         }
 
         System.out.printf("Count: " + count);
+        iterator.close();
+    }
+
+    @Test
+    public void testCostlyFilter() throws Throwable {
+        ColumnDesc sellerDessc = tableDesc.findColumnByName("SELLER_ID");
+        TblColRef sellerColumn = new TblColRef(sellerDessc);
+        TupleFilter tupleFilter = mockGTFiter(sellerColumn, "10000570");
+
+        TblColRef lfn = new TblColRef(sellerDessc);
+        Collection<TblColRef> groupby = ImmutableSet.of(lfn);
+
+        List<FunctionDesc> measures = buildAggregations(sellerDessc);
+        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc.getColumns(), tupleFilter, groupby, measures, context, hconn);
+
+        int count = 0;
+        while (iterator.hasNext()) {
+            ITuple tuple = iterator.next();
+            count += (Long) tuple.getValue("COUNT__");
+        }
+
+        System.out.println("Count: " + count);
+        iterator.close();
     }
 
 
@@ -286,7 +307,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         ColumnDesc priceColumn = tableDesc.findColumnByName("PRICE");
         List<FunctionDesc> measures = buildAggregations(priceColumn);
 
-        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc.getColumns(), tupleFilter, groupby, measures, context, table);
+        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc.getColumns(), tupleFilter, groupby, measures, context, hconn);
 
         int count = 0;
         while (iterator.hasNext()) {
@@ -294,11 +315,13 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
             count += (Long) tuple.getValue("COUNT__");
         }
 
+        iterator.close();
         return count;
     }
 
     @Test
     public void testFilterGroupByCount() throws Throwable {
+
 
         ColumnDesc columnDesc = tableDesc.findColumnByName("LSTG_FORMAT_NAME");
         TblColRef lfn = new TblColRef(columnDesc);

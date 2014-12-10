@@ -3,6 +3,7 @@ package com.kylinolap.storage.hbase.coprocessor.endpoint;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
+import com.kylinolap.common.persistence.HBaseConnection;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.invertedindex.TableRecord;
 import com.kylinolap.cube.invertedindex.TableRecordInfo;
@@ -22,6 +23,9 @@ import com.kylinolap.storage.tuple.ITuple;
 import com.kylinolap.storage.tuple.ITupleIterator;
 import com.kylinolap.storage.tuple.Tuple;
 import com.kylinolap.storage.tuple.TupleInfo;
+import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
@@ -55,11 +59,15 @@ public class EndpointTupleIterator implements ITupleIterator {
 
     Iterator<List<IIRow>> regionResponsesIterator = null;
     ITupleIterator tupleIterator = null;
+    HTableInterface table = null;
 
     int rowsInAllMetric = 0;
 
     public EndpointTupleIterator(CubeSegment cubeSegment, ColumnDesc[] columnDescs,
-            TupleFilter rootFilter, Collection<TblColRef> groupBy, List<FunctionDesc> measures, StorageContext context, HTableInterface table) throws Throwable {
+            TupleFilter rootFilter, Collection<TblColRef> groupBy, List<FunctionDesc> measures, StorageContext context, HConnection conn) throws Throwable {
+
+        String tableName = cubeSegment.getStorageLocationIdentifier();
+        table = conn.getTable(tableName);
 
         if (rootFilter == null) {
             rootFilter = ConstantTupleFilter.TRUE;
@@ -129,7 +137,14 @@ public class EndpointTupleIterator implements ITupleIterator {
 
     @Override
     public boolean hasNext() {
-        return this.regionResponsesIterator.hasNext() || this.tupleIterator.hasNext();
+        while (!this.tupleIterator.hasNext()) {
+            if (this.regionResponsesIterator.hasNext()) {
+                this.tupleIterator = new SingleRegionTupleIterator(this.regionResponsesIterator.next());
+            } else {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -140,14 +155,12 @@ public class EndpointTupleIterator implements ITupleIterator {
             throw new IllegalStateException("No more ITuple in EndpointTupleIterator");
         }
 
-        if (!this.tupleIterator.hasNext()) {
-            this.tupleIterator = new SingleRegionTupleIterator(this.regionResponsesIterator.next());
-        }
         return this.tupleIterator.next();
     }
 
     @Override
     public void close() {
+        IOUtils.closeQuietly(table);
         logger.info("Closed after " + rowsInAllMetric + " rows are fetched");
     }
 
@@ -191,16 +204,13 @@ public class EndpointTupleIterator implements ITupleIterator {
 
         for (int i = 0; i < columns.size(); i++) {
             TblColRef column = columns.get(i);
-
 //            if (!dimensions.contains(column)) {
 //                continue;
 //            }
-
             info.setField(columnNames.get(i), columns.get(i), columns.get(i).getType().getName(), index++);
         }
 
         for (FunctionDesc measure : measures) {
-
             info.setField(measure.getRewriteFieldName(), null, measure.getSQLType(), index++);
         }
 
