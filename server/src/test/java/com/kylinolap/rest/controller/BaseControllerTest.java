@@ -59,7 +59,7 @@ public class BaseControllerTest extends ServiceTestBase {
         Assert.assertNotNull(errorResponse);
 
         InternalErrorException internalErrorException = new InternalErrorException("error");
-        errorResponse = basicController.handleInternalError(request, internalErrorException);
+        errorResponse = basicController.handleError(request, internalErrorException);
         Assert.assertNotNull(errorResponse);
 
         BadRequestException badRequestException = new BadRequestException("error");
