@@ -1,7 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('SourceMetaCtrl', function ($scope,$cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService,$route,rainbowBar,loadingRequest,SweetAlert) {
+    .controller('SourceMetaCtrl', function ($scope,$cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService,$route,loadingRequest,SweetAlert) {
         var $httpDefaultCache = $cacheFactory.get('$http');
         $scope.srcTables = {};
         $scope.srcDbs = [];
@@ -148,7 +148,7 @@ KylinApp
             });
         };
 
-        var ModalInstanceCtrl = function ($scope,$location, $modalInstance, tableNames, MessageService,projectName,hiveTbLoad,rainbowBar) {
+        var ModalInstanceCtrl = function ($scope,$location, $modalInstance, tableNames, MessageService,projectName,hiveTbLoad) {
             $scope.tableNames = "";
             $scope.projectName = projectName;
             $scope.cancel = function () {
@@ -160,7 +160,6 @@ KylinApp
                   return;
                 }
                 $scope.cancel();
-                rainbowBar.show();
                 loadingRequest.show();
                 TableService.loadHiveTable({tableName: $scope.tableNames,action:projectName}, {}, function (result) {
                     var loadTableInfo="";
@@ -183,11 +182,9 @@ KylinApp
                     }
 
 
-                    rainbowBar.hide();
                     loadingRequest.hide();
                     hiveTbLoad.status="success";
                 },function(){
-                    rainbowBar.hide();
                     loadingRequest.hide();
                     hiveTbLoad.status="init";
                 })
