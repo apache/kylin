@@ -138,7 +138,7 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
 
         for (String table : tableNames) {
 
-            if (!(table.equals("kylin_metadata_qa") && importMetadataTables || table.startsWith("KYLIN_") && importCubeTables)) {
+            if (!(table.startsWith("kylin_metadata_qa") && importMetadataTables || table.startsWith("KYLIN_") && importCubeTables)) {
                 continue;
             }
 
