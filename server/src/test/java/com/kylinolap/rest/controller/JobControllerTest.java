@@ -18,8 +18,16 @@ package com.kylinolap.rest.controller;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
+import com.kylinolap.cube.CubeDescManager;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.rest.exception.InternalErrorException;
+import com.kylinolap.rest.exception.NotFoundException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -36,6 +44,9 @@ import com.kylinolap.rest.service.CubeService;
 import com.kylinolap.rest.service.JobService;
 import com.kylinolap.rest.service.ServiceTestBase;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author xduo
  * @deprecated method has been merged into #ServiceTestAllInOne
@@ -50,12 +61,8 @@ public class JobControllerTest extends ServiceTestBase {
 
     @Autowired
     CubeService cubeService;
+    private static final String CUBE_NAME = "new_job_controller";
 
-    @BeforeClass
-    public static void setupResource() throws Exception {
-        Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", "ROLE_ADMIN");
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-    }
 
     @Before
     public void setup() throws Exception {
@@ -66,27 +73,39 @@ public class JobControllerTest extends ServiceTestBase {
         cubeController = new CubeController();
         cubeController.setJobService(jobService);
         cubeController.setCubeService(cubeService);
+
     }
 
     @Test
     public void testBasics() throws IOException {
+
+        CubeManager cubeManager = CubeManager.getInstance(getTestConfig());
+        if (cubeManager.getCube(CUBE_NAME) != null) {
+            cubeManager.dropCube(CUBE_NAME, false);
+        }
+        CubeDescManager cubeDescManager = CubeDescManager.getInstance(getTestConfig());
+        CubeDesc cubeDesc = cubeDescManager.getCubeDesc("test_kylin_cube_with_slr_left_join_desc");
+        CubeInstance cube = cubeManager.createCube(CUBE_NAME, "DEFAULT", cubeDesc, "test");
+        assertNotNull(cube);
+
         JobListRequest jobRequest = new JobListRequest();
         Assert.assertNotNull(jobSchedulerController.list(jobRequest));
 
-        JobInstance job = null;
-        try {
-            JobBuildRequest jobBuildRequest = new JobBuildRequest();
-            jobBuildRequest.setBuildType("BUILD");
-            jobBuildRequest.setStartTime(1386806400000L);
-            jobBuildRequest.setEndTime(new Date().getTime());
-            job = cubeController.rebuild("test_kylin_cube_with_slr_ready", jobBuildRequest);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        JobBuildRequest jobBuildRequest = new JobBuildRequest();
+        jobBuildRequest.setBuildType("BUILD");
+        jobBuildRequest.setStartTime(1386806400000L);
+        jobBuildRequest.setEndTime(new Date().getTime());
+        JobInstance job = cubeController.rebuild(CUBE_NAME, jobBuildRequest);
+
 
         Assert.assertNotNull(jobSchedulerController.get(job.getId()));
         Map<String, String> output = jobSchedulerController.getStepOutput(job.getId(), 0);
         Assert.assertNotNull(output);
+        try {
+            jobSchedulerController.cancel(job.getId());
+        } catch (InternalErrorException e) {
+
+        }
 
         // jobSchedulerController.cancel(job.getId());
     }
@@ -97,7 +116,7 @@ public class JobControllerTest extends ServiceTestBase {
         jobBuildRequest.setBuildType("BUILD");
         jobBuildRequest.setStartTime(20130331080000L);
         jobBuildRequest.setEndTime(20131212080000L);
-        JobInstance job = cubeController.rebuild("test_kylin_cube_with_slr_ready", jobBuildRequest);
+        JobInstance job = cubeController.rebuild(CUBE_NAME, jobBuildRequest);
 
         jobSchedulerController.resume(job.getId());
     }

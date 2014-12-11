@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.kylinolap.metadata.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectManager;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,11 +31,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.persistence.JsonSerializer;
-import com.kylinolap.common.persistence.ResourceStore;
-import com.kylinolap.common.persistence.Serializer;
-import com.kylinolap.common.restclient.Broadcaster;
-import com.kylinolap.common.restclient.SingleValueCache;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.model.CubeDesc;
@@ -55,13 +51,17 @@ public class CubeRealizationManager {
 
     // static cached instances
     private static final ConcurrentHashMap<KylinConfig, CubeRealizationManager> CACHE = new ConcurrentHashMap<KylinConfig, CubeRealizationManager>();
-    private static final Serializer<ProjectInstance> PROJECT_SERIALIZER = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
 
     private KylinConfig config;
-    // project name => ProjrectDesc
-    private SingleValueCache<String, ProjectInstance> projectMap = new SingleValueCache<String, ProjectInstance>(Broadcaster.TYPE.PROJECT);
     // project name => tables
     private Multimap<String, ProjectTable> projectTables = Multimaps.synchronizedMultimap(HashMultimap.<String, ProjectTable>create());
+
+    private CubeRealizationManager(KylinConfig config) throws IOException {
+        logger.info("Initializing CubeManager with metadata url " + config);
+        this.config = config;
+
+        loadAllProjects();
+    }
 
     public static CubeRealizationManager getInstance(KylinConfig config) {
         CubeRealizationManager r = CACHE.get(config);
@@ -91,102 +91,11 @@ public class CubeRealizationManager {
         CACHE.remove(config);
     }
 
-    private CubeRealizationManager(KylinConfig config) throws IOException {
-        logger.info("Initializing CubeManager with metadata url " + config);
-        this.config = config;
-
-        loadAllProjects();
-    }
-
-    public static String getDefaultProjectName() {
-        return ProjectInstance.DEFAULT_PROJECT_NAME;
-    }
-
-    public List<ProjectInstance> listAllProjects() {
-        return new ArrayList<ProjectInstance>(projectMap.values());
-    }
-
-    public List<ProjectInstance> getProjects(String cubeName) {
-        return this.findProjects(cubeName);
-    }
-
-    public ProjectInstance dropProject(String projectName) throws IOException {
-        if (projectName == null)
-            throw new IllegalArgumentException("Project name not given");
-
-        ProjectInstance projectInstance = getProject(projectName);
-
-        if (projectInstance == null) {
-            throw new IllegalStateException("The project named " + projectName + " does not exist");
-        }
-
-        if (projectInstance.getCubes().size() != 0) {
-            throw new IllegalStateException("The project named " + projectName + " can not be deleted because there's still cubes in it. Delete all the cubes first.");
-        }
-
-        logger.info("Dropping project '" + projectInstance.getName() + "'");
-        deleteResource(projectInstance);
-
-        return projectInstance;
-    }
-
-    public ProjectInstance getProject(String projectName) {
-        if (projectName == null)
-            return null;
-        projectName = ProjectInstance.getNormalizedProjectName(projectName);
-        return projectMap.get(projectName);
-    }
-
-    public ProjectInstance createProject(String projectName, String owner, String description) throws IOException {
-
-        logger.info("Creating project '" + projectName);
-
-        ProjectInstance currentProject = getProject(projectName);
-        if (currentProject == null) {
-            currentProject = ProjectInstance.create(projectName, owner, description, null);
-        } else {
-            throw new IllegalStateException("The project named " + projectName + "already exists");
-        }
-
-        saveResource(currentProject);
-
-        return currentProject;
-    }
-
-    public ProjectInstance updateProject(ProjectInstance project, String newName, String newDesc) throws IOException {
-        if (!project.getName().equals(newName)) {
-            ProjectInstance newProject = this.createProject(newName, project.getOwner(), newDesc);
-            newProject.setCreateTime(project.getCreateTime());
-            newProject.recordUpdateTime(System.currentTimeMillis());
-            newProject.setCubes(project.getCubes());
-
-            deleteResource(project);
-            saveResource(newProject);
-
-            return newProject;
-        } else {
-            project.setName(newName);
-            project.setDescription(newDesc);
-
-            if (project.getUuid() == null)
-                project.updateRandomUuid();
-
-            saveResource(project);
-
-            return project;
-        }
-    }
-
     public boolean isCubeInProject(String projectName, CubeInstance cube) {
         return this.listAllCubes(projectName).contains(cube);
     }
 
-//    public ProjectInstance updateCubeToProject(String cubeName, String newProjectName, String owner) throws IOException {
-//        removeCubeFromProjects(cubeName);
-//        return addCubeToProject(cubeName, newProjectName, owner);
-//    }
-
-    public ProjectInstance updateTableToProject(String tables, String projectName) throws IOException {
+    public ProjectInstance addTablesToProject(String tables, String projectName) throws IOException {
         ProjectInstance projectInstance = getProject(projectName);
         String[] tokens = StringUtils.split(tables, ",");
         for (int i = 0; i < tokens.length; i++) {
@@ -205,15 +114,6 @@ public class CubeRealizationManager {
         return projectInstance;
     }
 
-
-//    public void removeCubeFromProjects(String cubeName) throws IOException {
-//        for (ProjectInstance projectInstance : findProjects(cubeName)) {
-//            projectInstance.removeCube(cubeName);
-//
-//            saveResource(projectInstance);
-//        }
-//    }
-
     public List<TableDesc> listExposedTables(String project) {
         project = ProjectInstance.getNormalizedProjectName(project);
         List<TableDesc> tables = Lists.newArrayList();
@@ -230,7 +130,7 @@ public class CubeRealizationManager {
 
 
     public List<TableDesc> listDefinedTablesInProject(String project) throws IOException {
-        if(null==project){
+        if(null == project){
             return Collections.emptyList();
         }
         project = ProjectInstance.getNormalizedProjectName(project);
@@ -283,23 +183,23 @@ public class CubeRealizationManager {
         return getProjectTable(project, table).getColumns().contains(col);
     }
 
-    public List<CubeInstance> listAllCubes(String project) {
-        project = ProjectInstance.getNormalizedProjectName(project);
+    public List<CubeInstance> listAllCubes(String projectName) {
+        return listAllCubes(ProjectManager.getInstance(config).getProject(projectName));
+    }
 
+    public List<CubeInstance> listAllCubes(ProjectInstance projectInstance) {
+        if (projectInstance == null) {
+            return Collections.emptyList();
+        }
         HashSet<CubeInstance> ret = new HashSet<CubeInstance>();
-
-        ProjectInstance projectInstance = getProject(project);
-        if (projectInstance != null) {
-            for (String cubeName : projectInstance.getCubes()) {
-                CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
-                if (null != cube) {
-                    ret.add(cube);
-                } else {
-                    logger.error("Failed to load cube " + cubeName);
-                }
+        for (String cubeName : projectInstance.getCubes()) {
+            CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
+            if (null != cube) {
+                ret.add(cube);
+            } else {
+                logger.error("Failed to load cube " + cubeName);
             }
         }
-
         return new ArrayList<CubeInstance>(ret);
     }
 
@@ -354,17 +254,24 @@ public class CubeRealizationManager {
         return result;
     }
 
-    public void loadProjectCache(ProjectInstance project, boolean triggerUpdate) throws IOException {
-        loadProject(project.getResourcePath(), triggerUpdate);
-        loadTables(project.getResourcePath());
-    }
-
-    public void removeProjectCache(ProjectInstance project) {
+    public void unloadProject(ProjectInstance project) {
         String projectName = ProjectInstance.getNormalizedProjectName(project.getName());
-        if (projectMap.containsKey(projectName)) {
-            projectMap.remove(projectName);
+        if (projectTables.containsKey(projectName)) {
             projectTables.removeAll(projectName);
         }
+    }
+
+    public void loadProject(ProjectInstance project) throws IOException {
+        loadTables(project);
+    }
+
+    public final void loadAllProjects() throws IOException {
+        List<ProjectInstance> projectInstances = ProjectManager.getInstance(config).listAllProjects();
+        for (ProjectInstance projectInstance : projectInstances) {
+            loadTables(projectInstance);
+        }
+
+        logger.debug("Loaded " + projectInstances.size() + " Project(s)");
     }
 
     private void mapTableToCube(ProjectInstance projectInstance, CubeInstance cubeInstance) {
@@ -398,9 +305,9 @@ public class CubeRealizationManager {
         }
     }
 
-    private List<ProjectInstance> findProjects(String cubeName) {
+    private List<ProjectInstance> findProjectsByCubeName(String cubeName) {
         List<ProjectInstance> projects = new ArrayList<ProjectInstance>();
-        for (ProjectInstance projectInstance : projectMap.values()) {
+        for (ProjectInstance projectInstance : getProjectManager().listAllProjects()) {
             if (projectInstance.containsCube(cubeName)) {
                 projects.add(projectInstance);
             }
@@ -409,33 +316,7 @@ public class CubeRealizationManager {
         return projects;
     }
 
-    private synchronized ProjectInstance loadProject(String path, boolean triggerUpdate) throws IOException {
-        ResourceStore store = getStore();
-        logger.debug("Loading CubeInstance " + store.getReadableResourcePath(path));
-
-        ProjectInstance projectInstance = store.getResource(path, ProjectInstance.class, PROJECT_SERIALIZER);
-        projectInstance.init();
-
-        if (StringUtils.isBlank(projectInstance.getName())) {
-            throw new IllegalStateException("Project name must not be blank");
-        }
-
-        if (triggerUpdate) {
-            projectMap.put(projectInstance.getName().toUpperCase(), projectInstance);
-        } else {
-            projectMap.putLocal(projectInstance.getName().toUpperCase(), projectInstance);
-        }
-
-        return projectInstance;
-    }
-
-    private synchronized void loadTables(String path) throws IOException {
-        ResourceStore store = getStore();
-        logger.debug("Loading CubeInstance " + store.getReadableResourcePath(path));
-
-        ProjectInstance projectInstance = store.getResource(path, ProjectInstance.class, PROJECT_SERIALIZER);
-        projectInstance.init();
-
+    private synchronized void loadTables(ProjectInstance projectInstance) throws IOException {
         String project = ProjectInstance.getNormalizedProjectName(projectInstance.getName());
         projectTables.removeAll(project);
 
@@ -445,54 +326,8 @@ public class CubeRealizationManager {
         }
     }
 
-    private void loadAllProjects() throws IOException {
-        ResourceStore store = getStore();
-        List<String> paths = store.collectResourceRecursively(ResourceStore.PROJECT_RESOURCE_ROOT, ".json");
-
-        logger.debug("Loading Project from folder " + store.getReadableResourcePath(ResourceStore.PROJECT_RESOURCE_ROOT));
-
-        for (String path : paths) {
-            loadProject(path, false);
-            loadTables(path);
-        }
-
-        logger.debug("Loaded " + paths.size() + " Project(s)");
-    }
-
-    private ProjectInstance addCubeToProject(String cubeName, String project, String user) throws IOException {
-        String newProjectName = ProjectInstance.getNormalizedProjectName(project);
-        ProjectInstance newProject = getProject(newProjectName);
-        if (newProject == null) {
-            newProject = this.createProject(newProjectName, user, "This is a project automatically added when adding cube " + cubeName);
-        }
-        newProject.addCube(cubeName);
-        saveResource(newProject);
-
-        return newProject;
-    }
-
-    private void saveResource(ProjectInstance proj) throws IOException {
-        ResourceStore store = getStore();
-        store.putResource(proj.getResourcePath(), proj, PROJECT_SERIALIZER);
-        afterProjectUpdated(proj);
-    }
-
-    private void deleteResource(ProjectInstance proj) throws IOException {
-        ResourceStore store = getStore();
-        store.deleteResource(proj.getResourcePath());
-        this.afterProjectDropped(proj);
-    }
-
-    private void afterProjectUpdated(ProjectInstance updatedProject) {
-        try {
-            this.loadProjectCache(updatedProject, true);
-        } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
-        }
-    }
-
-    private void afterProjectDropped(ProjectInstance droppedProject) {
-        this.removeProjectCache(droppedProject);
+    private ProjectInstance getProject(String projectName) {
+        return ProjectManager.getInstance(config).getProject(projectName);
     }
 
     // sync on update
@@ -573,11 +408,16 @@ public class CubeRealizationManager {
         return projectTable;
     }
 
-    private ResourceStore getStore() {
-        return ResourceStore.getStore(this.config);
+    private void saveResource(ProjectInstance projectInstance) throws IOException {
+        getProjectManager().updateProject(projectInstance);
     }
 
     private MetadataManager getMetadataManager() {
         return MetadataManager.getInstance(config);
     }
+
+    private ProjectManager getProjectManager() {
+        return ProjectManager.getInstance(config);
+    }
+
 }
