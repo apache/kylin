@@ -3,14 +3,14 @@ package com.kylinolap.storage.hbase.coprocessor.endpoint;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
-import com.kylinolap.common.persistence.HBaseConnection;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.invertedindex.TableRecord;
-import com.kylinolap.cube.invertedindex.TableRecordInfo;
+import com.kylinolap.invertedindex.IISegment;
+import com.kylinolap.invertedindex.index.TableRecord;
+import com.kylinolap.invertedindex.index.TableRecordInfo;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.DataType;
-import com.kylinolap.metadata.model.realization.FunctionDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.ConstantTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
@@ -25,7 +25,6 @@ import com.kylinolap.storage.tuple.Tuple;
 import com.kylinolap.storage.tuple.TupleInfo;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
@@ -43,7 +42,7 @@ public class EndpointTupleIterator implements ITupleIterator {
 
     private final static Logger logger = LoggerFactory.getLogger(EndpointTupleIterator.class);
 
-    private final CubeSegment seg;
+    private final IISegment seg;
     private final StorageContext context;
     private final List<FunctionDesc> measures;
 
@@ -63,7 +62,8 @@ public class EndpointTupleIterator implements ITupleIterator {
 
     int rowsInAllMetric = 0;
 
-    public EndpointTupleIterator(CubeSegment cubeSegment, ColumnDesc[] columnDescs,
+
+    public EndpointTupleIterator(IISegment cubeSegment, ColumnDesc[] columnDescs,
             TupleFilter rootFilter, Collection<TblColRef> groupBy, List<FunctionDesc> measures, StorageContext context, HConnection conn) throws Throwable {
 
         String tableName = cubeSegment.getStorageLocationIdentifier();

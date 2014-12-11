@@ -27,7 +27,7 @@ import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 
-import com.kylinolap.cube.measure.MeasureAggregator;
+import com.kylinolap.metadata.measure.MeasureAggregator;
 
 /**
  * @author yangli9

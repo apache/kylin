@@ -25,7 +25,7 @@ import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.model.CubeDesc.DeriveInfo;
 import com.kylinolap.dict.DateStrDictionary;
 import com.kylinolap.dict.lookup.LookupStringTable;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * @author xjiang

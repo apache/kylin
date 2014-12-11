@@ -16,26 +16,27 @@
 
 package com.kylinolap.storage.hbase;
 
-import static com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc.*;
 
 import java.io.IOException;
 import java.util.*;
 
-import com.kylinolap.cube.invertedindex.*;
-
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IISegment;
+import com.kylinolap.invertedindex.index.Slice;
+import com.kylinolap.invertedindex.index.TableRecord;
+import com.kylinolap.invertedindex.index.TableRecordBytes;
+import com.kylinolap.invertedindex.index.TableRecordInfo;
+import com.kylinolap.invertedindex.model.IIDesc;
+import com.kylinolap.invertedindex.model.IIKeyValueCodec;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.storage.hbase.coprocessor.endpoint.EndpointTupleIterator;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.client.HConnection;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.HBaseConnection;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.metadata.model.ColumnDesc;
-import com.kylinolap.metadata.model.realization.FunctionDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.IStorageEngine;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.TupleFilter;
@@ -49,13 +50,12 @@ import com.kylinolap.storage.tuple.TupleInfo;
 public class InvertedIndexStorageEngine implements IStorageEngine {
 
     private String hbaseUrl;
-    private CubeSegment seg;
+    private IISegment seg;
     private ColumnDesc[] columnDescs;
 
-    public InvertedIndexStorageEngine(CubeInstance cube) {
-        this.seg = cube.getFirstSegment();
-        //TODO: to refine
-        CubeDesc cubeDesc = this.seg.getCubeDesc();
+    public InvertedIndexStorageEngine(IIInstance ii) {
+        this.seg = ii.getFirstSegment();
+        IIDesc cubeDesc = this.seg.getIIDesc();
         this.columnDescs = MetadataManager.getInstance(cubeDesc.getConfig()).
                 getTableDesc(cubeDesc.getFactTable()).getColumns();
         this.hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
@@ -91,7 +91,7 @@ public class InvertedIndexStorageEngine implements IStorageEngine {
 
             HConnection hconn = HBaseConnection.get(hbaseUrl);
             String tableName = seg.getStorageLocationIdentifier();
-            kvIterator = new HBaseClientKVIterator(hconn, tableName, HBASE_FAMILY_BYTES, HBASE_QUALIFIER_BYTES);
+            kvIterator = new HBaseClientKVIterator(hconn, tableName, IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES);
             codec = new IIKeyValueCodec(new TableRecordInfo(seg));
             sliceIterator = codec.decodeKeyValue(kvIterator).iterator();
         }

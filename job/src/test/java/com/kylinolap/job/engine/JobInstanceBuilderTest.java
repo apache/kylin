@@ -29,7 +29,7 @@ import org.junit.Test;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.cube.CubeBuildTypeEnum;
+import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
@@ -74,9 +74,9 @@ public class JobInstanceBuilderTest extends LocalFileMetadataTestCase {
         CubeInstance cube = cubeManager.getCube(cubeName);
 
         // initial segment
-        CubeSegment segment = cubeManager.allocateSegments(cube, CubeBuildTypeEnum.BUILD, 0, dateEnd).get(0);
+        CubeSegment segment = cubeManager.allocateSegments(cube, RealizationBuildTypeEnum.BUILD, 0, dateEnd).get(0);
 
-        JobInstance jobInstance = jobManager.createJob(cubeName, segment.getName(), UUID.randomUUID().toString(), CubeBuildTypeEnum.BUILD);
+        JobInstance jobInstance = jobManager.createJob(cubeName, segment.getName(), UUID.randomUUID().toString(), RealizationBuildTypeEnum.BUILD);
 
         String actual = JsonUtil.writeValueAsIndentString(jobInstance);
         System.out.println(actual);
@@ -149,9 +149,9 @@ public class JobInstanceBuilderTest extends LocalFileMetadataTestCase {
         CubeInstance cube = cubeManager.getCube(cubeName);
 
         // initial segment
-        CubeSegment segment = CubeManager.getInstance(this.getTestConfig()).allocateSegments(cube, CubeBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L).get(0);
+        CubeSegment segment = CubeManager.getInstance(this.getTestConfig()).allocateSegments(cube, RealizationBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L).get(0);
 
-        JobInstance jobInstance = jobManager.createJob(cubeName, segment.getName(), UUID.randomUUID().toString(), CubeBuildTypeEnum.MERGE);
+        JobInstance jobInstance = jobManager.createJob(cubeName, segment.getName(), UUID.randomUUID().toString(), RealizationBuildTypeEnum.MERGE);
 
         String actual = JsonUtil.writeValueAsIndentString(jobInstance);
         System.out.println(actual);

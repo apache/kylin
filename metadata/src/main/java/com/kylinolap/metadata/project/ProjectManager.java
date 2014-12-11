@@ -23,8 +23,8 @@ import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.common.restclient.Broadcaster;
 import com.kylinolap.common.restclient.SingleValueCache;
-import com.kylinolap.metadata.model.realization.DataModelRealizationType;
-import com.kylinolap.metadata.model.realization.IDataModelRealization;
+import com.kylinolap.metadata.realization.DataModelRealizationType;
+import com.kylinolap.metadata.realization.IDataModelRealization;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +44,7 @@ public class ProjectManager {
     // static cached instances
     private static final ConcurrentHashMap<KylinConfig, ProjectManager> CACHE = new ConcurrentHashMap<KylinConfig, ProjectManager>();
     private static final Serializer<ProjectInstance> PROJECT_SERIALIZER = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
+
     private ConcurrentMap<Class<? extends IDataModelRealization>, Class<? extends IDataModelRealization>> realizations = Maps.newConcurrentMap();
 
     private KylinConfig config;

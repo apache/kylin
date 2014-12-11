@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 
+import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -48,7 +49,6 @@ import com.kylinolap.common.util.HadoopUtil;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.CubeSegmentStatusEnum;
 
 /**
  * @author yangli9
@@ -263,7 +263,7 @@ public class DeployCoprocessorCLI {
 
         ArrayList<String> result = new ArrayList<String>();
         for (CubeInstance cube : cubeMgr.listAllCubes()) {
-            for (CubeSegment seg : cube.getSegments(CubeSegmentStatusEnum.READY)) {
+            for (CubeSegment seg : cube.getSegments(SegmentStatusEnum.READY)) {
                 String tableName = seg.getStorageLocationIdentifier();
                 if (StringUtils.isBlank(tableName) == false)
                     result.add(tableName);

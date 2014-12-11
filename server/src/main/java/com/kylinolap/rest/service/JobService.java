@@ -29,7 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
-import com.kylinolap.cube.CubeBuildTypeEnum;
+import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.exception.CubeIntegrityException;
@@ -96,7 +96,7 @@ public class JobService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public String submitJob(CubeInstance cube, long startDate, long endDate, CubeBuildTypeEnum buildType) throws IOException, JobException, InvalidJobInstanceException {
+    public String submitJob(CubeInstance cube, long startDate, long endDate, RealizationBuildTypeEnum buildType) throws IOException, JobException, InvalidJobInstanceException {
 
         List<JobInstance> jobInstances = this.getJobManager().listJobs(cube.getName(), null);
         for (JobInstance jobInstance : jobInstances) {

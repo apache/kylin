@@ -35,9 +35,9 @@ import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.DimensionDesc;
 import com.kylinolap.metadata.model.JoinDesc;
-import com.kylinolap.metadata.model.realization.FunctionDesc;
-import com.kylinolap.metadata.model.realization.ParameterDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.ParameterDesc;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.query.relnode.OLAPContext;
 
 /**
@@ -65,36 +65,15 @@ public class QueryRouter {
             bestCube = findBestMatchCube(cubeRealizationManager, olapContext);
         }
 
-        CubeInstance bestCube = null;
+        if (bestCube == null) {
+            throw new CubeNotFoundException("Can't find cube for fact table " + olapContext.firstTableScan.getCubeTable() //
+                    + " in project " + olapContext.olapSchema.getProjectName() + " with dimensions " //
+                    + getDimensionColumns(olapContext) + " and measures " + olapContext.aggregations //
+                    + ". Also please check whether join types match what defined in Cube.");
+        }
 
-        //TODO: to refine
-        bestCube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube("test_kylin_cube_ii");
         return bestCube;
-//
-//        // NOTE: since some query has no groups and projections are the superset of groups, we choose projections.
-//        ProjectManager projectManager = ProjectManager.getInstance(olapContext.olapSchema.getConfig());
-//
-//        if (olapContext.isSimpleQuery()) {
-//            // if simple query like "select X from fact table", just return the cube with most dimensions
-//            // Note that this will only succeed to get best cube if the current simple query is on fact table.
-//            // Simple query on look up table is handled in OLAPTableScan.genExecFunc
-//            // In other words, for simple query on lookup tables, bestCube here will be assigned null in this method
-//            bestCube = findCubeWithMostDimensions(projectManager, olapContext);
-//        }
-//
-//        if (bestCube == null) {
-//            bestCube = findBestMatchCube(projectManager, olapContext);
-//        }
-//
-//
-//        if (bestCube == null) {
-//            throw new CubeNotFoundException("Can't find cube for fact table " + olapContext.firstTableScan.getCubeTable() //
-//                    + " in project " + olapContext.olapSchema.getProjectName() + " with dimensions " //
-//                    + getDimensionColumns(olapContext) + " and measures " + olapContext.aggregations //
-//                    + ". Also please check whether join types match what defined in Cube.");
-//        }
-//
-//        return bestCube;
+
     }
 
     private static CubeInstance findCubeWithMostDimensions(CubeRealizationManager projectManager, OLAPContext olapContext) {

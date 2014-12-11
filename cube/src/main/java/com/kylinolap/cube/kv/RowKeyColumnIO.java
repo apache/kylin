@@ -27,7 +27,7 @@ import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.model.RowKeyDesc;
 import com.kylinolap.dict.Dictionary;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * Read/Write column values from/into bytes

@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
-import com.kylinolap.metadata.model.realization.DataModelRealizationType;
+import com.kylinolap.metadata.realization.DataModelRealizationType;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;

@@ -17,6 +17,7 @@ package com.kylinolap.cube.cli;
 
 import java.io.IOException;
 
+import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,9 +25,8 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.CubeSegmentStatusEnum;
 import com.kylinolap.cube.model.DimensionDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 
 public class DictionaryGeneratorCLI {
 
@@ -34,7 +34,7 @@ public class DictionaryGeneratorCLI {
 
     public static void processSegment(KylinConfig config, String cubeName, String segmentName, String factColumnsPath) throws IOException {
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
-        CubeSegment segment = cube.getSegment(segmentName, CubeSegmentStatusEnum.NEW);
+        CubeSegment segment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
 
         processSegment(config, segment, factColumnsPath);
     }

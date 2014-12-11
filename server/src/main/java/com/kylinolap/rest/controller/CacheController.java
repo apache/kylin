@@ -72,7 +72,7 @@ public class CacheController extends BasicController {
             projectService.cleanDataCache();
             cubeMgmtService.cleanDataCache();
             break;
-        case CUBE:
+        case REALIZATION:
             logger.debug("Reload cube " + name + " with type:" + type + ", event type " + event);
             cubeMgmtService.reloadMetadataCache();
             if ("ALL".equalsIgnoreCase(name.toUpperCase())) {

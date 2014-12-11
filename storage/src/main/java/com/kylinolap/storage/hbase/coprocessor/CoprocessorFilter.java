@@ -19,7 +19,7 @@ package com.kylinolap.storage.hbase.coprocessor;
 import java.util.Collection;
 import java.util.Set;
 
-import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
+import com.kylinolap.invertedindex.IISegment;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import com.google.common.collect.Sets;
@@ -27,7 +27,7 @@ import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.kv.RowKeyColumnIO;
 import com.kylinolap.dict.Dictionary;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.filter.ColumnTupleFilter;
 import com.kylinolap.storage.filter.CompareTupleFilter;
 import com.kylinolap.storage.filter.ConstantTupleFilter;
@@ -74,9 +74,6 @@ public class CoprocessorFilter {
                 return filter;
             }
 
-            if (isFilterOnIIMetric(col)) {
-                return filter;
-            }
 
             String nullString = nullString(col);
             Collection<String> constValues = compf.getValues();
@@ -161,11 +158,6 @@ public class CoprocessorFilter {
             return result;
         }
 
-        private boolean isFilterOnIIMetric(TblColRef column) {
-            InvertedIndexDesc iidesc = this.seg.getCubeInstance().getInvertedIndexDesc();
-            return ((iidesc != null) && (iidesc.isMetricsCol(column)));
-        }
-
         private String nullString(TblColRef column) {
             byte[] id = new byte[columnIO.getColumnLength(column)];
             for (int i = 0; i < id.length; i++) {
@@ -182,6 +174,13 @@ public class CoprocessorFilter {
         }
 
 
+    }
+
+    public static CoprocessorFilter fromFilter(final IISegment seg, TupleFilter rootFilter) {
+        // translate constants into dictionary IDs via a serialize copy
+        byte[] bytes = TupleFilterSerializer.serialize(rootFilter, null);
+        TupleFilter copy = TupleFilterSerializer.deserialize(bytes);
+        return new CoprocessorFilter(copy);
     }
 
     public static CoprocessorFilter fromFilter(final CubeSegment seg, TupleFilter rootFilter) {

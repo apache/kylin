@@ -13,6 +13,8 @@ import com.kylinolap.dict.lookup.SnapshotTable;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.project.ProjectInstance;
+import com.kylinolap.metadata.realization.RealizationStatusEnum;
+import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -83,11 +85,11 @@ public class CubeMigrationCLI {
         CubeInstance cube = cubeManager.getCube(cubeName);
         logger.info("cube to be moved is : " + cubeName);
 
-        if (cube.getStatus() != CubeStatusEnum.READY)
+        if (cube.getStatus() != RealizationStatusEnum.READY)
             throw new IllegalStateException("Cannot migrate cube that is not in READY state.");
 
         for (CubeSegment segment : cube.getSegments()) {
-            if (segment.getStatus() != CubeSegmentStatusEnum.READY) {
+            if (segment.getStatus() != SegmentStatusEnum.READY) {
                 throw new IllegalStateException("At least one segment is not in READY state");
             }
         }
