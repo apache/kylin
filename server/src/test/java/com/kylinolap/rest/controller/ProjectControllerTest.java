@@ -33,6 +33,17 @@ public class ProjectControllerTest extends ServiceTestBase {
 
         projectController = new ProjectController();
         projectController.setProjectService(projectService);
+        try {
+            projectController.deleteProject("new_project");
+        } catch (InternalErrorException e) {
+            //project doesn't exist
+        }
+        try {
+            projectController.deleteProject("new_project_2");
+        } catch (InternalErrorException e) {
+            //project doesn't exist
+        }
+
     }
 
     @Test

@@ -56,12 +56,14 @@ public class CubeRealizationManagerTest extends LocalFileMetadataTestCase {
 
     @Test(expected = IllegalStateException.class)
     public void testDropNonemptyProject1() throws IOException {
-        ProjectManager.getInstance(this.getTestConfig()).dropProject("DEFAULT");
+        ProjectInstance project = ProjectManager.getInstance(this.getTestConfig()).dropProject("DEFAULT");
+        CubeRealizationManager.getInstance(this.getTestConfig()).unloadProject(project);
     }
 
     @Test(expected = IllegalStateException.class)
     public void testDropNonemptyProject2() throws IOException {
-        ProjectManager.getInstance(this.getTestConfig()).dropProject("DEFAULT???");
+        ProjectInstance project = ProjectManager.getInstance(this.getTestConfig()).dropProject("DEFAULT???");
+        CubeRealizationManager.getInstance(this.getTestConfig()).unloadProject(project);
     }
 
     @Test
@@ -89,11 +91,13 @@ public class CubeRealizationManagerTest extends LocalFileMetadataTestCase {
         assertTrue(CubeManager.getInstance(this.getTestConfig()).listAllCubes().size() == originalCubeCount + 1);
 
         projectmanager.updateCubeToProject("cube_in_alien_project", "default", null);
+        CubeRealizationManager.getInstance(getTestConfig()).loadProject(projectmanager.getProject("default"));
         assertTrue(cubeRealizationManager.listAllCubes("ALIEN").size() == 0);
         assertTrue(cubeRealizationManager.listAllCubes("default").size() == originalCubeCountInDefault + 1);
         assertTrue(cubeRealizationManager.listAllCubes("default").contains(createdCube));
 
         projectmanager.updateCubeToProject("cube_in_alien_project", "alien", null);
+        CubeRealizationManager.getInstance(getTestConfig()).loadProject(projectmanager.getProject("default"));
         assertTrue(cubeRealizationManager.listAllCubes("ALIEN").size() == 1);
         assertTrue(cubeRealizationManager.listAllCubes("default").size() == originalCubeCountInDefault);
         assertTrue(cubeRealizationManager.listAllCubes("alien").contains(createdCube));
@@ -107,7 +111,8 @@ public class CubeRealizationManagerTest extends LocalFileMetadataTestCase {
         assertTrue(projectmanager.listAllProjects().size() == originalProjectCount + 1);
         assertTrue(CubeManager.getInstance(this.getTestConfig()).listAllCubes().size() == originalCubeCount);
 
-        projectmanager.dropProject("alien");
+        ProjectInstance project = projectmanager.dropProject("alien");
+        CubeRealizationManager.getInstance(this.getTestConfig()).unloadProject(project);
         assertTrue(projectmanager.listAllProjects().size() == originalProjectCount);
     }
 
@@ -158,10 +163,13 @@ public class CubeRealizationManagerTest extends LocalFileMetadataTestCase {
         assertTrue(cubeRealizationManager.getCubesByTable("default", "default.test_kylin_fact").contains(cube));
 
         ProjectManager.getInstance(getTestConfig()).removeCubeFromProjects(cube.getName());
+        CubeRealizationManager.getInstance(getTestConfig()).loadAllProjects();
+
 
         assertTrue(!cubeRealizationManager.getCubesByTable("default", "default.test_kylin_fact").contains(cube));
 
         ProjectManager.getInstance(getTestConfig()).updateCubeToProject(cube.getName(), "default", "tester");
+        CubeRealizationManager.getInstance(getTestConfig()).loadProject(ProjectManager.getInstance(getTestConfig()).getProject("default"));
 
         assertTrue(cubeRealizationManager.getCubesByTable("default", "default.test_kylin_fact").contains(cube));
     }
