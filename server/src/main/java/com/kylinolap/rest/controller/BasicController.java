@@ -43,12 +43,11 @@ public class BasicController {
     @Autowired
     protected MetricsService metricsService;
 
-    // ~ exception handlers ~
+    // ~ general handler ~
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
     @ResponseBody
     ErrorResponse handleError(HttpServletRequest req, Exception ex) {
-        logger.error("Internal error (Exception) throw out of controller", ex);
         return new ErrorResponse(req.getRequestURL().toString(), ex);
     }
     
