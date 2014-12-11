@@ -18,6 +18,7 @@ package com.kylinolap.job.hadoop.cube;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.cli.Option;
@@ -66,10 +67,14 @@ public class StorageCleanupJob extends AbstractHadoopJob {
     @Override
     public int run(String[] args) throws Exception {
         Options options = new Options();
+        
+        log.info("----- jobs args: " + Arrays.toString(args));
         try {
             options.addOption(OPTION_DELETE);
             parseOptions(options, args);
 
+            log.info("options: '" + getOptionsAsString() + "'");
+            log.info("delete option value: '" + getOptionValue(OPTION_DELETE) + "'");
             delete = Boolean.parseBoolean(getOptionValue(OPTION_DELETE));
 
             Configuration conf = HBaseConfiguration.create(getConf());
