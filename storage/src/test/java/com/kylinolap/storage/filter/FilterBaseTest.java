@@ -21,9 +21,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
 import com.kylinolap.storage.tuple.Tuple;
 import com.kylinolap.storage.tuple.TupleInfo;
@@ -39,7 +39,7 @@ public class FilterBaseTest {
 
         TableDesc t1 = new TableDesc();
         t1.setName("TEST_KYLIN_FACT");
-        t1.setDatabase("EDW");
+        t1.setDatabase("DEFAULT");
         ColumnDesc c1 = new ColumnDesc();
         c1.setName("CAL_DT");
         c1.setDatatype("String");
@@ -49,7 +49,7 @@ public class FilterBaseTest {
 
         TableDesc t2 = new TableDesc();
         t2.setName("TEST_CATEGORY_GROUPINGS");
-        t2.setDatabase("EDW");
+        t2.setDatabase("DEFAULT");
         ColumnDesc c2 = new ColumnDesc();
         c2.setName("META_CATEG_NAME");
         c1.setDatatype("String");

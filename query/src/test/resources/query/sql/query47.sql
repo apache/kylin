@@ -1,1 +1,1 @@
-select count(*) as CNT  from test_seller_type_dim
+select count(*) as CNT  from edw.test_seller_type_dim

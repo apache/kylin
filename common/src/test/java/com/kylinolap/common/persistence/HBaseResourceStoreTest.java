@@ -32,10 +32,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.HBaseMetadataTestCase;
+import com.kylinolap.common.util.HBaseMiniclusterMetadataTestCase;
 import com.kylinolap.common.util.HadoopUtil;
 
-public class HBaseResourceStoreTest extends HBaseMetadataTestCase {
+public class HBaseResourceStoreTest extends HBaseMiniclusterMetadataTestCase { // HBaseMetadataTestCase {
 
     @Before
     public void setup() throws Exception {

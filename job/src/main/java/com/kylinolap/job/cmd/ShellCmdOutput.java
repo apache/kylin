@@ -25,7 +25,7 @@ import com.kylinolap.job.constant.JobStepStatusEnum;
  * @author xjiang
  * 
  */
-public class ShellCmdOutput implements ICommandOutput {
+public class ShellCmdOutput extends BaseCommandOutput implements ICommandOutput {
 
     protected static final Logger log = LoggerFactory.getLogger(ShellCmdOutput.class);
 

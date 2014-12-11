@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.kylinolap.cube.project.CubeRealizationManager;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -39,7 +40,6 @@ import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.CubeSegmentStatusEnum;
 import com.kylinolap.cube.exception.CubeIntegrityException;
-import com.kylinolap.cube.project.ProjectManager;
 import com.kylinolap.job.JobDAO;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.JobInstance.JobStep;
@@ -53,7 +53,6 @@ import com.kylinolap.metadata.MetadataManager;
 
 /**
  * @author ysong1
- * 
  */
 public class GenericJobEngineTest {
     private static String cubeName = "test_kylin_cube_with_slr_empty";
@@ -111,21 +110,21 @@ public class GenericJobEngineTest {
     @BeforeClass
     public static void beforeClass() throws Exception {
 
-        FileUtils.forceMkdir(new File("/tmp/kylin/logs/"));
+        FileUtils.forceMkdir(new File(KylinConfig.getInstanceFromEnv().getKylinJobLogDir()));
 
         FileUtils.deleteDirectory(new File(tempTestMetadataUrl));
         FileUtils.copyDirectory(new File(AbstractKylinTestCase.LOCALMETA_TEST_DATA), new File(tempTestMetadataUrl));
         System.setProperty(KylinConfig.KYLIN_CONF, tempTestMetadataUrl);
 
         // deploy files to hdfs
-        SSHClient hadoopCli = new SSHClient(getHadoopCliHostname(), getHadoopCliUsername(), getHadoopCliPassword(), null);
+        SSHClient hadoopCli = new SSHClient(getHadoopCliHostname(), getHadoopCliUsername(), getHadoopCliPassword());
         scpFilesToHdfs(hadoopCli, new String[] { "src/test/resources/json/dummy_jobinstance.json" }, mrInputDir);
         // deploy sample java jar
         hadoopCli.scpFileToRemote("src/test/resources/jarfile/SampleJavaProgram.jarfile", "/tmp");
         hadoopCli.scpFileToRemote("src/test/resources/jarfile/SampleBadJavaProgram.jarfile", "/tmp");
 
         // create log dir
-        hadoopCli.execCommand("mkdir -p /tmp/kylin/logs/");
+        hadoopCli.execCommand("mkdir -p " + KylinConfig.getInstanceFromEnv().getKylinJobLogDir());
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         kylinConfig.setMetadataUrl(tempTestMetadataUrl);
 
@@ -157,13 +156,13 @@ public class GenericJobEngineTest {
 
     @Before
     public void before() throws Exception {
-        SSHClient hadoopCli = new SSHClient(getHadoopCliHostname(), getHadoopCliUsername(), getHadoopCliPassword(), null);
+        SSHClient hadoopCli = new SSHClient(getHadoopCliHostname(), getHadoopCliUsername(), getHadoopCliPassword());
         removeHdfsDir(hadoopCli, mrOutputDir1);
         removeHdfsDir(hadoopCli, mrOutputDir2);
 
         MetadataManager.removeInstance(KylinConfig.getInstanceFromEnv());
         CubeManager.removeInstance(KylinConfig.getInstanceFromEnv());
-        ProjectManager.removeInstance(KylinConfig.getInstanceFromEnv());
+        CubeRealizationManager.removeInstance(KylinConfig.getInstanceFromEnv());
     }
 
     @Test(expected = InvalidJobInstanceException.class)

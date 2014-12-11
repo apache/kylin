@@ -32,7 +32,7 @@ import com.google.common.collect.Lists;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.dict.lookup.ReadableTable;
 import com.kylinolap.dict.lookup.TableReader;
-import com.kylinolap.metadata.model.schema.DataType;
+import com.kylinolap.metadata.model.DataType;
 
 /**
  * @author yangli9
@@ -111,26 +111,35 @@ public class DictionaryGenerator {
     }
 
     private static Dictionary buildDateStrDict(List<byte[]> values, int baseId, int nSamples, ArrayList samples) {
+        final int BAD_THRESHOLD = 2;
         String matchPattern = null;
+        
         for (String ptn : DATE_PATTERNS) {
             matchPattern = ptn; // be optimistic
+            int badCount = 0;
             SimpleDateFormat sdf = new SimpleDateFormat(ptn);
             for (byte[] value : values) {
+                if (value.length == 0)
+                    continue;
+
                 String str = Bytes.toString(value);
                 try {
                     sdf.parse(str);
                     if (samples.size() < nSamples && samples.contains(str) == false)
                         samples.add(str);
                 } catch (ParseException e) {
-                    // not match pattern, try next
-                    matchPattern = null;
-                    break;
+                    logger.info("Unrecognized datetime value: " + str);
+                    badCount++;
+                    if (badCount > BAD_THRESHOLD) {
+                        matchPattern = null;
+                        break;
+                    }
                 }
             }
             if (matchPattern != null)
                 return new DateStrDictionary(matchPattern, baseId);
         }
-        throw new IllegalStateException("Unrecognized datetime values: " + samples);
+        throw new IllegalStateException("Unrecognized datetime value");
     }
 
     private static Dictionary buildStringDict(List<byte[]> values, int baseId, int nSamples, ArrayList samples) {

@@ -24,7 +24,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * @author George Song (ysong1)

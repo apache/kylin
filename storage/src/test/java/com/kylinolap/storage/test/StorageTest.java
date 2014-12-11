@@ -26,14 +26,14 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.HBaseMetadataTestCase;
+import com.kylinolap.common.util.HBaseMiniclusterMetadataTestCase;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.ParameterDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
+import com.kylinolap.metadata.model.realization.FunctionDesc;
+import com.kylinolap.metadata.model.realization.ParameterDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.IStorageEngine;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.StorageEngineFactory;
@@ -47,7 +47,7 @@ import com.kylinolap.storage.hbase.ScanOutOfLimitException;
 import com.kylinolap.storage.tuple.ITuple;
 import com.kylinolap.storage.tuple.ITupleIterator;
 
-public class StorageTest extends HBaseMetadataTestCase {
+public class StorageTest extends HBaseMiniclusterMetadataTestCase {
 
     private IStorageEngine storageEngine;
     private CubeInstance cube;
@@ -89,7 +89,7 @@ public class StorageTest extends HBaseMetadataTestCase {
         int count = search(groups, aggregations, filter, context);
         assertTrue(count > 0);
     }
-
+/*
     @Test
     public void test02() {
         List<TblColRef> groups = buildGroups();
@@ -128,7 +128,7 @@ public class StorageTest extends HBaseMetadataTestCase {
         int count = search(groups, aggregations, null, context);
         assertTrue(count > 0);
     }
-
+*/
     private int search(List<TblColRef> groups, List<FunctionDesc> aggregations, TupleFilter filter, StorageContext context) {
         int count = 0;
         ITupleIterator iterator = null;

@@ -31,6 +31,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.quartz.SchedulerException;
 
+import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.ClasspathUtil;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
@@ -169,10 +170,11 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         waitCubeBuilt(jobs);
 
         jobs.clear();
+
         // final submit a merge job, start date is 0, end date is 20220101000000
-        dateEnd = f.parse("2022-01-01").getTime();
-        jobs.addAll(this.submitJob("test_kylin_cube_without_slr_left_join_empty", 0, dateEnd, CubeBuildTypeEnum.MERGE));
-        waitCubeBuilt(jobs);
+        //dateEnd = f.parse("2022-01-01").getTime();
+        //jobs.addAll(this.submitJob("test_kylin_cube_without_slr_left_join_empty", 0, dateEnd, CubeBuildTypeEnum.MERGE));
+        //waitCubeBuilt(jobs);
     }
 
     @SuppressWarnings("unused")
@@ -223,7 +225,6 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
     }
 
     protected List<String> submitJob(String cubename, long startDate, long endDate, CubeBuildTypeEnum jobType) throws SchedulerException, IOException, InvalidJobInstanceException, CubeIntegrityException {
-        List<String> jobList = new ArrayList<String>();
 
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         CubeInstance cube = cubeMgr.getCube(cubename);
@@ -233,13 +234,19 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         List<CubeSegment> newSegments = cubeMgr.allocateSegments(cube, jobType, startDate, endDate);
         System.out.println(JsonUtil.writeValueAsIndentString(cube));
 
+        List<String> jobUuids = Lists.newArrayList();
+        List<JobInstance> jobs = Lists.newArrayList();
         for (CubeSegment seg : newSegments) {
-            JobInstance newJob = jobManager.createJob(cubename, seg.getName(), jobType);
-            // submit job to store
-            String jobUuid = jobManager.submitJob(newJob);
-            jobList.add(jobUuid);
+            String uuid = seg.getUuid();
+            jobUuids.add(uuid);
+            jobs.add(jobManager.createJob(cubename, seg.getName(), uuid, jobType));
+            seg.setLastBuildJobID(uuid);
         }
-
-        return jobList;
+        cubeMgr.updateCube(cube);
+        for (JobInstance job: jobs) {
+            // submit job to store
+            jobManager.submitJob(job);
+        }
+        return jobUuids;
     }
 }

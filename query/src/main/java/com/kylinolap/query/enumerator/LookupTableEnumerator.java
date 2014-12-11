@@ -24,9 +24,9 @@ import net.hydromatic.linq4j.Enumerator;
 
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.model.DimensionDesc;
 import com.kylinolap.dict.lookup.LookupStringTable;
-import com.kylinolap.metadata.model.cube.DimensionDesc;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.query.relnode.OLAPContext;
 import com.kylinolap.query.schema.OLAPTable;
 import com.kylinolap.storage.tuple.Tuple;

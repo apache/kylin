@@ -3,7 +3,7 @@ package com.kylinolap.storage.filter;
 import java.util.List;
 
 import com.kylinolap.dict.Dictionary;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 

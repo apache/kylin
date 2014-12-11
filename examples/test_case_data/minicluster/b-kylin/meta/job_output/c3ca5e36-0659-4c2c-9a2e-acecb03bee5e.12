@@ -1,0 +1,6 @@
+{
+  "uuid" : null,
+  "name" : "c3ca5e36-0659-4c2c-9a2e-acecb03bee5e.12",
+  "output" : "Start to execute command: \n -input /tmp/kylin-c3ca5e36-0659-4c2c-9a2e-acecb03bee5e/test_kylin_cube_with_slr_empty/hfile/ -htablename KYLIN_M6R1O4K4HP -cubename test_kylin_cube_with_slr_empty\nCommand execute return code 0\n",
+  "last_modified" : 1416538246135
+}

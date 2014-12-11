@@ -22,6 +22,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.kylinolap.cube.project.CubeRealizationManager;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -38,7 +39,6 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.exception.CubeIntegrityException;
-import com.kylinolap.cube.project.ProjectManager;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryGenerator;
 import com.kylinolap.dict.DictionaryInfo;
@@ -47,7 +47,7 @@ import com.kylinolap.dict.TrieDictionary;
 import com.kylinolap.dict.lookup.TableSignature;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * @author honma
@@ -93,7 +93,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
         MetadataManager.removeInstance(this.getTestConfig());
         CubeManager.removeInstance(this.getTestConfig());
-        ProjectManager.removeInstance(this.getTestConfig());
+        CubeRealizationManager.removeInstance(this.getTestConfig());
         DictionaryManager.removeInstance(this.getTestConfig());
 
         // hack for distributed cache

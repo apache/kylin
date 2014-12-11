@@ -64,6 +64,10 @@ public class MiniClusterMetadataTestCase extends HBaseMetadataTestCase {
 
     }
     
+    protected void importHBaseData() {
+        
+    }
+    
     
 
     @Override
@@ -72,7 +76,7 @@ public class MiniClusterMetadataTestCase extends HBaseMetadataTestCase {
         System.clearProperty(KylinConfig.KYLIN_CONF);
         KylinConfig.destoryInstance();
         try {
-            testUtil.shutdownMiniMapReduceCluster();
+//            testUtil.shutdownMiniMapReduceCluster();
             testUtil.shutdownMiniCluster();
         } catch (Exception e) {
             // TODO Auto-generated catch block

@@ -36,12 +36,12 @@ import com.kylinolap.cube.common.RowKeySplitter;
 import com.kylinolap.cube.common.SplittedBytes;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowConstants;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * @author ysong1, honma
@@ -65,20 +65,22 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
 
     private HashMap<TblColRef, Boolean> dictsNeedMerging = new HashMap<TblColRef, Boolean>();
 
+    private static final Pattern JOB_NAME_PATTERN = Pattern.compile("kylin-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})");
+
     private Boolean checkNeedMerging(TblColRef col) throws IOException {
         Boolean ret = dictsNeedMerging.get(col);
         if (ret != null)
             return ret;
         else {
-            ret = cubeDesc.getRowkey().isUseDictionary(col) && cubeDesc.getFactTable().equalsIgnoreCase((String) DictionaryManager.getInstance(config).decideSourceData(cubeDesc, col, null)[0]);
+            String dictTable = (String) DictionaryManager.getInstance(config).decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null)[0];
+            ret = cubeDesc.getRowkey().isUseDictionary(col) && cubeDesc.getFactTable().equalsIgnoreCase(dictTable);
             dictsNeedMerging.put(col, ret);
             return ret;
         }
     }
 
     private String extractJobIDFromPath(String path) {
-        Pattern pattern = Pattern.compile("kylin-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})");
-        Matcher matcher = pattern.matcher(path);
+        Matcher matcher = JOB_NAME_PATTERN.matcher(path);
         // check the first occurance
         if (matcher.find()) {
             return matcher.group(1);
@@ -87,10 +89,11 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
         }
     }
 
-    private CubeSegment findSegmentWithJobID(String jobID, CubeInstance cubeInstance) {
+    private CubeSegment findSegmentWithUuid(String jobID, CubeInstance cubeInstance) {
         for (CubeSegment segment : cubeInstance.getSegments()) {
-            if (segment.getLastBuildJobID().equalsIgnoreCase(jobID))
+            if (segment.getUuid().equalsIgnoreCase(jobID)) {
                 return segment;
+            }
         }
 
         throw new IllegalStateException("No merging segment's last build job ID equals " + jobID);
@@ -116,7 +119,7 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
         org.apache.hadoop.mapreduce.InputSplit inputSplit = context.getInputSplit();
         String filePath = ((FileSplit) inputSplit).getPath().toString();
         String jobID = extractJobIDFromPath(filePath);
-        sourceCubeSegment = findSegmentWithJobID(jobID, cube);
+        sourceCubeSegment = findSegmentWithUuid(jobID, cube);
 
         this.rowKeySplitter = new RowKeySplitter(sourceCubeSegment, 65, 255);
     }

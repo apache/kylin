@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 import com.kylinolap.common.util.BytesUtil;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.storage.tuple.ITuple;
 
 /**

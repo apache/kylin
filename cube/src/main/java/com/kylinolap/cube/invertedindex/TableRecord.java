@@ -17,7 +17,6 @@
 package com.kylinolap.cube.invertedindex;
 
 import com.kylinolap.dict.DateStrDictionary;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
 
@@ -79,13 +78,6 @@ public class TableRecord extends TableRecordBytes {
             return info().dict(col).getValueFromId(getValueID(col));
     }
 
-    public void setValueBytes(int col, ImmutableBytesWritable bytes) {
-        System.arraycopy(bytes.get(), bytes.getOffset(), buf, info.offset(col), info.length(col));
-    }
-    
-    public void getValueBytes(int col, ImmutableBytesWritable bytes) {
-        bytes.set(buf, info.offset(col), info.length(col));
-    }
 
     private void setValueMetrics(int col, LongWritable value) {
         info().codec(col).write(value, buf, info.offset(col));

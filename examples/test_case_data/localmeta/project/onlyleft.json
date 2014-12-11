@@ -1,6 +1,18 @@
 {
 "uuid" : "1eaca32a-a33e-4b69-83dd-0bb8b1f8c93b",
   "name": "onlyleft",
+  "datamodels": [
+    {
+      "name": "test_kylin_with_slr_left_join_model_desc",
+      "type": "CUBE",
+      "realization": "test_kylin_cube_with_slr_left_join_empty"
+    },
+    {
+      "name": "test_kylin_without_slr_left_join_model_desc",
+      "type": "CUBE",
+      "realization": "test_kylin_cube_without_slr_left_join_empty"
+    }
+  ],
   "cubes": [
     "test_kylin_cube_with_slr_left_join_empty",
     "test_kylin_cube_without_slr_left_join_empty"
