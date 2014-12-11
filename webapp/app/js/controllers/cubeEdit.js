@@ -206,18 +206,25 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                     CubeService.update({}, {cubeDescData: $scope.state.cubeSchema, cubeName: $routeParams.cubeName, project: $scope.state.project}, function (request) {
                         if (request.successful) {
                             $scope.state.cubeSchema = request.cubeDescData;
-                            SweetAlert.swal('success', "Update cube successful.", 'success');
+                            MessageService.sendMsg("Update cube successful.","success",{},true);
                             if(design_form){
                                 design_form.$invalid = true;
                             }
                         } else {
-                            SweetAlert.swal('Oops...', request.message, 'error');
+                            MessageService.sendMsg("<h2>Failed to deal the request:</h2><pre>"+$scope.state.cubeSchema+"</pre>","error",{},true);
                         }
                         //end loading
                         loadingRequest.hide();
                         recoveryCubeStatus();
-                    }, function () {
-//                            SweetAlert.swal('Oops...', 'Action Failed: ' + msg, 'error');
+                    }, function (e) {
+
+                        if(e.data&& e.data.exception){
+                            var message =e.data.exception;
+                            var msg = !!(message) ? message : 'Failed to take action.';
+                            MessageService.sendMsg("<h2>Failed to deal the request:"+msg+"</h2><pre>"+$scope.state.cubeSchema+"</pre>","error",{},true);
+                        }else{
+                            SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                        }
                         loadingRequest.hide();
                         recoveryCubeStatus();
                     });
@@ -226,17 +233,29 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                     CubeService.save({}, {cubeDescData: $scope.state.cubeSchema, project: $scope.state.project}, function (request) {
                         if (request.successful) {
                             $scope.state.cubeSchema = request.cubeDescData;
-                            SweetAlert.swal('success', "Created cube successful.", 'success');
+                            MessageService.sendMsg("Created cube successful.","success",{},true);
                         } else {
                             $scope.cubeMetaFrame.project = $scope.state.project;
-                            SweetAlert.swal('Oops...', request.message, 'error');
-                        }
+                            var e = request;
+                            if(e.data&& e.data.exception){
+                                var message =e.data.exception;
+                                var msg = !!(message) ? message : 'Failed to take action.';
+                                MessageService.sendMsg("<h2>Failed to deal the request:</h2><p>"+msg+"</p><pre>"+$scope.state.cubeSchema+"</pre>","error",{},true);
+                            }else{
+                                SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                            }                        }
 
                         //end loading
                         loadingRequest.hide();
                         recoveryCubeStatus();
-                    }, function () {
-
+                    }, function (e) {
+                        if(e.data&& e.data.exception){
+                            var message =e.data.exception;
+                            var msg = !!(message) ? message : 'Failed to take action.';
+                            MessageService.sendMsg("<h2>Failed to deal the request:</h2><p>"+msg+"</p><pre>"+$scope.state.cubeSchema+"</pre>","error",{},true);
+                        }else{
+                            SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                        }
                         //end loading
                         loadingRequest.hide();
                         recoveryCubeStatus();
