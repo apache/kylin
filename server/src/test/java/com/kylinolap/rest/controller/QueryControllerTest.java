@@ -22,7 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.kylinolap.cube.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.rest.request.MetaRequest;
 import com.kylinolap.rest.request.SQLRequest;
 import com.kylinolap.rest.service.QueryService;
@@ -31,6 +31,7 @@ import com.kylinolap.rest.util.QueryUtil;
 
 /**
  * @author xduo
+ * @deprecated method has been merged into #ServiceTestAllInOne
  * 
  */
 public class QueryControllerTest extends ServiceTestBase {

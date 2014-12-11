@@ -6,8 +6,8 @@ import org.junit.Test;
 
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.estimation.CubeSizeEstimationCLI;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
 
 /**
  * Created by honma on 9/1/14.

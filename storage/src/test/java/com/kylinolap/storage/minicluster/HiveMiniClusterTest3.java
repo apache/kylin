@@ -9,17 +9,17 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
+import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hbase.MiniHBaseCluster;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.service.HiveInterface;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
-import org.apache.hive.service.server.HiveServer2;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
+
+import com.kylinolap.common.util.AbstractKylinTestCase;
 
 public class HiveMiniClusterTest3 extends HiveJDBCClientTest {
     public static final File HIVE_BASE_DIR = new File("target/hive");
@@ -37,6 +37,7 @@ public class HiveMiniClusterTest3 extends HiveJDBCClientTest {
     
     protected static MiniDFSCluster dfsCluster = null;
     protected static MiniMRCluster mrCluster = null;
+    protected static MiniHBaseCluster hbaseCluster = null;
     protected static JobConf conf = null;
     private static final int NAMENODE_PORT = 9010;
     private static final int JOBTRACKER_PORT = 9011;
@@ -126,19 +127,29 @@ public class HiveMiniClusterTest3 extends HiveJDBCClientTest {
         Properties props = new Properties();
         props.setProperty("dfs.datanode.data.dir.perm", "775");
         conf = new JobConf();
-        String hadoopConfDir = "test" + File.separator + "resources" + File.separator + "hadoop" + File.separator + "conf";
-        File hadoopConfFolder = new File(hadoopConfDir);
-        if(!hadoopConfFolder.exists()) {
-            System.err.println("Couldn't find " + hadoopConfDir + ", exit...");
+//        String hadoopConfDir = "test" + File.separator + "resources" + File.separator + "hadoop" + File.separator + "conf";
+//        File hadoopConfFolder = new File(hadoopConfDir);
+        
+
+        File miniclusterFolder = new File(AbstractKylinTestCase.MINICLUSTER_TEST_DATA);
+        System.out.println("----" + miniclusterFolder.getAbsolutePath());
+        if(!miniclusterFolder.exists()) {
+            System.err.println("Couldn't find " + miniclusterFolder + ", exit...");
             System.exit(1);
         }
         
-        String coreSitePath = hadoopConfDir + File.separator + "core-site.xml";
+        String coreSitePath = miniclusterFolder + File.separator + "core-site.xml";
         conf.addResource(new Path(coreSitePath));
-        String hdfsSitePath = hadoopConfDir + File.separator + "hdfs-site.xml";
+        String hdfsSitePath = miniclusterFolder + File.separator + "hdfs-site.xml";
         conf.addResource(new Path(hdfsSitePath));
-        String mrSitePath = hadoopConfDir + File.separator + "mapred-site.xml";
+        String mrSitePath = miniclusterFolder + File.separator + "mapred-site.xml";
         conf.addResource(new Path(mrSitePath));
+        
+        //save the dfs data to minicluster folder
+        //conf.set("test.build.data", miniclusterFolder.getAbsolutePath());
+        System.setProperty("test.build.data",miniclusterFolder.getAbsolutePath());
+        
+        //System.setProperty("test.build.data.basedirectory",miniclusterFolder.getAbsolutePath() + File.separator + "testdata");
         startCluster(true, conf, props);
         
 
@@ -157,11 +168,14 @@ public class HiveMiniClusterTest3 extends HiveJDBCClientTest {
     public static void tearDownAfterClass() throws Exception {
         stopCluster();
         // clean up the hdfs files created by mini cluster
-        String baseTempDir = "build" + File.separator + "test" + File.separator;
+//        String baseTempDir = "build" + File.separator + "test" + File.separator;
+        String baseTempDir =  dfsCluster.getBaseDirectory();
         String dfsDir = baseTempDir + "data";
+        System.out.println("------" + new File(dfsDir).getAbsolutePath());
         FileUtils.deleteDirectory(new File(dfsDir));
         String mrDir = baseTempDir + "mapred";
         FileUtils.deleteDirectory(new File(mrDir));
+        
         FileUtils.cleanDirectory(new File(LOG_DIR));
     }
 
@@ -179,6 +193,27 @@ public class HiveMiniClusterTest3 extends HiveJDBCClientTest {
             mrCluster = new ConfigurableMiniMRCluster(2, dfsCluster.getFileSystem().getName(),
                     1, conf);
         }
+        
+        HBaseTestingUtility testUtil = new HBaseTestingUtility();
+        testUtil.setDFSCluster(dfsCluster);
+        hbaseCluster = testUtil.startMiniCluster();
+        
+
+        System.out.println("dfs uri: -------" + dfsCluster.getFileSystem().getUri().toString());
+        
+        Configuration config = hbaseCluster.getConf();
+        String host = config.get(HConstants.ZOOKEEPER_QUORUM);
+        String port = config.get(HConstants.ZOOKEEPER_CLIENT_PORT);
+        String parent = config.get(HConstants.ZOOKEEPER_ZNODE_PARENT);
+        
+        // reduce rpc retry
+        config.set(HConstants.HBASE_CLIENT_PAUSE, "3000");
+        config.set(HConstants.HBASE_CLIENT_RETRIES_NUMBER, "5");
+        config.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
+        
+        
+        String hbaseconnectionUrl = "hbase:" + host + ":" + port + ":" + parent;
+        System.out.println("hbase connection url: -----" + hbaseconnectionUrl);
     }
     
     protected static void stopCluster() throws Exception {
@@ -190,6 +225,11 @@ public class HiveMiniClusterTest3 extends HiveJDBCClientTest {
             dfsCluster.shutdown();
             dfsCluster = null;
         }
+        
+        if(hbaseCluster !=null) {
+            hbaseCluster.shutdown();
+            hbaseCluster = null;
+        }
     }
     
 
@@ -197,8 +237,9 @@ public class HiveMiniClusterTest3 extends HiveJDBCClientTest {
         return DriverManager.getConnection("jdbc:hive2:///", "hive", "");
     }
     
+    
     public static void main(String[] args) throws SQLException {
-        HiveMiniClusterTest test = new HiveMiniClusterTest();
+        HiveMiniClusterTest3 test = new HiveMiniClusterTest3();
         test.runTests();
     }
     

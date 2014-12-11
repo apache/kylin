@@ -23,6 +23,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.kylinolap.metadata.project.ProjectInstance;
+import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
+
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,17 +41,17 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.codahale.metrics.annotation.Metered;
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.cube.CubeBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.exception.CubeIntegrityException;
-import com.kylinolap.cube.project.ProjectInstance;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.exception.InvalidJobInstanceException;
 import com.kylinolap.job.exception.JobException;
-import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.rest.exception.BadRequestException;
 import com.kylinolap.rest.exception.ForbiddenException;
 import com.kylinolap.rest.exception.InternalErrorException;
@@ -59,7 +62,6 @@ import com.kylinolap.rest.response.GeneralResponse;
 import com.kylinolap.rest.response.HBaseResponse;
 import com.kylinolap.rest.service.CubeService;
 import com.kylinolap.rest.service.JobService;
-import com.kylinolap.storage.hbase.observer.CoprocessorEnabler;
 
 /**
  * CubeController is defined as Restful API entrance for UI.
@@ -156,8 +158,8 @@ public class CubeController extends BasicController {
     @ResponseBody
     public Map<String, Boolean> updateCubeCoprocessor(@PathVariable String cubeName, @RequestParam(value = "force") String force) {
         try {
-            CoprocessorEnabler.updateCubeOverride(cubeName, force);
-            return CoprocessorEnabler.getCubeOverrides();
+            ObserverEnabler.updateCubeOverride(cubeName, force);
+            return ObserverEnabler.getCubeOverrides();
         } catch (Exception e) {
             String message = "Failed to update cube coprocessor: " + cubeName + " : " + force;
             logger.error(message, e);
@@ -315,7 +317,7 @@ public class CubeController extends BasicController {
             cubeService.createCubeAndDesc(name, projectName, desc);
         } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(),e);
         }
 
         cubeRequest.setUuid(desc.getUuid());
@@ -327,12 +329,13 @@ public class CubeController extends BasicController {
      * Get available table list of the input database
      * 
      * @return Table metadata array
+     * @throws JsonProcessingException 
      * @throws IOException
      */
     @RequestMapping(value = "", method = { RequestMethod.PUT })
     @ResponseBody
     @Metered(name = "updateCube")
-    public CubeRequest updateCubeDesc(@RequestBody CubeRequest cubeRequest) {
+    public CubeRequest updateCubeDesc(@RequestBody CubeRequest cubeRequest) throws JsonProcessingException {
         CubeDesc desc = deserializeCubeDesc(cubeRequest);
 
         if (desc == null) {
@@ -346,25 +349,24 @@ public class CubeController extends BasicController {
             return cubeRequest;
         }
 
-        String descData = "";
         try {
             CubeInstance cube = cubeService.getCubeManager().getCube(cubeRequest.getCubeName());
             String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest.getProject();
             desc = cubeService.updateCubeAndDesc(cube, desc, projectName);
 
-            descData = JsonUtil.writeValueAsIndentString(desc);
         } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException("You don't have right to update this cube.");
         } catch (Exception e) {
-            logger.error("Failed to deal with the request.", e);
             throw new InternalErrorException("Failed to deal with the request.", e);
         }
 
         if (desc.getError().isEmpty()) {
             cubeRequest.setSuccessful(true);
         } else {
+            logger.warn("Cube " + desc.getName() + " fail to create because " + desc.getError());
             updateRequest(cubeRequest, false, omitMessage(desc.getError()));
         }
+        String descData = JsonUtil.writeValueAsIndentString(desc);
         cubeRequest.setCubeDescData(descData);
 
         return cubeRequest;

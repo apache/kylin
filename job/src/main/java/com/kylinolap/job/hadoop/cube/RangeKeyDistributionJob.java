@@ -33,9 +33,9 @@ import org.slf4j.LoggerFactory;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.model.CubeDesc.CubeCapacity;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.model.cube.CubeDesc.CubeCapacity;
 
 /**
  * @author xjiang, ysong1

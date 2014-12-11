@@ -31,6 +31,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.kylinolap.cube.project.CubeRealizationManager;
+import com.kylinolap.metadata.model.realization.DataModelRealizationType;
+import com.kylinolap.metadata.project.ProjectDataModel;
+import com.kylinolap.metadata.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectManager;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -60,7 +65,7 @@ import com.kylinolap.cube.CubeSegmentStatusEnum;
 import com.kylinolap.cube.CubeStatusEnum;
 import com.kylinolap.cube.cuboid.CuboidCLI;
 import com.kylinolap.cube.exception.CubeIntegrityException;
-import com.kylinolap.cube.project.ProjectInstance;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.JobDAO;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.JobInstance.JobStep;
@@ -69,9 +74,8 @@ import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.hadoop.cardinality.HiveColumnCardinalityJob;
 import com.kylinolap.metadata.MetadataConstances;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.tool.HiveSourceTableLoader;
 import com.kylinolap.rest.constant.Constant;
 import com.kylinolap.rest.controller.QueryController;
@@ -103,7 +107,7 @@ public class CubeService extends BasicService {
         if (null == project) {
             cubeInstances = getCubeManager().listAllCubes();
         } else {
-            cubeInstances = getProjectManager().listAllCubes(projectName);
+            cubeInstances = listAllCubes(projectName);
         }
 
         List<CubeInstance> filterCubes = new ArrayList<CubeInstance>();
@@ -163,15 +167,21 @@ public class CubeService extends BasicService {
         CubeDesc createdDesc = null;
         CubeInstance createdCube = null;
 
-        createdDesc = getMetadataManager().createCubeDesc(desc);
+        createdDesc = getCubeDescManager().createCubeDesc(desc);
 
         if (!createdDesc.getError().isEmpty()) {
+            getCubeDescManager().removeCubeDesc(createdDesc);
             throw new InternalErrorException(createdDesc.getError().get(0));
         }
-
-        int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc);
-        logger.info("New cube " + cubeName + " has " + cuboidCount + " cuboids");
-
+        
+        try{
+            int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc);
+            logger.info("New cube " + cubeName + " has " + cuboidCount + " cuboids");
+        }catch(Exception e){
+            getCubeDescManager().removeCubeDesc(createdDesc);
+            throw new InternalErrorException("Failed to deal with the request.", e);
+        }
+        
         createdCube = getCubeManager().createCube(cubeName, projectName, createdDesc, owner);
         accessService.init(createdCube, AclPermission.ADMINISTRATION);
 
@@ -179,6 +189,41 @@ public class CubeService extends BasicService {
         accessService.inherit(createdCube, project);
 
         return createdCube;
+    }
+
+    private List<CubeInstance> listAllCubes(String projectName) {
+        ProjectManager projectManager = getProjectManager();
+        ProjectInstance project = projectManager.getProject(projectName);
+        if (project == null) {
+            return Collections.emptyList();
+        }
+        ArrayList<CubeInstance> result = new ArrayList<CubeInstance>();
+        for (ProjectDataModel projectDataModel: project.getDataModels()) {
+            if (projectDataModel.getType() == DataModelRealizationType.CUBE) {
+                CubeInstance cube = getCubeManager().getCube(projectDataModel.getRealization());
+                assert cube != null;
+                result.add(cube);
+            }
+        }
+        return result;
+    }
+
+    private boolean isCubeInProject(String projectName, CubeInstance target) {
+        ProjectManager projectManager = getProjectManager();
+        ProjectInstance project = projectManager.getProject(projectName);
+        if (project == null) {
+            return false;
+        }
+        for (ProjectDataModel projectDataModel: project.getDataModels()) {
+            if (projectDataModel.getType() == DataModelRealizationType.CUBE) {
+                CubeInstance cube = getCubeManager().getCube(projectDataModel.getRealization());
+                assert cube != null;
+                if (cube.equals(target)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
@@ -194,13 +239,16 @@ public class CubeService extends BasicService {
             if (!cube.getDescriptor().calculateSignature().equals(cube.getDescriptor().getSignature())) {
                 this.releaseAllSegments(cube);
             }
-            CubeDesc updatedCubeDesc = getMetadataManager().updateCubeDesc(desc);
+            
+            CubeDesc updatedCubeDesc = getCubeDescManager().updateCubeDesc(desc);
+            
             int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc);
             logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
 
-            if (!getProjectManager().isCubeInProject(newProjectName, cube)) {
+            ProjectManager projectManager = getProjectManager();
+            if (!isCubeInProject(newProjectName, cube)) {
                 String owner = SecurityContextHolder.getContext().getAuthentication().getName();
-                ProjectInstance newProject = getProjectManager().updateCubeToProject(cube.getName(), newProjectName, owner);
+                ProjectInstance newProject = projectManager.updateCubeToProject(cube.getName(), newProjectName, owner);
                 accessService.inherit(cube, newProject);
             }
 
@@ -544,7 +592,7 @@ public class CubeService extends BasicService {
     public void updateCubeNotifyList(CubeInstance cube, List<String> notifyList) throws IOException, CubeIntegrityException {
         CubeDesc desc = cube.getDescriptor();
         desc.setNotifyList(notifyList);
-        getMetadataManager().updateCubeDesc(desc);
+        getCubeDescManager().updateCubeDesc(desc);
     }
 
     public CubeInstance rebuildLookupSnapshot(String cubeName, String segmentName, String lookupTable) throws IOException {
@@ -589,6 +637,6 @@ public class CubeService extends BasicService {
     
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void syncTableToProject(String tables,String project) throws IOException {
-        getProjectManager().updateTableToProject(tables, project);
+        getCubeRealizationManager().updateTableToProject(tables, project);
     }    
 }

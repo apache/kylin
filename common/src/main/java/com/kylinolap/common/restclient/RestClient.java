@@ -44,7 +44,7 @@ public class RestClient {
     String password;
     HttpClient client;
 
-    private static Pattern fullRestPattern = Pattern.compile("([^:]+)[:]([^@]+)[@]([^:]+)(?:[:](\\d+))?");
+    private static Pattern fullRestPattern = Pattern.compile("(?:([^:]+)[:]([^@]+)[@])?([^:]+)(?:[:](\\d+))?");
 
     public static boolean matchFullRestPattern(String uri) {
         Matcher m = fullRestPattern.matcher(uri);
@@ -57,35 +57,16 @@ public class RestClient {
      */
     public RestClient(String uri) {
         Matcher m = fullRestPattern.matcher(uri);
-        if (m.matches() == false)
+        if (!m.matches())
             throw new IllegalArgumentException("URI: " + uri + " -- does not match pattern " + fullRestPattern);
 
         String user = m.group(1);
         String pwd = m.group(2);
         String host = m.group(3);
         String portStr = m.group(4);
-        int port = Integer.parseInt(portStr == null ? "80" : portStr);
+        int port = Integer.parseInt(portStr == null ? "7070" : portStr);
 
         init(host, port, user, pwd);
-    }
-
-    public RestClient(String hostAndPort, String userName, String password) {
-        String host;
-        int port;
-        int cut = hostAndPort.indexOf(":");
-        if (cut < 0) {
-            host = hostAndPort;
-            port = 80;
-        } else {
-            host = hostAndPort.substring(0, cut);
-            port = Integer.parseInt(hostAndPort.substring(cut + 1));
-        }
-
-        init(host, port, userName, password);
-    }
-
-    public RestClient(String host, int port, String userName, String password) {
-        init(host, port, userName, password);
     }
 
     private void init(String host, int port, String userName, String password) {

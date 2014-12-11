@@ -7,13 +7,17 @@
             <form role="form" name="cube_form" novalidate>
                 <div class="row">
                     <div class="col-xs-12">
-                        <h3>Project
-                            <select class="inline form-control" ng-model="cubeMetaFrame.project" required
-                                    ng-options="project.name as project.name for project in projects | filter: filterProj"
-                                    style="width: 250px">
-                                <option value="">-- Select Project --</option>
-                            </select>
-                        </h3>
+                        <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
+                            <div class="form-group">
+                                <span><b>Project: </b></span>
+                                <select chosen ng-model="project.selectedProject" ng-init="newAccess.permission=permissions.READ.value;project.selectedProject=project.selectedProject!=null?project.selectedProject:project.projects[0]"
+                                        ng-options="project as project for project in project.projects"
+                                        style="width: 150px"
+                                        data-placeholder="select a project"
+                                        class="chosen-select">
+                                </select>
+                            </div>
+                        </form>
                     </div>
                 </div>
                 <section style="padding-bottom: 20px">
@@ -28,7 +32,7 @@
                                     }" ng-model="state.cubeSchema">
                     </div>
                 </section>
-                <button class="btn btn-primary" ng-disabled="cube_form.$invalid" ng-click="state.project = cubeMetaFrame.project;saveCube()">
+                <button class="btn btn-primary" ng-disabled="cube_form.$invalid" ng-click="state.project = project.selectedProject;saveCube()">
                     Save
                 </button>
             </form>

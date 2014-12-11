@@ -50,8 +50,8 @@ import org.eigenbase.sql.SqlKind;
 import org.eigenbase.util.ImmutableIntList;
 
 import com.google.common.base.Preconditions;
-import com.kylinolap.metadata.model.cube.JoinDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.JoinDesc;
+import com.kylinolap.metadata.model.realization.TblColRef;
 import com.kylinolap.query.schema.OLAPTable;
 
 /**

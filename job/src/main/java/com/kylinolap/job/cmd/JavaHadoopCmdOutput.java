@@ -16,8 +16,10 @@
 
 package com.kylinolap.job.cmd;
 
+import java.io.IOException;
 import java.util.Map;
 
+import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.TaskCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +37,7 @@ import com.kylinolap.job.tools.HadoopStatusChecker;
  * @author xduo
  * 
  */
-public class JavaHadoopCmdOutput implements ICommandOutput {
+public class JavaHadoopCmdOutput extends BaseCommandOutput implements ICommandOutput {
 
     protected static final Logger log = LoggerFactory.getLogger(JavaHadoopCmdOutput.class);
 
@@ -123,9 +125,6 @@ public class JavaHadoopCmdOutput implements ICommandOutput {
         status = JobStepStatusEnum.NEW;
     }
 
-    /**
-     * @param jobStatus
-     */
     private void updateHadoopJobInfo() {
         try {
             Map<String, String> jobInfo = job.getInfo();
@@ -159,16 +158,23 @@ public class JavaHadoopCmdOutput implements ICommandOutput {
 
     private void updateJobCounter() {
         try {
-            this.output.append(job.getCounters().toString()).append("\n");
-            log.debug(job.getCounters().toString());
+            Counters counters = job.getCounters();
+            if (counters == null) {
+                String errorMsg = "no counters for job " + mrJobID;
+                log.warn(errorMsg);
+                output.append(errorMsg);
+                return;
+            }
+            this.output.append(counters.toString()).append("\n");
+            log.debug(counters.toString());
 
             JobDAO jobDAO = JobDAO.getInstance(config);
             JobInstance jobInstance = jobDAO.getJob(jobInstanceID);
             JobStep jobStep = jobInstance.getSteps().get(jobStepID);
 
-            long mapInputRecords = job.getCounters().findCounter(TaskCounter.MAP_INPUT_RECORDS).getValue();
+            long mapInputRecords = counters.findCounter(TaskCounter.MAP_INPUT_RECORDS).getValue();
             jobStep.putInfo(JobInstance.SOURCE_RECORDS_COUNT, String.valueOf(mapInputRecords));
-            long hdfsBytesWritten = job.getCounters().findCounter("FileSystemCounters", "HDFS_BYTES_WRITTEN").getValue();
+            long hdfsBytesWritten = counters.findCounter("FileSystemCounters", "HDFS_BYTES_WRITTEN").getValue();
             jobStep.putInfo(JobInstance.HDFS_BYTES_WRITTEN, String.valueOf(hdfsBytesWritten));
 
             jobDAO.updateJobInstance(jobInstance);
@@ -177,4 +183,5 @@ public class JavaHadoopCmdOutput implements ICommandOutput {
             output.append(e.getLocalizedMessage());
         }
     }
+
 }

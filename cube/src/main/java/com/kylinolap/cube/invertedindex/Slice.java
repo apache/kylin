@@ -18,6 +18,7 @@ package com.kylinolap.cube.invertedindex;
 
 import java.util.Iterator;
 
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 
 /**
@@ -51,6 +52,10 @@ public class Slice implements Iterable<TableRecordBytes>, Comparable<Slice> {
         }
     }
 
+    public int getRecordCount() {
+        return this.nRecords;
+    }
+
     public short getShard() {
         return shard;
     }
@@ -59,47 +64,55 @@ public class Slice implements Iterable<TableRecordBytes>, Comparable<Slice> {
         return timestamp;
     }
 
-    /**
-     * Standard iterator of Slice will return a iterator of TableRecordBytes,
-     * which cannot be printed/formated to readable text.
-     * By invoking this API client can avoid code like:
-     * <p/>
-     * for (TableRecordBytes rec : slice) {
-     * TableRecord realRecord = (TableRecord) rec.clone();
-     * }
-     * <p/>
-     * Note this API cannot be called simultaneously with iterator()
-     *
-     * @return
-     */
-    public Iterator<TableRecord> readableIterator() {
-        final Iterator<TableRecordBytes> innerIterator = iterator();
+    public ColumnValueContainer getColumnValueContainer(int col) {
+        return containers[col];
+    }
 
-        return new Iterator<TableRecord>() {
+    public Iterator<TableRecordBytes> iterateWithBitmap(final ConciseSet resultBitMap) {
+        if (resultBitMap == null) {
+            return this.iterator();
+        } else {
+            return new Iterator<TableRecordBytes>() {
+                int i = 0;
+                int iteratedCount = 0;
+                int resultSize = resultBitMap.size();
 
+                TableRecordBytes rec = info.createTableRecord();
+                ImmutableBytesWritable temp = new ImmutableBytesWritable();
 
-            @Override
-            public boolean hasNext() {
-                return innerIterator.hasNext();
-            }
+                @Override
+                public boolean hasNext() {
+                    return iteratedCount < resultSize;
+                }
 
-            @Override
-            public TableRecord next() {
-                return (TableRecord) innerIterator.next();
-            }
+                @Override
+                public TableRecordBytes next() {
+                    while (!resultBitMap.contains(i) && i < nRecords - 1) {
+                        i++;
+                    }
+                    for (int col = 0; col < nColumns; col++) {
+                        containers[col].getValueAt(i, temp);
+                        rec.setValueBytes(col, temp);
+                    }
+                    iteratedCount++;
 
-            @Override
-            public void remove() {
-                throw new UnsupportedOperationException();
-            }
-        };
+                    return rec;
+                }
+
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+
+            };
+        }
     }
 
     @Override
     public Iterator<TableRecordBytes> iterator() {
         return new Iterator<TableRecordBytes>() {
             int i = 0;
-            TableRecord rec = new TableRecord(info);
+            TableRecordBytes rec = info.createTableRecord();
             ImmutableBytesWritable temp = new ImmutableBytesWritable();
 
             @Override

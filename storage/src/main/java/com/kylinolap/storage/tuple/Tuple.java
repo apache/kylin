@@ -22,10 +22,10 @@ import java.util.List;
 import com.kylinolap.common.util.Array;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.cube.model.CubeDesc.DeriveInfo;
 import com.kylinolap.dict.DateStrDictionary;
 import com.kylinolap.dict.lookup.LookupStringTable;
-import com.kylinolap.metadata.model.cube.CubeDesc.DeriveInfo;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * @author xjiang
@@ -135,6 +135,8 @@ public class Tuple implements ITuple {
             return Double.valueOf(strValue);
         } else if ("decimal".equals(dataType)) {
             return new BigDecimal(strValue);
+        } else if ("timestamp".equals(dataType)) {
+            return Long.valueOf(DateStrDictionary.stringToMillis(strValue));
         } else {
             return strValue;
         }

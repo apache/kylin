@@ -19,7 +19,7 @@ package com.kylinolap.dict.lookup;
 import java.io.IOException;
 
 import com.kylinolap.dict.Dictionary;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.TableDesc;
 
 /**
  * An in-memory lookup table indexed by a dictionary column. The column value

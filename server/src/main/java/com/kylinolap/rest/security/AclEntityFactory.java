@@ -18,8 +18,8 @@ package com.kylinolap.rest.security;
 
 import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.job.JobInstance;
+import com.kylinolap.metadata.project.ProjectInstance;
 
 /**
  * @author xduo

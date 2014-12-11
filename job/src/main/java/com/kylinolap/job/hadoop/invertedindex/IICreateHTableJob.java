@@ -59,7 +59,7 @@ public class IICreateHTableJob extends AbstractHadoopJob {
             HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
             HColumnDescriptor cf = new HColumnDescriptor(InvertedIndexDesc.HBASE_FAMILY);
             cf.setMaxVersions(1);
-            cf.setCompressionType(Algorithm.LZO);
+            //cf.setCompressionType(Algorithm.LZO);
             cf.setDataBlockEncoding(DataBlockEncoding.FAST_DIFF);
             tableDesc.addFamily(cf);
 

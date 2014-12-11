@@ -25,9 +25,9 @@ import org.slf4j.LoggerFactory;
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.cube.model.RowKeyDesc;
 import com.kylinolap.dict.Dictionary;
-import com.kylinolap.metadata.model.cube.RowKeyDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.realization.TblColRef;
 
 /**
  * Read/Write column values from/into bytes

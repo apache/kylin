@@ -18,6 +18,8 @@ package com.kylinolap.cube;
 
 import static org.junit.Assert.*;
 
+import com.kylinolap.cube.project.CubeRealizationManager;
+import com.kylinolap.metadata.project.ProjectInstance;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,10 +27,8 @@ import org.junit.Test;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.cube.project.ProjectInstance;
-import com.kylinolap.cube.project.ProjectManager;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
 
 /**
  * @author yangli9
@@ -40,7 +40,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         this.createTestMetadata();
         MetadataManager.removeInstance(this.getTestConfig());
         CubeManager.removeInstance(this.getTestConfig());
-        ProjectManager.removeInstance(this.getTestConfig());
+        CubeRealizationManager.removeInstance(this.getTestConfig());
     }
 
     @After
@@ -67,22 +67,22 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         // clean legacy in case last run failed
         store.deleteResource("/cube/a_whole_new_cube.json");
 
-        MetadataManager metaMgr = getMetadataManager();
-        CubeDesc desc = metaMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
+        CubeDescManager cubeDescMgr = getCubeDescManager();
+        CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
         CubeInstance createdCube = CubeManager.getInstance(this.getTestConfig()).createCube("a_whole_new_cube", ProjectInstance.DEFAULT_PROJECT_NAME, desc, null);
         assertTrue(createdCube == CubeManager.getInstance(this.getTestConfig()).getCube("a_whole_new_cube"));
 
-        assertTrue(ProjectManager.getInstance(getTestConfig()).listAllCubes(ProjectInstance.DEFAULT_PROJECT_NAME).contains(createdCube));
+        assertTrue(CubeRealizationManager.getInstance(getTestConfig()).listAllCubes(ProjectInstance.DEFAULT_PROJECT_NAME).contains(createdCube));
 
         CubeInstance droppedCube = CubeManager.getInstance(this.getTestConfig()).dropCube("a_whole_new_cube", true);
         assertTrue(createdCube == droppedCube);
 
-        assertTrue(!ProjectManager.getInstance(getTestConfig()).listAllCubes(ProjectInstance.DEFAULT_PROJECT_NAME).contains(droppedCube));
+        assertTrue(!CubeRealizationManager.getInstance(getTestConfig()).listAllCubes(ProjectInstance.DEFAULT_PROJECT_NAME).contains(droppedCube));
 
         assertNull(CubeManager.getInstance(this.getTestConfig()).getCube("a_whole_new_cube"));
     }
 
-    private MetadataManager getMetadataManager() {
-        return MetadataManager.getInstance(getTestConfig());
+    public CubeDescManager getCubeDescManager() {
+        return CubeDescManager.getInstance(getTestConfig());
     }
 }

@@ -1,0 +1,38 @@
+{
+  "name": "test_kylin_with_slr_model_desc",
+  "fact_table": "DEFAULT.test_kylin_fact",
+  "lookups": [
+    {
+      "table": "EDW.test_cal_dt",
+      "join": {
+        "type": "inner",
+        "primary_key": ["cal_dt"],
+        "foreign_key": ["cal_dt"]
+      }
+    },
+    {
+      "table": "DEFAULT.test_category_groupings",
+      "join": {
+        "type": "inner",
+        "primary_key": ["leaf_categ_id", "site_id"],
+        "foreign_key": ["leaf_categ_id", "lstg_site_id"]
+      }
+    },
+    {
+      "table": "EDW.test_sites",
+      "join": {
+        "type": "inner",
+        "primary_key": ["site_id"],
+        "foreign_key": ["lstg_site_id"]
+      }
+    },
+    {
+      "table": "EDW.test_seller_type_dim",
+      "join": {
+        "type": "inner",
+        "primary_key": ["seller_type_cd"],
+        "foreign_key": ["slr_segment_cd"]
+      }
+    }
+  ]
+}
