@@ -182,7 +182,7 @@ KylinApp
 
             SweetAlert.swal({
                 title: '',
-                text: "Are you sure to drop the cube? Once it's dropped, all the jobs and data will be cleaned up. ",
+                text: "Are you sure to drop the cube? Once it's dropped, your cube’s metadata and data will be cleaned up and can’t be restored back. ",
                 type: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
