@@ -16,38 +16,29 @@
 
 package com.kylinolap.rest.controller;
 
-import java.io.IOException;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeDescManager;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.JobDAO;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.rest.exception.InternalErrorException;
-import com.kylinolap.rest.exception.NotFoundException;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.TestingAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.rest.request.JobBuildRequest;
 import com.kylinolap.rest.request.JobListRequest;
 import com.kylinolap.rest.service.CubeService;
 import com.kylinolap.rest.service.JobService;
 import com.kylinolap.rest.service.ServiceTestBase;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.io.IOException;
+import java.util.Date;
+import java.util.Map;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author xduo
@@ -63,6 +54,10 @@ public class JobControllerTest extends ServiceTestBase {
     CubeService cubeService;
     private static final String CUBE_NAME = "new_job_controller";
 
+    private CubeManager cubeManager;
+    private CubeDescManager cubeDescManager;
+    private JobDAO jobDAO;
+
 
     @Before
     public void setup() throws Exception {
@@ -73,18 +68,23 @@ public class JobControllerTest extends ServiceTestBase {
         cubeController = new CubeController();
         cubeController.setJobService(jobService);
         cubeController.setCubeService(cubeService);
+        KylinConfig testConfig = getTestConfig();
+        cubeManager = CubeManager.getInstance(testConfig);
+        cubeDescManager = CubeDescManager.getInstance(testConfig);
 
+        jobDAO = JobDAO.getInstance(testConfig);
+
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (cubeManager.getCube(CUBE_NAME) != null) {
+            cubeManager.dropCube(CUBE_NAME, false);
+        }
     }
 
     @Test
     public void testBasics() throws IOException {
-
-        KylinConfig testConfig = getTestConfig();
-        CubeManager cubeManager = CubeManager.getInstance(testConfig);
-        if (cubeManager.getCube(CUBE_NAME) != null) {
-            cubeManager.dropCube(CUBE_NAME, false);
-        }
-        CubeDescManager cubeDescManager = CubeDescManager.getInstance(testConfig);
         CubeDesc cubeDesc = cubeDescManager.getCubeDesc("test_kylin_cube_with_slr_left_join_desc");
         CubeInstance cube = cubeManager.createCube(CUBE_NAME, "DEFAULT", cubeDesc, "test");
         assertNotNull(cube);
@@ -102,7 +102,10 @@ public class JobControllerTest extends ServiceTestBase {
         Assert.assertNotNull(jobSchedulerController.get(job.getId()));
         Map<String, String> output = jobSchedulerController.getStepOutput(job.getId(), 0);
         Assert.assertNotNull(output);
-        JobDAO.getInstance(testConfig).deleteJob(job);
+        jobDAO.deleteJob(job);
+        if (cubeManager.getCube(CUBE_NAME) != null) {
+            cubeManager.dropCube(CUBE_NAME, false);
+        }
 
         // jobSchedulerController.cancel(job.getId());
     }
