@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
@@ -31,9 +32,8 @@ import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.CubeSegmentStatusEnum;
 import com.kylinolap.cube.common.RowKeySplitter;
-import com.kylinolap.cube.common.SplittedBytes;
+import com.kylinolap.common.util.SplittedBytes;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowConstants;
 import com.kylinolap.cube.model.CubeDesc;
@@ -41,7 +41,7 @@ import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * @author ysong1, honma
@@ -110,7 +110,7 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
         cubeManager = CubeManager.getInstance(config);
         cube = cubeManager.getCube(cubeName);
         cubeDesc = cube.getDescriptor();
-        mergedCubeSegment = cube.getSegment(segmentName, CubeSegmentStatusEnum.NEW);
+        mergedCubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
 
         // int colCount = cubeDesc.getRowkey().getRowKeyColumns().length;
         newKeyBuf = new byte[256];// size will auto-grow

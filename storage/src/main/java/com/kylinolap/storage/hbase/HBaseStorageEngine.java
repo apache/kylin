@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
 
 import org.apache.hadoop.hbase.client.HConnection;
@@ -41,17 +42,16 @@ import com.kylinolap.common.persistence.HBaseConnection;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.CubeSegmentStatusEnum;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowValueDecoder;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.HBaseColumnDesc;
 import com.kylinolap.cube.model.HBaseMappingDesc;
-import com.kylinolap.cube.model.MeasureDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.cube.model.CubeDesc.DeriveInfo;
 import com.kylinolap.dict.lookup.LookupStringTable;
-import com.kylinolap.metadata.model.realization.FunctionDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.IStorageEngine;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.ColumnTupleFilter;
@@ -364,7 +364,7 @@ public class HBaseStorageEngine implements IStorageEngine {
         List<HBaseKeyRange> result = Lists.newArrayList();
 
         // build row key range for each cube segment
-        for (CubeSegment cubeSeg : cubeInstance.getSegments(CubeSegmentStatusEnum.READY)) {
+        for (CubeSegment cubeSeg : cubeInstance.getSegments(SegmentStatusEnum.READY)) {
 
             // consider derived (lookup snapshot), filter on dimension may
             // differ per segment

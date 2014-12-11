@@ -18,7 +18,7 @@ package com.kylinolap.cube.model;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 9/24/13 Time: 10:46 AM To

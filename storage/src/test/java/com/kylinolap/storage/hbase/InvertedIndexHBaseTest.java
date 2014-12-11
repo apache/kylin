@@ -19,7 +19,15 @@ package com.kylinolap.storage.hbase;
 import java.util.List;
 
 import com.kylinolap.common.util.BytesUtil;
-import com.kylinolap.cube.invertedindex.*;
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IIManager;
+import com.kylinolap.invertedindex.IISegment;
+import com.kylinolap.invertedindex.index.Slice;
+import com.kylinolap.invertedindex.index.TableRecord;
+import com.kylinolap.invertedindex.index.TableRecordBytes;
+import com.kylinolap.invertedindex.index.TableRecordInfo;
+import com.kylinolap.invertedindex.model.IIDesc;
+import com.kylinolap.invertedindex.model.IIKeyValueCodec;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.*;
 import org.junit.After;
@@ -30,26 +38,24 @@ import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.common.util.HadoopUtil;
-import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
  * @author yangli9
  */
 public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
 
-    CubeInstance cube;
-    CubeSegment seg;
+    IIInstance ii;
+    IISegment seg;
     HConnection hconn;
 
     @Before
     public void setup() throws Exception {
         this.createTestMetadata();
 
-        this.cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_ii");
-        this.seg = cube.getFirstSegment();
+        this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii");
+        this.seg = ii.getFirstSegment();
 
         String hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
         Configuration hconf = HadoopUtil.newHBaseConfiguration(hbaseUrl);
@@ -68,7 +74,7 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
         IIKeyValueCodec codec = new IIKeyValueCodec(new TableRecordInfo(seg));
 
         List<Slice> slices = Lists.newArrayList();
-        HBaseClientKVIterator kvIterator = new HBaseClientKVIterator(hconn, tableName, InvertedIndexDesc.HBASE_FAMILY_BYTES, InvertedIndexDesc.HBASE_QUALIFIER_BYTES);
+        HBaseClientKVIterator kvIterator = new HBaseClientKVIterator(hconn, tableName, IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES);
         try {
             for (Slice slice : codec.decodeKeyValue(kvIterator)) {
                 slices.add(slice);

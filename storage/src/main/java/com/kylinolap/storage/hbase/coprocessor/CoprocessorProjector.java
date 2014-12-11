@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import com.kylinolap.cube.invertedindex.TableRecordInfo;
+import com.kylinolap.invertedindex.index.TableRecordInfo;
 import com.kylinolap.metadata.model.ColumnDesc;
 import org.apache.hadoop.hbase.Cell;
 
@@ -30,7 +30,7 @@ import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowKeyEncoder;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * @author yangli9

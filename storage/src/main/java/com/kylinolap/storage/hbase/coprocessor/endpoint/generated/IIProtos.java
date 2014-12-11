@@ -1901,68 +1901,6 @@ public final class IIProtos {
       }
       /**
        * <code>repeated .IIResponse.IIRow rows = 1;</code>
-<<<<<<< HEAD
-       */
-      public Builder addRows(com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow value) {
-        if (rowsBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureRowsIsMutable();
-          rows_.add(value);
-          onChanged();
-        } else {
-          rowsBuilder_.addMessage(value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
-       */
-      public Builder addRows(
-          int index, com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow value) {
-        if (rowsBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureRowsIsMutable();
-          rows_.add(index, value);
-          onChanged();
-        } else {
-          rowsBuilder_.addMessage(index, value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
-       */
-      public Builder addRows(
-          com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.Builder builderForValue) {
-        if (rowsBuilder_ == null) {
-          ensureRowsIsMutable();
-          rows_.add(builderForValue.build());
-          onChanged();
-        } else {
-          rowsBuilder_.addMessage(builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
-       */
-      public Builder addRows(
-          int index, com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.Builder builderForValue) {
-        if (rowsBuilder_ == null) {
-          ensureRowsIsMutable();
-          rows_.add(index, builderForValue.build());
-          onChanged();
-        } else {
-          rowsBuilder_.addMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
        */
       public Builder addAllRows(
           java.lang.Iterable<? extends com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow> values) {

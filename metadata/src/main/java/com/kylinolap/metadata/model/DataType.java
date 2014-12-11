@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.kylinolap.metadata.model.realization.TblColRef.InnerDataTypeEnum;
+import com.kylinolap.metadata.model.TblColRef.InnerDataTypeEnum;
 
 /**
  * @author yangli9

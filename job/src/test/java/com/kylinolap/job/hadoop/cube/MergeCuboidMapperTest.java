@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.cube.CubeBuildTypeEnum;
+import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
@@ -47,7 +47,7 @@ import com.kylinolap.dict.TrieDictionary;
 import com.kylinolap.dict.lookup.TableSignature;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * @author honma
@@ -157,7 +157,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
         String cubeName = "test_kylin_cube_without_slr_left_join_ready_2_segments";
 
-        List<CubeSegment> newSegments = cubeManager.allocateSegments(cube, CubeBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L);
+        List<CubeSegment> newSegments = cubeManager.allocateSegments(cube, RealizationBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L);
 
         logger.info("Size of new segments: " + newSegments.size());
 

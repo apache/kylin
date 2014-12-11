@@ -27,7 +27,8 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
+import com.kylinolap.metadata.realization.SegmentStatusEnum;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeSegment implements Comparable<CubeSegment> {
@@ -45,7 +46,7 @@ public class CubeSegment implements Comparable<CubeSegment> {
     @JsonProperty("date_range_end")
     private long dateRangeEnd;
     @JsonProperty("status")
-    private CubeSegmentStatusEnum status;
+    private SegmentStatusEnum status;
     @JsonProperty("size_kb")
     private long sizeKB;
     @JsonProperty("source_records")
@@ -124,11 +125,11 @@ public class CubeSegment implements Comparable<CubeSegment> {
         this.dateRangeEnd = dateRangeEnd;
     }
 
-    public CubeSegmentStatusEnum getStatus() {
+    public SegmentStatusEnum getStatus() {
         return status;
     }
 
-    public void setStatus(CubeSegmentStatusEnum status) {
+    public void setStatus(SegmentStatusEnum status) {
         this.status = status;
     }
 

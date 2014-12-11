@@ -28,7 +28,7 @@ import java.util.List;
 
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorRowType;

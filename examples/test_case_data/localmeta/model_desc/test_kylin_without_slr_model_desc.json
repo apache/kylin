@@ -3,7 +3,7 @@
   "fact_table": "DEFAULT.test_kylin_fact",
   "lookups": [
     {
-      "table" : "EDW.test_cal_dt",
+      "table": "EDW.test_cal_dt",
       "join": {
         "type": "inner",
         "primary_key": [

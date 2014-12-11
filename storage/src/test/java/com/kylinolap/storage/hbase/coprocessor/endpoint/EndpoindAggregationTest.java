@@ -3,14 +3,14 @@ package com.kylinolap.storage.hbase.coprocessor.endpoint;
 import static org.junit.Assert.assertEquals;
 
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.invertedindex.TableRecord;
-import com.kylinolap.cube.invertedindex.TableRecordInfo;
-import com.kylinolap.cube.measure.MeasureAggregator;
-import com.kylinolap.metadata.model.realization.FunctionDesc;
-import com.kylinolap.metadata.model.realization.ParameterDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IIManager;
+import com.kylinolap.invertedindex.index.TableRecord;
+import com.kylinolap.invertedindex.index.TableRecordInfo;
+import com.kylinolap.metadata.measure.MeasureAggregator;
+import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.ParameterDesc;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.filter.ColumnTupleFilter;
 import com.kylinolap.storage.filter.CompareTupleFilter;
 import com.kylinolap.storage.filter.ConstantTupleFilter;
@@ -28,9 +28,8 @@ import java.util.*;
 /**
  * Created by Hongbin Ma(Binmahone) on 11/27/14.
  */
-@Ignore
 public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
-    CubeInstance cube;
+    IIInstance ii;
     TableRecordInfo tableRecordInfo;
 
     CoprocessorProjector projector;
@@ -45,10 +44,10 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
     @Before
     public void setup() throws IOException {
         this.createTestMetadata();
-        this.cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_ii");
-        this.tableRecordInfo = new TableRecordInfo(cube.getFirstSegment());
-        TblColRef formatName = this.cube.getDescriptor().findColumnRef("TEST_KYLIN_FACT", "LSTG_FORMAT_NAME");
-        TblColRef siteId = this.cube.getDescriptor().findColumnRef("TEST_KYLIN_FACT", "LSTG_SITE_ID");
+        this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii");
+        this.tableRecordInfo = new TableRecordInfo(ii.getFirstSegment());
+        TblColRef formatName = this.ii.getDescriptor().findColumnRef("TEST_KYLIN_FACT", "LSTG_FORMAT_NAME");
+        TblColRef siteId = this.ii.getDescriptor().findColumnRef("TEST_KYLIN_FACT", "LSTG_SITE_ID");
 
         Collection<TblColRef> dims = new HashSet<>();
         dims.add(formatName);
@@ -58,7 +57,7 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
         CompareTupleFilter rawFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
         rawFilter.addChild(new ColumnTupleFilter(siteId));
         rawFilter.addChild(new ConstantTupleFilter("0"));
-        filter = CoprocessorFilter.fromFilter(this.cube.getFirstSegment(), rawFilter);
+        filter = CoprocessorFilter.fromFilter(this.ii.getFirstSegment(), rawFilter);
 
         aggCache = new EndpointAggregationCache(aggregators);
         tableData = mockTable();

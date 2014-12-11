@@ -14,7 +14,6 @@ import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.common.util.StringUtil;
 import com.kylinolap.metadata.MetadataConstances;
-import com.kylinolap.metadata.model.realization.TblColRef;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class DataModelDesc extends RootPersistentEntity {

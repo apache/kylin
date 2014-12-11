@@ -14,7 +14,7 @@ import com.kylinolap.cube.cuboid.CuboidScheduler;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.DimensionDesc;
 import com.kylinolap.cube.model.HierarchyDesc;
-import com.kylinolap.cube.model.MeasureDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.cube.model.RowKeyColDesc;
 import com.kylinolap.cube.model.RowKeyDesc;
 import com.kylinolap.metadata.model.DataType;

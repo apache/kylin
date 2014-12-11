@@ -17,7 +17,6 @@ import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.hbase.util.Threads;
 import org.junit.Ignore;
 import org.junit.Test;
-import sun.jvm.hotspot.oops.BitData;
 
 /**
  * Created by honma on 10/17/14.

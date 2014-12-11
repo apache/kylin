@@ -24,10 +24,10 @@ import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.DimensionDesc;
-import com.kylinolap.cube.model.MeasureDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.metadata.model.JoinDesc;
-import com.kylinolap.metadata.model.realization.FunctionDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * @author George Song (ysong1)

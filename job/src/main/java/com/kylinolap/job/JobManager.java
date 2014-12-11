@@ -31,6 +31,8 @@ import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.project.ProjectManager;
+import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
+import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +68,7 @@ public class JobManager {
         this.jobEngine = JobEngine.getInstance(engineID, engineCfg);
     }
 
-    public JobInstance createJob(String cubeName, String segmentName, String segmentId, CubeBuildTypeEnum jobType) throws IOException {
+    public JobInstance createJob(String cubeName, String segmentName, String segmentId, RealizationBuildTypeEnum jobType) throws IOException {
         // build job instance
         JobInstance jobInstance = buildJobInstance(cubeName, segmentName, segmentId, jobType);
 
@@ -77,7 +79,7 @@ public class JobManager {
         return jobInstance;
     }
 
-    private JobInstance buildJobInstance(String cubeName, String segmentName, String segmentId, CubeBuildTypeEnum jobType) {
+    private JobInstance buildJobInstance(String cubeName, String segmentName, String segmentId, RealizationBuildTypeEnum jobType) {
         SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss");
         format.setTimeZone(TimeZone.getTimeZone(this.engineConfig.getTimeZone()));
 
@@ -233,7 +235,7 @@ public class JobManager {
     public String previewFlatHiveQL(String cubeName, String segmentName) {
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
         CubeDesc cubeDesc = cube.getDescriptor();
-        CubeSegment cubeSegment = cube.getSegment(segmentName, CubeSegmentStatusEnum.READY);
+        CubeSegment cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.READY);
         JoinedFlatTableDesc flatTableDesc = new JoinedFlatTableDesc(cubeDesc, cubeSegment);
         return JoinedFlatTable.generateSelectDataStatement(flatTableDesc);
     }

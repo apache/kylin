@@ -1,7 +1,7 @@
 package com.kylinolap.storage.hbase.coprocessor.endpoint;
 
-import com.kylinolap.cube.invertedindex.Slice;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.invertedindex.index.Slice;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.filter.BitMapFilterEvaluator;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorRowType;
 import it.uniroma3.mat.extendedset.intset.ConciseSet;

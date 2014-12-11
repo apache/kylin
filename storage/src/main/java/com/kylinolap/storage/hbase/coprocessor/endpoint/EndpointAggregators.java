@@ -19,13 +19,12 @@ package com.kylinolap.storage.hbase.coprocessor.endpoint;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.util.BytesSerializer;
 import com.kylinolap.common.util.BytesUtil;
-import com.kylinolap.cube.invertedindex.TableRecordInfo;
-import com.kylinolap.cube.invertedindex.TableRecordInfoDigest;
-import com.kylinolap.cube.measure.MeasureAggregator;
-import com.kylinolap.cube.measure.fixedlen.FixedLenMeasureCodec;
-import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.measure.MeasureAggregator;
+import com.kylinolap.metadata.measure.fixedlen.FixedLenMeasureCodec;
+import com.kylinolap.invertedindex.index.TableRecordInfo;
+import com.kylinolap.invertedindex.index.TableRecordInfoDigest;
 import com.kylinolap.metadata.model.DataType;
-import com.kylinolap.metadata.model.realization.FunctionDesc;
+import com.kylinolap.metadata.model.FunctionDesc;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorConstants;
 import org.apache.hadoop.io.LongWritable;
 

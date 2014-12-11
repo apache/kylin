@@ -2,7 +2,7 @@ package com.kylinolap.metadata.project;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.kylinolap.metadata.model.realization.DataModelRealizationType;
+import com.kylinolap.metadata.realization.DataModelRealizationType;
 
 /**
  * Created by qianzhou on 12/5/14.

@@ -22,7 +22,7 @@ import com.kylinolap.storage.hbase.coprocessor.CoprocessorRowType;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 
 import com.kylinolap.dict.Dictionary;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.tuple.ITuple;
 
 /**

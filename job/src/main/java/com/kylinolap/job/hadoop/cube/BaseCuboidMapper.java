@@ -20,6 +20,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 
+import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -31,20 +32,19 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.CubeSegmentStatusEnum;
-import com.kylinolap.cube.common.BytesSplitter;
-import com.kylinolap.cube.common.SplittedBytes;
+import com.kylinolap.common.util.BytesSplitter;
+import com.kylinolap.common.util.SplittedBytes;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.AbstractRowKeyEncoder;
 import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.cube.measure.MeasureCodec;
+import com.kylinolap.metadata.measure.MeasureCodec;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.cube.model.MeasureDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc;
-import com.kylinolap.metadata.model.realization.FunctionDesc;
-import com.kylinolap.metadata.model.realization.ParameterDesc;
+import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.ParameterDesc;
 
 /**
  * @author George Song (ysong1)
@@ -94,7 +94,7 @@ public class BaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> {
 
         cube = CubeManager.getInstance(config).getCube(cubeName);
         cubeDesc = cube.getDescriptor();
-        cubeSegment = cube.getSegment(segmentName, CubeSegmentStatusEnum.NEW);
+        cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
 
         long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);

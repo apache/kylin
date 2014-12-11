@@ -2,21 +2,16 @@ package com.kylinolap.job.coprocessor;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.kylinolap.common.persistence.HBaseConnection;
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.invertedindex.IIKeyValueCodec;
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IIManager;
+import com.kylinolap.invertedindex.IISegment;
+import com.kylinolap.invertedindex.model.IIDesc;
+import com.kylinolap.invertedindex.model.IIKeyValueCodec;
 import com.kylinolap.job.hadoop.invertedindex.IIBulkLoadJob;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.ColumnDesc;
-import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
-import com.kylinolap.metadata.model.realization.FunctionDesc;
-import com.kylinolap.metadata.model.realization.ParameterDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.*;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.ColumnTupleFilter;
 import com.kylinolap.storage.filter.CompareTupleFilter;
@@ -62,8 +57,8 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
 
     private static StorageContext context = new StorageContext();
 
-    private CubeInstance cube;
-    private CubeSegment seg;
+    private IIInstance ii;
+    private IISegment seg;
     private TableDesc tableDesc;
     String tableName;
 
@@ -82,7 +77,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         TEST_UTIL.startMiniCluster();
 
         //simulate bulk load
-        mockCubeHtable();
+        mockIIHtables();
 
         hconn = HConnectionManager.createConnection(CONF);
     }
@@ -95,14 +90,14 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         TEST_UTIL.shutdownMiniCluster();
     }
 
-    private static void mockCubeHtable() throws Exception {
+    private static void mockIIHtables() throws Exception {
         org.apache.hadoop.fs.FileSystem fs = org.apache.hadoop.fs.FileSystem.get(CONF);
         fs.copyFromLocalFile(false, new Path("../examples/test_case_cube/II_hfile/"), new Path("/tmp/test_III_hfile"));
 
         int sharding = 4;
 
         HTableDescriptor tableDesc = new HTableDescriptor(TEST_TABLE);
-        HColumnDescriptor cf = new HColumnDescriptor(InvertedIndexDesc.HBASE_FAMILY);
+        HColumnDescriptor cf = new HColumnDescriptor(IIDesc.HBASE_FAMILY);
         cf.setMaxVersions(1);
         tableDesc.addFamily(cf);
 
@@ -120,15 +115,15 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         HBaseAdmin hBaseAdmin = new HBaseAdmin(CONF);
         TableName[] tables = hBaseAdmin.listTableNames();
 
-        String temp = "-cubename \"test_kylin_cube_ii\"  -input \"/tmp/test_III_hfile\"  -htablename \"test_III\"";
+        String temp = "-cubename \"test_kylin_ii\"  -input \"/tmp/test_III_hfile\"  -htablename \"test_III\"";
         ToolRunner.run(CONF, new IIBulkLoadJob(), temp.split("\\s+"));
     }
 
     @Before
     public void setup() throws Exception {
 
-        this.cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_ii");
-        this.seg = cube.getFirstSegment();
+        this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii");
+        this.seg = ii.getFirstSegment();
         this.tableDesc = MetadataManager.getInstance(getTestConfig()).getTableDesc("test_kylin_fact");
 
         this.tableName = seg.getStorageLocationIdentifier();
@@ -262,73 +257,6 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         iterator.close();
     }
 
-<<<<<<< HEAD
-    private List<FunctionDesc> buildAggregations(ColumnDesc priceColumn) {
-        List<FunctionDesc> functions = new ArrayList<FunctionDesc>();
-
-        FunctionDesc f1 = new FunctionDesc();
-        f1.setExpression("MAX");
-        ParameterDesc p1 = new ParameterDesc();
-        p1.setType("column");
-        p1.setValue("PRICE");
-        p1.setColRefs(ImmutableList.of(new TblColRef(priceColumn)));
-        f1.setParameter(p1);
-        f1.setReturnType("decimal");
-        functions.add(f1);
-
-        FunctionDesc f2 = new FunctionDesc();
-        f2.setExpression("MIN");
-        ParameterDesc p2 = new ParameterDesc();
-        p2.setType("column");
-        p2.setValue("PRICE");
-        p2.setColRefs(ImmutableList.of(new TblColRef(priceColumn)));
-        f2.setParameter(p2);
-        f2.setReturnType("decimal");
-        functions.add(f2);
-
-        FunctionDesc f3 = new FunctionDesc();
-        f3.setExpression("COUNT");
-        ParameterDesc p3 = new ParameterDesc();
-        p3.setType("constant");
-        p3.setValue("1");
-        f3.setParameter(p3);
-        f3.setReturnType("bigint");
-        functions.add(f3);
-
-        return functions;
-    }
-
-
-    //TODO: queries like select count(*) on II can be optimized
-    @Test
-    public void testSimpleCount() throws Throwable {
-        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc, null, null, null, context, table);
-
-        int count = 0;
-        while (iterator.hasNext()) {
-            ITuple tuple = iterator.next();
-            System.out.println(tuple);
-            count++;
-        }
-        assertEquals(count, 10000);
-    }
-
-    private int filteredCount(TupleFilter tupleFilter) throws Throwable {
-
-        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc, tupleFilter, null, null, context, table);
-
-        int count = 0;
-        while (iterator.hasNext()) {
-            ITuple tuple = iterator.next();
-            System.out.println(tuple);
-            count++;
-        }
-
-        return count;
-    }
-
-    @Test
-    public void testFilteredCount() throws Throwable {
     @Test
     public void testCostlyFilter() throws Throwable {
         ColumnDesc sellerDessc = tableDesc.findColumnByName("SELLER_ID");

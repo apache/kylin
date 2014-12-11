@@ -1,10 +1,10 @@
 package com.kylinolap.storage.hbase.coprocessor.endpoint;
 
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.invertedindex.TableRecordInfo;
-import com.kylinolap.cube.invertedindex.TableRecordInfoDigest;
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IIManager;
+import com.kylinolap.invertedindex.index.TableRecordInfo;
+import com.kylinolap.invertedindex.index.TableRecordInfoDigest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,15 +17,15 @@ import static org.junit.Assert.assertEquals;
  * Created by Hongbin Ma(Binmahone) on 12/3/14.
  */
 public class TableRecordInfoTest extends LocalFileMetadataTestCase {
-    CubeInstance cube;
+    IIInstance ii;
     TableRecordInfo tableRecordInfo;
 
 
     @Before
     public void setup() throws IOException {
         this.createTestMetadata();
-        this.cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_ii");
-        this.tableRecordInfo = new TableRecordInfo(cube.getFirstSegment());
+        this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii");
+        this.tableRecordInfo = new TableRecordInfo(ii.getFirstSegment());
     }
 
     @Test

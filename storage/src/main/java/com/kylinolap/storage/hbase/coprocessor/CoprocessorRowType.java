@@ -21,7 +21,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.kylinolap.common.util.BytesSerializer;
 import com.kylinolap.common.util.BytesUtil;
@@ -29,16 +28,18 @@ import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowConstants;
 import com.kylinolap.cube.kv.RowKeyColumnIO;
+import com.kylinolap.invertedindex.IISegment;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * @author yangli9
  */
 public class CoprocessorRowType {
 
-    public static CoprocessorRowType fromColumnDescs(CubeSegment seg, ColumnDesc[] columnDescs) {
+    //for endpoint
+    public static CoprocessorRowType fromColumnDescs(IISegment seg, ColumnDesc[] columnDescs) {
 
         TblColRef[] cols = new TblColRef[columnDescs.length];
         for (int i = 0; i < columnDescs.length; ++i) {
@@ -53,6 +54,7 @@ public class CoprocessorRowType {
         return new CoprocessorRowType(cols, colSizes);
     }
 
+    //for observer
     public static CoprocessorRowType fromCuboid(CubeSegment seg, Cuboid cuboid) {
         List<TblColRef> colList = cuboid.getColumns();
         TblColRef[] cols = colList.toArray(new TblColRef[colList.size()]);
