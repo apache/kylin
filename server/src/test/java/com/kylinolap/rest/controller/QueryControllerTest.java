@@ -19,6 +19,7 @@ package com.kylinolap.rest.controller;
 import net.sf.ehcache.CacheManager;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -32,8 +33,8 @@ import com.kylinolap.rest.util.QueryUtil;
 /**
  * @author xduo
  * @deprecated method has been merged into #ServiceTestAllInOne
- * 
  */
+@Ignore
 public class QueryControllerTest extends ServiceTestBase {
 
     private QueryController queryController;
