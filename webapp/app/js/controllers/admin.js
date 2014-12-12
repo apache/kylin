@@ -174,16 +174,7 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
         };
         $scope.update = function () {
 
-            SweetAlert.swal({
-                title: '',
-                text: 'Are you sure to update config?',
-                type: '',
-                showCancelButton: true,
-                confirmButtonColor: '#DD6B55',
-                confirmButtonText: "Yes",
-                closeOnConfirm: true
-            }, function(isConfirm) {
-                if(isConfirm){
+
                 AdminService.updateConfig({}, {key: $scope.state.key, value: $scope.state.value}, function (result) {
                     SweetAlert.swal('Success!', 'Config updated successfully!', 'success');
                     $modalInstance.dismiss();
@@ -197,10 +188,6 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
                     }
                 });
                 }
-
-            });
-
-        }
     };
 
     $scope.getEnv();
