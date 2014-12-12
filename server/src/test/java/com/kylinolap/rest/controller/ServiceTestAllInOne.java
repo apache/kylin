@@ -25,8 +25,6 @@ import java.util.Map;
 import net.sf.ehcache.CacheManager;
 
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -233,7 +231,7 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         // jobSchedulerController.cancel(job.getId());
     }
 
-    @Test(expected = RuntimeException.class)
+    //@Test(expected = RuntimeException.class)
     public void testJobControllerResume() throws IOException {
 
         jobSchedulerController = new JobController();
@@ -261,6 +259,17 @@ public class ServiceTestAllInOne extends ServiceTestBase {
     public void testAddUpdateProject() throws IOException {
         projectController = new ProjectController();
         projectController.setProjectService(projectService);
+        
+        try {
+            projectController.deleteProject("new_project");
+        } catch (InternalErrorException e) {
+            //project doesn't exist
+        }
+        try {
+            projectController.deleteProject("new_project_2");
+        } catch (InternalErrorException e) {
+            //project doesn't exist
+        }
 
         List<ProjectInstance> projects = projectController.getProjects(null, null);
 
