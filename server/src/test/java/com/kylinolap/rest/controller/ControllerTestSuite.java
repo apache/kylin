@@ -21,6 +21,7 @@ import org.junit.runners.Suite;
 
 /**
  * @author xduo
+ * @deprecated method has been merged into #ServiceTestAllInOne
  * @Ignore
  */
 @RunWith(Suite.class)

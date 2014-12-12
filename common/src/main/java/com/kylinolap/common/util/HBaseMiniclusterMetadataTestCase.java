@@ -70,6 +70,7 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
     public static void startupMinicluster() throws IOException, ClassNotFoundException, InterruptedException {
         staticCreateTestMetadata(MINICLUSTER_TEST_DATA);
 
+        System.out.println("Going to start mini cluster.");
         try {
             hbaseCluster = UTIL.startMiniCluster();
         } catch (Exception e) {
@@ -188,6 +189,7 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
      * Shutdown the minicluster; Sub-classes should invoke this method in AfterClass method.
      */
     public static void shutdownMiniCluster() {
+        System.out.println("Going to shutdown mini cluster.");
         try {
             UTIL.shutdownMiniMapReduceCluster();
         } catch (Exception e) {

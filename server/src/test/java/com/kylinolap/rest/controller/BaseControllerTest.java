@@ -20,6 +20,7 @@ import java.io.IOException;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
@@ -33,8 +34,8 @@ import com.kylinolap.rest.service.ServiceTestBase;
 /**
  * @author xduo
  * @deprecated method has been merged into #ServiceTestAllInOne
- * @Ignore
  */
+@Ignore
 public class BaseControllerTest extends ServiceTestBase {
 
     private BasicController basicController;
