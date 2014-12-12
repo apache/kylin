@@ -281,15 +281,7 @@ KylinApp
                                     startTime: 0,
                                     endTime: 0
                                 }, function (job) {
-                                    MessageService.sendMsg('Rebuild job was submitted successfully', 'success', {
-                                        cancel: {
-                                            label: 'View Jobs',
-                                            action: function () {
-                                                $location.path('/jobs');
-                                                $scope.$apply();
-                                            }
-                                        }
-                                    });
+                                    SweetAlert.swal('Success!', 'Rebuild job was submitted successfully', 'success');
                                 },function(e){
                                     if(e.data&& e.data.exception){
                                         var message =e.data.exception;
@@ -365,15 +357,7 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
 
                 CubeService.rebuildCube({cubeId: cube.name}, $scope.jobBuildRequest, function (job) {
                     $modalInstance.dismiss('cancel');
-                    MessageService.sendMsg('Rebuild job was submitted successfully', 'success', {
-                        cancel: {
-                            label: 'View Jobs',
-                            action: function () {
-                                $location.path('/jobs');
-                                $scope.$apply();
-                            }
-                        }
-                    });
+                    SweetAlert.swal('Success!', 'Rebuild job was submitted successfully', 'success');
                 },function(e){
                     if(e.data&& e.data.exception){
                         var message =e.data.exception;
