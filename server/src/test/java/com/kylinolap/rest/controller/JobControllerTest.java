@@ -50,6 +50,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author xduo
  * @deprecated method has been merged into #ServiceTestAllInOne
+ * @Ignore
  * 
  */
 public class JobControllerTest extends ServiceTestBase {

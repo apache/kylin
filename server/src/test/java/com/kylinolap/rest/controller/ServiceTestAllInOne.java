@@ -15,6 +15,8 @@
  */
 package com.kylinolap.rest.controller;
 
+import static org.junit.Assert.*;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -36,6 +38,9 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kylinolap.cube.CubeDescManager;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.metadata.project.ProjectInstance;
@@ -87,13 +92,12 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         Assert.assertNotNull(adminController.getConfig());
         Assert.assertNotNull(adminController.getEnv());
     }
-    
 
     @Test
     public void testAccessControlBasics() throws IOException {
         accessController = new AccessController();
         accessController.setAccessService(accessService);
-        
+
         List<AccessEntryResponse> aes = accessController.getAccessEntities("CubeInstance", "a24ca905-1fc6-4f67-985c-38fa5aeafd92");
         Assert.assertTrue(aes.size() == 0);
 
@@ -128,7 +132,7 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         aes = accessController.revoke("CubeInstance", "a24ca905-1fc6-4f67-985c-38fa5aeafd92", accessRequest);
         Assert.assertTrue(aes.size() == 0);
     }
-    
+
     private BasicController basicController;
 
     @Test
@@ -153,7 +157,7 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         errorResponse = basicController.handleBadRequest(request, badRequestException);
         Assert.assertNotNull(errorResponse);
     }
-    
+
     private CubeController cubeController;
     private CubeDescController cubeDescController;
 
@@ -168,7 +172,7 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         cubeController.setJobService(jobService);
         cubeDescController = new CubeDescController();
         cubeDescController.setCubeService(cubeService);
-        
+
         CubeDesc[] cubes = (CubeDesc[]) cubeDescController.getCube("test_kylin_cube_with_slr_ready");
         Assert.assertNotNull(cubes);
         Assert.assertNotNull(cubeController.getSql("test_kylin_cube_with_slr_ready", "20130331080000_20131212080000"));
@@ -196,12 +200,14 @@ public class ServiceTestAllInOne extends ServiceTestBase {
 
         cubeController.deleteCube(newCubeName);
     }
-    
+
     private JobController jobSchedulerController;
 
+    private static final String CUBE_NAME = "new_job_controller";
 
     @Test
     public void testJobControllerBasics() throws IOException {
+        
 
         jobSchedulerController = new JobController();
         jobSchedulerController.setJobService(jobService);
@@ -209,26 +215,33 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         cubeController.setJobService(jobService);
         cubeController.setCubeService(cubeService);
         
+        
+        CubeManager cubeManager = CubeManager.getInstance(getTestConfig());
+        if (cubeManager.getCube(CUBE_NAME) != null) {
+            cubeManager.dropCube(CUBE_NAME, false);
+        }
+        CubeDescManager cubeDescManager = CubeDescManager.getInstance(getTestConfig());
+        CubeDesc cubeDesc = cubeDescManager.getCubeDesc("test_kylin_cube_with_slr_left_join_desc");
+        CubeInstance cube = cubeManager.createCube(CUBE_NAME, "DEFAULT", cubeDesc, "test");
+        assertNotNull(cube);
+
         JobListRequest jobRequest = new JobListRequest();
         Assert.assertNotNull(jobSchedulerController.list(jobRequest));
 
-        JobInstance job = null;
-        try {
-            JobBuildRequest jobBuildRequest = new JobBuildRequest();
-            jobBuildRequest.setBuildType("BUILD");
-            jobBuildRequest.setStartTime(1386806400000L);
-            jobBuildRequest.setEndTime(new Date().getTime());
-            job = cubeController.rebuild("test_kylin_cube_with_slr_ready", jobBuildRequest);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        JobBuildRequest jobBuildRequest = new JobBuildRequest();
+        jobBuildRequest.setBuildType("BUILD");
+        jobBuildRequest.setStartTime(0L);
+        jobBuildRequest.setEndTime(new Date().getTime());
+        JobInstance job = cubeController.rebuild(CUBE_NAME, jobBuildRequest);
 
-        Assert.assertNotNull(job);
         Assert.assertNotNull(jobSchedulerController.get(job.getId()));
         Map<String, String> output = jobSchedulerController.getStepOutput(job.getId(), 0);
         Assert.assertNotNull(output);
+        try {
+            jobSchedulerController.cancel(job.getId());
+        } catch (InternalErrorException e) {
 
-        // jobSchedulerController.cancel(job.getId());
+        }
     }
 
     //@Test(expected = RuntimeException.class)
@@ -239,17 +252,17 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         cubeController = new CubeController();
         cubeController.setJobService(jobService);
         cubeController.setCubeService(cubeService);
-        
+
         JobBuildRequest jobBuildRequest = new JobBuildRequest();
         jobBuildRequest.setBuildType("BUILD");
         jobBuildRequest.setStartTime(20130331080000L);
         jobBuildRequest.setEndTime(20131212080000L);
-        JobInstance job = cubeController.rebuild("test_kylin_cube_with_slr_ready", jobBuildRequest);
+        JobInstance job = cubeController.rebuild(CUBE_NAME, jobBuildRequest);
 
         Assert.assertNotNull(job);
         jobSchedulerController.resume(job.getId());
     }
-    
+
     private ProjectController projectController;
 
     @Autowired
@@ -259,7 +272,7 @@ public class ServiceTestAllInOne extends ServiceTestBase {
     public void testAddUpdateProject() throws IOException {
         projectController = new ProjectController();
         projectController.setProjectService(projectService);
-        
+
         try {
             projectController.deleteProject("new_project");
         } catch (InternalErrorException e) {
@@ -308,12 +321,12 @@ public class ServiceTestAllInOne extends ServiceTestBase {
     public void testAddExistingProject() throws IOException {
         projectController = new ProjectController();
         projectController.setProjectService(projectService);
-        
+
         CreateProjectRequest request = new CreateProjectRequest();
         request.setName("default");
         projectController.saveProject(request);
     }
-    
+
     private QueryController queryController;
     @Autowired
     QueryService queryService;
@@ -325,7 +338,7 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         queryController = new QueryController();
         queryController.setQueryService(queryService);
         queryController.setCacheManager(cacheManager);
-        
+
         SQLRequest sqlRequest = new SQLRequest();
         sqlRequest.setSql("select * from not_exist_table");
         sqlRequest.setProject("default");
@@ -343,12 +356,11 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         queryController = new QueryController();
         queryController.setQueryService(queryService);
         queryController.setCacheManager(cacheManager);
-        
+
         queryController.getMetadata(new MetaRequest(ProjectInstance.DEFAULT_PROJECT_NAME));
     }
-    
-    private UserController userController;
 
+    private UserController userController;
 
     @Test
     public void testUserControllerBasics() throws IOException {
@@ -356,10 +368,9 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         User user = new User("ADMIN", "ADMIN", authorities);
         Authentication authentication = new TestingAuthenticationToken(user, "ADMIN", "ROLE_ADMIN");
         SecurityContextHolder.getContext().setAuthentication(authentication);
- 
-        
+
         userController = new UserController();
-        
+
         UserDetails userdetail = userController.authenticate();
         Assert.assertNotNull(userdetail);
         Assert.assertTrue(user.getUsername().equals("ADMIN"));
