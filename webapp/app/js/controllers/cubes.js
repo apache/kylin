@@ -122,7 +122,7 @@ KylinApp
             SweetAlert.swal({
                 title: '',
                 text: 'Are you sure to enable the cube? Please note: if cube schema is changed in the disabled period, all segments of the cube will be discarded due to data and schema mismatch.',
-                type: 'warning',
+                type: 'info',
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes",
@@ -156,7 +156,7 @@ KylinApp
             SweetAlert.swal({
                 title: '',
                 text: 'Are you sure to purge the cube? ',
-                type: 'warning',
+                type: 'info',
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes",
@@ -185,7 +185,7 @@ KylinApp
             SweetAlert.swal({
                 title: '',
                 text: 'Are you sure to disable the cube? ',
-                type: 'warning',
+                type: 'info',
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes",
@@ -213,8 +213,8 @@ KylinApp
 
             SweetAlert.swal({
                 title: '',
-                text: "Are you sure to drop the cube? Once it's dropped, your cube’s metadata and data will be cleaned up and can’t be restored back. ",
-                type: 'warning',
+                text: " Once it's dropped, your cube’s metadata and data will be cleaned up and can’t be restored back. ",
+                type: 'info',
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes",
@@ -265,7 +265,7 @@ KylinApp
                         SweetAlert.swal({
                             title: '',
                             text: "Are you sure to start the build? ",
-                            type: 'warning',
+                            type: 'info',
                             showCancelButton: true,
                             confirmButtonColor: '#DD6B55',
                             confirmButtonText: "Yes",
@@ -354,16 +354,6 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
 
     $scope.rebuild = function () {
 
-        SweetAlert.swal({
-            title: '',
-            text: "Are you sure to rebuild the cube? ",
-            type: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#DD6B55',
-            confirmButtonText: "Yes",
-            closeOnConfirm: true
-        }, function(isConfirm) {
-            if(isConfirm){
                 $scope.message = null;
                 $scope.jobBuildRequest.startTime = new Date($scope.jobBuildRequest.startTime).getTime();
                 $scope.jobBuildRequest.endTime = new Date($scope.jobBuildRequest.endTime).getTime();
@@ -393,9 +383,6 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
                         SweetAlert.swal('Oops...', "Failed to take action.", 'error');
                     }
                 });
-            }
-
-        });
     };
 
     // used by cube segment refresh

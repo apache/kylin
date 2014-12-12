@@ -191,7 +191,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         }
 
         SweetAlert.swal({
-            title: 'Confirm',
+            title: '',
             text: 'Are you sure to save the cube ?',
             type: 'info',
             showCancelButton: true,
@@ -211,17 +211,23 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                                 design_form.$invalid = true;
                             }
                         } else {
-                            MessageService.sendMsg("<h2>Failed to deal the request:</h2><pre>"+$scope.state.cubeSchema+"</pre>","error",{},true);
+                            $scope.cubeMetaFrame.project = $scope.state.project;
+                            if(request.message){
+                                var message =request.message;
+                                var msg = !!(message) ? message : 'Failed to take action.';
+                                MessageService.sendMsg("<h2>Failed to deal the request:</h2><p class='error'>"+msg+"</p><pre>"+$scope.state.cubeSchema+"</pre>","error",{},true);
+                            }else{
+                                SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                            }
                         }
                         //end loading
                         loadingRequest.hide();
                         recoveryCubeStatus();
                     }, function (e) {
-
                         if(e.data&& e.data.exception){
                             var message =e.data.exception;
                             var msg = !!(message) ? message : 'Failed to take action.';
-                            MessageService.sendMsg("<h2>Failed to deal the request:"+msg+"</h2><pre>"+$scope.state.cubeSchema+"</pre>","error",{},true);
+                            MessageService.sendMsg("<h2>Failed to deal the request:</h2><p class='error'>"+msg+"</p><pre>"+$scope.state.cubeSchema+"</pre>","error",{},true);
                         }else{
                             SweetAlert.swal('Oops...', "Failed to take action.", 'error');
                         }
@@ -231,19 +237,19 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                 }
                 else {
                     CubeService.save({}, {cubeDescData: $scope.state.cubeSchema, project: $scope.state.project}, function (request) {
-                        if (request.successful) {
+                        if(request.successful) {
                             $scope.state.cubeSchema = request.cubeDescData;
                             MessageService.sendMsg("Created cube successful.","success",{},true);
                         } else {
                             $scope.cubeMetaFrame.project = $scope.state.project;
-                            var e = request;
-                            if(e.data&& e.data.exception){
-                                var message =e.data.exception;
+                            if(request.message){
+                                var message =request.message;
                                 var msg = !!(message) ? message : 'Failed to take action.';
-                                MessageService.sendMsg("<h2>Failed to deal the request:</h2><p>"+msg+"</p><pre>"+$scope.state.cubeSchema+"</pre>","error",{},true);
+                                MessageService.sendMsg("<h2>Failed to deal the request:</h2><p class='error'>"+msg+"</p><pre>"+$scope.state.cubeSchema+"</pre>","error",{},true);
                             }else{
                                 SweetAlert.swal('Oops...', "Failed to take action.", 'error');
-                            }                        }
+                            }
+                        }
 
                         //end loading
                         loadingRequest.hide();
@@ -252,7 +258,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         if(e.data&& e.data.exception){
                             var message =e.data.exception;
                             var msg = !!(message) ? message : 'Failed to take action.';
-                            MessageService.sendMsg("<h2>Failed to deal the request:</h2><p>"+msg+"</p><pre>"+$scope.state.cubeSchema+"</pre>","error",{},true);
+                            MessageService.sendMsg("<h2>Failed to deal the request:</h2><p class='error'>"+msg+"</p><pre>"+$scope.state.cubeSchema+"</pre>","error",{},true);
                         }else{
                             SweetAlert.swal('Oops...', "Failed to take action.", 'error');
                         }
