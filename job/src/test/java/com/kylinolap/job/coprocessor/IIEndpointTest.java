@@ -77,7 +77,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         TEST_UTIL.startMiniCluster();
 
         //simulate bulk load
-        mockIIHtables();
+        mockIIHtable();
 
         hconn = HConnectionManager.createConnection(CONF);
     }
@@ -90,7 +90,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         TEST_UTIL.shutdownMiniCluster();
     }
 
-    private static void mockIIHtables() throws Exception {
+    private static void mockIIHtable() throws Exception {
         org.apache.hadoop.fs.FileSystem fs = org.apache.hadoop.fs.FileSystem.get(CONF);
         fs.copyFromLocalFile(false, new Path("../examples/test_case_cube/II_hfile/"), new Path("/tmp/test_III_hfile"));
 
@@ -115,7 +115,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         HBaseAdmin hBaseAdmin = new HBaseAdmin(CONF);
         TableName[] tables = hBaseAdmin.listTableNames();
 
-        String temp = "-cubename \"test_kylin_ii\"  -input \"/tmp/test_III_hfile\"  -htablename \"test_III\"";
+        String temp = "-iiname \"test_kylin_ii\"  -input \"/tmp/test_III_hfile\"  -htablename \"test_III\"";
         ToolRunner.run(CONF, new IIBulkLoadJob(), temp.split("\\s+"));
     }
 
