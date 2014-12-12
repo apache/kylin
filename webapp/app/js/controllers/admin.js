@@ -149,11 +149,10 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
         };
         $scope.calculate = function () {
             $modalInstance.dismiss();
-            SweetAlert.swal('Success!', 'A cardinality task has been submitted', 'success');
             TableService.genCardinality({tableName: $scope.tableName}, {delimiter: $scope.delimiter, format: $scope.format}, function (result) {
-//                MessageService.sendMsg('Cardinality job was calculated successfully. Click Refresh button ...', 'success', {});
                 SweetAlert.swal('Success!', 'Cardinality job was calculated successfully. . Click Refresh button ...', 'success');
             },function(e){
+                console.log(e);
                 if(e.data&& e.data.exception){
                     var message =e.data.exception;
                     var msg = !!(message) ? message : 'Failed to take action.';

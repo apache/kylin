@@ -49,9 +49,9 @@ KylinApp
 
         $scope.delete = function(project){
             SweetAlert.swal({
-                title: 'Confirm',
+                title: '',
                 text: 'Are you sure to delete ?',
-                type: 'warning',
+                type: 'info',
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes",

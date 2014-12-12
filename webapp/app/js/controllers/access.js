@@ -77,9 +77,9 @@ KylinApp.controller('AccessCtrl', function ($scope,AccessService, MessageService
 
     $scope.revoke = function (type, access, entity) {
         SweetAlert.swal({
-            title: 'Confirm',
+            title: '',
             text: 'Are you sure to revoke the access?',
-            type: 'warning',
+            type: 'info',
             showCancelButton: true,
             confirmButtonColor: '#DD6B55',
             confirmButtonText: "Yes",
