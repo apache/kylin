@@ -89,27 +89,27 @@
                     <td>{{ job.related_cube}}</td>
                     <td>
                         <div ng-switch on="job.job_status">
-                            <div ng-switch-when="ERROR">
+                            <div ng-switch-when="ERROR" tooltip="ERROR">
                                 <progressbar class="progress-striped" value="job.progress" type="danger">
                                     {{job.job_status}}
                                 </progressbar>
                             </div>
-                            <div ng-switch-when="FINISHED">
+                            <div ng-switch-when="FINISHED" tooltip="FINISHED">
                                 <progressbar class="progress-striped" value="job.progress" type="success">
                                     {{job.progress}}%
                                 </progressbar>
                             </div>
-                            <div ng-switch-when="PENDING">
+                            <div ng-switch-when="PENDING" tooltip="PENDING">
                                 <progressbar class="progress-striped active" value="job.progress"
                                              type="pending">{{job.job_status}}
                                 </progressbar>
                             </div>
-                            <div ng-switch-when="RUNNING">
+                            <div ng-switch-when="RUNNING" tooltip="RUNNING">
                                 <progressbar class="progress-striped active" value="job.progress"
                                              type="info">{{job.progress | number:2}}%
                                 </progressbar>
                             </div>
-                            <div ng-switch-when="DISCARDED">
+                            <div ng-switch-when="DISCARDED" tooltip="DISCARDED">
                                 <progressbar class="progress-striped" value="job.progress" type="inverse">
                                     {{job.progress | number:2}}%
                                 </progressbar>

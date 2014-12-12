@@ -292,7 +292,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
             }
             else if (dimension.column) {
                 for (var i = 0; i < tmpRowKeyColumns.length; i++) {
-                    if(tmpRowKeyColumns.column == dimension.column)
+                    if(tmpRowKeyColumns[i].column == dimension.column)
                         break;
                 }
                 if(i == tmpRowKeyColumns.length) {
@@ -308,7 +308,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
             if (dimension.hierarchy && dimension.hierarchy.length > 0) {
                 angular.forEach(dimension.hierarchy, function (hierarchy, index) {
                     for (var i = 0; i < tmpRowKeyColumns.length; i++) {
-                        if(tmpRowKeyColumns.column == hierarchy.column)
+                        if(tmpRowKeyColumns[i].column == hierarchy.column)
                             break;
                     }
                     if(i == tmpRowKeyColumns.length) {
