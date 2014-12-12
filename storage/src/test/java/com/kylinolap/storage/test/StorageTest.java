@@ -21,7 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -52,7 +54,17 @@ public class StorageTest extends HBaseMiniclusterMetadataTestCase {
     private IStorageEngine storageEngine;
     private CubeInstance cube;
     private StorageContext context;
-
+    
+    @BeforeClass
+    public static void setupResource() throws Exception {
+        startupMinicluster();
+    }
+    
+    @AfterClass
+    public static void tearDownResource() {
+        shutdownMiniCluster();
+    }
+    
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();

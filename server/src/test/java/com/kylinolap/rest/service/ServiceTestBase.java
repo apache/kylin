@@ -44,15 +44,17 @@ public class ServiceTestBase extends HBaseMiniclusterMetadataTestCase { //HBaseM
 
     @BeforeClass
     public static void setupResource() throws Exception {
-
-        //staticCreateTestMetadata(SANDBOX_TEST_DATA);
-
         startupMinicluster();
         
         Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", "ROLE_ADMIN");
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        
     }
+    
+    @AfterClass
+    public static void tearDownResource() {
+        shutdownMiniCluster();
+    }
+
 
     @Before
     public void setUp() {
@@ -67,12 +69,6 @@ public class ServiceTestBase extends HBaseMiniclusterMetadataTestCase { //HBaseM
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
-    
-    @AfterClass
-    public static void tearDownResource() {
-        shutdownMiniCluster();
-    }
-
     /**
      * better keep this method, otherwise cause error
      * com.kylinolap.rest.service.TestBase.initializationError
