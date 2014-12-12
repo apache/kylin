@@ -1,7 +1,7 @@
 KylinApp.service('MessageService', function () {
     var options = {
         extraClasses: 'messenger-fixed messenger-on-top',
-        theme: 'air'
+        theme: 'ice'
     };
 
     this.sendMsg = function (msg, type, actions, sticky) {
