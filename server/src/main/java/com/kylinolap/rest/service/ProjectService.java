@@ -56,6 +56,7 @@ public class ProjectService extends BasicService {
         }
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
         ProjectInstance createdProject = getProjectManager().createProject(projectName, owner, description);
+        getCubeRealizationManager().loadProject(createdProject);
         accessService.init(createdProject, AclPermission.ADMINISTRATION);
         logger.debug("New project created.");
 
@@ -102,6 +103,7 @@ public class ProjectService extends BasicService {
     public void deleteProject(String projectName) throws IOException {
         ProjectInstance project = getProjectManager().getProject(projectName);
         getProjectManager().dropProject(projectName);
+        getCubeRealizationManager().unloadProject(project);
 
         accessService.clean(project, true);
     }
