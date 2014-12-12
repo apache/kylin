@@ -1,6 +1,6 @@
 KylinApp.service('MessageService', function () {
     var options = {
-        extraClasses: 'messenger-fixed messenger-on-top messenger-on-right',
+        extraClasses: 'messenger-fixed messenger-on-top',
         theme: 'air'
     };
 
