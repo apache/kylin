@@ -39,7 +39,7 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
         SweetAlert.swal({
             title: '',
             text: 'Are you sure to reload metadata and clean cache?',
-            type: 'info',
+            type: '',
             showCancelButton: true,
             confirmButtonColor: '#DD6B55',
             confirmButtonText: "Yes",
@@ -81,7 +81,7 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
         SweetAlert.swal({
             title: '',
             text: 'Are you sure to clean up unused HDFS and HBase space?',
-            type: 'info',
+            type: '',
             showCancelButton: true,
             confirmButtonColor: '#DD6B55',
             confirmButtonText: "Yes",
@@ -107,7 +107,7 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
         SweetAlert.swal({
             title: '',
             text: 'Are you sure to disable query cache?',
-            type: 'info',
+            type: '',
             showCancelButton: true,
             confirmButtonColor: '#DD6B55',
             confirmButtonText: "Yes",
@@ -149,11 +149,10 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
         };
         $scope.calculate = function () {
             $modalInstance.dismiss();
-            SweetAlert.swal('Success!', 'A cardinality task has been submitted', 'success');
             TableService.genCardinality({tableName: $scope.tableName}, {delimiter: $scope.delimiter, format: $scope.format}, function (result) {
-//                MessageService.sendMsg('Cardinality job was calculated successfully. Click Refresh button ...', 'success', {});
                 SweetAlert.swal('Success!', 'Cardinality job was calculated successfully. . Click Refresh button ...', 'success');
             },function(e){
+                console.log(e);
                 if(e.data&& e.data.exception){
                     var message =e.data.exception;
                     var msg = !!(message) ? message : 'Failed to take action.';
@@ -175,16 +174,7 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
         };
         $scope.update = function () {
 
-            SweetAlert.swal({
-                title: '',
-                text: 'Are you sure to update config?',
-                type: 'info',
-                showCancelButton: true,
-                confirmButtonColor: '#DD6B55',
-                confirmButtonText: "Yes",
-                closeOnConfirm: true
-            }, function(isConfirm) {
-                if(isConfirm){
+
                 AdminService.updateConfig({}, {key: $scope.state.key, value: $scope.state.value}, function (result) {
                     SweetAlert.swal('Success!', 'Config updated successfully!', 'success');
                     $modalInstance.dismiss();
@@ -198,10 +188,6 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
                     }
                 });
                 }
-
-            });
-
-        }
     };
 
     $scope.getEnv();
