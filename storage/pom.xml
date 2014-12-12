@@ -17,6 +17,12 @@
             <version>${project.parent.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.kylinolap</groupId>
+            <artifactId>kylin-invertedindex</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
         <!-- Env & Test -->
 
         <dependency>
