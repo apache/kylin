@@ -184,7 +184,14 @@ KylinApp
 
                     loadingRequest.hide();
                     hiveTbLoad.status="success";
-                },function(){
+                },function(e){
+                    if(e.data&& e.data.exception){
+                        var message =e.data.exception;
+                        var msg = !!(message) ? message : 'Failed to take action.';
+                        SweetAlert.swal('Oops...', msg, 'error');
+                    }else{
+                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                    }
                     loadingRequest.hide();
                     hiveTbLoad.status="init";
                 })

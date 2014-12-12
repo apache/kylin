@@ -1,7 +1,7 @@
 'use strict';
 
 
-KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, MessageService, TableService, CubeDescService, CubeService,loadingRequest,SweetAlert) {
+KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert) {
 
     //add or edit ?
     var absUrl = $location.absUrl();
@@ -63,7 +63,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
             }
         });
         return temp;
-    }
+    };
 
     var ColFamily = function () {
         var index = 1;
@@ -120,7 +120,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                 "hbase_mapping": {
                     "column_family": []
                 }
-            }
+            };
 
             return cubeMeta;
         }
@@ -147,10 +147,10 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
     // ~ public methods
     $scope.aceChanged = function () {
-    }
+    };
 
     $scope.aceLoaded = function(){
-    }
+    };
 
     $scope.prepareCube = function () {
         // generate column family
@@ -179,7 +179,13 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 //        delete $scope.cubeMetaFrame.project;
 
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
-    }
+    };
+
+    $scope.cubeResultTmpl = function (notification) {
+        // Get the static notification template.
+        var tmpl = notification.type == 'success' ? 'cubeResultSuccess.html' : 'cubeResultError.html';
+        return $interpolate($templateCache.get(tmpl))(notification);
+    };
 
     $scope.saveCube = function (design_form) {
 
@@ -192,7 +198,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
         SweetAlert.swal({
             title: 'Confirm',
-            text: 'Are you sure to save the cube ?',
+            text: 'Are you sure to save the cube?',
             type: 'info',
             showCancelButton: true,
             confirmButtonColor: '#DD6B55',
@@ -206,37 +212,61 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                     CubeService.update({}, {cubeDescData: $scope.state.cubeSchema, cubeName: $routeParams.cubeName, project: $scope.state.project}, function (request) {
                         if (request.successful) {
                             $scope.state.cubeSchema = request.cubeDescData;
-                            SweetAlert.swal('success', "Update cube successful.", 'success');
-                            if(design_form){
+                            MessageService.sendMsg($scope.cubeResultTmpl({'text':'Updated the cube successfully.',type:'success'}), 'success', {}, true);
+
+                            if (design_form) {
                                 design_form.$invalid = true;
                             }
                         } else {
-                            SweetAlert.swal('Oops...', request.message, 'error');
+                            MessageService.sendMsg($scope.cubeResultTmpl({'text':'Failed to update the cube.','schema':$scope.state.cubeSchema}), 'error', {}, true);
                         }
                         //end loading
                         loadingRequest.hide();
                         recoveryCubeStatus();
-                    }, function () {
-//                            SweetAlert.swal('Oops...', 'Action Failed: ' + msg, 'error');
+                    }, function (e) {
+
+                        if (e.data && e.data.exception) {
+                            var message =e.data.exception;
+                            var msg = !!(message) ? message : 'Failed to take action.';
+
+                            MessageService.sendMsg($scope.cubeResultTmpl({'text':msg,'schema':$scope.state.cubeSchema}), 'error', {}, true);
+                        } else {
+                            SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                        }
                         loadingRequest.hide();
                         recoveryCubeStatus();
                     });
-                }
-                else {
+                } else {
                     CubeService.save({}, {cubeDescData: $scope.state.cubeSchema, project: $scope.state.project}, function (request) {
                         if (request.successful) {
                             $scope.state.cubeSchema = request.cubeDescData;
-                            SweetAlert.swal('success', "Created cube successful.", 'success');
+
+                            MessageService.sendMsg($scope.cubeResultTmpl({'text':'Created the cube successfully.',type:'success'}), 'success', {}, true);
                         } else {
                             $scope.cubeMetaFrame.project = $scope.state.project;
-                            SweetAlert.swal('Oops...', request.message, 'error');
+                            var e = request;
+                            if(e.data && e.data.exception){
+                                var message =e.data.exception;
+                                var msg = !!(message) ? message : 'Failed to take action.';
+
+                                MessageService.sendMsg($scope.cubeResultTmpl({'text':msg,'schema':$scope.state.cubeSchema}), 'error', {}, true);
+                            } else {
+                                SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                            }
                         }
 
                         //end loading
                         loadingRequest.hide();
                         recoveryCubeStatus();
-                    }, function () {
+                    }, function (e) {
+                        if (e.data && e.data.exception) {
+                            var message =e.data.exception;
+                            var msg = !!(message) ? message : 'Failed to take action.';
 
+                            MessageService.sendMsg($scope.cubeResultTmpl({'text':msg,'schema':$scope.state.cubeSchema}), 'error', {}, true);
+                        } else {
+                            SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                        }
                         //end loading
                         loadingRequest.hide();
                         recoveryCubeStatus();
@@ -244,8 +274,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                 }
             }
         });
-
-     }
+    };
 
 
     function reGenerateRowKey(){
@@ -362,12 +391,9 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                 increasedDataGroups.push(hierarchyItems);
             }
 
-
             //! here get the latest aggregation groups,only effect when add newCube
             $scope.cubeMetaFrame.rowkey.aggregation_groups = increasedDataGroups;
         }
-
-
     }
 
     function sortSharedData(oldArray,tmpArr){
@@ -519,6 +545,4 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
             reGenerateRowKey();
         }
     });
-
-
 });

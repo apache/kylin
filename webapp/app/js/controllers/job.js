@@ -118,6 +118,14 @@ KylinApp
                     }
 //                    MessageService.sendMsg('Job was resumed successfully', 'success', {});
                     SweetAlert.swal('Success!', 'Job has been resumed successfully!', 'success');
+                },function(e){
+                    if(e.data&& e.data.exception){
+                        var message =e.data.exception;
+                        var msg = !!(message) ? message : 'Failed to take action.';
+                        SweetAlert.swal('Oops...', msg, 'error');
+                    }else{
+                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                    }
                 });
             });
         }
@@ -138,6 +146,14 @@ KylinApp
                         $scope.state.selectedJob = $scope.jobs[ $scope.state.selectedJob.uuid];
                     }
                     SweetAlert.swal('Success!', 'Job has been discarded successfully!', 'success');
+                },function(e){
+                    if(e.data&& e.data.exception){
+                        var message =e.data.exception;
+                        var msg = !!(message) ? message : 'Failed to take action.';
+                        SweetAlert.swal('Oops...', msg, 'error');
+                    }else{
+                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                    }
                 });
             });
         }

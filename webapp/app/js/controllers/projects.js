@@ -64,6 +64,14 @@ KylinApp
                         $scope.projects.splice(pIndex, 1);
                     }
                 SweetAlert.swal('Success!',"Project [" + project.name + "] has been deleted successfully!", 'success');
+                },function(e){
+                    if(e.data&& e.data.exception){
+                        var message =e.data.exception;
+                        var msg = !!(message) ? message : 'Failed to take action.';
+                        SweetAlert.swal('Oops...', msg, 'error');
+                    }else{
+                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                    }
                 });
                 }
             });
