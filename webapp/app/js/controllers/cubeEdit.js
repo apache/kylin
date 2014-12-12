@@ -199,7 +199,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         SweetAlert.swal({
             title: '',
             text: 'Are you sure to save the cube ?',
-            type: 'info',
+            type: '',
             showCancelButton: true,
             confirmButtonColor: '#DD6B55',
             confirmButtonText: "Yes",

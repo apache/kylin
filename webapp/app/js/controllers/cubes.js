@@ -122,10 +122,10 @@ KylinApp
             SweetAlert.swal({
                 title: '',
                 text: 'Are you sure to enable the cube? Please note: if cube schema is changed in the disabled period, all segments of the cube will be discarded due to data and schema mismatch.',
-                type: 'info',
+                type: '',
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
-                confirmButtonText: "Yes",
+//                confirmButtonText: "Yes",
                 closeOnConfirm: true
             }, function(isConfirm) {
                 if(isConfirm){
@@ -156,7 +156,7 @@ KylinApp
             SweetAlert.swal({
                 title: '',
                 text: 'Are you sure to purge the cube? ',
-                type: 'info',
+                type: '',
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes",
@@ -185,7 +185,7 @@ KylinApp
             SweetAlert.swal({
                 title: '',
                 text: 'Are you sure to disable the cube? ',
-                type: 'info',
+                type: '',
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes",
@@ -214,7 +214,7 @@ KylinApp
             SweetAlert.swal({
                 title: '',
                 text: " Once it's dropped, your cube’s metadata and data will be cleaned up and can’t be restored back. ",
-                type: 'info',
+                type: '',
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes",
@@ -265,7 +265,7 @@ KylinApp
                         SweetAlert.swal({
                             title: '',
                             text: "Are you sure to start the build? ",
-                            type: 'info',
+                            type: '',
                             showCancelButton: true,
                             confirmButtonColor: '#DD6B55',
                             confirmButtonText: "Yes",
