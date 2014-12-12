@@ -122,10 +122,10 @@ KylinApp
             SweetAlert.swal({
                 title: '',
                 text: 'Are you sure to enable the cube? Please note: if cube schema is changed in the disabled period, all segments of the cube will be discarded due to data and schema mismatch.',
-                type: 'warning',
+                type: '',
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
-                confirmButtonText: "Yes",
+//                confirmButtonText: "Yes",
                 closeOnConfirm: true
             }, function(isConfirm) {
                 if(isConfirm){
@@ -156,7 +156,7 @@ KylinApp
             SweetAlert.swal({
                 title: '',
                 text: 'Are you sure to purge the cube? ',
-                type: 'warning',
+                type: '',
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes",
@@ -185,7 +185,7 @@ KylinApp
             SweetAlert.swal({
                 title: '',
                 text: 'Are you sure to disable the cube? ',
-                type: 'warning',
+                type: '',
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes",
@@ -213,8 +213,8 @@ KylinApp
 
             SweetAlert.swal({
                 title: '',
-                text: "Are you sure to drop the cube? Once it's dropped, your cube’s metadata and data will be cleaned up and can’t be restored back. ",
-                type: 'warning',
+                text: " Once it's dropped, your cube’s metadata and data will be cleaned up and can’t be restored back. ",
+                type: '',
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes",
@@ -265,7 +265,7 @@ KylinApp
                         SweetAlert.swal({
                             title: '',
                             text: "Are you sure to start the build? ",
-                            type: 'warning',
+                            type: '',
                             showCancelButton: true,
                             confirmButtonColor: '#DD6B55',
                             confirmButtonText: "Yes",
@@ -281,15 +281,7 @@ KylinApp
                                     startTime: 0,
                                     endTime: 0
                                 }, function (job) {
-                                    MessageService.sendMsg('Rebuild job was submitted successfully', 'success', {
-                                        cancel: {
-                                            label: 'View Jobs',
-                                            action: function () {
-                                                $location.path('/jobs');
-                                                $scope.$apply();
-                                            }
-                                        }
-                                    });
+                                    SweetAlert.swal('Success!', 'Rebuild job was submitted successfully', 'success');
                                 },function(e){
                                     if(e.data&& e.data.exception){
                                         var message =e.data.exception;
@@ -354,16 +346,6 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
 
     $scope.rebuild = function () {
 
-        SweetAlert.swal({
-            title: '',
-            text: "Are you sure to rebuild the cube? ",
-            type: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#DD6B55',
-            confirmButtonText: "Yes",
-            closeOnConfirm: true
-        }, function(isConfirm) {
-            if(isConfirm){
                 $scope.message = null;
                 $scope.jobBuildRequest.startTime = new Date($scope.jobBuildRequest.startTime).getTime();
                 $scope.jobBuildRequest.endTime = new Date($scope.jobBuildRequest.endTime).getTime();
@@ -375,15 +357,7 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
 
                 CubeService.rebuildCube({cubeId: cube.name}, $scope.jobBuildRequest, function (job) {
                     $modalInstance.dismiss('cancel');
-                    MessageService.sendMsg('Rebuild job was submitted successfully', 'success', {
-                        cancel: {
-                            label: 'View Jobs',
-                            action: function () {
-                                $location.path('/jobs');
-                                $scope.$apply();
-                            }
-                        }
-                    });
+                    SweetAlert.swal('Success!', 'Rebuild job was submitted successfully', 'success');
                 },function(e){
                     if(e.data&& e.data.exception){
                         var message =e.data.exception;
@@ -393,9 +367,6 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
                         SweetAlert.swal('Oops...', "Failed to take action.", 'error');
                     }
                 });
-            }
-
-        });
     };
 
     // used by cube segment refresh

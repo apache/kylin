@@ -103,9 +103,9 @@ KylinApp
         });
         $scope.resume = function (job) {
             SweetAlert.swal({
-                title: 'Confirm',
+                title: '',
                 text: 'Are you sure to resume the job?',
-                type: 'warning',
+                type: '',
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes",
@@ -134,7 +134,7 @@ KylinApp
             SweetAlert.swal({
                 title: 'Confirm',
                 text: 'Are you sure to discard the job?',
-                type: 'warning',
+                type: '',
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes",

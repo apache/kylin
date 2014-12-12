@@ -222,14 +222,6 @@ KylinApp
                 $scope.parseQueryResult(query, result, (!result || result.isException) ? 'failed' : 'success');
                 $scope.curQuery.result.hasMore = (query.result.results && query.result.results.length == $scope.rowsPerPage);
             }, function (result) {
-                var e = result;
-                if(e.data&& e.data.exception){
-                    var message =e.data.exception;
-                    var msg = !!(message) ? message : 'Failed to take action.';
-                    SweetAlert.swal('Oops...', msg, 'error');
-                }else{
-                    SweetAlert.swal('Oops...', "Failed to take action.", 'error');
-                }
                 scrollToButton();
                 $scope.parseQueryResult(query, result, 'failed');
             });
@@ -287,14 +279,6 @@ KylinApp
                 query.result.loading = false;
             }, function (result) {
                 query.status = 'failed';
-                var e = result;
-                if(e.data&& e.data.exception){
-                    var message =e.data.exception;
-                    var msg = !!(message) ? message : 'Failed to take action.';
-                    SweetAlert.swal('Oops...', msg, 'error');
-                }else{
-                    SweetAlert.swal('Oops...', "Failed to take action.", 'error');
-                }
             });
         }
 
@@ -377,14 +361,6 @@ KylinApp
                 QueryService.save({}, {name: query.name, project: query.project, sql: query.sql, description: query.description}, function () {
                     SweetAlert.swal('Success!', 'New query saved..', 'success');
                     $modalInstance.dismiss('cancel');
-                },function(e){
-                    if(e.data&& e.data.exception){
-                        var message =e.data.exception;
-                        var msg = !!(message) ? message : 'Failed to take action.';
-                        SweetAlert.swal('Oops...', msg, 'error');
-                    }else{
-                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
-                    }
                 });
             }
         }
@@ -398,9 +374,20 @@ KylinApp
             });
 
             if (isExecuting && (next.replace(current, "").indexOf("#") != 0)) {
-                if (!confirm("You've executing query in current page, are you sure to leave this page?")) {
-                    event.preventDefault();
-                }
+                SweetAlert.swal({
+                    title: '',
+                    text: "You've executing query in current page, are you sure to leave this page?",
+                    type: '',
+                    showCancelButton: true,
+                    confirmButtonColor: '#DD6B55',
+                    confirmButtonText: "Yes",
+                    closeOnConfirm: true
+                }, function(isConfirm) {
+                    if(!isConfirm){
+                        event.preventDefault();
+                    }
+
+                });
             }
         });
 
