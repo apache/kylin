@@ -77,8 +77,8 @@ KylinApp.run(function ($rootScope,$http, $location, UserService, AuthenticationS
     /**
      * On 'event:error', resend all the 500 requests.
      */
-    $rootScope.$on('event:error', function (event, message) {
-        var msg = !!(message) ? message : 'Failed to take action.';
-        SweetAlert.swal('Oops...', 'Action Failed: ' + msg, 'error');
-    });
+//    $rootScope.$on('event:error', function (event, message) {
+//        var msg = !!(message) ? message : 'Failed to take action.';
+//        SweetAlert.swal('Oops...', 'Action Failed: ' + msg, 'error');
+//    });
 });

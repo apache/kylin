@@ -178,6 +178,14 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
             ProjectService.update({}, requestBody, function (newProj) {
                 SweetAlert.swal('Success!', 'Project update successfully!', 'success');
                 $modalInstance.dismiss('cancel');
+            },function(e){
+                if(e.data&& e.data.exception){
+                    var message =e.data.exception;
+                    var msg = !!(message) ? message : 'Failed to take action.';
+                    SweetAlert.swal('Oops...', msg, 'error');
+                }else{
+                    SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                }
             });
         }
         else
@@ -188,8 +196,14 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
                 if(projects) {
                     projects.push(newProj);
                 }
-            }, function(){
-                console.log('error');
+            }, function(e){
+                if(e.data&& e.data.exception){
+                    var message =e.data.exception;
+                    var msg = !!(message) ? message : 'Failed to take action.';
+                    SweetAlert.swal('Oops...', msg, 'error');
+                }else{
+                    SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                }
             });
         }
     };
