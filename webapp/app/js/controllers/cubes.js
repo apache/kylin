@@ -93,7 +93,14 @@ KylinApp
                     if (detail.length > 0) {
                         cube.detail = detail[0];
                     }
-                }, function () {
+                }, function (e) {
+                    if(e.data&& e.data.exception){
+                        var message =e.data.exception;
+                        var msg = !!(message) ? message : 'Failed to take action.';
+                        SweetAlert.swal('Oops...', msg, 'error');
+                    }else{
+                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                    }
                 });
             }
         };
@@ -126,6 +133,14 @@ KylinApp
                     cube.status = 'READY';
 //                    MessageService.sendMsg('Enable job was submitted successfully', 'success', {});
                     SweetAlert.swal('Success!', 'Enable job was submitted successfully', 'success');
+                },function(e){
+                    if(e.data&& e.data.exception){
+                        var message =e.data.exception;
+                        var msg = !!(message) ? message : 'Failed to take action.';
+                        SweetAlert.swal('Oops...', msg, 'error');
+                    }else{
+                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                    }
                 });
                 }
             });
@@ -152,6 +167,14 @@ KylinApp
                     $scope.cubes=[];
                     $scope.reload();
                     SweetAlert.swal('Success!', 'Purge job was submitted successfully', 'success');
+                },function(e){
+                    if(e.data&& e.data.exception){
+                        var message =e.data.exception;
+                        var msg = !!(message) ? message : 'Failed to take action.';
+                        SweetAlert.swal('Oops...', msg, 'error');
+                    }else{
+                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                    }
                 });
                 }
             });
@@ -172,6 +195,14 @@ KylinApp
                 CubeService.disable({cubeId: cube.name}, {}, function (result) {
                     cube.status = 'DISABLED';
                     SweetAlert.swal('Success!', 'Disable job was submitted successfully', 'success');
+                },function(e){
+                    if(e.data&& e.data.exception){
+                        var message =e.data.exception;
+                        var msg = !!(message) ? message : 'Failed to take action.';
+                        SweetAlert.swal('Oops...', msg, 'error');
+                    }else{
+                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                    }
                 });
                 }
 
@@ -197,6 +228,14 @@ KylinApp
                     }
                     SweetAlert.swal('Success!', 'Cube drop is done successfully', 'success');
 
+                },function(e){
+                    if(e.data&& e.data.exception){
+                        var message =e.data.exception;
+                        var msg = !!(message) ? message : 'Failed to take action.';
+                        SweetAlert.swal('Oops...', msg, 'error');
+                    }else{
+                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                    }
                 });
                 }
 
@@ -251,6 +290,14 @@ KylinApp
                                             }
                                         }
                                     });
+                                },function(e){
+                                    if(e.data&& e.data.exception){
+                                        var message =e.data.exception;
+                                        var msg = !!(message) ? message : 'Failed to take action.';
+                                        SweetAlert.swal('Oops...', msg, 'error');
+                                    }else{
+                                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                                    }
                                 });
                             }
 
@@ -337,6 +384,14 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
                             }
                         }
                     });
+                },function(e){
+                    if(e.data&& e.data.exception){
+                        var message =e.data.exception;
+                        var msg = !!(message) ? message : 'Failed to take action.';
+                        SweetAlert.swal('Oops...', msg, 'error');
+                    }else{
+                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                    }
                 });
             }
 
