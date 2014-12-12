@@ -28,9 +28,11 @@ import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.exception.NotFoundException;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -50,9 +52,8 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author xduo
  * @deprecated method has been merged into #ServiceTestAllInOne
- * @Ignore
- * 
  */
+@Ignore
 public class JobControllerTest extends ServiceTestBase {
 
     private JobController jobSchedulerController;

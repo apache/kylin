@@ -19,6 +19,8 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.net.UnknownHostException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -30,19 +32,27 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.security.acls.domain.PrincipalSid;
+import org.springframework.security.acls.model.AccessControlEntry;
+import org.springframework.security.acls.model.Acl;
+import org.springframework.security.acls.model.Sid;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kylinolap.common.persistence.AclEntity;
 import com.kylinolap.cube.CubeDescManager;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.JobInstance;
+import com.kylinolap.job.exception.JobException;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.project.ProjectManager;
 import com.kylinolap.rest.exception.BadRequestException;
@@ -59,6 +69,9 @@ import com.kylinolap.rest.request.SQLRequest;
 import com.kylinolap.rest.request.UpdateProjectRequest;
 import com.kylinolap.rest.response.AccessEntryResponse;
 import com.kylinolap.rest.response.ErrorResponse;
+import com.kylinolap.rest.response.SQLResponse;
+import com.kylinolap.rest.security.AclPermission;
+import com.kylinolap.rest.security.AclPermissionFactory;
 import com.kylinolap.rest.service.AccessService;
 import com.kylinolap.rest.service.AdminService;
 import com.kylinolap.rest.service.CubeService;
@@ -66,6 +79,8 @@ import com.kylinolap.rest.service.JobService;
 import com.kylinolap.rest.service.ProjectService;
 import com.kylinolap.rest.service.QueryService;
 import com.kylinolap.rest.service.ServiceTestBase;
+import com.kylinolap.rest.service.UserService;
+import com.kylinolap.rest.service.AccessServiceTest.MockAclEntity;
 import com.kylinolap.rest.util.QueryUtil;
 
 /**
@@ -374,5 +389,180 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         UserDetails userdetail = userController.authenticate();
         Assert.assertNotNull(userdetail);
         Assert.assertTrue(user.getUsername().equals("ADMIN"));
+    }
+    
+    @Autowired
+    UserService userService;
+    
+    @Test
+    public void testUserServiceBasics(){
+        userService.deleteUser("ADMIN");
+        Assert.assertTrue(!userService.userExists("ADMIN"));
+        
+        List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        User user = new User("ADMIN", "ADMIN", authorities);
+        userService.createUser(user);
+        
+        Assert.assertTrue(userService.userExists("ADMIN"));
+        
+        UserDetails ud = userService.loadUserByUsername("ADMIN");
+        Assert.assertTrue(ud.getUsername().equals("ADMIN"));
+        
+        Assert.assertTrue(userService.getUserAuthorities().size() > 0);
+    }
+    
+
+    @Test
+    public void testQueryServiceBasics() throws JobException, IOException, SQLException {
+        Assert.assertNotNull(queryService.getJobManager());
+        Assert.assertNotNull(queryService.getConfig());
+        Assert.assertNotNull(queryService.getKylinConfig());
+        Assert.assertNotNull(queryService.getMetadataManager());
+        Assert.assertNotNull(queryService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
+
+//        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 0);
+//
+//        queryService.saveQuery("test", "test", "select * from test_table", "test");
+//        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 1);
+//
+//        queryService.removeQuery(queryService.getQueries("ADMIN").get(0).getProperty("id"));
+//        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 0);
+
+        SQLRequest request = new SQLRequest();
+        request.setSql("select * from test_table");
+        request.setAcceptPartial(true);
+        SQLResponse response = new SQLResponse();
+        response.setHitCache(true);
+        queryService.logQuery(request, response, new Date(), new Date());
+    }
+    
+    @Test
+    public void testJobServiceBasics() throws JobException, IOException {
+        Assert.assertNotNull(jobService.getJobManager());
+        Assert.assertNotNull(jobService.getConfig());
+        Assert.assertNotNull(jobService.getKylinConfig());
+        Assert.assertNotNull(jobService.getMetadataManager());
+        Assert.assertNotNull(jobService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
+        Assert.assertNull(jobService.getJobInstance("job_not_exist"));
+        Assert.assertNotNull(jobService.listAllJobs(null, null, null));
+    }
+    
+    @Test
+    public void testCubeServiceBasics() throws JsonProcessingException, JobException, UnknownHostException {
+        Assert.assertNotNull(cubeService.getJobManager());
+        Assert.assertNotNull(cubeService.getConfig());
+        Assert.assertNotNull(cubeService.getKylinConfig());
+        Assert.assertNotNull(cubeService.getMetadataManager());
+        Assert.assertNotNull(cubeService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
+
+        Assert.assertTrue(CubeService.getCubeDescNameFromCube("testCube").equals("testCube_desc"));
+        Assert.assertTrue(CubeService.getCubeNameFromDesc("testCube_desc").equals("testCube"));
+
+        List<CubeInstance> cubes = cubeService.getCubes(null, null, null, null);
+        Assert.assertNotNull(cubes);
+        CubeInstance cube = cubes.get(0);
+        cubeService.isCubeDescEditable(cube.getDescriptor());
+        cubeService.isCubeEditable(cube);
+
+        cubes = cubeService.getCubes(null, null, 1, 0);
+        Assert.assertTrue(cubes.size() == 1);
+    }
+    
+    @Test
+    public void testAccessServiceBasics() throws JsonProcessingException {
+        Sid adminSid = accessService.getSid("ADMIN", true);
+        Assert.assertNotNull(adminSid);
+        Assert.assertNotNull(AclPermissionFactory.getPermissions());
+
+        AclEntity ae = new MockAclEntity("test-domain-object");
+        accessService.clean(ae, true);
+        AclEntity attachedEntity = new MockAclEntity("attached-domain-object");
+        accessService.clean(attachedEntity, true);
+        
+        // test getAcl
+        Acl acl = accessService.getAcl(ae);
+        Assert.assertNull(acl);
+
+        // test init
+        acl = accessService.init(ae, AclPermission.ADMINISTRATION);
+        Assert.assertTrue(((PrincipalSid) acl.getOwner()).getPrincipal().equals("ADMIN"));
+        Assert.assertTrue(accessService.generateAceResponses(acl).size() == 1);
+        AccessEntryResponse  aer = accessService.generateAceResponses(acl).get(0);
+        Assert.assertTrue(aer.getId() != null);
+        Assert.assertTrue(aer.getPermission() == AclPermission.ADMINISTRATION);
+        Assert.assertTrue(((PrincipalSid)aer.getSid()).getPrincipal().equals("ADMIN"));
+
+        // test grant
+        Sid modeler = accessService.getSid("MODELER", true);
+        acl = accessService.grant(ae, AclPermission.ADMINISTRATION, modeler);
+        Assert.assertTrue(accessService.generateAceResponses(acl).size() == 2);
+        
+        Long modelerEntryId = null;
+        for (AccessControlEntry ace : acl.getEntries()) {
+            PrincipalSid sid = (PrincipalSid) ace.getSid();
+
+            if (sid.getPrincipal().equals("MODELER")) {
+                modelerEntryId = (Long) ace.getId();
+                Assert.assertTrue(ace.getPermission() == AclPermission.ADMINISTRATION);
+            }
+        }
+
+        // test update
+        acl = accessService.update(ae, modelerEntryId, AclPermission.READ);
+
+        Assert.assertTrue(accessService.generateAceResponses(acl).size() == 2);
+
+        for (AccessControlEntry ace : acl.getEntries()) {
+            PrincipalSid sid = (PrincipalSid) ace.getSid();
+
+            if (sid.getPrincipal().equals("MODELER")) {
+                modelerEntryId = (Long) ace.getId();
+                Assert.assertTrue(ace.getPermission() == AclPermission.READ);
+            }
+        }
+
+        accessService.clean(attachedEntity, true);
+        
+        Acl attachedEntityAcl = accessService.getAcl(attachedEntity);
+        Assert.assertNull(attachedEntityAcl);
+        attachedEntityAcl = accessService.init(attachedEntity, AclPermission.ADMINISTRATION);
+        
+        accessService.inherit(attachedEntity, ae);
+
+        attachedEntityAcl = accessService.getAcl(attachedEntity);
+        Assert.assertTrue(attachedEntityAcl.getParentAcl() != null);
+        Assert.assertTrue(attachedEntityAcl.getParentAcl().getObjectIdentity().getIdentifier().equals("test-domain-object"));
+        Assert.assertTrue(attachedEntityAcl.getEntries().size() == 1);
+        
+        // test revoke
+        acl = accessService.revoke(ae, modelerEntryId);
+        Assert.assertTrue(accessService.generateAceResponses(acl).size() == 1);
+
+        // test clean
+        accessService.clean(ae, true);
+        acl = accessService.getAcl(ae);
+        Assert.assertNull(acl);
+        
+        attachedEntityAcl = accessService.getAcl(attachedEntity);
+        Assert.assertNull(attachedEntityAcl);
+    }
+
+    public class MockAclEntity implements AclEntity {
+
+        private String id;
+
+        /**
+         * @param id
+         */
+        public MockAclEntity(String id) {
+            super();
+            this.id = id;
+        }
+
+        @Override
+        public String getId() {
+            return id;
+        }
     }
 }
