@@ -39,7 +39,7 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
         SweetAlert.swal({
             title: '',
             text: 'Are you sure to reload metadata and clean cache?',
-            type: 'info',
+            type: '',
             showCancelButton: true,
             confirmButtonColor: '#DD6B55',
             confirmButtonText: "Yes",
@@ -81,7 +81,7 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
         SweetAlert.swal({
             title: '',
             text: 'Are you sure to clean up unused HDFS and HBase space?',
-            type: 'info',
+            type: '',
             showCancelButton: true,
             confirmButtonColor: '#DD6B55',
             confirmButtonText: "Yes",
@@ -107,7 +107,7 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
         SweetAlert.swal({
             title: '',
             text: 'Are you sure to disable query cache?',
-            type: 'info',
+            type: '',
             showCancelButton: true,
             confirmButtonColor: '#DD6B55',
             confirmButtonText: "Yes",
@@ -177,7 +177,7 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
             SweetAlert.swal({
                 title: '',
                 text: 'Are you sure to update config?',
-                type: 'info',
+                type: '',
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes",

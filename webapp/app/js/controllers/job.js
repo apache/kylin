@@ -105,7 +105,7 @@ KylinApp
             SweetAlert.swal({
                 title: '',
                 text: 'Are you sure to resume the job?',
-                type: 'info',
+                type: '',
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes",
@@ -134,7 +134,7 @@ KylinApp
             SweetAlert.swal({
                 title: 'Confirm',
                 text: 'Are you sure to discard the job?',
-                type: 'info',
+                type: '',
                 showCancelButton: true,
                 confirmButtonColor: '#DD6B55',
                 confirmButtonText: "Yes",
