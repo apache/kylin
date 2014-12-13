@@ -38,21 +38,10 @@ Installation
 ------------
 It is very easy to install Kylin for exploration/development. There are 3 supported options:
 
-1. Quick Start     (Docker)
-2. Sandbox         (HDP or CDH sandbox)
-3. Dev Environment (IDE + Sandbox)
 
-#### Quick Start (using Docker) ####
-This is the easiest option to try Kylin. We have created docker container for Kylin (along with Hadoop, HBase and Hive) with help of SequenceIQ.  The only thing you will need to do is to pull the container from the official Docker repository to be up and running in few minutes. 
-
-Features:
-
-- Size            - Light weight compared to downloading and setting up HDP or CDH sandbox.
-- Cluster support - Supports multi node installation. 
-- Fully Automated - No manual steps. One command does it all 
-
-For a hands-on tutorial please visit [Kylin Docker installation](https://github.com/KylinOLAP/Kylin/wiki/On-Hadoop-Kylin-installation-using-Docker). 
-
+1. Sandbox         (HDP or CDH sandbox)
+2. Dev Environment (IDE + Sandbox)
+3. Docker container     (Docker)
 
 #### Sandbox (On-Hadoop-CLI installation) ####
 
@@ -75,6 +64,18 @@ Applications does not necessarily mean Kylin Web, it can also be any test cases 
 ![Off-CLI Installation](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/installation/Picture2.png)
 
 For a hands-on tutorial please visit [Off-Hadoop-CLI installation](https://github.com/KylinOLAP/Kylin/wiki/Off-Hadoop-CLI-Installation-(Dev-Env-Setup))
+
+#### Docker Container ####
+With help from [SequenceIQ](http://sequenceiq.com/), there's docker container for Kylin (along with Hadoop, HBase and Hive) avaliable now.  The only thing you will need to do is to pull the container from the official Docker repository to be up and running in few minutes. 
+
+Features:
+
+- Size            - Light weight compared to downloading and setting up HDP or CDH sandbox.
+- Cluster support - Supports multi node installation. 
+- Fully Automated - No manual steps. One command does it all 
+
+For a hands-on tutorial please visit [Kylin Docker installation](https://github.com/KylinOLAP/Kylin/wiki/On-Hadoop-Kylin-installation-using-Docker). 
+
 
 
 ### Resources ###
