@@ -66,7 +66,7 @@ Applications does not necessarily mean Kylin Web, it can also be any test cases 
 For a hands-on tutorial please visit [Off-Hadoop-CLI installation](https://github.com/KylinOLAP/Kylin/wiki/Off-Hadoop-CLI-Installation-(Dev-Env-Setup))
 
 #### Docker Container ####
-With help from [SequenceIQ](http://sequenceiq.com/), there's docker container for Kylin (along with Hadoop, HBase and Hive) avaliable now.  The only thing you will need to do is to pull the container from the official Docker repository to be up and running in few minutes. 
+With help from [SequenceIQ](http://sequenceiq.com/), there's docker container for Kylin (along with Hadoop, HBase and Hive) available now:[sequenceiq/docker-kylin](https://github.com/sequenceiq/docker-kylin).  The only thing you will need to do is to pull the container from the official Docker repository to be up and running in few minutes. 
 
 Features:
 
