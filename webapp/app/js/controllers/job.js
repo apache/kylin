@@ -116,7 +116,6 @@ KylinApp
                     if (angular.isDefined($scope.state.selectedJob)) {
                         $scope.state.selectedJob = $scope.jobs[ $scope.state.selectedJob.uuid];
                     }
-//                    MessageService.sendMsg('Job was resumed successfully', 'success', {});
                     SweetAlert.swal('Success!', 'Job has been resumed successfully!', 'success');
                 },function(e){
                     if(e.data&& e.data.exception){
