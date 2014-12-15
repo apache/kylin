@@ -131,7 +131,6 @@ KylinApp
                 if(isConfirm){
                 CubeService.enable({cubeId: cube.name}, {}, function (result) {
                     cube.status = 'READY';
-//                    MessageService.sendMsg('Enable job was submitted successfully', 'success', {});
                     SweetAlert.swal('Success!', 'Enable job was submitted successfully', 'success');
                 },function(e){
                     if(e.data&& e.data.exception){
@@ -144,12 +143,6 @@ KylinApp
                 });
                 }
             });
-//            if (confirm("Are you sure to enable the cube? Please note: if cube schema is changed in the disabled period, all segments of the cube will be discarded due to data and schema mismatch.")) {
-//                CubeService.enable({cubeId: cube.name}, {}, function (result) {
-//                    cube.status = 'READY';
-//                    MessageService.sendMsg('Enable job was submitted successfully', 'success', {});
-//                });
-//            }
         };
 
         $scope.purge = function (cube) {
