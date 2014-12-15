@@ -1,7 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService) {
+    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest) {
         $scope.listParams={
             cubeName: $routeParams.cubeName,
             projectName: $routeParams.projectName
@@ -26,8 +26,10 @@ KylinApp
         $scope.state = { filterAttr: 'create_time', filterReverse: true, reverseColumn: 'create_time',
             dimensionFilter: '', measureFilter: ''};
 
-
         $scope.list = function (offset, limit) {
+            if(!$scope.project.selectedProject){
+                return;
+            }
             offset = (!!offset) ? offset : 0;
             limit = (!!limit) ? limit : 20;
             var defer = $q.defer();
@@ -74,7 +76,7 @@ KylinApp
 
         $scope.$watch('project.selectedProject', function (newValue, oldValue) {
             //exclude when refresh page oldValue=null,first time set value for project (will have page auto reload ,incase duplicate) oldvalue is null
-           if(oldValue){
+           if(newValue){
                 $scope.cubes=[];
                 $scope.reload();
            }
@@ -91,7 +93,14 @@ KylinApp
                     if (detail.length > 0) {
                         cube.detail = detail[0];
                     }
-                }, function () {
+                }, function (e) {
+                    if(e.data&& e.data.exception){
+                        var message =e.data.exception;
+                        var msg = !!(message) ? message : 'Failed to take action.';
+                        SweetAlert.swal('Oops...', msg, 'error');
+                    }else{
+                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                    }
                 });
             }
         };
@@ -110,43 +119,143 @@ KylinApp
         };
 
         $scope.enable = function (cube) {
-            if (confirm("Are you sure to enable the cube? Please note: if cube schema is changed in the disabled period, all segments of the cube will be discarded due to data and schema mismatch.")) {
+            SweetAlert.swal({
+                title: '',
+                text: 'Are you sure to enable the cube? Please note: if cube schema is changed in the disabled period, all segments of the cube will be discarded due to data and schema mismatch.',
+                type: '',
+                showCancelButton: true,
+                confirmButtonColor: '#DD6B55',
+//                confirmButtonText: "Yes",
+                closeOnConfirm: true
+            }, function(isConfirm) {
+                if(isConfirm){
+
+                loadingRequest.show();
                 CubeService.enable({cubeId: cube.name}, {}, function (result) {
+
+                    loadingRequest.hide();
                     cube.status = 'READY';
-                    MessageService.sendMsg('Enable job was submitted successfully', 'success', {});
+                    SweetAlert.swal('Success!', 'Enable job was submitted successfully', 'success');
+                },function(e){
+
+                    loadingRequest.hide();
+                    if(e.data&& e.data.exception){
+                        var message =e.data.exception;
+                        var msg = !!(message) ? message : 'Failed to take action.';
+                        SweetAlert.swal('Oops...', msg, 'error');
+                    }else{
+                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                    }
                 });
-            }
+                }
+            });
         };
 
         $scope.purge = function (cube) {
-            if (confirm("Are you sure to purge the cube? ")) {
+            SweetAlert.swal({
+                title: '',
+                text: 'Are you sure to purge the cube? ',
+                type: '',
+                showCancelButton: true,
+                confirmButtonColor: '#DD6B55',
+                confirmButtonText: "Yes",
+                closeOnConfirm: true
+            }, function(isConfirm) {
+                if(isConfirm){
+
+                loadingRequest.show();
                 CubeService.purge({cubeId: cube.name}, {}, function (result) {
+
+                    loadingRequest.hide();
                     $scope.cubes=[];
                     $scope.reload();
-                    MessageService.sendMsg('Purge job was submitted successfully', 'success', {});
+                    SweetAlert.swal('Success!', 'Purge job was submitted successfully', 'success');
+                },function(e){
+                    loadingRequest.hide();
+                    if(e.data&& e.data.exception){
+                        var message =e.data.exception;
+                        var msg = !!(message) ? message : 'Failed to take action.';
+                        SweetAlert.swal('Oops...', msg, 'error');
+                    }else{
+                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                    }
                 });
-            }
+                }
+            });
         }
 
         $scope.disable = function (cube) {
-            if (confirm("Are you sure to disable the cube?")) {
+
+            SweetAlert.swal({
+                title: '',
+                text: 'Are you sure to disable the cube? ',
+                type: '',
+                showCancelButton: true,
+                confirmButtonColor: '#DD6B55',
+                confirmButtonText: "Yes",
+                closeOnConfirm: true
+            }, function(isConfirm) {
+                if(isConfirm){
+
+                loadingRequest.show();
                 CubeService.disable({cubeId: cube.name}, {}, function (result) {
+
+                    loadingRequest.hide();
                     cube.status = 'DISABLED';
-                    MessageService.sendMsg('Disable job was submitted successfully', 'success', {});
+                    SweetAlert.swal('Success!', 'Disable job was submitted successfully', 'success');
+                },function(e){
+
+                    loadingRequest.hide();
+                    if(e.data&& e.data.exception){
+                        var message =e.data.exception;
+                        var msg = !!(message) ? message : 'Failed to take action.';
+                        SweetAlert.swal('Oops...', msg, 'error');
+                    }else{
+                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                    }
                 });
-            }
+                }
+
+            });
         };
 
         $scope.dropCube = function (cube) {
-            if (confirm("Are you sure to drop the cube? Once it's dropped, all the jobs and data will be cleaned up.")) {
-                CubeService.drop({cubeId: cube.name}, {}, function (result) {
+
+            SweetAlert.swal({
+                title: '',
+                text: " Once it's dropped, your cube’s metadata and data will be cleaned up and can’t be restored back. ",
+                type: '',
+                showCancelButton: true,
+                confirmButtonColor: '#DD6B55',
+                confirmButtonText: "Yes",
+                closeOnConfirm: true
+            }, function(isConfirm) {
+                if(isConfirm){
+
+                    loadingRequest.show();
+                    CubeService.drop({cubeId: cube.name}, {}, function (result) {
+
+                    loadingRequest.hide();
                     var cubeIndex = $scope.cubes.indexOf(cube);
                     if (cubeIndex > -1) {
                         $scope.cubes.splice(cubeIndex, 1);
                     }
-                    MessageService.sendMsg('Cube drop is done successfully', 'success', {});
+                    SweetAlert.swal('Success!', 'Cube drop is done successfully', 'success');
+
+                },function(e){
+
+                    loadingRequest.hide();
+                    if(e.data&& e.data.exception){
+                        var message =e.data.exception;
+                        var msg = !!(message) ? message : 'Failed to take action.';
+                        SweetAlert.swal('Oops...', msg, 'error');
+                    }else{
+                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                    }
                 });
-            }
+                }
+
+            });
         };
 
         $scope.startJobSubmit = function (cube) {
@@ -168,7 +277,19 @@ KylinApp
                         });
                     }
                     else {
-                        if (confirm("Are you sure to start the build?")) {
+
+                        SweetAlert.swal({
+                            title: '',
+                            text: "Are you sure to start the build? ",
+                            type: '',
+                            showCancelButton: true,
+                            confirmButtonColor: '#DD6B55',
+                            confirmButtonText: "Yes",
+                            closeOnConfirm: true
+                        }, function(isConfirm) {
+                            if(isConfirm){
+
+                            loadingRequest.show();
                             CubeService.rebuildCube(
                                 {
                                     cubeId: cube.name
@@ -178,17 +299,23 @@ KylinApp
                                     startTime: 0,
                                     endTime: 0
                                 }, function (job) {
-                                    MessageService.sendMsg('Rebuild job was submitted successfully', 'success', {
-                                        cancel: {
-                                            label: 'View Jobs',
-                                            action: function () {
-                                                $location.path('/jobs');
-                                                $scope.$apply();
-                                            }
-                                        }
-                                    });
+
+                                    loadingRequest.hide();
+                                    SweetAlert.swal('Success!', 'Rebuild job was submitted successfully', 'success');
+                                },function(e){
+
+                                    loadingRequest.hide();
+                                    if(e.data&& e.data.exception){
+                                        var message =e.data.exception;
+                                        var msg = !!(message) ? message : 'Failed to take action.';
+                                        SweetAlert.swal('Oops...', msg, 'error');
+                                    }else{
+                                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                                    }
                                 });
-                        }
+                            }
+
+                        });
                     }
                 }
             });
@@ -229,7 +356,7 @@ KylinApp
         }
     });
 
-var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube, buildType) {
+var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube, buildType,SweetAlert) {
     $scope.cube = cube;
 
     $scope.jobBuildRequest = {
@@ -240,29 +367,33 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
     $scope.message = "";
 
     $scope.rebuild = function () {
-        if (confirm("Are you sure to rebuild the cube?")) {
-            $scope.message = null;
-            $scope.jobBuildRequest.startTime = new Date($scope.jobBuildRequest.startTime).getTime();
-            $scope.jobBuildRequest.endTime = new Date($scope.jobBuildRequest.endTime).getTime();
 
-            if ($scope.jobBuildRequest.startTime >= $scope.jobBuildRequest.endTime) {
-                $scope.message = "WARNING: End time should be later than the start time.";
-                return;
-            }
+                $scope.message = null;
+                $scope.jobBuildRequest.startTime = new Date($scope.jobBuildRequest.startTime).getTime();
+                $scope.jobBuildRequest.endTime = new Date($scope.jobBuildRequest.endTime).getTime();
 
-            CubeService.rebuildCube({cubeId: cube.name}, $scope.jobBuildRequest, function (job) {
-                $modalInstance.dismiss('cancel');
-                MessageService.sendMsg('Rebuild job was submitted successfully', 'success', {
-                    cancel: {
-                        label: 'View Jobs',
-                        action: function () {
-                            $location.path('/jobs');
-                            $scope.$apply();
-                        }
+                if ($scope.jobBuildRequest.startTime >= $scope.jobBuildRequest.endTime) {
+                    $scope.message = "WARNING: End time should be later than the start time.";
+                    return;
+                }
+
+                loadingRequest.show();
+                CubeService.rebuildCube({cubeId: cube.name}, $scope.jobBuildRequest, function (job) {
+
+                    loadingRequest.hide();
+                    $modalInstance.dismiss('cancel');
+                    SweetAlert.swal('Success!', 'Rebuild job was submitted successfully', 'success');
+                },function(e){
+
+                    loadingRequest.hide();
+                    if(e.data&& e.data.exception){
+                        var message =e.data.exception;
+                        var msg = !!(message) ? message : 'Failed to take action.';
+                        SweetAlert.swal('Oops...', msg, 'error');
+                    }else{
+                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
                     }
                 });
-            });
-        }
     };
 
     // used by cube segment refresh

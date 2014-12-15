@@ -76,7 +76,7 @@ public class JobInstanceBuilderTest extends LocalFileMetadataTestCase {
         // initial segment
         CubeSegment segment = cubeManager.allocateSegments(cube, CubeBuildTypeEnum.BUILD, 0, dateEnd).get(0);
 
-        JobInstance jobInstance = jobManager.createJob(cubeName, segment.getName(), UUID.randomUUID().toString(), CubeBuildTypeEnum.BUILD);
+        JobInstance jobInstance = jobManager.createJob(cubeName, segment.getName(), UUID.randomUUID().toString(), CubeBuildTypeEnum.BUILD,"KylinTest");
 
         String actual = JsonUtil.writeValueAsIndentString(jobInstance);
         System.out.println(actual);
@@ -151,7 +151,7 @@ public class JobInstanceBuilderTest extends LocalFileMetadataTestCase {
         // initial segment
         CubeSegment segment = CubeManager.getInstance(this.getTestConfig()).allocateSegments(cube, CubeBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L).get(0);
 
-        JobInstance jobInstance = jobManager.createJob(cubeName, segment.getName(), UUID.randomUUID().toString(), CubeBuildTypeEnum.MERGE);
+        JobInstance jobInstance = jobManager.createJob(cubeName, segment.getName(), UUID.randomUUID().toString(), CubeBuildTypeEnum.MERGE,"KylinTest");
 
         String actual = JsonUtil.writeValueAsIndentString(jobInstance);
         System.out.println(actual);
