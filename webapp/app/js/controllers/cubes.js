@@ -1,7 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert) {
+    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest) {
         $scope.listParams={
             cubeName: $routeParams.cubeName,
             projectName: $routeParams.projectName
@@ -129,10 +129,16 @@ KylinApp
                 closeOnConfirm: true
             }, function(isConfirm) {
                 if(isConfirm){
+
+                loadingRequest.show();
                 CubeService.enable({cubeId: cube.name}, {}, function (result) {
+
+                    loadingRequest.hide();
                     cube.status = 'READY';
                     SweetAlert.swal('Success!', 'Enable job was submitted successfully', 'success');
                 },function(e){
+
+                    loadingRequest.hide();
                     if(e.data&& e.data.exception){
                         var message =e.data.exception;
                         var msg = !!(message) ? message : 'Failed to take action.';
@@ -156,11 +162,16 @@ KylinApp
                 closeOnConfirm: true
             }, function(isConfirm) {
                 if(isConfirm){
+
+                loadingRequest.show();
                 CubeService.purge({cubeId: cube.name}, {}, function (result) {
+
+                    loadingRequest.hide();
                     $scope.cubes=[];
                     $scope.reload();
                     SweetAlert.swal('Success!', 'Purge job was submitted successfully', 'success');
                 },function(e){
+                    loadingRequest.hide();
                     if(e.data&& e.data.exception){
                         var message =e.data.exception;
                         var msg = !!(message) ? message : 'Failed to take action.';
@@ -185,10 +196,16 @@ KylinApp
                 closeOnConfirm: true
             }, function(isConfirm) {
                 if(isConfirm){
+
+                loadingRequest.show();
                 CubeService.disable({cubeId: cube.name}, {}, function (result) {
+
+                    loadingRequest.hide();
                     cube.status = 'DISABLED';
                     SweetAlert.swal('Success!', 'Disable job was submitted successfully', 'success');
                 },function(e){
+
+                    loadingRequest.hide();
                     if(e.data&& e.data.exception){
                         var message =e.data.exception;
                         var msg = !!(message) ? message : 'Failed to take action.';
@@ -214,7 +231,11 @@ KylinApp
                 closeOnConfirm: true
             }, function(isConfirm) {
                 if(isConfirm){
-                CubeService.drop({cubeId: cube.name}, {}, function (result) {
+
+                    loadingRequest.show();
+                    CubeService.drop({cubeId: cube.name}, {}, function (result) {
+
+                    loadingRequest.hide();
                     var cubeIndex = $scope.cubes.indexOf(cube);
                     if (cubeIndex > -1) {
                         $scope.cubes.splice(cubeIndex, 1);
@@ -222,6 +243,8 @@ KylinApp
                     SweetAlert.swal('Success!', 'Cube drop is done successfully', 'success');
 
                 },function(e){
+
+                    loadingRequest.hide();
                     if(e.data&& e.data.exception){
                         var message =e.data.exception;
                         var msg = !!(message) ? message : 'Failed to take action.';
@@ -265,6 +288,8 @@ KylinApp
                             closeOnConfirm: true
                         }, function(isConfirm) {
                             if(isConfirm){
+
+                            loadingRequest.show();
                             CubeService.rebuildCube(
                                 {
                                     cubeId: cube.name
@@ -274,8 +299,12 @@ KylinApp
                                     startTime: 0,
                                     endTime: 0
                                 }, function (job) {
+
+                                    loadingRequest.hide();
                                     SweetAlert.swal('Success!', 'Rebuild job was submitted successfully', 'success');
                                 },function(e){
+
+                                    loadingRequest.hide();
                                     if(e.data&& e.data.exception){
                                         var message =e.data.exception;
                                         var msg = !!(message) ? message : 'Failed to take action.';
@@ -348,10 +377,15 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
                     return;
                 }
 
+                loadingRequest.show();
                 CubeService.rebuildCube({cubeId: cube.name}, $scope.jobBuildRequest, function (job) {
+
+                    loadingRequest.hide();
                     $modalInstance.dismiss('cancel');
                     SweetAlert.swal('Success!', 'Rebuild job was submitted successfully', 'success');
                 },function(e){
+
+                    loadingRequest.hide();
                     if(e.data&& e.data.exception){
                         var message =e.data.exception;
                         var msg = !!(message) ? message : 'Failed to take action.';
