@@ -190,13 +190,14 @@ public class ProjectManager {
         return addCubeToProject(cubeName, newProjectName, owner);
     }
 
-    public ProjectInstance updateTableToProject(String tables, String projectName) throws IOException {
+    public ProjectInstance updateTableToProject(String[] tables, String projectName) throws IOException {
         ProjectInstance projectInstance = getProject(projectName);
-        String[] tokens = StringUtils.split(tables, ",");
-        for (int i = 0; i < tokens.length; i++) {
-            String token = tokens[i].trim();
-            if (StringUtils.isNotEmpty(token)) {
-                projectInstance.addTable(token);
+        for (int i = 0; i < tables.length; i++) {
+            String token = tables[i].trim();
+            int cut = token.indexOf('.');
+            String tableName = cut >= 0 ? token.substring(cut + 1).trim() : token.trim();
+            if (StringUtils.isNotEmpty(tableName)) {
+                projectInstance.addTable(tableName);
             }
         }
 

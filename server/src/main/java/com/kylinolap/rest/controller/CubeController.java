@@ -28,6 +28,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -196,10 +199,12 @@ public class CubeController extends BasicController {
     @ResponseBody
     public JobInstance rebuild(@PathVariable String cubeName, @RequestBody JobBuildRequest jobBuildRequest) {
         JobInstance jobInstance = null;
-
         try {
             CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
-            String jobId = jobService.submitJob(cube, jobBuildRequest.getStartTime(), jobBuildRequest.getEndTime(), CubeBuildTypeEnum.valueOf(jobBuildRequest.getBuildType()));
+            
+            String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
+
+            String jobId = jobService.submitJob(cube, jobBuildRequest.getStartTime(), jobBuildRequest.getEndTime(), CubeBuildTypeEnum.valueOf(jobBuildRequest.getBuildType()),submitter);
             jobInstance = jobService.getJobInstance(jobId);
         } catch (JobException e) {
             logger.error(e.getLocalizedMessage(), e);
@@ -356,7 +361,8 @@ public class CubeController extends BasicController {
         } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException("You don't have right to update this cube.");
         } catch (Exception e) {
-            throw new InternalErrorException("Failed to deal with the request.", e);
+            logger.error("Failed to deal with the request.", e);
+            throw new InternalErrorException("Failed to deal with the request: " + e.getMessage());
         }
 
         if (desc.getError().isEmpty()) {
@@ -426,7 +432,7 @@ public class CubeController extends BasicController {
             updateRequest(cubeRequest, false, e.getMessage());
         } catch (IOException e) {
             logger.error("Failed to deal with the request.", e);
-            throw new InternalErrorException("Failed to deal with the request.", e);
+            throw new InternalErrorException("Failed to deal with the request:"+e.getMessage(), e);
         }
         return desc;
     }

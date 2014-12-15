@@ -2,7 +2,6 @@
 body {
   background-color: #FFF;
 }
-
 /** Fixed bottom footer **/
 .copyright {
   display: table;
@@ -488,4 +487,46 @@ background-color:#ffffff;
   line-height: 1.42857143;
   vertical-align: top;
   border-top: 1px solid #ddd;
+}
+.tb-breakword{
+    word-break:break-all;
+    word-wrap:break-word;
+}
+
+//overlay for loading request
+.loadingOverlay{position:fixed;top:0;right:0;bottom:0;left:0;z-index:1998;width:100%;height:100%;_padding:0 20px 0 0;background:#f6f4f5;display:none;}
+.showbox{position:fixed;top:0;left:50%;z-index:9999;opacity:0;filter:alpha(opacity=0);margin-left:-80px;}
+*html,*html body{background-image:url(about:blank);background-attachment:fixed;}
+//*html .showbox,*html .loadingOverlay{position:absolute;top:expression(eval(document.documentElement.scrollTop));}
+#loadingCntnr{
+//  border:1px solid #8CBEDA;color:#37a;font-size:18px;font-weight:bold;
+  color: #797979;
+  font-size: 16px;
+  font-weight: 300;
+  line-height: normal;
+}
+
+#loadingCntnr div.loadingWord{width:200px;height:70px;line-height:70px;border:2px solid #D6E7F2;background:#fff;}
+#loadingCntnr img{margin:17px 15px;float:left;display:inline;}
+
+treecontrol ul{
+  width:305px !important;
+}
+
+/** Customization for Messenger **/
+/** The top lower **/
+ul.messenger.messenger-fixed.messenger-on-top {
+  top: 100px;
+}
+
+/** Enable the text selectable on notification of Messenger **/
+ul.messenger .messenger-message-inner {
+  -moz-user-select: text;
+  -webkit-user-select: text;
+  -o-user-select: text;
+  user-select: text;
+}
+
+.load-hive-metawrapper input[type="radio"]{
+  margin-left:0px !important;
 }

@@ -489,7 +489,7 @@ public class CubeDesc extends RootPersistentEntity {
         // check all dimension columns are presented on rowkey
         List<TblColRef> dimCols = listDimensionColumnsExcludingDerived();
         if (rowkey.getRowKeyColumns().length != dimCols.size()) {
-            addError("RowKey columns count (" + rowkey.getRowKeyColumns().length + ") does not equal to dimension columns count (" + dimCols.size() + "). ");
+            addError("RowKey columns count (" + rowkey.getRowKeyColumns().length + ") does not match dimension columns count (" + dimCols.size() + "). ");
         }
     }
 
