@@ -1,6 +1,6 @@
 'use strict';
 
-KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, TableService, MessageService, $modal,SweetAlert) {
+KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, TableService,loadingRequest, MessageService, $modal,SweetAlert) {
     $scope.configStr = "";
     $scope.envStr = "";
 
@@ -149,9 +149,12 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
         };
         $scope.calculate = function () {
             $modalInstance.dismiss();
+            loadingRequest.show();
             TableService.genCardinality({tableName: $scope.tableName}, {delimiter: $scope.delimiter, format: $scope.format}, function (result) {
+                loadingRequest.hide();
                 SweetAlert.swal('Success!', 'Cardinality job was calculated successfully. . Click Refresh button ...', 'success');
             },function(e){
+                loadingRequest.hide();
                 console.log(e);
                 if(e.data&& e.data.exception){
                     var message =e.data.exception;
