@@ -1,6 +1,6 @@
 'use strict';
 
-KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService,SweetAlert,$cookieStore) {
+KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService,SweetAlert,$cookieStore,$log) {
 
     $scope.header = {show: true};
     $scope.footer = {
@@ -155,7 +155,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
 
     $scope.$watch('project.selectedProject', function (newValue, oldValue) {
         if(newValue){
-            console.log("project updated in page controller");
+            $log.log("project updated in page controller");
             $cookieStore.put("project",$scope.project.selectedProject);
         }
 
