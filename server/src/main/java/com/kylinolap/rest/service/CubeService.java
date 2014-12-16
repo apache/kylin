@@ -175,7 +175,7 @@ public class CubeService extends BasicService {
             logger.info("New cube " + cubeName + " has " + cuboidCount + " cuboids");
         } catch (Exception e) {
             getMetadataManager().removeCubeDesc(createdDesc);
-            throw new InternalErrorException("Failed to deal with the request.", e);
+            throw new InternalErrorException("Failed to deal with the request."+e.getLocalizedMessage(), e);
         }
 
         createdCube = getCubeManager().createCube(cubeName, projectName, createdDesc, owner);
