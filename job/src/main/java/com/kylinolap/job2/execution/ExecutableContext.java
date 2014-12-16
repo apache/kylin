@@ -5,5 +5,5 @@ package com.kylinolap.job2.execution;
  */
 public interface ExecutableContext {
 
-    Object getSchedularContext();
+    Object getSchedulerContext();
 }
