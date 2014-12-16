@@ -16,7 +16,7 @@ public class QuartzContext implements ExecutableContext {
         innerContext = context;
     }
     @Override
-    public JobExecutionContext getSchedularContext() {
+    public JobExecutionContext getSchedulerContext() {
         return innerContext;
     }
 }

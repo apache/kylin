@@ -7,9 +7,15 @@ import com.kylinolap.job2.exception.ExecuteException;
  */
 public interface Executable {
 
+    String getId();
+
     ExecuteResult execute(ExecutableContext executableContext) throws ExecuteException;
 
-    void stop();
+    void stop() throws ExecuteException;
 
     ExecuteStatus getStatus();
+
+    boolean isRunnable();
+
+    boolean isAsync();
 }
