@@ -1,6 +1,6 @@
 'use strict';
 
-KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService,SweetAlert) {
+KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService,SweetAlert,$cookieStore) {
 
     $scope.header = {show: true};
     $scope.footer = {
@@ -122,17 +122,19 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
         projects:[],
         selectedProject: null
     };
-    ProjectService.list({}, function (projects) {
 
+    ProjectService.list({}, function (projects) {
         angular.forEach(projects, function(project, index){
             $scope.project.projects.push(project.name);
         });
-
         var absUrl = $location.absUrl();
-        if(absUrl.indexOf("/login")==-1){
-            $scope.project.selectedProject=$scope.project.selectedProject!=null?$scope.project.selectedProject:$scope.project.projects[0]
-        }
 
+        var projectInCookie = $cookieStore.get("project");
+        if(absUrl.indexOf("/login")==-1){
+            $scope.project.selectedProject=$scope.project.selectedProject!=null?$scope.project.selectedProject:projectInCookie!=null?projectInCookie:$scope.project.projects[0]
+        }else{
+            $scope.project.selectedProject=projectInCookie!=null?projectInCookie:null;
+        }
     });
 
     $scope.toCreateProj = function () {
@@ -149,6 +151,15 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
             }
         });
     };
+
+
+    $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+        if(newValue){
+            console.log("project updated in page controller");
+            $cookieStore.put("project",$scope.project.selectedProject);
+        }
+
+    });
 
 });
 
@@ -211,4 +222,5 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
     $scope.cancel = function () {
         $modalInstance.dismiss('cancel');
     };
+
 };
