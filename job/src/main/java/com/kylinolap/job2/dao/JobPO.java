@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kylinolap.common.persistence.RootPersistentEntity;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by qianzhou on 12/15/14.
@@ -32,6 +33,9 @@ public class JobPO extends RootPersistentEntity {
 
     @JsonProperty("isAsync")
     private boolean isAsync;
+
+    @JsonProperty("extra")
+    private Map<String, String> extra;
 
     public String getName() {
         return name;
@@ -87,5 +91,13 @@ public class JobPO extends RootPersistentEntity {
 
     public void setAsync(boolean isAsync) {
         this.isAsync = isAsync;
+    }
+
+    public Map<String, String> getExtra() {
+        return extra;
+    }
+
+    public void setExtra(Map<String, String> extra) {
+        this.extra = extra;
     }
 }

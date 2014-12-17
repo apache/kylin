@@ -1,4 +1,4 @@
-package com.kylinolap.job2.schedular;
+package com.kylinolap.job2;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.job.engine.JobEngineConfig;
@@ -19,7 +19,5 @@ public interface Scheduler {
     boolean submit(Executable executable) throws SchedularException;
 
     boolean stop(Executable executable) throws SchedularException;
-
-    List<Executable> getAllExecutables();
 
 }
