@@ -5,7 +5,6 @@ import com.kylinolap.job2.execution.ExecutableContext;
 import com.kylinolap.job2.execution.ExecuteResult;
 import com.kylinolap.job2.execution.ExecuteStatus;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
-import com.sun.org.apache.bcel.internal.generic.NEW;
 
 import java.util.UUID;
 

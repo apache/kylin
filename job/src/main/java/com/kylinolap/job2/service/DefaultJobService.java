@@ -109,6 +109,7 @@ public class DefaultJobService {
         result.setUuid(executable.getId());
         result.setType(executable.getClass().getName());
         result.setStatus(executable.getStatus().toString());
+        result.setExtra(executable.getExtra());
         if (executable instanceof DefaultChainedExecutable) {
             ArrayList<JobPO> tasks = Lists.<JobPO>newArrayList();
             for (AbstractExecutable task : ((DefaultChainedExecutable) executable).getExecutables()) {
@@ -128,6 +129,7 @@ public class DefaultJobService {
             result.setAsync(jobPO.isAsync());
             result.setStatus(ExecuteStatus.valueOf(jobPO.getStatus()));
             result.setId(jobPO.getUuid());
+            result.setExtra(jobPO.getExtra());
             List<JobPO> tasks = jobPO.getTasks();
             if (tasks != null && !tasks.isEmpty()) {
                 Preconditions.checkArgument(result instanceof DefaultChainedExecutable);

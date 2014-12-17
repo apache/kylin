@@ -22,11 +22,11 @@ public class DefaultContext implements ExecutableContext {
         return null;
     }
 
-    public void addRunningJob(Executable executable) {
+    void addRunningJob(Executable executable) {
         runningJobs.put(executable.getId(), executable);
     }
 
-    public void removeRunningJob(Executable executable) {
+    void removeRunningJob(Executable executable) {
         runningJobs.remove(executable.getId());
     }
 
