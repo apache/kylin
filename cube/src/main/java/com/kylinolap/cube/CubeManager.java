@@ -620,7 +620,6 @@ public class CubeManager {
 
     private synchronized CubeInstance loadCubeInstance(String path) throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Loading CubeInstance " + store.getReadableResourcePath(path));
 
         CubeInstance cubeInstance = null;
         try {
