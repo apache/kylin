@@ -403,8 +403,8 @@ public class JobFlowListener implements JobListener {
             log.info("prepare to send email to:"+users);
             
             log.info("job name:"+jobInstance.getName());
-            log.info("submitter:"+jobInstance.getSubmitter());
             
+            log.info("submitter:"+jobInstance.getSubmitter());
             
             if (users.size() > 0) {
                 log.info("notify list:"+users);
