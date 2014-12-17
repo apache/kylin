@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 
+import org.apache.hadoop.util.ToolRunner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -34,7 +35,6 @@ import org.quartz.SchedulerException;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.ClasspathUtil;
-import com.kylinolap.common.util.CliCommandExecutor;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.cube.CubeBuildTypeEnum;
@@ -45,6 +45,7 @@ import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.job.constant.JobStatusEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.exception.InvalidJobInstanceException;
+import com.kylinolap.job.hadoop.cube.StorageCleanupJob;
 
 /**
  * @author ysong1
@@ -74,8 +75,12 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
     }
 
     @After
-    public void after() throws IOException {
+    public void after() throws Exception {
         // jobManager.deleteAllJobs();
+        int exitCode = cleanupOldCubes();
+        if (exitCode == 0)
+            exportHBaseData();
+        
         this.cleanupTestMetadata();
     }
 
@@ -85,8 +90,8 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         // start job schedule engine
         jobManager.startJobEngine(10);
 
-//        testSimpleLeftJoinCube();
-        
+        //        testSimpleLeftJoinCube();
+
         // keep this order.
         testLeftJoinCube();
         testInnerJoinCube();
@@ -181,28 +186,28 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
     @SuppressWarnings("unused")
     private void testSimpleLeftJoinCube() throws Exception {
         DeployUtil.prepareTestData("left", "test_kylin_cube_with_slr_left_join_empty");
-        
+
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
         long dateStart;
         long dateEnd;
-        
+
         ArrayList<String> jobs = new ArrayList<String>();
-        
+
         // this cube's start date is 0, end date is 20501112000000
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         dateStart = cubeMgr.getCube("test_kylin_cube_with_slr_left_join_empty").getDescriptor().getCubePartitionDesc().getPartitionDateStart();
         dateEnd = f.parse("2050-11-12").getTime();
         jobs.addAll(this.submitJob("test_kylin_cube_with_slr_left_join_empty", dateStart, dateEnd, CubeBuildTypeEnum.BUILD));
-        
+
         // this cube's start date is 0, end date is 20501112000000
         dateStart = cubeMgr.getCube("test_kylin_cube_without_slr_left_join_empty").getDescriptor().getCubePartitionDesc().getPartitionDateStart();
         dateEnd = f.parse("2050-11-12").getTime();
         jobs.addAll(this.submitJob("test_kylin_cube_without_slr_left_join_empty", dateStart, dateEnd, CubeBuildTypeEnum.BUILD));
-        
+
         waitCubeBuilt(jobs);
     }
-    
+
     protected void waitCubeBuilt(List<String> jobs) throws Exception {
 
         boolean allFinished = false;
@@ -244,19 +249,23 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
             seg.setLastBuildJobID(uuid);
         }
         cubeMgr.updateCube(cube);
-        for (JobInstance job: jobs) {
+        for (JobInstance job : jobs) {
             // submit job to store
             jobManager.submitJob(job);
         }
         return jobUuids;
     }
-    
-    private void cleanupOldCubes() {
-        try {
-            CliCommandExecutor cli = KylinConfig.getInstanceFromEnv().getCliCommandExecutor();
-            cli.execute("hbase org.apache.hadoop.util.RunJar /root/kylin-job-0.6.3-SNAPSHOT-job.jar com.kylinolap.job.hadoop.cube.StorageCleanupJob --delete true");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+    private int cleanupOldCubes() throws Exception {
+        String[] args = { "--delete", "true" };
+
+        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
+        return exitCode;
+    }
+
+    private void exportHBaseData() throws IOException {
+        ExportHBaseData export = new ExportHBaseData();
+        export.setup();
+        export.exportTables();
     }
 }
