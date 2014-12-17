@@ -455,6 +455,7 @@ public class CubeDesc extends RootPersistentEntity {
     public void init(KylinConfig config, Map<String, TableDesc> tables) {
         this.errors.clear();
         this.config = config;
+
         if (this.modelName == null || this.modelName.length() == 0) {
             this.addError("The cubeDesc '" + this.getName() + "' doesn't have data model specified.");
         }

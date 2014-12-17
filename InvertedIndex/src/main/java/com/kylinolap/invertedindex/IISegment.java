@@ -20,6 +20,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.kylinolap.dict.ColumnDictInfo;
+import com.kylinolap.dict.Dictionary;
+import com.kylinolap.invertedindex.index.TableRecordInfo;
 import com.kylinolap.invertedindex.model.IIDesc;
 import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.metadata.realization.SegmentStatusEnum;
@@ -34,7 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author honma
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class IISegment implements Comparable<IISegment> {
+public class IISegment implements Comparable<IISegment>, ColumnDictInfo {
 
     @JsonBackReference
     private IIInstance iiInstance;
@@ -69,6 +72,8 @@ public class IISegment implements Comparable<IISegment> {
 
     @JsonProperty("dictionaries")
     private ConcurrentHashMap<String, String> dictionaries; // table/column ==> dictionary resource path
+
+    private transient TableRecordInfo tableRecordInfo;
 
     /**
      * @param startDate
@@ -287,5 +292,23 @@ public class IISegment implements Comparable<IISegment> {
                 .add("last_build_job_id", lastBuildJobID)
                 .add("status", status)
                 .toString();
+    }
+
+    @Override
+    public int getColumnLength(TblColRef col) {
+        if (tableRecordInfo == null)
+            tableRecordInfo = new TableRecordInfo(this);
+
+        int index = tableRecordInfo.findColumn(col);
+        return tableRecordInfo.length(index);
+    }
+
+    @Override
+    public Dictionary<?> getDictionary(TblColRef col) {
+        if (tableRecordInfo == null)
+            tableRecordInfo = new TableRecordInfo(this);
+
+        int index = tableRecordInfo.findColumn(col);
+        return tableRecordInfo.dict(index);
     }
 }

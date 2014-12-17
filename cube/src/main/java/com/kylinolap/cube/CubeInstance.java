@@ -16,6 +16,7 @@
 package com.kylinolap.cube;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,15 +29,15 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
-import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.CubePartitionDesc;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.realization.RealizationStatusEnum;
-import com.kylinolap.metadata.realization.SegmentStatusEnum;
+import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.JoinDesc;
+import com.kylinolap.metadata.model.TblColRef;
+import com.kylinolap.metadata.realization.*;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class CubeInstance extends RootPersistentEntity {
+public class CubeInstance extends AbstractRealization {
 
     public static CubeInstance create(String cubeName, String projectName, CubeDesc cubeDesc) {
         CubeInstance cubeInstance = new CubeInstance();
@@ -168,8 +169,6 @@ public class CubeInstance extends RootPersistentEntity {
     public CubeDesc getDescriptor() {
         return CubeDescManager.getInstance(config).getCubeDesc(descName);
     }
-
-
 
     public boolean isReady() {
         return getStatus() == RealizationStatusEnum.READY;
@@ -364,7 +363,7 @@ public class CubeInstance extends RootPersistentEntity {
     public long[] getDateRange() {
         List<CubeSegment> readySegments = getSegment(SegmentStatusEnum.READY);
         if (readySegments.isEmpty()) {
-            return new long[]{0L, 0L};
+            return new long[] { 0L, 0L };
         }
         long start = Long.MAX_VALUE;
         long end = Long.MIN_VALUE;
@@ -376,7 +375,7 @@ public class CubeInstance extends RootPersistentEntity {
                 end = segment.getDateRangeEnd();
             }
         }
-        return new long[]{start, end};
+        return new long[] { start, end };
     }
 
     private boolean appendOnHll() {
@@ -401,7 +400,7 @@ public class CubeInstance extends RootPersistentEntity {
         if (readySegments.isEmpty()) {
             return false;
         }
-        for (CubeSegment readySegment: readySegments) {
+        for (CubeSegment readySegment : readySegments) {
             if (readySegment.getDateRangeStart() == startDate && readySegment.getDateRangeEnd() == endDate) {
                 //refresh build
                 return false;
@@ -418,7 +417,7 @@ public class CubeInstance extends RootPersistentEntity {
         if (readySegments.isEmpty()) {
             return false;
         }
-        for (CubeSegment readySegment: readySegments) {
+        for (CubeSegment readySegment : readySegments) {
             if (readySegment.getDateRangeEnd() > segment.getDateRangeStart()) {
                 //has overlap and not refresh
                 return true;
@@ -427,4 +426,13 @@ public class CubeInstance extends RootPersistentEntity {
         return false;
     }
 
+    @Override
+    public int getCost(String factTable, Collection<JoinDesc> joins, Collection<TblColRef> allColumns, Collection<FunctionDesc> aggrFunctions) {
+        return 0;
+    }
+
+    @Override
+    public DataModelRealizationType getType() {
+        return DataModelRealizationType.CUBE;
+    }
 }

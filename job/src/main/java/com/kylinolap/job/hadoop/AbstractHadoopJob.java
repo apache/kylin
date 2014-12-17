@@ -17,8 +17,9 @@ package com.kylinolap.job.hadoop;
 
 /**
  * @author George Song (ysong1)
- * 
+ *
  */
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +27,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IISegment;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -176,9 +179,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         dumpList.add(cube.getResourcePath());
         dumpList.add(cube.getDescriptor().getModel().getResourcePath());
         dumpList.add(cube.getDescriptor().getResourcePath());
-        if (cube.isInvertedIndex()) {
-            dumpList.add(cube.getInvertedIndexDesc().getResourcePath());
-        }
         for (TableDesc table : cube.getDescriptor().listTables()) {
             dumpList.add(table.getResourcePath());
         }
@@ -192,6 +192,40 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         // hadoop distributed cache
         conf.set("tmpfiles", "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath()));
     }
+
+
+    protected void attachKylinPropsAndMetadata(IIInstance ii, Configuration conf) throws IOException {
+        File tmp = File.createTempFile("kylin_job_meta", "");
+        tmp.delete(); // we need a directory, so delete the file first
+
+        File metaDir = new File(tmp, "meta");
+        metaDir.mkdirs();
+        metaDir.getParentFile().deleteOnExit();
+
+        // write kylin.properties
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        File kylinPropsFile = new File(metaDir, "kylin.properties");
+        kylinConfig.writeProperties(kylinPropsFile);
+
+        // write II / model_desc / II_desc / dict / table
+        ArrayList<String> dumpList = new ArrayList<String>();
+        dumpList.add(ii.getResourcePath());
+        dumpList.add(ii.getDescriptor().getModel().getResourcePath());
+        dumpList.add(ii.getDescriptor().getResourcePath());
+        for (TableDesc table : ii.getDescriptor().listTables()) {
+            dumpList.add(table.getResourcePath());
+        }
+
+        for (IISegment segment : ii.getSegments()) {
+            dumpList.addAll(segment.getDictionaryPaths());
+        }
+
+        dumpResources(kylinConfig, metaDir, dumpList);
+
+        // hadoop distributed cache
+        conf.set("tmpfiles", "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath()));
+    }
+
 
     private void dumpResources(KylinConfig kylinConfig, File metaDir, ArrayList<String> dumpList) throws IOException {
         ResourceStore from = ResourceStore.getStore(kylinConfig);

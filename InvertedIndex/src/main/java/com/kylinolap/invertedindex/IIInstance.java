@@ -16,6 +16,7 @@
 package com.kylinolap.invertedindex;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,6 +31,11 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.invertedindex.model.IIDesc;
+import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.JoinDesc;
+import com.kylinolap.metadata.model.TblColRef;
+import com.kylinolap.metadata.realization.AbstractRealization;
+import com.kylinolap.metadata.realization.DataModelRealizationType;
 import com.kylinolap.metadata.realization.RealizationStatusEnum;
 import com.kylinolap.metadata.realization.SegmentStatusEnum;
 
@@ -38,7 +44,7 @@ import com.kylinolap.metadata.realization.SegmentStatusEnum;
  * @author honma
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class IIInstance extends RootPersistentEntity {
+public class IIInstance extends AbstractRealization {
 
     public static IIInstance create(String iiName, String projectName, IIDesc iiDesc) {
         IIInstance iii = new IIInstance();
@@ -182,7 +188,7 @@ public class IIInstance extends RootPersistentEntity {
     }
 
     public static String concatResourcePath(String cubeName) {
-        return ResourceStore.CUBE_RESOURCE_ROOT + "/" + cubeName + ".json";
+        return ResourceStore.II_RESOURCE_ROOT + "/" + cubeName + ".json";
     }
 
     @Override
@@ -382,4 +388,13 @@ public class IIInstance extends RootPersistentEntity {
     }
 
 
+    @Override
+    public int getCost(String factTable, Collection<JoinDesc> joins, Collection<TblColRef> allColumns, Collection<FunctionDesc> aggrFunctions) {
+        return 0;
+    }
+
+    @Override
+    public DataModelRealizationType getType() {
+        return DataModelRealizationType.INVERTED_INDEX;
+    }
 }

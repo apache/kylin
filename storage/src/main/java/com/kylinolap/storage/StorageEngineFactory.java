@@ -16,21 +16,22 @@
 package com.kylinolap.storage;
 
 import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.metadata.realization.DataModelRealizationType;
+import com.kylinolap.metadata.realization.IDataModelRealization;
 import com.kylinolap.storage.hbase.HBaseStorageEngine;
 import com.kylinolap.storage.hbase.InvertedIndexStorageEngine;
 
 /**
- * 
  * @author xjiang
- * 
  */
 public class StorageEngineFactory {
 
-    public static IStorageEngine getStorageEngine(CubeInstance cube) {
-        if (cube.isInvertedIndex()) {
-            return new InvertedIndexStorageEngine(cube);
+    public static IStorageEngine getStorageEngine(IDataModelRealization realization) {
+        if (realization.getType() == DataModelRealizationType.INVERTED_INDEX) {
+            return new InvertedIndexStorageEngine((IIInstance) realization);
         } else {
-            return new HBaseStorageEngine(cube);
+            return new HBaseStorageEngine((CubeInstance) realization);
         }
     }
 
