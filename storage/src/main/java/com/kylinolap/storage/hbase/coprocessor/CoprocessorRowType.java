@@ -29,6 +29,7 @@ import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowConstants;
 import com.kylinolap.cube.kv.RowKeyColumnIO;
 import com.kylinolap.invertedindex.IISegment;
+import com.kylinolap.invertedindex.index.TableRecordInfo;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.TblColRef;
@@ -39,17 +40,16 @@ import com.kylinolap.metadata.model.TblColRef;
 public class CoprocessorRowType {
 
     //for endpoint
-    public static CoprocessorRowType fromColumnDescs(IISegment seg, ColumnDesc[] columnDescs) {
+    public static CoprocessorRowType fromTableRecordInfo(TableRecordInfo tableRecordInfo, ColumnDesc[] columnDescs) {
 
         TblColRef[] cols = new TblColRef[columnDescs.length];
         for (int i = 0; i < columnDescs.length; ++i) {
             cols[i] = new TblColRef(columnDescs[i]);
         }
 
-        RowKeyColumnIO colIO = new RowKeyColumnIO(seg);
         int[] colSizes = new int[cols.length];
         for (int i = 0; i < cols.length; i++) {
-            colSizes[i] = colIO.getColumnLength(cols[i]);
+            colSizes[i] = tableRecordInfo.length(i);
         }
         return new CoprocessorRowType(cols, colSizes);
     }

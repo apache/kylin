@@ -99,7 +99,7 @@ public class IIManager {
     // ============================================================================
 
     private KylinConfig config;
-    // cube name ==> IIInstance
+    // ii name ==> IIInstance
     private SingleValueCache<String, IIInstance> iiMap = new SingleValueCache<String, IIInstance>(Broadcaster.TYPE.REALIZATION);
     
     // for generation hbase table name of a new segment
@@ -112,7 +112,7 @@ public class IIManager {
         loadAllIIInstance();
     }
 
-    public List<IIInstance> listAllCubes() {
+    public List<IIInstance> listAllIIs() {
         return new ArrayList<IIInstance>(iiMap.values());
     }
 
@@ -121,17 +121,10 @@ public class IIManager {
         return iiMap.get(iiName);
     }
 
-    /**
-     * Get related Cubes by cubedesc name. By default, the desc name will be
-     * translated into upper case.
-     *
-     * @param descName CubeDesc name
-     * @return
-     */
     public List<IIInstance> getIIsByDesc(String descName) {
 
         descName = descName.toUpperCase();
-        List<IIInstance> list = listAllCubes();
+        List<IIInstance> list = listAllIIs();
         List<IIInstance> result = new ArrayList<IIInstance>();
         Iterator<IIInstance> it = list.iterator();
         while (it.hasNext()) {
@@ -201,51 +194,41 @@ public class IIManager {
     }
 
     /**
-     * For each cube htable, we leverage htable's metadata to keep track of
+     * For each htable, we leverage htable's metadata to keep track of
      * which kylin server(represented by its kylin_metadata prefix) owns this htable
      */
     public static  String getHtableMetadataKey() {
         return "KYLIN_HOST";
     }
 
-    /**
-     * After cube update, reload cube related cache
-     *
-     * @param cube
-     */
-    public void loadIICache(IIInstance cube) {
+    public void loadIICache(IIInstance ii) {
         try {
-            loadIIInstance(cube.getResourcePath());
+            loadIIInstance(ii.getResourcePath());
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
         }
     }
 
-    /**
-     * After cube deletion, remove cube related cache
-     *
-     * @param cube
-     */
-    public void removeIICache(IIInstance cube) {
-        iiMap.remove(cube.getName().toUpperCase());
+    public void removeIICache(IIInstance ii) {
+        iiMap.remove(ii.getName().toUpperCase());
 
-        for (IISegment segment : cube.getSegments()) {
+        for (IISegment segment : ii.getSegments()) {
             usedStorageLocation.remove(segment.getName());
         }
     }
 
 
-    private void saveResource(IIInstance cube) throws IOException {
+    private void saveResource(IIInstance ii) throws IOException {
         ResourceStore store = getStore();
-        store.putResource(cube.getResourcePath(), cube, II_SERIALIZER);
-        this.afterCubeUpdated(cube);
+        store.putResource(ii.getResourcePath(), ii, II_SERIALIZER);
+        this.afterIIUpdated(ii);
     }
 
-    private void afterCubeUpdated(IIInstance updatedCube) {
+    private void afterIIUpdated(IIInstance updatedII) {
         MetadataManager.getInstance(config).reload();
-        iiMap.put(updatedCube.getName().toUpperCase(), updatedCube);
+        iiMap.put(updatedII.getName().toUpperCase(), updatedII);
 
-        for (ProjectInstance project : ProjectManager.getInstance(config).getProjects(updatedCube.getName())) {
+        for (ProjectInstance project : ProjectManager.getInstance(config).getProjects(updatedII.getName())) {
             try {
                 ProjectManager.getInstance(config).loadProjectCache(project, true);
             } catch (IOException e) {
@@ -254,20 +237,6 @@ public class IIManager {
         }
     }
 
-    private void afterCubeDroped(IIInstance droppedCube, List<ProjectInstance> projects) {
-        MetadataManager.getInstance(config).reload();
-        removeIICache(droppedCube);
-
-        if (null != projects) {
-            for (ProjectInstance project : projects) {
-                try {
-                    ProjectManager.getInstance(config).loadProjectCache(project, true);
-                } catch (IOException e) {
-                    logger.error(e.getLocalizedMessage(), e);
-                }
-            }
-        }
-    }
 
     /**
      * @param IIInstance
@@ -310,15 +279,15 @@ public class IIManager {
 
     private void loadAllIIInstance() throws IOException {
         ResourceStore store = getStore();
-        List<String> paths = store.collectResourceRecursively(ResourceStore.CUBE_RESOURCE_ROOT, ".json");
+        List<String> paths = store.collectResourceRecursively(ResourceStore.II_RESOURCE_ROOT, ".json");
 
-        logger.debug("Loading Cube from folder " + store.getReadableResourcePath(ResourceStore.CUBE_RESOURCE_ROOT));
+        logger.debug("Loading II from folder " + store.getReadableResourcePath(ResourceStore.II_RESOURCE_ROOT));
 
         for (String path : paths) {
             loadIIInstance(path);
         }
 
-        logger.debug("Loaded " + paths.size() + " Cube(s)");
+        logger.debug("Loaded " + paths.size() + " II(s)");
     }
 
     private synchronized IIInstance loadIIInstance(String path) throws IOException {
@@ -341,7 +310,7 @@ public class IIManager {
 
             return IIInstance;
         } catch (Exception e) {
-            logger.error("Error during load cube instance " + path, e);
+            logger.error("Error during load ii instance " + path, e);
             return null;
         }
     }

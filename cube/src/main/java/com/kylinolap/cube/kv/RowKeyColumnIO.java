@@ -18,20 +18,18 @@ package com.kylinolap.cube.kv;
 
 import java.util.Arrays;
 
+import com.kylinolap.dict.ColumnDictInfo;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.util.BytesUtil;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.model.RowKeyDesc;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * Read/Write column values from/into bytes
- * 
+ *
  * @author yangli9
  */
 @SuppressWarnings("unchecked")
@@ -39,26 +37,19 @@ public class RowKeyColumnIO {
 
     private static final Logger logger = LoggerFactory.getLogger(RowKeyColumnIO.class);
 
-    private CubeSegment seg;
-    private RowKeyDesc rowkeyDesc;
-    private boolean forceNoDict = Boolean.getBoolean("forceNoDict");
+    private ColumnDictInfo columnDictInfo;
 
-    public RowKeyColumnIO(CubeSegment cubeSeg) {
-        this.seg = cubeSeg;
-        this.rowkeyDesc = seg.getCubeDesc().getRowkey();
-    }
-
-    public CubeSegment getCubeSegment() {
-        return seg;
+    public RowKeyColumnIO(ColumnDictInfo columnDictInfo) {
+        this.columnDictInfo = columnDictInfo;
     }
 
     public int getColumnLength(TblColRef col) {
-        Dictionary<String> dict = getDictionary(col);
-        if (dict == null) {
-            return rowkeyDesc.getColumnLength(col);
-        } else {
-            return dict.getSizeOfId();
-        }
+        return columnDictInfo.getColumnLength(col);
+    }
+
+    //TODO is type cast really necessary here?
+    public Dictionary<String> getDictionary(TblColRef col) {
+        return (Dictionary<String>) columnDictInfo.getDictionary(col);
     }
 
     public void writeColumn(TblColRef column, byte[] value, int valueLen, byte dft, byte[] output, int outputOffset) {
@@ -155,11 +146,5 @@ public class RowKeyColumnIO {
         return stripBytes;
     }
 
-    public Dictionary<String> getDictionary(TblColRef col) {
-        if (forceNoDict)
-            return null;
-
-        return (Dictionary<String>) CubeManager.getInstance(seg.getCubeInstance().getConfig()).getDictionary(seg, col);
-    }
 
 }

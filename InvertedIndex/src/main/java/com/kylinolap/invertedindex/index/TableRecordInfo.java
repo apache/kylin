@@ -43,9 +43,9 @@ public class TableRecordInfo extends TableRecordInfoDigest {
     final String[] colNames;
     final Dictionary<?>[] dictionaries;
 
-    public TableRecordInfo(IISegment cubeSeg) throws IOException {
+    public TableRecordInfo(IISegment iiSegment) {
 
-        seg = cubeSeg;
+        seg = iiSegment;
         desc = seg.getIIInstance().getDescriptor();
         tableDesc = desc.getFactTableDesc();
 
@@ -62,7 +62,11 @@ public class TableRecordInfo extends TableRecordInfoDigest {
                 measureSerializers[i] = FixedLenMeasureCodec.get(col.getType());
             } else {
                 String dictPath = seg.getDictResPath(new TblColRef(col));
-                dictionaries[i] = dictMgr.getDictionary(dictPath);
+                try {
+                    dictionaries[i] = dictMgr.getDictionary(dictPath);
+                } catch (IOException e) {
+                    throw new RuntimeException("dictionary " + dictPath + " does not exist ", e);
+                }
             }
         }
 
@@ -109,6 +113,16 @@ public class TableRecordInfo extends TableRecordInfoDigest {
         return tableDesc.getColumns();
     }
 
+    public int findColumn(TblColRef col) {
+        ColumnDesc[] columns = getColumns();
+        for (int i = 0; i < columns.length; ++i) {
+            if (col.getColumn().equals(columns[i])) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     public int findMetric(String name) {
         if (name == null)
             return -1;
@@ -126,6 +140,7 @@ public class TableRecordInfo extends TableRecordInfoDigest {
         // yes, all dictionaries are string based
         return (Dictionary<String>) dictionaries[col];
     }
+
 
 
     public int getTimestampColumn() {

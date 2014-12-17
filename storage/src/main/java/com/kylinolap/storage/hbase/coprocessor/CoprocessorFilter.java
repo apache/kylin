@@ -45,11 +45,9 @@ public class CoprocessorFilter {
     private static class FilterDecorator implements Decorator {
 
         private RowKeyColumnIO columnIO;
-        private CubeSegment seg;
 
         public FilterDecorator(CubeSegment seg) {
-            this.seg = seg;
-            columnIO = new RowKeyColumnIO(this.seg);
+            columnIO = new RowKeyColumnIO(seg);
         }
 
         @Override
@@ -73,7 +71,6 @@ public class CoprocessorFilter {
             if (col == null) {
                 return filter;
             }
-
 
             String nullString = nullString(col);
             Collection<String> constValues = compf.getValues();
