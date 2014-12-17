@@ -34,6 +34,7 @@ import org.quartz.SchedulerException;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.ClasspathUtil;
+import com.kylinolap.common.util.CliCommandExecutor;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.cube.CubeBuildTypeEnum;
@@ -248,5 +249,14 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
             jobManager.submitJob(job);
         }
         return jobUuids;
+    }
+    
+    private void cleanupOldCubes() {
+        try {
+            CliCommandExecutor cli = KylinConfig.getInstanceFromEnv().getCliCommandExecutor();
+            cli.execute("hbase org.apache.hadoop.util.RunJar /root/kylin-job-0.6.3-SNAPSHOT-job.jar com.kylinolap.job.hadoop.cube.StorageCleanupJob --delete true");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
