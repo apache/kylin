@@ -151,7 +151,7 @@ public class Broadcaster {
     }
 
     public enum TYPE {
-        REALIZATION("realization"), METADATA("metadata"), PROJECT("project");
+        CUBE("realization"), METADATA("metadata"), PROJECT("project");
         private String text;
 
         private TYPE(String text) {

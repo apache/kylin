@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.kylinolap.metadata.realization.DataModelRealizationType;
+import com.kylinolap.metadata.realization.RealizationType;
 import com.kylinolap.metadata.project.ProjectDataModel;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.project.ProjectManager;
@@ -172,15 +172,15 @@ public class CubeService extends BasicService {
             getCubeDescManager().removeCubeDesc(createdDesc);
             throw new InternalErrorException(createdDesc.getError().get(0));
         }
-        
-        try{
+
+        try {
             int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc);
             logger.info("New cube " + cubeName + " has " + cuboidCount + " cuboids");
-        }catch(Exception e){
+        } catch (Exception e) {
             getCubeDescManager().removeCubeDesc(createdDesc);
             throw new InternalErrorException("Failed to deal with the request.", e);
         }
-        
+
         createdCube = getCubeManager().createCube(cubeName, projectName, createdDesc, owner);
         accessService.init(createdCube, AclPermission.ADMINISTRATION);
 
@@ -197,8 +197,8 @@ public class CubeService extends BasicService {
             return Collections.emptyList();
         }
         ArrayList<CubeInstance> result = new ArrayList<CubeInstance>();
-        for (ProjectDataModel projectDataModel: project.getDataModels()) {
-            if (projectDataModel.getType() == DataModelRealizationType.CUBE) {
+        for (ProjectDataModel projectDataModel : project.getDataModels()) {
+            if (projectDataModel.getType() == RealizationType.CUBE) {
                 CubeInstance cube = getCubeManager().getCube(projectDataModel.getRealization());
                 assert cube != null;
                 result.add(cube);
@@ -213,8 +213,8 @@ public class CubeService extends BasicService {
         if (project == null) {
             return false;
         }
-        for (ProjectDataModel projectDataModel: project.getDataModels()) {
-            if (projectDataModel.getType() == DataModelRealizationType.CUBE) {
+        for (ProjectDataModel projectDataModel : project.getDataModels()) {
+            if (projectDataModel.getType() == RealizationType.CUBE) {
                 CubeInstance cube = getCubeManager().getCube(projectDataModel.getRealization());
                 assert cube != null;
                 if (cube.equals(target)) {
@@ -238,9 +238,9 @@ public class CubeService extends BasicService {
             if (!cube.getDescriptor().calculateSignature().equals(cube.getDescriptor().getSignature())) {
                 this.releaseAllSegments(cube);
             }
-            
+
             CubeDesc updatedCubeDesc = getCubeDescManager().updateCubeDesc(desc);
-            
+
             int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc);
             logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
 
@@ -248,7 +248,6 @@ public class CubeService extends BasicService {
             if (!isCubeInProject(newProjectName, cube)) {
                 String owner = SecurityContextHolder.getContext().getAuthentication().getName();
                 ProjectInstance newProject = projectManager.updateCubeToProject(cube.getName(), newProjectName, owner);
-                getCubeRealizationManager().loadProject(getProjectManager().getProject(newProjectName));
                 accessService.inherit(cube, newProject);
             }
 
@@ -634,9 +633,9 @@ public class CubeService extends BasicService {
         getMetadataManager().reload();
         return (String[]) loaded.toArray(new String[loaded.size()]);
     }
-    
+
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public void syncTableToProject(String tables,String project) throws IOException {
-        getCubeRealizationManager().addTablesToProject(tables, project);
-    }    
+    public void syncTableToProject(String tables, String project) throws IOException {
+        getProjectManager().addTableDescToProject(tables, project);
+    }
 }

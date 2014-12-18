@@ -27,11 +27,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.kylinolap.cube.project.CubeRealizationManager;
 import com.kylinolap.metadata.project.ProjectInstance;
-import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
-import com.kylinolap.metadata.realization.RealizationStatusEnum;
-import com.kylinolap.metadata.realization.SegmentStatusEnum;
+import com.kylinolap.metadata.realization.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +52,6 @@ import com.kylinolap.dict.lookup.LookupStringTable;
 import com.kylinolap.dict.lookup.SnapshotManager;
 import com.kylinolap.dict.lookup.SnapshotTable;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.TblColRef;
 
@@ -98,19 +94,16 @@ public class CubeManager {
         }
     }
 
-    public static void clearCache() {
-        CACHE.clear();
-    }
-
     public static synchronized void removeInstance(KylinConfig config) {
         CACHE.remove(config);
+        RealizationRegistry.getInstance(config).resetRealizationOf(RealizationType.CUBE);
     }
 
     // ============================================================================
 
     private KylinConfig config;
     // cube name ==> CubeInstance
-    private SingleValueCache<String, CubeInstance> cubeMap = new SingleValueCache<String, CubeInstance>(Broadcaster.TYPE.REALIZATION);
+    private SingleValueCache<String, CubeInstance> cubeMap = new SingleValueCache<String, CubeInstance>(Broadcaster.TYPE.CUBE);
     // "table/column" ==> lookup table
     private SingleValueCache<String, LookupStringTable> lookupTables = new SingleValueCache<String, LookupStringTable>(Broadcaster.TYPE.METADATA);
 
@@ -154,7 +147,6 @@ public class CubeManager {
         }
         return result;
     }
-
 
 
     public DictionaryInfo buildDictionary(CubeSegment cubeSeg, TblColRef col, String factColumnsPath) throws IOException {
@@ -227,7 +219,6 @@ public class CubeManager {
 
         // delete cube from project
         ProjectManager.getInstance(config).removeCubeFromProjects(cubeName);
-        CubeRealizationManager.getInstance(config).loadAllProjects();
 
         // clean cube cache
         this.afterCubeDroped(cube, projects);
@@ -245,7 +236,6 @@ public class CubeManager {
         saveResource(cube);
 
         ProjectManager.getInstance(config).updateCubeToProject(cubeName, projectName, owner);
-        CubeRealizationManager.getInstance(config).loadProject(ProjectManager.getInstance(config).getProject(projectName));
 
         return cube;
     }
@@ -331,7 +321,7 @@ public class CubeManager {
      * For each cube htable, we leverage htable's metadata to keep track of
      * which kylin server(represented by its kylin_metadata prefix) owns this htable
      */
-    public static  String getHtableMetadataKey() {
+    public static String getHtableMetadataKey() {
         return "KYLIN_HOST";
     }
 
@@ -408,6 +398,7 @@ public class CubeManager {
      */
     public void removeCubeCache(CubeInstance cube) {
         cubeMap.remove(cube.getName().toUpperCase());
+        RealizationRegistry.getInstance(config).unregisterRealization(cube);
 
         for (CubeSegment segment : cube.getSegments()) {
             usedStorageLocation.remove(segment.getName());
@@ -518,6 +509,7 @@ public class CubeManager {
     private void afterCubeUpdated(CubeInstance updatedCube) {
         MetadataManager.getInstance(config).reload();
         cubeMap.put(updatedCube.getName().toUpperCase(), updatedCube);
+        RealizationRegistry.getInstance(config).registerRealization(updatedCube);
 
         for (ProjectInstance project : ProjectManager.getInstance(config).getProjects(updatedCube.getName())) {
             try {
@@ -629,6 +621,7 @@ public class CubeManager {
                 throw new IllegalStateException("CubeInstance name must not be blank");
 
             cubeMap.putLocal(cubeInstance.getName().toUpperCase(), cubeInstance);
+            RealizationRegistry.getInstance(config).registerRealization(cubeInstance);
 
             for (CubeSegment segment : cubeInstance.getSegments()) {
                 usedStorageLocation.add(segment.getName());

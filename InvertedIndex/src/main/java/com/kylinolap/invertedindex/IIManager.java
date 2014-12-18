@@ -100,7 +100,7 @@ public class IIManager {
 
     private KylinConfig config;
     // ii name ==> IIInstance
-    private SingleValueCache<String, IIInstance> iiMap = new SingleValueCache<String, IIInstance>(Broadcaster.TYPE.REALIZATION);
+    private SingleValueCache<String, IIInstance> iiMap = new SingleValueCache<String, IIInstance>(Broadcaster.TYPE.CUBE);
     
     // for generation hbase table name of a new segment
     private HashSet<String> usedStorageLocation = new HashSet<String>();
