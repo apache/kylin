@@ -3,13 +3,14 @@ package com.kylinolap.rest.controller;
 import java.io.IOException;
 import java.util.List;
 
-import com.kylinolap.metadata.project.ProjectManager;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.kylinolap.metadata.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectManager;
 import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.request.CreateProjectRequest;
 import com.kylinolap.rest.request.UpdateProjectRequest;
@@ -18,7 +19,9 @@ import com.kylinolap.rest.service.ServiceTestBase;
 
 /**
  * Created by honma on 8/7/14.
+ * @deprecated method has been merged into #ServiceTestAllInOne
  */
+@Ignore
 public class ProjectControllerTest extends ServiceTestBase {
 
     private ProjectController projectController;
