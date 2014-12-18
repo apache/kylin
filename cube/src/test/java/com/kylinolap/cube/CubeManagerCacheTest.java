@@ -18,7 +18,7 @@ package com.kylinolap.cube;
 
 import static org.junit.Assert.*;
 
-import com.kylinolap.cube.project.CubeRealizationManager;
+import com.kylinolap.metadata.project.ProjectManager;
 import com.kylinolap.metadata.realization.RealizationStatusEnum;
 import org.junit.After;
 import org.junit.Before;
@@ -42,7 +42,7 @@ public class CubeManagerCacheTest extends LocalFileMetadataTestCase {
         this.createTestMetadata();
         MetadataManager.removeInstance(this.getTestConfig());
         CubeManager.removeInstance(this.getTestConfig());
-        CubeRealizationManager.removeInstance(this.getTestConfig());
+        ProjectManager.removeInstance(this.getTestConfig());
         cubeManager = CubeManager.getInstance(this.getTestConfig());
     }
 

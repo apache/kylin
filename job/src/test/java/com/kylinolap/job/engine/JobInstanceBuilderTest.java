@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 import java.util.UUID;
 
-import com.kylinolap.cube.project.CubeRealizationManager;
+import com.kylinolap.metadata.project.ProjectManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +51,7 @@ public class JobInstanceBuilderTest extends LocalFileMetadataTestCase {
         this.createTestMetadata();
         MetadataManager.removeInstance(this.getTestConfig());
         CubeManager.removeInstance(this.getTestConfig());
-        CubeRealizationManager.removeInstance(this.getTestConfig());
+        ProjectManager.removeInstance(this.getTestConfig());
         DictionaryManager.removeInstance(this.getTestConfig());
     }
 

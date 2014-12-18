@@ -15,10 +15,7 @@
  */
 package com.kylinolap.invertedindex;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -26,16 +23,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
-import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.invertedindex.model.IIDesc;
-import com.kylinolap.metadata.model.FunctionDesc;
-import com.kylinolap.metadata.model.JoinDesc;
-import com.kylinolap.metadata.model.TblColRef;
+import com.kylinolap.metadata.model.*;
 import com.kylinolap.metadata.realization.AbstractRealization;
-import com.kylinolap.metadata.realization.DataModelRealizationType;
+import com.kylinolap.metadata.realization.RealizationType;
 import com.kylinolap.metadata.realization.RealizationStatusEnum;
 import com.kylinolap.metadata.realization.SegmentStatusEnum;
 
@@ -81,7 +76,6 @@ public class IIInstance extends AbstractRealization {
 
     @JsonProperty("create_time")
     private String createTime;
-
 
 
     public List<IISegment> getBuildingSegments() {
@@ -193,7 +187,7 @@ public class IIInstance extends AbstractRealization {
 
     @Override
     public String toString() {
-        return "II [name=" + name + "]";
+        return getCanonicalName(name);
     }
 
     // ============================================================================
@@ -241,6 +235,16 @@ public class IIInstance extends AbstractRealization {
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String getFactTable() {
+        return getDescriptor().getFactTable();
+    }
+
+    @Override
+    public List<MeasureDesc> getMeasures() {
+        return getDescriptor().getMeasures();
     }
 
     public void setName(String name) {
@@ -394,7 +398,12 @@ public class IIInstance extends AbstractRealization {
     }
 
     @Override
-    public DataModelRealizationType getType() {
-        return DataModelRealizationType.INVERTED_INDEX;
+    public RealizationType getType() {
+        return RealizationType.INVERTED_INDEX;
+    }
+
+    @Override
+    public List<TblColRef> getAllColumns() {
+        return getDescriptor().listAllColumns();
     }
 }

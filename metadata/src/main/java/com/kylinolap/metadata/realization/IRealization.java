@@ -1,12 +1,14 @@
 package com.kylinolap.metadata.realization;
 
 import java.util.Collection;
+import java.util.List;
 
 import com.kylinolap.metadata.model.FunctionDesc;
 import com.kylinolap.metadata.model.JoinDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.metadata.model.TblColRef;
 
-public interface IDataModelRealization {
+public interface IRealization {
 
     /**
      * Given the features of a query, return an integer indicating how capable the realization
@@ -18,12 +20,25 @@ public interface IDataModelRealization {
      * 0   - means the realization has the exact result pre-calculated, no less no more;
      * 100 - means the realization will scan the full table with little or no indexing.
      */
-    int getCost(String factTable, Collection<JoinDesc> joins, Collection<TblColRef> allColumns, //
+    public int getCost(String factTable, Collection<JoinDesc> joins, Collection<TblColRef> allColumns, //
             Collection<FunctionDesc> aggrFunctions);
 
     /**
      * Get whether this specific realization is a cube or InvertedIndex
+     *
      * @return
      */
-    DataModelRealizationType getType();
+    public RealizationType getType();
+
+    public List<TblColRef> getAllColumns();
+
+    public boolean isReady();
+
+    public String getName();
+
+    public String getCanonicalName(String name);
+
+    public String getFactTable();
+
+    public List<MeasureDesc> getMeasures();
 }

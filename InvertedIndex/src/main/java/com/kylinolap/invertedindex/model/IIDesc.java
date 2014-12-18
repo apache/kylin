@@ -128,7 +128,7 @@ public class IIDesc extends RootPersistentEntity {
     }
 
 
-    public List<MeasureDesc> getMeasureDescs() {
+    public List<MeasureDesc> getMeasures() {
         return measureDescs;
     }
 
@@ -155,6 +155,14 @@ public class IIDesc extends RootPersistentEntity {
      */
     public List<TableDesc> listTables() {
         return Lists.newArrayList(this.tableDesc);
+    }
+
+    public List<TblColRef> listAllColumns() {
+        List<TblColRef> ret = Lists.newArrayList();
+        for (ColumnDesc columnDesc : this.tableDesc.getColumns()) {
+            ret.add(new TblColRef(columnDesc));
+        }
+        return ret;
     }
 
     public TblColRef findColumnRef(String table, String column) {

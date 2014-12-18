@@ -33,6 +33,7 @@ import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.CubePartitionDesc;
 import com.kylinolap.metadata.model.FunctionDesc;
 import com.kylinolap.metadata.model.JoinDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.metadata.realization.*;
 
@@ -184,7 +185,7 @@ public class CubeInstance extends AbstractRealization {
 
     @Override
     public String toString() {
-        return "Cube [name=" + name + "]";
+        return getCanonicalName(name);
     }
 
     // ============================================================================
@@ -232,6 +233,16 @@ public class CubeInstance extends AbstractRealization {
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String getFactTable() {
+        return this.getDescriptor().getFactTable();
+    }
+
+    @Override
+    public List<MeasureDesc> getMeasures() {
+        return null;
     }
 
     public void setName(String name) {
@@ -432,7 +443,12 @@ public class CubeInstance extends AbstractRealization {
     }
 
     @Override
-    public DataModelRealizationType getType() {
-        return DataModelRealizationType.CUBE;
+    public RealizationType getType() {
+        return RealizationType.CUBE;
+    }
+
+    @Override
+    public List<TblColRef> getAllColumns() {
+        return Lists.newArrayList(getDescriptor().listAllColumns());
     }
 }
