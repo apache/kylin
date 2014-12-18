@@ -203,9 +203,10 @@ public class BaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> {
             logger.info("Handled " + counter + " records!");
         }
 
-        bytesSplitter.split(value.getBytes(), value.getLength(), byteRowDelimiter);
-
         try {
+            bytesSplitter.split(value.getBytes(), value.getLength(), byteRowDelimiter);
+            intermediateTableDesc.sanityCheck(bytesSplitter);
+            
             byte[] rowKey = buildKey(bytesSplitter.getSplitBuffers());
             outputKey.set(rowKey, 0, rowKey.length);
 
@@ -214,23 +215,13 @@ public class BaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> {
 
             context.write(outputKey, outputValue);
         } catch (Exception ex) {
-            handleErrorRecord(bytesSplitter.getSplitBuffers(), ex);
+            handleErrorRecord(bytesSplitter, ex);
         }
     }
 
-    private void handleErrorRecord(SplittedBytes[] splitBuffers, Exception ex) throws IOException {
+    private void handleErrorRecord(BytesSplitter bytesSplitter, Exception ex) throws IOException {
         
-        StringBuilder buf = new StringBuilder();
-        buf.append("Error record: [");
-        for (int i = 0; i < splitBuffers.length; i++) {
-            if (i > 0)
-                buf.append(", ");
-            
-            buf.append(Bytes.toString(splitBuffers[i].value, 0, splitBuffers[i].length));
-        }
-        buf.append("] -- ");
-        buf.append(ex.toString());
-        System.err.println(buf.toString());
+        System.err.println("Insane record: " + bytesSplitter);
         ex.printStackTrace(System.err);
         
         errorRecordCounter++;

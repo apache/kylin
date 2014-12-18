@@ -42,5 +42,5 @@ public interface BatchConstants {
     public static final String CUBE_CAPACITY = "cube.capacity";
 
     public static final int COUNTER_MAX = 100000;
-    public static final int ERROR_RECORD_THRESHOLD = 10;
+    public static final int ERROR_RECORD_THRESHOLD = 100;
 }
