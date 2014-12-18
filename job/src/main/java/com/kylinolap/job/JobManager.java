@@ -232,7 +232,8 @@ public class JobManager {
     public void deleteAllJobs() throws IOException {
         List<JobInstance> allJobs = listJobs(null, null);
         for (JobInstance job : allJobs) {
-            jobDAO.deleteJob(job);
+            if (job != null)
+                jobDAO.deleteJob(job);
         }
     }
 
