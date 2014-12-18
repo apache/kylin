@@ -1,11 +1,9 @@
 package com.kylinolap.job2.impl.threadpool;
 
-import com.kylinolap.common.util.Array;
+import com.kylinolap.common.KylinConfig;
 import com.kylinolap.job2.exception.ExecuteException;
-import com.kylinolap.job2.execution.ChainedExecutable;
-import com.kylinolap.job2.execution.Executable;
-import com.kylinolap.job2.execution.ExecutableContext;
-import com.kylinolap.job2.execution.ExecuteResult;
+import com.kylinolap.job2.execution.*;
+import com.kylinolap.job2.service.DefaultJobService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,14 +15,25 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
 
     private final List<AbstractExecutable> subTasks = new ArrayList<AbstractExecutable>();
 
+    private final DefaultJobService jobService = DefaultJobService.getInstance(KylinConfig.getInstanceFromEnv());
+
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
-        for (Executable subTask: getExecutables()) {
+        List<AbstractExecutable> executables = getExecutables();
+        final int size = executables.size();
+        for (int i = 0; i < size; ++i) {
+            AbstractExecutable subTask = executables.get(i);
             if (subTask.isRunnable()) {
-                return subTask.execute(context);
+                ExecuteResult result = subTask.execute(context);
+                if (result.succeed()) {
+                    jobService.updateJobStatus(getId(), ExecutableStatus.READY, null);
+                } else {
+                    jobService.updateJobStatus(getId(), ExecutableStatus.ERROR, null);
+                }
             }
         }
-        throw new ExecuteException("this job:" + getId() + " is not Runnable");
+        jobService.updateJobStatus(getId(), ExecutableStatus.SUCCEED, null);
+        return new ExecuteResult(true, null);
     }
 
     @Override

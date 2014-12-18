@@ -6,9 +6,8 @@ import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.job2.dao.JobDao;
 import com.kylinolap.job2.dao.JobPO;
-import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.exception.PersistentException;
-import com.kylinolap.job2.execution.ExecuteStatus;
+import com.kylinolap.job2.execution.ExecutableStatus;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
 import com.kylinolap.job2.impl.threadpool.DefaultChainedExecutable;
 import org.slf4j.Logger;
@@ -102,10 +101,13 @@ public class DefaultJobService {
         }
     }
 
+    public boolean updateJobStatus(String uuid, ExecutableStatus status, String output) {
+        return true;
+    }
+
     private JobPO parseTo(AbstractExecutable executable) {
         Preconditions.checkArgument(executable.getId() != null, "please generate unique id");
         JobPO result = new JobPO();
-        result.setAsync(executable.isAsync());
         result.setUuid(executable.getId());
         result.setType(executable.getClass().getName());
         result.setStatus(executable.getStatus().toString());
@@ -126,8 +128,7 @@ public class DefaultJobService {
             Class<? extends AbstractExecutable> clazz = (Class<? extends AbstractExecutable>) Class.forName(type);
             Constructor<? extends AbstractExecutable> constructor = clazz.getConstructor();
             AbstractExecutable result = constructor.newInstance();
-            result.setAsync(jobPO.isAsync());
-            result.setStatus(ExecuteStatus.valueOf(jobPO.getStatus()));
+            result.setStatus(ExecutableStatus.valueOf(jobPO.getStatus()));
             result.setId(jobPO.getUuid());
             result.setExtra(jobPO.getExtra());
             List<JobPO> tasks = jobPO.getTasks();

@@ -3,15 +3,14 @@ package com.kylinolap.job2.service;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.job2.TestExecutable;
-import com.kylinolap.job2.execution.ExecuteStatus;
+import com.kylinolap.job2.execution.ExecutableStatus;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
-import com.sun.org.apache.bcel.internal.generic.NEW;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -44,8 +43,12 @@ public class DefaultJobServiceTest extends LocalFileMetadataTestCase {
     public void test() throws Exception {
         assertNotNull(service);
         TestExecutable executable = new TestExecutable();
-        executable.setAsync(true);
-        executable.setStatus(ExecuteStatus.NEW);
+        executable.setStatus(ExecutableStatus.READY);
+        HashMap<String, String> extra = new HashMap<>();
+        extra.put("test1", "test1");
+        extra.put("test2", "test2");
+        extra.put("test3", "test3");
+        executable.setExtra(extra);
         service.add(executable);
         List<AbstractExecutable> result = service.getAllExecutables();
         assertEquals(1, result.size());
@@ -53,6 +56,9 @@ public class DefaultJobServiceTest extends LocalFileMetadataTestCase {
         assertEquals(executable.getId(), another.getId());
         assertEquals(executable.getStatus(), another.getStatus());
         assertEquals(executable.isRunnable(), another.isRunnable());
-        assertEquals(executable.isAsync(), another.isAsync());
+        assertEquals(extra.size(), another.getExtra().size());
+        for (String key: extra.keySet()) {
+            assertEquals(extra.get(key), another.getExtra().get(key));
+        }
     }
 }

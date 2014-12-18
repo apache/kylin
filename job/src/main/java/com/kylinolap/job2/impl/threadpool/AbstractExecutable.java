@@ -12,26 +12,34 @@ import java.util.Map;
 public abstract class AbstractExecutable implements Executable, Idempotent {
 
     private String uuid;
-    private ExecuteStatus status;
-    private boolean isAsync;
+    private ExecutableStatus status;
     private Map<String, String> extra;
+    private String output;
 
-    protected void beforeExecute(ExecutableContext executableContext) throws ExecuteException {
+    protected void onExecuteStart(ExecutableContext executableContext) {
 
     }
-    protected void afterExecute(ExecutableContext executableContext) throws ExecuteException {
+    protected void onExecuteSucceed(ExecuteResult result, ExecutableContext executableContext) {
+
+    }
+
+    protected void onExecuteException(Exception exception, ExecutableContext executableContext) {
 
     }
 
     @Override
     public final ExecuteResult execute(ExecutableContext executableContext) throws ExecuteException {
         Preconditions.checkArgument(executableContext instanceof DefaultContext);
+        ExecuteResult result;
         try {
-            beforeExecute(executableContext);
-            return doWork(executableContext);
-        } finally {
-            afterExecute(executableContext);
+            onExecuteStart(executableContext);
+            result = doWork(executableContext);
+        } catch (Exception e) {
+            onExecuteException(e, executableContext);
+            throw new ExecuteException(e);
         }
+        onExecuteSucceed(result, executableContext);
+        return result;
     }
 
     protected abstract ExecuteResult doWork(ExecutableContext context) throws ExecuteException;
@@ -57,29 +65,12 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     }
 
     @Override
-    public final ExecuteStatus getStatus() {
+    public final ExecutableStatus getStatus() {
         return status;
     }
 
-    public final void setStatus(ExecuteStatus status) {
+    public final void setStatus(ExecutableStatus status) {
         this.status = status;
-    }
-
-    @Override
-    public final boolean isAsync() {
-        return isAsync;
-    }
-
-    public final void setAsync(boolean isAsync) {
-        this.isAsync = isAsync;
-    }
-
-    public String getUuid() {
-        return uuid;
-    }
-
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
     }
 
     @Override
@@ -89,5 +80,14 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     public void setExtra(Map<String, String> extra) {
         this.extra = extra;
+    }
+
+    public void setOutput(String output) {
+        this.output = output;
+    }
+
+    @Override
+    public String getOutput() {
+        return output;
     }
 }
