@@ -93,7 +93,7 @@ public class MailService {
             email.getMailSession();
 
         } catch (EmailException e) {
-            logger.error(e);
+            logger.error(e.getLocalizedMessage(),e);
             return false;
         }
         

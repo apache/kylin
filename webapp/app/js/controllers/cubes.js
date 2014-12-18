@@ -356,7 +356,7 @@ KylinApp
         }
     });
 
-var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube, buildType,SweetAlert) {
+var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube, buildType,SweetAlert,loadingRequest) {
     $scope.cube = cube;
 
     $scope.jobBuildRequest = {

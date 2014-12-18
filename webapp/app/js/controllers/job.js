@@ -1,7 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,SweetAlert) {
+    .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,SweetAlert,loadingRequest) {
         $scope.cubeName = null;
         $scope.jobs = {};
         $scope.projects = [];
@@ -111,13 +111,16 @@ KylinApp
                 confirmButtonText: "Yes",
                 closeOnConfirm: true
             }, function() {
+                loadingRequest.show();
                 JobService.resume({jobId: job.uuid}, {}, function (job) {
+                    loadingRequest.hide();
                     $scope.jobs[job.uuid] = job;
                     if (angular.isDefined($scope.state.selectedJob)) {
                         $scope.state.selectedJob = $scope.jobs[ $scope.state.selectedJob.uuid];
                     }
                     SweetAlert.swal('Success!', 'Job has been resumed successfully!', 'success');
                 },function(e){
+                    loadingRequest.hide();
                     if(e.data&& e.data.exception){
                         var message =e.data.exception;
                         var msg = !!(message) ? message : 'Failed to take action.';
@@ -139,13 +142,16 @@ KylinApp
                 confirmButtonText: "Yes",
                 closeOnConfirm: true
             }, function() {
+                loadingRequest.show();
                 JobService.cancel({jobId: job.uuid}, {}, function (job) {
+                    loadingRequest.hide();
                     $scope.jobs[job.uuid] = job;
                     if (angular.isDefined($scope.state.selectedJob)) {
                         $scope.state.selectedJob = $scope.jobs[ $scope.state.selectedJob.uuid];
                     }
                     SweetAlert.swal('Success!', 'Job has been discarded successfully!', 'success');
                 },function(e){
+                    loadingRequest.hide();
                     if(e.data&& e.data.exception){
                         var message =e.data.exception;
                         var msg = !!(message) ? message : 'Failed to take action.';
