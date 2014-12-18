@@ -43,19 +43,14 @@ public class BasicController {
     @Autowired
     protected MetricsService metricsService;
 
-    // ~ exception handlers ~
-    @ExceptionHandler(Exception.class)
-    void handleError(HttpServletRequest req, Exception ex) {
-        logger.error("Internal error (Exception) throw out of controller", ex);
-    }
-    
+    // ~ general handler ~
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    @ExceptionHandler(InternalErrorException.class)
+    @ExceptionHandler(Exception.class)
     @ResponseBody
-    ErrorResponse handleInternalError(HttpServletRequest req, Exception ex) {
-        logger.error("Internal error (InternalErrorException) throw out of controller", ex);
+    ErrorResponse handleError(HttpServletRequest req, Exception ex) {
         return new ErrorResponse(req.getRequestURL().toString(), ex);
     }
+    
 
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @ExceptionHandler(ForbiddenException.class)

@@ -69,6 +69,7 @@ public class BaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> {
     private byte byteRowDelimiter;
 
     private int counter;
+    private int errorRecordCounter;
     private Text outputKey = new Text();
     private Text outputValue = new Text();
     private Object[] measures;
@@ -204,12 +205,42 @@ public class BaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> {
 
         bytesSplitter.split(value.getBytes(), value.getLength(), byteRowDelimiter);
 
-        byte[] rowKey = buildKey(bytesSplitter.getSplitBuffers());
-        outputKey.set(rowKey, 0, rowKey.length);
+        try {
+            byte[] rowKey = buildKey(bytesSplitter.getSplitBuffers());
+            outputKey.set(rowKey, 0, rowKey.length);
 
-        buildValue(bytesSplitter.getSplitBuffers());
-        outputValue.set(valueBuf.array(), 0, valueBuf.position());
+            buildValue(bytesSplitter.getSplitBuffers());
+            outputValue.set(valueBuf.array(), 0, valueBuf.position());
 
-        context.write(outputKey, outputValue);
+            context.write(outputKey, outputValue);
+        } catch (Exception ex) {
+            handleErrorRecord(bytesSplitter.getSplitBuffers(), ex);
+        }
+    }
+
+    private void handleErrorRecord(SplittedBytes[] splitBuffers, Exception ex) throws IOException {
+        
+        StringBuilder buf = new StringBuilder();
+        buf.append("Error record: [");
+        for (int i = 0; i < splitBuffers.length; i++) {
+            if (i > 0)
+                buf.append(", ");
+            
+            buf.append(Bytes.toString(splitBuffers[i].value, 0, splitBuffers[i].length));
+        }
+        buf.append("] -- ");
+        buf.append(ex.toString());
+        System.err.println(buf.toString());
+        ex.printStackTrace(System.err);
+        
+        errorRecordCounter++;
+        if (errorRecordCounter > BatchConstants.ERROR_RECORD_THRESHOLD) {
+            if (ex instanceof IOException)
+                throw (IOException) ex;
+            else if (ex instanceof RuntimeException)
+                throw (RuntimeException) ex;
+            else
+                throw new RuntimeException("", ex);
+        }
     }
 }

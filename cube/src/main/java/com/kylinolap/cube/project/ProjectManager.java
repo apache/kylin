@@ -190,13 +190,14 @@ public class ProjectManager {
         return addCubeToProject(cubeName, newProjectName, owner);
     }
 
-    public ProjectInstance updateTableToProject(String tables, String projectName) throws IOException {
+    public ProjectInstance updateTableToProject(String[] tables, String projectName) throws IOException {
         ProjectInstance projectInstance = getProject(projectName);
-        String[] tokens = StringUtils.split(tables, ",");
-        for (int i = 0; i < tokens.length; i++) {
-            String token = tokens[i].trim();
-            if (StringUtils.isNotEmpty(token)) {
-                projectInstance.addTable(token);
+        for (int i = 0; i < tables.length; i++) {
+            String token = tables[i].trim();
+            int cut = token.indexOf('.');
+            String tableName = cut >= 0 ? token.substring(cut + 1).trim() : token.trim();
+            if (StringUtils.isNotEmpty(tableName)) {
+                projectInstance.addTable(tableName);
             }
         }
 
@@ -381,7 +382,6 @@ public class ProjectManager {
 
         // table ==> cube mapping
         String factTable = cubeDesc.getFactTable();
-        logger.debug("Fact Table: " + factTable + " -- Cube: " + cubeInstance.getName());
         assert this.getMetadataManager().getTableDesc(factTable) != null;
 
         String project = ProjectInstance.getNormalizedProjectName(projectInstance.getName());
@@ -392,7 +392,6 @@ public class ProjectManager {
 
         for (DimensionDesc d : cubeDesc.getDimensions()) {
             String lookupTable = d.getTable();
-            logger.debug("Lookup Table: " + lookupTable + " -- Cube: " + cubeInstance.getName());
             assert this.getMetadataManager().getTableDesc(lookupTable) != null;
 
             ProjectTable dimensionProjTable = this.getProjectTable(project, lookupTable);
@@ -415,7 +414,6 @@ public class ProjectManager {
 
     private synchronized ProjectInstance loadProject(String path, boolean triggerUpdate) throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Loading CubeInstance " + store.getReadableResourcePath(path));
 
         ProjectInstance projectInstance = store.getResource(path, ProjectInstance.class, PROJECT_SERIALIZER);
         projectInstance.init();
@@ -434,7 +432,6 @@ public class ProjectManager {
 
     private synchronized void loadTables(String path) throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Loading CubeInstance " + store.getReadableResourcePath(path));
 
         ProjectInstance projectInstance = store.getResource(path, ProjectInstance.class, PROJECT_SERIALIZER);
         projectInstance.init();
