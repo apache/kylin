@@ -104,6 +104,7 @@ public class JobEngine implements ConnectionStateListener {
                 }
             }
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
@@ -135,8 +136,11 @@ public class JobEngine implements ConnectionStateListener {
     }
 
     public void stop() throws JobException {
-        releaseLock();
-        this.scheduler.stop();
+        try {
+            releaseLock();
+        } finally {
+            this.scheduler.stop();
+        }
     }
 
     @Override

@@ -1,0 +1,95 @@
+{
+  "uuid" : "a83195f5-0e09-4ae1-b3e9-6620d85cbf15",
+  "name" : "test_kylin_cube_without_slr_left_join_empty - 19700101000000_20220101000000 - MERGE - PST 2014-11-20 18:06:48",
+  "type" : "MERGE",
+  "duration" : 389,
+  "steps" : [ {
+    "name" : "Merge Cuboid Data",
+    "info" : {
+      "source_records_count" : "221266",
+      "mr_job_id" : "job_1416479946942_0047",
+      "hdfs_bytes_written" : "10537963",
+      "yarn_application_tracking_url" : "http://sandbox.hortonworks.com:8088/proxy/application_1416479946942_0047/"
+    },
+    "interruptCmd" : null,
+    "sequence_id" : 0,
+    "exec_cmd" : " -conf ../examples/test_case_data/hadoop_job_conf.xml -cubename test_kylin_cube_without_slr_left_join_empty -segmentname 19700101000000_20220101000000 -input /tmp/kylin-f2efdac3-9417-41d3-af77-70ff2c06a946/test_kylin_cube_without_slr_left_join_empty/cuboid/*,/tmp/kylin-9d8baebe-8e73-4acf-9d7e-731630a7691e/test_kylin_cube_without_slr_left_join_empty/cuboid/* -output /tmp/kylin-a83195f5-0e09-4ae1-b3e9-6620d85cbf15/test_kylin_cube_without_slr_left_join_empty/merged_cuboid -jobname Kylin_Merge_Cuboid_test_kylin_cube_without_slr_left_join_empty_Step_0",
+    "interrupt_cmd" : null,
+    "exec_start_time" : 1416535612180,
+    "exec_end_time" : 1416535878455,
+    "exec_wait_time" : 20,
+    "step_status" : "FINISHED",
+    "cmd_type" : "JAVA_CMD_HADOOP_MERGECUBOID",
+    "run_async" : true
+  }, {
+    "name" : "Calculate HTable Region Splits",
+    "info" : {
+      "source_records_count" : "221266",
+      "mr_job_id" : "job_1416479946942_0048",
+      "hdfs_bytes_written" : "122",
+      "yarn_application_tracking_url" : "http://sandbox.hortonworks.com:8088/proxy/application_1416479946942_0048/"
+    },
+    "interruptCmd" : null,
+    "sequence_id" : 1,
+    "exec_cmd" : " -conf ../examples/test_case_data/hadoop_job_conf.xml -input /tmp/kylin-a83195f5-0e09-4ae1-b3e9-6620d85cbf15/test_kylin_cube_without_slr_left_join_empty/merged_cuboid -output /tmp/kylin-a83195f5-0e09-4ae1-b3e9-6620d85cbf15/test_kylin_cube_without_slr_left_join_empty/rowkey_stats -jobname Kylin_Region_Splits_Calculator_test_kylin_cube_without_slr_left_join_empty_Step_1 -cubename test_kylin_cube_without_slr_left_join_empty",
+    "interrupt_cmd" : null,
+    "exec_start_time" : 1416535878524,
+    "exec_end_time" : 1416535923222,
+    "exec_wait_time" : 16,
+    "step_status" : "FINISHED",
+    "cmd_type" : "JAVA_CMD_HADOOP_RANGEKEYDISTRIBUTION",
+    "run_async" : true
+  }, {
+    "name" : "Create HTable",
+    "info" : null,
+    "interruptCmd" : null,
+    "sequence_id" : 2,
+    "exec_cmd" : " -cubename test_kylin_cube_without_slr_left_join_empty -input /tmp/kylin-a83195f5-0e09-4ae1-b3e9-6620d85cbf15/test_kylin_cube_without_slr_left_join_empty/rowkey_stats/part-r-00000 -htablename KYLIN_B6NUL8IDX3",
+    "interrupt_cmd" : null,
+    "exec_start_time" : 1416535923305,
+    "exec_end_time" : 1416535925258,
+    "exec_wait_time" : 0,
+    "step_status" : "FINISHED",
+    "cmd_type" : "JAVA_CMD_HADDOP_NO_MR_CREATEHTABLE",
+    "run_async" : false
+  }, {
+    "name" : "Convert Cuboid Data to HFile",
+    "info" : {
+      "source_records_count" : "221266",
+      "mr_job_id" : "job_1416479946942_0049",
+      "hdfs_bytes_written" : "9336035",
+      "yarn_application_tracking_url" : "http://sandbox.hortonworks.com:8088/proxy/application_1416479946942_0049/"
+    },
+    "interruptCmd" : null,
+    "sequence_id" : 3,
+    "exec_cmd" : " -conf ../examples/test_case_data/hadoop_job_conf.xml -cubename test_kylin_cube_without_slr_left_join_empty -input /tmp/kylin-a83195f5-0e09-4ae1-b3e9-6620d85cbf15/test_kylin_cube_without_slr_left_join_empty/merged_cuboid -output /tmp/kylin-a83195f5-0e09-4ae1-b3e9-6620d85cbf15/test_kylin_cube_without_slr_left_join_empty/hfile -htablename KYLIN_B6NUL8IDX3 -jobname Kylin_HFile_Generator_test_kylin_cube_without_slr_left_join_empty_Step_3",
+    "interrupt_cmd" : null,
+    "exec_start_time" : 1416535925317,
+    "exec_end_time" : 1416536003751,
+    "exec_wait_time" : 26,
+    "step_status" : "FINISHED",
+    "cmd_type" : "JAVA_CMD_HADOOP_CONVERTHFILE",
+    "run_async" : true
+  }, {
+    "name" : "Load HFile to HBase Table",
+    "info" : null,
+    "interruptCmd" : null,
+    "sequence_id" : 4,
+    "exec_cmd" : " -input /tmp/kylin-a83195f5-0e09-4ae1-b3e9-6620d85cbf15/test_kylin_cube_without_slr_left_join_empty/hfile/ -htablename KYLIN_B6NUL8IDX3 -cubename test_kylin_cube_without_slr_left_join_empty",
+    "interrupt_cmd" : null,
+    "exec_start_time" : 1416536003813,
+    "exec_end_time" : 1416536004168,
+    "exec_wait_time" : 0,
+    "step_status" : "FINISHED",
+    "cmd_type" : "JAVA_CMD_HADOOP_NO_MR_BULKLOAD",
+    "run_async" : false
+  } ],
+  "progress" : 100.0,
+  "last_modified" : 1416536004215,
+  "related_cube" : "test_kylin_cube_without_slr_left_join_empty",
+  "related_segment" : "19700101000000_20220101000000",
+  "exec_start_time" : 1416535612180,
+  "exec_end_time" : 1416536004168,
+  "mr_waiting" : 62,
+  "job_status" : "FINISHED"
+}
