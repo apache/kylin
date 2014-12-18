@@ -55,11 +55,9 @@ public class JobFetcher implements Job {
 
         try {
             // get all pending jobs
-            log.debug("Using metadata url: " + engineConfig.getConfig().getMetadataUrl());
-            log.debug("Getting pending job list");
             List<JobInstance> pendingJobList = jobDAO.listAllJobs(JobStatusEnum.PENDING);
 
-            log.debug("Pending job count is " + pendingJobList.size());
+            log.debug(pendingJobList.size() + " pending jobs");
             int leftJobs = JOB_THRESHOLD;
             Random rand = new Random();
             int maxConcurrentJobCount = engineConfig.getMaxConcurrentJobLimit();

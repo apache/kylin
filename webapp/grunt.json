@@ -33,6 +33,8 @@
                 "app/components/d3/d3.min.js",
                 "app/components/nvd3/nv.d3.min.js",
                 "app/components/angularjs-nvd3-directives/dist/angularjs-nvd3-directives.js",
+                "app/components/bootstrap-sweetalert/lib/sweet-alert.js",
+                "app/components/angular-sweetalert/SweetAlert.js",
                 "tmp/js/scripts.js"
             ],
             "dest": "tmp/js/scripts.min.js"
@@ -47,11 +49,12 @@
                 "app/components/angular-tree-control/css/tree-control-attribute.css",
                 "app/components/animate.css/animate.min.css",
                 "app/components/messenger/build/css/messenger.css",
-                "app/components/messenger/build/css/messenger-theme-air.css",
+                "app/components/messenger/build/css/messenger-theme-ice.css",
                 "app/components/chosen/chosen.css",
                 "app/components/angular-chosen-localytics/chosen-spinner.css",
                 "app/components/nvd3/nv.d3.min.css",
                 "app/components/ace/css/AdminLTE.css",
+                "app/components/bootstrap-sweetalert/lib/sweet-alert.css",
                 "tmp/css/styles.css"
             ],
             "dest": "tmp/css/styles.min.css"

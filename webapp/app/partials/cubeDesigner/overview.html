@@ -11,17 +11,17 @@
                     <!--Cube Name-->
                     <tr>
                         <th>Cube Name</th>
-                        <td>{{cubeMetaFrame.name}}</td>
+                        <td class="tb-breakword">{{cubeMetaFrame.name}}</td>
                     </tr>
                     <!--Fact Table-->
                     <tr>
                         <th>Fact Table</th>
-                        <td>{{cubeMetaFrame.fact_table}}</td>
+                        <td class="tb-breakword">{{cubeMetaFrame.fact_table}}</td>
                     </tr>
                     <!--Lookup Table-->
                     <tr>
                         <th>Lookup Table</th>
-                        <td>
+                        <td class="tb-breakword">
                             {{cubeMetaFrame.dimensions.length - (cubeMetaFrame.dimensions | filter: {table: cubeMetaFrame.fact_table}).length}}
                         </td>
                     </tr>
