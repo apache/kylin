@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.cube.common.BytesSplitter;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.metadata.model.cube.CubeDesc;
 import com.kylinolap.metadata.model.cube.FunctionDesc;
@@ -36,9 +37,12 @@ public class JoinedFlatTableDesc {
     private final CubeDesc cubeDesc;
     private final CubeSegment cubeSegment;
 
+    private List<IntermediateColumnDesc> columnList = new ArrayList<IntermediateColumnDesc>();
+
     private int[] rowKeyColumnIndexes; // the column index on flat table
-    private int[][] measureColumnIndexes; // [i] is the i.th measure related
-                                          // column index on flat table
+    private int[][] measureColumnIndexes; // [i] is the i.th measure related column index on flat table
+
+    private int columnCount;
 
     public JoinedFlatTableDesc(CubeDesc cubeDesc, CubeSegment cubeSegment) {
         this.cubeDesc = cubeDesc;
@@ -52,8 +56,6 @@ public class JoinedFlatTableDesc {
     public CubeSegment getCubeSegment() {
         return cubeSegment;
     }
-
-    private List<IntermediateColumnDesc> columnList = new ArrayList<IntermediateColumnDesc>();
 
     public List<IntermediateColumnDesc> getColumnList() {
         return columnList;
@@ -112,6 +114,8 @@ public class JoinedFlatTableDesc {
                 }
             }
         }
+
+        this.columnCount = columnIndex;
     }
 
     private int contains(List<IntermediateColumnDesc> columnList, TblColRef c) {
@@ -137,6 +141,15 @@ public class JoinedFlatTableDesc {
 
     public int[][] getMeasureColumnIndexes() {
         return measureColumnIndexes;
+    }
+
+    // sanity check the input record (in bytes) matches what's expected
+    public void sanityCheck(BytesSplitter bytesSplitter) {
+        if (columnCount != bytesSplitter.getBufferSize()) {
+            throw new IllegalArgumentException("Expect " + columnCount + " columns, but see " + bytesSplitter.getBufferSize() + " -- " + bytesSplitter);
+        }
+        
+        // TODO: check data types here
     }
 
     public static class IntermediateColumnDesc {
@@ -168,4 +181,5 @@ public class JoinedFlatTableDesc {
             return tableName;
         }
     }
+
 }

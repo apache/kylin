@@ -55,6 +55,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, Text, ShortW
 
     private ShortWritable outputKey = new ShortWritable();
     private Text outputValue = new Text();
+    private int errorRecordCounter;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -83,7 +84,6 @@ public class FactDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, Text, ShortW
 
             String scanTable = (String) dictMgr.decideSourceData(cubeDesc, col, null)[0];
             if (cubeDesc.isFactTable(scanTable)) {
-                System.out.println(col + " -- " + i);
                 factDictCols.add(i);
             }
         }
@@ -95,17 +95,37 @@ public class FactDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, Text, ShortW
     @Override
     public void map(KEYIN key, Text value, Context context) throws IOException, InterruptedException {
 
-        bytesSplitter.split(value.getBytes(), value.getLength(), byteRowDelimiter);
-        SplittedBytes[] splitBuffers = bytesSplitter.getSplitBuffers();
+        try {
+            bytesSplitter.split(value.getBytes(), value.getLength(), byteRowDelimiter);
+            intermediateTableDesc.sanityCheck(bytesSplitter);
+            SplittedBytes[] splitBuffers = bytesSplitter.getSplitBuffers();
 
-        int[] flatTableIndexes = intermediateTableDesc.getRowKeyColumnIndexes();
-        for (int i : factDictCols) {
-            outputKey.set((short) i);
-            SplittedBytes bytes = splitBuffers[flatTableIndexes[i]];
-            outputValue.set(bytes.value, 0, bytes.length);
-            System.out.println(i + " -- " + outputValue);
-            context.write(outputKey, outputValue);
+            int[] flatTableIndexes = intermediateTableDesc.getRowKeyColumnIndexes();
+            for (int i : factDictCols) {
+                outputKey.set((short) i);
+                SplittedBytes bytes = splitBuffers[flatTableIndexes[i]];
+                outputValue.set(bytes.value, 0, bytes.length);
+                context.write(outputKey, outputValue);
+            }
+        } catch (Exception ex) {
+            handleErrorRecord(bytesSplitter, ex);
         }
 
+    }
+
+    private void handleErrorRecord(BytesSplitter bytesSplitter, Exception ex) throws IOException {
+
+        System.err.println("Insane record: " + bytesSplitter);
+        ex.printStackTrace(System.err);
+
+        errorRecordCounter++;
+        if (errorRecordCounter > BatchConstants.ERROR_RECORD_THRESHOLD) {
+            if (ex instanceof IOException)
+                throw (IOException) ex;
+            else if (ex instanceof RuntimeException)
+                throw (RuntimeException) ex;
+            else
+                throw new RuntimeException("", ex);
+        }
     }
 }
