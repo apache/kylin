@@ -15,11 +15,11 @@ public interface Executable {
 
     void stop() throws ExecuteException;
 
-    ExecuteStatus getStatus();
+    ExecutableStatus getStatus();
+
+    String getOutput();
 
     boolean isRunnable();
-
-    boolean isAsync();
 
     Map<String, String> getExtra();
 }

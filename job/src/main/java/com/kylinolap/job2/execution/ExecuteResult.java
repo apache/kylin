@@ -3,9 +3,21 @@ package com.kylinolap.job2.execution;
 /**
  * Created by qianzhou on 12/15/14.
  */
-public interface ExecuteResult {
+public final class ExecuteResult {
 
-    int statusCode();
+    private final boolean succeed;
+    private final String output;
 
-    String output();
+    public ExecuteResult(boolean succeed, String output) {
+        this.succeed = succeed;
+        this.output = output;
+    }
+
+    public boolean succeed() {
+        return succeed;
+    }
+
+    public String output() {
+        return output;
+    }
 }

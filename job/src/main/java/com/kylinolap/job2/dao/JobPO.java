@@ -31,9 +31,6 @@ public class JobPO extends RootPersistentEntity {
     @JsonProperty("type")
     private String type;
 
-    @JsonProperty("isAsync")
-    private boolean isAsync;
-
     @JsonProperty("extra")
     private Map<String, String> extra;
 
@@ -83,14 +80,6 @@ public class JobPO extends RootPersistentEntity {
 
     public void setType(String type) {
         this.type = type;
-    }
-
-    public boolean isAsync() {
-        return isAsync;
-    }
-
-    public void setAsync(boolean isAsync) {
-        this.isAsync = isAsync;
     }
 
     public Map<String, String> getExtra() {

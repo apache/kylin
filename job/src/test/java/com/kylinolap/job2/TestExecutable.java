@@ -3,7 +3,7 @@ package com.kylinolap.job2;
 import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.execution.ExecutableContext;
 import com.kylinolap.job2.execution.ExecuteResult;
-import com.kylinolap.job2.execution.ExecuteStatus;
+import com.kylinolap.job2.execution.ExecutableStatus;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
 
 import java.util.UUID;
@@ -15,8 +15,7 @@ public class TestExecutable extends AbstractExecutable {
 
     public TestExecutable() {
         this.setId(UUID.randomUUID().toString());
-        this.setAsync(false);
-        this.setStatus(ExecuteStatus.NEW);
+        this.setStatus(ExecutableStatus.READY);
     }
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
@@ -25,21 +24,11 @@ public class TestExecutable extends AbstractExecutable {
         } catch (InterruptedException e) {
             throw new ExecuteException(e);
         }
-        return new ExecuteResult() {
-            @Override
-            public int statusCode() {
-                return 0;
-            }
-
-            @Override
-            public String output() {
-                return "success";
-            }
-        };
+        return new ExecuteResult(true, "success");
     }
 
     @Override
     public boolean isRunnable() {
-        return getStatus() == ExecuteStatus.NEW || getStatus() == ExecuteStatus.STOPPED || getStatus() == ExecuteStatus.PENDING;
+        return getStatus() == ExecutableStatus.READY;
     }
 }

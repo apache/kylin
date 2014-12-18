@@ -13,6 +13,8 @@ import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.imps.CuratorFrameworkState;
+import org.apache.curator.framework.state.ConnectionState;
+import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +27,7 @@ import java.util.concurrent.*;
 /**
  * Created by qianzhou on 12/15/14.
  */
-public class DefaultScheduler implements Scheduler {
+public class DefaultScheduler implements Scheduler, ConnectionStateListener {
 
     private static final String ZOOKEEPER_LOCK_PATH = "/kylin/job_engine/lock";
 
@@ -40,9 +42,14 @@ public class DefaultScheduler implements Scheduler {
     private CuratorFramework zkClient;
     private JobEngineConfig jobEngineConfig;
 
-    private static final DefaultScheduler defaultScheduler = new DefaultScheduler();
+    private static final DefaultScheduler INSTANCE = new DefaultScheduler();
 
     private DefaultScheduler() {}
+
+    @Override
+    public void stateChanged(CuratorFramework client, ConnectionState newState) {
+        //TODO
+    }
 
     private class FetcherRunner implements Runnable {
 
@@ -106,6 +113,10 @@ public class DefaultScheduler implements Scheduler {
 
     private String schedulerId() throws UnknownHostException {
         return ZOOKEEPER_LOCK_PATH + "/" + InetAddress.getLocalHost().getCanonicalHostName();
+    }
+
+    public DefaultScheduler getInstance() {
+        return INSTANCE;
     }
 
     @Override
