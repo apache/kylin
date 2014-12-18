@@ -71,9 +71,9 @@ public class JobManager {
         this.jobEngine = JobEngine.getInstance(engineID, engineCfg);
     }
 
-    public JobInstance createJob(String cubeName, String segmentName, String segmentId, CubeBuildTypeEnum jobType,String submitter) throws IOException {
+    public JobInstance createJob(String cubeName, String segmentName, String segmentId, CubeBuildTypeEnum jobType, String submitter) throws IOException {
         // build job instance
-        JobInstance jobInstance = buildJobInstance(cubeName, segmentName, segmentId, jobType,submitter);
+        JobInstance jobInstance = buildJobInstance(cubeName, segmentName, segmentId, jobType, submitter);
 
         // create job steps based on job type
         JobInstanceBuilder stepBuilder = new JobInstanceBuilder(this.engineConfig);
@@ -82,7 +82,7 @@ public class JobManager {
         return jobInstance;
     }
 
-    private JobInstance buildJobInstance(String cubeName, String segmentName, String segmentId, CubeBuildTypeEnum jobType,String submitter) {
+    private JobInstance buildJobInstance(String cubeName, String segmentName, String segmentId, CubeBuildTypeEnum jobType, String submitter) {
         SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss");
         format.setTimeZone(TimeZone.getTimeZone(this.engineConfig.getTimeZone()));
 
@@ -232,8 +232,7 @@ public class JobManager {
     public void deleteAllJobs() throws IOException {
         List<JobInstance> allJobs = listJobs(null, null);
         for (JobInstance job : allJobs) {
-            if (job != null)
-                jobDAO.deleteJob(job);
+            jobDAO.deleteJob(job);
         }
     }
 
