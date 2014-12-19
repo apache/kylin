@@ -26,6 +26,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
             if (subTask.isRunnable()) {
                 ExecuteResult result = subTask.execute(context);
                 if (result.succeed()) {
+                    this.setStatus(ExecutableStatus.READY);
                     jobService.updateJobStatus(getId(), ExecutableStatus.READY, null);
                 } else {
                     jobService.updateJobStatus(getId(), ExecutableStatus.ERROR, null);

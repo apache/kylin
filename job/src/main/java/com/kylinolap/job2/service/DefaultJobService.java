@@ -48,37 +48,56 @@ public class DefaultJobService {
         this.jobDao = JobDao.getInstance(config);
     }
 
-    public boolean add(AbstractExecutable executable) {
+    public void addJob(AbstractExecutable executable) {
         try {
             jobDao.addJob(parseTo(executable));
-            return true;
         } catch (PersistentException e) {
             logger.error("fail to submit job:" + executable.getId(), e);
-            return false;
+            throw new RuntimeException(e);
         }
     }
 
-    public boolean update(AbstractExecutable executable) {
+    private void updateJobStatus(String uuid, ExecutableStatus status) {
         try {
-            jobDao.updateJob(parseTo(executable));
-            return true;
+            JobPO job = jobDao.getJob(uuid);
+            if (ExecutableStatus.valueOf(job.getStatus()) != status) {
+                job.setStatus(status.toString());
+            }
+            jobDao.updateJob(job);
         } catch (PersistentException e) {
-            logger.error("fail to stop job:" + executable.getId(), e);
-            return false;
+            logger.error("fail to update job status id:" + uuid, e);
+            throw new RuntimeException(e);
         }
     }
 
-    public boolean delete(AbstractExecutable executable) {
+    private String getJobOutput(String uuid) {
+        try {
+            return jobDao.getJobOutput(uuid);
+        } catch (PersistentException e) {
+            logger.error("fail to get job output id:" + uuid, e);
+            return null;
+        }
+    }
+
+    private void updateJobOutput(String uuid, String output) {
+        try {
+            jobDao.addOrUpdateJobOutput(uuid, output);
+        } catch (PersistentException e) {
+            logger.error("fail to update job output id:" + uuid, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void deleteJob(AbstractExecutable executable) {
         try {
             jobDao.deleteJob(executable.getId());
-            return true;
         } catch (PersistentException e) {
             logger.error("fail to delete job:" + executable.getId(), e);
-            return false;
+            throw new RuntimeException(e);
         }
     }
 
-    public AbstractExecutable get(String uuid) {
+    public AbstractExecutable getJob(String uuid) {
         try {
             return parseTo(jobDao.getJob(uuid));
         } catch (PersistentException e) {
@@ -101,8 +120,13 @@ public class DefaultJobService {
         }
     }
 
-    public boolean updateJobStatus(String uuid, ExecutableStatus status, String output) {
-        return true;
+    public void updateJobStatus(String uuid, ExecutableStatus status, String output) {
+        updateJobOutput(uuid, output);
+        updateJobStatus(uuid, status);
+    }
+
+    public void updateJobStatus(AbstractExecutable executable) {
+        updateJobStatus(executable.getId(), executable.getStatus(), executable.getOutput());
     }
 
     private JobPO parseTo(AbstractExecutable executable) {
@@ -132,6 +156,7 @@ public class DefaultJobService {
             result.setId(jobPO.getUuid());
             result.setExtra(jobPO.getExtra());
             List<JobPO> tasks = jobPO.getTasks();
+            result.setOutput(getJobOutput(jobPO.getUuid()));
             if (tasks != null && !tasks.isEmpty()) {
                 Preconditions.checkArgument(result instanceof DefaultChainedExecutable);
                 for (JobPO subTask: tasks) {

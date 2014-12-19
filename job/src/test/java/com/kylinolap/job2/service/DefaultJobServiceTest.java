@@ -29,7 +29,7 @@ public class DefaultJobServiceTest extends LocalFileMetadataTestCase {
 
         for (AbstractExecutable executable: service.getAllExecutables()) {
             System.out.println("deleting " + executable.getId());
-            service.delete(executable);
+            service.deleteJob(executable);
         }
 
     }
@@ -49,16 +49,26 @@ public class DefaultJobServiceTest extends LocalFileMetadataTestCase {
         extra.put("test2", "test2");
         extra.put("test3", "test3");
         executable.setExtra(extra);
-        service.add(executable);
+        service.addJob(executable);
         List<AbstractExecutable> result = service.getAllExecutables();
         assertEquals(1, result.size());
-        AbstractExecutable another = service.get(executable.getId());
-        assertEquals(executable.getId(), another.getId());
-        assertEquals(executable.getStatus(), another.getStatus());
-        assertEquals(executable.isRunnable(), another.isRunnable());
-        assertEquals(extra.size(), another.getExtra().size());
-        for (String key: extra.keySet()) {
-            assertEquals(extra.get(key), another.getExtra().get(key));
+        AbstractExecutable another = service.getJob(executable.getId());
+        assertEqual(executable, another);
+
+        executable.setStatus(ExecutableStatus.SUCCEED);
+        executable.setOutput("test output");
+        service.updateJobStatus(executable);
+        assertEqual(executable, service.getJob(executable.getId()));
+    }
+
+    private void assertEqual(AbstractExecutable one, AbstractExecutable another) {
+        assertEquals(one.getId(), another.getId());
+        assertEquals(one.getStatus(), another.getStatus());
+        assertEquals(one.isRunnable(), another.isRunnable());
+        assertEquals(one.getOutput(), another.getOutput());
+        assertEquals(one.getExtra().size(), another.getExtra().size());
+        for (String key: one.getExtra().keySet()) {
+            assertEquals(one.getExtra().get(key), another.getExtra().get(key));
         }
     }
 }
