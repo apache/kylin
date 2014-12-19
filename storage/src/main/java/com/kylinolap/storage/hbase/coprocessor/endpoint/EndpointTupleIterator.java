@@ -176,6 +176,7 @@ public class EndpointTupleIterator implements ITupleIterator {
     }
 
 
+    //TODO : async callback
     private Iterator<List<IIRow>> getResults(final IIProtos.IIRequest request, HTableInterface table) throws Throwable {
         Map<byte[], List<IIRow>> results = table.coprocessorService(IIProtos.RowsService.class,
                 null, null,

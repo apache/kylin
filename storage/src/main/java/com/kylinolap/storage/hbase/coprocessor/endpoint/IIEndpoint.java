@@ -80,6 +80,7 @@ public class IIEndpoint extends IIProtos.RowsService
 
             synchronized (innerScanner) {
                 IIKeyValueCodec codec = new IIKeyValueCodec(tableRecordInfoDigest);
+                //TODO pass projector to codec to skip loading columns
                 Iterable<Slice> slices = codec.decodeKeyValue(new HbaseServerKVIterator(innerScanner));
 
                 if (aggregators.isEmpty()) {
@@ -106,6 +107,7 @@ public class IIEndpoint extends IIProtos.RowsService
         done.run(response);
     }
 
+    //TODO check memory usage
     private IIProtos.IIResponse getAggregatedResponse(Iterable<Slice> slices, CoprocessorFilter filter, CoprocessorRowType type,
             CoprocessorProjector projector, EndpointAggregators aggregators) {
         EndpointAggregationCache aggCache = new EndpointAggregationCache(aggregators);
@@ -139,7 +141,6 @@ public class IIEndpoint extends IIProtos.RowsService
         return responseBuilder.build();
     }
 
-    //TODO check memory usage
     private IIProtos.IIResponse getNonAggregatedResponse(Iterable<Slice> slices, CoprocessorFilter filter, CoprocessorRowType type) {
         IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
         for (Slice slice : slices) {

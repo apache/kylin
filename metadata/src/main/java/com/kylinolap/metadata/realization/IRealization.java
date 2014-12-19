@@ -30,7 +30,11 @@ public interface IRealization {
      */
     public RealizationType getType();
 
+    public String getFactTable();
+
     public List<TblColRef> getAllColumns();
+
+    public List<MeasureDesc> getMeasures();
 
     public boolean isReady();
 
@@ -38,7 +42,6 @@ public interface IRealization {
 
     public String getCanonicalName(String name);
 
-    public String getFactTable();
 
-    public List<MeasureDesc> getMeasures();
+
 }
