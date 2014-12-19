@@ -73,6 +73,7 @@ public class RealizationRegistry {
      */
     public synchronized void resetRealizationOf(RealizationType type) {
         realizationTable.rowMap().remove(type);
+        realizationsLoaded = false;
     }
 
 
