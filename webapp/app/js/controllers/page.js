@@ -123,10 +123,29 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
         selectedProject: null
     };
 
+    $scope.projectVisible = function(project){
+        $log.info(project);
+        return project!='-- Select All --';
+    }
+
     ProjectService.list({}, function (projects) {
         angular.forEach(projects, function(project, index){
             $scope.project.projects.push(project.name);
         });
+        $scope.project.projects.sort();
+
+        $log.info("get all project");
+//        if($scope.userService.hasRole('ROLE_ADMIN')){
+            $log.info("admin access");
+            if( $scope.project.projects.lastIndexOf('-- Select All --')==-1){
+                $log.info("allow select all");
+                $scope.project.projects.unshift("-- Select All --");
+            }
+//        }else{
+//            $log.info("not admin");
+//        }
+
+
         var absUrl = $location.absUrl();
 
         var projectInCookie = $cookieStore.get("project");
@@ -181,6 +200,7 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
     $scope.createOrUpdate = function () {
         if ($scope.state.isEdit)
         {
+
             var requestBody = {
                 formerProjectName: $scope.state.oldProjName,
                 newProjectName: $scope.proj.name,

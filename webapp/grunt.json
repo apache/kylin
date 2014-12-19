@@ -35,6 +35,8 @@
                 "app/components/angularjs-nvd3-directives/dist/angularjs-nvd3-directives.js",
                 "app/components/bootstrap-sweetalert/lib/sweet-alert.js",
                 "app/components/angular-sweetalert/SweetAlert.js",
+                "app/components/underscore/underscore.js",
+                "app/components/angular-underscore/angular-underscore.js",
                 "tmp/js/scripts.js"
             ],
             "dest": "tmp/js/scripts.min.js"

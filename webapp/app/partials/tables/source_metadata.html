@@ -4,7 +4,7 @@
         <div class="form-group">
             <span><b>Project: </b></span>
             <select chosen ng-model="project.selectedProject" ng-init="newAccess.permission=permissions.READ.value;"
-                    ng-options="project as project for project in project.projects"
+                    ng-options="project as project for project in project.projects | filter:projectVisible"
                     style="width: 150px"
                     data-placeholder="select a project"
                     class="chosen-select">

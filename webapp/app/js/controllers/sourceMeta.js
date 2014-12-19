@@ -97,6 +97,10 @@ KylinApp
         };
 
         $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+            if(newValue=="-- Select All --"){
+                $scope.project.selectedProject=$scope.project.projects[1];
+                return;
+            }
             if(newValue){
                 $scope.aceSrcTbLoaded();
             }
