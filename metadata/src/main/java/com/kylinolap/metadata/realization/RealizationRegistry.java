@@ -15,7 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RealizationRegistry {
     private static final Logger logger = LoggerFactory.getLogger(RealizationRegistry.class);
     private static final ConcurrentHashMap<KylinConfig, RealizationRegistry> CACHE = new ConcurrentHashMap<KylinConfig, RealizationRegistry>();
-    private static boolean realizationsLoaded = false;//double check lock is unsafe, but it's safe to "load" twice, need not to be volatile
+
+    private boolean realizationsLoaded = false;//double check lock is unsafe, but it's safe to "load" twice, need not to be volatile
 
     private Table<RealizationType, String, IRealization> realizationTable = HashBasedTable.create();
     private KylinConfig config;
@@ -92,7 +93,7 @@ public class RealizationRegistry {
                 r = new RealizationRegistry(config);
                 CACHE.put(config, r);
                 if (CACHE.size() > 1) {
-                    logger.warn("More than one singleton exist");
+                    logger.warn("More than one singleton of RealizationRegistry exist");
                 }
                 return r;
             } catch (IOException e) {
@@ -101,7 +102,4 @@ public class RealizationRegistry {
         }
     }
 
-    public static synchronized void removeInstance(KylinConfig config) {
-        CACHE.remove(config);
-    }
 }

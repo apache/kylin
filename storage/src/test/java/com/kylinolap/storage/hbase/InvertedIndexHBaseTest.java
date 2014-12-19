@@ -32,6 +32,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.*;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -44,6 +45,7 @@ import com.kylinolap.cube.CubeSegment;
 /**
  * @author yangli9
  */
+@Ignore
 public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
 
     IIInstance ii;
