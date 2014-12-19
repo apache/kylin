@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -14,16 +15,43 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RealizationRegistry {
     private static final Logger logger = LoggerFactory.getLogger(RealizationRegistry.class);
     private static final ConcurrentHashMap<KylinConfig, RealizationRegistry> CACHE = new ConcurrentHashMap<KylinConfig, RealizationRegistry>();
+    private static boolean realizationsLoaded = false;//double check lock is unsafe, but it's safe to "load" twice, need not to be volatile
 
     private Table<RealizationType, String, IRealization> realizationTable = HashBasedTable.create();
-
     private KylinConfig config;
 
     private RealizationRegistry(KylinConfig config) throws IOException {
         logger.info("Initializing RealizationRegistry with metadata url " + config);
         this.config = config;
+    }
 
-        //TODO: use reflection to load all realizations
+    public void loadRealizations() {
+        if (!realizationsLoaded) {
+            synchronized (RealizationRegistry.class) {
+                if (!realizationsLoaded) {
+                    // use reflection to load all realizations
+                    List<Throwable> es = Lists.newArrayList();
+                    List<String> realizationProviders = Lists.newArrayList("com.kylinolap.cube.CubeManager");
+                    for (String clsName : realizationProviders) {
+                        try {
+                            Class cls = Class.forName(clsName);
+                            cls.getMethod("getInstance", KylinConfig.class).invoke(null, this.config);
+                        } catch (Exception | NoClassDefFoundError e) {
+                            es.add(e);
+                        }
+
+                        if (es.size() > 0) {
+                            for (Throwable exceptionOrError : es) {
+                                logger.error("Create new store instance failed ", exceptionOrError);
+                            }
+                            throw new IllegalArgumentException("Failed to find metadata store by url: " + this.config.getMetadataUrl());
+                        }
+                    }
+
+                    realizationsLoaded = true;
+                }
+            }
+        }
     }
 
     public synchronized IRealization getRealization(RealizationType type, String name) {

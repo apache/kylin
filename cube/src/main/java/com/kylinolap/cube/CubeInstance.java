@@ -242,7 +242,7 @@ public class CubeInstance extends AbstractRealization {
 
     @Override
     public List<MeasureDesc> getMeasures() {
-        return null;
+        return getDescriptor().getMeasures();
     }
 
     public void setName(String name) {
