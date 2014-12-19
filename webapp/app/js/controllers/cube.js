@@ -1,6 +1,6 @@
 'use strict';
 
-KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService, CubeService, TableService, CubeGraphService, UserService, AuthenticationService) {
+KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService, CubeService, TableService, CubeGraphService, UserService, AuthenticationService,SweetAlert) {
     $scope.newAccess = null;
     $scope.state = {jsonEdit: false};
 
@@ -11,6 +11,14 @@ KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService,
     $scope.getCubeSql = function (cube) {
         CubeService.getSql({cubeId: cube.name, propValue: "null"}, function (sql) {
             cube.sql = sql.sql;
+        },function(e){
+            if(e.data&& e.data.exception){
+                var message =e.data.exception;
+                var msg = !!(message) ? message : 'Failed to take action.';
+                SweetAlert.swal('Oops...', msg, 'error');
+            }else{
+                SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+            }
         });
     };
 
@@ -42,7 +50,15 @@ KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService,
     $scope.updateNotifyList = function (cube) {
         cube.detail.notify_list = cube.notifyListString.split(",");
         CubeService.updateNotifyList({cubeId: cube.name}, cube.detail.notify_list, function () {
-            MessageService.sendMsg('Notify List updated successfully!', 'success', {});
+            SweetAlert.swal('Success!', 'Notify List updated successfully!', 'success');
+        },function(e){
+            if(e.data&& e.data.exception){
+                var message =e.data.exception;
+                var msg = !!(message) ? message : 'Failed to take action.';
+                SweetAlert.swal('Oops...', msg, 'error');
+            }else{
+                SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+            }
         });
     };
 
@@ -57,6 +73,14 @@ KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService,
                     totalSize += t.tableSize;
                 });
                 cube.totalSize = totalSize;
+            },function(e){
+                if(e.data&& e.data.exception){
+                    var message =e.data.exception;
+                    var msg = !!(message) ? message : 'Failed to take action.';
+                    SweetAlert.swal('Oops...', msg, 'error');
+                }else{
+                    SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                }
             });
         }
     };

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 set -o pipefail  # trace ERR through pipes
 set -o errtrace  # trace ERR through 'time command' and other functions
@@ -38,7 +38,7 @@ echo "Checking JAVA status..."
 
 if [ -z "$JAVA_HOME" ]
 then
-    echo "Please set $JAVA_HOME so that Kylin-Deploy can proceed"
+    echo "Please set JAVA_HOME so that Kylin-Deploy can proceed"
     exit 1
 else
     echo "JAVA_HOME is set to $JAVA_HOME"
