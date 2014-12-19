@@ -280,7 +280,9 @@ public class ProjectManager {
         if (projectInstance != null) {
             for (ProjectDataModel dm : projectInstance.getDataModels()) {
                 if (dm.getType() == type || type == null) {//type == null means any type
-                    IRealization realization = RealizationRegistry.getInstance(config).getRealization(dm.getType(), dm.getRealization());
+                    RealizationRegistry registry = RealizationRegistry.getInstance(config);
+                    registry.loadRealizations();
+                    IRealization realization = registry.getRealization(dm.getType(), dm.getRealization());
                     ret.add(realization);
                 }
             }
@@ -491,7 +493,6 @@ public class ProjectManager {
         TableDesc t = this.getMetadataManager().getTableDesc(table);
         if (t == null)
             throw new IllegalStateException("No SourceTable found by name '" + table);
-        table = t.getName(); // ensures upper case
 
         ProjectTable projTable = getProjectTable(project, table, true);
 
