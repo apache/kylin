@@ -22,8 +22,6 @@ import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.MiniHBaseCluster;
@@ -45,11 +43,33 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
 
     protected static MiniHBaseCluster hbaseCluster = null;
 
+    private static boolean clusterStarted = false;
+
     protected static Configuration config = null;
 
     protected static String hbaseconnectionUrl = "";
 
     private static final Log logger = LogFactory.getLog(HBaseMiniclusterMetadataTestCase.class);
+
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                try {
+                    UTIL.shutdownMiniMapReduceCluster();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    UTIL.shutdownMiniCluster();
+                } catch (Exception e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
 
     @Override
     public void createTestMetadata() {
@@ -70,35 +90,50 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
     public static void startupMinicluster() throws IOException, ClassNotFoundException, InterruptedException {
         staticCreateTestMetadata(MINICLUSTER_TEST_DATA);
 
-        System.out.println("Going to start mini cluster.");
-        try {
-            hbaseCluster = UTIL.startMiniCluster();
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (!clusterStarted) {
+            synchronized (HBaseMiniclusterMetadataTestCase.class) {
+                if (!clusterStarted) {
+                    startupMiniClusterAndImportData();
+                    clusterStarted = true;
+                }
+            }
         }
-        config = hbaseCluster.getConf();
-        String host = config.get(HConstants.ZOOKEEPER_QUORUM);
-        String port = config.get(HConstants.ZOOKEEPER_CLIENT_PORT);
-        String parent = config.get(HConstants.ZOOKEEPER_ZNODE_PARENT);
-
-        // reduce rpc retry
-        config.set(HConstants.HBASE_CLIENT_PAUSE, "3000");
-        config.set(HConstants.HBASE_CLIENT_RETRIES_NUMBER, "5");
-        config.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
-
-        hbaseconnectionUrl = "hbase:" + host + ":" + port + ":" + parent;
-        UTIL.startMiniMapReduceCluster();
 
         KylinConfig.getInstanceFromEnv().setMetadataUrl("kylin_metadata_qa@" + hbaseconnectionUrl);
         KylinConfig.getInstanceFromEnv().setStorageUrl(hbaseconnectionUrl);
-
-        // create the metadata htables;
-        HBaseResourceStore store = new HBaseResourceStore(KylinConfig.getInstanceFromEnv());
-
-        // import the table content
-        importHBaseData(true, true);
     }
 
+    private static void startupMiniClusterAndImportData() {
+
+        System.out.println("Going to start mini cluster.");
+        try {
+            hbaseCluster = UTIL.startMiniCluster();
+
+            UTIL.startMiniMapReduceCluster();
+            config = hbaseCluster.getConf();
+            String host = config.get(HConstants.ZOOKEEPER_QUORUM);
+            String port = config.get(HConstants.ZOOKEEPER_CLIENT_PORT);
+            String parent = config.get(HConstants.ZOOKEEPER_ZNODE_PARENT);
+
+            // reduce rpc retry
+            config.set(HConstants.HBASE_CLIENT_PAUSE, "3000");
+            config.set(HConstants.HBASE_CLIENT_RETRIES_NUMBER, "5");
+            config.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
+
+            hbaseconnectionUrl = "hbase:" + host + ":" + port + ":" + parent;
+            
+            // create the metadata htables;
+            HBaseResourceStore store = new HBaseResourceStore(KylinConfig.getInstanceFromEnv());
+
+            // import the table content
+            importHBaseData(true, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    
+    }
+    
+    
     public static void importHBaseData(boolean importMetadataTables, boolean importCubeTables) throws IOException, ClassNotFoundException, InterruptedException {
 
         if (!importMetadataTables && !importCubeTables)
@@ -160,16 +195,6 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
 
     }
 
-    private String copyTableBackupToHDFS(File backupFolder, String tableName) throws IOException {
-        File tableExportFolder = new File(backupFolder, tableName);
-        org.apache.hadoop.fs.FileSystem fs = org.apache.hadoop.fs.FileSystem.get(UTIL.getConfiguration());
-        Path tableExportPath = new Path("/tmp/hbase-export/");
-        fs.delete(tableExportPath, true);
-        fs.mkdirs(tableExportPath);
-        fs.copyFromLocalFile(false, new Path(tableExportFolder.getAbsolutePath()), tableExportPath);
-        return tableExportPath.makeQualified(FileSystem.get(UTIL.getConfiguration())).toString() + "/" + tableName;
-    }
-
     private static boolean runImport(String[] args) throws IOException, InterruptedException, ClassNotFoundException {
         // need to make a copy of the configuration because to make sure different temp dirs are used.
         GenericOptionsParser opts = new GenericOptionsParser(new Configuration(UTIL.getConfiguration()), args);
@@ -189,6 +214,8 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
      * Shutdown the minicluster; Sub-classes should invoke this method in AfterClass method.
      */
     public static void shutdownMiniCluster() {
+
+        /*
         System.out.println("Going to shutdown mini cluster.");
         try {
             UTIL.shutdownMiniMapReduceCluster();
@@ -201,6 +228,7 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        */
     }
 
     public static void main(String[] args) {
