@@ -72,7 +72,7 @@ public class ProjectManager {
                 }
                 return r;
             } catch (IOException e) {
-                throw new IllegalStateException("Failed to init CubeManager from " + config, e);
+                throw new IllegalStateException("Failed to init ProjectManager from " + config, e);
             }
         }
     }
@@ -93,8 +93,8 @@ public class ProjectManager {
         return new ArrayList<ProjectInstance>(projectMap.values());
     }
 
-    public List<ProjectInstance> getProjects(String cubeName) {
-        return this.findProjects(cubeName);
+    public List<ProjectInstance> getProjects(RealizationType type, String realizationName) {
+        return this.findProjects(type, realizationName);
     }
 
     public ProjectInstance dropProject(String projectName) throws IOException {
@@ -107,8 +107,8 @@ public class ProjectManager {
             throw new IllegalStateException("The project named " + projectName + " does not exist");
         }
 
-        if (projectInstance.getCubes().size() != 0) {
-            throw new IllegalStateException("The project named " + projectName + " can not be deleted because there's still cubes in it. Delete all the cubes first.");
+        if (projectInstance.getRealizationCount(null) != 0) {
+            throw new IllegalStateException("The project named " + projectName + " can not be deleted because there's still realizations in it. Delete them first.");
         }
 
         logger.info("Dropping project '" + projectInstance.getName() + "'");
@@ -145,7 +145,7 @@ public class ProjectManager {
             ProjectInstance newProject = this.createProject(newName, project.getOwner(), newDesc);
             newProject.setCreateTime(project.getCreateTime());
             newProject.recordUpdateTime(System.currentTimeMillis());
-            newProject.setCubes(project.getCubes());
+            newProject.setRealizationEntries(project.getRealizationEntries());
 
             deleteResource(project);
             saveResource(newProject);
@@ -164,10 +164,24 @@ public class ProjectManager {
         }
     }
 
-    public ProjectInstance updateCubeToProject(String cubeName, String newProjectName, String owner) throws IOException {
-        removeCubeFromProjects(cubeName);
-        return addCubeToProject(cubeName, newProjectName, owner);
+    public ProjectInstance updateRealizationToProject(RealizationType type, String realizationName, String newProjectName, String owner) throws IOException {
+        removeRealizationsFromProjects(type, realizationName);
+        return addRealizationToProject(type, realizationName, newProjectName, owner);
     }
+
+
+    private ProjectInstance addRealizationToProject(RealizationType type, String realizationName, String project, String user) throws IOException {
+        String newProjectName = ProjectInstance.getNormalizedProjectName(project);
+        ProjectInstance newProject = getProject(newProjectName);
+        if (newProject == null) {
+            newProject = this.createProject(newProjectName, user, "This is a project automatically added when adding realization " + realizationName + "(" + type + ")");
+        }
+        newProject.addRealizationEntry(type, realizationName);
+        saveResource(newProject);
+
+        return newProject;
+    }
+
 
     ////////////////////////////////////////////////////////
     // project table related
@@ -222,11 +236,9 @@ public class ProjectManager {
     //
     ////////////////////////////////////////////////////////
 
-
-    public void removeCubeFromProjects(String cubeName) throws IOException {
-        for (ProjectInstance projectInstance : findProjects(cubeName)) {
-            projectInstance.removeCube(cubeName);
-
+    public void removeRealizationsFromProjects(RealizationType type, String realizationName) throws IOException {
+        for (ProjectInstance projectInstance : findProjects(type, realizationName)) {
+            projectInstance.removeRealization(type, realizationName);
             saveResource(projectInstance);
         }
     }
@@ -278,7 +290,7 @@ public class ProjectManager {
 
         ProjectInstance projectInstance = getProject(project);
         if (projectInstance != null) {
-            for (ProjectDataModel dm : projectInstance.getDataModels()) {
+            for (RealizationEntry dm : projectInstance.getRealizationEntries()) {
                 if (dm.getType() == type || type == null) {//type == null means any type
                     RealizationRegistry registry = RealizationRegistry.getInstance(config);
                     registry.loadRealizations();
@@ -380,10 +392,10 @@ public class ProjectManager {
 
     }
 
-    private List<ProjectInstance> findProjects(String cubeName) {
-        List<ProjectInstance> projects = new ArrayList<ProjectInstance>();
+    private List<ProjectInstance> findProjects(RealizationType type, String realizationName) {
+        List<ProjectInstance> projects = Lists.newArrayList();
         for (ProjectInstance projectInstance : projectMap.values()) {
-            if (projectInstance.containsCube(cubeName)) {
+            if (projectInstance.containsRealization(type, realizationName)) {
                 projects.add(projectInstance);
             }
         }
@@ -393,7 +405,7 @@ public class ProjectManager {
 
     public synchronized ProjectInstance loadProject(String path, boolean triggerUpdate) throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Loading CubeInstance " + store.getReadableResourcePath(path));
+        logger.debug("Loading ProjectInstance " + store.getReadableResourcePath(path));
 
         ProjectInstance projectInstance = store.getResource(path, ProjectInstance.class, PROJECT_SERIALIZER);
         projectInstance.init();
@@ -420,9 +432,9 @@ public class ProjectManager {
         String project = ProjectInstance.getNormalizedProjectName(projectInstance.getName());
         projectTables.removeAll(project);
 
-        for (IRealization cubeInstance : this.listAllRealizations(projectInstance.getName())) {
-            markExposedTablesAndColumns(projectInstance.getName(), cubeInstance);
-            mapTableToRealization(projectInstance, cubeInstance);
+        for (IRealization realization : this.listAllRealizations(projectInstance.getName())) {
+            markExposedTablesAndColumns(projectInstance.getName(), realization);
+            mapTableToRealization(projectInstance, realization);
         }
     }
 
@@ -440,17 +452,6 @@ public class ProjectManager {
         logger.debug("Loaded " + paths.size() + " Project(s)");
     }
 
-    private ProjectInstance addCubeToProject(String cubeName, String project, String user) throws IOException {
-        String newProjectName = ProjectInstance.getNormalizedProjectName(project);
-        ProjectInstance newProject = getProject(newProjectName);
-        if (newProject == null) {
-            newProject = this.createProject(newProjectName, user, "This is a project automatically added when adding cube " + cubeName);
-        }
-        newProject.addCube(cubeName);
-        saveResource(newProject);
-
-        return newProject;
-    }
 
     private void saveResource(ProjectInstance proj) throws IOException {
         ResourceStore store = getStore();

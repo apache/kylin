@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.kylinolap.metadata.realization.RealizationType;
-import com.kylinolap.metadata.project.ProjectDataModel;
+import com.kylinolap.metadata.project.RealizationEntry;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.project.ProjectManager;
 import com.kylinolap.metadata.realization.RealizationStatusEnum;
@@ -197,7 +197,7 @@ public class CubeService extends BasicService {
             return Collections.emptyList();
         }
         ArrayList<CubeInstance> result = new ArrayList<CubeInstance>();
-        for (ProjectDataModel projectDataModel : project.getDataModels()) {
+        for (RealizationEntry projectDataModel : project.getRealizationEntries()) {
             if (projectDataModel.getType() == RealizationType.CUBE) {
                 CubeInstance cube = getCubeManager().getCube(projectDataModel.getRealization());
                 assert cube != null;
@@ -213,7 +213,7 @@ public class CubeService extends BasicService {
         if (project == null) {
             return false;
         }
-        for (ProjectDataModel projectDataModel : project.getDataModels()) {
+        for (RealizationEntry projectDataModel : project.getRealizationEntries()) {
             if (projectDataModel.getType() == RealizationType.CUBE) {
                 CubeInstance cube = getCubeManager().getCube(projectDataModel.getRealization());
                 assert cube != null;
@@ -247,7 +247,7 @@ public class CubeService extends BasicService {
             ProjectManager projectManager = getProjectManager();
             if (!isCubeInProject(newProjectName, cube)) {
                 String owner = SecurityContextHolder.getContext().getAuthentication().getName();
-                ProjectInstance newProject = projectManager.updateCubeToProject(cube.getName(), newProjectName, owner);
+                ProjectInstance newProject = projectManager.updateRealizationToProject(RealizationType.CUBE, cube.getName(), newProjectName, owner);
                 accessService.inherit(cube, newProject);
             }
 

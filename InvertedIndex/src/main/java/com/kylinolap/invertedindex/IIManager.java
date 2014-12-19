@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.kylinolap.invertedindex.model.IIDesc;
 import com.kylinolap.metadata.project.ProjectInstance;
+import com.kylinolap.metadata.realization.RealizationType;
 import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -56,7 +57,7 @@ public class IIManager {
 
     private static String ALPHA_NUM = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private static int HBASE_TABLE_LENGTH = 10;
-    
+
     private static final Serializer<IIInstance> II_SERIALIZER = new JsonSerializer<IIInstance>(IIInstance.class);
 
     private static final Logger logger = LoggerFactory.getLogger(IIManager.class);
@@ -101,7 +102,7 @@ public class IIManager {
     private KylinConfig config;
     // ii name ==> IIInstance
     private SingleValueCache<String, IIInstance> iiMap = new SingleValueCache<String, IIInstance>(Broadcaster.TYPE.CUBE);
-    
+
     // for generation hbase table name of a new segment
     private HashSet<String> usedStorageLocation = new HashSet<String>();
 
@@ -153,7 +154,7 @@ public class IIManager {
         saveResource(iiSeg.getIIInstance());
     }
 
-   /**
+    /**
      * return null if no dictionary for given column
      */
     public Dictionary<?> getDictionary(IISegment iiSeg, TblColRef col) {
@@ -197,7 +198,7 @@ public class IIManager {
      * For each htable, we leverage htable's metadata to keep track of
      * which kylin server(represented by its kylin_metadata prefix) owns this htable
      */
-    public static  String getHtableMetadataKey() {
+    public static String getHtableMetadataKey() {
         return "KYLIN_HOST";
     }
 
@@ -228,7 +229,7 @@ public class IIManager {
         MetadataManager.getInstance(config).reload();
         iiMap.put(updatedII.getName().toUpperCase(), updatedII);
 
-        for (ProjectInstance project : ProjectManager.getInstance(config).getProjects(updatedII.getName())) {
+        for (ProjectInstance project : ProjectManager.getInstance(config).getProjects(RealizationType.INVERTED_INDEX, updatedII.getName())) {
             try {
                 ProjectManager.getInstance(config).loadProjectCache(project, true);
             } catch (IOException e) {
@@ -240,8 +241,8 @@ public class IIManager {
 
     /**
      * @param IIInstance
-     * @param startDate    (pass 0 if full build)
-     * @param endDate      (pass 0 if full build)
+     * @param startDate  (pass 0 if full build)
+     * @param endDate    (pass 0 if full build)
      * @return
      */
     private IISegment buildSegment(IIInstance IIInstance, long startDate, long endDate) {
