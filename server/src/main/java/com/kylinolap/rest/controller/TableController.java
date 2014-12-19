@@ -71,7 +71,7 @@ public class TableController extends BasicController {
         List<TableDesc> tables = null;
         try {
                 tables = cubeMgmtService.getProjectManager().listDefinedTablesInProject(project);
-        } catch (Exception e) {
+        } catch (IOException e) {
             logger.error("Failed to deal with the request.", e);
             throw new InternalErrorException(e.getLocalizedMessage());
         }
@@ -119,11 +119,36 @@ public class TableController extends BasicController {
 
     @RequestMapping(value = "/{tables}/{project}", method = { RequestMethod.POST })
     @ResponseBody
-    public Map<String, String[]> loadHiveTable(@PathVariable String tables,@PathVariable String project) throws IOException {
-        String[] arr = cubeMgmtService.reloadHiveTable(tables);
-        cubeMgmtService.syncTableToProject(tables, project);
+    public Map<String, String[]> loadHiveTable(@PathVariable String tables,@PathVariable String project){
         Map<String, String[]> result = new HashMap<String, String[]>();
-        result.put("result", arr);
+        try{ 
+            String[] loadedTables = cubeMgmtService.reloadHiveTable(tables);
+
+            String inputTables[] = tables.split(",");
+            ArrayList<String> unloadedTables = new ArrayList<String>();
+            for (String inputTable : inputTables) {
+                boolean tableLoaded = false;
+                for (String loadedTable : loadedTables) {
+                    int cut = loadedTable.indexOf('.');
+                    String tableName = cut >= 0 ? loadedTable.substring(cut + 1).trim() : loadedTable.trim();
+                    if (inputTable.trim().toUpperCase().equals(tableName)||inputTable.trim().toUpperCase().equals(loadedTable)) {
+                        tableLoaded = true;
+                        break;
+                    }
+                }
+                if(!tableLoaded){
+                    unloadedTables.add(inputTable);
+                }
+            }
+           
+            cubeMgmtService.syncTableToProject(loadedTables, project);
+            result.put("result.loaded", loadedTables);
+            result.put("result.unloaded",unloadedTables.toArray(new String[unloadedTables.size()]) );
+            
+       }catch(IOException e){
+           logger.error("Failed to deal with the request.", e);
+           throw new InternalErrorException("Failed to load table,Please check the table name.");
+       }
         return result;
     }
 

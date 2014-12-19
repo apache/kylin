@@ -1,7 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('QueryCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, $modal, MessageService, $domUtilityService, $timeout, TableService) {
+    .controller('QueryCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, $modal, MessageService, $domUtilityService, $timeout, TableService,SweetAlert) {
         $scope.mainPanel = 'query';
         $scope.rowsPerPage = 50000;
         $scope.base64 = $base64;
@@ -359,7 +359,7 @@ KylinApp
 
             $scope.saveQuery = function (query) {
                 QueryService.save({}, {name: query.name, project: query.project, sql: query.sql, description: query.description}, function () {
-                    MessageService.sendMsg('New query saved.', 'success', {});
+                    SweetAlert.swal('Success!', 'New query saved..', 'success');
                     $modalInstance.dismiss('cancel');
                 });
             }
@@ -374,9 +374,20 @@ KylinApp
             });
 
             if (isExecuting && (next.replace(current, "").indexOf("#") != 0)) {
-                if (!confirm("You've executing query in current page, are you sure to leave this page?")) {
-                    event.preventDefault();
-                }
+                SweetAlert.swal({
+                    title: '',
+                    text: "You've executing query in current page, are you sure to leave this page?",
+                    type: '',
+                    showCancelButton: true,
+                    confirmButtonColor: '#DD6B55',
+                    confirmButtonText: "Yes",
+                    closeOnConfirm: true
+                }, function(isConfirm) {
+                    if(!isConfirm){
+                        event.preventDefault();
+                    }
+
+                });
             }
         });
 

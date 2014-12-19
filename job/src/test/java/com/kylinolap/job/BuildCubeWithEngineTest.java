@@ -24,15 +24,14 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
-import java.util.UUID;
 
-import com.google.common.collect.Lists;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.quartz.SchedulerException;
 
+import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.ClasspathUtil;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
@@ -240,7 +239,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         for (CubeSegment seg : newSegments) {
             String uuid = seg.getUuid();
             jobUuids.add(uuid);
-            jobs.add(jobManager.createJob(cubename, seg.getName(), uuid, jobType));
+            jobs.add(jobManager.createJob(cubename, seg.getName(), uuid, jobType,"KylinTest"));
             seg.setLastBuildJobID(uuid);
         }
         cubeMgr.updateCube(cube);

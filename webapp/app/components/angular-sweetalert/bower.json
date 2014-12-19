@@ -1,0 +1,32 @@
+{
+	"name": "ngSweetAlert",
+	"version": "1.0.3",
+	"main": "./SweetAlert.js",
+	"authors": [
+		"pedro@oitozero.com",
+		"gnick666@gmail.com"
+	],
+	"description": "AngularJS wrapper for SweetAlert",
+	"keywords": [
+		"angular",
+		"AngularJs",
+		"sweetalert",
+		"sweet",
+		"alert"
+	],
+	"license": "MIT",
+	"ignore": [
+		"**/.*",
+		"node_modules",
+		"bower_components",
+		"test",
+		"tests",
+		"CHANGELOG.md"
+	],
+	"dependencies": {
+		"angular":"~1.2.0",
+		"sweetalert":"~0.2.0"
+	},
+	"devDependencies": {
+	}
+}

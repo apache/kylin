@@ -57,9 +57,9 @@ KylinApp.config(function ($routeProvider, $httpProvider, $locationProvider, $log
                         $rootScope.$broadcast('event:forbidden', response.data.exception);
                     }
 
-                    if (response.status === 500) {
-                        $rootScope.$broadcast('event:error', response.data.exception);
-                    }
+//                    if (response.status === 500) {
+//                        $rootScope.$broadcast('event:error', response.data.exception);
+//                    }
 
                     return $q.reject(response);
                 }

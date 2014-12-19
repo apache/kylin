@@ -96,7 +96,7 @@ public class JobService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public String submitJob(CubeInstance cube, long startDate, long endDate, CubeBuildTypeEnum buildType) throws IOException, JobException, InvalidJobInstanceException {
+    public String submitJob(CubeInstance cube, long startDate, long endDate, CubeBuildTypeEnum buildType,String submitter) throws IOException, JobException, InvalidJobInstanceException {
 
         List<JobInstance> jobInstances = this.getJobManager().listJobs(cube.getName(), null);
         for (JobInstance jobInstance : jobInstances) {
@@ -111,7 +111,7 @@ public class JobService extends BasicService {
             List<JobInstance> jobs = Lists.newArrayListWithExpectedSize(cubeSegments.size());
             for (CubeSegment segment : cubeSegments) {
                 uuid = segment.getUuid();
-                JobInstance job = this.getJobManager().createJob(cube.getName(), segment.getName(), segment.getUuid(), buildType);
+                JobInstance job = this.getJobManager().createJob(cube.getName(), segment.getName(), segment.getUuid(), buildType,submitter);
                 segment.setLastBuildJobID(uuid);
                 jobs.add(job);
             }

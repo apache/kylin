@@ -30,6 +30,7 @@ public class MailServiceTest {
     @Test
     public void testSendEmail() throws IOException {
         
+        @SuppressWarnings("deprecation")
         KylinConfig config = KylinConfig.getInstanceForTest(AbstractKylinTestCase.SANDBOX_TEST_DATA);
 
         MailService mailservice = new MailService(config);

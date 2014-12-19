@@ -380,8 +380,10 @@ public class JobFlowListener implements JobListener {
         content = content.replaceAll("\\$\\{duration\\}", jobInstance.getDuration() / 60 + "mins");
         content = content.replaceAll("\\$\\{mr_waiting\\}", jobInstance.getMrWaiting() / 60 + "mins");
         content = content.replaceAll("\\$\\{last_update_time\\}", new Date(jobInstance.getLastModified()).toString());
+        content = content.replaceAll("\\$\\{submitter\\}", jobInstance.getSubmitter());
         content = content.replaceAll("\\$\\{error_log\\}", logMsg);
 
+        
         MailService mailService = new MailService();
         try {
             List<String> users = new ArrayList<String>();
@@ -398,8 +400,16 @@ public class JobFlowListener implements JobListener {
                 }
             }
 
+            log.info("prepare to send email to:"+users);
+            
+            log.info("job name:"+jobInstance.getName());
+            
+            log.info("submitter:"+jobInstance.getSubmitter());
+            
             if (users.size() > 0) {
+                log.info("notify list:"+users);
                 mailService.sendMail(users, "["+ finalStatus + "] - [Kylin Cube Build Job]-" + cubeName, content);
+                log.info("notified users:"+users);
             }
         } catch (IOException e) {
             log.error(e.getLocalizedMessage(), e);
