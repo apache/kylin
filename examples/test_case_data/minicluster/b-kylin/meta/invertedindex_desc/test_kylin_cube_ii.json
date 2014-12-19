@@ -1,0 +1,24 @@
+{
+  "uuid" : "74bf87b5-c7b5-4420-a12a-07f6b37b3187",
+  "last_modified" : 0,
+  "name" : "test_kylin_cube_ii",
+  "fact_table" : "TEST_KYLIN_FACT",
+  "timestamp_dimension" : "CAL_DT",
+  "bitmap_dimensions" : [
+    "LSTG_FORMAT_NAME",
+    "LSTG_SITE_ID",
+    "SLR_SEGMENT_CD"
+  ],
+  "value_dimensions" : [
+    "TRANS_ID",
+    "CAL_DT",
+    "LEAF_CATEG_ID",
+    "SELLER_ID"
+  ],
+  "metrics" : [
+    "PRICE",
+    "ITEM_COUNT"
+  ],
+  "sharding" : 4,
+  "slice_size" : 50000
+}

@@ -1,0 +1,270 @@
+{
+  "uuid" : "d0705b0e-515b-44f1-b662-0a00728797d3",
+  "name" : "test_kylin_cube_without_slr_left_join_empty - 19700101000000_20120601000000 - BUILD - PST 2014-11-20 16:50:46",
+  "type" : "BUILD",
+  "duration" : 1920,
+  "steps" : [ {
+    "name" : "Create Intermediate Flat Hive Table",
+    "info" : {
+      "source_records_size" : "507634",
+      "mr_job_id" : "job_1416479946942_0001",
+      "hdfs_bytes_written" : "31257",
+      "yarn_application_tracking_url" : "http://sandbox.hortonworks.com:8088/proxy/application_1416479946942_0001/"
+    },
+    "interruptCmd" : null,
+    "sequence_id" : 0,
+    "exec_cmd" : "hive -e \"DROP TABLE IF EXISTS kylin_intermediate_test_kylin_cube_without_slr_left_join_desc_19700101000000_20120601000000_d0705b0e_515b_44f1_b662_0a00728797d3;\nCREATE EXTERNAL TABLE IF NOT EXISTS kylin_intermediate_test_kylin_cube_without_slr_left_join_desc_19700101000000_20120601000000_d0705b0e_515b_44f1_b662_0a00728797d3\n(\nCAL_DT date\n,LEAF_CATEG_ID int\n,LSTG_SITE_ID int\n,META_CATEG_NAME string\n,CATEG_LVL2_NAME string\n,CATEG_LVL3_NAME string\n,LSTG_FORMAT_NAME string\n,SLR_SEGMENT_CD smallint\n,PRICE decimal\n,SELLER_ID bigint\n)\nROW FORMAT DELIMITED FIELDS TERMINATED BY '\\177'\nSTORED AS SEQUENCEFILE\nLOCATION '/tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/kylin_intermediate_test_kylin_cube_without_slr_left_join_desc_19700101000000_20120601000000_d0705b0e_515b_44f1_b662_0a00728797d3';\nSET mapreduce.job.split.metainfo.maxsize=-1;\nSET mapreduce.job.max.split.locations=2000;\nSET dfs.replication=2;\nSET hive.exec.compress.output=true;\nSET hive.auto.convert.join.noconditionaltask = true;\nSET hive.auto.convert.join.noconditionaltask.size = 300000000;\nINSERT OVERWRITE TABLE kylin_intermediate_test_kylin_cube_without_slr_left_join_desc_19700101000000_20120601000000_d0705b0e_515b_44f1_b662_0a00728797d3\nSELECT\nTEST_KYLIN_FACT.CAL_DT\n,TEST_KYLIN_FACT.LEAF_CATEG_ID\n,TEST_KYLIN_FACT.LSTG_SITE_ID\n,TEST_CATEGORY_GROUPINGS.META_CATEG_NAME\n,TEST_CATEGORY_GROUPINGS.CATEG_LVL2_NAME\n,TEST_CATEGORY_GROUPINGS.CATEG_LVL3_NAME\n,TEST_KYLIN_FACT.LSTG_FORMAT_NAME\n,TEST_KYLIN_FACT.SLR_SEGMENT_CD\n,TEST_KYLIN_FACT.PRICE\n,TEST_KYLIN_FACT.SELLER_ID\nFROM TEST_KYLIN_FACT\nLEFT JOIN TEST_CAL_DT\nON TEST_KYLIN_FACT.CAL_DT = TEST_CAL_DT.CAL_DT\nLEFT JOIN TEST_CATEGORY_GROUPINGS\nON TEST_KYLIN_FACT.LEAF_CATEG_ID = TEST_CATEGORY_GROUPINGS.LEAF_CATEG_ID AND TEST_KYLIN_FACT.LSTG_SITE_ID = TEST_CATEGORY_GROUPINGS.SITE_ID\nLEFT JOIN TEST_SITES\nON TEST_KYLIN_FACT.LSTG_SITE_ID = TEST_SITES.SITE_ID\nLEFT JOIN TEST_SELLER_TYPE_DIM\nON TEST_KYLIN_FACT.SLR_SEGMENT_CD = TEST_SELLER_TYPE_DIM.SELLER_TYPE_CD\nWHERE (test_kylin_fact.cal_dt < '2012-06-01')\n;\n\"",
+    "interrupt_cmd" : null,
+    "exec_start_time" : 1416531052169,
+    "exec_end_time" : 1416531189745,
+    "exec_wait_time" : 0,
+    "step_status" : "FINISHED",
+    "cmd_type" : "SHELL_CMD_HADOOP",
+    "run_async" : false
+  }, {
+    "name" : "Extract Fact Table Distinct Columns",
+    "info" : {
+      "source_records_count" : "2027",
+      "mr_job_id" : "job_1416479946942_0003",
+      "hdfs_bytes_written" : "146",
+      "yarn_application_tracking_url" : "http://sandbox.hortonworks.com:8088/proxy/application_1416479946942_0003/"
+    },
+    "interruptCmd" : null,
+    "sequence_id" : 1,
+    "exec_cmd" : " -conf ../examples/test_case_data/hadoop_job_conf.xml -cubename test_kylin_cube_without_slr_left_join_empty -input /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/kylin_intermediate_test_kylin_cube_without_slr_left_join_desc_19700101000000_20120601000000_d0705b0e_515b_44f1_b662_0a00728797d3 -output /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/fact_distinct_columns -jobname Kylin_Fact_Distinct_Columns_test_kylin_cube_without_slr_left_join_empty_Step_1",
+    "interrupt_cmd" : null,
+    "exec_start_time" : 1416531189847,
+    "exec_end_time" : 1416531267507,
+    "exec_wait_time" : 30,
+    "step_status" : "FINISHED",
+    "cmd_type" : "JAVA_CMD_HADOOP_FACTDISTINCT",
+    "run_async" : true
+  }, {
+    "name" : "Build Dimension Dictionary",
+    "info" : null,
+    "interruptCmd" : null,
+    "sequence_id" : 2,
+    "exec_cmd" : " -cubename test_kylin_cube_without_slr_left_join_empty -segmentname 19700101000000_20120601000000 -input /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/fact_distinct_columns",
+    "interrupt_cmd" : null,
+    "exec_start_time" : 1416531267585,
+    "exec_end_time" : 1416531678850,
+    "exec_wait_time" : 0,
+    "step_status" : "FINISHED",
+    "cmd_type" : "JAVA_CMD_HADOOP_NO_MR_DICTIONARY",
+    "run_async" : false
+  }, {
+    "name" : "Build Base Cuboid Data",
+    "info" : {
+      "source_records_count" : "2027",
+      "mr_job_id" : "job_1416479946942_0005",
+      "hdfs_bytes_written" : "102298",
+      "yarn_application_tracking_url" : "http://sandbox.hortonworks.com:8088/proxy/application_1416479946942_0005/"
+    },
+    "interruptCmd" : null,
+    "sequence_id" : 3,
+    "exec_cmd" : " -conf ../examples/test_case_data/hadoop_job_conf.xml -cubename test_kylin_cube_without_slr_left_join_empty -segmentname 19700101000000_20120601000000 -input /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/kylin_intermediate_test_kylin_cube_without_slr_left_join_desc_19700101000000_20120601000000_d0705b0e_515b_44f1_b662_0a00728797d3 -output /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/cuboid/base_cuboid -jobname Kylin_Base_Cuboid_Builder_test_kylin_cube_without_slr_left_join_empty_Step_3 -level 0",
+    "interrupt_cmd" : null,
+    "exec_start_time" : 1416531678928,
+    "exec_end_time" : 1416531752347,
+    "exec_wait_time" : 35,
+    "step_status" : "FINISHED",
+    "cmd_type" : "JAVA_CMD_HADOOP_BASECUBOID",
+    "run_async" : true
+  }, {
+    "name" : "Build N-Dimension Cuboid Data : 7-Dimension",
+    "info" : {
+      "source_records_count" : "2024",
+      "mr_job_id" : "job_1416479946942_0007",
+      "hdfs_bytes_written" : "385604",
+      "yarn_application_tracking_url" : "http://sandbox.hortonworks.com:8088/proxy/application_1416479946942_0007/"
+    },
+    "interruptCmd" : null,
+    "sequence_id" : 4,
+    "exec_cmd" : " -conf ../examples/test_case_data/hadoop_job_conf.xml -cubename test_kylin_cube_without_slr_left_join_empty -segmentname 19700101000000_20120601000000 -input /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/cuboid/base_cuboid -output /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/cuboid/7d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_without_slr_left_join_empty_Step_4 -level 1",
+    "interrupt_cmd" : null,
+    "exec_start_time" : 1416531752422,
+    "exec_end_time" : 1416531840502,
+    "exec_wait_time" : 33,
+    "step_status" : "FINISHED",
+    "cmd_type" : "JAVA_CMD_HADOOP_NDCUBOID",
+    "run_async" : true
+  }, {
+    "name" : "Build N-Dimension Cuboid Data : 6-Dimension",
+    "info" : {
+      "source_records_count" : "7923",
+      "mr_job_id" : "job_1416479946942_0009",
+      "hdfs_bytes_written" : "491639",
+      "yarn_application_tracking_url" : "http://sandbox.hortonworks.com:8088/proxy/application_1416479946942_0009/"
+    },
+    "interruptCmd" : null,
+    "sequence_id" : 5,
+    "exec_cmd" : " -conf ../examples/test_case_data/hadoop_job_conf.xml -cubename test_kylin_cube_without_slr_left_join_empty -segmentname 19700101000000_20120601000000 -input /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/cuboid/7d_cuboid -output /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/cuboid/6d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_without_slr_left_join_empty_Step_5 -level 2",
+    "interrupt_cmd" : null,
+    "exec_start_time" : 1416531840580,
+    "exec_end_time" : 1416531945706,
+    "exec_wait_time" : 27,
+    "step_status" : "FINISHED",
+    "cmd_type" : "JAVA_CMD_HADOOP_NDCUBOID",
+    "run_async" : true
+  }, {
+    "name" : "Build N-Dimension Cuboid Data : 5-Dimension",
+    "info" : {
+      "source_records_count" : "10285",
+      "mr_job_id" : "job_1416479946942_0011",
+      "hdfs_bytes_written" : "386217",
+      "yarn_application_tracking_url" : "http://sandbox.hortonworks.com:8088/proxy/application_1416479946942_0011/"
+    },
+    "interruptCmd" : null,
+    "sequence_id" : 6,
+    "exec_cmd" : " -conf ../examples/test_case_data/hadoop_job_conf.xml -cubename test_kylin_cube_without_slr_left_join_empty -segmentname 19700101000000_20120601000000 -input /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/cuboid/6d_cuboid -output /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/cuboid/5d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_without_slr_left_join_empty_Step_6 -level 3",
+    "interrupt_cmd" : null,
+    "exec_start_time" : 1416531945793,
+    "exec_end_time" : 1416532026159,
+    "exec_wait_time" : 27,
+    "step_status" : "FINISHED",
+    "cmd_type" : "JAVA_CMD_HADOOP_NDCUBOID",
+    "run_async" : true
+  }, {
+    "name" : "Build N-Dimension Cuboid Data : 4-Dimension",
+    "info" : {
+      "source_records_count" : "7867",
+      "mr_job_id" : "job_1416479946942_0013",
+      "hdfs_bytes_written" : "325470",
+      "yarn_application_tracking_url" : "http://sandbox.hortonworks.com:8088/proxy/application_1416479946942_0013/"
+    },
+    "interruptCmd" : null,
+    "sequence_id" : 7,
+    "exec_cmd" : " -conf ../examples/test_case_data/hadoop_job_conf.xml -cubename test_kylin_cube_without_slr_left_join_empty -segmentname 19700101000000_20120601000000 -input /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/cuboid/5d_cuboid -output /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/cuboid/4d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_without_slr_left_join_empty_Step_7 -level 4",
+    "interrupt_cmd" : null,
+    "exec_start_time" : 1416532026223,
+    "exec_end_time" : 1416532112879,
+    "exec_wait_time" : 35,
+    "step_status" : "FINISHED",
+    "cmd_type" : "JAVA_CMD_HADOOP_NDCUBOID",
+    "run_async" : true
+  }, {
+    "name" : "Build N-Dimension Cuboid Data : 3-Dimension",
+    "info" : {
+      "source_records_count" : "7009",
+      "mr_job_id" : "job_1416479946942_0015",
+      "hdfs_bytes_written" : "314238",
+      "yarn_application_tracking_url" : "http://sandbox.hortonworks.com:8088/proxy/application_1416479946942_0015/"
+    },
+    "interruptCmd" : null,
+    "sequence_id" : 8,
+    "exec_cmd" : " -conf ../examples/test_case_data/hadoop_job_conf.xml -cubename test_kylin_cube_without_slr_left_join_empty -segmentname 19700101000000_20120601000000 -input /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/cuboid/4d_cuboid -output /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/cuboid/3d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_without_slr_left_join_empty_Step_8 -level 5",
+    "interrupt_cmd" : null,
+    "exec_start_time" : 1416532112949,
+    "exec_end_time" : 1416532200182,
+    "exec_wait_time" : 30,
+    "step_status" : "FINISHED",
+    "cmd_type" : "JAVA_CMD_HADOOP_NDCUBOID",
+    "run_async" : true
+  }, {
+    "name" : "Build N-Dimension Cuboid Data : 2-Dimension",
+    "info" : {
+      "source_records_count" : "6900",
+      "mr_job_id" : "job_1416479946942_0017",
+      "hdfs_bytes_written" : "137288",
+      "yarn_application_tracking_url" : "http://sandbox.hortonworks.com:8088/proxy/application_1416479946942_0017/"
+    },
+    "interruptCmd" : null,
+    "sequence_id" : 9,
+    "exec_cmd" : " -conf ../examples/test_case_data/hadoop_job_conf.xml -cubename test_kylin_cube_without_slr_left_join_empty -segmentname 19700101000000_20120601000000 -input /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/cuboid/3d_cuboid -output /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/cuboid/2d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_without_slr_left_join_empty_Step_9 -level 6",
+    "interrupt_cmd" : null,
+    "exec_start_time" : 1416532200245,
+    "exec_end_time" : 1416532326933,
+    "exec_wait_time" : 68,
+    "step_status" : "FINISHED",
+    "cmd_type" : "JAVA_CMD_HADOOP_NDCUBOID",
+    "run_async" : true
+  }, {
+    "name" : "Build N-Dimension Cuboid Data : 1-Dimension",
+    "info" : {
+      "source_records_count" : "3009",
+      "mr_job_id" : "job_1416479946942_0019",
+      "hdfs_bytes_written" : "78",
+      "yarn_application_tracking_url" : "http://sandbox.hortonworks.com:8088/proxy/application_1416479946942_0019/"
+    },
+    "interruptCmd" : null,
+    "sequence_id" : 10,
+    "exec_cmd" : " -conf ../examples/test_case_data/hadoop_job_conf.xml -cubename test_kylin_cube_without_slr_left_join_empty -segmentname 19700101000000_20120601000000 -input /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/cuboid/2d_cuboid -output /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/cuboid/1d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_without_slr_left_join_empty_Step_10 -level 7",
+    "interrupt_cmd" : null,
+    "exec_start_time" : 1416532327008,
+    "exec_end_time" : 1416532459195,
+    "exec_wait_time" : 82,
+    "step_status" : "FINISHED",
+    "cmd_type" : "JAVA_CMD_HADOOP_NDCUBOID",
+    "run_async" : true
+  }, {
+    "name" : "Calculate HTable Region Splits",
+    "info" : {
+      "source_records_count" : "45017",
+      "mr_job_id" : "job_1416479946942_0021",
+      "hdfs_bytes_written" : "122",
+      "yarn_application_tracking_url" : "http://sandbox.hortonworks.com:8088/proxy/application_1416479946942_0021/"
+    },
+    "interruptCmd" : null,
+    "sequence_id" : 11,
+    "exec_cmd" : " -conf ../examples/test_case_data/hadoop_job_conf.xml -input /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/cuboid/* -output /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/rowkey_stats -jobname Kylin_Region_Splits_Calculator_test_kylin_cube_without_slr_left_join_empty_Step_11 -cubename test_kylin_cube_without_slr_left_join_empty",
+    "interrupt_cmd" : null,
+    "exec_start_time" : 1416532459266,
+    "exec_end_time" : 1416532749423,
+    "exec_wait_time" : 158,
+    "step_status" : "FINISHED",
+    "cmd_type" : "JAVA_CMD_HADOOP_RANGEKEYDISTRIBUTION",
+    "run_async" : true
+  }, {
+    "name" : "Create HTable",
+    "info" : null,
+    "interruptCmd" : null,
+    "sequence_id" : 12,
+    "exec_cmd" : " -cubename test_kylin_cube_without_slr_left_join_empty -input /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/rowkey_stats/part-r-00000 -htablename KYLIN_RD0JFWQCRC",
+    "interrupt_cmd" : null,
+    "exec_start_time" : 1416532749513,
+    "exec_end_time" : 1416532750973,
+    "exec_wait_time" : 0,
+    "step_status" : "FINISHED",
+    "cmd_type" : "JAVA_CMD_HADDOP_NO_MR_CREATEHTABLE",
+    "run_async" : false
+  }, {
+    "name" : "Convert Cuboid Data to HFile",
+    "info" : {
+      "source_records_count" : "45017",
+      "mr_job_id" : "job_1416479946942_0022",
+      "hdfs_bytes_written" : "1937684",
+      "yarn_application_tracking_url" : "http://sandbox.hortonworks.com:8088/proxy/application_1416479946942_0022/"
+    },
+    "interruptCmd" : null,
+    "sequence_id" : 13,
+    "exec_cmd" : " -conf ../examples/test_case_data/hadoop_job_conf.xml -cubename test_kylin_cube_without_slr_left_join_empty -input /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/cuboid/* -output /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/hfile -htablename KYLIN_RD0JFWQCRC -jobname Kylin_HFile_Generator_test_kylin_cube_without_slr_left_join_empty_Step_13",
+    "interrupt_cmd" : null,
+    "exec_start_time" : 1416532751034,
+    "exec_end_time" : 1416532978611,
+    "exec_wait_time" : 28,
+    "step_status" : "FINISHED",
+    "cmd_type" : "JAVA_CMD_HADOOP_CONVERTHFILE",
+    "run_async" : true
+  }, {
+    "name" : "Load HFile to HBase Table",
+    "info" : null,
+    "interruptCmd" : null,
+    "sequence_id" : 14,
+    "exec_cmd" : " -input /tmp/kylin-d0705b0e-515b-44f1-b662-0a00728797d3/test_kylin_cube_without_slr_left_join_empty/hfile/ -htablename KYLIN_RD0JFWQCRC -cubename test_kylin_cube_without_slr_left_join_empty",
+    "interrupt_cmd" : null,
+    "exec_start_time" : 1416532978677,
+    "exec_end_time" : 1416532979013,
+    "exec_wait_time" : 0,
+    "step_status" : "FINISHED",
+    "cmd_type" : "JAVA_CMD_HADOOP_NO_MR_BULKLOAD",
+    "run_async" : false
+  } ],
+  "progress" : 100.0,
+  "last_modified" : 1416532979063,
+  "related_cube" : "test_kylin_cube_without_slr_left_join_empty",
+  "related_segment" : "19700101000000_20120601000000",
+  "exec_start_time" : 1416531052169,
+  "exec_end_time" : 1416532979013,
+  "mr_waiting" : 553,
+  "job_status" : "FINISHED"
+}

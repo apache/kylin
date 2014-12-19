@@ -23,6 +23,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -35,8 +36,9 @@ import com.kylinolap.rest.service.ServiceTestBase;
 
 /**
  * @author xduo
- * 
+ * @deprecated method has been merged into #ServiceTestAllInOne
  */
+@Ignore
 public class UserControllerTest extends ServiceTestBase {
 
     private UserController userController;

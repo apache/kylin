@@ -4,16 +4,19 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 
-import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+
+import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
 
 /**
  * Created by honma on 7/2/14.
  */
 @RunWith(Parameterized.class)
+@Ignore
 public class CombinationTest extends KylinQueryTest {
 
     @BeforeClass
