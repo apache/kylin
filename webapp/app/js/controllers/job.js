@@ -1,7 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,SweetAlert,loadingRequest) {
+    .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,SweetAlert,loadingRequest,UserService) {
         $scope.cubeName = null;
         $scope.jobs = {};
         $scope.projects = [];
@@ -30,6 +30,8 @@ KylinApp
               $scope.status.push(current);
             }
         };
+
+
 
         // projectName from page ctrl
         $scope.state = {loading: false, refreshing: false, filterAttr: 'last_modified', filterReverse: true, reverseColumn: 'last_modified', projectName:$scope.project.selectedProject};
@@ -134,7 +136,7 @@ KylinApp
 
         $scope.cancel = function (job) {
             SweetAlert.swal({
-                title: 'Confirm',
+                title: '',
                 text: 'Are you sure to discard the job?',
                 type: '',
                 showCancelButton: true,
