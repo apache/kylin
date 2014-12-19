@@ -115,7 +115,7 @@ public class DefaultScheduler implements Scheduler, ConnectionStateListener {
         return ZOOKEEPER_LOCK_PATH + "/" + InetAddress.getLocalHost().getCanonicalHostName();
     }
 
-    public DefaultScheduler getInstance() {
+    public static DefaultScheduler getInstance() {
         return INSTANCE;
     }
 
