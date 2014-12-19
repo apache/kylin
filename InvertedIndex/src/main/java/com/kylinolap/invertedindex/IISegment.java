@@ -36,6 +36,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author honma
  */
+
+//TODO: remove segment concept for II, append old hbase table
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class IISegment implements Comparable<IISegment>, ColumnDictInfo {
 

@@ -2,7 +2,6 @@ package com.kylinolap.metadata.realization;
 
 import com.google.common.collect.*;
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.metadata.project.ProjectTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
