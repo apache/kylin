@@ -12,7 +12,7 @@ import java.util.Map;
 public abstract class AbstractExecutable implements Executable, Idempotent {
 
     private String uuid;
-    private ExecutableStatus status;
+    private ExecutableStatus status = ExecutableStatus.READY;
     private Map<String, String> extra;
     private String output;
 
@@ -23,7 +23,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     }
 
-    protected void onExecuteException(Exception exception, ExecutableContext executableContext) {
+    protected void onExecuteError(Throwable exception, ExecutableContext executableContext) {
 
     }
 
@@ -34,8 +34,8 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         try {
             onExecuteStart(executableContext);
             result = doWork(executableContext);
-        } catch (Exception e) {
-            onExecuteException(e, executableContext);
+        } catch (Throwable e) {
+            onExecuteError(e, executableContext);
             throw new ExecuteException(e);
         }
         onExecuteSucceed(result, executableContext);

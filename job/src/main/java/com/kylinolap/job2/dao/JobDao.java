@@ -21,9 +21,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class JobDao {
 
     private static final Serializer<JobPO> JOB_SERIALIZER = new JsonSerializer<JobPO>(JobPO.class);
+    private static final Serializer<JobOutputPO> JOB_OUTPUT_SERIALIZER = new JsonSerializer<JobOutputPO>(JobOutputPO.class);
     private static final Logger logger = LoggerFactory.getLogger(JobDao.class);
     private static final ConcurrentHashMap<KylinConfig, JobDao> CACHE = new ConcurrentHashMap<KylinConfig, JobDao>();
     public static final String JOB_PATH_ROOT = "/execute";
+    public static final String JOB_OUTPUT_ROOT = "/execute_output";
 
     private ResourceStore store;
 
@@ -52,12 +54,24 @@ public class JobDao {
         return JOB_PATH_ROOT + "/" + uuid;
     }
 
+    private String pathOfJobOutput(String uuid) {
+        return JOB_OUTPUT_ROOT + "/" + uuid;
+    }
+
     private JobPO readJobResource(String path) throws IOException {
         return store.getResource(path, JobPO.class, JOB_SERIALIZER);
     }
 
     private void writeJobResource(String path, JobPO job) throws IOException {
         store.putResource(path, job, JOB_SERIALIZER);
+    }
+
+    private JobOutputPO readJobOutputResource(String path) throws IOException {
+        return store.getResource(path, JobOutputPO.class, JOB_OUTPUT_SERIALIZER);
+    }
+
+    private void writeJobOutputResource(String path, JobOutputPO output) throws IOException {
+        store.putResource(path, output, JOB_OUTPUT_SERIALIZER);
     }
 
     public List<JobPO> getJobs() throws PersistentException {
@@ -120,6 +134,31 @@ public class JobDao {
             return uuid;
         } catch (IOException e) {
             logger.error("error delete job:" + uuid, e);
+            throw new PersistentException(e);
+        }
+    }
+
+    public String getJobOutput(String uuid) throws PersistentException {
+        try {
+            JobOutputPO jobOutputPO = readJobOutputResource(pathOfJobOutput(uuid));
+            return jobOutputPO != null?jobOutputPO.getContent():null;
+        } catch (IOException e) {
+            logger.error("error get job output id:" + uuid, e);
+            throw new PersistentException(e);
+        }
+    }
+
+    public void addOrUpdateJobOutput(String uuid, String output) throws PersistentException {
+        if (output == null) {
+            return;
+        }
+        JobOutputPO jobOutputPO = new JobOutputPO();
+        jobOutputPO.setContent(output);
+        jobOutputPO.setUuid(uuid);
+        try {
+            writeJobOutputResource(pathOfJobOutput(uuid), jobOutputPO);
+        } catch (IOException e) {
+            logger.error("error update job output id:" + uuid, e);
             throw new PersistentException(e);
         }
     }
