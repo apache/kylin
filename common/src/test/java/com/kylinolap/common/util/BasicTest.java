@@ -27,13 +27,18 @@ import org.junit.Test;
 @Ignore
 public class BasicTest {
     private void log(ByteBuffer a) {
+        Integer x = 4;
+        foo(x);
 
-        System.out.println("");
-        System.out.println("position: " + a.position());
-        System.out.println("limit: " + a.limit());
-        System.out.println("mark: " + a.mark());
-        System.out.println("remaining: " + a.remaining());
-        System.out.println("arrayoffset: " + a.arrayOffset());
+    }
+
+    private void foo(Long a) {
+        System.out.printf("a");
+
+    }
+
+    private void foo(Integer b) {
+        System.out.printf("b");
     }
 
 

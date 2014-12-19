@@ -32,6 +32,7 @@ import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.project.ProjectManager;
 import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
+import com.kylinolap.metadata.realization.RealizationType;
 import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,6 @@ import java.util.TimeZone;
 
 /**
  * @author xjiang, ysong1
- * 
  */
 public class JobManager {
 
@@ -199,7 +199,7 @@ public class JobManager {
             List<JobInstance> filtedJobs = new ArrayList<JobInstance>();
             ProjectInstance project = ProjectManager.getInstance(config).getProject(projectName);
             for (JobInstance job : jobs) {
-                if (project.getCubes().contains(job.getRelatedCube().toUpperCase())) {
+                if (project.containsRealization(RealizationType.CUBE, job.getRelatedCube())) {
                     filtedJobs.add(job);
                 }
             }
@@ -272,8 +272,7 @@ public class JobManager {
     }
 
     /**
-     * @param percentile
-     *            (eg. 95 percentile)
+     * @param percentile (eg. 95 percentile)
      * @return the percentile value
      */
     public double getPercentileJobStepDuration(double percentile) {

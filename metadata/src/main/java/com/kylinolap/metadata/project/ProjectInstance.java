@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.metadata.realization.RealizationType;
@@ -42,9 +43,6 @@ public class ProjectInstance extends RootPersistentEntity {
     @JsonProperty("name")
     private String name;
 
-    @JsonProperty("cubes")
-    private List<String> cubes;
-
     @JsonProperty("tables")
     private Set<String> tables;
 
@@ -65,7 +63,7 @@ public class ProjectInstance extends RootPersistentEntity {
     private String description;
 
     @JsonProperty("datamodels")
-    private List<ProjectDataModel> dataModels;
+    private List<RealizationEntry> realizationEntries;
 
     public String getResourcePath() {
         return concatResourcePath(name);
@@ -84,7 +82,7 @@ public class ProjectInstance extends RootPersistentEntity {
 
     // ============================================================================
 
-    public static ProjectInstance create(String name, String owner, String description, List<String> cubes) {
+    public static ProjectInstance create(String name, String owner, String description, List<RealizationEntry> realizationEntries) {
         ProjectInstance projectInstance = new ProjectInstance();
 
         projectInstance.updateRandomUuid();
@@ -93,10 +91,10 @@ public class ProjectInstance extends RootPersistentEntity {
         projectInstance.setDescription(description);
         projectInstance.setStatus(ProjectStatusEnum.ENABLED);
         projectInstance.setCreateTime(formatTime(System.currentTimeMillis()));
-        if (cubes != null)
-            projectInstance.setCubes(cubes);
+        if (realizationEntries != null)
+            projectInstance.setRealizationEntries(realizationEntries);
         else
-            projectInstance.setCubes(new ArrayList<String>());
+            projectInstance.setRealizationEntries(Lists.<RealizationEntry>newArrayList());
 
         return projectInstance;
     }
@@ -105,9 +103,8 @@ public class ProjectInstance extends RootPersistentEntity {
 
     }
 
-    public ProjectInstance(String name, List<String> cubes, String owner) {
+    public ProjectInstance(String name, String owner) {
         this.name = name;
-        this.cubes = cubes;
         this.owner = owner;
     }
 
@@ -143,29 +140,56 @@ public class ProjectInstance extends RootPersistentEntity {
         this.name = name;
     }
 
-    public boolean containsCube(String cubeName) {
-        return cubes.contains(cubeName.toUpperCase());
+    public boolean containsRealization(final RealizationType type, final String realization) {
+        return Iterables.any(this.realizationEntries, new Predicate<RealizationEntry>() {
+            @Override
+            public boolean apply(RealizationEntry input) {
+                return input.getType() == type && input.getRealization().equalsIgnoreCase(realization);
+            }
+        });
     }
 
-    public void removeCube(String cubeName) {
-        cubes.remove(cubeName.toUpperCase());
-    }
-
-    public int getCubesCount() {
-        return cubes.size();
-    }
-
-    public void addCube(String cubeName) {
-        this.cubes.add(cubeName.toUpperCase());
-    }
-
-    public List<String> getCubes() {
-        return cubes;
+    public void removeRealization(final RealizationType type, final String realization) {
+        Iterables.removeIf(this.realizationEntries, new Predicate<RealizationEntry>() {
+            @Override
+            public boolean apply(RealizationEntry input) {
+                return input.getType() == type && input.getRealization().equalsIgnoreCase(realization);
+            }
+        });
     }
 
 
-    public void setCubes(List<String> cubes) {
-        this.cubes = cubes;
+    public List<RealizationEntry> getRealizationEntries(final RealizationType type) {
+        if (type == null)
+            return getRealizationEntries();
+
+        return ImmutableList.copyOf(Iterables.filter(realizationEntries, new Predicate<RealizationEntry>() {
+            @Override
+            public boolean apply(@Nullable RealizationEntry input) {
+                return input.getType() == type;
+            }
+        }));
+    }
+
+    public int getRealizationCount(final RealizationType type) {
+
+        if (type == null)
+            return this.realizationEntries.size();
+
+        return Iterables.size(
+                Iterables.filter(this.realizationEntries, new Predicate<RealizationEntry>() {
+                    @Override
+                    public boolean apply(RealizationEntry input) {
+                        return input.getType() == type;
+                    }
+                }));
+    }
+
+    public void addRealizationEntry(final RealizationType type, final String realizationName) {
+        RealizationEntry pdm = new RealizationEntry();
+        pdm.setType(type);
+        pdm.setRealization(realizationName);
+        this.realizationEntries.add(pdm);
     }
 
     public void setTables(Set<String> tables) {
@@ -214,51 +238,29 @@ public class ProjectInstance extends RootPersistentEntity {
         this.lastUpdateTime = formatTime(timeMillis);
     }
 
-    public List<ProjectDataModel> getDataModels() {
-        return dataModels;
+    public List<RealizationEntry> getRealizationEntries() {
+        return realizationEntries;
     }
 
-    public void setDataModels(List<ProjectDataModel> dataModels) {
-        this.dataModels = dataModels;
+    public void setRealizationEntries(List<RealizationEntry> entries) {
+        this.realizationEntries = entries;
     }
 
     public void init() {
         if (name == null)
             name = ProjectInstance.DEFAULT_PROJECT_NAME;
 
-        if (cubes == null) {
-            cubes = new ArrayList<String>();
+        if (realizationEntries == null) {
+            realizationEntries = new ArrayList<RealizationEntry>();
         }
 
-        for (int i = 0; i < cubes.size(); ++i) {
-            if (cubes.get(i) != null)
-                cubes.set(i, cubes.get(i).toUpperCase());
+        for (int i = 0; i < realizationEntries.size(); ++i) {
+            String r = realizationEntries.get(i).getRealization();
+            realizationEntries.get(i).setRealization(r.toUpperCase());
         }
     }
 
-    public boolean containsRealization(RealizationType realization, String name) {
-        if (dataModels == null) {
-            return false;
-        }
-        for (ProjectDataModel dataModel : dataModels) {
-            if (dataModel.getType() == realization && dataModel.getName().equalsIgnoreCase(name)) {
-                return true;
-            }
-        }
-        return false;
-    }
 
-    public List<ProjectDataModel> getDataModels(final RealizationType dataModelRealizationType) {
-        if (dataModelRealizationType == null)
-            return getDataModels();
-
-        return ImmutableList.copyOf(Iterables.filter(dataModels, new Predicate<ProjectDataModel>() {
-            @Override
-            public boolean apply(@Nullable ProjectDataModel input) {
-                return input.getType() == dataModelRealizationType;
-            }
-        }));
-    }
 
     @Override
     public String toString() {

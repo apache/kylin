@@ -205,7 +205,7 @@ public class CubeManager {
     public CubeInstance dropCube(String cubeName, boolean deleteDesc) throws IOException {
         logger.info("Dropping cube '" + cubeName + "'");
         // load projects before remove cube from project
-        List<ProjectInstance> projects = ProjectManager.getInstance(config).getProjects(cubeName);
+        List<ProjectInstance> projects = ProjectManager.getInstance(config).getProjects(RealizationType.CUBE, cubeName);
 
         ResourceStore store = getStore();
 
@@ -218,7 +218,7 @@ public class CubeManager {
         store.deleteResource(cube.getResourcePath());
 
         // delete cube from project
-        ProjectManager.getInstance(config).removeCubeFromProjects(cubeName);
+        ProjectManager.getInstance(config).removeRealizationsFromProjects(RealizationType.CUBE, cubeName);
 
         // clean cube cache
         this.afterCubeDroped(cube, projects);
@@ -235,7 +235,7 @@ public class CubeManager {
         cube.setOwner(owner);
         saveResource(cube);
 
-        ProjectManager.getInstance(config).updateCubeToProject(cubeName, projectName, owner);
+        ProjectManager.getInstance(config).updateRealizationToProject(RealizationType.CUBE, cubeName, projectName, owner);
 
         return cube;
     }
@@ -511,7 +511,7 @@ public class CubeManager {
         cubeMap.put(updatedCube.getName().toUpperCase(), updatedCube);
         RealizationRegistry.getInstance(config).registerRealization(updatedCube);
 
-        for (ProjectInstance project : ProjectManager.getInstance(config).getProjects(updatedCube.getName())) {
+        for (ProjectInstance project : ProjectManager.getInstance(config).getProjects(RealizationType.CUBE, updatedCube.getName())) {
             try {
                 ProjectManager.getInstance(config).loadProjectCache(project, true);
             } catch (IOException e) {

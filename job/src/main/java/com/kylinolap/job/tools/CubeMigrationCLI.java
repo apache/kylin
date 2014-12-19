@@ -14,6 +14,7 @@ import com.kylinolap.job.JobInstance;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.realization.RealizationStatusEnum;
+import com.kylinolap.metadata.realization.RealizationType;
 import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -369,8 +370,8 @@ public class CubeMigrationCLI {
             String projectResPath = ProjectInstance.concatResourcePath(projectName);
             Serializer<ProjectInstance> projectSerializer = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
             ProjectInstance project = dstStore.getResource(projectResPath, ProjectInstance.class, projectSerializer);
-            project.removeCube(cubeName);
-            project.addCube(cubeName);
+            project.removeRealization(RealizationType.CUBE, cubeName);
+            project.removeRealization(RealizationType.CUBE, cubeName);
             dstStore.putResource(projectResPath, project, projectSerializer);
             logger.info("Project instance for " + projectName + " is corrected");
             break;
