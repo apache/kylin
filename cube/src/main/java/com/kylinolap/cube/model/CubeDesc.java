@@ -437,9 +437,7 @@ public class CubeDesc extends RootPersistentEntity {
 
             byte[] signature = md.digest(sigString.toString().getBytes());
             return new String(Base64.encodeBase64(signature));
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Failed to calculate signature");
-        } catch (JsonProcessingException e) {
+        } catch (NoSuchAlgorithmException | JsonProcessingException e) {
             throw new RuntimeException("Failed to calculate signature");
         }
     }
