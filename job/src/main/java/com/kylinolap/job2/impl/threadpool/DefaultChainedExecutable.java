@@ -24,17 +24,41 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
         for (int i = 0; i < size; ++i) {
             AbstractExecutable subTask = executables.get(i);
             if (subTask.isRunnable()) {
-                ExecuteResult result = subTask.execute(context);
-                if (result.succeed()) {
-                    this.setStatus(ExecutableStatus.READY);
-                    jobService.updateJobStatus(getId(), ExecutableStatus.READY, null);
-                } else {
-                    jobService.updateJobStatus(getId(), ExecutableStatus.ERROR, null);
-                }
+                return subTask.execute(context);
             }
         }
-        jobService.updateJobStatus(getId(), ExecutableStatus.SUCCEED, null);
         return new ExecuteResult(true, null);
+    }
+
+    @Override
+    protected void onExecuteStart(ExecutableContext executableContext) {
+        this.setStatus(ExecutableStatus.RUNNING);
+        jobService.updateJobStatus(this);
+    }
+
+    @Override
+    protected void onExecuteError(Throwable exception, ExecutableContext executableContext) {
+        this.setStatus(ExecutableStatus.ERROR);
+        jobService.updateJobStatus(this);
+    }
+
+    @Override
+    protected void onExecuteSucceed(ExecuteResult result, ExecutableContext executableContext) {
+        if (result.succeed()) {
+            List<AbstractExecutable> jobs = getExecutables();
+            AbstractExecutable lastJob = jobs.get(jobs.size() - 1);
+            if (lastJob.isRunnable()) {
+                this.setStatus(ExecutableStatus.READY);
+                jobService.updateJobStatus(this);
+            } else if (lastJob.getStatus() == ExecutableStatus.SUCCEED) {
+                this.setStatus(ExecutableStatus.SUCCEED);
+                jobService.updateJobStatus(this);
+            } else {
+
+            }
+        } else {
+            jobService.updateJobStatus(getId(), ExecutableStatus.ERROR, null);
+        }
     }
 
     @Override
