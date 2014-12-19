@@ -43,6 +43,7 @@ import com.kylinolap.query.relnode.OLAPContext;
 import com.kylinolap.query.schema.OLAPSchemaFactory;
 import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
 
+@Ignore
 public class KylinQueryTest extends KylinTestBase {
 
     @BeforeClass
