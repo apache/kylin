@@ -20,6 +20,7 @@ import java.io.IOException;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -29,8 +30,9 @@ import com.kylinolap.rest.service.ServiceTestBase;
 
 /**
  * @author xduo
- * 
+ * @deprecated method has been merged into #ServiceTestAllInOne
  */
+@Ignore
 public class AdminControllerTest extends ServiceTestBase {
 
     private AdminController adminController;

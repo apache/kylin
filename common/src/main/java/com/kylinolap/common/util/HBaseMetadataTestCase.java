@@ -23,15 +23,6 @@ import com.kylinolap.common.KylinConfig;
  */
 public class HBaseMetadataTestCase extends AbstractKylinTestCase {
     
-    public static void staticCreateTestMetadata() {
-
-        KylinConfig.destoryInstance();
-
-        if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null)
-            System.setProperty(KylinConfig.KYLIN_CONF, SANDBOX_TEST_DATA);
-
-    }
-    
     public static void staticCleanupTestMetadata() {
         System.clearProperty(KylinConfig.KYLIN_CONF);
         KylinConfig.destoryInstance();
@@ -39,7 +30,7 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
 
     @Override
     public void createTestMetadata() {
-        staticCreateTestMetadata();
+        staticCreateTestMetadata(SANDBOX_TEST_DATA);
     }
 
     @Override
