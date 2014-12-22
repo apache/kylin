@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.kylinolap</groupId>
     <artifactId>kylin</artifactId>
@@ -11,7 +12,7 @@
         <!-- General Properties -->
         <javaVersion>1.7</javaVersion>
         <maven-model.version>3.1.1</maven-model.version>
-         <maven-release.version>2.5.1</maven-release.version>
+        <maven-release.version>2.5.1</maven-release.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
@@ -70,7 +71,8 @@
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
         <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
         <sonar.language>java</sonar.language>
-        <sonar.jacoco.excludes>com/kylinolap/**/tools/**:net/hydromatic/optiq/**:org/eigenbase/sql2rel/**</sonar.jacoco.excludes>
+        <sonar.jacoco.excludes>com/kylinolap/**/tools/**:net/hydromatic/optiq/**:org/eigenbase/sql2rel/**
+        </sonar.jacoco.excludes>
     </properties>
 
     <dependencyManagement>
@@ -400,7 +402,7 @@
                     <executions>
                         <execution>
                             <goals>
-                                <goal>test-jar</goal>
+                                    <goal>test-jar</goal>
                             </goals>
                         </execution>
                     </executions>
@@ -493,8 +495,8 @@
         <connection>scm:git:git@github.com:KylinOLAP/Kylin.git</connection>
         <url>scm:git:git@github.com:KylinOLAP/Kylin.git</url>
         <developerConnection>scm:git:git@github.com:KylinOLAP/Kylin.git</developerConnection>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
     <modules>
         <module>atopcalcite</module>
@@ -506,9 +508,10 @@
         <module>storage</module>
         <module>query</module>
         <module>server</module>
-		<module>jdbc</module>
+        <module>jdbc</module>
         <module>invertedindex</module>
     </modules>
+
     <profiles>
         <profile>
             <id>default</id>
@@ -523,11 +526,8 @@
                         <version>2.16</version>
                         <configuration>
                             <excludes>
-                                <exclude>**/com/kylinolap/job/**</exclude>
                                 <exclude>**/BuildCubeWithEngineTest.java</exclude>
                                 <exclude>**/SampleCubeSetupTest.java</exclude>
-                                <exclude>**/InvertedIndexHBaseTest.java</exclude>
-                                <exclude>**/StorageTest.java</exclude>
                                 <exclude>**/KylinQueryTest.java</exclude>
                             </excludes>
                         </configuration>

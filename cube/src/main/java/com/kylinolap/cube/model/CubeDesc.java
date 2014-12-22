@@ -437,9 +437,7 @@ public class CubeDesc extends RootPersistentEntity {
 
             byte[] signature = md.digest(sigString.toString().getBytes());
             return new String(Base64.encodeBase64(signature));
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Failed to calculate signature");
-        } catch (JsonProcessingException e) {
+        } catch (NoSuchAlgorithmException | JsonProcessingException e) {
             throw new RuntimeException("Failed to calculate signature");
         }
     }
@@ -455,6 +453,7 @@ public class CubeDesc extends RootPersistentEntity {
     public void init(KylinConfig config, Map<String, TableDesc> tables) {
         this.errors.clear();
         this.config = config;
+
         if (this.modelName == null || this.modelName.length() == 0) {
             this.addError("The cubeDesc '" + this.getName() + "' doesn't have data model specified.");
         }

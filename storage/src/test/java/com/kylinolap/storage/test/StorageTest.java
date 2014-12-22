@@ -166,7 +166,7 @@ public class StorageTest extends HBaseMiniclusterMetadataTestCase {
 
         TableDesc t1 = new TableDesc();
         t1.setName("TEST_KYLIN_FACT");
-        t1.setDatabase("EDW");
+        t1.setDatabase("DEFAULT");
         ColumnDesc c1 = new ColumnDesc();
         c1.setName("CAL_DT");
         c1.setTable(t1);
@@ -176,7 +176,7 @@ public class StorageTest extends HBaseMiniclusterMetadataTestCase {
 
         TableDesc t2 = new TableDesc();
         t2.setName("TEST_CATEGORY_GROUPINGS");
-        t2.setDatabase("EDW");
+        t2.setDatabase("DEFAULT");
         ColumnDesc c2 = new ColumnDesc();
         c2.setName("META_CATEG_NAME");
         c2.setTable(t2);

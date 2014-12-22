@@ -20,6 +20,7 @@ import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
 import org.apache.hadoop.io.LongWritable;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -28,6 +29,7 @@ import java.util.*;
 /**
  * Created by Hongbin Ma(Binmahone) on 11/27/14.
  */
+@Ignore
 public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
     IIInstance ii;
     TableRecordInfo tableRecordInfo;

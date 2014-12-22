@@ -15,9 +15,7 @@
  */
 package com.kylinolap.invertedindex;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -25,11 +23,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
-import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.invertedindex.model.IIDesc;
+import com.kylinolap.metadata.model.*;
+import com.kylinolap.metadata.realization.AbstractRealization;
+import com.kylinolap.metadata.realization.RealizationType;
 import com.kylinolap.metadata.realization.RealizationStatusEnum;
 import com.kylinolap.metadata.realization.SegmentStatusEnum;
 
@@ -38,7 +39,7 @@ import com.kylinolap.metadata.realization.SegmentStatusEnum;
  * @author honma
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class IIInstance extends RootPersistentEntity {
+public class IIInstance extends AbstractRealization {
 
     public static IIInstance create(String iiName, String projectName, IIDesc iiDesc) {
         IIInstance iii = new IIInstance();
@@ -75,7 +76,6 @@ public class IIInstance extends RootPersistentEntity {
 
     @JsonProperty("create_time")
     private String createTime;
-
 
 
     public List<IISegment> getBuildingSegments() {
@@ -182,12 +182,12 @@ public class IIInstance extends RootPersistentEntity {
     }
 
     public static String concatResourcePath(String cubeName) {
-        return ResourceStore.CUBE_RESOURCE_ROOT + "/" + cubeName + ".json";
+        return ResourceStore.II_RESOURCE_ROOT + "/" + cubeName + ".json";
     }
 
     @Override
     public String toString() {
-        return "II [name=" + name + "]";
+        return getCanonicalName(name);
     }
 
     // ============================================================================
@@ -235,6 +235,16 @@ public class IIInstance extends RootPersistentEntity {
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String getFactTable() {
+        return getDescriptor().getFactTable();
+    }
+
+    @Override
+    public List<MeasureDesc> getMeasures() {
+        return getDescriptor().getMeasures();
     }
 
     public void setName(String name) {
@@ -382,4 +392,18 @@ public class IIInstance extends RootPersistentEntity {
     }
 
 
+    @Override
+    public int getCost(String factTable, Collection<JoinDesc> joins, Collection<TblColRef> allColumns, Collection<FunctionDesc> aggrFunctions) {
+        return 0;
+    }
+
+    @Override
+    public RealizationType getType() {
+        return RealizationType.INVERTED_INDEX;
+    }
+
+    @Override
+    public List<TblColRef> getAllColumns() {
+        return getDescriptor().listAllColumns();
+    }
 }

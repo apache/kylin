@@ -2,7 +2,9 @@ package com.kylinolap.invertedindex.model;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.HashSet;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -37,9 +39,12 @@ public class IIDesc extends RootPersistentEntity {
     public static final byte[] HBASE_QUALIFIER_BYTES = Bytes.toBytes(HBASE_QUALIFIER);
 
     private KylinConfig config;
+    private DataModelDesc model;
 
     @JsonProperty("name")
     private String name;
+    @JsonProperty("model_name")
+    private String modelName;
     @JsonProperty("fact_table")
     private String factTable;
     @JsonProperty("timestamp_dimension")
@@ -68,6 +73,16 @@ public class IIDesc extends RootPersistentEntity {
 
 
     public void init(MetadataManager mgr) {
+        if (this.modelName == null || this.modelName.length() == 0) {
+            throw new RuntimeException("The cubeDesc '" + this.getName() + "' doesn't have data model specified.");
+        }
+
+        this.model = MetadataManager.getInstance(config).getDataModelDesc(this.modelName);
+
+        if (this.model == null) {
+            throw new RuntimeException("No data model found with name '" + modelName + "'.");
+        }
+
         config = mgr.getConfig();
 
         factTable = factTable.toUpperCase();
@@ -113,7 +128,7 @@ public class IIDesc extends RootPersistentEntity {
     }
 
 
-    public List<MeasureDesc> getMeasureDescs() {
+    public List<MeasureDesc> getMeasures() {
         return measureDescs;
     }
 
@@ -133,12 +148,51 @@ public class IIDesc extends RootPersistentEntity {
         return measureDesc;
     }
 
+    /**
+     * at first stage the only table in II is fact table, TODO: to extend to all tables
+     *
+     * @return
+     */
+    public List<TableDesc> listTables() {
+        return Lists.newArrayList(this.tableDesc);
+    }
+
+    public List<TblColRef> listAllColumns() {
+        List<TblColRef> ret = Lists.newArrayList();
+        for (ColumnDesc columnDesc : this.tableDesc.getColumns()) {
+            ret.add(new TblColRef(columnDesc));
+        }
+        return ret;
+    }
+
+    public TblColRef findColumnRef(String table, String column) {
+        ColumnDesc columnDesc = this.tableDesc.findColumnByName(column);
+        return new TblColRef(columnDesc);
+    }
+
     public KylinConfig getConfig() {
         return config;
     }
 
     public String getName() {
         return name;
+    }
+
+
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
+    }
+
+    public DataModelDesc getModel() {
+        return model;
+    }
+
+    public void setModel(DataModelDesc model) {
+        this.model = model;
     }
 
     public int getTimestampColumn() {
@@ -182,7 +236,6 @@ public class IIDesc extends RootPersistentEntity {
     public boolean isMetricsCol(int colZeroBasedIndex) {
         return metricsColSet.get(colZeroBasedIndex);
     }
-
 
 
     public TableDesc getFactTableDesc() {

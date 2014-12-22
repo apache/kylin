@@ -27,7 +27,7 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
  *
  * @author yangli9
  */
-public class Slice implements Iterable<TableRecordBytes>, Comparable<Slice> {
+public class Slice implements Iterable<RawTableRecord>, Comparable<Slice> {
 
     TableRecordInfoDigest info;
     int nColumns;
@@ -37,9 +37,9 @@ public class Slice implements Iterable<TableRecordBytes>, Comparable<Slice> {
     int nRecords;
     ColumnValueContainer[] containers;
 
-    public Slice(TableRecordInfoDigest info, short shard, long timestamp, ColumnValueContainer[] containers) {
-        this.info = info;
-        this.nColumns = info.getColumnCount();
+    public Slice(TableRecordInfoDigest digest, short shard, long timestamp, ColumnValueContainer[] containers) {
+        this.info = digest;
+        this.nColumns = digest.getColumnCount();
 
         this.shard = shard;
         this.timestamp = timestamp;
@@ -72,16 +72,16 @@ public class Slice implements Iterable<TableRecordBytes>, Comparable<Slice> {
         return containers[col];
     }
 
-    public Iterator<TableRecordBytes> iterateWithBitmap(final ConciseSet resultBitMap) {
+    public Iterator<RawTableRecord> iterateWithBitmap(final ConciseSet resultBitMap) {
         if (resultBitMap == null) {
             return this.iterator();
         } else {
-            return new Iterator<TableRecordBytes>() {
+            return new Iterator<RawTableRecord>() {
                 int i = 0;
                 int iteratedCount = 0;
                 int resultSize = resultBitMap.size();
 
-                TableRecordBytes rec = info.createTableRecord();
+                RawTableRecord rec = info.createTableRecordBytes();
                 ImmutableBytesWritable temp = new ImmutableBytesWritable();
 
                 @Override
@@ -90,7 +90,7 @@ public class Slice implements Iterable<TableRecordBytes>, Comparable<Slice> {
                 }
 
                 @Override
-                public TableRecordBytes next() {
+                public RawTableRecord next() {
                     while (!resultBitMap.contains(i)) {
                         i++;
                     }
@@ -114,10 +114,10 @@ public class Slice implements Iterable<TableRecordBytes>, Comparable<Slice> {
     }
 
     @Override
-    public Iterator<TableRecordBytes> iterator() {
-        return new Iterator<TableRecordBytes>() {
+    public Iterator<RawTableRecord> iterator() {
+        return new Iterator<RawTableRecord>() {
             int i = 0;
-            TableRecordBytes rec = info.createTableRecord();
+            RawTableRecord rec = info.createTableRecordBytes();
             ImmutableBytesWritable temp = new ImmutableBytesWritable();
 
             @Override
@@ -126,7 +126,7 @@ public class Slice implements Iterable<TableRecordBytes>, Comparable<Slice> {
             }
 
             @Override
-            public TableRecordBytes next() {
+            public RawTableRecord next() {
                 for (int col = 0; col < nColumns; col++) {
                     containers[col].getValueAt(i, temp);
                     rec.setValueBytes(col, temp);

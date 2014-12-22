@@ -130,19 +130,17 @@ public class KylinQueryTest extends KylinTestBase {
     @Ignore
     @Test
     public void testTempQuery() throws Exception {
-       execAndCompQuery("src/test/resources/query/temp", null, true);
+        execAndCompQuery("src/test/resources/query/temp", null, true);
     }
 
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        for (int i = 0; i < 100; ++i) {
-            String queryFileName = "src/test/resources/query/sql_ii/query05.sql";
+        String queryFileName = "src/test/resources/query/sql_orderby/query01.sql";
 
-            File sqlFile = new File(queryFileName);
-            //runSQL(sqlFile, true, true);
-            runSQL(sqlFile, true, false);
-        }
+        File sqlFile = new File(queryFileName);
+        //runSQL(sqlFile, true, true);
+        runSQL(sqlFile, true, false);
     }
 
     @Test
@@ -168,11 +166,13 @@ public class KylinQueryTest extends KylinTestBase {
         execAndCompQuery("src/test/resources/query/sql", null, true);
     }
 
+    @Ignore
     @Test
     public void testIIQuery() throws Exception {
         execAndCompQuery("src/test/resources/query/sql_ii", null, true);
     }
 
+    @Ignore
     @Test
     public void testSimpleQuery() throws Exception {
         verifyResultRowCount("src/test/resources/query/sql_verifyCount");

@@ -12,17 +12,31 @@ import java.nio.ByteBuffer;
 /**
  * Created by honma on 11/10/14.
  */
-public class TableRecordInfoDigest implements TableRecordFactory {
+public class TableRecordInfoDigest  {
 
-    protected int nColumns;
-    protected int byteFormLen;
+    private int nColumns;
+    private int byteFormLen;
 
-    protected int[] offsets;//column offset in byte form row
-    protected int[] dictMaxIds;//max id for each of the dict
-    protected int[] lengths;//length of each encoded dict
-    protected boolean[] isMetric;//whether it's metric or dict
+    private int[] offsets;//column offset in byte form row
+    private int[] dictMaxIds;//max id for each of the dict
+    private int[] lengths;//length of each encoded dict
+    private boolean[] isMetric;//whether it's metric or dict
 
     protected FixedLenMeasureCodec<?>[] measureSerializers;
+
+    public TableRecordInfoDigest(int nColumns, int byteFormLen, int[] offsets, int[] dictMaxIds, int[] lengths, boolean[] isMetric,
+            FixedLenMeasureCodec<?>[] measureSerializers) {
+        this.nColumns = nColumns;
+        this.byteFormLen = byteFormLen;
+        this.offsets = offsets;
+        this.dictMaxIds = dictMaxIds;
+        this.lengths = lengths;
+        this.isMetric = isMetric;
+        this.measureSerializers = measureSerializers;
+    }
+
+    public TableRecordInfoDigest() {
+    }
 
     public int getByteFormLen() {
         return byteFormLen;
@@ -58,9 +72,8 @@ public class TableRecordInfoDigest implements TableRecordFactory {
         return ret;
     }
 
-    @Override
-    public TableRecordBytes createTableRecord() {
-        return new TableRecordBytes(this);
+    public RawTableRecord createTableRecordBytes() {
+        return new RawTableRecord(this);
     }
 
 
