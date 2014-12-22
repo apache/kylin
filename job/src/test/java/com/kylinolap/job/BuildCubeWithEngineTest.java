@@ -198,12 +198,12 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         dateStart = cubeMgr.getCube("test_kylin_cube_with_slr_left_join_empty").getDescriptor().getCubePartitionDesc().getPartitionDateStart();
         dateEnd = f.parse("2050-11-12").getTime();
-        jobs.addAll(this.submitJob("test_kylin_cube_with_slr_left_join_empty", dateStart, dateEnd, CubeBuildTypeEnum.BUILD));
+        jobs.addAll(this.submitJob("test_kylin_cube_with_slr_left_join_empty", dateStart, dateEnd, RealizationBuildTypeEnum.BUILD));
 
         // this cube's start date is 0, end date is 20501112000000
         dateStart = cubeMgr.getCube("test_kylin_cube_without_slr_left_join_empty").getDescriptor().getCubePartitionDesc().getPartitionDateStart();
         dateEnd = f.parse("2050-11-12").getTime();
-        jobs.addAll(this.submitJob("test_kylin_cube_without_slr_left_join_empty", dateStart, dateEnd, CubeBuildTypeEnum.BUILD));
+        jobs.addAll(this.submitJob("test_kylin_cube_without_slr_left_join_empty", dateStart, dateEnd, RealizationBuildTypeEnum.BUILD));
 
         waitCubeBuilt(jobs);
     }

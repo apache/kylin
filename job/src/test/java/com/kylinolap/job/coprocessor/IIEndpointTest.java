@@ -65,7 +65,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
 
     @BeforeClass
     public static void setupBeforeClass() throws Exception {
-        staticCreateTestMetadata();
+        staticCreateTestMetadata(SANDBOX_TEST_DATA);
 
         TEST_UTIL = new HBaseTestingUtility();
         CONF = TEST_UTIL.getConfiguration();
