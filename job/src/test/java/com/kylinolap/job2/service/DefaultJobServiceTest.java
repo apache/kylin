@@ -2,7 +2,8 @@ package com.kylinolap.job2.service;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.job2.TestExecutable;
+import com.kylinolap.job2.BaseTestExecutable;
+import com.kylinolap.job2.SucceedTestExecutable;
 import com.kylinolap.job2.execution.ExecutableStatus;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
 import com.kylinolap.job2.impl.threadpool.DefaultChainedExecutable;
@@ -45,7 +46,7 @@ public class DefaultJobServiceTest extends LocalFileMetadataTestCase {
     @Test
     public void test() throws Exception {
         assertNotNull(service);
-        TestExecutable executable = new TestExecutable();
+        BaseTestExecutable executable = new SucceedTestExecutable();
         executable.setStatus(ExecutableStatus.READY);
         HashMap<String, String> extra = new HashMap<>();
         extra.put("test1", "test1");
@@ -68,8 +69,8 @@ public class DefaultJobServiceTest extends LocalFileMetadataTestCase {
     public void testDefaultChainedExecutable() throws Exception {
         DefaultChainedExecutable job = new DefaultChainedExecutable();
         job.setId(UUID.randomUUID().toString());
-        job.addTask(new TestExecutable());
-        job.addTask(new TestExecutable());
+        job.addTask(new SucceedTestExecutable());
+        job.addTask(new SucceedTestExecutable());
 
         service.addJob(job);
         AbstractExecutable anotherJob = service.getJob(job.getId());

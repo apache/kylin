@@ -1,23 +1,20 @@
 package com.kylinolap.job2;
 
-import com.kylinolap.common.KylinConfig;
 import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job2.exception.SchedularException;
+import com.kylinolap.job2.exception.SchedulerException;
 import com.kylinolap.job2.execution.Executable;
-
-import java.util.List;
 
 /**
  * Created by qianzhou on 12/15/14.
  */
-public interface Scheduler {
+public interface Scheduler<T extends Executable> {
 
-    void init(JobEngineConfig jobEngineConfig) throws SchedularException;
+    void init(JobEngineConfig jobEngineConfig) throws SchedulerException;
 
-    void shutdown() throws SchedularException;
+    void shutdown() throws SchedulerException;
 
-    boolean submit(Executable executable) throws SchedularException;
+    boolean submit(T executable) throws SchedulerException;
 
-    boolean stop(Executable executable) throws SchedularException;
+    boolean stop(T executable) throws SchedulerException;
 
 }

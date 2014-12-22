@@ -13,12 +13,12 @@ import java.util.UUID;
 /**
  * Created by qianzhou on 12/16/14.
  */
-public class TestExecutable extends AbstractExecutable {
+public abstract class BaseTestExecutable extends AbstractExecutable {
 
     private static DefaultJobService jobService = DefaultJobService.getInstance(KylinConfig.getInstanceFromEnv());
 
 
-    public TestExecutable() {
+    public BaseTestExecutable() {
         this.setId(UUID.randomUUID().toString());
         this.setStatus(ExecutableStatus.READY);
     }
@@ -27,24 +27,6 @@ public class TestExecutable extends AbstractExecutable {
     protected void onExecuteStart(ExecutableContext executableContext) {
         this.setStatus(ExecutableStatus.RUNNING);
         jobService.updateJobStatus(this);
-    }
-
-    @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            throw new ExecuteException(e);
-        }
-        if (Math.random() < .8) {
-            return new ExecuteResult(true, "success");
-        } else {
-            if (Math.random() > .5) {
-                return new ExecuteResult(false, "failed");
-            } else {
-                throw new RuntimeException("error");
-            }
-        }
     }
 
     @Override

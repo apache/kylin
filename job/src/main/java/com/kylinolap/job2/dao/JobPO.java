@@ -22,8 +22,6 @@ public class JobPO extends RootPersistentEntity {
     @JsonProperty("endTime")
     private long endTime;
 
-    @JsonProperty("status")
-    private String status;
 
     @JsonProperty("tasks")
     private List<JobPO> tasks;
@@ -58,14 +56,6 @@ public class JobPO extends RootPersistentEntity {
         this.endTime = endTime;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
     public List<JobPO> getTasks() {
         return tasks;
     }
@@ -89,4 +79,5 @@ public class JobPO extends RootPersistentEntity {
     public void setExtra(Map<String, String> extra) {
         this.extra = extra;
     }
+
 }
