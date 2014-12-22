@@ -24,7 +24,9 @@ import org.apache.hadoop.io.LongWritable;
 import java.util.List;
 
 /**
- * @author yangli9
+ * @author yangli9, honma
+ *
+ * TableRecord extends RawTableRecord by decorating it with a TableRecordInfo
  */
 public class TableRecord implements Cloneable {
 
