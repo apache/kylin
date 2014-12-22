@@ -107,9 +107,9 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
         cubeManager = CubeManager.getInstance(this.getTestConfig());
         cube = cubeManager.getCube("test_kylin_cube_without_slr_left_join_ready_2_segments");
         dictionaryManager = DictionaryManager.getInstance(getTestConfig());
-        lfn = cube.getDescriptor().findColumnRef("TEST_KYLIN_FACT", "LSTG_FORMAT_NAME");
-        lsi = cube.getDescriptor().findColumnRef("TEST_KYLIN_FACT", "CAL_DT");
-        ssc = cube.getDescriptor().findColumnRef("TEST_CATEGORY_GROUPINGS", "META_CATEG_NAME");
+        lfn = cube.getDescriptor().findColumnRef("DEFAULT.TEST_KYLIN_FACT", "LSTG_FORMAT_NAME");
+        lsi = cube.getDescriptor().findColumnRef("DEFAULT.TEST_KYLIN_FACT", "CAL_DT");
+        ssc = cube.getDescriptor().findColumnRef("DEFAULT.TEST_CATEGORY_GROUPINGS", "META_CATEG_NAME");
 
         DictionaryInfo sharedDict = makeSharedDict();
 

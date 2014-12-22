@@ -232,6 +232,7 @@ public class JobInstanceBuilder {
             pathToMerge.add(cuboidTmpRootPath + "*");
             result.add(createMergeCuboidDataStep(jobInstance, stepSeqNum++, formatPaths(pathToMerge), cuboidRootPath));
         }
+
         String cuboidPath = incBuildMerge?cuboidRootPath:cuboidRootPath+"*";
 
         // get output distribution step
