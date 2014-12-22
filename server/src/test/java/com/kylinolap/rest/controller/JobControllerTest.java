@@ -16,6 +16,19 @@
 
 package com.kylinolap.rest.controller;
 
+import static org.junit.Assert.*;
+
+import java.io.IOException;
+import java.util.Date;
+import java.util.Map;
+
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeDescManager;
 import com.kylinolap.cube.CubeInstance;
@@ -28,21 +41,12 @@ import com.kylinolap.rest.request.JobListRequest;
 import com.kylinolap.rest.service.CubeService;
 import com.kylinolap.rest.service.JobService;
 import com.kylinolap.rest.service.ServiceTestBase;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.io.IOException;
-import java.util.Date;
-import java.util.Map;
-
-import static org.junit.Assert.assertNotNull;
 
 /**
  * @author xduo
+ * @deprecated method has been merged into #ServiceTestAllInOne
  */
+@Ignore
 public class JobControllerTest extends ServiceTestBase {
 
     private JobController jobSchedulerController;
