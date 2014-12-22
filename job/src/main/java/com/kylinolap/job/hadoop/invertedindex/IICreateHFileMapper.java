@@ -16,10 +16,10 @@
 
 package com.kylinolap.job.hadoop.invertedindex;
 
-import static com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc.*;
 
 import java.io.IOException;
 
+import com.kylinolap.invertedindex.model.IIDesc;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValue.Type;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
@@ -27,7 +27,6 @@ import org.apache.hadoop.mapreduce.Mapper;
 
 /**
  * @author yangli9
- * 
  */
 public class IICreateHFileMapper extends Mapper<ImmutableBytesWritable, ImmutableBytesWritable, ImmutableBytesWritable, KeyValue> {
 
@@ -42,8 +41,8 @@ public class IICreateHFileMapper extends Mapper<ImmutableBytesWritable, Immutabl
     protected void map(ImmutableBytesWritable key, ImmutableBytesWritable value, Context context) throws IOException, InterruptedException {
 
         KeyValue kv = new KeyValue(key.get(), key.getOffset(), key.getLength(), //
-                HBASE_FAMILY_BYTES, 0, HBASE_FAMILY_BYTES.length, //
-                HBASE_QUALIFIER_BYTES, 0, HBASE_QUALIFIER_BYTES.length, //
+                IIDesc.HBASE_FAMILY_BYTES, 0, IIDesc.HBASE_FAMILY_BYTES.length, //
+                IIDesc.HBASE_QUALIFIER_BYTES, 0, IIDesc.HBASE_QUALIFIER_BYTES.length, //
                 timestamp, Type.Put, //
                 value.get(), value.getOffset(), value.getLength());
 

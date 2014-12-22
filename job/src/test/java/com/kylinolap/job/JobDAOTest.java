@@ -26,7 +26,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.cube.CubeBuildTypeEnum;
+import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
 import com.kylinolap.job.exception.InvalidJobInstanceException;
 
 /**
@@ -94,7 +94,7 @@ public class JobDAOTest extends LocalFileMetadataTestCase {
 
             JobInstance jobInstance = new JobInstance();
             jobInstance.setUuid(uuid);
-            jobInstance.setType(CubeBuildTypeEnum.BUILD);
+            jobInstance.setType(RealizationBuildTypeEnum.BUILD);
             jobInstance.setRelatedCube("test_kylin_cube_with_slr".toUpperCase());
             jobInstance.setName("Dummy_Job");
             // jobInstance.setStatus(JobStatusEnum.PENDING);

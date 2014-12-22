@@ -26,10 +26,10 @@ import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 
-import com.kylinolap.cube.measure.MeasureCodec;
+import com.kylinolap.metadata.measure.MeasureCodec;
 import com.kylinolap.cube.model.HBaseColumnDesc;
-import com.kylinolap.cube.model.MeasureDesc;
-import com.kylinolap.metadata.model.realization.FunctionDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
+import com.kylinolap.metadata.model.FunctionDesc;
 
 /**
  * 

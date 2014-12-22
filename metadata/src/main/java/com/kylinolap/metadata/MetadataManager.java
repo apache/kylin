@@ -40,7 +40,6 @@ import com.kylinolap.common.restclient.SingleValueCache;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.metadata.model.DataModelDesc;
 import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
  * Serves (and caches) metadata for Kylin instance.
@@ -55,7 +54,6 @@ public class MetadataManager {
     private static final Logger logger = LoggerFactory.getLogger(MetadataManager.class);
 
     private static final Serializer<TableDesc> TABLE_SERIALIZER = new JsonSerializer<TableDesc>(TableDesc.class);
-    private static final Serializer<InvertedIndexDesc> IIDESC_SERIALIZER = new JsonSerializer<InvertedIndexDesc>(InvertedIndexDesc.class);
     private static final Serializer<DataModelDesc> MODELDESC_SERIALIZER = new JsonSerializer<DataModelDesc>(DataModelDesc.class);
 
     TypeReference<HashMap<String, Object>> typeRef = new TypeReference<HashMap<String, Object>>() {
@@ -102,8 +100,6 @@ public class MetadataManager {
     private KylinConfig config;
     // table name ==> SourceTable
     private SingleValueCache<String, TableDesc> srcTableMap = new SingleValueCache<String, TableDesc>(Broadcaster.TYPE.METADATA);
-    // name ==> InvertedIndexDesc
-    private SingleValueCache<String, InvertedIndexDesc> iiDescMap = new SingleValueCache<String, InvertedIndexDesc>(Broadcaster.TYPE.METADATA);
     // name => value
     private SingleValueCache<String, Map<String, String>> srcTableExdMap = new SingleValueCache<String, Map<String, String>>(Broadcaster.TYPE.METADATA);
     // name => DataModelDesc
@@ -181,16 +177,12 @@ public class MetadataManager {
         srcTableMap.put(tableIdentity, srcTable);
     }
 
-    public InvertedIndexDesc getInvertedIndexDesc(String name) {
-        return iiDescMap.get(name);
-    }
 
     // sync on update
     private void init(KylinConfig config) throws IOException {
         this.config = config;
         reloadAllSourceTable();
         reloadAllSourceTableExd();
-        reloadAllInvertedIndexDesc();
         reloadAllDataModel();
     }
 
@@ -262,50 +254,6 @@ public class MetadataManager {
         srcTableMap.putLocal(tableIdentity, t);
 
         return t;
-    }
-
-    private void reloadAllInvertedIndexDesc() throws IOException {
-        ResourceStore store = getStore();
-        logger.info("Reloading Inverted Index Desc from folder " + store.getReadableResourcePath(ResourceStore.IIDESC_RESOURCE_ROOT));
-
-        iiDescMap.clear();
-
-        List<String> paths = store.collectResourceRecursively(ResourceStore.IIDESC_RESOURCE_ROOT, ".json");
-        for (String path : paths) {
-            InvertedIndexDesc desc;
-            try {
-                desc = loadInvertedIndexDesc(path);
-            } catch (Exception e) {
-                logger.error("Error loading inverted index desc " + path, e);
-                continue;
-            }
-            if (path.equals(desc.getResourcePath()) == false) {
-                logger.error("Skip suspicious desc at " + path + ", " + desc + " should be at " + desc.getResourcePath());
-                continue;
-            }
-            if (iiDescMap.containsKey(desc.getName())) {
-                logger.error("Dup InvertedIndexDesc name '" + desc.getName() + "' on path " + path);
-                continue;
-            }
-
-            iiDescMap.putLocal(desc.getName(), desc);
-        }
-
-        logger.debug("Loaded " + iiDescMap.size() + " Inverted Index Desc(s)");
-    }
-
-    private InvertedIndexDesc loadInvertedIndexDesc(String path) throws IOException {
-        ResourceStore store = getStore();
-        logger.debug("Loading InvertedIndexDesc " + store.getReadableResourcePath(path));
-
-        InvertedIndexDesc desc = store.getResource(path, InvertedIndexDesc.class, IIDESC_SERIALIZER);
-        if (StringUtils.isBlank(desc.getName())) {
-            throw new IllegalStateException("InvertedIndexDesc name must not be blank");
-        }
-
-        desc.init(this);
-
-        return desc;
     }
 
     /**

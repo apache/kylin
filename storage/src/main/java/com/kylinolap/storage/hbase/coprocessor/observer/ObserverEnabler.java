@@ -23,6 +23,7 @@ import java.util.Set;
 
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorRowType;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
@@ -36,7 +37,7 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowValueDecoder;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.hbase.RegionScannerAdapter;
@@ -49,7 +50,7 @@ public class ObserverEnabler {
 
     private static final Logger logger = LoggerFactory.getLogger(ObserverEnabler.class);
 
-    static final String FORCE_COPROCESSOR = "forceCoprocessor";
+    static final String FORCE_COPROCESSOR = "forceObserver";
     static final boolean DEBUG_LOCAL_COPROCESSOR = false;
     static final Map<String, Boolean> CUBE_OVERRIDES = Maps.newConcurrentMap();
 
@@ -60,7 +61,7 @@ public class ObserverEnabler {
             return table.getScanner(scan);
         }
 
-        ObserverRowType type = ObserverRowType.fromCuboid(segment, cuboid);
+        CoprocessorRowType type = CoprocessorRowType.fromCuboid(segment, cuboid);
         CoprocessorFilter filter = CoprocessorFilter.fromFilter(segment, tupleFiler);
         CoprocessorProjector projector = CoprocessorProjector.makeForObserver(segment, cuboid, groupBy);
         ObserverAggregators aggrs = ObserverAggregators.fromValueDecoders(rowValueDecoders);
@@ -71,7 +72,7 @@ public class ObserverEnabler {
             return new ResultScannerAdapter(aggrScanner);
         } else {
             scan.setAttribute(AggregateRegionObserver.COPROCESSOR_ENABLE, new byte[] { 0x01 });
-            scan.setAttribute(AggregateRegionObserver.TYPE, ObserverRowType.serialize(type));
+            scan.setAttribute(AggregateRegionObserver.TYPE, CoprocessorRowType.serialize(type));
             scan.setAttribute(AggregateRegionObserver.PROJECTOR, CoprocessorProjector.serialize(projector));
             scan.setAttribute(AggregateRegionObserver.AGGREGATORS, ObserverAggregators.serialize(aggrs));
             scan.setAttribute(AggregateRegionObserver.FILTER, CoprocessorFilter.serialize(filter));

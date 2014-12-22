@@ -28,7 +28,7 @@ import com.kylinolap.cube.kv.RowKeyColumnOrder;
 import com.kylinolap.cube.model.CubeDesc.DeriveInfo;
 import com.kylinolap.cube.model.CubeDesc.DeriveType;
 import com.kylinolap.dict.lookup.LookupStringTable;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.filter.ColumnTupleFilter;
 import com.kylinolap.storage.filter.CompareTupleFilter;
 import com.kylinolap.storage.filter.ConstantTupleFilter;

@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -32,7 +33,9 @@ import com.kylinolap.rest.service.ServiceTestBase;
 /**
  * @author xduo
  * 
+ * @deprecated method has been merged into #ServiceTestAllInOne
  */
+@Ignore
 public class AccessControllerTest extends ServiceTestBase {
 
     private AccessController accessController;

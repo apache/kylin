@@ -15,6 +15,7 @@
  */
 package com.kylinolap.cube.common;
 
+import com.kylinolap.common.util.SplittedBytes;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import com.kylinolap.cube.CubeSegment;
@@ -22,7 +23,7 @@ import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowConstants;
 import com.kylinolap.cube.kv.RowKeyColumnIO;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * @author George Song (ysong1)

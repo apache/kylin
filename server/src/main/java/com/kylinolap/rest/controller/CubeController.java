@@ -44,7 +44,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.kylinolap.common.util.JsonUtil;
-import com.kylinolap.cube.CubeBuildTypeEnum;
+import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.exception.CubeIntegrityException;
@@ -200,7 +200,7 @@ public class CubeController extends BasicController {
 
         try {
             CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
-            String jobId = jobService.submitJob(cube, jobBuildRequest.getStartTime(), jobBuildRequest.getEndTime(), CubeBuildTypeEnum.valueOf(jobBuildRequest.getBuildType()));
+            String jobId = jobService.submitJob(cube, jobBuildRequest.getStartTime(), jobBuildRequest.getEndTime(), RealizationBuildTypeEnum.valueOf(jobBuildRequest.getBuildType()));
             jobInstance = jobService.getJobInstance(jobId);
         } catch (JobException e) {
             logger.error(e.getLocalizedMessage(), e);

@@ -22,7 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import com.kylinolap.cube.project.CubeRealizationManager;
+import com.kylinolap.metadata.project.ProjectManager;
 import net.hydromatic.linq4j.Enumerable;
 import net.hydromatic.linq4j.Enumerator;
 import net.hydromatic.linq4j.QueryProvider;
@@ -43,10 +43,10 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.type.SqlTypeUtil;
 
-import com.kylinolap.cube.model.MeasureDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.model.realization.FunctionDesc;
+import com.kylinolap.metadata.model.FunctionDesc;
 import com.kylinolap.query.enumerator.OLAPQuery;
 import com.kylinolap.query.enumerator.OLAPQuery.EnumeratorTypeEnum;
 import com.kylinolap.query.relnode.OLAPTableScan;
@@ -161,7 +161,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
     }
 
     private List<ColumnDesc> listSourceColumns() {
-        CubeRealizationManager projectMgr = CubeRealizationManager.getInstance(olapSchema.getConfig());
+        ProjectManager projectMgr = ProjectManager.getInstance(olapSchema.getConfig());
         List<ColumnDesc> exposedColumns = projectMgr.listExposedColumns(olapSchema.getProjectName(), sourceTable.getIdentity());
 
         List<MeasureDesc> countMeasures = projectMgr.listEffectiveRewriteMeasures(olapSchema.getProjectName(), sourceTable.getIdentity());
@@ -169,7 +169,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         for (MeasureDesc m : countMeasures) {
             FunctionDesc func = m.getFunction();
             String fieldName = func.getRewriteFieldName();
-            if (metFields.contains(fieldName) == false) {
+            if (!metFields.contains(fieldName)) {
                 metFields.add(fieldName);
                 ColumnDesc fakeCountCol = new ColumnDesc();
                 fakeCountCol.setName(fieldName);

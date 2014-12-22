@@ -22,8 +22,8 @@ import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-import com.kylinolap.cube.common.BytesSplitter;
-import com.kylinolap.cube.common.SplittedBytes;
+import com.kylinolap.common.util.BytesSplitter;
+import com.kylinolap.common.util.SplittedBytes;
 import com.kylinolap.job.constant.BatchConstants;
 
 /**

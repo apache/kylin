@@ -32,6 +32,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import com.kylinolap.common.util.CaseInsensitiveStringMap;
+import com.kylinolap.metadata.model.*;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.net.util.Base64;
 
@@ -48,14 +49,9 @@ import com.kylinolap.common.util.Array;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.metadata.MetadataConstances;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.ColumnDesc;
-import com.kylinolap.metadata.model.DataModelDesc;
-import com.kylinolap.metadata.model.DataType;
-import com.kylinolap.metadata.model.JoinDesc;
-import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.model.realization.FunctionDesc;
-import com.kylinolap.metadata.model.realization.ParameterDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.ParameterDesc;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 9/24/13 Time: 10:40 AM To
@@ -441,9 +437,7 @@ public class CubeDesc extends RootPersistentEntity {
 
             byte[] signature = md.digest(sigString.toString().getBytes());
             return new String(Base64.encodeBase64(signature));
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Failed to calculate signature");
-        } catch (JsonProcessingException e) {
+        } catch (NoSuchAlgorithmException | JsonProcessingException e) {
             throw new RuntimeException("Failed to calculate signature");
         }
     }
@@ -459,6 +453,7 @@ public class CubeDesc extends RootPersistentEntity {
     public void init(KylinConfig config, Map<String, TableDesc> tables) {
         this.errors.clear();
         this.config = config;
+
         if (this.modelName == null || this.modelName.length() == 0) {
             this.addError("The cubeDesc '" + this.getName() + "' doesn't have data model specified.");
         }

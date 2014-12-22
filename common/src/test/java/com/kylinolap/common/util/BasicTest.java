@@ -2,11 +2,16 @@ package com.kylinolap.common.util;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
+import com.google.common.collect.Lists;
 import org.apache.hadoop.fs.HasEnhancedByteBufferAccess;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.hbase.util.Threads;
@@ -21,11 +26,29 @@ import org.junit.Test;
  */
 @Ignore
 public class BasicTest {
+    private void log(ByteBuffer a) {
+        Integer x = 4;
+        foo(x);
+
+    }
+
+    private void foo(Long a) {
+        System.out.printf("a");
+
+    }
+
+    private void foo(Integer b) {
+        System.out.printf("b");
+    }
+
+
     @Test
     public void test() throws IOException {
-        for (String s : ManagementFactory.getRuntimeMXBean().getInputArguments())
-            System.out.println(s);
-        return;
+
+//        for (String s : ManagementFactory.getRuntimeMXBean().getInputArguments())
+//            System.out.println(s);
+//        return;
+
 //        //BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(1000000);
 //        BlockingQueue<Runnable> workQueue = new SynchronousQueue<>();
 //

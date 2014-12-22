@@ -22,7 +22,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.kylinolap.cube.project.CubeRealizationManager;
+import com.kylinolap.metadata.project.ProjectManager;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.cube.CubeBuildTypeEnum;
+import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
@@ -47,7 +47,7 @@ import com.kylinolap.dict.TrieDictionary;
 import com.kylinolap.dict.lookup.TableSignature;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * @author honma
@@ -93,7 +93,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
         MetadataManager.removeInstance(this.getTestConfig());
         CubeManager.removeInstance(this.getTestConfig());
-        CubeRealizationManager.removeInstance(this.getTestConfig());
+        ProjectManager.removeInstance(this.getTestConfig());
         DictionaryManager.removeInstance(this.getTestConfig());
 
         // hack for distributed cache
@@ -107,9 +107,9 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
         cubeManager = CubeManager.getInstance(this.getTestConfig());
         cube = cubeManager.getCube("test_kylin_cube_without_slr_left_join_ready_2_segments");
         dictionaryManager = DictionaryManager.getInstance(getTestConfig());
-        lfn = cube.getDescriptor().findColumnRef("TEST_KYLIN_FACT", "LSTG_FORMAT_NAME");
-        lsi = cube.getDescriptor().findColumnRef("TEST_KYLIN_FACT", "CAL_DT");
-        ssc = cube.getDescriptor().findColumnRef("TEST_CATEGORY_GROUPINGS", "META_CATEG_NAME");
+        lfn = cube.getDescriptor().findColumnRef("DEFAULT.TEST_KYLIN_FACT", "LSTG_FORMAT_NAME");
+        lsi = cube.getDescriptor().findColumnRef("DEFAULT.TEST_KYLIN_FACT", "CAL_DT");
+        ssc = cube.getDescriptor().findColumnRef("DEFAULT.TEST_CATEGORY_GROUPINGS", "META_CATEG_NAME");
 
         DictionaryInfo sharedDict = makeSharedDict();
 
@@ -157,7 +157,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
         String cubeName = "test_kylin_cube_without_slr_left_join_ready_2_segments";
 
-        List<CubeSegment> newSegments = cubeManager.allocateSegments(cube, CubeBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L);
+        List<CubeSegment> newSegments = cubeManager.allocateSegments(cube, RealizationBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L);
 
         logger.info("Size of new segments: " + newSegments.size());
 
