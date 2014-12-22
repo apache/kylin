@@ -17,17 +17,11 @@
 package com.kylinolap.storage.hbase;
 
 
-import java.io.IOException;
 import java.util.*;
 
 import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IISegment;
-import com.kylinolap.invertedindex.index.Slice;
-import com.kylinolap.invertedindex.index.TableRecord;
-import com.kylinolap.invertedindex.index.TableRecordBytes;
-import com.kylinolap.invertedindex.index.TableRecordInfo;
 import com.kylinolap.invertedindex.model.IIDesc;
-import com.kylinolap.invertedindex.model.IIKeyValueCodec;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.storage.hbase.coprocessor.endpoint.EndpointTupleIterator;
 import org.apache.hadoop.hbase.client.HConnection;
@@ -41,8 +35,6 @@ import com.kylinolap.storage.IStorageEngine;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.tuple.ITupleIterator;
-import com.kylinolap.storage.tuple.Tuple;
-import com.kylinolap.storage.tuple.TupleInfo;
 
 /**
  * @author yangli9
@@ -75,82 +67,6 @@ public class InvertedIndexStorageEngine implements IStorageEngine {
         }
     }
 
-    private class IISegmentTupleIterator implements ITupleIterator {
-        final StorageContext context;
-        final HBaseClientKVIterator kvIterator;
-        final IIKeyValueCodec codec;
-        final Iterator<Slice> sliceIterator;
-        Iterator<TableRecordBytes> recordIterator;
-        Tuple next;
 
-        TupleInfo tupleInfo;
-        Tuple tuple;
-
-        IISegmentTupleIterator(StorageContext context) throws IOException {
-            this.context = context;
-
-            HConnection hconn = HBaseConnection.get(hbaseUrl);
-            String tableName = seg.getStorageLocationIdentifier();
-            kvIterator = new HBaseClientKVIterator(hconn, tableName, IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES);
-            codec = new IIKeyValueCodec(new TableRecordInfo(seg));
-            sliceIterator = codec.decodeKeyValue(kvIterator).iterator();
-        }
-
-        private TupleInfo buildTupleInfo(TableRecordInfo recInfo) {
-            TupleInfo info = new TupleInfo();
-            ColumnDesc[] columns = recInfo.getColumns();
-            for (int i = 0; i < columns.length; i++) {
-                TblColRef col = new TblColRef(columns[i]);
-                info.setField(context.getFieldName(col), col, col.getType().getName(), i);
-            }
-            return info;
-        }
-
-        private Tuple toTuple(TableRecord rec) {
-            if (tuple == null) {
-                tupleInfo = buildTupleInfo(rec.info());
-                tuple = new Tuple(tupleInfo);
-            }
-
-            List<String> fieldNames = tupleInfo.getAllFields();
-            for (int i = 0, n = tupleInfo.size(); i < n; i++) {
-                tuple.setDimensionValue(fieldNames.get(i), rec.getValueString(i));
-            }
-            return tuple;
-        }
-
-        @Override
-        public boolean hasNext() {
-            while (next == null) {
-                if (recordIterator != null && recordIterator.hasNext()) {
-                    next = toTuple((TableRecord) recordIterator.next());
-                    break;
-                }
-                if (sliceIterator.hasNext()) {
-                    recordIterator = sliceIterator.next().iterator();
-                    continue;
-                }
-                break;
-            }
-
-            return next != null;
-        }
-
-        @Override
-        public Tuple next() {
-            if (next == null)
-                throw new NoSuchElementException();
-
-            Tuple r = next;
-            next = null;
-            return r;
-        }
-
-        @Override
-        public void close() {
-            kvIterator.close();
-        }
-
-    }
 
 }

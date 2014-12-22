@@ -21,7 +21,6 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 
 /**
  * @author yangli9
- * 
  */
 public class SliceBuilder {
 
@@ -33,19 +32,19 @@ public class SliceBuilder {
     long sliceTimestamp;
     int nRecords;
     private ColumnValueContainer[] containers;
-    
+
     transient ImmutableBytesWritable temp = new ImmutableBytesWritable();
 
     public SliceBuilder(TableRecordInfo info, short shard) {
         this.info = info;
-        this.nColumns = info.getColumnCount();
+        this.nColumns = info.getDigest().getColumnCount();
         this.nRecordsCap = Math.max(1, info.getDescriptor().getSliceSize());
 
         this.shard = shard;
         this.sliceTimestamp = Long.MIN_VALUE;
         this.nRecords = 0;
         this.containers = null;
-        
+
         doneSlice(); // init containers
     }
 
@@ -55,20 +54,20 @@ public class SliceBuilder {
             for (int i = 0; i < nColumns; i++) {
                 containers[i].closeForChange();
             }
-            r = new Slice(info, shard, sliceTimestamp, containers);
+            r = new Slice(info.getDigest(), shard, sliceTimestamp, containers);
         }
 
         // reset for next slice
         nRecords = 0;
         containers = new ColumnValueContainer[nColumns];
         for (int i : info.getDescriptor().getBitmapColumns()) {
-            containers[i] = new BitMapContainer(info, i);
+            containers[i] = new BitMapContainer(info.getDigest(), i);
         }
         for (int i : info.getDescriptor().getValueColumns()) {
-            containers[i] = new CompressedValueContainer(info, i, nRecordsCap);
+            containers[i] = new CompressedValueContainer(info.getDigest(), i, nRecordsCap);
         }
         for (int i : info.getDescriptor().getMetricsColumns()) {
-            containers[i] = new CompressedValueContainer(info, i, nRecordsCap);
+            containers[i] = new CompressedValueContainer(info.getDigest(), i, nRecordsCap);
         }
 
         return r;
@@ -79,13 +78,13 @@ public class SliceBuilder {
     public Slice append(TableRecord rec) {
         if (rec.getShard() != shard)
             throw new IllegalStateException();
-        
+
         Slice doneSlice = null;
-        
+
         if (isFull()) {
             doneSlice = doneSlice();
         }
-        
+
         if (nRecords == 0) {
             sliceTimestamp = increaseSliceTimestamp(rec.getTimestamp());
         }
@@ -102,7 +101,7 @@ public class SliceBuilder {
     private long increaseSliceTimestamp(long timestamp) {
         if (timestamp < sliceTimestamp)
             throw new IllegalStateException();
-        
+
         if (timestamp == sliceTimestamp)
             return ++timestamp; // ensure slice timestamp increases
         else

@@ -253,7 +253,7 @@ public class EndpointTupleIterator implements ITupleIterator {
         public SingleRegionTupleIterator(List<IIProtos.IIResponse.IIRow> rows) {
             this.rows = rows;
             this.index = 0;
-            this.tableRecord = new TableRecord(tableRecordInfo);
+            this.tableRecord = tableRecordInfo.createTableRecord();
             this.tuple = new Tuple(tupleInfo);
         }
 

@@ -23,7 +23,7 @@ import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.invertedindex.index.Slice;
 import com.kylinolap.invertedindex.index.TableRecord;
-import com.kylinolap.invertedindex.index.TableRecordBytes;
+import com.kylinolap.invertedindex.index.RawTableRecord;
 import com.kylinolap.invertedindex.index.TableRecordInfo;
 import com.kylinolap.invertedindex.model.IIKeyValueCodec;
 import org.apache.commons.io.IOUtils;
@@ -39,7 +39,6 @@ import com.kylinolap.common.util.HadoopUtil;
 
 /**
  * @author yangli9
- * 
  */
 public class IICLI {
 
@@ -54,11 +53,11 @@ public class IICLI {
         System.out.println("Reading from " + path + " ...");
 
         TableRecordInfo info = new TableRecordInfo(ii.getFirstSegment());
-        IIKeyValueCodec codec = new IIKeyValueCodec(info);
+        IIKeyValueCodec codec = new IIKeyValueCodec(info.getDigest());
         int count = 0;
         for (Slice slice : codec.decodeKeyValue(readSequenceKVs(hconf, path))) {
-            for (TableRecordBytes rec : slice) {
-                System.out.println((TableRecord)rec);
+            for (RawTableRecord rec : slice) {
+                System.out.printf(new TableRecord(rec, info).toString());
                 count++;
             }
         }

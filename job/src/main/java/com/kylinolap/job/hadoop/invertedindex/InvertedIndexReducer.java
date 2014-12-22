@@ -54,9 +54,9 @@ public class InvertedIndexReducer extends Reducer<LongWritable, ImmutableBytesWr
         IIInstance ii = mgr.getII(conf.get(BatchConstants.CFG_II_NAME));
         IISegment seg = ii.getSegment(conf.get(BatchConstants.CFG_II_SEGMENT_NAME), SegmentStatusEnum.NEW);
         info = new TableRecordInfo(seg);
-        rec = new TableRecord(info);
+        rec = info.createTableRecord();
         builder = null;
-        kv = new IIKeyValueCodec(info);
+        kv = new IIKeyValueCodec(info.getDigest());
     }
 
     @Override

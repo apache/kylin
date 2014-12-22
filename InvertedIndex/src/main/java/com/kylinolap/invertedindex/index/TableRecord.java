@@ -18,7 +18,7 @@ package com.kylinolap.invertedindex.index;
 
 import com.google.common.collect.Lists;
 import com.kylinolap.dict.DateStrDictionary;
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.LongWritable;
 
 import java.util.List;
@@ -26,27 +26,19 @@ import java.util.List;
 /**
  * @author yangli9
  */
-public class TableRecord extends TableRecordBytes {
+public class TableRecord implements Cloneable {
 
+    private TableRecordInfo info;
+    private RawTableRecord rawRecord;
 
-    public TableRecord(TableRecordInfoDigest info) {
-        super();
-
-        if (info instanceof TableRecordInfo) {
-        } else {
-            throw new IllegalStateException("Table Record must be initialized with a TableRecordInfo");
-        }
-
+    public TableRecord(RawTableRecord rawRecord, TableRecordInfo info) {
         this.info = info;
-        this.buf = new byte[info.byteFormLen];
-        reset();
+        this.rawRecord = rawRecord;
     }
 
     public TableRecord(TableRecord another) {
-        super();
-
         this.info = another.info;
-        this.buf = Bytes.copy(another.buf);
+        this.rawRecord = (RawTableRecord) another.rawRecord.clone();
     }
 
     @Override
@@ -54,14 +46,25 @@ public class TableRecord extends TableRecordBytes {
         return new TableRecord(this);
     }
 
+    public void reset() {
+        rawRecord.reset();
+    }
+
+    public byte[] getBytes() {
+        return rawRecord.getBytes();
+    }
+
+    public void setBytes(byte[] bytes, int offset, int length) {
+        rawRecord.setBytes(bytes, offset, length);
+    }
 
     public long getTimestamp() {
-        String str = getValueString(info().getTimestampColumn());
+        String str = getValueString(info.getTimestampColumn());
         return DateStrDictionary.stringToMillis(str);
     }
 
     public int length(int col) {
-        return info.length(col);
+        return rawRecord.length(col);
     }
 
     public List<String> getValueList() {
@@ -73,45 +76,43 @@ public class TableRecord extends TableRecordBytes {
     }
 
     public void setValueString(int col, String value) {
-        if (info().isMetrics(col)) {
-            LongWritable v = info().codec(col).valueOf(value);
+        if (rawRecord.isMetric(col)) {
+            LongWritable v = rawRecord.codec(col).valueOf(value);
             setValueMetrics(col, v);
         } else {
-            int id = info().dict(col).getIdFromValue(value);
-            setValueID(col, id);
+            int id = info.dict(col).getIdFromValue(value);
+            rawRecord.setValueID(col, id);
         }
     }
 
     public String getValueString(int col) {
-        if (info().isMetrics(col))
-            return info().codec(col).toString(getValueMetrics(col));
+        if (rawRecord.isMetric(col))
+            return rawRecord.codec(col).toString(getValueMetrics(col));
         else
-            return info().dict(col).getValueFromId(getValueID(col));
+            return info.dict(col).getValueFromId(rawRecord.getValueID(col));
     }
 
+    public void getValueBytes(int col, ImmutableBytesWritable bytes) {
+        rawRecord.getValueBytes(col, bytes);
+    }
 
     private void setValueMetrics(int col, LongWritable value) {
-        info().codec(col).write(value, buf, info.offset(col));
+        rawRecord.setValueMetrics(col, value);
     }
 
     private LongWritable getValueMetrics(int col) {
-        return info().codec(col).read(buf, info.offset(col));
+        return rawRecord.getValueMetrics(col);
     }
 
     public short getShard() {
-        int timestampID = getValueID(info().getTimestampColumn());
-        return (short) (Math.abs(ShardingHash.hashInt(timestampID)) % info().getDescriptor().getSharding());
+        int timestampID = rawRecord.getValueID(info.getTimestampColumn());
+        return (short) (Math.abs(ShardingHash.hashInt(timestampID)) % info.getDescriptor().getSharding());
     }
-
-    public TableRecordInfo info() {
-        return (TableRecordInfo) info;
-    }
-
 
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder("[");
-        for (int col = 0; col < info.getColumnCount(); col++) {
+        for (int col = 0; col < rawRecord.getColumnCount(); col++) {
             if (col > 0)
                 buf.append(",");
             buf.append(getValueString(col));

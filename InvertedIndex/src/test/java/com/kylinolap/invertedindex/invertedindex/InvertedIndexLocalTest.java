@@ -44,11 +44,11 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
-    
+
     @Test
     public void testBitMapContainer() {
         // create container
-        BitMapContainer container = new BitMapContainer(info, 0);
+        BitMapContainer container = new BitMapContainer(info.getDigest(), 0);
         Dictionary<String> dict = info.dict(0);
         for (int v = dict.getMinId(); v <= dict.getMaxId(); v++) {
             container.append(v);
@@ -58,7 +58,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
 
         // copy by serialization
         List<ImmutableBytesWritable> bytes = container.toBytes();
-        BitMapContainer container2 = new BitMapContainer(info, 0);
+        BitMapContainer container2 = new BitMapContainer(info.getDigest(), 0);
         container2.fromBytes(bytes);
 
         // check the copy
@@ -74,12 +74,12 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
     @Test
     public void testCompressedValueContainer() {
         // create container
-        CompressedValueContainer container = new CompressedValueContainer(info, 0, 500);
+        CompressedValueContainer container = new CompressedValueContainer(info.getDigest(), 0, 500);
         Dictionary<String> dict = info.dict(0);
-        
+
         byte[] buf = new byte[dict.getSizeOfId()];
         ImmutableBytesWritable bytes = new ImmutableBytesWritable(buf);
-        
+
         for (int v = dict.getMinId(); v <= dict.getMaxId(); v++) {
             BytesUtil.writeUnsigned(v, buf, 0, dict.getSizeOfId());
             container.append(bytes);
@@ -90,7 +90,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
 
         // copy by serialization
         ImmutableBytesWritable copy = container.toBytes();
-        CompressedValueContainer container2 = new CompressedValueContainer(info, 0, 500);
+        CompressedValueContainer container2 = new CompressedValueContainer(info.getDigest(), 0, 500);
         container2.fromBytes(copy);
 
         // check the copy
@@ -113,7 +113,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
         List<Slice> slices = buildTimeSlices(records);
         System.out.println(slices.size() + " slices");
 
-        IIKeyValueCodec codec = new IIKeyValueCodec(info);
+        IIKeyValueCodec codec = new IIKeyValueCodec(info.getDigest());
         List<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> kvs = encodeKVs(codec, slices);
         System.out.println(kvs.size() + " KV pairs");
 
@@ -134,7 +134,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
         List<TableRecord> records = Lists.newArrayList();
         for (String line : lines) {
             String[] fields = line.split(",");
-            TableRecord rec = new TableRecord(info);
+            TableRecord rec = info.createTableRecord();
             for (int col = 0; col < fields.length; col++) {
                 rec.setValueString(col, fields[col]);
             }
@@ -161,7 +161,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
         }
         List<Slice> finals = builder.close();
         slices.addAll(finals);
-        
+
         Collections.sort(slices);
         return slices;
     }
@@ -186,8 +186,8 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
     private List<TableRecord> iterateRecords(List<Slice> slices) {
         List<TableRecord> records = Lists.newArrayList();
         for (Slice slice : slices) {
-            for (TableRecordBytes rec : slice) {
-                records.add((TableRecord) rec.clone());
+            for (RawTableRecord rec : slice) {
+                records.add(new TableRecord((RawTableRecord) rec.clone(), info));
             }
         }
         return records;

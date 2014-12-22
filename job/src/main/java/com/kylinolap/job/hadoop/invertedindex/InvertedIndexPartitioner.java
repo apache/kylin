@@ -36,7 +36,6 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**
  * @author yangli9
- * 
  */
 public class InvertedIndexPartitioner extends Partitioner<LongWritable, ImmutableBytesWritable> implements Configurable {
 
@@ -59,7 +58,7 @@ public class InvertedIndexPartitioner extends Partitioner<LongWritable, Immutabl
             IIInstance ii = mgr.getII(conf.get(BatchConstants.CFG_II_NAME));
             IISegment seg = ii.getSegment(conf.get(BatchConstants.CFG_II_SEGMENT_NAME), SegmentStatusEnum.NEW);
             this.info = new TableRecordInfo(seg);
-            this.rec = new TableRecord(this.info);
+            this.rec = this.info.createTableRecord();
         } catch (IOException e) {
             throw new RuntimeException("", e);
         }

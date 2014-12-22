@@ -49,7 +49,7 @@ public class CoprocessorRowType {
 
         int[] colSizes = new int[cols.length];
         for (int i = 0; i < cols.length; i++) {
-            colSizes[i] = tableRecordInfo.length(i);
+            colSizes[i] = tableRecordInfo.getDigest().length(i);
         }
         return new CoprocessorRowType(cols, colSizes);
     }
