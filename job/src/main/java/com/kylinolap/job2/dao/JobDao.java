@@ -128,39 +128,43 @@ public class JobDao {
         return job;
     }
 
-    public String deleteJob(String uuid) throws PersistentException {
+    public void deleteJob(String uuid) throws PersistentException {
         try {
             store.deleteResource(pathOfJob(uuid));
-            return uuid;
         } catch (IOException e) {
             logger.error("error delete job:" + uuid, e);
             throw new PersistentException(e);
         }
     }
 
-    public String getJobOutput(String uuid) throws PersistentException {
+    public JobOutputPO getJobOutput(String uuid) throws PersistentException {
         try {
             JobOutputPO jobOutputPO = readJobOutputResource(pathOfJobOutput(uuid));
-            return jobOutputPO != null?jobOutputPO.getContent():null;
+            return jobOutputPO;
         } catch (IOException e) {
             logger.error("error get job output id:" + uuid, e);
             throw new PersistentException(e);
         }
     }
 
-    public void addOrUpdateJobOutput(String uuid, String output) throws PersistentException {
+    public void addOrUpdateJobOutput(String uuid, JobOutputPO output) throws PersistentException {
         if (output == null) {
             return;
         }
-        JobOutputPO jobOutputPO = new JobOutputPO();
-        jobOutputPO.setContent(output);
-        jobOutputPO.setUuid(uuid);
         try {
-            writeJobOutputResource(pathOfJobOutput(uuid), jobOutputPO);
+            writeJobOutputResource(pathOfJobOutput(uuid), output);
         } catch (IOException e) {
             logger.error("error update job output id:" + uuid, e);
             throw new PersistentException(e);
         }
     }
 
+    public void deleteJobOutput(String uuid) throws PersistentException {
+        try {
+            store.deleteResource(pathOfJobOutput(uuid));
+        } catch (IOException e) {
+            logger.error("error delete job:" + uuid, e);
+            throw new PersistentException(e);
+        }
+    }
 }

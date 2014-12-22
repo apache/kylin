@@ -6,7 +6,7 @@ import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job2.Scheduler;
 import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.exception.LockException;
-import com.kylinolap.job2.exception.SchedularException;
+import com.kylinolap.job2.exception.SchedulerException;
 import com.kylinolap.job2.execution.Executable;
 import com.kylinolap.job2.service.DefaultJobService;
 import org.apache.curator.RetryPolicy;
@@ -27,7 +27,7 @@ import java.util.concurrent.*;
 /**
  * Created by qianzhou on 12/15/14.
  */
-public class DefaultScheduler implements Scheduler, ConnectionStateListener {
+public class DefaultScheduler implements Scheduler<AbstractExecutable>, ConnectionStateListener {
 
     private static final String ZOOKEEPER_LOCK_PATH = "/kylin/job_engine/lock";
 
@@ -61,12 +61,17 @@ public class DefaultScheduler implements Scheduler, ConnectionStateListener {
                     boolean hasLock = false;
                     try {
                         hasLock = acquireJobLock(executable.getId(), 1);
-                        jobPool.execute(new JobRunner(executable));
+                        logger.info("acquire job lock:" + executable.getId() + " status:" + (hasLock ? "succeed" : "failed"));
+                        if (hasLock) {
+                            logger.info("start to run job id:" + executable.getId());
+                            jobPool.execute(new JobRunner(executable));
+                        }
                     } catch (LockException e) {
                         logger.error("error acquire job lock, id:" + executable.getId(), e);
                     } finally {
                         try {
                             if (hasLock) {
+                                logger.info("finish running job id:" + executable.getId());
                                 releaseJobLock(executable.getId());
                             }
                         } catch (LockException ex) {
@@ -88,23 +93,21 @@ public class DefaultScheduler implements Scheduler, ConnectionStateListener {
 
         @Override
         public void run() {
-            if (context.getRunningJobs().containsKey(executable.getId())) {
-                logger.warn("job:" + executable.getId() + " is already running");
-                return;
-            }
             try {
+                context.addRunningJob(executable);
                 executable.execute(context);
             } catch (ExecuteException e) {
                 logger.error("ExecuteException job:" + executable.getId(), e);
             } catch (Exception e) {
                 logger.error("unknown error execute job:" + executable.getId(), e);
             } finally {
+                context.removeRunningJob(executable);
             }
         }
     }
 
     private boolean acquireJobLock(String jobId, long timeoutSeconds) throws LockException {
-        return true;
+        return !context.getRunningJobs().containsKey(jobId);
     }
 
     private void releaseJobLock(String jobId) throws LockException {
@@ -120,11 +123,11 @@ public class DefaultScheduler implements Scheduler, ConnectionStateListener {
     }
 
     @Override
-    public synchronized void init(JobEngineConfig jobEngineConfig) throws SchedularException {
+    public synchronized void init(JobEngineConfig jobEngineConfig) throws SchedulerException {
         if (!initialized) {
             initialized = true;
         } else {
-            throw new UnsupportedOperationException("cannot init this instance twice");
+            return;
         }
         this.jobEngineConfig = jobEngineConfig;
         jobService = DefaultJobService.getInstance(jobEngineConfig.getConfig());
@@ -143,17 +146,17 @@ public class DefaultScheduler implements Scheduler, ConnectionStateListener {
             logger.debug("Closing zk connection");
             try {
                 shutdown();
-            } catch (SchedularException e) {
+            } catch (SchedulerException e) {
                 logger.error("error shutdown scheduler", e);
             }
             }
         });
 
-        fetcherPool.scheduleAtFixedRate(new FetcherRunner(), 0, JobConstants.DEFAULT_SCHEDULER_INTERVAL_SECONDS, TimeUnit.SECONDS);
+        fetcherPool.scheduleAtFixedRate(new FetcherRunner(), 10, JobConstants.DEFAULT_SCHEDULER_INTERVAL_SECONDS, TimeUnit.SECONDS);
     }
 
     @Override
-    public void shutdown() throws SchedularException {
+    public void shutdown() throws SchedulerException {
         fetcherPool.shutdown();
         jobPool.shutdown();
         if (zkClient.getState().equals(CuratorFrameworkState.STARTED)) {
@@ -163,21 +166,21 @@ public class DefaultScheduler implements Scheduler, ConnectionStateListener {
                 }
             } catch (Exception e) {
                 logger.error("error delete scheduler", e);
-                throw new SchedularException(e);
+                throw new SchedulerException(e);
             }
         }
+
     }
 
 
     @Override
-    public boolean submit(Executable executable) throws SchedularException {
-        //to persistent
+    public boolean submit(AbstractExecutable executable) throws SchedulerException {
+        jobService.addJob(executable);
         return true;
     }
 
     @Override
-    public boolean stop(Executable executable) throws SchedularException {
-        //update persistent
+    public boolean stop(AbstractExecutable executable) throws SchedulerException {
         return true;
     }
 
