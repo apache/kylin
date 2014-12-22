@@ -160,6 +160,7 @@ public class KylinQueryTest extends KylinTestBase {
         execAndCompQuery("src/test/resources/query/sql", null, true);
     }
 
+    @Ignore
     @Test
     public void testIIQuery() throws Exception {
         execAndCompQuery("src/test/resources/query/sql_ii", null, true);
