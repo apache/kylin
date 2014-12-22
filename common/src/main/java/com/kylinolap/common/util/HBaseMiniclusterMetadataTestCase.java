@@ -99,8 +99,7 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
             }
         }
 
-        KylinConfig.getInstanceFromEnv().setMetadataUrl("kylin_metadata_qa@" + hbaseconnectionUrl);
-        KylinConfig.getInstanceFromEnv().setStorageUrl(hbaseconnectionUrl);
+
     }
 
     private static void startupMiniClusterAndImportData() {
@@ -121,6 +120,9 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
             config.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
 
             hbaseconnectionUrl = "hbase:" + host + ":" + port + ":" + parent;
+
+            KylinConfig.getInstanceFromEnv().setMetadataUrl("kylin_metadata_qa@" + hbaseconnectionUrl);
+            KylinConfig.getInstanceFromEnv().setStorageUrl(hbaseconnectionUrl);
             
             // create the metadata htables;
             HBaseResourceStore store = new HBaseResourceStore(KylinConfig.getInstanceFromEnv());
