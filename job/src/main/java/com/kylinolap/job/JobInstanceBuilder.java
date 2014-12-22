@@ -102,7 +102,7 @@ public class JobInstanceBuilder {
         
         String extraArgs = engineConfig.getMapReduceCmdExtraArgs();
         if (StringUtils.isBlank(extraArgs) == false) {
-            extraArgs = extraArgs.replace("${REALIZATION}", jobInstance.getRelatedCube());
+            extraArgs = extraArgs.replace("${CUBE}", jobInstance.getRelatedCube());
             extraArgs = extraArgs.replace("${TYPE}", jobInstance.getType().toString());
             extraArgs = extraArgs.replace("${UUID}", jobInstance.getUuid());
             buf.append(" ").append(extraArgs);
@@ -232,6 +232,7 @@ public class JobInstanceBuilder {
             pathToMerge.add(cuboidTmpRootPath + "*");
             result.add(createMergeCuboidDataStep(jobInstance, stepSeqNum++, formatPaths(pathToMerge), cuboidRootPath));
         }
+
         String cuboidPath = incBuildMerge?cuboidRootPath:cuboidRootPath+"*";
 
         // get output distribution step

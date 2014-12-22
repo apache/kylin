@@ -38,9 +38,9 @@ public class CompressedValueContainer implements ColumnValueContainer {
     byte[] uncompressed;
     byte[] compressed;
 
-    public CompressedValueContainer(TableRecordInfoDigest info, int col, int cap) {
-        this.valueLen = info.length(col);
-        this.nValues = info.getMaxID(col) + 1;
+    public CompressedValueContainer(TableRecordInfoDigest digest, int col, int cap) {
+        this.valueLen = digest.length(col);
+        this.nValues = digest.getMaxID(col) + 1;
         this.cap = cap;
         this.size = 0;
         this.uncompressed = null;

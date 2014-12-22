@@ -3,7 +3,6 @@ package com.kylinolap.storage.hbase.coprocessor.endpoint;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
-import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.invertedindex.IISegment;
 import com.kylinolap.invertedindex.index.TableRecord;
 import com.kylinolap.invertedindex.index.TableRecordInfo;
@@ -96,7 +95,7 @@ public class EndpointTupleIterator implements ITupleIterator {
         this.tupleInfo = buildTupleInfo();
         this.tableRecordInfo = new TableRecordInfo(this.seg);
 
-        this.pushedDownRowType = CoprocessorRowType.fromColumnDescs(this.seg, columnDescs);
+        this.pushedDownRowType = CoprocessorRowType.fromTableRecordInfo(tableRecordInfo, columnDescs);
         this.pushedDownFilter = CoprocessorFilter.fromFilter(this.seg, rootFilter);
         this.pushedDownProjector = CoprocessorProjector.makeForEndpoint(tableRecordInfo, groupBy);
         this.pushedDownAggregators = EndpointAggregators.fromFunctions(tableRecordInfo, measures);
@@ -177,6 +176,7 @@ public class EndpointTupleIterator implements ITupleIterator {
     }
 
 
+    //TODO : async callback
     private Iterator<List<IIRow>> getResults(final IIProtos.IIRequest request, HTableInterface table) throws Throwable {
         Map<byte[], List<IIRow>> results = table.coprocessorService(IIProtos.RowsService.class,
                 null, null,
@@ -253,7 +253,7 @@ public class EndpointTupleIterator implements ITupleIterator {
         public SingleRegionTupleIterator(List<IIProtos.IIResponse.IIRow> rows) {
             this.rows = rows;
             this.index = 0;
-            this.tableRecord = new TableRecord(tableRecordInfo);
+            this.tableRecord = tableRecordInfo.createTableRecord();
             this.tuple = new Tuple(tupleInfo);
         }
 

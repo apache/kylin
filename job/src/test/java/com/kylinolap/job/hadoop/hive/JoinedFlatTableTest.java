@@ -59,7 +59,7 @@ public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
     public void testGenCreateTableDDL() {
         String ddl = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, "/tmp", fakeJobUUID);
         System.out.println(ddl);
-        assertEquals(512, ddl.length());
+        assertEquals(515, ddl.length());
     }
 
     @Test
@@ -74,7 +74,7 @@ public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
         String sql = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, fakeJobUUID, new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
         System.out.println(sql);
 
-        assertEquals(1127, sql.length());
+        assertEquals(1168, sql.length());
     }
 
 

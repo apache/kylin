@@ -31,7 +31,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.sql.DataSource;
 
-import com.kylinolap.cube.project.CubeRealizationManager;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.project.ProjectManager;
 import org.apache.commons.lang3.StringUtils;
@@ -124,7 +123,7 @@ public abstract class BasicService {
     @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
     public void cleanDataCache() {
         CubeManager.removeInstance(getConfig());
-        CubeRealizationManager.removeInstance(getConfig());
+        ProjectManager.removeInstance(getConfig());
         BasicService.resetOLAPDataSources();
     }
 
@@ -162,9 +161,6 @@ public abstract class BasicService {
         return ProjectManager.getInstance(getConfig());
     }
 
-    public CubeRealizationManager getCubeRealizationManager() {
-        return CubeRealizationManager.getInstance(getConfig());
-    }
 
     public JobManager getJobManager() throws JobException, UnknownHostException {
         KylinConfig config = KylinConfig.getInstanceFromEnv();

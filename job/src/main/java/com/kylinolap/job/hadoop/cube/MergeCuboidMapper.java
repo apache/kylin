@@ -56,7 +56,7 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
     private CubeDesc cubeDesc;
     private CubeSegment mergedCubeSegment;
     private CubeSegment sourceCubeSegment;// Must be unique during a mapper's
-                                          // life cycle
+    // life cycle
 
     private Text outputKey = new Text();
 
@@ -72,8 +72,11 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
         if (ret != null)
             return ret;
         else {
-            String dictTable = (String) DictionaryManager.getInstance(config).decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null)[0];
-            ret = cubeDesc.getRowkey().isUseDictionary(col) && cubeDesc.getFactTable().equalsIgnoreCase(dictTable);
+            ret = cubeDesc.getRowkey().isUseDictionary(col);
+            if (ret) {
+                String dictTable = (String) DictionaryManager.getInstance(config).decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null)[0];
+                ret = cubeDesc.getFactTable().equalsIgnoreCase(dictTable);
+            }
             dictsNeedMerging.put(col, ret);
             return ret;
         }

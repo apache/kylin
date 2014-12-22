@@ -34,24 +34,29 @@ import com.kylinolap.metadata.model.TblColRef;
  *         TableRecordInfo stores application-aware knowledges,
  *         while TableRecordInfoDigest only stores byte level knowleges
  */
-public class TableRecordInfo extends TableRecordInfoDigest {
+public class TableRecordInfo {
 
     final IISegment seg;
     final IIDesc desc;
     final TableDesc tableDesc;
+    final int nColumns;
 
     final String[] colNames;
+    final FixedLenMeasureCodec<?>[] measureSerializers;
     final Dictionary<?>[] dictionaries;
 
-    public TableRecordInfo(IISegment cubeSeg) throws IOException {
+    final TableRecordInfoDigest digest;
 
-        seg = cubeSeg;
+    public TableRecordInfo(IISegment iiSegment) {
+
+        seg = iiSegment;
         desc = seg.getIIInstance().getDescriptor();
         tableDesc = desc.getFactTableDesc();
 
         nColumns = tableDesc.getColumnCount();
         colNames = new String[nColumns];
         dictionaries = new Dictionary<?>[nColumns];
+
         measureSerializers = new FixedLenMeasureCodec<?>[nColumns];
 
         DictionaryManager dictMgr = DictionaryManager.getInstance(desc.getConfig());
@@ -62,43 +67,56 @@ public class TableRecordInfo extends TableRecordInfoDigest {
                 measureSerializers[i] = FixedLenMeasureCodec.get(col.getType());
             } else {
                 String dictPath = seg.getDictResPath(new TblColRef(col));
-                dictionaries[i] = dictMgr.getDictionary(dictPath);
+                try {
+                    dictionaries[i] = dictMgr.getDictionary(dictPath);
+                } catch (IOException e) {
+                    throw new RuntimeException("dictionary " + dictPath + " does not exist ", e);
+                }
             }
         }
 
+        digest = createDigest();
+    }
+
+    public TableRecordInfoDigest getDigest() {
+        return digest;
+    }
+
+    private TableRecordInfoDigest createDigest() {
         //isMetric
-        isMetric = new boolean[nColumns];
+        boolean[] isMetric = new boolean[nColumns];
         for (int i = 0; i < nColumns; ++i) {
             isMetric[i] = desc.isMetricsCol(i);
         }
 
         //lengths
-        lengths = new int[nColumns];
+        int[] lengths = new int[nColumns];
         for (int i = 0; i < nColumns; ++i) {
-            lengths[i] = isMetrics(i) ? measureSerializers[i].getLength() : dictionaries[i].getSizeOfId();
+            lengths[i] = isMetric[i] ? measureSerializers[i].getLength() : dictionaries[i].getSizeOfId();
         }
 
         //dict max id
-        dictMaxIds = new int[nColumns];
+        int[] dictMaxIds = new int[nColumns];
         for (int i = 0; i < nColumns; ++i) {
-            if (!isMetrics(i))
+            if (!isMetric[i])
                 dictMaxIds[i] = dictionaries[i].getMaxId();
         }
 
         //offsets
         int pos = 0;
-        offsets = new int[nColumns];
+        int[] offsets = new int[nColumns];
         for (int i = 0; i < nColumns; i++) {
             offsets[i] = pos;
-            pos += length(i);
+            pos += lengths[i];
         }
 
-        byteFormLen = pos;
+        int byteFormLen = pos;
+
+        return new TableRecordInfoDigest(nColumns, byteFormLen, offsets, dictMaxIds, lengths, isMetric, measureSerializers);
     }
 
-    @Override
-    public TableRecordBytes createTableRecord() {
-        return new TableRecord(this);
+    public TableRecord createTableRecord() {
+        return new TableRecord(digest.createTableRecordBytes(), this);
     }
 
     public IIDesc getDescriptor() {
@@ -109,11 +127,21 @@ public class TableRecordInfo extends TableRecordInfoDigest {
         return tableDesc.getColumns();
     }
 
+    public int findColumn(TblColRef col) {
+        ColumnDesc[] columns = getColumns();
+        for (int i = 0; i < columns.length; ++i) {
+            if (col.getColumn().equals(columns[i])) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     public int findMetric(String name) {
         if (name == null)
             return -1;
         for (int i = 0; i < colNames.length; ++i) {
-            if (isMetrics(i) && name.equals(colNames[i])) {
+            if (measureSerializers[i] != null && name.equals(colNames[i])) {
                 return i;
             }
         }

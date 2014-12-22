@@ -47,7 +47,6 @@ import com.kylinolap.rest.service.CubeService;
 
 /**
  * @author xduo
- * 
  */
 @Controller
 @RequestMapping(value = "/tables")
@@ -59,18 +58,18 @@ public class TableController extends BasicController {
 
     /**
      * Get available table list of the input database
-     * 
+     *
      * @return Table metadata array
      * @throws IOException
      */
     @RequestMapping(value = "", method = { RequestMethod.GET })
     @ResponseBody
     @Metered(name = "listSourceTables")
-    public List<TableDesc> getHiveTables(@RequestParam(value = "ext", required = false) boolean withExt,@RequestParam(value = "project", required = false) String project ) {
+    public List<TableDesc> getHiveTables(@RequestParam(value = "ext", required = false) boolean withExt, @RequestParam(value = "project", required = false) String project) {
         long start = System.currentTimeMillis();
         List<TableDesc> tables = null;
         try {
-            tables = cubeMgmtService.getCubeRealizationManager().listDefinedTablesInProject(project);
+            tables = cubeMgmtService.getProjectManager().listDefinedTablesInProject(project);
         } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);
             throw new InternalErrorException(e.getLocalizedMessage());
@@ -87,7 +86,7 @@ public class TableController extends BasicController {
 
     /**
      * Get available table list of the input database
-     * 
+     *
      * @return Table metadata array
      * @throws IOException
      */
@@ -99,7 +98,7 @@ public class TableController extends BasicController {
 
     /**
      * Get available table list of the input database
-     * 
+     *
      * @return Table metadata array
      * @throws IOException
      */
@@ -119,7 +118,7 @@ public class TableController extends BasicController {
 
     @RequestMapping(value = "/{tables}/{project}", method = { RequestMethod.POST })
     @ResponseBody
-    public Map<String, String[]> loadHiveTable(@PathVariable String tables,@PathVariable String project) throws IOException {
+    public Map<String, String[]> loadHiveTable(@PathVariable String tables, @PathVariable String project) throws IOException {
         String[] arr = cubeMgmtService.reloadHiveTable(tables);
         cubeMgmtService.syncTableToProject(tables, project);
         Map<String, String[]> result = new HashMap<String, String[]>();
@@ -129,7 +128,7 @@ public class TableController extends BasicController {
 
     /**
      * Regenerate table cardinality
-     * 
+     *
      * @return Table metadata array
      * @throws IOException
      */

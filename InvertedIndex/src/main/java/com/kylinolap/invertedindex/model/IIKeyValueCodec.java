@@ -39,8 +39,8 @@ public class IIKeyValueCodec {
 
     private TableRecordInfoDigest infoDigest;
 
-    public IIKeyValueCodec(TableRecordInfoDigest info) {
-        this.infoDigest = info;
+    public IIKeyValueCodec(TableRecordInfoDigest digest) {
+        this.infoDigest = digest;
     }
 
     public Collection<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> encodeKeyValue(Slice slice) {

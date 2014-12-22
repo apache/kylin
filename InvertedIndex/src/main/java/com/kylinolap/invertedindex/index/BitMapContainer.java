@@ -42,10 +42,10 @@ public class BitMapContainer implements ColumnValueContainer {
 
     transient byte[] temp;
 
-    public BitMapContainer(TableRecordInfoDigest info, int col) {
-        this.valueLen = info.length(col);
+    public BitMapContainer(TableRecordInfoDigest digest, int col) {
+        this.valueLen = digest.length(col);
         this.size = 0;
-        this.nValues = info.getMaxID(col) + 1;
+        this.nValues = digest.getMaxID(col) + 1;
         this.sets = null;
         this.closedForChange = false;
 

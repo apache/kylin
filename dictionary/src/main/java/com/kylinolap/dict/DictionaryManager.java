@@ -176,6 +176,7 @@ public class DictionaryManager {
      * 3. column cardinal in source table
      * 4. ReadableTable object
      */
+
     public Object[] decideSourceData(DataModelDesc model, String dict, TblColRef col, String factColumnsPath) throws IOException {
         String srcTable;
         String srcCol;

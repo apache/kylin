@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.kylinolap.cube.project;
+package com.kylinolap.metadata.project;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
-import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.metadata.model.TableDesc;
+import com.kylinolap.metadata.realization.IRealization;
 
 /**
  * @author xduo
- * 
  */
 public class ProjectTable {
 
@@ -30,15 +30,16 @@ public class ProjectTable {
 
     private Multiset<String> columns = HashMultiset.create();
 
-    private Multiset<CubeInstance> cubes = HashMultiset.create();
+    private Multiset<IRealization> realizations = HashMultiset.create();
 
     /**
      * @param name
      */
     public ProjectTable(String name) {
         super();
-        this.name = name.toUpperCase();
+        this.name = name;
     }
+
 
     public String getName() {
         return name;
@@ -52,12 +53,12 @@ public class ProjectTable {
         this.columns = columns;
     }
 
-    public Multiset<CubeInstance> getCubes() {
-        return cubes;
+    public Multiset<IRealization> getRealizations() {
+        return realizations;
     }
 
-    public void setCubes(Multiset<CubeInstance> cubes) {
-        this.cubes = cubes;
+    public void setRealizations(Multiset<IRealization> realizations) {
+        this.realizations = realizations;
     }
 
     @Override
