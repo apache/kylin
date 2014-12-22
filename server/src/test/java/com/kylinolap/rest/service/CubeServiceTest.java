@@ -20,6 +20,7 @@ import java.net.UnknownHostException;
 import java.util.List;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -31,7 +32,9 @@ import com.kylinolap.job.exception.JobException;
 /**
  * @author xduo
  * 
+ * @deprecated method has been merged into #ServiceTestAllInOne
  */
+@Ignore
 public class CubeServiceTest extends ServiceTestBase {
 
     @Autowired

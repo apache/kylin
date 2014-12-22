@@ -26,6 +26,9 @@ public interface BatchConstants {
     public static final String CFG_CUBE_NAME = "cube.name";
     public static final String CFG_CUBE_SEGMENT_NAME = "cube.segment.name";
 
+    public static final String CFG_II_NAME = "ii.name";
+    public static final String CFG_II_SEGMENT_NAME = "ii.segment.name";
+
     public static final String INPUT_DELIM = "input.delim";
 
     public static final String OUTPUT_PATH = "output.path";

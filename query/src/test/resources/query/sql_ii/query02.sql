@@ -1,0 +1,1 @@
+select sum(price) as price_sum, min(price) as price_min, max(price) as price_max from test_kylin_fact

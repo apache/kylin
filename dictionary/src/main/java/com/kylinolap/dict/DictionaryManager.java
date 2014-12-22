@@ -39,7 +39,7 @@ import com.kylinolap.dict.lookup.ReadableTable;
 import com.kylinolap.dict.lookup.TableSignature;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.DataModelDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 
 public class DictionaryManager {
 
@@ -176,6 +176,7 @@ public class DictionaryManager {
      * 3. column cardinal in source table
      * 4. ReadableTable object
      */
+
     public Object[] decideSourceData(DataModelDesc model, String dict, TblColRef col, String factColumnsPath) throws IOException {
         String srcTable;
         String srcCol;

@@ -21,7 +21,8 @@ import org.junit.runners.Suite;
 
 /**
  * @author xduo
- * 
+ * @deprecated method has been merged into #ServiceTestAllInOne
+ * @Ignore
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({ AccessControllerTest.class, AdminControllerTest.class, BaseControllerTest.class, CubeControllerTest.class, JobControllerTest.class, QueryControllerTest.class, UserControllerTest.class })

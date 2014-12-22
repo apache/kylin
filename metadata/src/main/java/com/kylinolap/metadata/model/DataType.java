@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.kylinolap.metadata.model.realization.TblColRef.InnerDataTypeEnum;
+import com.kylinolap.metadata.model.TblColRef.InnerDataTypeEnum;
 
 /**
  * @author yangli9
@@ -151,8 +151,8 @@ public class DataType {
 
         // FIXME (19,4) for unknown decimal precision
         if ((name.equals("decimal") || name.equals("numeric")) && precision == -1) {
-            precision = 19;
-            scale = 4;
+            precision = 39;
+            scale = 16;
         }
 
         if (isHLLC() && HLLC_PRECISIONS.contains(precision) == false)

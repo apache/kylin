@@ -53,6 +53,7 @@ public class MergeCuboidJobTest extends LocalFileMetadataTestCase {
         cleanupTestMetadata();
     }
 
+
     @Test
     public void test() throws Exception {
         // String input =

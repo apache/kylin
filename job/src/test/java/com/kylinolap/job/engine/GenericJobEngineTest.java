@@ -23,22 +23,21 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.kylinolap.cube.project.CubeRealizationManager;
+import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.dict.DictionaryManager;
+import com.kylinolap.metadata.project.ProjectManager;
+import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.apache.commons.io.FileUtils;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.common.util.SSHClient;
-import com.kylinolap.cube.CubeBuildTypeEnum;
+import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.CubeSegmentStatusEnum;
 import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.job.JobDAO;
 import com.kylinolap.job.JobInstance;
@@ -54,6 +53,7 @@ import com.kylinolap.metadata.MetadataManager;
 /**
  * @author ysong1
  */
+@Ignore //TODO: use minicluster to do this.
 public class GenericJobEngineTest {
     private static String cubeName = "test_kylin_cube_with_slr_empty";
 
@@ -66,6 +66,7 @@ public class GenericJobEngineTest {
     private static String mrOutputDir1 = "/tmp/mapredsmokeoutput1";
     private static String mrOutputDir2 = "/tmp/mapredsmokeoutput2";
     private static String mrCmd = "hadoop --config /etc/hadoop/conf jar /usr/lib/hadoop-mapreduce/hadoop-mapreduce-examples-2.*.jar wordcount " + mrInputDir + " ";
+
 
     public static void removeHdfsDir(SSHClient hadoopCli, String hdfsDir) throws Exception {
         String cmd = "hadoop fs -rm -f -r " + hdfsDir;
@@ -110,11 +111,11 @@ public class GenericJobEngineTest {
     @BeforeClass
     public static void beforeClass() throws Exception {
 
-        FileUtils.forceMkdir(new File(KylinConfig.getInstanceFromEnv().getKylinJobLogDir()));
-
         FileUtils.deleteDirectory(new File(tempTestMetadataUrl));
         FileUtils.copyDirectory(new File(AbstractKylinTestCase.LOCALMETA_TEST_DATA), new File(tempTestMetadataUrl));
         System.setProperty(KylinConfig.KYLIN_CONF, tempTestMetadataUrl);
+
+        FileUtils.forceMkdir(new File(KylinConfig.getInstanceFromEnv().getKylinJobLogDir()));
 
         // deploy files to hdfs
         SSHClient hadoopCli = new SSHClient(getHadoopCliHostname(), getHadoopCliUsername(), getHadoopCliPassword());
@@ -162,7 +163,7 @@ public class GenericJobEngineTest {
 
         MetadataManager.removeInstance(KylinConfig.getInstanceFromEnv());
         CubeManager.removeInstance(KylinConfig.getInstanceFromEnv());
-        CubeRealizationManager.removeInstance(KylinConfig.getInstanceFromEnv());
+        ProjectManager.removeInstance(KylinConfig.getInstanceFromEnv());
     }
 
     @Test(expected = InvalidJobInstanceException.class)
@@ -212,7 +213,7 @@ public class GenericJobEngineTest {
         CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
         String cubeString = JsonUtil.writeValueAsIndentString(cube);
         System.out.println(cubeString);
-        assertEquals(CubeSegmentStatusEnum.NEW, cube.getSegments().get(0).getStatus());
+        assertEquals(SegmentStatusEnum.NEW, cube.getSegments().get(0).getStatus());
     }
 
     @Test
@@ -321,7 +322,7 @@ public class GenericJobEngineTest {
         CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
         cube.getSegments().clear();
         CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).updateCube(cube);
-        CubeSegment seg = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).allocateSegments(cube, CubeBuildTypeEnum.BUILD, 0, 12345L).get(0);
+        CubeSegment seg = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).allocateSegments(cube, RealizationBuildTypeEnum.BUILD, 0, 12345L).get(0);
 
         JobInstance jobInstance = new JobInstance();
         jobInstance.setUuid(uuid);
@@ -329,7 +330,7 @@ public class GenericJobEngineTest {
         jobInstance.setRelatedSegment(seg.getName());
         jobInstance.setName("A_Good_Job");
         // jobInstance.setStatus(JobStatusEnum.PENDING);
-        jobInstance.setType(CubeBuildTypeEnum.BUILD);
+        jobInstance.setType(RealizationBuildTypeEnum.BUILD);
         // jobInstance.putInputParameter(JobConstants.PROP_STORAGE_LOCATION,
         // "htablename");
 
@@ -369,7 +370,7 @@ public class GenericJobEngineTest {
         CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
         cube.getSegments().clear();
         CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).updateCube(cube);
-        CubeSegment seg = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).allocateSegments(cube, CubeBuildTypeEnum.BUILD, 0, 12345L).get(0);
+        CubeSegment seg = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).allocateSegments(cube, RealizationBuildTypeEnum.BUILD, 0, 12345L).get(0);
 
         JobInstance jobInstance = new JobInstance();
         jobInstance.setUuid(uuid);
@@ -377,7 +378,7 @@ public class GenericJobEngineTest {
         jobInstance.setRelatedSegment(seg.getName());
         jobInstance.setName("A_Bad_Job");
         // jobInstance.setStatus(JobStatusEnum.PENDING);
-        jobInstance.setType(CubeBuildTypeEnum.BUILD);
+        jobInstance.setType(RealizationBuildTypeEnum.BUILD);
         // jobInstance.putInputParameter(JobConstants.PROP_STORAGE_LOCATION,
         // "htablename");
 
@@ -397,7 +398,7 @@ public class GenericJobEngineTest {
         CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
         cube.getSegments().clear();
         CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).updateCube(cube);
-        CubeSegment seg = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).allocateSegments(cube, CubeBuildTypeEnum.BUILD, 0, 12345L).get(0);
+        CubeSegment seg = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).allocateSegments(cube, RealizationBuildTypeEnum.BUILD, 0, 12345L).get(0);
 
         JobInstance jobInstance = new JobInstance();
         jobInstance.setUuid(uuid);
@@ -405,7 +406,7 @@ public class GenericJobEngineTest {
         jobInstance.setRelatedSegment(seg.getName());
         jobInstance.setName("A_Running_Job");
         // jobInstance.setStatus(JobStatusEnum.RUNNING);
-        jobInstance.setType(CubeBuildTypeEnum.BUILD);
+        jobInstance.setType(RealizationBuildTypeEnum.BUILD);
         // jobInstance.putInputParameter(JobConstants.PROP_STORAGE_LOCATION,
         // "htablename");
 

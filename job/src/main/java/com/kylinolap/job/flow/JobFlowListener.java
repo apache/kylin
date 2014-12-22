@@ -24,8 +24,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.kylinolap.cube.CubeSegmentStatusEnum;
 
+import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -282,7 +282,7 @@ public class JobFlowListener implements JobListener {
                 }
 
                 if (cubeInstance.needMergeImmediatelyAfterBuild(newSegment)) {
-                    for (CubeSegment seg : cubeInstance.getSegment(CubeSegmentStatusEnum.READY)) {
+                    for (CubeSegment seg : cubeInstance.getSegment(SegmentStatusEnum.READY)) {
                         sourceCount += seg.getSourceRecords();
                         sourceSize += seg.getSourceRecordsSize();
                     }

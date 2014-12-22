@@ -43,7 +43,7 @@ import org.eigenbase.reltype.RelDataTypeField;
 
 import com.google.common.base.Preconditions;
 import com.kylinolap.metadata.model.ColumnDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.query.optrule.OLAPAggregateRule;
 import com.kylinolap.query.optrule.OLAPFilterRule;
 import com.kylinolap.query.optrule.OLAPJoinRule;

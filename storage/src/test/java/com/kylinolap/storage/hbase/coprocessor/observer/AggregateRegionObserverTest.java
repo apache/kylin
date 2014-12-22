@@ -28,9 +28,10 @@ import java.util.List;
 
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorRowType;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.HRegionInfo;
@@ -104,7 +105,7 @@ public class AggregateRegionObserverTest {
     @Test
     public void test() throws IOException {
 
-        ObserverRowType rowType = newRowType();
+        CoprocessorRowType rowType = newRowType();
         CoprocessorProjector projector = new CoprocessorProjector(mask);
         ObserverAggregators aggregators = new ObserverAggregators(new HCol[] { c1, c2 });
         CoprocessorFilter filter = CoprocessorFilter.deserialize(null); // a default,
@@ -155,7 +156,7 @@ public class AggregateRegionObserverTest {
     @Test
     public void testNoMeasure() throws IOException {
 
-        ObserverRowType rowType = newRowType();
+        CoprocessorRowType rowType = newRowType();
         CoprocessorProjector projector = new CoprocessorProjector(mask);
         ObserverAggregators aggregators = new ObserverAggregators(new HCol[] {});
         CoprocessorFilter filter = CoprocessorFilter.deserialize(null); // a default,
@@ -195,12 +196,12 @@ public class AggregateRegionObserverTest {
         return result.toString();
     }
 
-    private ObserverRowType newRowType() {
+    private CoprocessorRowType newRowType() {
         TableDesc t = new TableDesc();
         t.setName("TABLE");
         TblColRef[] cols = new TblColRef[] { newCol("A", t), newCol("B", t), newCol("C", t), newCol("D", t) };
         int[] sizes = new int[] { 1, 1, 1, 1 };
-        return new ObserverRowType(cols, sizes);
+        return new CoprocessorRowType(cols, sizes);
     }
 
     private TblColRef newCol(String name, TableDesc t) {

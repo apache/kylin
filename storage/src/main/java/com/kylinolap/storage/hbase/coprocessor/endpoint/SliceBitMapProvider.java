@@ -1,9 +1,9 @@
 package com.kylinolap.storage.hbase.coprocessor.endpoint;
 
-import com.kylinolap.cube.invertedindex.Slice;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.invertedindex.index.Slice;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.filter.BitMapFilterEvaluator;
-import com.kylinolap.storage.hbase.coprocessor.observer.ObserverRowType;
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorRowType;
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 /**
@@ -14,9 +14,9 @@ import it.uniroma3.mat.extendedset.intset.ConciseSet;
 public class SliceBitMapProvider implements BitMapFilterEvaluator.BitMapProvider {
 
     private Slice slice;
-    private ObserverRowType type;
+    private CoprocessorRowType type;
 
-    public SliceBitMapProvider(Slice slice, ObserverRowType type) {
+    public SliceBitMapProvider(Slice slice, CoprocessorRowType type) {
         this.slice = slice;
         this.type = type;
     }

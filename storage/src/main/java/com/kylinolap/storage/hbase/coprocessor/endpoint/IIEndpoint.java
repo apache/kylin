@@ -4,13 +4,20 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
-import com.kylinolap.cube.invertedindex.*;
+import com.kylinolap.invertedindex.index.Slice;
+import com.kylinolap.invertedindex.index.RawTableRecord;
+import com.kylinolap.invertedindex.index.TableRecordInfoDigest;
+import com.kylinolap.invertedindex.model.IIKeyValueCodec;
+import com.kylinolap.metadata.measure.MeasureAggregator;
 import com.kylinolap.storage.filter.BitMapFilterEvaluator;
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorConstants;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
 import com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos;
+
+import static com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow;
+
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
-import com.kylinolap.storage.hbase.coprocessor.observer.ObserverAggregators;
-import com.kylinolap.storage.hbase.coprocessor.observer.ObserverRowType;
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorRowType;
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 import org.apache.commons.io.IOUtils;
@@ -26,8 +33,8 @@ import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Created by honma on 11/7/14.
@@ -47,57 +54,40 @@ public class IIEndpoint extends IIProtos.RowsService
         return scan;
     }
 
+    //TODO: protobuf does not provide built-in compression
     @Override
     public void getRows(RpcController controller, IIProtos.IIRequest request, RpcCallback<IIProtos.IIResponse> done) {
 
-        ObserverRowType type = null;
+        CoprocessorRowType type = null;
         CoprocessorProjector projector = null;
-        ObserverAggregators aggregators = null;
+        EndpointAggregators aggregators = null;
         CoprocessorFilter filter = null;
 
-        if (request.hasSRowType()) {
-            type = ObserverRowType.deserialize(request.getSRowType().toByteArray());
-        }
-        if (request.hasSRowProjector()) {
-            projector = CoprocessorProjector.deserialize(request.getSRowProjector().toByteArray());
-        }
-        if (request.hasSRowAggregator()) {
-            aggregators = ObserverAggregators.deserialize(request.getSRowAggregator().toByteArray());
-        }
-        if (request.hasSRowFilter()) {
-            filter = CoprocessorFilter.deserialize(request.getSRowFilter().toByteArray());
-        }
+        type = CoprocessorRowType.deserialize(request.getType().toByteArray());
+        projector = CoprocessorProjector.deserialize(request.getProjector().toByteArray());
+        aggregators = EndpointAggregators.deserialize(request.getAggregator().toByteArray());
+        filter = CoprocessorFilter.deserialize(request.getFilter().toByteArray());
 
+        TableRecordInfoDigest tableRecordInfoDigest = aggregators.getTableRecordInfo();
 
         IIProtos.IIResponse response = null;
         RegionScanner innerScanner = null;
         HRegion region = null;
         try {
-            ByteBuffer byteBuffer = request.getTableInfo().asReadOnlyByteBuffer();
-            TableRecordInfoDigest tableInfo = TableRecordInfoDigest.deserialize(byteBuffer);
-
             region = env.getRegion();
             innerScanner = region.getScanner(buildScan());
             region.startRegionOperation();
 
-
             synchronized (innerScanner) {
-                IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
+                IIKeyValueCodec codec = new IIKeyValueCodec(tableRecordInfoDigest);
+                //TODO pass projector to codec to skip loading columns
+                Iterable<Slice> slices = codec.decodeKeyValue(new HbaseServerKVIterator(innerScanner));
 
-                IIKeyValueCodec codec = new IIKeyValueCodec(tableInfo);
-                for (Slice slice : codec.decodeKeyValue(new HbaseServerKVIterator(innerScanner))) {
-                    ConciseSet result = null;
-                    if (filter != null) {
-                        result = new BitMapFilterEvaluator(new SliceBitMapProvider(slice, type)).evaluate(filter.getFilter());
-                    }
-
-                    Iterator<TableRecordBytes> iterator = slice.iterateWithBitmap(result);
-                    while (iterator.hasNext()) {
-                        responseBuilder.addRows(ByteString.copyFrom(iterator.next().getBytes()));
-                    }
+                if (aggregators.isEmpty()) {
+                    response = getNonAggregatedResponse(slices, filter, type);
+                } else {
+                    response = getAggregatedResponse(slices, filter, type, projector, aggregators);
                 }
-
-                response = responseBuilder.build();
             }
 
         } catch (IOException ioe) {
@@ -115,6 +105,60 @@ public class IIEndpoint extends IIProtos.RowsService
         }
 
         done.run(response);
+    }
+
+    //TODO check memory usage
+    private IIProtos.IIResponse getAggregatedResponse(Iterable<Slice> slices, CoprocessorFilter filter, CoprocessorRowType type,
+            CoprocessorProjector projector, EndpointAggregators aggregators) {
+        EndpointAggregationCache aggCache = new EndpointAggregationCache(aggregators);
+        IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
+        for (Slice slice : slices) {
+            ConciseSet result = null;
+            if (filter != null) {
+                result = new BitMapFilterEvaluator(new SliceBitMapProvider(slice, type)).evaluate(filter.getFilter());
+            }
+
+            Iterator<RawTableRecord> iterator = slice.iterateWithBitmap(result);
+            while (iterator.hasNext()) {
+                byte[] data = iterator.next().getBytes();
+                CoprocessorProjector.AggrKey aggKey = projector.getAggrKey(data);
+                MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
+                aggregators.aggregate(bufs, data);
+                aggCache.checkMemoryUsage();
+            }
+        }
+
+        byte[] metricBuffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
+        for (Map.Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
+            CoprocessorProjector.AggrKey aggrKey = entry.getKey();
+            IIRow.Builder rowBuilder = IIRow.newBuilder().
+                    setColumns(ByteString.copyFrom(aggrKey.get(), aggrKey.offset(), aggrKey.length()));
+            int length = aggregators.serializeMetricValues(entry.getValue(), metricBuffer);
+            rowBuilder.setMeasures(ByteString.copyFrom(metricBuffer, 0, length));
+            responseBuilder.addRows(rowBuilder.build());
+        }
+
+        return responseBuilder.build();
+    }
+
+    private IIProtos.IIResponse getNonAggregatedResponse(Iterable<Slice> slices, CoprocessorFilter filter, CoprocessorRowType type) {
+        IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
+        for (Slice slice : slices) {
+            ConciseSet result = null;
+            if (filter != null) {
+                result = new BitMapFilterEvaluator(new SliceBitMapProvider(slice, type)).evaluate(filter.getFilter());
+            }
+
+            Iterator<RawTableRecord> iterator = slice.iterateWithBitmap(result);
+            while (iterator.hasNext()) {
+                byte[] data = iterator.next().getBytes();
+                IIRow.Builder rowBuilder = IIRow.newBuilder().
+                        setColumns(ByteString.copyFrom(data));
+                responseBuilder.addRows(rowBuilder.build());
+            }
+        }
+
+        return responseBuilder.build();
     }
 
     @Override
