@@ -8,7 +8,9 @@ import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.exception.LockException;
 import com.kylinolap.job2.exception.SchedulerException;
 import com.kylinolap.job2.execution.Executable;
+import com.kylinolap.job2.execution.ExecutableStatus;
 import com.kylinolap.job2.service.DefaultJobService;
+import org.apache.commons.math3.analysis.function.Abs;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -22,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -46,39 +49,33 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
     private DefaultScheduler() {}
 
-    @Override
-    public void stateChanged(CuratorFramework client, ConnectionState newState) {
-        //TODO
-    }
-
     private class FetcherRunner implements Runnable {
 
         @Override
         public void run() {
-            List<AbstractExecutable> allExecutables = jobService.getAllExecutables();
-            for (final AbstractExecutable executable : allExecutables) {
-                if (executable.isRunnable() && !context.getRunningJobs().containsKey(executable.getId())) {
-                    boolean hasLock = false;
+            for (final AbstractExecutable executable : jobService.getAllExecutables()) {
+                boolean hasLock = false;
+                try {
+                    hasLock = acquireJobLock(executable, 1);
+                } catch (LockException e) {
+                    logger.error("error acquire job lock, id:" + executable.getId(), e);
+                }
+                logger.info("acquire job lock:" + executable.getId() + " status:" + (hasLock ? "succeed" : "failed"));
+                if (hasLock) {
                     try {
-                        hasLock = acquireJobLock(executable.getId(), 1);
-                        logger.info("acquire job lock:" + executable.getId() + " status:" + (hasLock ? "succeed" : "failed"));
-                        if (hasLock) {
-                            logger.info("start to run job id:" + executable.getId());
-                            jobPool.execute(new JobRunner(executable));
-                        }
-                    } catch (LockException e) {
-                        logger.error("error acquire job lock, id:" + executable.getId(), e);
+                        logger.info("start to run job id:" + executable.getId());
+                        context.addRunningJob(executable);
+                        jobPool.execute(new JobRunner(executable));
                     } finally {
                         try {
-                            if (hasLock) {
-                                logger.info("finish running job id:" + executable.getId());
-                                releaseJobLock(executable.getId());
-                            }
+                            logger.info("finish running job id:" + executable.getId());
+                            releaseJobLock(executable.getId());
                         } catch (LockException ex) {
                             logger.error("error release job lock, id:" + executable.getId(), ex);
                         }
                     }
                 }
+                resetStatus(executable);
             }
         }
     }
@@ -94,7 +91,6 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         @Override
         public void run() {
             try {
-                context.addRunningJob(executable);
                 executable.execute(context);
             } catch (ExecuteException e) {
                 logger.error("ExecuteException job:" + executable.getId(), e);
@@ -106,20 +102,63 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         }
     }
 
-    private boolean acquireJobLock(String jobId, long timeoutSeconds) throws LockException {
-        return !context.getRunningJobs().containsKey(jobId);
+    private void resetStatus(Executable executable) {
+        if (!context.getRunningJobs().containsKey(executable.getId()) && executable.getStatus() == ExecutableStatus.RUNNING) {
+            logger.warn("job:" + executable.getId() + " status should not be:" + ExecutableStatus.RUNNING + ", reset it to ERROR");
+            jobService.updateJobStatus(executable.getId(), ExecutableStatus.ERROR, "job fetcher has detected the status in inconsistent status, and reset it to ERROR");
+        }
+    }
+
+    private boolean acquireJobLock(Executable executable, long timeoutSeconds) throws LockException {
+        Map<String, Executable> runningJobs = context.getRunningJobs();
+        if (runningJobs.size() >= jobEngineConfig.getMaxConcurrentJobLimit()) {
+            return false;
+        }
+        if (runningJobs.containsKey(executable.getId())) {
+            return false;
+        }
+        if (!executable.isRunnable()) {
+            return false;
+        }
+        return true;
     }
 
     private void releaseJobLock(String jobId) throws LockException {
 
     }
 
-    private String schedulerId() throws UnknownHostException {
-        return ZOOKEEPER_LOCK_PATH + "/" + InetAddress.getLocalHost().getCanonicalHostName();
+    private void releaseLock() {
+        try {
+            if (zkClient.getState().equals(CuratorFrameworkState.STARTED)) {
+                // client.setData().forPath(ZOOKEEPER_LOCK_PATH, null);
+                if (zkClient.checkExists().forPath(schedulerId()) != null) {
+                    zkClient.delete().guaranteed().deletingChildrenIfNeeded().forPath(schedulerId());
+                }
+            }
+        } catch (Exception e) {
+            logger.error("error release lock:" + schedulerId());
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String schedulerId() {
+        try {
+            String canonicalHostName = InetAddress.getLocalHost().getCanonicalHostName();
+            return ZOOKEEPER_LOCK_PATH + "/" + canonicalHostName;
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static DefaultScheduler getInstance() {
         return INSTANCE;
+    }
+
+    @Override
+    public void stateChanged(CuratorFramework client, ConnectionState newState) {
+        if ((newState == ConnectionState.SUSPENDED) || (newState == ConnectionState.LOST)) {
+            releaseLock();
+        }
     }
 
     @Override
@@ -140,6 +179,12 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
         this.zkClient = CuratorFrameworkFactory.newClient(jobEngineConfig.getZookeeperString(), retryPolicy);
         this.zkClient.start();
+
+        for (AbstractExecutable executable : jobService.getAllExecutables()) {
+            if (executable.getStatus() == ExecutableStatus.RUNNING) {
+                jobService.updateJobStatus(executable.getId(), ExecutableStatus.READY, null);
+            }
+        }
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
