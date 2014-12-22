@@ -18,11 +18,6 @@ public abstract class BaseTestExecutable extends AbstractExecutable {
     private static DefaultJobService jobService = DefaultJobService.getInstance(KylinConfig.getInstanceFromEnv());
 
 
-    public BaseTestExecutable() {
-        this.setId(UUID.randomUUID().toString());
-        this.setStatus(ExecutableStatus.READY);
-    }
-
     @Override
     protected void onExecuteStart(ExecutableContext executableContext) {
         this.setStatus(ExecutableStatus.RUNNING);
