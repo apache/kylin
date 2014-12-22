@@ -32,7 +32,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.kylinolap.common.util.HBaseMiniclusterMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.project.CubeRealizationManager;
 import com.kylinolap.metadata.MetadataManager;
 
 /**
