@@ -20,9 +20,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hive.hcatalog.data.HCatRecord;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeInstance;
@@ -41,7 +43,7 @@ import com.kylinolap.metadata.model.cube.TblColRef;
 /**
  * @author yangli9
  */
-public class FactDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, Text, ShortWritable, Text> {
+public class FactDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, HCatRecord, ShortWritable, Text> {
 
     private String cubeName;
     private CubeInstance cube;
@@ -93,18 +95,20 @@ public class FactDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, Text, ShortW
     }
 
     @Override
-    public void map(KEYIN key, Text value, Context context) throws IOException, InterruptedException {
+    public void map(KEYIN key, HCatRecord record, Context context) throws IOException, InterruptedException {
 
         try {
-            bytesSplitter.split(value.getBytes(), value.getLength(), byteRowDelimiter);
-            intermediateTableDesc.sanityCheck(bytesSplitter);
-            SplittedBytes[] splitBuffers = bytesSplitter.getSplitBuffers();
+//            bytesSplitter.split(value.getBytes(), value.getLength(), byteRowDelimiter);
+//            intermediateTableDesc.sanityCheck(bytesSplitter);
+//            SplittedBytes[] splitBuffers = bytesSplitter.getSplitBuffers();
 
             int[] flatTableIndexes = intermediateTableDesc.getRowKeyColumnIndexes();
             for (int i : factDictCols) {
                 outputKey.set((short) i);
-                SplittedBytes bytes = splitBuffers[flatTableIndexes[i]];
-                outputValue.set(bytes.value, 0, bytes.length);
+//                SplittedBytes bytes = splitBuffers[flatTableIndexes[i]];
+                String textValue = record.get(flatTableIndexes[i]+1).toString();
+                byte[] bytes = Bytes.toBytes(textValue);
+                outputValue.set(bytes, 0, bytes.length);
                 context.write(outputKey, outputValue);
             }
         } catch (Exception ex) {

@@ -169,7 +169,11 @@
             <artifactId>hadoop-hdfs</artifactId>
             <scope>provided</scope>
         </dependency>
-
+		<dependency>
+		    <groupId>org.apache.hive.hcatalog</groupId>
+		    <artifactId>hive-hcatalog-core</artifactId>
+		    <version>0.14.0</version>
+		</dependency>
     </dependencies>
 
     <build>
