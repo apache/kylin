@@ -134,25 +134,13 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
         });
         $scope.project.projects.sort();
 
-        $log.info("get all project");
-//        if($scope.userService.hasRole('ROLE_ADMIN')){
-            $log.info("admin access");
-            if( $scope.project.projects.lastIndexOf('-- Select All --')==-1){
-                $log.info("allow select all");
-                $scope.project.projects.unshift("-- Select All --");
-            }
-//        }else{
-//            $log.info("not admin");
-//        }
-
-
         var absUrl = $location.absUrl();
 
         var projectInCookie = $cookieStore.get("project");
         if(absUrl.indexOf("/login")==-1){
-            $scope.project.selectedProject=$scope.project.selectedProject!=null?$scope.project.selectedProject:projectInCookie!=null?projectInCookie:$scope.project.projects[0]
-        }else{
             $scope.project.selectedProject=projectInCookie!=null?projectInCookie:null;
+        }else{
+            $scope.project.selectedProject=$scope.project.selectedProject!=null?$scope.project.selectedProject:projectInCookie!=null?projectInCookie:$scope.project.projects[0];
         }
     });
 
@@ -173,8 +161,8 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
 
 
     $scope.$watch('project.selectedProject', function (newValue, oldValue) {
-        if(newValue){
-            $log.log("project updated in page controller");
+        if(newValue!=oldValue){
+            $log.log("project updated in page controller,from:"+oldValue+" To:"+newValue);
             $cookieStore.put("project",$scope.project.selectedProject);
         }
 

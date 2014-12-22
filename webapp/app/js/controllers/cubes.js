@@ -27,9 +27,9 @@ KylinApp
             dimensionFilter: '', measureFilter: ''};
 
         $scope.list = function (offset, limit) {
-            if(!$scope.project.selectedProject){
-                return;
-            }
+//            if(!$scope.project.selectedProject){
+//                return;
+//            }
             offset = (!!offset) ? offset : 0;
             limit = (!!limit) ? limit : 20;
             var defer = $q.defer();
@@ -38,11 +38,11 @@ KylinApp
             if ($scope.listParams.cubeName) {
                 queryParam.cubeName = $scope.listParams.cubeName;
             }
-            if ($scope.project.selectedProject){
-                queryParam.projectName = $scope.project.selectedProject;
-            }else{
-                queryParam.projectName = $scope.project.projects[0];
-            }
+//            if ($scope.project.selectedProject){
+               queryParam.projectName = $scope.project.selectedProject;
+//            }else{
+//                queryParam.projectName = $scope.project.projects[0];
+//            }
 
             $scope.loading = true;
             CubeService.list(queryParam, function (cubes) {
@@ -76,10 +76,8 @@ KylinApp
 
         $scope.$watch('project.selectedProject', function (newValue, oldValue) {
             //exclude when refresh page oldValue=null,first time set value for project (will have page auto reload ,incase duplicate) oldvalue is null
-           if(newValue){
                 $scope.cubes=[];
                 $scope.reload();
-           }
 
         });
         $scope.reload = function () {

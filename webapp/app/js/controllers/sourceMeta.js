@@ -97,13 +97,9 @@ KylinApp
         };
 
         $scope.$watch('project.selectedProject', function (newValue, oldValue) {
-            if(newValue=="-- Select All --"){
-                $scope.project.selectedProject=$scope.project.projects[1];
-                return;
-            }
-            if(newValue){
-                $scope.aceSrcTbLoaded();
-            }
+//         will load table when enter this page,null or not
+        $scope.aceSrcTbLoaded();
+
 
         });
         $scope.$watch('hiveTbLoad.status', function (newValue, oldValue) {
@@ -113,12 +109,12 @@ KylinApp
 
         });
 
-        $scope.showSelected = function (table) {
-            if (table.uuid) {
-                $scope.selectedSrcTable = table;
+        $scope.showSelected = function (obj) {
+            if (obj.uuid) {
+                $scope.selectedSrcTable = obj;
             }
-            else {
-                $scope.selectedSrcTable.selectedSrcColumn = table;
+            else if(obj.datatype) {
+                $scope.selectedSrcTable.selectedSrcColumn = obj;
             }
         };
 
