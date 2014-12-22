@@ -32,11 +32,10 @@ public class TableRecordInfoTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testSerialize() {
-        byte[] x = TableRecordInfoDigest.serialize(this.tableRecordInfo);
+        byte[] x = TableRecordInfoDigest.serialize(this.tableRecordInfo.getDigest());
         TableRecordInfoDigest d = TableRecordInfoDigest.deserialize(x);
         assertEquals(d, 9);
     }
-
 
 
     @After

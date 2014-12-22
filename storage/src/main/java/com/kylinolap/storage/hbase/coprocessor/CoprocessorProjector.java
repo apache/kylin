@@ -58,12 +58,12 @@ public class CoprocessorProjector {
     }
 
     public static CoprocessorProjector makeForEndpoint(final TableRecordInfo tableInfo, final Collection<TblColRef> groupby) {
-        byte[] mask = new byte[tableInfo.getByteFormLen()];
+        byte[] mask = new byte[tableInfo.getDigest().getByteFormLen()];
         int maskIdx = 0;
-        for (int i = 0; i < tableInfo.getColumnCount(); ++i) {
+        for (int i = 0; i < tableInfo.getDigest().getColumnCount(); ++i) {
             ColumnDesc columnDesc = tableInfo.getColumns()[i];
             TblColRef tblColRef = new TblColRef(columnDesc);
-            int length = tableInfo.length(i);
+            int length = tableInfo.getDigest().length(i);
             byte bits = groupby.contains(tblColRef) ? (byte) 0xff : 0x00;
             for (int j = 0; j < length; ++j) {
                 mask[maskIdx++] = bits;

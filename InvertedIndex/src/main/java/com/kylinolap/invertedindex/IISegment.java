@@ -302,7 +302,7 @@ public class IISegment implements Comparable<IISegment>, ColumnDictInfo {
             tableRecordInfo = new TableRecordInfo(this);
 
         int index = tableRecordInfo.findColumn(col);
-        return tableRecordInfo.length(index);
+        return tableRecordInfo.getDigest().length(index);
     }
 
     @Override

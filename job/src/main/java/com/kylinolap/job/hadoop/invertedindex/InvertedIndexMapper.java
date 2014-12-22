@@ -39,7 +39,6 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**
  * @author yangli9
- * 
  */
 public class InvertedIndexMapper<KEYIN> extends Mapper<KEYIN, Text, LongWritable, ImmutableBytesWritable> {
 
@@ -63,7 +62,7 @@ public class InvertedIndexMapper<KEYIN> extends Mapper<KEYIN, Text, LongWritable
         IIInstance ii = mgr.getII(conf.get(BatchConstants.CFG_II_NAME));
         IISegment seg = ii.getSegment(conf.get(BatchConstants.CFG_II_SEGMENT_NAME), SegmentStatusEnum.NEW);
         this.info = new TableRecordInfo(seg);
-        this.rec = new TableRecord(this.info);
+        this.rec = this.info.createTableRecord();
 
         outputKey = new LongWritable();
         outputValue = new ImmutableBytesWritable(rec.getBytes());
@@ -72,14 +71,14 @@ public class InvertedIndexMapper<KEYIN> extends Mapper<KEYIN, Text, LongWritable
     @Override
     public void map(KEYIN key, Text value, Context context) throws IOException, InterruptedException {
         if (delim == -1) {
-            delim = splitter.detectDelim(value, info.getColumnCount());
+            delim = splitter.detectDelim(value, info.getDigest().getColumnCount());
         }
 
         int nParts = splitter.split(value.getBytes(), value.getLength(), (byte) delim);
         SplittedBytes[] parts = splitter.getSplitBuffers();
 
-        if (nParts != info.getColumnCount()) {
-            throw new RuntimeException("Got " + parts.length + " from -- " + value.toString() + " -- but only " + info.getColumnCount() + " expected");
+        if (nParts != info.getDigest().getColumnCount()) {
+            throw new RuntimeException("Got " + parts.length + " from -- " + value.toString() + " -- but only " + info.getDigest().getColumnCount() + " expected");
         }
 
         rec.reset();

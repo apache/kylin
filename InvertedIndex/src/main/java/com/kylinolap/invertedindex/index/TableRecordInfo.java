@@ -34,14 +34,18 @@ import com.kylinolap.metadata.model.TblColRef;
  *         TableRecordInfo stores application-aware knowledges,
  *         while TableRecordInfoDigest only stores byte level knowleges
  */
-public class TableRecordInfo extends TableRecordInfoDigest {
+public class TableRecordInfo {
 
     final IISegment seg;
     final IIDesc desc;
     final TableDesc tableDesc;
+    final int nColumns;
 
     final String[] colNames;
+    final FixedLenMeasureCodec<?>[] measureSerializers;
     final Dictionary<?>[] dictionaries;
+
+    final TableRecordInfoDigest digest;
 
     public TableRecordInfo(IISegment iiSegment) {
 
@@ -52,6 +56,7 @@ public class TableRecordInfo extends TableRecordInfoDigest {
         nColumns = tableDesc.getColumnCount();
         colNames = new String[nColumns];
         dictionaries = new Dictionary<?>[nColumns];
+
         measureSerializers = new FixedLenMeasureCodec<?>[nColumns];
 
         DictionaryManager dictMgr = DictionaryManager.getInstance(desc.getConfig());
@@ -70,39 +75,48 @@ public class TableRecordInfo extends TableRecordInfoDigest {
             }
         }
 
+        digest = createDigest();
+    }
+
+    public TableRecordInfoDigest getDigest() {
+        return digest;
+    }
+
+    private TableRecordInfoDigest createDigest() {
         //isMetric
-        isMetric = new boolean[nColumns];
+        boolean[] isMetric = new boolean[nColumns];
         for (int i = 0; i < nColumns; ++i) {
             isMetric[i] = desc.isMetricsCol(i);
         }
 
         //lengths
-        lengths = new int[nColumns];
+        int[] lengths = new int[nColumns];
         for (int i = 0; i < nColumns; ++i) {
-            lengths[i] = isMetrics(i) ? measureSerializers[i].getLength() : dictionaries[i].getSizeOfId();
+            lengths[i] = isMetric[i] ? measureSerializers[i].getLength() : dictionaries[i].getSizeOfId();
         }
 
         //dict max id
-        dictMaxIds = new int[nColumns];
+        int[] dictMaxIds = new int[nColumns];
         for (int i = 0; i < nColumns; ++i) {
-            if (!isMetrics(i))
+            if (!isMetric[i])
                 dictMaxIds[i] = dictionaries[i].getMaxId();
         }
 
         //offsets
         int pos = 0;
-        offsets = new int[nColumns];
+        int[] offsets = new int[nColumns];
         for (int i = 0; i < nColumns; i++) {
             offsets[i] = pos;
-            pos += length(i);
+            pos += lengths[i];
         }
 
-        byteFormLen = pos;
+        int byteFormLen = pos;
+
+        return new TableRecordInfoDigest(nColumns, byteFormLen, offsets, dictMaxIds, lengths, isMetric, measureSerializers);
     }
 
-    @Override
-    public TableRecordBytes createTableRecord() {
-        return new TableRecord(this);
+    public TableRecord createTableRecord() {
+        return new TableRecord(digest.createTableRecordBytes(), this);
     }
 
     public IIDesc getDescriptor() {
@@ -127,7 +141,7 @@ public class TableRecordInfo extends TableRecordInfoDigest {
         if (name == null)
             return -1;
         for (int i = 0; i < colNames.length; ++i) {
-            if (isMetrics(i) && name.equals(colNames[i])) {
+            if (measureSerializers[i] != null && name.equals(colNames[i])) {
                 return i;
             }
         }
@@ -140,7 +154,6 @@ public class TableRecordInfo extends TableRecordInfoDigest {
         // yes, all dictionaries are string based
         return (Dictionary<String>) dictionaries[col];
     }
-
 
 
     public int getTimestampColumn() {

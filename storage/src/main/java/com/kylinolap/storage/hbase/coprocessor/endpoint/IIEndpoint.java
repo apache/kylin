@@ -5,7 +5,7 @@ import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
 import com.kylinolap.invertedindex.index.Slice;
-import com.kylinolap.invertedindex.index.TableRecordBytes;
+import com.kylinolap.invertedindex.index.RawTableRecord;
 import com.kylinolap.invertedindex.index.TableRecordInfoDigest;
 import com.kylinolap.invertedindex.model.IIKeyValueCodec;
 import com.kylinolap.metadata.measure.MeasureAggregator;
@@ -118,7 +118,7 @@ public class IIEndpoint extends IIProtos.RowsService
                 result = new BitMapFilterEvaluator(new SliceBitMapProvider(slice, type)).evaluate(filter.getFilter());
             }
 
-            Iterator<TableRecordBytes> iterator = slice.iterateWithBitmap(result);
+            Iterator<RawTableRecord> iterator = slice.iterateWithBitmap(result);
             while (iterator.hasNext()) {
                 byte[] data = iterator.next().getBytes();
                 CoprocessorProjector.AggrKey aggKey = projector.getAggrKey(data);
@@ -149,7 +149,7 @@ public class IIEndpoint extends IIProtos.RowsService
                 result = new BitMapFilterEvaluator(new SliceBitMapProvider(slice, type)).evaluate(filter.getFilter());
             }
 
-            Iterator<TableRecordBytes> iterator = slice.iterateWithBitmap(result);
+            Iterator<RawTableRecord> iterator = slice.iterateWithBitmap(result);
             while (iterator.hasNext()) {
                 byte[] data = iterator.next().getBytes();
                 IIRow.Builder rowBuilder = IIRow.newBuilder().

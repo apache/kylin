@@ -59,7 +59,7 @@ public class EndpointAggregators {
             }
         }
 
-        return new EndpointAggregators(funcNames, dataTypes, refColIndex, tableInfo);
+        return new EndpointAggregators(funcNames, dataTypes, refColIndex, tableInfo.getDigest());
     }
 
     final String[] funcNames;
@@ -127,7 +127,6 @@ public class EndpointAggregators {
     }
 
     /**
-     *
      * @param aggrs
      * @param buffer byte buffer to get the metric data
      * @return length of metric data
