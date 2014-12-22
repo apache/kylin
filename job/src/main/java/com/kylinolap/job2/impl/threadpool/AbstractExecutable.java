@@ -5,6 +5,7 @@ import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.execution.*;
 
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Created by qianzhou on 12/16/14.
@@ -15,6 +16,10 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     private ExecutableStatus status = ExecutableStatus.READY;
     private Map<String, String> extra;
     private String output;
+
+    public AbstractExecutable() {
+        setId(UUID.randomUUID().toString());
+    }
 
     protected void onExecuteStart(ExecutableContext executableContext) {
 

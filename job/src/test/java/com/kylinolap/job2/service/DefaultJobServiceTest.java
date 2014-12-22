@@ -68,7 +68,6 @@ public class DefaultJobServiceTest extends LocalFileMetadataTestCase {
     @Test
     public void testDefaultChainedExecutable() throws Exception {
         DefaultChainedExecutable job = new DefaultChainedExecutable();
-        job.setId(UUID.randomUUID().toString());
         job.addTask(new SucceedTestExecutable());
         job.addTask(new SucceedTestExecutable());
 

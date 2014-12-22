@@ -77,7 +77,6 @@ public class DefaultSchedulerTest extends LocalFileMetadataTestCase {
     public void testSucceed() throws Exception {
         assertNotNull(scheduler);
         DefaultChainedExecutable job = new DefaultChainedExecutable();
-        job.setId(UUID.randomUUID().toString());
         BaseTestExecutable task1 = new SucceedTestExecutable();
         BaseTestExecutable task2 = new SucceedTestExecutable();
         job.addTask(task1);
@@ -92,7 +91,6 @@ public class DefaultSchedulerTest extends LocalFileMetadataTestCase {
     public void testSucceedAndFailed() throws Exception {
         assertNotNull(scheduler);
         DefaultChainedExecutable job = new DefaultChainedExecutable();
-        job.setId(UUID.randomUUID().toString());
         BaseTestExecutable task1 = new SucceedTestExecutable();
         BaseTestExecutable task2 = new FailedTestExecutable();
         job.addTask(task1);
@@ -107,7 +105,6 @@ public class DefaultSchedulerTest extends LocalFileMetadataTestCase {
     public void testSucceedAndError() throws Exception {
         assertNotNull(scheduler);
         DefaultChainedExecutable job = new DefaultChainedExecutable();
-        job.setId(UUID.randomUUID().toString());
         BaseTestExecutable task1 = new ErrorTestExecutable();
         BaseTestExecutable task2 = new SucceedTestExecutable();
         job.addTask(task1);
