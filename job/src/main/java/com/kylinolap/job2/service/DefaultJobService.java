@@ -61,24 +61,8 @@ public class DefaultJobService {
         }
     }
 
-    private void updateJobStatus(String uuid, ExecutableStatus status) {
-        try {
-            JobOutputPO jobOutput = jobDao.getJobOutput(uuid);
-            if (ExecutableStatus.valueOf(jobOutput.getStatus()) != status) {
-                jobOutput.setStatus(status.toString());
-            }
-            jobDao.addOrUpdateJobOutput(uuid, jobOutput);
-        } catch (PersistentException e) {
-            logger.error("fail to update job status id:" + uuid, e);
-            throw new RuntimeException(e);
-        }
-    }
-
     private void updateJobOutput(String uuid, JobOutputPO output) {
         try {
-            if (jobDao.getJobOutput(uuid) != null) {
-                jobDao.deleteJobOutput(uuid);
-            }
             jobDao.addOrUpdateJobOutput(uuid, output);
         } catch (PersistentException e) {
             logger.error("fail to update job output id:" + uuid, e);
@@ -106,12 +90,7 @@ public class DefaultJobService {
 
     public ExecutableStatus getJobStatus(String uuid) {
         try {
-            JobOutputPO jobOutput = jobDao.getJobOutput(uuid);
-            if (jobOutput == null) {
-                return ExecutableStatus.READY;//default status
-            } else {
-                return ExecutableStatus.valueOf(jobOutput.getStatus());
-            }
+            return ExecutableStatus.valueOf(jobDao.getJobOutput(uuid).getStatus());
         } catch (PersistentException e) {
             logger.error("fail to get job output:" + uuid, e);
             throw new RuntimeException(e);

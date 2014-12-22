@@ -5,6 +5,7 @@ import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.job2.exception.PersistentException;
+import com.kylinolap.job2.execution.ExecutableStatus;
 import com.kylinolap.metadata.MetadataManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -139,8 +140,14 @@ public class JobDao {
 
     public JobOutputPO getJobOutput(String uuid) throws PersistentException {
         try {
-            JobOutputPO jobOutputPO = readJobOutputResource(pathOfJobOutput(uuid));
-            return jobOutputPO;
+            JobOutputPO result = readJobOutputResource(pathOfJobOutput(uuid));
+            if (result == null) {
+                result = new JobOutputPO();
+                result.setStatus(ExecutableStatus.READY.toString());
+                result.setUuid(uuid);
+                return result;
+            }
+            return result;
         } catch (IOException e) {
             logger.error("error get job output id:" + uuid, e);
             throw new PersistentException(e);
@@ -152,6 +159,7 @@ public class JobDao {
             return;
         }
         try {
+            deleteJobOutput(uuid);
             writeJobOutputResource(pathOfJobOutput(uuid), output);
         } catch (IOException e) {
             logger.error("error update job output id:" + uuid, e);

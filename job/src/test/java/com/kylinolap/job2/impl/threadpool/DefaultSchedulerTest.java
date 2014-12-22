@@ -49,8 +49,9 @@ public class DefaultSchedulerTest extends LocalFileMetadataTestCase {
                 break;
             } else {
                 try {
-                    Thread.sleep(30000);
+                    Thread.sleep(5000);
                 } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
         }

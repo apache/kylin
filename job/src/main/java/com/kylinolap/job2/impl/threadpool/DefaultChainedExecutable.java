@@ -63,12 +63,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
 
     @Override
     public boolean isRunnable() {
-        for (Executable subTask: getExecutables()) {
-            if (subTask.isRunnable()) {
-                return true;
-            }
-        }
-        return false;
+        return getStatus() == ExecutableStatus.READY;
     }
 
     public void addTask(AbstractExecutable executable) {
