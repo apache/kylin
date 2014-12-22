@@ -26,15 +26,15 @@ import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
@@ -64,17 +64,19 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
 
             // ----------------------------------------------------------------------------
+            // add metadata to distributed cache
+            CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
+            CubeInstance cubeInstance = cubeMgr.getCube(cubeName);
+            String factTableName = cubeInstance.getDescriptor().getFactTable();
 
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             System.out.println("Starting: " + job.getJobName());
 
-            setupMapInput(input, inputFormat);
+            setupMapInput(input, inputFormat, factTableName);
             setupReduceOutput(output);
 
-            // add metadata to distributed cache
-            CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             // CubeSegment seg = cubeMgr.getCube(cubeName).getTheOnlySegment();
-            attachKylinPropsAndMetadata(cubeMgr.getCube(cubeName), job.getConfiguration());
+            attachKylinPropsAndMetadata(cubeInstance, job.getConfiguration());
 
             return waitForCompletion(job);
 
@@ -86,7 +88,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
 
     }
 
-    private void setupMapInput(Path input, String inputFormat) throws IOException {
+    private void setupMapInput(Path input, String inputFormat, String factTableName) throws IOException {
         FileInputFormat.setInputPaths(job, input);
 
         File JarFile = new File(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
@@ -95,12 +97,20 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
         } else {
             job.setJarByClass(this.getClass());
         }
-
+        
+        /*
         if ("text".equalsIgnoreCase(inputFormat) || "textinputformat".equalsIgnoreCase(inputFormat)) {
             job.setInputFormatClass(TextInputFormat.class);
         } else {
             job.setInputFormatClass(SequenceFileInputFormat.class);
         }
+        */
+//        HCatInputFormat.setInput(job, "default",
+//                factTableName);
+        HCatInputFormat.setInput(job, "default",
+                factTableName.toLowerCase());
+        
+        job.setInputFormatClass(HCatInputFormat.class);
         job.setMapperClass(FactDistinctColumnsMapper.class);
         job.setCombinerClass(FactDistinctColumnsCombiner.class);
         job.setMapOutputKeyClass(ShortWritable.class);
