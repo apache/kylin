@@ -38,11 +38,7 @@ KylinApp
             if ($scope.listParams.cubeName) {
                 queryParam.cubeName = $scope.listParams.cubeName;
             }
-//            if ($scope.project.selectedProject){
                queryParam.projectName = $scope.project.selectedProject;
-//            }else{
-//                queryParam.projectName = $scope.project.projects[0];
-//            }
 
             $scope.loading = true;
             CubeService.list(queryParam, function (cubes) {
@@ -83,9 +79,7 @@ KylinApp
         });
         $scope.reload = function () {
             // trigger reload action in pagination directive
-            if($scope.action.reload==undefined){
                 $scope.action.reload = false;
-            }
             $scope.action.reload = !$scope.action.reload;
         };
 

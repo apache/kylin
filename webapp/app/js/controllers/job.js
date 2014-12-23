@@ -91,9 +91,6 @@ KylinApp
 
         $scope.reload = function () {
             // trigger reload action in pagination directive
-            if($scope.action.reload==undefined){
-                $scope.action.reload = false;
-            }
             $scope.action.reload = !$scope.action.reload;
         };
 
