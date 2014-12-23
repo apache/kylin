@@ -75,8 +75,7 @@ KylinApp
         };
 
         $scope.$watch('project.selectedProject', function (newValue, oldValue) {
-            //exclude when refresh page oldValue=null,first time set value for project (will have page auto reload ,incase duplicate) oldvalue is null
-            if(newValue!=oldValue){
+            if(newValue!=oldValue||newValue==null){
                 $scope.cubes=[];
                 $scope.reload();
             }
@@ -84,6 +83,9 @@ KylinApp
         });
         $scope.reload = function () {
             // trigger reload action in pagination directive
+            if($scope.action.reload==undefined){
+                $scope.action.reload = false;
+            }
             $scope.action.reload = !$scope.action.reload;
         };
 
