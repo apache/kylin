@@ -106,7 +106,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, HCatRecord, 
             for (int i : factDictCols) {
                 outputKey.set((short) i);
 //                SplittedBytes bytes = splitBuffers[flatTableIndexes[i]];
-                String textValue = record.get(flatTableIndexes[i]+1).toString();
+                String textValue = record.get(flatTableIndexes[i]).toString();
                 byte[] bytes = Bytes.toBytes(textValue);
                 outputValue.set(bytes, 0, bytes.length);
                 context.write(outputKey, outputValue);
