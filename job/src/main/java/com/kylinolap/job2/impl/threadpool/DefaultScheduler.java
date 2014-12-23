@@ -142,12 +142,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     }
 
     private String schedulerId() {
-        try {
-            String canonicalHostName = InetAddress.getLocalHost().getCanonicalHostName();
-            return ZOOKEEPER_LOCK_PATH + "/" + canonicalHostName;
-        } catch (UnknownHostException e) {
-            throw new RuntimeException(e);
-        }
+        return ZOOKEEPER_LOCK_PATH + "/" + jobEngineConfig.getConfig().getMetadataUrlPrefix();
     }
 
     public static DefaultScheduler getInstance() {

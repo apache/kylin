@@ -23,40 +23,36 @@ import java.util.List;
 
 import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.CubePartitionDesc;
 import com.kylinolap.cube.model.DimensionDesc;
 import com.kylinolap.cube.model.CubePartitionDesc.CubePartitionType;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
+import com.kylinolap.metadata.realization.SegmentStatusEnum;
 
 /**
  * @author xduo
  */
-public class CubeSegmentValidator {
+public abstract class CubeSegmentValidator {
 
     private CubeSegmentValidator() {
     }
 
-    public static CubeSegmentValidator getCubeSegmentValidator(RealizationBuildTypeEnum buildType, CubePartitionType partitionType) {
+    public static CubeSegmentValidator getCubeSegmentValidator(RealizationBuildTypeEnum buildType) {
         switch (buildType) {
         case MERGE:
             return new MergeOperationValidator();
         case BUILD:
-            switch (partitionType) {
-            case APPEND:
-                return new IncrementalBuildOperationValidator();
-            case UPDATE_INSERT:
-                return new UpdateBuildOperationValidator();
-            }
+            return new BuildOperationValidator();
         default:
-            return new CubeSegmentValidator();
+            throw new RuntimeException("invalid build type:" + buildType);
         }
     }
 
-    void validate(CubeInstance cubeInstance, List<CubeSegment> newSegments) throws CubeIntegrityException {
-    }
+    abstract void validate(CubeInstance cubeInstance, List<CubeSegment> newSegments) throws CubeIntegrityException;
 
-    public static class MergeOperationValidator extends CubeSegmentValidator {
+    private static class MergeOperationValidator extends CubeSegmentValidator {
         private void checkContingency(CubeInstance cubeInstance, List<CubeSegment> newSegments) throws CubeIntegrityException {
             if (cubeInstance.getSegments().size() < 2) {
                 throw new CubeIntegrityException("No segments to merge.");
@@ -147,7 +143,39 @@ public class CubeSegmentValidator {
         }
     }
 
-    public static class IncrementalBuildOperationValidator extends CubeSegmentValidator {
+    private static class BuildOperationValidator extends CubeSegmentValidator {
+
+        @Override
+        void validate(CubeInstance cubeInstance, List<CubeSegment> newSegments) throws CubeIntegrityException {
+            List<CubeSegment> readySegments = cubeInstance.getSegments(SegmentStatusEnum.READY);
+            CubePartitionDesc cubePartitionDesc = cubeInstance.getDescriptor().getCubePartitionDesc();
+            final long initStartDate = cubePartitionDesc.getPartitionDateColumn() != null ? cubePartitionDesc.getPartitionDateStart() : 0;
+            long startDate = initStartDate;
+            for (CubeSegment readySegment: readySegments) {
+                if (startDate == readySegment.getDateRangeStart() && startDate < readySegment.getDateRangeEnd()) {
+                    startDate = readySegment.getDateRangeEnd();
+                } else {
+                    throw new CubeIntegrityException("there is gap in cube segments");
+                }
+            }
+            if (newSegments.size() != 1) {
+                throw new CubeIntegrityException("there are more than 2 segments");
+            }
+            final CubeSegment newSegment = newSegments.get(0);
+            if (cubeInstance.appendOnHll()) {
+                if (newSegment.getDateRangeStart() == initStartDate && startDate < newSegment.getDateRangeEnd()) {
+                    return;
+                }
+            } else {
+                if (newSegment.getDateRangeStart() == startDate) {
+                    return;
+                }
+            }
+            throw new CubeIntegrityException("invalid segment date range from " + newSegment.getDateRangeStart() + " to " + newSegment.getDateRangeEnd());
+        }
+    }
+
+    private static class IncrementalBuildOperationValidator extends CubeSegmentValidator {
         /*
          * (non-Javadoc)
          *
@@ -193,7 +221,7 @@ public class CubeSegmentValidator {
 
     }
 
-    public static class UpdateBuildOperationValidator extends CubeSegmentValidator {
+    private static class UpdateBuildOperationValidator extends CubeSegmentValidator {
 
         /*
          * (non-Javadoc)

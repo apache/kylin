@@ -107,7 +107,14 @@ public class JobService extends BasicService {
 
         String uuid = null;
         try {
-            List<CubeSegment> cubeSegments = this.getCubeManager().allocateSegments(cube, buildType, startDate, endDate);
+            List<CubeSegment> cubeSegments;
+            if (buildType == RealizationBuildTypeEnum.BUILD) {
+                cubeSegments = this.getCubeManager().appendSegments(cube, startDate, endDate);
+            } else if (buildType == RealizationBuildTypeEnum.MERGE) {
+                cubeSegments = this.getCubeManager().mergeSegments(cube, startDate, endDate);
+            } else {
+                throw new JobException("invalid build type:" + buildType);
+            }
             List<JobInstance> jobs = Lists.newArrayListWithExpectedSize(cubeSegments.size());
             for (CubeSegment segment : cubeSegments) {
                 uuid = segment.getUuid();

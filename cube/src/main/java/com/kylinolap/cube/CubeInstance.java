@@ -389,15 +389,12 @@ public class CubeInstance extends AbstractRealization {
         return new long[] { start, end };
     }
 
-    private boolean appendOnHll() {
+    public boolean appendOnHll() {
         CubePartitionDesc cubePartitionDesc = getDescriptor().getCubePartitionDesc();
         if (cubePartitionDesc == null) {
             return false;
         }
         if (cubePartitionDesc.getPartitionDateColumn() == null) {
-            return false;
-        }
-        if (cubePartitionDesc.getCubePartitionType() != CubePartitionDesc.CubePartitionType.APPEND) {
             return false;
         }
         return getDescriptor().hasHolisticCountDistinctMeasures();

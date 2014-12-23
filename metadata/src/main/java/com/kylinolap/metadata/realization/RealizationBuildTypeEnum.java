@@ -28,5 +28,10 @@ public enum RealizationBuildTypeEnum {
     /**
      * merge segments
      */
-    MERGE;
+    MERGE,
+
+    /**
+     * refresh segments
+     */
+    REFRESH
 }
