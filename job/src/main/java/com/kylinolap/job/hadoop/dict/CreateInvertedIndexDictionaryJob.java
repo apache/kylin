@@ -44,9 +44,9 @@ public class CreateInvertedIndexDictionaryJob extends AbstractHadoopJob {
             KylinConfig config = KylinConfig.getInstanceFromEnv();
 
             IIManager mgr = IIManager.getInstance(config);
-            IIInstance cube = mgr.getII(iiname);
+            IIInstance ii = mgr.getII(iiname);
 
-            mgr.buildInvertedIndexDictionary(cube.getFirstSegment(), factColumnsInputPath);
+            mgr.buildInvertedIndexDictionary(ii.getFirstSegment(), factColumnsInputPath);
             return 0;
         } catch (Exception e) {
             printUsage(options);
