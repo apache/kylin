@@ -20,16 +20,16 @@ import com.kylinolap.common.KylinConfig;
 
 /**
  * @author ysong1
- * 
+ *
  */
 public abstract class AbstractKylinTestCase {
 
     public static final String LOCALMETA_TEST_DATA = "../examples/test_case_data/localmeta";
 
     public static final String MINICLUSTER_TEST_DATA = "../examples/test_case_data/minicluster";
-    
+
     public static final String SANDBOX_TEST_DATA = "../examples/test_case_data/sandbox";
-    
+
     public abstract void createTestMetadata();
 
     public abstract void cleanupTestMetadata();
@@ -37,16 +37,16 @@ public abstract class AbstractKylinTestCase {
     public KylinConfig getTestConfig() {
         return KylinConfig.getInstanceFromEnv();
     }
-    
+
     public static void staticCreateTestMetadata(String kylinConfigFolder) {
 
         KylinConfig.destoryInstance();
 
         if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null)
             System.setProperty(KylinConfig.KYLIN_CONF, kylinConfigFolder);
-        
+
     }
-    
+
     public static void staticCleanupTestMetadata() {
         System.clearProperty(KylinConfig.KYLIN_CONF);
         KylinConfig.destoryInstance();
