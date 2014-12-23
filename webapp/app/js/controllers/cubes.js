@@ -79,7 +79,6 @@ KylinApp
         });
         $scope.reload = function () {
             // trigger reload action in pagination directive
-                $scope.action.reload = false;
             $scope.action.reload = !$scope.action.reload;
         };
 
