@@ -55,6 +55,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             options.addOption(OPTION_INPUT_PATH);
             options.addOption(OPTION_INPUT_FORMAT);
             options.addOption(OPTION_OUTPUT_PATH);
+            options.addOption(OPTION_HTABLE_NAME);
             parseOptions(options, args);
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
@@ -62,6 +63,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             Path input = new Path(getOptionValue(OPTION_INPUT_PATH));
             String inputFormat = getOptionValue(OPTION_INPUT_FORMAT);
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
+            String intermediateTable = getOptionValue(OPTION_HTABLE_NAME);
 
             // ----------------------------------------------------------------------------
             // add metadata to distributed cache
@@ -72,7 +74,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             System.out.println("Starting: " + job.getJobName());
 
-            setupMapInput(input, inputFormat, factTableName);
+            setupMapInput(input, inputFormat, intermediateTable);
             setupReduceOutput(output);
 
             // CubeSegment seg = cubeMgr.getCube(cubeName).getTheOnlySegment();
@@ -88,7 +90,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
 
     }
 
-    private void setupMapInput(Path input, String inputFormat, String factTableName) throws IOException {
+    private void setupMapInput(Path input, String inputFormat, String intermediateTable) throws IOException {
         FileInputFormat.setInputPaths(job, input);
 
         File JarFile = new File(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
@@ -108,7 +110,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
 //        HCatInputFormat.setInput(job, "default",
 //                factTableName);
         HCatInputFormat.setInput(job, "default",
-                factTableName.toLowerCase());
+                intermediateTable.toLowerCase());
         
         job.setInputFormatClass(HCatInputFormat.class);
         job.setMapperClass(FactDistinctColumnsMapper.class);
