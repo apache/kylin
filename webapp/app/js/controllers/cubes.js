@@ -28,7 +28,7 @@ KylinApp
 
         $scope.list = function (offset, limit) {
             if(!$scope.project.projects.length){
-                return;
+                return [];
             }
             offset = (!!offset) ? offset : 0;
             limit = (!!limit) ? limit : 20;
