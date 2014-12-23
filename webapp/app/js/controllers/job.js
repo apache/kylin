@@ -45,7 +45,7 @@ KylinApp
         $scope.list = function (offset, limit) {
 
             if(!$scope.project.projects.length){
-                return;
+                return [];
             }
 
             offset = (!!offset) ? offset : 0;
@@ -98,7 +98,7 @@ KylinApp
 
 
         $scope.$watch('project.selectedProject', function (newValue, oldValue) {
-            if(newValue!=oldValue){
+            if(newValue!=oldValue||newValue==null){
                 $scope.jobs={};
                 $scope.state.projectName = newValue;
                 $scope.reload();
