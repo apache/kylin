@@ -520,10 +520,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         if(!newValue){
             return;
         }
-        if(newValue=="-- Select All --"){
-            $scope.project.selectedProject=$scope.project.projects[1];
-            return;
-        }
         $scope.srcTablesInProject=[];
         var param = {
             ext: true,
