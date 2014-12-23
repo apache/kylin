@@ -17,19 +17,19 @@ Refer to wiki page [Kylin ODBC Driver Tutorial](https://github.com/KylinOLAP/Kyl
 
 Connect Using Driver: Select "Other Database(ODBC)" in the left panel and choose KylinODBCDriver in the pop-up window. 
 
-![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tableau_tutorial/1%20odbc.png)
+![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/1%20odbc.png)
 
 Enter your Sever location and credentials: server host, port, username and password.
 
-![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tableau_tutorial/2%20serverhost.jpg)
+![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/2%20serverhost.jpg)
 
 Click "Connect" to get the list of projects that you have permission to access. See details about permission in [Kylin Cube Permission Grant Tutorial](https://github.com/KylinOLAP/Kylin/wiki/Kylin-Cube-Permission-Grant-Tutorial). Then choose the project you want to connect in the drop down list. 
 
-![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tableau_tutorial/3%20project.jpg)
+![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/3%20project.jpg)
 
 Click "Done" to complete the connection.
 
-![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tableau_tutorial/4%20done.jpg)
+![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/4%20done.jpg)
 
 ### Step 3. Using Single Table or Multiple Tables
 > Limitation
@@ -41,66 +41,66 @@ Click "Done" to complete the connection.
 
 Select `Multiple Tables`.
 
-![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tableau_tutorial/5%20multipleTable.jpg)
+![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/5%20multipleTable.jpg)
 
 Then click `Add Table...` to add a fact table.
 
-![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tableau_tutorial/6%20facttable.jpg)
+![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/6%20facttable.jpg)
 
-![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tableau_tutorial/6%20facttable2.jpg)
+![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/6%20facttable2.jpg)
 
 **Select Look-up Table**
 
 Click `Add Table...` to add a look-up table. 
 
-![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tableau_tutorial/7%20lkptable.jpg)
+![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/7%20lkptable.jpg)
 
 Set up the join clause carefully. 
 
-![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tableau_tutorial/8%20join.jpg)
+![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/8%20join.jpg)
 
 Keep add tables through click `Add Table...` until all the look-up tables have been added properly. Give the connection a name for use in Tableau.
 
-![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tableau_tutorial/9%20connName.jpg)
+![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/9%20connName.jpg)
 
 **Using Connect Live**
 
 There are three types of `Data Connection`. Choose the `Connect Live` option. 
 
-![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tableau_tutorial/10%20connectLive.jpg)
+![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/10%20connectLive.jpg)
 
 Then you can enjoy analyzing with Tableau.
 
-![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tableau_tutorial/11%20analysis.jpg)
+![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/11%20analysis.jpg)
 
 **Add additional look-up Tables**
 
 Click `Data` in the top menu bar, select `Edit Tables...` to update the look-up table information.
 
-![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tableau_tutorial/12%20edit%20tables.jpg)
+![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/12%20edit%20tables.jpg)
 
 ### Step 4. Using Customized SQL
 To use customized SQL resembles using Single Table/Multiple Tables, except that you just need to paste your SQL in `Custom SQL` tab and take the same instruction as above.
 
-![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tableau_tutorial/19%20custom.jpg)
+![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/19%20custom.jpg)
 
 ### Step 5. Publish to Tableau Server
 Suppose you have finished making a dashboard with Tableau, you can publish it to Tableau Server.
 Click `Server` in the top menu bar, select `Publish Workbook...`. 
 
-![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tableau_tutorial/14%20publish.jpg)
+![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/14%20publish.jpg)
 
 Then sign in your Tableau Server and prepare to publish. 
 
-![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tableau_tutorial/16%20prepare-publish.png)
+![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/16%20prepare-publish.png)
 
 If you're Using Driver Connect instead of DSN connect, you'll need to additionally embed your password in. Click the `Authentication` button at left bottom and select `Embedded Password`. Click `Publish` and you will see the result.
 
-![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tableau_tutorial/17%20embedded-pwd.png)
+![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/17%20embedded-pwd.png)
 
 ### Tips
 * Hide Table name in Tableau
 
     * Tableau will display columns be grouped by source table name, but user may want to organize columns with different structure. Using "Group by Folder" in Tableau and Create Folders to group different columns.
 
-     ![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tableau_tutorial/18%20groupby-folder.jpg)
+     ![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/18%20groupby-folder.jpg)
