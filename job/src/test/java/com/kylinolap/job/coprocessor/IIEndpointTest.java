@@ -2,6 +2,7 @@ package com.kylinolap.job.coprocessor;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.invertedindex.IIInstance;
