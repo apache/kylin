@@ -76,8 +76,10 @@ KylinApp
 
         $scope.$watch('project.selectedProject', function (newValue, oldValue) {
             //exclude when refresh page oldValue=null,first time set value for project (will have page auto reload ,incase duplicate) oldvalue is null
+            if(newValue!=oldValue){
                 $scope.cubes=[];
                 $scope.reload();
+            }
 
         });
         $scope.reload = function () {

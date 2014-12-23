@@ -28,7 +28,6 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
             $location.path('/login');
 
             console.debug("Logout Completed.");
-            $scope.project.selectedProject = null;
         }).error(function () {
             UserService.setCurUser({});
             $scope.username = $scope.password = null;
