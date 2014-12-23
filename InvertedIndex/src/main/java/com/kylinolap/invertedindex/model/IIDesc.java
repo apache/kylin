@@ -73,6 +73,9 @@ public class IIDesc extends RootPersistentEntity {
 
 
     public void init(MetadataManager mgr) {
+
+        config = mgr.getConfig();
+
         if (this.modelName == null || this.modelName.length() == 0) {
             throw new RuntimeException("The cubeDesc '" + this.getName() + "' doesn't have data model specified.");
         }
@@ -83,7 +86,6 @@ public class IIDesc extends RootPersistentEntity {
             throw new RuntimeException("No data model found with name '" + modelName + "'.");
         }
 
-        config = mgr.getConfig();
 
         factTable = factTable.toUpperCase();
         timestampDimension = timestampDimension.toUpperCase();

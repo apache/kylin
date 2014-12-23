@@ -1,6 +1,6 @@
 {
   "name": "test_kylin_ii_model_desc",
-  "model_name": "test_kylin_with_slr_model_desc",
+
   "fact_table": "DEFAULT.TEST_KYLIN_FACT",
   "lookups": [
     {
