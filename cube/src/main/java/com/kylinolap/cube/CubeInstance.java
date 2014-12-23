@@ -16,6 +16,7 @@
 package com.kylinolap.cube;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,14 +29,16 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
-import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.CubePartitionDesc;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
+import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.JoinDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
+import com.kylinolap.metadata.model.TblColRef;
+import com.kylinolap.metadata.realization.*;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class CubeInstance extends RootPersistentEntity {
+public class CubeInstance extends AbstractRealization {
 
     public static CubeInstance create(String cubeName, String projectName, CubeDesc cubeDesc) {
         CubeInstance cubeInstance = new CubeInstance();
@@ -45,7 +48,7 @@ public class CubeInstance extends RootPersistentEntity {
         cubeInstance.setDescName(cubeDesc.getName());
         cubeInstance.setCreateTime(formatTime(System.currentTimeMillis()));
         cubeInstance.setSegments(new ArrayList<CubeSegment>());
-        cubeInstance.setStatus(CubeStatusEnum.DISABLED);
+        cubeInstance.setStatus(RealizationStatusEnum.DISABLED);
         cubeInstance.updateRandomUuid();
 
         return cubeInstance;
@@ -65,7 +68,7 @@ public class CubeInstance extends RootPersistentEntity {
     @JsonProperty("cost")
     private int cost = 50;
     @JsonProperty("status")
-    private CubeStatusEnum status;
+    private RealizationStatusEnum status;
 
     @JsonManagedReference
     @JsonProperty("segments")
@@ -78,7 +81,7 @@ public class CubeInstance extends RootPersistentEntity {
         List<CubeSegment> buildingSegments = new ArrayList<CubeSegment>();
         if (null != segments) {
             for (CubeSegment segment : segments) {
-                if (CubeSegmentStatusEnum.NEW == segment.getStatus() || CubeSegmentStatusEnum.READY_PENDING == segment.getStatus()) {
+                if (SegmentStatusEnum.NEW == segment.getStatus() || SegmentStatusEnum.READY_PENDING == segment.getStatus()) {
                     buildingSegments.add(segment);
                 }
             }
@@ -126,7 +129,7 @@ public class CubeInstance extends RootPersistentEntity {
         List<CubeSegment> mergingSegments = new ArrayList<CubeSegment>();
         if (null != this.segments) {
             for (CubeSegment segment : this.segments) {
-                if (segment.getStatus() == CubeSegmentStatusEnum.READY) {
+                if (segment.getStatus() == SegmentStatusEnum.READY) {
                     if (buildingSegment.getDateRangeStart() <= segment.getDateRangeStart() && buildingSegment.getDateRangeEnd() >= segment.getDateRangeEnd()) {
                         mergingSegments.add(segment);
                     }
@@ -147,7 +150,7 @@ public class CubeInstance extends RootPersistentEntity {
                 long startDate = buildingSegments.get(0).getDateRangeStart();
                 long endDate = buildingSegments.get(buildingSegments.size() - 1).getDateRangeEnd();
                 for (CubeSegment segment : this.segments) {
-                    if (segment.getStatus() == CubeSegmentStatusEnum.READY) {
+                    if (segment.getStatus() == SegmentStatusEnum.READY) {
                         if (startDate >= segment.getDateRangeStart() && startDate < segment.getDateRangeEnd() && segment.getDateRangeEnd() < endDate) {
                             rebuildingSegments.add(segment);
                             continue;
@@ -168,16 +171,8 @@ public class CubeInstance extends RootPersistentEntity {
         return CubeDescManager.getInstance(config).getCubeDesc(descName);
     }
 
-    public InvertedIndexDesc getInvertedIndexDesc() {
-        return MetadataManager.getInstance(config).getInvertedIndexDesc(name);
-    }
-
-    public boolean isInvertedIndex() {
-        return getInvertedIndexDesc() != null;
-    }
-
     public boolean isReady() {
-        return getStatus() == CubeStatusEnum.READY;
+        return getStatus() == RealizationStatusEnum.READY;
     }
 
     public String getResourcePath() {
@@ -190,7 +185,7 @@ public class CubeInstance extends RootPersistentEntity {
 
     @Override
     public String toString() {
-        return "Cube [name=" + name + "]";
+        return getCanonicalName(name);
     }
 
     // ============================================================================
@@ -199,7 +194,7 @@ public class CubeInstance extends RootPersistentEntity {
     public long getSizeKB() {
         long sizeKb = 0L;
 
-        for (CubeSegment cubeSegment : this.getSegments(CubeSegmentStatusEnum.READY)) {
+        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
             sizeKb += cubeSegment.getSizeKB();
         }
 
@@ -210,7 +205,7 @@ public class CubeInstance extends RootPersistentEntity {
     public long getSourceRecordCount() {
         long sizeRecordCount = 0L;
 
-        for (CubeSegment cubeSegment : this.getSegments(CubeSegmentStatusEnum.READY)) {
+        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
             sizeRecordCount += cubeSegment.getSourceRecords();
         }
 
@@ -221,7 +216,7 @@ public class CubeInstance extends RootPersistentEntity {
     public long getSourceRecordSize() {
         long sizeRecordSize = 0L;
 
-        for (CubeSegment cubeSegment : this.getSegments(CubeSegmentStatusEnum.READY)) {
+        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
             sizeRecordSize += cubeSegment.getSourceRecordsSize();
         }
 
@@ -238,6 +233,16 @@ public class CubeInstance extends RootPersistentEntity {
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String getFactTable() {
+        return this.getDescriptor().getFactTable();
+    }
+
+    @Override
+    public List<MeasureDesc> getMeasures() {
+        return getDescriptor().getMeasures();
     }
 
     public void setName(String name) {
@@ -280,11 +285,11 @@ public class CubeInstance extends RootPersistentEntity {
         this.cost = cost;
     }
 
-    public CubeStatusEnum getStatus() {
+    public RealizationStatusEnum getStatus() {
         return status;
     }
 
-    public void setStatus(CubeStatusEnum status) {
+    public void setStatus(RealizationStatusEnum status) {
         this.status = status;
     }
 
@@ -300,7 +305,7 @@ public class CubeInstance extends RootPersistentEntity {
         CubeSegment latest = null;
         for (int i = segments.size() - 1; i >= 0; i--) {
             CubeSegment seg = segments.get(i);
-            if (seg.getStatus() != CubeSegmentStatusEnum.READY)
+            if (seg.getStatus() != SegmentStatusEnum.READY)
                 continue;
             if (latest == null || latest.getDateRangeEnd() < seg.getDateRangeEnd()) {
                 latest = seg;
@@ -313,7 +318,7 @@ public class CubeInstance extends RootPersistentEntity {
         return segments;
     }
 
-    public List<CubeSegment> getSegments(CubeSegmentStatusEnum status) {
+    public List<CubeSegment> getSegments(SegmentStatusEnum status) {
         List<CubeSegment> result = new ArrayList<CubeSegment>();
 
         for (CubeSegment segment : segments) {
@@ -325,7 +330,7 @@ public class CubeInstance extends RootPersistentEntity {
         return result;
     }
 
-    public List<CubeSegment> getSegment(CubeSegmentStatusEnum status) {
+    public List<CubeSegment> getSegment(SegmentStatusEnum status) {
         List<CubeSegment> result = Lists.newArrayList();
         for (CubeSegment segment : segments) {
             if (segment.getStatus() == status) {
@@ -335,7 +340,7 @@ public class CubeInstance extends RootPersistentEntity {
         return result;
     }
 
-    public CubeSegment getSegment(String name, CubeSegmentStatusEnum status) {
+    public CubeSegment getSegment(String name, SegmentStatusEnum status) {
         for (CubeSegment segment : segments) {
             if ((null != segment.getName() && segment.getName().equals(name)) && segment.getStatus() == status) {
                 return segment;
@@ -367,9 +372,9 @@ public class CubeInstance extends RootPersistentEntity {
     }
 
     public long[] getDateRange() {
-        List<CubeSegment> readySegments = getSegment(CubeSegmentStatusEnum.READY);
+        List<CubeSegment> readySegments = getSegment(SegmentStatusEnum.READY);
         if (readySegments.isEmpty()) {
-            return new long[]{0L, 0L};
+            return new long[] { 0L, 0L };
         }
         long start = Long.MAX_VALUE;
         long end = Long.MIN_VALUE;
@@ -381,7 +386,7 @@ public class CubeInstance extends RootPersistentEntity {
                 end = segment.getDateRangeEnd();
             }
         }
-        return new long[]{start, end};
+        return new long[] { start, end };
     }
 
     private boolean appendOnHll() {
@@ -402,11 +407,11 @@ public class CubeInstance extends RootPersistentEntity {
         if (!appendOnHll()) {
             return false;
         }
-        List<CubeSegment> readySegments = getSegment(CubeSegmentStatusEnum.READY);
+        List<CubeSegment> readySegments = getSegment(SegmentStatusEnum.READY);
         if (readySegments.isEmpty()) {
             return false;
         }
-        for (CubeSegment readySegment: readySegments) {
+        for (CubeSegment readySegment : readySegments) {
             if (readySegment.getDateRangeStart() == startDate && readySegment.getDateRangeEnd() == endDate) {
                 //refresh build
                 return false;
@@ -419,11 +424,11 @@ public class CubeInstance extends RootPersistentEntity {
         if (!appendOnHll()) {
             return false;
         }
-        List<CubeSegment> readySegments = getSegment(CubeSegmentStatusEnum.READY);
+        List<CubeSegment> readySegments = getSegment(SegmentStatusEnum.READY);
         if (readySegments.isEmpty()) {
             return false;
         }
-        for (CubeSegment readySegment: readySegments) {
+        for (CubeSegment readySegment : readySegments) {
             if (readySegment.getDateRangeEnd() > segment.getDateRangeStart()) {
                 //has overlap and not refresh
                 return true;
@@ -432,4 +437,18 @@ public class CubeInstance extends RootPersistentEntity {
         return false;
     }
 
+    @Override
+    public int getCost(String factTable, Collection<JoinDesc> joins, Collection<TblColRef> allColumns, Collection<FunctionDesc> aggrFunctions) {
+        return 0;
+    }
+
+    @Override
+    public RealizationType getType() {
+        return RealizationType.CUBE;
+    }
+
+    @Override
+    public List<TblColRef> getAllColumns() {
+        return Lists.newArrayList(getDescriptor().listAllColumns());
+    }
 }

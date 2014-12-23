@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.io.Text;
@@ -37,16 +38,15 @@ import com.kylinolap.common.util.ByteArray;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.CubeSegmentStatusEnum;
-import com.kylinolap.cube.common.BytesSplitter;
-import com.kylinolap.cube.common.SplittedBytes;
+import com.kylinolap.common.util.BytesSplitter;
+import com.kylinolap.common.util.SplittedBytes;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.AbstractRowKeyEncoder;
 import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.cube.measure.MeasureCodec;
+import com.kylinolap.metadata.measure.MeasureCodec;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.DimensionDesc;
-import com.kylinolap.cube.model.MeasureDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.dict.lookup.HiveTable;
 import com.kylinolap.dict.lookup.LookupBytesTable;
 import com.kylinolap.job.constant.BatchConstants;
@@ -54,9 +54,9 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.model.realization.FunctionDesc;
-import com.kylinolap.metadata.model.realization.ParameterDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.ParameterDesc;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * @author George Song (ysong1),honma
@@ -124,7 +124,7 @@ public class NewBaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> 
 
         metadataManager = MetadataManager.getInstance(config);
         cube = CubeManager.getInstance(config).getCube(cubeName);
-        cubeSegment = cube.getSegment(segmentName, CubeSegmentStatusEnum.NEW);
+        cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
         cubeDesc = cube.getDescriptor();
         factTableDesc = metadataManager.getTableDesc(cubeDesc.getFactTable());
 

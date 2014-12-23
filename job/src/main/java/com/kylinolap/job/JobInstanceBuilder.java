@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,6 @@ import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.CubeSegmentStatusEnum;
 import com.kylinolap.dict.lookup.HiveTable;
 import com.kylinolap.job.JobInstance.JobStep;
 import com.kylinolap.job.constant.JobConstants;
@@ -87,7 +87,7 @@ public class JobInstanceBuilder {
         }
 
         // only the segment which can be build
-        cubeSegment = cube.getSegment(segmentName, CubeSegmentStatusEnum.NEW);
+        cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
         htablename = cubeSegment.getStorageLocationIdentifier();
 
         this.jobWorkingDir = JobInstance.getJobWorkingDir(jobInstance, engineConfig);
@@ -226,12 +226,13 @@ public class JobInstanceBuilder {
 
         if (incBuildMerge) {
             List<String> pathToMerge = Lists.newArrayList();
-            for (CubeSegment segment: cube.getSegments(CubeSegmentStatusEnum.READY)) {
+            for (CubeSegment segment: cube.getSegments(SegmentStatusEnum.READY)) {
                 pathToMerge.add(getPathToMerge(jobInstance, segment));
             }
             pathToMerge.add(cuboidTmpRootPath + "*");
             result.add(createMergeCuboidDataStep(jobInstance, stepSeqNum++, formatPaths(pathToMerge), cuboidRootPath));
         }
+
         String cuboidPath = incBuildMerge?cuboidRootPath:cuboidRootPath+"*";
 
         // get output distribution step

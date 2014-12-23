@@ -15,16 +15,30 @@
  */
 package com.kylinolap.storage.tuple;
 
+
 /**
- * 
  * @author xjiang
- * 
  */
 public interface ITupleIterator {
+    public static final ITupleIterator EMPTY_TUPLE_ITERATOR = new ITupleIterator() {
+        @Override
+        public boolean hasNext() {
+            return false;
+        }
+
+        @Override
+        public Tuple next() {
+            return null;
+        }
+
+        @Override
+        public void close() {
+        }
+    };
 
     public boolean hasNext();
 
-    public ITuple next();
+    public ITuple next() ;
 
     public void close();
 

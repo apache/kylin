@@ -1,0 +1,41 @@
+{
+  "uuid": "daa53e80-41be-49a5-89ca-9fb7294db186",
+  "name": "test_kylin_ii",
+  "owner": null,
+  "version": null,
+  "cost": 10,
+  "status": "READY",
+  "segments": [
+    {
+      "uuid": null,
+      "name": "19700101000000_20140901000000",
+      "status": "READY",
+      "dictionaries": {
+        "TEST_KYLIN_FACT/LSTG_FORMAT_NAME": "/dict/TEST_KYLIN_FACT/LSTG_FORMAT_NAME/bd9f6b22-36ba-4e6b-92aa-0d585faf0b39.dict",
+        "TEST_KYLIN_FACT/TRANS_ID": "/dict/TEST_KYLIN_FACT/TRANS_ID/e7da081e-7fa7-4c28-ab7e-6c26f7b90fc4.dict",
+        "TEST_KYLIN_FACT/LSTG_SITE_ID": "/dict/TEST_KYLIN_FACT/LSTG_SITE_ID/7df5789b-0280-453c-b406-b75cad6770d1.dict",
+        "TEST_KYLIN_FACT/SLR_SEGMENT_CD": "/dict/TEST_KYLIN_FACT/SLR_SEGMENT_CD/e60ab521-668b-4f61-bad2-162602e992f8.dict",
+        "TEST_KYLIN_FACT/SELLER_ID": "/dict/TEST_KYLIN_FACT/SELLER_ID/a0fb0a39-02a0-41c5-85e9-27d8921129cc.dict",
+        "TEST_KYLIN_FACT/CAL_DT": "/dict/TEST_KYLIN_FACT/CAL_DT/48433f91-0d68-495f-b7f2-295414591275.dict",
+        "TEST_KYLIN_FACT/LEAF_CATEG_ID": "/dict/TEST_KYLIN_FACT/LEAF_CATEG_ID/45837578-c727-4b93-9b16-751cb6900626.dict"
+      },
+      "snapshots": {},
+      "storage_location_identifier": "test_III",
+      "date_range_start": 0,
+      "date_range_end": 0,
+      "size_kb": 0,
+      "source_records": 0,
+      "source_records_size": 0,
+      "last_build_time": 0,
+      "last_build_job_id": null,
+      "create_time": null,
+      "binary_signature": null
+    }
+  ],
+  "last_modified": 1418180845247,
+  "descriptor": "test_kylin_ii_desc",
+  "create_time": null,
+  "size_kb": 0,
+  "source_records_count": 0,
+  "source_records_size": 0
+}

@@ -27,10 +27,13 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.dict.ColumnDictInfo;
+import com.kylinolap.dict.Dictionary;
+import com.kylinolap.metadata.model.TblColRef;
+import com.kylinolap.metadata.realization.SegmentStatusEnum;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class CubeSegment implements Comparable<CubeSegment> {
+public class CubeSegment implements Comparable<CubeSegment>, ColumnDictInfo {
 
     @JsonBackReference
     private CubeInstance cubeInstance;
@@ -45,7 +48,7 @@ public class CubeSegment implements Comparable<CubeSegment> {
     @JsonProperty("date_range_end")
     private long dateRangeEnd;
     @JsonProperty("status")
-    private CubeSegmentStatusEnum status;
+    private SegmentStatusEnum status;
     @JsonProperty("size_kb")
     private long sizeKB;
     @JsonProperty("source_records")
@@ -61,7 +64,7 @@ public class CubeSegment implements Comparable<CubeSegment> {
 
     @JsonProperty("binary_signature")
     private String binarySignature; // a hash of cube schema and dictionary ID,
-                                    // used for sanity check
+    // used for sanity check
 
     @JsonProperty("dictionaries")
     private ConcurrentHashMap<String, String> dictionaries; // table/column ==> dictionary resource path
@@ -76,7 +79,7 @@ public class CubeSegment implements Comparable<CubeSegment> {
      * @param startDate
      * @param endDate
      * @return if(startDate == 0 && endDate == 0), returns "FULL_BUILD", else
-     *         returns "yyyyMMddHHmmss_yyyyMMddHHmmss"
+     * returns "yyyyMMddHHmmss_yyyyMMddHHmmss"
      */
     public static String getSegmentName(long startDate, long endDate) {
         if (startDate == 0 && endDate == 0) {
@@ -124,11 +127,11 @@ public class CubeSegment implements Comparable<CubeSegment> {
         this.dateRangeEnd = dateRangeEnd;
     }
 
-    public CubeSegmentStatusEnum getStatus() {
+    public SegmentStatusEnum getStatus() {
         return status;
     }
 
-    public void setStatus(CubeSegmentStatusEnum status) {
+    public void setStatus(SegmentStatusEnum status) {
         this.status = status;
     }
 
@@ -242,8 +245,7 @@ public class CubeSegment implements Comparable<CubeSegment> {
     }
 
     /**
-     * @param storageLocationIdentifier
-     *            the storageLocationIdentifier to set
+     * @param storageLocationIdentifier the storageLocationIdentifier to set
      */
     public void setStorageLocationIdentifier(String storageLocationIdentifier) {
         this.storageLocationIdentifier = storageLocationIdentifier;
@@ -303,5 +305,20 @@ public class CubeSegment implements Comparable<CubeSegment> {
                 .add("last_build_job_id", lastBuildJobID)
                 .add("status", status)
                 .toString();
+    }
+
+    @Override
+    public int getColumnLength(TblColRef col) {
+        Dictionary<?> dict = getDictionary(col);
+        if (dict == null) {
+            return this.getCubeDesc().getRowkey().getColumnLength(col);
+        } else {
+            return dict.getSizeOfId();
+        }
+    }
+
+    @Override
+    public Dictionary<?> getDictionary(TblColRef col) {
+        return CubeManager.getInstance(this.getCubeInstance().getConfig()).getDictionary(this, col);
     }
 }

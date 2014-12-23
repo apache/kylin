@@ -16,6 +16,8 @@
 
 package com.kylinolap.job.hadoop.invertedindex;
 
+import com.kylinolap.invertedindex.model.IIDesc;
+import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -28,9 +30,7 @@ import com.kylinolap.common.util.HadoopUtil;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.CubeSegmentStatusEnum;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
  * @author ysong1
@@ -54,7 +54,7 @@ public class IIBulkLoadJob extends AbstractHadoopJob {
 
             FileSystem fs = FileSystem.get(getConf());
             FsPermission permission = new FsPermission((short) 0777);
-            fs.setPermission(new Path(input, InvertedIndexDesc.HBASE_FAMILY), permission);
+            fs.setPermission(new Path(input, IIDesc.HBASE_FAMILY), permission);
 
             int hbaseExitCode = ToolRunner.run(new LoadIncrementalHFiles(getConf()), new String[] { input, tableName });
 
@@ -62,7 +62,7 @@ public class IIBulkLoadJob extends AbstractHadoopJob {
             CubeInstance cube = mgr.getCube(cubeName);
             CubeSegment seg = cube.getFirstSegment();
             seg.setStorageLocationIdentifier(tableName);
-            seg.setStatus(CubeSegmentStatusEnum.READY);
+            seg.setStatus(SegmentStatusEnum.READY);
             mgr.updateCube(cube);
 
             return hbaseExitCode;

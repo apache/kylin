@@ -149,7 +149,7 @@ public class HiveSourceTableLoader {
         }
 
         for (Map<String, String> tableAttrs : tableAttrsList) {
-            File file = new File(tableExdDir, tableAttrs.get("tableName").toUpperCase() + "." + OUTPUT_SURFIX);
+            File file = new File(tableExdDir, (database + "." + tableAttrs.get("tableName")).toUpperCase() + "." + OUTPUT_SURFIX);
             JsonUtil.writeValueIndent(new FileOutputStream(file), tableAttrs);
         }
         return loadedTables;

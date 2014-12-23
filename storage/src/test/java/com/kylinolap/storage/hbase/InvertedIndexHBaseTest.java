@@ -19,41 +19,51 @@ package com.kylinolap.storage.hbase;
 import java.util.List;
 
 import com.kylinolap.common.util.BytesUtil;
-import com.kylinolap.cube.invertedindex.*;
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IIManager;
+import com.kylinolap.invertedindex.IISegment;
+import com.kylinolap.invertedindex.index.Slice;
+import com.kylinolap.invertedindex.index.TableRecord;
+import com.kylinolap.invertedindex.index.RawTableRecord;
+import com.kylinolap.invertedindex.index.TableRecordInfo;
+import com.kylinolap.invertedindex.model.IIDesc;
+import com.kylinolap.invertedindex.model.IIKeyValueCodec;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.*;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.common.util.HadoopUtil;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
  * @author yangli9
  */
+@Ignore
 public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
 
-    CubeInstance cube;
-    CubeSegment seg;
+    IIInstance ii;
+    IISegment seg;
     HConnection hconn;
+
+    TableRecordInfo info;
 
     @Before
     public void setup() throws Exception {
         this.createTestMetadata();
 
-        this.cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_ii");
-        this.seg = cube.getFirstSegment();
+        this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii");
+        this.seg = ii.getFirstSegment();
 
         String hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
         Configuration hconf = HadoopUtil.newHBaseConfiguration(hbaseUrl);
         hconn = HConnectionManager.createConnection(hconf);
+
+        this.info = new TableRecordInfo(seg);
     }
 
     @After
@@ -65,10 +75,10 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
     public void testLoad() throws Exception {
 
         String tableName = seg.getStorageLocationIdentifier();
-        IIKeyValueCodec codec = new IIKeyValueCodec(new TableRecordInfo(seg));
+        IIKeyValueCodec codec = new IIKeyValueCodec(info.getDigest());
 
         List<Slice> slices = Lists.newArrayList();
-        HBaseClientKVIterator kvIterator = new HBaseClientKVIterator(hconn, tableName, InvertedIndexDesc.HBASE_FAMILY_BYTES, InvertedIndexDesc.HBASE_QUALIFIER_BYTES);
+        HBaseClientKVIterator kvIterator = new HBaseClientKVIterator(hconn, tableName, IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES);
         try {
             for (Slice slice : codec.decodeKeyValue(kvIterator)) {
                 slices.add(slice);
@@ -86,8 +96,8 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
     private List<TableRecord> iterateRecords(List<Slice> slices) {
         List<TableRecord> records = Lists.newArrayList();
         for (Slice slice : slices) {
-            for (TableRecordBytes rec : slice) {
-                records.add((TableRecord) rec.clone());
+            for (RawTableRecord rec : slice) {
+                records.add(new TableRecord((RawTableRecord) rec.clone(), info));
             }
         }
         return records;

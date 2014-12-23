@@ -28,7 +28,7 @@ import com.kylinolap.common.util.StringUtil;
 import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.LookupDesc;
 import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 9/24/13 Time: 10:40 AM To

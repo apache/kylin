@@ -13,43 +13,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.kylinolap.metadata.project;
 
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+import com.kylinolap.metadata.model.*;
+import com.kylinolap.metadata.realization.IRealization;
+import com.kylinolap.metadata.realization.RealizationRegistry;
+import com.kylinolap.metadata.realization.RealizationType;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.common.restclient.Broadcaster;
 import com.kylinolap.common.restclient.SingleValueCache;
-import com.kylinolap.metadata.model.realization.DataModelRealizationType;
-import com.kylinolap.metadata.model.realization.IDataModelRealization;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import com.kylinolap.metadata.MetadataManager;
 
 /**
  * @author xduo
  */
 public class ProjectManager {
     private static final Logger logger = LoggerFactory.getLogger(ProjectManager.class);
-
-    // static cached instances
     private static final ConcurrentHashMap<KylinConfig, ProjectManager> CACHE = new ConcurrentHashMap<KylinConfig, ProjectManager>();
     private static final Serializer<ProjectInstance> PROJECT_SERIALIZER = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
-    private ConcurrentMap<Class<? extends IDataModelRealization>, Class<? extends IDataModelRealization>> realizations = Maps.newConcurrentMap();
 
     private KylinConfig config;
     // project name => ProjrectDesc
     private SingleValueCache<String, ProjectInstance> projectMap = new SingleValueCache<String, ProjectInstance>(Broadcaster.TYPE.PROJECT);
     // project name => tables
+    private Multimap<String, ProjectTable> projectTables = Multimaps.synchronizedMultimap(HashMultimap.<String, ProjectTable>create());
 
     public static ProjectManager getInstance(KylinConfig config) {
         ProjectManager r = CACHE.get(config);
@@ -70,7 +72,7 @@ public class ProjectManager {
                 }
                 return r;
             } catch (IOException e) {
-                throw new IllegalStateException("Failed to init CubeManager from " + config, e);
+                throw new IllegalStateException("Failed to init ProjectManager from " + config, e);
             }
         }
     }
@@ -80,25 +82,19 @@ public class ProjectManager {
     }
 
     private ProjectManager(KylinConfig config) throws IOException {
-        logger.info("Initializing CubeManager with metadata url " + config);
+        logger.info("Initializing ProjectManager with metadata url " + config);
         this.config = config;
 
         loadAllProjects();
     }
 
-    public void registerDataModelRealization(Class<? extends IDataModelRealization> realization) {
-        if (realization == null) {
-            throw new NullPointerException("realization cannot be null");
-        }
-        realizations.putIfAbsent(realization, realization);
-    }
 
     public List<ProjectInstance> listAllProjects() {
         return new ArrayList<ProjectInstance>(projectMap.values());
     }
 
-    public List<ProjectInstance> getProjects(String cubeName) {
-        return this.findProjects(cubeName);
+    public List<ProjectInstance> getProjects(RealizationType type, String realizationName) {
+        return this.findProjects(type, realizationName);
     }
 
     public ProjectInstance dropProject(String projectName) throws IOException {
@@ -111,8 +107,8 @@ public class ProjectManager {
             throw new IllegalStateException("The project named " + projectName + " does not exist");
         }
 
-        if (projectInstance.getCubes().size() != 0) {
-            throw new IllegalStateException("The project named " + projectName + " can not be deleted because there's still cubes in it. Delete all the cubes first.");
+        if (projectInstance.getRealizationCount(null) != 0) {
+            throw new IllegalStateException("The project named " + projectName + " can not be deleted because there's still realizations in it. Delete them first.");
         }
 
         logger.info("Dropping project '" + projectInstance.getName() + "'");
@@ -149,7 +145,7 @@ public class ProjectManager {
             ProjectInstance newProject = this.createProject(newName, project.getOwner(), newDesc);
             newProject.setCreateTime(project.getCreateTime());
             newProject.recordUpdateTime(System.currentTimeMillis());
-            newProject.setCubes(project.getCubes());
+            newProject.setRealizationEntries(project.getRealizationEntries());
 
             deleteResource(project);
             saveResource(newProject);
@@ -159,9 +155,8 @@ public class ProjectManager {
             project.setName(newName);
             project.setDescription(newDesc);
 
-            if (project.getUuid() == null) {
+            if (project.getUuid() == null)
                 project.updateRandomUuid();
-            }
 
             saveResource(project);
 
@@ -169,38 +164,238 @@ public class ProjectManager {
         }
     }
 
-    public ProjectInstance updateProject(ProjectInstance project) throws IOException{
-        saveResource(project);
-        return project;
+    public ProjectInstance updateRealizationToProject(RealizationType type, String realizationName, String newProjectName, String owner) throws IOException {
+        removeRealizationsFromProjects(type, realizationName);
+        return addRealizationToProject(type, realizationName, newProjectName, owner);
     }
 
-    public void removeCubeFromProjects(String cubeName) throws IOException {
-        for (ProjectInstance projectInstance : findProjects(cubeName)) {
-            projectInstance.removeCube(cubeName);
+
+    private ProjectInstance addRealizationToProject(RealizationType type, String realizationName, String project, String user) throws IOException {
+        String newProjectName = ProjectInstance.getNormalizedProjectName(project);
+        ProjectInstance newProject = getProject(newProjectName);
+        if (newProject == null) {
+            newProject = this.createProject(newProjectName, user, "This is a project automatically added when adding realization " + realizationName + "(" + type + ")");
+        }
+        newProject.addRealizationEntry(type, realizationName);
+        saveResource(newProject);
+
+        return newProject;
+    }
+
+
+    ////////////////////////////////////////////////////////
+    // project table related
+
+    public ProjectInstance addTableDescToProject(String tables, String projectName) throws IOException {
+        ProjectInstance projectInstance = getProject(projectName);
+        String[] tokens = StringUtils.split(tables, ",");
+        for (int i = 0; i < tokens.length; i++) {
+            String token = tokens[i].trim();
+            if (StringUtils.isNotEmpty(token)) {
+                projectInstance.addTable(token);
+            }
+        }
+
+        List<TableDesc> exposedTables = listExposedTables(projectName);
+        for (TableDesc table : exposedTables) {
+            projectInstance.addTable(table.getName());
+        }
+
+        saveResource(projectInstance);
+        return projectInstance;
+    }
+
+    public List<TableDesc> listDefinedTablesInProject(String project) throws IOException {
+        if (null == project) {
+            return Collections.emptyList();
+        }
+        project = ProjectInstance.getNormalizedProjectName(project);
+        ProjectInstance projectInstance = getProject(project);
+        int originTableCount = projectInstance.getTablesCount();
+        //sync exposed table to project when list
+        List<TableDesc> exposedTables = listExposedTables(project);
+        for (TableDesc table : exposedTables) {
+            projectInstance.addTable(table.getName());
+        }
+        //only save project json if new tables are sync in
+        if (originTableCount < projectInstance.getTablesCount()) {
+            saveResource(projectInstance);
+        }
+
+        List<TableDesc> tables = Lists.newArrayList();
+        for (String table : projectInstance.getTables()) {
+            TableDesc tableDesc = getMetadataManager().getTableDesc(table);
+            if (tableDesc != null) {
+                tables.add(tableDesc);
+            }
+        }
+
+        return tables;
+    }
+
+    //
+    ////////////////////////////////////////////////////////
+
+    public void removeRealizationsFromProjects(RealizationType type, String realizationName) throws IOException {
+        for (ProjectInstance projectInstance : findProjects(type, realizationName)) {
+            projectInstance.removeRealization(type, realizationName);
             saveResource(projectInstance);
         }
     }
 
-    public ProjectInstance updateCubeToProject(String cubeName, String newProjectName, String owner) throws IOException {
-        removeCubeFromProjects(cubeName);
-        return addCubeToProject(cubeName, newProjectName, owner);
+    public List<TableDesc> listExposedTables(String project) {
+        project = ProjectInstance.getNormalizedProjectName(project);
+        List<TableDesc> tables = Lists.newArrayList();
+
+        for (ProjectTable table : projectTables.get(project)) {
+            TableDesc tableDesc = getMetadataManager().getTableDesc(table.getName());
+            if (tableDesc != null) {
+                tables.add(tableDesc);
+            }
+        }
+
+        return tables;
+    }
+
+    public List<ColumnDesc> listExposedColumns(String project, String table) {
+        project = ProjectInstance.getNormalizedProjectName(project);
+
+        MetadataManager metaMgr = getMetadataManager();
+        TableDesc tableDesc = metaMgr.getTableDesc(table);
+        List<ColumnDesc> columns = Lists.newArrayList();
+
+        for (String column : this.getProjectTable(project, table).getColumns()) {
+            columns.add(tableDesc.findColumnByName(column));
+        }
+
+        return columns;
+    }
+
+    public boolean isExposedTable(String project, String table) {
+        project = ProjectInstance.getNormalizedProjectName(project);
+
+        return projectTables.containsEntry(project, new ProjectTable(table));
+    }
+
+    public boolean isExposedColumn(String project, String table, String col) {
+        project = ProjectInstance.getNormalizedProjectName(project);
+
+        return getProjectTable(project, table).getColumns().contains(col);
+    }
+
+    public List<IRealization> listAllRealizations(String project, RealizationType type) {
+        project = ProjectInstance.getNormalizedProjectName(project);
+
+        HashSet<IRealization> ret = new HashSet<IRealization>();
+
+        ProjectInstance projectInstance = getProject(project);
+        if (projectInstance != null) {
+            for (RealizationEntry dm : projectInstance.getRealizationEntries()) {
+                if (dm.getType() == type || type == null) {//type == null means any type
+                    RealizationRegistry registry = RealizationRegistry.getInstance(config);
+                    registry.loadRealizations();
+                    IRealization realization = registry.getRealization(dm.getType(), dm.getRealization());
+                    ret.add(realization);
+                }
+            }
+        }
+
+        return Lists.newArrayList(ret);
+    }
+
+    public List<IRealization> listAllRealizations(String project) {
+        return listAllRealizations(project, null);
+    }
+
+
+    public List<IRealization> getRealizationsByTable(String project, String tableName) {
+        project = ProjectInstance.getNormalizedProjectName(project);
+        tableName = tableName.toUpperCase();
+        List<IRealization> realizations = new ArrayList<IRealization>();
+
+        ProjectTable projectTable = getProjectTable(project, tableName);
+        realizations.addAll(projectTable.getRealizations());
+
+        return realizations;
+    }
+
+
+    public List<IRealization> getOnlineRealizationByFactTable(String project, String factTableName) {
+        project = ProjectInstance.getNormalizedProjectName(project);
+        factTableName = factTableName.toUpperCase();
+        List<IRealization> realizations = new ArrayList<IRealization>();
+        ProjectTable projectTable = this.getProjectTable(project, factTableName);
+        for (IRealization realization : projectTable.getRealizations()) {
+            if (realization.getFactTable().equalsIgnoreCase(factTableName) && realization.isReady()) {
+                realizations.add(realization);
+            }
+        }
+
+        return realizations;
+    }
+
+    public List<MeasureDesc> listEffectiveRewriteMeasures(String project, String factTable) {
+        factTable = factTable.toUpperCase();
+        List<MeasureDesc> result = Lists.newArrayList();
+
+        for (IRealization realization : getProjectTable(project, factTable).getRealizations()) {
+            if (realization.isReady() == false)
+                continue;
+            if (!realization.getFactTable().equalsIgnoreCase(factTable))
+                continue;
+
+            for (MeasureDesc m : realization.getMeasures()) {
+                FunctionDesc func = m.getFunction();
+                if (func.needRewrite())
+                    result.add(m);
+            }
+        }
+
+        return result;
     }
 
     public void loadProjectCache(ProjectInstance project, boolean triggerUpdate) throws IOException {
+
+        //TODO project instance inited twice here
         loadProject(project.getResourcePath(), triggerUpdate);
+        loadTables(project.getResourcePath());
     }
 
     public void removeProjectCache(ProjectInstance project) {
         String projectName = ProjectInstance.getNormalizedProjectName(project.getName());
         if (projectMap.containsKey(projectName)) {
             projectMap.remove(projectName);
+            projectTables.removeAll(projectName);
         }
     }
 
-    private List<ProjectInstance> findProjects(String cubeName) {
-        List<ProjectInstance> projects = new ArrayList<ProjectInstance>();
+    private void mapTableToRealization(ProjectInstance projectInstance, IRealization realization) {
+
+        List<TblColRef> allColumns = realization.getAllColumns();
+        if (allColumns == null || allColumns.size() == 0) {
+            logger.warn("No columns found from realization '" + realization.getName());
+            return;
+        }
+
+        for (TblColRef tblColRef : allColumns) {
+            String project = ProjectInstance.getNormalizedProjectName(projectInstance.getName());
+
+            if (this.getMetadataManager().getTableDesc(tblColRef.getTable()) == null) {
+                throw new RuntimeException("Table Desc for " + tblColRef.getTable() + "does not exist");
+            }
+
+            ProjectTable factProjTable = this.getProjectTable(project, tblColRef.getTable(), true);
+            if (!factProjTable.getRealizations().contains(realization)) {
+                factProjTable.getRealizations().add(realization);
+            }
+        }
+
+    }
+
+    private List<ProjectInstance> findProjects(RealizationType type, String realizationName) {
+        List<ProjectInstance> projects = Lists.newArrayList();
         for (ProjectInstance projectInstance : projectMap.values()) {
-            if (projectInstance.containsCube(cubeName)) {
+            if (projectInstance.containsRealization(type, realizationName)) {
                 projects.add(projectInstance);
             }
         }
@@ -208,16 +403,15 @@ public class ProjectManager {
         return projects;
     }
 
-    private synchronized ProjectInstance loadProject(String path, boolean triggerUpdate) throws IOException {
+    public synchronized ProjectInstance loadProject(String path, boolean triggerUpdate) throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Loading CubeInstance " + store.getReadableResourcePath(path));
+        logger.debug("Loading ProjectInstance " + store.getReadableResourcePath(path));
 
         ProjectInstance projectInstance = store.getResource(path, ProjectInstance.class, PROJECT_SERIALIZER);
         projectInstance.init();
 
-        if (StringUtils.isBlank(projectInstance.getName())) {
+        if (StringUtils.isBlank(projectInstance.getName()))
             throw new IllegalStateException("Project name must not be blank");
-        }
 
         if (triggerUpdate) {
             projectMap.put(projectInstance.getName().toUpperCase(), projectInstance);
@@ -228,6 +422,22 @@ public class ProjectManager {
         return projectInstance;
     }
 
+    private synchronized void loadTables(String path) throws IOException {
+        ResourceStore store = getStore();
+        logger.debug("Loading ProjectInstance " + store.getReadableResourcePath(path));
+
+        ProjectInstance projectInstance = store.getResource(path, ProjectInstance.class, PROJECT_SERIALIZER);
+        projectInstance.init();
+
+        String project = ProjectInstance.getNormalizedProjectName(projectInstance.getName());
+        projectTables.removeAll(project);
+
+        for (IRealization realization : this.listAllRealizations(projectInstance.getName())) {
+            markExposedTablesAndColumns(projectInstance.getName(), realization);
+            mapTableToRealization(projectInstance, realization);
+        }
+    }
+
     private void loadAllProjects() throws IOException {
         ResourceStore store = getStore();
         List<String> paths = store.collectResourceRecursively(ResourceStore.PROJECT_RESOURCE_ROOT, ".json");
@@ -236,22 +446,12 @@ public class ProjectManager {
 
         for (String path : paths) {
             loadProject(path, false);
+            loadTables(path);
         }
 
         logger.debug("Loaded " + paths.size() + " Project(s)");
     }
 
-    private ProjectInstance addCubeToProject(String cubeName, String project, String user) throws IOException {
-        String newProjectName = ProjectInstance.getNormalizedProjectName(project);
-        ProjectInstance newProject = getProject(newProjectName);
-        if (newProject == null) {
-            newProject = this.createProject(newProjectName, user, "This is a project automatically added when adding cube " + cubeName);
-        }
-        newProject.addCube(cubeName);
-        saveResource(newProject);
-
-        return newProject;
-    }
 
     private void saveResource(ProjectInstance proj) throws IOException {
         ResourceStore store = getStore();
@@ -277,8 +477,70 @@ public class ProjectManager {
         this.removeProjectCache(droppedProject);
     }
 
+    // sync on update
+    private void markExposedTablesAndColumns(String projectName, IRealization realization) {
+        if (!realization.isReady())
+            return;
+
+        //TODO removed redunctant code here, check correctness
+
+        for (TblColRef col : realization.getAllColumns()) {
+            markExposedTableAndColumn(projectName, col.getTable(), col.getName());
+        }
+    }
+
+    private void markExposedTableAndColumn(String project, String table, String column) {
+        project = ProjectInstance.getNormalizedProjectName(project);
+        TableDesc t = this.getMetadataManager().getTableDesc(table);
+        if (t == null)
+            throw new IllegalStateException("No SourceTable found by name '" + table);
+
+        ProjectTable projTable = getProjectTable(project, table, true);
+
+        ColumnDesc srcCol = t.findColumnByName(column);
+        if (srcCol == null)
+            throw new IllegalStateException("No SourceColumn found by name '" + table + "/" + column);
+
+        if (!projTable.getColumns().contains(srcCol.getName())) {
+            projTable.getColumns().add(srcCol.getName());
+        }
+    }
+
+    private ProjectTable getProjectTable(String project, final String table) {
+        return getProjectTable(project, table, false);
+    }
+
+    private ProjectTable getProjectTable(String project, final String table, boolean autoCreate) {
+        String tableIdentity = TableDesc.getTableIdentity(table);
+
+        ProjectTable projectTable = null;
+        project = ProjectInstance.getNormalizedProjectName(project);
+
+        if (this.projectTables.containsEntry(project, new ProjectTable(tableIdentity))) {
+            Iterator<ProjectTable> projsIter = this.projectTables.get(project).iterator();
+            while (projsIter.hasNext()) {
+                ProjectTable oneTable = projsIter.next();
+                if (oneTable.getName().equalsIgnoreCase(tableIdentity)) {
+                    projectTable = oneTable;
+                    break;
+                }
+            }
+        } else {
+            projectTable = new ProjectTable(tableIdentity);
+
+            if (autoCreate) {
+                this.projectTables.put(project, projectTable);
+            }
+        }
+
+        return projectTable;
+    }
+
     private ResourceStore getStore() {
         return ResourceStore.getStore(this.config);
     }
 
+    private MetadataManager getMetadataManager() {
+        return MetadataManager.getInstance(config);
+    }
 }
