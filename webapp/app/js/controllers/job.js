@@ -43,6 +43,11 @@ KylinApp
         });
 
         $scope.list = function (offset, limit) {
+
+            if(!$scope.project.projects.length){
+                return;
+            }
+
             offset = (!!offset) ? offset : 0;
             var selectedJob = null;
             if (angular.isDefined($scope.state.selectedJob)) {
