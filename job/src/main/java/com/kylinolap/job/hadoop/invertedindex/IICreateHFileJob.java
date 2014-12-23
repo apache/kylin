@@ -47,7 +47,7 @@ public class IICreateHFileJob extends AbstractHadoopJob {
 
         try {
             options.addOption(OPTION_JOB_NAME);
-            options.addOption(OPTION_CUBE_NAME);
+            options.addOption(OPTION_II_NAME);
             options.addOption(OPTION_INPUT_PATH);
             options.addOption(OPTION_OUTPUT_PATH);
             options.addOption(OPTION_HTABLE_NAME);

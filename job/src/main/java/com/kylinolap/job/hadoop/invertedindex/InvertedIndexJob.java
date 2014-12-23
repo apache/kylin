@@ -53,7 +53,7 @@ public class InvertedIndexJob extends AbstractHadoopJob {
 
         try {
             options.addOption(OPTION_JOB_NAME);
-            options.addOption(OPTION_CUBE_NAME);
+            options.addOption(OPTION_II_NAME);
             options.addOption(OPTION_INPUT_PATH);
             options.addOption(OPTION_INPUT_FORMAT);
             options.addOption(OPTION_INPUT_DELIM);
@@ -61,7 +61,7 @@ public class InvertedIndexJob extends AbstractHadoopJob {
             parseOptions(options, args);
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
-            String cubeName = getOptionValue(OPTION_CUBE_NAME);
+            String iiname = getOptionValue(OPTION_II_NAME);
             Path input = new Path(getOptionValue(OPTION_INPUT_PATH));
             String inputFormat = getOptionValue(OPTION_INPUT_FORMAT);
             String inputDelim = getOptionValue(OPTION_INPUT_DELIM);
@@ -71,7 +71,7 @@ public class InvertedIndexJob extends AbstractHadoopJob {
 
             System.out.println("Starting: " + job.getJobName());
             
-            IIInstance ii = getII(cubeName);
+            IIInstance ii = getII(iiname);
 
             setupMapInput(input, inputFormat, inputDelim);
             setupReduceOutput(output, ii.getDescriptor().getSharding());
@@ -93,10 +93,10 @@ public class InvertedIndexJob extends AbstractHadoopJob {
      */
     private IIInstance getII(String iiName) {
         IIManager mgr = IIManager.getInstance(KylinConfig.getInstanceFromEnv());
-        IIInstance cube = mgr.getII(iiName);
-        if (cube == null)
+        IIInstance ii = mgr.getII(iiName);
+        if (ii == null)
             throw new IllegalArgumentException("No Inverted Index found by name " + iiName);
-        return cube;
+        return ii;
     }
 
     private void attachMetadata(IIInstance ii) throws IOException {
@@ -105,8 +105,8 @@ public class InvertedIndexJob extends AbstractHadoopJob {
         attachKylinPropsAndMetadata(ii, conf);
 
         IISegment seg = ii.getFirstSegment();
-        conf.set(BatchConstants.CFG_CUBE_NAME, ii.getName());
-        conf.set(BatchConstants.CFG_CUBE_SEGMENT_NAME, seg.getName());
+        conf.set(BatchConstants.CFG_II_NAME, ii.getName());
+        conf.set(BatchConstants.CFG_II_SEGMENT_NAME, seg.getName());
     }
 
     private void setupMapInput(Path input, String inputFormat, String inputDelim) throws IOException {
