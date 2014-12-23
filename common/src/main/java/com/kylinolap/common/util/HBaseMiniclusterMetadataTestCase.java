@@ -98,8 +98,6 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
                 }
             }
         }
-
-
     }
 
     private static void startupMiniClusterAndImportData() {

@@ -63,8 +63,16 @@ public class KylinQueryTest extends KylinTestBase {
     }
 
     private static void setUpEnv() throws IOException, ClassNotFoundException, InterruptedException {
-        HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.MINICLUSTER_TEST_DATA);
-        HBaseMiniclusterMetadataTestCase.startupMinicluster();
+
+        String queryUseMinicluster = System.getProperty("queryUseMinicluster");
+
+        if (Boolean.parseBoolean(queryUseMinicluster)) {
+            HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.MINICLUSTER_TEST_DATA);
+            HBaseMiniclusterMetadataTestCase.startupMinicluster();
+        } else {
+            HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
+        }
+
         config = KylinConfig.getInstanceFromEnv();
     }
 
