@@ -48,6 +48,7 @@ public class KylinQueryTest extends KylinTestBase {
 
     @BeforeClass
     public static void setUp() throws Exception {
+
         printInfo("setUp in KylinQueryTest");
 
         joinType = "left";
@@ -62,8 +63,16 @@ public class KylinQueryTest extends KylinTestBase {
     }
 
     private static void setUpEnv() throws IOException, ClassNotFoundException, InterruptedException {
-        HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.MINICLUSTER_TEST_DATA);
-        HBaseMiniclusterMetadataTestCase.startupMinicluster();
+
+        String queryUseMinicluster = System.getProperty("queryUseMinicluster");
+
+        if (Boolean.parseBoolean(queryUseMinicluster)) {
+            HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.MINICLUSTER_TEST_DATA);
+            HBaseMiniclusterMetadataTestCase.startupMinicluster();
+        } else {
+            HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
+        }
+
         config = KylinConfig.getInstanceFromEnv();
     }
 
@@ -129,7 +138,7 @@ public class KylinQueryTest extends KylinTestBase {
     @Ignore
     @Test
     public void testTempQuery() throws Exception {
-       execAndCompQuery("src/test/resources/query/temp", null, true);
+        execAndCompQuery("src/test/resources/query/temp", null, true);
     }
 
     @Test
@@ -138,7 +147,7 @@ public class KylinQueryTest extends KylinTestBase {
         String queryFileName = "src/test/resources/query/sql_orderby/query01.sql";
 
         File sqlFile = new File(queryFileName);
-        runSQL(sqlFile, true, true);
+        //runSQL(sqlFile, true, true);
         runSQL(sqlFile, true, false);
     }
 
@@ -165,6 +174,13 @@ public class KylinQueryTest extends KylinTestBase {
         execAndCompQuery("src/test/resources/query/sql", null, true);
     }
 
+    @Ignore
+    @Test
+    public void testIIQuery() throws Exception {
+        execAndCompQuery("src/test/resources/query/sql_ii", null, true);
+    }
+
+    @Ignore
     @Test
     public void testSimpleQuery() throws Exception {
         verifyResultRowCount("src/test/resources/query/sql_verifyCount");

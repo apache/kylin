@@ -26,7 +26,8 @@ import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.DimensionDesc;
 import com.kylinolap.cube.model.CubePartitionDesc.CubePartitionType;
 import com.kylinolap.dict.DictionaryManager;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
+import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
 
 /**
  * @author xduo
@@ -36,7 +37,7 @@ public class CubeSegmentValidator {
     private CubeSegmentValidator() {
     }
 
-    public static CubeSegmentValidator getCubeSegmentValidator(CubeBuildTypeEnum buildType, CubePartitionType partitionType) {
+    public static CubeSegmentValidator getCubeSegmentValidator(RealizationBuildTypeEnum buildType, CubePartitionType partitionType) {
         switch (buildType) {
         case MERGE:
             return new MergeOperationValidator();

@@ -318,6 +318,39 @@ public class BytesUtil {
         return array;
     }
 
+    public static void writeBooleanArray(boolean[] array, ByteBuffer out) {
+        if (array == null) {
+            writeVInt(-1, out);
+            return;
+        }
+        writeVInt(array.length, out);
+        byte b_true = (byte) 1;
+        byte b_false = (byte) 0;
+        for (int i = 0; i < array.length; i++) {
+            if (array[i])
+                out.put(b_true);
+            else
+                out.put(b_false);
+        }
+    }
+
+    public static boolean[] readBooleanArray(ByteBuffer in) {
+        int len = readVInt(in);
+        if (len < 0)
+            return null;
+
+        boolean[] array = new boolean[len];
+        byte b_true = (byte) 1;
+        for (int i = 0; i < array.length; i++) {
+            byte temp = in.get();
+            if (temp == b_true)
+                array[i] = true;
+            else
+                array[i] = false;
+        }
+        return array;
+    }
+
     public static byte[] toBytes(Writable writable) {
         try {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();

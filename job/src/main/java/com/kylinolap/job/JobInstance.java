@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.persistence.RootPersistentEntity;
-import com.kylinolap.cube.CubeBuildTypeEnum;
+import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
 import com.kylinolap.job.constant.JobStatusEnum;
 import com.kylinolap.job.constant.JobStepCmdTypeEnum;
 import com.kylinolap.job.constant.JobStepStatusEnum;
@@ -67,7 +67,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
     @JsonProperty("name")
     private String name;
     @JsonProperty("type")
-    private CubeBuildTypeEnum type; // java implementation
+    private RealizationBuildTypeEnum type; // java implementation
     @JsonProperty("duration")
     private long duration;
     @JsonProperty("related_cube")
@@ -152,11 +152,11 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         this.name = name;
     }
 
-    public CubeBuildTypeEnum getType() {
+    public RealizationBuildTypeEnum getType() {
         return type;
     }
 
-    public void setType(CubeBuildTypeEnum type) {
+    public void setType(RealizationBuildTypeEnum type) {
         this.type = type;
     }
 

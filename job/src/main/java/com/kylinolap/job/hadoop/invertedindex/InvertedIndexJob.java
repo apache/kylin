@@ -19,6 +19,9 @@ package com.kylinolap.job.hadoop.invertedindex;
 import java.io.File;
 import java.io.IOException;
 
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IIManager;
+import com.kylinolap.invertedindex.IISegment;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -35,9 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
@@ -71,11 +71,11 @@ public class InvertedIndexJob extends AbstractHadoopJob {
 
             System.out.println("Starting: " + job.getJobName());
             
-            CubeInstance cube = getCube(cubeName);
+            IIInstance ii = getII(cubeName);
 
             setupMapInput(input, inputFormat, inputDelim);
-            setupReduceOutput(output, cube.getInvertedIndexDesc().getSharding());
-            attachMetadata(cube);
+            setupReduceOutput(output, ii.getDescriptor().getSharding());
+            attachMetadata(ii);
 
             return waitForCompletion(job);
 
@@ -88,24 +88,24 @@ public class InvertedIndexJob extends AbstractHadoopJob {
     }
 
     /**
-     * @param cubeName
+     * @param iiName
      * @return
      */
-    private CubeInstance getCube(String cubeName) {
-        CubeManager mgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-        CubeInstance cube = mgr.getCube(cubeName);
+    private IIInstance getII(String iiName) {
+        IIManager mgr = IIManager.getInstance(KylinConfig.getInstanceFromEnv());
+        IIInstance cube = mgr.getII(iiName);
         if (cube == null)
-            throw new IllegalArgumentException("No Inverted Index Cubefound by name " + cubeName);
+            throw new IllegalArgumentException("No Inverted Index found by name " + iiName);
         return cube;
     }
 
-    private void attachMetadata(CubeInstance cube) throws IOException {
+    private void attachMetadata(IIInstance ii) throws IOException {
 
         Configuration conf = job.getConfiguration();
-        attachKylinPropsAndMetadata(cube, conf);
+        attachKylinPropsAndMetadata(ii, conf);
 
-        CubeSegment seg = cube.getFirstSegment();
-        conf.set(BatchConstants.CFG_CUBE_NAME, cube.getName());
+        IISegment seg = ii.getFirstSegment();
+        conf.set(BatchConstants.CFG_CUBE_NAME, ii.getName());
         conf.set(BatchConstants.CFG_CUBE_SEGMENT_NAME, seg.getName());
     }
 

@@ -18,7 +18,8 @@ package com.kylinolap.cube;
 
 import static org.junit.Assert.*;
 
-import com.kylinolap.cube.project.CubeRealizationManager;
+import com.kylinolap.metadata.project.ProjectManager;
+import com.kylinolap.metadata.realization.RealizationStatusEnum;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,7 +42,7 @@ public class CubeManagerCacheTest extends LocalFileMetadataTestCase {
         this.createTestMetadata();
         MetadataManager.removeInstance(this.getTestConfig());
         CubeManager.removeInstance(this.getTestConfig());
-        CubeRealizationManager.removeInstance(this.getTestConfig());
+        ProjectManager.removeInstance(this.getTestConfig());
         cubeManager = CubeManager.getInstance(this.getTestConfig());
     }
 
@@ -62,11 +63,11 @@ public class CubeManagerCacheTest extends LocalFileMetadataTestCase {
 
         CubeInstance createdCube = cubeManager.getCube("a_whole_new_cube");
         assertEquals(0, createdCube.getSegments().size());
-        assertEquals(CubeStatusEnum.DISABLED, createdCube.getStatus());
-        createdCube.setStatus(CubeStatusEnum.DESCBROKEN);
+        assertEquals(RealizationStatusEnum.DISABLED, createdCube.getStatus());
+        createdCube.setStatus(RealizationStatusEnum.DESCBROKEN);
 
         cubeManager.updateCube(createdCube);
-        assertEquals(CubeStatusEnum.DESCBROKEN, cubeManager.getCube("a_whole_new_cube").getStatus());
+        assertEquals(RealizationStatusEnum.DESCBROKEN, cubeManager.getCube("a_whole_new_cube").getStatus());
     }
 
     public CubeDescManager getCubeDescManager() {

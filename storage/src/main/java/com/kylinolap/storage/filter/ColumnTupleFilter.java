@@ -24,7 +24,7 @@ import java.util.List;
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.tuple.ITuple;
 
 /**

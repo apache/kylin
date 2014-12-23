@@ -52,9 +52,9 @@ import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowKeyDecoder;
 import com.kylinolap.cube.kv.RowValueDecoder;
 import com.kylinolap.cube.model.HBaseColumnDesc;
-import com.kylinolap.cube.model.MeasureDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.cube.model.CubeDesc.DeriveInfo;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.tuple.ITupleIterator;
@@ -72,21 +72,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
 
     public static final int SCAN_CACHE = 1024;
 
-    public static final ITupleIterator EMPTY_TUPLE_ITERATOR = new ITupleIterator() {
-        @Override
-        public boolean hasNext() {
-            return false;
-        }
 
-        @Override
-        public Tuple next() {
-            return null;
-        }
-
-        @Override
-        public void close() {
-        }
-    };
 
     private final CubeInstance cube;
     private final CubeSegment cubeSeg;

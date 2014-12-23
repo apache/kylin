@@ -23,8 +23,8 @@ import java.util.Set;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.kylinolap.cube.cuboid.Cuboid;
-import com.kylinolap.cube.model.MeasureDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.MeasureDesc;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * @author xjiang

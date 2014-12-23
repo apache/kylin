@@ -16,6 +16,9 @@
 
 package com.kylinolap.rest.service;
 
+import com.kylinolap.dict.DictionaryManager;
+import com.kylinolap.invertedindex.IIManager;
+import com.kylinolap.metadata.project.ProjectManager;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -31,7 +34,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.kylinolap.common.util.HBaseMiniclusterMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.project.CubeRealizationManager;
 import com.kylinolap.metadata.MetadataManager;
 
 /**
@@ -60,9 +62,11 @@ public class ServiceTestBase extends HBaseMiniclusterMetadataTestCase { //HBaseM
     public void setUp() {
         this.createTestMetadata();
 
-        MetadataManager.removeInstance(getTestConfig());
+        MetadataManager.removeInstance(this.getTestConfig());
+        DictionaryManager.removeInstance(this.getTestConfig());
         CubeManager.removeInstance(this.getTestConfig());
-        CubeRealizationManager.removeInstance(this.getTestConfig());
+        IIManager.removeInstance(this.getTestConfig());
+        ProjectManager.removeInstance(this.getTestConfig());
     }
 
     @After

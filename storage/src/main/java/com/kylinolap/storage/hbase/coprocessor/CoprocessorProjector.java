@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import com.kylinolap.cube.invertedindex.TableRecordInfo;
+import com.kylinolap.invertedindex.index.TableRecordInfo;
 import com.kylinolap.metadata.model.ColumnDesc;
 import org.apache.hadoop.hbase.Cell;
 
@@ -30,7 +30,7 @@ import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowKeyEncoder;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * @author yangli9
@@ -57,17 +57,16 @@ public class CoprocessorProjector {
         return new CoprocessorProjector(mask);
     }
 
-    public static CoprocessorProjector makeForEndpoint(final TableRecordInfo tableInfo, final Collection<TblColRef> dimensionColumns) {
-        byte[] mask = new byte[tableInfo.getByteFormLen()];
+    public static CoprocessorProjector makeForEndpoint(final TableRecordInfo tableInfo, final Collection<TblColRef> groupby) {
+        byte[] mask = new byte[tableInfo.getDigest().getByteFormLen()];
         int maskIdx = 0;
-        for (int i = 0; i < tableInfo.getColumnCount(); ++i) {
-            for (ColumnDesc columnDesc : tableInfo.getColumns()) {
-                TblColRef tblColRef = new TblColRef(columnDesc);
-                int length = tableInfo.length(i);
-                byte bits = dimensionColumns.contains(tblColRef) ? (byte) 0xff : 0x00;
-                for (int j = 0; j < length; ++j) {
-                    mask[maskIdx++] = bits;
-                }
+        for (int i = 0; i < tableInfo.getDigest().getColumnCount(); ++i) {
+            ColumnDesc columnDesc = tableInfo.getColumns()[i];
+            TblColRef tblColRef = new TblColRef(columnDesc);
+            int length = tableInfo.getDigest().length(i);
+            byte bits = groupby.contains(tblColRef) ? (byte) 0xff : 0x00;
+            for (int j = 0; j < length; ++j) {
+                mask[maskIdx++] = bits;
             }
         }
         return new CoprocessorProjector(mask);

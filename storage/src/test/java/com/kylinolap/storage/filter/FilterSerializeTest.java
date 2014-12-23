@@ -23,7 +23,7 @@ import org.junit.Test;
 
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
 
 /**

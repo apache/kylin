@@ -35,8 +35,8 @@ import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.kv.RowKeyDecoder;
-import com.kylinolap.cube.measure.MeasureCodec;
-import com.kylinolap.cube.model.MeasureDesc;
+import com.kylinolap.metadata.measure.MeasureCodec;
+import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.job.constant.BatchConstants;
 
 /**

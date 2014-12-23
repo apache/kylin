@@ -25,7 +25,7 @@ import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.model.CubeDesc.DeriveInfo;
 import com.kylinolap.dict.DateStrDictionary;
 import com.kylinolap.dict.lookup.LookupStringTable;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * @author xjiang
@@ -52,6 +52,10 @@ public class Tuple implements ITuple {
         return values;
     }
 
+    public TupleInfo getInfo() {
+        return info;
+    }
+
     public String getFieldName(TblColRef col) {
         return info.getFieldName(col);
     }
@@ -73,6 +77,10 @@ public class Tuple implements ITuple {
     private void setFieldObjectValue(String fieldName, Object fieldValue) {
         int index = info.getFieldIndex(fieldName);
         values[index] = fieldValue;
+    }
+
+    public void setValue(String fieldName, String fieldValue) {
+        this.setDimensionValue(fieldName, fieldValue);
     }
 
     public void setDimensionValue(String fieldName, String fieldValue) {

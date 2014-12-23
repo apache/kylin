@@ -40,7 +40,7 @@ import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc;
 import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc.IntermediateColumnDesc;
 import com.kylinolap.job.hadoop.hive.SqlHiveDataTypeMapping;
 import com.kylinolap.metadata.model.JoinDesc;
-import com.kylinolap.metadata.model.realization.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * @author George Song (ysong1)

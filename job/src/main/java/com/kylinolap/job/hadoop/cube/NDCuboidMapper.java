@@ -18,6 +18,7 @@ package com.kylinolap.job.hadoop.cube;
 import java.io.IOException;
 import java.util.Collection;
 
+import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.slf4j.Logger;
@@ -27,9 +28,8 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.CubeSegmentStatusEnum;
 import com.kylinolap.cube.common.RowKeySplitter;
-import com.kylinolap.cube.common.SplittedBytes;
+import com.kylinolap.common.util.SplittedBytes;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.cuboid.CuboidScheduler;
 import com.kylinolap.cube.model.CubeDesc;
@@ -65,7 +65,7 @@ public class NDCuboidMapper extends Mapper<Text, Text, Text, Text> {
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(context.getConfiguration());
 
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
-        CubeSegment cubeSegment = cube.getSegment(segmentName, CubeSegmentStatusEnum.NEW);
+        CubeSegment cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
         cubeDesc = cube.getDescriptor();
 
         // initialize CubiodScheduler

@@ -22,11 +22,12 @@ import java.util.List;
 
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
+import com.kylinolap.storage.hbase.coprocessor.CoprocessorRowType;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 
-import com.kylinolap.cube.measure.MeasureAggregator;
+import com.kylinolap.metadata.measure.MeasureAggregator;
 
 /**
  * @author yangli9
@@ -36,7 +37,7 @@ public class AggregationScanner implements RegionScanner {
 
     private RegionScanner outerScanner;
 
-    public AggregationScanner(ObserverRowType type, CoprocessorFilter filter, CoprocessorProjector groupBy, ObserverAggregators aggrs, RegionScanner innerScanner) throws IOException {
+    public AggregationScanner(CoprocessorRowType type, CoprocessorFilter filter, CoprocessorProjector groupBy, ObserverAggregators aggrs, RegionScanner innerScanner) throws IOException {
 
         AggregateRegionObserver.LOG.info("Kylin Coprocessor start");
 
@@ -51,7 +52,7 @@ public class AggregationScanner implements RegionScanner {
     }
 
     @SuppressWarnings("rawtypes")
-    ObserverAggregationCache buildAggrCache(final RegionScanner innerScanner, ObserverRowType type, CoprocessorProjector projector, ObserverAggregators aggregators, CoprocessorFilter filter, Stats stats) throws IOException {
+    ObserverAggregationCache buildAggrCache(final RegionScanner innerScanner, CoprocessorRowType type, CoprocessorProjector projector, ObserverAggregators aggregators, CoprocessorFilter filter, Stats stats) throws IOException {
 
         ObserverAggregationCache aggCache = new ObserverAggregationCache(aggregators);
 

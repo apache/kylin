@@ -26,7 +26,7 @@ import org.apache.commons.lang.StringUtils;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.cube.model.MeasureDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.cube.model.validation.IValidatorRule;
 import com.kylinolap.cube.model.validation.ResultLevel;
 import com.kylinolap.cube.model.validation.ValidateContext;
@@ -34,8 +34,8 @@ import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.DataType;
 import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.model.realization.FunctionDesc;
-import com.kylinolap.metadata.model.realization.ParameterDesc;
+import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.ParameterDesc;
 
 /**
  * Validate function parameter. Ticket:
