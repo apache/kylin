@@ -153,7 +153,7 @@
                 <h4>Load Hive Table Metadata</h4>
             </div>
             <div class="modal-body">
-                <span><strong>Project: </strong>{{ $parent.projectName }}</span>
+                <span><strong>Project: </strong>{{ $parent.projectName!=null?$parent.projectName:'NULL'}}</span>
                 <label for="tables"> Table Names:(Seperate with comma)</label>
                 <textarea ng-model="$parent.tableNames" class="form-control" id="tables"
                           placeholder="table1,table2  By default,system will choose 'Default' as database,you can specify database like this 'database.table'"></textarea>
