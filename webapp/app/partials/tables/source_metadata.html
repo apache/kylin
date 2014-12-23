@@ -8,12 +8,14 @@
                     style="width: 150px"
                     data-placeholder="select a project"
                     class="chosen-select">
+                <option  ng-if="userService.hasRole('ROLE_ADMIN')" ng-selected="project.selectedProject==null"  value=""> -- Choose Project -- </option>
             </select>
             <!--Project-->
             <a class="btn btn-xs btn-info" href="/projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
             <a class="btn btn-xs btn-primary" style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
                 <i class="fa fa-plus"></i>
             </a>
+
         </div>
     </form>
 </div>
