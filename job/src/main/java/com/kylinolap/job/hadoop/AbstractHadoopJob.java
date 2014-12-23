@@ -29,6 +29,7 @@ import java.util.Map;
 
 import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IISegment;
+import com.kylinolap.metadata.MetadataManager;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -212,7 +213,9 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         dumpList.add(ii.getResourcePath());
         dumpList.add(ii.getDescriptor().getModel().getResourcePath());
         dumpList.add(ii.getDescriptor().getResourcePath());
-        for (TableDesc table : ii.getDescriptor().listTables()) {
+
+        for (String tableName : ii.getDescriptor().getModel().getAllTables()) {
+            TableDesc table = MetadataManager.getInstance(kylinConfig).getTableDesc(tableName);
             dumpList.add(table.getResourcePath());
         }
 
