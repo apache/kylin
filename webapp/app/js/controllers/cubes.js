@@ -27,9 +27,9 @@ KylinApp
             dimensionFilter: '', measureFilter: ''};
 
         $scope.list = function (offset, limit) {
-//            if(!$scope.project.selectedProject){
-//                return;
-//            }
+            if(!$scope.project.projects.length){
+                return;
+            }
             offset = (!!offset) ? offset : 0;
             limit = (!!limit) ? limit : 20;
             var defer = $q.defer();
