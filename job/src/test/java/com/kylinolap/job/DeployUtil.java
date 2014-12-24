@@ -1,15 +1,13 @@
 package com.kylinolap.job;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
+import com.kylinolap.common.persistence.ResourceStore;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.apache.tools.ant.filters.StringInputStream;
 import org.codehaus.plexus.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +55,7 @@ public class DeployUtil {
         config().overrideKylinJobJarPath(jobJar.getAbsolutePath());
         config().overrideCoprocessorLocalJar(coprocessorJar.getAbsolutePath());
     }
-    
+
     public static void deployJobJars() throws IOException {
         Pair<File, File> files = getJobJarFiles();
         File jobJar = files.getFirst();
@@ -68,18 +66,18 @@ public class DeployUtil {
         if (jobJar.equals(jobJarLocal) == false) {
             FileUtils.copyFile(jobJar, jobJarLocal);
         }
-        
+
         File coprocessorJarRemote = new File(config().getCoprocessorLocalJar());
         File coprocessorJarLocal = new File(coprocessorJar.getParentFile(), coprocessorJarRemote.getName());
         if (coprocessorJar.equals(coprocessorJarLocal) == false) {
             FileUtils.copyFile(coprocessorJar, coprocessorJarLocal);
         }
-        
+
         CliCommandExecutor cmdExec = config().getCliCommandExecutor();
         cmdExec.copyFile(jobJarLocal.getAbsolutePath(), jobJarRemote.getParent());
         cmdExec.copyFile(coprocessorJar.getAbsolutePath(), coprocessorJarRemote.getParent());
     }
-    
+
     private static Pair<File, File> getJobJarFiles() {
         String version;
         try {
@@ -94,7 +92,7 @@ public class DeployUtil {
         File coprocessorJar = new File("../storage/target", "kylin-storage-" + version + "-coprocessor.jar");
         return new Pair<File, File>(jobJar, coprocessorJar);
     }
-    
+
     public static void overrideJobConf(String confDir) throws IOException {
         boolean enableLzo = LZOSupportnessChecker.getSupportness();
         overrideJobConf(confDir, enableLzo);
@@ -128,17 +126,52 @@ public class DeployUtil {
 
     static final String[] TABLE_NAMES = new String[] { TABLE_CAL_DT, TABLE_CATEGORY_GROUPINGS, TABLE_KYLIN_FACT, TABLE_SELLER_TYPE_DIM, TABLE_SITES };
 
+
     public static void prepareTestData(String joinType, String cubeName) throws Exception {
+
+        String factTableName = CubeManager.getInstance(config()).getCube(cubeName).getDescriptor().getFactTable();
+        String content = null;
+
         // data is generated according to cube descriptor and saved in resource store
         if (joinType.equalsIgnoreCase("inner")) {
-            FactTableGenerator.generate(cubeName, "10000", "1", null, "inner");
+            content = FactTableGenerator.generate(cubeName, "10000", "1", null, "inner");
         } else if (joinType.equalsIgnoreCase("left")) {
-            FactTableGenerator.generate(cubeName, "10000", "0.6", null, "left");
+            content = FactTableGenerator.generate(cubeName, "10000", "0.6", null, "left");
         } else {
             throw new IllegalArgumentException("Unsupported join type : " + joinType);
         }
 
+        if (content != null) {
+            overrideFactTableData(content, factTableName, joinType);
+        } else {
+            throw new IllegalStateException("generated table content is null");
+        }
+
         deployHiveTables();
+    }
+
+    private static void overrideFactTableData(String factTableContent, String factTableName, String joinType) throws IOException {
+        // Write to resource store
+        ResourceStore store = ResourceStore.getStore(config());
+
+        InputStream in = new StringInputStream(factTableContent);
+        String factTablePath = "/data/" + factTableName + ".csv";
+        store.deleteResource(factTablePath);
+        store.putResource(factTablePath, in, System.currentTimeMillis());
+        in.close();
+
+        // duplicate a copy of this fact table, with a naming convention with
+        // jointype added
+        // so that later test cases can select different data files
+        in = new FileInputStream(factTableContent);
+        String factTablePathWithJoinType = "/data/" + factTableName + ".csv." + joinType.toLowerCase();
+        store.deleteResource(factTablePathWithJoinType);
+        store.putResource(factTablePathWithJoinType, in, System.currentTimeMillis());
+        in.close();
+
+        System.out.println();
+        System.out.println("The new fact table has been written to resource store: " + factTablePath);
+        System.out.println();
     }
 
     private static void deployHiveTables() throws Exception {

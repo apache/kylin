@@ -5,10 +5,7 @@ import java.lang.management.ManagementFactory;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 
 import com.google.common.collect.Lists;
@@ -44,8 +41,10 @@ public class BasicTest {
 
     @Test
     public void test() throws IOException {
-
-//        for (String s : ManagementFactory.getRuntimeMXBean().getInputArguments())
+        Set<String> a = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        a.add("aaa");
+        System.out.println(a.contains("AaA"));
+        //        for (String s : ManagementFactory.getRuntimeMXBean().getInputArguments())
 //            System.out.println(s);
 //        return;
 
