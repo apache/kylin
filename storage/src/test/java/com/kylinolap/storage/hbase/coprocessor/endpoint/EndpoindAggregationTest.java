@@ -71,7 +71,6 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
     }
 
     private List<TableRecord> mockTable() {
-        org.apache.commons.lang3.concurrent.ConcurrentUtils
 
         TableRecord temp1 = (TableRecord) tableRecordInfo.createTableRecord();
         temp1.setValueString(0, "0");

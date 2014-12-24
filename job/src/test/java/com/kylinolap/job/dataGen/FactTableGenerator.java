@@ -1,10 +1,6 @@
-package com.kylinolap.cube.dataGen;
+package com.kylinolap.job.dataGen;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -18,14 +14,12 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.DimensionDesc;
-import com.kylinolap.dict.StringBytesConverter;
 import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.DataType;
 import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.TblColRef;
-import org.apache.commons.io.FileUtils;
 
 /**
  * Created by hongbin on 5/20/14.

@@ -3,6 +3,7 @@ package com.kylinolap.job;
 import java.io.*;
 
 import com.kylinolap.common.persistence.ResourceStore;
+import com.kylinolap.job.tools.LZOSupportnessChecker;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.maven.model.Model;
@@ -18,10 +19,9 @@ import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.CliCommandExecutor;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.dataGen.FactTableGenerator;
+import com.kylinolap.job.dataGen.FactTableGenerator;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.hive.SqlHiveDataTypeMapping;
-import com.kylinolap.job.tools.LZOSupportnessChecker;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
@@ -150,7 +150,7 @@ public class DeployUtil {
         deployHiveTables();
     }
 
-    private static void overrideFactTableData(String factTableContent, String factTableName, String joinType) throws IOException {
+    public static void overrideFactTableData(String factTableContent, String factTableName, String joinType) throws IOException {
         // Write to resource store
         ResourceStore store = ResourceStore.getStore(config());
 
@@ -163,7 +163,7 @@ public class DeployUtil {
         // duplicate a copy of this fact table, with a naming convention with
         // jointype added
         // so that later test cases can select different data files
-        in = new FileInputStream(factTableContent);
+        in = new StringInputStream(factTableContent);
         String factTablePathWithJoinType = "/data/" + factTableName + ".csv." + joinType.toLowerCase();
         store.deleteResource(factTablePathWithJoinType);
         store.putResource(factTablePathWithJoinType, in, System.currentTimeMillis());

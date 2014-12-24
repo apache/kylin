@@ -1,5 +1,6 @@
-package com.kylinolap.cube.dataGen;
+package com.kylinolap.job;
 
+import com.kylinolap.job.dataGen.FactTableGenerator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,6 +32,8 @@ public class DataGenTest extends LocalFileMetadataTestCase {
         System.out.println(content);
         assertTrue(content.contains("FP-non GTC"));
         assertTrue(content.contains("ABIN"));
+
+        DeployUtil.overrideFactTableData(content,"test_kylin_fact","inner");
     }
 
 }
