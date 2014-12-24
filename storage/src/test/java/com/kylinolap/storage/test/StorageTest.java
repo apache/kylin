@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -71,6 +72,7 @@ public class StorageTest extends HBaseMiniclusterMetadataTestCase {
 
         CubeManager cubeMgr = CubeManager.getInstance(this.getTestConfig());
         cube = cubeMgr.getCube("TEST_KYLIN_CUBE_WITHOUT_SLR_EMPTY");
+        Assert.assertNotNull(cube);
         storageEngine = StorageEngineFactory.getStorageEngine(cube);
         String url = KylinConfig.getInstanceFromEnv().getStorageUrl();
         context = new StorageContext();
