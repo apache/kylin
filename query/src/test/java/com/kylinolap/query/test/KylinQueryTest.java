@@ -56,13 +56,13 @@ public class KylinQueryTest extends KylinTestBase {
         preferCubeOf(joinType);
     }
 
-    protected static void setupAll() throws SQLException, IOException, ClassNotFoundException, InterruptedException {
+    protected static void setupAll() throws Exception {
         setUpEnv();
         setUpCubeConn();
         setUpH2Conn();
     }
 
-    private static void setUpEnv() throws IOException, ClassNotFoundException, InterruptedException {
+    private static void setUpEnv() throws Exception {
 
         String queryUseMinicluster = System.getProperty("queryUseMinicluster");
 
