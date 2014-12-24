@@ -537,6 +537,7 @@
                                     <value>true</value>
                                 </property>
                             </systemProperties>
+                            <argLine>-Xms1G -Xmx6G -XX:PermSize=1G -XX:MaxPermSize=2G</argLine>
                         </configuration>
                     </plugin>
 
