@@ -390,15 +390,19 @@ public class CubeInstance extends AbstractRealization {
     }
 
     public boolean appendOnHll() {
-        CubePartitionDesc cubePartitionDesc = getDescriptor().getCubePartitionDesc();
-        if (cubePartitionDesc == null) {
-            return false;
-        }
-        if (cubePartitionDesc.getPartitionDateColumn() == null) {
-            return false;
-        }
-        return getDescriptor().hasHolisticCountDistinctMeasures();
+        return false;
     }
+
+//    public boolean appendOnHll() {
+//        CubePartitionDesc cubePartitionDesc = getDescriptor().getCubePartitionDesc();
+//        if (cubePartitionDesc == null) {
+//            return false;
+//        }
+//        if (cubePartitionDesc.getPartitionDateColumn() == null) {
+//            return false;
+//        }
+//        return getDescriptor().hasHolisticCountDistinctMeasures();
+//    }
 
     public boolean appendBuildOnHllMeasure(long startDate, long endDate) {
         if (!appendOnHll()) {
