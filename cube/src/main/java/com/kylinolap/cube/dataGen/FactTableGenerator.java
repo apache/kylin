@@ -18,12 +18,14 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.DimensionDesc;
+import com.kylinolap.dict.StringBytesConverter;
 import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.DataType;
 import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.TblColRef;
+import org.apache.commons.io.FileUtils;
 
 /**
  * Created by hongbin on 5/20/14.
@@ -48,15 +50,15 @@ public class FactTableGenerator {
 
     // the names of lookup table columns which is in relation with fact
     // table(appear as fk in fact table)
-    Hashtable<String, LinkedList<String>> lookupTableKeys = new Hashtable<String, LinkedList<String>>();
+    TreeMap<String, LinkedList<String>> lookupTableKeys = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     // possible values of lookupTableKeys, extracted from existing lookup
     // tables.
     // The key is in the format of tablename/columnname
-    HashMap<String, ArrayList<String>> feasibleValues = new HashMap<String, ArrayList<String>>();
+    TreeMap<String, ArrayList<String>> feasibleValues = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     // lookup table name -> sets of all composite keys
-    HashMap<String, HashSet<Array<String>>> lookupTableCompositeKeyValues = new HashMap<String, HashSet<Array<String>>>();
+    TreeMap<String, HashSet<Array<String>>> lookupTableCompositeKeyValues = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     private void init(String cubeName, int rowCount, double conflictRaio, double linkableRatio, long randomSeed) {
         this.rowCount = rowCount;
@@ -104,7 +106,7 @@ public class FactTableGenerator {
         InputStream tableStream = null;
         BufferedReader tableReader = null;
         try {
-            Hashtable<String, Integer> zeroBasedInice = new Hashtable<String, Integer>();
+            TreeMap<String, Integer> zeroBasedInice = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
             for (String columnName : columnNames) {
                 ColumnDesc cDesc = MetadataManager.getInstance(config).getTableDesc(lookupTableName).findColumnByName(columnName);
                 zeroBasedInice.put(columnName, cDesc.getZeroBasedIndex());
@@ -184,7 +186,7 @@ public class FactTableGenerator {
         // load config
         loadConfig();
 
-        HashSet<String> factTableColumns = new HashSet<String>();
+        TreeSet<String> factTableColumns = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
         for (DimensionDesc dim : desc.getDimensions()) {
             for (TblColRef col : dim.getColumnRefs()) {
@@ -227,51 +229,22 @@ public class FactTableGenerator {
         return dimensions;
     }
 
-    private void execute(String joinType) throws Exception {
-
-        // main logic here , generate the data to a temp file
-        String tempFilePath = generate();
-
-        // Write to hbase
-        File tempFile = new File(tempFilePath);
-
-        InputStream in = new FileInputStream(tempFile);
-        String factTablePath = "/data/" + factTableName + ".csv";
-        store.deleteResource(factTablePath);
-        store.putResource(factTablePath, in, System.currentTimeMillis());
-        in.close();
-
-        // duplicate a copy of this fact table, with a naming convention with
-        // jointype added
-        // so that later test cases can select different data files
-        in = new FileInputStream(tempFile);
-        String factTablePathWithJoinType = "/data/" + factTableName + ".csv." + joinType.toLowerCase();
-        store.deleteResource(factTablePathWithJoinType);
-        store.putResource(factTablePathWithJoinType, in, System.currentTimeMillis());
-        in.close();
-
-        tempFile.delete();
-
-        System.out.println();
-        System.out.println("The new fact table has been written to $KYLIN_METADATA_URL" + factTablePath);
-        System.out.println();
-    }
 
     /**
-     * Generate the fact table and put it into a temp file
+     * Generate the fact table and return it as text
      *
      * @return
      * @throws Exception
      */
-    private String generate() throws Exception {
+    private String cookData() throws Exception {
         // the columns on the fact table can be classified into three groups:
         // 1. foreign keys
-        HashMap<String, String> factTableCol2LookupCol = new HashMap<String, String>();
+        TreeMap<String, String> factTableCol2LookupCol = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         // 2. metrics or directly used dimensions
-        HashSet<String> usedCols = new HashSet<String>();
+        TreeSet<String> usedCols = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         // 3. others, not referenced anywhere
 
-        HashMap<String, String> lookupCol2factTableCol = new HashMap<String, String>();
+        TreeMap<String, String> lookupCol2factTableCol = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
         // find fact table columns in fks
         List<DimensionDesc> dimensions = getSortedDimentsionDescs();
@@ -439,7 +412,7 @@ public class FactTableGenerator {
         return null;
     }
 
-    private void printColumnMappings(HashMap<String, String> factTableCol2LookupCol, HashSet<String> usedCols, HashSet<String> defaultColumns) {
+    private void printColumnMappings(TreeMap<String, String> factTableCol2LookupCol, TreeSet<String> usedCols, TreeSet<String> defaultColumns) {
 
         System.out.println("=======================================================================");
         System.out.format("%-30s %s", "FACT_TABLE_COLUMN", "MAPPING");
@@ -476,7 +449,7 @@ public class FactTableGenerator {
     // for single-column joins the generated row is guaranteed to have a match
     // in lookup table
     // for composite keys we'll need an extra check
-    private boolean matchAllCompositeKeys(HashMap<String, String> lookupCol2FactTableCol, LinkedList<String> columnValues) {
+    private boolean matchAllCompositeKeys(TreeMap<String, String> lookupCol2FactTableCol, LinkedList<String> columnValues) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
 
         for (String lookupTable : lookupTableKeys.keySet()) {
@@ -534,7 +507,7 @@ public class FactTableGenerator {
         }
     }
 
-    private LinkedList<String> createRow(HashMap<String, String> factTableCol2LookupCol, HashSet<String> usedCols, HashSet<String> defaultColumns) throws Exception {
+    private LinkedList<String> createRow(TreeMap<String, String> factTableCol2LookupCol, TreeSet<String> usedCols, TreeSet<String> defaultColumns) throws Exception {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         LinkedList<String> columnValues = new LinkedList<String>();
 
@@ -564,12 +537,21 @@ public class FactTableGenerator {
         return columnValues;
     }
 
-    private String createTable(int rowCount, HashMap<String, String> factTableCol2LookupCol, HashMap<String, String> lookupCol2FactTableCol, HashSet<String> usedCols) throws Exception {
+    /**
+     * return the text of table contents(one line one row)
+     *
+     * @param rowCount
+     * @param factTableCol2LookupCol
+     * @param lookupCol2FactTableCol
+     * @param usedCols
+     * @return
+     * @throws Exception
+     */
+    private String createTable(int rowCount, TreeMap<String, String> factTableCol2LookupCol, TreeMap<String, String> lookupCol2FactTableCol, TreeSet<String> usedCols) throws Exception {
         try {
-            File tempFile = File.createTempFile("ftg", ".tmp");
-            BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
-            HashSet<String> defaultColumns = new HashSet<String>();
+            TreeSet<String> defaultColumns = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
+            StringBuffer sb = new StringBuffer();
             for (int i = 0; i < rowCount; ) {
 
                 LinkedList<String> columnValues = createRow(factTableCol2LookupCol, usedCols, defaultColumns);
@@ -582,22 +564,19 @@ public class FactTableGenerator {
                     }
                 }
 
-                StringBuffer sb = new StringBuffer();
                 for (String c : columnValues)
                     sb.append(c + ",");
                 sb.deleteCharAt(sb.length() - 1);
-                writer.write(sb.toString());
-                writer.newLine();
+                sb.append(System.getProperty("line.separator"));
+
                 i++;
 
                 // System.out.println("Just generated the " + i + "th record");
             }
-            writer.flush();
-            writer.close();
 
             printColumnMappings(factTableCol2LookupCol, usedCols, defaultColumns);
 
-            return tempFile.getAbsolutePath();
+            return sb.toString();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -608,7 +587,7 @@ public class FactTableGenerator {
     }
 
     /**
-     * Randomly create a fact table and put it to test_kylin_data table in hbase
+     * Randomly create a fact table and return the table content
      *
      * @param cubeName      name of the cube
      * @param rowCount      expected row count generated
@@ -616,7 +595,7 @@ public class FactTableGenerator {
      *                      lookup table by INNER join
      * @param randomSeed    random seed
      */
-    public static void generate(String cubeName, String rowCount, String linkableRatio, String randomSeed, String joinType) throws Exception {
+    public static String generate(String cubeName, String rowCount, String linkableRatio, String randomSeed, String joinType) throws Exception {
 
         if (cubeName == null)
             cubeName = "test_kylin_cube_with_slr_ready";
@@ -642,6 +621,6 @@ public class FactTableGenerator {
 
         generator.init(cubeName, Integer.parseInt(rowCount), 5, Double.parseDouble(linkableRatio), seed);
         generator.prepare();
-        generator.execute(joinType);
+        return generator.cookData();
     }
 }

@@ -1,15 +1,9 @@
 package com.kylinolap.invertedindex.invertedindex;
 
-import static org.junit.Assert.*;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-
+import com.google.common.collect.Lists;
+import com.kylinolap.common.util.BytesUtil;
+import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import com.kylinolap.dict.Dictionary;
 import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.invertedindex.index.*;
@@ -19,25 +13,28 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Pair;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-import com.kylinolap.common.util.BytesUtil;
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.dict.Dictionary;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
 
-@Ignore
+import static org.junit.Assert.assertEquals;
+
 public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
 
-    IIInstance cube;
+    IIInstance ii;
     TableRecordInfo info;
 
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
-        this.cube = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii");
-        this.info = new TableRecordInfo(cube.getFirstSegment());
+        this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii");
+        this.info = new TableRecordInfo(ii.getFirstSegment());
     }
 
     @After
@@ -126,7 +123,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
     }
 
     private List<TableRecord> loadRecordsSorted() throws IOException {
-        File file = new File(LOCALMETA_TEST_DATA, "data/TEST_KYLIN_FACT.csv");
+        File file = new File(LOCALMETA_TEST_DATA, "data/DEFAULT.TEST_KYLIN_FACT.gen.csv");
         FileInputStream in = new FileInputStream(file);
         List<String> lines = IOUtils.readLines(in, "UTF-8");
         in.close();

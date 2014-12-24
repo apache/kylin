@@ -18,6 +18,7 @@ package com.kylinolap.invertedindex.index;
 
 import com.google.common.collect.Lists;
 import com.kylinolap.dict.DateStrDictionary;
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.LongWritable;
 
@@ -25,8 +26,8 @@ import java.util.List;
 
 /**
  * @author yangli9, honma
- *
- * TableRecord extends RawTableRecord by decorating it with a TableRecordInfo
+ *         <p/>
+ *         TableRecord extends RawTableRecord by decorating it with a TableRecordInfo
  */
 public class TableRecord implements Cloneable {
 
@@ -121,6 +122,28 @@ public class TableRecord implements Cloneable {
         }
         buf.append("]");
         return buf.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        if (rawRecord != null) {
+            return rawRecord.hashCode();
+        } else {
+            return 0;
+        }
+    }
+
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        TableRecord other = (TableRecord) obj;
+        return ObjectUtils.equals(other.rawRecord, this.rawRecord);
     }
 
 

@@ -7,6 +7,8 @@ import org.junit.Test;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.metadata.MetadataManager;
 
+import static org.junit.Assert.*;
+
 /**
  * Created by honma on 6/19/14.
  */
@@ -25,8 +27,10 @@ public class DataGenTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBasics() throws Exception {
-        FactTableGenerator.generate("test_kylin_cube_with_slr_ready", "10000", "0.6", null, "left");// default
-                                                                                                    // settings
+        String content = FactTableGenerator.generate("test_kylin_cube_with_slr_ready", "10000", "1", null, "inner");// default  settings
+        System.out.println(content);
+        assertTrue(content.contains("FP-non GTC"));
+        assertTrue(content.contains("ABIN"));
     }
 
 }

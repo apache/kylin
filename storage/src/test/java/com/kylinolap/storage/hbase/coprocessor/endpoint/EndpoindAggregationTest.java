@@ -17,10 +17,10 @@ import com.kylinolap.storage.filter.ConstantTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
+import org.apache.commons.collections.Predicate;
 import org.apache.hadoop.io.LongWritable;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -29,7 +29,6 @@ import java.util.*;
 /**
  * Created by Hongbin Ma(Binmahone) on 11/27/14.
  */
-@Ignore
 public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
     IIInstance ii;
     TableRecordInfo tableRecordInfo;
@@ -48,8 +47,8 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
         this.createTestMetadata();
         this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii");
         this.tableRecordInfo = new TableRecordInfo(ii.getFirstSegment());
-        TblColRef formatName = this.ii.getDescriptor().findColumnRef("TEST_KYLIN_FACT", "LSTG_FORMAT_NAME");
-        TblColRef siteId = this.ii.getDescriptor().findColumnRef("TEST_KYLIN_FACT", "LSTG_SITE_ID");
+        TblColRef formatName = this.ii.getDescriptor().findColumnRef("DEFAULT.TEST_KYLIN_FACT", "LSTG_FORMAT_NAME");
+        TblColRef siteId = this.ii.getDescriptor().findColumnRef("DEFAULT.TEST_KYLIN_FACT", "LSTG_SITE_ID");
 
         Collection<TblColRef> dims = new HashSet<>();
         dims.add(formatName);
@@ -72,9 +71,10 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
     }
 
     private List<TableRecord> mockTable() {
+        org.apache.commons.lang3.concurrent.ConcurrentUtils
 
         TableRecord temp1 = (TableRecord) tableRecordInfo.createTableRecord();
-        temp1.setValueString(0, "10000000252");
+        temp1.setValueString(0, "0");
         temp1.setValueString(1, "2012-03-22");
         temp1.setValueString(2, "Auction");
         temp1.setValueString(3, "80135");
@@ -85,7 +85,7 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
         temp1.setValueString(8, "10000005");
 
         TableRecord temp2 = (TableRecord) tableRecordInfo.createTableRecord();
-        temp2.setValueString(0, "10000000242");
+        temp2.setValueString(0, "0");
         temp2.setValueString(1, "2012-11-11");
         temp2.setValueString(2, "Auction");
         temp2.setValueString(3, "16509");
@@ -96,7 +96,7 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
         temp2.setValueString(8, "10000004");
 
         TableRecord temp3 = (TableRecord) tableRecordInfo.createTableRecord();
-        temp3.setValueString(0, "10000000258");
+        temp3.setValueString(0, "0");
         temp3.setValueString(1, "2012-07-12");
         temp3.setValueString(2, "Others");
         temp3.setValueString(3, "15687");
