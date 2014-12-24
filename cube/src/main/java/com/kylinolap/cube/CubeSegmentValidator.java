@@ -25,7 +25,6 @@ import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.CubePartitionDesc;
 import com.kylinolap.cube.model.DimensionDesc;
-import com.kylinolap.cube.model.CubePartitionDesc.CubePartitionType;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;

@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.realization.*;
@@ -314,38 +315,48 @@ public class CubeManager {
         return segments;
     }
 
-    public List<CubeSegment> mergeSegments(CubeInstance cubeInstance, long startDate, long endDate) throws IOException, CubeIntegrityException {
+    private boolean hasOverlap(long startDate, long endDate, long anotherStartDate, long anotherEndDate) {
+        if (startDate >= endDate) {
+            throw new IllegalArgumentException("startDate must be less than endDate");
+        }
+        if (anotherStartDate >= anotherEndDate) {
+            throw new IllegalArgumentException("anotherStartDate must be less than anotherEndDate");
+        }
+        if (startDate <= anotherStartDate && anotherEndDate < endDate) {
+            return true;
+        }
+        if (startDate < anotherEndDate && anotherEndDate <= endDate) {
+            return true;
+        }
+        return false;
+    }
+
+    public List<CubeSegment> mergeSegments(CubeInstance cubeInstance, final long startDate, final long endDate) throws IOException, CubeIntegrityException {
         if (cubeInstance.getBuildingSegments().size() > 0) {
             throw new RuntimeException("There is already an allocating segment!");
         }
         List<CubeSegment> segments = new ArrayList<CubeSegment>();
 
         if (null != cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateColumn()) {
-            if (startDate == 0 && cubeInstance.getSegments().size() == 0) {
-                startDate = cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateStart();
+            List<CubeSegment> readySegments = cubeInstance.getSegment(SegmentStatusEnum.READY);
+            if (readySegments.isEmpty()) {
+                throw new CubeIntegrityException("there are no segments in ready state");
             }
-
-            // incremental build
-            CubeSegment lastSegment = null;
-            for (CubeSegment segment : cubeInstance.getSegments()) {
-                if (segment.getDateRangeStart() == startDate) {
-                    // refresh or merge
-                    segments.add(buildSegment(cubeInstance, startDate, endDate));
+            long start = Long.MIN_VALUE;
+            long end = Long.MAX_VALUE;
+            for (CubeSegment readySegment: readySegments) {
+                if (hasOverlap(startDate, endDate, readySegment.getDateRangeStart(), readySegment.getDateRangeEnd())) {
+                    if (start > readySegment.getDateRangeStart()) {
+                        start = readySegment.getDateRangeStart();
+                    }
+                    if (end < readySegment.getDateRangeEnd()) {
+                        end = readySegment.getDateRangeEnd();
+                    }
                 }
-                if (segment.getDateRangeStart() < startDate && startDate < segment.getDateRangeEnd()) {
-                    // delete-insert
-                    segments.add(buildSegment(cubeInstance, segment.getDateRangeStart(), startDate));
-                    segments.add(buildSegment(cubeInstance, startDate, endDate));
-                }
-                lastSegment = segment;
             }
-
-            // append
-            if (null == lastSegment || (lastSegment.getDateRangeEnd() == startDate)) {
-                segments.add(buildSegment(cubeInstance, startDate, endDate));
-            }
+            segments.add(buildSegment(cubeInstance, start, end));
         } else {
-            segments.add(buildSegment(cubeInstance, 0, 0));
+            throw new CubeIntegrityException("there is no partition date, only full build is supported");
         }
 
         validateNewSegments(cubeInstance, RealizationBuildTypeEnum.MERGE, segments);
@@ -409,6 +420,7 @@ public class CubeManager {
         return "KYLIN_HOST";
     }
 
+/*
     public void updateSegmentOnJobSucceed(CubeInstance cubeInstance, RealizationBuildTypeEnum buildType, String segmentName, String jobUuid, long lastBuildTime, long sizeKB, long sourceRecordCount, long sourceRecordsSize) throws IOException, CubeIntegrityException {
 
         List<CubeSegment> segmentsInNewStatus = cubeInstance.getSegments(SegmentStatusEnum.NEW);
@@ -449,6 +461,39 @@ public class CubeManager {
         } else {
             cubeSegment.setStatus(SegmentStatusEnum.READY_PENDING);
         }
+        this.updateCube(cubeInstance);
+    }
+*/
+
+    public void updateSegmentOnJobSucceed(CubeInstance cubeInstance, RealizationBuildTypeEnum buildType, String segmentName, String jobUuid, long lastBuildTime, long sizeKB, long sourceRecordCount, long sourceRecordsSize) throws IOException, CubeIntegrityException {
+
+        List<CubeSegment> segmentsInNewStatus = cubeInstance.getSegments(SegmentStatusEnum.NEW);
+        CubeSegment cubeSegment = cubeInstance.getSegmentById(jobUuid);
+        Preconditions.checkArgument(segmentsInNewStatus.size() == 1, "there are " + segmentsInNewStatus.size() + " new segments");
+
+        switch (buildType) {
+            case BUILD:
+                if (cubeInstance.needMergeImmediatelyAfterBuild(cubeSegment)) {
+                    cubeInstance.getSegments().removeAll(cubeInstance.getMergingSegments());
+                } else {
+                    cubeInstance.getSegments().removeAll(cubeInstance.getRebuildingSegments());
+                }
+                break;
+            case MERGE:
+                cubeInstance.getSegments().removeAll(cubeInstance.getMergingSegments());
+                break;
+            case REFRESH:
+                break;
+            default:
+                throw new RuntimeException("invalid build type:" + buildType);
+        }
+        cubeSegment.setLastBuildJobID(jobUuid);
+        cubeSegment.setLastBuildTime(lastBuildTime);
+        cubeSegment.setSizeKB(sizeKB);
+        cubeSegment.setSourceRecords(sourceRecordCount);
+        cubeSegment.setSourceRecordsSize(sourceRecordsSize);
+        cubeSegment.setStatus(SegmentStatusEnum.READY);
+        cubeInstance.setStatus(RealizationStatusEnum.READY);
         this.updateCube(cubeInstance);
     }
 
