@@ -19,6 +19,7 @@ package com.kylinolap.common.util;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -110,19 +111,22 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
         System.out.println("Going to start mini cluster.");
         hbaseCluster = UTIL.startMiniCluster();
 
-        UTIL.startMiniMapReduceCluster();
         config = hbaseCluster.getConf();
         String host = config.get(HConstants.ZOOKEEPER_QUORUM);
         String port = config.get(HConstants.ZOOKEEPER_CLIENT_PORT);
         String parent = config.get(HConstants.ZOOKEEPER_ZNODE_PARENT);
 
+        // see in: https://hbase.apache.org/book.html#trouble.rs.runtime.zkexpired
+        config.set("zookeeper.session.timeout", "1200000");
+        config.set("hbase.zookeeper.property.tickTime", "6000");
         // reduce rpc retry
         config.set(HConstants.HBASE_CLIENT_PAUSE, "3000");
-        config.set(HConstants.HBASE_CLIENT_RETRIES_NUMBER, "5");
+        config.set(HConstants.HBASE_CLIENT_RETRIES_NUMBER, "1");
         config.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
 
         hbaseconnectionUrl = "hbase:" + host + ":" + port + ":" + parent;
 
+        UTIL.startMiniMapReduceCluster();
         updateKylinConfigWithMinicluster();
         // create the metadata htables;
         HBaseResourceStore store = new HBaseResourceStore(KylinConfig.getInstanceFromEnv());
@@ -152,7 +156,7 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
         File folder = new File("/tmp/hbase-export/");
 
         if (folder.exists()) {
-            folder.delete();
+            FileUtils.deleteDirectory(folder);
         }
 
         folder.mkdirs();
