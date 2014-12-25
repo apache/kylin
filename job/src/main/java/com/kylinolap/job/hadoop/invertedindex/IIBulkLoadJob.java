@@ -16,6 +16,9 @@
 
 package com.kylinolap.job.hadoop.invertedindex;
 
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IIManager;
+import com.kylinolap.invertedindex.IISegment;
 import com.kylinolap.invertedindex.model.IIDesc;
 import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.apache.commons.cli.Options;
@@ -27,9 +30,6 @@ import org.apache.hadoop.util.ToolRunner;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.HadoopUtil;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**
@@ -45,12 +45,12 @@ public class IIBulkLoadJob extends AbstractHadoopJob {
         try {
             options.addOption(OPTION_INPUT_PATH);
             options.addOption(OPTION_HTABLE_NAME);
-            options.addOption(OPTION_CUBE_NAME);
+            options.addOption(OPTION_II_NAME);
             parseOptions(options, args);
 
             String tableName = getOptionValue(OPTION_HTABLE_NAME);
             String input = getOptionValue(OPTION_INPUT_PATH);
-            String cubeName = getOptionValue(OPTION_CUBE_NAME);
+            String iiname = getOptionValue(OPTION_II_NAME);
 
             FileSystem fs = FileSystem.get(getConf());
             FsPermission permission = new FsPermission((short) 0777);
@@ -58,12 +58,12 @@ public class IIBulkLoadJob extends AbstractHadoopJob {
 
             int hbaseExitCode = ToolRunner.run(new LoadIncrementalHFiles(getConf()), new String[] { input, tableName });
 
-            CubeManager mgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-            CubeInstance cube = mgr.getCube(cubeName);
-            CubeSegment seg = cube.getFirstSegment();
+            IIManager mgr = IIManager.getInstance(KylinConfig.getInstanceFromEnv());
+            IIInstance ii = mgr.getII(iiname);
+            IISegment seg = ii.getFirstSegment();
             seg.setStorageLocationIdentifier(tableName);
             seg.setStatus(SegmentStatusEnum.READY);
-            mgr.updateCube(cube);
+            mgr.updateII(ii);
 
             return hbaseExitCode;
 

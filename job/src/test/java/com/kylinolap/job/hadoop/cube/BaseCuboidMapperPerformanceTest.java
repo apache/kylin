@@ -40,7 +40,7 @@ public class BaseCuboidMapperPerformanceTest {
     String cubeName = "test_kylin_cube_with_slr";
     Path srcPath = new Path("/download/test_kylin_cube_with_slr_intermediate_table_64mb.seq");
 
-    @Ignore
+    @Ignore("convenient trial tool for dev")
     @Test
     public void test() throws IOException, InterruptedException {
         Configuration hconf = new Configuration();

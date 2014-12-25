@@ -43,13 +43,13 @@ public class HBaseResourceStoreTest extends HBaseMiniclusterMetadataTestCase { /
     public static void setupResource() throws Exception {
         startupMinicluster();
     }
-    
+
     @AfterClass
     public static void tearDownResource() {
         shutdownMiniCluster();
     }
 
-    
+
     @Before
     public void setup() throws Exception {
         this.createTestMetadata();

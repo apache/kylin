@@ -13,7 +13,7 @@ import org.junit.Ignore;
  */
 public class InstallJarIntoMavenTest {
 
-    @Ignore
+    @Ignore("convenient trial tool for dev")
     public void testInstall() throws IOException {
         File folder = new File("/export/home/b_kylin/tmp");
         File out = new File("/export/home/b_kylin/tmp/out.sh");
