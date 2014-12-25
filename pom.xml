@@ -529,10 +529,12 @@
                                 <exclude>**/BuildCubeWithEngineTest.java</exclude>
                                 <exclude>**/SampleCubeSetupTest.java</exclude>
                                 <exclude>**/KylinQueryTest.java</exclude>
+                                <exclue>**/SnapshotManagerTest.java</exclue>
+                                <exclue>**/SampleCubeSetupTest.java</exclue>
                             </excludes>
                             <systemProperties>
                                 <property>
-                                    <name>querySkipUsingMinicluster</name>
+                                    <name>useSandbox</name>
                                     <value>false</value>
                                 </property>
                                 <property>
@@ -549,7 +551,37 @@
         </profile>
 
         <profile>
-            <id>e2e</id>
+            <id>sandbox</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.16</version>
+                        <configuration>
+                            <excludes>
+                                <exclude>**/BuildCubeWithEngineTest.java</exclude>
+                                <exclude>**/SampleCubeSetupTest.java</exclude>
+                                <exclude>**/KylinQueryTest.java</exclude>
+                            </excludes>
+                            <systemProperties>
+                                <property>
+                                    <name>useSandbox</name>
+                                    <value>true</value>
+                                </property>
+                                <property>
+                                    <name>buildCubeUsingProvidedData</name>
+                                    <value>false</value>
+                                </property>
+                            </systemProperties>
+                        </configuration>
+                    </plugin>
+
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>

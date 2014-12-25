@@ -30,7 +30,7 @@ public class ProjectControllerTest extends ServiceTestBase {
     ProjectService projectService;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         super.setUp();
 
         projectController = new ProjectController();
