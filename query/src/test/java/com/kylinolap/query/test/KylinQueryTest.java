@@ -18,7 +18,6 @@ package com.kylinolap.query.test;
 import static org.junit.Assert.*;
 
 import java.io.File;
-import java.io.IOException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
@@ -64,9 +63,7 @@ public class KylinQueryTest extends KylinTestBase {
 
     private static void setUpEnv() throws Exception {
 
-        String queryUseMinicluster = System.getProperty("queryUseMinicluster");
-
-        if (Boolean.parseBoolean(queryUseMinicluster)) {
+        if (HBaseMetadataTestCase.useMiniCluster()) {
             HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.MINICLUSTER_TEST_DATA);
             HBaseMiniclusterMetadataTestCase.startupMinicluster();
         } else {
@@ -97,7 +94,10 @@ public class KylinQueryTest extends KylinTestBase {
         printInfo("tearDown");
         printInfo("Closing connection...");
         clean();
-        HBaseMiniclusterMetadataTestCase.shutdownMiniCluster();
+
+        if (HBaseMetadataTestCase.useMiniCluster()) {
+            HBaseMiniclusterMetadataTestCase.shutdownMiniCluster();
+        }
     }
 
     protected static void clean() {

@@ -22,20 +22,34 @@ import com.kylinolap.common.KylinConfig;
  * @author ysong1
  */
 public class HBaseMetadataTestCase extends AbstractKylinTestCase {
-    
+
     public static void staticCleanupTestMetadata() {
         System.clearProperty(KylinConfig.KYLIN_CONF);
         KylinConfig.destoryInstance();
     }
 
     @Override
-    public void createTestMetadata() {
-        staticCreateTestMetadata(SANDBOX_TEST_DATA);
+    public void createTestMetadata() throws Exception {
+        if (useMiniCluster()) {
+            HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.MINICLUSTER_TEST_DATA);
+            HBaseMiniclusterMetadataTestCase.startupMinicluster();
+        } else {
+            HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
+        }
     }
 
     @Override
     public void cleanupTestMetadata() {
-        staticCleanupTestMetadata();
+        HBaseMetadataTestCase.staticCleanupTestMetadata();
+        if (useMiniCluster()) {
+            HBaseMiniclusterMetadataTestCase.shutdownMiniCluster();
+        }
+    }
+    
+    public static boolean useMiniCluster() {
+        String queryUseMinicluster = System.getProperty("queryUseMinicluster");
+        return Boolean.parseBoolean(queryUseMinicluster);
+
     }
 
 }
