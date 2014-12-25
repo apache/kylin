@@ -11,6 +11,7 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.HBaseConnection;
 import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.CliCommandExecutor;
+import com.kylinolap.common.util.HBaseMiniclusterMetadataTestCase;
 import com.kylinolap.common.util.SSHClient;
 
 public class ExportHBaseData {
@@ -91,8 +92,7 @@ public class ExportHBaseData {
         
         for (HTableDescriptor table : allTables) {
             String tName = table.getNameAsString();
-            if (!tName.startsWith(tableNameBase) && !tName.startsWith("KYLIN_"))
-//                if (!tName.equals(tableNameBase) ) // this is for debug
+            if (!tName.equals(tableNameBase) && !tName.startsWith(HBaseMiniclusterMetadataTestCase.CUBE_STORAGE_PREFIX))
                 continue;
             
             cli.execute("hbase org.apache.hadoop.hbase.mapreduce.Export " + tName + " " + exportFolder + tName);
