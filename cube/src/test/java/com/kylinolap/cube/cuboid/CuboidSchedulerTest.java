@@ -247,34 +247,6 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    @Ignore
-    public void testCuboidGeneration4() {
-        CubeDesc cube = getCubeDescManager().getCubeDesc("geox_trans_mtrc_sd_cube_desc");
-        CuboidCLI.simulateCuboidGeneration(cube);
-    }
-
-    @Test
-    @Ignore
-    public void testCuboidGeneration5() {
-        CubeDesc cube = getCubeDescManager().getCubeDesc("clsfd_ga_dayweek");
-        CuboidCLI.simulateCuboidGeneration(cube);
-    }
-
-    @Test
-    @Ignore
-    public void testCuboidGeneration6() {
-        CubeDesc cube = getCubeDescManager().getCubeDesc("clsfd_ga_day");
-        CuboidCLI.simulateCuboidGeneration(cube);
-    }
-
-    @Test
-    @Ignore
-    public void testCuboidGeneration7() {
-        CubeDesc cube = getCubeDescManager().getCubeDesc("clsfd_ga_week");
-        CuboidCLI.simulateCuboidGeneration(cube);
-    }
-
-    @Test
     public void testCuboidCounts1() {
         CubeDesc cube = getTestKylinCubeWithoutSeller();
         int[] counts = CuboidCLI.calculateAllLevelCount(cube);

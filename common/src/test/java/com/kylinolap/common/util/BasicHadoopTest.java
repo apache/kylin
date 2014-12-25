@@ -18,7 +18,7 @@ import java.io.IOException;
  *
  * development concept proving use
  */
-@Ignore
+@Ignore("convenient trial tool for dev")
 public class BasicHadoopTest {
 
     @BeforeClass
