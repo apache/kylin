@@ -65,13 +65,7 @@ public class CubeMigrationCLI {
 
     private static void usage() {
         System.out.println("Usage: CubeMigrationCLI srcKylinConfigUri dstKylinConfigUri cubeName projectName overwriteIfExists realExecute");
-        System.out.println(
-                " srcKylinConfigUri: The KylinConfig of the cube’s source \n" +
-                        "dstKylinConfigUri: The KylinConfig of the cube’s new home \n" +
-                        "cubeName: the name of cube to be migrated. \n" +
-                        "projectName: The target project in the target environment.(Make sure it exist) \n" +
-                        "overwriteIfExists: overwrite cube if it already exists in the target environment. \n" +
-                        "realExecute: if false, just print the operations to take, if true, do the real migration. \n");
+        System.out.println(" srcKylinConfigUri: The KylinConfig of the cube’s source \n" + "dstKylinConfigUri: The KylinConfig of the cube’s new home \n" + "cubeName: the name of cube to be migrated. \n" + "projectName: The target project in the target environment.(Make sure it exist) \n" + "overwriteIfExists: overwrite cube if it already exists in the target environment. \n" + "realExecute: if false, just print the operations to take, if true, do the real migration. \n");
 
     }
 
@@ -157,8 +151,7 @@ public class CubeMigrationCLI {
 
     private static void changeHtableHost(CubeInstance cube) {
         for (CubeSegment segment : cube.getSegments()) {
-            operations.add(new Opt(OptType.CHANGE_HTABLE_HOST,
-                    new Object[] { segment.getStorageLocationIdentifier() }));
+            operations.add(new Opt(OptType.CHANGE_HTABLE_HOST, new Object[] { segment.getStorageLocationIdentifier() }));
         }
     }
 
@@ -327,7 +320,6 @@ public class CubeMigrationCLI {
                 snapSrc.setLastModified(0);
                 SnapshotTable snapSaved = dstSnapMgr.trySaveNewSnapshot(snapSrc);
                 snapSrc.setLastModified(ts);
-
 
                 if (snapSaved == snapSrc) {
                     //no dup found, already saved to dest

@@ -48,7 +48,6 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         @SuppressWarnings("unused")
         CubeDesc desc2 = JsonUtil.readValue(str, CubeDesc.class);
     }
-    
 
     @Test
     public void testGetCubeDesc() throws Exception {

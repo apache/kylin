@@ -34,13 +34,13 @@ public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
 
     String adminRole;
     SimpleGrantedAuthority adminRoleAsAuthority;
-    
+
     SimpleGrantedAuthority adminAuthority = new SimpleGrantedAuthority(Constant.ROLE_ADMIN);
     SimpleGrantedAuthority modelerAuthority = new SimpleGrantedAuthority(Constant.ROLE_MODELER);
     SimpleGrantedAuthority analystAuthority = new SimpleGrantedAuthority(Constant.ROLE_ANALYST);
-    
+
     Set<GrantedAuthority> defaultAuthorities = new HashSet<GrantedAuthority>();
-    
+
     /**
      * @param contextSource
      * @param groupSearchBase
@@ -49,7 +49,7 @@ public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
         super(contextSource, groupSearchBase);
         this.adminRole = adminRole;
         this.adminRoleAsAuthority = new SimpleGrantedAuthority(adminRole);
-        
+
         if (defaultRole.contains(Constant.ROLE_MODELER))
             this.defaultAuthorities.add(modelerAuthority);
         if (defaultRole.contains(Constant.ROLE_ANALYST))
@@ -59,17 +59,16 @@ public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
     @Override
     public Set<GrantedAuthority> getGroupMembershipRoles(String userDn, String username) {
         Set<GrantedAuthority> authorities = super.getGroupMembershipRoles(userDn, username);
-        
+
         if (authorities.contains(adminRoleAsAuthority)) {
             authorities.add(adminAuthority);
             authorities.add(modelerAuthority);
             authorities.add(analystAuthority);
         }
-        
+
         authorities.addAll(defaultAuthorities);
-        
+
         return authorities;
     }
-    
-    
+
 }

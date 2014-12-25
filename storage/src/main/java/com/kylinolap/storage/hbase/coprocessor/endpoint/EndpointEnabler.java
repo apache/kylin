@@ -19,7 +19,6 @@ package com.kylinolap.storage.hbase.coprocessor.endpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * @author honma
  */

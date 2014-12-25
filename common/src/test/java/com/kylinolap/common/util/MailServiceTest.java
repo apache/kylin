@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 package com.kylinolap.common.util;
 
 import java.io.IOException;
@@ -31,22 +30,22 @@ public class MailServiceTest {
 
     @Test
     public void testSendEmail() throws IOException {
-        
+
         @SuppressWarnings("deprecation")
         KylinConfig config = KylinConfig.getInstanceForTest(AbstractKylinTestCase.SANDBOX_TEST_DATA);
 
         MailService mailservice = new MailService(config);
         boolean sent = sendTestEmail(mailservice);
         assert sent;
-        
+
         // set mail.enabled=false, and run again, this time should be no mail delviered
         config.setProperty(KylinConfig.MAIL_ENABLED, "false");
         mailservice = new MailService(config);
         sent = sendTestEmail(mailservice);
         assert !sent;
-        
+
     }
-    
+
     private boolean sendTestEmail(MailService mailservice) {
 
         List<String> receivers = new ArrayList<String>(1);

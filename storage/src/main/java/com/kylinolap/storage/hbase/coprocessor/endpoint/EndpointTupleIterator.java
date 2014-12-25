@@ -61,9 +61,7 @@ public class EndpointTupleIterator implements ITupleIterator {
 
     int rowsInAllMetric = 0;
 
-
-    public EndpointTupleIterator(IISegment cubeSegment, ColumnDesc[] columnDescs,
-            TupleFilter rootFilter, Collection<TblColRef> groupBy, List<FunctionDesc> measures, StorageContext context, HConnection conn) throws Throwable {
+    public EndpointTupleIterator(IISegment cubeSegment, ColumnDesc[] columnDescs, TupleFilter rootFilter, Collection<TblColRef> groupBy, List<FunctionDesc> measures, StorageContext context, HConnection conn) throws Throwable {
 
         String tableName = cubeSegment.getStorageLocationIdentifier();
         table = conn.getTable(tableName);
@@ -80,7 +78,6 @@ public class EndpointTupleIterator implements ITupleIterator {
             measures = Lists.newArrayList();
         }
         initMeaureParameters(measures, columnDescs);
-
 
         this.seg = cubeSegment;
         this.context = context;
@@ -163,37 +160,27 @@ public class EndpointTupleIterator implements ITupleIterator {
         logger.info("Closed after " + rowsInAllMetric + " rows are fetched");
     }
 
-
     private IIProtos.IIRequest prepareRequest() throws IOException {
-        IIProtos.IIRequest request = IIProtos.IIRequest.newBuilder().
-                setType(ByteString.copyFrom(CoprocessorRowType.serialize(pushedDownRowType))).
-                setFilter(ByteString.copyFrom(CoprocessorFilter.serialize(pushedDownFilter))).
-                setProjector(ByteString.copyFrom(CoprocessorProjector.serialize(pushedDownProjector))).
-                setAggregator(ByteString.copyFrom(EndpointAggregators.serialize(pushedDownAggregators))).
-                build();
+        IIProtos.IIRequest request = IIProtos.IIRequest.newBuilder().setType(ByteString.copyFrom(CoprocessorRowType.serialize(pushedDownRowType))).setFilter(ByteString.copyFrom(CoprocessorFilter.serialize(pushedDownFilter))).setProjector(ByteString.copyFrom(CoprocessorProjector.serialize(pushedDownProjector))).setAggregator(ByteString.copyFrom(EndpointAggregators.serialize(pushedDownAggregators))).build();
 
         return request;
     }
 
-
     //TODO : async callback
     private Iterator<List<IIRow>> getResults(final IIProtos.IIRequest request, HTableInterface table) throws Throwable {
-        Map<byte[], List<IIRow>> results = table.coprocessorService(IIProtos.RowsService.class,
-                null, null,
-                new Batch.Call<IIProtos.RowsService, List<IIRow>>() {
-                    public List<IIProtos.IIResponse.IIRow> call(IIProtos.RowsService rowsService) throws IOException {
-                        ServerRpcController controller = new ServerRpcController();
-                        BlockingRpcCallback<IIProtos.IIResponse> rpcCallback =
-                                new BlockingRpcCallback<>();
-                        rowsService.getRows(controller, request, rpcCallback);
-                        IIProtos.IIResponse response = rpcCallback.get();
-                        if (controller.failedOnException()) {
-                            throw controller.getFailedOn();
-                        }
+        Map<byte[], List<IIRow>> results = table.coprocessorService(IIProtos.RowsService.class, null, null, new Batch.Call<IIProtos.RowsService, List<IIRow>>() {
+            public List<IIProtos.IIResponse.IIRow> call(IIProtos.RowsService rowsService) throws IOException {
+                ServerRpcController controller = new ServerRpcController();
+                BlockingRpcCallback<IIProtos.IIResponse> rpcCallback = new BlockingRpcCallback<>();
+                rowsService.getRows(controller, request, rpcCallback);
+                IIProtos.IIResponse response = rpcCallback.get();
+                if (controller.failedOnException()) {
+                    throw controller.getFailedOn();
+                }
 
-                        return response.getRowsList();
-                    }
-                });
+                return response.getRowsList();
+            }
+        });
 
         return results.values().iterator();
     }
@@ -204,9 +191,9 @@ public class EndpointTupleIterator implements ITupleIterator {
 
         for (int i = 0; i < columns.size(); i++) {
             TblColRef column = columns.get(i);
-//            if (!dimensions.contains(column)) {
-//                continue;
-//            }
+            //            if (!dimensions.contains(column)) {
+            //                continue;
+            //            }
             info.setField(columnNames.get(i), columns.get(i), columns.get(i).getType().getName(), index++);
         }
 
@@ -236,7 +223,6 @@ public class EndpointTupleIterator implements ITupleIterator {
         return name;
 
     }
-
 
     /**
      * Internal class to handle iterators for a single region's returned rows
@@ -274,8 +260,8 @@ public class EndpointTupleIterator implements ITupleIterator {
             byte[] columnsBytes = currentRow.getColumns().toByteArray();
             this.tableRecord.setBytes(columnsBytes, 0, columnsBytes.length);
 
-//            ByteBuffer measuresBuffer = currentRow.getMeasures().asReadOnlyByteBuffer();
-//            this.measureValues = pushedDownAggregators.deserializeMetricValues(measuresBuffer.array(), measuresBuffer.position());
+            //            ByteBuffer measuresBuffer = currentRow.getMeasures().asReadOnlyByteBuffer();
+            //            this.measureValues = pushedDownAggregators.deserializeMetricValues(measuresBuffer.array(), measuresBuffer.position());
             if (currentRow.hasMeasures()) {
                 byte[] measuresBytes = currentRow.getMeasures().toByteArray();
                 this.measureValues = pushedDownAggregators.deserializeMetricValues(measuresBytes, 0);
@@ -309,7 +295,6 @@ public class EndpointTupleIterator implements ITupleIterator {
             }
             return tuple;
         }
-
 
     }
 }

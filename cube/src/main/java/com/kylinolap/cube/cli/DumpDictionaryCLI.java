@@ -32,14 +32,14 @@ public class DumpDictionaryCLI {
             dump(new File(path));
         }
     }
-    
+
     public static void dump(File f) throws IOException {
         if (f.isDirectory()) {
             for (File c : f.listFiles())
                 dump(c);
             return;
         }
-        
+
         if (f.getName().endsWith(".dict")) {
             DictionaryInfoSerializer ser = new DictionaryInfoSerializer();
             DictionaryInfo dictInfo = ser.deserialize(new DataInputStream(new FileInputStream(f)));

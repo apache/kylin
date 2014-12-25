@@ -77,7 +77,6 @@ public class RealizationRegistry {
         realizationsLoaded = false;
     }
 
-
     public static RealizationRegistry getInstance(KylinConfig config) {
         RealizationRegistry r = CACHE.get(config);
         if (r != null) {

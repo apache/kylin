@@ -170,7 +170,6 @@ public class CoprocessorFilter {
             return Dictionary.dictIdToString(id, 0, id.length);
         }
 
-
     }
 
     public static CoprocessorFilter fromFilter(final IISegment seg, TupleFilter rootFilter) {
@@ -193,7 +192,7 @@ public class CoprocessorFilter {
 
     public static CoprocessorFilter deserialize(byte[] filterBytes) {
         TupleFilter filter = (filterBytes == null || filterBytes.length == 0) //
-                ? null //
+        ? null //
                 : TupleFilterSerializer.deserialize(filterBytes);
         return new CoprocessorFilter(filter);
     }

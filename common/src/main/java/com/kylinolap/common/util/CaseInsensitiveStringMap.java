@@ -12,13 +12,13 @@ public class CaseInsensitiveStringMap<T> implements Map<String, T> {
 
     private Map<String, T> innerMap;
 
-    public CaseInsensitiveStringMap(){
+    public CaseInsensitiveStringMap() {
         this(new HashMap<String, T>());
     }
-    public CaseInsensitiveStringMap(Map<String, T> innerMap){
+
+    public CaseInsensitiveStringMap(Map<String, T> innerMap) {
         this.innerMap = innerMap;
     }
-
 
     @Override
     public int size() {
@@ -32,27 +32,27 @@ public class CaseInsensitiveStringMap<T> implements Map<String, T> {
 
     @Override
     public boolean containsKey(Object key) {
-        return key != null?innerMap.containsKey(key.toString().toUpperCase()):false;
+        return key != null ? innerMap.containsKey(key.toString().toUpperCase()) : false;
     }
 
     @Override
     public boolean containsValue(Object value) {
-        return value != null?innerMap.containsValue(value):false;
+        return value != null ? innerMap.containsValue(value) : false;
     }
 
     @Override
     public T get(Object key) {
-        return key != null?innerMap.get(key.toString().toUpperCase()):null;
+        return key != null ? innerMap.get(key.toString().toUpperCase()) : null;
     }
 
     @Override
     public T put(String key, T value) {
-        return key != null?innerMap.put(key.toString().toUpperCase(), value):null;
+        return key != null ? innerMap.put(key.toString().toUpperCase(), value) : null;
     }
 
     @Override
     public T remove(Object key) {
-        return key != null?innerMap.remove(key.toString().toUpperCase()):null;
+        return key != null ? innerMap.remove(key.toString().toUpperCase()) : null;
     }
 
     @Override

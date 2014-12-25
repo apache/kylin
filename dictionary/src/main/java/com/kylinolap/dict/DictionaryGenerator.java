@@ -113,7 +113,7 @@ public class DictionaryGenerator {
     private static Dictionary buildDateStrDict(List<byte[]> values, int baseId, int nSamples, ArrayList samples) {
         final int BAD_THRESHOLD = 2;
         String matchPattern = null;
-        
+
         for (String ptn : DATE_PATTERNS) {
             matchPattern = ptn; // be optimistic
             int badCount = 0;

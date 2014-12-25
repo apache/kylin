@@ -40,7 +40,6 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
 
     List<TableRecord> tableData;
 
-
     @Before
     public void setup() throws IOException {
         this.createTestMetadata();
@@ -62,7 +61,6 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
         aggCache = new EndpointAggregationCache(aggregators);
         tableData = mockTable();
     }
-
 
     @After
     public void cleanUp() {
@@ -110,7 +108,6 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
         ret.add(temp3);
         return ret;
     }
-
 
     private List<FunctionDesc> buildAggregations() {
         List<FunctionDesc> functions = new ArrayList<FunctionDesc>();
@@ -163,8 +160,8 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
             minTotal += ((LongWritable) entry.getValue()[1].getState()).get();
 
         }
-        assertEquals(3020800,sumTotal);
-        assertEquals(1020900,minTotal);
+        assertEquals(3020800, sumTotal);
+        assertEquals(1020900, minTotal);
 
     }
 

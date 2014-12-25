@@ -28,6 +28,5 @@ public class LookupDesc {
     public void setJoin(JoinDesc join) {
         this.join = join;
     }
-    
-    
+
 }

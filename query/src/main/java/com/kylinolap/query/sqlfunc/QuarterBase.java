@@ -8,7 +8,7 @@ import net.hydromatic.optiq.runtime.SqlFunctions.TimeUnitRange;
  * 
  */
 public abstract class QuarterBase {
-    
+
     /**
      * According to jvm spec, it return self method before parent.
      * So, we keep Date in parent and int in child

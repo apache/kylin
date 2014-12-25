@@ -120,7 +120,7 @@ public class MetadataManager {
     public List<TableDesc> listAllTables() {
         return Lists.newArrayList(srcTableMap.values());
     }
-    
+
     public Map<String, TableDesc> getAllTablesMap() {
         return Collections.unmodifiableMap(srcTableMap.getMap());
     }
@@ -176,7 +176,6 @@ public class MetadataManager {
 
         srcTableMap.put(tableIdentity, srcTable);
     }
-
 
     // sync on update
     private void init(KylinConfig config) throws IOException {
@@ -272,7 +271,6 @@ public class MetadataManager {
     public DataModelDesc getDataModelDesc(String name) {
         return dataModelDescMap.get(name);
     }
-    
 
     private void reloadAllDataModel() throws IOException {
         ResourceStore store = getStore();
@@ -309,7 +307,7 @@ public class MetadataManager {
 
         return dataModelDesc;
     }
-    
+
     /**
      * Update DataModelDesc with the input. Broadcast the event into cluster
      * 
@@ -332,7 +330,6 @@ public class MetadataManager {
             desc.addError(e.getMessage(), true);
             return desc;
         }
-
 
         // Save Source
         String path = desc.getResourcePath();
@@ -369,7 +366,6 @@ public class MetadataManager {
 
         return ndesc;
     }
-
 
     public void deleteDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
         // remove dataModelDesc

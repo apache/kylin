@@ -30,7 +30,7 @@ public class ImportHBaseData {
     String tableNameBase;
 
     public void setup() throws IOException {
-        
+
         KylinConfig.destoryInstance();
         System.setProperty(KylinConfig.KYLIN_CONF, AbstractKylinTestCase.SANDBOX_TEST_DATA);
 
@@ -65,7 +65,7 @@ public class ImportHBaseData {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
         KylinConfig.destoryInstance();
 
     }
@@ -77,18 +77,18 @@ public class ImportHBaseData {
         List<String> tablelocations = getTablesBackupLocations(importFolder);
         for (String tableLocation : tablelocations) {
             String table = tableLocation.substring(tableLocation.lastIndexOf("/") + 1);
-            
+
             if (!(table.equalsIgnoreCase("kylin_metadata_qa") || table.startsWith("KYLIN_"))) {
                 continue;
             }
-            
+
             if (table.startsWith("KYLIN_")) {
                 // create the cube table; otherwise the import will fail.
                 HBaseConnection.createHTableIfNeeded(KylinConfig.getInstanceFromEnv().getStorageUrl(), table, "F1", "F2");
             }
             cli.execute("hbase org.apache.hadoop.hbase.mapreduce.Import " + table + " file://" + tableLocation);
         }
-        
+
     }
 
     public void uploadTarballToRemote() throws IOException {
@@ -96,14 +96,14 @@ public class ImportHBaseData {
         cli.execute("mkdir -p /tmp/hbase-export/");
         SSHClient ssh = new SSHClient(kylinConfig.getRemoteHadoopCliHostname(), kylinConfig.getRemoteHadoopCliUsername(), kylinConfig.getRemoteHadoopCliPassword());
         try {
-           // ssh.scpFileToRemote("../examples/test_case_data/minicluster/hbase-export.tar.gz", importFolder);
+            // ssh.scpFileToRemote("../examples/test_case_data/minicluster/hbase-export.tar.gz", importFolder);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        
+
         cli.execute("tar -xzf /tmp/hbase-export/hbase-export.tar.gz  --directory=" + importFolder);
     }
-    
+
     private List<String> getTablesBackupLocations(String exportBase) throws IOException {
         File exportFile = new File("../examples/test_case_data/minicluster/hbase-export.tar.gz");
 
@@ -131,16 +131,16 @@ public class ImportHBaseData {
         File backupFolder = new File(folder, backupTime);
 
         String[] tableNames = backupFolder.list();
-        
+
         List<String> locations = new ArrayList<String>(15);
-        
-        for(String t: tableNames) {
+
+        for (String t : tableNames) {
             locations.add(exportBase + backupTime + "/" + t);
         }
-        
+
         return locations;
     }
-    
+
     public static void main(String[] args) {
         ImportHBaseData export = new ImportHBaseData();
         try {

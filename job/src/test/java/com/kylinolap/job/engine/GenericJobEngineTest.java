@@ -64,7 +64,6 @@ public class GenericJobEngineTest {
     private static String mrOutputDir2 = "/tmp/mapredsmokeoutput2";
     private static String mrCmd = "hadoop --config /etc/hadoop/conf jar /usr/lib/hadoop-mapreduce/hadoop-mapreduce-examples-2.*.jar wordcount " + mrInputDir + " ";
 
-
     public static void removeHdfsDir(SSHClient hadoopCli, String hdfsDir) throws Exception {
         String cmd = "hadoop fs -rm -f -r " + hdfsDir;
         hadoopCli.execCommand(cmd);
@@ -260,7 +259,6 @@ public class GenericJobEngineTest {
         assertEquals(JobStepStatusEnum.DISCARDED, killedJob.getSteps().get(0).getStatus());
         assertEquals(JobStatusEnum.DISCARDED, killedJob.getStatus());
     }
-
 
     @Test
     public void testKillMrStep() throws Exception {

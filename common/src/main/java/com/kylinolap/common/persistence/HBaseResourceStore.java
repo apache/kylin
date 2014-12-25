@@ -70,7 +70,7 @@ public class HBaseResourceStore extends ResourceStore {
     final String tableNameBase;
     final String hbaseUrl;
 
-//    final Map<String, String> tableNameMap; // path prefix ==> HBase table name
+    //    final Map<String, String> tableNameMap; // path prefix ==> HBase table name
 
     private HConnection getConnection() throws IOException {
         return HBaseConnection.get(hbaseUrl);
@@ -87,13 +87,13 @@ public class HBaseResourceStore extends ResourceStore {
 
         createHTableIfNeeded(getAllInOneTableName());
 
-//        tableNameMap = new LinkedHashMap<String, String>();
-//        for (Entry<String, String> entry : TABLE_SUFFIX_MAP.entrySet()) {
-//            String pathPrefix = entry.getKey();
-//            String tableName = tableNameBase + entry.getValue();
-//            tableNameMap.put(pathPrefix, tableName);
-//            createHTableIfNeeded(tableName);
-//        }
+        //        tableNameMap = new LinkedHashMap<String, String>();
+        //        for (Entry<String, String> entry : TABLE_SUFFIX_MAP.entrySet()) {
+        //            String pathPrefix = entry.getKey();
+        //            String tableName = tableNameBase + entry.getValue();
+        //            tableNameMap.put(pathPrefix, tableName);
+        //            createHTableIfNeeded(tableName);
+        //        }
 
     }
 

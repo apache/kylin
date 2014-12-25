@@ -51,7 +51,6 @@ public class MailService {
         password = config.getProperty(KylinConfig.MAIL_PASSWORD, "");
         sender = config.getProperty(KylinConfig.MAIL_SENDER, "");
 
-
         if (enabled) {
             if (host.isEmpty())
                 throw new RuntimeException("mail service host is empty");

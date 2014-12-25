@@ -162,7 +162,7 @@ public class JobEngineConfig {
     public String getRemoteHadoopCliPassword() {
         return config.getRemoteHadoopCliPassword();
     }
-    
+
     public String getMapReduceCmdExtraArgs() {
         return config.getMapReduceCmdExtraArgs();
     }

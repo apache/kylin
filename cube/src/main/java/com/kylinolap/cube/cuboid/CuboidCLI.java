@@ -129,14 +129,14 @@ public class CuboidCLI {
         long groupMask = aggrGroupMask.groupMask;
         int n = mathCalcCuboidCount_combination(rowkey, groupMask);
         n -= 2; // exclude group all 1 and all 0
-        
+
         long nonUniqueMask = groupMask & (~aggrGroupMask.uniqueMask);
         if (nonUniqueMask > 0) {
             // exclude duplicates caused by non-unique columns
             // FIXME this assumes non-unique masks consolidates in ONE following group which maybe not be true
             n -= mathCalcCuboidCount_combination(rowkey, nonUniqueMask) - 1; // exclude all 0
         }
-        
+
         if (hasTail) {
             n *= 2; // tail being 1 and 0
             n += 2; // +1 for group all 1 and tail 0; +1 for group all 0 and tail 1

@@ -99,7 +99,7 @@ public class JobInstanceBuilder {
         if (StringUtils.isBlank(jobConf) == false) {
             buf.append(" -conf " + jobConf);
         }
-        
+
         String extraArgs = engineConfig.getMapReduceCmdExtraArgs();
         if (StringUtils.isBlank(extraArgs) == false) {
             extraArgs = extraArgs.replace("${CUBE}", jobInstance.getRelatedCube());
@@ -150,7 +150,6 @@ public class JobInstanceBuilder {
             throw new IllegalArgumentException("Merging segments count should be more than 2");
         }
 
-
         String[] cuboidPaths = new String[mergingSegments.size()];
         for (int i = 0; i < mergingSegments.size(); i++) {
             cuboidPaths[i] = getPathToMerge(jobInstance, mergingSegments.get(i));
@@ -158,7 +157,7 @@ public class JobInstanceBuilder {
         String formattedPath = formatPaths(cuboidPaths);
 
         // clear existing steps
-//        jobInstance.clearSteps();
+        //        jobInstance.clearSteps();
         int stepSeqNum = 0;
         List<JobStep> result = Lists.newArrayList();
         final String mergedCuboidPath = jobWorkingDir + "/" + cubeName + "/cuboid";
@@ -189,11 +188,10 @@ public class JobInstanceBuilder {
     private List<JobStep> createBuildCubeSegmentSteps(JobInstance jobInstance) throws IOException {
 
         // clear existing steps
-//        jobInstance.clearSteps();
+        //        jobInstance.clearSteps();
 
         int groupRowkeyColumnsCount = cube.getDescriptor().getRowkey().getNCuboidBuildLevels();
         int totalRowkeyColumnsCount = cube.getDescriptor().getRowkey().getRowKeyColumns().length;
-
 
         int stepSeqNum = 0;
         List<JobStep> result = Lists.newArrayList();
@@ -214,7 +212,7 @@ public class JobInstanceBuilder {
         final String cuboidTmpRootPath = jobWorkingDir + "/" + cubeName + "/tmp_cuboid/";
         final boolean incBuildMerge = cube.needMergeImmediatelyAfterBuild(cubeSegment);
 
-        String[] cuboidOutputTempPath = getCuboidOutputPaths(incBuildMerge?cuboidTmpRootPath:cuboidRootPath, totalRowkeyColumnsCount, groupRowkeyColumnsCount);
+        String[] cuboidOutputTempPath = getCuboidOutputPaths(incBuildMerge ? cuboidTmpRootPath : cuboidRootPath, totalRowkeyColumnsCount, groupRowkeyColumnsCount);
         // base cuboid step
         result.add(createBaseCuboidStep(jobInstance, stepSeqNum++, cuboidOutputTempPath));
 
@@ -226,14 +224,14 @@ public class JobInstanceBuilder {
 
         if (incBuildMerge) {
             List<String> pathToMerge = Lists.newArrayList();
-            for (CubeSegment segment: cube.getSegments(SegmentStatusEnum.READY)) {
+            for (CubeSegment segment : cube.getSegments(SegmentStatusEnum.READY)) {
                 pathToMerge.add(getPathToMerge(jobInstance, segment));
             }
             pathToMerge.add(cuboidTmpRootPath + "*");
             result.add(createMergeCuboidDataStep(jobInstance, stepSeqNum++, formatPaths(pathToMerge), cuboidRootPath));
         }
 
-        String cuboidPath = incBuildMerge?cuboidRootPath:cuboidRootPath+"*";
+        String cuboidPath = incBuildMerge ? cuboidRootPath : cuboidRootPath + "*";
 
         // get output distribution step
         result.add(createRangeRowkeyDistributionStep(jobInstance, stepSeqNum++, cuboidPath));

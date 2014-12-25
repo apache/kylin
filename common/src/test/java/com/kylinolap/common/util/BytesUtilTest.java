@@ -27,7 +27,7 @@ public class BytesUtilTest extends TestCase {
     @Test
     public void testBooleanArray() {
         ByteBuffer buffer = ByteBuffer.allocate(10000);
-        boolean[] x = new boolean[]{ true, false, true };
+        boolean[] x = new boolean[] { true, false, true };
         BytesUtil.writeBooleanArray(x, buffer);
         buffer.flip();
         boolean[] y = BytesUtil.readBooleanArray(buffer);

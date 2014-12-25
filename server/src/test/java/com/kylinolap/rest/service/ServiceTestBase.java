@@ -57,7 +57,6 @@ public class ServiceTestBase extends HBaseMiniclusterMetadataTestCase { //HBaseM
         shutdownMiniCluster();
     }
 
-
     @Before
     public void setUp() {
         this.createTestMetadata();
