@@ -17,16 +17,7 @@ public class ProtobufTest {
     @Test
     public void testRecursive() throws IOException {
 
-
-        NodeProtos.Node node = NodeProtos.Node.newBuilder().setName("root").
-                setLeft(
-                        NodeProtos.Node.newBuilder().setName("L1 left").
-                                setLeft(
-                                        NodeProtos.Node.newBuilder().setName("L2 left most"))).
-                setRight(
-                        NodeProtos.Node.newBuilder().setName("L1 right").
-                                setRight(
-                                        NodeProtos.Node.newBuilder().setName("L2 right most"))).build();
+        NodeProtos.Node node = NodeProtos.Node.newBuilder().setName("root").setLeft(NodeProtos.Node.newBuilder().setName("L1 left").setLeft(NodeProtos.Node.newBuilder().setName("L2 left most"))).setRight(NodeProtos.Node.newBuilder().setName("L1 right").setRight(NodeProtos.Node.newBuilder().setName("L2 right most"))).build();
 
         File a = File.createTempFile("dfsd", "fdsfsd");
         FileOutputStream outputStream = new FileOutputStream(a);

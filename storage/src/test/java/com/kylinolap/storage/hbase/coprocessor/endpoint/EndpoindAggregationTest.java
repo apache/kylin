@@ -17,11 +17,9 @@ import com.kylinolap.storage.filter.ConstantTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
-import org.apache.commons.collections.Predicate;
 import org.apache.hadoop.io.LongWritable;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -30,7 +28,6 @@ import java.util.*;
 /**
  * Created by Hongbin Ma(Binmahone) on 11/27/14.
  */
-@Ignore("ii not ready")
 public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
     IIInstance ii;
     TableRecordInfo tableRecordInfo;
@@ -42,7 +39,6 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
     EndpointAggregationCache aggCache;
 
     List<TableRecord> tableData;
-
 
     @Before
     public void setup() throws IOException {
@@ -65,7 +61,6 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
         aggCache = new EndpointAggregationCache(aggregators);
         tableData = mockTable();
     }
-
 
     @After
     public void cleanUp() {
@@ -113,7 +108,6 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
         ret.add(temp3);
         return ret;
     }
-
 
     private List<FunctionDesc> buildAggregations() {
         List<FunctionDesc> functions = new ArrayList<FunctionDesc>();
@@ -166,8 +160,8 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
             minTotal += ((LongWritable) entry.getValue()[1].getState()).get();
 
         }
-        assertEquals(3020800,sumTotal);
-        assertEquals(1020900,minTotal);
+        assertEquals(3020800, sumTotal);
+        assertEquals(1020900, minTotal);
 
     }
 

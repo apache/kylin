@@ -47,7 +47,6 @@ public class DictionaryManagerTest extends LocalFileMetadataTestCase {
         cleanupTestMetadata();
     }
 
-
     @Test
     @Ignore("hive not ready")
     public void basic() throws Exception {

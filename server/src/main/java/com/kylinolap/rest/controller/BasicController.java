@@ -48,7 +48,7 @@ public class BasicController {
     void handleError(HttpServletRequest req, Exception ex) {
         logger.error("Internal error (Exception) throw out of controller", ex);
     }
-    
+
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(InternalErrorException.class)
     @ResponseBody

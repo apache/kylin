@@ -84,7 +84,7 @@ public class HBaseConnection {
     public static void createHTableIfNeeded(String hbaseUrl, String tableName, String... families) throws IOException {
         createHTableIfNeeded(HBaseConnection.get(hbaseUrl), tableName, families);
     }
-    
+
     public static void createHTableIfNeeded(HConnection conn, String tableName, String... families) throws IOException {
         HBaseAdmin hbase = new HBaseAdmin(conn);
 

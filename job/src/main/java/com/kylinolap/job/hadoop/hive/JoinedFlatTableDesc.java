@@ -41,10 +41,10 @@ public class JoinedFlatTableDesc {
     private int[] rowKeyColumnIndexes; // the column index on flat table
     private int[][] measureColumnIndexes; // [i] is the i.th measure related
                                           // column index on flat table
-    
+
     // Map for table alais; key: table name; value: alias;
     private Map<String, String> tableAliasMap;
-    
+
     public static final String FACT_TABLE_ALIAS = "FACT_TABLE";
     public static final String LOOKUP_TABLE_ALAIS_PREFIX = "LOOKUP_";
 
@@ -120,26 +120,26 @@ public class JoinedFlatTableDesc {
                 }
             }
         }
-        
+
         buileTableAliasMap();
     }
-    
+
     private void buileTableAliasMap() {
         tableAliasMap = new HashMap<String, String>();
-        
+
         tableAliasMap.put(cubeDesc.getFactTable(), FACT_TABLE_ALIAS);
-        
-        int i=1;
+
+        int i = 1;
         for (DimensionDesc dim : cubeDesc.getDimensions()) {
             JoinDesc join = dim.getJoin();
-            if(join != null) {
+            if (join != null) {
                 tableAliasMap.put(dim.getTable(), LOOKUP_TABLE_ALAIS_PREFIX + i);
                 i++;
             }
-            
+
         }
     }
-    
+
     public String getTableAlias(String tableName) {
         return tableAliasMap.get(tableName);
     }
@@ -198,7 +198,7 @@ public class JoinedFlatTableDesc {
         public String getTableName() {
             return tableName;
         }
-        
+
         public String getDatabaseName() {
             return databaseName;
         }

@@ -33,239 +33,244 @@ import com.kylinolap.metadata.MetadataManager;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class IIDesc extends RootPersistentEntity {
 
-    public static final String HBASE_FAMILY = "f";
-    public static final String HBASE_QUALIFIER = "c";
-    public static final byte[] HBASE_FAMILY_BYTES = Bytes.toBytes(HBASE_FAMILY);
-    public static final byte[] HBASE_QUALIFIER_BYTES = Bytes.toBytes(HBASE_QUALIFIER);
+	public static final String HBASE_FAMILY = "f";
+	public static final String HBASE_QUALIFIER = "c";
+	public static final byte[] HBASE_FAMILY_BYTES = Bytes.toBytes(HBASE_FAMILY);
+	public static final byte[] HBASE_QUALIFIER_BYTES = Bytes
+			.toBytes(HBASE_QUALIFIER);
 
-    private KylinConfig config;
-    private DataModelDesc model;
+	private KylinConfig config;
+	private DataModelDesc model;
 
-    @JsonProperty("name")
-    private String name;
-    @JsonProperty("model_name")
-    private String modelName;
-    @JsonProperty("fact_table")
-    private String factTable;
-    @JsonProperty("timestamp_dimension")
-    private String timestampDimension;
-    @JsonProperty("bitmap_dimensions")
-    private String[] bitmapDimensions;
-    @JsonProperty("value_dimensions")
-    private String[] valueDimensions;
-    @JsonProperty("metrics")
-    private String[] metrics;
-    @JsonProperty("sharding")
-    private short sharding = 1; // parallelism
-    @JsonProperty("slice_size")
-    private int sliceSize = 50000; // no. rows
-    @JsonProperty("signature")
-    private String signature;
+	@JsonProperty("name")
+	private String name;
+	@JsonProperty("model_name")
+	private String modelName;
+	@JsonProperty("fact_table")
+	private String factTable;
+	@JsonProperty("timestamp_dimension")
+	private String timestampDimension;
+	@JsonProperty("bitmap_dimensions")
+	private String[] bitmapDimensions;
+	@JsonProperty("value_dimensions")
+	private String[] valueDimensions;
+	@JsonProperty("metrics")
+	private String[] metrics;
+	@JsonProperty("sharding")
+	private short sharding = 1; // parallelism
+	@JsonProperty("slice_size")
+	private int sliceSize = 50000; // no. rows
+	@JsonProperty("signature")
+	private String signature;
 
-    // computed
-    private TableDesc tableDesc;
-    private int tsCol;
-    private int[] bitmapCols;
-    private int[] valueCols;
-    private int[] metricsCols;
-    private BitSet metricsColSet;
-    private List<MeasureDesc> measureDescs;
+	// computed
+	private TableDesc tableDesc;
+	private int tsCol;
+	private int[] bitmapCols;
+	private int[] valueCols;
+	private int[] metricsCols;
+	private BitSet metricsColSet;
+	private List<MeasureDesc> measureDescs;
 
+	public void init(MetadataManager mgr) {
 
-    public void init(MetadataManager mgr) {
+		config = mgr.getConfig();
 
-        config = mgr.getConfig();
+		if (this.modelName == null || this.modelName.length() == 0) {
+			throw new RuntimeException("The cubeDesc '" + this.getName()
+					+ "' doesn't have data model specified.");
+		}
 
-        if (this.modelName == null || this.modelName.length() == 0) {
-            throw new RuntimeException("The cubeDesc '" + this.getName() + "' doesn't have data model specified.");
-        }
+		this.model = MetadataManager.getInstance(config).getDataModelDesc(
+				this.modelName);
 
-        this.model = MetadataManager.getInstance(config).getDataModelDesc(this.modelName);
+		if (this.model == null) {
+			throw new RuntimeException("No data model found with name '"
+					+ modelName + "'.");
+		}
 
-        if (this.model == null) {
-            throw new RuntimeException("No data model found with name '" + modelName + "'.");
-        }
+		factTable = factTable.toUpperCase();
+		timestampDimension = timestampDimension.toUpperCase();
+		StringUtil.toUpperCaseArray(bitmapDimensions, bitmapDimensions);
+		StringUtil.toUpperCaseArray(valueDimensions, valueDimensions);
+		StringUtil.toUpperCaseArray(metrics, metrics);
 
+		tableDesc = mgr.getTableDesc(factTable);
+		bitmapCols = new int[bitmapDimensions.length];
+		valueCols = new int[valueDimensions.length];
+		metricsCols = new int[metrics.length];
+		metricsColSet = new BitSet(tableDesc.getColumnCount());
+		measureDescs = Lists.newArrayList();
+		int i = 0, j = 0, k = 0;
+		for (ColumnDesc col : tableDesc.getColumns()) {
+			if (ArrayUtils.contains(bitmapDimensions, col.getName())) {
+				bitmapCols[i++] = col.getZeroBasedIndex();
+			}
+			if (ArrayUtils.contains(valueDimensions, col.getName())) {
+				valueCols[j++] = col.getZeroBasedIndex();
+			}
+			if (ArrayUtils.contains(metrics, col.getName())) {
+				metricsCols[k++] = col.getZeroBasedIndex();
+				metricsColSet.set(col.getZeroBasedIndex());
+				measureDescs.add(makeMeasureDescs("SUM", col));
+				measureDescs.add(makeMeasureDescs("MIN", col));
+				measureDescs.add(makeMeasureDescs("MAX", col));
+				// TODO support for HLL
+			}
+		}
 
-        factTable = factTable.toUpperCase();
-        timestampDimension = timestampDimension.toUpperCase();
-        StringUtil.toUpperCaseArray(bitmapDimensions, bitmapDimensions);
-        StringUtil.toUpperCaseArray(valueDimensions, valueDimensions);
-        StringUtil.toUpperCaseArray(metrics, metrics);
+		tsCol = tableDesc.findColumnByName(timestampDimension)
+				.getZeroBasedIndex();
+	}
 
-        tableDesc = mgr.getTableDesc(factTable);
-        bitmapCols = new int[bitmapDimensions.length];
-        valueCols = new int[valueDimensions.length];
-        metricsCols = new int[metrics.length];
-        metricsColSet = new BitSet(tableDesc.getColumnCount());
-        measureDescs = Lists.newArrayList();
-        int i = 0, j = 0, k = 0;
-        for (ColumnDesc col : tableDesc.getColumns()) {
-            if (ArrayUtils.contains(bitmapDimensions, col.getName())) {
-                bitmapCols[i++] = col.getZeroBasedIndex();
-            }
-            if (ArrayUtils.contains(valueDimensions, col.getName())) {
-                valueCols[j++] = col.getZeroBasedIndex();
-            }
-            if (ArrayUtils.contains(metrics, col.getName())) {
-                metricsCols[k++] = col.getZeroBasedIndex();
-                metricsColSet.set(col.getZeroBasedIndex());
-                measureDescs.add(makeMeasureDescs("SUM", col));
-                measureDescs.add(makeMeasureDescs("MIN", col));
-                measureDescs.add(makeMeasureDescs("MAX", col));
-                //TODO support for HLL
-            }
-        }
+	public String getResourcePath() {
+		return getIIDescResourcePath(name);
+	}
 
-        tsCol = tableDesc.findColumnByName(timestampDimension).getZeroBasedIndex();
-    }
+	public static String getIIDescResourcePath(String descName) {
+		return ResourceStore.II_DESC_RESOURCE_ROOT + "/" + descName
+				+ MetadataConstances.FILE_SURFIX;
+	}
 
+	public List<MeasureDesc> getMeasures() {
+		return measureDescs;
+	}
 
-    public String getResourcePath() {
-        return getIIDescResourcePath(name);
-    }
+	private MeasureDesc makeMeasureDescs(String func, ColumnDesc columnDesc) {
+		String columnName = columnDesc.getName();
+		String returnType = columnDesc.getTypeName();
+		MeasureDesc measureDesc = new MeasureDesc();
+		FunctionDesc f1 = new FunctionDesc();
+		f1.setExpression(func);
+		ParameterDesc p1 = new ParameterDesc();
+		p1.setType("column");
+		p1.setValue(columnName);
+		p1.setColRefs(ImmutableList.of(new TblColRef(columnDesc)));
+		f1.setParameter(p1);
+		f1.setReturnType(returnType);
+		measureDesc.setFunction(f1);
+		return measureDesc;
+	}
 
-    public static String getIIDescResourcePath(String descName) {
-        return ResourceStore.II_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstances.FILE_SURFIX;
-    }
+	/**
+	 * at first stage the only table in II is fact table, TODO: to extend to all
+	 * tables
+	 * 
+	 * @return
+	 */
+	public List<TableDesc> listTables() {
+		return Lists.newArrayList(this.tableDesc);
+	}
 
+	public List<TblColRef> listAllColumns() {
+		List<TblColRef> ret = Lists.newArrayList();
+		for (ColumnDesc columnDesc : this.tableDesc.getColumns()) {
+			ret.add(new TblColRef(columnDesc));
+		}
+		return ret;
+	}
 
-    public List<MeasureDesc> getMeasures() {
-        return measureDescs;
-    }
+	public TblColRef findColumnRef(String table, String column) {
+		ColumnDesc columnDesc = this.tableDesc.findColumnByName(column);
+		return new TblColRef(columnDesc);
+	}
 
-    private MeasureDesc makeMeasureDescs(String func, ColumnDesc columnDesc) {
-        String columnName = columnDesc.getName();
-        String returnType = columnDesc.getTypeName();
-        MeasureDesc measureDesc = new MeasureDesc();
-        FunctionDesc f1 = new FunctionDesc();
-        f1.setExpression(func);
-        ParameterDesc p1 = new ParameterDesc();
-        p1.setType("column");
-        p1.setValue(columnName);
-        p1.setColRefs(ImmutableList.of(new TblColRef(columnDesc)));
-        f1.setParameter(p1);
-        f1.setReturnType(returnType);
-        measureDesc.setFunction(f1);
-        return measureDesc;
-    }
+	public KylinConfig getConfig() {
+		return config;
+	}
 
-    /**
-     * at first stage the only table in II is fact table, TODO: to extend to all tables
-     *
-     * @return
-     */
-    public List<TableDesc> listTables() {
-        return Lists.newArrayList(this.tableDesc);
-    }
+	public String getName() {
+		return name;
+	}
 
-    public List<TblColRef> listAllColumns() {
-        List<TblColRef> ret = Lists.newArrayList();
-        for (ColumnDesc columnDesc : this.tableDesc.getColumns()) {
-            ret.add(new TblColRef(columnDesc));
-        }
-        return ret;
-    }
+	public String getModelName() {
+		return modelName;
+	}
 
-    public TblColRef findColumnRef(String table, String column) {
-        ColumnDesc columnDesc = this.tableDesc.findColumnByName(column);
-        return new TblColRef(columnDesc);
-    }
+	public void setModelName(String modelName) {
+		this.modelName = modelName;
+	}
 
-    public KylinConfig getConfig() {
-        return config;
-    }
+	public DataModelDesc getModel() {
+		return model;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public void setModel(DataModelDesc model) {
+		this.model = model;
+	}
 
+	public int getTimestampColumn() {
+		return tsCol;
+	}
 
-    public String getModelName() {
-        return modelName;
-    }
+	public int[] getBitmapColumns() {
+		return bitmapCols;
+	}
 
-    public void setModelName(String modelName) {
-        this.modelName = modelName;
-    }
+	public int[] getValueColumns() {
+		return valueCols;
+	}
 
-    public DataModelDesc getModel() {
-        return model;
-    }
+	public int[] getMetricsColumns() {
+		return metricsCols;
+	}
 
-    public void setModel(DataModelDesc model) {
-        this.model = model;
-    }
+	public short getSharding() {
+		return sharding;
+	}
 
-    public int getTimestampColumn() {
-        return tsCol;
-    }
+	public int getSliceSize() {
+		return sliceSize;
+	}
 
-    public int[] getBitmapColumns() {
-        return bitmapCols;
-    }
+	public String getSignature() {
+		return signature;
+	}
 
-    public int[] getValueColumns() {
-        return valueCols;
-    }
+	public void setSignature(String signature) {
+		this.signature = signature;
+	}
 
-    public int[] getMetricsColumns() {
-        return metricsCols;
-    }
+	public boolean isMetricsCol(TblColRef col) {
+		assert col.getTable().equals(factTable);
+		return isMetricsCol(col.getColumn().getZeroBasedIndex());
+	}
 
-    public short getSharding() {
-        return sharding;
-    }
+	public boolean isMetricsCol(int colZeroBasedIndex) {
+		return metricsColSet.get(colZeroBasedIndex);
+	}
 
-    public int getSliceSize() {
-        return sliceSize;
-    }
+	public TableDesc getFactTableDesc() {
+		return tableDesc;
+	}
 
-    public String getSignature() {
-        return signature;
-    }
+	public String getFactTable() {
+		return factTable;
+	}
 
-    public void setSignature(String signature) {
-        this.signature = signature;
-    }
+	public String getTimestampDimension() {
+		return timestampDimension;
+	}
 
+	public String calculateSignature() {
+		MessageDigest md = null;
+		try {
+			md = MessageDigest.getInstance("MD5");
+			StringBuilder sigString = new StringBuilder();
+			sigString.append(this.name).append("|").append(this.getFactTable())
+					.append("|").append(timestampDimension).append("|")
+					.append(JsonUtil.writeValueAsString(this.bitmapDimensions))
+					.append("|")
+					.append(JsonUtil.writeValueAsString(valueDimensions))
+					.append("|")
+					.append(JsonUtil.writeValueAsString(this.metrics))
+					.append("|").append(sharding).append("|").append(sliceSize);
 
-    public boolean isMetricsCol(TblColRef col) {
-        assert col.getTable().equals(factTable);
-        return isMetricsCol(col.getColumn().getZeroBasedIndex());
-    }
-
-    public boolean isMetricsCol(int colZeroBasedIndex) {
-        return metricsColSet.get(colZeroBasedIndex);
-    }
-
-
-    public TableDesc getFactTableDesc() {
-        return tableDesc;
-    }
-
-    public String getFactTable() {
-        return factTable;
-    }
-
-    public String getTimestampDimension() {
-        return timestampDimension;
-    }
-
-    public String calculateSignature() {
-        MessageDigest md = null;
-        try {
-            md = MessageDigest.getInstance("MD5");
-            StringBuilder sigString = new StringBuilder();
-            sigString.append(this.name).append("|").append(this.getFactTable()).append("|").append(timestampDimension).append("|").
-                    append(JsonUtil.writeValueAsString(this.bitmapDimensions)).append("|").append(JsonUtil.writeValueAsString(valueDimensions)).append("|").
-                    append(JsonUtil.writeValueAsString(this.metrics)).append("|").append(sharding).append("|").append(sliceSize);
-
-            byte[] signature = md.digest(sigString.toString().getBytes());
-            return new String(Base64.encodeBase64(signature));
-        } catch (NoSuchAlgorithmException | JsonProcessingException e) {
-            throw new RuntimeException("Failed to calculate signature");
-        }
-    }
+			byte[] signature = md.digest(sigString.toString().getBytes());
+			return new String(Base64.encodeBase64(signature));
+		} catch (NoSuchAlgorithmException | JsonProcessingException e) {
+			throw new RuntimeException("Failed to calculate signature");
+		}
+	}
 
 }

@@ -45,9 +45,9 @@ public class HiveMiniClusterTest extends HiveJDBCClientTest {
         super.setup();
         startHiveMiniCluster();
     }
-    
+
     protected void startHiveMiniCluster() {
-      //Create and configure location for hive to dump junk in target folder
+        //Create and configure location for hive to dump junk in target folder
         try {
             FileUtils.forceMkdir(HIVE_BASE_DIR);
             FileUtils.forceMkdir(HIVE_SCRATCH_DIR);
@@ -90,7 +90,7 @@ public class HiveMiniClusterTest extends HiveJDBCClientTest {
             JobConf jobConf = miniMR.createJobConf(new JobConf(conf));
             System.out.println("-------" + jobConf.get("fs.defaultFS"));
             System.out.println("-------" + miniDFS.getFileSystem().getUri().toString());
-            System.setProperty("mapred.job.tracker",jobConf.get("mapred.job.tracker"));
+            System.setProperty("mapred.job.tracker", jobConf.get("mapred.job.tracker"));
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
@@ -107,11 +107,11 @@ public class HiveMiniClusterTest extends HiveJDBCClientTest {
 
         super.tearDown();
     }
-    
+
     protected Connection getHiveConnection() throws SQLException {
         return DriverManager.getConnection("jdbc:hive2:///", "", "");
     }
-    
+
     public static void main(String[] args) throws SQLException {
         HiveMiniClusterTest test = new HiveMiniClusterTest();
         test.runTests();

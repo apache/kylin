@@ -52,7 +52,7 @@ public class AccessServiceTest extends ServiceTestBase {
         accessService.clean(ae, true);
         AclEntity attachedEntity = new MockAclEntity("attached-domain-object");
         accessService.clean(attachedEntity, true);
-        
+
         // test getAcl
         Acl acl = accessService.getAcl(ae);
         Assert.assertNull(acl);
@@ -61,16 +61,16 @@ public class AccessServiceTest extends ServiceTestBase {
         acl = accessService.init(ae, AclPermission.ADMINISTRATION);
         Assert.assertTrue(((PrincipalSid) acl.getOwner()).getPrincipal().equals("ADMIN"));
         Assert.assertTrue(accessService.generateAceResponses(acl).size() == 1);
-        AccessEntryResponse  aer = accessService.generateAceResponses(acl).get(0);
+        AccessEntryResponse aer = accessService.generateAceResponses(acl).get(0);
         Assert.assertTrue(aer.getId() != null);
         Assert.assertTrue(aer.getPermission() == AclPermission.ADMINISTRATION);
-        Assert.assertTrue(((PrincipalSid)aer.getSid()).getPrincipal().equals("ADMIN"));
+        Assert.assertTrue(((PrincipalSid) aer.getSid()).getPrincipal().equals("ADMIN"));
 
         // test grant
         Sid modeler = accessService.getSid("MODELER", true);
         acl = accessService.grant(ae, AclPermission.ADMINISTRATION, modeler);
         Assert.assertTrue(accessService.generateAceResponses(acl).size() == 2);
-        
+
         Long modelerEntryId = null;
         for (AccessControlEntry ace : acl.getEntries()) {
             PrincipalSid sid = (PrincipalSid) ace.getSid();
@@ -96,18 +96,18 @@ public class AccessServiceTest extends ServiceTestBase {
         }
 
         accessService.clean(attachedEntity, true);
-        
+
         Acl attachedEntityAcl = accessService.getAcl(attachedEntity);
         Assert.assertNull(attachedEntityAcl);
         attachedEntityAcl = accessService.init(attachedEntity, AclPermission.ADMINISTRATION);
-        
+
         accessService.inherit(attachedEntity, ae);
 
         attachedEntityAcl = accessService.getAcl(attachedEntity);
         Assert.assertTrue(attachedEntityAcl.getParentAcl() != null);
         Assert.assertTrue(attachedEntityAcl.getParentAcl().getObjectIdentity().getIdentifier().equals("test-domain-object"));
         Assert.assertTrue(attachedEntityAcl.getEntries().size() == 1);
-        
+
         // test revoke
         acl = accessService.revoke(ae, modelerEntryId);
         Assert.assertTrue(accessService.generateAceResponses(acl).size() == 1);
@@ -116,7 +116,7 @@ public class AccessServiceTest extends ServiceTestBase {
         accessService.clean(ae, true);
         acl = accessService.getAcl(ae);
         Assert.assertNull(acl);
-        
+
         attachedEntityAcl = accessService.getAcl(attachedEntity);
         Assert.assertNull(attachedEntityAcl);
     }

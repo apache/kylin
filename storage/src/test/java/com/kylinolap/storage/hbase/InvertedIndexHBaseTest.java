@@ -92,7 +92,6 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
         System.out.println(records.size() + " records");
     }
 
-
     private List<TableRecord> iterateRecords(List<Slice> slices) {
         List<TableRecord> records = Lists.newArrayList();
         for (Slice slice : slices) {

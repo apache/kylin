@@ -23,17 +23,14 @@ public class MiniClusterTest {
     private static Logger logger = LoggerFactory.getLogger(MiniClusterTest.class);
     private static HBaseTestingUtility testUtil = new HBaseTestingUtility();
 
-
     public static void main(String[] args) throws Exception {
-
 
         File miniclusterFolder = new File(AbstractKylinTestCase.MINICLUSTER_TEST_DATA);
         System.out.println("----" + miniclusterFolder.getAbsolutePath());
 
         //save the dfs data to minicluster folder
         System.setProperty("test.build.data", miniclusterFolder.getAbsolutePath());
-        
-        
+
         MiniHBaseCluster hbCluster = testUtil.startMiniCluster(1);
         testUtil.startMiniMapReduceCluster();
         System.out.println("Minicluster started.");

@@ -126,7 +126,6 @@ public class DeployUtil {
 
     static final String[] TABLE_NAMES = new String[] { TABLE_CAL_DT, TABLE_CATEGORY_GROUPINGS, TABLE_KYLIN_FACT, TABLE_SELLER_TYPE_DIM, TABLE_SITES };
 
-
     public static void prepareTestData(String joinType, String cubeName) throws Exception {
 
         String factTableName = TABLE_KYLIN_FACT;
@@ -172,7 +171,6 @@ public class DeployUtil {
         store.putResource(factTablePathWithJoinType, in, System.currentTimeMillis());
         in.close();
     }
-
 
     private static void deployHiveTables() throws Exception {
 

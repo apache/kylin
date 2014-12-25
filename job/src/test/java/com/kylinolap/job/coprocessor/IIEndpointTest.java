@@ -2,7 +2,6 @@ package com.kylinolap.job.coprocessor;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.invertedindex.IIInstance;
@@ -43,7 +42,6 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-
 /**
  * Created by Hongbin Ma(Binmahone) on 11/14/14.
  */
@@ -72,8 +70,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         CONF = TEST_UTIL.getConfiguration();
 
         //add endpoint coprocessor
-        CONF.setStrings(CoprocessorHost.REGION_COPROCESSOR_CONF_KEY,
-                IIEndpoint.class.getName());
+        CONF.setStrings(CoprocessorHost.REGION_COPROCESSOR_CONF_KEY, IIEndpoint.class.getName());
 
         //create table and bulk load data
         TEST_UTIL.startMiniCluster();
@@ -136,7 +133,6 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
     public void cleanup() throws IOException {
     }
 
-
     //one region for one shard
     private static byte[][] getSplits(int shard) {
         byte[][] result = new byte[shard - 1][];
@@ -147,7 +143,6 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         }
         return result;
     }
-
 
     private TupleFilter mockEQFiter(TblColRef tblColRef, String value) throws IOException {
         CompareTupleFilter filter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
@@ -204,7 +199,6 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
 
         return functions;
     }
-
 
     @Test
     public void testSimpleCount() throws Throwable {
@@ -281,7 +275,6 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         iterator.close();
     }
 
-
     @Test
     public void testFilteredCount() throws Throwable {
         ColumnDesc lstgDesc = tableDesc.findColumnByName("LSTG_FORMAT_NAME");
@@ -318,7 +311,6 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
 
     @Test
     public void testFilterGroupByCount() throws Throwable {
-
 
         ColumnDesc columnDesc = tableDesc.findColumnByName("LSTG_FORMAT_NAME");
         TblColRef lfn = new TblColRef(columnDesc);

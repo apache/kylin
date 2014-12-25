@@ -222,15 +222,13 @@ public class ServiceTestAllInOne extends ServiceTestBase {
 
     @Test
     public void testJobControllerBasics() throws IOException {
-        
 
         jobSchedulerController = new JobController();
         jobSchedulerController.setJobService(jobService);
         cubeController = new CubeController();
         cubeController.setJobService(jobService);
         cubeController.setCubeService(cubeService);
-        
-        
+
         CubeManager cubeManager = CubeManager.getInstance(getTestConfig());
         if (cubeManager.getCube(CUBE_NAME) != null) {
             cubeManager.dropCube(CUBE_NAME, false);
@@ -390,28 +388,27 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         Assert.assertNotNull(userdetail);
         Assert.assertTrue(user.getUsername().equals("ADMIN"));
     }
-    
+
     @Autowired
     UserService userService;
-    
+
     @Test
-    public void testUserServiceBasics(){
+    public void testUserServiceBasics() {
         userService.deleteUser("ADMIN");
         Assert.assertTrue(!userService.userExists("ADMIN"));
-        
+
         List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
         authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
         User user = new User("ADMIN", "ADMIN", authorities);
         userService.createUser(user);
-        
+
         Assert.assertTrue(userService.userExists("ADMIN"));
-        
+
         UserDetails ud = userService.loadUserByUsername("ADMIN");
         Assert.assertTrue(ud.getUsername().equals("ADMIN"));
-        
+
         Assert.assertTrue(userService.getUserAuthorities().size() > 0);
     }
-    
 
     @Test
     public void testQueryServiceBasics() throws JobException, IOException, SQLException {
@@ -421,13 +418,13 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         Assert.assertNotNull(queryService.getMetadataManager());
         Assert.assertNotNull(queryService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
 
-//        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 0);
-//
-//        queryService.saveQuery("test", "test", "select * from test_table", "test");
-//        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 1);
-//
-//        queryService.removeQuery(queryService.getQueries("ADMIN").get(0).getProperty("id"));
-//        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 0);
+        //        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 0);
+        //
+        //        queryService.saveQuery("test", "test", "select * from test_table", "test");
+        //        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 1);
+        //
+        //        queryService.removeQuery(queryService.getQueries("ADMIN").get(0).getProperty("id"));
+        //        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 0);
 
         SQLRequest request = new SQLRequest();
         request.setSql("select * from test_table");
@@ -436,7 +433,7 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         response.setHitCache(true);
         queryService.logQuery(request, response, new Date(), new Date());
     }
-    
+
     @Test
     public void testJobServiceBasics() throws JobException, IOException {
         Assert.assertNotNull(jobService.getJobManager());
@@ -447,7 +444,7 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         Assert.assertNull(jobService.getJobInstance("job_not_exist"));
         Assert.assertNotNull(jobService.listAllJobs(null, null, null));
     }
-    
+
     @Test
     public void testCubeServiceBasics() throws JsonProcessingException, JobException, UnknownHostException {
         Assert.assertNotNull(cubeService.getJobManager());
@@ -468,7 +465,7 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         cubes = cubeService.getCubes(null, null, 1, 0);
         Assert.assertTrue(cubes.size() == 1);
     }
-    
+
     @Test
     public void testAccessServiceBasics() throws JsonProcessingException {
         Sid adminSid = accessService.getSid("ADMIN", true);
@@ -479,7 +476,7 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         accessService.clean(ae, true);
         AclEntity attachedEntity = new MockAclEntity("attached-domain-object");
         accessService.clean(attachedEntity, true);
-        
+
         // test getAcl
         Acl acl = accessService.getAcl(ae);
         Assert.assertNull(acl);
@@ -488,16 +485,16 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         acl = accessService.init(ae, AclPermission.ADMINISTRATION);
         Assert.assertTrue(((PrincipalSid) acl.getOwner()).getPrincipal().equals("ADMIN"));
         Assert.assertTrue(accessService.generateAceResponses(acl).size() == 1);
-        AccessEntryResponse  aer = accessService.generateAceResponses(acl).get(0);
+        AccessEntryResponse aer = accessService.generateAceResponses(acl).get(0);
         Assert.assertTrue(aer.getId() != null);
         Assert.assertTrue(aer.getPermission() == AclPermission.ADMINISTRATION);
-        Assert.assertTrue(((PrincipalSid)aer.getSid()).getPrincipal().equals("ADMIN"));
+        Assert.assertTrue(((PrincipalSid) aer.getSid()).getPrincipal().equals("ADMIN"));
 
         // test grant
         Sid modeler = accessService.getSid("MODELER", true);
         acl = accessService.grant(ae, AclPermission.ADMINISTRATION, modeler);
         Assert.assertTrue(accessService.generateAceResponses(acl).size() == 2);
-        
+
         Long modelerEntryId = null;
         for (AccessControlEntry ace : acl.getEntries()) {
             PrincipalSid sid = (PrincipalSid) ace.getSid();
@@ -523,18 +520,18 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         }
 
         accessService.clean(attachedEntity, true);
-        
+
         Acl attachedEntityAcl = accessService.getAcl(attachedEntity);
         Assert.assertNull(attachedEntityAcl);
         attachedEntityAcl = accessService.init(attachedEntity, AclPermission.ADMINISTRATION);
-        
+
         accessService.inherit(attachedEntity, ae);
 
         attachedEntityAcl = accessService.getAcl(attachedEntity);
         Assert.assertTrue(attachedEntityAcl.getParentAcl() != null);
         Assert.assertTrue(attachedEntityAcl.getParentAcl().getObjectIdentity().getIdentifier().equals("test-domain-object"));
         Assert.assertTrue(attachedEntityAcl.getEntries().size() == 1);
-        
+
         // test revoke
         acl = accessService.revoke(ae, modelerEntryId);
         Assert.assertTrue(accessService.generateAceResponses(acl).size() == 1);
@@ -543,7 +540,7 @@ public class ServiceTestAllInOne extends ServiceTestBase {
         accessService.clean(ae, true);
         acl = accessService.getAcl(ae);
         Assert.assertNull(acl);
-        
+
         attachedEntityAcl = accessService.getAcl(attachedEntity);
         Assert.assertNull(attachedEntityAcl);
     }

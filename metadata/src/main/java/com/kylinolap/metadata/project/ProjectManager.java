@@ -51,7 +51,7 @@ public class ProjectManager {
     // project name => ProjrectDesc
     private SingleValueCache<String, ProjectInstance> projectMap = new SingleValueCache<String, ProjectInstance>(Broadcaster.TYPE.PROJECT);
     // project name => tables
-    private Multimap<String, ProjectTable> projectTables = Multimaps.synchronizedMultimap(HashMultimap.<String, ProjectTable>create());
+    private Multimap<String, ProjectTable> projectTables = Multimaps.synchronizedMultimap(HashMultimap.<String, ProjectTable> create());
 
     public static ProjectManager getInstance(KylinConfig config) {
         ProjectManager r = CACHE.get(config);
@@ -87,7 +87,6 @@ public class ProjectManager {
 
         loadAllProjects();
     }
-
 
     public List<ProjectInstance> listAllProjects() {
         return new ArrayList<ProjectInstance>(projectMap.values());
@@ -169,7 +168,6 @@ public class ProjectManager {
         return addRealizationToProject(type, realizationName, newProjectName, owner);
     }
 
-
     private ProjectInstance addRealizationToProject(RealizationType type, String realizationName, String project, String user) throws IOException {
         String newProjectName = ProjectInstance.getNormalizedProjectName(project);
         ProjectInstance newProject = getProject(newProjectName);
@@ -181,7 +179,6 @@ public class ProjectManager {
 
         return newProject;
     }
-
 
     ////////////////////////////////////////////////////////
     // project table related
@@ -307,7 +304,6 @@ public class ProjectManager {
         return listAllRealizations(project, null);
     }
 
-
     public List<IRealization> getRealizationsByTable(String project, String tableName) {
         project = ProjectInstance.getNormalizedProjectName(project);
         tableName = tableName.toUpperCase();
@@ -318,7 +314,6 @@ public class ProjectManager {
 
         return realizations;
     }
-
 
     public List<IRealization> getOnlineRealizationByFactTable(String project, String factTableName) {
         project = ProjectInstance.getNormalizedProjectName(project);
@@ -451,7 +446,6 @@ public class ProjectManager {
 
         logger.debug("Loaded " + paths.size() + " Project(s)");
     }
-
 
     private void saveResource(ProjectInstance proj) throws IOException {
         ResourceStore store = getStore();
