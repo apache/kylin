@@ -32,9 +32,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
-import com.kylinolap.common.util.HBaseMiniclusterMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.query.enumerator.OLAPQuery;
@@ -62,13 +60,7 @@ public class KylinQueryTest extends KylinTestBase {
     }
 
     private static void setUpEnv() throws Exception {
-
-        if (HBaseMetadataTestCase.useMiniCluster()) {
-            HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.MINICLUSTER_TEST_DATA);
-            HBaseMiniclusterMetadataTestCase.startupMinicluster();
-        } else {
-            HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
-        }
+        HBaseMetadataTestCase.staticCreateTestMetadata();
 
         config = KylinConfig.getInstanceFromEnv();
     }
@@ -104,9 +96,6 @@ public class KylinQueryTest extends KylinTestBase {
             closeConnection(h2Connection);
 
         ObserverEnabler.forceCoprocessorUnset();
-        if (HBaseMetadataTestCase.useMiniCluster()) {
-            HBaseMiniclusterMetadataTestCase.shutdownMiniCluster();
-        }
         HBaseMetadataTestCase.staticCleanupTestMetadata();
     }
 
