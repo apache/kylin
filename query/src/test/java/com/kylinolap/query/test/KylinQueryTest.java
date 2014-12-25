@@ -32,9 +32,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
-import com.kylinolap.common.util.HBaseMiniclusterMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.query.enumerator.OLAPQuery;
@@ -62,15 +60,7 @@ public class KylinQueryTest extends KylinTestBase {
     }
 
     private static void setUpEnv() throws Exception {
-
-        String querySkipUsingMinicluster = System.getProperty("querySkipUsingMinicluster");
-
-        if (Boolean.parseBoolean(querySkipUsingMinicluster)) {
-            HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
-        } else {
-            HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.MINICLUSTER_TEST_DATA);
-            HBaseMiniclusterMetadataTestCase.startupMinicluster();
-        }
+        HBaseMetadataTestCase.staticCreateTestMetadata();
 
         config = KylinConfig.getInstanceFromEnv();
     }
@@ -96,7 +86,7 @@ public class KylinQueryTest extends KylinTestBase {
         printInfo("tearDown");
         printInfo("Closing connection...");
         clean();
-        HBaseMiniclusterMetadataTestCase.shutdownMiniCluster();
+
     }
 
     protected static void clean() {

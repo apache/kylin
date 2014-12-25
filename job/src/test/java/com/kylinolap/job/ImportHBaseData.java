@@ -15,6 +15,7 @@ import com.kylinolap.common.persistence.HBaseConnection;
 import com.kylinolap.common.persistence.HBaseResourceStore;
 import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.CliCommandExecutor;
+import com.kylinolap.common.util.HBaseMiniclusterMetadataTestCase;
 import com.kylinolap.common.util.SSHClient;
 import com.kylinolap.common.util.TarGZUtil;
 
@@ -77,12 +78,12 @@ public class ImportHBaseData {
         List<String> tablelocations = getTablesBackupLocations(importFolder);
         for (String tableLocation : tablelocations) {
             String table = tableLocation.substring(tableLocation.lastIndexOf("/") + 1);
-
-            if (!(table.equalsIgnoreCase("kylin_metadata_qa") || table.startsWith("KYLIN_"))) {
+            
+            if (!(table.equalsIgnoreCase(tableNameBase) || table.startsWith(HBaseMiniclusterMetadataTestCase.CUBE_STORAGE_PREFIX))) {
                 continue;
             }
-
-            if (table.startsWith("KYLIN_")) {
+            
+            if (table.startsWith(HBaseMiniclusterMetadataTestCase.CUBE_STORAGE_PREFIX)) {
                 // create the cube table; otherwise the import will fail.
                 HBaseConnection.createHTableIfNeeded(KylinConfig.getInstanceFromEnv().getStorageUrl(), table, "F1", "F2");
             }

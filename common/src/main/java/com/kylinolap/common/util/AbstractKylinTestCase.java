@@ -30,9 +30,9 @@ public abstract class AbstractKylinTestCase {
 
     public static final String SANDBOX_TEST_DATA = "../examples/test_case_data/sandbox";
 
-    public abstract void createTestMetadata();
+    public abstract void createTestMetadata() throws Exception;
 
-    public abstract void cleanupTestMetadata();
+    public abstract void cleanupTestMetadata() throws Exception;
 
     public KylinConfig getTestConfig() {
         return KylinConfig.getInstanceFromEnv();

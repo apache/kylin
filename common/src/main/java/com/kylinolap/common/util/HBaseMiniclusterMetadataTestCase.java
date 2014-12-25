@@ -39,7 +39,7 @@ import com.kylinolap.common.persistence.HBaseResourceStore;
  *
  * @author shaoshi
  */
-public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
+public class HBaseMiniclusterMetadataTestCase {
 
     private static HBaseTestingUtility UTIL = new HBaseTestingUtility();
 
@@ -50,6 +50,10 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
     protected static Configuration config = null;
 
     protected static String hbaseconnectionUrl = "";
+    
+    public static final String TEST_METADATA_TABLE = "kylin_metadata_qa";
+    
+    public static final String CUBE_STORAGE_PREFIX = "KYLIN_";
 
     private static final Log logger = LogFactory.getLog(HBaseMiniclusterMetadataTestCase.class);
 
@@ -57,29 +61,9 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                try {
-                    UTIL.shutdownMiniMapReduceCluster();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                try {
-                    UTIL.shutdownMiniCluster();
-                } catch (Exception e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+                shutdownMiniCluster();
             }
         });
-    }
-
-    @Override
-    public void createTestMetadata() {
-        // do nothing, as the Test metadata has been initialized in BeforeClass
-        staticCreateTestMetadata(MINICLUSTER_TEST_DATA);
-
-        // Overwrite the hbase url with the minicluster's
-        updateKylinConfigWithMinicluster();
     }
 
     /**
@@ -88,7 +72,7 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
      * @throws Exception
      */
     public static void startupMinicluster() throws Exception {
-        staticCreateTestMetadata(MINICLUSTER_TEST_DATA);
+        HBaseMetadataTestCase.staticCreateTestMetadata(HBaseMetadataTestCase.MINICLUSTER_TEST_DATA);
 
         if (!clusterStarted) {
             synchronized (HBaseMiniclusterMetadataTestCase.class) {
@@ -104,7 +88,7 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
 
     private static void updateKylinConfigWithMinicluster() {
 
-        KylinConfig.getInstanceFromEnv().setMetadataUrl("kylin_metadata_qa@" + hbaseconnectionUrl);
+        KylinConfig.getInstanceFromEnv().setMetadataUrl(TEST_METADATA_TABLE + "@" + hbaseconnectionUrl);
         KylinConfig.getInstanceFromEnv().setStorageUrl(hbaseconnectionUrl);
     }
 
@@ -127,21 +111,19 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
         config.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
 
         hbaseconnectionUrl = "hbase:" + host + ":" + port + ":" + parent;
-
-        UTIL.startMiniMapReduceCluster();
         updateKylinConfigWithMinicluster();
+        
+        UTIL.startMiniMapReduceCluster();
+        
         // create the metadata htables;
         HBaseResourceStore store = new HBaseResourceStore(KylinConfig.getInstanceFromEnv());
 
         // import the table content
-        importHBaseData(true, true);
+        importHBaseData();
 
     }
 
-    public static void importHBaseData(boolean importMetadataTables, boolean importCubeTables) throws IOException, ClassNotFoundException, InterruptedException {
-
-        if (!importMetadataTables && !importCubeTables)
-            return;
+    public static void importHBaseData() throws IOException, ClassNotFoundException, InterruptedException {
 
         if (System.getenv("JAVA_HOME") == null) {
             System.err.println("Didn't find $JAVA_HOME, this will cause HBase data import failed. Please set $JAVA_HOME.");
@@ -178,11 +160,11 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
 
         for (String table : tableNames) {
 
-            if (!(table.equalsIgnoreCase("kylin_metadata_qa") && importMetadataTables || table.startsWith("KYLIN_") && importCubeTables)) {
+            if (!(table.equalsIgnoreCase(TEST_METADATA_TABLE) || table.startsWith(CUBE_STORAGE_PREFIX))) {
                 continue;
             }
 
-            if (table.startsWith("KYLIN_")) {
+            if (table.startsWith(CUBE_STORAGE_PREFIX)) {
                 // create the cube table; otherwise the import will fail.
                 HBaseConnection.createHTableIfNeeded(KylinConfig.getInstanceFromEnv().getStorageUrl(), table, "F1", "F2");
             }
@@ -209,17 +191,11 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
         return job.isSuccessful();
     }
 
-    @Override
-    public void cleanupTestMetadata() {
-        staticCleanupTestMetadata();
-    }
-
     /**
-     * Shutdown the minicluster; Sub-classes should invoke this method in AfterClass method.
+     * Shutdown the minicluster; 
      */
     public static void shutdownMiniCluster() {
 
-        /*
         System.out.println("Going to shutdown mini cluster.");
         try {
             UTIL.shutdownMiniMapReduceCluster();
@@ -232,18 +208,15 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        */
     }
 
     public static void main(String[] args) {
         HBaseMiniclusterMetadataTestCase t = new HBaseMiniclusterMetadataTestCase();
         try {
             HBaseMiniclusterMetadataTestCase.startupMinicluster();
-            t.createTestMetadata();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            t.cleanupTestMetadata();
             HBaseMiniclusterMetadataTestCase.shutdownMiniCluster();
         }
     }
