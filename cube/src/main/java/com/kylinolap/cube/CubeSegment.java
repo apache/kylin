@@ -94,7 +94,6 @@ public class CubeSegment implements Comparable<CubeSegment>, ColumnDictInfo {
 
     // ============================================================================
 
-
     public String getUuid() {
         return uuid;
     }
@@ -298,13 +297,7 @@ public class CubeSegment implements Comparable<CubeSegment>, ColumnDictInfo {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-                .add("uuid", uuid)
-                .add("create_time:", createTime)
-                .add("name", name)
-                .add("last_build_job_id", lastBuildJobID)
-                .add("status", status)
-                .toString();
+        return Objects.toStringHelper(this).add("uuid", uuid).add("create_time:", createTime).add("name", name).add("last_build_job_id", lastBuildJobID).add("status", status).toString();
     }
 
     @Override

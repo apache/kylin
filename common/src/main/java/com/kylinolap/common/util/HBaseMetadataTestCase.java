@@ -22,7 +22,7 @@ import com.kylinolap.common.KylinConfig;
  * @author ysong1
  */
 public class HBaseMetadataTestCase extends AbstractKylinTestCase {
-    
+
     public static void staticCleanupTestMetadata() {
         System.clearProperty(KylinConfig.KYLIN_CONF);
         KylinConfig.destoryInstance();

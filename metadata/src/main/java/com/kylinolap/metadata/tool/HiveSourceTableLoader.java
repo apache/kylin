@@ -76,8 +76,8 @@ public class HiveSourceTableLoader {
         metaTmpDir.delete();
         metaTmpDir.mkdirs();
 
-        for (String database: db2tables.keySet()) {
-            for (String table: db2tables.get(database)) {
+        for (String database : db2tables.keySet()) {
+            for (String table : db2tables.get(database)) {
                 TableDesc tableDesc = MetadataManager.getInstance(config).getTableDesc(table);
                 if (tableDesc == null) {
                     continue;
@@ -141,7 +141,7 @@ public class HiveSourceTableLoader {
         getTables(database, reader, tableDescList, tableAttrsList);
 
         List<String> loadedTables = Lists.newArrayList();
-        
+
         for (TableDesc table : tableDescList) {
             File file = new File(tableDescDir, table.getIdentity().toUpperCase() + "." + OUTPUT_SURFIX);
             JsonUtil.writeValueIndent(new FileOutputStream(file), table);
@@ -170,7 +170,7 @@ public class HiveSourceTableLoader {
         TableDesc tableDesc = new TableDesc();
         String line;
         boolean hit = false;
-        
+
         while ((line = reader.readLine()) != null) {
             logger.info(line);
             int i = line.indexOf(":");

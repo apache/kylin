@@ -545,7 +545,7 @@ public class CubeDesc extends RootPersistentEntity {
                         TblColRef ref = initDimensionColRef(dimTable, aColumn);
                         if (!dimColList.contains(ref)) {
                             dimColList.add(ref);
-                           //hostColList.add(ref);
+                            //hostColList.add(ref);
                         }
                     }
                 }

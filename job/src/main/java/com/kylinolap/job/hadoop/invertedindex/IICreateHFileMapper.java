@@ -16,7 +16,6 @@
 
 package com.kylinolap.job.hadoop.invertedindex;
 
-
 import java.io.IOException;
 
 import com.kylinolap.invertedindex.model.IIDesc;

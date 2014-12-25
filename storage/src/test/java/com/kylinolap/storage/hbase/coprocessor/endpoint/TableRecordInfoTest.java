@@ -20,7 +20,6 @@ public class TableRecordInfoTest extends LocalFileMetadataTestCase {
     IIInstance ii;
     TableRecordInfo tableRecordInfo;
 
-
     @Before
     public void setup() throws IOException {
         this.createTestMetadata();
@@ -28,14 +27,12 @@ public class TableRecordInfoTest extends LocalFileMetadataTestCase {
         this.tableRecordInfo = new TableRecordInfo(ii.getFirstSegment());
     }
 
-
     @Test
     public void testSerialize() {
         byte[] x = TableRecordInfoDigest.serialize(this.tableRecordInfo.getDigest());
         TableRecordInfoDigest d = TableRecordInfoDigest.deserialize(x);
         assertEquals(d.getColumnCount(), 9);
     }
-
 
     @After
     public void cleanUp() {

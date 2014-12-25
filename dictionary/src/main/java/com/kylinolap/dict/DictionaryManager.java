@@ -70,6 +70,7 @@ public class DictionaryManager {
 
     private KylinConfig config;
     private ConcurrentHashMap<String, DictionaryInfo> dictCache; // resource
+
     // path ==>
     // DictionaryInfo
 
@@ -295,7 +296,7 @@ public class DictionaryManager {
             DictionaryInfo existingInfo = load(existing, true); // skip cache,
             // direct load
             // from store
-            if(existingInfo == null)
+            if (existingInfo == null)
                 logger.info("existingInfo is null");
 
             if (existingInfo != null && dict.equals(existingInfo.getDictionaryObject()))

@@ -49,7 +49,6 @@ public class HBaseResourceStoreTest extends HBaseMiniclusterMetadataTestCase { /
         shutdownMiniCluster();
     }
 
-
     @Before
     public void setup() throws Exception {
         this.createTestMetadata();

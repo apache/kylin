@@ -35,7 +35,6 @@ public class HBaseMiniClusterTest2 {
     private static final int JOBTRACKER_PORT = 9011;
     protected static String LOG_DIR = "/tmp/logs";
 
-
     //@Before
     public void setup() {
         try {
@@ -44,7 +43,6 @@ public class HBaseMiniClusterTest2 {
             e.printStackTrace();
         }
     }
-
 
     //@BeforeClass
     public static void setUpBeforeClass() throws Exception {
@@ -72,7 +70,6 @@ public class HBaseMiniClusterTest2 {
         conf.addResource(new Path(mrSitePath));
         String hbSitePath = miniclusterFolder + File.separator + "hbase-site.xml";
         conf.addResource(new Path(hbSitePath));
-        
 
         Configuration c = new Configuration();
         c.addResource(new Path(coreSitePath));
@@ -101,40 +98,39 @@ public class HBaseMiniClusterTest2 {
         // clean up the hdfs files created by mini cluster
         //        String baseTempDir = "build" + File.separator + "test" + File.separator;
         String baseTempDir = dfsCluster.getBaseDirectory();
-//        String dfsDir = baseTempDir + "data";
-//        System.out.println("------" + new File(dfsDir).getAbsolutePath());
-//        FileUtils.deleteDirectory(new File(dfsDir));
-//        String mrDir = baseTempDir + "mapred";
-//        FileUtils.deleteDirectory(new File(mrDir));
+        //        String dfsDir = baseTempDir + "data";
+        //        System.out.println("------" + new File(dfsDir).getAbsolutePath());
+        //        FileUtils.deleteDirectory(new File(dfsDir));
+        //        String mrDir = baseTempDir + "mapred";
+        //        FileUtils.deleteDirectory(new File(mrDir));
 
         FileUtils.cleanDirectory(new File(LOG_DIR));
     }
 
     protected static synchronized void startCluster(boolean reformatDFS, Configuration c, JobConf conf, Properties props) throws Exception {
-                if (dfsCluster == null) {
-                    
-                    if (props != null) {
-                        for (Map.Entry entry : props.entrySet()) {
-                            conf.set((String) entry.getKey(), (String) entry.getValue());
-                        }
-                    }
-                    
-                    dfsCluster = new  MiniDFSCluster(NAMENODE_PORT, conf, 2, reformatDFS, true, null, null);
-        //            ConfigurableMiniMRCluster.setConfiguration(props);
-        //            mrCluster = new ConfigurableMiniMRCluster(2, dfsCluster.getFileSystem().getName(),
-        //                    1, conf);
-                    
-                    hbaseCluster =
-                        new MiniHBaseCluster(c, 1, 1, null, null);
-                    // Don't leave here till we've done a successful scan of the hbase:meta
-                    HTable t = new HTable(c, TableName.META_TABLE_NAME);
-                    ResultScanner s = t.getScanner(new Scan());
-                    while (s.next() != null) {
-                      continue;
-                    }
-                    s.close();
-                    t.close();
+        if (dfsCluster == null) {
+
+            if (props != null) {
+                for (Map.Entry entry : props.entrySet()) {
+                    conf.set((String) entry.getKey(), (String) entry.getValue());
                 }
+            }
+
+            dfsCluster = new MiniDFSCluster(NAMENODE_PORT, conf, 2, reformatDFS, true, null, null);
+            //            ConfigurableMiniMRCluster.setConfiguration(props);
+            //            mrCluster = new ConfigurableMiniMRCluster(2, dfsCluster.getFileSystem().getName(),
+            //                    1, conf);
+
+            hbaseCluster = new MiniHBaseCluster(c, 1, 1, null, null);
+            // Don't leave here till we've done a successful scan of the hbase:meta
+            HTable t = new HTable(c, TableName.META_TABLE_NAME);
+            ResultScanner s = t.getScanner(new Scan());
+            while (s.next() != null) {
+                continue;
+            }
+            s.close();
+            t.close();
+        }
 
         System.out.println("dfs uri: -------" + dfsCluster.getFileSystem().getUri().toString());
         System.out.println("dfs base directory: -------" + dfsCluster.getBaseDirectory().toString());
@@ -154,19 +150,19 @@ public class HBaseMiniClusterTest2 {
     }
 
     protected static void stopCluster() throws Exception {
-                if (mrCluster != null) {
-                    mrCluster.shutdown();
-                    mrCluster = null;
-                }
-                if (dfsCluster != null) {
-                    dfsCluster.shutdown();
-                    dfsCluster = null;
-                }
-                
-                if(hbaseCluster !=null) {
-                    hbaseCluster.shutdown();
-                    hbaseCluster = null;
-                }
+        if (mrCluster != null) {
+            mrCluster.shutdown();
+            mrCluster = null;
+        }
+        if (dfsCluster != null) {
+            dfsCluster.shutdown();
+            dfsCluster = null;
+        }
+
+        if (hbaseCluster != null) {
+            hbaseCluster.shutdown();
+            hbaseCluster = null;
+        }
     }
 
     public void runTests() throws SQLException {

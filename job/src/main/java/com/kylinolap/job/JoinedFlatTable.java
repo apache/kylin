@@ -156,7 +156,7 @@ public class JoinedFlatTable {
                     if (pk.length != fk.length) {
                         throw new RuntimeException("Invalid join condition of dimension " + dim.getName());
                     }
-                    sql.append(joinType + " JOIN " + dimTableName + " as " + intermediateTableDesc.getTableAlias(dimTableName) +  "\n");
+                    sql.append(joinType + " JOIN " + dimTableName + " as " + intermediateTableDesc.getTableAlias(dimTableName) + "\n");
                     sql.append("ON ");
                     for (int i = 0; i < pk.length; i++) {
                         if (i > 0) {
@@ -196,15 +196,15 @@ public class JoinedFlatTable {
             if (!(dateStart == 0 && dateEnd == 0)) {
                 String partitionColumnName = cubeDesc.getCubePartitionDesc().getPartitionDateColumn();
                 int indexOfDot = partitionColumnName.lastIndexOf(".");
-                
+
                 // convert to use table alias;
-                if(indexOfDot >0) {
+                if (indexOfDot > 0) {
                     String partitionTableName = partitionColumnName.substring(0, indexOfDot);
                     String columeOnly = partitionColumnName.substring(indexOfDot);
                     String partitionTableAlias = intermediateTableDesc.getTableAlias(partitionTableName);
                     partitionColumnName = partitionTableAlias + columeOnly;
                 }
-                        
+
                 whereBuilder.append(hasCondition ? " AND (" : " (");
                 if (dateStart > 0) {
                     whereBuilder.append(partitionColumnName + " >= '" + formatDateTimeInWhereClause(dateStart) + "' ");

@@ -134,7 +134,7 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
         HBaseResourceStore store = new HBaseResourceStore(KylinConfig.getInstanceFromEnv());
 
         // import the table content
-        importHBaseData(true,true);
+        importHBaseData(true, true);
 
     }
 

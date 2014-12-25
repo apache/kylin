@@ -25,8 +25,7 @@ import java.util.List;
  * Created by honma on 11/3/14.
  */
 
-public class ExampleEndpoint extends ExampleProtos.RowCountService
-        implements Coprocessor, CoprocessorService {
+public class ExampleEndpoint extends ExampleProtos.RowCountService implements Coprocessor, CoprocessorService {
     private RegionCoprocessorEnvironment env;
 
     public ExampleEndpoint() {
@@ -44,8 +43,7 @@ public class ExampleEndpoint extends ExampleProtos.RowCountService
      * Returns a count of the rows in the region where this coprocessor is loaded.
      */
     @Override
-    public void getRowCount(RpcController controller, ExampleProtos.CountRequest request,
-            RpcCallback<ExampleProtos.CountResponse> done) {
+    public void getRowCount(RpcController controller, ExampleProtos.CountRequest request, RpcCallback<ExampleProtos.CountResponse> done) {
         Scan scan = new Scan();
         scan.setFilter(new FirstKeyOnlyFilter());
         ExampleProtos.CountResponse response = null;
@@ -68,8 +66,7 @@ public class ExampleEndpoint extends ExampleProtos.RowCountService
                 results.clear();
             } while (hasMore);
 
-            response = ExampleProtos.CountResponse.newBuilder()
-                    .setCount(count).build();
+            response = ExampleProtos.CountResponse.newBuilder().setCount(count).build();
         } catch (IOException ioe) {
             ResponseConverter.setControllerException(controller, ioe);
         } finally {
@@ -87,8 +84,7 @@ public class ExampleEndpoint extends ExampleProtos.RowCountService
      * Returns a count of all KeyValues in the region where this coprocessor is loaded.
      */
     @Override
-    public void getKeyValueCount(RpcController controller, ExampleProtos.CountRequest request,
-            RpcCallback<ExampleProtos.CountResponse> done) {
+    public void getKeyValueCount(RpcController controller, ExampleProtos.CountRequest request, RpcCallback<ExampleProtos.CountResponse> done) {
         ExampleProtos.CountResponse response = null;
         InternalScanner scanner = null;
         try {
@@ -104,8 +100,7 @@ public class ExampleEndpoint extends ExampleProtos.RowCountService
                 results.clear();
             } while (hasMore);
 
-            response = ExampleProtos.CountResponse.newBuilder()
-                    .setCount(count).build();
+            response = ExampleProtos.CountResponse.newBuilder().setCount(count).build();
         } catch (IOException ioe) {
             ResponseConverter.setControllerException(controller, ioe);
         } finally {

@@ -6,6 +6,5 @@ package com.kylinolap.metadata.realization;
 
 //TODO: change to String for plugin
 public enum RealizationType {
-    CUBE,
-    INVERTED_INDEX
+    CUBE, INVERTED_INDEX
 }

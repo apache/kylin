@@ -16,23 +16,23 @@ public class BitMapFilterEvaluator {
 
     /** Provides bitmaps for a record group ranging [0..N-1], where N is the size of the group */
     public static interface BitMapProvider {
-        
+
         /** return records whose specified column having specified value */
         ConciseSet getBitMap(TblColRef col, int valueId);
-        
+
         /** return the size of the group */
         int getRecordCount();
-        
+
         /** return the max value ID of a column according to dictionary */
         int getMaxValueId(TblColRef col);
     }
-    
+
     BitMapProvider provider;
-    
+
     public BitMapFilterEvaluator(BitMapProvider bitMapProvider) {
         this.provider = bitMapProvider;
     }
-    
+
     /**
      * @param filter
      * @return a set of records that match the filter; or null if filter is null or unable to evaluate
@@ -40,13 +40,13 @@ public class BitMapFilterEvaluator {
     public ConciseSet evaluate(TupleFilter filter) {
         if (filter == null)
             return null;
-        
+
         if (filter instanceof LogicalTupleFilter)
             return evalLogical((LogicalTupleFilter) filter);
-        
+
         if (filter instanceof CompareTupleFilter)
             return evalCompare((CompareTupleFilter) filter);
-        
+
         return null; // unable to evaluate
     }
 
@@ -115,7 +115,7 @@ public class BitMapFilterEvaluator {
             return null;
         return bitMap.clone(); // NOTE the clone() to void messing provider's cache
     }
-    
+
     private ConciseSet evalCompareNotEqual(CompareTupleFilter filter) {
         ConciseSet set = evalCompareEqual(filter);
         not(set);
@@ -145,7 +145,7 @@ public class BitMapFilterEvaluator {
     private void dropNull(ConciseSet set, CompareTupleFilter filter) {
         if (set == null)
             return;
-        
+
         ConciseSet nullSet = evalCompareIsNull(filter);
         set.removeAll(nullSet);
     }
@@ -166,7 +166,7 @@ public class BitMapFilterEvaluator {
 
     private ConciseSet evalLogical(LogicalTupleFilter filter) {
         List<? extends TupleFilter> children = filter.getChildren();
-        
+
         switch (filter.getOperator()) {
         case AND:
             return evalLogicalAnd(children);
@@ -182,12 +182,12 @@ public class BitMapFilterEvaluator {
     private ConciseSet evalLogicalAnd(List<? extends TupleFilter> children) {
         ConciseSet set = new ConciseSet();
         not(set);
-        
+
         for (TupleFilter c : children) {
             ConciseSet t = evaluate(c);
             if (t == null)
                 continue; // because it's AND
-            
+
             set.retainAll(t);
         }
         return set;
@@ -195,12 +195,12 @@ public class BitMapFilterEvaluator {
 
     private ConciseSet evalLogicalOr(List<? extends TupleFilter> children) {
         ConciseSet set = new ConciseSet();
-        
+
         for (TupleFilter c : children) {
             ConciseSet t = evaluate(c);
             if (t == null)
                 return null; // because it's OR
-            
+
             set.addAll(t);
         }
         return set;
@@ -215,7 +215,7 @@ public class BitMapFilterEvaluator {
     private void not(ConciseSet set) {
         if (set == null)
             return;
-        
+
         set.add(provider.getRecordCount());
         set.complement();
     }

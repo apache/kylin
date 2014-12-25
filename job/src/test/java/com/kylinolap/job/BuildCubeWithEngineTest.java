@@ -80,7 +80,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         int exitCode = cleanupOldCubes();
         if (exitCode == 0)
             exportHBaseData();
-        
+
         this.cleanupTestMetadata();
     }
 

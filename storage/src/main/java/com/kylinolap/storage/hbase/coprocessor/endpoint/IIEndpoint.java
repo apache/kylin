@@ -39,8 +39,7 @@ import java.util.Map;
 /**
  * Created by honma on 11/7/14.
  */
-public class IIEndpoint extends IIProtos.RowsService
-        implements Coprocessor, CoprocessorService {
+public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, CoprocessorService {
 
     private RegionCoprocessorEnvironment env;
 
@@ -108,8 +107,7 @@ public class IIEndpoint extends IIProtos.RowsService
     }
 
     //TODO check memory usage
-    private IIProtos.IIResponse getAggregatedResponse(Iterable<Slice> slices, CoprocessorFilter filter, CoprocessorRowType type,
-            CoprocessorProjector projector, EndpointAggregators aggregators) {
+    private IIProtos.IIResponse getAggregatedResponse(Iterable<Slice> slices, CoprocessorFilter filter, CoprocessorRowType type, CoprocessorProjector projector, EndpointAggregators aggregators) {
         EndpointAggregationCache aggCache = new EndpointAggregationCache(aggregators);
         IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
         for (Slice slice : slices) {
@@ -131,8 +129,7 @@ public class IIEndpoint extends IIProtos.RowsService
         byte[] metricBuffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
         for (Map.Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
             CoprocessorProjector.AggrKey aggrKey = entry.getKey();
-            IIRow.Builder rowBuilder = IIRow.newBuilder().
-                    setColumns(ByteString.copyFrom(aggrKey.get(), aggrKey.offset(), aggrKey.length()));
+            IIRow.Builder rowBuilder = IIRow.newBuilder().setColumns(ByteString.copyFrom(aggrKey.get(), aggrKey.offset(), aggrKey.length()));
             int length = aggregators.serializeMetricValues(entry.getValue(), metricBuffer);
             rowBuilder.setMeasures(ByteString.copyFrom(metricBuffer, 0, length));
             responseBuilder.addRows(rowBuilder.build());
@@ -152,8 +149,7 @@ public class IIEndpoint extends IIProtos.RowsService
             Iterator<RawTableRecord> iterator = slice.iterateWithBitmap(result);
             while (iterator.hasNext()) {
                 byte[] data = iterator.next().getBytes();
-                IIRow.Builder rowBuilder = IIRow.newBuilder().
-                        setColumns(ByteString.copyFrom(data));
+                IIRow.Builder rowBuilder = IIRow.newBuilder().setColumns(ByteString.copyFrom(data));
                 responseBuilder.addRows(rowBuilder.build());
             }
         }

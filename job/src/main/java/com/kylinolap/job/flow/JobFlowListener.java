@@ -24,7 +24,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.quartz.JobDataMap;
@@ -399,7 +398,7 @@ public class JobFlowListener implements JobListener {
             }
 
             if (users.size() > 0) {
-                mailService.sendMail(users, "["+ finalStatus + "] - [Kylin Cube Build Job]-" + cubeName, content);
+                mailService.sendMail(users, "[" + finalStatus + "] - [Kylin Cube Build Job]-" + cubeName, content);
             }
         } catch (IOException e) {
             log.error(e.getLocalizedMessage(), e);
