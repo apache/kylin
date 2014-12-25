@@ -129,28 +129,29 @@ public class DeployUtil {
 
     public static void prepareTestData(String joinType, String cubeName) throws Exception {
 
-        String factTableName = CubeManager.getInstance(config()).getCube(cubeName).getDescriptor().getFactTable();
+        String factTableName = TABLE_KYLIN_FACT;
         String content = null;
 
-        // data is generated according to cube descriptor and saved in resource store
-        if (joinType.equalsIgnoreCase("inner")) {
-            content = FactTableGenerator.generate(cubeName, "10000", "1", null, "inner");
-        } else if (joinType.equalsIgnoreCase("left")) {
-            content = FactTableGenerator.generate(cubeName, "10000", "0.6", null, "left");
-        } else {
-            throw new IllegalArgumentException("Unsupported join type : " + joinType);
+        boolean buildCubeUsingProvidedData = Boolean.parseBoolean(System.getProperty("buildCubeUsingProvidedData"));
+        if (!buildCubeUsingProvidedData) {
+            // data is generated according to cube descriptor and saved in resource store
+            if (joinType.equalsIgnoreCase("inner")) {
+                content = FactTableGenerator.generate(cubeName, "10000", "1", null, "inner");
+            } else if (joinType.equalsIgnoreCase("left")) {
+                content = FactTableGenerator.generate(cubeName, "10000", "0.6", null, "left");
+            } else {
+                throw new IllegalArgumentException("Unsupported join type : " + joinType);
+            }
+
+            assert content != null;
+            overrideFactTableData(content, factTableName);
         }
 
-        if (content != null) {
-            overrideFactTableData(content, factTableName, joinType);
-        } else {
-            throw new IllegalStateException("generated table content is null");
-        }
-
+        duplicateFactTableData(factTableName, joinType);
         deployHiveTables();
     }
 
-    public static void overrideFactTableData(String factTableContent, String factTableName, String joinType) throws IOException {
+    public static void overrideFactTableData(String factTableContent, String factTableName) throws IOException {
         // Write to resource store
         ResourceStore store = ResourceStore.getStore(config());
 
@@ -159,20 +160,19 @@ public class DeployUtil {
         store.deleteResource(factTablePath);
         store.putResource(factTablePath, in, System.currentTimeMillis());
         in.close();
+    }
 
-        // duplicate a copy of this fact table, with a naming convention with
-        // jointype added
+    public static void duplicateFactTableData(String factTableName, String joinType) throws IOException {
+        // duplicate a copy of this fact table, with a naming convention with fact.csv.inner or fact.csv.left
         // so that later test cases can select different data files
-        in = new StringInputStream(factTableContent);
+        ResourceStore store = ResourceStore.getStore(config());
+        InputStream in = store.getResource("/data/" + factTableName + ".csv");
         String factTablePathWithJoinType = "/data/" + factTableName + ".csv." + joinType.toLowerCase();
         store.deleteResource(factTablePathWithJoinType);
         store.putResource(factTablePathWithJoinType, in, System.currentTimeMillis());
         in.close();
-
-        System.out.println();
-        System.out.println("The new fact table has been written to resource store: " + factTablePath);
-        System.out.println();
     }
+
 
     private static void deployHiveTables() throws Exception {
 
