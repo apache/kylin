@@ -67,7 +67,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
     @Override
     public int run(String[] args) throws Exception {
         Options options = new Options();
-        
+
         log.info("----- jobs args: " + Arrays.toString(args));
         try {
             options.addOption(OPTION_DELETE);
@@ -98,7 +98,6 @@ public class StorageCleanupJob extends AbstractHadoopJob {
             return false;
         }
     }
-
 
     private void cleanUnusedHBaseTables(Configuration conf) throws MasterNotRunningException, ZooKeeperConnectionException, IOException {
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());

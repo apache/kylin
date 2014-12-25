@@ -103,7 +103,6 @@ public class BitMapFilterEvaluatorTest {
         basicResults.add(set(3, 4, 5, 6, 7, 8));
     }
 
-
     @Test
     public void testBasics() {
         for (int i = 0; i < basicFilters.size(); i++) {
@@ -147,7 +146,6 @@ public class BitMapFilterEvaluatorTest {
         assertEquals(basicResults.get(1), eval.evaluate(and));
     }
 
-
     public static CompareTupleFilter compare(TblColRef col, TupleFilter.FilterOperatorEnum op, int... ids) {
         CompareTupleFilter filter = new CompareTupleFilter(op);
         filter.setNullString(idToStr(Dictionary.NULL_ID[1]));
@@ -179,7 +177,6 @@ public class BitMapFilterEvaluatorTest {
             set.add(i);
         return set;
     }
-
 
     public static String idToStr(int id) {
         byte[] bytes = new byte[] { (byte) id };

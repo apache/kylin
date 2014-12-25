@@ -2,16 +2,17 @@ package com.kylinolap.rest.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Query {
-    
+
     private String name;
     private String project;
     private String sql;
     private String description;
 
-    public Query(){}
-    
+    public Query() {
+    }
+
     public Query(String name, String project, String sql, String description) {
         super();
         this.name = name;
@@ -20,10 +21,10 @@ public class Query {
         this.description = description;
     }
 
-    public String getId(){
+    public String getId() {
         return String.valueOf(this.hashCode());
     }
- 
+
     public String getName() {
         return name;
     }
@@ -98,5 +99,5 @@ public class Query {
             return false;
         return true;
     }
- 
+
 }

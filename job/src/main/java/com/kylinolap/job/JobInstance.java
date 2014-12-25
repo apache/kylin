@@ -34,7 +34,7 @@ import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class JobInstance extends RootPersistentEntity implements Comparable<JobInstance>{
+public class JobInstance extends RootPersistentEntity implements Comparable<JobInstance> {
 
     public static final String JOB_WORKING_DIR_PREFIX = "kylin-";
 
@@ -109,6 +109,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
 
     @JsonProperty("job_status")
     public JobStatusEnum getStatus() {
+
         // JobStatusEnum finalJobStatus;
         int compositResult = 0;
 
@@ -121,9 +122,14 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         // if one of steps status is KILLED, then job status is KILLED
         // default status is RUNNING
 
+        System.out.println(this.getName());
+
         for (JobStep step : this.getSteps()) {
+            System.out.println("step: " + step.getSequenceID() + "'s status:" + step.getStatus());
             compositResult = compositResult | step.getStatus().getCode();
         }
+
+        System.out.println();
 
         if (compositResult == JobStatusEnum.FINISHED.getCode()) {
             return JobStatusEnum.FINISHED;
@@ -192,8 +198,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
     }
 
     /**
-     * @param execStartTime
-     *            the execStartTime to set
+     * @param execStartTime the execStartTime to set
      */
     public void setExecStartTime(long execStartTime) {
         this.execStartTime = execStartTime;
@@ -207,8 +212,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
     }
 
     /**
-     * @param execEndTime
-     *            the execEndTime to set
+     * @param execEndTime the execEndTime to set
      */
     public void setExecEndTime(long execEndTime) {
         this.execEndTime = execEndTime;
@@ -350,8 +354,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         }
 
         /**
-         * @param execStartTime
-         *            the execStartTime to set
+         * @param execStartTime the execStartTime to set
          */
         public void setExecStartTime(long execStartTime) {
             this.execStartTime = execStartTime;
@@ -365,8 +368,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         }
 
         /**
-         * @param execEndTime
-         *            the execEndTime to set
+         * @param execEndTime the execEndTime to set
          */
         public void setExecEndTime(long execEndTime) {
             this.execEndTime = execEndTime;
@@ -404,8 +406,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         }
 
         /**
-         * @param runAsync
-         *            the runAsync to set
+         * @param runAsync the runAsync to set
          */
         public void setRunAsync(boolean runAsync) {
             this.runAsync = runAsync;

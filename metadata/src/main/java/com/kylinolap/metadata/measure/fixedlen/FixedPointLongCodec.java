@@ -17,7 +17,6 @@ public class FixedPointLongCodec extends FixedLenMeasureCodec<LongWritable> {
     // avoid mass object creation
     LongWritable current = new LongWritable();
 
-
     public FixedPointLongCodec(DataType type) {
         this.type = type;
         this.scale = Math.max(0, type.getScale());

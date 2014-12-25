@@ -42,8 +42,7 @@ public class ExampleEndpointTest {
     public static void setupBeforeClass() throws Exception {
         TEST_UTIL = new HBaseTestingUtility();
         CONF = TEST_UTIL.getConfiguration();
-        CONF.setStrings(CoprocessorHost.REGION_COPROCESSOR_CONF_KEY,
-                ExampleEndpoint.class.getName());
+        CONF.setStrings(CoprocessorHost.REGION_COPROCESSOR_CONF_KEY, ExampleEndpoint.class.getName());
 
         TEST_UTIL.startMiniCluster();
         TEST_UTIL.createTable(TEST_TABLE, new byte[][] { TEST_FAMILY });
@@ -70,21 +69,18 @@ public class ExampleEndpointTest {
         }
 
         final ExampleProtos.CountRequest request = ExampleProtos.CountRequest.getDefaultInstance();
-        Map<byte[], Long> results = table.coprocessorService(ExampleProtos.RowCountService.class,
-                null, null,
-                new Batch.Call<ExampleProtos.RowCountService, Long>() {
-                    public Long call(ExampleProtos.RowCountService counter) throws IOException {
-                        ServerRpcController controller = new ServerRpcController();
-                        BlockingRpcCallback<ExampleProtos.CountResponse> rpcCallback =
-                                new BlockingRpcCallback<ExampleProtos.CountResponse>();
-                        counter.getRowCount(controller, request, rpcCallback);
-                        ExampleProtos.CountResponse response = rpcCallback.get();
-                        if (controller.failedOnException()) {
-                            throw controller.getFailedOn();
-                        }
-                        return (response != null && response.hasCount()) ? response.getCount() : 0;
-                    }
-                });
+        Map<byte[], Long> results = table.coprocessorService(ExampleProtos.RowCountService.class, null, null, new Batch.Call<ExampleProtos.RowCountService, Long>() {
+            public Long call(ExampleProtos.RowCountService counter) throws IOException {
+                ServerRpcController controller = new ServerRpcController();
+                BlockingRpcCallback<ExampleProtos.CountResponse> rpcCallback = new BlockingRpcCallback<ExampleProtos.CountResponse>();
+                counter.getRowCount(controller, request, rpcCallback);
+                ExampleProtos.CountResponse response = rpcCallback.get();
+                if (controller.failedOnException()) {
+                    throw controller.getFailedOn();
+                }
+                return (response != null && response.hasCount()) ? response.getCount() : 0;
+            }
+        });
         // should be one region with results
         assertEquals(1, results.size());
         Iterator<Long> iter = results.values().iterator();
@@ -92,6 +88,5 @@ public class ExampleEndpointTest {
         assertNotNull(val);
         assertEquals(5l, val.longValue());
     }
-
 
 }

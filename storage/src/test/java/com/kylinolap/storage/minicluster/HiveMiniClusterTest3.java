@@ -32,9 +32,9 @@ public class HiveMiniClusterTest3 extends HiveJDBCClientTest {
     public static final File HIVE_TESTDATA_DIR = new File(HIVE_BASE_DIR + "/testdata");
     public static final File HIVE_HADOOP_TMP_DIR = new File(HIVE_BASE_DIR + "/hadooptmp");
     protected HiveInterface client;
-    
+
     private static final HBaseTestingUtility testUtil = new HBaseTestingUtility();
-    
+
     protected static MiniDFSCluster dfsCluster = null;
     protected static MiniMRCluster mrCluster = null;
     protected static MiniHBaseCluster hbaseCluster = null;
@@ -50,10 +50,8 @@ public class HiveMiniClusterTest3 extends HiveJDBCClientTest {
             config = props;
         }
 
-        public ConfigurableMiniMRCluster(int numTaskTrackers, String namenode,
-                int numDir, JobConf conf)
-                        throws Exception {
-            super(JOBTRACKER_PORT,0, numTaskTrackers, namenode, numDir, null, null, null, conf);
+        public ConfigurableMiniMRCluster(int numTaskTrackers, String namenode, int numDir, JobConf conf) throws Exception {
+            super(JOBTRACKER_PORT, 0, numTaskTrackers, namenode, numDir, null, null, null, conf);
         }
 
         public JobConf createJobConf() {
@@ -107,54 +105,49 @@ public class HiveMiniClusterTest3 extends HiveJDBCClientTest {
 
         // custom properties
         System.setProperty("hive.server2.long.polling.timeout", "5000");
-       
+
     }
-    
 
     //@BeforeClass
     public static void setUpBeforeClass() throws Exception {
         // make sure the log dir exists
         File logPath = new File(LOG_DIR);
-        if (!logPath.exists()){
+        if (!logPath.exists()) {
             logPath.mkdirs();
         }
         // configure and start the cluster
         System.setProperty("hadoop.log.dir", LOG_DIR);
-        System.setProperty("javax.xml.parsers.SAXParserFactory",
-                "com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl");
-        System.setProperty("javax.xml.parsers.DocumentBuilderFactory",
-                "com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl");
+        System.setProperty("javax.xml.parsers.SAXParserFactory", "com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl");
+        System.setProperty("javax.xml.parsers.DocumentBuilderFactory", "com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl");
         Properties props = new Properties();
         props.setProperty("dfs.datanode.data.dir.perm", "775");
         conf = new JobConf();
-//        String hadoopConfDir = "test" + File.separator + "resources" + File.separator + "hadoop" + File.separator + "conf";
-//        File hadoopConfFolder = new File(hadoopConfDir);
-        
+        //        String hadoopConfDir = "test" + File.separator + "resources" + File.separator + "hadoop" + File.separator + "conf";
+        //        File hadoopConfFolder = new File(hadoopConfDir);
 
         File miniclusterFolder = new File(AbstractKylinTestCase.MINICLUSTER_TEST_DATA);
         System.out.println("----" + miniclusterFolder.getAbsolutePath());
-        if(!miniclusterFolder.exists()) {
+        if (!miniclusterFolder.exists()) {
             System.err.println("Couldn't find " + miniclusterFolder + ", exit...");
             System.exit(1);
         }
-        
+
         String coreSitePath = miniclusterFolder + File.separator + "core-site.xml";
         conf.addResource(new Path(coreSitePath));
         String hdfsSitePath = miniclusterFolder + File.separator + "hdfs-site.xml";
         conf.addResource(new Path(hdfsSitePath));
         String mrSitePath = miniclusterFolder + File.separator + "mapred-site.xml";
         conf.addResource(new Path(mrSitePath));
-        
+
         //save the dfs data to minicluster folder
         //conf.set("test.build.data", miniclusterFolder.getAbsolutePath());
-        System.setProperty("test.build.data",miniclusterFolder.getAbsolutePath());
-        
+        System.setProperty("test.build.data", miniclusterFolder.getAbsolutePath());
+
         //System.setProperty("test.build.data.basedirectory",miniclusterFolder.getAbsolutePath() + File.separator + "testdata");
         startCluster(true, conf, props);
-        
 
     }
-    
+
     public void tearDown() {
         try {
             tearDownAfterClass();
@@ -168,54 +161,50 @@ public class HiveMiniClusterTest3 extends HiveJDBCClientTest {
     public static void tearDownAfterClass() throws Exception {
         stopCluster();
         // clean up the hdfs files created by mini cluster
-//        String baseTempDir = "build" + File.separator + "test" + File.separator;
-        String baseTempDir =  dfsCluster.getBaseDirectory();
+        //        String baseTempDir = "build" + File.separator + "test" + File.separator;
+        String baseTempDir = dfsCluster.getBaseDirectory();
         String dfsDir = baseTempDir + "data";
         System.out.println("------" + new File(dfsDir).getAbsolutePath());
         FileUtils.deleteDirectory(new File(dfsDir));
         String mrDir = baseTempDir + "mapred";
         FileUtils.deleteDirectory(new File(mrDir));
-        
+
         FileUtils.cleanDirectory(new File(LOG_DIR));
     }
 
-    protected static synchronized void startCluster(boolean reformatDFS, JobConf conf ,Properties props)
-            throws Exception {
+    protected static synchronized void startCluster(boolean reformatDFS, JobConf conf, Properties props) throws Exception {
         if (dfsCluster == null) {
-            
+
             if (props != null) {
                 for (Map.Entry entry : props.entrySet()) {
                     conf.set((String) entry.getKey(), (String) entry.getValue());
                 }
             }
-            dfsCluster = new  MiniDFSCluster(NAMENODE_PORT, conf, 2, reformatDFS, true, null, null);
+            dfsCluster = new MiniDFSCluster(NAMENODE_PORT, conf, 2, reformatDFS, true, null, null);
             ConfigurableMiniMRCluster.setConfiguration(props);
-            mrCluster = new ConfigurableMiniMRCluster(2, dfsCluster.getFileSystem().getName(),
-                    1, conf);
+            mrCluster = new ConfigurableMiniMRCluster(2, dfsCluster.getFileSystem().getName(), 1, conf);
         }
-        
+
         HBaseTestingUtility testUtil = new HBaseTestingUtility();
         testUtil.setDFSCluster(dfsCluster);
         hbaseCluster = testUtil.startMiniCluster();
-        
 
         System.out.println("dfs uri: -------" + dfsCluster.getFileSystem().getUri().toString());
-        
+
         Configuration config = hbaseCluster.getConf();
         String host = config.get(HConstants.ZOOKEEPER_QUORUM);
         String port = config.get(HConstants.ZOOKEEPER_CLIENT_PORT);
         String parent = config.get(HConstants.ZOOKEEPER_ZNODE_PARENT);
-        
+
         // reduce rpc retry
         config.set(HConstants.HBASE_CLIENT_PAUSE, "3000");
         config.set(HConstants.HBASE_CLIENT_RETRIES_NUMBER, "5");
         config.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
-        
-        
+
         String hbaseconnectionUrl = "hbase:" + host + ":" + port + ":" + parent;
         System.out.println("hbase connection url: -----" + hbaseconnectionUrl);
     }
-    
+
     protected static void stopCluster() throws Exception {
         if (mrCluster != null) {
             mrCluster.shutdown();
@@ -225,22 +214,20 @@ public class HiveMiniClusterTest3 extends HiveJDBCClientTest {
             dfsCluster.shutdown();
             dfsCluster = null;
         }
-        
-        if(hbaseCluster !=null) {
+
+        if (hbaseCluster != null) {
             hbaseCluster.shutdown();
             hbaseCluster = null;
         }
     }
-    
 
     protected Connection getHiveConnection() throws SQLException {
         return DriverManager.getConnection("jdbc:hive2:///", "hive", "");
     }
-    
-    
+
     public static void main(String[] args) throws SQLException {
         HiveMiniClusterTest3 test = new HiveMiniClusterTest3();
         test.runTests();
     }
-    
+
 }

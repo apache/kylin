@@ -35,212 +35,220 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * copied from CubeDescManager
- *
+ * 
  * @author honma
  */
 public class IIDescManager {
 
-    private static final Logger logger = LoggerFactory.getLogger(IIDescManager.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(IIDescManager.class);
 
-    private static final Serializer<IIDesc> II_DESC_SERIALIZER = new JsonSerializer<IIDesc>(IIDesc.class);
+	private static final Serializer<IIDesc> II_DESC_SERIALIZER = new JsonSerializer<IIDesc>(
+			IIDesc.class);
 
-    // static cached instances
-    private static final ConcurrentHashMap<KylinConfig, IIDescManager> CACHE = new ConcurrentHashMap<KylinConfig, IIDescManager>();
+	// static cached instances
+	private static final ConcurrentHashMap<KylinConfig, IIDescManager> CACHE = new ConcurrentHashMap<KylinConfig, IIDescManager>();
 
-    // ============================================================================
+	// ============================================================================
 
-    private KylinConfig config;
-    // name ==> IIDesc
-    private SingleValueCache<String, IIDesc> iiDescMap = new SingleValueCache<String, IIDesc>(Broadcaster.TYPE.METADATA);
+	private KylinConfig config;
+	// name ==> IIDesc
+	private SingleValueCache<String, IIDesc> iiDescMap = new SingleValueCache<String, IIDesc>(
+			Broadcaster.TYPE.METADATA);
 
-    public static IIDescManager getInstance(KylinConfig config) {
-        IIDescManager r = CACHE.get(config);
-        if (r != null) {
-            return r;
-        }
+	public static IIDescManager getInstance(KylinConfig config) {
+		IIDescManager r = CACHE.get(config);
+		if (r != null) {
+			return r;
+		}
 
-        synchronized (IIDescManager.class) {
-            r = CACHE.get(config);
-            if (r != null) {
-                return r;
-            }
-            try {
-                r = new IIDescManager(config);
-                CACHE.put(config, r);
-                if (CACHE.size() > 1) {
-                    logger.warn("More than one singleton exist");
-                }
-                return r;
-            } catch (IOException e) {
-                throw new IllegalStateException("Failed to init IIDescManager from " + config, e);
-            }
-        }
-    }
+		synchronized (IIDescManager.class) {
+			r = CACHE.get(config);
+			if (r != null) {
+				return r;
+			}
+			try {
+				r = new IIDescManager(config);
+				CACHE.put(config, r);
+				if (CACHE.size() > 1) {
+					logger.warn("More than one singleton exist");
+				}
+				return r;
+			} catch (IOException e) {
+				throw new IllegalStateException(
+						"Failed to init IIDescManager from " + config, e);
+			}
+		}
+	}
 
-    public static void clearCache() {
-        CACHE.clear();
-    }
+	public static void clearCache() {
+		CACHE.clear();
+	}
 
-    public static synchronized void removeInstance(KylinConfig config) {
-        CACHE.remove(config);
-    }
+	public static synchronized void removeInstance(KylinConfig config) {
+		CACHE.remove(config);
+	}
 
-    private IIDescManager(KylinConfig config) throws IOException {
-        logger.info("Initializing IIDescManager with config " + config);
-        this.config = config;
-        reloadAllIIDesc();
-    }
+	private IIDescManager(KylinConfig config) throws IOException {
+		logger.info("Initializing IIDescManager with config " + config);
+		this.config = config;
+		reloadAllIIDesc();
+	}
 
-    public IIDesc getIIDesc(String name) {
-        return iiDescMap.get(name);
-    }
+	public IIDesc getIIDesc(String name) {
+		return iiDescMap.get(name);
+	}
 
+	/**
+	 * Reload IIDesc from resource store It will be triggered by an desc update
+	 * event.
+	 * 
+	 * @param name
+	 * @throws IOException
+	 */
+	public IIDesc reloadIIDesc(String name) throws IOException {
 
-    /**
-     * Reload IIDesc from resource store It will be triggered by an desc
-     * update event.
-     *
-     * @param name
-     * @throws IOException
-     */
-    public IIDesc reloadIIDesc(String name) throws IOException {
+		// Save Source
+		String path = IIDesc.getIIDescResourcePath(name);
 
-        // Save Source
-        String path = IIDesc.getIIDescResourcePath(name);
+		// Reload the IIDesc
+		IIDesc ndesc = loadIIDesc(path);
 
-        // Reload the IIDesc
-        IIDesc ndesc = loadIIDesc(path);
+		// Here replace the old one
+		iiDescMap.put(ndesc.getName(), ndesc);
+		return ndesc;
+	}
 
-        // Here replace the old one
-        iiDescMap.put(ndesc.getName(), ndesc);
-        return ndesc;
-    }
+	private IIDesc loadIIDesc(String path) throws IOException {
+		ResourceStore store = getStore();
+		logger.debug("Loading IIDesc " + store.getReadableResourcePath(path));
 
-    private IIDesc loadIIDesc(String path) throws IOException {
-        ResourceStore store = getStore();
-        logger.debug("Loading IIDesc " + store.getReadableResourcePath(path));
+		IIDesc ndesc = store
+				.getResource(path, IIDesc.class, II_DESC_SERIALIZER);
 
-        IIDesc ndesc = store.getResource(path, IIDesc.class, II_DESC_SERIALIZER);
+		if (StringUtils.isBlank(ndesc.getName())) {
+			throw new IllegalStateException("IIDesc name must not be blank");
+		}
 
-        if (StringUtils.isBlank(ndesc.getName())) {
-            throw new IllegalStateException("IIDesc name must not be blank");
-        }
+		ndesc.init(getMetadataManager());
 
-        ndesc.init(getMetadataManager());
+		return ndesc;
+	}
 
-        return ndesc;
-    }
+	/**
+	 * Create a new IIDesc
+	 * 
+	 * @param iiDesc
+	 * @return
+	 * @throws IOException
+	 */
+	public IIDesc createIIDesc(IIDesc iiDesc) throws IOException {
+		if (iiDesc.getUuid() == null || iiDesc.getName() == null)
+			throw new IllegalArgumentException();
 
+		if (iiDescMap.containsKey(iiDesc.getName()))
+			throw new IllegalArgumentException("IIDesc '" + iiDesc.getName()
+					+ "' already exists");
 
-    /**
-     * Create a new IIDesc
-     *
-     * @param iiDesc
-     * @return
-     * @throws IOException
-     */
-    public IIDesc createIIDesc(IIDesc iiDesc) throws IOException {
-        if (iiDesc.getUuid() == null || iiDesc.getName() == null)
-            throw new IllegalArgumentException();
+		iiDesc.init(getMetadataManager());
 
-        if (iiDescMap.containsKey(iiDesc.getName()))
-            throw new IllegalArgumentException("IIDesc '" + iiDesc.getName() + "' already exists");
+		// Check base validation
+		// Semantic validation
+		// TODO
 
-        iiDesc.init(getMetadataManager());
+		iiDesc.setSignature(iiDesc.calculateSignature());
 
-        // Check base validation
-        // Semantic validation
-        // TODO
+		String path = iiDesc.getResourcePath();
+		getStore().putResource(path, iiDesc, II_DESC_SERIALIZER);
+		iiDescMap.put(iiDesc.getName(), iiDesc);
 
-        iiDesc.setSignature(iiDesc.calculateSignature());
+		return iiDesc;
+	}
 
-        String path = iiDesc.getResourcePath();
-        getStore().putResource(path, iiDesc, II_DESC_SERIALIZER);
-        iiDescMap.put(iiDesc.getName(), iiDesc);
+	// remove iiDesc
+	public void removeIIDesc(IIDesc iiDesc) throws IOException {
+		String path = iiDesc.getResourcePath();
+		getStore().deleteResource(path);
+		iiDescMap.remove(iiDesc.getName());
+	}
 
-        return iiDesc;
-    }
+	private void reloadAllIIDesc() throws IOException {
+		ResourceStore store = getStore();
+		logger.info("Reloading II Metadata from folder "
+				+ store.getReadableResourcePath(ResourceStore.II_DESC_RESOURCE_ROOT));
 
-    // remove iiDesc
-    public void removeIIDesc(IIDesc iiDesc) throws IOException {
-        String path = iiDesc.getResourcePath();
-        getStore().deleteResource(path);
-        iiDescMap.remove(iiDesc.getName());
-    }
+		iiDescMap.clear();
 
-    private void reloadAllIIDesc() throws IOException {
-        ResourceStore store = getStore();
-        logger.info("Reloading II Metadata from folder " + store.getReadableResourcePath(ResourceStore.II_DESC_RESOURCE_ROOT));
+		List<String> paths = store.collectResourceRecursively(
+				ResourceStore.II_DESC_RESOURCE_ROOT,
+				MetadataConstances.FILE_SURFIX);
+		for (String path : paths) {
+			IIDesc desc;
+			try {
+				desc = loadIIDesc(path);
+			} catch (Exception e) {
+				logger.error("Error loading II desc " + path, e);
+				continue;
+			}
+			if (path.equals(desc.getResourcePath()) == false) {
+				logger.error("Skip suspicious desc at " + path + ", " + desc
+						+ " should be at " + desc.getResourcePath());
+				continue;
+			}
+			if (iiDescMap.containsKey(desc.getName())) {
+				logger.error("Dup IIDesc name '" + desc.getName()
+						+ "' on path " + path);
+				continue;
+			}
 
-        iiDescMap.clear();
+			iiDescMap.putLocal(desc.getName(), desc);
+		}
 
-        List<String> paths = store.collectResourceRecursively(ResourceStore.II_DESC_RESOURCE_ROOT, MetadataConstances.FILE_SURFIX);
-        for (String path : paths) {
-            IIDesc desc;
-            try {
-                desc = loadIIDesc(path);
-            } catch (Exception e) {
-                logger.error("Error loading II desc " + path, e);
-                continue;
-            }
-            if (path.equals(desc.getResourcePath()) == false) {
-                logger.error("Skip suspicious desc at " + path + ", " + desc + " should be at " + desc.getResourcePath());
-                continue;
-            }
-            if (iiDescMap.containsKey(desc.getName())) {
-                logger.error("Dup IIDesc name '" + desc.getName() + "' on path " + path);
-                continue;
-            }
+		logger.debug("Loaded " + iiDescMap.size() + " II(s)");
+	}
 
-            iiDescMap.putLocal(desc.getName(), desc);
-        }
+	/**
+	 * Update IIDesc with the input. Broadcast the event into cluster
+	 * 
+	 * @param desc
+	 * @return
+	 * @throws IOException
+	 */
+	public IIDesc updateIIDesc(IIDesc desc) throws IOException {
+		// Validate IIDesc
+		if (desc.getUuid() == null || desc.getName() == null) {
+			throw new IllegalArgumentException();
+		}
+		String name = desc.getName();
+		if (!iiDescMap.containsKey(name)) {
+			throw new IllegalArgumentException("IIDesc '" + name
+					+ "' does not exist.");
+		}
 
-        logger.debug("Loaded " + iiDescMap.size() + " II(s)");
-    }
+		desc.init(getMetadataManager());
 
+		// TODO: Semantic validation
 
-    /**
-     * Update IIDesc with the input. Broadcast the event into cluster
-     *
-     * @param desc
-     * @return
-     * @throws IOException
-     */
-    public IIDesc updateIIDesc(IIDesc desc) throws IOException {
-        // Validate IIDesc
-        if (desc.getUuid() == null || desc.getName() == null) {
-            throw new IllegalArgumentException();
-        }
-        String name = desc.getName();
-        if (!iiDescMap.containsKey(name)) {
-            throw new IllegalArgumentException("IIDesc '" + name + "' does not exist.");
-        }
+		desc.setSignature(desc.calculateSignature());
 
-        desc.init(getMetadataManager());
+		// Save Source
+		String path = desc.getResourcePath();
+		getStore().putResource(path, desc, II_DESC_SERIALIZER);
 
-        //TODO: Semantic validation
+		// Reload the IIDesc
+		IIDesc ndesc = loadIIDesc(path);
+		// Here replace the old one
+		iiDescMap.put(ndesc.getName(), desc);
 
-        desc.setSignature(desc.calculateSignature());
+		return ndesc;
+	}
 
-        // Save Source
-        String path = desc.getResourcePath();
-        getStore().putResource(path, desc, II_DESC_SERIALIZER);
+	private MetadataManager getMetadataManager() {
+		return MetadataManager.getInstance(config);
+	}
 
-        // Reload the IIDesc
-        IIDesc ndesc = loadIIDesc(path);
-        // Here replace the old one
-        iiDescMap.put(ndesc.getName(), desc);
-
-        return ndesc;
-    }
-
-
-    private MetadataManager getMetadataManager() {
-        return MetadataManager.getInstance(config);
-    }
-
-    private ResourceStore getStore() {
-        return ResourceStore.getStore(this.config);
-    }
+	private ResourceStore getStore() {
+		return ResourceStore.getStore(this.config);
+	}
 
 }

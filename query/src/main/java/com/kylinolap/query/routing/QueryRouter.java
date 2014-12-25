@@ -132,21 +132,18 @@ public class QueryRouter {
     }
 
     static List<CubeInstance> filterCubes(List<IRealization> realizations) {
-        return Lists.newArrayList(
-                Iterables.transform(
-                        Iterables.filter(realizations, new Predicate<IRealization>() {
-                            @Override
-                            public boolean apply(IRealization input) {
-                                return input.getType() == RealizationType.CUBE;
-                            }
-                        }),
-                        new Function<IRealization, CubeInstance>() {
-                            @Nullable
-                            @Override
-                            public CubeInstance apply(IRealization input) {
-                                return (CubeInstance) input;
-                            }
-                        }));
+        return Lists.newArrayList(Iterables.transform(Iterables.filter(realizations, new Predicate<IRealization>() {
+            @Override
+            public boolean apply(IRealization input) {
+                return input.getType() == RealizationType.CUBE;
+            }
+        }), new Function<IRealization, CubeInstance>() {
+            @Nullable
+            @Override
+            public CubeInstance apply(IRealization input) {
+                return (CubeInstance) input;
+            }
+        }));
     }
 
     static CubeInstance findBestMatchCube(ProjectManager projectManager, OLAPContext olapContext) throws CubeNotFoundException {

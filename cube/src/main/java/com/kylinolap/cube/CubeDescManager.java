@@ -87,7 +87,7 @@ public class CubeDescManager {
     public static synchronized void removeInstance(KylinConfig config) {
         CACHE.remove(config);
     }
-    
+
     private CubeDescManager(KylinConfig config) throws IOException {
         logger.info("Initializing CubeDescManager with config " + config);
         this.config = config;
@@ -97,7 +97,6 @@ public class CubeDescManager {
     public CubeDesc getCubeDesc(String name) {
         return cubeDescMap.get(name);
     }
-    
 
     /**
      * Reload CubeDesc from resource store It will be triggered by an desc
@@ -118,7 +117,7 @@ public class CubeDescManager {
         cubeDescMap.put(ndesc.getName(), ndesc);
         return ndesc;
     }
-    
+
     private CubeDesc loadCubeDesc(String path) throws IOException {
         ResourceStore store = getStore();
         logger.debug("Loading CubeDesc " + store.getReadableResourcePath(path));
@@ -137,7 +136,6 @@ public class CubeDescManager {
 
         return ndesc;
     }
-
 
     /**
      * Create a new CubeDesc
@@ -176,11 +174,9 @@ public class CubeDescManager {
 
         return cubeDesc;
     }
-    
 
-    
     // remove cubeDesc
-    public void removeCubeDesc(CubeDesc cubeDesc) throws IOException{
+    public void removeCubeDesc(CubeDesc cubeDesc) throws IOException {
         String path = cubeDesc.getResourcePath();
         getStore().deleteResource(path);
         cubeDescMap.remove(cubeDesc.getName());
@@ -215,7 +211,6 @@ public class CubeDescManager {
 
         logger.debug("Loaded " + cubeDescMap.size() + " Cube(s)");
     }
-
 
     /**
      * Update CubeDesc with the input. Broadcast the event into cluster
@@ -264,8 +259,6 @@ public class CubeDescManager {
 
         return ndesc;
     }
-
-
 
     private MetadataManager getMetadataManager() {
         return MetadataManager.getInstance(config);

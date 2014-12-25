@@ -223,7 +223,6 @@ public class FactTableGenerator {
         return dimensions;
     }
 
-
     /**
      * Generate the fact table and return it as text
      *
@@ -507,7 +506,6 @@ public class FactTableGenerator {
 
         for (ColumnDesc cDesc : MetadataManager.getInstance(config).getTableDesc(factTableName).getColumns()) {
 
-
             String colName = cDesc.getName();
 
             if (factTableCol2LookupCol.containsKey(colName)) {
@@ -546,7 +544,7 @@ public class FactTableGenerator {
             TreeSet<String> defaultColumns = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
             StringBuffer sb = new StringBuffer();
-            for (int i = 0; i < rowCount; ) {
+            for (int i = 0; i < rowCount;) {
 
                 LinkedList<String> columnValues = createRow(factTableCol2LookupCol, usedCols, defaultColumns);
 

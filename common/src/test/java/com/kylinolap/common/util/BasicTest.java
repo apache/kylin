@@ -30,7 +30,6 @@ public class BasicTest {
         System.out.printf("b");
     }
 
-
     @Test
     @Ignore("convenient trial tool for dev")
     public void test1() throws IOException {
@@ -42,6 +41,5 @@ public class BasicTest {
     public void test2() throws IOException {
         // fix it later
     }
-
 
 }

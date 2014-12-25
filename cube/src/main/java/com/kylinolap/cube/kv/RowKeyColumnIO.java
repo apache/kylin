@@ -146,5 +146,4 @@ public class RowKeyColumnIO {
         return stripBytes;
     }
 
-
 }

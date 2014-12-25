@@ -7,5 +7,6 @@ import com.kylinolap.metadata.model.TblColRef;
  */
 public interface ColumnDictInfo {
     public abstract int getColumnLength(TblColRef col);
+
     public abstract Dictionary<?> getDictionary(TblColRef col);
 }

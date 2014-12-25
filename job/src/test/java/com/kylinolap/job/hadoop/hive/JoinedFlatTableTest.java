@@ -77,5 +77,4 @@ public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
         assertEquals(1168, sql.length());
     }
 
-
 }

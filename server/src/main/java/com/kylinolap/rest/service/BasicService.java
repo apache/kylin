@@ -59,8 +59,8 @@ public abstract class BasicService {
 
     private static ConcurrentMap<String, DataSource> olapDataSources = new ConcurrentHashMap<String, DataSource>();
 
-//    @Autowired
-//    protected JdbcTemplate jdbcTemplate;
+    //    @Autowired
+    //    protected JdbcTemplate jdbcTemplate;
 
     public KylinConfig getConfig() {
         return KylinConfig.getInstanceFromEnv();
@@ -148,7 +148,7 @@ public abstract class BasicService {
     public MetadataManager getMetadataManager() {
         return MetadataManager.getInstance(getConfig());
     }
-    
+
     public CubeManager getCubeManager() {
         return CubeManager.getInstance(getConfig());
     }
@@ -156,11 +156,10 @@ public abstract class BasicService {
     public CubeDescManager getCubeDescManager() {
         return CubeDescManager.getInstance(getConfig());
     }
-    
+
     public ProjectManager getProjectManager() {
         return ProjectManager.getInstance(getConfig());
     }
-
 
     public JobManager getJobManager() throws JobException, UnknownHostException {
         KylinConfig config = KylinConfig.getInstanceFromEnv();

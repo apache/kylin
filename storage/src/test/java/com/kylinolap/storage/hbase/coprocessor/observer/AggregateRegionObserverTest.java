@@ -109,8 +109,8 @@ public class AggregateRegionObserverTest {
         CoprocessorProjector projector = new CoprocessorProjector(mask);
         ObserverAggregators aggregators = new ObserverAggregators(new HCol[] { c1, c2 });
         CoprocessorFilter filter = CoprocessorFilter.deserialize(null); // a default,
-                                                          // always-true,
-                                                          // filter
+        // always-true,
+        // filter
         HashSet<String> expectedResult = new HashSet<String>();
 
         expectedResult.add("\\x02\\x02\\x00\\x00, f:q1, [26.0, 7]");
@@ -160,8 +160,8 @@ public class AggregateRegionObserverTest {
         CoprocessorProjector projector = new CoprocessorProjector(mask);
         ObserverAggregators aggregators = new ObserverAggregators(new HCol[] {});
         CoprocessorFilter filter = CoprocessorFilter.deserialize(null); // a default,
-                                                          // always-true,
-                                                          // filter
+        // always-true,
+        // filter
         HashSet<String> expectedResult = new HashSet<String>();
 
         expectedResult.add("\\x02\\x02\\x00\\x00");

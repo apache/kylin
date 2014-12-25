@@ -46,7 +46,6 @@ public class ProjectInstance extends RootPersistentEntity {
     @JsonProperty("tables")
     private Set<String> tables;
 
-
     @JsonProperty("owner")
     private String owner;
 
@@ -94,7 +93,7 @@ public class ProjectInstance extends RootPersistentEntity {
         if (realizationEntries != null)
             projectInstance.setRealizationEntries(realizationEntries);
         else
-            projectInstance.setRealizationEntries(Lists.<RealizationEntry>newArrayList());
+            projectInstance.setRealizationEntries(Lists.<RealizationEntry> newArrayList());
 
         return projectInstance;
     }
@@ -158,7 +157,6 @@ public class ProjectInstance extends RootPersistentEntity {
         });
     }
 
-
     public List<RealizationEntry> getRealizationEntries(final RealizationType type) {
         if (type == null)
             return getRealizationEntries();
@@ -176,13 +174,12 @@ public class ProjectInstance extends RootPersistentEntity {
         if (type == null)
             return this.realizationEntries.size();
 
-        return Iterables.size(
-                Iterables.filter(this.realizationEntries, new Predicate<RealizationEntry>() {
-                    @Override
-                    public boolean apply(RealizationEntry input) {
-                        return input.getType() == type;
-                    }
-                }));
+        return Iterables.size(Iterables.filter(this.realizationEntries, new Predicate<RealizationEntry>() {
+            @Override
+            public boolean apply(RealizationEntry input) {
+                return input.getType() == type;
+            }
+        }));
     }
 
     public void addRealizationEntry(final RealizationType type, final String realizationName) {
@@ -259,8 +256,6 @@ public class ProjectInstance extends RootPersistentEntity {
             realizationEntries.get(i).setRealization(r.toUpperCase());
         }
     }
-
-
 
     @Override
     public String toString() {

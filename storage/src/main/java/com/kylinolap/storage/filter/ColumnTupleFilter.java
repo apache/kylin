@@ -102,7 +102,7 @@ public class ColumnTupleFilter extends TupleFilter {
         ColumnDesc column = new ColumnDesc();
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         String tableName = BytesUtil.readUTFString(buffer);
-        if(tableName != null) {
+        if (tableName != null) {
             TableDesc table = new TableDesc();
             table.setName(tableName);
             column.setTable(table);

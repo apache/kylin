@@ -54,7 +54,6 @@ public class ServiceTestBase extends HBaseMetadataTestCase { //HBaseMetadataTest
     public static void tearDownResource() {
     }
 
-
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
