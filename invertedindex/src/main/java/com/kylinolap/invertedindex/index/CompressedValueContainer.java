@@ -31,153 +31,158 @@ import com.ning.compress.lzf.LZFEncoder;
  * @author yangli9
  */
 public class CompressedValueContainer implements ColumnValueContainer {
-    int valueLen;
-    int nValues;
-    int cap;
-    int size;
-    byte[] uncompressed;
-    byte[] compressed;
+	int valueLen;
+	int nValues;
+	int cap;
+	int size;
+	byte[] uncompressed;
+	byte[] compressed;
 
-    public CompressedValueContainer(TableRecordInfoDigest digest, int col, int cap) {
-        this.valueLen = digest.length(col);
-        this.nValues = digest.getMaxID(col) + 1;
-        this.cap = cap;
-        this.size = 0;
-        this.uncompressed = null;
-        this.compressed = null;
-    }
+	public CompressedValueContainer(TableRecordInfoDigest digest, int col,
+			int cap) {
+		this.valueLen = digest.length(col);
+		this.nValues = digest.getMaxID(col) + 1;
+		this.cap = cap;
+		this.size = 0;
+		this.uncompressed = null;
+		this.compressed = null;
+	}
 
-    @Override
-    public void append(ImmutableBytesWritable valueBytes) {
-        checkUpdateMode();
-        System.arraycopy(valueBytes.get(), valueBytes.getOffset(), uncompressed, valueLen * size, valueLen);
-        size++;
-    }
+	@Override
+	public void append(ImmutableBytesWritable valueBytes) {
+		checkUpdateMode();
+		System.arraycopy(valueBytes.get(), valueBytes.getOffset(),
+				uncompressed, valueLen * size, valueLen);
+		size++;
+	}
 
-    @Override
-    public void getValueAt(int i, ImmutableBytesWritable valueBytes) {
-        valueBytes.set(uncompressed, valueLen * i, valueLen);
-    }
+	@Override
+	public void getValueAt(int i, ImmutableBytesWritable valueBytes) {
+		valueBytes.set(uncompressed, valueLen * i, valueLen);
+	}
 
-    @Override
-    public ConciseSet getBitMap(int valueId) {
-        createBitMapWrapperIfNecessary();
-        return wrapper.getBitMap(valueId);
-    }
+	@Override
+	public ConciseSet getBitMap(int valueId) {
+		createBitMapWrapperIfNecessary();
+		return wrapper.getBitMap(valueId);
+	}
 
-    @Override
-    public int getMaxValueId() {
-        return nValues - 1;
-    }
+	@Override
+	public int getMaxValueId() {
+		return nValues - 1;
+	}
 
-    private void checkUpdateMode() {
-        if (isClosedForChange()) {
-            throw new IllegalArgumentException();
-        }
-        if (uncompressed == null) {
-            uncompressed = new byte[valueLen * cap];
-        }
-    }
+	private void checkUpdateMode() {
+		if (isClosedForChange()) {
+			throw new IllegalArgumentException();
+		}
+		if (uncompressed == null) {
+			uncompressed = new byte[valueLen * cap];
+		}
+	}
 
-    private boolean isClosedForChange() {
-        return compressed != null;
-    }
+	private boolean isClosedForChange() {
+		return compressed != null;
+	}
 
-    @Override
-    public void closeForChange() {
-        checkUpdateMode();
-        try {
-            compressed = LZFEncoder.encode(uncompressed, 0, valueLen * size);
-        } catch (Exception e) {
-            throw new RuntimeException("LZF encode failure", e);
-        }
-    }
+	@Override
+	public void closeForChange() {
+		checkUpdateMode();
+		try {
+			compressed = LZFEncoder.encode(uncompressed, 0, valueLen * size);
+		} catch (Exception e) {
+			throw new RuntimeException("LZF encode failure", e);
+		}
+	}
 
-    @Override
-    public int getSize() {
-        return size;
-    }
+	@Override
+	public int getSize() {
+		return size;
+	}
 
-    public ImmutableBytesWritable toBytes() {
-        if (isClosedForChange() == false)
-            closeForChange();
-        return new ImmutableBytesWritable(compressed);
-    }
+	public ImmutableBytesWritable toBytes() {
+		if (isClosedForChange() == false)
+			closeForChange();
+		return new ImmutableBytesWritable(compressed);
+	}
 
-    public void fromBytes(ImmutableBytesWritable bytes) {
-        try {
-            uncompressed = LZFDecoder.decode(bytes.get(), bytes.getOffset(), bytes.getLength());
-        } catch (IOException e) {
-            throw new RuntimeException("LZF decode failure", e);
-        }
-        size = cap = uncompressed.length / valueLen;
-        compressed = BytesUtil.EMPTY_BYTE_ARRAY; // mark closed
-    }
+	public void fromBytes(ImmutableBytesWritable bytes) {
+		try {
+			uncompressed = LZFDecoder.decode(bytes.get(), bytes.getOffset(),
+					bytes.getLength());
+		} catch (IOException e) {
+			throw new RuntimeException("LZF decode failure", e);
+		}
+		size = cap = uncompressed.length / valueLen;
+		compressed = BytesUtil.EMPTY_BYTE_ARRAY; // mark closed
+	}
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + size;
-        result = prime * result + valueLen;
-        result = prime * result + Arrays.hashCode(uncompressed);
-        return result;
-    }
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + size;
+		result = prime * result + valueLen;
+		result = prime * result + Arrays.hashCode(uncompressed);
+		return result;
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        CompressedValueContainer other = (CompressedValueContainer) obj;
-        if (size != other.size)
-            return false;
-        if (valueLen != other.valueLen)
-            return false;
-        if (!Bytes.equals(uncompressed, 0, size * valueLen, uncompressed, 0, size * valueLen))
-            return false;
-        return true;
-    }
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		CompressedValueContainer other = (CompressedValueContainer) obj;
+		if (size != other.size)
+			return false;
+		if (valueLen != other.valueLen)
+			return false;
+		if (!Bytes.equals(uncompressed, 0, size * valueLen, uncompressed, 0,
+				size * valueLen))
+			return false;
+		return true;
+	}
 
-    private BitmapWrapper wrapper = null;
+	private BitmapWrapper wrapper = null;
 
-    private void createBitMapWrapperIfNecessary() {
-        if (wrapper == null)
-            wrapper = new BitmapWrapper();
-    }
+	private void createBitMapWrapperIfNecessary() {
+		if (wrapper == null)
+			wrapper = new BitmapWrapper();
+	}
 
-    private class BitmapWrapper {
-        private ConciseSet[] sets;
+	private class BitmapWrapper {
+		private ConciseSet[] sets;
 
-        BitmapWrapper() {
-            sets = new ConciseSet[nValues + 1];
-            for (int i = 0; i < sets.length; ++i) {
-                sets[i] = new ConciseSet();
-            }
+		BitmapWrapper() {
+			sets = new ConciseSet[nValues + 1];
+			for (int i = 0; i < sets.length; ++i) {
+				sets[i] = new ConciseSet();
+			}
 
-            for (int i = 0; i < size; ++i) {
-                int valueID = BytesUtil.readUnsigned(uncompressed, i * valueLen, valueLen);
-                if (notNullValue(valueID)) {
-                    sets[valueID].add(i);
-                } else {
-                    sets[nValues].add(i);
-                }
-            }
-        }
+			for (int i = 0; i < size; ++i) {
+				int valueID = BytesUtil.readUnsigned(uncompressed,
+						i * valueLen, valueLen);
+				if (notNullValue(valueID)) {
+					sets[valueID].add(i);
+				} else {
+					sets[nValues].add(i);
+				}
+			}
+		}
 
-        private boolean notNullValue(int valueId) {
-            return valueId >= 0 && valueId <= getMaxValueId();
-        }
+		private boolean notNullValue(int valueId) {
+			return valueId >= 0 && valueId <= getMaxValueId();
+		}
 
-        ConciseSet getBitMap(int valueId) {
-            if (notNullValue(valueId)) {
-                return sets[valueId];
-            } else {
-                return sets[nValues];
-            }
-        }
-    }
+		ConciseSet getBitMap(int valueId) {
+			if (notNullValue(valueId)) {
+				return sets[valueId];
+			} else {
+				return sets[nValues];
+			}
+		}
+	}
 }
