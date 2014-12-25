@@ -16,7 +16,7 @@ import com.kylinolap.common.util.LocalFileMetadataTestCase;
 /**
  * Created by honma on 9/17/14.
  */
-@Ignore
+@Ignore("convenient trial tool for dev")
 public class CubeMigrationTests extends LocalFileMetadataTestCase {
     @Before
     public void setup() throws Exception {

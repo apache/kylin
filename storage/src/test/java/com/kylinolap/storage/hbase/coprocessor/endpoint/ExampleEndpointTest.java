@@ -29,7 +29,7 @@ import static junit.framework.Assert.assertNotNull;
 /**
  * Created by honma on 11/3/14.
  */
-@Ignore
+@Ignore("convenient trial tool for dev")
 public class ExampleEndpointTest {
     private static final TableName TEST_TABLE = TableName.valueOf("testrowcounter");
     private static final byte[] TEST_FAMILY = Bytes.toBytes("f");

@@ -74,7 +74,7 @@ public class KylinConfig {
     public static final String KYLIN_JOB_REMOTE_CLI_HOSTNAME = "kylin.job.remote.cli.hostname";
 
     public static final String KYLIN_JOB_REMOTE_CLI_WORKING_DIR = "kylin.job.remote.cli.working.dir";
-    
+
     public static final String KYLIN_JOB_CMD_EXTRA_ARGS = "kylin.job.cmd.extra.args";
     /**
      * Toggle to indicate whether to use hive for table flattening. Default
@@ -124,13 +124,13 @@ public class KylinConfig {
     public static final String KYLIN_CONF_PROPERTIES_FILE = "kylin.properties";
 
     public static final String MAIL_ENABLED = "mail.enabled";
-    
+
     public static final String MAIL_HOST = "mail.host";
-    
+
     public static final String MAIL_USERNAME = "mail.username";
-    
+
     public static final String MAIL_PASSWORD = "mail.password";
-    
+
     public static final String MAIL_SENDER = "mail.sender";
 
     private static final Logger logger = LoggerFactory.getLogger(KylinConfig.class);
@@ -334,7 +334,7 @@ public class KylinConfig {
     public String getKylinJobJarPath() {
         return getRequired(KYLIN_JOB_JAR);
     }
-    
+
     public void overrideKylinJobJarPath(String path) {
         kylinConfig.setProperty(KYLIN_JOB_JAR, path);
     }
@@ -515,14 +515,14 @@ public class KylinConfig {
 
     public static InputStream getKylinPropertiesAsInputSteam() {
         File propFile = null;
-        
+
         // 1st, find conf path from env
         String path = System.getProperty(KYLIN_CONF);
         if (path == null) {
             path = System.getenv(KYLIN_CONF);
         }
         propFile = getKylinPropertiesFile(path);
-        
+
         // 2nd, find /etc/kylin
         if (propFile == null) {
             propFile = getKylinPropertiesFile(KYLIN_CONF_DEFAULT);
@@ -535,7 +535,7 @@ public class KylinConfig {
                 logger.warn("Failed to read properties " + propFile.getAbsolutePath() + " and skip");
             }
         }
-        
+
         // 3rd, find classpath
         logger.info("Search " + KYLIN_CONF_PROPERTIES_FILE + " from classpath ...");
         InputStream is = KylinConfig.class.getClassLoader().getResourceAsStream("kylin.properties");
@@ -548,7 +548,6 @@ public class KylinConfig {
     /**
      * Check if there is kylin.properties exist
      *
-     *
      * @param path
      * @param env
      * @return the properties file
@@ -556,13 +555,13 @@ public class KylinConfig {
     private static File getKylinPropertiesFile(String path) {
         if (path == null)
             return null;
-        
+
         File propFile = new File(path, KYLIN_CONF_PROPERTIES_FILE);
         if (propFile.exists()) {
             logger.info(KYLIN_CONF_PROPERTIES_FILE + " was found at " + propFile.getAbsolutePath());
             return propFile;
         }
-        
+
         logger.info(KYLIN_CONF_PROPERTIES_FILE + " was NOT found at " + propFile.getAbsolutePath());
         return null;
     }
@@ -587,9 +586,25 @@ public class KylinConfig {
     public void setMetadataUrl(String metadataUrl) {
         kylinConfig.setProperty(KYLIN_METADATA_URL, metadataUrl);
     }
-    
+
     public void setStorageUrl(String storageUrl) {
         kylinConfig.setProperty(KYLIN_STORAGE_URL, storageUrl);
+    }
+
+    public void setRunAsRemoteCommand(String v) {
+        kylinConfig.setProperty(KYLIN_JOB_RUN_AS_REMOTE_CMD, v);
+    }
+
+    public void setRemoteHadoopCliHostname(String v) {
+        kylinConfig.setProperty(KYLIN_JOB_REMOTE_CLI_HOSTNAME, v);
+    }
+
+    public void setRemoteHadoopCliUsername(String v) {
+        kylinConfig.setProperty(KYLIN_JOB_REMOTE_CLI_USERNAME, v);
+    }
+
+    public void setRemoteHadoopCliPassword(String v) {
+        kylinConfig.setProperty(KYLIN_JOB_REMOTE_CLI_PASSWORD, v);
     }
 
 

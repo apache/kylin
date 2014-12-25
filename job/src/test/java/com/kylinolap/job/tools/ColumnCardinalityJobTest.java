@@ -46,7 +46,7 @@ public class ColumnCardinalityJobTest {
     }
 
     @Test
-    @Ignore
+    @Ignore("not maintaining")
     public void testJob() throws Exception {
         final String input = "src/test/resources/data/test_cal_dt/";
         final String output = "target/test-output/column-cardinality/";

@@ -42,7 +42,7 @@ import com.kylinolap.query.relnode.OLAPContext;
 import com.kylinolap.query.schema.OLAPSchemaFactory;
 import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
 
-@Ignore
+@Ignore("KylinQueryTest is contained by CombinationTest")
 public class KylinQueryTest extends KylinTestBase {
 
     @BeforeClass
@@ -95,9 +95,6 @@ public class KylinQueryTest extends KylinTestBase {
         printInfo("Closing connection...");
         clean();
 
-        if (HBaseMetadataTestCase.useMiniCluster()) {
-            HBaseMiniclusterMetadataTestCase.shutdownMiniCluster();
-        }
     }
 
     protected static void clean() {
@@ -107,6 +104,9 @@ public class KylinQueryTest extends KylinTestBase {
             closeConnection(h2Connection);
 
         ObserverEnabler.forceCoprocessorUnset();
+        if (HBaseMetadataTestCase.useMiniCluster()) {
+            HBaseMiniclusterMetadataTestCase.shutdownMiniCluster();
+        }
         HBaseMetadataTestCase.staticCleanupTestMetadata();
     }
 
@@ -174,7 +174,7 @@ public class KylinQueryTest extends KylinTestBase {
         execAndCompQuery("src/test/resources/query/sql", null, true);
     }
 
-    @Ignore
+    @Ignore("ii not ready")
     @Test
     public void testIIQuery() throws Exception {
         execAndCompQuery("src/test/resources/query/sql_ii", null, true);
