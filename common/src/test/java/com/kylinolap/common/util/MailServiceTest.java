@@ -26,7 +26,7 @@ import org.junit.Test;
 
 import com.kylinolap.common.KylinConfig;
 
-@Ignore
+@Ignore("convenient trial tool for dev")
 public class MailServiceTest {
 
     @Test

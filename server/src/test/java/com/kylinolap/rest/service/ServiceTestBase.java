@@ -49,7 +49,7 @@ public class ServiceTestBase extends HBaseMetadataTestCase { //HBaseMetadataTest
         Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", "ROLE_ADMIN");
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
-    
+
     @AfterClass
     public static void tearDownResource() {
     }
@@ -70,6 +70,7 @@ public class ServiceTestBase extends HBaseMetadataTestCase { //HBaseMetadataTest
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
+
     /**
      * better keep this method, otherwise cause error
      * com.kylinolap.rest.service.TestBase.initializationError

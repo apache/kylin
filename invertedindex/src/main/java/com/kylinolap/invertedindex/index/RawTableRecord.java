@@ -94,9 +94,10 @@ public class RawTableRecord implements Cloneable {
         final int prime = 31;
         int result = 1;
         result = prime * result + Arrays.hashCode(buf);
-        result = prime * result + ((digest == null) ? 0 : digest.hashCode());
+        //result = prime * result + ((digest == null) ? 0 : digest.hashCode());
         return result;
     }
+
 
     @Override
     public boolean equals(Object obj) {
@@ -108,11 +109,6 @@ public class RawTableRecord implements Cloneable {
             return false;
         RawTableRecord other = (RawTableRecord) obj;
         if (!Arrays.equals(buf, other.buf))
-            return false;
-        if (digest == null) {
-            if (other.digest != null)
-                return false;
-        } else if (!digest.equals(other.digest))
             return false;
         return true;
     }

@@ -533,8 +533,12 @@
                             </excludes>
                             <systemProperties>
                                 <property>
-                                    <name>queryUseMinicluster</name>
-                                    <value>true</value>
+                                    <name>querySkipUsingMinicluster</name>
+                                    <value>false</value>
+                                </property>
+                                <property>
+                                    <name>buildCubeUsingProvidedData</name>
+                                    <value>false</value>
                                 </property>
                             </systemProperties>
                             <argLine>-Xms1G -Xmx6G -XX:PermSize=1G -XX:MaxPermSize=2G</argLine>

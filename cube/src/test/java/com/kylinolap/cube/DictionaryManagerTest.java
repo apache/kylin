@@ -47,11 +47,12 @@ public class DictionaryManagerTest extends LocalFileMetadataTestCase {
         cleanupTestMetadata();
     }
 
+
     @Test
-    @Ignore
+    @Ignore("hive not ready")
     public void basic() throws Exception {
         CubeDesc cubeDesc = CubeDescManager.getInstance(this.getTestConfig()).getCubeDesc("test_kylin_cube_without_slr_desc");
-        TblColRef col = cubeDesc.findColumnRef("EDW.TEST_SITES", "SITE_NAME");
+        TblColRef col = cubeDesc.findColumnRef("DEFAULT.TEST_CATEGORY_GROUPINGS", "META_CATEG_NAME");
 
         DictionaryInfo info1 = dictMgr.buildDictionary(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null);
         System.out.println(JsonUtil.writeValueAsIndentString(info1));

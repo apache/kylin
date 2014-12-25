@@ -23,8 +23,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.metadata.project.ProjectManager;
 import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.apache.commons.io.FileUtils;
@@ -53,7 +51,6 @@ import com.kylinolap.metadata.MetadataManager;
 /**
  * @author ysong1
  */
-@Ignore //TODO: use minicluster to do this.
 public class GenericJobEngineTest {
     private static String cubeName = "test_kylin_cube_with_slr_empty";
 
@@ -111,11 +108,19 @@ public class GenericJobEngineTest {
     @BeforeClass
     public static void beforeClass() throws Exception {
 
+        KylinConfig sandboxConf = KylinConfig.createInstanceFromUri(AbstractKylinTestCase.SANDBOX_TEST_DATA + "/kylin.properties");
+
         FileUtils.deleteDirectory(new File(tempTestMetadataUrl));
         FileUtils.copyDirectory(new File(AbstractKylinTestCase.LOCALMETA_TEST_DATA), new File(tempTestMetadataUrl));
         System.setProperty(KylinConfig.KYLIN_CONF, tempTestMetadataUrl);
 
         FileUtils.forceMkdir(new File(KylinConfig.getInstanceFromEnv().getKylinJobLogDir()));
+
+        KylinConfig localConf = KylinConfig.getInstanceFromEnv();
+        localConf.setRunAsRemoteCommand(String.valueOf(sandboxConf.getRunAsRemoteCommand()));
+        localConf.setRemoteHadoopCliHostname(sandboxConf.getRemoteHadoopCliHostname());
+        localConf.setRemoteHadoopCliUsername(sandboxConf.getRemoteHadoopCliUsername());
+        localConf.setRemoteHadoopCliPassword(sandboxConf.getRemoteHadoopCliPassword());
 
         // deploy files to hdfs
         SSHClient hadoopCli = new SSHClient(getHadoopCliHostname(), getHadoopCliUsername(), getHadoopCliPassword());

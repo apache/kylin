@@ -1,4 +1,4 @@
-package com.kylinolap.cube.dataGen;
+package com.kylinolap.job.dataGen;
 
 import java.util.ArrayList;
 

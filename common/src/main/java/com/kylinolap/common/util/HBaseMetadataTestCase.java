@@ -47,8 +47,8 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
     }
     
     public static boolean useMiniCluster() {
-        String queryUseMinicluster = System.getProperty("queryUseMinicluster");
-        return Boolean.parseBoolean(queryUseMinicluster);
+        String queryUseMinicluster = System.getProperty("querySkipUsingMinicluster");
+        return !Boolean.parseBoolean(queryUseMinicluster);
 
     }
 
