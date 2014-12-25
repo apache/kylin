@@ -18,7 +18,6 @@ package com.kylinolap.query.test;
 import static org.junit.Assert.*;
 
 import java.io.File;
-import java.io.IOException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
@@ -43,7 +42,7 @@ import com.kylinolap.query.relnode.OLAPContext;
 import com.kylinolap.query.schema.OLAPSchemaFactory;
 import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
 
-@Ignore
+@Ignore("KylinQueryTest is contained by CombinationTest")
 public class KylinQueryTest extends KylinTestBase {
 
     @BeforeClass
@@ -56,21 +55,21 @@ public class KylinQueryTest extends KylinTestBase {
         preferCubeOf(joinType);
     }
 
-    protected static void setupAll() throws SQLException, IOException, ClassNotFoundException, InterruptedException {
+    protected static void setupAll() throws Exception {
         setUpEnv();
         setUpCubeConn();
         setUpH2Conn();
     }
 
-    private static void setUpEnv() throws IOException, ClassNotFoundException, InterruptedException {
+    private static void setUpEnv() throws Exception {
 
-        String queryUseMinicluster = System.getProperty("queryUseMinicluster");
+        String querySkipUsingMinicluster = System.getProperty("querySkipUsingMinicluster");
 
-        if (Boolean.parseBoolean(queryUseMinicluster)) {
+        if (Boolean.parseBoolean(querySkipUsingMinicluster)) {
+            HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
+        } else {
             HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.MINICLUSTER_TEST_DATA);
             HBaseMiniclusterMetadataTestCase.startupMinicluster();
-        } else {
-            HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
         }
 
         config = KylinConfig.getInstanceFromEnv();
@@ -174,7 +173,7 @@ public class KylinQueryTest extends KylinTestBase {
         execAndCompQuery("src/test/resources/query/sql", null, true);
     }
 
-    @Ignore
+    @Ignore("ii not ready")
     @Test
     public void testIIQuery() throws Exception {
         execAndCompQuery("src/test/resources/query/sql_ii", null, true);

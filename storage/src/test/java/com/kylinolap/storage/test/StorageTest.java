@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -54,23 +55,24 @@ public class StorageTest extends HBaseMiniclusterMetadataTestCase {
     private IStorageEngine storageEngine;
     private CubeInstance cube;
     private StorageContext context;
-    
+
     @BeforeClass
     public static void setupResource() throws Exception {
         startupMinicluster();
     }
-    
+
     @AfterClass
     public static void tearDownResource() {
         shutdownMiniCluster();
     }
-    
+
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
 
         CubeManager cubeMgr = CubeManager.getInstance(this.getTestConfig());
         cube = cubeMgr.getCube("TEST_KYLIN_CUBE_WITHOUT_SLR_EMPTY");
+        Assert.assertNotNull(cube);
         storageEngine = StorageEngineFactory.getStorageEngine(cube);
         String url = KylinConfig.getInstanceFromEnv().getStorageUrl();
         context = new StorageContext();
@@ -101,46 +103,47 @@ public class StorageTest extends HBaseMiniclusterMetadataTestCase {
         int count = search(groups, aggregations, filter, context);
         assertTrue(count > 0);
     }
-/*
-    @Test
-    public void test02() {
-        List<TblColRef> groups = buildGroups();
-        List<FunctionDesc> aggregations = buildAggregations();
-        TupleFilter filter = buildFilter2(groups.get(1));
 
-        int count = search(groups, aggregations, filter, context);
-        assertTrue(count > 0);
-    }
+    /*
+        @Test
+        public void test02() {
+            List<TblColRef> groups = buildGroups();
+            List<FunctionDesc> aggregations = buildAggregations();
+            TupleFilter filter = buildFilter2(groups.get(1));
 
-    @Test
-    public void test03() {
-        List<TblColRef> groups = buildGroups();
-        List<FunctionDesc> aggregations = buildAggregations();
-        TupleFilter filter = buildAndFilter(groups);
+            int count = search(groups, aggregations, filter, context);
+            assertTrue(count > 0);
+        }
 
-        int count = search(groups, aggregations, filter, context);
-        assertTrue(count > 0);
-    }
+        @Test
+        public void test03() {
+            List<TblColRef> groups = buildGroups();
+            List<FunctionDesc> aggregations = buildAggregations();
+            TupleFilter filter = buildAndFilter(groups);
 
-    @Test
-    public void test04() {
-        List<TblColRef> groups = buildGroups();
-        List<FunctionDesc> aggregations = buildAggregations();
-        TupleFilter filter = buildOrFilter(groups);
+            int count = search(groups, aggregations, filter, context);
+            assertTrue(count > 0);
+        }
 
-        int count = search(groups, aggregations, filter, context);
-        assertTrue(count > 0);
-    }
+        @Test
+        public void test04() {
+            List<TblColRef> groups = buildGroups();
+            List<FunctionDesc> aggregations = buildAggregations();
+            TupleFilter filter = buildOrFilter(groups);
 
-    @Test
-    public void test05() {
-        List<TblColRef> groups = buildGroups();
-        List<FunctionDesc> aggregations = buildAggregations();
+            int count = search(groups, aggregations, filter, context);
+            assertTrue(count > 0);
+        }
 
-        int count = search(groups, aggregations, null, context);
-        assertTrue(count > 0);
-    }
-*/
+        @Test
+        public void test05() {
+            List<TblColRef> groups = buildGroups();
+            List<FunctionDesc> aggregations = buildAggregations();
+
+            int count = search(groups, aggregations, null, context);
+            assertTrue(count > 0);
+        }
+    */
     private int search(List<TblColRef> groups, List<FunctionDesc> aggregations, TupleFilter filter, StorageContext context) {
         int count = 0;
         ITupleIterator iterator = null;

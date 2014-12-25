@@ -1,10 +1,8 @@
 package com.kylinolap.metadata.model;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.ArrayUtils;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -38,6 +36,14 @@ public class DataModelDesc extends RootPersistentEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Collection<String> getAllTables() {
+        HashSet<String> ret = Sets.newHashSet();
+        ret.add(factTable);
+        for (LookupDesc lookupDesc : lookups)
+            ret.add(lookupDesc.getTable());
+        return ret;
     }
 
     public String getFactTable() {
@@ -74,7 +80,7 @@ public class DataModelDesc extends RootPersistentEntity {
             if (find >= 0) {
                 candidate = join.getPrimaryKeyColumns()[find];
                 if (join.getForeignKeyColumns().length == 1) { // is single
-                                                               // column join?
+                    // column join?
                     break;
                 }
             }

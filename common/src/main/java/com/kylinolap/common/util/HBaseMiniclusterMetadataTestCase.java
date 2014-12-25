@@ -19,6 +19,7 @@ package com.kylinolap.common.util;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -35,6 +36,7 @@ import com.kylinolap.common.persistence.HBaseResourceStore;
 
 /**
  * A base class for running unit tests with HBase minicluster;
+ *
  * @author shaoshi
  */
 public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
@@ -43,7 +45,7 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
 
     protected static MiniHBaseCluster hbaseCluster = null;
 
-    private static boolean clusterStarted = false;
+    private static volatile boolean clusterStarted = false;
 
     protected static Configuration config = null;
 
@@ -77,17 +79,15 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
         staticCreateTestMetadata(MINICLUSTER_TEST_DATA);
 
         // Overwrite the hbase url with the minicluster's
-        KylinConfig.getInstanceFromEnv().setMetadataUrl("kylin_metadata_qa@" + hbaseconnectionUrl);
-        KylinConfig.getInstanceFromEnv().setStorageUrl(hbaseconnectionUrl);
+        updateKylinConfigWithMinicluster();
     }
 
     /**
      * Start the minicluster; Sub-classes should invoke this in BeforeClass method.
-     * @throws IOException
-     * @throws ClassNotFoundException
-     * @throws InterruptedException
+     *
+     * @throws Exception
      */
-    public static void startupMinicluster() throws IOException, ClassNotFoundException, InterruptedException {
+    public static void startupMinicluster() throws Exception {
         staticCreateTestMetadata(MINICLUSTER_TEST_DATA);
 
         if (!clusterStarted) {
@@ -97,43 +97,47 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
                     clusterStarted = true;
                 }
             }
+        } else {
+            updateKylinConfigWithMinicluster();
         }
     }
 
-    private static void startupMiniClusterAndImportData() {
+    private static void updateKylinConfigWithMinicluster() {
+
+        KylinConfig.getInstanceFromEnv().setMetadataUrl("kylin_metadata_qa@" + hbaseconnectionUrl);
+        KylinConfig.getInstanceFromEnv().setStorageUrl(hbaseconnectionUrl);
+    }
+
+    private static void startupMiniClusterAndImportData() throws Exception {
 
         System.out.println("Going to start mini cluster.");
-        try {
-            hbaseCluster = UTIL.startMiniCluster();
+        hbaseCluster = UTIL.startMiniCluster();
 
-            UTIL.startMiniMapReduceCluster();
-            config = hbaseCluster.getConf();
-            String host = config.get(HConstants.ZOOKEEPER_QUORUM);
-            String port = config.get(HConstants.ZOOKEEPER_CLIENT_PORT);
-            String parent = config.get(HConstants.ZOOKEEPER_ZNODE_PARENT);
+        config = hbaseCluster.getConf();
+        String host = config.get(HConstants.ZOOKEEPER_QUORUM);
+        String port = config.get(HConstants.ZOOKEEPER_CLIENT_PORT);
+        String parent = config.get(HConstants.ZOOKEEPER_ZNODE_PARENT);
 
-            // reduce rpc retry
-            config.set(HConstants.HBASE_CLIENT_PAUSE, "3000");
-            config.set(HConstants.HBASE_CLIENT_RETRIES_NUMBER, "5");
-            config.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
+        // see in: https://hbase.apache.org/book.html#trouble.rs.runtime.zkexpired
+        config.set("zookeeper.session.timeout", "1200000");
+        config.set("hbase.zookeeper.property.tickTime", "6000");
+        // reduce rpc retry
+        config.set(HConstants.HBASE_CLIENT_PAUSE, "3000");
+        config.set(HConstants.HBASE_CLIENT_RETRIES_NUMBER, "1");
+        config.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
 
-            hbaseconnectionUrl = "hbase:" + host + ":" + port + ":" + parent;
+        hbaseconnectionUrl = "hbase:" + host + ":" + port + ":" + parent;
 
-            KylinConfig.getInstanceFromEnv().setMetadataUrl("kylin_metadata_qa@" + hbaseconnectionUrl);
-            KylinConfig.getInstanceFromEnv().setStorageUrl(hbaseconnectionUrl);
-            
-            // create the metadata htables;
-            HBaseResourceStore store = new HBaseResourceStore(KylinConfig.getInstanceFromEnv());
+        UTIL.startMiniMapReduceCluster();
+        updateKylinConfigWithMinicluster();
+        // create the metadata htables;
+        HBaseResourceStore store = new HBaseResourceStore(KylinConfig.getInstanceFromEnv());
 
-            // import the table content
-            importHBaseData(true, true);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    
+        // import the table content
+        importHBaseData(true,true);
+
     }
-    
-    
+
     public static void importHBaseData(boolean importMetadataTables, boolean importCubeTables) throws IOException, ClassNotFoundException, InterruptedException {
 
         if (!importMetadataTables && !importCubeTables)
@@ -154,7 +158,7 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
         File folder = new File("/tmp/hbase-export/");
 
         if (folder.exists()) {
-            folder.delete();
+            FileUtils.deleteDirectory(folder);
         }
 
         folder.mkdirs();
@@ -174,7 +178,7 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
 
         for (String table : tableNames) {
 
-            if (!(table.startsWith("kylin_metadata_qa") && importMetadataTables || table.startsWith("KYLIN_") && importCubeTables)) {
+            if (!(table.equalsIgnoreCase("kylin_metadata_qa") && importMetadataTables || table.startsWith("KYLIN_") && importCubeTables)) {
                 continue;
             }
 
