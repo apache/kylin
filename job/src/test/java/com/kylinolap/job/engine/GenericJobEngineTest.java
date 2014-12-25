@@ -261,6 +261,7 @@ public class GenericJobEngineTest {
         assertEquals(JobStatusEnum.DISCARDED, killedJob.getStatus());
     }
 
+
     @Test
     public void testKillMrStep() throws Exception {
         String uuid = "a_long_running_good_job_uuid_2";
@@ -268,17 +269,21 @@ public class GenericJobEngineTest {
         jobManager.submitJob(job);
 
         try {
+            System.out.println("wait for Running state");
             waitUntilMrStepIsRunning(uuid);
+            System.out.println("Running state is reached");
             jobManager.discardJob(uuid);
         } catch (RuntimeException e) {
             throw e;
         }
 
+        System.out.println("wait for complete state");
         waitUntilJobComplete(uuid);
+        System.out.println("Complete state is reached");
 
         JobInstance killedJob = jobManager.getJob(uuid);
-        assertEquals(JobStepStatusEnum.ERROR, killedJob.getSteps().get(1).getStatus());
-        assertEquals(JobStatusEnum.ERROR, killedJob.getStatus());
+        assertEquals(JobStepStatusEnum.DISCARDED, killedJob.getSteps().get(1).getStatus());
+        assertEquals(JobStatusEnum.DISCARDED, killedJob.getStatus());
 
         // cube should be updated
         CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
@@ -290,8 +295,8 @@ public class GenericJobEngineTest {
     private void waitUntilMrStepIsRunning(String jobUuid) throws InterruptedException, IOException {
         boolean running = false;
         while (running == false) {
-            // sleep for 1 seconds
-            Thread.sleep(1 * 1000L);
+            // sleep for 0.1 seconds
+            Thread.sleep(1 * 100L);
 
             JobInstance savedJob = jobManager.getJob(jobUuid);
             for (JobStep step : savedJob.getSteps()) {

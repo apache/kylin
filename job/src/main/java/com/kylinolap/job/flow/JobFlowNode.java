@@ -146,7 +146,7 @@ public class JobFlowNode implements InterruptableJob {
 
     protected void handleException(String jobInstanceUuid, int jobInstanceStepSeqId, KylinConfig config, Throwable t) {
         log.error(t.getLocalizedMessage(), t);
-        String exceptionMsg = "Failed with Exception:" + ExceptionUtils.getFullStackTrace(t);
+        String exceptionMsg = "Job flow node failed with Exception:" + ExceptionUtils.getFullStackTrace(t);
         try {
             JobDAO dao = JobDAO.getInstance(config);
             JobInstance jobInstance = dao.getJob(jobInstanceUuid);
