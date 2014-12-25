@@ -28,28 +28,15 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.HBaseMiniclusterMetadataTestCase;
+import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.common.util.HadoopUtil;
 
-public class HBaseResourceStoreTest extends HBaseMiniclusterMetadataTestCase { // HBaseMetadataTestCase {
+public class HBaseResourceStoreTest extends HBaseMetadataTestCase { // HBaseMetadataTestCase {
 
-    @BeforeClass
-    public static void setupResource() throws Exception {
-        startupMinicluster();
-    }
-    
-    @AfterClass
-    public static void tearDownResource() {
-        shutdownMiniCluster();
-    }
-
-    
     @Before
     public void setup() throws Exception {
         this.createTestMetadata();
