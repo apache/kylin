@@ -322,7 +322,7 @@ public class CubeManager {
         if (anotherStartDate >= anotherEndDate) {
             throw new IllegalArgumentException("anotherStartDate must be less than anotherEndDate");
         }
-        if (startDate <= anotherStartDate && anotherEndDate < endDate) {
+        if (startDate <= anotherStartDate && anotherStartDate < endDate) {
             return true;
         }
         if (startDate < anotherEndDate && anotherEndDate <= endDate) {
@@ -342,8 +342,8 @@ public class CubeManager {
             if (readySegments.isEmpty()) {
                 throw new CubeIntegrityException("there are no segments in ready state");
             }
-            long start = Long.MIN_VALUE;
-            long end = Long.MAX_VALUE;
+            long start = Long.MAX_VALUE;
+            long end = Long.MIN_VALUE;
             for (CubeSegment readySegment: readySegments) {
                 if (hasOverlap(startDate, endDate, readySegment.getDateRangeStart(), readySegment.getDateRangeEnd())) {
                     if (start > readySegment.getDateRangeStart()) {
