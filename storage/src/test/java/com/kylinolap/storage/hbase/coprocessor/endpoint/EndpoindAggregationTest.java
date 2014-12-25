@@ -17,11 +17,9 @@ import com.kylinolap.storage.filter.ConstantTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
-import org.apache.commons.collections.Predicate;
 import org.apache.hadoop.io.LongWritable;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -30,7 +28,6 @@ import java.util.*;
 /**
  * Created by Hongbin Ma(Binmahone) on 11/27/14.
  */
-@Ignore("ii not ready")
 public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
     IIInstance ii;
     TableRecordInfo tableRecordInfo;

@@ -13,7 +13,6 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Pair;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -26,7 +25,6 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-@Ignore("ii not ready")
 public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
 
     IIInstance ii;
@@ -143,7 +141,13 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
         Collections.sort(records, new Comparator<TableRecord>() {
             @Override
             public int compare(TableRecord a, TableRecord b) {
-                return (int) (a.getTimestamp() - b.getTimestamp());
+                long x = a.getTimestamp() - b.getTimestamp();
+                if (x > 0)
+                    return 1;
+                else if (x == 0)
+                    return 0;
+                else
+                    return -1;
             }
         });
 
