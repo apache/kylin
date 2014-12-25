@@ -49,7 +49,7 @@ public class CubeHFileMapperTest {
 
     @SuppressWarnings("deprecation")
     @Test
-    @Ignore
+    @Ignore("not maintaining")
     public void testMapper2() throws IOException {
         mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cube_name);
 

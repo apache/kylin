@@ -47,7 +47,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Created by Hongbin Ma(Binmahone) on 11/14/14.
  */
-@Ignore
+@Ignore("ii not ready")
 public class IIEndpointTest extends HBaseMetadataTestCase {
 
     private static final TableName TEST_TABLE = TableName.valueOf("test_III");

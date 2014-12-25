@@ -36,6 +36,7 @@ import com.kylinolap.common.persistence.HBaseResourceStore;
 
 /**
  * A base class for running unit tests with HBase minicluster;
+ *
  * @author shaoshi
  */
 public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
@@ -44,7 +45,7 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
 
     protected static MiniHBaseCluster hbaseCluster = null;
 
-    private static boolean clusterStarted = false;
+    private static volatile boolean clusterStarted = false;
 
     protected static Configuration config = null;
 
@@ -83,7 +84,8 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
 
     /**
      * Start the minicluster; Sub-classes should invoke this in BeforeClass method.
-     * @throws Exception 
+     *
+     * @throws Exception
      */
     public static void startupMinicluster() throws Exception {
         staticCreateTestMetadata(MINICLUSTER_TEST_DATA);
@@ -132,7 +134,7 @@ public class HBaseMiniclusterMetadataTestCase extends AbstractKylinTestCase {
         HBaseResourceStore store = new HBaseResourceStore(KylinConfig.getInstanceFromEnv());
 
         // import the table content
-        importHBaseData(true, true);
+        importHBaseData(true,true);
 
     }
 

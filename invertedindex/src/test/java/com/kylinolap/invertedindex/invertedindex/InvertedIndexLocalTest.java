@@ -13,6 +13,7 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Pair;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -25,6 +26,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
+@Ignore("ii not ready")
 public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
 
     IIInstance ii;
