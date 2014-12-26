@@ -72,7 +72,7 @@ public class DefaultJobService {
     }
 
     //for ut
-    void deleteJob(AbstractExecutable executable) {
+    public void deleteJob(AbstractExecutable executable) {
         try {
             jobDao.deleteJob(executable.getId());
         } catch (PersistentException e) {

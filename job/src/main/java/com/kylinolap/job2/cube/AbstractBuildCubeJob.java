@@ -12,6 +12,9 @@ public abstract class AbstractBuildCubeJob extends AbstractExecutable {
     private static final String CUBE_INSTANCE_NAME = "cubeName";
     private static final String CUBE_SEGMENT_NAME = "segmentName";
 
+    public AbstractBuildCubeJob() {
+    }
+
     public AbstractBuildCubeJob(JobPO job, JobOutputPO jobOutput) {
         super(job, jobOutput);
     }

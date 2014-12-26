@@ -6,6 +6,7 @@ import com.kylinolap.job.constant.JobConstants;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc;
 import com.kylinolap.job2.common.CommonJob;
+import com.kylinolap.job2.common.ShellExecutable;
 
 import java.io.IOException;
 
@@ -33,34 +34,33 @@ public final class BuildCubeJobBuilder {
     }
 
     public CommonJob build() {
-//        CommonJob result = new CommonJob();
-//        result.addTask(createIntermediateHiveTableStep());
-//        return result;
-        return null;
+        CommonJob result = new CommonJob();
+        result.addTask(createIntermediateHiveTableStep());
+        return result;
     }
 
-//    private HadoopExecutable createIntermediateHiveTableStep() {
-//        try {
-//            HadoopExecutable result = new HadoopExecutable();
-//            String jobUUID = result.getId();
-//            JoinedFlatTableDesc intermediateTableDesc = new JoinedFlatTableDesc(segment.getCubeDesc(), this.segment);
-//            String dropTableHql = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc, jobUUID);
-//            String createTableHql = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, getJobWorkingDir(jobUUID), jobUUID);
-//            String insertDataHql = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, jobUUID, this.jobEngineConfig);
-//
-//
-//            StringBuilder buf = new StringBuilder();
-//            buf.append("hive -e \"");
-//            buf.append(dropTableHql + "\n");
-//            buf.append(createTableHql + "\n");
-//            buf.append(insertDataHql + "\n");
-//            buf.append("\"");
-//
-//            result.setName(JobConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
-//            result.setShellCmd(buf.toString());
-//            return result;
-//        } catch (IOException e) {
-//            throw new RuntimeException("fail to create job", e);
-//        }
-//    }
+    private ShellExecutable createIntermediateHiveTableStep() {
+        try {
+            ShellExecutable result = new ShellExecutable();
+            result.setName(JobConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
+            String jobUUID = result.getId();
+            JoinedFlatTableDesc intermediateTableDesc = new JoinedFlatTableDesc(segment.getCubeDesc(), this.segment);
+            String dropTableHql = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc, jobUUID);
+            String createTableHql = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, getJobWorkingDir(jobUUID), jobUUID);
+            String insertDataHql = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, jobUUID, this.jobEngineConfig);
+
+
+            StringBuilder buf = new StringBuilder();
+            buf.append("hive -e \"");
+            buf.append(dropTableHql + "\n");
+            buf.append(createTableHql + "\n");
+            buf.append(insertDataHql + "\n");
+            buf.append("\"");
+
+            result.setCmd(buf.toString());
+            return result;
+        } catch (IOException e) {
+            throw new RuntimeException("fail to create job", e);
+        }
+    }
 }

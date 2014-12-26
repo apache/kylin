@@ -192,7 +192,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         fetcherPool = Executors.newScheduledThreadPool(1);
         int corePoolSize = jobEngineConfig.getMaxConcurrentJobLimit();
         jobPool = new ThreadPoolExecutor(corePoolSize, corePoolSize, Long.MAX_VALUE, TimeUnit.DAYS, new SynchronousQueue<Runnable>());
-        context = new DefaultContext(Maps.<String, Executable>newConcurrentMap());
+        context = new DefaultContext(Maps.<String, Executable>newConcurrentMap(), jobEngineConfig.getConfig());
 
 
         for (AbstractExecutable executable : jobService.getAllExecutables()) {
@@ -233,7 +233,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         }
     }
 
-    boolean hasStarted() {
+    public boolean hasStarted() {
         return this.hasStarted;
     }
 
