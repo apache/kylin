@@ -48,7 +48,7 @@ public class CliCommandExecutor {
         this.remoteUser = null;
         this.remotePwd = null;
     }
-    
+
     public void copyFile(String localFile, String destDir) throws IOException {
         if (remoteHost == null)
             copyNative(localFile, destDir);
@@ -81,7 +81,9 @@ public class CliCommandExecutor {
             r = runRemoteCommand(command);
 
         if (r.getFirst() != 0)
-            throw new IOException("OS command error exit with " + r.getFirst() + " -- " + command + "\n" + r.getSecond());
+            throw new IOException("OS command error exit with " + r.getFirst() //
+                    + (remoteHost == null ? "" : " (remoteHost:" + remoteHost + ")") //
+                    + " -- " + command + "\n" + r.getSecond());
 
         return r.getSecond();
     }
