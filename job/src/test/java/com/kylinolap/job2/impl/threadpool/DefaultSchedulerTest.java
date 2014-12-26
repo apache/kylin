@@ -64,6 +64,9 @@ public class DefaultSchedulerTest extends LocalFileMetadataTestCase {
         jobService = DefaultJobService.getInstance(KylinConfig.getInstanceFromEnv());
         scheduler = DefaultScheduler.getInstance();
         scheduler.init(new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
+        if (!scheduler.hasStarted()) {
+            throw new RuntimeException("scheduler has not been started");
+        }
 
     }
 

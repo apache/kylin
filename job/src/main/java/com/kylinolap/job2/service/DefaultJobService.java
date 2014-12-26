@@ -66,7 +66,7 @@ public class DefaultJobService {
         jobDao.addJobOutput(executable.getJobOutput());
         if (executable instanceof DefaultChainedExecutable) {
             for (AbstractExecutable subTask: ((DefaultChainedExecutable) executable).getTasks()) {
-                addJob(subTask);
+                addJobOutput(subTask);
             }
         }
     }
