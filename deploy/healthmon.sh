@@ -1,13 +1,20 @@
 #!/usr/bin/env bash
 
-curl --max-time 20 \
-	--data '{"sql":"select count(*) from kylin_fact","offset":0,"limit":50000,"acceptPartial":true,"project":"Default"}' \
-	-H "Authorization:Basic eWFuZ2xpOTpQYSQkdzRyZA==" \
+ALERT="your@email.com"
+
+OUTPUT=$(
+	curl --max-time 20 -# \
+	--data '{"sql":"select count(*) from kylin_fact","offset":0,"limit":50000,"acceptPartial":true,"project":"default"}' \
+	-H "Authorization:Basic QURNSU46S1lMSU4=" \
 	-H "Content-Type:application/json;charset=UTF-8" \
 	http://localhost:7070/kylin/api/query \
-	>/dev/null
+)
 
-if [ "$?" == "0" ]; then
+# ----------------------------------------------------------------------------
+
+date
+
+if [[ $OUTPUT == *"results"* ]]; then
 	echo "Good."
 else
 	echo "Bad."
@@ -17,7 +24,8 @@ else
 	echo last: $LAST_TS
 	echo curr: $CURR_TS
 	if (( ${LAST_TS:-"0"} < $CURR_TS - 3600 )); then
-		echo "send mail"
+		echo "Sending mail..."
+		echo "Kylin Prod health check failed as of $(date)." | mail -s "KYLIN PROD DOWN" $ALERT
 		if [ "$?" == "0" ]; then
 			touch $TS_FILE
 		fi
