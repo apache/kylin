@@ -128,7 +128,7 @@ public class DeployUtil {
 
     public static void prepareTestData(String joinType, String cubeName) throws Exception {
 
-        String factTableName = TABLE_KYLIN_FACT;
+        String factTableName = TABLE_KYLIN_FACT.toUpperCase();
         String content = null;
 
         boolean buildCubeUsingProvidedData = Boolean.parseBoolean(System.getProperty("buildCubeUsingProvidedData"));
