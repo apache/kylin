@@ -1,10 +1,32 @@
-<div class="row" ng-init="dumpColumns();">
+<div class="row" ng-init="initializeColumns();">
     <div class="col-xs-3">
-        <h4>Columns</h4>
-        <select multiple ng-model="selectedColumns.available"
-                ng-options="col.name group by col.table for col in availableColumns track by col.table + '.' + col.name"
-                class="form-control" style="min-height: 200px;">
-        </select>
+        <div class="box box-solid">
+            <div class="box-header"><h4>Columns</h4></div>
+            <div class="box-body">
+                <!--
+                <select multiple ng-model="selectedColumns.available"
+                        ng-options="col.name group by col.table for col in availableColumns track by col.table + '.' + col.name"
+                        class="form-control" style="min-height: 200px;">
+                </select>
+                -->
+                <ul class="list-unstyled">
+                    <li ng-repeat="(table, cols) in availableColumns">
+                        <h5 style="margin: 0 0 5px 0; border-bottom: 1px dashed #ddd; padding-bottom: 3px;">
+                            <b>{{table}}</b>{{$index == 0 ? ' [Fact Table]' : ' [Lookup Table]'}}
+                        </h5>
+                        <ul class="list-unstyled">
+                            <li ng-repeat="col in cols track by col.table + '.' + col.name">
+                                <label>
+                                    <input type="checkbox" ng-model="selectedColumns.available[table][col.name].selected"
+                                            ng-disabled="selectedColumns.available[table][col.name].disabled">
+                                    {{col.name}}
+                                </label>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </div>
     <div class="col-xs-1">
         <div class="space-32"></div>
@@ -27,6 +49,18 @@
 
         {{selectedColumns.chosen | json}}
     </div>
+
+
+    <!--
+    <form name="dimSelectForm">
+        <multi-select ng-model="chosenColumns" available="availableColumns" selected-label="Dimension Columns"
+                      available-label="Columns" display="col as col.table + '.' + col.name" required-min="1"></multi-select>
+        <div class="input-error" ng-show="dimSelectForm.numSelected.$error.min">
+            Please select at least one column.</div>
+    </form>
+    -->
+
+
     <div class="col-xs-5 dimension-options-animate" ng-show="selectedColumns.chosen.length > 0">
         <h4>Advanced Dimension Options</h4>
         <!-- include options template -->

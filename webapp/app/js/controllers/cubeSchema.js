@@ -107,26 +107,36 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
 
     /** START: js about data model dimensions **/
-    $scope.availableColumns = [];
+    $scope.availableColumns = {};
     $scope.chosenColumns = [];
 
     // Selected item bound to UI.
     $scope.selectedColumns = {
-        available: [],
+        available: {},
         chosen: []
     };
 
     // Dump available columns plus column table name, whether is from lookup table.
-    $scope.dumpColumns = function () {
+    $scope.initializeColumns = function () {
         // At first dump the columns of fact table.
         var cols = $scope.getColumnsByTable($scope.newModel.fact_table);
+
+        // Initialize selected available.
+        var factAvailable = {};
+        var factSelectAvailable = {};
 
         for (var i = 0; i < cols.length; i++) {
             cols[i].table = $scope.newModel.fact_table;
             cols[i].isLookup = false;
+
+            factAvailable[cols[i].name] = cols[i];
+
+            // TODO Default not selected and not disabled.
+            factSelectAvailable[cols[i].name] = {selected: false, disabled: false};
         }
 
-        $scope.availableColumns = $scope.availableColumns.concat(cols);
+        $scope.availableColumns[$scope.newModel.fact_table] = factAvailable;
+        $scope.selectedColumns.available[$scope.newModel.fact_table] = factSelectAvailable;
 
         // Then dump each lookup tables.
         var lookups = $scope.newModel.lookups;
@@ -134,12 +144,22 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         for (var j = 0; j < lookups.length; j++) {
             var cols2 = $scope.getColumnsByTable(lookups[j].table);
 
+            // Initialize selected available.
+            var lookupAvailable = {};
+            var lookupSelectAvailable = {};
+
             for (var k = 0; k < cols2.length; k++) {
                 cols2[k].table = lookups[j].table;
                 cols2[k].isLookup = true;
+
+                lookupAvailable[cols2[k].name] = cols2[k];
+
+                // TODO Default not selected and not disabled.
+                lookupSelectAvailable[cols2[k].name] = {selected: false, disabled: false};
             }
 
-            $scope.availableColumns = $scope.availableColumns.concat(cols2);
+            $scope.availableColumns[lookups[j].table] = lookupAvailable;
+            $scope.selectedColumns.available[lookups[j].table] = lookupSelectAvailable;
         }
     };
 
@@ -169,21 +189,48 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         return filtered;
     };
 
-    $scope.refreshAvailable = function () {
-        $scope.availableColumns = filterOut($scope.availableColumns, $scope.chosenColumns);
-        $scope.selectedColumns.available = [];
+    $scope.refreshAvailable = function (list) {
+        //
+        for (var i = 0; i < list.length; i++) {
+            var availableCol = $scope.selectedColumns.available[list[i].table][list[i].name];
+            availableCol.selected = false;
+            availableCol.disabled = false;
+        }
+
+        // Reset selected chosen column.
         $scope.selectedColumns.chosen = [];
     };
 
-    $scope.addDim = function () {
-        $scope.chosenColumns = $scope.chosenColumns.concat($scope.selectedColumns.available);
-        $scope.refreshAvailable();
+    // Helper func to get selected available column.
+    $scope.selectedAvailable = function(list) {
+        var found = [];
+
+        angular.forEach(list, function (value, tableName) {
+            // Key is table name.
+            angular.forEach(value, function (v, colName) {
+                if (v.selected && !v.disabled) {
+                    found.push($scope.availableColumns[tableName][colName]);
+
+                    // Disable the selected at this time.
+                    if (!v.disabled) {
+                        v.disabled = true;
+                    }
+                }
+            });
+        });
+
+        return found;
     };
 
+    // Add dimension alternative.
+    $scope.addDim = function () {
+        $scope.chosenColumns = $scope.chosenColumns.concat($scope.selectedAvailable($scope.selectedColumns.available));
+    };
+
+    // Remove dimension alternative.
     $scope.removeDim = function () {
-        $scope.availableColumns = $scope.availableColumns.concat($scope.selectedColumns.chosen);
         $scope.chosenColumns = filterOut($scope.chosenColumns, $scope.selectedColumns.chosen);
-        $scope.refreshAvailable();
+        $scope.refreshAvailable($scope.selectedColumns.chosen);
     };
     /** END: js about data model dimensions **/
 
