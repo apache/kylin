@@ -17,32 +17,12 @@ import java.util.UUID;
  */
 public abstract class BaseTestExecutable extends AbstractExecutable {
 
-    private static DefaultJobService jobService = DefaultJobService.getInstance(KylinConfig.getInstanceFromEnv());
 
     public BaseTestExecutable() {
     }
 
     public BaseTestExecutable(JobPO job, JobOutputPO jobOutput) {
         super(job, jobOutput);
-    }
-
-    @Override
-    protected void onExecuteStart(ExecutableContext executableContext) {
-        jobService.updateJobStatus(this, ExecutableStatus.RUNNING);
-    }
-
-    @Override
-    protected void onExecuteSucceed(ExecuteResult result, ExecutableContext executableContext) {
-        if (result.succeed()) {
-            jobService.updateJobStatus(this, ExecutableStatus.SUCCEED, result.output());
-        } else {
-            jobService.updateJobStatus(this, ExecutableStatus.ERROR, result.output());
-        }
-    }
-
-    @Override
-    protected void onExecuteError(Throwable exception, ExecutableContext executableContext) {
-        jobService.updateJobStatus(this, ExecutableStatus.ERROR, exception.getLocalizedMessage());
     }
 
     @Override

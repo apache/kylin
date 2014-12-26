@@ -2,10 +2,14 @@ package com.kylinolap.job2.impl.threadpool;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import com.kylinolap.common.KylinConfig;
 import com.kylinolap.job2.dao.JobOutputPO;
 import com.kylinolap.job2.dao.JobPO;
 import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.execution.*;
+import com.kylinolap.job2.service.DefaultJobService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.Map;
@@ -18,6 +22,9 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     private JobPO job;
     private JobOutputPO jobOutput;
+    protected static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
+
+    private static DefaultJobService jobService = DefaultJobService.getInstance(KylinConfig.getInstanceFromEnv());
 
     public AbstractExecutable() {
         String uuid = UUID.randomUUID().toString();
@@ -41,14 +48,19 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     }
 
     protected void onExecuteStart(ExecutableContext executableContext) {
-
+        jobService.updateJobStatus(this, ExecutableStatus.RUNNING);
     }
-    protected void onExecuteSucceed(ExecuteResult result, ExecutableContext executableContext) {
 
+    protected void onExecuteSucceed(ExecuteResult result, ExecutableContext executableContext) {
+        if (result.succeed()) {
+            jobService.updateJobStatus(this, ExecutableStatus.SUCCEED, result.output());
+        } else {
+            jobService.updateJobStatus(this, ExecutableStatus.ERROR, result.output());
+        }
     }
 
     protected void onExecuteError(Throwable exception, ExecutableContext executableContext) {
-
+        jobService.updateJobStatus(this, ExecutableStatus.ERROR, exception.getLocalizedMessage());
     }
 
     @Override
