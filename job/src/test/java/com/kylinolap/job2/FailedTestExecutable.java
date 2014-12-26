@@ -1,5 +1,7 @@
 package com.kylinolap.job2;
 
+import com.kylinolap.job2.dao.JobOutputPO;
+import com.kylinolap.job2.dao.JobPO;
 import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.execution.ExecutableContext;
 import com.kylinolap.job2.execution.ExecuteResult;
@@ -8,6 +10,14 @@ import com.kylinolap.job2.execution.ExecuteResult;
  * Created by qianzhou on 12/22/14.
  */
 public class FailedTestExecutable extends BaseTestExecutable {
+
+    public FailedTestExecutable() {
+    }
+
+    public FailedTestExecutable(JobPO job, JobOutputPO jobOutput) {
+        super(job, jobOutput);
+    }
+
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         try {

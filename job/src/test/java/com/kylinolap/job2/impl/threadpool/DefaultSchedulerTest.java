@@ -81,7 +81,7 @@ public class DefaultSchedulerTest extends LocalFileMetadataTestCase {
         BaseTestExecutable task2 = new SucceedTestExecutable();
         job.addTask(task1);
         job.addTask(task2);
-        scheduler.submit(job);
+        jobService.addJob(job);
         waitForJob(job.getId());
         assertEquals(ExecutableStatus.SUCCEED, jobService.getJobStatus(job.getId()));
         assertEquals(ExecutableStatus.SUCCEED, jobService.getJobStatus(task1.getId()));
@@ -95,7 +95,7 @@ public class DefaultSchedulerTest extends LocalFileMetadataTestCase {
         BaseTestExecutable task2 = new FailedTestExecutable();
         job.addTask(task1);
         job.addTask(task2);
-        scheduler.submit(job);
+        jobService.addJob(job);
         waitForJob(job.getId());
         assertEquals(ExecutableStatus.ERROR, jobService.getJobStatus(job.getId()));
         assertEquals(ExecutableStatus.SUCCEED, jobService.getJobStatus(task1.getId()));
@@ -109,7 +109,7 @@ public class DefaultSchedulerTest extends LocalFileMetadataTestCase {
         BaseTestExecutable task2 = new SucceedTestExecutable();
         job.addTask(task1);
         job.addTask(task2);
-        scheduler.submit(job);
+        jobService.addJob(job);
         waitForJob(job.getId());
         assertEquals(ExecutableStatus.ERROR, jobService.getJobStatus(job.getId()));
         assertEquals(ExecutableStatus.ERROR, jobService.getJobStatus(task1.getId()));

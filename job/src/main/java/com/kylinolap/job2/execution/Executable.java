@@ -11,6 +11,8 @@ public interface Executable {
 
     String getId();
 
+    String getName();
+
     ExecuteResult execute(ExecutableContext executableContext) throws ExecuteException;
 
     void stop() throws ExecuteException;
@@ -21,5 +23,5 @@ public interface Executable {
 
     boolean isRunnable();
 
-    Map<String, String> getExtra();
+    Map<String, String> getParams();
 }

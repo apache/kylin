@@ -4,6 +4,9 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.job2.BaseTestExecutable;
 import com.kylinolap.job2.SucceedTestExecutable;
+import com.kylinolap.job2.exception.IllegalStateTranferException;
+import com.kylinolap.job2.execution.ChainedExecutable;
+import com.kylinolap.job2.execution.Executable;
 import com.kylinolap.job2.execution.ExecutableStatus;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
 import com.kylinolap.job2.impl.threadpool.DefaultChainedExecutable;
@@ -13,7 +16,6 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -48,20 +50,17 @@ public class DefaultJobServiceTest extends LocalFileMetadataTestCase {
         assertNotNull(service);
         BaseTestExecutable executable = new SucceedTestExecutable();
         executable.setStatus(ExecutableStatus.READY);
-        HashMap<String, String> extra = new HashMap<>();
-        extra.put("test1", "test1");
-        extra.put("test2", "test2");
-        extra.put("test3", "test3");
-        executable.setExtra(extra);
+        executable.setParam("test1", "test1");
+        executable.setParam("test2", "test2");
+        executable.setParam("test3", "test3");
         service.addJob(executable);
         List<AbstractExecutable> result = service.getAllExecutables();
         assertEquals(1, result.size());
         AbstractExecutable another = service.getJob(executable.getId());
         assertJobEqual(executable, another);
 
-        executable.setStatus(ExecutableStatus.SUCCEED);
         executable.setOutput("test output");
-        service.updateJobStatus(executable);
+        service.updateJobStatus(executable, ExecutableStatus.RUNNING);
         assertJobEqual(executable, service.getJob(executable.getId()));
     }
 
@@ -72,28 +71,54 @@ public class DefaultJobServiceTest extends LocalFileMetadataTestCase {
         job.addTask(new SucceedTestExecutable());
 
         service.addJob(job);
+        assertEquals(2, job.getTasks().size());
         AbstractExecutable anotherJob = service.getJob(job.getId());
+        assertEquals(DefaultChainedExecutable.class, anotherJob.getClass());
+        assertEquals(2, ((DefaultChainedExecutable) anotherJob).getTasks().size());
         assertJobEqual(job, anotherJob);
+    }
+
+    @Test
+    public void testValidStateTransfer() throws Exception {
+        SucceedTestExecutable job = new SucceedTestExecutable();
+        service.addJob(job);
+        service.updateJobStatus(job, ExecutableStatus.RUNNING);
+        service.updateJobStatus(job, ExecutableStatus.ERROR);
+        service.updateJobStatus(job, ExecutableStatus.READY);
+        service.updateJobStatus(job, ExecutableStatus.RUNNING);
+        service.updateJobStatus(job, ExecutableStatus.STOPPED);
+        service.updateJobStatus(job, ExecutableStatus.READY);
+        service.updateJobStatus(job, ExecutableStatus.RUNNING);
+        service.updateJobStatus(job, ExecutableStatus.SUCCEED);
+    }
+
+    @Test(expected = IllegalStateTranferException.class)
+    public void testInvalidStateTransfer(){
+        SucceedTestExecutable job = new SucceedTestExecutable();
+        service.addJob(job);
+        service.updateJobStatus(job, ExecutableStatus.RUNNING);
+        service.updateJobStatus(job, ExecutableStatus.DISCARDED);
     }
 
 
 
-    private static void assertJobEqual(AbstractExecutable one, AbstractExecutable another) {
+    private static void assertJobEqual(Executable one, Executable another) {
+        assertEquals(one.getClass(), another.getClass());
         assertEquals(one.getId(), another.getId());
         assertEquals(one.getStatus(), another.getStatus());
         assertEquals(one.isRunnable(), another.isRunnable());
         assertEquals(one.getOutput(), another.getOutput());
-        assertTrue((one.getExtra() == null && another.getExtra() == null) || (one.getExtra() != null && another.getExtra() != null));
-        if (one.getExtra() != null) {
-            assertEquals(one.getExtra().size(), another.getExtra().size());
-            for (String key : one.getExtra().keySet()) {
-                assertEquals(one.getExtra().get(key), another.getExtra().get(key));
+        assertTrue((one.getParams() == null && another.getParams() == null) || (one.getParams() != null && another.getParams() != null));
+        if (one.getParams() != null) {
+            assertEquals(one.getParams().size(), another.getParams().size());
+            for (String key : one.getParams().keySet()) {
+                assertEquals(one.getParams().get(key), another.getParams().get(key));
             }
         }
-        if (one instanceof DefaultChainedExecutable) {
-            assertTrue(another instanceof DefaultChainedExecutable);
-            List<AbstractExecutable> onesSubs = ((DefaultChainedExecutable) one).getExecutables();
-            List<AbstractExecutable> anotherSubs = ((DefaultChainedExecutable) another).getExecutables();
+        if (one instanceof ChainedExecutable) {
+            assertTrue(another instanceof ChainedExecutable);
+            List<? extends Executable> onesSubs = ((ChainedExecutable) one).getTasks();
+            List<? extends Executable> anotherSubs = ((ChainedExecutable) another).getTasks();
             assertTrue((onesSubs == null && anotherSubs == null) || (onesSubs != null && anotherSubs != null));
             if (onesSubs != null) {
                 assertEquals(onesSubs.size(), anotherSubs.size());

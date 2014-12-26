@@ -7,23 +7,21 @@ import com.kylinolap.job2.Scheduler;
 import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.exception.LockException;
 import com.kylinolap.job2.exception.SchedulerException;
+import com.kylinolap.job2.execution.ChainedExecutable;
 import com.kylinolap.job2.execution.Executable;
 import com.kylinolap.job2.execution.ExecutableStatus;
 import com.kylinolap.job2.service.DefaultJobService;
-import org.apache.commons.math3.analysis.function.Abs;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.imps.CuratorFrameworkState;
+import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -42,8 +40,10 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
     private Logger logger = LoggerFactory.getLogger(DefaultScheduler.class);
     private boolean initialized = false;
+    private boolean hasStarted = false;
     private CuratorFramework zkClient;
     private JobEngineConfig jobEngineConfig;
+    private InterProcessMutex sharedLock;
 
     private static final DefaultScheduler INSTANCE = new DefaultScheduler();
 
@@ -75,7 +75,9 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                         }
                     }
                 }
-                resetStatus(executable);
+                if (!context.getRunningJobs().containsKey(executable.getId())) {
+                    resetStatusFromRunningToError(executable);
+                }
             }
         }
     }
@@ -102,10 +104,10 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         }
     }
 
-    private void resetStatus(Executable executable) {
-        if (!context.getRunningJobs().containsKey(executable.getId()) && executable.getStatus() == ExecutableStatus.RUNNING) {
+    private void resetStatusFromRunningToError(AbstractExecutable executable) {
+        if (executable.getStatus() == ExecutableStatus.RUNNING) {
             logger.warn("job:" + executable.getId() + " status should not be:" + ExecutableStatus.RUNNING + ", reset it to ERROR");
-            jobService.updateJobStatus(executable.getId(), ExecutableStatus.ERROR, "job fetcher has detected the status in inconsistent status, and reset it to ERROR");
+            jobService.resetRunningJobToError(executable, "job:" + executable.getId() + " status should not be:" + ExecutableStatus.RUNNING + ", reset it to ERROR");
         }
     }
 
@@ -152,7 +154,11 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     @Override
     public void stateChanged(CuratorFramework client, ConnectionState newState) {
         if ((newState == ConnectionState.SUSPENDED) || (newState == ConnectionState.LOST)) {
-            releaseLock();
+            try {
+                shutdown();
+            } catch (SchedulerException e) {
+                throw new RuntimeException("failed to shutdown scheduler", e);
+            }
         }
     }
 
@@ -164,6 +170,21 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
             return;
         }
         this.jobEngineConfig = jobEngineConfig;
+        RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
+        this.zkClient = CuratorFrameworkFactory.newClient(jobEngineConfig.getZookeeperString(), retryPolicy);
+        this.zkClient.start();
+        this.sharedLock = new InterProcessMutex(zkClient, schedulerId());
+        boolean hasLock = false;
+        try {
+            hasLock = sharedLock.acquire(3, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            logger.warn("error acquire lock", e);
+        }
+        if (!hasLock) {
+            logger.warn("fail to acquire lock, scheduler has not been started");
+            zkClient.close();
+            return;
+        }
         jobService = DefaultJobService.getInstance(jobEngineConfig.getConfig());
         //load all executable, set them to a consistent status
         fetcherPool = Executors.newScheduledThreadPool(1);
@@ -171,13 +192,10 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         jobPool = new ThreadPoolExecutor(corePoolSize, corePoolSize, Long.MAX_VALUE, TimeUnit.DAYS, new SynchronousQueue<Runnable>());
         context = new DefaultContext(Maps.<String, Executable>newConcurrentMap());
 
-        RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
-        this.zkClient = CuratorFrameworkFactory.newClient(jobEngineConfig.getZookeeperString(), retryPolicy);
-        this.zkClient.start();
 
         for (AbstractExecutable executable : jobService.getAllExecutables()) {
             if (executable.getStatus() == ExecutableStatus.RUNNING) {
-                jobService.updateJobStatus(executable.getId(), ExecutableStatus.READY, null);
+                jobService.resetRunningJobToError(executable, "scheduler initializing work to reset job to ERROR status");
             }
         }
 
@@ -193,35 +211,24 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         });
 
         fetcherPool.scheduleAtFixedRate(new FetcherRunner(), 10, JobConstants.DEFAULT_SCHEDULER_INTERVAL_SECONDS, TimeUnit.SECONDS);
+        hasStarted = true;
     }
 
     @Override
     public void shutdown() throws SchedulerException {
         fetcherPool.shutdown();
         jobPool.shutdown();
-        if (zkClient.getState().equals(CuratorFrameworkState.STARTED)) {
-            try {
-                if (zkClient.checkExists().forPath(schedulerId()) != null) {
-                    zkClient.delete().guaranteed().deletingChildrenIfNeeded().forPath(schedulerId());
-                }
-            } catch (Exception e) {
-                logger.error("error delete scheduler", e);
-                throw new SchedulerException(e);
-            }
-        }
-
-    }
-
-
-    @Override
-    public boolean submit(AbstractExecutable executable) throws SchedulerException {
-        jobService.addJob(executable);
-        return true;
+        releaseLock();
     }
 
     @Override
     public boolean stop(AbstractExecutable executable) throws SchedulerException {
-        return true;
+        if (hasStarted) {
+            return true;
+        } else {
+            //TODO should try to stop this executable
+            return true;
+        }
     }
 
 }

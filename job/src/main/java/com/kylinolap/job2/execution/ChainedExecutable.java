@@ -7,6 +7,6 @@ import java.util.List;
  */
 public interface ChainedExecutable extends Executable {
 
-    List<? extends Executable> getExecutables();
+    List<? extends Executable> getTasks();
 
 }
