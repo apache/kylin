@@ -28,7 +28,6 @@ public abstract class BaseTestExecutable extends AbstractExecutable {
 
     @Override
     protected void onExecuteStart(ExecutableContext executableContext) {
-        this.setStatus(ExecutableStatus.RUNNING);
         jobService.updateJobStatus(this, ExecutableStatus.RUNNING);
     }
 

@@ -72,8 +72,8 @@ public class JobDao {
         return store.getResource(path, JobOutputPO.class, JOB_OUTPUT_SERIALIZER);
     }
 
-    private void writeJobOutputResource(String path, JobOutputPO output) throws IOException {
-        store.putResource(path, output, JOB_OUTPUT_SERIALIZER);
+    private long writeJobOutputResource(String path, JobOutputPO output) throws IOException {
+        return store.putResource(path, output, JOB_OUTPUT_SERIALIZER);
     }
 
     public List<JobPO> getJobs() throws PersistentException {
@@ -152,8 +152,9 @@ public class JobDao {
 
     public void updateJobOutput(JobOutputPO output) throws PersistentException {
         try {
-            Preconditions.checkArgument(output.getLastModified() > 0, "timestamp should be greater than 0 in order to update");
-            writeJobOutputResource(pathOfJobOutput(output.getUuid()), output);
+            Preconditions.checkArgument(output.getLastModified() > 0, "timestamp should be greater than 0 inf");
+            final long ts = writeJobOutputResource(pathOfJobOutput(output.getUuid()), output);
+            output.setLastModified(ts);
         } catch (IOException e) {
             logger.error("error update job output id:" + output.getUuid(), e);
             throw new PersistentException(e);

@@ -39,8 +39,8 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     private DefaultContext context;
 
     private Logger logger = LoggerFactory.getLogger(DefaultScheduler.class);
-    private boolean initialized = false;
-    private boolean hasStarted = false;
+    private volatile boolean initialized = false;
+    private volatile boolean hasStarted = false;
     private CuratorFramework zkClient;
     private JobEngineConfig jobEngineConfig;
     private InterProcessMutex sharedLock;
@@ -53,6 +53,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
         @Override
         public void run() {
+            logger.info("Job Fetcher is running...");
             for (final AbstractExecutable executable : jobService.getAllExecutables()) {
                 boolean hasLock = false;
                 try {
@@ -79,6 +80,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                     resetStatusFromRunningToError(executable);
                 }
             }
+            logger.info("Job Fetcher finish running");
         }
     }
 
@@ -229,6 +231,10 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
             //TODO should try to stop this executable
             return true;
         }
+    }
+
+    boolean hasStarted() {
+        return this.hasStarted;
     }
 
 }
