@@ -125,7 +125,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         System.out.println(this.getName());
 
         for (JobStep step : this.getSteps()) {
-            System.out.println("step: " + step.getSequenceID() + "'s status:" + step.getStatus());
+            //System.out.println("step: " + step.getSequenceID() + "'s status:" + step.getStatus());
             compositResult = compositResult | step.getStatus().getCode();
         }
 
