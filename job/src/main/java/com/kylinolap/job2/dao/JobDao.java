@@ -1,5 +1,6 @@
 package com.kylinolap.job2.dao;
 
+import com.google.common.base.Preconditions;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
@@ -114,21 +115,6 @@ public class JobDao {
         }
     }
 
-    public JobPO updateJob(JobPO job) throws PersistentException {
-        try {
-            JobPO existedJob = getJob(job.getUuid());
-            if (existedJob == null) {
-                throw new IllegalArgumentException("job id:" + job.getUuid() + " does not exists");
-            }
-            job.setLastModified(existedJob.getLastModified());
-            writeJobResource(pathOfJob(job), job);
-        } catch (IOException e) {
-            logger.error("error save job:" + job.getUuid(), e);
-            throw new PersistentException(e);
-        }
-        return job;
-    }
-
     public void deleteJob(String uuid) throws PersistentException {
         try {
             store.deleteResource(pathOfJob(uuid));
@@ -154,15 +140,22 @@ public class JobDao {
         }
     }
 
-    public void addOrUpdateJobOutput(String uuid, JobOutputPO output) throws PersistentException {
-        if (output == null) {
-            return;
-        }
+    public void addJobOutput(JobOutputPO output) throws PersistentException {
         try {
-            deleteJobOutput(uuid);
-            writeJobOutputResource(pathOfJobOutput(uuid), output);
+            output.setLastModified(0);
+            writeJobOutputResource(pathOfJobOutput(output.getUuid()), output);
         } catch (IOException e) {
-            logger.error("error update job output id:" + uuid, e);
+            logger.error("error update job output id:" + output.getUuid(), e);
+            throw new PersistentException(e);
+        }
+    }
+
+    public void updateJobOutput(JobOutputPO output) throws PersistentException {
+        try {
+            Preconditions.checkArgument(output.getLastModified() > 0, "timestamp should be greater than 0 in order to update");
+            writeJobOutputResource(pathOfJobOutput(output.getUuid()), output);
+        } catch (IOException e) {
+            logger.error("error update job output id:" + output.getUuid(), e);
             throw new PersistentException(e);
         }
     }

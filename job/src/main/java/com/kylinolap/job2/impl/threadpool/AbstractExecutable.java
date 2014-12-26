@@ -1,9 +1,13 @@
 package com.kylinolap.job2.impl.threadpool;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
+import com.kylinolap.job2.dao.JobOutputPO;
+import com.kylinolap.job2.dao.JobPO;
 import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.execution.*;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
@@ -12,13 +16,28 @@ import java.util.UUID;
  */
 public abstract class AbstractExecutable implements Executable, Idempotent {
 
-    private String uuid;
-    private ExecutableStatus status = ExecutableStatus.READY;
-    private Map<String, String> extra;
-    private String output;
+    private JobPO job;
+    private JobOutputPO jobOutput;
 
     public AbstractExecutable() {
-        setId(UUID.randomUUID().toString());
+        String uuid = UUID.randomUUID().toString();
+        this.job = new JobPO();
+        this.job.setType(this.getClass().getName());
+        this.job.setUuid(uuid);
+
+        this.jobOutput = new JobOutputPO();
+        this.jobOutput.setUuid(uuid);
+        this.jobOutput.setStatus(ExecutableStatus.READY.toString());
+    }
+
+    protected AbstractExecutable(JobPO job, JobOutputPO jobOutput) {
+        Preconditions.checkArgument(job != null, "job cannot be null");
+        Preconditions.checkArgument(jobOutput != null, "jobOutput cannot be null");
+        Preconditions.checkArgument(job.getId() != null, "job id cannot be null");
+        Preconditions.checkArgument(jobOutput.getId() != null, "jobOutput id cannot be null");
+        Preconditions.checkArgument(job.getId().equalsIgnoreCase(jobOutput.getId()), "job id should be equals");
+        this.job = job;
+        this.jobOutput = jobOutput;
     }
 
     protected void onExecuteStart(ExecutableContext executableContext) {
@@ -59,40 +78,56 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     }
 
+    @Override
+    public String getName() {
+        return job.getName();
+    }
+
+    public void setName(String name) {
+        job.setName(name);
+    }
 
     @Override
     public final String getId() {
-        return uuid;
-    }
-
-    public final void setId(String id) {
-        this.uuid = id;
+        return job.getId();
     }
 
     @Override
     public final ExecutableStatus getStatus() {
-        return status;
+        return ExecutableStatus.valueOf(jobOutput.getStatus());
     }
 
     public final void setStatus(ExecutableStatus status) {
-        this.status = status;
+        jobOutput.setStatus(status.toString());
     }
 
     @Override
-    public Map<String, String> getExtra() {
-        return extra;
+    public final Map<String, String> getParams() {
+        return Collections.unmodifiableMap(job.getParams());
     }
 
-    public void setExtra(Map<String, String> extra) {
-        this.extra = extra;
+    public final String getParam(String key) {
+        return job.getParams().get(key);
+    }
+
+    public final void setParam(String key, String value) {
+        job.getParams().put(key, value);
     }
 
     public void setOutput(String output) {
-        this.output = output;
+        this.jobOutput.setContent(output);
     }
 
     @Override
     public String getOutput() {
-        return output;
+        return jobOutput.getContent();
+    }
+
+    public JobPO getJobPO() {
+        return job;
+    }
+
+    public JobOutputPO getJobOutput() {
+        return jobOutput;
     }
 }

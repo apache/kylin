@@ -2,6 +2,8 @@ package com.kylinolap.job2.dao;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.kylinolap.common.persistence.RootPersistentEntity;
 
 import java.util.List;
@@ -16,21 +18,14 @@ public class JobPO extends RootPersistentEntity {
     @JsonProperty("name")
     private String name;
 
-    @JsonProperty("startTime")
-    private long startTime;
-
-    @JsonProperty("endTime")
-    private long endTime;
-
-
     @JsonProperty("tasks")
-    private List<JobPO> tasks;
+    private List<JobPO> tasks = Lists.newArrayList();
 
     @JsonProperty("type")
     private String type;
 
-    @JsonProperty("extra")
-    private Map<String, String> extra;
+    @JsonProperty("params")
+    private Map<String, String> params = Maps.newHashMap();
 
     public String getName() {
         return name;
@@ -38,22 +33,6 @@ public class JobPO extends RootPersistentEntity {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public long getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(long startTime) {
-        this.startTime = startTime;
-    }
-
-    public long getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(long endTime) {
-        this.endTime = endTime;
     }
 
     public List<JobPO> getTasks() {
@@ -72,12 +51,12 @@ public class JobPO extends RootPersistentEntity {
         this.type = type;
     }
 
-    public Map<String, String> getExtra() {
-        return extra;
+    public Map<String, String> getParams() {
+        return params;
     }
 
-    public void setExtra(Map<String, String> extra) {
-        this.extra = extra;
+    public void setParams(Map<String, String> params) {
+        this.params = params;
     }
 
 }
