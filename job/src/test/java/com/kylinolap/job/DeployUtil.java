@@ -133,6 +133,7 @@ public class DeployUtil {
 
         boolean buildCubeUsingProvidedData = Boolean.parseBoolean(System.getProperty("buildCubeUsingProvidedData"));
         if (!buildCubeUsingProvidedData) {
+            System.out.println("build cube with random dataset");
             // data is generated according to cube descriptor and saved in resource store
             if (joinType.equalsIgnoreCase("inner")) {
                 content = FactTableGenerator.generate(cubeName, "10000", "1", null, "inner");
@@ -144,6 +145,8 @@ public class DeployUtil {
 
             assert content != null;
             overrideFactTableData(content, factTableName);
+        } else {
+            System.out.println("build cube with provided dataset");
         }
 
         duplicateFactTableData(factTableName, joinType);

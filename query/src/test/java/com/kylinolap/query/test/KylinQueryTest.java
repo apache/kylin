@@ -164,6 +164,7 @@ public class KylinQueryTest extends KylinTestBase {
     }
 
     @Test
+    @Ignore("ii not ready")
     public void testIIQuery() throws Exception {
         execAndCompQuery("src/test/resources/query/sql_ii", null, true);
     }
