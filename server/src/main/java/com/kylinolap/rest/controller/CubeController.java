@@ -360,8 +360,8 @@ public class CubeController extends BasicController {
         } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException("You don't have right to update this cube.");
         } catch (Exception e) {
-            logger.error("Failed to deal with the request.", e);
-            throw new InternalErrorException("Failed to deal with the request: " + e.getMessage());
+            logger.error("Failed to deal with the request:"+e.getLocalizedMessage(), e);
+            throw new InternalErrorException("Failed to deal with the request: "+e.getLocalizedMessage() + e.getMessage());
         }
 
         if (desc.getError().isEmpty()) {

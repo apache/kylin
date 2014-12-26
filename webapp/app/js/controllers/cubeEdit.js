@@ -219,13 +219,9 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                             }
                         } else {
                             $scope.cubeMetaFrame.project = $scope.state.project;
-                            if(request.message){
                                 var message =request.message;
                                 var msg = !!(message) ? message : 'Failed to take action.';
-                                 MessageService.sendMsg($scope.cubeResultTmpl({'text':'Failed to update the cube.','schema':$scope.state.cubeSchema}), 'error', {}, true, 'top_center');
-                            }else{
-                                SweetAlert.swal('Oops...', "Failed to take action.", 'error');
-                            }
+                                MessageService.sendMsg($scope.cubeResultTmpl({'text':msg,'schema':$scope.state.cubeSchema}), 'error', {}, true, 'top_center');
                         }
                         //end loading
                         loadingRequest.hide();
@@ -249,13 +245,9 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                             MessageService.sendMsg($scope.cubeResultTmpl({'text':'Created the cube successfully.',type:'success'}), 'success', {}, true, 'top_center');
                         } else {
                             $scope.cubeMetaFrame.project = $scope.state.project;
-                            if(request.message){
-                                var message =request.message;
-                                var msg = !!(message) ? message : 'Failed to take action.';
-                                MessageService.sendMsg($scope.cubeResultTmpl({'text':msg,'schema':$scope.state.cubeSchema}), 'error', {}, true, 'top_center');
-                            } else {
-                                MessageService.sendMsg($scope.cubeResultTmpl({'text':"Failed to take action.",'schema':$scope.state.cubeSchema}), 'error', {}, true, 'top_center');
-                            }
+                            var message =request.message;
+                            var msg = !!(message) ? message : 'Failed to take action.';
+                            MessageService.sendMsg($scope.cubeResultTmpl({'text':msg,'schema':$scope.state.cubeSchema}), 'error', {}, true, 'top_center');
                         }
 
                         //end loading
