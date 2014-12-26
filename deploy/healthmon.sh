@@ -4,7 +4,7 @@ ALERT="your@email.com"
 
 OUTPUT=$(
 	curl --max-time 20 -# \
-	--data '{"sql":"select count(*) from kylin_fact","offset":0,"limit":50000,"acceptPartial":true,"project":"default"}' \
+	--data '{"sql":"select count(*) from test_kylin_fact","offset":0,"limit":50000,"acceptPartial":true,"project":"default"}' \
 	-H "Authorization:Basic QURNSU46S1lMSU4=" \
 	-H "Content-Type:application/json;charset=UTF-8" \
 	http://localhost:7070/kylin/api/query \
