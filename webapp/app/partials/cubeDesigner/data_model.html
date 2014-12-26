@@ -1,27 +1,5 @@
-<ng-form name="model_form">
-<!-- Model Name -->
-<div class="form-group">
-    <div class="row">
-        <label class="col-xs-12 col-sm-2 control-label no-padding-right font-color-default">
-            <b>Model Name</b>
-        </label>
-        <div class="col-xs-12 col-sm-6">
-            <input ng-if="state.mode=='edit'" name="model_name" type="text" class="form-control"
-                   ng-model="newModel.name" required
-                   placeholder="You can use letters, numbers, and '_'"
-                   ng-maxlength=100 ng-pattern="/^\w+$/" />
-            <span ng-if="state.mode=='view'">{{newModel.name}}</span>
-        </div>
-        <div class="col-xs-12 col-sm-4">
-            <div class="text-warning" ng-if="model_form.model_name.$error.required && model_form.model_name.$dirty">
-                Model name is required.
-            </div>
-            <div class="text-warning" ng-if="model_form.model_name.$invalid && model_form.model_name.$dirty && !model_form.model_name.$error.required">
-                Model name is invalid.
-            </div>
-        </div>
-    </div>
-</div>
+<!-- init: currently set model name same as cube name, hidden from user -->
+<ng-form name="model_form" ng-init="newModel.name=cubeMetaFrame.name;">
 
 <!-- Fact Table Name -->
 <div class="form-group">
@@ -73,7 +51,7 @@
             <td>
                 <ul class="list-unstyled">
                     <li ng-repeat="pk in lookup.join.primary_key">
-                        <code>{{pk}} = {{lookup.join.foreign_key[$index]}}</code>
+                        <code>{{lookup.table + '.' + pk}} = {{newModel.fact_table + '.' + lookup.join.foreign_key[$index]}}</code>
                     </li>
                 </ul>
             </td>
@@ -160,7 +138,7 @@
                 <div class="form-group">
                     <div class="row">
                         <div class="col-sm-6 col-sm-offset-3">
-                            <button class="btn btn-sm btn-info" ng-disabled="lookup_form.$invalid || newLookup.join.foreign_key.length == 0"
+                            <button class="btn btn-sm btn-info" ng-disabled="lookup_form.$invalid || newLookup.join.primary_key.length == 0"
                                     ng-click="lookupState.editing ? doneEditLookup() : addLookup()">OK</button>
                             <button class="btn btn-link" ng-click="cancelLookup()">Cancel</button>
                         </div>

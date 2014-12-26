@@ -1,12 +1,10 @@
-<div class="row" ng-init="logModel();dumpColumns();">
+<div class="row" ng-init="dumpColumns();">
     <div class="col-xs-3">
         <h4>Columns</h4>
         <select multiple ng-model="selectedColumns.available"
                 ng-options="col.name group by col.table for col in availableColumns track by col.table + '.' + col.name"
-                style="width: 100%;min-height: 200px;">
+                class="form-control" style="min-height: 200px;">
         </select>
-
-        {{selectedColumns.available | json}}
     </div>
     <div class="col-xs-1">
         <div class="space-32"></div>
@@ -23,19 +21,16 @@
     <div class="col-xs-3">
         <h4>Dimension Columns</h4>
         <select multiple ng-model="selectedColumns.chosen" ng-change="switchDimOptions()"
-                ng-options="col.name group by col.table for col in chosenColumns track by col.table + '.' + col.name"
-                style="width: 100%;min-height: 200px;">
+                ng-options="col.table + '.' + col.name for col in chosenColumns track by col.table + '.' + col.name"
+                class="form-control" style="min-height: 200px;">
         </select>
 
         {{selectedColumns.chosen | json}}
     </div>
     <div class="col-xs-5 dimension-options-animate" ng-show="selectedColumns.chosen.length > 0">
         <h4>Advanced Dimension Options</h4>
-
+        <!-- include options template -->
         <div ng-include="'partials/cubeDesigner/dimension_options.html'"></div>
-
-        {{selectedColumns.chosen[0] | json}}
-        {{advancedDimOptions | json}}
     </div>
 </div>
 <button type="button" class="btn btn-default" ng-click="dimensionsAdapter();">Test Dimensions</button>

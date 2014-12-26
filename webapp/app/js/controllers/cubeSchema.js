@@ -30,10 +30,10 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     var DataModel = {
         init: function () {
             return {
-                "name": "",
-                "fact_table": "",
-                "lookups": []
-            }
+                name: '',
+                fact_table: '',
+                lookups: []
+            };
         }
     };
 
@@ -42,11 +42,11 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     var Lookup = {
         init: function () {
             return {
-                "table": "",
-                "join": {
-                    "type": "",
-                    "primary_key": [],
-                    "foreign_key": []
+                table: '',
+                join: {
+                    type: '',
+                    primary_key: [],
+                    foreign_key: []
                 }
             };
         }
@@ -103,10 +103,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
         $scope.newLookup = Lookup.init();
     };
-
-    $scope.logModel = function () {
-        console.dir($scope.newModel);
-    };
     /** END: js about data model **/
 
 
@@ -145,8 +141,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
             $scope.availableColumns = $scope.availableColumns.concat(cols2);
         }
-
-        console.dir($scope.availableColumns);
     };
 
     var columnKey = function (col) {
@@ -195,14 +189,15 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
 
     /** START: js about dimension advanced options **/
-    // Init the dimension option.
+    // Init the dimension option, dimension name default as the column key.
     var DimensionOption = {
         init: function (dimCol) {
             return {
-                name: '',
+                name: columnKey(dimCol),
                 hierarchy: [],
                 derived: [],
                 status: {
+                    includeFK: false,
                     hierarchyCount: 1,
                     useHierarchy: false
                 },
@@ -231,17 +226,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         }
     };
 
-    $scope.getAvailableDimOptCols = function (dimCol) {
-        var availableCols = $scope.getColumnsByTable(dimCol.table);
-
-        // Whether the dimension column comes from lookup table.
-        if (dimCol.isLookup) {
-            availableCols = availableCols.concat($scope.getColumnsByTable($scope.newModel.fact_table));
-        }
-
-        return availableCols;
-    };
-
     // Adapter between new data model/dimensions and original dimensions.
     $scope.dimensionsAdapter = function () {
         var dimensions = [];
@@ -252,7 +236,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
             var dim = {
                 name: dimOptions.name,
                 table: dimOptions.dimCol.table,
-                column: dimOptions.dimCol.name,
+                column: dimOptions.status.includeFK ? '{FK}' : dimOptions.dimCol.name,
                 derived: dimOptions.derived,
                 hierarchy: dimOptions.hierarchy
             };
