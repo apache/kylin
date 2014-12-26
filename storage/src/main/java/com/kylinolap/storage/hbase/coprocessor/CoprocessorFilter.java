@@ -50,12 +50,16 @@ public class CoprocessorFilter {
             columnIO = new RowKeyColumnIO(seg);
         }
 
+        public FilterDecorator(IISegment seg) {
+            columnIO = new RowKeyColumnIO(seg);
+        }
+
         @Override
         public TupleFilter onSerialize(TupleFilter filter) {
             if (filter == null)
-                return filter;
+                return null;
 
-            if (filter.getOperator() == FilterOperatorEnum.NOT && TupleFilter.isEvaluableRecursively(filter) == false)
+            if (filter.getOperator() == FilterOperatorEnum.NOT && !TupleFilter.isEvaluableRecursively(filter))
                 return ConstantTupleFilter.TRUE;
 
             if (!(filter instanceof CompareTupleFilter))
@@ -94,7 +98,7 @@ public class CoprocessorFilter {
                 Set<String> newValues = Sets.newHashSet();
                 for (String value : constValues) {
                     v = translate(col, value, 0);
-                    if (nullString.equals(v) == false)
+                    if (!nullString.equals(v))
                         newValues.add(v);
                 }
                 if (newValues.isEmpty()) {
@@ -174,7 +178,7 @@ public class CoprocessorFilter {
 
     public static CoprocessorFilter fromFilter(final IISegment seg, TupleFilter rootFilter) {
         // translate constants into dictionary IDs via a serialize copy
-        byte[] bytes = TupleFilterSerializer.serialize(rootFilter, null);
+        byte[] bytes = TupleFilterSerializer.serialize(rootFilter, new FilterDecorator(seg));
         TupleFilter copy = TupleFilterSerializer.deserialize(bytes);
         return new CoprocessorFilter(copy);
     }
