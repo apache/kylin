@@ -1,7 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest) {
+    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log) {
         $scope.listParams={
             cubeName: $routeParams.cubeName,
             projectName: $routeParams.projectName
@@ -27,8 +27,8 @@ KylinApp
             dimensionFilter: '', measureFilter: ''};
 
         $scope.list = function (offset, limit) {
-            if(!$scope.project.selectedProject){
-                return;
+            if(!$scope.project.projects.length){
+                return [];
             }
             offset = (!!offset) ? offset : 0;
             limit = (!!limit) ? limit : 20;
@@ -38,11 +38,7 @@ KylinApp
             if ($scope.listParams.cubeName) {
                 queryParam.cubeName = $scope.listParams.cubeName;
             }
-            if ($scope.project.selectedProject){
-                queryParam.projectName = $scope.project.selectedProject;
-            }else{
-                queryParam.projectName = $scope.project.projects[0];
-            }
+               queryParam.projectName = $scope.project.selectedProject;
 
             $scope.loading = true;
             CubeService.list(queryParam, function (cubes) {
@@ -75,11 +71,10 @@ KylinApp
         };
 
         $scope.$watch('project.selectedProject', function (newValue, oldValue) {
-            //exclude when refresh page oldValue=null,first time set value for project (will have page auto reload ,incase duplicate) oldvalue is null
-           if(newValue){
+            if(newValue!=oldValue||newValue==null){
                 $scope.cubes=[];
                 $scope.reload();
-           }
+            }
 
         });
         $scope.reload = function () {
