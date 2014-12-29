@@ -163,10 +163,12 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         }
     };
 
+    // Helper func to get identity of the column.
     var columnKey = function (col) {
         return col.table + '.' + col.name;
     };
 
+    // Helper func to filter out a list from another list, depends on the column identity.
     var filterOut = function (original, toFilter) {
         var filtered = [];
 
@@ -189,8 +191,10 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         return filtered;
     };
 
-    $scope.refreshAvailable = function (list) {
-        //
+    // Reset status of available list of columns based on selected chosen columns.
+    $scope.refreshAvailable = function () {
+        var list = $scope.selectedColumns.chosen;
+
         for (var i = 0; i < list.length; i++) {
             var availableCol = $scope.selectedColumns.available[list[i].table][list[i].name];
             availableCol.selected = false;
@@ -202,8 +206,9 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     };
 
     // Helper func to get selected available column.
-    $scope.selectedAvailable = function(list) {
+    $scope.selectedAvailable = function() {
         var found = [];
+        var list = $scope.selectedColumns.available;
 
         angular.forEach(list, function (value, tableName) {
             // Key is table name.
@@ -224,13 +229,13 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
     // Add dimension alternative.
     $scope.addDim = function () {
-        $scope.chosenColumns = $scope.chosenColumns.concat($scope.selectedAvailable($scope.selectedColumns.available));
+        $scope.chosenColumns = $scope.chosenColumns.concat($scope.selectedAvailable());
     };
 
     // Remove dimension alternative.
     $scope.removeDim = function () {
         $scope.chosenColumns = filterOut($scope.chosenColumns, $scope.selectedColumns.chosen);
-        $scope.refreshAvailable($scope.selectedColumns.chosen);
+        $scope.refreshAvailable();
     };
     /** END: js about data model dimensions **/
 
@@ -283,12 +288,19 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
             var dim = {
                 name: dimOptions.name,
                 table: dimOptions.dimCol.table,
-                column: dimOptions.status.includeFK ? '{FK}' : dimOptions.dimCol.name,
-                derived: dimOptions.derived,
-                hierarchy: dimOptions.hierarchy
+                column: dimOptions.status.includeFK ? '{FK}' : dimOptions.dimCol.name
             };
 
-            // Lookup table column.
+            // Derived and hierarchy info.
+            if (dimOptions.derived.length) {
+                dim.derived = dimOptions.derived;
+            }
+
+            if (dimOptions.hierarchy.length) {
+                dim.hierarchy = dimOptions.hierarchy;
+            }
+
+            // Lookup table column, add 'join' info.
             if (dimOptions.dimCol.isLookup) {
                 // Add join info from model.
                 for (var j = 0; j < $scope.newModel.lookups.length; j++) {
