@@ -104,6 +104,16 @@ public class TblColRef {
         return InnerDataTypeEnum.DERIVED.getDataType().equals(getDatatype());
     }
 
+    /**
+     *
+     * @param tableName full name : db.table
+     * @param columnName columnname
+     * @return
+     */
+    public boolean matchFullName(String tableName, String columnName) {
+        return column.matchFullName(tableName, columnName);
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;

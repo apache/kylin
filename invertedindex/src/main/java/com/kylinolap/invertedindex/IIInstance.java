@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
@@ -246,7 +245,7 @@ public class IIInstance extends AbstractRealization {
 
 	@Override
 	public String getFactTable() {
-		return getDescriptor().getFactTable();
+		return getDescriptor().getFactTableName();
 	}
 
 	@Override
