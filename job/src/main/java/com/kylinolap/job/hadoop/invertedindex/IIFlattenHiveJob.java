@@ -22,7 +22,7 @@ import com.kylinolap.job.hadoop.hive.IJoinedFlatTableDesc;
 /**
  * Created by Hongbin Ma(Binmahone) on 12/30/14.
  */
-public class IIFlatenHiveJob extends AbstractHadoopJob {
+public class IIFlattenHiveJob extends AbstractHadoopJob {
 
     protected static final Logger log = LoggerFactory.getLogger(InvertedIndexJob.class);
 
@@ -71,7 +71,7 @@ public class IIFlatenHiveJob extends AbstractHadoopJob {
     }
 
     public static void main(String[] args) throws Exception {
-        IIFlatenHiveJob job = new IIFlatenHiveJob();
+        IIFlattenHiveJob job = new IIFlattenHiveJob();
         int exitCode = ToolRunner.run(job, args);
         System.exit(exitCode);
     }
