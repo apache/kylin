@@ -101,35 +101,10 @@
     <value>/tmp/kylin/*,/usr/lib/hive/conf/,/usr/lib/hbase/lib/*,/usr/lib/hive-hcatalog/share/hcatalog/*,/usr/lib/hive/lib/*</value>
   </property>
   
-  <!-- 
-    <property>
-      <name>hive.metastore.uris</name>
-      <value>thrift://sandbox.hortonworks.com:9083</value>
-    </property>
-
-     -->
-    <property>
-      <name>javax.jdo.option.ConnectionURL</name>
-      <value>jdbc:mysql://sandbox.hortonworks.com/hive?createDatabaseIfNotExist=true</value>
-    </property>
-    <property>
-      <name>javax.jdo.option.ConnectionDriverName</name>
-      <value>com.mysql.jdbc.Driver</value>
-    </property>
-    <property>
-      <name>javax.jdo.option.ConnectionUserName</name>
-      <value>hive</value>
-    </property>
-    <property>
-	  <name>javax.jdo.option.ConnectionPassword</name>
-	  <value>hive</value>
-	  <description>password to use against metastore database</description>
-	</property>
-	<property>
-	  <name>hive.metastore.local</name>
-	  <value>false</value>
-	  <description>controls whether to connect to remove metastore server or open a new metastore server in Hive Client JVM</description>
-	</property>
+  <property>
+    <name>hive.metastore.uris</name>
+    <value>thrift://sandbox.hortonworks.com:9083</value>
+  </property>
 
   <property>
     <name>mapreduce.map.output.compress</name>
