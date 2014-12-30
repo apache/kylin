@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
-import com.kylinolap.dict.ColumnDictInfo;
+import com.kylinolap.dict.ISegment;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.invertedindex.index.TableRecordInfo;
 import com.kylinolap.invertedindex.model.IIDesc;
@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 // TODO: remove segment concept for II, append old hbase table
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class IISegment implements Comparable<IISegment>, ColumnDictInfo {
+public class IISegment implements Comparable<IISegment>, ISegment {
 
 	@JsonBackReference
 	private IIInstance iiInstance;

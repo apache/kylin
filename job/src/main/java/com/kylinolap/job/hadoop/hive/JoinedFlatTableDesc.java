@@ -15,11 +15,12 @@
  */
 package com.kylinolap.job.hadoop.hive;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.model.CubeDesc;
@@ -42,7 +43,9 @@ public class JoinedFlatTableDesc {
     private int[][] measureColumnIndexes; // [i] is the i.th measure related
                                           // column index on flat table
 
-    // Map for table alais; key: table name; value: alias;
+    // Map for table alias:
+    // key -> table name; 
+    // value -> alias;
     private Map<String, String> tableAliasMap;
 
     public static final String FACT_TABLE_ALIAS = "FACT_TABLE";
@@ -61,7 +64,7 @@ public class JoinedFlatTableDesc {
         return cubeSegment;
     }
 
-    private List<IntermediateColumnDesc> columnList = new ArrayList<IntermediateColumnDesc>();
+    private List<IntermediateColumnDesc> columnList = Lists.newArrayList();
 
     public List<IntermediateColumnDesc> getColumnList() {
         return columnList;
@@ -79,11 +82,11 @@ public class JoinedFlatTableDesc {
             this.tableName = "kylin_intermediate_" + cubeDesc.getName() + "_" + cubeSegment.getName();
         }
 
-        Map<String, Integer> dimensionIndexMap = new HashMap<String, Integer>();
+        Map<String, Integer> dimensionIndexMap = Maps.newHashMap();
         int columnIndex = 0;
         for (TblColRef col : cubeDesc.listDimensionColumnsExcludingDerived()) {
-            dimensionIndexMap.put(col.getName(), columnIndex);
-            columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), col.getName(), col.getDatatype(), col.getTable()));
+            dimensionIndexMap.put(col.getCanonicalName(), columnIndex);
+            columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), col));
             columnIndex++;
         }
 
@@ -91,7 +94,7 @@ public class JoinedFlatTableDesc {
         List<TblColRef> cuboidColumns = baseCuboid.getColumns();
         rowKeyColumnIndexes = new int[rowkeyColCount];
         for (int i = 0; i < rowkeyColCount; i++) {
-            String colName = cuboidColumns.get(i).getName();
+            String colName = cuboidColumns.get(i).getCanonicalName();
             Integer dimIdx = dimensionIndexMap.get(colName);
             if (dimIdx == null) {
                 throw new RuntimeException("Can't find column " + colName);
@@ -114,7 +117,7 @@ public class JoinedFlatTableDesc {
                     measureColumnIndexes[i][j] = contains(columnList, c);
                     if (measureColumnIndexes[i][j] < 0) {
                         measureColumnIndexes[i][j] = columnIndex;
-                        columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), c.getName(), c.getDatatype(), c.getTable()));
+                        columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), c));
                         columnIndex++;
                     }
                 }
@@ -147,7 +150,8 @@ public class JoinedFlatTableDesc {
     private int contains(List<IntermediateColumnDesc> columnList, TblColRef c) {
         for (int i = 0; i < columnList.size(); i++) {
             IntermediateColumnDesc col = columnList.get(i);
-            if (col.getColumnName().equals(c.getName()) && col.getTableName().equals(c.getTable()))
+
+            if (col.isSameAs(c.getTable(), c.getName()))
                 return i;
         }
         return -1;
@@ -171,15 +175,11 @@ public class JoinedFlatTableDesc {
 
     public static class IntermediateColumnDesc {
         private String id;
-        private String columnName;
-        private String dataType;
-        private String tableName;
+        private TblColRef colRef;
 
-        public IntermediateColumnDesc(String id, String columnName, String dataType, String tableName) {
+        public IntermediateColumnDesc(String id, TblColRef colRef) {
             this.id = id;
-            this.columnName = columnName;
-            this.dataType = dataType;
-            this.tableName = tableName;
+            this.colRef = colRef;
         }
 
         public String getId() {
@@ -187,15 +187,23 @@ public class JoinedFlatTableDesc {
         }
 
         public String getColumnName() {
-            return columnName;
+            return colRef.getName();
         }
 
         public String getDataType() {
-            return dataType;
+            return colRef.getDatatype();
         }
 
         public String getTableName() {
-            return tableName;
+            return colRef.getTable();
+        }
+
+        public boolean isSameAs(String tableName, String columnName) {
+            return colRef.isSameAs(tableName, columnName);
+        }
+
+        public String getCanonicalName() {
+            return colRef.getCanonicalName();
         }
 
     }

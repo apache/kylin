@@ -131,7 +131,7 @@ public class TableRecordInfo {
             return -1;
         for (int i = 0; i < allColumns.size(); ++i) {
             TblColRef tblColRef = allColumns.get(i);
-            if (measureSerializers[i] != null && tblColRef.matchFullName(desc.getFactTableName(), metricColumnName)) {
+            if (measureSerializers[i] != null && tblColRef.isSameAs(desc.getFactTableName(), metricColumnName)) {
                 return i;
             }
         }

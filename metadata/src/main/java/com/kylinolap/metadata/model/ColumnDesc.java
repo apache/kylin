@@ -118,7 +118,7 @@ public class ColumnDesc {
         type = DataType.getInstance(datatype);
     }
 
-    public boolean matchFullName(String tableName, String columnName) {
+    public boolean isSameAs(String tableName, String columnName) {
         return StringUtils.equalsIgnoreCase(table.getIdentity(), tableName) && //
                 StringUtils.equalsIgnoreCase(name, columnName);
     }

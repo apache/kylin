@@ -317,7 +317,7 @@ public class QueryRouter {
 
         String columnName = parameter.getValue();
         for (TblColRef col : dimensionColumns) {
-            if (col.matchFullName(factTableName, columnName)) {
+            if (col.isSameAs(factTableName, columnName)) {
                 return col;
             }
         }

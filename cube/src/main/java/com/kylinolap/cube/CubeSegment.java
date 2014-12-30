@@ -27,13 +27,13 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.dict.ColumnDictInfo;
+import com.kylinolap.dict.ISegment;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.metadata.realization.SegmentStatusEnum;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class CubeSegment implements Comparable<CubeSegment>, ColumnDictInfo {
+public class CubeSegment implements Comparable<CubeSegment>, ISegment {
 
     @JsonBackReference
     private CubeInstance cubeInstance;
