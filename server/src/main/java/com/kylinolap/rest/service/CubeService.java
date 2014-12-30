@@ -453,30 +453,9 @@ public class CubeService extends BasicService {
             logger.error("Cannot find table descirptor " + tableName, e);
             throw e;
         }
-        Map<String, String> exd = getMetadataManager().getTableDescExd(tableName);
-        if (exd == null || !Boolean.valueOf(exd.get(MetadataConstances.TABLE_EXD_STATUS_KEY))) {
-            throw new IllegalArgumentException("Table " + tableName + " does not exist.");
-        }
-        String location = exd.get(MetadataConstances.TABLE_EXD_LOCATION);
-        if (location == null || MetadataConstances.TABLE_EXD_DEFAULT_VALUE.equals(location)) {
-            throw new IllegalArgumentException("Cannot get table " + tableName + " location, the location is " + location);
-        }
-        String inputFormat = exd.get(MetadataConstances.TABLE_EXD_IF);
-        if (inputFormat == null || MetadataConstances.TABLE_EXD_DEFAULT_VALUE.equals(inputFormat)) {
-            throw new IllegalArgumentException("Cannot get table " + tableName + " input format, the format is " + inputFormat);
-        }
-        String delim = exd.get(MetadataConstances.TABLE_EXD_DELIM);
-        if (delimiter != null) {
-            delim = delimiter;
-        }
         String jarPath = getKylinConfig().getKylinJobJarPath();
         String outPath = HiveColumnCardinalityJob.OUTPUT_PATH + "/" + tableName;
-        String[] args = null;
-        if (delim == null) {
-            args = new String[] {"-table", tableName, "-input", location, "-output", outPath, "-iformat", inputFormat };
-        } else {
-            args = new String[] {"-table", tableName, "-input", location, "-output", outPath, "-iformat", inputFormat, "-idelim", delim };
-        }
+        String[] args = new String[] {"-table", tableName, "-output", outPath };
         
         HiveColumnCardinalityJob job = new HiveColumnCardinalityJob(jarPath, null);
         int hresult = 0;

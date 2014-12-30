@@ -21,12 +21,10 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.StringTokenizer;
 
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hive.hcatalog.data.HCatRecord;
 
@@ -44,25 +42,9 @@ public class ColumnCardinalityMapper<T> extends Mapper<T, HCatRecord, IntWritabl
 
     @Override
     public void map(T key, HCatRecord value, Context context) throws IOException, InterruptedException {
-        /*
-        String delim = context.getConfiguration().get(HiveColumnCardinalityJob.KEY_INPUT_DELIM);
-        if (delim == null) {
-            delim = DEFAULT_DELIM;
-        }
-        
 
-        String line = value.toString();
-        StringTokenizer tokenizer = new StringTokenizer(line, delim);
-        int i = 1;
-        while (tokenizer.hasMoreTokens()) {
-            String temp = tokenizer.nextToken();
-            getHllc(i).add(Bytes.toBytes(temp));
-            i++;
-        }
-        */
-        
-        Integer columnSize = Integer.valueOf(context.getConfiguration().get(HiveColumnCardinalityJob.KEY_TABLE_COLUMN_NUMBER));
-        for(int m=0; m<columnSize; m++) {
+        Integer columnSize = context.getConfiguration().getInt(HiveColumnCardinalityJob.KEY_TABLE_COLUMN_NUMBER, 100);
+        for (int m = 0; m < columnSize; m++) {
             Object cell = value.get(m);
             getHllc(m).add(Bytes.toBytes(String.valueOf(cell)));
         }
