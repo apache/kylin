@@ -25,11 +25,12 @@ import org.apache.hadoop.io.compress.CompressionCodecFactory;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.MRJobConfig;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.hive.hcatalog.data.schema.HCatSchema;
+import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
@@ -37,12 +38,10 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
     public static final String JOB_TITLE = "Kylin Hive Column Cardinality Job";
 
     @SuppressWarnings("static-access")
-    protected static final Option OPTION_FORMAT = OptionBuilder.withArgName("input format").hasArg().isRequired(true).withDescription("The file format").create("iformat");
-
-    @SuppressWarnings("static-access")
-    protected static final Option OPTION_INPUT_DELIM = OptionBuilder.withArgName("input_dilim").hasArg().isRequired(false).withDescription("Input delim").create("idelim");
+    protected static final Option OPTION_TABLE = OptionBuilder.withArgName("table name").hasArg().isRequired(true).withDescription("The hive table name").create("table");
 
     public static final String KEY_INPUT_DELIM = "INPUT_DELIM";
+    public static final String KEY_TABLE_COLUMN_NUMBER = "TABLE_COLUMN_NUMBER";
     public static final String OUTPUT_PATH = "/tmp/cardinality";
 
     /**
@@ -50,6 +49,8 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
      */
     private String jarPath;
     private Configuration conf;
+    
+    private String table;
 
     /**
      * MRJobConfig.MAPREDUCE_JOB_CREDENTIALS_BINARY
@@ -114,10 +115,8 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
         Options options = new Options();
 
         try {
-            options.addOption(OPTION_INPUT_PATH);
+            options.addOption(OPTION_TABLE);
             options.addOption(OPTION_OUTPUT_PATH);
-            options.addOption(OPTION_FORMAT);
-            options.addOption(OPTION_INPUT_DELIM);
 
             parseOptions(options, args);
 
@@ -133,28 +132,21 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
             } else {
                 job.setJar(jarPath);
             }
-            FileInputFormat.setInputDirRecursive(job, true);
-            addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
 
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
             FileOutputFormat.setOutputPath(job, output);
             job.getConfiguration().set("dfs.block.size", "67108864");
 
-            String format = getOptionValue(OPTION_FORMAT);
-            @SuppressWarnings("rawtypes")
-            Class cformat = getFormat(format);
-            String delim = getOptionValue(OPTION_INPUT_DELIM);
-            if (delim != null) {
-                if (delim.equals("t")) {
-                    delim = "\t";
-                } else if (delim.equals("177")) {
-                    delim = "\177";
-                }
-                job.getConfiguration().set(KEY_INPUT_DELIM, delim);
-            }
-
             // Mapper
-            job.setInputFormatClass(cformat);
+            this.table = getOptionValue(OPTION_TABLE);
+            System.out.println("Going to start HiveColumnCardinalityJob on table '" + table + "'");
+            HCatInputFormat.setInput(job, "default",
+                    table);
+
+            HCatSchema tableSchema = HCatInputFormat.getTableSchema(job.getConfiguration());
+            job.getConfiguration().set(KEY_TABLE_COLUMN_NUMBER, String.valueOf(tableSchema.size()));
+            
+            job.setInputFormatClass(HCatInputFormat.class);
             job.setMapperClass(ColumnCardinalityMapper.class);
             job.setMapOutputKeyClass(IntWritable.class);
             job.setMapOutputValueClass(BytesWritable.class);
@@ -165,6 +157,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
             job.setOutputKeyClass(IntWritable.class);
             job.setOutputValueClass(LongWritable.class);
             job.setNumReduceTasks(1);
+            
 
             this.deletePath(job.getConfiguration(), output);
 
@@ -175,22 +168,6 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
             e.printStackTrace(System.err);
             log.error(e.getLocalizedMessage(), e);
             return 2;
-        }
-
-    }
-
-    /**
-     * @param format
-     * @throws ClassNotFoundException
-     */
-    @SuppressWarnings("rawtypes")
-    private Class getFormat(String format) throws ClassNotFoundException {
-        if (format.endsWith(".TextInputFormat")) {
-            return Class.forName("org.apache.hadoop.mapreduce.lib.input.TextInputFormat");
-        } else if (format.endsWith(".SequenceFileInputFormat")) {
-            return Class.forName("org.apache.hadoop.mapreduce.lib.input.SequenceFileAsTextInputFormat");
-        } else {
-            return Class.forName(format);
         }
 
     }
@@ -208,7 +185,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
         String delim = "177";
         String jarPath = "/usr/lib/kylin/kylin-index-latest.jar";
 
-        args = new String[] { "-input", location, "-output", "/tmp/cardinality/" + tempName, "-iformat", inputFormat, "-idelim", delim };
+        args = new String[] { "-output", "/tmp/cardinality/" + tempName, "-table", "shipping_sisense_cube_desc_intermediate_table" };
         HiveColumnCardinalityJob job = new HiveColumnCardinalityJob(jarPath, "/tmp/krb5cc_882");
         try {
             ToolRunner.run(job, args);
