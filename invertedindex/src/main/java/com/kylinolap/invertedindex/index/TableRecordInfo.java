@@ -55,19 +55,20 @@ public class TableRecordInfo {
         measureSerializers = new FixedLenMeasureCodec<?>[nColumns];
 
         DictionaryManager dictMgr = DictionaryManager.getInstance(desc.getConfig());
+        int index = 0;
         for (TblColRef tblColRef : desc.listAllColumns()) {
             ColumnDesc col = tblColRef.getColumn();
-            int i = col.getZeroBasedIndex();
-            if (desc.isMetricsCol(i)) {
-                measureSerializers[i] = FixedLenMeasureCodec.get(col.getType());
+            if (desc.isMetricsCol(index)) {
+                measureSerializers[index] = FixedLenMeasureCodec.get(col.getType());
             } else {
                 String dictPath = seg.getDictResPath(tblColRef);
                 try {
-                    dictionaries[i] = dictMgr.getDictionary(dictPath);
+                    dictionaries[index] = dictMgr.getDictionary(dictPath);
                 } catch (IOException e) {
                     throw new RuntimeException("dictionary " + dictPath + " does not exist ", e);
                 }
             }
+            index++;
         }
 
         digest = createDigest();
