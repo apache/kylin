@@ -174,7 +174,6 @@ public class JoinedFlatTableDesc {
         private String columnName;
         private String dataType;
         private String tableName;
-        private String databaseName;
 
         public IntermediateColumnDesc(String id, String columnName, String dataType, String tableName) {
             this.id = id;
@@ -199,8 +198,5 @@ public class JoinedFlatTableDesc {
             return tableName;
         }
 
-        public String getDatabaseName() {
-            return databaseName;
-        }
     }
 }
