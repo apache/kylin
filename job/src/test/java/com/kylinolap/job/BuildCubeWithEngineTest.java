@@ -88,7 +88,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         
         // keep this order.
         testLeftJoinCube();
-        testInnerJoinCube();
+//        testInnerJoinCube();
 
         jobManager.stopJobEngine();
     }
