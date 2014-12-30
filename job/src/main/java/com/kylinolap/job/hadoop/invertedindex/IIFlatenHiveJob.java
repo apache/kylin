@@ -1,5 +1,9 @@
 package com.kylinolap.job.hadoop.invertedindex;
 
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IIManager;
+import com.kylinolap.job.cmd.ICommandOutput;
+import com.kylinolap.job.cmd.ShellCmd;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
@@ -32,7 +36,8 @@ public class IIFlatenHiveJob extends AbstractHadoopJob {
             String iiname = getOptionValue(OPTION_II_NAME);
             KylinConfig config = KylinConfig.getInstanceFromEnv();
 
-            IIDesc iidesc = IIDescManager.getInstance(config).getIIDesc(iiname);
+            IIInstance iiInstance = IIManager.getInstance(config).getII(iiname);
+            IIDesc iidesc = IIDescManager.getInstance(config).getIIDesc(iiInstance.getDescName());
 
             String jobUUID = "00bf87b5-c7b5-4420-a12a-07f6b37b3187";
             JobEngineConfig engineConfig = new JobEngineConfig(config);
@@ -50,6 +55,12 @@ public class IIFlatenHiveJob extends AbstractHadoopJob {
             buf.append("\"");
 
             System.out.println(buf.toString());
+            System.out.println("========================");
+
+            ShellCmd cmd = new ShellCmd(buf.toString(), null, null, null, false);
+            ICommandOutput output = cmd.execute();
+            System.out.println(output.getOutput());
+            System.out.println(output.getExitCode());
 
             return 0;
         } catch (Exception e) {
