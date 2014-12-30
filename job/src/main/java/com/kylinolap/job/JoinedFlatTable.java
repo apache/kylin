@@ -64,8 +64,7 @@ public class JoinedFlatTable {
             if (i > 0) {
                 ddl.append(",");
             }
-            String fullColumnName = (col.getTableName() + "_" + col.getColumnName()).replace(".", "_");
-            ddl.append(fullColumnName + " " + SqlHiveDataTypeMapping.getHiveDataType(col.getDataType()) + "\n");
+            ddl.append(col.getCanonicalName() + " " + SqlHiveDataTypeMapping.getHiveDataType(col.getDataType()) + "\n");
         }
         ddl.append(")" + "\n");
 

@@ -83,6 +83,10 @@ public class TblColRef {
         return column.getTable().getIdentity();
     }
 
+    public String getCanonicalName() {
+        return (getTable() + "_" + getName()).replace(".", "_");
+    }
+
     public String getDatatype() {
         return column.getDatatype();
     }
@@ -110,8 +114,8 @@ public class TblColRef {
      * @param columnName columnname
      * @return
      */
-    public boolean matchFullName(String tableName, String columnName) {
-        return column.matchFullName(tableName, columnName);
+    public boolean isSameAs(String tableName, String columnName) {
+        return column.isSameAs(tableName, columnName);
     }
 
     @Override
