@@ -47,7 +47,7 @@ public class InvertedIndexStorageEngine implements IStorageEngine {
     public InvertedIndexStorageEngine(IIInstance ii) {
         this.seg = ii.getFirstSegment();
         IIDesc cubeDesc = this.seg.getIIDesc();
-        this.columnDescs = MetadataManager.getInstance(cubeDesc.getConfig()).getTableDesc(cubeDesc.getFactTable()).getColumns();
+        this.columnDescs = MetadataManager.getInstance(cubeDesc.getConfig()).getTableDesc(cubeDesc.getFactTableName()).getColumns();
         this.hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
     }
 
