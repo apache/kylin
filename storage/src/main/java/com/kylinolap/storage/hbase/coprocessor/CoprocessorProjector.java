@@ -61,8 +61,7 @@ public class CoprocessorProjector {
         byte[] mask = new byte[tableInfo.getDigest().getByteFormLen()];
         int maskIdx = 0;
         for (int i = 0; i < tableInfo.getDigest().getColumnCount(); ++i) {
-            ColumnDesc columnDesc = tableInfo.getColumns()[i];
-            TblColRef tblColRef = new TblColRef(columnDesc);
+            TblColRef tblColRef = tableInfo.getColumns().get(i);
             int length = tableInfo.getDigest().length(i);
             byte bits = groupby.contains(tblColRef) ? (byte) 0xff : 0x00;
             for (int j = 0; j < length; ++j) {
