@@ -473,10 +473,11 @@ public class CubeService extends BasicService {
         String outPath = HiveColumnCardinalityJob.OUTPUT_PATH + "/" + tableName;
         String[] args = null;
         if (delim == null) {
-            args = new String[] { "-input", location, "-output", outPath, "-iformat", inputFormat };
+            args = new String[] {"-table", tableName, "-input", location, "-output", outPath, "-iformat", inputFormat };
         } else {
-            args = new String[] { "-input", location, "-output", outPath, "-iformat", inputFormat, "-idelim", delim };
+            args = new String[] {"-table", tableName, "-input", location, "-output", outPath, "-iformat", inputFormat, "-idelim", delim };
         }
+        
         HiveColumnCardinalityJob job = new HiveColumnCardinalityJob(jarPath, null);
         int hresult = 0;
         try {

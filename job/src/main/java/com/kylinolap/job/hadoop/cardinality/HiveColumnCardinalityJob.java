@@ -30,11 +30,18 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.hive.hcatalog.data.schema.HCatSchema;
+import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 public class HiveColumnCardinalityJob extends AbstractHadoopJob {
     public static final String JOB_TITLE = "Kylin Hive Column Cardinality Job";
+    
+
+    @SuppressWarnings("static-access")
+    protected static final Option OPTION_TABLE = OptionBuilder.withArgName("table name").hasArg().isRequired(true).withDescription("The hive table name").create("table");
+
 
     @SuppressWarnings("static-access")
     protected static final Option OPTION_FORMAT = OptionBuilder.withArgName("input format").hasArg().isRequired(true).withDescription("The file format").create("iformat");
@@ -43,6 +50,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
     protected static final Option OPTION_INPUT_DELIM = OptionBuilder.withArgName("input_dilim").hasArg().isRequired(false).withDescription("Input delim").create("idelim");
 
     public static final String KEY_INPUT_DELIM = "INPUT_DELIM";
+    public static final String KEY_TABLE_COLUMN_NUMBER = "TABLE_COLUMN_NUMBER";
     public static final String OUTPUT_PATH = "/tmp/cardinality";
 
     /**
@@ -50,6 +58,8 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
      */
     private String jarPath;
     private Configuration conf;
+    
+    private String table;
 
     /**
      * MRJobConfig.MAPREDUCE_JOB_CREDENTIALS_BINARY
@@ -114,6 +124,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
         Options options = new Options();
 
         try {
+            options.addOption(OPTION_TABLE);
             options.addOption(OPTION_INPUT_PATH);
             options.addOption(OPTION_OUTPUT_PATH);
             options.addOption(OPTION_FORMAT);
@@ -154,7 +165,16 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
             }
 
             // Mapper
-            job.setInputFormatClass(cformat);
+//            job.setInputFormatClass(cformat);
+
+            this.table = getOptionValue(OPTION_TABLE);
+            HCatInputFormat.setInput(job, "default",
+                    table);
+
+            HCatSchema tableSchema = HCatInputFormat.getTableSchema(job.getConfiguration());
+            job.getConfiguration().set(KEY_TABLE_COLUMN_NUMBER, String.valueOf(tableSchema.size()));
+            
+            job.setInputFormatClass(HCatInputFormat.class);
             job.setMapperClass(ColumnCardinalityMapper.class);
             job.setMapOutputKeyClass(IntWritable.class);
             job.setMapOutputValueClass(BytesWritable.class);
@@ -165,6 +185,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
             job.setOutputKeyClass(IntWritable.class);
             job.setOutputValueClass(LongWritable.class);
             job.setNumReduceTasks(1);
+            
 
             this.deletePath(job.getConfiguration(), output);
 

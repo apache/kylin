@@ -28,6 +28,7 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hive.hcatalog.data.HCatRecord;
 
 import com.kylinolap.common.hll.HyperLogLogPlusCounter;
 import com.kylinolap.cube.kv.RowConstants;
@@ -36,17 +37,20 @@ import com.kylinolap.cube.kv.RowConstants;
  * @author Jack
  * 
  */
-public class ColumnCardinalityMapper<T> extends Mapper<T, Text, IntWritable, BytesWritable> {
+public class ColumnCardinalityMapper<T> extends Mapper<T, HCatRecord, IntWritable, BytesWritable> {
 
     private Map<Integer, HyperLogLogPlusCounter> hllcMap = new HashMap<Integer, HyperLogLogPlusCounter>();
     public static final String DEFAULT_DELIM = ",";
 
     @Override
-    public void map(T key, Text value, Context context) throws IOException, InterruptedException {
+    public void map(T key, HCatRecord value, Context context) throws IOException, InterruptedException {
+        /*
         String delim = context.getConfiguration().get(HiveColumnCardinalityJob.KEY_INPUT_DELIM);
         if (delim == null) {
             delim = DEFAULT_DELIM;
         }
+        
+
         String line = value.toString();
         StringTokenizer tokenizer = new StringTokenizer(line, delim);
         int i = 1;
@@ -54,6 +58,13 @@ public class ColumnCardinalityMapper<T> extends Mapper<T, Text, IntWritable, Byt
             String temp = tokenizer.nextToken();
             getHllc(i).add(Bytes.toBytes(temp));
             i++;
+        }
+        */
+        
+        Integer columnSize = Integer.valueOf(context.getConfiguration().get(HiveColumnCardinalityJob.KEY_TABLE_COLUMN_NUMBER));
+        for(int m=0; m<columnSize; m++) {
+            Object cell = value.get(m);
+            getHllc(m).add(Bytes.toBytes(String.valueOf(cell)));
         }
     }
 
