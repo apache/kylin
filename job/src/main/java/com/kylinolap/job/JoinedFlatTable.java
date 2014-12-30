@@ -46,6 +46,7 @@ import com.kylinolap.metadata.model.TblColRef;
  * @author George Song (ysong1)
  * 
  */
+
 public class JoinedFlatTable {
 
     public static String getTableDir(JoinedFlatTableDesc intermediateTableDesc, String storageDfsDir, String jobUUID) {
@@ -63,7 +64,8 @@ public class JoinedFlatTable {
             if (i > 0) {
                 ddl.append(",");
             }
-            ddl.append(col.getColumnName() + " " + SqlHiveDataTypeMapping.getHiveDataType(col.getDataType()) + "\n");
+            String fullColumnName = (col.getTableName() + "_" + col.getColumnName()).replace(".", "_");
+            ddl.append(fullColumnName + " " + SqlHiveDataTypeMapping.getHiveDataType(col.getDataType()) + "\n");
         }
         ddl.append(")" + "\n");
 
