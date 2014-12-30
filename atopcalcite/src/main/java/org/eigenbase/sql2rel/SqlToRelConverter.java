@@ -1,7 +1,8 @@
 /*
- * OVERRIDE POINTS:
+ * OVERRIDE POINT:
  * - getInSubqueryThreshold(), was `20`, now `Integer.MAX_VALUE`
  * - isTrimUnusedFields(), override to false
+ * - AggConverter.visit(SqlCall), skip column reading for COUNT(COL)
  */
 
 /*
@@ -4417,8 +4418,9 @@ private void findSubqueries(
       if (call.getOperator().isAggregator()) {
         assert bb.agg == this;
         List<Integer> args = new ArrayList<Integer>();
+        boolean isCount = call.getOperator() instanceof SqlCountAggFunction; // OVERRIDE POINT
         List<RelDataType> argTypes =
-            call.getOperator() instanceof SqlCountAggFunction
+            isCount // OVERRIDE POINT
             ? new ArrayList<RelDataType>(call.getOperandList().size())
             : null;
         try {
@@ -4430,7 +4432,7 @@ private void findSubqueries(
             // special case for COUNT(*):  delete the *
             if (operand instanceof SqlIdentifier) {
               SqlIdentifier id = (SqlIdentifier) operand;
-              if (id.isStar()) {
+              if (id.isStar() || isCount) { // OVERRIDE POINT, was just `id.isStar()`
                 assert call.operandCount() == 1;
                 assert args.isEmpty();
                 break;
