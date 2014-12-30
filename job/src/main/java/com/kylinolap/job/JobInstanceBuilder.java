@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.kylinolap.job.hadoop.hive.IJoinedFlatTableDesc;
 import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -34,7 +35,7 @@ import com.kylinolap.job.constant.JobConstants;
 import com.kylinolap.job.constant.JobStepCmdTypeEnum;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc;
+import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
 import com.kylinolap.metadata.MetadataManager;
 
 /**
@@ -118,7 +119,7 @@ public class JobInstanceBuilder {
     }
 
     private String getIntermediateHiveTablePath() {
-        JoinedFlatTableDesc intermediateTableDesc = new JoinedFlatTableDesc(cube.getDescriptor(), this.cubeSegment);
+        CubeJoinedFlatTableDesc intermediateTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), this.cubeSegment);
         return JoinedFlatTable.getTableDir(intermediateTableDesc, jobWorkingDir, jobUUID);
     }
 
@@ -285,7 +286,7 @@ public class JobInstanceBuilder {
     }
 
     private JobStep createIntermediateHiveTableStep(JobInstance jobInstance, int stepSeqNum) throws IOException {
-        JoinedFlatTableDesc intermediateTableDesc = new JoinedFlatTableDesc(cube.getDescriptor(), this.cubeSegment);
+        IJoinedFlatTableDesc intermediateTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), this.cubeSegment);
         String dropTableHql = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc, jobUUID);
         String createTableHql = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, jobWorkingDir, jobUUID);
         String insertDataHql = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, jobUUID, this.engineConfig);

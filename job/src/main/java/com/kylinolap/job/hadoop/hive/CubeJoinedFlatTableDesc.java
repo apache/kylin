@@ -25,15 +25,12 @@ import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.DimensionDesc;
-import com.kylinolap.metadata.model.MeasureDesc;
-import com.kylinolap.metadata.model.JoinDesc;
-import com.kylinolap.metadata.model.FunctionDesc;
-import com.kylinolap.metadata.model.TblColRef;
+import com.kylinolap.metadata.model.*;
 
 /**
  * @author George Song (ysong1)
  */
-public class JoinedFlatTableDesc {
+public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
 
     private String tableName;
     private final CubeDesc cubeDesc;
@@ -47,11 +44,11 @@ public class JoinedFlatTableDesc {
     // key -> table name; 
     // value -> alias;
     private Map<String, String> tableAliasMap;
+    private List<IntermediateColumnDesc> columnList = Lists.newArrayList();
 
-    public static final String FACT_TABLE_ALIAS = "FACT_TABLE";
-    public static final String LOOKUP_TABLE_ALAIS_PREFIX = "LOOKUP_";
 
-    public JoinedFlatTableDesc(CubeDesc cubeDesc, CubeSegment cubeSegment) {
+
+    public CubeJoinedFlatTableDesc(CubeDesc cubeDesc, CubeSegment cubeSegment) {
         this.cubeDesc = cubeDesc;
         this.cubeSegment = cubeSegment;
         parseCubeDesc();
@@ -62,12 +59,6 @@ public class JoinedFlatTableDesc {
      */
     public CubeSegment getCubeSegment() {
         return cubeSegment;
-    }
-
-    private List<IntermediateColumnDesc> columnList = Lists.newArrayList();
-
-    public List<IntermediateColumnDesc> getColumnList() {
-        return columnList;
     }
 
     // check what columns from hive tables are required, and index them
@@ -124,10 +115,10 @@ public class JoinedFlatTableDesc {
             }
         }
 
-        buileTableAliasMap();
+        buildTableAliasMap();
     }
 
-    private void buileTableAliasMap() {
+    private void buildTableAliasMap() {
         tableAliasMap = new HashMap<String, String>();
 
         tableAliasMap.put(cubeDesc.getFactTable(), FACT_TABLE_ALIAS);
@@ -141,10 +132,6 @@ public class JoinedFlatTableDesc {
             }
 
         }
-    }
-
-    public String getTableAlias(String tableName) {
-        return tableAliasMap.get(tableName);
     }
 
     private int contains(List<IntermediateColumnDesc> columnList, TblColRef c) {
@@ -161,10 +148,6 @@ public class JoinedFlatTableDesc {
         return cubeDesc;
     }
 
-    public String getTableName(String jobUUID) {
-        return tableName + "_" + jobUUID.replace("-", "_");
-    }
-
     public int[] getRowKeyColumnIndexes() {
         return rowKeyColumnIndexes;
     }
@@ -173,38 +156,29 @@ public class JoinedFlatTableDesc {
         return measureColumnIndexes;
     }
 
-    public static class IntermediateColumnDesc {
-        private String id;
-        private TblColRef colRef;
-
-        public IntermediateColumnDesc(String id, TblColRef colRef) {
-            this.id = id;
-            this.colRef = colRef;
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public String getColumnName() {
-            return colRef.getName();
-        }
-
-        public String getDataType() {
-            return colRef.getDatatype();
-        }
-
-        public String getTableName() {
-            return colRef.getTable();
-        }
-
-        public boolean isSameAs(String tableName, String columnName) {
-            return colRef.isSameAs(tableName, columnName);
-        }
-
-        public String getCanonicalName() {
-            return colRef.getCanonicalName();
-        }
-
+    @Override
+    public String getTableName(String jobUUID) {
+        return tableName + "_" + jobUUID.replace("-", "_");
     }
+
+    @Override
+    public List<IntermediateColumnDesc> getColumnList() {
+        return columnList;
+    }
+
+    @Override
+    public DataModelDesc getDataModel() {
+        return cubeDesc.getModel();
+    }
+
+    @Override
+    public CubeDesc.RealizationCapacity getCapacity() {
+        return cubeDesc.getCapacity();
+    }
+
+    @Override
+    public String getTableAlias(String tableName) {
+        return tableAliasMap.get(tableName);
+    }
+
 }

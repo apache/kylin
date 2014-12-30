@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.model.CubeDesc.CubeCapacity;
+import com.kylinolap.cube.model.CubeDesc.RealizationCapacity;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
@@ -97,8 +97,8 @@ public class RangeKeyDistributionJob extends AbstractHadoopJob {
             String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
             CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cube = cubeMgr.getCube(cubeName);
-            CubeCapacity cubeCapacity = cube.getDescriptor().getCapacity();
-            job.getConfiguration().set(BatchConstants.CUBE_CAPACITY, cubeCapacity.toString());
+            RealizationCapacity realizationCapacity = cube.getDescriptor().getCapacity();
+            job.getConfiguration().set(BatchConstants.CUBE_CAPACITY, realizationCapacity.toString());
 
             return waitForCompletion(job);
         } catch (Exception e) {

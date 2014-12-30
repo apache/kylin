@@ -35,7 +35,7 @@ import com.kylinolap.cube.model.RowKeyDesc;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc;
+import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
 import com.kylinolap.metadata.model.TblColRef;
 
 /**
@@ -48,7 +48,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, Text, ShortW
     private CubeDesc cubeDesc;
     private int[] factDictCols;
 
-    private JoinedFlatTableDesc intermediateTableDesc;
+    private CubeJoinedFlatTableDesc intermediateTableDesc;
     private String intermediateTableRowDelimiter;
     private byte byteRowDelimiter;
     private BytesSplitter bytesSplitter;
@@ -67,7 +67,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, Text, ShortW
         cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
         cube = CubeManager.getInstance(config).getCube(cubeName);
         cubeDesc = cube.getDescriptor();
-        intermediateTableDesc = new JoinedFlatTableDesc(cubeDesc, null);
+        intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
 
         long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);

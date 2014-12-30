@@ -28,7 +28,7 @@ import com.kylinolap.job.engine.JobEngine;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.exception.InvalidJobInstanceException;
 import com.kylinolap.job.exception.JobException;
-import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc;
+import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.project.ProjectManager;
 import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
@@ -236,7 +236,7 @@ public class JobManager {
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
         CubeDesc cubeDesc = cube.getDescriptor();
         CubeSegment cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.READY);
-        JoinedFlatTableDesc flatTableDesc = new JoinedFlatTableDesc(cubeDesc, cubeSegment);
+        CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, cubeSegment);
         return JoinedFlatTable.generateSelectDataStatement(flatTableDesc);
     }
 
