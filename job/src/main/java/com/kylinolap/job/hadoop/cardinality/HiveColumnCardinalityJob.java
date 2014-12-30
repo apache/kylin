@@ -168,6 +168,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
 //            job.setInputFormatClass(cformat);
 
             this.table = getOptionValue(OPTION_TABLE);
+            System.out.println("Going to start HiveColumnCardinalityJob on table '" + table + "'");
             HCatInputFormat.setInput(job, "default",
                     table);
 
