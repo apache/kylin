@@ -92,7 +92,7 @@ public class IIDescManager {
     }
 
     public IIDesc getIIDesc(String name) {
-        return iiDescMap.get(name);
+        return iiDescMap.get(name.toUpperCase());
     }
 
     /**
