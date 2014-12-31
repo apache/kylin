@@ -34,7 +34,7 @@ import com.kylinolap.metadata.model.TableDesc;
  */
 public class OLAPSchema extends AbstractSchema {
 
-//    private static final Logger logger = LoggerFactory.getLogger(OLAPSchema.class);
+    //    private static final Logger logger = LoggerFactory.getLogger(OLAPSchema.class);
 
     private KylinConfig config;
     private String projectName;
@@ -77,7 +77,7 @@ public class OLAPSchema extends AbstractSchema {
                 final String tableName = tableDesc.getName();//safe to use tableDesc.getName() here, it is in a DB context now
                 final OLAPTable table = new OLAPTable(this, tableDesc);
                 olapTables.put(tableName, table);
-//            logger.debug("Project " + projectName + " exposes table " + tableName);
+                //            logger.debug("Project " + projectName + " exposes table " + tableName);
             }
         }
 

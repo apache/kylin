@@ -15,24 +15,22 @@
  */
 package com.kylinolap.job.hadoop.hive;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.DimensionDesc;
-import com.kylinolap.metadata.model.MeasureDesc;
-import com.kylinolap.metadata.model.JoinDesc;
-import com.kylinolap.metadata.model.FunctionDesc;
-import com.kylinolap.metadata.model.TblColRef;
+import com.kylinolap.metadata.model.*;
 
 /**
  * @author George Song (ysong1)
  */
-public class JoinedFlatTableDesc {
+public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
 
     private String tableName;
     private final CubeDesc cubeDesc;
@@ -41,14 +39,16 @@ public class JoinedFlatTableDesc {
     private int[] rowKeyColumnIndexes; // the column index on flat table
     private int[][] measureColumnIndexes; // [i] is the i.th measure related
                                           // column index on flat table
-    
-    // Map for table alais; key: table name; value: alias;
-    private Map<String, String> tableAliasMap;
-    
-    public static final String FACT_TABLE_ALIAS = "FACT_TABLE";
-    public static final String LOOKUP_TABLE_ALAIS_PREFIX = "LOOKUP_";
 
-    public JoinedFlatTableDesc(CubeDesc cubeDesc, CubeSegment cubeSegment) {
+    // Map for table alias:
+    // key -> table name; 
+    // value -> alias;
+    private Map<String, String> tableAliasMap;
+    private List<IntermediateColumnDesc> columnList = Lists.newArrayList();
+
+
+
+    public CubeJoinedFlatTableDesc(CubeDesc cubeDesc, CubeSegment cubeSegment) {
         this.cubeDesc = cubeDesc;
         this.cubeSegment = cubeSegment;
         parseCubeDesc();
@@ -59,12 +59,6 @@ public class JoinedFlatTableDesc {
      */
     public CubeSegment getCubeSegment() {
         return cubeSegment;
-    }
-
-    private List<IntermediateColumnDesc> columnList = new ArrayList<IntermediateColumnDesc>();
-
-    public List<IntermediateColumnDesc> getColumnList() {
-        return columnList;
     }
 
     // check what columns from hive tables are required, and index them
@@ -79,11 +73,11 @@ public class JoinedFlatTableDesc {
             this.tableName = "kylin_intermediate_" + cubeDesc.getName() + "_" + cubeSegment.getName();
         }
 
-        Map<String, Integer> dimensionIndexMap = new HashMap<String, Integer>();
+        Map<String, Integer> dimensionIndexMap = Maps.newHashMap();
         int columnIndex = 0;
         for (TblColRef col : cubeDesc.listDimensionColumnsExcludingDerived()) {
-            dimensionIndexMap.put(col.getName(), columnIndex);
-            columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), col.getName(), col.getDatatype(), col.getTable()));
+            dimensionIndexMap.put(col.getCanonicalName(), columnIndex);
+            columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), col));
             columnIndex++;
         }
 
@@ -91,7 +85,7 @@ public class JoinedFlatTableDesc {
         List<TblColRef> cuboidColumns = baseCuboid.getColumns();
         rowKeyColumnIndexes = new int[rowkeyColCount];
         for (int i = 0; i < rowkeyColCount; i++) {
-            String colName = cuboidColumns.get(i).getName();
+            String colName = cuboidColumns.get(i).getCanonicalName();
             Integer dimIdx = dimensionIndexMap.get(colName);
             if (dimIdx == null) {
                 throw new RuntimeException("Can't find column " + colName);
@@ -114,40 +108,37 @@ public class JoinedFlatTableDesc {
                     measureColumnIndexes[i][j] = contains(columnList, c);
                     if (measureColumnIndexes[i][j] < 0) {
                         measureColumnIndexes[i][j] = columnIndex;
-                        columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), c.getName(), c.getDatatype(), c.getTable()));
+                        columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), c));
                         columnIndex++;
                     }
                 }
             }
         }
-        
-        buileTableAliasMap();
+
+        buildTableAliasMap();
     }
-    
-    private void buileTableAliasMap() {
+
+    private void buildTableAliasMap() {
         tableAliasMap = new HashMap<String, String>();
-        
+
         tableAliasMap.put(cubeDesc.getFactTable(), FACT_TABLE_ALIAS);
-        
-        int i=1;
+
+        int i = 1;
         for (DimensionDesc dim : cubeDesc.getDimensions()) {
             JoinDesc join = dim.getJoin();
-            if(join != null) {
+            if (join != null) {
                 tableAliasMap.put(dim.getTable(), LOOKUP_TABLE_ALAIS_PREFIX + i);
                 i++;
             }
-            
+
         }
-    }
-    
-    public String getTableAlias(String tableName) {
-        return tableAliasMap.get(tableName);
     }
 
     private int contains(List<IntermediateColumnDesc> columnList, TblColRef c) {
         for (int i = 0; i < columnList.size(); i++) {
             IntermediateColumnDesc col = columnList.get(i);
-            if (col.getColumnName().equals(c.getName()) && col.getTableName().equals(c.getTable()))
+
+            if (col.isSameAs(c.getTable(), c.getName()))
                 return i;
         }
         return -1;
@@ -155,10 +146,6 @@ public class JoinedFlatTableDesc {
 
     public CubeDesc getCubeDesc() {
         return cubeDesc;
-    }
-
-    public String getTableName(String jobUUID) {
-        return tableName + "_" + jobUUID.replace("-", "_");
     }
 
     public int[] getRowKeyColumnIndexes() {
@@ -169,38 +156,29 @@ public class JoinedFlatTableDesc {
         return measureColumnIndexes;
     }
 
-    public static class IntermediateColumnDesc {
-        private String id;
-        private String columnName;
-        private String dataType;
-        private String tableName;
-        private String databaseName;
-
-        public IntermediateColumnDesc(String id, String columnName, String dataType, String tableName) {
-            this.id = id;
-            this.columnName = columnName;
-            this.dataType = dataType;
-            this.tableName = tableName;
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public String getColumnName() {
-            return columnName;
-        }
-
-        public String getDataType() {
-            return dataType;
-        }
-
-        public String getTableName() {
-            return tableName;
-        }
-        
-        public String getDatabaseName() {
-            return databaseName;
-        }
+    @Override
+    public String getTableName(String jobUUID) {
+        return tableName + "_" + jobUUID.replace("-", "_");
     }
+
+    @Override
+    public List<IntermediateColumnDesc> getColumnList() {
+        return columnList;
+    }
+
+    @Override
+    public DataModelDesc getDataModel() {
+        return cubeDesc.getModel();
+    }
+
+    @Override
+    public CubeDesc.RealizationCapacity getCapacity() {
+        return cubeDesc.getCapacity();
+    }
+
+    @Override
+    public String getTableAlias(String tableName) {
+        return tableAliasMap.get(tableName);
+    }
+
 }

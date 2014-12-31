@@ -46,8 +46,6 @@ import com.kylinolap.dict.DictionaryInfo;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.dict.lookup.SnapshotManager;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.ColumnDesc;
-import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.TblColRef;
 
 /**
@@ -139,18 +137,15 @@ public class IIManager {
 
     public void buildInvertedIndexDictionary(IISegment iiSeg, String factColumnsPath) throws IOException {
         DictionaryManager dictMgr = getDictionaryManager();
-
         IIDesc iiDesc = iiSeg.getIIInstance().getDescriptor();
-        TableDesc tableDesc = iiDesc.getFactTableDesc();
-        for (ColumnDesc colDesc : tableDesc.getColumns()) {
-            TblColRef col = new TblColRef(colDesc);
-            if (iiDesc.isMetricsCol(col))
+        for (TblColRef column : iiDesc.listAllColumns()) {
+            if (iiDesc.isMetricsCol(column)) {
                 continue;
+            }
 
-            DictionaryInfo dict = dictMgr.buildDictionary(null, null, col, factColumnsPath);
-            iiSeg.putDictResPath(col, dict.getResourcePath());
+            DictionaryInfo dict = dictMgr.buildDictionary(iiDesc.getModel(), "true", column, factColumnsPath);
+            iiSeg.putDictResPath(column, dict.getResourcePath());
         }
-
         saveResource(iiSeg.getIIInstance());
     }
 
@@ -177,7 +172,6 @@ public class IIManager {
         return info.getDictionaryObject();
     }
 
-
     public IIInstance updateII(IIInstance ii) throws IOException {
         logger.info("Updating II instance '" + ii.getName());
 
@@ -189,14 +183,13 @@ public class IIManager {
         return ii;
     }
 
-
     public static String getHBaseStorageLocationPrefix() {
         return "KYLIN_II_";
     }
 
     /**
-     * For each htable, we leverage htable's metadata to keep track of
-     * which kylin server(represented by its kylin_metadata prefix) owns this htable
+     * For each htable, we leverage htable's metadata to keep track of which
+     * kylin server(represented by its kylin_metadata prefix) owns this htable
      */
     public static String getHtableMetadataKey() {
         return "KYLIN_HOST";
@@ -218,7 +211,6 @@ public class IIManager {
         }
     }
 
-
     private void saveResource(IIInstance ii) throws IOException {
         ResourceStore store = getStore();
         store.putResource(ii.getResourcePath(), ii, II_SERIALIZER);
@@ -238,11 +230,12 @@ public class IIManager {
         }
     }
 
-
     /**
      * @param IIInstance
-     * @param startDate  (pass 0 if full build)
-     * @param endDate    (pass 0 if full build)
+     * @param startDate
+     *            (pass 0 if full build)
+     * @param endDate
+     *            (pass 0 if full build)
      * @return
      */
     private IISegment buildSegment(IIInstance IIInstance, long startDate, long endDate) {
@@ -276,7 +269,6 @@ public class IIManager {
 
         return tableName;
     }
-
 
     private void loadAllIIInstance() throws IOException {
         ResourceStore store = getStore();

@@ -126,14 +126,14 @@ public class DeployUtil {
 
     static final String[] TABLE_NAMES = new String[] { TABLE_CAL_DT, TABLE_CATEGORY_GROUPINGS, TABLE_KYLIN_FACT, TABLE_SELLER_TYPE_DIM, TABLE_SITES };
 
-
     public static void prepareTestData(String joinType, String cubeName) throws Exception {
 
-        String factTableName = TABLE_KYLIN_FACT;
+        String factTableName = TABLE_KYLIN_FACT.toUpperCase();
         String content = null;
 
         boolean buildCubeUsingProvidedData = Boolean.parseBoolean(System.getProperty("buildCubeUsingProvidedData"));
         if (!buildCubeUsingProvidedData) {
+            System.out.println("build cube with random dataset");
             // data is generated according to cube descriptor and saved in resource store
             if (joinType.equalsIgnoreCase("inner")) {
                 content = FactTableGenerator.generate(cubeName, "10000", "1", null, "inner");
@@ -145,6 +145,8 @@ public class DeployUtil {
 
             assert content != null;
             overrideFactTableData(content, factTableName);
+        } else {
+            System.out.println("build cube with provided dataset");
         }
 
         duplicateFactTableData(factTableName, joinType);
@@ -172,7 +174,6 @@ public class DeployUtil {
         store.putResource(factTablePathWithJoinType, in, System.currentTimeMillis());
         in.close();
     }
-
 
     private static void deployHiveTables() throws Exception {
 

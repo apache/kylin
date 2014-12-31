@@ -33,7 +33,7 @@ public class DataGenTest extends LocalFileMetadataTestCase {
         assertTrue(content.contains("FP-non GTC"));
         assertTrue(content.contains("ABIN"));
 
-        DeployUtil.overrideFactTableData(content,"default.test_kylin_fact");
+        DeployUtil.overrideFactTableData(content, "default.test_kylin_fact");
     }
 
 }

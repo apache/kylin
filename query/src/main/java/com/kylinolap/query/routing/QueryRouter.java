@@ -132,21 +132,18 @@ public class QueryRouter {
     }
 
     static List<CubeInstance> filterCubes(List<IRealization> realizations) {
-        return Lists.newArrayList(
-                Iterables.transform(
-                        Iterables.filter(realizations, new Predicate<IRealization>() {
-                            @Override
-                            public boolean apply(IRealization input) {
-                                return input.getType() == RealizationType.CUBE;
-                            }
-                        }),
-                        new Function<IRealization, CubeInstance>() {
-                            @Nullable
-                            @Override
-                            public CubeInstance apply(IRealization input) {
-                                return (CubeInstance) input;
-                            }
-                        }));
+        return Lists.newArrayList(Iterables.transform(Iterables.filter(realizations, new Predicate<IRealization>() {
+            @Override
+            public boolean apply(IRealization input) {
+                return input.getType() == RealizationType.CUBE;
+            }
+        }), new Function<IRealization, CubeInstance>() {
+            @Nullable
+            @Override
+            public CubeInstance apply(IRealization input) {
+                return (CubeInstance) input;
+            }
+        }));
     }
 
     static CubeInstance findBestMatchCube(ProjectManager projectManager, OLAPContext olapContext) throws CubeNotFoundException {
@@ -279,7 +276,7 @@ public class QueryRouter {
             if (functionDesc.isCountDistinct()) // calcite can not handle distinct count
                 matched = false;
 
-            TblColRef col = findTblColByMetrics(metricColumns, functionDesc);
+            TblColRef col = findTblColByMetrics(metricColumns, functionDesc,cubeDesc.getFactTable());
             if (col == null || !cubeDesc.listDimensionColumnsIncludingDerived().contains(col)) {
                 matched = false;
             }
@@ -297,7 +294,7 @@ public class QueryRouter {
             FunctionDesc functionDesc = it.next();
             if (!cubeFuncs.contains(functionDesc)) {
                 // try to convert the metric to dimension to see if it works
-                TblColRef col = findTblColByMetrics(metricColumns, functionDesc);
+                TblColRef col = findTblColByMetrics(metricColumns, functionDesc, cubeDesc.getFactTable());
                 functionDesc.setAppliedOnDimension(true);
                 rewriteFields.remove(functionDesc.getRewriteFieldName());
                 if (col != null) {
@@ -310,7 +307,7 @@ public class QueryRouter {
         }
     }
 
-    private static TblColRef findTblColByMetrics(Collection<TblColRef> dimensionColumns, FunctionDesc func) {
+    private static TblColRef findTblColByMetrics(Collection<TblColRef> dimensionColumns, FunctionDesc func, String factTableName) {
         if (func.isCount())
             return null; // count is not about any column but the whole row
 
@@ -320,11 +317,10 @@ public class QueryRouter {
 
         String columnName = parameter.getValue();
         for (TblColRef col : dimensionColumns) {
-            String name = col.getName();
-            if (name != null && name.equals(columnName))
+            if (col.isSameAs(factTableName, columnName)) {
                 return col;
+            }
         }
         return null;
     }
-
 }

@@ -47,7 +47,7 @@ public class TableDesc extends RootPersistentEntity {
         if (lastIndexOfDot >= 0) {
             name = name.substring(lastIndexOfDot + 1);
         }
-        
+
         for (ColumnDesc c : columns) {
             // return first matched column
             if (name.equalsIgnoreCase(c.getName())) {

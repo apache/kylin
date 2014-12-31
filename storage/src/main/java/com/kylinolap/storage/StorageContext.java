@@ -188,23 +188,23 @@ public class StorageContext {
     public void setExactAggregation(boolean isExactAggregation) {
         this.exactAggregation = isExactAggregation;
     }
-    
+
     public boolean isExactAggregation() {
         return this.exactAggregation;
     }
-    
+
     public void addOtherMandatoryColumns(TblColRef col) {
         this.otherMandatoryColumns.add(col);
     }
-    
+
     public Set<TblColRef> getOtherMandatoryColumns() {
         return this.otherMandatoryColumns;
     }
-    
+
     public void enableCoprocessor() {
         this.enableCoprocessor = true;
     }
-    
+
     public boolean isCoprocessorEnabled() {
         return this.enableCoprocessor;
     }

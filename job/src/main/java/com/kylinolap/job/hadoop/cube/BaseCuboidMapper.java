@@ -42,7 +42,7 @@ import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc;
+import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
 import com.kylinolap.metadata.model.FunctionDesc;
 import com.kylinolap.metadata.model.ParameterDesc;
 
@@ -64,7 +64,7 @@ public class BaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> {
     private CubeSegment cubeSegment;
     private List<byte[]> nullBytes;
 
-    private JoinedFlatTableDesc intermediateTableDesc;
+    private CubeJoinedFlatTableDesc intermediateTableDesc;
     private String intermediateTableRowDelimiter;
     private byte byteRowDelimiter;
 
@@ -99,7 +99,7 @@ public class BaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> {
         long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
 
-        intermediateTableDesc = new JoinedFlatTableDesc(cube.getDescriptor(), cubeSegment);
+        intermediateTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), cubeSegment);
 
         bytesSplitter = new BytesSplitter(200, 4096);
         rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid);

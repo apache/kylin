@@ -23,7 +23,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.util.StringUtils;
 
-import com.kylinolap.cube.model.CubeDesc.CubeCapacity;
+import com.kylinolap.cube.model.CubeDesc.RealizationCapacity;
 import com.kylinolap.job.constant.BatchConstants;
 
 /**
@@ -41,13 +41,13 @@ public class RangeKeyDistributionReducer extends Reducer<Text, LongWritable, Tex
     private long bytesRead = 0;
     private Text lastKey;
 
-    private CubeCapacity cubeCapacity;
+    private RealizationCapacity realizationCapacity;
     private long cut;
 
     @Override
     protected void setup(Context context) throws IOException {
-        cubeCapacity = CubeCapacity.valueOf(context.getConfiguration().get(BatchConstants.CUBE_CAPACITY));
-        switch (cubeCapacity) {
+        realizationCapacity = RealizationCapacity.valueOf(context.getConfiguration().get(BatchConstants.CUBE_CAPACITY));
+        switch (realizationCapacity) {
         case SMALL:
             cut = FIVE_GIGA_BYTES;
             break;

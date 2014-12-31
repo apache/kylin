@@ -59,7 +59,7 @@ abstract public class Dictionary<T> implements Writable {
      *         value of column
      */
     abstract public int getSizeOfValue();
-    
+
     /**
      * Convenient form of <code>getIdFromValue(value, 0)</code>
      */
@@ -131,7 +131,7 @@ abstract public class Dictionary<T> implements Writable {
         else
             return getIdFromValueBytesImpl(value, offset, len, roundingFlag);
     }
-    
+
     protected boolean isNullByteForm(byte[] value, int offset, int len) {
         return value == null;
     }

@@ -70,11 +70,12 @@ public class InvertedIndexJob extends AbstractHadoopJob {
             // ----------------------------------------------------------------------------
 
             System.out.println("Starting: " + job.getJobName());
-            
+
             IIInstance ii = getII(iiname);
+            short sharding = ii.getDescriptor().getSharding();
 
             setupMapInput(input, inputFormat, inputDelim);
-            setupReduceOutput(output, ii.getDescriptor().getSharding());
+            setupReduceOutput(output, sharding);
             attachMetadata(ii);
 
             return waitForCompletion(job);
@@ -145,7 +146,7 @@ public class InvertedIndexJob extends AbstractHadoopJob {
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
         job.setOutputKeyClass(ImmutableBytesWritable.class);
         job.setOutputValueClass(ImmutableBytesWritable.class);
-        
+
         job.setNumReduceTasks(sharding);
 
         FileOutputFormat.setOutputPath(job, output);

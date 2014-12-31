@@ -18,6 +18,7 @@ package com.kylinolap.metadata.model;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * Column Metadata from Source. All name should be uppercase.
@@ -115,6 +116,11 @@ public class ColumnDesc {
             zeroBasedIndex = Integer.parseInt(id) - 1;
 
         type = DataType.getInstance(datatype);
+    }
+
+    public boolean isSameAs(String tableName, String columnName) {
+        return StringUtils.equalsIgnoreCase(table.getIdentity(), tableName) && //
+                StringUtils.equalsIgnoreCase(name, columnName);
     }
 
     @Override

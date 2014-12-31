@@ -72,8 +72,6 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
 
     public static final int SCAN_CACHE = 1024;
 
-
-
     private final CubeInstance cube;
     private final CubeSegment cubeSeg;
     private final Collection<TblColRef> dimensions;

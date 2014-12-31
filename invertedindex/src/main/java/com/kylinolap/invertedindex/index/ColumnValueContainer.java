@@ -24,18 +24,17 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
  */
 public interface ColumnValueContainer {
 
-    void append(ImmutableBytesWritable valueBytes);
+	void append(ImmutableBytesWritable valueBytes);
 
-    void closeForChange();
+	void closeForChange();
 
-    int getSize();
+	int getSize();
 
-    // works only after closeForChange()
-    void getValueAt(int i, ImmutableBytesWritable valueBytes);
+	// works only after closeForChange()
+	void getValueAt(int i, ImmutableBytesWritable valueBytes);
 
-    ConciseSet getBitMap(int valueId);
+	ConciseSet getBitMap(int valueId);
 
-    int getMaxValueId();
-
+	int getMaxValueId();
 
 }

@@ -16,26 +16,35 @@
 
 package com.kylinolap.common.util;
 
-import com.kylinolap.common.KylinConfig;
-
 /**
  * @author ysong1
  */
 public class HBaseMetadataTestCase extends AbstractKylinTestCase {
-    
-    public static void staticCleanupTestMetadata() {
-        System.clearProperty(KylinConfig.KYLIN_CONF);
-        KylinConfig.destoryInstance();
-    }
 
     @Override
-    public void createTestMetadata() {
-        staticCreateTestMetadata(SANDBOX_TEST_DATA);
+    public void createTestMetadata() throws Exception {
+        staticCreateTestMetadata();
     }
 
     @Override
     public void cleanupTestMetadata() {
-        staticCleanupTestMetadata();
+        HBaseMetadataTestCase.staticCleanupTestMetadata();
+    }
+
+    public static void staticCreateTestMetadata() throws Exception {
+        if (useSandbox()) {
+            HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
+        } else {
+            HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.MINICLUSTER_TEST_DATA);
+            HBaseMiniclusterMetadataTestCase.startupMinicluster();
+        }
+        
+    }
+    
+    public static boolean useSandbox() {
+        String useSandbox = System.getProperty("useSandbox");
+        return Boolean.parseBoolean(useSandbox);
+
     }
 
 }

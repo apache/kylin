@@ -77,7 +77,6 @@ public class ObserverTuple implements ITuple {
         return values[i];
     }
 
-
     @Override
     public Object getValue(TblColRef col) {
         int i = type.getColIndexByTblColRef(col);

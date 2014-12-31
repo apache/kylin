@@ -48,13 +48,13 @@ public class QueryServiceTest extends ServiceTestBase {
         Assert.assertNotNull(queryService.getMetadataManager());
         Assert.assertNotNull(queryService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
 
-//        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 0);
-//
-//        queryService.saveQuery("test", "test", "select * from test_table", "test");
-//        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 1);
-//
-//        queryService.removeQuery(queryService.getQueries("ADMIN").get(0).getProperty("id"));
-//        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 0);
+        //        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 0);
+        //
+        //        queryService.saveQuery("test", "test", "select * from test_table", "test");
+        //        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 1);
+        //
+        //        queryService.removeQuery(queryService.getQueries("ADMIN").get(0).getProperty("id"));
+        //        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 0);
 
         SQLRequest request = new SQLRequest();
         request.setSql("select * from test_table");

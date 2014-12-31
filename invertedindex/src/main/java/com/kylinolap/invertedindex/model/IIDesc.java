@@ -2,30 +2,29 @@ package com.kylinolap.invertedindex.model;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.kylinolap.common.util.JsonUtil;
-import com.kylinolap.metadata.MetadataConstances;
-import com.kylinolap.metadata.model.*;
-import com.kylinolap.metadata.model.ParameterDesc;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.net.util.Base64;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
+import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.common.util.StringUtil;
+import com.kylinolap.metadata.MetadataConstances;
 import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.*;
 
 /**
  * @author yangli9
@@ -46,15 +45,15 @@ public class IIDesc extends RootPersistentEntity {
     @JsonProperty("model_name")
     private String modelName;
     @JsonProperty("fact_table")
-    private String factTable;
+    private String factTableName;
     @JsonProperty("timestamp_dimension")
     private String timestampDimension;
     @JsonProperty("bitmap_dimensions")
-    private String[] bitmapDimensions;
+    private List<IIDimension> bitmapDimensions;
     @JsonProperty("value_dimensions")
-    private String[] valueDimensions;
+    private List<IIDimension> valueDimensions;
     @JsonProperty("metrics")
-    private String[] metrics;
+    private String[] metricNames;
     @JsonProperty("sharding")
     private short sharding = 1; // parallelism
     @JsonProperty("slice_size")
@@ -63,7 +62,8 @@ public class IIDesc extends RootPersistentEntity {
     private String signature;
 
     // computed
-    private TableDesc tableDesc;
+    private List<TableDesc> allTables = Lists.newArrayList();
+    private List<TblColRef> allColumns = Lists.newArrayList();
     private int tsCol;
     private int[] bitmapCols;
     private int[] valueCols;
@@ -71,10 +71,9 @@ public class IIDesc extends RootPersistentEntity {
     private BitSet metricsColSet;
     private List<MeasureDesc> measureDescs;
 
+    public void init(MetadataManager metadataManager) {
 
-    public void init(MetadataManager mgr) {
-
-        config = mgr.getConfig();
+        config = metadataManager.getConfig();
 
         if (this.modelName == null || this.modelName.length() == 0) {
             throw new RuntimeException("The cubeDesc '" + this.getName() + "' doesn't have data model specified.");
@@ -86,40 +85,79 @@ public class IIDesc extends RootPersistentEntity {
             throw new RuntimeException("No data model found with name '" + modelName + "'.");
         }
 
-
-        factTable = factTable.toUpperCase();
+        factTableName = TableDesc.getTableIdentity(factTableName);
         timestampDimension = timestampDimension.toUpperCase();
-        StringUtil.toUpperCaseArray(bitmapDimensions, bitmapDimensions);
-        StringUtil.toUpperCaseArray(valueDimensions, valueDimensions);
-        StringUtil.toUpperCaseArray(metrics, metrics);
 
-        tableDesc = mgr.getTableDesc(factTable);
-        bitmapCols = new int[bitmapDimensions.length];
-        valueCols = new int[valueDimensions.length];
-        metricsCols = new int[metrics.length];
-        metricsColSet = new BitSet(tableDesc.getColumnCount());
-        measureDescs = Lists.newArrayList();
-        int i = 0, j = 0, k = 0;
-        for (ColumnDesc col : tableDesc.getColumns()) {
-            if (ArrayUtils.contains(bitmapDimensions, col.getName())) {
-                bitmapCols[i++] = col.getZeroBasedIndex();
+        //capitalize
+        IIDimension.capicalizeStrings(bitmapDimensions);
+        IIDimension.capicalizeStrings(valueDimensions);
+        StringUtil.toUpperCaseArray(metricNames, metricNames);
+
+        //retrieve all columns and all tables
+        HashSet<String> allTableNames = Sets.newHashSet();
+        for (IIDimension iiDimension : Iterables.concat(bitmapDimensions, valueDimensions)) {
+            TableDesc tableDesc = this.getTableDesc(iiDimension.getTable());
+            for (String column : iiDimension.getColumns()) {
+                ColumnDesc columnDesc = tableDesc.findColumnByName(column);
+                allColumns.add(new TblColRef(columnDesc));
             }
-            if (ArrayUtils.contains(valueDimensions, col.getName())) {
-                valueCols[j++] = col.getZeroBasedIndex();
+            if (!allTableNames.contains(tableDesc.getIdentity())) {
+                allTableNames.add(tableDesc.getIdentity());
+                allTables.add(tableDesc);
             }
-            if (ArrayUtils.contains(metrics, col.getName())) {
-                metricsCols[k++] = col.getZeroBasedIndex();
-                metricsColSet.set(col.getZeroBasedIndex());
-                measureDescs.add(makeMeasureDescs("SUM", col));
-                measureDescs.add(makeMeasureDescs("MIN", col));
-                measureDescs.add(makeMeasureDescs("MAX", col));
-                //TODO support for HLL
+        }
+        for (String column : metricNames) {
+            TableDesc tableDesc = this.getTableDesc(this.factTableName);
+            ColumnDesc columnDesc = tableDesc.findColumnByName(column);
+            allColumns.add(new TblColRef(columnDesc));
+            if (!allTableNames.contains(tableDesc.getIdentity())) {
+                allTableNames.add(tableDesc.getIdentity());
+                allTables.add(tableDesc);
             }
         }
 
-        tsCol = tableDesc.findColumnByName(timestampDimension).getZeroBasedIndex();
+        //indexing for each type of columns
+        bitmapCols = new int[IIDimension.getColumnCount(bitmapDimensions)];
+        valueCols = new int[IIDimension.getColumnCount(valueDimensions)];
+        metricsCols = new int[metricNames.length];
+
+        metricsColSet = new BitSet(this.getTableDesc(this.factTableName).getColumnCount());
+        measureDescs = Lists.newArrayList();
+
+        int totalIndex = 0;
+        for (int i = 0; i < bitmapCols.length; ++i, ++totalIndex) {
+            bitmapCols[i] = totalIndex;
+        }
+        for (int i = 0; i < valueCols.length; ++i, ++totalIndex) {
+            valueCols[i] = totalIndex;
+        }
+        for (int i = 0; i < metricsCols.length; ++i, ++totalIndex) {
+            metricsCols[i] = totalIndex;
+            metricsColSet.set(totalIndex);
+
+            ColumnDesc col = this.getTableDesc(this.factTableName).findColumnByName(metricNames[i]);
+            measureDescs.add(makeMeasureDescs("SUM", col));
+            measureDescs.add(makeMeasureDescs("MIN", col));
+            measureDescs.add(makeMeasureDescs("MAX", col));
+            // TODO support for HLL
+        }
+
+        //partitioning column
+        tsCol = -1;
+        for (int i = 0; i < allColumns.size(); ++i) {
+            TblColRef col = allColumns.get(i);
+            if (col.getTable().equalsIgnoreCase(TableDesc.getTableIdentity(this.factTableName)) && col.getColumn().getName().equalsIgnoreCase(this.timestampDimension)) {
+                tsCol = i;
+                break;
+            }
+        }
+        if (tsCol < 0)
+            throw new RuntimeException("timestamp_dimension is not in bitmapDimensions or valueDimensions");
     }
 
+    private TableDesc getTableDesc(String tableName) {
+        return MetadataManager.getInstance(this.config).getTableDesc(tableName);
+    }
 
     public String getResourcePath() {
         return getIIDescResourcePath(name);
@@ -128,7 +166,6 @@ public class IIDesc extends RootPersistentEntity {
     public static String getIIDescResourcePath(String descName) {
         return ResourceStore.II_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstances.FILE_SURFIX;
     }
-
 
     public List<MeasureDesc> getMeasures() {
         return measureDescs;
@@ -151,25 +188,26 @@ public class IIDesc extends RootPersistentEntity {
     }
 
     /**
-     * at first stage the only table in II is fact table, TODO: to extend to all tables
-     *
+     * at first stage the only table in II is fact table, 
+     * tables
+     * 
      * @return
      */
     public List<TableDesc> listTables() {
-        return Lists.newArrayList(this.tableDesc);
+        return allTables;
     }
 
     public List<TblColRef> listAllColumns() {
-        List<TblColRef> ret = Lists.newArrayList();
-        for (ColumnDesc columnDesc : this.tableDesc.getColumns()) {
-            ret.add(new TblColRef(columnDesc));
-        }
-        return ret;
+        return allColumns;
     }
 
     public TblColRef findColumnRef(String table, String column) {
-        ColumnDesc columnDesc = this.tableDesc.findColumnByName(column);
+        ColumnDesc columnDesc = this.getTableDesc(table).findColumnByName(column);
         return new TblColRef(columnDesc);
+    }
+
+    public int findColumn(TblColRef col) {
+        return this.allColumns.indexOf(col);
     }
 
     public KylinConfig getConfig() {
@@ -179,7 +217,6 @@ public class IIDesc extends RootPersistentEntity {
     public String getName() {
         return name;
     }
-
 
     public String getModelName() {
         return modelName;
@@ -229,23 +266,22 @@ public class IIDesc extends RootPersistentEntity {
         this.signature = signature;
     }
 
-
     public boolean isMetricsCol(TblColRef col) {
-        assert col.getTable().equals(factTable);
-        return isMetricsCol(col.getColumn().getZeroBasedIndex());
+        if (!col.getTable().equalsIgnoreCase(this.factTableName))
+            return false;
+        return isMetricsCol(this.findColumn(col));
     }
 
-    public boolean isMetricsCol(int colZeroBasedIndex) {
-        return metricsColSet.get(colZeroBasedIndex);
+    public boolean isMetricsCol(int index) {
+        return metricsColSet.get(index);
     }
 
-
-    public TableDesc getFactTableDesc() {
-        return tableDesc;
-    }
-
-    public String getFactTable() {
-        return factTable;
+    /**
+     * the returned fact table name is guaranteed to be in the form of db.table
+     * @return
+     */
+    public String getFactTableName() {
+        return factTableName;
     }
 
     public String getTimestampDimension() {
@@ -257,9 +293,7 @@ public class IIDesc extends RootPersistentEntity {
         try {
             md = MessageDigest.getInstance("MD5");
             StringBuilder sigString = new StringBuilder();
-            sigString.append(this.name).append("|").append(this.getFactTable()).append("|").append(timestampDimension).append("|").
-                    append(JsonUtil.writeValueAsString(this.bitmapDimensions)).append("|").append(JsonUtil.writeValueAsString(valueDimensions)).append("|").
-                    append(JsonUtil.writeValueAsString(this.metrics)).append("|").append(sharding).append("|").append(sliceSize);
+            sigString.append(this.name).append("|").append(this.getFactTableName()).append("|").append(timestampDimension).append("|").append(JsonUtil.writeValueAsString(this.bitmapDimensions)).append("|").append(JsonUtil.writeValueAsString(valueDimensions)).append("|").append(JsonUtil.writeValueAsString(this.metricNames)).append("|").append(sharding).append("|").append(sliceSize);
 
             byte[] signature = md.digest(sigString.toString().getBytes());
             return new String(Base64.encodeBase64(signature));

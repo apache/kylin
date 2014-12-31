@@ -131,7 +131,6 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
         return Arrays.hashCode(parts);
     }
 
-
     @Override
     public boolean equals(Object o) {
         if ((o instanceof SnapshotTable) == false)

@@ -68,7 +68,7 @@ public class DimensionDesc {
         }
         return false;
     }
-    
+
     public boolean isHierarchy() {
         return isHierarchy;
     }
@@ -224,7 +224,7 @@ public class DimensionDesc {
     public void init(CubeDesc cubeDesc, Map<String, TableDesc> tables, Map<String, List<TableDesc>> columnTableMap, Map<String, List<String>> tableDatabaseMap) {
         if (name != null)
             name = name.toUpperCase();
-        
+
         if (table != null)
             table = table.toUpperCase();
 

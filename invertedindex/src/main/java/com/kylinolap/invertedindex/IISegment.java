@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
-import com.kylinolap.dict.ColumnDictInfo;
+import com.kylinolap.dict.ISegment;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.invertedindex.index.TableRecordInfo;
 import com.kylinolap.invertedindex.model.IIDesc;
@@ -37,280 +37,278 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author honma
  */
 
-//TODO: remove segment concept for II, append old hbase table
+// TODO: remove segment concept for II, append old hbase table
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class IISegment implements Comparable<IISegment>, ColumnDictInfo {
+public class IISegment implements Comparable<IISegment>, ISegment {
 
-    @JsonBackReference
-    private IIInstance iiInstance;
-    @JsonProperty("uuid")
-    private String uuid;
-    @JsonProperty("name")
-    private String name;
-    @JsonProperty("storage_location_identifier")
-    private String storageLocationIdentifier; // HTable name
-    @JsonProperty("date_range_start")
-    private long dateRangeStart;
-    @JsonProperty("date_range_end")
-    private long dateRangeEnd;
-    @JsonProperty("status")
-    private SegmentStatusEnum status;
-    @JsonProperty("size_kb")
-    private long sizeKB;
-    @JsonProperty("source_records")
-    private long sourceRecords;
-    @JsonProperty("source_records_size")
-    private long sourceRecordsSize;
-    @JsonProperty("last_build_time")
-    private long lastBuildTime;
-    @JsonProperty("last_build_job_id")
-    private String lastBuildJobID;
-    @JsonProperty("create_time")
-    private String createTime;
+	@JsonBackReference
+	private IIInstance iiInstance;
+	@JsonProperty("uuid")
+	private String uuid;
+	@JsonProperty("name")
+	private String name;
+	@JsonProperty("storage_location_identifier")
+	private String storageLocationIdentifier; // HTable name
+	@JsonProperty("date_range_start")
+	private long dateRangeStart;
+	@JsonProperty("date_range_end")
+	private long dateRangeEnd;
+	@JsonProperty("status")
+	private SegmentStatusEnum status;
+	@JsonProperty("size_kb")
+	private long sizeKB;
+	@JsonProperty("source_records")
+	private long sourceRecords;
+	@JsonProperty("source_records_size")
+	private long sourceRecordsSize;
+	@JsonProperty("last_build_time")
+	private long lastBuildTime;
+	@JsonProperty("last_build_job_id")
+	private String lastBuildJobID;
+	@JsonProperty("create_time")
+	private String createTime;
 
-    @JsonProperty("binary_signature")
-    private String binarySignature; // a hash of schema and dictionary ID,
-    // used for sanity check
+	@JsonProperty("binary_signature")
+	private String binarySignature; // a hash of schema and dictionary ID,
+	// used for sanity check
 
-    @JsonProperty("dictionaries")
-    private ConcurrentHashMap<String, String> dictionaries; // table/column ==> dictionary resource path
+	@JsonProperty("dictionaries")
+	private ConcurrentHashMap<String, String> dictionaries; // table/column ==>
+															// dictionary
+															// resource path
 
-    private transient TableRecordInfo tableRecordInfo;
+	private transient TableRecordInfo tableRecordInfo;
 
-    /**
-     * @param startDate
-     * @param endDate
-     * @return if(startDate == 0 && endDate == 0), returns "FULL_BUILD", else
-     * returns "yyyyMMddHHmmss_yyyyMMddHHmmss"
-     */
-    public static String getSegmentName(long startDate, long endDate) {
-        if (startDate == 0 && endDate == 0) {
-            return "FULL_BUILD";
-        }
+	/**
+	 * @param startDate
+	 * @param endDate
+	 * @return if(startDate == 0 && endDate == 0), returns "FULL_BUILD", else
+	 *         returns "yyyyMMddHHmmss_yyyyMMddHHmmss"
+	 */
+	public static String getSegmentName(long startDate, long endDate) {
+		if (startDate == 0 && endDate == 0) {
+			return "FULL_BUILD";
+		}
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+		dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 
-        return dateFormat.format(startDate) + "_" + dateFormat.format(endDate);
-    }
+		return dateFormat.format(startDate) + "_" + dateFormat.format(endDate);
+	}
 
-    public IIDesc getIIDesc() {
-        return getIIInstance().getDescriptor();
-    }
+	public IIDesc getIIDesc() {
+		return getIIInstance().getDescriptor();
+	}
 
+	// ============================================================================
 
-    // ============================================================================
+	public String getUuid() {
+		return uuid;
+	}
 
+	public void setUuid(String id) {
+		this.uuid = id;
+	}
 
-    public String getUuid() {
-        return uuid;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setUuid(String id) {
-        this.uuid = id;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public long getDateRangeStart() {
+		return dateRangeStart;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setDateRangeStart(long dateRangeStart) {
+		this.dateRangeStart = dateRangeStart;
+	}
 
-    public long getDateRangeStart() {
-        return dateRangeStart;
-    }
+	public long getDateRangeEnd() {
+		return dateRangeEnd;
+	}
 
-    public void setDateRangeStart(long dateRangeStart) {
-        this.dateRangeStart = dateRangeStart;
-    }
+	public void setDateRangeEnd(long dateRangeEnd) {
+		this.dateRangeEnd = dateRangeEnd;
+	}
 
-    public long getDateRangeEnd() {
-        return dateRangeEnd;
-    }
+	public SegmentStatusEnum getStatus() {
+		return status;
+	}
 
-    public void setDateRangeEnd(long dateRangeEnd) {
-        this.dateRangeEnd = dateRangeEnd;
-    }
+	public void setStatus(SegmentStatusEnum status) {
+		this.status = status;
+	}
 
-    public SegmentStatusEnum getStatus() {
-        return status;
-    }
+	public long getSizeKB() {
+		return sizeKB;
+	}
 
-    public void setStatus(SegmentStatusEnum status) {
-        this.status = status;
-    }
+	public void setSizeKB(long sizeKB) {
+		this.sizeKB = sizeKB;
+	}
 
-    public long getSizeKB() {
-        return sizeKB;
-    }
+	public long getSourceRecords() {
+		return sourceRecords;
+	}
 
-    public void setSizeKB(long sizeKB) {
-        this.sizeKB = sizeKB;
-    }
+	public void setSourceRecords(long sourceRecords) {
+		this.sourceRecords = sourceRecords;
+	}
 
-    public long getSourceRecords() {
-        return sourceRecords;
-    }
+	public long getSourceRecordsSize() {
+		return sourceRecordsSize;
+	}
 
-    public void setSourceRecords(long sourceRecords) {
-        this.sourceRecords = sourceRecords;
-    }
+	public void setSourceRecordsSize(long sourceRecordsSize) {
+		this.sourceRecordsSize = sourceRecordsSize;
+	}
 
-    public long getSourceRecordsSize() {
-        return sourceRecordsSize;
-    }
+	public long getLastBuildTime() {
+		return lastBuildTime;
+	}
 
-    public void setSourceRecordsSize(long sourceRecordsSize) {
-        this.sourceRecordsSize = sourceRecordsSize;
-    }
+	public void setLastBuildTime(long lastBuildTime) {
+		this.lastBuildTime = lastBuildTime;
+	}
 
-    public long getLastBuildTime() {
-        return lastBuildTime;
-    }
+	public String getLastBuildJobID() {
+		return lastBuildJobID;
+	}
 
-    public void setLastBuildTime(long lastBuildTime) {
-        this.lastBuildTime = lastBuildTime;
-    }
+	public void setLastBuildJobID(String lastBuildJobID) {
+		this.lastBuildJobID = lastBuildJobID;
+	}
 
-    public String getLastBuildJobID() {
-        return lastBuildJobID;
-    }
+	public String getCreateTime() {
+		return createTime;
+	}
 
-    public void setLastBuildJobID(String lastBuildJobID) {
-        this.lastBuildJobID = lastBuildJobID;
-    }
+	public void setCreateTime(String createTime) {
+		this.createTime = createTime;
+	}
 
-    public String getCreateTime() {
-        return createTime;
-    }
+	public String getBinarySignature() {
+		return binarySignature;
+	}
 
-    public void setCreateTime(String createTime) {
-        this.createTime = createTime;
-    }
+	public void setBinarySignature(String binarySignature) {
+		this.binarySignature = binarySignature;
+	}
 
-    public String getBinarySignature() {
-        return binarySignature;
-    }
+	public IIInstance getIIInstance() {
+		return iiInstance;
+	}
 
-    public void setBinarySignature(String binarySignature) {
-        this.binarySignature = binarySignature;
-    }
+	public void setIIInstance(IIInstance iiInstance) {
+		this.iiInstance = iiInstance;
+	}
 
-    public IIInstance getIIInstance() {
-        return iiInstance;
-    }
+	public String getStorageLocationIdentifier() {
+		return storageLocationIdentifier;
+	}
 
-    public void setIIInstance(IIInstance iiInstance) {
-        this.iiInstance = iiInstance;
-    }
+	public Map<String, String> getDictionaries() {
+		if (dictionaries == null)
+			dictionaries = new ConcurrentHashMap<String, String>();
+		return dictionaries;
+	}
 
-    public String getStorageLocationIdentifier() {
-        return storageLocationIdentifier;
-    }
+	public Collection<String> getDictionaryPaths() {
+		return getDictionaries().values();
+	}
 
-    public Map<String, String> getDictionaries() {
-        if (dictionaries == null)
-            dictionaries = new ConcurrentHashMap<String, String>();
-        return dictionaries;
-    }
+	public String getDictResPath(TblColRef col) {
+		return getDictionaries().get(dictKey(col));
+	}
 
-    public Collection<String> getDictionaryPaths() {
-        return getDictionaries().values();
-    }
+	public void putDictResPath(TblColRef col, String dictResPath) {
+		getDictionaries().put(dictKey(col), dictResPath);
+	}
 
+	private String dictKey(TblColRef col) {
+		return col.getTable() + "/" + col.getName();
+	}
 
-    public String getDictResPath(TblColRef col) {
-        return getDictionaries().get(dictKey(col));
-    }
+	/**
+	 * @param storageLocationIdentifier
+	 *            the storageLocationIdentifier to set
+	 */
+	public void setStorageLocationIdentifier(String storageLocationIdentifier) {
+		this.storageLocationIdentifier = storageLocationIdentifier;
+	}
 
-    public void putDictResPath(TblColRef col, String dictResPath) {
-        getDictionaries().put(dictKey(col), dictResPath);
-    }
+	@Override
+	public int compareTo(IISegment other) {
+		if (this.dateRangeEnd < other.dateRangeEnd) {
+			return -1;
+		} else if (this.dateRangeEnd > other.dateRangeEnd) {
+			return 1;
+		} else {
+			return 0;
+		}
+	}
 
-    private String dictKey(TblColRef col) {
-        return col.getTable() + "/" + col.getName();
-    }
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((iiInstance == null) ? 0 : iiInstance.hashCode());
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((status == null) ? 0 : status.hashCode());
+		return result;
+	}
 
-    /**
-     * @param storageLocationIdentifier the storageLocationIdentifier to set
-     */
-    public void setStorageLocationIdentifier(String storageLocationIdentifier) {
-        this.storageLocationIdentifier = storageLocationIdentifier;
-    }
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		IISegment other = (IISegment) obj;
+		if (iiInstance == null) {
+			if (other.iiInstance != null)
+				return false;
+		} else if (!iiInstance.equals(other.iiInstance))
+			return false;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		if (status != other.status)
+			return false;
+		return true;
+	}
 
-    @Override
-    public int compareTo(IISegment other) {
-        if (this.dateRangeEnd < other.dateRangeEnd) {
-            return -1;
-        } else if (this.dateRangeEnd > other.dateRangeEnd) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
+	@Override
+	public String toString() {
+		return Objects.toStringHelper(this).add("uuid", uuid)
+				.add("create_time:", createTime).add("name", name)
+				.add("last_build_job_id", lastBuildJobID).add("status", status)
+				.toString();
+	}
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((iiInstance == null) ? 0 : iiInstance.hashCode());
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + ((status == null) ? 0 : status.hashCode());
-        return result;
-    }
+	@Override
+	public int getColumnLength(TblColRef col) {
+		if (tableRecordInfo == null)
+			tableRecordInfo = new TableRecordInfo(this);
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        IISegment other = (IISegment) obj;
-        if (iiInstance == null) {
-            if (other.iiInstance != null)
-                return false;
-        } else if (!iiInstance.equals(other.iiInstance))
-            return false;
-        if (name == null) {
-            if (other.name != null)
-                return false;
-        } else if (!name.equals(other.name))
-            return false;
-        if (status != other.status)
-            return false;
-        return true;
-    }
+		int index = tableRecordInfo.findColumn(col);
+		return tableRecordInfo.getDigest().length(index);
+	}
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
-                .add("uuid", uuid)
-                .add("create_time:", createTime)
-                .add("name", name)
-                .add("last_build_job_id", lastBuildJobID)
-                .add("status", status)
-                .toString();
-    }
+	@Override
+	public Dictionary<?> getDictionary(TblColRef col) {
+		if (tableRecordInfo == null)
+			tableRecordInfo = new TableRecordInfo(this);
 
-    @Override
-    public int getColumnLength(TblColRef col) {
-        if (tableRecordInfo == null)
-            tableRecordInfo = new TableRecordInfo(this);
-
-        int index = tableRecordInfo.findColumn(col);
-        return tableRecordInfo.getDigest().length(index);
-    }
-
-    @Override
-    public Dictionary<?> getDictionary(TblColRef col) {
-        if (tableRecordInfo == null)
-            tableRecordInfo = new TableRecordInfo(this);
-
-        int index = tableRecordInfo.findColumn(col);
-        return tableRecordInfo.dict(index);
-    }
+		int index = tableRecordInfo.findColumn(col);
+		return tableRecordInfo.dict(index);
+	}
 }

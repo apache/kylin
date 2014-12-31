@@ -154,7 +154,6 @@ public class KylinConfig {
         ENV_INSTANCE = null;
     }
 
-
     /**
      * This method only for test case. You can get a KylinConfig instance by
      * path "/a/b/c", where "/a/b/c/kylin.properties" exists. By default, the
@@ -606,7 +605,6 @@ public class KylinConfig {
     public void setRemoteHadoopCliPassword(String v) {
         kylinConfig.setProperty(KYLIN_JOB_REMOTE_CLI_PASSWORD, v);
     }
-
 
     /**
      * return -1 if there is no setting

@@ -133,7 +133,7 @@ public class ResourceTool {
                 resetR(store, child);
         }
     }
-    
+
     private static void remove(KylinConfig config, String path) throws IOException {
         ResourceStore store = ResourceStore.getStore(config);
         resetR(store, path);

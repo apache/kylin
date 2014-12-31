@@ -150,7 +150,6 @@ public class CubeManager {
         return result;
     }
 
-
     public DictionaryInfo buildDictionary(CubeSegment cubeSeg, TblColRef col, String factColumnsPath) throws IOException {
         CubeDesc cubeDesc = cubeSeg.getCubeDesc();
         if (!cubeDesc.getRowkey().isUseDictionary(col))

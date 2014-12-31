@@ -11,6 +11,7 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.HBaseConnection;
 import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.CliCommandExecutor;
+import com.kylinolap.common.util.HBaseMiniclusterMetadataTestCase;
 import com.kylinolap.common.util.SSHClient;
 
 public class ExportHBaseData {
@@ -28,7 +29,7 @@ public class ExportHBaseData {
         long currentTIME = System.currentTimeMillis();
         exportFolder = "/tmp/hbase-export/" + currentTIME + "/";
         backupArchive = "/tmp/kylin_" + currentTIME + ".tar.gz";
-        
+
         KylinConfig.destoryInstance();
         System.setProperty(KylinConfig.KYLIN_CONF, AbstractKylinTestCase.SANDBOX_TEST_DATA);
 
@@ -71,7 +72,7 @@ public class ExportHBaseData {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
         // delete archive file on sandbox
         try {
             if (cli != null && backupArchive != null) {
@@ -80,24 +81,22 @@ public class ExportHBaseData {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
 
         KylinConfig.destoryInstance();
 
     }
 
     public void exportTables() throws IOException {
-        cli.execute("mkdir -p "  + exportFolder);
-        
+        cli.execute("mkdir -p " + exportFolder);
+
         for (HTableDescriptor table : allTables) {
             String tName = table.getNameAsString();
-            if (!tName.startsWith(tableNameBase) && !tName.startsWith("KYLIN_"))
-//                if (!tName.equals(tableNameBase) ) // this is for debug
+            if (!tName.equals(tableNameBase) && !tName.startsWith(HBaseMiniclusterMetadataTestCase.CUBE_STORAGE_PREFIX))
                 continue;
-            
+
             cli.execute("hbase org.apache.hadoop.hbase.mapreduce.Export " + tName + " " + exportFolder + tName);
         }
-        
+
         cli.execute("hadoop fs -copyToLocal " + exportFolder + " " + exportFolder);
         cli.execute("tar -zcvf " + backupArchive + " --directory=" + exportFolder + " .");
         downloadToLocal();
@@ -112,7 +111,7 @@ public class ExportHBaseData {
             e.printStackTrace();
         }
     }
-    
+
     public static void main(String[] args) {
         ExportHBaseData export = new ExportHBaseData();
         try {

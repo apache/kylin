@@ -24,7 +24,6 @@ import java.nio.ByteBuffer;
  */
 public interface BytesSerializer<T> {
 
-
     public static final int SERIALIZE_BUFFER_SIZE = 65536;
 
     abstract public void serialize(T value, ByteBuffer out);
