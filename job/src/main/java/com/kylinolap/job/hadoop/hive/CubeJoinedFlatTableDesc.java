@@ -21,6 +21,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.kylinolap.common.util.BytesSplitter;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.model.CubeDesc;
@@ -36,9 +37,9 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     private final CubeDesc cubeDesc;
     private final CubeSegment cubeSegment;
 
+    private int columnCount;
     private int[] rowKeyColumnIndexes; // the column index on flat table
-    private int[][] measureColumnIndexes; // [i] is the i.th measure related
-                                          // column index on flat table
+    private int[][] measureColumnIndexes; // [i] is the i.th measure related column index on flat table
 
     // Map for table alias:
     // key -> table name; 
@@ -115,6 +116,8 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
             }
         }
 
+        columnCount = columnIndex;
+        
         buildTableAliasMap();
     }
 
@@ -142,6 +145,15 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
                 return i;
         }
         return -1;
+    }
+
+    // sanity check the input record (in bytes) matches what's expected
+    public void sanityCheck(BytesSplitter bytesSplitter) {
+        if (columnCount != bytesSplitter.getBufferSize()) {
+            throw new IllegalArgumentException("Expect " + columnCount + " columns, but see " + bytesSplitter.getBufferSize() + " -- " + bytesSplitter);
+        }
+        
+        // TODO: check data types here
     }
 
     public CubeDesc getCubeDesc() {

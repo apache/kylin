@@ -8,6 +8,7 @@ import java.util.SortedMap;
 /**
  * Created by Hongbin Ma(Binmahone) on 11/27/14.
  */
+@SuppressWarnings("rawtypes")
 public abstract class AggregationCache {
     transient int rowMemBytes;
     static final int MEMORY_USAGE_CAP = 500 * 1024 * 1024; // 500 MB

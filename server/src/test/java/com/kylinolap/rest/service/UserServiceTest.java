@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -14,9 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 /**
  * 
- * @deprecated method has been merged into #ServiceTestAllInOne
  */
-@Ignore
 public class UserServiceTest extends ServiceTestBase {
 
     @Autowired
