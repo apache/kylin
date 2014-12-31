@@ -1,10 +1,8 @@
 package com.kylinolap.job2.common;
 
-import com.kylinolap.job2.dao.JobOutputPO;
 import com.kylinolap.job2.dao.JobPO;
 import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.execution.ExecutableContext;
-import com.kylinolap.job2.execution.ExecutableStatus;
 import com.kylinolap.job2.execution.ExecuteResult;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
 import org.apache.hadoop.hbase.util.Pair;
@@ -21,8 +19,8 @@ public class ShellExecutable extends AbstractExecutable {
     public ShellExecutable() {
     }
 
-    public ShellExecutable(JobPO job, JobOutputPO jobOutput) {
-        super(job, jobOutput);
+    public ShellExecutable(JobPO job) {
+        super(job);
     }
 
     @Override
@@ -45,8 +43,4 @@ public class ShellExecutable extends AbstractExecutable {
         return getParam(CMD);
     }
 
-    @Override
-    public boolean isRunnable() {
-        return getStatus() == ExecutableStatus.READY;
-    }
 }

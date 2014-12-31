@@ -1,22 +1,8 @@
 package com.kylinolap.job2.impl.threadpool;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.job.constant.JobConstants;
-import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job2.BaseTestExecutable;
-import com.kylinolap.job2.ErrorTestExecutable;
-import com.kylinolap.job2.FailedTestExecutable;
-import com.kylinolap.job2.SucceedTestExecutable;
-import com.kylinolap.job2.execution.ExecutableStatus;
-import com.kylinolap.job2.service.DefaultJobService;
-import org.junit.After;
-import org.junit.Before;
+import com.kylinolap.job2.*;
+import com.kylinolap.job2.execution.ExecutableState;
 import org.junit.Test;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -33,9 +19,9 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         BaseTestExecutable task1 = new SucceedTestExecutable();
         job.addTask(task1);
         jobService.addJob(job);
-        waitForJob(job.getId());
-        assertEquals(ExecutableStatus.SUCCEED, jobService.getJobStatus(job.getId()));
-        assertEquals(ExecutableStatus.SUCCEED, jobService.getJobStatus(task1.getId()));
+        waitForJobFinish(job.getId());
+        assertEquals(ExecutableState.SUCCEED, jobService.getJobStatus(job.getId()));
+        assertEquals(ExecutableState.SUCCEED, jobService.getJobStatus(task1.getId()));
     }
 
     @Test
@@ -46,10 +32,10 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         job.addTask(task1);
         job.addTask(task2);
         jobService.addJob(job);
-        waitForJob(job.getId());
-        assertEquals(ExecutableStatus.SUCCEED, jobService.getJobStatus(job.getId()));
-        assertEquals(ExecutableStatus.SUCCEED, jobService.getJobStatus(task1.getId()));
-        assertEquals(ExecutableStatus.SUCCEED, jobService.getJobStatus(task2.getId()));
+        waitForJobFinish(job.getId());
+        assertEquals(ExecutableState.SUCCEED, jobService.getJobStatus(job.getId()));
+        assertEquals(ExecutableState.SUCCEED, jobService.getJobStatus(task1.getId()));
+        assertEquals(ExecutableState.SUCCEED, jobService.getJobStatus(task2.getId()));
     }
     @Test
     public void testSucceedAndFailed() throws Exception {
@@ -59,10 +45,10 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         job.addTask(task1);
         job.addTask(task2);
         jobService.addJob(job);
-        waitForJob(job.getId());
-        assertEquals(ExecutableStatus.ERROR, jobService.getJobStatus(job.getId()));
-        assertEquals(ExecutableStatus.SUCCEED, jobService.getJobStatus(task1.getId()));
-        assertEquals(ExecutableStatus.ERROR, jobService.getJobStatus(task2.getId()));
+        waitForJobFinish(job.getId());
+        assertEquals(ExecutableState.ERROR, jobService.getJobStatus(job.getId()));
+        assertEquals(ExecutableState.SUCCEED, jobService.getJobStatus(task1.getId()));
+        assertEquals(ExecutableState.ERROR, jobService.getJobStatus(task2.getId()));
     }
     @Test
     public void testSucceedAndError() throws Exception {
@@ -72,9 +58,22 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         job.addTask(task1);
         job.addTask(task2);
         jobService.addJob(job);
-        waitForJob(job.getId());
-        assertEquals(ExecutableStatus.ERROR, jobService.getJobStatus(job.getId()));
-        assertEquals(ExecutableStatus.ERROR, jobService.getJobStatus(task1.getId()));
-        assertEquals(ExecutableStatus.READY, jobService.getJobStatus(task2.getId()));
+        waitForJobFinish(job.getId());
+        assertEquals(ExecutableState.ERROR, jobService.getJobStatus(job.getId()));
+        assertEquals(ExecutableState.ERROR, jobService.getJobStatus(task1.getId()));
+        assertEquals(ExecutableState.READY, jobService.getJobStatus(task2.getId()));
+    }
+
+    @Test
+    public void testStop() throws Exception {
+        DefaultChainedExecutable job = new DefaultChainedExecutable();
+        BaseTestExecutable task1 = new SelfStopExecutable();
+        job.addTask(task1);
+        jobService.addJob(job);
+        waitForJobStatus(job.getId(), ExecutableState.RUNNING, 500);
+        jobService.stopJob(job.getId());
+        waitForJobFinish(job.getId());
+        assertEquals(ExecutableState.STOPPED, jobService.getJobStatus(job.getId()));
+        assertEquals(ExecutableState.STOPPED, jobService.getJobStatus(task1.getId()));
     }
 }

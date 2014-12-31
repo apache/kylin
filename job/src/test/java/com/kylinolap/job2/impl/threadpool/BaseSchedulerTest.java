@@ -4,7 +4,7 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.job.constant.JobConstants;
 import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job2.execution.ExecutableStatus;
+import com.kylinolap.job2.execution.ExecutableState;
 import com.kylinolap.job2.service.DefaultJobService;
 import org.junit.After;
 import org.junit.Before;
@@ -31,15 +31,30 @@ public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
         field.set(null, newValue);
     }
 
-    protected void waitForJob(String jobId) {
+    protected void waitForJobFinish(String jobId) {
         while (true) {
             AbstractExecutable job = jobService.getJob(jobId);
-            System.out.println("job:" + jobId + " status:" + job.getStatus());
-            if (job.getStatus() == ExecutableStatus.SUCCEED || job.getStatus() == ExecutableStatus.ERROR) {
+            final ExecutableState status = job.getStatus();
+            if (status == ExecutableState.SUCCEED || status == ExecutableState.ERROR || status == ExecutableState.STOPPED) {
                 break;
             } else {
                 try {
                     Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    protected void waitForJobStatus(String jobId, ExecutableState state, long interval) {
+        while (true) {
+            AbstractExecutable job = jobService.getJob(jobId);
+            if (job.getStatus() == state) {
+                break;
+            } else {
+                try {
+                    Thread.sleep(interval);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Maps;
 import com.kylinolap.common.persistence.RootPersistentEntity;
+import com.kylinolap.job2.execution.ExecutableState;
 
 import java.util.List;
 import java.util.Map;
@@ -18,7 +19,7 @@ public class JobOutputPO extends RootPersistentEntity {
     private String content;
 
     @JsonProperty("status")
-    private String status;
+    private String status = ExecutableState.READY.toString();
 
     @JsonProperty("info")
     private Map<String, String> info = Maps.newHashMap();

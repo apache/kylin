@@ -7,9 +7,8 @@ import com.kylinolap.job2.Scheduler;
 import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.exception.LockException;
 import com.kylinolap.job2.exception.SchedulerException;
-import com.kylinolap.job2.execution.ChainedExecutable;
 import com.kylinolap.job2.execution.Executable;
-import com.kylinolap.job2.execution.ExecutableStatus;
+import com.kylinolap.job2.execution.ExecutableState;
 import com.kylinolap.job2.service.DefaultJobService;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -107,9 +106,10 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     }
 
     private void resetStatusFromRunningToError(AbstractExecutable executable) {
-        if (executable.getStatus() == ExecutableStatus.RUNNING) {
-            logger.warn("job:" + executable.getId() + " status should not be:" + ExecutableStatus.RUNNING + ", reset it to ERROR");
-            jobService.resetRunningJobToError(executable, "job:" + executable.getId() + " status should not be:" + ExecutableStatus.RUNNING + ", reset it to ERROR");
+        if (executable.getStatus() == ExecutableState.RUNNING) {
+            final String errMsg = "job:" + executable.getId() + " status should not be:" + ExecutableState.RUNNING + ", reset it to ERROR";
+            logger.warn(errMsg);
+            jobService.updateJobStatus(executable.getId(), ExecutableState.ERROR, errMsg);
         }
     }
 
@@ -196,8 +196,8 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
 
         for (AbstractExecutable executable : jobService.getAllExecutables()) {
-            if (executable.getStatus() == ExecutableStatus.RUNNING) {
-                jobService.resetRunningJobToError(executable, "scheduler initializing work to reset job to ERROR status");
+            if (executable.getStatus() == ExecutableState.RUNNING) {
+                jobService.updateJobStatus(executable.getId(), ExecutableState.ERROR, "scheduler initializing work to reset job to ERROR status");
             }
         }
 

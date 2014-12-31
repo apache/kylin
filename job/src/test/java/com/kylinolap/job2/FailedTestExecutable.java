@@ -14,8 +14,8 @@ public class FailedTestExecutable extends BaseTestExecutable {
     public FailedTestExecutable() {
     }
 
-    public FailedTestExecutable(JobPO job, JobOutputPO jobOutput) {
-        super(job, jobOutput);
+    public FailedTestExecutable(JobPO job) {
+        super(job);
     }
 
     @Override

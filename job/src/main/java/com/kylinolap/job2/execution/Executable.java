@@ -15,9 +15,7 @@ public interface Executable {
 
     ExecuteResult execute(ExecutableContext executableContext) throws ExecuteException;
 
-    void stop() throws ExecuteException;
-
-    ExecutableStatus getStatus();
+    ExecutableState getStatus();
 
     String getOutput();
 

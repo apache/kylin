@@ -1,9 +1,7 @@
 package com.kylinolap.job2.impl.threadpool;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.job2.dao.JobOutputPO;
 import com.kylinolap.job2.dao.JobPO;
 import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.execution.*;
@@ -21,7 +19,6 @@ import java.util.UUID;
 public abstract class AbstractExecutable implements Executable, Idempotent {
 
     private JobPO job;
-    private JobOutputPO jobOutput;
     protected static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
 
     protected static DefaultJobService jobService = DefaultJobService.getInstance(KylinConfig.getInstanceFromEnv());
@@ -32,37 +29,30 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         this.job.setType(this.getClass().getName());
         this.job.setUuid(uuid);
 
-        this.jobOutput = new JobOutputPO();
-        this.jobOutput.setUuid(uuid);
-        this.jobOutput.setStatus(ExecutableStatus.READY.toString());
     }
 
-    protected AbstractExecutable(JobPO job, JobOutputPO jobOutput) {
+    protected AbstractExecutable(JobPO job) {
         Preconditions.checkArgument(job != null, "job cannot be null");
-        Preconditions.checkArgument(jobOutput != null, "jobOutput cannot be null");
         Preconditions.checkArgument(job.getId() != null, "job id cannot be null");
-        Preconditions.checkArgument(jobOutput.getId() != null, "jobOutput id cannot be null");
-        Preconditions.checkArgument(job.getId().equalsIgnoreCase(jobOutput.getId()), "job id should be equals");
         this.job = job;
-        this.jobOutput = jobOutput;
     }
 
     protected void onExecuteStart(ExecutableContext executableContext) {
-        jobService.updateJobStatus(this, ExecutableStatus.RUNNING);
+        jobService.updateJobStatus(getId(), ExecutableState.RUNNING);
     }
 
-    protected void onExecuteSucceed(ExecuteResult result, ExecutableContext executableContext) {
+    protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
         if (result.succeed()) {
-            jobService.updateJobStatus(this, ExecutableStatus.SUCCEED, result.output());
-        } else if (!result.finished()) {
-            jobService.updateJobStatus(this, ExecutableStatus.STOPPED, result.output());
+            jobService.updateJobStatus(getId(), ExecutableState.SUCCEED, result.output());
+        } else if (result.state() == ExecuteResult.State.STOPPED) {
+            jobService.updateJobStatus(getId(), ExecutableState.STOPPED, result.output());
         } else {
-            jobService.updateJobStatus(this, ExecutableStatus.ERROR, result.output());
+            jobService.updateJobStatus(getId(), ExecutableState.ERROR, result.output());
         }
     }
 
     protected void onExecuteError(Throwable exception, ExecutableContext executableContext) {
-        jobService.updateJobStatus(this, ExecutableStatus.ERROR, exception.getLocalizedMessage());
+        jobService.updateJobStatus(getId(), ExecutableState.ERROR, exception.getLocalizedMessage());
     }
 
     @Override
@@ -76,20 +66,20 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
             onExecuteError(e, executableContext);
             throw new ExecuteException(e);
         }
-        onExecuteSucceed(result, executableContext);
+        onExecuteFinished(result, executableContext);
         return result;
     }
 
     protected abstract ExecuteResult doWork(ExecutableContext context) throws ExecuteException;
 
     @Override
-    public void stop() throws ExecuteException {
+    public void cleanup() throws ExecuteException {
 
     }
 
     @Override
-    public void cleanup() throws ExecuteException {
-
+    public boolean isRunnable() {
+        return this.getStatus() == ExecutableState.READY;
     }
 
     @Override
@@ -107,12 +97,8 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     }
 
     @Override
-    public final ExecutableStatus getStatus() {
-        return ExecutableStatus.valueOf(jobOutput.getStatus());
-    }
-
-    public final void setStatus(ExecutableStatus status) {
-        jobOutput.setStatus(status.toString());
+    public final ExecutableState getStatus() {
+        return jobService.getJobStatus(this.getId());
     }
 
     @Override
@@ -128,20 +114,20 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         job.getParams().put(key, value);
     }
 
-    public void setOutput(String output) {
-        this.jobOutput.setContent(output);
-    }
-
     @Override
     public String getOutput() {
-        return jobOutput.getContent();
+        return jobService.getJobOutput(getId());
     }
 
     public JobPO getJobPO() {
         return job;
     }
 
-    public JobOutputPO getJobOutput() {
-        return jobOutput;
+    /*
+    * stop is triggered by JobService, the Scheduler is not awake of that, so
+    *
+    * */
+    protected final boolean isStopped() {
+        return getStatus() == ExecutableState.STOPPED;
     }
 }
