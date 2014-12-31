@@ -39,20 +39,21 @@ public class ColumnCardinalityMapper<T> extends Mapper<T, HCatRecord, IntWritabl
 
     private Map<Integer, HyperLogLogPlusCounter> hllcMap = new HashMap<Integer, HyperLogLogPlusCounter>();
     public static final String DEFAULT_DELIM = ",";
+    
+    private int counter = 0;
 
     @Override
     public void map(T key, HCatRecord value, Context context) throws IOException, InterruptedException {
 
         Integer columnSize = context.getConfiguration().getInt(HiveColumnCardinalityJob.KEY_TABLE_COLUMN_NUMBER, 100);
         for (int m = 0; m < columnSize; m++) {
-            int counter = 0;
             Object cell = value.get(m);
-            if(counter <5) {
+            if(counter <5 && m <3) {
                 System.out.println("Get col " + m + " row " + counter +  " value: " + String.valueOf(cell));
-                counter++;
             }
             getHllc(m).add(Bytes.toBytes(String.valueOf(cell)));
         }
+        counter++;
     }
 
     private HyperLogLogPlusCounter getHllc(Integer key) {
