@@ -5,7 +5,9 @@ import com.kylinolap.job.JoinedFlatTable;
 import com.kylinolap.job.constant.JobConstants;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.cube.FactDistinctColumnsJob;
+import com.kylinolap.job.hadoop.dict.CreateDictionaryJob;
 import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
+import com.kylinolap.job2.common.HadoopShellExecutable;
 import com.kylinolap.job2.common.MapReduceExecutable;
 import com.kylinolap.job2.common.ShellExecutable;
 import org.apache.commons.lang3.StringUtils;
@@ -41,6 +43,9 @@ public final class BuildCubeJobBuilder {
         final MapReduceExecutable factDistinctColumnsStep = createFactDistinctColumnsStep(intermediateHiveTableName);
         result.addTask(factDistinctColumnsStep);
         final String factDistinctColumnsPath = getFactDistinctColumnsPath(factDistinctColumnsStep.getId());
+
+        final HadoopShellExecutable buildDictionaryStep = createBuildDictionaryStep(factDistinctColumnsPath);
+        result.addTask(buildDictionaryStep);
 
         return result;
     }
@@ -114,6 +119,20 @@ public final class BuildCubeJobBuilder {
 
         result.setMapReduceParams(cmd.toString());
         return result;
+    }
+
+    private HadoopShellExecutable createBuildDictionaryStep(String factDistinctColumnsPath) {
+        // base cuboid job
+        HadoopShellExecutable buildDictionaryStep = new HadoopShellExecutable();
+        buildDictionaryStep.setName(JobConstants.STEP_NAME_BUILD_DICTIONARY);
+        StringBuilder cmd = new StringBuilder();
+        appendExecCmdParameters(cmd, "cubename", getCubeName());
+        appendExecCmdParameters(cmd, "segmentname", segment.getName());
+        appendExecCmdParameters(cmd, "input", factDistinctColumnsPath);
+
+        buildDictionaryStep.setMapReduceParams(cmd.toString());
+        buildDictionaryStep.setJobClass(CreateDictionaryJob.class);
+        return buildDictionaryStep;
     }
 
 }

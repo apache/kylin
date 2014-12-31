@@ -66,7 +66,7 @@ public class MapReduceExecutable extends AbstractExecutable {
 
         } catch (ReflectiveOperationException e) {
             logger.error("error getMapReduceJobClass, class name:" + getParam(KEY_MR_JOB), e);
-            throw new ExecuteException(e);
+            return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         } catch (Exception e) {
             logger.error("error execute MapReduceJob, id:" + getId(), e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
