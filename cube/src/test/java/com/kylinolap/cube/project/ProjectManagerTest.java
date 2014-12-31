@@ -160,14 +160,6 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
         assertTrue(ProjectManager.getInstance(this.getTestConfig()).getRealizationsByTable("default", "test_kylin_fact").contains(cube));
     }
 
-    private MetadataManager getMetadataManager() {
-        return MetadataManager.getInstance(getTestConfig());
-    }
-
-    private CubeManager getCubeManager() {
-        return CubeManager.getInstance(getTestConfig());
-    }
-
     public CubeDescManager getCubeDescManager() {
         return CubeDescManager.getInstance(getTestConfig());
     }

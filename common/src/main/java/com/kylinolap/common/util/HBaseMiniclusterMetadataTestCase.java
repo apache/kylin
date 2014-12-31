@@ -116,6 +116,7 @@ public class HBaseMiniclusterMetadataTestCase {
         UTIL.startMiniMapReduceCluster();
         
         // create the metadata htables;
+        @SuppressWarnings("unused")
         HBaseResourceStore store = new HBaseResourceStore(KylinConfig.getInstanceFromEnv());
 
         // import the table content
@@ -212,6 +213,7 @@ public class HBaseMiniclusterMetadataTestCase {
 
     public static void main(String[] args) {
         HBaseMiniclusterMetadataTestCase t = new HBaseMiniclusterMetadataTestCase();
+        System.out.println(t);
         try {
             HBaseMiniclusterMetadataTestCase.startupMinicluster();
         } catch (Exception e) {
