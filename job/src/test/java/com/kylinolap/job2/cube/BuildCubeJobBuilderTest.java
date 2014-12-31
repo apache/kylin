@@ -1,23 +1,23 @@
 package com.kylinolap.job2.cube;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.ClasspathUtil;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.job.constant.JobConstants;
-import com.kylinolap.job.engine.JobEngine;
 import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job2.common.CommonJob;
 import com.kylinolap.job2.execution.ExecutableStatus;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
-import com.kylinolap.job2.impl.threadpool.BaseSchedulerTest;
 import com.kylinolap.job2.impl.threadpool.DefaultScheduler;
 import com.kylinolap.job2.service.DefaultJobService;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.List;
@@ -60,6 +60,11 @@ public class BuildCubeJobBuilderTest extends HBaseMetadataTestCase {
         }
     }
 
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        ClasspathUtil.addClasspath(new File(SANDBOX_TEST_DATA).getAbsolutePath());
+    }
+
     @Before
     public void setup() throws Exception {
         createTestMetadata();
@@ -93,7 +98,7 @@ public class BuildCubeJobBuilderTest extends HBaseMetadataTestCase {
         assertNotNull(cubeInstance);
         final List<CubeSegment> cubeSegments = cubeManager.appendSegments(cubeInstance, 0, System.currentTimeMillis());
         final BuildCubeJobBuilder buildCubeJobBuilder = BuildCubeJobBuilder.newBuilder(jobEngineConfig, cubeSegments.get(0));
-        final CommonJob job = buildCubeJobBuilder.build();
+        final BuildCubeJob job = buildCubeJobBuilder.build();
         jobService.addJob(job);
         waitForJob(job.getId());
         assertEquals(ExecutableStatus.SUCCEED, jobService.getJobStatus(job.getId()));

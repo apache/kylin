@@ -24,6 +24,6 @@ public class FailedTestExecutable extends BaseTestExecutable {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
         }
-        return new ExecuteResult(false, "failed");
+        return new ExecuteResult(ExecuteResult.State.FAILED, "failed");
     }
 }

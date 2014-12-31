@@ -38,7 +38,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
                 return subTask.execute(context);
             }
         }
-        return new ExecuteResult(true, null);
+        return new ExecuteResult(ExecuteResult.State.SUCCEED, null);
     }
 
     @Override
@@ -63,6 +63,8 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
             } else {
 
             }
+        } else if (result.state() == ExecuteResult.State.STOPPED) {
+            jobService.updateJobStatus(this, ExecutableStatus.STOPPED, null);
         } else {
             jobService.updateJobStatus(this, ExecutableStatus.ERROR, null);
         }

@@ -1,20 +1,33 @@
 package com.kylinolap.job2.execution;
 
+import com.google.common.base.Preconditions;
+
 /**
  * Created by qianzhou on 12/15/14.
  */
 public final class ExecuteResult {
 
-    private final boolean succeed;
+    public static enum State {SUCCEED, FAILED, ERROR, STOPPED}
+
+    private final State state;
     private final String output;
 
-    public ExecuteResult(boolean succeed, String output) {
-        this.succeed = succeed;
+    public ExecuteResult(State state, String output) {
+        Preconditions.checkArgument(state != null, "state cannot be null");
+        this.state = state;
         this.output = output;
     }
 
+    public State state() {
+        return state;
+    }
+
     public boolean succeed() {
-        return succeed;
+        return state == State.SUCCEED;
+    }
+
+    public boolean finished() {
+        return state != State.STOPPED;
     }
 
     public String output() {
