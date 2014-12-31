@@ -68,6 +68,8 @@ public class InvertedIndexReducer extends Reducer<LongWritable, ImmutableBytesWr
             if (builder == null) {
                 builder = new SliceBuilder(info, rec.getShard());
             }
+
+            //TODO: to delete this log
             System.out.println(rec.getShard() + " - " + rec);
 
             Slice slice = builder.append(rec);
