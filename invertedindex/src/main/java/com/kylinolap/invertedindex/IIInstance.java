@@ -274,10 +274,6 @@ public class IIInstance extends AbstractRealization {
 	}
 
 	public String getDescName() {
-		return descName.toUpperCase();
-	}
-
-	public String getOriginDescName() {
 		return descName;
 	}
 
