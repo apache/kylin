@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -32,6 +34,9 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 
+import com.kylinolap.job.JobDAO;
+import com.kylinolap.job.JobInstance;
+import com.kylinolap.job.JobInstance.JobStep;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 public class HiveColumnCardinalityJob extends AbstractHadoopJob {
@@ -143,6 +148,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
             HCatInputFormat.setInput(job, "default",
                     table);
 
+            System.out.println("Set input format as HCat on table '" + table + "'");
             HCatSchema tableSchema = HCatInputFormat.getTableSchema(job.getConfiguration());
             job.getConfiguration().set(KEY_TABLE_COLUMN_NUMBER, String.valueOf(tableSchema.size()));
             
@@ -161,7 +167,13 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
 
             this.deletePath(job.getConfiguration(), output);
 
+            isAsync = true;
+            System.out.println("Going to submit HiveColumnCardinalityJob for table '" + table + "'");
             int result = waitForCompletion(job);
+
+            System.out.println("Get job track url " + job.getJobID() + "\n");
+            System.out.println("Get job track url " + job.getTrackingURL() + "\n");
+            
             return result;
         } catch (Exception e) {
             printUsage(options);
