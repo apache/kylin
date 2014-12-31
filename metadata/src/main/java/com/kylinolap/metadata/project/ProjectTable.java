@@ -18,7 +18,6 @@ package com.kylinolap.metadata.project;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
-import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.realization.IRealization;
 
 /**

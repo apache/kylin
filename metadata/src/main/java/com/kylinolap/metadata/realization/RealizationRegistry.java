@@ -2,6 +2,7 @@ package com.kylinolap.metadata.realization;
 
 import com.google.common.collect.*;
 import com.kylinolap.common.KylinConfig;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,7 @@ public class RealizationRegistry {
                     List<String> realizationProviders = Lists.newArrayList("com.kylinolap.cube.CubeManager");
                     for (String clsName : realizationProviders) {
                         try {
-                            Class cls = Class.forName(clsName);
+                            Class<?> cls = Class.forName(clsName);
                             cls.getMethod("getInstance", KylinConfig.class).invoke(null, this.config);
                         } catch (Exception | NoClassDefFoundError e) {
                             es.add(e);

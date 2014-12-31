@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
  * Created by Hongbin Ma(Binmahone) on 12/31/14.
  */
 public class ThreadUtil {
+    @SuppressWarnings("unused")
     public static void main(String[] args) {
         ThreadPoolExecutor pool = new ThreadPoolExecutor(1, Integer.MAX_VALUE, 60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());//Threads.newDaemonThreadFactory("htable"));
 
