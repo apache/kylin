@@ -254,7 +254,6 @@ public class CubeController extends BasicController {
         }
     }
 
-
     @RequestMapping(value = "/{cubeName}/enable", method = { RequestMethod.PUT })
     @ResponseBody
     @Metered(name = "enableCube")
@@ -317,7 +316,7 @@ public class CubeController extends BasicController {
             cubeService.createCubeAndDesc(name, projectName, desc);
         } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);
-            throw new InternalErrorException(e.getLocalizedMessage(),e);
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
 
         cubeRequest.setUuid(desc.getUuid());

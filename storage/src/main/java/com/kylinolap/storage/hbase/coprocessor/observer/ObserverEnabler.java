@@ -85,7 +85,7 @@ public class ObserverEnabler {
             context.enableCoprocessor();
         }
     }
-    
+
     private static boolean isCoprocessorBeneficial(CubeInstance cube, Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders, StorageContext context) {
 
         if (context.isAvoidAggregation()) {

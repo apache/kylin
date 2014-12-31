@@ -123,7 +123,7 @@ public class JobService extends BasicService {
                 jobs.add(job);
             }
             getCubeManager().updateCube(cube);
-            for (JobInstance job: jobs) {
+            for (JobInstance job : jobs) {
                 this.getJobManager().submitJob(job);
                 permissionService.init(job, null);
                 permissionService.inherit(job, cube);

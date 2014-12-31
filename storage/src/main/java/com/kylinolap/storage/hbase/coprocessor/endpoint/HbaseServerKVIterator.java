@@ -46,7 +46,6 @@ public class HbaseServerKVIterator implements Iterable<Pair<ImmutableBytesWritab
                 return hasMore;
             }
 
-
             @Override
             public Pair<ImmutableBytesWritable, ImmutableBytesWritable> next() {
                 if (hasNext()) {
@@ -78,4 +77,3 @@ public class HbaseServerKVIterator implements Iterable<Pair<ImmutableBytesWritab
     }
 
 }
-

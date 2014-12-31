@@ -46,7 +46,7 @@ public class CliCommandExecutor {
         this.remoteUser = null;
         this.remotePwd = null;
     }
-    
+
     public void copyFile(String localFile, String destDir) throws IOException {
         if (remoteHost == null)
             copyNative(localFile, destDir);

@@ -46,8 +46,9 @@ public class DataModelDesc extends RootPersistentEntity {
         return ret;
     }
 
+
     public String getFactTable() {
-        return factTable;
+        return TableDesc.getTableIdentity(factTable);
     }
 
     public void setFactTable(String factTable) {

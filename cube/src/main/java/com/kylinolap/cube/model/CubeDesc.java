@@ -60,7 +60,7 @@ import com.kylinolap.metadata.model.TblColRef;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeDesc extends RootPersistentEntity {
 
-    public static enum CubeCapacity {
+    public static enum RealizationCapacity {
         SMALL, MEDIUM, LARGE;
     }
 
@@ -114,7 +114,7 @@ public class CubeDesc extends RootPersistentEntity {
     @JsonProperty("signature")
     private String signature;
     @JsonProperty("capacity")
-    private CubeCapacity capacity = CubeCapacity.MEDIUM;
+    private RealizationCapacity capacity = RealizationCapacity.MEDIUM;
     @JsonProperty("notify_list")
     private List<String> notifyList;
 
@@ -382,11 +382,11 @@ public class CubeDesc extends RootPersistentEntity {
         this.signature = signature;
     }
 
-    public CubeCapacity getCapacity() {
+    public RealizationCapacity getCapacity() {
         return capacity;
     }
 
-    public void setCapacity(CubeCapacity capacity) {
+    public void setCapacity(RealizationCapacity capacity) {
         this.capacity = capacity;
     }
 
@@ -545,7 +545,7 @@ public class CubeDesc extends RootPersistentEntity {
                         TblColRef ref = initDimensionColRef(dimTable, aColumn);
                         if (!dimColList.contains(ref)) {
                             dimColList.add(ref);
-                           //hostColList.add(ref);
+                            //hostColList.add(ref);
                         }
                     }
                 }

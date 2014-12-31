@@ -18,7 +18,7 @@ package com.kylinolap.cube.kv;
 
 import java.util.Arrays;
 
-import com.kylinolap.dict.ColumnDictInfo;
+import com.kylinolap.dict.ISegment;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,19 +37,19 @@ public class RowKeyColumnIO {
 
     private static final Logger logger = LoggerFactory.getLogger(RowKeyColumnIO.class);
 
-    private ColumnDictInfo columnDictInfo;
+    private ISegment ISegment;
 
-    public RowKeyColumnIO(ColumnDictInfo columnDictInfo) {
-        this.columnDictInfo = columnDictInfo;
+    public RowKeyColumnIO(ISegment ISegment) {
+        this.ISegment = ISegment;
     }
 
     public int getColumnLength(TblColRef col) {
-        return columnDictInfo.getColumnLength(col);
+        return ISegment.getColumnLength(col);
     }
 
     //TODO is type cast really necessary here?
     public Dictionary<String> getDictionary(TblColRef col) {
-        return (Dictionary<String>) columnDictInfo.getDictionary(col);
+        return (Dictionary<String>) ISegment.getDictionary(col);
     }
 
     public void writeColumn(TblColRef column, byte[] value, int valueLen, byte dft, byte[] output, int outputOffset) {
@@ -145,6 +145,5 @@ public class RowKeyColumnIO {
         }
         return stripBytes;
     }
-
 
 }

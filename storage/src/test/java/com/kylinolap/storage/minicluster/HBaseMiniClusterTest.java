@@ -40,7 +40,6 @@ public class HBaseMiniClusterTest {
     private static final int JOBTRACKER_PORT = 9011;
     protected static String LOG_DIR = "/tmp/logs";
 
-
     //@Before
     public void setup() {
         try {
@@ -49,7 +48,6 @@ public class HBaseMiniClusterTest {
             e.printStackTrace();
         }
     }
-
 
     //@BeforeClass
     public static void setUpBeforeClass() throws Exception {
@@ -69,14 +67,14 @@ public class HBaseMiniClusterTest {
         File miniclusterFolder = new File(AbstractKylinTestCase.MINICLUSTER_TEST_DATA);
         System.out.println("----" + miniclusterFolder.getAbsolutePath());
 
-//        String coreSitePath = miniclusterFolder + File.separator + "core-site.xml";
-//        conf.addResource(new Path(coreSitePath));
-//        String hdfsSitePath = miniclusterFolder + File.separator + "hdfs-site.xml";
-//        conf.addResource(new Path(hdfsSitePath));
-//        String mrSitePath = miniclusterFolder + File.separator + "mapred-site.xml";
-//        conf.addResource(new Path(mrSitePath));
-//        String hbSitePath = miniclusterFolder + File.separator + "hbase-site.xml";
-//        conf.addResource(new Path(hbSitePath));
+        //        String coreSitePath = miniclusterFolder + File.separator + "core-site.xml";
+        //        conf.addResource(new Path(coreSitePath));
+        //        String hdfsSitePath = miniclusterFolder + File.separator + "hdfs-site.xml";
+        //        conf.addResource(new Path(hdfsSitePath));
+        //        String mrSitePath = miniclusterFolder + File.separator + "mapred-site.xml";
+        //        conf.addResource(new Path(mrSitePath));
+        //        String hbSitePath = miniclusterFolder + File.separator + "hbase-site.xml";
+        //        conf.addResource(new Path(hbSitePath));
 
         //save the dfs data to minicluster folder
         //System.setProperty("test.build.data", miniclusterFolder.getAbsolutePath());
@@ -125,13 +123,13 @@ public class HBaseMiniClusterTest {
         //        }
 
         if (hbaseCluster == null) {
-//            if (props != null) {
-//                for (Map.Entry entry : props.entrySet()) {
-//                    conf.set((String) entry.getKey(), (String) entry.getValue());
-//                }
-//            }
+            //            if (props != null) {
+            //                for (Map.Entry entry : props.entrySet()) {
+            //                    conf.set((String) entry.getKey(), (String) entry.getValue());
+            //                }
+            //            }
             testUtil = new HBaseTestingUtility();
-           // dfsCluster = testUtil.startMiniDFSCluster(1);
+            // dfsCluster = testUtil.startMiniDFSCluster(1);
             System.out.println("-----" + testUtil.getDataTestDir());
             hbaseCluster = testUtil.startMiniCluster();
             dfsCluster = testUtil.getDFSCluster();

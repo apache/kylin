@@ -194,7 +194,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         conf.set("tmpfiles", "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath()));
     }
 
-
     protected void attachKylinPropsAndMetadata(IIInstance ii, Configuration conf) throws IOException {
         File tmp = File.createTempFile("kylin_job_meta", "");
         tmp.delete(); // we need a directory, so delete the file first
@@ -228,7 +227,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         // hadoop distributed cache
         conf.set("tmpfiles", "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath()));
     }
-
 
     private void dumpResources(KylinConfig kylinConfig, File metaDir, ArrayList<String> dumpList) throws IOException {
         ResourceStore from = ResourceStore.getStore(kylinConfig);

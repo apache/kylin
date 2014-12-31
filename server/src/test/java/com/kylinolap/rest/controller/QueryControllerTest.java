@@ -44,7 +44,7 @@ public class QueryControllerTest extends ServiceTestBase {
     private CacheManager cacheManager;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         super.setUp();
 
         queryController = new QueryController();

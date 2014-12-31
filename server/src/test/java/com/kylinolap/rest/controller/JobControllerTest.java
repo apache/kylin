@@ -62,7 +62,6 @@ public class JobControllerTest extends ServiceTestBase {
     private CubeDescManager cubeDescManager;
     private JobDAO jobDAO;
 
-
     @Before
     public void setup() throws Exception {
         super.setUp();
@@ -101,7 +100,6 @@ public class JobControllerTest extends ServiceTestBase {
         jobBuildRequest.setStartTime(0L);
         jobBuildRequest.setEndTime(new Date().getTime());
         JobInstance job = cubeController.rebuild(CUBE_NAME, jobBuildRequest);
-
 
         Assert.assertNotNull(jobSchedulerController.get(job.getId()));
         Map<String, String> output = jobSchedulerController.getStepOutput(job.getId(), 0);

@@ -80,9 +80,9 @@ public class CompareTupleFilter extends TupleFilter {
             this.dynamicVariables.put(dynamicFilter.getVariableName(), null);
         }
         //TODO
-//        else if (child instanceof ExtractTupleFilter) {
-//        } else if (child instanceof CaseTupleFilter) {
-//        }
+        //        else if (child instanceof ExtractTupleFilter) {
+        //        } else if (child instanceof CaseTupleFilter) {
+        //        }
     }
 
     private boolean needSwapOperator() {
@@ -93,7 +93,7 @@ public class CompareTupleFilter extends TupleFilter {
     public Collection<String> getValues() {
         return conditionValues;
     }
-    
+
     public String getFirstValue() {
         return firstCondValue;
     }

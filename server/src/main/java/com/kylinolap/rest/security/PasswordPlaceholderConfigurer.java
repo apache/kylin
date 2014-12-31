@@ -42,7 +42,7 @@ public class PasswordPlaceholderConfigurer extends PropertyPlaceholderConfigurer
         resources[0] = new InputStreamResource(KylinConfig.getKylinPropertiesAsInputSteam());
         this.setLocations(resources);
     }
-    
+
     public static String encrypt(String strToEncrypt) {
         try {
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");

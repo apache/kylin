@@ -54,6 +54,7 @@ public class SnapshotManager {
 
     private KylinConfig config;
     private ConcurrentHashMap<String, SnapshotTable> snapshotCache; // resource
+
     // path ==>
     // SnapshotTable
 

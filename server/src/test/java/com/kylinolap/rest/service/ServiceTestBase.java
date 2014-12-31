@@ -16,9 +16,6 @@
 
 package com.kylinolap.rest.service;
 
-import com.kylinolap.dict.DictionaryManager;
-import com.kylinolap.invertedindex.IIManager;
-import com.kylinolap.metadata.project.ProjectManager;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -32,9 +29,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.kylinolap.common.util.HBaseMiniclusterMetadataTestCase;
+import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
+import com.kylinolap.dict.DictionaryManager;
+import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.project.ProjectManager;
 
 /**
  * @author xduo
@@ -42,24 +42,20 @@ import com.kylinolap.metadata.MetadataManager;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:applicationContext.xml", "classpath:kylinSecurity.xml" })
 @ActiveProfiles("testing")
-public class ServiceTestBase extends HBaseMiniclusterMetadataTestCase { //HBaseMetadataTestCase {
+public class ServiceTestBase extends HBaseMetadataTestCase { //HBaseMetadataTestCase {
 
     @BeforeClass
     public static void setupResource() throws Exception {
-        startupMinicluster();
-
         Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", "ROLE_ADMIN");
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     @AfterClass
     public static void tearDownResource() {
-        shutdownMiniCluster();
     }
 
-
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         this.createTestMetadata();
 
         MetadataManager.removeInstance(this.getTestConfig());

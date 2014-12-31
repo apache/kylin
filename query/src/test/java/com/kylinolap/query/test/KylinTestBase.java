@@ -403,7 +403,7 @@ public class KylinTestBase {
     protected int runSqlFile(String file) throws Exception {
         return runSQL(new File(file), true, false);
     }
-    
+
     protected int runSQL(File sqlFile, boolean debug, boolean explain) throws Exception {
         if (debug) {
             System.setProperty("calcite.debug", "true");

@@ -23,20 +23,18 @@ import com.kylinolap.common.util.AbstractKylinTestCase;
  */
 public class KylinHBaseCommonTestingUtility extends HBaseTestingUtility {
     protected static String LOG_DIR = "/tmp/logs";
-    
+
     protected File dataTestDir = null;
-    
+
     protected File clusterTestDir = null;
-    
+
     protected MiniZooKeeperCluster zkCluster = null;
-    
-    
+
     private Path getBaseTestDir() {
-        String PathName = System.getProperty(
-            BASE_TEST_DIRECTORY_KEY, DEFAULT_BASE_TEST_DIRECTORY);
+        String PathName = System.getProperty(BASE_TEST_DIRECTORY_KEY, DEFAULT_BASE_TEST_DIRECTORY);
 
         return new Path(PathName);
-      }
+    }
 
     protected Path setupDataTestDir() {
 
@@ -49,13 +47,12 @@ public class KylinHBaseCommonTestingUtility extends HBaseTestingUtility {
         createSubDir("hbase.local.dir", testPath, "hbase-local-dir");
 
         return testPath;
-      }
+    }
 
-    
     public Path getDataTestDirOnTestFS() throws IOException {
         FileSystem fs = getTestFileSystem();
         return new Path(fs.getWorkingDirectory(), "testPath");
-      }
+    }
 
     public void init() {
         System.setProperty("hadoop.log.dir", LOG_DIR);
@@ -73,72 +70,64 @@ public class KylinHBaseCommonTestingUtility extends HBaseTestingUtility {
         System.setProperty("hbase.testing.preserve.testdir", "true");
 
     }
-    
+
     private void setupClusterTestDir() {
-        
-        if(clusterTestDir != null)
+
+        if (clusterTestDir != null)
             return;
 
         Path testDir = getDataTestDir("dfscluster_kylin");
         clusterTestDir = new File(testDir.toString()).getAbsoluteFile();
         // Have it cleaned up on exit
         conf.set("test.build.data", clusterTestDir.getPath());
-      }
-    
+    }
+
     public Path getDataTestDir() {
         if (this.dataTestDir == null) {
-          setupDataTestDir();
+            setupDataTestDir();
         }
         return new Path(this.dataTestDir.getAbsolutePath());
-      }
-    
-    public MiniHBaseCluster startMiniCluster(final int numMasters,
-            final int numSlaves, int numDataNodes, final String[] dataNodeHosts,
-            Class<? extends HMaster> masterClass,
-            Class<? extends MiniHBaseCluster.MiniHBaseClusterRegionServer> regionserverClass)
-          throws Exception {
-            if (dataNodeHosts != null && dataNodeHosts.length != 0) {
-              numDataNodes = dataNodeHosts.length;
-            }
+    }
 
-            LOG.info("Starting up minicluster with " + numMasters + " master(s) and " +
-                numSlaves + " regionserver(s) and " + numDataNodes + " datanode(s)");
+    public MiniHBaseCluster startMiniCluster(final int numMasters, final int numSlaves, int numDataNodes, final String[] dataNodeHosts, Class<? extends HMaster> masterClass, Class<? extends MiniHBaseCluster.MiniHBaseClusterRegionServer> regionserverClass) throws Exception {
+        if (dataNodeHosts != null && dataNodeHosts.length != 0) {
+            numDataNodes = dataNodeHosts.length;
+        }
 
-            setupClusterTestDir();
+        LOG.info("Starting up minicluster with " + numMasters + " master(s) and " + numSlaves + " regionserver(s) and " + numDataNodes + " datanode(s)");
 
-            // Bring up mini dfs cluster. This spews a bunch of warnings about missing
-            // scheme. Complaints are 'Scheme is undefined for build/test/data/dfs/name1'.
-            startMiniDFSCluster(numDataNodes, dataNodeHosts);
+        setupClusterTestDir();
 
-            // Start up a zk cluster.
-              startMiniZKCluster(clusterTestDir, 1);
+        // Bring up mini dfs cluster. This spews a bunch of warnings about missing
+        // scheme. Complaints are 'Scheme is undefined for build/test/data/dfs/name1'.
+        startMiniDFSCluster(numDataNodes, dataNodeHosts);
 
-            // Start the MiniHBaseCluster
-            return startMiniHBaseCluster(numMasters, numSlaves, masterClass, regionserverClass);
-          }
-    
+        // Start up a zk cluster.
+        startMiniZKCluster(clusterTestDir, 1);
+
+        // Start the MiniHBaseCluster
+        return startMiniHBaseCluster(numMasters, numSlaves, masterClass, regionserverClass);
+    }
+
     /**
      * Start a mini ZK cluster. If the property "test.hbase.zookeeper.property.clientPort" is set
      *  the port mentionned is used as the default port for ZooKeeper.
      */
-    private MiniZooKeeperCluster startMiniZKCluster(final File dir,
-        int zooKeeperServerNum)
-    throws Exception {
-      if (this.zkCluster != null) {
-        throw new IOException("Cluster already running at " + dir);
-      }
-      this.zkCluster = new MiniZooKeeperCluster(this.getConfiguration());
-      final int defPort = this.conf.getInt("test.hbase.zookeeper.property.clientPort", 0);
-      if (defPort > 0){
-        // If there is a port in the config file, we use it.
-        this.zkCluster.setDefaultClientPort(defPort);
-      }
-      int clientPort =   this.zkCluster.startup(dir,zooKeeperServerNum);
-      this.conf.set(HConstants.ZOOKEEPER_CLIENT_PORT,
-        Integer.toString(clientPort));
-      return this.zkCluster;
+    private MiniZooKeeperCluster startMiniZKCluster(final File dir, int zooKeeperServerNum) throws Exception {
+        if (this.zkCluster != null) {
+            throw new IOException("Cluster already running at " + dir);
+        }
+        this.zkCluster = new MiniZooKeeperCluster(this.getConfiguration());
+        final int defPort = this.conf.getInt("test.hbase.zookeeper.property.clientPort", 0);
+        if (defPort > 0) {
+            // If there is a port in the config file, we use it.
+            this.zkCluster.setDefaultClientPort(defPort);
+        }
+        int clientPort = this.zkCluster.startup(dir, zooKeeperServerNum);
+        this.conf.set(HConstants.ZOOKEEPER_CLIENT_PORT, Integer.toString(clientPort));
+        return this.zkCluster;
     }
-    
+
     public MiniHBaseCluster startMiniCluster() throws Exception {
         this.init();
         return startMiniCluster(1, 1, 1, null, null, null);
@@ -147,9 +136,9 @@ public class KylinHBaseCommonTestingUtility extends HBaseTestingUtility {
     public static void main(String[] args) throws Exception {
         KylinHBaseCommonTestingUtility util = new KylinHBaseCommonTestingUtility();
         util.startMiniCluster();
-        
-        Thread.sleep(5*1000);
+
+        Thread.sleep(5 * 1000);
         util.shutdownMiniCluster();
     }
-    
+
 }

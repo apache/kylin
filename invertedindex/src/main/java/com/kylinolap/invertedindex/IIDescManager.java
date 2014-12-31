@@ -35,7 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * copied from CubeDescManager
- *
+ * 
  * @author honma
  */
 public class IIDescManager {
@@ -95,11 +95,10 @@ public class IIDescManager {
         return iiDescMap.get(name);
     }
 
-
     /**
-     * Reload IIDesc from resource store It will be triggered by an desc
-     * update event.
-     *
+     * Reload IIDesc from resource store It will be triggered by an desc update
+     * event.
+     * 
      * @param name
      * @throws IOException
      */
@@ -118,7 +117,7 @@ public class IIDescManager {
 
     private IIDesc loadIIDesc(String path) throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Loading IIDesc " + store.getReadableResourcePath(path));
+        logger.info("Loading IIDesc " + store.getReadableResourcePath(path));
 
         IIDesc ndesc = store.getResource(path, IIDesc.class, II_DESC_SERIALIZER);
 
@@ -131,10 +130,9 @@ public class IIDescManager {
         return ndesc;
     }
 
-
     /**
      * Create a new IIDesc
-     *
+     * 
      * @param iiDesc
      * @return
      * @throws IOException
@@ -170,12 +168,13 @@ public class IIDescManager {
 
     private void reloadAllIIDesc() throws IOException {
         ResourceStore store = getStore();
-        logger.info("Reloading II Metadata from folder " + store.getReadableResourcePath(ResourceStore.II_DESC_RESOURCE_ROOT));
+        logger.info("Reloading all II desc from folder " + store.getReadableResourcePath(ResourceStore.II_DESC_RESOURCE_ROOT));
 
         iiDescMap.clear();
 
         List<String> paths = store.collectResourceRecursively(ResourceStore.II_DESC_RESOURCE_ROOT, MetadataConstances.FILE_SURFIX);
         for (String path : paths) {
+            logger.info("loading II Desc from path" + path);
             IIDesc desc;
             try {
                 desc = loadIIDesc(path);
@@ -183,7 +182,7 @@ public class IIDescManager {
                 logger.error("Error loading II desc " + path, e);
                 continue;
             }
-            if (path.equals(desc.getResourcePath()) == false) {
+            if (!path.equals(desc.getResourcePath())) {
                 logger.error("Skip suspicious desc at " + path + ", " + desc + " should be at " + desc.getResourcePath());
                 continue;
             }
@@ -195,13 +194,12 @@ public class IIDescManager {
             iiDescMap.putLocal(desc.getName(), desc);
         }
 
-        logger.debug("Loaded " + iiDescMap.size() + " II(s)");
+        logger.debug("Loaded " + iiDescMap.size() + " II desc(s)");
     }
-
 
     /**
      * Update IIDesc with the input. Broadcast the event into cluster
-     *
+     * 
      * @param desc
      * @return
      * @throws IOException
@@ -218,7 +216,7 @@ public class IIDescManager {
 
         desc.init(getMetadataManager());
 
-        //TODO: Semantic validation
+        // TODO: Semantic validation
 
         desc.setSignature(desc.calculateSignature());
 
@@ -233,7 +231,6 @@ public class IIDescManager {
 
         return ndesc;
     }
-
 
     private MetadataManager getMetadataManager() {
         return MetadataManager.getInstance(config);

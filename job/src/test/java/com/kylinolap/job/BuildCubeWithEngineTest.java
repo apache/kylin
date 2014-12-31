@@ -34,6 +34,7 @@ import org.quartz.SchedulerException;
 
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.ClasspathUtil;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.common.util.JsonUtil;
@@ -50,24 +51,24 @@ import com.kylinolap.job.hadoop.cube.StorageCleanupJob;
 /**
  * @author ysong1
  */
-public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
+public class BuildCubeWithEngineTest {
 
     protected JobManager jobManager;
     protected JobEngineConfig engineConfig;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        ClasspathUtil.addClasspath(new File(SANDBOX_TEST_DATA).getAbsolutePath());
+        ClasspathUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
     }
 
     @Before
     public void before() throws Exception {
-        this.createTestMetadata();
+        HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
 
         DeployUtil.initCliWorkDir();
         DeployUtil.deployMetadata();
         DeployUtil.overrideJobJarLocations();
-        DeployUtil.overrideJobConf(SANDBOX_TEST_DATA);
+        DeployUtil.overrideJobConf(HBaseMetadataTestCase.SANDBOX_TEST_DATA);
 
         engineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
         jobManager = new JobManager("Build_Test_Cube_Engine", engineConfig);
@@ -81,7 +82,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         if (exitCode == 0)
             exportHBaseData();
         
-        this.cleanupTestMetadata();
+        HBaseMetadataTestCase.staticCleanupTestMetadata();
     }
 
     @Test
@@ -234,7 +235,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
 
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         CubeInstance cube = cubeMgr.getCube(cubename);
-        CubeManager.getInstance(this.getTestConfig()).loadCubeCache(cube);
+        CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).loadCubeCache(cube);
 
         System.out.println(JsonUtil.writeValueAsIndentString(cube));
         List<CubeSegment> newSegments = cubeMgr.allocateSegments(cube, jobType, startDate, endDate);

@@ -38,7 +38,7 @@ import com.kylinolap.job.engine.JobEngineConfig;
 public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
 
     CubeInstance cube = null;
-    JoinedFlatTableDesc intermediateTableDesc = null;
+    CubeJoinedFlatTableDesc intermediateTableDesc = null;
     String fakeJobUUID = "abc-def";
     CubeSegment cubeSegment = null;
 
@@ -47,7 +47,7 @@ public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
         this.createTestMetadata();
         cube = CubeManager.getInstance(this.getTestConfig()).getCube("test_kylin_cube_with_slr_ready");
         cubeSegment = cube.getSegments().get(0);
-        intermediateTableDesc = new JoinedFlatTableDesc(cube.getDescriptor(), cubeSegment);
+        intermediateTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), cubeSegment);
     }
 
     @After
@@ -76,6 +76,5 @@ public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
 
         assertEquals(1168, sql.length());
     }
-
 
 }

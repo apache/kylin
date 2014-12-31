@@ -83,6 +83,10 @@ public class TblColRef {
         return column.getTable().getIdentity();
     }
 
+    public String getCanonicalName() {
+        return (getTable() + "_" + getName()).replace(".", "_");
+    }
+
     public String getDatatype() {
         return column.getDatatype();
     }
@@ -102,6 +106,16 @@ public class TblColRef {
 
     public boolean isDerivedDataType() {
         return InnerDataTypeEnum.DERIVED.getDataType().equals(getDatatype());
+    }
+
+    /**
+     *
+     * @param tableName full name : db.table
+     * @param columnName columnname
+     * @return
+     */
+    public boolean isSameAs(String tableName, String columnName) {
+        return column.isSameAs(tableName, columnName);
     }
 
     @Override

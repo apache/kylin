@@ -50,7 +50,7 @@ public class ShellHadoopCmd extends ShellCmd {
         try {
             jobInstance = jobDAO.getJob(jobInstanceID);
             String mrJobId = jobInstance.getSteps().get(jobStepID).getInfo(JobInstance.MR_JOB_ID);
-            log.debug("kill MR job " + mrJobId);
+            log.info("kill MR job " + mrJobId);
             executeCommand("hadoop job -kill " + mrJobId);
         } catch (IOException e) {
             throw new JobException(e);
