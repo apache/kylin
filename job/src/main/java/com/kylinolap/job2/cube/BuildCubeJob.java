@@ -1,4 +1,4 @@
-package com.kylinolap.job2.common;
+package com.kylinolap.job2.cube;
 
 import com.kylinolap.job2.dao.JobOutputPO;
 import com.kylinolap.job2.dao.JobPO;
@@ -7,12 +7,12 @@ import com.kylinolap.job2.impl.threadpool.DefaultChainedExecutable;
 /**
  * Created by qianzhou on 12/25/14.
  */
-public class CommonJob extends DefaultChainedExecutable {
-    public CommonJob() {
+public class BuildCubeJob extends DefaultChainedExecutable {
+    public BuildCubeJob() {
         super();
     }
 
-    public CommonJob(JobPO job, JobOutputPO jobOutput) {
+    public BuildCubeJob(JobPO job, JobOutputPO jobOutput) {
         super(job, jobOutput);
     }
 }

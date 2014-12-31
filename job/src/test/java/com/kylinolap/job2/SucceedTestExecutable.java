@@ -24,6 +24,6 @@ public class SucceedTestExecutable extends BaseTestExecutable {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
         }
-        return new ExecuteResult(true, "succeed");
+        return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
     }
 }

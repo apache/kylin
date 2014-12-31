@@ -24,7 +24,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     private JobOutputPO jobOutput;
     protected static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
 
-    private static DefaultJobService jobService = DefaultJobService.getInstance(KylinConfig.getInstanceFromEnv());
+    protected static DefaultJobService jobService = DefaultJobService.getInstance(KylinConfig.getInstanceFromEnv());
 
     public AbstractExecutable() {
         String uuid = UUID.randomUUID().toString();
@@ -54,6 +54,8 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected void onExecuteSucceed(ExecuteResult result, ExecutableContext executableContext) {
         if (result.succeed()) {
             jobService.updateJobStatus(this, ExecutableStatus.SUCCEED, result.output());
+        } else if (!result.finished()) {
+            jobService.updateJobStatus(this, ExecutableStatus.STOPPED, result.output());
         } else {
             jobService.updateJobStatus(this, ExecutableStatus.ERROR, result.output());
         }

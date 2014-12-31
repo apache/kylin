@@ -2,6 +2,7 @@ package com.kylinolap.job2.dao;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Maps;
 import com.kylinolap.common.persistence.RootPersistentEntity;
 
 import java.util.List;
@@ -19,6 +20,9 @@ public class JobOutputPO extends RootPersistentEntity {
     @JsonProperty("status")
     private String status;
 
+    @JsonProperty("info")
+    private Map<String, String> info = Maps.newHashMap();
+
     public String getContent() {
         return content;
     }
@@ -35,4 +39,11 @@ public class JobOutputPO extends RootPersistentEntity {
         this.status = status;
     }
 
+    public Map<String, String> getInfo() {
+        return info;
+    }
+
+    public void setInfo(Map<String, String> info) {
+        this.info = info;
+    }
 }

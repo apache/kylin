@@ -14,6 +14,7 @@ import com.kylinolap.job2.execution.ExecutableStatus;
 import com.kylinolap.job2.execution.StateTransferUtil;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
 import com.kylinolap.job2.impl.threadpool.DefaultChainedExecutable;
+import org.apache.commons.math3.analysis.function.Abs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +22,7 @@ import javax.annotation.Nullable;
 import java.lang.reflect.Constructor;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -145,6 +147,20 @@ public class DefaultJobService {
             jobDao.updateJobOutput(output);
         } catch (PersistentException e) {
             logger.error("error change job:" + output.getUuid() + " to " + newStatus.toString());
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void updateJobInfo(AbstractExecutable executable, Map<String, String> info) {
+        if (info == null) {
+            return;
+        }
+        JobOutputPO output = executable.getJobOutput();
+        output.setInfo(info);
+        try {
+            jobDao.updateJobOutput(output);
+        } catch (PersistentException e) {
+            logger.error("error update job info, id:" + output.getUuid() + "  info:" + info.toString());
             throw new RuntimeException(e);
         }
     }

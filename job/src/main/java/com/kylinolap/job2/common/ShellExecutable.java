@@ -30,10 +30,10 @@ public class ShellExecutable extends AbstractExecutable {
         try {
             logger.info("executing:" + getCmd());
             final Pair<Integer, String> result = context.getConfig().getCliCommandExecutor().execute(getCmd());
-            return new ExecuteResult(result.getFirst() == 0, result.getSecond());
+            return new ExecuteResult(result.getFirst() == 0? ExecuteResult.State.SUCCEED: ExecuteResult.State.FAILED, result.getSecond());
         } catch (IOException e) {
             logger.error("job:" + getId() + " execute finished with exception", e);
-            return new ExecuteResult(false, e.getLocalizedMessage());
+            return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         }
     }
 
