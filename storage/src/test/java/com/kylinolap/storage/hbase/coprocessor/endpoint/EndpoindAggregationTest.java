@@ -17,6 +17,7 @@ import com.kylinolap.storage.filter.ConstantTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
+
 import org.apache.hadoop.io.LongWritable;
 import org.junit.After;
 import org.junit.Before;
@@ -137,10 +138,11 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
     public void testSerializeAggreagtor() {
         EndpointAggregators endpointAggregators = EndpointAggregators.fromFunctions(tableRecordInfo, buildAggregations());
         byte[] x = EndpointAggregators.serialize(endpointAggregators);
-        EndpointAggregators d = EndpointAggregators.deserialize(x);
+        EndpointAggregators.deserialize(x);
     }
 
     @Test
+    @SuppressWarnings("rawtypes")
     public void basicTest() {
 
         for (int i = 0; i < tableData.size(); ++i) {

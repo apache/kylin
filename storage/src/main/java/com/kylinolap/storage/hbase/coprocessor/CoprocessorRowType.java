@@ -28,7 +28,6 @@ import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowConstants;
 import com.kylinolap.cube.kv.RowKeyColumnIO;
-import com.kylinolap.invertedindex.IISegment;
 import com.kylinolap.invertedindex.index.TableRecordInfo;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;

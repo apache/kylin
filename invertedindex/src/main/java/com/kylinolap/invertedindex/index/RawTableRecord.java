@@ -35,7 +35,6 @@ public class RawTableRecord implements Cloneable {
 		return digest.isMetrics(col);
 	}
 
-	@SuppressWarnings("unchecked")
 	protected FixedLenMeasureCodec<LongWritable> codec(int col) {
 		return digest.codec(col);
 	}
