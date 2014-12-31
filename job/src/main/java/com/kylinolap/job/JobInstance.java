@@ -80,11 +80,12 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
     private long execEndTime;
     @JsonProperty("mr_waiting")
     private long mrWaiting = 0;
-
     @JsonManagedReference
     @JsonProperty("steps")
     private List<JobStep> steps;
-
+    @JsonProperty("submitter")
+    private String submitter;
+    
     public JobStep getRunningStep() {
         for (JobStep step : this.getSteps()) {
             if (step.getStatus().equals(JobStepStatusEnum.RUNNING) || step.getStatus().equals(JobStepStatusEnum.WAITING)) {
@@ -257,6 +258,18 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         }
         return null;
     }
+
+        
+    public String getSubmitter() {
+        return submitter;
+    }
+
+    public void setSubmitter(String submitter) {
+        this.submitter = submitter;
+    }
+
+
+
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class JobStep implements Comparable<JobStep> {

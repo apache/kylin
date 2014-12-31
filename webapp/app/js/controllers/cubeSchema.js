@@ -80,7 +80,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     });
 
     $scope.$watch('cubeMetaFrame', function (newValue, oldValue) {
-        if (newValue && !newValue.project) {
+        if ($scope.cubeMode=="editExistCube"&&newValue && !newValue.project) {
             initProject();
             generateCubeStatus($scope.cubeMetaFrame);
         }
@@ -137,7 +137,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         $scope.cubeMetaFrame.rowkey.rowkey_columns.push({
             "column": "",
             "length": 0,
-            "dictionary": true,
+            "dictionary": "true",
             "mandatory": false
         });
     }

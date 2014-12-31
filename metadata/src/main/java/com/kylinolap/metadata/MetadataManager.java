@@ -220,7 +220,6 @@ public class MetadataManager {
      */
     public static String loadSourceTableExd(ResourceStore store, String path, Map<String, String> attrContainer) throws IOException {
 
-        logger.debug("Loading SourceTable exd " + path);
         InputStream is = store.getResource(path);
         if (is != null) {
             attrContainer.putAll(JsonUtil.readValue(is, HashMap.class));
@@ -237,7 +236,6 @@ public class MetadataManager {
 
     private TableDesc loadSourceTable(String path) throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Loading SourceTable " + store.getReadableResourcePath(path));
 
         TableDesc t = store.getResource(path, TableDesc.class, TABLE_SERIALIZER);
         t.init();

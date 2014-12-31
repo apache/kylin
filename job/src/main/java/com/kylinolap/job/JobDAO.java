@@ -73,7 +73,10 @@ public class JobDAO {
 
         ArrayList<JobInstance> result = new ArrayList<JobInstance>(jobResources.size());
         for (String path : jobResources) {
-            result.add(readJobResource(path));
+            JobInstance job = readJobResource(path);
+            if (job != null) {
+                result.add(job);
+            }
         }
 
         return result;

@@ -37,6 +37,7 @@ import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.relopt.RelTrait;
 import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.volcano.AbstractConverter.ExpandConversionRule;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
@@ -124,6 +125,9 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
         planner.removeRule(PushFilterPastProjectRule.INSTANCE);
         // distinct count will be split into a separated query that is joined with the left query
         planner.removeRule(RemoveDistinctAggregateRule.INSTANCE);
+        
+        // see Dec 26th email @ http://mail-archives.apache.org/mod_mbox/calcite-dev/201412.mbox/browser
+        planner.removeRule(ExpandConversionRule.INSTANCE);
     }
 
     @Override

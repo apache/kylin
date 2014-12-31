@@ -384,7 +384,6 @@ public class ProjectManager {
                 factProjTable.getRealizations().add(realization);
             }
         }
-
     }
 
     private List<ProjectInstance> findProjects(RealizationType type, String realizationName) {
@@ -400,7 +399,6 @@ public class ProjectManager {
 
     public synchronized ProjectInstance loadProject(String path, boolean triggerUpdate) throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Loading ProjectInstance " + store.getReadableResourcePath(path));
 
         ProjectInstance projectInstance = store.getResource(path, ProjectInstance.class, PROJECT_SERIALIZER);
         projectInstance.init();
@@ -419,7 +417,6 @@ public class ProjectManager {
 
     private synchronized void loadTables(String path) throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Loading ProjectInstance " + store.getReadableResourcePath(path));
 
         ProjectInstance projectInstance = store.getResource(path, ProjectInstance.class, PROJECT_SERIALIZER);
         projectInstance.init();

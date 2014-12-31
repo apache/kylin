@@ -49,9 +49,13 @@ public class RowKeyAttrRule implements IValidatorRule<CubeDesc> {
         }
 
         RowKeyColDesc[] rcd = row.getRowKeyColumns();
-        if (rcd == null || rcd.length == 0) {
-            context.addResult(ResultLevel.ERROR, "Rowkey columns do not exist or is empty");
+        if (rcd == null) {
+            context.addResult(ResultLevel.ERROR, "Rowkey columns do not exist");
             return;
+        }
+        if(rcd.length == 0){
+            context.addResult(ResultLevel.ERROR, "Rowkey columns is empty");
+            return;       	
         }
 
         for (int i = 0; i < rcd.length; i++) {
