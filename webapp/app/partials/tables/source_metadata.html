@@ -3,17 +3,19 @@
     <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
         <div class="form-group">
             <span><b>Project: </b></span>
-            <select chosen ng-model="project.selectedProject" ng-init="newAccess.permission=permissions.READ.value;project.selectedProject=project.selectedProject!=null?project.selectedProject:project.projects[0]"
+            <select chosen ng-model="project.selectedProject" ng-init="newAccess.permission=permissions.READ.value;"
                     ng-options="project as project for project in project.projects"
                     style="width: 150px"
                     data-placeholder="select a project"
                     class="chosen-select">
+                <option  ng-if="userService.hasRole('ROLE_ADMIN')" ng-selected="project.selectedProject==null"  value=""> -- Choose Project -- </option>
             </select>
             <!--Project-->
             <a class="btn btn-xs btn-info" href="/projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
             <a class="btn btn-xs btn-primary" style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
                 <i class="fa fa-plus"></i>
             </a>
+
         </div>
     </form>
 </div>
@@ -151,10 +153,10 @@
                 <h4>Load Hive Table Metadata</h4>
             </div>
             <div class="modal-body">
-                <span><strong>Project: </strong>{{ $parent.projectName }}</span>
+                <span><strong>Project: </strong>{{ $parent.projectName!=null?$parent.projectName:'NULL'}}</span>
                 <label for="tables"> Table Names:(Seperate with comma)</label>
                 <textarea ng-model="$parent.tableNames" class="form-control" id="tables"
-                          placeholder="table1,table2"></textarea>
+                          placeholder="table1,table2  By default,system will choose 'Default' as database,you can specify database like this 'database.table'"></textarea>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-primary" ng-click="add()">Sync</button>

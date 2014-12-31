@@ -1,7 +1,8 @@
 /*
- * OVERRIDE POINTS:
+ * OVERRIDE POINT:
  * - getInSubqueryThreshold(), was `20`, now `Integer.MAX_VALUE`
  * - isTrimUnusedFields(), override to false
+ * - AggConverter.visit(SqlCall), skip column reading for COUNT(COL), for https://jirap.corp.ebay.com/browse/KYLIN-104
  */
 
 /*
@@ -3550,6 +3551,7 @@ public class SqlToRelConverter {
             return null;
         }
 
+<<<<<<< HEAD
         public Void visit(SqlCall call) {
             if (call.getOperator().isAggregator()) {
                 assert bb.agg == this;
@@ -3603,6 +3605,30 @@ public class SqlToRelConverter {
                         operand.accept(this);
                     }
                 }
+=======
+    public Void visit(SqlCall call) {
+      if (call.getOperator().isAggregator()) {
+        assert bb.agg == this;
+        List<Integer> args = new ArrayList<Integer>();
+        List<RelDataType> argTypes =
+            call.getOperator() instanceof SqlCountAggFunction
+            ? new ArrayList<RelDataType>(call.getOperandList().size())
+            : null;
+        try {
+          // switch out of agg mode
+          bb.agg = null;
+          for (SqlNode operand : call.getOperandList()) {
+            RexNode convertedExpr;
+
+            // special case for COUNT(*):  delete the *
+            if (operand instanceof SqlIdentifier) {
+              SqlIdentifier id = (SqlIdentifier) operand;
+              if (id.isStar() || isSimpleCount(call)) { // OVERRIDE POINT, was just `id.isStar()`
+                assert call.operandCount() == 1;
+                assert args.isEmpty();
+                break;
+              }
+>>>>>>> staging
             }
             return null;
         }
@@ -3615,10 +3641,30 @@ public class SqlToRelConverter {
                 }
             }
 
+<<<<<<< HEAD
             // not found -- add it
             int index = convertedInputExprs.size();
             addExpr(expr, null);
             return index;
+=======
+    // OVERRIDE POINT
+    private boolean isSimpleCount(SqlCall call) {
+        if (call.getOperator().isName("COUNT") && call.operandCount() == 1) {
+            final SqlNode parm = call.operand(0);
+            if ((parm instanceof SqlIdentifier || parm instanceof SqlNumericLiteral) //
+                    && call.getFunctionQuantifier() == null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private int lookupOrCreateGroupExpr(RexNode expr) {
+      for (int i = 0; i < convertedInputExprs.size(); i++) {
+        RexNode convertedInputExpr = convertedInputExprs.get(i);
+        if (expr.toString().equals(convertedInputExpr.toString())) {
+          return i;
+>>>>>>> staging
         }
 
         /**

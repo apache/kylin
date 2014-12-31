@@ -69,6 +69,7 @@ public class BaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> {
     private byte byteRowDelimiter;
 
     private int counter;
+    private int errorRecordCounter;
     private Text outputKey = new Text();
     private Text outputValue = new Text();
     private Object[] measures;
@@ -202,14 +203,35 @@ public class BaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> {
             logger.info("Handled " + counter + " records!");
         }
 
-        bytesSplitter.split(value.getBytes(), value.getLength(), byteRowDelimiter);
+        try {
+            bytesSplitter.split(value.getBytes(), value.getLength(), byteRowDelimiter);
+            intermediateTableDesc.sanityCheck(bytesSplitter);
+            
+            byte[] rowKey = buildKey(bytesSplitter.getSplitBuffers());
+            outputKey.set(rowKey, 0, rowKey.length);
 
-        byte[] rowKey = buildKey(bytesSplitter.getSplitBuffers());
-        outputKey.set(rowKey, 0, rowKey.length);
+            buildValue(bytesSplitter.getSplitBuffers());
+            outputValue.set(valueBuf.array(), 0, valueBuf.position());
 
-        buildValue(bytesSplitter.getSplitBuffers());
-        outputValue.set(valueBuf.array(), 0, valueBuf.position());
+            context.write(outputKey, outputValue);
+        } catch (Exception ex) {
+            handleErrorRecord(bytesSplitter, ex);
+        }
+    }
 
-        context.write(outputKey, outputValue);
+    private void handleErrorRecord(BytesSplitter bytesSplitter, Exception ex) throws IOException {
+        
+        System.err.println("Insane record: " + bytesSplitter);
+        ex.printStackTrace(System.err);
+        
+        errorRecordCounter++;
+        if (errorRecordCounter > BatchConstants.ERROR_RECORD_THRESHOLD) {
+            if (ex instanceof IOException)
+                throw (IOException) ex;
+            else if (ex instanceof RuntimeException)
+                throw (RuntimeException) ex;
+            else
+                throw new RuntimeException("", ex);
+        }
     }
 }
