@@ -51,7 +51,6 @@ public class BuildCubeJobBuilderTest {
     protected void waitForJob(String jobId) {
         while (true) {
             AbstractExecutable job = jobService.getJob(jobId);
-            System.out.println("job:" + jobId + " status:" + job.getStatus());
             if (job.getStatus() == ExecutableState.SUCCEED || job.getStatus() == ExecutableState.ERROR) {
                 break;
             } else {
