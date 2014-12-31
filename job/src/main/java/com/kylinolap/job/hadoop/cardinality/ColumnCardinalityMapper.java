@@ -49,9 +49,9 @@ public class ColumnCardinalityMapper<T> extends Mapper<T, HCatRecord, IntWritabl
         for (int m = 0; m < columnSize; m++) {
             Object cell = value.get(m);
             if(counter <5 && m <3) {
-                System.out.println("Get col " + m + " row " + counter +  " value: " + String.valueOf(cell));
+                System.out.println("Get col " + m + " row " + counter +  " value: " + cell.toString());
             }
-            getHllc(m).add(Bytes.toBytes(String.valueOf(cell)));
+            getHllc(m).add(Bytes.toBytes(cell.toString()));
         }
         counter++;
     }
