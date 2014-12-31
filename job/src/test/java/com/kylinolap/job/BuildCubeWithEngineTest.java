@@ -266,7 +266,6 @@ public class BuildCubeWithEngineTest {
 
     private void exportHBaseData() throws IOException {
         ExportHBaseData export = new ExportHBaseData();
-        export.setup();
         export.exportTables();
     }
 }

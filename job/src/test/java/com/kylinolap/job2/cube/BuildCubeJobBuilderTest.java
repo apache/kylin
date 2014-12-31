@@ -1,30 +1,34 @@
 package com.kylinolap.job2.cube;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.ClasspathUtil;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.job.DeployUtil;
+import com.kylinolap.job.ExportHBaseData;
 import com.kylinolap.job.constant.JobConstants;
 import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job2.execution.ExecutableStatus;
+import com.kylinolap.job.hadoop.cube.StorageCleanupJob;
+import com.kylinolap.job2.execution.ExecutableState;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
 import com.kylinolap.job2.impl.threadpool.DefaultScheduler;
 import com.kylinolap.job2.service.DefaultJobService;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.apache.hadoop.util.ToolRunner;
+import org.junit.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.List;
 
 import static org.junit.Assert.*;
 
-public class BuildCubeJobBuilderTest extends HBaseMetadataTestCase {
+@Ignore
+public class BuildCubeJobBuilderTest {
 
     private JobEngineConfig jobEngineConfig;
 
@@ -48,7 +52,7 @@ public class BuildCubeJobBuilderTest extends HBaseMetadataTestCase {
         while (true) {
             AbstractExecutable job = jobService.getJob(jobId);
             System.out.println("job:" + jobId + " status:" + job.getStatus());
-            if (job.getStatus() == ExecutableStatus.SUCCEED || job.getStatus() == ExecutableStatus.ERROR) {
+            if (job.getStatus() == ExecutableState.SUCCEED || job.getStatus() == ExecutableState.ERROR) {
                 break;
             } else {
                 try {
@@ -62,12 +66,18 @@ public class BuildCubeJobBuilderTest extends HBaseMetadataTestCase {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        ClasspathUtil.addClasspath(new File(SANDBOX_TEST_DATA).getAbsolutePath());
+        ClasspathUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
     }
 
     @Before
-    public void setup() throws Exception {
-        createTestMetadata();
+    public void before() throws Exception {
+        HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
+
+        DeployUtil.initCliWorkDir();
+        DeployUtil.deployMetadata();
+        DeployUtil.overrideJobJarLocations();
+        DeployUtil.overrideJobConf(HBaseMetadataTestCase.SANDBOX_TEST_DATA);
+
         setFinalStatic(JobConstants.class.getField("DEFAULT_SCHEDULER_INTERVAL_SECONDS"), 10);
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         jobService = DefaultJobService.getInstance(kylinConfig);
@@ -84,12 +94,17 @@ public class BuildCubeJobBuilderTest extends HBaseMetadataTestCase {
         final CubeInstance testCube = cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty");
         testCube.getSegments().clear();
         cubeManager.updateCube(testCube);
-
     }
 
     @After
     public void after() throws Exception {
-        cleanupTestMetadata();
+        // jobManager.deleteAllJobs();
+        int exitCode = cleanupOldCubes();
+        if (exitCode == 0) {
+            exportHBaseData();
+        }
+
+        HBaseMetadataTestCase.staticCleanupTestMetadata();
     }
 
     @Test
@@ -101,6 +116,18 @@ public class BuildCubeJobBuilderTest extends HBaseMetadataTestCase {
         final BuildCubeJob job = buildCubeJobBuilder.build();
         jobService.addJob(job);
         waitForJob(job.getId());
-        assertEquals(ExecutableStatus.SUCCEED, jobService.getJobStatus(job.getId()));
+        assertEquals(ExecutableState.SUCCEED, jobService.getJobStatus(job.getId()));
+    }
+
+    private int cleanupOldCubes() throws Exception {
+        String[] args = { "--delete", "true" };
+
+        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
+        return exitCode;
+    }
+
+    private void exportHBaseData() throws IOException {
+        ExportHBaseData export = new ExportHBaseData();
+        export.exportTables();
     }
 }

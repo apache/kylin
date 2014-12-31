@@ -15,8 +15,8 @@ public abstract class AbstractBuildCubeJob extends AbstractExecutable {
     public AbstractBuildCubeJob() {
     }
 
-    public AbstractBuildCubeJob(JobPO job, JobOutputPO jobOutput) {
-        super(job, jobOutput);
+    public AbstractBuildCubeJob(JobPO job) {
+        super(job);
     }
 
     void setCubeInstanceName(String name) {

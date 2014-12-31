@@ -26,9 +26,6 @@ public final class ExecuteResult {
         return state == State.SUCCEED;
     }
 
-    public boolean finished() {
-        return state != State.STOPPED;
-    }
 
     public String output() {
         return output;

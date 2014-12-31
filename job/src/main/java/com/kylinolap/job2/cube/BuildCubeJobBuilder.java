@@ -1,12 +1,11 @@
 package com.kylinolap.job2.cube;
 
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.JoinedFlatTable;
 import com.kylinolap.job.constant.JobConstants;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.cube.FactDistinctColumnsJob;
-import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc;
+import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
 import com.kylinolap.job2.common.MapReduceExecutable;
 import com.kylinolap.job2.common.ShellExecutable;
 import org.apache.commons.lang3.StringUtils;
@@ -34,7 +33,7 @@ public final class BuildCubeJobBuilder {
 
     public BuildCubeJob build() {
         BuildCubeJob result = new BuildCubeJob();
-        final JoinedFlatTableDesc intermediateTableDesc = new JoinedFlatTableDesc(segment.getCubeDesc(), this.segment);
+        final CubeJoinedFlatTableDesc intermediateTableDesc = new CubeJoinedFlatTableDesc(segment.getCubeDesc(), this.segment);
         final ShellExecutable intermediateHiveTableStep = createIntermediateHiveTableStep(intermediateTableDesc);
         final String intermediateHiveTableName = getIntermediateHiveTableName(intermediateTableDesc, intermediateHiveTableStep.getId());
         result.addTask(intermediateHiveTableStep);
@@ -70,11 +69,11 @@ public final class BuildCubeJobBuilder {
         return cmd.append(" -").append(paraName).append(" ").append(paraValue);
     }
 
-    private String getIntermediateHiveTableName(JoinedFlatTableDesc intermediateTableDesc, String jobUuid) {
+    private String getIntermediateHiveTableName(CubeJoinedFlatTableDesc intermediateTableDesc, String jobUuid) {
         return JoinedFlatTable.getTableDir(intermediateTableDesc, getJobWorkingDir(jobUuid), jobUuid);
     }
 
-    private ShellExecutable createIntermediateHiveTableStep(JoinedFlatTableDesc intermediateTableDesc) {
+    private ShellExecutable createIntermediateHiveTableStep(CubeJoinedFlatTableDesc intermediateTableDesc) {
         try {
             ShellExecutable result = new ShellExecutable();
             result.setName(JobConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);

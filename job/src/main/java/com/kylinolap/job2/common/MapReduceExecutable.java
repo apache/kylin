@@ -1,24 +1,17 @@
 package com.kylinolap.job2.common;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import com.kylinolap.job.JobInstance;
-import com.kylinolap.job.cmd.JavaHadoopCmdOutput;
 import com.kylinolap.job.constant.JobStepStatusEnum;
-import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.job.tools.HadoopStatusChecker;
-import com.kylinolap.job2.dao.JobOutputPO;
 import com.kylinolap.job2.dao.JobPO;
 import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.execution.ExecutableContext;
-import com.kylinolap.job2.execution.ExecutableStatus;
 import com.kylinolap.job2.execution.ExecuteResult;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
 import org.apache.hadoop.util.ToolRunner;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
 /**
@@ -28,13 +21,12 @@ public class MapReduceExecutable extends AbstractExecutable {
 
     private static final String KEY_MR_JOB = "MR_JOB_CLASS";
     private static final String KEY_PARAMS = "MR_JOB_PARAMS";
-    private volatile boolean stopped = false;
 
     public MapReduceExecutable() {
     }
 
-    public MapReduceExecutable(JobPO job, JobOutputPO jobOutput) {
-        super(job, jobOutput);
+    public MapReduceExecutable(JobPO job) {
+        super(job);
     }
 
     @Override
@@ -54,27 +46,23 @@ public class MapReduceExecutable extends AbstractExecutable {
             JobStepStatusEnum status;
             do {
                 status = hadoopCmdOutput.getStatus();
-                jobService.updateJobInfo(this, job.getInfo());
+                jobService.updateJobInfo(getId(), job.getInfo());
                 if (status.isComplete()) {
-                    break;
+                    final Map<String, String> info = job.getInfo();
+                    info.put(JobInstance.SOURCE_RECORDS_COUNT, hadoopCmdOutput.getMapInputRecords());
+                    info.put(JobInstance.HDFS_BYTES_WRITTEN, hadoopCmdOutput.getHdfsBytesWritten());
+                    jobService.updateJobInfo(getId(), info);
+
+                    if (status == JobStepStatusEnum.FINISHED) {
+                        return new ExecuteResult(ExecuteResult.State.SUCCEED, hadoopCmdOutput.getOutput());
+                    } else {
+                        return new ExecuteResult(ExecuteResult.State.FAILED, hadoopCmdOutput.getOutput());
+                    }
                 }
                 Thread.sleep(context.getConfig().getYarnStatusCheckIntervalSeconds() * 1000);
-            } while (!stopped);
+            } while (!isStopped());
 
-            if (status.isComplete()) {
-                final Map<String, String> info = job.getInfo();
-                info.put(JobInstance.SOURCE_RECORDS_COUNT, hadoopCmdOutput.getMapInputRecords());
-                info.put(JobInstance.HDFS_BYTES_WRITTEN, hadoopCmdOutput.getHdfsBytesWritten());
-                jobService.updateJobInfo(this, info);
-
-                if (status == JobStepStatusEnum.FINISHED) {
-                    return new ExecuteResult(ExecuteResult.State.SUCCEED, hadoopCmdOutput.getOutput());
-                } else {
-                    return new ExecuteResult(ExecuteResult.State.FAILED, hadoopCmdOutput.getOutput());
-                }
-            } else {
-                return new ExecuteResult(ExecuteResult.State.STOPPED, hadoopCmdOutput.getOutput());
-            }
+            return new ExecuteResult(ExecuteResult.State.STOPPED, hadoopCmdOutput.getOutput());
 
         } catch (ReflectiveOperationException e) {
             logger.error("error getMapReduceJobClass, class name:" + getParam(KEY_MR_JOB), e);
@@ -97,17 +85,8 @@ public class MapReduceExecutable extends AbstractExecutable {
         setParam(KEY_PARAMS, param);
     }
 
-    String getMapReduceParams() {
+    protected String getMapReduceParams() {
         return getParam(KEY_PARAMS);
     }
 
-    @Override
-    public boolean isRunnable() {
-        return this.getStatus() == ExecutableStatus.READY;
-    }
-
-    @Override
-    public void stop() throws ExecuteException {
-        this.stopped = true;
-    }
 }

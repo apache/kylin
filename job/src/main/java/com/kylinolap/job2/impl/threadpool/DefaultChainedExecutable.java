@@ -2,13 +2,11 @@ package com.kylinolap.job2.impl.threadpool;
 
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.job2.dao.JobOutputPO;
 import com.kylinolap.job2.dao.JobPO;
 import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.execution.*;
 import com.kylinolap.job2.service.DefaultJobService;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,8 +22,8 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
         super();
     }
 
-    public DefaultChainedExecutable(JobPO job, JobOutputPO jobOutput) {
-        super(job, jobOutput);
+    public DefaultChainedExecutable(JobPO job) {
+        super(job);
     }
 
     @Override
@@ -43,36 +41,45 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
 
     @Override
     protected void onExecuteStart(ExecutableContext executableContext) {
-        jobService.updateJobStatus(this, ExecutableStatus.RUNNING);
+        jobService.updateJobStatus(getId(), ExecutableState.RUNNING);
     }
 
     @Override
     protected void onExecuteError(Throwable exception, ExecutableContext executableContext) {
-        jobService.updateJobStatus(this, ExecutableStatus.ERROR);
+        jobService.updateJobStatus(getId(), ExecutableState.ERROR);
     }
 
     @Override
-    protected void onExecuteSucceed(ExecuteResult result, ExecutableContext executableContext) {
+    protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
         if (result.succeed()) {
             List<? extends Executable> jobs = getTasks();
-            Executable lastJob = jobs.get(jobs.size() - 1);
-            if (lastJob.isRunnable()) {
-                jobService.updateJobStatus(this, ExecutableStatus.READY);
-            } else if (lastJob.getStatus() == ExecutableStatus.SUCCEED) {
-                jobService.updateJobStatus(this, ExecutableStatus.SUCCEED);
+            boolean allSucceed = true;
+            boolean hasError = false;
+            for (Executable task: jobs) {
+                final ExecutableState status = task.getStatus();
+                if (status == ExecutableState.ERROR) {
+                    hasError = true;
+                }
+                if (status != ExecutableState.SUCCEED) {
+                    allSucceed = false;
+                }
+            }
+            if (allSucceed) {
+                jobService.updateJobStatus(getId(), ExecutableState.SUCCEED);
+            } else if (hasError) {
+                jobService.updateJobStatus(getId(), ExecutableState.ERROR);
             } else {
-
+                jobService.updateJobStatus(getId(), ExecutableState.READY);
             }
         } else if (result.state() == ExecuteResult.State.STOPPED) {
-            jobService.updateJobStatus(this, ExecutableStatus.STOPPED, null);
+            if (getStatus() == ExecutableState.STOPPED) {
+                //
+            } else {
+                jobService.updateJobStatus(getId(), ExecutableState.ERROR);
+            }
         } else {
-            jobService.updateJobStatus(this, ExecutableStatus.ERROR, null);
+            jobService.updateJobStatus(getId(), ExecutableState.ERROR, null);
         }
-    }
-
-    @Override
-    public boolean isRunnable() {
-        return getStatus() == ExecutableStatus.READY;
     }
 
     @Override

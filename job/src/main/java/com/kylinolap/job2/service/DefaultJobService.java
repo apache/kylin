@@ -2,16 +2,13 @@ package com.kylinolap.job2.service;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.collect.*;
+import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.job2.dao.JobDao;
 import com.kylinolap.job2.dao.JobOutputPO;
 import com.kylinolap.job2.dao.JobPO;
-import com.kylinolap.job2.exception.IllegalStateTranferException;
 import com.kylinolap.job2.exception.PersistentException;
-import com.kylinolap.job2.execution.ExecutableStatus;
-import com.kylinolap.job2.execution.StateTransferUtil;
+import com.kylinolap.job2.execution.ExecutableState;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
 import com.kylinolap.job2.impl.threadpool.DefaultChainedExecutable;
 import org.apache.commons.math3.analysis.function.Abs;
@@ -20,10 +17,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Constructor;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -31,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class DefaultJobService {
 
-    private static final Logger logger = LoggerFactory.getLogger(JobDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultJobService.class);
     private static final ConcurrentHashMap<KylinConfig, DefaultJobService> CACHE = new ConcurrentHashMap<KylinConfig, DefaultJobService>();
 
     private JobDao jobDao;
@@ -65,7 +60,9 @@ public class DefaultJobService {
     }
 
     private void addJobOutput(AbstractExecutable executable) throws PersistentException {
-        jobDao.addJobOutput(executable.getJobOutput());
+        JobOutputPO jobOutputPO = new JobOutputPO();
+        jobOutputPO.setUuid(executable.getId());
+        jobDao.addJobOutput(jobOutputPO);
         if (executable instanceof DefaultChainedExecutable) {
             for (AbstractExecutable subTask: ((DefaultChainedExecutable) executable).getTasks()) {
                 addJobOutput(subTask);
@@ -85,16 +82,24 @@ public class DefaultJobService {
 
     public AbstractExecutable getJob(String uuid) {
         try {
-            return parseTo(jobDao.getJob(uuid), jobDao.getJobOutput(uuid));
+            return parseTo(jobDao.getJob(uuid));
         } catch (PersistentException e) {
             logger.error("fail to get job:" + uuid, e);
             throw new RuntimeException(e);
         }
     }
 
-    public ExecutableStatus getJobStatus(String uuid) {
+    public ExecutableState getJobStatus(String uuid) {
         try {
-            return ExecutableStatus.valueOf(jobDao.getJobOutput(uuid).getStatus());
+            return ExecutableState.valueOf(jobDao.getJobOutput(uuid).getStatus());
+        } catch (PersistentException e) {
+            logger.error("fail to get job output:" + uuid, e);
+            throw new RuntimeException(e);
+        }
+    }
+    public String getJobOutput(String uuid) {
+        try {
+            return jobDao.getJobOutput(uuid).getContent();
         } catch (PersistentException e) {
             logger.error("fail to get job output:" + uuid, e);
             throw new RuntimeException(e);
@@ -107,12 +112,7 @@ public class DefaultJobService {
                 @Nullable
                 @Override
                 public AbstractExecutable apply(JobPO input) {
-                    try {
-                        JobOutputPO jobOutput = jobDao.getJobOutput(input.getUuid());
-                        return parseTo(input, jobOutput);
-                    } catch (PersistentException e) {
-                        throw new RuntimeException(e);
-                    }
+                        return parseTo(input);
                 }
             });
         } catch (PersistentException e) {
@@ -120,49 +120,83 @@ public class DefaultJobService {
         }
     }
 
-    public void resetRunningJobToError(AbstractExecutable executable, String reason) {
-        if (executable.getStatus() == ExecutableStatus.RUNNING) {
-            updateJobStatus(executable, ExecutableStatus.ERROR, reason);
-            if (executable instanceof DefaultChainedExecutable) {
-                for (AbstractExecutable subTask : ((DefaultChainedExecutable) executable).getTasks()) {
-                    resetRunningJobToError(subTask, reason);
-                }
-            }
-        }
-    }
-
-    public void updateJobStatus(AbstractExecutable executable, ExecutableStatus newStatus) {
-        updateJobStatus(executable, newStatus, null);
-    }
-
-    public void updateJobStatus(AbstractExecutable executable, ExecutableStatus newStatus, String reason) {
-        ExecutableStatus oldStatus = executable.getStatus();
-        if (!StateTransferUtil.isValidStateTransfer(oldStatus, newStatus)) {
-            throw new IllegalStateTranferException("there is no valid state transfer from:" + oldStatus + " to:" + newStatus);
-        }
-        JobOutputPO output = executable.getJobOutput();
-        output.setStatus(newStatus.toString());
-        output.setContent(reason);
+    public boolean updateJobStatus(String jobId, ExecutableState newStatus) {
         try {
-            jobDao.updateJobOutput(output);
+            final JobOutputPO jobOutput = jobDao.getJobOutput(jobId);
+            ExecutableState oldStatus = ExecutableState.valueOf(jobOutput.getStatus());
+            if (oldStatus == newStatus) {
+                return true;
+            }
+            if (!ExecutableState.isValidStateTransfer(oldStatus, newStatus)) {
+                throw new RuntimeException("there is no valid state transfer from:" + oldStatus + " to:" + newStatus);
+            }
+            jobOutput.setStatus(newStatus.toString());
+            jobDao.updateJobOutput(jobOutput);
+            logger.info("job id:" + jobId + " from " + oldStatus + " to " + newStatus);
+            return true;
         } catch (PersistentException e) {
-            logger.error("error change job:" + output.getUuid() + " to " + newStatus.toString());
+            logger.error("error change job:" + jobId + " to " + newStatus.toString());
             throw new RuntimeException(e);
         }
     }
 
-    public void updateJobInfo(AbstractExecutable executable, Map<String, String> info) {
+    public boolean updateJobStatus(String jobId, ExecutableState newStatus, String output) {
+        try {
+            final JobOutputPO jobOutput = jobDao.getJobOutput(jobId);
+            ExecutableState oldStatus = ExecutableState.valueOf(jobOutput.getStatus());
+            if (oldStatus == newStatus) {
+                return true;
+            }
+            if (!ExecutableState.isValidStateTransfer(oldStatus, newStatus)) {
+                throw new RuntimeException("there is no valid state transfer from:" + oldStatus + " to:" + newStatus);
+            }
+            jobOutput.setStatus(newStatus.toString());
+            jobOutput.setContent(output);
+            jobDao.updateJobOutput(jobOutput);
+            logger.info("job id:" + jobId + " from " + oldStatus + " to " + newStatus);
+            return true;
+        } catch (PersistentException e) {
+            logger.error("error change job:" + jobId + " to " + newStatus.toString());
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void updateJobInfo(String id, Map<String, String> info) {
         if (info == null) {
             return;
         }
-        JobOutputPO output = executable.getJobOutput();
-        output.setInfo(info);
         try {
+            JobOutputPO output = jobDao.getJobOutput(id);
+            output.setInfo(info);
             jobDao.updateJobOutput(output);
         } catch (PersistentException e) {
-            logger.error("error update job info, id:" + output.getUuid() + "  info:" + info.toString());
+            logger.error("error update job info, id:" + id + "  info:" + info.toString());
             throw new RuntimeException(e);
         }
+    }
+
+    private void stopJob(AbstractExecutable job) {
+        final ExecutableState status = job.getStatus();
+        if (status == ExecutableState.RUNNING) {
+            updateJobStatus(job.getId(), ExecutableState.STOPPED);
+            if (job instanceof DefaultChainedExecutable) {
+                final List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
+                for (AbstractExecutable task: tasks) {
+                    if (task.getStatus() == ExecutableState.RUNNING) {
+                        stopJob(task);
+                        break;
+                    }
+                }
+            }
+        } else {
+            updateJobStatus(job.getId(), ExecutableState.STOPPED);
+        }
+    }
+
+
+    public void stopJob(String id) {
+        final AbstractExecutable job = getJob(id);
+        stopJob(job);
     }
 
     private JobPO getJobPO(AbstractExecutable executable) {
@@ -175,27 +209,21 @@ public class DefaultJobService {
         return result;
     }
 
-    private AbstractExecutable parseTo(JobPO jobPO, JobOutputPO jobOutput) {
+    private AbstractExecutable parseTo(JobPO jobPO) {
         String type = jobPO.getType();
         try {
             Class<? extends AbstractExecutable> clazz = (Class<? extends AbstractExecutable>) Class.forName(type);
-            Constructor<? extends AbstractExecutable> constructor = clazz.getConstructor(JobPO.class, JobOutputPO.class);
-            AbstractExecutable result = constructor.newInstance(jobPO, jobOutput);
+            Constructor<? extends AbstractExecutable> constructor = clazz.getConstructor(JobPO.class);
+            AbstractExecutable result = constructor.newInstance(jobPO);
             List<JobPO> tasks = jobPO.getTasks();
             if (tasks != null && !tasks.isEmpty()) {
                 Preconditions.checkArgument(result instanceof DefaultChainedExecutable);
                 for (JobPO subTask: tasks) {
-                    ((DefaultChainedExecutable) result).addTask(parseTo(subTask, jobDao.getJobOutput(subTask.getUuid())));
+                    ((DefaultChainedExecutable) result).addTask(parseTo(subTask));
                 }
-            }
-            if (jobOutput != null) {
-                result.setStatus(ExecutableStatus.valueOf(jobOutput.getStatus()));
-                result.setOutput(jobOutput.getContent());
             }
             return result;
         } catch (ReflectiveOperationException e) {
-            throw new IllegalArgumentException("cannot parse this job:" + jobPO.getId(), e);
-        } catch (PersistentException e) {
             throw new IllegalArgumentException("cannot parse this job:" + jobPO.getId(), e);
         }
     }

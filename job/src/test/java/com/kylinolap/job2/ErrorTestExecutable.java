@@ -15,8 +15,8 @@ public class ErrorTestExecutable extends BaseTestExecutable {
     public ErrorTestExecutable() {
     }
 
-    public ErrorTestExecutable(JobPO job, JobOutputPO jobOutput) {
-        super(job, jobOutput);
+    public ErrorTestExecutable(JobPO job) {
+        super(job);
     }
 
     @Override
