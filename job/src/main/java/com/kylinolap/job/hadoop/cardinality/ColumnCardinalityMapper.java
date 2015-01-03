@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.hbase.util.Bytes;
@@ -42,41 +43,32 @@ public class ColumnCardinalityMapper<T> extends Mapper<T, HCatRecord, IntWritabl
 
     private Map<Integer, HyperLogLogPlusCounter> hllcMap = new HashMap<Integer, HyperLogLogPlusCounter>();
     public static final String DEFAULT_DELIM = ",";
-    
+
     private int counter = 0;
 
     @Override
     public void map(T key, HCatRecord value, Context context) throws IOException, InterruptedException {
 
         HCatSchema schema = HCatInputFormat.getTableSchema(context.getConfiguration());
-        Integer columnSize = context.getConfiguration().getInt(HiveColumnCardinalityJob.KEY_TABLE_COLUMN_NUMBER, 100);
-        
-        Iterator<HCatFieldSchema> it = schema.getFields().iterator();
+
+        List<HCatFieldSchema> fieldList = schema.getFields();
         HCatFieldSchema field;
         Object fieldValue;
-        int m = 0;
-        while(it.hasNext()) {
-            field = it.next();
-            fieldValue = value.get(field.getName(), schema);
-            if(fieldValue == null)
-                continue;
-            
-            if(counter <5 && m <3) {
-                System.out.println("Get row " + counter +  " column " + m + "  value: " + fieldValue.toString());
-            }
-            getHllc(m).add(Bytes.toBytes(fieldValue.toString()));
-            m++;
-        }
-        
-        /*
+        Integer columnSize = fieldList.size();
         for (int m = 0; m < columnSize; m++) {
-            Object cell = value.get(m);
-            if(counter <5 && m <3) {
-                System.out.println("Get row " + counter +  " column " + m + "  value: " + cell.toString());
+            field = fieldList.get(m);
+            fieldValue = value.get(field.getName(), schema);
+            if (fieldValue == null)
+                fieldValue = "NULL";
+            
+            if (counter < 5 && m < 10) {
+                System.out.println("Get row " + counter + " column '" + field.getName() + "'  value: " + fieldValue);
             }
-            getHllc(m).add(Bytes.toBytes(cell.toString()));
+
+            if (fieldValue != null)
+                getHllc(m).add(Bytes.toBytes(fieldValue.toString()));
         }
-        */
+
         counter++;
     }
 
