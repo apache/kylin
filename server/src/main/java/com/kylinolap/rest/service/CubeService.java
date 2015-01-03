@@ -472,7 +472,7 @@ public class CubeService extends BasicService {
         }
         */
         String jarPath = getKylinConfig().getKylinJobJarPath();
-        String outPath = HiveColumnCardinalityJob.OUTPUT_PATH + "/" + tableName;
+        String outPath = HiveColumnCardinalityJob.OUTPUT_PATH + "/" + tableName.toUpperCase();
         String[] args = new String[] {"-table", tableName, "-output", outPath };
         
         HiveColumnCardinalityJob job = new HiveColumnCardinalityJob(jarPath, null);
