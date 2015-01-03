@@ -27,6 +27,9 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hive.hcatalog.data.HCatRecord;
+import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
+import org.apache.hive.hcatalog.data.schema.HCatSchema;
+import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 
 import com.kylinolap.common.hll.HyperLogLogPlusCounter;
 import com.kylinolap.cube.kv.RowConstants;
@@ -45,7 +48,27 @@ public class ColumnCardinalityMapper<T> extends Mapper<T, HCatRecord, IntWritabl
     @Override
     public void map(T key, HCatRecord value, Context context) throws IOException, InterruptedException {
 
+        HCatSchema schema = HCatInputFormat.getTableSchema(context.getConfiguration());
         Integer columnSize = context.getConfiguration().getInt(HiveColumnCardinalityJob.KEY_TABLE_COLUMN_NUMBER, 100);
+        
+        Iterator<HCatFieldSchema> it = schema.getFields().iterator();
+        HCatFieldSchema field;
+        Object fieldValue;
+        int m = 0;
+        while(it.hasNext()) {
+            field = it.next();
+            fieldValue = value.get(field.getName(), schema);
+            if(fieldValue == null)
+                continue;
+            
+            if(counter <5 && m <3) {
+                System.out.println("Get row " + counter +  " column " + m + "  value: " + fieldValue.toString());
+            }
+            getHllc(m).add(Bytes.toBytes(fieldValue.toString()));
+            m++;
+        }
+        
+        /*
         for (int m = 0; m < columnSize; m++) {
             Object cell = value.get(m);
             if(counter <5 && m <3) {
@@ -53,6 +76,7 @@ public class ColumnCardinalityMapper<T> extends Mapper<T, HCatRecord, IntWritabl
             }
             getHllc(m).add(Bytes.toBytes(cell.toString()));
         }
+        */
         counter++;
     }
 
