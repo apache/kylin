@@ -46,7 +46,6 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
     protected static final Option OPTION_TABLE = OptionBuilder.withArgName("table name").hasArg().isRequired(true).withDescription("The hive table name").create("table");
 
     public static final String KEY_INPUT_DELIM = "INPUT_DELIM";
-    public static final String KEY_TABLE_COLUMN_NUMBER = "TABLE_COLUMN_NUMBER";
     public static final String OUTPUT_PATH = "/tmp/cardinality";
 
     /**
@@ -149,8 +148,6 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
                     table);
 
             System.out.println("Set input format as HCat on table '" + table + "'");
-            HCatSchema tableSchema = HCatInputFormat.getTableSchema(job.getConfiguration());
-            job.getConfiguration().set(KEY_TABLE_COLUMN_NUMBER, String.valueOf(tableSchema.size()));
             
             job.setInputFormatClass(HCatInputFormat.class);
             job.setMapperClass(ColumnCardinalityMapper.class);
