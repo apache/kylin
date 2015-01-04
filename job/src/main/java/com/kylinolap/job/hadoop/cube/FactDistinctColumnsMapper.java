@@ -25,12 +25,13 @@ import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hive.hcatalog.data.HCatRecord;
+import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
+import org.apache.hive.hcatalog.data.schema.HCatSchema;
+import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.common.BytesSplitter;
-import com.kylinolap.cube.common.SplittedBytes;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.job.constant.BatchConstants;
@@ -51,20 +52,16 @@ public class FactDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, HCatRecord, 
     private int[] factDictCols;
 
     private JoinedFlatTableDesc intermediateTableDesc;
-    private String intermediateTableRowDelimiter;
-    private byte byteRowDelimiter;
-    private BytesSplitter bytesSplitter;
 
     private ShortWritable outputKey = new ShortWritable();
     private Text outputValue = new Text();
     private int errorRecordCounter;
 
+    private HCatSchema schema = null;
+
     @Override
     protected void setup(Context context) throws IOException {
         Configuration conf = context.getConfiguration();
-        intermediateTableRowDelimiter = conf.get(BatchConstants.CFG_CUBE_INTERMEDIATE_TABLE_ROW_DELIMITER, Character.toString(BatchConstants.INTERMEDIATE_TABLE_ROW_DELIMITER));
-        byteRowDelimiter = intermediateTableRowDelimiter.getBytes("UTF-8")[0];
-        bytesSplitter = new BytesSplitter(200, 4096);
 
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
         cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
@@ -92,34 +89,36 @@ public class FactDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, HCatRecord, 
         this.factDictCols = new int[factDictCols.size()];
         for (int i = 0; i < factDictCols.size(); i++)
             this.factDictCols[i] = factDictCols.get(i);
+
+        schema = HCatInputFormat.getTableSchema(context.getConfiguration());
     }
 
     @Override
     public void map(KEYIN key, HCatRecord record, Context context) throws IOException, InterruptedException {
 
         try {
-//            bytesSplitter.split(value.getBytes(), value.getLength(), byteRowDelimiter);
-//            intermediateTableDesc.sanityCheck(bytesSplitter);
-//            SplittedBytes[] splitBuffers = bytesSplitter.getSplitBuffers();
 
             int[] flatTableIndexes = intermediateTableDesc.getRowKeyColumnIndexes();
+            HCatFieldSchema fieldSchema = null;
             for (int i : factDictCols) {
                 outputKey.set((short) i);
-//                SplittedBytes bytes = splitBuffers[flatTableIndexes[i]];
-                String textValue = record.get(flatTableIndexes[i]).toString();
-                byte[] bytes = Bytes.toBytes(textValue);
+                fieldSchema = schema.get(flatTableIndexes[i]);
+                Object fieldValue = record.get(fieldSchema.getName(), schema);
+                if (fieldValue == null)
+                    fieldValue = "NULL";
+                byte[] bytes = Bytes.toBytes(fieldValue.toString());
                 outputValue.set(bytes, 0, bytes.length);
                 context.write(outputKey, outputValue);
             }
         } catch (Exception ex) {
-            handleErrorRecord(bytesSplitter, ex);
+            handleErrorRecord(record, ex);
         }
 
     }
 
-    private void handleErrorRecord(BytesSplitter bytesSplitter, Exception ex) throws IOException {
+    private void handleErrorRecord(HCatRecord record, Exception ex) throws IOException {
 
-        System.err.println("Insane record: " + bytesSplitter);
+        System.err.println("Insane record: " + record.getAll());
         ex.printStackTrace(System.err);
 
         errorRecordCounter++;
