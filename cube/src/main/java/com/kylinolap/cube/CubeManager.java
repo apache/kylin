@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.realization.*;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,7 @@ import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.common.restclient.Broadcaster;
 import com.kylinolap.common.restclient.SingleValueCache;
 import com.kylinolap.cube.exception.CubeIntegrityException;
+import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.DimensionDesc;
 import com.kylinolap.metadata.project.ProjectManager;
@@ -52,6 +54,7 @@ import com.kylinolap.dict.lookup.LookupStringTable;
 import com.kylinolap.dict.lookup.SnapshotManager;
 import com.kylinolap.dict.lookup.SnapshotTable;
 import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.TblColRef;
 
@@ -250,7 +253,7 @@ public class CubeManager {
         return cube;
     }
 
-    public List<CubeSegment> allocateSegments(CubeInstance cubeInstance, RealizationBuildTypeEnum buildType, long startDate, long endDate) throws IOException, CubeIntegrityException {
+    public List<CubeSegment> allocateSegments(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, long startDate, long endDate) throws IOException, CubeIntegrityException {
         if (cubeInstance.getBuildingSegments().size() > 0) {
             throw new RuntimeException("There is already an allocating segment!");
         }
@@ -294,7 +297,7 @@ public class CubeManager {
         validateNewSegments(cubeInstance, buildType, segments);
 
         CubeSegment newSeg = segments.get(0);
-        if (buildType == RealizationBuildTypeEnum.MERGE) {
+        if (buildType == CubeBuildTypeEnum.MERGE) {
             List<CubeSegment> mergingSegments = cubeInstance.getMergingSegments(newSeg);
             this.makeDictForNewSegment(cubeInstance, newSeg, mergingSegments);
             this.makeSnapshotForNewSegment(cubeInstance, newSeg, mergingSegments);
@@ -324,7 +327,7 @@ public class CubeManager {
         return "KYLIN_HOST";
     }
 
-    public void updateSegmentOnJobSucceed(CubeInstance cubeInstance, RealizationBuildTypeEnum buildType, String segmentName, String jobUuid, long lastBuildTime, long sizeKB, long sourceRecordCount, long sourceRecordsSize) throws IOException, CubeIntegrityException {
+    public void updateSegmentOnJobSucceed(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, String segmentName, String jobUuid, long lastBuildTime, long sizeKB, long sourceRecordCount, long sourceRecordsSize) throws IOException, CubeIntegrityException {
 
         List<CubeSegment> segmentsInNewStatus = cubeInstance.getSegments(SegmentStatusEnum.NEW);
         CubeSegment cubeSegment = cubeInstance.getSegmentById(jobUuid);
@@ -574,7 +577,7 @@ public class CubeManager {
 
     /**
      */
-    private void validateNewSegments(CubeInstance cubeInstance, RealizationBuildTypeEnum buildType, List<CubeSegment> newSegments) throws CubeIntegrityException {
+    private void validateNewSegments(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, List<CubeSegment> newSegments) throws CubeIntegrityException {
         if (null == cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateColumn()) {
             // do nothing for non-incremental build
             return;

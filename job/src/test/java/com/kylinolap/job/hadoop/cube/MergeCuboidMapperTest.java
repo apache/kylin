@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.kylinolap.metadata.project.ProjectManager;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -34,11 +35,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.exception.CubeIntegrityException;
+import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryGenerator;
 import com.kylinolap.dict.DictionaryInfo;
@@ -157,7 +158,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
         String cubeName = "test_kylin_cube_without_slr_left_join_ready_2_segments";
 
-        List<CubeSegment> newSegments = cubeManager.allocateSegments(cube, RealizationBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L);
+        List<CubeSegment> newSegments = cubeManager.allocateSegments(cube, CubeBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L);
 
         logger.info("Size of new segments: " + newSegments.size());
 

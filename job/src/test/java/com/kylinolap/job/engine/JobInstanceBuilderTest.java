@@ -22,6 +22,7 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 import com.kylinolap.metadata.project.ProjectManager;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,10 +30,10 @@ import org.junit.Test;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.JobInstance.JobStep;
@@ -74,9 +75,9 @@ public class JobInstanceBuilderTest extends LocalFileMetadataTestCase {
         CubeInstance cube = cubeManager.getCube(cubeName);
 
         // initial segment
-        CubeSegment segment = cubeManager.allocateSegments(cube, RealizationBuildTypeEnum.BUILD, 0, dateEnd).get(0);
+        CubeSegment segment = cubeManager.allocateSegments(cube, CubeBuildTypeEnum.BUILD, 0, dateEnd).get(0);
 
-        JobInstance jobInstance = jobManager.createJob(cubeName, segment.getName(), UUID.randomUUID().toString(), RealizationBuildTypeEnum.BUILD, null);
+        JobInstance jobInstance = jobManager.createJob(cubeName, segment.getName(), UUID.randomUUID().toString(), CubeBuildTypeEnum.BUILD, null);
 
         String actual = JsonUtil.writeValueAsIndentString(jobInstance);
         System.out.println(actual);
@@ -149,9 +150,9 @@ public class JobInstanceBuilderTest extends LocalFileMetadataTestCase {
         CubeInstance cube = cubeManager.getCube(cubeName);
 
         // initial segment
-        CubeSegment segment = CubeManager.getInstance(this.getTestConfig()).allocateSegments(cube, RealizationBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L).get(0);
+        CubeSegment segment = CubeManager.getInstance(this.getTestConfig()).allocateSegments(cube, CubeBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L).get(0);
 
-        JobInstance jobInstance = jobManager.createJob(cubeName, segment.getName(), UUID.randomUUID().toString(), RealizationBuildTypeEnum.MERGE, null);
+        JobInstance jobInstance = jobManager.createJob(cubeName, segment.getName(), UUID.randomUUID().toString(), CubeBuildTypeEnum.MERGE, null);
 
         String actual = JsonUtil.writeValueAsIndentString(jobInstance);
         System.out.println(actual);

@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.kylinolap.metadata.realization;
+package com.kylinolap.cube.model;
 
 /**
  * @author xduo
  * 
  */
-public enum RealizationBuildTypeEnum {
+public enum CubeBuildTypeEnum {
     /**
      * rebuild a segment or incremental build
      */

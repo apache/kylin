@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.metadata.realization;
+package com.kylinolap.metadata.model;
 
 /**
  * @author xduo

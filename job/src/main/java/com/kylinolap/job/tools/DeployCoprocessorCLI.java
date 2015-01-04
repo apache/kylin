@@ -26,7 +26,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 
-import com.kylinolap.metadata.realization.SegmentStatusEnum;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;

@@ -24,7 +24,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.kylinolap.metadata.realization.SegmentStatusEnum;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
+
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
