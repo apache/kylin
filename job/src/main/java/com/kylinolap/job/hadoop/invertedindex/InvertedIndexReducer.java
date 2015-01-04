@@ -25,7 +25,8 @@ import com.kylinolap.invertedindex.index.SliceBuilder;
 import com.kylinolap.invertedindex.index.TableRecord;
 import com.kylinolap.invertedindex.index.TableRecordInfo;
 import com.kylinolap.invertedindex.model.IIKeyValueCodec;
-import com.kylinolap.metadata.realization.SegmentStatusEnum;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Pair;
