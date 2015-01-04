@@ -290,7 +290,6 @@ public class ProjectManager {
             for (RealizationEntry dm : projectInstance.getRealizationEntries()) {
                 if (dm.getType() == type || type == null) {//type == null means any type
                     RealizationRegistry registry = RealizationRegistry.getInstance(config);
-                    registry.loadRealizations();
                     IRealization realization = registry.getRealization(dm.getType(), dm.getRealization());
                     ret.add(realization);
                 }
