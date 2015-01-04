@@ -20,15 +20,15 @@ package com.kylinolap.query.routing;
  * @author xjiang
  * 
  */
-public class CubeNotFoundException extends RuntimeException {
+public class NoRealizationFoundException extends RuntimeException {
 
     private static final long serialVersionUID = 4372584597304243555L;
 
-    public CubeNotFoundException(String message, Throwable t) {
+    public NoRealizationFoundException(String message, Throwable t) {
         super(message, t);
     }
 
-    public CubeNotFoundException(String message) {
+    public NoRealizationFoundException(String message) {
         super(message);
     }
 }
