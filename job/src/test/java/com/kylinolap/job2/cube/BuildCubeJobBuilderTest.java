@@ -97,13 +97,12 @@ public class BuildCubeJobBuilderTest {
 
     @After
     public void after() throws Exception {
-        // jobManager.deleteAllJobs();
-        int exitCode = cleanupOldCubes();
-        if (exitCode == 0) {
-            exportHBaseData();
-        }
-
-        HBaseMetadataTestCase.staticCleanupTestMetadata();
+//        int exitCode = cleanupOldCubes();
+//        if (exitCode == 0) {
+//            exportHBaseData();
+//        }
+//
+//        HBaseMetadataTestCase.staticCleanupTestMetadata();
     }
 
     @Test
