@@ -1,18 +1,18 @@
-<div class="row" ng-init="initializeColumns();">
+<div class="row" ng-controller="CubeDimensionsCtrl">
     <div class="col-xs-3">
         <div class="box box-solid">
             <div class="box-header"><h4>Columns</h4></div>
             <div class="box-body">
-                <ul class="list-unstyled">
+                <ul class="list-unstyled columns-region">
                     <li ng-repeat="(table, cols) in availableColumns">
-                        <h5 style="margin: 0 0 5px 0; border-bottom: 1px dashed #ddd; padding-bottom: 3px;">
+                        <h5 class="table-name-underline">
                             <b>{{table}}</b>{{$index == 0 ? ' [Fact Table]' : ' [Lookup Table]'}}
                         </h5>
                         <ul class="list-unstyled">
                             <li ng-repeat="col in cols track by col.table + '.' + col.name">
                                 <label>
-                                    <input type="checkbox" ng-model="selectedColumns.available[table][col.name].selected"
-                                            ng-disabled="selectedColumns.available[table][col.name].disabled">
+                                    <input type="checkbox" ng-model="selectedColumns[table][col.name].selected"
+                                            ng-disabled="selectedColumns[table][col.name].disabled">
                                     {{col.name}}
                                 </label>
                             </li>
@@ -25,26 +25,30 @@
     <div class="col-xs-1">
         <div class="space-32"></div>
         <button type="button" class="btn btn-default btn-sm"
-                ng-click="addDim()" ng-disabled="">
+                ng-click="addDim()" ng-disabled="!anyAvailableSelected">
             <i class="ace-icon fa fa-arrow-right"></i>
         </button>
         <div class="space-32"></div>
         <button type="button" class="btn btn-default btn-sm"
-                ng-click="removeDim()" ng-disabled="selectedColumns.chosen.length == 0">
+                ng-click="removeDim()" ng-disabled="!newDimensionOption.hasOwnProperty('name')">
             <i class="ace-icon fa fa-arrow-left"></i>
         </button>
     </div>
     <div class="col-xs-3">
-        <h4>Dimension Columns</h4>
-        <select multiple ng-model="selectedColumns.chosen" ng-change="switchDimOptions()"
-                ng-options="col.table + '.' + col.name for col in chosenColumns track by col.table + '.' + col.name"
-                class="form-control" style="min-height: 200px;">
-        </select>
+        <div class="box box-solid">
+            <div class="box-header"><h4>Dimensions</h4></div>
+            <div class="box-body">
+                <ul class="list-unstyled dimensions-region">
+                    <li ng-repeat="dim in cubeMetaFrame.dimensions track by $index" ng-click="switchDim(dim)" ng-class="{active: dim == newDimensionOption}">
+                        {{dim.name}}
+                    </li>
+                </ul>
+            </div>
+        </div>
     </div>
-    <div class="col-xs-5 dimension-options-animate" ng-show="selectedColumns.chosen.length > 0">
+    <div class="col-xs-5 dimension-options-animate" ng-show="newDimensionOption.hasOwnProperty('name')">
         <h4>Dimension Options</h4>
         <!-- include options template -->
         <div ng-include="'partials/cubeDesigner/dimension_options.html'"></div>
     </div>
 </div>
-<button type="button" class="btn btn-default" ng-click="dimensionsAdapter();">Test Dimensions</button>
