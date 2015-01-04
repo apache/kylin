@@ -1,11 +1,23 @@
 package com.kylinolap.metadata.tool;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.apache.hadoop.hive.cli.CliSessionState;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
+import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.hive.hcatalog.common.HCatException;
+import org.apache.hive.hcatalog.data.transfer.DataTransferFactory;
+import org.apache.hive.hcatalog.data.transfer.HCatReader;
+import org.apache.hive.hcatalog.data.transfer.ReadEntity;
+import org.apache.hive.hcatalog.data.transfer.ReaderContext;
 
 /*
  * Copyright 2013-2014 eBay Software Foundation
@@ -72,7 +84,6 @@ public class HiveClient {
         return driver;
     }
 
-
     /**
      * Get the Hive Meta store client;
      * @return
@@ -81,6 +92,32 @@ public class HiveClient {
         return metaStoreClient;
     }
 
-    
-    
+    public ReaderContext getReaderContext(String database, String table) throws MetaException, CommandNeedRetryException, IOException, ClassNotFoundException {
+
+        Iterator<Entry<String, String>> itr = hiveConf.iterator();
+        Map<String, String> map = new HashMap<String, String>();
+        while (itr.hasNext()) {
+            Entry<String, String> kv = itr.next();
+            map.put(kv.getKey(), kv.getValue());
+        }
+
+        ReaderContext readCntxt = runsInMaster(map, database, table);
+
+        return readCntxt;
+    }
+
+    private ReaderContext runsInMaster(Map<String, String> config, String database, String table) throws HCatException {
+        ReadEntity entity = new ReadEntity.Builder().withDatabase(database).withTable(table).build();
+        HCatReader reader = DataTransferFactory.getHCatReader(entity, config);
+        ReaderContext cntxt = reader.prepareRead();
+        return cntxt;
+    }
+
+    public HCatReader getHCatReader(ReaderContext cntxt, int slaveNum) throws HCatException {
+
+        HCatReader reader = DataTransferFactory.getHCatReader(cntxt, slaveNum);
+        return reader;
+
+    }
+
 }
