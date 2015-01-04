@@ -1,5 +1,6 @@
-<!-- init: currently set model name same as cube name, hidden from user -->
-<ng-form name="model_form" ng-init="newModel.name=cubeMetaFrame.name;">
+<div ng-controller="CubeModelCtrl">
+
+<ng-form name="model_form">
 
 <!-- Fact Table Name -->
 <div class="form-group">
@@ -9,8 +10,8 @@
         </label>
         <div class="col-xs-12 col-sm-6">
             <typeahead ng-if="state.mode=='edit'" items="srcTablesInProject" prompt="Fact Table Name"
-                       title="name" model="newModel.fact_table" required="true"></typeahead>
-            <span ng-if="state.mode=='view'">{{newModel.fact_table}}</span>
+                       title="name" model="cubeMetaFrame.model.fact_table" required="true"></typeahead>
+            <span ng-if="state.mode=='view'">{{cubeMetaFrame.model.fact_table}}</span>
         </div>
     </div>
 </div>
@@ -19,12 +20,12 @@
 <div class="dataTables_wrapper form-inline no-footer">
     <div class="row">
         <span><b>Lookup Tables</b></span>
-        <span class="input-icon input-icon-right nav-search" style="margin-left: 22px;" ng-if="newModel.lookups.length > 0">
+        <span class="input-icon input-icon-right nav-search" style="margin-left: 22px;" ng-if="cubeMetaFrame.model.lookups.length > 0">
             <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="lookupState.filter"/>
             <i class="ace-icon fa fa-search nav-search-icon"></i>
         </span>
     </div>
-    <table class="table table-striped table-hover" ng-if="newModel.lookups.length > 0">
+    <table class="table table-striped table-hover" ng-if="cubeMetaFrame.model.lookups.length > 0">
         <thead>
         <tr>
             <th>ID</th>
@@ -35,7 +36,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="lookup in newModel.lookups | filter:lookupState.filter track by $index">
+        <tr ng-repeat="lookup in cubeMetaFrame.model.lookups | filter:lookupState.filter track by $index">
             <td>
                 <b>{{$index + 1}}</b>
             </td>
@@ -51,7 +52,7 @@
             <td>
                 <ul class="list-unstyled">
                     <li ng-repeat="pk in lookup.join.primary_key">
-                        <code>{{lookup.table + '.' + pk}} = {{newModel.fact_table + '.' + lookup.join.foreign_key[$index]}}</code>
+                        <code>{{lookup.table + '.' + pk}} = {{cubeMetaFrame.model.fact_table + '.' + lookup.join.foreign_key[$index]}}</code>
                     </li>
                 </ul>
             </td>
@@ -106,7 +107,7 @@
                         <div>
                             <select style="width: 45%" chosen data-placeholder="Fact Table Column"
                                     ng-model="newLookup.join.foreign_key[$index]"
-                                    ng-options="columns.name as columns.name for columns in getColumnsByTable(newModel.fact_table)" >
+                                    ng-options="columns.name as columns.name for columns in getColumnsByTable(cubeMetaFrame.model.fact_table)" >
                                 <option value=""></option>
                             </select>
                             <b>=</b>
@@ -168,4 +169,6 @@
             </div>
         </div>
     </div>
+</div>
+
 </div>

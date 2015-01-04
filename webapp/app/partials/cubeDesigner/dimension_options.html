@@ -18,15 +18,15 @@
     </div>
 </div>
 
-<!-- Whether Include Foreign Key -->
-<div class="form-group" ng-if="newDimensionOption.dimCol.isLookup">
+<!-- Whether Include Foreign Key for dimensions came from lookup table -->
+<div class="form-group" ng-if="newDimensionOption.status.hasOwnProperty('includeFK')">
     <div class="row">
         <label class="control-label font-color-default col-sm-5" >
             Include Foreign Key
         </label>
         <label class="col-sm-7">
             <input type="checkbox" class="ace ace-switch ace-switch-5"
-                   ng-model="newDimensionOption.status.includeFK" >
+                   ng-model="newDimensionOption.status.includeFK">
             <span class="lbl middle"></span>
         </label>
     </div>
@@ -79,7 +79,7 @@
                         <select chosen style="width: 100%"
                                 data-placeholder="Dimension Hierarchy Column"
                                 ng-model="newDimensionOption.hierarchy[$index].column"
-                                ng-options="columns.name as columns.name for columns in getColumnsByTable(newDimensionOption.dimCol.table)" >
+                                ng-options="columns.name as columns.name for columns in getColumnsByTable(newDimensionOption.table)" >
                             <option value="">-- Select Column --</option>
                         </select>
                     </td>
@@ -111,7 +111,7 @@
                         <select chosen style="width:85%;" width="200"
                                 data-placeholder="Derived Columns.."
                                 ng-model="newDimensionOption.derived[$index]"
-                                ng-options="columns.name as columns.name for columns in getColumnsByTable(newDimensionOption.dimCol.table)" >
+                                ng-options="columns.name as columns.name for columns in getColumnsByTable(newDimensionOption.table)" >
                             <option value=""></option>
                         </select>
                         <button class="btn btn-xs btn-danger" style="cursor: pointer " tooltip="Delete"
