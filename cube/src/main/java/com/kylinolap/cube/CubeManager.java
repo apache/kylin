@@ -236,7 +236,7 @@ public class CubeManager {
         cube.setOwner(owner);
         saveResource(cube);
 
-        ProjectManager.getInstance(config).updateRealizationToProject(RealizationType.CUBE, cubeName, projectName, owner);
+        ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.CUBE, cubeName, projectName, owner);
 
         return cube;
     }

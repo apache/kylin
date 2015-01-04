@@ -248,7 +248,7 @@ public class CubeService extends BasicService {
             ProjectManager projectManager = getProjectManager();
             if (!isCubeInProject(newProjectName, cube)) {
                 String owner = SecurityContextHolder.getContext().getAuthentication().getName();
-                ProjectInstance newProject = projectManager.updateRealizationToProject(RealizationType.CUBE, cube.getName(), newProjectName, owner);
+                ProjectInstance newProject = projectManager.moveRealizationToProject(RealizationType.CUBE, cube.getName(), newProjectName, owner);
                 accessService.inherit(cube, newProject);
             }
 
