@@ -24,8 +24,8 @@ import com.kylinolap.dict.ISegment;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.invertedindex.index.TableRecordInfo;
 import com.kylinolap.invertedindex.model.IIDesc;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.metadata.realization.SegmentStatusEnum;
 
 import java.text.SimpleDateFormat;
 import java.util.Collection;

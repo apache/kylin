@@ -20,7 +20,6 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 
-import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -45,6 +44,7 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
 import com.kylinolap.metadata.model.FunctionDesc;
 import com.kylinolap.metadata.model.ParameterDesc;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 
 /**
  * @author George Song (ysong1)
