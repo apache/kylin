@@ -59,7 +59,7 @@ public class RealizationRegistry {
     private void loadRealizations() {
         // use reflection to load all realizations
         List<Throwable> es = Lists.newArrayList();
-        List<String> realizationProviders = Lists.newArrayList("com.kylinolap.cube.CubeManager");
+        List<String> realizationProviders = Lists.newArrayList("com.kylinolap.cube.CubeManager","com.kylinolap.invertedindex.IIManager");
         for (String clsName : realizationProviders) {
             try {
                 Class<?> cls = Class.forName(clsName);
