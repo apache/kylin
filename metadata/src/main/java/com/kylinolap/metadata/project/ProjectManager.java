@@ -486,22 +486,21 @@ public class ProjectManager {
     }
 
     private ProjectTable getProjectTable(String project, final String table, boolean autoCreate) {
-        String tableIdentity = TableDesc.getTableIdentity(table);
 
         ProjectTable projectTable = null;
         project = ProjectInstance.getNormalizedProjectName(project);
 
-        if (this.projectTables.containsEntry(project, new ProjectTable(tableIdentity))) {
+        if (this.projectTables.containsEntry(project, new ProjectTable(table))) {
             Iterator<ProjectTable> projsIter = this.projectTables.get(project).iterator();
             while (projsIter.hasNext()) {
                 ProjectTable oneTable = projsIter.next();
-                if (oneTable.getName().equalsIgnoreCase(tableIdentity)) {
+                if (oneTable.getName().equalsIgnoreCase(table)) {
                     projectTable = oneTable;
                     break;
                 }
             }
         } else {
-            projectTable = new ProjectTable(tableIdentity);
+            projectTable = new ProjectTable(table);
 
             if (autoCreate) {
                 this.projectTables.put(project, projectTable);
