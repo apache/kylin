@@ -48,7 +48,7 @@ public class QueryRouter {
 
     private static final Logger logger = LoggerFactory.getLogger(QueryRouter.class);
 
-    public static CubeInstance findCube(OLAPContext olapContext) throws CubeNotFoundException {
+    public static CubeInstance findCube(OLAPContext olapContext) throws NoRealizationFoundException {
 
         CubeInstance bestCube = null;
         // NOTE: since some query has no groups and projections are the superset of groups, we choose projections.
@@ -67,10 +67,10 @@ public class QueryRouter {
         }
 
         if (bestCube == null) {
-            throw new CubeNotFoundException("Can't find cube for fact table " + olapContext.firstTableScan.getCubeTable() //
+            throw new NoRealizationFoundException("Can't find any realization for fact table " + olapContext.firstTableScan.getCubeTable() //
                     + " in project " + olapContext.olapSchema.getProjectName() + " with dimensions " //
                     + getDimensionColumns(olapContext) + " and measures " + olapContext.aggregations //
-                    + ". Also please check whether join types match what defined in Cube.");
+                    + ". Also please check whether join types match what defined in realization.");
         }
 
         return bestCube;
@@ -127,7 +127,7 @@ public class QueryRouter {
         return dimensionColumns;
     }
 
-    static List<CubeInstance> findMatchCubesForTableScanQuery(CubeManager cubeMgr, String factTableName, Collection<TblColRef> dimensionColumns, Collection<FunctionDesc> functions) throws CubeNotFoundException {
+    static List<CubeInstance> findMatchCubesForTableScanQuery(CubeManager cubeMgr, String factTableName, Collection<TblColRef> dimensionColumns, Collection<FunctionDesc> functions) throws NoRealizationFoundException {
         return null;
     }
 
@@ -146,7 +146,7 @@ public class QueryRouter {
         }));
     }
 
-    static CubeInstance findBestMatchCube(ProjectManager projectManager, OLAPContext olapContext) throws CubeNotFoundException {
+    static CubeInstance findBestMatchCube(ProjectManager projectManager, OLAPContext olapContext) throws NoRealizationFoundException {
 
         // retrieve members from olapContext
         String factTableName = olapContext.firstTableScan.getCubeTable();
@@ -225,7 +225,7 @@ public class QueryRouter {
         return matchAgg;
     }
 
-    private static boolean isMatchedWithJoins(Collection<JoinDesc> joins, CubeInstance cube) throws CubeNotFoundException {
+    private static boolean isMatchedWithJoins(Collection<JoinDesc> joins, CubeInstance cube) throws NoRealizationFoundException {
         CubeDesc cubeDesc = cube.getDescriptor();
 
         List<JoinDesc> cubeJoins = new ArrayList<JoinDesc>(cubeDesc.getDimensions().size());
