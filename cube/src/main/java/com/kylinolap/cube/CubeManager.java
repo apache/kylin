@@ -99,7 +99,6 @@ public class CubeManager {
 
     public static synchronized void removeInstance(KylinConfig config) {
         CACHE.remove(config);
-        RealizationRegistry.getInstance(config).resetRealizationOf(RealizationType.CUBE);
     }
 
     // ============================================================================

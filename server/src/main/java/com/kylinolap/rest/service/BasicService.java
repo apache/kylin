@@ -33,6 +33,8 @@ import javax.sql.DataSource;
 
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.project.ProjectManager;
+import com.kylinolap.metadata.realization.RealizationRegistry;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,6 +126,7 @@ public abstract class BasicService {
     public void cleanDataCache() {
         CubeManager.removeInstance(getConfig());
         ProjectManager.removeInstance(getConfig());
+        RealizationRegistry.removeInstance(getConfig());
         BasicService.resetOLAPDataSources();
     }
 
