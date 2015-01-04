@@ -38,10 +38,10 @@ public class DimensionDesc {
 
     @JsonProperty("id")
     private int id;
+
     @JsonProperty("name")
     private String name;
-    private JoinDesc join;
-    private HierarchyDesc[] hierarchy;
+
     @JsonProperty("hierarchy")
     private boolean isHierarchy;
     @JsonProperty("table")
@@ -52,6 +52,8 @@ public class DimensionDesc {
     private String[] derived;
 
     private TableDesc tableDesc;
+    private JoinDesc join;
+    private HierarchyDesc[] hierarchy;
 
     // computed
     private TblColRef[] columnRefs;
