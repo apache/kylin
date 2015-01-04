@@ -98,6 +98,7 @@ public class TblColRef {
     public void markInnerColumn(InnerDataTypeEnum dataType) {
         this.column.setDatatype(dataType.getDataType());
         this.column.getTable().setName(INNER_TABLE_NAME);
+        this.column.getTable().setDatabase("DEFAULT");
     }
 
     public boolean isInnerColumn() {
@@ -137,7 +138,7 @@ public class TblColRef {
         if (getClass() != obj.getClass())
             return false;
         TblColRef other = (TblColRef) obj;
-        if (!StringUtils.equals(TableDesc.getTableIdentity(column.getTable()), TableDesc.getTableIdentity(other.column.getTable())))
+        if (!StringUtils.equals(column.getTable().getIdentity(), other.column.getTable().getIdentity()))
             return false;
         if (!StringUtils.equals(column.getName(), other.column.getName()))
             return false;

@@ -58,11 +58,11 @@ public class TableDesc extends RootPersistentEntity {
     }
 
     public String getResourcePath() {
-        return ResourceStore.TABLE_RESOURCE_ROOT + "/" + getTableIdentity(this) + ".json";
+        return ResourceStore.TABLE_RESOURCE_ROOT + "/" + getIdentity() + ".json";
     }
 
     public String getIdentity() {
-        return TableDesc.getTableIdentity(this);
+        return String.format("%s.%s", this.getDatabase().toUpperCase(), this.getName()).toUpperCase();
     }
 
     // ============================================================================
@@ -87,9 +87,6 @@ public class TableDesc extends RootPersistentEntity {
 
     @JsonProperty("database")
     public String getDatabase() {
-        if (database == null) {
-            return "DEFAULT";
-        }
         return database.getName();
     }
 
@@ -147,21 +144,4 @@ public class TableDesc extends RootPersistentEntity {
     public String toString() {
         return "TableDesc [database=" + getDatabase() + " name=" + name + "]";
     }
-
-    private static final Pattern TABLE_IDENTITY_PATTERN = Pattern.compile("^\\w+\\.\\w+$");
-
-    public static String getTableIdentity(TableDesc tableDesc) {
-        return String.format("%s.%s", tableDesc.getDatabase(), tableDesc.getName()).toUpperCase();
-    }
-
-    public static String getTableIdentity(String tableName) {
-        if (!tableName.contains(".")) {
-            tableName = "DEFAULT." + tableName;
-        }
-        if (!TABLE_IDENTITY_PATTERN.matcher(tableName).matches()) {
-            throw new IllegalArgumentException("invalid tableName:" + tableName);
-        }
-        return tableName.toUpperCase();
-    }
-
 }
