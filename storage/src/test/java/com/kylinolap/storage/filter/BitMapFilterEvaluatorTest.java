@@ -24,6 +24,7 @@ public class BitMapFilterEvaluatorTest {
     static {
         TableDesc table = new TableDesc();
         table.setName("TABLE");
+        table.setDatabase("DEFAULT");
 
         ColumnDesc col = new ColumnDesc();
         col.setTable(table);
