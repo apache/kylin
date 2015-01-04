@@ -29,8 +29,8 @@ import com.google.common.base.Objects;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.dict.ISegment;
 import com.kylinolap.dict.Dictionary;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.metadata.realization.SegmentStatusEnum;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeSegment implements Comparable<CubeSegment>, ISegment {

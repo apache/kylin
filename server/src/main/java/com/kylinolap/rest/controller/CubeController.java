@@ -46,10 +46,10 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.kylinolap.common.util.JsonUtil;
-import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.exception.CubeIntegrityException;
+import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.exception.InvalidJobInstanceException;
@@ -203,7 +203,7 @@ public class CubeController extends BasicController {
             String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
             CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
             String jobId = jobService.submitJob(cube, jobBuildRequest.getStartTime(), jobBuildRequest.getEndTime(), //
-                    RealizationBuildTypeEnum.valueOf(jobBuildRequest.getBuildType()), submitter);
+                    CubeBuildTypeEnum.valueOf(jobBuildRequest.getBuildType()), submitter);
             jobInstance = jobService.getJobInstance(jobId);
         } catch (JobException e) {
             logger.error(e.getLocalizedMessage(), e);

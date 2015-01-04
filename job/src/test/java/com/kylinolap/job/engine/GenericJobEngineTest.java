@@ -23,8 +23,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.project.ProjectManager;
-import com.kylinolap.metadata.realization.SegmentStatusEnum;
+
 import org.apache.commons.io.FileUtils;
 import org.junit.*;
 
@@ -32,11 +33,11 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.common.util.SSHClient;
-import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.exception.CubeIntegrityException;
+import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.job.JobDAO;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.JobInstance.JobStep;
@@ -332,7 +333,7 @@ public class GenericJobEngineTest {
         CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
         cube.getSegments().clear();
         CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).updateCube(cube);
-        CubeSegment seg = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).allocateSegments(cube, RealizationBuildTypeEnum.BUILD, 0, 12345L).get(0);
+        CubeSegment seg = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).allocateSegments(cube, CubeBuildTypeEnum.BUILD, 0, 12345L).get(0);
 
         JobInstance jobInstance = new JobInstance();
         jobInstance.setUuid(uuid);
@@ -340,7 +341,7 @@ public class GenericJobEngineTest {
         jobInstance.setRelatedSegment(seg.getName());
         jobInstance.setName("A_Good_Job");
         // jobInstance.setStatus(JobStatusEnum.PENDING);
-        jobInstance.setType(RealizationBuildTypeEnum.BUILD);
+        jobInstance.setType(CubeBuildTypeEnum.BUILD);
         // jobInstance.putInputParameter(JobConstants.PROP_STORAGE_LOCATION,
         // "htablename");
 
@@ -380,7 +381,7 @@ public class GenericJobEngineTest {
         CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
         cube.getSegments().clear();
         CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).updateCube(cube);
-        CubeSegment seg = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).allocateSegments(cube, RealizationBuildTypeEnum.BUILD, 0, 12345L).get(0);
+        CubeSegment seg = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).allocateSegments(cube, CubeBuildTypeEnum.BUILD, 0, 12345L).get(0);
 
         JobInstance jobInstance = new JobInstance();
         jobInstance.setUuid(uuid);
@@ -388,7 +389,7 @@ public class GenericJobEngineTest {
         jobInstance.setRelatedSegment(seg.getName());
         jobInstance.setName("A_Bad_Job");
         // jobInstance.setStatus(JobStatusEnum.PENDING);
-        jobInstance.setType(RealizationBuildTypeEnum.BUILD);
+        jobInstance.setType(CubeBuildTypeEnum.BUILD);
         // jobInstance.putInputParameter(JobConstants.PROP_STORAGE_LOCATION,
         // "htablename");
 
@@ -408,7 +409,7 @@ public class GenericJobEngineTest {
         CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
         cube.getSegments().clear();
         CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).updateCube(cube);
-        CubeSegment seg = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).allocateSegments(cube, RealizationBuildTypeEnum.BUILD, 0, 12345L).get(0);
+        CubeSegment seg = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).allocateSegments(cube, CubeBuildTypeEnum.BUILD, 0, 12345L).get(0);
 
         JobInstance jobInstance = new JobInstance();
         jobInstance.setUuid(uuid);
@@ -416,7 +417,7 @@ public class GenericJobEngineTest {
         jobInstance.setRelatedSegment(seg.getName());
         jobInstance.setName("A_Running_Job");
         // jobInstance.setStatus(JobStatusEnum.RUNNING);
-        jobInstance.setType(RealizationBuildTypeEnum.BUILD);
+        jobInstance.setType(CubeBuildTypeEnum.BUILD);
         // jobInstance.putInputParameter(JobConstants.PROP_STORAGE_LOCATION,
         // "htablename");
 

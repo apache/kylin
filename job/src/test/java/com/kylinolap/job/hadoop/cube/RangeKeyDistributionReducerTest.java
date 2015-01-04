@@ -76,7 +76,7 @@ public class RangeKeyDistributionReducerTest {
         reduceDriver.withInput(key4, values4);
         reduceDriver.withInput(key5, values5);
 
-        reduceDriver.getConfiguration().set(BatchConstants.CUBE_CAPACITY, "MEDIUM");
+        reduceDriver.getConfiguration().set(BatchConstants.CUBE_CAPACITY, "SMALL");
 
         List<Pair<Text, LongWritable>> result = reduceDriver.run();
 

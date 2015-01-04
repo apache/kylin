@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.kylinolap.metadata.realization;
+package com.kylinolap.metadata.model;
 
 /**
- * @author ysong1
+ * @author xduo
  * 
  */
-public enum SegmentTypeEnum {
-    TRANSIENT, PERMANENT
+public enum SegmentStatusEnum {
+    NEW, READY, READY_PENDING
 }

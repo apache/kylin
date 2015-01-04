@@ -34,6 +34,7 @@ import com.kylinolap.cube.model.CubePartitionDesc;
 import com.kylinolap.metadata.model.FunctionDesc;
 import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.MeasureDesc;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.metadata.realization.*;
 

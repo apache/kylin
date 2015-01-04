@@ -19,6 +19,7 @@ package com.kylinolap.job;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.*;
 import com.kylinolap.cube.exception.CubeIntegrityException;
+import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.JobInstance.JobStep;
 import com.kylinolap.job.constant.JobConstants;
@@ -29,11 +30,11 @@ import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.exception.InvalidJobInstanceException;
 import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.project.ProjectManager;
-import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
 import com.kylinolap.metadata.realization.RealizationType;
-import com.kylinolap.metadata.realization.SegmentStatusEnum;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +69,7 @@ public class JobManager {
         this.jobEngine = JobEngine.getInstance(engineID, engineCfg);
     }
 
-    public JobInstance createJob(String cubeName, String segmentName, String segmentId, RealizationBuildTypeEnum jobType, String submitter) throws IOException {
+    public JobInstance createJob(String cubeName, String segmentName, String segmentId, CubeBuildTypeEnum jobType, String submitter) throws IOException {
         // build job instance
         JobInstance jobInstance = buildJobInstance(cubeName, segmentName, segmentId, jobType, submitter);
 
@@ -79,7 +80,7 @@ public class JobManager {
         return jobInstance;
     }
 
-    private JobInstance buildJobInstance(String cubeName, String segmentName, String segmentId, RealizationBuildTypeEnum jobType, String submitter) {
+    private JobInstance buildJobInstance(String cubeName, String segmentName, String segmentId, CubeBuildTypeEnum jobType, String submitter) {
         SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss");
         format.setTimeZone(TimeZone.getTimeZone(this.engineConfig.getTimeZone()));
 
