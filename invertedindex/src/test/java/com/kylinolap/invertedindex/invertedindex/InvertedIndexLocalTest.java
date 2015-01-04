@@ -132,7 +132,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
 
 	private List<TableRecord> loadRecordsSorted() throws IOException {
 		File file = new File(LOCALMETA_TEST_DATA,
-				"data/DEFAULT.TEST_KYLIN_FACT.gen.csv");
+				"data/flatten_data_for_ii.csv");
 		FileInputStream in = new FileInputStream(file);
 		List<String> lines = IOUtils.readLines(in, "UTF-8");
 		in.close();
