@@ -7,10 +7,9 @@ import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.invertedindex.index.TableRecord;
 import com.kylinolap.invertedindex.index.TableRecordInfo;
+import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.measure.MeasureAggregator;
-import com.kylinolap.metadata.model.FunctionDesc;
-import com.kylinolap.metadata.model.ParameterDesc;
-import com.kylinolap.metadata.model.TblColRef;
+import com.kylinolap.metadata.model.*;
 import com.kylinolap.storage.filter.ColumnTupleFilter;
 import com.kylinolap.storage.filter.CompareTupleFilter;
 import com.kylinolap.storage.filter.ConstantTupleFilter;
@@ -28,8 +27,10 @@ import java.util.*;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 11/27/14.
+ *
+ * ii test
  */
-public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
+public class EndpointAggregationTest extends LocalFileMetadataTestCase {
     IIInstance ii;
     TableRecordInfo tableRecordInfo;
 
@@ -38,14 +39,16 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
     CoprocessorFilter filter;
 
     EndpointAggregationCache aggCache;
-
     List<TableRecord> tableData;
+
+    TableDesc factTableDesc;
 
     @Before
     public void setup() throws IOException {
         this.createTestMetadata();
         this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii");
         this.tableRecordInfo = new TableRecordInfo(ii.getFirstSegment());
+        factTableDesc = MetadataManager.getInstance(getTestConfig()).getTableDesc("DEFAULT.TEST_KYLIN_FACT");
         TblColRef formatName = this.ii.getDescriptor().findColumnRef("DEFAULT.TEST_KYLIN_FACT", "LSTG_FORMAT_NAME");
         TblColRef siteId = this.ii.getDescriptor().findColumnRef("DEFAULT.TEST_KYLIN_FACT", "LSTG_SITE_ID");
 
@@ -70,38 +73,44 @@ public class EndpoindAggregationTest extends LocalFileMetadataTestCase {
 
     private List<TableRecord> mockTable() {
 
-        TableRecord temp1 = (TableRecord) tableRecordInfo.createTableRecord();
-        temp1.setValueString(0, "0");
-        temp1.setValueString(1, "2012-03-22");
-        temp1.setValueString(2, "Auction");
-        temp1.setValueString(3, "80135");
-        temp1.setValueString(4, "0");
-        temp1.setValueString(5, "14");
-        temp1.setValueString(6, "199.99");
-        temp1.setValueString(7, "1");
-        temp1.setValueString(8, "10000005");
+        ColumnDesc[] factTableColumns = factTableDesc.getColumns();
+        int[] factTableColumnIndex = new int[factTableColumns.length];
+        for (int i = 0; i < factTableColumnIndex.length; ++i) {
+            factTableColumnIndex[i] = tableRecordInfo.findColumn(new TblColRef(factTableColumns[i]));
+        }
 
-        TableRecord temp2 = (TableRecord) tableRecordInfo.createTableRecord();
-        temp2.setValueString(0, "0");
-        temp2.setValueString(1, "2012-11-11");
-        temp2.setValueString(2, "Auction");
-        temp2.setValueString(3, "16509");
-        temp2.setValueString(4, "101");
-        temp2.setValueString(5, "12");
-        temp2.setValueString(6, "2.09");
-        temp2.setValueString(7, "1");
-        temp2.setValueString(8, "10000004");
+        TableRecord temp1 = tableRecordInfo.createTableRecord();
+        temp1.setValueString(factTableColumnIndex[0], "10000000239");
+        temp1.setValueString(factTableColumnIndex[1], "2012-03-22");
+        temp1.setValueString(factTableColumnIndex[2], "Auction");
+        temp1.setValueString(factTableColumnIndex[3], "80135");
+        temp1.setValueString(factTableColumnIndex[4], "0");
+        temp1.setValueString(factTableColumnIndex[5], "14");
+        temp1.setValueString(factTableColumnIndex[6], "199.99");
+        temp1.setValueString(factTableColumnIndex[7], "1");
+        temp1.setValueString(factTableColumnIndex[8], "10000005");
 
-        TableRecord temp3 = (TableRecord) tableRecordInfo.createTableRecord();
-        temp3.setValueString(0, "0");
-        temp3.setValueString(1, "2012-07-12");
-        temp3.setValueString(2, "Others");
-        temp3.setValueString(3, "15687");
-        temp3.setValueString(4, "0");
-        temp3.setValueString(5, "14");
-        temp3.setValueString(6, "100");
-        temp3.setValueString(7, "1");
-        temp3.setValueString(8, "10000020");
+        TableRecord temp2 = tableRecordInfo.createTableRecord();
+        temp2.setValueString(factTableColumnIndex[0], "10000000244");
+        temp2.setValueString(factTableColumnIndex[1], "2012-11-11");
+        temp2.setValueString(factTableColumnIndex[2], "Auction");
+        temp2.setValueString(factTableColumnIndex[3], "16509");
+        temp2.setValueString(factTableColumnIndex[4], "101");
+        temp2.setValueString(factTableColumnIndex[5], "12");
+        temp2.setValueString(factTableColumnIndex[6], "2.09");
+        temp2.setValueString(factTableColumnIndex[7], "1");
+        temp2.setValueString(factTableColumnIndex[8], "10000004");
+
+        TableRecord temp3 = tableRecordInfo.createTableRecord();
+        temp3.setValueString(factTableColumnIndex[0], "10000000259");
+        temp3.setValueString(factTableColumnIndex[1], "2012-07-12");
+        temp3.setValueString(factTableColumnIndex[2], "Others");
+        temp3.setValueString(factTableColumnIndex[3], "15687");
+        temp3.setValueString(factTableColumnIndex[4], "0");
+        temp3.setValueString(factTableColumnIndex[5], "14");
+        temp3.setValueString(factTableColumnIndex[6], "100");
+        temp3.setValueString(factTableColumnIndex[7], "1");
+        temp3.setValueString(factTableColumnIndex[8], "10000020");
 
         List<TableRecord> ret = new ArrayList<TableRecord>();
         ret.add(temp1);
