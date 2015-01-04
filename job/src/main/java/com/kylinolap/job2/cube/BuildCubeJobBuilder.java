@@ -130,7 +130,7 @@ public final class BuildCubeJobBuilder {
     }
 
     private String getHFilePath(String jobId) {
-        return getJobWorkingDir(jobId) + "/" + getCubeName() + "/hfile";
+        return getJobWorkingDir(jobId) + "/" + getCubeName() + "/hfile/";
     }
 
     private ShellExecutable createIntermediateHiveTableStep(CubeJoinedFlatTableDesc intermediateTableDesc, String jobId) {
