@@ -16,23 +16,16 @@
 
 package com.kylinolap.dict.lookup;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
+import org.apache.hadoop.hive.metastore.api.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.HadoopUtil;
-import com.kylinolap.common.util.CliCommandExecutor;
 import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.tool.HiveClient;
 
 /**
  * @author yangli9
@@ -89,36 +82,17 @@ public class HiveTable implements ReadableTable {
             return override;
         }
 
-        String cmd = "hive -e \"describe extended " + hiveTable + ";\"";
-        CliCommandExecutor exec = KylinConfig.getInstanceFromEnv().getCliCommandExecutor();
-        String output = exec.execute(cmd);
-
-        Pattern ptn = Pattern.compile("location:(.*?),");
-        Matcher m = ptn.matcher(output);
-        if (m.find() == false)
-            throw new IOException("Failed to find HDFS location for hive table " + hiveTable + " from output -- " + output);
-
-        String hdfsDir = m.group(1);
-
-        if (needFilePath) {
-            FileSystem fs = HadoopUtil.getFileSystem(hdfsDir);
-            FileStatus file = findOnlyFile(hdfsDir, fs);
-            return file.getPath().toString();
-        } else {
-            return hdfsDir;
+        HiveMetaStoreClient hiveClient = HiveClient.getInstance().getMetaStoreClient();
+        Table table = null;
+        try {
+            table = hiveClient.getTable(hiveTable);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IOException(e);
         }
-    }
+        
+        return table.getSd().getLocation();
 
-    private FileStatus findOnlyFile(String hdfsDir, FileSystem fs) throws FileNotFoundException, IOException {
-        FileStatus[] files = fs.listStatus(new Path(hdfsDir));
-        ArrayList<FileStatus> nonZeroFiles = Lists.newArrayList();
-        for (FileStatus f : files) {
-            if (f.getLen() > 0)
-                nonZeroFiles.add(f);
-        }
-        if (nonZeroFiles.size() != 1)
-            throw new IllegalStateException("Expect 1 and only 1 non-zero file under " + hdfsDir + ", but find " + nonZeroFiles.size());
-        return nonZeroFiles.get(0);
     }
 
     @Override

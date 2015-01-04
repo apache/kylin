@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.hbase.util.Bytes;
@@ -45,18 +44,23 @@ public class ColumnCardinalityMapper<T> extends Mapper<T, HCatRecord, IntWritabl
     public static final String DEFAULT_DELIM = ",";
 
     private int counter = 0;
+    
+    private HCatSchema schema = null;
+    private int columnSize = 0;
+    
+    @Override
+    protected void setup(Context context) throws IOException {
+        schema = HCatInputFormat.getTableSchema(context.getConfiguration());
+        columnSize = schema.getFields().size();
+    }
 
     @Override
     public void map(T key, HCatRecord value, Context context) throws IOException, InterruptedException {
 
-        HCatSchema schema = HCatInputFormat.getTableSchema(context.getConfiguration());
-
-        List<HCatFieldSchema> fieldList = schema.getFields();
         HCatFieldSchema field;
         Object fieldValue;
-        Integer columnSize = fieldList.size();
         for (int m = 0; m < columnSize; m++) {
-            field = fieldList.get(m);
+            field = schema.get(m);
             fieldValue = value.get(field.getName(), schema);
             if (fieldValue == null)
                 fieldValue = "NULL";
