@@ -31,6 +31,7 @@ public class RealizationRegistry {
             try {
                 r = new RealizationRegistry(config);
                 CACHE.put(config, r);
+                r.loadRealizations();
                 if (CACHE.size() > 1) {
                     logger.warn("More than one singleton of RealizationRegistry exist");
                 }
@@ -53,7 +54,6 @@ public class RealizationRegistry {
     private RealizationRegistry(KylinConfig config) throws IOException {
         logger.info("Initializing RealizationRegistry with metadata url " + config);
         this.config = config;
-        loadRealizations();
     }
 
     private void loadRealizations() {
