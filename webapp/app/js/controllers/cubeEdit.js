@@ -95,9 +95,9 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                 "cube_partition_desc": {
                     "partition_date_column": null,
                     "partition_date_start": null,
-                    "cube_partition_type": null
+                    "cube_partition_type": 'APPEND'
                 },
-                "capacity": "",
+                "capacity": "MEDIUM",
                 "cost": 50,
                 "dimensions": [],
                 "measures": [
