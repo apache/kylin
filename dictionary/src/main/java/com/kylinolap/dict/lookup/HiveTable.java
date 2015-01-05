@@ -42,6 +42,7 @@ public class HiveTable implements ReadableTable {
 
     private static final Logger logger = LoggerFactory.getLogger(HiveTable.class);
 
+    private String database = "default";
     private String hiveTable;
     private int nColumns;
     private String hdfsLocation;
@@ -59,7 +60,7 @@ public class HiveTable implements ReadableTable {
 
     @Override
     public TableReader getReader() throws IOException {
-        return getFileTable().getReader();
+        return new HiveTableReader(database, hiveTable);
     }
 
     @Override
@@ -92,12 +93,12 @@ public class HiveTable implements ReadableTable {
         HiveMetaStoreClient hiveClient = HiveClient.getInstance().getMetaStoreClient();
         Table table = null;
         try {
-            table = hiveClient.getTable(hiveTable);
+            table = hiveClient.getTable(database, hiveTable);
         } catch (Exception e) {
             e.printStackTrace();
             throw new IOException(e);
         }
-        
+
         String hdfsDir = table.getSd().getLocation();
         if (needFilePath) {
             FileSystem fs = HadoopUtil.getFileSystem(hdfsDir);
@@ -106,9 +107,8 @@ public class HiveTable implements ReadableTable {
         } else {
             return hdfsDir;
         }
-        
+
     }
-    
 
     private FileStatus findOnlyFile(String hdfsDir, FileSystem fs) throws FileNotFoundException, IOException {
         FileStatus[] files = fs.listStatus(new Path(hdfsDir));
@@ -124,7 +124,7 @@ public class HiveTable implements ReadableTable {
 
     @Override
     public String toString() {
-        return "hive:" + hiveTable;
+        return "hive: database=[" + database + "], table=[" + hiveTable + "]";
     }
 
 }

@@ -31,56 +31,33 @@ import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
  */
 public class IIDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, HCatRecord, ShortWritable, Text> {
 
-//    private String[] columns;
-//    private int delim;
-//    private BytesSplitter splitter;
-
     private ShortWritable outputKey = new ShortWritable();
     private Text outputValue = new Text();
     private HCatSchema schema = null;
     private int columnSize = 0;
+    
+    public static final byte[] NULL_VALUE = Bytes.toBytes("NULL");
 
     @Override
     protected void setup(Context context) throws IOException {
-//        Configuration conf = context.getConfiguration();
-//        this.columns = conf.get(BatchConstants.TABLE_COLUMNS).split(",");
-//        String inputDelim = conf.get(BatchConstants.INPUT_DELIM);
-//        this.delim = inputDelim == null ? -1 : inputDelim.codePointAt(0);
-//        this.splitter = new BytesSplitter(200, 4096);
-        
         schema = HCatInputFormat.getTableSchema(context.getConfiguration());
         columnSize = schema.getFields().size();
     }
     
     @Override
     public void map(KEYIN key, HCatRecord record, Context context) throws IOException, InterruptedException {
-        /*
-        if (delim == -1) {
-            delim = splitter.detectDelim(value, columns.length);
-        }
-
-        int nParts = splitter.split(value.getBytes(), value.getLength(), (byte) delim);
-        SplittedBytes[] parts = splitter.getSplitBuffers();
-
-        if (nParts != columns.length) {
-            throw new RuntimeException("Got " + parts.length + " from -- " + value.toString() + " -- but only " + columns.length + " expected");
-        }
-
-        for (short i = 0; i < nParts; i++) {
-            outputKey.set(i);
-            outputValue.set(parts[i].value, 0, parts[i].length);
-            context.write(outputKey, outputValue);
-        }
-        */
         
         HCatFieldSchema fieldSchema = null;
         for (short i = 0; i < columnSize; i++) {
             outputKey.set(i);
             fieldSchema = schema.get(i);
             Object fieldValue = record.get(fieldSchema.getName(), schema);
-            if (fieldValue == null)
-                fieldValue = "NULL";
-            byte[] bytes = Bytes.toBytes(fieldValue.toString());
+            byte[] bytes;
+            if (fieldValue != null) {
+                bytes = Bytes.toBytes(fieldValue.toString());
+            } else {
+                bytes = NULL_VALUE;
+            }
             outputValue.set(bytes, 0, bytes.length);
             context.write(outputKey, outputValue);
         }
