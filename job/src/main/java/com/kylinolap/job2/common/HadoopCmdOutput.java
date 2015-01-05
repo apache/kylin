@@ -16,23 +16,15 @@
 
 package com.kylinolap.job2.common;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.job.JobDAO;
-import com.kylinolap.job.JobInstance;
-import com.kylinolap.job.JobInstance.JobStep;
-import com.kylinolap.job.cmd.BaseCommandOutput;
-import com.kylinolap.job.cmd.ICommandOutput;
 import com.kylinolap.job.constant.JobStepStatusEnum;
-import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.job.tools.HadoopStatusChecker;
+import com.kylinolap.job2.constants.ExecutableConstants;
 import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.TaskCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Map;
 
 /**
  * @author xduo
@@ -72,7 +64,7 @@ public class HadoopCmdOutput {
     public String getMrJobId() {
         try {
             if (mrJobID == null) {
-                mrJobID = job.getInfo().get(JobInstance.MR_JOB_ID);
+                mrJobID = job.getInfo().get(ExecutableConstants.MR_JOB_ID);
             }
             return mrJobID;
         } catch (JobException e) {
@@ -83,7 +75,7 @@ public class HadoopCmdOutput {
     public String getTrackUrl() {
         try {
             if (trackUrl == null) {
-                trackUrl = job.getInfo().get(JobInstance.YARN_APP_URL);
+                trackUrl = job.getInfo().get(ExecutableConstants.YARN_APP_URL);
             }
             return trackUrl;
         } catch (JobException e) {
@@ -116,9 +108,7 @@ public class HadoopCmdOutput {
             log.debug(counters.toString());
 
             mapInputRecords = String.valueOf(counters.findCounter(TaskCounter.MAP_INPUT_RECORDS).getValue());
-//            jobStep.putInfo(JobInstance.SOURCE_RECORDS_COUNT, String.valueOf(mapInputRecords));
             hdfsBytesWritten = String.valueOf(counters.findCounter("FileSystemCounters", "HDFS_BYTES_WRITTEN").getValue());
-//            jobStep.putInfo(JobInstance.HDFS_BYTES_WRITTEN, String.valueOf(hdfsBytesWritten));
         } catch (Exception e) {
             log.error(e.getLocalizedMessage(), e);
             output.append(e.getLocalizedMessage());

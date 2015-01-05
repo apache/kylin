@@ -1,9 +1,9 @@
 package com.kylinolap.job2.common;
 
 import com.google.common.base.Preconditions;
-import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
+import com.kylinolap.job2.constants.ExecutableConstants;
 import com.kylinolap.job2.dao.JobPO;
 import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.execution.ExecutableContext;
@@ -49,8 +49,8 @@ public class MapReduceExecutable extends AbstractExecutable {
                 jobService.updateJobInfo(getId(), job.getInfo());
                 if (status.isComplete()) {
                     final Map<String, String> info = job.getInfo();
-                    info.put(JobInstance.SOURCE_RECORDS_COUNT, hadoopCmdOutput.getMapInputRecords());
-                    info.put(JobInstance.HDFS_BYTES_WRITTEN, hadoopCmdOutput.getHdfsBytesWritten());
+                    info.put(ExecutableConstants.SOURCE_RECORDS_COUNT, hadoopCmdOutput.getMapInputRecords());
+                    info.put(ExecutableConstants.HDFS_BYTES_WRITTEN, hadoopCmdOutput.getHdfsBytesWritten());
                     jobService.updateJobInfo(getId(), info);
 
                     if (status == JobStepStatusEnum.FINISHED) {
