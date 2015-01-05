@@ -43,6 +43,7 @@ import com.kylinolap.job.hadoop.cardinality.HiveColumnCardinalityJob;
  * @author ysong1
  * 
  */
+@Ignore("This test is invalid now as the mapper uses HCatalog to fetch the data which need a hive env")
 public class ColumnCardinalityMapperTest {
 
     @SuppressWarnings("rawtypes")

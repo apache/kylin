@@ -19,20 +19,21 @@ package com.kylinolap.dict.lookup;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
+import org.apache.hadoop.hive.metastore.api.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.HadoopUtil;
-import com.kylinolap.common.util.CliCommandExecutor;
 import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.TableDesc;
+import com.kylinolap.metadata.tool.HiveClient;
 
 /**
  * @author yangli9
@@ -42,14 +43,17 @@ public class HiveTable implements ReadableTable {
 
     private static final Logger logger = LoggerFactory.getLogger(HiveTable.class);
 
+    private String database;
     private String hiveTable;
     private int nColumns;
     private String hdfsLocation;
     private FileTable fileTable;
 
     public HiveTable(MetadataManager metaMgr, String table) {
-        this.hiveTable = table;
-        this.nColumns = metaMgr.getTableDesc(table).getColumnCount();
+        TableDesc tableDesc = metaMgr.getTableDesc(table);
+        this.database = tableDesc.getDatabase();
+        this.hiveTable = tableDesc.getName();
+        this.nColumns = tableDesc.getColumnCount();
     }
 
     @Override
@@ -59,7 +63,7 @@ public class HiveTable implements ReadableTable {
 
     @Override
     public TableReader getReader() throws IOException {
-        return getFileTable().getReader();
+        return new HiveTableReader(database, hiveTable);
     }
 
     @Override
@@ -88,19 +92,18 @@ public class HiveTable implements ReadableTable {
             logger.debug("Override hive table location " + hiveTable + " -- " + override);
             return override;
         }
-
-        String cmd = "hive -e \"describe extended " + hiveTable + ";\"";
-        CliCommandExecutor exec = KylinConfig.getInstanceFromEnv().getCliCommandExecutor();
-        String output = exec.execute(cmd).getSecond();
-
-        Pattern ptn = Pattern.compile("location:(.*?),");
-        Matcher m = ptn.matcher(output);
-        if (m.find() == false) {
-            throw new IOException("Failed to find HDFS location for hive table " + hiveTable + " from output -- " + output);
+        
+        Table table = null;
+        try {
+            HiveClient hiveClient = new HiveClient();
+            HiveMetaStoreClient metaDataClient = hiveClient.getMetaStoreClient();
+            table = metaDataClient.getTable(database, hiveTable);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IOException(e);
         }
 
-        String hdfsDir = m.group(1);
-
+        String hdfsDir = table.getSd().getLocation();
         if (needFilePath) {
             FileSystem fs = HadoopUtil.getFileSystem(hdfsDir);
             FileStatus file = findOnlyFile(hdfsDir, fs);
@@ -108,6 +111,7 @@ public class HiveTable implements ReadableTable {
         } else {
             return hdfsDir;
         }
+
     }
 
     private FileStatus findOnlyFile(String hdfsDir, FileSystem fs) throws FileNotFoundException, IOException {
@@ -124,7 +128,7 @@ public class HiveTable implements ReadableTable {
 
     @Override
     public String toString() {
-        return "hive:" + hiveTable;
+        return "hive: database=[" + database + "], table=[" + hiveTable + "]";
     }
 
 }
