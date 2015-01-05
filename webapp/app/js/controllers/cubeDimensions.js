@@ -13,6 +13,35 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope) {
      * TODO migrate above from cubeSchema.js to here.
      */
 
+    // Helper func to get join info from cube data model.
+    var getJoin = function (tableName) {
+        var join = null;
+
+        for (var j = 0; j < $scope.cubeMetaFrame.model.lookups.length; j++) {
+            if ($scope.cubeMetaFrame.model.lookups[j].table == tableName) {
+                join = $scope.cubeMetaFrame.model.lookups[j].join;
+                break;
+            }
+        }
+
+        return join;
+    };
+
+    // Helper func to get columns that dimensions based on.
+    var dimCols = function (dim) {
+        if (dim.column) {
+            if (dim.status.includeFK) {
+                var join = getJoin(dim.table);
+
+                return join != null ? join.primary_key : [];
+            } else {
+                return [dim.column];
+            }
+        } else {
+            return [];
+        }
+    };
+
     // Dump available columns plus column table name, whether is from lookup table.
     $scope.initColumns = function () {
         // At first dump the columns of fact table.
@@ -100,34 +129,6 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope) {
         $scope.anyAvailableSelected = false;
     }, true);
 
-    // Helper func to get columns that dimensions based on.
-    var dimCols = function (dim) {
-        if (dim.column) {
-            if (dim.status.includeFK) {
-                var join = getJoin(dim.table);
-
-                return join != null ? join.primary_key : [];
-            } else {
-                return [dim.column];
-            }
-        } else {
-            return [];
-        }
-    };
-
-    // Helper func to get join info from cube data model.
-    var getJoin = function (tableName) {
-        var join = null;
-
-        for (var j = 0; j < $scope.cubeMetaFrame.model.lookups.length; j++) {
-            if ($scope.cubeMetaFrame.model.lookups[j].table == tableName) {
-                join = $scope.cubeMetaFrame.model.lookups[j].join;
-                break;
-            }
-        }
-
-        return join;
-    };
 
     // Helper func to get identity of the column.
     var columnKey = function (col) {
@@ -219,6 +220,31 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope) {
         }
     };
 
+    // Add hierarchy option.
+    $scope.addNewHierarchy = function (dimension) {
+        if (!dimension.hierarchy) {
+            dimension.hierarchy = [];
+        }
+        dimension.hierarchy.push({
+            "level": (dimension.hierarchy.length + 1),
+            "column": undefined
+        });
+    };
+
+    // Toggle hierarchy.
+    $scope.toggleHierarchy = function (dimension) {
+        if (dimension.status.useHierarchy) {
+            dimension.hierarchy = [];
+        }
+    };
+
+    // Add derived option.
+    $scope.addNewDerived = function (dimension) {
+        if(!dimension.derived){
+            dimension.derived = [];
+        }
+        dimension.derived.push("");
+    };
 
     // Adapter between new data model/dimensions and original dimensions.
     $scope.dimensionsAdapter = function () {

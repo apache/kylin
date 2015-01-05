@@ -24,6 +24,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
     $scope.curStep = $scope.wizardSteps[0];
 
+    /**
     var Dimension = {
         createNew: function () {
             var dimension = {
@@ -50,6 +51,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
             return dimension;
         }
     };
+     **/
 
     var Measure = {
         createNew: function () {
@@ -156,23 +158,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         }
     };
 
-    $scope.addNewHierarchy = function (dimension) {
-        if (!dimension.hierarchy) {
-            dimension.hierarchy = [];
-        }
-        dimension.hierarchy.push({
-            "level": (dimension.hierarchy.length + 1),
-            "column": undefined
-        });
-    };
-
-    $scope.addNewDerived = function (dimension) {
-        if(!dimension.derived){
-            dimension.derived = [];
-        }
-        dimension.derived.push("");
-    };
-
     /**
     $scope.toggleJoin = function (dimension,$event) {
         if (dimension.join&&dimension.join.type!='') {
@@ -189,12 +174,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         }
     }
     **/
-
-    $scope.toggleHierarchy = function (dimension) {
-        if (dimension.status.useHierarchy) {
-            dimension.hierarchy = [];
-        }
-    };
 
     $scope.removeElement = function (arr, element) {
         var index = arr.indexOf(element);
