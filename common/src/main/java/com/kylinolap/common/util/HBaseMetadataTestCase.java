@@ -33,9 +33,9 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
 
     public static void staticCreateTestMetadata() throws Exception {
         if (useSandbox()) {
-            HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
+            staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
         } else {
-            HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.MINICLUSTER_TEST_DATA);
+            staticCreateTestMetadata(AbstractKylinTestCase.MINICLUSTER_TEST_DATA);
             HBaseMiniclusterMetadataTestCase.startupMinicluster();
         }
         
