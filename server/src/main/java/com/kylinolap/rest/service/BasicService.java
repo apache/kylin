@@ -126,7 +126,6 @@ public abstract class BasicService {
     public void cleanDataCache() {
         CubeManager.removeInstance(getConfig());
         ProjectManager.removeInstance(getConfig());
-        RealizationRegistry.removeInstance(getConfig());
         BasicService.resetOLAPDataSources();
     }
 

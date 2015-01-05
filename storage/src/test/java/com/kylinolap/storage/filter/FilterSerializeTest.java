@@ -110,6 +110,7 @@ public class FilterSerializeTest extends FilterBaseTest {
     public void testSerialize07() {
         TableDesc table = new TableDesc();
         table.setName("TEST_KYLIN_FACT");
+        table.setDatabase("DEFAULT");
 
         ColumnDesc column = new ColumnDesc();
         column.setTable(table);
@@ -127,6 +128,7 @@ public class FilterSerializeTest extends FilterBaseTest {
     @Test
     public void testSerialize08() {
         TableDesc table = new TableDesc();
+        table.setDatabase("DEFAULT");
 
         ColumnDesc column = new ColumnDesc();
         column.setTable(table);

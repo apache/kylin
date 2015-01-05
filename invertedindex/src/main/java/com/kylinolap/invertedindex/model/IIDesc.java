@@ -88,7 +88,6 @@ public class IIDesc extends RootPersistentEntity {
 					+ modelName + "'.");
 		}
 
-		factTableName = TableDesc.getTableIdentity(factTableName);
 		timestampDimension = timestampDimension.toUpperCase();
 
 		// capitalize
@@ -153,7 +152,7 @@ public class IIDesc extends RootPersistentEntity {
 		for (int i = 0; i < allColumns.size(); ++i) {
 			TblColRef col = allColumns.get(i);
 			if (col.getTable().equalsIgnoreCase(
-					TableDesc.getTableIdentity(this.factTableName))
+					this.factTableName)
 					&& col.getColumn().getName()
 							.equalsIgnoreCase(this.timestampDimension)) {
 				tsCol = i;

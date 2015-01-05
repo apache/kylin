@@ -8,12 +8,14 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/18/14.
  */
 public class RealizationRegistry {
+    
     private static final Logger logger = LoggerFactory.getLogger(RealizationRegistry.class);
     private static final ConcurrentHashMap<KylinConfig, RealizationRegistry> CACHE = new ConcurrentHashMap<KylinConfig, RealizationRegistry>();
 
@@ -31,9 +33,6 @@ public class RealizationRegistry {
             try {
                 r = new RealizationRegistry(config);
                 CACHE.put(config, r);
-                if (CACHE.size() > 1) {
-                    logger.warn("More than one singleton of RealizationRegistry exist");
-                }
                 return r;
             } catch (IOException e) {
                 throw new IllegalStateException("Failed to init CubeManager from " + config, e);
@@ -47,23 +46,27 @@ public class RealizationRegistry {
 
     // ============================================================================
 
-    private Table<RealizationType, String, IRealization> realizationTable = HashBasedTable.create();
+    private Map<RealizationType, IRealizationProvider> providers;
     private KylinConfig config;
 
     private RealizationRegistry(KylinConfig config) throws IOException {
         logger.info("Initializing RealizationRegistry with metadata url " + config);
         this.config = config;
-        loadRealizations();
+        init();
     }
 
-    private void loadRealizations() {
-        // use reflection to load all realizations
+    private void init() {
+        providers = Maps.newConcurrentMap();
+        
+        // use reflection to load providers
+        List<String> realizationProviders = Lists.newArrayList("com.kylinolap.cube.CubeManager");
         List<Throwable> es = Lists.newArrayList();
-        List<String> realizationProviders = Lists.newArrayList("com.kylinolap.cube.CubeManager","com.kylinolap.invertedindex.IIManager");
         for (String clsName : realizationProviders) {
             try {
                 Class<?> cls = Class.forName(clsName);
-                cls.getMethod("getInstance", KylinConfig.class).invoke(null, this.config);
+                IRealizationProvider p = (IRealizationProvider) cls.getMethod("getInstance", KylinConfig.class).invoke(null, config);
+                providers.put(p.getRealizationType(), p);
+                
             } catch (Exception | NoClassDefFoundError e) {
                 es.add(e);
             }
@@ -72,21 +75,19 @@ public class RealizationRegistry {
                 for (Throwable exceptionOrError : es) {
                     logger.error("Create new store instance failed ", exceptionOrError);
                 }
-                throw new IllegalArgumentException("Failed to find metadata store by url: " + this.config.getMetadataUrl());
+                throw new IllegalArgumentException("Failed to find metadata store by url: " + config.getMetadataUrl());
             }
         }
+        
+        logger.info("RealizationRegistry is " + providers);
     }
 
-    public synchronized void registerRealization(IRealization realization) {
-        realizationTable.put(realization.getType(), realization.getName().toUpperCase(), realization);
-    }
-
-    public synchronized void unregisterRealization(IRealization realization) {
-        realizationTable.remove(realization.getType(), realization.getName().toUpperCase());
-    }
-
-    public synchronized IRealization getRealization(RealizationType type, String name) {
-        return realizationTable.get(type, name.toUpperCase());
+    public IRealization getRealization(RealizationType type, String name) {
+        IRealizationProvider p = providers.get(type);
+        if (p == null)
+            throw new IllegalStateException("No provider for realization type " + type);
+        
+        return p.getRealization(name);
     }
 
 }

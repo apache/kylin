@@ -48,11 +48,11 @@ public class DataModelDesc extends RootPersistentEntity {
 
 
     public String getFactTable() {
-        return TableDesc.getTableIdentity(factTable);
+        return factTable;
     }
 
     public void setFactTable(String factTable) {
-        this.factTable = factTable;
+        this.factTable = factTable.toUpperCase();
     }
 
     public LookupDesc[] getLookups() {
@@ -100,7 +100,7 @@ public class DataModelDesc extends RootPersistentEntity {
         // initDimensionColumns() will do the update
         for (LookupDesc lookup : this.lookups) {
             lookup.setTable(lookup.getTable().toUpperCase());
-            TableDesc dimTable = tables.get(TableDesc.getTableIdentity(lookup.getTable()));
+            TableDesc dimTable = tables.get(lookup.getTable());
 
             JoinDesc join = lookup.getJoin();
             if (join == null)
@@ -122,7 +122,7 @@ public class DataModelDesc extends RootPersistentEntity {
             }
             join.setPrimaryKeyColumns(pkCols);
             // foreign key
-            TableDesc factTable = tables.get(TableDesc.getTableIdentity(this.factTable));
+            TableDesc factTable = tables.get(this.factTable.toUpperCase());
             if (factTable == null) {
                 addError("Fact table does not exist:" + this.getFactTable());
             }

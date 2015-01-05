@@ -61,7 +61,7 @@ import com.kylinolap.metadata.model.TblColRef;
 /**
  * @author yangli9
  */
-public class CubeManager {
+public class CubeManager implements IRealizationProvider {
 
     private static String ALPHA_NUM = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -236,7 +236,7 @@ public class CubeManager {
         cube.setOwner(owner);
         saveResource(cube);
 
-        ProjectManager.getInstance(config).updateRealizationToProject(RealizationType.CUBE, cubeName, projectName, owner);
+        ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.CUBE, cubeName, projectName, owner);
 
         return cube;
     }
@@ -399,7 +399,6 @@ public class CubeManager {
      */
     public void removeCubeCache(CubeInstance cube) {
         cubeMap.remove(cube.getName().toUpperCase());
-        RealizationRegistry.getInstance(config).unregisterRealization(cube);
 
         for (CubeSegment segment : cube.getSegments()) {
             usedStorageLocation.remove(segment.getName());
@@ -510,7 +509,6 @@ public class CubeManager {
     private void afterCubeUpdated(CubeInstance updatedCube) {
         MetadataManager.getInstance(config).reload();
         cubeMap.put(updatedCube.getName().toUpperCase(), updatedCube);
-        RealizationRegistry.getInstance(config).registerRealization(updatedCube);
 
         for (ProjectInstance project : ProjectManager.getInstance(config).getProjects(RealizationType.CUBE, updatedCube.getName())) {
             try {
@@ -621,7 +619,6 @@ public class CubeManager {
                 throw new IllegalStateException("CubeInstance name must not be blank");
 
             cubeMap.putLocal(cubeInstance.getName().toUpperCase(), cubeInstance);
-            RealizationRegistry.getInstance(config).registerRealization(cubeInstance);
 
             for (CubeSegment segment : cubeInstance.getSegments()) {
                 usedStorageLocation.add(segment.getName());
@@ -648,5 +645,15 @@ public class CubeManager {
 
     private ResourceStore getStore() {
         return ResourceStore.getStore(this.config);
+    }
+
+    @Override
+    public RealizationType getRealizationType() {
+        return RealizationType.CUBE;
+    }
+
+    @Override
+    public IRealization getRealization(String name) {
+        return getCube(name);
     }
 }
