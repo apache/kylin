@@ -14,4 +14,15 @@ public class BuildCubeJob extends DefaultChainedExecutable {
     public BuildCubeJob(JobPO job) {
         super(job);
     }
+
+    public static final String CUBE_INSTANCE_NAME = "cubeName";
+
+    void setCubeName(String name) {
+        setParam(CUBE_INSTANCE_NAME, name);
+    }
+
+    public String getCubeName() {
+        return getParam(CUBE_INSTANCE_NAME);
+    }
+
 }

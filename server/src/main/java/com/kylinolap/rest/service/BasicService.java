@@ -24,17 +24,26 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import javax.sql.DataSource;
 
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
+import com.kylinolap.job.JobInstance;
+import com.kylinolap.job2.cube.BuildCubeJob;
+import com.kylinolap.job2.execution.ExecutableState;
+import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
+import com.kylinolap.job2.service.ExecutableManager;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.project.ProjectManager;
 import com.kylinolap.metadata.realization.RealizationRegistry;
 
+import com.kylinolap.metadata.realization.RealizationType;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,7 +146,7 @@ public abstract class BasicService {
         MetadataManager.getInstance(getConfig()).reload();
     }
 
-    public KylinConfig getKylinConfig() {
+    public final KylinConfig getKylinConfig() {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
 
         if (kylinConfig == null) {
@@ -147,19 +156,19 @@ public abstract class BasicService {
         return kylinConfig;
     }
 
-    public MetadataManager getMetadataManager() {
+    public final MetadataManager getMetadataManager() {
         return MetadataManager.getInstance(getConfig());
     }
 
-    public CubeManager getCubeManager() {
+    public final CubeManager getCubeManager() {
         return CubeManager.getInstance(getConfig());
     }
 
-    public CubeDescManager getCubeDescManager() {
+    public final CubeDescManager getCubeDescManager() {
         return CubeDescManager.getInstance(getConfig());
     }
 
-    public ProjectManager getProjectManager() {
+    public final ProjectManager getProjectManager() {
         return ProjectManager.getInstance(getConfig());
     }
 
@@ -170,6 +179,48 @@ public abstract class BasicService {
 
         InetAddress ia = InetAddress.getLocalHost();
         return new JobManager(ia.getCanonicalHostName(), engineCntx);
+    }
+
+    public final ExecutableManager getExecutableManager() {
+        return ExecutableManager.getInstance(getConfig());
+    }
+
+    protected List<BuildCubeJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList) {
+        List<BuildCubeJob> results = Lists.newArrayList(FluentIterable.from(getExecutableManager().getAllExecutables()).filter(new Predicate<AbstractExecutable>() {
+            @Override
+            public boolean apply(AbstractExecutable executable) {
+                if (cubeName == null) {
+                    return true;
+                }
+                return executable instanceof BuildCubeJob && ((BuildCubeJob) executable).getCubeName().equalsIgnoreCase(cubeName);
+            }
+        }).transform(new Function<AbstractExecutable, BuildCubeJob>() {
+            @Override
+            public BuildCubeJob apply(AbstractExecutable executable) {
+                return (BuildCubeJob) executable;
+            }
+        }).filter(new Predicate<BuildCubeJob>() {
+            @Override
+            public boolean apply(BuildCubeJob executable) {
+                if (null == projectName || null == getProjectManager().getProject(projectName)) {
+                    return true;
+                } else {
+                    List<JobInstance> filtedJobs = new ArrayList<JobInstance>();
+                    ProjectInstance project = getProjectManager().getProject(projectName);
+                    return project.containsRealization(RealizationType.CUBE, executable.getCubeName());
+                }
+            }
+        }).filter(new Predicate<BuildCubeJob>() {
+            @Override
+            public boolean apply(BuildCubeJob executable) {
+                return statusList.contains(executable.getStatus());
+            }
+        }));
+        return results;
+    }
+
+    protected List<BuildCubeJob> listAllCubingJobs(final String cubeName, final String projectName) {
+        return listAllCubingJobs(cubeName, projectName, EnumSet.allOf(ExecutableState.class));
     }
 
     protected static void close(ResultSet resultSet, Statement stat, Connection conn) {
