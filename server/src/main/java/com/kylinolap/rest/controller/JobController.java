@@ -78,9 +78,9 @@ public class JobController extends BasicController implements InitializingBean {
                 public void run() {
                     JobManager jobManager = null;
                     try {
-                        jobManager = jobService.getJobManager();
-                        jobManager.startJobEngine();
-                        metricsService.registerJobMetrics(jobManager);
+//                        jobManager = jobService.getJobManager();
+//                        jobManager.startJobEngine();
+//                        metricsService.registerJobMetrics(jobManager);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -92,8 +92,6 @@ public class JobController extends BasicController implements InitializingBean {
     /**
      * get all cube jobs
      * 
-     * @param cubeName
-     *            Cube ID
      * @return
      * @throws IOException
      */
@@ -122,8 +120,6 @@ public class JobController extends BasicController implements InitializingBean {
     /**
      * Get a cube job
      * 
-     * @param cubeName
-     *            Cube ID
      * @return
      * @throws IOException
      */
@@ -144,8 +140,6 @@ public class JobController extends BasicController implements InitializingBean {
     /**
      * Get a job step output
      * 
-     * @param cubeName
-     *            Cube ID
      * @return
      * @throws IOException
      */
@@ -158,24 +152,23 @@ public class JobController extends BasicController implements InitializingBean {
         long start = System.currentTimeMillis();
         String output = "";
 
-        try {
-            output = jobService.getJobManager().getJobStepOutput(jobId, stepId);
-        } catch (Exception e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e);
-        }
-
-        result.put("cmd_output", output);
-        long end = System.currentTimeMillis();
-        logger.info("Complete fetching step " + jobId + ":" + stepId + " output in " + (end - start) + " seconds");
-        return result;
+//        try {
+//            output = jobService.getExecutableManager().getJobOutput(jobId);//.getJobStepOutput(jobId, stepId);
+//        } catch (Exception e) {
+//            logger.error(e.getLocalizedMessage(), e);
+//            throw new InternalErrorException(e);
+//        }
+//
+//        result.put("cmd_output", output);
+//        long end = System.currentTimeMillis();
+//        logger.info("Complete fetching step " + jobId + ":" + stepId + " output in " + (end - start) + " seconds");
+//        return result;
+        throw new RuntimeException("please use step uuid to query the output");
     }
 
     /**
      * Resume a cube job
      * 
-     * @param String
-     *            Job ID
      * @return
      * @throws IOException
      */
@@ -198,8 +191,6 @@ public class JobController extends BasicController implements InitializingBean {
     /**
      * Cancel a job
      * 
-     * @param String
-     *            Job ID
      * @return
      * @throws IOException
      */

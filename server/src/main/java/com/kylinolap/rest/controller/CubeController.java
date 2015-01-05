@@ -23,6 +23,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.job.JoinedFlatTable;
+import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
 
@@ -100,16 +104,11 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "/{cubeName}/segs/{segmentName}/sql", method = { RequestMethod.GET })
     @ResponseBody
     public GeneralResponse getSql(@PathVariable String cubeName, @PathVariable String segmentName) {
-        String sql = null;
-        try {
-            sql = cubeService.getJobManager().previewFlatHiveQL(cubeName, segmentName);
-        } catch (JobException e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
-        } catch (UnknownHostException e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
-        }
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        CubeDesc cubeDesc = cube.getDescriptor();
+        CubeSegment cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.READY);
+        CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, cubeSegment);
+        String sql = JoinedFlatTable.generateSelectDataStatement(flatTableDesc);
 
         GeneralResponse repsonse = new GeneralResponse();
         repsonse.setProperty("sql", sql);
@@ -436,7 +435,6 @@ public class CubeController extends BasicController {
     }
 
     /**
-     * @param error
      * @return
      */
     private String omitMessage(List<String> errors) {
