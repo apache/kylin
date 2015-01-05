@@ -11,7 +11,6 @@ import com.kylinolap.metadata.model.FunctionDesc;
 import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.metadata.realization.IRealization;
 import com.kylinolap.query.relnode.OLAPContext;
-import com.kylinolap.query.routing.QueryRouter;
 import com.kylinolap.query.routing.RoutingRule;
 import org.eigenbase.reltype.RelDataType;
 import org.slf4j.Logger;
@@ -25,9 +24,11 @@ public class AdjustForWeeklyMatchCubeRule extends RoutingRule {
 
     @Override
     public void apply(List<IRealization> realizations, OLAPContext olapContext) {
-        if (olapContext.isWeekMatch.containsKey(realizations.get(0))) {
-            CubeInstance cube = (CubeInstance) realizations.get(0);
-            adjustOLAPContext(cube, olapContext);
+        if(realizations.size() > 0) {
+            if (olapContext.isWeekMatch.containsKey(realizations.get(0))) {
+                CubeInstance cube = (CubeInstance) realizations.get(0);
+                adjustOLAPContext(cube, olapContext);
+            }
         }
     }
 
