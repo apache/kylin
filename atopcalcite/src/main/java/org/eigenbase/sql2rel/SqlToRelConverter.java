@@ -1,7 +1,8 @@
 /*
- * OVERRIDE POINTS:
+ * OVERRIDE POINT:
  * - getInSubqueryThreshold(), was `20`, now `Integer.MAX_VALUE`
  * - isTrimUnusedFields(), override to false
+ * - AggConverter.visit(SqlCall), skip column reading for COUNT(COL), for https://jirap.corp.ebay.com/browse/KYLIN-104
  */
 
 /*
@@ -4430,7 +4431,7 @@ private void findSubqueries(
             // special case for COUNT(*):  delete the *
             if (operand instanceof SqlIdentifier) {
               SqlIdentifier id = (SqlIdentifier) operand;
-              if (id.isStar()) {
+              if (id.isStar() || isSimpleCount(call)) { // OVERRIDE POINT, was just `id.isStar()`
                 assert call.operandCount() == 1;
                 assert args.isEmpty();
                 break;
@@ -4485,6 +4486,18 @@ private void findSubqueries(
         }
       }
       return null;
+    }
+
+    // OVERRIDE POINT
+    private boolean isSimpleCount(SqlCall call) {
+        if (call.getOperator().isName("COUNT") && call.operandCount() == 1) {
+            final SqlNode parm = call.operand(0);
+            if ((parm instanceof SqlIdentifier || parm instanceof SqlNumericLiteral) //
+                    && call.getFunctionQuantifier() == null) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private int lookupOrCreateGroupExpr(RexNode expr) {

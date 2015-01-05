@@ -247,8 +247,7 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
     }
 
     private void fillbackOptimizedColumn() {
-        // some aggcall will be optimized out in sub-query (e.g. tableau
-        // generated sql)
+        // some aggcall will be optimized out in sub-query (e.g. tableau generated sql)
         // we need to fill them back
         RelDataType inputAggRow = getChild().getRowType();
         RelDataType outputAggRow = getRowType();

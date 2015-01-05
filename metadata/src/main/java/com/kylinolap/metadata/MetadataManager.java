@@ -273,7 +273,6 @@ public class MetadataManager {
      */
     public static String loadSourceTableExd(ResourceStore store, String path, Map<String, String> attrContainer) throws IOException {
 
-        logger.debug("Loading SourceTable exd " + path);
         InputStream is = store.getResource(path);
         if (is != null) {
             attrContainer.putAll(JsonUtil.readValue(is, HashMap.class));
@@ -290,7 +289,6 @@ public class MetadataManager {
 
     private TableDesc loadSourceTable(String path) throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Loading SourceTable " + store.getReadableResourcePath(path));
 
         TableDesc t = store.getResource(path, TableDesc.class, TABLE_SERIALIZER);
         t.init();
@@ -337,7 +335,6 @@ public class MetadataManager {
 
     private CubeDesc loadCubeDesc(String path) throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Loading CubeDesc " + store.getReadableResourcePath(path));
 
         CubeDesc ndesc = store.getResource(path, CubeDesc.class, CUBE_SERIALIZER);
 
@@ -386,7 +383,6 @@ public class MetadataManager {
 
     private InvertedIndexDesc loadInvertedIndexDesc(String path) throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Loading InvertedIndexDesc " + store.getReadableResourcePath(path));
 
         InvertedIndexDesc desc = store.getResource(path, InvertedIndexDesc.class, IIDESC_SERIALIZER);
         if (StringUtils.isBlank(desc.getName())) {

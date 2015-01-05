@@ -1,7 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,SweetAlert) {
+    .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,SweetAlert,loadingRequest,UserService) {
         $scope.cubeName = null;
         $scope.jobs = {};
         $scope.projects = [];
@@ -31,6 +31,8 @@ KylinApp
             }
         };
 
+
+
         // projectName from page ctrl
         $scope.state = {loading: false, refreshing: false, filterAttr: 'last_modified', filterReverse: true, reverseColumn: 'last_modified', projectName:$scope.project.selectedProject};
 
@@ -41,8 +43,8 @@ KylinApp
         });
 
         $scope.list = function (offset, limit) {
-            if(!$scope.project.selectedProject){
-                return;
+            if(!$scope.project.projects.length){
+                return [];
             }
             offset = (!!offset) ? offset : 0;
             var selectedJob = null;
@@ -94,7 +96,7 @@ KylinApp
 
 
         $scope.$watch('project.selectedProject', function (newValue, oldValue) {
-            if(newValue){
+            if(newValue!=oldValue||newValue==null){
                 $scope.jobs={};
                 $scope.state.projectName = newValue;
                 $scope.reload();
@@ -111,13 +113,16 @@ KylinApp
                 confirmButtonText: "Yes",
                 closeOnConfirm: true
             }, function() {
+                loadingRequest.show();
                 JobService.resume({jobId: job.uuid}, {}, function (job) {
+                    loadingRequest.hide();
                     $scope.jobs[job.uuid] = job;
                     if (angular.isDefined($scope.state.selectedJob)) {
                         $scope.state.selectedJob = $scope.jobs[ $scope.state.selectedJob.uuid];
                     }
                     SweetAlert.swal('Success!', 'Job has been resumed successfully!', 'success');
                 },function(e){
+                    loadingRequest.hide();
                     if(e.data&& e.data.exception){
                         var message =e.data.exception;
                         var msg = !!(message) ? message : 'Failed to take action.';
@@ -131,7 +136,7 @@ KylinApp
 
         $scope.cancel = function (job) {
             SweetAlert.swal({
-                title: 'Confirm',
+                title: '',
                 text: 'Are you sure to discard the job?',
                 type: '',
                 showCancelButton: true,
@@ -139,13 +144,16 @@ KylinApp
                 confirmButtonText: "Yes",
                 closeOnConfirm: true
             }, function() {
+                loadingRequest.show();
                 JobService.cancel({jobId: job.uuid}, {}, function (job) {
+                    loadingRequest.hide();
                     $scope.jobs[job.uuid] = job;
                     if (angular.isDefined($scope.state.selectedJob)) {
                         $scope.state.selectedJob = $scope.jobs[ $scope.state.selectedJob.uuid];
                     }
                     SweetAlert.swal('Success!', 'Job has been discarded successfully!', 'success');
                 },function(e){
+                    loadingRequest.hide();
                     if(e.data&& e.data.exception){
                         var message =e.data.exception;
                         var msg = !!(message) ? message : 'Failed to take action.';
