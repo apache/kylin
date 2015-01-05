@@ -22,6 +22,7 @@
         <hbase-hadoop2.version>0.98.8-hadoop2</hbase-hadoop2.version>
         <zookeeper.version>3.4.5</zookeeper.version>
         <hive.version>0.13.0</hive.version>
+        <hive-hcatalog.version>0.13.0.2.1.1.0-385</hive-hcatalog.version>
 
         <!-- Dependency versions -->
         <antlr.version>3.4</antlr.version>
@@ -531,6 +532,7 @@
                                 <exclude>**/KylinQueryTest.java</exclude>
                                 <exclue>**/SnapshotManagerTest.java</exclue>
                                 <exclue>**/SampleCubeSetupTest.java</exclue>
+                                <exclue>**/HiveTableReaderTest.java</exclue>
                             </excludes>
                             <systemProperties>
                                 <property>
