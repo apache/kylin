@@ -23,6 +23,7 @@ import com.kylinolap.metadata.model.*;
 import com.kylinolap.metadata.realization.IRealization;
 import com.kylinolap.metadata.realization.RealizationRegistry;
 import com.kylinolap.metadata.realization.RealizationType;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,6 +81,8 @@ public class ProjectManager {
     public static synchronized void removeInstance(KylinConfig config) {
         CACHE.remove(config);
     }
+    
+    // ============================================================================
 
     private ProjectManager(KylinConfig config) throws IOException {
         logger.info("Initializing ProjectManager with metadata url " + config);
@@ -163,7 +166,7 @@ public class ProjectManager {
         }
     }
 
-    public ProjectInstance updateRealizationToProject(RealizationType type, String realizationName, String newProjectName, String owner) throws IOException {
+    public ProjectInstance moveRealizationToProject(RealizationType type, String realizationName, String newProjectName, String owner) throws IOException {
         removeRealizationsFromProjects(type, realizationName);
         return addRealizationToProject(type, realizationName, newProjectName, owner);
     }
@@ -180,45 +183,37 @@ public class ProjectManager {
         return newProject;
     }
 
+    public void removeRealizationsFromProjects(RealizationType type, String realizationName) throws IOException {
+        for (ProjectInstance projectInstance : findProjects(type, realizationName)) {
+            projectInstance.removeRealization(type, realizationName);
+            saveResource(projectInstance);
+        }
+    }
+
     ////////////////////////////////////////////////////////
     // project table related
 
     public ProjectInstance addTableDescToProject(String tables, String projectName) throws IOException {
+        MetadataManager metaMgr = getMetadataManager();
         ProjectInstance projectInstance = getProject(projectName);
         String[] tokens = StringUtils.split(tables, ",");
         for (int i = 0; i < tokens.length; i++) {
             String token = tokens[i].trim();
-            if (StringUtils.isNotEmpty(token)) {
-                projectInstance.addTable(token);
+            TableDesc table = metaMgr.getTableDesc(token);
+            if (table != null) {
+                projectInstance.addTable(table.getIdentity());
             }
-        }
-
-        List<TableDesc> exposedTables = listExposedTables(projectName);
-        for (TableDesc table : exposedTables) {
-            projectInstance.addTable(table.getName());
         }
 
         saveResource(projectInstance);
         return projectInstance;
     }
 
-    public List<TableDesc> listDefinedTablesInProject(String project) throws IOException {
+    public List<TableDesc> listDefinedTables(String project) throws IOException {
         if (null == project) {
             return Collections.emptyList();
         }
-        project = ProjectInstance.getNormalizedProjectName(project);
         ProjectInstance projectInstance = getProject(project);
-        int originTableCount = projectInstance.getTablesCount();
-        //sync exposed table to project when list
-        List<TableDesc> exposedTables = listExposedTables(project);
-        for (TableDesc table : exposedTables) {
-            projectInstance.addTable(table.getName());
-        }
-        //only save project json if new tables are sync in
-        if (originTableCount < projectInstance.getTablesCount()) {
-            saveResource(projectInstance);
-        }
-
         List<TableDesc> tables = Lists.newArrayList();
         for (String table : projectInstance.getTables()) {
             TableDesc tableDesc = getMetadataManager().getTableDesc(table);
@@ -230,20 +225,10 @@ public class ProjectManager {
         return tables;
     }
 
-    //
-    ////////////////////////////////////////////////////////
-
-    public void removeRealizationsFromProjects(RealizationType type, String realizationName) throws IOException {
-        for (ProjectInstance projectInstance : findProjects(type, realizationName)) {
-            projectInstance.removeRealization(type, realizationName);
-            saveResource(projectInstance);
-        }
-    }
-
     public List<TableDesc> listExposedTables(String project) {
         project = ProjectInstance.getNormalizedProjectName(project);
         List<TableDesc> tables = Lists.newArrayList();
-
+        
         for (ProjectTable table : projectTables.get(project)) {
             TableDesc tableDesc = getMetadataManager().getTableDesc(table.getName());
             if (tableDesc != null) {
@@ -501,22 +486,21 @@ public class ProjectManager {
     }
 
     private ProjectTable getProjectTable(String project, final String table, boolean autoCreate) {
-        String tableIdentity = TableDesc.getTableIdentity(table);
 
         ProjectTable projectTable = null;
         project = ProjectInstance.getNormalizedProjectName(project);
 
-        if (this.projectTables.containsEntry(project, new ProjectTable(tableIdentity))) {
+        if (this.projectTables.containsEntry(project, new ProjectTable(table))) {
             Iterator<ProjectTable> projsIter = this.projectTables.get(project).iterator();
             while (projsIter.hasNext()) {
                 ProjectTable oneTable = projsIter.next();
-                if (oneTable.getName().equalsIgnoreCase(tableIdentity)) {
+                if (oneTable.getName().equalsIgnoreCase(table)) {
                     projectTable = oneTable;
                     break;
                 }
             }
         } else {
-            projectTable = new ProjectTable(tableIdentity);
+            projectTable = new ProjectTable(table);
 
             if (autoCreate) {
                 this.projectTables.put(project, projectTable);

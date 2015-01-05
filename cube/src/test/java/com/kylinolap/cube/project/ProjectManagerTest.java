@@ -86,12 +86,12 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
         assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllRealizations("ALIEN").get(0).getName().equalsIgnoreCase("CUBE_IN_ALIEN_PROJECT"));
         assertTrue(CubeManager.getInstance(this.getTestConfig()).listAllCubes().size() == originalCubeCount + 1);
 
-        ProjectManager.getInstance(this.getTestConfig()).updateRealizationToProject(RealizationType.CUBE, "cube_in_alien_project", "default", null);
+        ProjectManager.getInstance(this.getTestConfig()).moveRealizationToProject(RealizationType.CUBE, "cube_in_alien_project", "default", null);
         assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllRealizations("ALIEN").size() == 0);
         assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllRealizations("default").size() == originalCubeCountInDefault + 1);
         assertTrue(ProjectManager.getInstance(getTestConfig()).listAllRealizations("default").contains(createdCube));
 
-        ProjectManager.getInstance(this.getTestConfig()).updateRealizationToProject(RealizationType.CUBE, "cube_in_alien_project", "alien", null);
+        ProjectManager.getInstance(this.getTestConfig()).moveRealizationToProject(RealizationType.CUBE, "cube_in_alien_project", "alien", null);
         assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllRealizations("ALIEN").size() == 1);
         assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllRealizations("default").size() == originalCubeCountInDefault);
         assertTrue(ProjectManager.getInstance(getTestConfig()).listAllRealizations("alien").contains(createdCube));
@@ -137,27 +137,27 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
     @Test
     public void testProjectsDrop() throws IOException {
         CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_empty");
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).getRealizationsByTable("default", "test_kylin_fact").contains(cube));
+        assertTrue(ProjectManager.getInstance(this.getTestConfig()).getRealizationsByTable("default", "default.test_kylin_fact").contains(cube));
         assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllRealizations("default").contains(cube));
 
         CubeManager.getInstance(getTestConfig()).dropCube(cube.getName(), true);
 
-        assertTrue(!ProjectManager.getInstance(this.getTestConfig()).getRealizationsByTable("default", "test_kylin_fact").contains(cube));
+        assertTrue(!ProjectManager.getInstance(this.getTestConfig()).getRealizationsByTable("default", "default.test_kylin_fact").contains(cube));
         assertTrue(!ProjectManager.getInstance(this.getTestConfig()).listAllRealizations("default").contains(cube));
     }
 
     @Test
     public void testProjectsLoadAfterProjectChange() throws IOException {
         CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_empty");
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).getRealizationsByTable("default", "test_kylin_fact").contains(cube));
+        assertTrue(ProjectManager.getInstance(this.getTestConfig()).getRealizationsByTable("default", "default.test_kylin_fact").contains(cube));
 
         ProjectManager.getInstance(getTestConfig()).removeRealizationsFromProjects(RealizationType.CUBE, cube.getName());
 
-        assertTrue(!ProjectManager.getInstance(this.getTestConfig()).getRealizationsByTable("default", "test_kylin_fact").contains(cube));
+        assertTrue(!ProjectManager.getInstance(this.getTestConfig()).getRealizationsByTable("default", "default.test_kylin_fact").contains(cube));
 
-        ProjectManager.getInstance(getTestConfig()).updateRealizationToProject(RealizationType.CUBE, cube.getName(), "default", "tester");
+        ProjectManager.getInstance(getTestConfig()).moveRealizationToProject(RealizationType.CUBE, cube.getName(), "default", "tester");
 
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).getRealizationsByTable("default", "test_kylin_fact").contains(cube));
+        assertTrue(ProjectManager.getInstance(this.getTestConfig()).getRealizationsByTable("default", "default.test_kylin_fact").contains(cube));
     }
 
     public CubeDescManager getCubeDescManager() {

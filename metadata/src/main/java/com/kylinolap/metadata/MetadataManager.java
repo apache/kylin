@@ -145,7 +145,7 @@ public class MetadataManager {
      * @return
      */
     public TableDesc getTableDesc(String tableName) {
-        return srcTableMap.get(TableDesc.getTableIdentity(tableName));
+        return srcTableMap.get(tableName.toUpperCase());
     }
 
     /**
@@ -155,7 +155,7 @@ public class MetadataManager {
      * @return
      */
     public Map<String, String> getTableDescExd(String tableName) {
-        String tableIdentity = TableDesc.getTableIdentity(tableName);
+        String tableIdentity = tableName;
         Map<String, String> result = new HashMap<String, String>();
         if (srcTableExdMap.containsKey(tableIdentity)) {
             Map<String, String> tmp = srcTableExdMap.get(tableIdentity);
@@ -175,7 +175,7 @@ public class MetadataManager {
         if (srcTable.getUuid() == null || srcTable.getIdentity() == null) {
             throw new IllegalArgumentException();
         }
-        String tableIdentity = TableDesc.getTableIdentity(srcTable);
+        String tableIdentity = srcTable.getIdentity();
         if (srcTableMap.containsKey(tableIdentity)) {
             throw new IllegalArgumentException("SourceTable '" + srcTable.getIdentity() + "' already exists");
         }
@@ -204,7 +204,7 @@ public class MetadataManager {
         for (String path : paths) {
             Map<String, String> attrContainer = new HashMap<String, String>();
             String tableName = loadSourceTableExd(getStore(), path, attrContainer);
-            String tableIdentity = TableDesc.getTableIdentity(tableName);
+            String tableIdentity = tableName;
             checkNoDupName(tableIdentity, srcTableExdMap.containsKey(tableIdentity), "SourceTableExd", path);
 
             srcTableExdMap.putLocal(tableIdentity, attrContainer);
@@ -241,7 +241,7 @@ public class MetadataManager {
         List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_RESOURCE_ROOT, MetadataConstances.FILE_SURFIX);
         for (String path : paths) {
             TableDesc t = loadSourceTable(path);
-            String tableIdentity = TableDesc.getTableIdentity(t);
+            String tableIdentity = t.getIdentity();
             checkNoDupName(tableIdentity, srcTableMap.containsKey(tableIdentity), "SourceTable", path);
 
             srcTableMap.putLocal(tableIdentity, t);
