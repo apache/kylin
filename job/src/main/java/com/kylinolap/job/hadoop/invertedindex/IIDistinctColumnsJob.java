@@ -31,6 +31,7 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,6 +111,7 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
             job.setJarByClass(this.getClass());
         }
 
+        /*
         if ("textinputformat".equalsIgnoreCase(inputFormat) || "text".equalsIgnoreCase(inputFormat)) {
             job.setInputFormatClass(TextInputFormat.class);
         } else {
@@ -124,6 +126,12 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
         if (inputDelim != null) {
             job.getConfiguration().set(BatchConstants.INPUT_DELIM, inputDelim);
         }
+        */
+        String tableName = job.getConfiguration().get(BatchConstants.TABLE_NAME);
+        HCatInputFormat.setInput(job, "default",
+                tableName.toLowerCase());
+        
+        job.setInputFormatClass(HCatInputFormat.class);
 
         job.setMapperClass(IIDistinctColumnsMapper.class);
         job.setCombinerClass(IIDistinctColumnsCombiner.class);
