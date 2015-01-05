@@ -23,16 +23,17 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
-import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.exception.CubeIntegrityException;
+import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.constant.JobStatusEnum;
 import com.kylinolap.job.exception.InvalidJobInstanceException;
@@ -96,7 +97,7 @@ public class JobService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public String submitJob(CubeInstance cube, long startDate, long endDate, RealizationBuildTypeEnum buildType) throws IOException, JobException, InvalidJobInstanceException {
+    public String submitJob(CubeInstance cube, long startDate, long endDate, CubeBuildTypeEnum buildType, String submitter) throws IOException, JobException, InvalidJobInstanceException {
 
         List<JobInstance> jobInstances = this.getJobManager().listJobs(cube.getName(), null);
         for (JobInstance jobInstance : jobInstances) {
@@ -118,7 +119,7 @@ public class JobService extends BasicService {
             List<JobInstance> jobs = Lists.newArrayListWithExpectedSize(cubeSegments.size());
             for (CubeSegment segment : cubeSegments) {
                 uuid = segment.getUuid();
-                JobInstance job = this.getJobManager().createJob(cube.getName(), segment.getName(), segment.getUuid(), buildType);
+                JobInstance job = getJobManager().createJob(cube.getName(), segment.getName(), segment.getUuid(), buildType, submitter);
                 segment.setLastBuildJobID(uuid);
                 jobs.add(job);
             }

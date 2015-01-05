@@ -11,8 +11,8 @@ import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.execution.ExecutableContext;
 import com.kylinolap.job2.execution.ExecuteResult;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.realization.RealizationStatusEnum;
-import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;

@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.kylinolap.metadata.realization.SegmentStatusEnum;
 import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
 
 import org.apache.hadoop.hbase.client.HConnection;
@@ -51,6 +50,7 @@ import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.cube.model.CubeDesc.DeriveInfo;
 import com.kylinolap.dict.lookup.LookupStringTable;
 import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.IStorageEngine;
 import com.kylinolap.storage.StorageContext;

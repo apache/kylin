@@ -22,13 +22,13 @@ import java.util.HashSet;
 import java.util.List;
 
 import com.kylinolap.cube.exception.CubeIntegrityException;
+import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.CubePartitionDesc;
 import com.kylinolap.cube.model.DimensionDesc;
 import com.kylinolap.dict.DictionaryManager;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
-import com.kylinolap.metadata.realization.SegmentStatusEnum;
 
 /**
  * @author xduo
@@ -38,7 +38,7 @@ public abstract class CubeSegmentValidator {
     private CubeSegmentValidator() {
     }
 
-    public static CubeSegmentValidator getCubeSegmentValidator(RealizationBuildTypeEnum buildType) {
+    public static CubeSegmentValidator getCubeSegmentValidator(CubeBuildTypeEnum buildType) {
         switch (buildType) {
         case MERGE:
             return new MergeOperationValidator();

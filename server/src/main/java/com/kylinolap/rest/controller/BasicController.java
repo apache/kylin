@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.kylinolap.rest.exception.BadRequestException;
 import com.kylinolap.rest.exception.ForbiddenException;
-import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.exception.NotFoundException;
 import com.kylinolap.rest.response.ErrorResponse;
 import com.kylinolap.rest.service.MetricsService;
@@ -43,19 +42,14 @@ public class BasicController {
     @Autowired
     protected MetricsService metricsService;
 
-    // ~ exception handlers ~
-    @ExceptionHandler(Exception.class)
-    void handleError(HttpServletRequest req, Exception ex) {
-        logger.error("Internal error (Exception) throw out of controller", ex);
-    }
-
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    @ExceptionHandler(InternalErrorException.class)
+    @ExceptionHandler(Exception.class)
     @ResponseBody
-    ErrorResponse handleInternalError(HttpServletRequest req, Exception ex) {
-        logger.error("Internal error (InternalErrorException) throw out of controller", ex);
+    ErrorResponse handleError(HttpServletRequest req, Exception ex) {
+        logger.error("", ex);
         return new ErrorResponse(req.getRequestURL().toString(), ex);
     }
+    
 
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @ExceptionHandler(ForbiddenException.class)
@@ -75,6 +69,7 @@ public class BasicController {
     @ExceptionHandler(BadRequestException.class)
     @ResponseBody
     ErrorResponse handleBadRequest(HttpServletRequest req, Exception ex) {
+        logger.error("", ex);
         return new ErrorResponse(req.getRequestURL().toString(), ex);
     }
 }

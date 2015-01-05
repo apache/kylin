@@ -24,7 +24,7 @@ import org.junit.Test;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
+import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.job.JobInstance.JobStep;
 import com.kylinolap.job.constant.JobStatusEnum;
 import com.kylinolap.job.constant.JobStepStatusEnum;
@@ -52,7 +52,7 @@ public class JobInstanceTest extends LocalFileMetadataTestCase {
         KylinConfig kylinCfg = KylinConfig.getInstanceFromEnv();
         JobManager jobManager = new JobManager("JobInstanceTest", new JobEngineConfig(kylinCfg));
 
-        JobInstance jobInstance = jobManager.createJob("test_kylin_cube_with_slr_1_new_segment", "20130331080000_20131212080000", UUID.randomUUID().toString(), RealizationBuildTypeEnum.BUILD);
+        JobInstance jobInstance = jobManager.createJob("test_kylin_cube_with_slr_1_new_segment", "20130331080000_20131212080000", UUID.randomUUID().toString(), CubeBuildTypeEnum.BUILD, null);
         // initial job status should be PENDING
         assertEquals(JobStatusEnum.PENDING, jobInstance.getStatus());
 

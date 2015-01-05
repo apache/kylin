@@ -17,7 +17,6 @@
 package com.kylinolap.rest.service;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.acls.domain.PrincipalSid;
@@ -33,10 +32,7 @@ import com.kylinolap.rest.security.AclPermissionFactory;
 
 /**
  * @author xduo
- * @deprecated method has been merged into #ServiceTestAllInOne
- * 
  */
-@Ignore
 public class AccessServiceTest extends ServiceTestBase {
 
     @Autowired

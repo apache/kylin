@@ -72,8 +72,8 @@ public class ImportHBaseData {
     }
 
     public void importTables() throws IOException {
-        // create the metadata htables;
-        HBaseResourceStore store = new HBaseResourceStore(KylinConfig.getInstanceFromEnv());
+        // create the metadata htables
+        new HBaseResourceStore(KylinConfig.getInstanceFromEnv());
 
         List<String> tablelocations = getTablesBackupLocations(importFolder);
         for (String tableLocation : tablelocations) {
@@ -95,6 +95,7 @@ public class ImportHBaseData {
     public void uploadTarballToRemote() throws IOException {
 
         cli.execute("mkdir -p /tmp/hbase-export/");
+        @SuppressWarnings("unused")
         SSHClient ssh = new SSHClient(kylinConfig.getRemoteHadoopCliHostname(), kylinConfig.getRemoteHadoopCliUsername(), kylinConfig.getRemoteHadoopCliPassword());
         try {
             // ssh.scpFileToRemote("../examples/test_case_data/minicluster/hbase-export.tar.gz", importFolder);

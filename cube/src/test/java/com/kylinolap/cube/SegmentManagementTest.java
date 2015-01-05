@@ -24,11 +24,11 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.TimeZone;
 
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.project.ProjectManager;
-import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
 import com.kylinolap.metadata.realization.RealizationStatusEnum;
-import com.kylinolap.metadata.realization.SegmentStatusEnum;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,6 +37,7 @@ import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.exception.CubeIntegrityException;
+import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.metadata.MetadataManager;
 
@@ -93,7 +94,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // initial build
         System.out.println("Initial Build");
-        CubeSegment initialSegment = cubeMgr.allocateSegments(cubeInstance, RealizationBuildTypeEnum.BUILD, desc.getCubePartitionDesc().getPartitionDateStart(), dateEnd).get(0);
+        CubeSegment initialSegment = cubeMgr.allocateSegments(cubeInstance, CubeBuildTypeEnum.BUILD, desc.getCubePartitionDesc().getPartitionDateStart(), dateEnd).get(0);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.DISABLED, cubeInstance.getStatus());
         assertEquals(SegmentStatusEnum.NEW, cubeInstance.getBuildingSegments().get(0).getStatus());
@@ -106,7 +107,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // initial build success
         System.out.println("Initial Build Success");
-        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, RealizationBuildTypeEnum.BUILD, initialSegment.getName(), "job_1", System.currentTimeMillis(), 111L, 222L, 333L);
+        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, CubeBuildTypeEnum.BUILD, initialSegment.getName(), "job_1", System.currentTimeMillis(), 111L, 222L, 333L);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(1, cubeInstance.getSegments(SegmentStatusEnum.READY).size());
@@ -118,7 +119,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         // incremental build
         System.out.println("Incremental Build");
         long dateEnd2 = f.parse("2013-12-12").getTime();
-        CubeSegment incrementalSegment = cubeMgr.allocateSegments(cubeInstance, RealizationBuildTypeEnum.BUILD, dateEnd, dateEnd2).get(0);
+        CubeSegment incrementalSegment = cubeMgr.allocateSegments(cubeInstance, CubeBuildTypeEnum.BUILD, dateEnd, dateEnd2).get(0);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(2, cubeInstance.getSegments().size());
@@ -131,7 +132,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // incremental build success
         System.out.println("Incremental Build Success");
-        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, RealizationBuildTypeEnum.BUILD, incrementalSegment.getName(), "job_2", System.currentTimeMillis(), 111L, 222L, 333L);
+        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, CubeBuildTypeEnum.BUILD, incrementalSegment.getName(), "job_2", System.currentTimeMillis(), 111L, 222L, 333L);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(2, cubeInstance.getSegments().size());
@@ -147,7 +148,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // rebuild segment
         System.out.println("Rebuild Segment");
-        CubeSegment rebuildSegment = cubeMgr.allocateSegments(cubeInstance, RealizationBuildTypeEnum.BUILD, 1364688000000L, 1386806400000L).get(0);
+        CubeSegment rebuildSegment = cubeMgr.allocateSegments(cubeInstance, CubeBuildTypeEnum.BUILD, 1364688000000L, 1386806400000L).get(0);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(1, cubeInstance.getBuildingSegments().size());
@@ -160,7 +161,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // rebuild success
         System.out.println("Rebuild Success");
-        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, RealizationBuildTypeEnum.BUILD, rebuildSegment.getName(), "job_3", System.currentTimeMillis(), 111, 222, 333);
+        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, CubeBuildTypeEnum.BUILD, rebuildSegment.getName(), "job_3", System.currentTimeMillis(), 111, 222, 333);
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(1, cubeInstance.getSegments().size());
         assertEquals(1, cubeInstance.getSegments(SegmentStatusEnum.READY).size());
@@ -178,7 +179,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // rebuild segment
         System.out.println("Rebuild Segment");
-        cubeMgr.allocateSegments(cubeInstance, RealizationBuildTypeEnum.BUILD, 1364688000000L + 1000L, 1386806400000L).get(0);
+        cubeMgr.allocateSegments(cubeInstance, CubeBuildTypeEnum.BUILD, 1364688000000L + 1000L, 1386806400000L).get(0);
     }
 
     @Test
@@ -187,7 +188,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // merge segments
         System.out.println("Merge Segment");
-        CubeSegment mergedSegment = cubeMgr.allocateSegments(cubeInstance, RealizationBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L).get(0);
+        CubeSegment mergedSegment = cubeMgr.allocateSegments(cubeInstance, CubeBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L).get(0);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(SegmentStatusEnum.NEW, cubeInstance.getBuildingSegments().get(0).getStatus());
@@ -199,7 +200,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // build success
         System.out.println("Build Success");
-        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, RealizationBuildTypeEnum.MERGE, mergedSegment.getName(), "job_4", System.currentTimeMillis(), 123, 20000L, 1216024L);
+        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, CubeBuildTypeEnum.MERGE, mergedSegment.getName(), "job_4", System.currentTimeMillis(), 123, 20000L, 1216024L);
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(1, cubeInstance.getSegments(SegmentStatusEnum.READY).size());
         assertEquals(0, cubeInstance.getBuildingSegments().size());
@@ -232,7 +233,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // initial build
         System.out.println("Initial Build");
-        CubeSegment initialSegment = cubeMgr.allocateSegments(cubeInstance, RealizationBuildTypeEnum.BUILD, desc.getCubePartitionDesc().getPartitionDateStart(), dateEnd).get(0);
+        CubeSegment initialSegment = cubeMgr.allocateSegments(cubeInstance, CubeBuildTypeEnum.BUILD, desc.getCubePartitionDesc().getPartitionDateStart(), dateEnd).get(0);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.DISABLED, cubeInstance.getStatus());
         assertEquals(SegmentStatusEnum.NEW, cubeInstance.getBuildingSegments().get(0).getStatus());
@@ -247,7 +248,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // initial build success
         System.out.println("Initial Build Success");
-        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, RealizationBuildTypeEnum.BUILD, initialSegment.getName(), "job_5", System.currentTimeMillis(), 111L, 222L, 333L);
+        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, CubeBuildTypeEnum.BUILD, initialSegment.getName(), "job_5", System.currentTimeMillis(), 111L, 222L, 333L);
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(1, cubeInstance.getSegments(SegmentStatusEnum.READY).size());
         assertEquals(0, cubeInstance.getBuildingSegments().size());
@@ -258,7 +259,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // rebuild segment
         System.out.println("Rebuild Segment");
-        CubeSegment rebuildSegment = cubeMgr.allocateSegments(cubeInstance, RealizationBuildTypeEnum.BUILD, 1364688000000L, 1386806400000L).get(0);
+        CubeSegment rebuildSegment = cubeMgr.allocateSegments(cubeInstance, CubeBuildTypeEnum.BUILD, 1364688000000L, 1386806400000L).get(0);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(SegmentStatusEnum.NEW, cubeInstance.getBuildingSegments().get(0).getStatus());
@@ -271,7 +272,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // rebuild success
         System.out.println("Rebuild Success");
-        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, RealizationBuildTypeEnum.BUILD, rebuildSegment.getName(), "job_6", System.currentTimeMillis(), 111, 222, 333);
+        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, CubeBuildTypeEnum.BUILD, rebuildSegment.getName(), "job_6", System.currentTimeMillis(), 111, 222, 333);
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(1, cubeInstance.getSegments().size());
         assertEquals(1, cubeInstance.getSegments(SegmentStatusEnum.READY).size());
@@ -303,7 +304,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // initial build
         System.out.println("Initial Build");
-        CubeSegment initialSegment = cubeMgr.allocateSegments(cubeInstance, RealizationBuildTypeEnum.BUILD, desc.getCubePartitionDesc().getPartitionDateStart(), dateEnd).get(0);
+        CubeSegment initialSegment = cubeMgr.allocateSegments(cubeInstance, CubeBuildTypeEnum.BUILD, desc.getCubePartitionDesc().getPartitionDateStart(), dateEnd).get(0);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.DISABLED, cubeInstance.getStatus());
         assertEquals(SegmentStatusEnum.NEW, cubeInstance.getBuildingSegments().get(0).getStatus());
@@ -316,7 +317,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // initial build success
         System.out.println("Initial Build Success");
-        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, RealizationBuildTypeEnum.BUILD, initialSegment.getName(), "job_1", System.currentTimeMillis(), 111L, 222L, 333L);
+        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, CubeBuildTypeEnum.BUILD, initialSegment.getName(), "job_1", System.currentTimeMillis(), 111L, 222L, 333L);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(1, cubeInstance.getSegments(SegmentStatusEnum.READY).size());
@@ -328,7 +329,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         // incremental build
         System.out.println("Invalid Incremental Build");
         long dateEnd2 = f.parse("2013-12-12").getTime();
-        cubeMgr.allocateSegments(cubeInstance, RealizationBuildTypeEnum.BUILD, dateEnd + 1000, dateEnd2);
+        cubeMgr.allocateSegments(cubeInstance, CubeBuildTypeEnum.BUILD, dateEnd + 1000, dateEnd2);
 
     }
 
@@ -352,7 +353,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // initial build
         System.out.println("Initial Build");
-        CubeSegment initialSegment = cubeMgr.allocateSegments(cubeInstance, RealizationBuildTypeEnum.BUILD, desc.getCubePartitionDesc().getPartitionDateStart(), dateEnd).get(0);
+        CubeSegment initialSegment = cubeMgr.allocateSegments(cubeInstance, CubeBuildTypeEnum.BUILD, desc.getCubePartitionDesc().getPartitionDateStart(), dateEnd).get(0);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.DISABLED, cubeInstance.getStatus());
         for (CubeSegment cubeSegment : cubeInstance.getBuildingSegments()) {
@@ -367,7 +368,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // initial build success
         System.out.println("Initial Build Success");
-        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, RealizationBuildTypeEnum.BUILD, initialSegment.getName(), "job_1", System.currentTimeMillis(), 111L, 222L, 333L);
+        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, CubeBuildTypeEnum.BUILD, initialSegment.getName(), "job_1", System.currentTimeMillis(), 111L, 222L, 333L);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(1, cubeInstance.getSegments(SegmentStatusEnum.READY).size());
@@ -379,7 +380,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         System.out.println("Upsert Build");
         long start = f.parse("2013-11-01").getTime();
         long dateEnd2 = f.parse("2013-12-12").getTime();
-        List<CubeSegment> upsertSegments = cubeMgr.allocateSegments(cubeInstance, RealizationBuildTypeEnum.BUILD, start, dateEnd2);
+        List<CubeSegment> upsertSegments = cubeMgr.allocateSegments(cubeInstance, CubeBuildTypeEnum.BUILD, start, dateEnd2);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(2, upsertSegments.size());
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
@@ -395,9 +396,9 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // upsert build success
         System.out.println("Upsert Build Success");
-        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, RealizationBuildTypeEnum.BUILD, upsertSegments.get(0).getName(), "job_2", System.currentTimeMillis(), 111L, 222L, 333L);
+        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, CubeBuildTypeEnum.BUILD, upsertSegments.get(0).getName(), "job_2", System.currentTimeMillis(), 111L, 222L, 333L);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
-        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, RealizationBuildTypeEnum.BUILD, upsertSegments.get(1).getName(), "job_3", System.currentTimeMillis(), 111L, 222L, 333L);
+        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, CubeBuildTypeEnum.BUILD, upsertSegments.get(1).getName(), "job_3", System.currentTimeMillis(), 111L, 222L, 333L);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(2, cubeInstance.getSegments().size());
@@ -410,7 +411,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         System.out.println("Upsert Build");
         long start2 = f.parse("2013-12-01").getTime();
         long dateEnd3 = f.parse("2013-12-31").getTime();
-        List<CubeSegment> upsertSegments2 = cubeMgr.allocateSegments(cubeInstance, RealizationBuildTypeEnum.BUILD, start2, dateEnd3);
+        List<CubeSegment> upsertSegments2 = cubeMgr.allocateSegments(cubeInstance, CubeBuildTypeEnum.BUILD, start2, dateEnd3);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(2, upsertSegments2.size());
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
@@ -429,8 +430,8 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // upsert build success
         System.out.println("Upsert Build Success");
-        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, RealizationBuildTypeEnum.BUILD, upsertSegments2.get(1).getName(), "job_5", System.currentTimeMillis(), 111L, 222L, 333L);
-        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, RealizationBuildTypeEnum.BUILD, upsertSegments2.get(0).getName(), "job_4", System.currentTimeMillis(), 111L, 222L, 333L);
+        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, CubeBuildTypeEnum.BUILD, upsertSegments2.get(1).getName(), "job_5", System.currentTimeMillis(), 111L, 222L, 333L);
+        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, CubeBuildTypeEnum.BUILD, upsertSegments2.get(0).getName(), "job_4", System.currentTimeMillis(), 111L, 222L, 333L);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(3, cubeInstance.getSegments().size());
@@ -451,7 +452,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // upsert build again
         System.out.println("Upsert Build");
-        List<CubeSegment> upsertSegments3 = cubeMgr.allocateSegments(cubeInstance, RealizationBuildTypeEnum.BUILD, f.parse("2013-10-01").getTime(), f.parse("2014-02-01").getTime());
+        List<CubeSegment> upsertSegments3 = cubeMgr.allocateSegments(cubeInstance, CubeBuildTypeEnum.BUILD, f.parse("2013-10-01").getTime(), f.parse("2014-02-01").getTime());
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(2, upsertSegments3.size());
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
@@ -470,8 +471,8 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // upsert build success
         System.out.println("Upsert Build Success");
-        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, RealizationBuildTypeEnum.BUILD, upsertSegments3.get(1).getName(), "job_7", System.currentTimeMillis(), 111L, 222L, 333L);
-        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, RealizationBuildTypeEnum.BUILD, upsertSegments3.get(0).getName(), "job_6", System.currentTimeMillis(), 111L, 222L, 333L);
+        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, CubeBuildTypeEnum.BUILD, upsertSegments3.get(1).getName(), "job_7", System.currentTimeMillis(), 111L, 222L, 333L);
+        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, CubeBuildTypeEnum.BUILD, upsertSegments3.get(0).getName(), "job_6", System.currentTimeMillis(), 111L, 222L, 333L);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(2, cubeInstance.getSegments().size());
@@ -508,7 +509,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // initial build
         System.out.println("Initial Build");
-        CubeSegment initialSegment = cubeMgr.allocateSegments(cubeInstance, RealizationBuildTypeEnum.BUILD, desc.getCubePartitionDesc().getPartitionDateStart(), dateEnd).get(0);
+        CubeSegment initialSegment = cubeMgr.allocateSegments(cubeInstance, CubeBuildTypeEnum.BUILD, desc.getCubePartitionDesc().getPartitionDateStart(), dateEnd).get(0);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.DISABLED, cubeInstance.getStatus());
         for (CubeSegment cubeSegment : cubeInstance.getBuildingSegments()) {
@@ -523,7 +524,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // initial build success
         System.out.println("Initial Build Success");
-        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, RealizationBuildTypeEnum.BUILD, initialSegment.getName(), "job_1", System.currentTimeMillis(), 111L, 222L, 333L);
+        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, CubeBuildTypeEnum.BUILD, initialSegment.getName(), "job_1", System.currentTimeMillis(), 111L, 222L, 333L);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(1, cubeInstance.getSegments(SegmentStatusEnum.READY).size());
@@ -535,7 +536,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         System.out.println("Upsert Build");
         long start = f.parse("2013-01-01").getTime();
         long dateEnd2 = f.parse("2014-01-01").getTime();
-        List<CubeSegment> upsertSegments = cubeMgr.allocateSegments(cubeInstance, RealizationBuildTypeEnum.BUILD, start, dateEnd2);
+        List<CubeSegment> upsertSegments = cubeMgr.allocateSegments(cubeInstance, CubeBuildTypeEnum.BUILD, start, dateEnd2);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(1, upsertSegments.size());
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
@@ -551,7 +552,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // upsert build success
         System.out.println("Upsert Build Success");
-        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, RealizationBuildTypeEnum.BUILD, upsertSegments.get(0).getName(), "job_2", System.currentTimeMillis(), 111L, 222L, 333L);
+        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, CubeBuildTypeEnum.BUILD, upsertSegments.get(0).getName(), "job_2", System.currentTimeMillis(), 111L, 222L, 333L);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
 
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
@@ -563,7 +564,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // upsert build again
         System.out.println("Upsert Build");
-        List<CubeSegment> upsertSegments3 = cubeMgr.allocateSegments(cubeInstance, RealizationBuildTypeEnum.BUILD, f.parse("2013-10-01").getTime(), f.parse("2014-02-01").getTime());
+        List<CubeSegment> upsertSegments3 = cubeMgr.allocateSegments(cubeInstance, CubeBuildTypeEnum.BUILD, f.parse("2013-10-01").getTime(), f.parse("2014-02-01").getTime());
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(2, upsertSegments3.size());
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
@@ -582,8 +583,8 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // upsert build success
         System.out.println("Upsert Build Success");
-        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, RealizationBuildTypeEnum.BUILD, upsertSegments3.get(1).getName(), "job_7", System.currentTimeMillis(), 111L, 222L, 333L);
-        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, RealizationBuildTypeEnum.BUILD, upsertSegments3.get(0).getName(), "job_6", System.currentTimeMillis(), 111L, 222L, 333L);
+        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, CubeBuildTypeEnum.BUILD, upsertSegments3.get(1).getName(), "job_7", System.currentTimeMillis(), 111L, 222L, 333L);
+        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, CubeBuildTypeEnum.BUILD, upsertSegments3.get(0).getName(), "job_6", System.currentTimeMillis(), 111L, 222L, 333L);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(3, cubeInstance.getSegments().size());
@@ -623,7 +624,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // initial build
         System.out.println("Initial Build");
-        CubeSegment initialSegment = cubeMgr.allocateSegments(cubeInstance, RealizationBuildTypeEnum.BUILD, desc.getCubePartitionDesc().getPartitionDateStart(), dateEnd).get(0);
+        CubeSegment initialSegment = cubeMgr.allocateSegments(cubeInstance, CubeBuildTypeEnum.BUILD, desc.getCubePartitionDesc().getPartitionDateStart(), dateEnd).get(0);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.DISABLED, cubeInstance.getStatus());
         for (CubeSegment cubeSegment : cubeInstance.getBuildingSegments()) {
@@ -638,7 +639,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // initial build success
         System.out.println("Initial Build Success");
-        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, RealizationBuildTypeEnum.BUILD, initialSegment.getName(), "job_1", System.currentTimeMillis(), 111L, 222L, 333L);
+        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, CubeBuildTypeEnum.BUILD, initialSegment.getName(), "job_1", System.currentTimeMillis(), 111L, 222L, 333L);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(1, cubeInstance.getSegments(SegmentStatusEnum.READY).size());
@@ -651,7 +652,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         System.out.println("Upsert Build");
         long start = f.parse("2013-11-13").getTime();
         long dateEnd2 = f.parse("2013-12-12").getTime();
-        cubeMgr.allocateSegments(cubeInstance, RealizationBuildTypeEnum.BUILD, start, dateEnd2);
+        cubeMgr.allocateSegments(cubeInstance, CubeBuildTypeEnum.BUILD, start, dateEnd2);
     }
 
     @Test(expected = CubeIntegrityException.class)
@@ -674,7 +675,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // initial build
         System.out.println("Initial Build");
-        CubeSegment initialSegment = cubeMgr.allocateSegments(cubeInstance, RealizationBuildTypeEnum.BUILD, desc.getCubePartitionDesc().getPartitionDateStart(), dateEnd).get(0);
+        CubeSegment initialSegment = cubeMgr.allocateSegments(cubeInstance, CubeBuildTypeEnum.BUILD, desc.getCubePartitionDesc().getPartitionDateStart(), dateEnd).get(0);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.DISABLED, cubeInstance.getStatus());
         for (CubeSegment cubeSegment : cubeInstance.getBuildingSegments()) {
@@ -689,7 +690,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // initial build success
         System.out.println("Initial Build Success");
-        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, RealizationBuildTypeEnum.BUILD, initialSegment.getName(), "job_1", System.currentTimeMillis(), 111L, 222L, 333L);
+        cubeMgr.updateSegmentOnJobSucceed(cubeInstance, CubeBuildTypeEnum.BUILD, initialSegment.getName(), "job_1", System.currentTimeMillis(), 111L, 222L, 333L);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(1, cubeInstance.getSegments(SegmentStatusEnum.READY).size());
@@ -703,7 +704,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         long start = f.parse("2013-11-01").getTime();
         long dateEnd2 = f.parse("2013-11-02").getTime();
 
-        cubeMgr.allocateSegments(cubeInstance, RealizationBuildTypeEnum.BUILD, start, dateEnd2);
+        cubeMgr.allocateSegments(cubeInstance, CubeBuildTypeEnum.BUILD, start, dateEnd2);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
     }
 

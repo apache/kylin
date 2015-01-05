@@ -1,22 +1,22 @@
 'use strict';
 
 KylinApp
-    .controller('SourceMetaCtrl', function ($scope,$cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService,$route) {
+    .controller('SourceMetaCtrl', function ($scope,$cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService,$route,loadingRequest,SweetAlert) {
         var $httpDefaultCache = $cacheFactory.get('$http');
         $scope.srcTables = {};
         $scope.srcDbs = [];
         $scope.selectedSrcDb = [];
         $scope.selectedSrcTable = {};
         $scope.window = 0.68 * $window.innerHeight;
-        $scope.hiveTbLoad = {
-            status:'init'
-        };
         $scope.theaditems = [
             {attr: 'id', name: 'ID'},
             {attr: 'name', name: 'Name'},
             {attr: 'datatype', name: 'Data Type'},
             {attr: 'cardinality', name: 'Cardinality'}
         ];
+        $scope.hiveTbLoad={
+            status:"init"
+        }
        $scope.state = { filterAttr: 'id', filterReverse:false, reverseColumn: 'id',
             dimensionFilter: '', measureFilter: ''};
 
@@ -97,9 +97,9 @@ KylinApp
         };
 
         $scope.$watch('project.selectedProject', function (newValue, oldValue) {
-            if(newValue){
-                $scope.aceSrcTbLoaded();
-            }
+//         will load table when enter this page,null or not
+        $scope.aceSrcTbLoaded();
+
 
         });
         $scope.$watch('hiveTbLoad.status', function (newValue, oldValue) {
@@ -109,12 +109,12 @@ KylinApp
 
         });
 
-        $scope.showSelected = function (table) {
-            if (table.uuid) {
-                $scope.selectedSrcTable = table;
+        $scope.showSelected = function (obj) {
+            if (obj.uuid) {
+                $scope.selectedSrcTable = obj;
             }
-            else {
-                $scope.selectedSrcTable.selectedSrcColumn = table;
+            else if(obj.datatype) {
+                $scope.selectedSrcTable.selectedSrcColumn = obj;
             }
         };
 
@@ -149,20 +149,58 @@ KylinApp
         };
 
         var ModalInstanceCtrl = function ($scope,$location, $modalInstance, tableNames, MessageService,projectName,hiveTbLoad) {
-            hiveTbLoad.status = "init";
             $scope.tableNames = "";
             $scope.projectName = projectName;
             $scope.cancel = function () {
                 $modalInstance.dismiss('cancel');
             };
             $scope.add = function () {
-                hiveTbLoad.status="loading";
-                MessageService.sendMsg('A sync task has been submitted, it might take 20 - 60 seconds', 'success', {});
+                if($scope.tableNames.trim()===""){
+                    SweetAlert.swal('','Please input table(s) you want to synchronize.', 'info');
+                  return;
+                }
+
+                if(!$scope.projectName){
+                    SweetAlert.swal('','Please choose your project first!.', 'info');
+                    return;
+                }
+
                 $scope.cancel();
+                loadingRequest.show();
                 TableService.loadHiveTable({tableName: $scope.tableNames,action:projectName}, {}, function (result) {
-                    hiveTbLoad.status = "success";
-                    MessageService.sendMsg('Below tables were synced successfully: ' + result['result'].join() + ', Click Refresh button ...', 'success', {});
-                });
+                    var loadTableInfo="";
+                    angular.forEach(result['result.loaded'],function(table){
+                        loadTableInfo+="\n"+table;
+                    })
+                    var unloadedTableInfo="";
+                    angular.forEach(result['result.unloaded'],function(table){
+                        unloadedTableInfo+="\n"+table;
+                    })
+
+                    if(result['result.unloaded'].length!=0&&result['result.loaded'].length==0){
+                        SweetAlert.swal('Failed!','Failed to synchronize following table(s): ' + unloadedTableInfo , 'error');
+                    }
+                    if(result['result.loaded'].length!=0&&result['result.unloaded'].length==0){
+                        SweetAlert.swal('Success!','The following table(s) have been successfully synchronized: ' + loadTableInfo , 'success');
+                    }
+                    if(result['result.loaded'].length!=0&&result['result.unloaded'].length!=0){
+                        SweetAlert.swal('Partial loaded!','The following table(s) have been successfully synchronized: ' + loadTableInfo+"\n\n Failed to synchronize following table(s):"  + unloadedTableInfo, 'warning');
+                    }
+
+
+                    loadingRequest.hide();
+                    hiveTbLoad.status="success";
+                },function(e){
+                    if(e.data&& e.data.exception){
+                        var message =e.data.exception;
+                        var msg = !!(message) ? message : 'Failed to take action.';
+                        SweetAlert.swal('Oops...', msg, 'error');
+                    }else{
+                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                    }
+                    loadingRequest.hide();
+                    hiveTbLoad.status="init";
+                })
             }
         };
         $scope.trimType = function(typeName){

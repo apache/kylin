@@ -79,8 +79,6 @@ public class ProjectInstance extends RootPersistentEntity {
         return project.toUpperCase();
     }
 
-    // ============================================================================
-
     public static ProjectInstance create(String name, String owner, String description, List<RealizationEntry> realizationEntries) {
         ProjectInstance projectInstance = new ProjectInstance();
 
@@ -98,13 +96,9 @@ public class ProjectInstance extends RootPersistentEntity {
         return projectInstance;
     }
 
+    // ============================================================================
+
     public ProjectInstance() {
-
-    }
-
-    public ProjectInstance(String name, String owner) {
-        this.name = name;
-        this.owner = owner;
     }
 
     public String getDescription() {
@@ -209,9 +203,7 @@ public class ProjectInstance extends RootPersistentEntity {
         this.getTables().add(tableName.toUpperCase());
     }
 
-    //will return new Set for null
     public Set<String> getTables() {
-        tables = tables == null ? new TreeSet<String>() : tables;
         return tables;
     }
 
@@ -255,6 +247,9 @@ public class ProjectInstance extends RootPersistentEntity {
             String r = realizationEntries.get(i).getRealization();
             realizationEntries.get(i).setRealization(r.toUpperCase());
         }
+        
+        if (tables == null)
+            tables = new TreeSet<String>();
     }
 
     @Override

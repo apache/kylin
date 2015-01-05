@@ -24,7 +24,6 @@ import java.util.Collections;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.kylinolap.common.util.LocalFileMetadataTestCase;

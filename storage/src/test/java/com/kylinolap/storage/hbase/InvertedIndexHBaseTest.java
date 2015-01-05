@@ -43,7 +43,7 @@ import com.kylinolap.common.util.HadoopUtil;
 /**
  * @author yangli9
  */
-@Ignore
+@Ignore("ii not ready")
 public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
 
     IIInstance ii;

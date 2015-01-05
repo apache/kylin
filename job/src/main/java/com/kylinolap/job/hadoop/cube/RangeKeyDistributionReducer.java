@@ -25,6 +25,8 @@ import org.apache.hadoop.util.StringUtils;
 
 import com.kylinolap.cube.model.CubeDesc.RealizationCapacity;
 import com.kylinolap.job.constant.BatchConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author ysong1
@@ -32,9 +34,11 @@ import com.kylinolap.job.constant.BatchConstants;
  */
 public class RangeKeyDistributionReducer extends Reducer<Text, LongWritable, Text, LongWritable> {
 
-    public static final long FIVE_GIGA_BYTES = 5L * 1024L * 1024L * 1024L;
     public static final long TEN_GIGA_BYTES = 10L * 1024L * 1024L * 1024L;
     public static final long TWENTY_GIGA_BYTES = 20L * 1024L * 1024L * 1024L;
+    public static final long HUNDRED_GIGA_BYTES = 100L * 1024L * 1024L * 1024L;
+
+    private static final Logger logger = LoggerFactory.getLogger(RangeKeyDistributionReducer.class);
 
     private LongWritable outputValue = new LongWritable(0);
 
@@ -49,15 +53,17 @@ public class RangeKeyDistributionReducer extends Reducer<Text, LongWritable, Tex
         realizationCapacity = RealizationCapacity.valueOf(context.getConfiguration().get(BatchConstants.CUBE_CAPACITY));
         switch (realizationCapacity) {
         case SMALL:
-            cut = FIVE_GIGA_BYTES;
-            break;
-        case MEDIUM:
             cut = TEN_GIGA_BYTES;
             break;
-        case LARGE:
+        case MEDIUM:
             cut = TWENTY_GIGA_BYTES;
             break;
+        case LARGE:
+            cut = HUNDRED_GIGA_BYTES;
+            break;
         }
+
+        logger.info("Chosen cut for htable is " + cut);
     }
 
     @Override

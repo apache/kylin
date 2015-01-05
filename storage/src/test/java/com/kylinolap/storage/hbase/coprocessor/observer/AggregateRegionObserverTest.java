@@ -199,6 +199,7 @@ public class AggregateRegionObserverTest {
     private CoprocessorRowType newRowType() {
         TableDesc t = new TableDesc();
         t.setName("TABLE");
+        t.setDatabase("DEFAULT");
         TblColRef[] cols = new TblColRef[] { newCol("A", t), newCol("B", t), newCol("C", t), newCol("D", t) };
         int[] sizes = new int[] { 1, 1, 1, 1 };
         return new CoprocessorRowType(cols, sizes);

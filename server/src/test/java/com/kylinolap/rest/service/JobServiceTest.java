@@ -19,19 +19,15 @@ package com.kylinolap.rest.service;
 import java.io.IOException;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.job.exception.JobException;
+import com.kylinolap.metadata.project.ProjectInstance;
 
 /**
  * @author xduo
- * 
- * @deprecated method has been merged into #ServiceTestAllInOne
  */
-@Ignore
 public class JobServiceTest extends ServiceTestBase {
 
     @Autowired

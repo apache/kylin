@@ -31,7 +31,7 @@ public class TableRecordInfoTest extends LocalFileMetadataTestCase {
     public void testSerialize() {
         byte[] x = TableRecordInfoDigest.serialize(this.tableRecordInfo.getDigest());
         TableRecordInfoDigest d = TableRecordInfoDigest.deserialize(x);
-        assertEquals(d.getColumnCount(), 9);
+        assertEquals(d.getColumnCount(), 25);
     }
 
     @After

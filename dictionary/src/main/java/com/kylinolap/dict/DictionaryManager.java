@@ -150,6 +150,8 @@ public class DictionaryManager {
 
     public DictionaryInfo buildDictionary(DataModelDesc model, String dict, TblColRef col, String factColumnsPath) throws IOException {
 
+        logger.info("building dictionary for " + col);
+
         Object[] tmp = decideSourceData(model, dict, col, factColumnsPath);
         String srcTable = (String) tmp[0];
         String srcCol = (String) tmp[1];

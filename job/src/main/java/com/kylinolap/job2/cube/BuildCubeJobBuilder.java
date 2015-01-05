@@ -2,7 +2,6 @@ package com.kylinolap.job2.cube;
 
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.job.JoinedFlatTable;
-import com.kylinolap.job.constant.JobConstants;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.cube.*;
 import com.kylinolap.job.hadoop.dict.CreateDictionaryJob;
@@ -12,6 +11,7 @@ import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
 import com.kylinolap.job2.common.HadoopShellExecutable;
 import com.kylinolap.job2.common.MapReduceExecutable;
 import com.kylinolap.job2.common.ShellExecutable;
+import com.kylinolap.job2.constants.ExecutableConstants;
 
 import java.io.IOException;
 
@@ -141,7 +141,7 @@ public final class BuildCubeJobBuilder {
     private ShellExecutable createIntermediateHiveTableStep(CubeJoinedFlatTableDesc intermediateTableDesc, String jobId) {
         try {
             ShellExecutable result = new ShellExecutable();
-            result.setName(JobConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
+            result.setName(ExecutableConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
             String dropTableHql = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc, jobId);
             String createTableHql = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, getJobWorkingDir(jobId), jobId);
             String insertDataHql = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, jobId, this.jobEngineConfig);
@@ -163,7 +163,7 @@ public final class BuildCubeJobBuilder {
 
     private MapReduceExecutable createFactDistinctColumnsStep(String intermediateHiveTableName, String jobId) {
         MapReduceExecutable result = new MapReduceExecutable();
-        result.setName(JobConstants.STEP_NAME_FACT_DISTINCT_COLUMNS);
+        result.setName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS);
         result.setMapReduceJobClass(FactDistinctColumnsJob.class);
         StringBuilder cmd = new StringBuilder();
         appendMapReduceParameters(cmd, jobEngineConfig);
@@ -179,7 +179,7 @@ public final class BuildCubeJobBuilder {
     private HadoopShellExecutable createBuildDictionaryStep(String factDistinctColumnsPath) {
         // base cuboid job
         HadoopShellExecutable buildDictionaryStep = new HadoopShellExecutable();
-        buildDictionaryStep.setName(JobConstants.STEP_NAME_BUILD_DICTIONARY);
+        buildDictionaryStep.setName(ExecutableConstants.STEP_NAME_BUILD_DICTIONARY);
         StringBuilder cmd = new StringBuilder();
         appendExecCmdParameters(cmd, "cubename", getCubeName());
         appendExecCmdParameters(cmd, "segmentname", segment.getName());
@@ -197,7 +197,7 @@ public final class BuildCubeJobBuilder {
         StringBuilder cmd = new StringBuilder();
         appendMapReduceParameters(cmd, jobEngineConfig);
 
-        baseCuboidStep.setName(JobConstants.STEP_NAME_BUILD_BASE_CUBOID);
+        baseCuboidStep.setName(ExecutableConstants.STEP_NAME_BUILD_BASE_CUBOID);
 
         appendExecCmdParameters(cmd, "cubename", getCubeName());
         appendExecCmdParameters(cmd, "segmentname", getSegmentName());
@@ -215,7 +215,7 @@ public final class BuildCubeJobBuilder {
         // ND cuboid job
         MapReduceExecutable ndCuboidStep = new MapReduceExecutable();
 
-        ndCuboidStep.setName(JobConstants.STEP_NAME_BUILD_N_D_CUBOID + " : " + dimNum + "-Dimension");
+        ndCuboidStep.setName(ExecutableConstants.STEP_NAME_BUILD_N_D_CUBOID + " : " + dimNum + "-Dimension");
         StringBuilder cmd = new StringBuilder();
 
         appendMapReduceParameters(cmd, jobEngineConfig);
@@ -233,7 +233,7 @@ public final class BuildCubeJobBuilder {
 
     private MapReduceExecutable createRangeRowkeyDistributionStep(String inputPath) {
         MapReduceExecutable rowkeyDistributionStep = new MapReduceExecutable();
-        rowkeyDistributionStep.setName(JobConstants.STEP_NAME_GET_CUBOID_KEY_DISTRIBUTION);
+        rowkeyDistributionStep.setName(ExecutableConstants.STEP_NAME_GET_CUBOID_KEY_DISTRIBUTION);
         StringBuilder cmd = new StringBuilder();
 
         appendMapReduceParameters(cmd, jobEngineConfig);
@@ -249,7 +249,7 @@ public final class BuildCubeJobBuilder {
 
     private HadoopShellExecutable createCreateHTableStep() {
         HadoopShellExecutable createHtableStep = new HadoopShellExecutable();
-        createHtableStep.setName(JobConstants.STEP_NAME_CREATE_HBASE_TABLE);
+        createHtableStep.setName(ExecutableConstants.STEP_NAME_CREATE_HBASE_TABLE);
         StringBuilder cmd = new StringBuilder();
         appendExecCmdParameters(cmd, "cubename", getCubeName());
         appendExecCmdParameters(cmd, "input", getRowkeyDistributionOutputPath() + "/part-r-00000");
@@ -263,7 +263,7 @@ public final class BuildCubeJobBuilder {
 
     private MapReduceExecutable createConvertCuboidToHfileStep(String inputPath, String jobId) {
         MapReduceExecutable createHFilesStep = new MapReduceExecutable();
-        createHFilesStep.setName(JobConstants.STEP_NAME_CONVERT_CUBOID_TO_HFILE);
+        createHFilesStep.setName(ExecutableConstants.STEP_NAME_CONVERT_CUBOID_TO_HFILE);
         StringBuilder cmd = new StringBuilder();
 
         appendMapReduceParameters(cmd, jobEngineConfig);
@@ -281,7 +281,7 @@ public final class BuildCubeJobBuilder {
 
     private HadoopShellExecutable createBulkLoadStep(String jobId) {
         HadoopShellExecutable bulkLoadStep = new HadoopShellExecutable();
-        bulkLoadStep.setName(JobConstants.STEP_NAME_BULK_LOAD_HFILE);
+        bulkLoadStep.setName(ExecutableConstants.STEP_NAME_BULK_LOAD_HFILE);
 
         StringBuilder cmd = new StringBuilder();
         appendExecCmdParameters(cmd, "input", getHFilePath(jobId));
@@ -296,13 +296,14 @@ public final class BuildCubeJobBuilder {
     }
 
     private UpdateCubeInfoExecutable createUpdateCubeInfoStep(String createFlatTableStepId, String baseCuboidStepId, String convertToHFileStepId) {
-        final UpdateCubeInfoExecutable executable = new UpdateCubeInfoExecutable();
-        executable.setCubeName(getCubeName());
-        executable.setSegmentId(segment.getUuid());
-        executable.setCreateFlatTableStepId(createFlatTableStepId);
-        executable.setBaseCuboidStepId(baseCuboidStepId);
-        executable.setConvertToHFileStepId(convertToHFileStepId);
-        return executable;
+        final UpdateCubeInfoExecutable updateCubeInfoStep = new UpdateCubeInfoExecutable();
+        updateCubeInfoStep.setName(ExecutableConstants.STEP_NAME_UPDATE_CUBE_INFO);
+        updateCubeInfoStep.setCubeName(getCubeName());
+        updateCubeInfoStep.setSegmentId(segment.getUuid());
+        updateCubeInfoStep.setCreateFlatTableStepId(createFlatTableStepId);
+        updateCubeInfoStep.setBaseCuboidStepId(baseCuboidStepId);
+        updateCubeInfoStep.setConvertToHFileStepId(convertToHFileStepId);
+        return updateCubeInfoStep;
     }
 
 

@@ -36,7 +36,7 @@ import com.kylinolap.metadata.project.RealizationEntry;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.project.ProjectManager;
 import com.kylinolap.metadata.realization.RealizationStatusEnum;
-import com.kylinolap.metadata.realization.SegmentStatusEnum;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -74,6 +74,7 @@ import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.hadoop.cardinality.HiveColumnCardinalityJob;
 import com.kylinolap.metadata.MetadataConstances;
 import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.tool.HiveSourceTableLoader;
 import com.kylinolap.rest.constant.Constant;
@@ -247,7 +248,7 @@ public class CubeService extends BasicService {
             ProjectManager projectManager = getProjectManager();
             if (!isCubeInProject(newProjectName, cube)) {
                 String owner = SecurityContextHolder.getContext().getAuthentication().getName();
-                ProjectInstance newProject = projectManager.updateRealizationToProject(RealizationType.CUBE, cube.getName(), newProjectName, owner);
+                ProjectInstance newProject = projectManager.moveRealizationToProject(RealizationType.CUBE, cube.getName(), newProjectName, owner);
                 accessService.inherit(cube, newProject);
             }
 

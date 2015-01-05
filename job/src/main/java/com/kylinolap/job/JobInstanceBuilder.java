@@ -20,7 +20,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.kylinolap.job.hadoop.hive.IJoinedFlatTableDesc;
-import com.kylinolap.metadata.realization.SegmentStatusEnum;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

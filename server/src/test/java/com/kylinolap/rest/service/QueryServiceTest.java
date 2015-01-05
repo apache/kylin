@@ -21,20 +21,17 @@ import java.sql.SQLException;
 import java.util.Date;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.job.exception.JobException;
+import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.rest.request.SQLRequest;
 import com.kylinolap.rest.response.SQLResponse;
 
 /**
  * @author xduo
- * @deprecated method has been merged into #ServiceTestAllInOne
  */
-@Ignore
 public class QueryServiceTest extends ServiceTestBase {
 
     @Autowired

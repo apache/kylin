@@ -15,8 +15,8 @@
     <link rel="stylesheet" type="text/css" href="components/angular-tree-control/css/tree-control.css">
     <link rel="stylesheet" type="text/css" href="components/angular-tree-control/css/tree-control-attribute.css">
     <link rel="stylesheet" type="text/css" href="components/messenger/build/css/messenger.css">
-    <link rel="stylesheet" type="text/css" href="components/messenger/build/css/messenger-theme-air.css">
-    <link rel="stylesheet" type="text/css" href="components/ng-grid/ng-grid.css" />
+    <link rel="stylesheet" type="text/css" href="components/messenger/build/css/messenger-theme-ice.css">
+    <link rel="stylesheet" type="text/css" href="components/ng-grid/ng-grid.css">
     <link rel="stylesheet" type="text/css" href="components/chosen/chosen.css">
     <link rel="stylesheet" type="text/css" href="components/angular-chosen-localytics/chosen-spinner.css">
     <link rel="stylesheet" type="text/css" href="components/animate.css/animate.css">
@@ -24,6 +24,7 @@
 
     <link rel="stylesheet" type="text/css" href="components/ace/css/AdminLTE-fonts.css">
     <link rel="stylesheet" type="text/css" href="components/ace/css/AdminLTE.css">
+    <link rel="stylesheet" type="text/css" href="components/bootstrap-sweetalert/lib/sweet-alert.css">
 
     <link rel="stylesheet/less" href="less/build.less">
     <!-- endref -->
@@ -74,6 +75,10 @@
 <script src="components/d3/d3.min.js"></script>
 <script src="components/nvd3/nv.d3.min.js"></script>
 <script src="components/angularjs-nvd3-directives/dist/angularjs-nvd3-directives.js"></script>
+<script src="components/bootstrap-sweetalert/lib/sweet-alert.js"></script>
+<script src="components/angular-sweetalert/SweetAlert.js"></script>
+<script src="components/underscore/underscore.js"></script>
+<script src="components/angular-underscore/angular-underscore.js"></script>
 
 <script src="js/app.js"></script>
 <script src="js/config.js"></script>
@@ -96,6 +101,7 @@
 <script src="js/services/tables.js"></script>
 <script src="js/services/tree.js"></script>
 <script src="js/services/users.js"></script>
+<script src="js/services/ngLoading.js"></script>
 <script src="js/controllers/page.js"></script>
 <script src="js/controllers/index.js"></script>
 <script src="js/controllers/access.js"></script>
@@ -115,6 +121,25 @@
 <!-- ref:remove -->
 <script src="components/less.js/dist/less-1.4.0.min.js"></script>
 <!-- endref -->
+
+<!--template-->
+<!-- static template for cube save/update result notification -->
+<script type="text/ng-template" id="cubeResultError.html">
+    <div class="callout callout-danger">
+        <h4>Error Message</h4>
+        <p>{{text}}</p>
+    </div>
+    <div class="callout callout-info">
+        <h4>Cube Schema</h4>
+        <pre>{{schema}}</pre>
+    </div>
+</script>
+
+<script type="text/ng-template" id="cubeResultSuccess.html">
+    <div class="callout callout-info">
+        <p>{{text}}</p>
+    </div>
+</script>
 
 
 </body>
