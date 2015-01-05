@@ -364,6 +364,11 @@ input.ng-invalid-required {
   border: 2px solid lightblue;
 }
 
+input.ng-invalid-required:after {
+  content: "*";
+  color: red;
+}
+
 .nav-pills>li {
 cursor: pointer;
 background-color: #094868;
@@ -390,7 +395,12 @@ treecontrol > ul {
 treecontrol > ul > li {
   padding-left: 0;
 }
-
+treecontrol li .tree-label{
+  cursor: default;
+}
+treecontrol li treeitem .tree-label{
+  cursor: pointer;
+}
 treecontrol.tree-light li.tree-collapsed i {
   padding: 1px 10px;
   background: url("../image/database.png") no-repeat;
@@ -517,6 +527,12 @@ treecontrol ul{
 /** The top lower **/
 ul.messenger.messenger-fixed.messenger-on-top {
   top: 100px;
+}
+
+/** Set max height and overflow auto **/
+ul.messenger.messenger-fixed.messenger-on-top .messenger-message .messenger-message-inner{
+  max-height: 500px;
+  overflow-y: auto;
 }
 
 /** Enable the text selectable on notification of Messenger **/

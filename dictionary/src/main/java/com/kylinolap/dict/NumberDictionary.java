@@ -28,8 +28,7 @@ public class NumberDictionary<T> extends TrieDictionary<T> {
 
     // encode a number into an order preserving byte sequence
     // for positives -- padding '0'
-    // for negatives -- '-' sign, padding '9', invert digits, and terminate by
-    // ';'
+    // for negatives -- '-' sign, padding '9', invert digits, and terminate by ';'
     static class NumberBytesCodec {
 
         byte[] buf = new byte[MAX_DIGITS_BEFORE_DECIMAL_POINT * 2];
@@ -41,6 +40,10 @@ public class NumberDictionary<T> extends TrieDictionary<T> {
                 bufOffset = 0;
                 bufLen = 0;
                 return;
+            }
+
+            if (len > buf.length) {
+                throw new IllegalArgumentException("Too many digits for NumberDictionary: " + Bytes.toString(value, offset, len) + ". Internal buffer is only " + buf.length + " bytes");
             }
 
             boolean negative = value[offset] == '-';
@@ -70,7 +73,7 @@ public class NumberDictionary<T> extends TrieDictionary<T> {
             // prepend '0'
             int nZeroPadding = MAX_DIGITS_BEFORE_DECIMAL_POINT - (decimalPoint - start);
             if (nZeroPadding < 0 || nZeroPadding + 1 > start)
-                throw new IllegalArgumentException("Too many digits for NumberDictionary: " + Bytes.toString(value, offset, len));
+                throw new IllegalArgumentException("Too many digits for NumberDictionary: " + Bytes.toString(value, offset, len) + ". Expect " + MAX_DIGITS_BEFORE_DECIMAL_POINT + " digits before decimal point at max.");
             for (int i = 0; i < nZeroPadding; i++) {
                 buf[--start] = '0';
             }

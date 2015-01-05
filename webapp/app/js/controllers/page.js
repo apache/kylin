@@ -1,6 +1,6 @@
 'use strict';
 
-KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService,SweetAlert) {
+KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService,SweetAlert,$cookieStore,$log) {
 
     $scope.header = {show: true};
     $scope.footer = {
@@ -28,7 +28,6 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
             $location.path('/login');
 
             console.debug("Logout Completed.");
-            $scope.project.selectedProject = null;
         }).error(function () {
             UserService.setCurUser({});
             $scope.username = $scope.password = null;
@@ -122,17 +121,26 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
         projects:[],
         selectedProject: null
     };
-    ProjectService.list({}, function (projects) {
 
+    $scope.projectVisible = function(project){
+        $log.info(project);
+        return project!='-- Select All --';
+    }
+
+    ProjectService.list({}, function (projects) {
         angular.forEach(projects, function(project, index){
             $scope.project.projects.push(project.name);
         });
+        $scope.project.projects.sort();
 
         var absUrl = $location.absUrl();
-        if(absUrl.indexOf("/login")==-1){
-            $scope.project.selectedProject=$scope.project.selectedProject!=null?$scope.project.selectedProject:$scope.project.projects[0]
-        }
 
+        var projectInCookie = $cookieStore.get("project");
+        if(absUrl.indexOf("/login")==-1){
+            $scope.project.selectedProject=projectInCookie!=null?projectInCookie:null;
+        }else{
+            $scope.project.selectedProject=$scope.project.selectedProject!=null?$scope.project.selectedProject:projectInCookie!=null?projectInCookie:$scope.project.projects[0];
+        }
     });
 
     $scope.toCreateProj = function () {
@@ -149,6 +157,15 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
             }
         });
     };
+
+
+    $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+        if(newValue!=oldValue){
+            $log.log("project updated in page controller,from:"+oldValue+" To:"+newValue);
+            $cookieStore.put("project",$scope.project.selectedProject);
+        }
+
+    });
 
 });
 
@@ -170,6 +187,7 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
     $scope.createOrUpdate = function () {
         if ($scope.state.isEdit)
         {
+
             var requestBody = {
                 formerProjectName: $scope.state.oldProjName,
                 newProjectName: $scope.proj.name,
@@ -211,4 +229,5 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
     $scope.cancel = function () {
         $modalInstance.dismiss('cancel');
     };
+
 };

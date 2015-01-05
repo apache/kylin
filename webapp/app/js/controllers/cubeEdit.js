@@ -1,7 +1,7 @@
 'use strict';
 
 
-KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert) {
+KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert,$log) {
 
     //add or edit ?
     var absUrl = $location.absUrl();
@@ -95,9 +95,9 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                 "cube_partition_desc": {
                     "partition_date_column": null,
                     "partition_date_start": null,
-                    "cube_partition_type": null
+                    "cube_partition_type": 'APPEND'
                 },
-                "capacity": "",
+                "capacity": "MEDIUM",
                 "cost": 50,
                 "dimensions": [],
                 "measures": [
@@ -219,13 +219,9 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                             }
                         } else {
                             $scope.cubeMetaFrame.project = $scope.state.project;
-                            if(request.message){
                                 var message =request.message;
                                 var msg = !!(message) ? message : 'Failed to take action.';
-                                 MessageService.sendMsg($scope.cubeResultTmpl({'text':'Failed to update the cube.','schema':$scope.state.cubeSchema}), 'error', {}, true, 'top_center');
-                            }else{
-                                SweetAlert.swal('Oops...', "Failed to take action.", 'error');
-                            }
+                                MessageService.sendMsg($scope.cubeResultTmpl({'text':msg,'schema':$scope.state.cubeSchema}), 'error', {}, true, 'top_center');
                         }
                         //end loading
                         loadingRequest.hide();
@@ -249,13 +245,9 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                             MessageService.sendMsg($scope.cubeResultTmpl({'text':'Created the cube successfully.',type:'success'}), 'success', {}, true, 'top_center');
                         } else {
                             $scope.cubeMetaFrame.project = $scope.state.project;
-                            if(request.message){
-                                var message =request.message;
-                                var msg = !!(message) ? message : 'Failed to take action.';
-                                MessageService.sendMsg($scope.cubeResultTmpl({'text':msg,'schema':$scope.state.cubeSchema}), 'error', {}, true, 'top_center');
-                            } else {
-                                MessageService.sendMsg($scope.cubeResultTmpl({'text':"Failed to take action.",'schema':$scope.state.cubeSchema}), 'error', {}, true, 'top_center');
-                            }
+                            var message =request.message;
+                            var msg = !!(message) ? message : 'Failed to take action.';
+                            MessageService.sendMsg($scope.cubeResultTmpl({'text':msg,'schema':$scope.state.cubeSchema}), 'error', {}, true, 'top_center');
                         }
 
                         //end loading
@@ -280,17 +272,19 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
 
     function reGenerateRowKey(){
-        console.log("reGen rowkey & agg group");
+        $log.log("reGen rowkey & agg group");
         var tmpRowKeyColumns = [];
         var tmpAggregationItems = [];
         var hierarchyItems = [];
         angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
             if (dimension.column == '{FK}' && dimension.join && dimension.join.foreign_key.length > 0) {
                 angular.forEach(dimension.join.foreign_key, function (fk, index) {
+
                     for (var i = 0; i < tmpRowKeyColumns.length; i++) {
                         if(tmpRowKeyColumns[i].column == fk)
                             break;
                     }
+                    // push to array if no duplicate value
                     if(i == tmpRowKeyColumns.length) {
                         tmpRowKeyColumns.push({
                             "column": fk,
@@ -298,8 +292,9 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                             "dictionary": "true",
                             "mandatory": false
                         });
+
+                        tmpAggregationItems.push(fk);
                     }
-                    tmpAggregationItems.push(fk);
                 });
             }
             else if (dimension.column) {
@@ -314,8 +309,8 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         "dictionary": "true",
                         "mandatory": false
                     });
+                    tmpAggregationItems.push(dimension.column);
                 }
-                tmpAggregationItems.push(dimension.column);
             }
             if (dimension.hierarchy && dimension.hierarchy.length > 0) {
                 angular.forEach(dimension.hierarchy, function (hierarchy, index) {
@@ -330,10 +325,11 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                             "dictionary": "true",
                             "mandatory": false
                         });
-                    }
-
                     tmpAggregationItems.push(hierarchy.column);
-                    hierarchyItems.push(hierarchy.column);
+                    }
+                    if(hierarchyItems.indexOf(hierarchy.column)==-1){
+                        hierarchyItems.push(hierarchy.column);
+                    }
                 });
             }
 

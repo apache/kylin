@@ -97,9 +97,9 @@ KylinApp
         };
 
         $scope.$watch('project.selectedProject', function (newValue, oldValue) {
-            if(newValue){
-                $scope.aceSrcTbLoaded();
-            }
+//         will load table when enter this page,null or not
+        $scope.aceSrcTbLoaded();
+
 
         });
         $scope.$watch('hiveTbLoad.status', function (newValue, oldValue) {
@@ -109,12 +109,12 @@ KylinApp
 
         });
 
-        $scope.showSelected = function (table) {
-            if (table.uuid) {
-                $scope.selectedSrcTable = table;
+        $scope.showSelected = function (obj) {
+            if (obj.uuid) {
+                $scope.selectedSrcTable = obj;
             }
-            else {
-                $scope.selectedSrcTable.selectedSrcColumn = table;
+            else if(obj.datatype) {
+                $scope.selectedSrcTable.selectedSrcColumn = obj;
             }
         };
 
@@ -159,6 +159,12 @@ KylinApp
                     SweetAlert.swal('','Please input table(s) you want to synchronize.', 'info');
                   return;
                 }
+
+                if(!$scope.projectName){
+                    SweetAlert.swal('','Please choose your project first!.', 'info');
+                    return;
+                }
+
                 $scope.cancel();
                 loadingRequest.show();
                 TableService.loadHiveTable({tableName: $scope.tableNames,action:projectName}, {}, function (result) {

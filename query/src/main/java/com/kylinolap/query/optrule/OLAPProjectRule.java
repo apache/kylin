@@ -41,7 +41,8 @@ public class OLAPProjectRule extends RelOptRule {
         ProjectRel project = call.rel(0);
 
         RelTraitSet traitSet = project.getTraitSet().replace(OLAPRel.CONVENTION);
-        OLAPProjectRel olapProj = new OLAPProjectRel(project.getCluster(), traitSet, convert(project.getChild(), project.getTraitSet().replace(OLAPRel.CONVENTION)), project.getProjects(), project.getRowType(), project.getFlags());
+        OLAPProjectRel olapProj = new OLAPProjectRel(project.getCluster(), traitSet, //
+                convert(project.getChild(), traitSet), project.getProjects(), project.getRowType(), project.getFlags());
         call.transformTo(olapProj);
     }
 

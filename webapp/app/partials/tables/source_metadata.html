@@ -8,12 +8,14 @@
                     style="width: 150px"
                     data-placeholder="select a project"
                     class="chosen-select">
+                <option  ng-if="userService.hasRole('ROLE_ADMIN')" ng-selected="project.selectedProject==null"  value=""> -- Choose Project -- </option>
             </select>
             <!--Project-->
             <a class="btn btn-xs btn-info" href="/projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
             <a class="btn btn-xs btn-primary" style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
                 <i class="fa fa-plus"></i>
             </a>
+
         </div>
     </form>
 </div>
@@ -143,11 +145,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Test: put data model list here -->
-        <div ng-include="'partials/dataModel/model_list.html'" ng-controller="DataModelListCtrl"></div>
-
-
     </div>
 
     <script type="text/ng-template" id="addHiveTable.html">
@@ -155,7 +152,7 @@
             <h4>Load Hive Table Metadata</h4>
         </div>
         <div class="modal-body">
-            <span><strong>Project: </strong>{{ $parent.projectName }}</span>
+            <span><strong>Project: </strong>{{ $parent.projectName!=null?$parent.projectName:'NULL'}}</span>
             <label for="tables"> Table Names:(Seperate with comma)</label>
             <textarea ng-model="$parent.tableNames" class="form-control" id="tables"
                       placeholder="table1,table2  By default,system will choose 'Default' as database,you can specify database like this 'database.table'"></textarea>
@@ -165,7 +162,6 @@
             <button class="btn btn-primary" ng-click="cancel()">Cancel</button>
         </div>
     </script>
-
 </div>
 
 <div ng-include="'partials/projects/project_create.html'"></div>

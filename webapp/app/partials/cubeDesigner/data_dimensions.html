@@ -40,7 +40,7 @@
             <div class="box-body">
                 <ul class="list-unstyled dimensions-region">
                     <li ng-repeat="dim in cubeMetaFrame.dimensions track by $index" ng-click="switchDim(dim)" ng-class="{active: dim == newDimensionOption}">
-                        {{dim.name}}
+                        {{dim.name ? dim.name : '...'}}
                     </li>
                 </ul>
             </div>
