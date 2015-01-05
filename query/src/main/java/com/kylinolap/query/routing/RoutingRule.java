@@ -29,7 +29,7 @@ public abstract class RoutingRule {
         rules.add(new AdjustForWeeklyMatchCubeRule());//this rule might modify olapcontext content, better put it at last
     }
 
-    public static void goThroughRules(List<IRealization> realizations, OLAPContext olapContext) {
+    public static void applyRules(List<IRealization> realizations, OLAPContext olapContext) {
         for (RoutingRule rule : rules) {
             logger.info("Initial realizations order:");
             logger.info(getPrintableText(realizations));

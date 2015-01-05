@@ -33,13 +33,13 @@ public class QueryRouter {
 
     public static IRealization selectRealization(OLAPContext olapContext) throws NoRealizationFoundException {
 
-        // NOTE: since some query has no groups and projections are the superset of groups, we choose projections.
         ProjectManager projectManager = ProjectManager.getInstance(olapContext.olapSchema.getConfig());
         String factTableName = olapContext.firstTableScan.getCubeTable();
         String projectName = olapContext.olapSchema.getProjectName();
         List<IRealization> realizations = projectManager.getRealizationsByTable(projectName, factTableName);
 
-        RoutingRule.goThroughRules(realizations, olapContext);
+        //rule based realization selection
+        RoutingRule.applyRules(realizations, olapContext);
 
         if (realizations.size() == 0) {
             throw new NoRealizationFoundException("Can't find any realization for fact table " + olapContext.firstTableScan.getCubeTable() //
