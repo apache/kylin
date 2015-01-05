@@ -31,10 +31,12 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.HadoopUtil;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.metadata.MetadataManager;
@@ -110,6 +112,7 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
             job.setJarByClass(this.getClass());
         }
 
+        /*
         if ("textinputformat".equalsIgnoreCase(inputFormat) || "text".equalsIgnoreCase(inputFormat)) {
             job.setInputFormatClass(TextInputFormat.class);
         } else {
@@ -124,6 +127,13 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
         if (inputDelim != null) {
             job.getConfiguration().set(BatchConstants.INPUT_DELIM, inputDelim);
         }
+        */
+        String tableName = job.getConfiguration().get(BatchConstants.TABLE_NAME);
+        String[] dbTableNames = HadoopUtil.parseHiveTableName(tableName);
+        HCatInputFormat.setInput(job, dbTableNames[0],
+                dbTableNames[1]);
+        
+        job.setInputFormatClass(HCatInputFormat.class);
 
         job.setMapperClass(IIDistinctColumnsMapper.class);
         job.setCombinerClass(IIDistinctColumnsCombiner.class);

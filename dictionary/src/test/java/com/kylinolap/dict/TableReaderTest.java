@@ -18,6 +18,7 @@ package com.kylinolap.dict;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -34,7 +35,8 @@ public class TableReaderTest {
 
     @Test
     public void testBasicReader() throws IOException {
-        FileTableReader reader = new FileTableReader("src/test/resources/dict/DW_SITES", ReadableTable.DELIM_AUTO, 10);
+        File f = new File("src/test/resources/dict/DW_SITES");
+        FileTableReader reader = new FileTableReader("file://" + f.getAbsolutePath(), ReadableTable.DELIM_AUTO, 10);
         while (reader.next()) {
             assertEquals("[-1, Korea Auction.co.kr, S, 48, 0, 111, 2009-02-11, , DW_OFFPLAT, ]", Arrays.toString(reader.getRow()));
             break;
