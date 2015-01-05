@@ -16,7 +16,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
 
     private final List<AbstractExecutable> subTasks = Lists.newArrayList();
 
-    private final DefaultJobService jobService = DefaultJobService.getInstance(KylinConfig.getInstanceFromEnv());
+    protected final DefaultJobService jobService = DefaultJobService.getInstance(KylinConfig.getInstanceFromEnv());
 
     public DefaultChainedExecutable(){
         super();
@@ -85,6 +85,15 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
     @Override
     public List<AbstractExecutable> getTasks() {
         return subTasks;
+    }
+
+    public final AbstractExecutable getTaskByName(String name) {
+        for (AbstractExecutable task : subTasks) {
+            if (task.getName() != null && task.getName().equalsIgnoreCase(name)) {
+                return task;
+            }
+        }
+        return null;
     }
 
     public void addTask(AbstractExecutable executable) {

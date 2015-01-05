@@ -175,6 +175,16 @@ public class DefaultJobService {
         }
     }
 
+    public Map<String, String> getJobInfo(String id) {
+        try {
+            JobOutputPO output = jobDao.getJobOutput(id);
+            return output.getInfo();
+        } catch (PersistentException e) {
+            logger.error("error get job info, id:" + id);
+            throw new RuntimeException(e);
+        }
+    }
+
     private void stopJob(AbstractExecutable job) {
         final ExecutableState status = job.getStatus();
         if (status == ExecutableState.RUNNING) {

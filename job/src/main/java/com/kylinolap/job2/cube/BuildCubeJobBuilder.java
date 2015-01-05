@@ -47,14 +47,16 @@ public final class BuildCubeJobBuilder {
         final String cuboidPath = cuboidRootPath + "*";
         final String[] cuboidOutputTempPath = getCuboidOutputPaths(cuboidRootPath, totalRowkeyColumnsCount, groupRowkeyColumnsCount);
 
-        result.addTask(createIntermediateHiveTableStep(intermediateTableDesc, jobId));
+        final ShellExecutable intermediateHiveTableStep = createIntermediateHiveTableStep(intermediateTableDesc, jobId);
+        result.addTask(intermediateHiveTableStep);
 
         result.addTask(createFactDistinctColumnsStep(intermediateHiveTableName, jobId));
 
         result.addTask(createBuildDictionaryStep(factDistinctColumnsPath));
 
         // base cuboid step
-        result.addTask(createBaseCuboidStep(intermediateHiveTableName, cuboidOutputTempPath));
+        final MapReduceExecutable baseCuboidStep = createBaseCuboidStep(intermediateHiveTableName, cuboidOutputTempPath);
+        result.addTask(baseCuboidStep);
 
         // n dim cuboid steps
         for (int i = 1; i <= groupRowkeyColumnsCount; i++) {
@@ -66,9 +68,12 @@ public final class BuildCubeJobBuilder {
         // create htable step
         result.addTask(createCreateHTableStep());
         // generate hfiles step
-        result.addTask(createConvertCuboidToHfileStep(cuboidPath, jobId));
+        final MapReduceExecutable convertCuboidToHfileStep = createConvertCuboidToHfileStep(cuboidPath, jobId);
+        result.addTask(convertCuboidToHfileStep);
         // bulk load step
         result.addTask(createBulkLoadStep(jobId));
+
+        result.addTask(createUpdateCubeInfoStep(intermediateHiveTableStep.getId(), baseCuboidStep.getId(), convertCuboidToHfileStep.getId()));
 
         return result;
     }
@@ -288,6 +293,16 @@ public final class BuildCubeJobBuilder {
 
         return bulkLoadStep;
 
+    }
+
+    private UpdateCubeInfoExecutable createUpdateCubeInfoStep(String createFlatTableStepId, String baseCuboidStepId, String convertToHFileStepId) {
+        final UpdateCubeInfoExecutable executable = new UpdateCubeInfoExecutable();
+        executable.setCubeName(getCubeName());
+        executable.setSegmentId(segment.getUuid());
+        executable.setCreateFlatTableStepId(createFlatTableStepId);
+        executable.setBaseCuboidStepId(baseCuboidStepId);
+        executable.setConvertToHFileStepId(convertToHFileStepId);
+        return executable;
     }
 
 
