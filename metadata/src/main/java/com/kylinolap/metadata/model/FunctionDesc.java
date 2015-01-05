@@ -19,6 +19,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Collection;
+
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 9/26/13 Time: 1:30 PM To
  * change this template use File | Settings | File Templates.
@@ -148,6 +150,23 @@ public class FunctionDesc {
 
     public void setReturnType(String returnType) {
         this.returnType = returnType;
+    }
+
+    public TblColRef selectTblColByMetrics(Collection<TblColRef> dimensionColumns, String factTableName) {
+        if (this.isCount())
+            return null; // count is not about any column but the whole row
+
+        ParameterDesc parameter = this.getParameter();
+        if (parameter == null)
+            return null;
+
+        String columnName = parameter.getValue();
+        for (TblColRef col : dimensionColumns) {
+            if (col.isSameAs(factTableName, columnName)) {
+                return col;
+            }
+        }
+        return null;
     }
 
     @Override
