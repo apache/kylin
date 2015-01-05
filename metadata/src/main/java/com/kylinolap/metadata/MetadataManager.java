@@ -29,7 +29,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.JsonSerializer;
@@ -55,9 +54,6 @@ public class MetadataManager {
 
     private static final Serializer<TableDesc> TABLE_SERIALIZER = new JsonSerializer<TableDesc>(TableDesc.class);
     private static final Serializer<DataModelDesc> MODELDESC_SERIALIZER = new JsonSerializer<DataModelDesc>(DataModelDesc.class);
-
-    TypeReference<HashMap<String, Object>> typeRef = new TypeReference<HashMap<String, Object>>() {
-    };
 
     // static cached instances
     private static final ConcurrentHashMap<KylinConfig, MetadataManager> CACHE = new ConcurrentHashMap<KylinConfig, MetadataManager>();
@@ -109,6 +105,19 @@ public class MetadataManager {
         init(config);
     }
 
+    /**
+     * Tell MetadataManager that the instance has changed. The cube info will
+     * be stored Reload the cube desc and source table A broadcast must be sent
+     * out
+     * 
+     * @return
+     * @throws IOException
+     */
+    public void reload() {
+        removeInstance(config);
+        getInstance(config);
+    }
+
     public KylinConfig getConfig() {
         return config;
     }
@@ -136,7 +145,7 @@ public class MetadataManager {
      * @return
      */
     public TableDesc getTableDesc(String tableName) {
-        return srcTableMap.get(TableDesc.getTableIdentity(tableName));
+        return srcTableMap.get(tableName.toUpperCase());
     }
 
     /**
@@ -146,7 +155,7 @@ public class MetadataManager {
      * @return
      */
     public Map<String, String> getTableDescExd(String tableName) {
-        String tableIdentity = TableDesc.getTableIdentity(tableName);
+        String tableIdentity = tableName;
         Map<String, String> result = new HashMap<String, String>();
         if (srcTableExdMap.containsKey(tableIdentity)) {
             Map<String, String> tmp = srcTableExdMap.get(tableIdentity);
@@ -166,7 +175,7 @@ public class MetadataManager {
         if (srcTable.getUuid() == null || srcTable.getIdentity() == null) {
             throw new IllegalArgumentException();
         }
-        String tableIdentity = TableDesc.getTableIdentity(srcTable);
+        String tableIdentity = srcTable.getIdentity();
         if (srcTableMap.containsKey(tableIdentity)) {
             throw new IllegalArgumentException("SourceTable '" + srcTable.getIdentity() + "' already exists");
         }
@@ -195,32 +204,20 @@ public class MetadataManager {
         for (String path : paths) {
             Map<String, String> attrContainer = new HashMap<String, String>();
             String tableName = loadSourceTableExd(getStore(), path, attrContainer);
-            srcTableExdMap.putLocal(TableDesc.getTableIdentity(tableName), attrContainer);
+            String tableIdentity = tableName;
+            checkNoDupName(tableIdentity, srcTableExdMap.containsKey(tableIdentity), "SourceTableExd", path);
+
+            srcTableExdMap.putLocal(tableIdentity, attrContainer);
         }
-        logger.debug("Loaded " + paths.size() + " SourceTable EXD(s)");
+        logger.debug("Loaded " + srcTableExdMap.size() + " SourceTable EXD(s)");
     }
 
-    private void reloadAllSourceTable() throws IOException {
-        ResourceStore store = getStore();
-        logger.debug("Reloading SourceTable from folder " + store.getReadableResourcePath(ResourceStore.TABLE_RESOURCE_ROOT));
-
-        srcTableMap.clear();
-
-        List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_RESOURCE_ROOT, MetadataConstances.FILE_SURFIX);
-        for (String path : paths) {
-            loadSourceTable(path);
-        }
-
-        logger.debug("Loaded " + paths.size() + " SourceTable(s)");
-    }
-
-    @SuppressWarnings("unchecked")
     /**
      * return table name
      */
-    public static String loadSourceTableExd(ResourceStore store, String path, Map<String, String> attrContainer) throws IOException {
+    @SuppressWarnings("unchecked")
+    private String loadSourceTableExd(ResourceStore store, String path, Map<String, String> attrContainer) throws IOException {
 
-        logger.debug("Loading SourceTable exd " + path);
         InputStream is = store.getResource(path);
         if (is != null) {
             attrContainer.putAll(JsonUtil.readValue(is, HashMap.class));
@@ -235,37 +232,29 @@ public class MetadataManager {
         }
     }
 
-    private TableDesc loadSourceTable(String path) throws IOException {
+    private void reloadAllSourceTable() throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Loading SourceTable " + store.getReadableResourcePath(path));
+        logger.debug("Reloading SourceTable from folder " + store.getReadableResourcePath(ResourceStore.TABLE_RESOURCE_ROOT));
 
-        TableDesc t = store.getResource(path, TableDesc.class, TABLE_SERIALIZER);
-        t.init();
+        srcTableMap.clear();
 
-        String tableIdentity = TableDesc.getTableIdentity(t);
-        if (StringUtils.isBlank(tableIdentity)) {
-            throw new IllegalStateException("SourceTable name must not be blank");
+        List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_RESOURCE_ROOT, MetadataConstances.FILE_SURFIX);
+        for (String path : paths) {
+            TableDesc t = loadSourceTable(path);
+            String tableIdentity = t.getIdentity();
+            checkNoDupName(tableIdentity, srcTableMap.containsKey(tableIdentity), "SourceTable", path);
+
+            srcTableMap.putLocal(tableIdentity, t);
         }
-        if (srcTableMap.containsKey(tableIdentity)) {
-            throw new IllegalStateException("Dup SourceTable name '" + tableIdentity + "'");
-        }
 
-        srcTableMap.putLocal(tableIdentity, t);
-
-        return t;
+        logger.debug("Loaded " + srcTableMap.size() + " SourceTable(s)");
     }
 
-    /**
-     * Tell MetadataManager that the instance has changed. The cube info will
-     * be stored Reload the cube desc and source table A broadcast must be sent
-     * out
-     * 
-     * @return
-     * @throws IOException
-     */
-    public void reload() {
-        removeInstance(config);
-        getInstance(config);
+    private TableDesc loadSourceTable(String path) throws IOException {
+        ResourceStore store = getStore();
+        TableDesc t = store.getResource(path, TableDesc.class, TABLE_SERIALIZER);
+        t.init();
+        return t;
     }
 
     public DataModelDesc getDataModelDesc(String name) {
@@ -276,86 +265,27 @@ public class MetadataManager {
         ResourceStore store = getStore();
         logger.debug("Reloading DataModel from folder " + store.getReadableResourcePath(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT));
 
-        this.dataModelDescMap.clear();
+        dataModelDescMap.clear();
 
         List<String> paths = store.collectResourceRecursively(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT, MetadataConstances.FILE_SURFIX);
         for (String path : paths) {
-            DataModelDesc modelDesc = this.loadDataModelDesc(path);
-            dataModelDescMap.putLocal(modelDesc.getName(), modelDesc);
+            DataModelDesc modelDesc = loadDataModelDesc(path);
+            String name = modelDesc.getName();
+            checkNoDupName(name, dataModelDescMap.containsKey(name), "DataModel", path);
+
+            dataModelDescMap.putLocal(name, modelDesc);
         }
 
-        logger.debug("Loaded " + paths.size() + " DataModel(s)");
-    }
-
-    public DataModelDesc createDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
-        if (dataModelDescMap.containsKey(dataModelDesc.getName()))
-            throw new IllegalArgumentException("DataModelDesc '" + dataModelDesc.getName() + "' already exists");
-
-        try {
-            dataModelDesc.init(this.getAllTablesMap());
-        } catch (IllegalStateException e) {
-            dataModelDesc.addError(e.getMessage(), true);
-        }
-        // Check base validation
-        if (!dataModelDesc.getError().isEmpty()) {
-            return dataModelDesc;
-        }
-
-        String path = dataModelDesc.getResourcePath();
-        getStore().putResource(path, dataModelDesc, MODELDESC_SERIALIZER);
-        dataModelDescMap.put(dataModelDesc.getName(), dataModelDesc);
-
-        return dataModelDesc;
-    }
-
-    /**
-     * Update DataModelDesc with the input. Broadcast the event into cluster
-     * 
-     * @param desc
-     * @return
-     * @throws IOException
-     */
-    public DataModelDesc updateDataModelDesc(DataModelDesc desc) throws IOException {
-        String name = desc.getName();
-        if (!dataModelDescMap.containsKey(name)) {
-            throw new IllegalArgumentException("DataModelDesc '" + name + "' does not exist.");
-        }
-
-        try {
-            desc.init(this.getAllTablesMap());
-        } catch (IllegalStateException e) {
-            desc.addError(e.getMessage(), true);
-            return desc;
-        } catch (IllegalArgumentException e) {
-            desc.addError(e.getMessage(), true);
-            return desc;
-        }
-
-        // Save Source
-        String path = desc.getResourcePath();
-        getStore().putResource(path, desc, MODELDESC_SERIALIZER);
-
-        // Reload the DataModelDesc
-        DataModelDesc ndesc = loadDataModelDesc(path);
-        // Here replace the old one
-        dataModelDescMap.put(ndesc.getName(), desc);
-
-        return ndesc;
+        logger.debug("Loaded " + dataModelDescMap.size() + " DataModel(s)");
     }
 
     private DataModelDesc loadDataModelDesc(String path) throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Loading DataModelDesc " + store.getReadableResourcePath(path));
         DataModelDesc ndesc = null;
         try {
             ndesc = store.getResource(path, DataModelDesc.class, MODELDESC_SERIALIZER);
-
         } catch (IOException e) {
-            System.err.println("Error to load" + path + ", exception is " + e.toString());
-            throw e;
-        }
-        if (StringUtils.isBlank(ndesc.getName())) {
-            throw new IllegalStateException("DataModelDesc name must not be blank");
+            throw new IllegalStateException("Error to load" + path, e);
         }
 
         ndesc.init(this.getAllTablesMap());
@@ -367,11 +297,55 @@ public class MetadataManager {
         return ndesc;
     }
 
+    public DataModelDesc createDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
+        String name = dataModelDesc.getName();
+        if (dataModelDescMap.containsKey(name))
+            throw new IllegalArgumentException("DataModelDesc '" + name + "' already exists");
+
+        return saveDataModelDesc(dataModelDesc);
+    }
+
+    public DataModelDesc updateDataModelDesc(DataModelDesc desc) throws IOException {
+        String name = desc.getName();
+        if (!dataModelDescMap.containsKey(name)) {
+            throw new IllegalArgumentException("DataModelDesc '" + name + "' does not exist.");
+        }
+
+        return saveDataModelDesc(desc);
+    }
+
+    private DataModelDesc saveDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
+        try {
+            dataModelDesc.init(this.getAllTablesMap());
+        } catch (Exception e) {
+            dataModelDesc.addError(e.getMessage(), true);
+        }
+        
+        if (!dataModelDesc.getError().isEmpty()) {
+            return dataModelDesc;
+        }
+
+        String path = dataModelDesc.getResourcePath();
+        getStore().putResource(path, dataModelDesc, MODELDESC_SERIALIZER);
+        dataModelDescMap.put(dataModelDesc.getName(), dataModelDesc);
+
+        return dataModelDesc;
+    }
+
     public void deleteDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
         // remove dataModelDesc
         String path = dataModelDesc.getResourcePath();
         getStore().deleteResource(path);
         dataModelDescMap.remove(dataModelDesc.getName());
+    }
+
+    private void checkNoDupName(String name, boolean containsKey, String entityType, String path) {
+        if (StringUtils.isBlank(name)) {
+            throw new IllegalStateException(entityType + " name at " + path + ", must not be blank");
+        }
+        if (containsKey) {
+            throw new IllegalStateException("Dup " + entityType + " name '" + name + "' at " + path);
+        }
     }
 
 }

@@ -195,38 +195,37 @@ public class QueryController extends BasicController {
             throw new InternalErrorException("Query is not allowed in " + serverMode + " mode.");
         }
 
-        if (sql.toLowerCase().contains("select")) {
-            SQLResponse sqlResponse = searchQueryInCache(sqlRequest);
-            try {
-                if (null == sqlResponse) {
-                    sqlResponse = queryService.query(sqlRequest);
-
-                    long durationThreshold = KylinConfig.getInstanceFromEnv().getQueryDurationCacheThreshold();
-                    long scancountThreshold = KylinConfig.getInstanceFromEnv().getQueryScanCountCacheThreshold();
-                    if (!sqlResponse.getIsException() && (sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold)) {
-                        cacheManager.getCache(SUCCESS_QUERY_CACHE).put(new Element(sqlRequest, sqlResponse));
-                    }
-                }
-
-                checkQueryAuth(sqlResponse);
-
-                return sqlResponse;
-            } catch (AccessDeniedException ade) {
-                // Access exception is bind with each user, it will not be
-                // cached.
-                logger.error("Exception when execute sql", ade);
-                throw new ForbiddenException(ade.getLocalizedMessage());
-            } catch (Exception e) {
-                SQLResponse exceptionRes = new SQLResponse(null, null, 0, true, e.getMessage());
-                Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
-                exceptionCache.put(new Element(sqlRequest, exceptionRes));
-
-                logger.error("Exception when execute sql", e);
-                throw new InternalErrorException(QueryUtil.makeErrorMsgUserFriendly(e.getLocalizedMessage()));
-            }
-        } else {
+        if (sql.toLowerCase().contains("select") == false) {
             logger.debug("Directly return expection as not supported");
             throw new InternalErrorException(QueryUtil.makeErrorMsgUserFriendly("Not Supported SQL."));
+        }
+
+        SQLResponse sqlResponse = searchQueryInCache(sqlRequest);
+        try {
+            if (null == sqlResponse) {
+                sqlResponse = queryService.query(sqlRequest);
+
+                long durationThreshold = KylinConfig.getInstanceFromEnv().getQueryDurationCacheThreshold();
+                long scancountThreshold = KylinConfig.getInstanceFromEnv().getQueryScanCountCacheThreshold();
+                if (!sqlResponse.getIsException() && (sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold)) {
+                    cacheManager.getCache(SUCCESS_QUERY_CACHE).put(new Element(sqlRequest, sqlResponse));
+                }
+            }
+
+            checkQueryAuth(sqlResponse);
+
+            return sqlResponse;
+        } catch (AccessDeniedException ade) {
+            // Access exception is bind with each user, it will not be cached
+            logger.error("Exception when execute sql", ade);
+            throw new ForbiddenException(ade.getLocalizedMessage());
+        } catch (Throwable e) { // calcite may throw AssertError
+            SQLResponse exceptionRes = new SQLResponse(null, null, 0, true, e.getMessage());
+            Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
+            exceptionCache.put(new Element(sqlRequest, exceptionRes));
+
+            logger.error("Exception when execute sql", e);
+            throw new InternalErrorException(QueryUtil.makeErrorMsgUserFriendly(e.getLocalizedMessage()));
         }
     }
 

@@ -23,8 +23,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 /**
  * Created by honma on 11/3/14.

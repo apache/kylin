@@ -188,7 +188,10 @@ public class KylinConfig {
 
         try {
             File file = new File(metaUri);
-            if (file.exists()) {
+            if (file.exists() || metaUri.contains("/")) {
+                if (file.exists() == false) {
+                    file.mkdirs();
+                }
                 if (file.isDirectory()) {
                     return UriType.LOCAL_FOLDER;
                 } else if (file.isFile()) {
@@ -197,6 +200,8 @@ public class KylinConfig {
                     } else {
                         throw new IllegalStateException("Metadata uri : " + metaUri + " is a local file but not kylin.properties");
                     }
+                } else {
+                    throw new IllegalStateException("Metadata uri : " + metaUri + " looks like a file but it's neither a file nor a directory");
                 }
             } else {
                 if (RestClient.matchFullRestPattern(metaUri))
@@ -208,8 +213,6 @@ public class KylinConfig {
             logger.info(e.getLocalizedMessage());
             throw new IllegalStateException("Metadata uri : " + metaUri + " is not recognized");
         }
-
-        return null;
     }
 
     public static KylinConfig createInstanceFromUri(String uri) {

@@ -16,10 +16,12 @@
 
 package com.kylinolap.common.util;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.util.Pair;
 
 /**
@@ -83,9 +85,11 @@ public class CliCommandExecutor {
             r = runRemoteCommand(command, logAppender);
         }
 
-        if (r.getFirst() != 0) {
-            throw new IOException("OS command error exit with " + r.getFirst() + " -- " + command + "\n" + r.getSecond());
-        }
+        if (r.getFirst() != 0)
+            throw new IOException("OS command error exit with " + r.getFirst() //
+                    + (remoteHost == null ? "" : " (remoteHost:" + remoteHost + ")") //
+                    + " -- " + command + "\n" + r.getSecond());
+
         return r;
     }
 

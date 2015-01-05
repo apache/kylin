@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.kylinolap.invertedindex.model.IIDesc;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.realization.RealizationType;
-import com.kylinolap.metadata.realization.SegmentStatusEnum;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +46,7 @@ import com.kylinolap.dict.DictionaryInfo;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.dict.lookup.SnapshotManager;
 import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.model.TblColRef;
 
 /**

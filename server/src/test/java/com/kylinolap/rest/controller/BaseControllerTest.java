@@ -20,7 +20,6 @@ import java.io.IOException;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
@@ -33,9 +32,7 @@ import com.kylinolap.rest.service.ServiceTestBase;
 
 /**
  * @author xduo
- * @deprecated method has been merged into #ServiceTestAllInOne
  */
-@Ignore
 public class BaseControllerTest extends ServiceTestBase {
 
     private BasicController basicController;
@@ -61,7 +58,7 @@ public class BaseControllerTest extends ServiceTestBase {
         Assert.assertNotNull(errorResponse);
 
         InternalErrorException internalErrorException = new InternalErrorException("error");
-        errorResponse = basicController.handleInternalError(request, internalErrorException);
+        errorResponse = basicController.handleError(request, internalErrorException);
         Assert.assertNotNull(errorResponse);
 
         BadRequestException badRequestException = new BadRequestException("error");

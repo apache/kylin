@@ -31,7 +31,6 @@ import com.kylinolap.metadata.model.*;
 import com.kylinolap.metadata.realization.AbstractRealization;
 import com.kylinolap.metadata.realization.RealizationType;
 import com.kylinolap.metadata.realization.RealizationStatusEnum;
-import com.kylinolap.metadata.realization.SegmentStatusEnum;
 
 /**
  * @author honma
@@ -274,10 +273,6 @@ public class IIInstance extends AbstractRealization {
 	}
 
 	public String getDescName() {
-		return descName.toUpperCase();
-	}
-
-	public String getOriginDescName() {
 		return descName;
 	}
 

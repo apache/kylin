@@ -1,6 +1,6 @@
 'use strict';
 
-KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService) {
+KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService,SweetAlert,$cookieStore,$log) {
 
     $scope.header = {show: true};
     $scope.footer = {
@@ -22,7 +22,6 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
     // Set up common methods
     $scope.logout = function () {
         $scope.$emit('event:logoutRequest');
-
         $http.get(Config.service.base + 'j_spring_security_logout').success(function () {
             UserService.setCurUser({});
             $scope.username = $scope.password = null;
@@ -122,10 +121,26 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
         projects:[],
         selectedProject: null
     };
+
+    $scope.projectVisible = function(project){
+        $log.info(project);
+        return project!='-- Select All --';
+    }
+
     ProjectService.list({}, function (projects) {
         angular.forEach(projects, function(project, index){
             $scope.project.projects.push(project.name);
         });
+        $scope.project.projects.sort();
+
+        var absUrl = $location.absUrl();
+
+        var projectInCookie = $cookieStore.get("project");
+        if(absUrl.indexOf("/login")==-1){
+            $scope.project.selectedProject=projectInCookie!=null?projectInCookie:null;
+        }else{
+            $scope.project.selectedProject=$scope.project.selectedProject!=null?$scope.project.selectedProject:projectInCookie!=null?projectInCookie:$scope.project.projects[0];
+        }
     });
 
     $scope.toCreateProj = function () {
@@ -143,9 +158,18 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
         });
     };
 
+
+    $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+        if(newValue!=oldValue){
+            $log.log("project updated in page controller,from:"+oldValue+" To:"+newValue);
+            $cookieStore.put("project",$scope.project.selectedProject);
+        }
+
+    });
+
 });
 
-var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService, projects, project) {
+var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService, projects, project,SweetAlert) {
     $scope.state = {
         isEdit: false,
         oldProjName: null
@@ -163,26 +187,41 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
     $scope.createOrUpdate = function () {
         if ($scope.state.isEdit)
         {
+
             var requestBody = {
                 formerProjectName: $scope.state.oldProjName,
                 newProjectName: $scope.proj.name,
                 newDescription: $scope.proj.description
             };
             ProjectService.update({}, requestBody, function (newProj) {
-                MessageService.sendMsg("Project update successfully!", 'success');
+                SweetAlert.swal('Success!', 'Project update successfully!', 'success');
                 $modalInstance.dismiss('cancel');
+            },function(e){
+                if(e.data&& e.data.exception){
+                    var message =e.data.exception;
+                    var msg = !!(message) ? message : 'Failed to take action.';
+                    SweetAlert.swal('Oops...', msg, 'error');
+                }else{
+                    SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                }
             });
         }
         else
         {
             ProjectService.save({}, $scope.proj, function (newProj) {
-                MessageService.sendMsg("New project created successfully", 'success');
+                SweetAlert.swal('Success!', 'New project created successfully!', 'success');
                 $modalInstance.dismiss('cancel');
                 if(projects) {
                     projects.push(newProj);
                 }
-            }, function(){
-                console.log('error');
+            }, function(e){
+                if(e.data&& e.data.exception){
+                    var message =e.data.exception;
+                    var msg = !!(message) ? message : 'Failed to take action.';
+                    SweetAlert.swal('Oops...', msg, 'error');
+                }else{
+                    SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                }
             });
         }
     };
@@ -190,4 +229,5 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
     $scope.cancel = function () {
         $modalInstance.dismiss('cancel');
     };
+
 };

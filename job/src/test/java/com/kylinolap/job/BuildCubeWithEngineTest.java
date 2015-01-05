@@ -38,11 +38,11 @@ import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.ClasspathUtil;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.common.util.JsonUtil;
-import com.kylinolap.metadata.realization.RealizationBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.exception.CubeIntegrityException;
+import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.job.constant.JobStatusEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.exception.InvalidJobInstanceException;
@@ -120,10 +120,10 @@ public class BuildCubeWithEngineTest {
         // this cube's start date is 0, end date is 20501112000000
         dateStart = 0;
         dateEnd = f.parse("2013-01-01").getTime();
-        jobs.addAll(this.submitJob("test_kylin_cube_with_slr_empty", dateStart, dateEnd, RealizationBuildTypeEnum.BUILD));
+        jobs.addAll(this.submitJob("test_kylin_cube_with_slr_empty", dateStart, dateEnd, CubeBuildTypeEnum.BUILD));
 
         // this cube doesn't support incremental build, always do full build
-        jobs.addAll(this.submitJob("test_kylin_cube_without_slr_empty", 0, 0, RealizationBuildTypeEnum.BUILD));
+        jobs.addAll(this.submitJob("test_kylin_cube_without_slr_empty", 0, 0, CubeBuildTypeEnum.BUILD));
 
         waitCubeBuilt(jobs);
 
@@ -132,7 +132,7 @@ public class BuildCubeWithEngineTest {
         jobs.clear();
         dateStart = f.parse("2013-01-01").getTime();
         dateEnd = f.parse("2022-01-01").getTime();
-        jobs.addAll(this.submitJob("test_kylin_cube_with_slr_empty", dateStart, dateEnd, RealizationBuildTypeEnum.BUILD));
+        jobs.addAll(this.submitJob("test_kylin_cube_with_slr_empty", dateStart, dateEnd, CubeBuildTypeEnum.BUILD));
         waitCubeBuilt(jobs);
     }
 
@@ -158,12 +158,12 @@ public class BuildCubeWithEngineTest {
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         dateStart = cubeMgr.getCube("test_kylin_cube_with_slr_left_join_empty").getDescriptor().getCubePartitionDesc().getPartitionDateStart();
         dateEnd = f.parse("2050-11-12").getTime();
-        jobs.addAll(this.submitJob("test_kylin_cube_with_slr_left_join_empty", dateStart, dateEnd, RealizationBuildTypeEnum.BUILD));
+        jobs.addAll(this.submitJob("test_kylin_cube_with_slr_left_join_empty", dateStart, dateEnd, CubeBuildTypeEnum.BUILD));
 
         // this cube's start date is 0, end date is 20120601000000
         dateStart = cubeMgr.getCube("test_kylin_cube_without_slr_left_join_empty").getDescriptor().getCubePartitionDesc().getPartitionDateStart();
         dateEnd = f.parse("2012-06-01").getTime();
-        jobs.addAll(this.submitJob("test_kylin_cube_without_slr_left_join_empty", dateStart, dateEnd, RealizationBuildTypeEnum.BUILD));
+        jobs.addAll(this.submitJob("test_kylin_cube_without_slr_left_join_empty", dateStart, dateEnd, CubeBuildTypeEnum.BUILD));
 
         waitCubeBuilt(jobs);
 
@@ -172,7 +172,7 @@ public class BuildCubeWithEngineTest {
         // date is 20220101000000
         dateStart = f.parse("2012-03-01").getTime();
         dateEnd = f.parse("2022-01-01").getTime();
-        jobs.addAll(this.submitJob("test_kylin_cube_without_slr_left_join_empty", dateStart, dateEnd, RealizationBuildTypeEnum.BUILD));
+        jobs.addAll(this.submitJob("test_kylin_cube_without_slr_left_join_empty", dateStart, dateEnd, CubeBuildTypeEnum.BUILD));
 
         waitCubeBuilt(jobs);
 
@@ -199,12 +199,12 @@ public class BuildCubeWithEngineTest {
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         dateStart = cubeMgr.getCube("test_kylin_cube_with_slr_left_join_empty").getDescriptor().getCubePartitionDesc().getPartitionDateStart();
         dateEnd = f.parse("2050-11-12").getTime();
-        jobs.addAll(this.submitJob("test_kylin_cube_with_slr_left_join_empty", dateStart, dateEnd, RealizationBuildTypeEnum.BUILD));
+        jobs.addAll(this.submitJob("test_kylin_cube_with_slr_left_join_empty", dateStart, dateEnd, CubeBuildTypeEnum.BUILD));
 
         // this cube's start date is 0, end date is 20501112000000
         dateStart = cubeMgr.getCube("test_kylin_cube_without_slr_left_join_empty").getDescriptor().getCubePartitionDesc().getPartitionDateStart();
         dateEnd = f.parse("2050-11-12").getTime();
-        jobs.addAll(this.submitJob("test_kylin_cube_without_slr_left_join_empty", dateStart, dateEnd, RealizationBuildTypeEnum.BUILD));
+        jobs.addAll(this.submitJob("test_kylin_cube_without_slr_left_join_empty", dateStart, dateEnd, CubeBuildTypeEnum.BUILD));
 
         waitCubeBuilt(jobs);
     }
@@ -231,7 +231,7 @@ public class BuildCubeWithEngineTest {
             assertEquals("Job fail - " + job, JobStatusEnum.FINISHED, jobManager.getJob(job).getStatus());
     }
 
-    protected List<String> submitJob(String cubename, long startDate, long endDate, RealizationBuildTypeEnum jobType) throws SchedulerException, IOException, InvalidJobInstanceException, CubeIntegrityException {
+    protected List<String> submitJob(String cubename, long startDate, long endDate, CubeBuildTypeEnum jobType) throws SchedulerException, IOException, InvalidJobInstanceException, CubeIntegrityException {
 
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         CubeInstance cube = cubeMgr.getCube(cubename);
@@ -246,7 +246,7 @@ public class BuildCubeWithEngineTest {
         for (CubeSegment seg : newSegments) {
             String uuid = seg.getUuid();
             jobUuids.add(uuid);
-            jobs.add(jobManager.createJob(cubename, seg.getName(), uuid, jobType));
+            jobs.add(jobManager.createJob(cubename, seg.getName(), uuid, jobType,"KylinTest"));
             seg.setLastBuildJobID(uuid);
         }
         cubeMgr.updateCube(cube);

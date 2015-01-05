@@ -20,21 +20,17 @@ import java.net.UnknownHostException;
 import java.util.List;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.job.exception.JobException;
+import com.kylinolap.metadata.project.ProjectInstance;
 
 /**
  * @author xduo
- * 
- * @deprecated method has been merged into #ServiceTestAllInOne
  */
-@Ignore
 public class CubeServiceTest extends ServiceTestBase {
 
     @Autowired

@@ -15,6 +15,7 @@ import java.util.TreeSet;
  * development concept proving use
  */
 @Ignore("convenient trial tool for dev")
+@SuppressWarnings("unused")
 public class BasicTest {
     private void log(ByteBuffer a) {
         Integer x = 4;

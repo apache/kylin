@@ -23,7 +23,6 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.kylinolap.common.util.StringSplitter;
 import com.kylinolap.common.util.StringUtil;
 import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.LookupDesc;
@@ -171,54 +170,6 @@ public class DimensionDesc {
     @Override
     public String toString() {
         return "DimensionDesc [name=" + name + ", join=" + join + ", hierarchy=" + Arrays.toString(hierarchy) + ", table=" + table + ", column=" + Arrays.toString(column) + ", derived=" + Arrays.toString(derived) + "]";
-    }
-
-    /**
-     * parse column to get db name and table name
-     * @return an array carries db name + table name
-     * @throws IllegalStateException if the column name or name is incorrect or inaccurate
-     * @deprecated 
-     */
-    private String[] parseTableDBName(String thisColumn, Map<String, List<TableDesc>> columnTableMap, Map<String, List<String>> tableDatabaseMap) {
-        String tableName = null, dbName = null;
-        String[] splits = StringSplitter.split(thisColumn, ".");
-        int length = splits.length;
-        if (length > 3 || length == 0) {
-            throw new IllegalStateException("The column name should be {db-name}.{table-name}.{column-name} (the {db-name} and {table-name} is optional); The given column value is: " + thisColumn);
-        } else if (length == 3) {
-            dbName = splits[0];
-            tableName = splits[1];
-        } else if (length == 2) {
-            tableName = splits[0];
-        }
-
-        if (tableName == null) {
-            List<TableDesc> tables = columnTableMap.get(thisColumn);
-            if (tables == null) {
-                throw new IllegalStateException("The column '" + thisColumn + "' isn't appeared in any table.");
-            } else if (tables.size() > 1) {
-                throw new IllegalStateException("The column '" + thisColumn + "' is ambiguous; it appeared in more than one tables, please specify table name together with the column name.");
-            } else {
-                tableName = tables.get(0).getName();
-                dbName = tables.get(0).getDatabase();
-            }
-        } else if (dbName == null) {
-            List<String> dbs = tableDatabaseMap.get(tableName);
-            if (dbs == null) {
-                throw new IllegalStateException("The table '" + tableName + "' isn't appeared on any database.");
-            } else if (dbs.size() > 1) {
-                throw new IllegalStateException("The table '" + tableName + "' is ambiguous; it appeared in more than one databases, please specify db name together with the table name.");
-            } else {
-                dbName = dbs.get(0);
-            }
-        } else {
-            List<String> dbs = tableDatabaseMap.get(tableName);
-            if (!dbs.contains(dbName)) {
-                throw new IllegalStateException("The database '" + dbName + "' isn't appeared.");
-            }
-        }
-
-        return new String[] { dbName, tableName };
     }
 
     public void init(CubeDesc cubeDesc, Map<String, TableDesc> tables, Map<String, List<TableDesc>> columnTableMap, Map<String, List<String>> tableDatabaseMap) {

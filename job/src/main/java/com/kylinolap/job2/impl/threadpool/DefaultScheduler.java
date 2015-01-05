@@ -1,9 +1,9 @@
 package com.kylinolap.job2.impl.threadpool;
 
 import com.google.common.collect.Maps;
-import com.kylinolap.job.constant.JobConstants;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job2.Scheduler;
+import com.kylinolap.job2.constants.ExecutableConstants;
 import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.exception.LockException;
 import com.kylinolap.job2.exception.SchedulerException;
@@ -212,7 +212,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
             }
         });
 
-        fetcherPool.scheduleAtFixedRate(new FetcherRunner(), 10, JobConstants.DEFAULT_SCHEDULER_INTERVAL_SECONDS, TimeUnit.SECONDS);
+        fetcherPool.scheduleAtFixedRate(new FetcherRunner(), 10, ExecutableConstants.DEFAULT_SCHEDULER_INTERVAL_SECONDS, TimeUnit.SECONDS);
         hasStarted = true;
     }
 

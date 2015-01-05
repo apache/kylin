@@ -77,25 +77,6 @@ public class BytesSplitter {
         return bufferSize;
     }
 
-    public static List<String> splitToString(byte[] bytes, int offset, byte delimiter) {
-        List<String> splitStrings = new ArrayList<String>();
-        int splitOffset = 0;
-        int splitLength = 0;
-        for (int i = offset; i < bytes.length; i++) {
-            if (bytes[i] == delimiter) {
-                String str = Bytes.toString(bytes, splitOffset, splitLength);
-                splitStrings.add(str);
-                splitOffset = i + 1;
-                splitLength = 0;
-            } else {
-                splitLength++;
-            }
-        }
-        String str = Bytes.toString(bytes, splitOffset, splitLength);
-        splitStrings.add(str);
-        return splitStrings;
-    }
-
     public byte inferByteRowDelimiter(byte[] bytes, int byteLen, int expectedSplits) throws IOException {
 
         if (expectedSplits > this.splitBuffers.length)
@@ -136,6 +117,38 @@ public class BytesSplitter {
                 return COMMON_DELIMS[i];
         }
         throw new RuntimeException("Cannot detect delimeter from first line -- " + value.toString() + " -- expect " + expectedParts + " columns");
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        buf.append("[");
+        for (int i = 0; i < bufferSize; i++) {
+            if (i > 0)
+                buf.append(", ");
+            
+            buf.append(Bytes.toString(splitBuffers[i].value, 0, splitBuffers[i].length));
+        }
+        return buf.toString();
+    }
+
+    public static List<String> splitToString(byte[] bytes, int offset, byte delimiter) {
+        List<String> splitStrings = new ArrayList<String>();
+        int splitOffset = 0;
+        int splitLength = 0;
+        for (int i = offset; i < bytes.length; i++) {
+            if (bytes[i] == delimiter) {
+                String str = Bytes.toString(bytes, splitOffset, splitLength);
+                splitStrings.add(str);
+                splitOffset = i + 1;
+                splitLength = 0;
+            } else {
+                splitLength++;
+            }
+        }
+        String str = Bytes.toString(bytes, splitOffset, splitLength);
+        splitStrings.add(str);
+        return splitStrings;
     }
 
 }
