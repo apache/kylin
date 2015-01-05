@@ -1,11 +1,13 @@
 package com.kylinolap.query.routing.RoutingRules;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.StringUtils;
-import org.eigenbase.reltype.RelDataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +20,6 @@ import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.DimensionDesc;
 import com.kylinolap.metadata.model.FunctionDesc;
 import com.kylinolap.metadata.model.JoinDesc;
-import com.kylinolap.metadata.model.ParameterDesc;
 import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.metadata.realization.IRealization;
 import com.kylinolap.metadata.realization.RealizationType;
@@ -64,8 +65,9 @@ public class RemoveUnmatchedCubesRule extends RoutingRule {
                 // sometimes metrics are indeed dimensions
                 // e.g. select min(cal_dt) from ..., where cal_dt is actually a dimension
                 if (isWeaklyMatchedWithAggregations(functions, metricsColumns, cube)) {
-                    logger.info("Weakly matched cube found" + cube.getName());
+                    logger.info("Weakly matched cube found " + cube.getName());
                     olapContext.isWeekMatch.put(cube, true);
+                    continue;
                 }
             }
 
