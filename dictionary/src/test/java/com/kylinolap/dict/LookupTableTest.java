@@ -16,6 +16,8 @@
 
 package com.kylinolap.dict;
 
+import java.io.File;
+
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.After;
 import org.junit.Before;
@@ -52,12 +54,14 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
 
         System.out.println("============================================================================");
 
-        lookup = new LookupBytesTable(siteTable, new String[] { "SITE_ID" }, new FileTable(LOCALMETA_TEST_DATA + "/data/EDW.TEST_SITES.csv", 10));
+        File f = new File(LOCALMETA_TEST_DATA + "/data/EDW.TEST_SITES.csv");
+        lookup = new LookupBytesTable(siteTable, new String[] { "SITE_ID" }, new FileTable("file://" + f.getAbsolutePath(), 10));
         lookup.dump();
 
         System.out.println("============================================================================");
 
-        lookup = new LookupBytesTable(categoryTable, new String[] { "leaf_categ_id", "site_id" }, new FileTable(LOCALMETA_TEST_DATA + "/data/DEFAULT.TEST_CATEGORY_GROUPINGS.csv", 36));
+        f = new File(LOCALMETA_TEST_DATA + "/data/DEFAULT.TEST_CATEGORY_GROUPINGS.csv");
+        lookup = new LookupBytesTable(categoryTable, new String[] { "leaf_categ_id", "site_id" }, new FileTable("file://" + f.getAbsolutePath(), 36));
         lookup.dump();
 
         System.out.println("============================================================================");
