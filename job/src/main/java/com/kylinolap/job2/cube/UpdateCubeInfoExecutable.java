@@ -13,6 +13,7 @@ import com.kylinolap.job2.execution.ExecuteResult;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
 import com.kylinolap.metadata.realization.RealizationStatusEnum;
 import com.kylinolap.metadata.realization.SegmentStatusEnum;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
 
@@ -82,15 +83,15 @@ public class UpdateCubeInfoExecutable extends AbstractExecutable {
         final CubeSegment segment = cube.getSegmentById(getSegmentId());
 
         String sourceRecordsSize = jobService.getJobInfo(getCreateFlatTableStepId()).get(ExecutableConstants.SOURCE_RECORDS_SIZE);
-        Preconditions.checkState(sourceRecordsSize != null && sourceRecordsSize.equals(""), "Can't get cube source record size.");
+        Preconditions.checkState(StringUtils.isNotEmpty(sourceRecordsSize), "Can't get cube source record size.");
         long sourceSize = Long.parseLong(sourceRecordsSize);
 
         String sourceRecordsCount = jobService.getJobInfo(getBaseCuboidStepId()).get(ExecutableConstants.SOURCE_RECORDS_COUNT);
-        Preconditions.checkState(sourceRecordsCount != null && sourceRecordsCount.equals(""), "Can't get cube source record count.");
+        Preconditions.checkState(StringUtils.isNotEmpty(sourceRecordsCount), "Can't get cube source record count.");
         long sourceCount = Long.parseLong(sourceRecordsCount);
 
         String cubeSizeString = jobService.getJobInfo(getConvertToHfileStepId()).get(ExecutableConstants.HDFS_BYTES_WRITTEN);
-        Preconditions.checkState(cubeSizeString != null && cubeSizeString.equals(""), "Can't get cube segment size.");
+        Preconditions.checkState(StringUtils.isNotEmpty(cubeSizeString), "Can't get cube segment size.");
         long size = Long.parseLong(cubeSizeString) / 1024;
 
 
