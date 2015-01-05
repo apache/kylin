@@ -15,7 +15,7 @@ import com.kylinolap.job.hadoop.cube.StorageCleanupJob;
 import com.kylinolap.job2.execution.ExecutableState;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
 import com.kylinolap.job2.impl.threadpool.DefaultScheduler;
-import com.kylinolap.job2.service.DefaultJobService;
+import com.kylinolap.job2.service.ExecutableManager;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.*;
 
@@ -36,7 +36,7 @@ public class BuildCubeJobBuilderTest {
 
     private DefaultScheduler scheduler;
 
-    protected DefaultJobService jobService;
+    protected ExecutableManager jobService;
 
     static void setFinalStatic(Field field, Object newValue) throws Exception {
         field.setAccessible(true);
@@ -79,7 +79,7 @@ public class BuildCubeJobBuilderTest {
 
         setFinalStatic(JobConstants.class.getField("DEFAULT_SCHEDULER_INTERVAL_SECONDS"), 10);
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        jobService = DefaultJobService.getInstance(kylinConfig);
+        jobService = ExecutableManager.getInstance(kylinConfig);
         scheduler = DefaultScheduler.getInstance();
         scheduler.init(new JobEngineConfig(kylinConfig));
         if (!scheduler.hasStarted()) {

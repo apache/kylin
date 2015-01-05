@@ -11,7 +11,6 @@ import com.kylinolap.job2.exception.PersistentException;
 import com.kylinolap.job2.execution.ExecutableState;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
 import com.kylinolap.job2.impl.threadpool.DefaultChainedExecutable;
-import org.apache.commons.math3.analysis.function.Abs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,17 +23,17 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by qianzhou on 12/16/14.
  */
-public class DefaultJobService {
+public class ExecutableManager {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultJobService.class);
-    private static final ConcurrentHashMap<KylinConfig, DefaultJobService> CACHE = new ConcurrentHashMap<KylinConfig, DefaultJobService>();
+    private static final Logger logger = LoggerFactory.getLogger(ExecutableManager.class);
+    private static final ConcurrentHashMap<KylinConfig, ExecutableManager> CACHE = new ConcurrentHashMap<KylinConfig, ExecutableManager>();
 
     private JobDao jobDao;
 
-    public static DefaultJobService getInstance(KylinConfig config) {
-        DefaultJobService r = CACHE.get(config);
+    public static ExecutableManager getInstance(KylinConfig config) {
+        ExecutableManager r = CACHE.get(config);
         if (r == null) {
-            r = new DefaultJobService(config);
+            r = new ExecutableManager(config);
             CACHE.put(config, r);
             if (CACHE.size() > 1) {
                 logger.warn("More than one singleton exist");
@@ -44,7 +43,7 @@ public class DefaultJobService {
         return r;
     }
 
-    private DefaultJobService(KylinConfig config) {
+    private ExecutableManager(KylinConfig config) {
         logger.info("Using metadata url: " + config);
         this.jobDao = JobDao.getInstance(config);
     }

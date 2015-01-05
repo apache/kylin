@@ -5,7 +5,7 @@ import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.job.constant.JobConstants;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job2.execution.ExecutableState;
-import com.kylinolap.job2.service.DefaultJobService;
+import com.kylinolap.job2.service.ExecutableManager;
 import org.junit.After;
 import org.junit.Before;
 
@@ -19,7 +19,7 @@ public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
 
     private DefaultScheduler scheduler;
 
-    protected DefaultJobService jobService;
+    protected ExecutableManager jobService;
 
     static void setFinalStatic(Field field, Object newValue) throws Exception {
         field.setAccessible(true);
@@ -66,7 +66,7 @@ public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
     public void setup() throws Exception {
         createTestMetadata();
         setFinalStatic(JobConstants.class.getField("DEFAULT_SCHEDULER_INTERVAL_SECONDS"), 10);
-        jobService = DefaultJobService.getInstance(KylinConfig.getInstanceFromEnv());
+        jobService = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
         scheduler = DefaultScheduler.getInstance();
         scheduler.init(new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
         if (!scheduler.hasStarted()) {

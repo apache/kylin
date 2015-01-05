@@ -9,7 +9,7 @@ import com.kylinolap.job2.exception.LockException;
 import com.kylinolap.job2.exception.SchedulerException;
 import com.kylinolap.job2.execution.Executable;
 import com.kylinolap.job2.execution.ExecutableState;
-import com.kylinolap.job2.service.DefaultJobService;
+import com.kylinolap.job2.service.ExecutableManager;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -32,7 +32,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     private static final String ZOOKEEPER_LOCK_PATH = "/kylin/job_engine/lock";
 
 
-    private DefaultJobService jobService;
+    private ExecutableManager jobService;
     private ScheduledExecutorService fetcherPool;
     private ExecutorService jobPool;
     private DefaultContext context;
@@ -187,7 +187,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
             zkClient.close();
             return;
         }
-        jobService = DefaultJobService.getInstance(jobEngineConfig.getConfig());
+        jobService = ExecutableManager.getInstance(jobEngineConfig.getConfig());
         //load all executable, set them to a consistent status
         fetcherPool = Executors.newScheduledThreadPool(1);
         int corePoolSize = jobEngineConfig.getMaxConcurrentJobLimit();

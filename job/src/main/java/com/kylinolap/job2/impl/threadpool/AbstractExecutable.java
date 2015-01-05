@@ -5,7 +5,7 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.job2.dao.JobPO;
 import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.execution.*;
-import com.kylinolap.job2.service.DefaultJobService;
+import com.kylinolap.job2.service.ExecutableManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +21,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     private JobPO job;
     protected static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
 
-    protected static DefaultJobService jobService = DefaultJobService.getInstance(KylinConfig.getInstanceFromEnv());
+    protected static ExecutableManager jobService = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
 
     public AbstractExecutable() {
         String uuid = UUID.randomUUID().toString();

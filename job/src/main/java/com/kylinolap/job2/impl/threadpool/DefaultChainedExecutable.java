@@ -5,7 +5,7 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.job2.dao.JobPO;
 import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.execution.*;
-import com.kylinolap.job2.service.DefaultJobService;
+import com.kylinolap.job2.service.ExecutableManager;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
 
     private final List<AbstractExecutable> subTasks = Lists.newArrayList();
 
-    protected final DefaultJobService jobService = DefaultJobService.getInstance(KylinConfig.getInstanceFromEnv());
+    protected final ExecutableManager jobService = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
 
     public DefaultChainedExecutable(){
         super();
