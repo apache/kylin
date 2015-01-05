@@ -20,14 +20,14 @@ import static org.junit.Assert.*;
 /**
  * Created by qianzhou on 12/16/14.
  */
-public class DefaultJobServiceTest extends LocalFileMetadataTestCase {
+public class ExecutableManagerTest extends LocalFileMetadataTestCase {
 
-    private DefaultJobService service;
+    private ExecutableManager service;
 
     @Before
     public void setup() throws Exception {
         createTestMetadata();
-        service = DefaultJobService.getInstance(KylinConfig.getInstanceFromEnv());
+        service = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
 
         for (AbstractExecutable executable: service.getAllExecutables()) {
             System.out.println("deleting " + executable.getId());
