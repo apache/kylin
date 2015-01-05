@@ -109,9 +109,9 @@ public class JobService extends BasicService {
         String uuid = null;
         try {
             List<CubeSegment> cubeSegments;
-            if (buildType == RealizationBuildTypeEnum.BUILD) {
+            if (buildType == CubeBuildTypeEnum.BUILD) {
                 cubeSegments = this.getCubeManager().appendSegments(cube, startDate, endDate);
-            } else if (buildType == RealizationBuildTypeEnum.MERGE) {
+            } else if (buildType == CubeBuildTypeEnum.MERGE) {
                 cubeSegments = this.getCubeManager().mergeSegments(cube, startDate, endDate);
             } else {
                 throw new JobException("invalid build type:" + buildType);
