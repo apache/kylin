@@ -1,6 +1,8 @@
 package com.kylinolap.job2.cube;
 
 import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.cube.model.CubeBuildTypeEnum;
+import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.JoinedFlatTable;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.cube.*;
@@ -14,6 +16,9 @@ import com.kylinolap.job2.common.ShellExecutable;
 import com.kylinolap.job2.constants.ExecutableConstants;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * Created by qianzhou on 12/25/14.
@@ -38,7 +43,14 @@ public final class BuildCubeJobBuilder {
         final int groupRowkeyColumnsCount = segment.getCubeDesc().getRowkey().getNCuboidBuildLevels();
         final int totalRowkeyColumnsCount = segment.getCubeDesc().getRowkey().getRowKeyColumns().length;
 
+        SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss");
+        format.setTimeZone(TimeZone.getTimeZone(jobEngineConfig.getTimeZone()));
+
         BuildCubeJob result = new BuildCubeJob();
+        result.setCubeName(getCubeName());
+        result.setSegmentId(segment.getUuid());
+        result.setName(getCubeName() + " - " + segment.getName() + " - BUILD - " + format.format(new Date(System.currentTimeMillis())));
+        result.setSubmitter(null);
         final String jobId = result.getId();
         final CubeJoinedFlatTableDesc intermediateTableDesc = new CubeJoinedFlatTableDesc(segment.getCubeDesc(), this.segment);
         final String intermediateHiveTableName = getIntermediateHiveTableName(intermediateTableDesc, jobId);

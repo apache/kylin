@@ -18,6 +18,7 @@ import java.util.UUID;
  */
 public abstract class AbstractExecutable implements Executable, Idempotent {
 
+    private static final String SUBMITTER = "submitter";
     private JobPO job;
     protected static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
 
@@ -112,6 +113,18 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     public final void setParam(String key, String value) {
         job.getParams().put(key, value);
+    }
+
+    public final long getLastModified() {
+        return jobService.getJobOutputTimeStamp(getId());
+    }
+
+    public final void setSubmitter(String submitter) {
+        setParam(SUBMITTER, submitter);
+    }
+
+    public final String getSubmitter() {
+        return getParam(SUBMITTER);
     }
 
     @Override

@@ -26,6 +26,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 
 import com.google.common.collect.Sets;
+import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job2.cube.BuildCubeJob;
 import com.kylinolap.job2.cube.BuildCubeJobBuilder;
@@ -79,9 +80,14 @@ public class JobService extends BasicService {
     }
 
     private List<JobInstance> listCubeJobInstance(final String cubeName, final String projectName, List<JobStatusEnum> statusList) {
-        Set<ExecutableState> states = Sets.newHashSet();
-        for (JobStatusEnum status: statusList) {
-            states.add(parseToExecutableState(status));
+        Set<ExecutableState> states;
+        if (statusList == null || statusList.isEmpty()) {
+            states = EnumSet.allOf(ExecutableState.class);
+        } else {
+            states = Sets.newHashSet();
+            for (JobStatusEnum status : statusList) {
+                states.add(parseToExecutableState(status));
+            }
         }
         return Lists.newArrayList(FluentIterable.from(listAllCubingJobs(cubeName, projectName, states)).transform(new Function<BuildCubeJob, JobInstance>() {
             @Override
@@ -156,9 +162,48 @@ public class JobService extends BasicService {
 
     private JobInstance parseToJobInstance(AbstractExecutable job) {
         Preconditions.checkState(job instanceof BuildCubeJob, "illegal job type, id:" + job.getId());
+        BuildCubeJob cubeJob = (BuildCubeJob) job;
         final JobInstance result = new JobInstance();
+        result.setName(job.getName());
+        result.setRelatedCube(cubeJob.getCubeName());
+        result.setLastModified(cubeJob.getLastModified());
+        result.setSubmitter(cubeJob.getSubmitter());
+        result.setUuid(cubeJob.getId());
+        result.setType(CubeBuildTypeEnum.BUILD);
+        for (int i = 0; i < cubeJob.getTasks().size(); ++i) {
+            AbstractExecutable task = cubeJob.getTasks().get(i);
+            result.addStep(parseToJobStep(task, i));
+        }
         return result;
     }
+
+    private JobInstance.JobStep parseToJobStep(AbstractExecutable task, int i) {
+        JobInstance.JobStep result = new JobInstance.JobStep();
+        result.setName(task.getName());
+        result.setSequenceID(i);
+        result.setStatus(parseToJobStepStatus(task.getStatus()));
+        return result;
+    }
+
+    private JobStepStatusEnum parseToJobStepStatus(ExecutableState state) {
+        switch (state) {
+            case READY:
+                return JobStepStatusEnum.PENDING;
+            case RUNNING:
+                return JobStepStatusEnum.RUNNING;
+            case ERROR:
+                return JobStepStatusEnum.ERROR;
+            case STOPPED:
+                return JobStepStatusEnum.PENDING;
+            case DISCARDED:
+                return JobStepStatusEnum.DISCARDED;
+            case SUCCEED:
+                return JobStepStatusEnum.FINISHED;
+            default:
+                throw new RuntimeException("invalid state:" + state);
+        }
+    }
+
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public void resumeJob(JobInstance job) throws IOException, JobException {
