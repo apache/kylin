@@ -24,6 +24,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.kylinolap.metadata.realization.IRealization;
 import org.eigenbase.reltype.RelDataType;
 
 import com.kylinolap.cube.CubeInstance;
@@ -101,8 +104,10 @@ public class OLAPContext {
     public boolean hasJoin = false;
 
     // cube metadata
-    public CubeInstance cubeInstance;
-    public CubeDesc cubeDesc;
+    public IRealization realization;
+
+    public Map<IRealization, Boolean> isWeekMatch = Maps.newHashMap();
+
     public Collection<TblColRef> allColumns = new HashSet<TblColRef>();
     public Collection<TblColRef> metricsColumns = new HashSet<TblColRef>();
     public Collection<TblColRef> groupByColumns = new ArrayList<TblColRef>();
@@ -118,5 +123,14 @@ public class OLAPContext {
 
     public boolean isSimpleQuery() {
         return (joins.size() == 0) && (groupByColumns.size() == 0) && (aggregations.size() == 0);
+    }
+
+    public  Collection<TblColRef> getDimensionColumns() {
+        Collection<TblColRef> dimensionColumns = new HashSet<TblColRef>();
+        dimensionColumns.addAll(allColumns);
+        for (TblColRef measureColumn : metricsColumns) {
+            dimensionColumns.remove(measureColumn);
+        }
+        return dimensionColumns;
     }
 }

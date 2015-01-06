@@ -44,8 +44,8 @@ public class ColumnCardinalityReducer extends Reducer<IntWritable, BytesWritable
 
     @Override
     public void reduce(IntWritable key, Iterable<BytesWritable> values, Context context) throws IOException, InterruptedException {
+        int skey = key.get();
         for (BytesWritable v : values) {
-            int skey = key.get();
             ByteBuffer buffer = ByteBuffer.wrap(v.getBytes());
             HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter();
             hll.readRegisters(buffer);

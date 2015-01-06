@@ -78,10 +78,7 @@ public class BuildCubeWithEngineTest {
     @After
     public void after() throws Exception {
         // jobManager.deleteAllJobs();
-        int exitCode = cleanupOldCubes();
-        if (exitCode == 0)
-            exportHBaseData();
-        
+
         HBaseMetadataTestCase.staticCleanupTestMetadata();
     }
 
@@ -98,6 +95,8 @@ public class BuildCubeWithEngineTest {
         testInnerJoinCube();
 
         jobManager.stopJobEngine();
+       
+        cleanupAndExport();
     }
 
     /**
@@ -246,7 +245,7 @@ public class BuildCubeWithEngineTest {
         for (CubeSegment seg : newSegments) {
             String uuid = seg.getUuid();
             jobUuids.add(uuid);
-            jobs.add(jobManager.createJob(cubename, seg.getName(), uuid, jobType,"KylinTest"));
+            jobs.add(jobManager.createJob(cubename, seg.getName(), uuid, jobType, "KylinTest"));
             seg.setLastBuildJobID(uuid);
         }
         cubeMgr.updateCube(cube);
@@ -255,6 +254,17 @@ public class BuildCubeWithEngineTest {
             jobManager.submitJob(job);
         }
         return jobUuids;
+    }
+
+    private void cleanupAndExport() {
+        try {
+            int cleanupExitCode = cleanupOldCubes();
+            if (cleanupExitCode == 0)
+                exportHBaseData();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     private int cleanupOldCubes() throws Exception {

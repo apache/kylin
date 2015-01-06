@@ -31,6 +31,7 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.CubePartitionDesc;
+import com.kylinolap.cube.model.DimensionDesc;
 import com.kylinolap.metadata.model.FunctionDesc;
 import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.MeasureDesc;
@@ -236,16 +237,6 @@ public class CubeInstance extends AbstractRealization {
         return name;
     }
 
-    @Override
-    public String getFactTable() {
-        return this.getDescriptor().getFactTable();
-    }
-
-    @Override
-    public List<MeasureDesc> getMeasures() {
-        return getDescriptor().getMeasures();
-    }
-
     public void setName(String name) {
         this.name = name;
     }
@@ -282,6 +273,7 @@ public class CubeInstance extends AbstractRealization {
         return cost;
     }
 
+    @Override
     public void setCost(int cost) {
         this.cost = cost;
     }
@@ -452,5 +444,26 @@ public class CubeInstance extends AbstractRealization {
     @Override
     public List<TblColRef> getAllColumns() {
         return Lists.newArrayList(getDescriptor().listAllColumns());
+    }
+
+    @Override
+    public String getFactTable() {
+        return this.getDescriptor().getFactTable();
+    }
+
+    @Override
+    public List<MeasureDesc> getMeasures() {
+        return getDescriptor().getMeasures();
+    }
+
+    @Override
+    public List<TblColRef> getDimensions() {
+        List<TblColRef> ret = Lists.newArrayList();
+        for (DimensionDesc dim : getDescriptor().getDimensions()) {
+            for (TblColRef colRef : dim.getColumnRefs()) {
+                ret.add(colRef);
+            }
+        }
+        return ret;
     }
 }
