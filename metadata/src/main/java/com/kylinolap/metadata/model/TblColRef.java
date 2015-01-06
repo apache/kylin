@@ -84,7 +84,7 @@ public class TblColRef {
     }
 
     public String getCanonicalName() {
-        return (getTable() + "_" + getName()).replace(".", "_");
+        return getTable() + "." + getName();
     }
 
     public String getDatatype() {
