@@ -292,9 +292,7 @@ public class QueryService extends BasicService {
                 String catalogName = JDBCTableMeta.getString(1);
                 String schemaName = JDBCTableMeta.getString(2);
 
-                // Not every JDBC data provider offers full 10 columns, for
-                // example,
-                // PostgreSQL has only 5
+                // Not every JDBC data provider offers full 10 columns, e.g., PostgreSQL has only 5
                 TableMeta tblMeta = new TableMeta(catalogName == null ? Constant.FakeCatalogName : catalogName, schemaName == null ? Constant.FakeSchemaName : schemaName, JDBCTableMeta.getString(3), JDBCTableMeta.getString(4), JDBCTableMeta.getString(5), null, null, null, null, null);
 
                 if (!cubedOnly || getProjectManager().isExposedTable(project, schemaName + "." + tblMeta.getTABLE_NAME())) {

@@ -20,6 +20,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Lists;
 import com.kylinolap.metadata.project.ProjectManager;
 import com.kylinolap.metadata.realization.IRealization;
 import com.kylinolap.query.relnode.OLAPContext;
@@ -33,10 +34,10 @@ public class QueryRouter {
 
     public static IRealization selectRealization(OLAPContext olapContext) throws NoRealizationFoundException {
 
-        ProjectManager projectManager = ProjectManager.getInstance(olapContext.olapSchema.getConfig());
+        ProjectManager prjMgr = ProjectManager.getInstance(olapContext.olapSchema.getConfig());
         String factTableName = olapContext.firstTableScan.getCubeTable();
         String projectName = olapContext.olapSchema.getProjectName();
-        List<IRealization> realizations = projectManager.getRealizationsByTable(projectName, factTableName);
+        List<IRealization> realizations = Lists.newArrayList(prjMgr.getRealizationsByTable(projectName, factTableName));
 
         //rule based realization selection
         RoutingRule.applyRules(realizations, olapContext);

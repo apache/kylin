@@ -19,6 +19,7 @@ package com.kylinolap.metadata.model;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author xjiang
@@ -52,7 +53,7 @@ public class DatabaseDesc {
         return "DatabaseDesc [name=" + name + "]";
     }
 
-    public static HashMap<String, Integer> extractDatabaseOccurenceCounts(List<TableDesc> tables) {
+    public static HashMap<String, Integer> extractDatabaseOccurenceCounts(Set<TableDesc> tables) {
         HashMap<String, Integer> databaseCounts = new HashMap<String, Integer>();
         for (TableDesc tableDesc : tables) {
             String databaseName = tableDesc.getDatabase();

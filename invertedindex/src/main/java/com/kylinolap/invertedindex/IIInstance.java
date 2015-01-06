@@ -26,18 +26,18 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
+import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.invertedindex.model.IIDesc;
 import com.kylinolap.metadata.model.*;
-import com.kylinolap.metadata.realization.AbstractRealization;
+import com.kylinolap.metadata.realization.IRealization;
 import com.kylinolap.metadata.realization.RealizationType;
 import com.kylinolap.metadata.realization.RealizationStatusEnum;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * @author honma
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class IIInstance extends AbstractRealization {
+public class IIInstance extends RootPersistentEntity implements IRealization {
 
     public static IIInstance create(String iiName, String projectName, IIDesc iiDesc) {
         IIInstance iii = new IIInstance();
@@ -183,7 +183,7 @@ public class IIInstance extends AbstractRealization {
 
     @Override
     public String toString() {
-        return getCanonicalName(name);
+        return getCanonicalName();
     }
 
     // ============================================================================
@@ -229,6 +229,12 @@ public class IIInstance extends AbstractRealization {
         this.config = config;
     }
 
+    @Override
+    public String getCanonicalName() {
+        return getType() + "[name=" + name + "]";
+    }
+
+    @Override
     public String getName() {
         return name;
     }
@@ -401,6 +407,6 @@ public class IIInstance extends AbstractRealization {
 
     @Override
     public List<TblColRef> getDimensions() {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 }

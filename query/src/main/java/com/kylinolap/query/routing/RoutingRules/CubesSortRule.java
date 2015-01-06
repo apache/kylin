@@ -1,6 +1,5 @@
 package com.kylinolap.query.routing.RoutingRules;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 

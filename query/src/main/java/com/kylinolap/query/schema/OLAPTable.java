@@ -22,7 +22,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import com.kylinolap.metadata.project.ProjectManager;
 import net.hydromatic.linq4j.Enumerable;
 import net.hydromatic.linq4j.Enumerator;
 import net.hydromatic.linq4j.QueryProvider;
@@ -43,10 +42,12 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.type.SqlTypeUtil;
 
-import com.kylinolap.metadata.model.MeasureDesc;
+import com.google.common.collect.Lists;
 import com.kylinolap.metadata.model.ColumnDesc;
-import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
+import com.kylinolap.metadata.model.TableDesc;
+import com.kylinolap.metadata.project.ProjectManager;
 import com.kylinolap.query.enumerator.OLAPQuery;
 import com.kylinolap.query.enumerator.OLAPQuery.EnumeratorTypeEnum;
 import com.kylinolap.query.relnode.OLAPTableScan;
@@ -161,10 +162,10 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
     }
 
     private List<ColumnDesc> listSourceColumns() {
-        ProjectManager projectMgr = ProjectManager.getInstance(olapSchema.getConfig());
-        List<ColumnDesc> exposedColumns = projectMgr.listExposedColumns(olapSchema.getProjectName(), sourceTable.getIdentity());
+        ProjectManager mgr = ProjectManager.getInstance(olapSchema.getConfig());
+        List<ColumnDesc> exposedColumns = Lists.newArrayList(mgr.listExposedColumns(olapSchema.getProjectName(), sourceTable.getIdentity()));
 
-        List<MeasureDesc> countMeasures = projectMgr.listEffectiveRewriteMeasures(olapSchema.getProjectName(), sourceTable.getIdentity());
+        List<MeasureDesc> countMeasures = mgr.listEffectiveRewriteMeasures(olapSchema.getProjectName(), sourceTable.getIdentity());
         HashSet<String> metFields = new HashSet<String>();
         for (MeasureDesc m : countMeasures) {
             FunctionDesc func = m.getFunction();

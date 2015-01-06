@@ -56,6 +56,7 @@ public class ProjectInstance extends RootPersistentEntity {
     private String createTime;
 
     @JsonProperty("last_update_time")
+    // FIXME why not RootPersistentEntity.lastModified??
     private String lastUpdateTime;
 
     @JsonProperty("description")
@@ -243,11 +244,6 @@ public class ProjectInstance extends RootPersistentEntity {
             realizationEntries = new ArrayList<RealizationEntry>();
         }
 
-        for (int i = 0; i < realizationEntries.size(); ++i) {
-            String r = realizationEntries.get(i).getRealization();
-            realizationEntries.get(i).setRealization(r.toUpperCase());
-        }
-        
         if (tables == null)
             tables = new TreeSet<String>();
     }
