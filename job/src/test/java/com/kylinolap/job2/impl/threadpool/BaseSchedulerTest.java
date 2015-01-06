@@ -35,7 +35,7 @@ public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
         while (true) {
             AbstractExecutable job = jobService.getJob(jobId);
             final ExecutableState status = job.getStatus();
-            if (status == ExecutableState.SUCCEED || status == ExecutableState.ERROR || status == ExecutableState.STOPPED) {
+            if (status == ExecutableState.SUCCEED || status == ExecutableState.ERROR || status == ExecutableState.STOPPED || status == ExecutableState.DISCARDED) {
                 break;
             } else {
                 try {

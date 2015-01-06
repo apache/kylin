@@ -183,6 +183,7 @@ public final class BuildCubeJobBuilder {
         appendExecCmdParameters(cmd, "input", intermediateHiveTableName);
         appendExecCmdParameters(cmd, "output", getFactDistinctColumnsPath(jobId));
         appendExecCmdParameters(cmd, "jobname", "Kylin_Fact_Distinct_Columns_" + getCubeName() + "_Step");
+        appendExecCmdParameters(cmd, "htablename", new CubeJoinedFlatTableDesc(segment.getCubeDesc(), segment).getTableName(jobId));
 
         result.setMapReduceParams(cmd.toString());
         return result;

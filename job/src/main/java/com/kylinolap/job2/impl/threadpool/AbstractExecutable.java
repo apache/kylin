@@ -150,6 +150,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     *
     * */
     protected final boolean isStopped() {
-        return getStatus() == ExecutableState.STOPPED;
+        final ExecutableState status = getStatus();
+        return status == ExecutableState.STOPPED || status == ExecutableState.DISCARDED;
     }
 }

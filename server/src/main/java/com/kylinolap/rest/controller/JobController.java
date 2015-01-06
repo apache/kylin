@@ -202,16 +202,13 @@ public class JobController extends BasicController implements InitializingBean {
     @ResponseBody
     public JobInstance cancel(@PathVariable String jobId) {
 
-        JobInstance jobInstance = null;
         try {
-            jobInstance = jobService.getJobInstance(jobId);
-            jobService.cancelJob(jobInstance);
+            return jobService.cancelJob(jobId);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e);
         }
 
-        return jobInstance;
     }
 
     public void setJobService(JobService jobService) {

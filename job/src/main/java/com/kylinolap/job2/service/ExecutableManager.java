@@ -149,6 +149,19 @@ public class ExecutableManager {
         }
     }
 
+    public void discardJob(String jobId) {
+        AbstractExecutable job = getJob(jobId);
+        if (job instanceof DefaultChainedExecutable) {
+            List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
+            for (AbstractExecutable task : tasks) {
+                if (!task.getStatus().isFinalState()) {
+                    updateJobStatus(task.getId(), ExecutableState.DISCARDED);
+                }
+            }
+        }
+        updateJobStatus(jobId, ExecutableState.DISCARDED);
+    }
+
     public boolean updateJobStatus(String jobId, ExecutableState newStatus) {
         try {
             final JobOutputPO jobOutput = jobDao.getJobOutput(jobId);
@@ -233,11 +246,6 @@ public class ExecutableManager {
         }
     }
 
-
-    public void stopJob(String id) {
-        final AbstractExecutable job = getJob(id);
-        stopJob(job);
-    }
 
     private JobPO getJobPO(AbstractExecutable executable) {
         final JobPO result = executable.getJobPO();
