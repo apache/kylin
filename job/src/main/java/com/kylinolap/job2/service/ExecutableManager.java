@@ -115,7 +115,37 @@ public class ExecutableManager {
                 }
             });
         } catch (PersistentException e) {
+            logger.error("error get All Jobs", e);
             throw new RuntimeException(e);
+        }
+    }
+
+    public void updateAllRunningJobsToError() {
+        try {
+            final List<JobOutputPO> jobOutputs = jobDao.getJobOutputs();
+            for (JobOutputPO jobOutputPO: jobOutputs) {
+                if (jobOutputPO.getStatus().equalsIgnoreCase(ExecutableState.RUNNING.toString())) {
+                    jobOutputPO.setStatus(ExecutableState.ERROR.toString());
+                    jobDao.updateJobOutput(jobOutputPO);
+                }
+            }
+        } catch (PersistentException e) {
+            logger.error("error reset job status from RUNNING to ERROR", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void resumeJob(String jobId) {
+        AbstractExecutable job = getJob(jobId);
+        updateJobStatus(jobId, ExecutableState.READY);
+        if (job instanceof DefaultChainedExecutable) {
+            List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
+            for (AbstractExecutable task : tasks) {
+                if (task.getStatus() == ExecutableState.ERROR) {
+                    updateJobStatus(task.getId(), ExecutableState.READY);
+                    break;
+                }
+            }
         }
     }
 
@@ -170,6 +200,17 @@ public class ExecutableManager {
             jobDao.updateJobOutput(output);
         } catch (PersistentException e) {
             logger.error("error update job info, id:" + id + "  info:" + info.toString());
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void updateJobInfo(String id, String key, String value) {
+        try {
+            JobOutputPO output = jobDao.getJobOutput(id);
+            output.getInfo().put(key, value);
+            jobDao.updateJobOutput(output);
+        } catch (PersistentException e) {
+            logger.error("error update job info, id:" + id + "  key:" + key + " value:" + value);
             throw new RuntimeException(e);
         }
     }

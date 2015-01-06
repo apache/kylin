@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import com.kylinolap.job.engine.JobEngineConfig;
+import com.kylinolap.job2.impl.threadpool.DefaultScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -68,7 +70,8 @@ public class JobController extends BasicController implements InitializingBean {
         TimeZone tzone = TimeZone.getTimeZone(timeZone);
         TimeZone.setDefault(tzone);
 
-        String serverMode = KylinConfig.getInstanceFromEnv().getServerMode();
+        final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        String serverMode = kylinConfig.getServerMode();
 
         if (Constant.SERVER_MODE_JOB.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase())) {
             logger.info("Initializing Job Engine ....");
@@ -76,11 +79,12 @@ public class JobController extends BasicController implements InitializingBean {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    JobManager jobManager = null;
                     try {
-//                        jobManager = jobService.getJobManager();
-//                        jobManager.startJobEngine();
-//                        metricsService.registerJobMetrics(jobManager);
+                        DefaultScheduler scheduler = DefaultScheduler.getInstance();
+                        scheduler.init(new JobEngineConfig(kylinConfig));
+                        if (!scheduler.hasStarted()) {
+                            throw new RuntimeException("scheduler has not been started");
+                        }
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }

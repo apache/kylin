@@ -35,7 +35,7 @@ public enum ExecutableState {
         //scheduler
         VALID_STATE_TRANSFER.put(ExecutableState.READY, ExecutableState.RUNNING);
         //user
-        VALID_STATE_TRANSFER.put(ExecutableState.READY, ExecutableState.STOPPED);
+        VALID_STATE_TRANSFER.put(ExecutableState.READY, ExecutableState.ERROR);
 
         //job
         VALID_STATE_TRANSFER.put(ExecutableState.RUNNING, ExecutableState.READY);
