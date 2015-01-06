@@ -605,7 +605,7 @@ public class CubeService extends BasicService {
         for (BuildCubeJob buildCubeJob : buildCubeJobs) {
             final ExecutableState status = buildCubeJob.getStatus();
             if (status != ExecutableState.SUCCEED && status != ExecutableState.STOPPED && status != ExecutableState.DISCARDED) {
-                getExecutableManager().stopJob(buildCubeJob.getId());
+                getExecutableManager().discardJob(buildCubeJob.getId());
             }
         }
         cube.getSegments().clear();

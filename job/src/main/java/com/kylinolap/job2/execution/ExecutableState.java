@@ -34,15 +34,16 @@ public enum ExecutableState {
 
         //scheduler
         VALID_STATE_TRANSFER.put(ExecutableState.READY, ExecutableState.RUNNING);
-        //user
         VALID_STATE_TRANSFER.put(ExecutableState.READY, ExecutableState.ERROR);
+        //user
+        VALID_STATE_TRANSFER.put(ExecutableState.READY, ExecutableState.DISCARDED);
 
         //job
         VALID_STATE_TRANSFER.put(ExecutableState.RUNNING, ExecutableState.READY);
         //job
         VALID_STATE_TRANSFER.put(ExecutableState.RUNNING, ExecutableState.SUCCEED);
         //user
-        VALID_STATE_TRANSFER.put(ExecutableState.RUNNING, ExecutableState.STOPPED);
+        VALID_STATE_TRANSFER.put(ExecutableState.RUNNING, ExecutableState.DISCARDED);
         //scheduler,job
         VALID_STATE_TRANSFER.put(ExecutableState.RUNNING, ExecutableState.ERROR);
 
@@ -52,6 +53,10 @@ public enum ExecutableState {
 
         VALID_STATE_TRANSFER.put(ExecutableState.ERROR, ExecutableState.DISCARDED);
         VALID_STATE_TRANSFER.put(ExecutableState.ERROR, ExecutableState.READY);
+    }
+
+    public boolean isFinalState() {
+        return this == SUCCEED || this == DISCARDED;
     }
 
     public static boolean isValidStateTransfer(ExecutableState from, ExecutableState to) {

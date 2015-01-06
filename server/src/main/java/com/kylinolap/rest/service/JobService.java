@@ -37,6 +37,7 @@ import com.kylinolap.job2.execution.Executable;
 import com.kylinolap.job2.execution.ExecutableState;
 import com.kylinolap.job2.execution.Output;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.realization.RealizationType;
 import org.slf4j.Logger;
@@ -169,6 +170,7 @@ public class JobService extends BasicService {
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
         result.setRelatedCube(cubeJob.getCubeName());
+        result.setRelatedSegment(cubeJob.getSegmentId());
         result.setLastModified(cubeJob.getLastModified());
         result.setSubmitter(cubeJob.getSubmitter());
         result.setUuid(cubeJob.getId());
@@ -247,11 +249,21 @@ public class JobService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
-    public void cancelJob(JobInstance job) throws IOException, JobException, CubeIntegrityException {
-        CubeInstance cube = this.getCubeManager().getCube(job.getRelatedCube());
-        for (BuildCubeJob cubeJob: listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING))) {
-            getExecutableManager().stopJob(cubeJob.getId());
+    public JobInstance cancelJob(String jobId) throws IOException, JobException, CubeIntegrityException {
+//        CubeInstance cube = this.getCubeManager().getCube(job.getRelatedCube());
+//        for (BuildCubeJob cubeJob: listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING))) {
+//            getExecutableManager().stopJob(cubeJob.getId());
+//        }
+        final JobInstance jobInstance = getJobInstance(jobId);
+        final String segmentId = jobInstance.getRelatedSegment();
+        CubeInstance cubeInstance = getCubeManager().getCube(jobInstance.getRelatedCube());
+        final CubeSegment segment = cubeInstance.getSegmentById(segmentId);
+        if (segment.getStatus() == SegmentStatusEnum.NEW) {
+            cubeInstance.getSegments().remove(segment);
+            getCubeManager().updateCube(cubeInstance);
         }
+        getExecutableManager().discardJob(jobId);
+        return jobInstance;
     }
 
 }
