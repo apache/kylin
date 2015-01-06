@@ -195,7 +195,7 @@ public class QueryService extends BasicService {
 
     public void logQuery(final SQLRequest request, final SQLResponse response, final Date startTime, final Date endTime) {
         final String user = SecurityContextHolder.getContext().getAuthentication().getName();
-        final Set<String> cubeNames = new HashSet<String>();
+        final Set<String> realizationNames = new HashSet<String>();
         final Set<Long> cuboidIds = new HashSet<Long>();
         long totalScanCount = 0;
         float duration = (endTime.getTime() - startTime.getTime()) / (float) 1000;
@@ -208,9 +208,9 @@ public class QueryService extends BasicService {
                     cuboidIds.add(cuboid.getId());
                 }
 
-                if (ctx.cubeInstance != null) {
-                    String cubeName = ctx.cubeInstance.getName();
-                    cubeNames.add(cubeName);
+                if (ctx.realization != null) {
+                    String realizationName = ctx.realization.getName();
+                    realizationNames.add(realizationName);
                 }
 
                 totalScanCount += ctx.storageContext.getTotalScanCount();
@@ -235,7 +235,7 @@ public class QueryService extends BasicService {
         stringBuilder.append("Success: ").append((null == response.getExceptionMessage())).append(newLine);
         stringBuilder.append("Duration: ").append(duration).append(newLine);
         stringBuilder.append("Project: ").append(request.getProject()).append(newLine);
-        stringBuilder.append("Cube Names: ").append(cubeNames).append(newLine);
+        stringBuilder.append("Realization Names: ").append(realizationNames).append(newLine);
         stringBuilder.append("Cuboid Ids: ").append(cuboidIds).append(newLine);
         stringBuilder.append("Total scan count: ").append(totalScanCount).append(newLine);
         stringBuilder.append("Result row count: ").append(resultRowCount).append(newLine);
@@ -381,7 +381,7 @@ public class QueryService extends BasicService {
         if (OLAPContext.getThreadLocalContexts() != null) { // contexts can be null in case of 'explain plan for'
             for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
                 isPartialResult |= ctx.storageContext.isPartialResultReturned();
-                cube = ctx.cubeInstance.getName();
+                cube = ctx.realization.getName();
                 totalScanCount += ctx.storageContext.getTotalScanCount();
             }
         }

@@ -322,7 +322,9 @@ public class JobInstanceBuilder {
 
         factDistinctColumnsStep.setName(JobConstants.STEP_NAME_FACT_DISTINCT_COLUMNS);
 
+        CubeJoinedFlatTableDesc intermediateTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), this.cubeSegment);
         cmd = appendExecCmdParameters(cmd, "cubename", cubeName);
+        cmd = appendExecCmdParameters(cmd, "htablename", intermediateTableDesc.getTableName(jobUUID));
         cmd = appendExecCmdParameters(cmd, "input", inputLocation);
         cmd = appendExecCmdParameters(cmd, "output", getFactDistinctColumnsPath());
         cmd = appendExecCmdParameters(cmd, "jobname", "Kylin_Fact_Distinct_Columns_" + jobInstance.getRelatedCube() + "_Step_" + stepSeqNum);

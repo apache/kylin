@@ -32,6 +32,7 @@ import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.CubePartitionDesc;
+import com.kylinolap.cube.model.DimensionDesc;
 import com.kylinolap.metadata.model.FunctionDesc;
 import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.MeasureDesc;
@@ -289,6 +290,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         return cost;
     }
 
+    @Override
     public void setCost(int cost) {
         this.cost = cost;
     }
@@ -458,5 +460,16 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
     @Override
     public List<TblColRef> getAllColumns() {
         return Lists.newArrayList(getDescriptor().listAllColumns());
+    }
+
+    @Override
+    public List<TblColRef> getDimensions() {
+        List<TblColRef> ret = Lists.newArrayList();
+        for (DimensionDesc dim : getDescriptor().getDimensions()) {
+            for (TblColRef colRef : dim.getColumnRefs()) {
+                ret.add(colRef);
+            }
+        }
+        return ret;
     }
 }

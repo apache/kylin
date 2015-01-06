@@ -144,7 +144,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
         buildDimensionsAndMetrics(dimensions, metrics);
 
         // query storage engine
-        IStorageEngine storageEngine = StorageEngineFactory.getStorageEngine(olapContext.cubeInstance);
+        IStorageEngine storageEngine = StorageEngineFactory.getStorageEngine(olapContext.realization);
         ITupleIterator iterator = storageEngine.search(dimensions, olapContext.filter, olapContext.groupByColumns, metrics, olapContext.storageContext);
         if (logger.isDebugEnabled()) {
             logger.debug("return TupleIterator...");
@@ -165,13 +165,12 @@ public class CubeEnumerator implements Enumerator<Object[]> {
         if (olapContext.isSimpleQuery()) {
             // In order to prevent coprocessor from doing the real aggregating,
             // All dimensions are injected
-            for (DimensionDesc dim : olapContext.cubeDesc.getDimensions()) {
-                for (TblColRef col : dim.getColumnRefs()) {
-                    dimensions.add(col);
-                }
+            for (TblColRef col : olapContext.realization.getDimensions()) {
+                dimensions.add(col);
             }
+
             // select sth from fact table
-            for (MeasureDesc measure : olapContext.cubeDesc.getMeasures()) {
+            for (MeasureDesc measure : olapContext.realization.getMeasures()) {
                 FunctionDesc func = measure.getFunction();
                 if (func.isSum()) {
                     // the rewritten name for sum(metric) is metric itself
