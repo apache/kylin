@@ -44,10 +44,6 @@ public class SnapshotManagerTest extends HBaseMetadataTestCase {
     @Before
     public void setup() throws Exception {
         createTestMetadata();
-        if (useSandbox()) {
-            ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox/").getAbsolutePath());
-        }
-
         snapshotMgr = SnapshotManager.getInstance(this.getTestConfig());
     }
 
