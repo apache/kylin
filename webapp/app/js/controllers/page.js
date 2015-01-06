@@ -231,3 +231,4 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
     };
 
 };
+
