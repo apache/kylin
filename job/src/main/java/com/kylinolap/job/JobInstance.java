@@ -473,7 +473,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
 
     @Override
     public int compareTo(JobInstance o) {
-        return (int) (o.lastModified - this.lastModified);
+        return o.lastModified<this.lastModified?-1:o.lastModified>this.lastModified?1:0;
     }
 
 }
