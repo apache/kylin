@@ -29,9 +29,8 @@ import org.eigenbase.reltype.RelDataTypeField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kylinolap.cube.model.DimensionDesc;
-import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.query.relnode.OLAPContext;
 import com.kylinolap.storage.IStorageEngine;

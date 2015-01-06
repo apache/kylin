@@ -51,6 +51,7 @@ import com.kylinolap.metadata.model.TableDesc;
  */
 public class HiveSourceTableLoader {
 
+    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(HiveSourceTableLoader.class);
 
     public static final String OUTPUT_SURFIX = "json";

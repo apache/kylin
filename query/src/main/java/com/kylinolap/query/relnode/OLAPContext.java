@@ -24,16 +24,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.kylinolap.metadata.realization.IRealization;
 import org.eigenbase.reltype.RelDataType;
 
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.metadata.model.JoinDesc;
+import com.google.common.collect.Maps;
 import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.TblColRef;
+import com.kylinolap.metadata.realization.IRealization;
 import com.kylinolap.query.schema.OLAPSchema;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.filter.TupleFilter;
