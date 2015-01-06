@@ -31,10 +31,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.sql.DataSource;
 
-import com.kylinolap.metadata.project.ProjectInstance;
-import com.kylinolap.metadata.project.ProjectManager;
-import com.kylinolap.metadata.realization.RealizationRegistry;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +46,8 @@ import com.kylinolap.job.JobManager;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.exception.JobException;
 import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectManager;
 import com.kylinolap.query.enumerator.OLAPQuery;
 import com.kylinolap.query.relnode.OLAPContext;
 import com.kylinolap.query.schema.OLAPSchemaFactory;

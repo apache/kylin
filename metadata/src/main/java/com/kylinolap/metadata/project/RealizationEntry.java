@@ -31,4 +31,9 @@ public class RealizationEntry {
     public void setRealization(String realization) {
         this.realization = realization;
     }
+    
+    @Override
+    public String toString() {
+        return "" + type.name() + "." + realization;
+    }
 }

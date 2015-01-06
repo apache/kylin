@@ -131,7 +131,7 @@ public class QueryRouter {
         return null;
     }
 
-    static List<CubeInstance> filterCubes(List<IRealization> realizations) {
+    static List<CubeInstance> filterCubes(Collection<IRealization> realizations) {
         return Lists.newArrayList(Iterables.transform(Iterables.filter(realizations, new Predicate<IRealization>() {
             @Override
             public boolean apply(IRealization input) {

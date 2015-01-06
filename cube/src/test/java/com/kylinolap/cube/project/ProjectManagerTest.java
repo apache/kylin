@@ -55,112 +55,121 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testDropNonemptyProject1() throws IOException {
+    public void testDropNonemptyProject() throws IOException {
         ProjectManager.getInstance(this.getTestConfig()).dropProject("DEFAULT");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testDropNonemptyProject2() throws IOException {
+    public void testDropNonexistProject() throws IOException {
         ProjectManager.getInstance(this.getTestConfig()).dropProject("DEFAULT???");
     }
 
     @Test
     public void testNewProject() throws Exception {
-        int originalProjectCount = ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size();
-        int originalCubeCount = CubeManager.getInstance(this.getTestConfig()).listAllCubes().size();
-        int originalCubeCountInDefault = ProjectManager.getInstance(this.getTestConfig()).listAllRealizations("default").size();
+        ProjectManager prjMgr = ProjectManager.getInstance(getTestConfig());
+        CubeManager cubeMgr = CubeManager.getInstance(getTestConfig());
+        CubeDescManager cubeDescMgr = CubeDescManager.getInstance(getTestConfig());
+        
+        int originalProjectCount = prjMgr.listAllProjects().size();
+        int originalCubeCount = cubeMgr.listAllCubes().size();
+        int originalCubeCountInDefault = prjMgr.listAllRealizations("default").size();
         ResourceStore store = getStore();
 
         // clean legacy in case last run failed
         store.deleteResource("/cube/cube_in_alien_project.json");
 
-        CubeDescManager cubeDescMgr = getCubeDescManager();
         CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
-        CubeInstance createdCube = CubeManager.getInstance(this.getTestConfig()).createCube("cube_in_alien_project", "alien", desc, null);
-        assertTrue(createdCube == CubeManager.getInstance(this.getTestConfig()).getCube("cube_in_alien_project"));
+        CubeInstance createdCube = cubeMgr.createCube("cube_in_alien_project", "alien", desc, null);
+        assertTrue(createdCube == cubeMgr.getCube("cube_in_alien_project"));
         assertTrue(ProjectManager.getInstance(getTestConfig()).listAllRealizations("alien").contains(createdCube));
 
         System.out.println(JsonUtil.writeValueAsIndentString(createdCube));
 
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size() == originalProjectCount + 1);
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllRealizations("ALIEN").get(0).getName().equalsIgnoreCase("CUBE_IN_ALIEN_PROJECT"));
-        assertTrue(CubeManager.getInstance(this.getTestConfig()).listAllCubes().size() == originalCubeCount + 1);
+        assertTrue(prjMgr.listAllProjects().size() == originalProjectCount + 1);
+        assertTrue(prjMgr.listAllRealizations("ALIEN").iterator().next().getName().equalsIgnoreCase("CUBE_IN_ALIEN_PROJECT"));
+        assertTrue(cubeMgr.listAllCubes().size() == originalCubeCount + 1);
 
-        ProjectManager.getInstance(this.getTestConfig()).moveRealizationToProject(RealizationType.CUBE, "cube_in_alien_project", "default", null);
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllRealizations("ALIEN").size() == 0);
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllRealizations("default").size() == originalCubeCountInDefault + 1);
+        prjMgr.moveRealizationToProject(RealizationType.CUBE, "cube_in_alien_project", "default", null);
+        assertTrue(prjMgr.listAllRealizations("ALIEN").size() == 0);
+        assertTrue(prjMgr.listAllRealizations("default").size() == originalCubeCountInDefault + 1);
         assertTrue(ProjectManager.getInstance(getTestConfig()).listAllRealizations("default").contains(createdCube));
 
-        ProjectManager.getInstance(this.getTestConfig()).moveRealizationToProject(RealizationType.CUBE, "cube_in_alien_project", "alien", null);
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllRealizations("ALIEN").size() == 1);
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllRealizations("default").size() == originalCubeCountInDefault);
+        prjMgr.moveRealizationToProject(RealizationType.CUBE, "cube_in_alien_project", "alien", null);
+        assertTrue(prjMgr.listAllRealizations("ALIEN").size() == 1);
+        assertTrue(prjMgr.listAllRealizations("default").size() == originalCubeCountInDefault);
         assertTrue(ProjectManager.getInstance(getTestConfig()).listAllRealizations("alien").contains(createdCube));
 
-        CubeInstance droppedCube = CubeManager.getInstance(this.getTestConfig()).dropCube("cube_in_alien_project", true);
+        CubeInstance droppedCube = cubeMgr.dropCube("cube_in_alien_project", true);
 
         assertTrue(createdCube == droppedCube);
-        assertNull(CubeManager.getInstance(this.getTestConfig()).getCube("cube_in_alien_project"));
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size() == originalProjectCount + 1);
-        assertTrue(CubeManager.getInstance(this.getTestConfig()).listAllCubes().size() == originalCubeCount);
+        assertNull(cubeMgr.getCube("cube_in_alien_project"));
+        assertTrue(prjMgr.listAllProjects().size() == originalProjectCount + 1);
+        assertTrue(cubeMgr.listAllCubes().size() == originalCubeCount);
 
-        ProjectManager.getInstance(this.getTestConfig()).dropProject("alien");
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size() == originalProjectCount);
+        prjMgr.dropProject("alien");
+        assertTrue(prjMgr.listAllProjects().size() == originalProjectCount);
     }
 
     @Test
     public void testExistingProject() throws Exception {
-        int originalProjectCount = ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size();
-        int originalCubeCount = CubeManager.getInstance(this.getTestConfig()).listAllCubes().size();
+        ProjectManager prjMgr = ProjectManager.getInstance(getTestConfig());
+        CubeManager cubeMgr = CubeManager.getInstance(getTestConfig());
+        CubeDescManager cubeDescMgr = CubeDescManager.getInstance(getTestConfig());
+        
+        int originalProjectCount = prjMgr.listAllProjects().size();
+        int originalCubeCount = cubeMgr.listAllCubes().size();
         ResourceStore store = getStore();
 
         // clean legacy in case last run failed
         store.deleteResource("/cube/new_cube_in_default.json");
 
-        CubeDescManager cubeDescMgr = getCubeDescManager();
         CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
-        CubeInstance createdCube = CubeManager.getInstance(this.getTestConfig()).createCube("new_cube_in_default", ProjectInstance.DEFAULT_PROJECT_NAME, desc, null);
-        assertTrue(createdCube == CubeManager.getInstance(this.getTestConfig()).getCube("new_cube_in_default"));
+        CubeInstance createdCube = cubeMgr.createCube("new_cube_in_default", ProjectInstance.DEFAULT_PROJECT_NAME, desc, null);
+        assertTrue(createdCube == cubeMgr.getCube("new_cube_in_default"));
 
         System.out.println(JsonUtil.writeValueAsIndentString(createdCube));
 
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size() == originalProjectCount);
-        assertTrue(CubeManager.getInstance(this.getTestConfig()).listAllCubes().size() == originalCubeCount + 1);
+        assertTrue(prjMgr.listAllProjects().size() == originalProjectCount);
+        assertTrue(cubeMgr.listAllCubes().size() == originalCubeCount + 1);
 
-        CubeInstance droppedCube = CubeManager.getInstance(this.getTestConfig()).dropCube("new_cube_in_default", true);
+        CubeInstance droppedCube = cubeMgr.dropCube("new_cube_in_default", true);
 
         assertTrue(createdCube == droppedCube);
-        assertNull(CubeManager.getInstance(this.getTestConfig()).getCube("new_cube_in_default"));
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size() == originalProjectCount);
-        assertTrue(CubeManager.getInstance(this.getTestConfig()).listAllCubes().size() == originalCubeCount);
+        assertNull(cubeMgr.getCube("new_cube_in_default"));
+        assertTrue(prjMgr.listAllProjects().size() == originalProjectCount);
+        assertTrue(cubeMgr.listAllCubes().size() == originalCubeCount);
     }
 
     @Test
     public void testProjectsDrop() throws IOException {
-        CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_empty");
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).getRealizationsByTable("default", "default.test_kylin_fact").contains(cube));
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).listAllRealizations("default").contains(cube));
+        ProjectManager prjMgr = ProjectManager.getInstance(getTestConfig());
+        CubeManager cubeMgr = CubeManager.getInstance(getTestConfig());
+        
+        CubeInstance cube = cubeMgr.getCube("test_kylin_cube_with_slr_empty");
+        assertTrue(prjMgr.getRealizationsByTable("default", "default.test_kylin_fact").contains(cube));
+        assertTrue(prjMgr.listAllRealizations("default").contains(cube));
 
-        CubeManager.getInstance(getTestConfig()).dropCube(cube.getName(), true);
+        cubeMgr.dropCube(cube.getName(), true);
 
-        assertTrue(!ProjectManager.getInstance(this.getTestConfig()).getRealizationsByTable("default", "default.test_kylin_fact").contains(cube));
-        assertTrue(!ProjectManager.getInstance(this.getTestConfig()).listAllRealizations("default").contains(cube));
+        assertTrue(!prjMgr.getRealizationsByTable("default", "default.test_kylin_fact").contains(cube));
+        assertTrue(!prjMgr.listAllRealizations("default").contains(cube));
     }
 
     @Test
     public void testProjectsLoadAfterProjectChange() throws IOException {
-        CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_empty");
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).getRealizationsByTable("default", "default.test_kylin_fact").contains(cube));
+        ProjectManager prjMgr = ProjectManager.getInstance(getTestConfig());
+        CubeManager cubeMgr = CubeManager.getInstance(getTestConfig());
+        
+        CubeInstance cube = cubeMgr.getCube("test_kylin_cube_with_slr_empty");
+        assertTrue(prjMgr.getRealizationsByTable("default", "default.test_kylin_fact").contains(cube));
 
-        ProjectManager.getInstance(getTestConfig()).removeRealizationsFromProjects(RealizationType.CUBE, cube.getName());
+        prjMgr.removeRealizationsFromProjects(RealizationType.CUBE, cube.getName());
 
-        assertTrue(!ProjectManager.getInstance(this.getTestConfig()).getRealizationsByTable("default", "default.test_kylin_fact").contains(cube));
+        assertTrue(!prjMgr.getRealizationsByTable("default", "default.test_kylin_fact").contains(cube));
 
-        ProjectManager.getInstance(getTestConfig()).moveRealizationToProject(RealizationType.CUBE, cube.getName(), "default", "tester");
+        prjMgr.moveRealizationToProject(RealizationType.CUBE, cube.getName(), "default", "tester");
 
-        assertTrue(ProjectManager.getInstance(this.getTestConfig()).getRealizationsByTable("default", "default.test_kylin_fact").contains(cube));
+        assertTrue(prjMgr.getRealizationsByTable("default", "default.test_kylin_fact").contains(cube));
     }
 
-    public CubeDescManager getCubeDescManager() {
-        return CubeDescManager.getInstance(getTestConfig());
-    }
 }
