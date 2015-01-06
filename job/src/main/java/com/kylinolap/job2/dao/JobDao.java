@@ -76,6 +76,23 @@ public class JobDao {
         return store.putResource(path, output, JOB_OUTPUT_SERIALIZER);
     }
 
+    public List<JobOutputPO> getJobOutputs() throws PersistentException {
+        try {
+            ArrayList<String> resources = store.listResources(JOB_OUTPUT_ROOT);
+            if (resources == null) {
+                return Collections.emptyList();
+            }
+            ArrayList<JobOutputPO> result = new ArrayList<JobOutputPO>(resources.size());
+            for (String path : resources) {
+                result.add(readJobOutputResource(path));
+            }
+            return result;
+        } catch (IOException e) {
+            logger.error("error get all Jobs:", e);
+            throw new PersistentException(e);
+        }
+    }
+
     public List<JobPO> getJobs() throws PersistentException {
         try {
             ArrayList<String> resources = store.listResources(JOB_PATH_ROOT);

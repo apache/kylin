@@ -32,7 +32,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     private static final String ZOOKEEPER_LOCK_PATH = "/kylin/job_engine/lock";
 
 
-    private ExecutableManager jobService;
+    private ExecutableManager executableManager;
     private ScheduledExecutorService fetcherPool;
     private ExecutorService jobPool;
     private DefaultContext context;
@@ -45,6 +45,8 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     private InterProcessMutex sharedLock;
 
     private static final DefaultScheduler INSTANCE = new DefaultScheduler();
+    private static final String SCHEDULER_RESET_STATUS_HINT = "scheduler initializing work to reset job to ERROR status";
+
 
     private DefaultScheduler() {}
 
@@ -53,7 +55,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         @Override
         public void run() {
             logger.info("Job Fetcher is running...");
-            for (final AbstractExecutable executable : jobService.getAllExecutables()) {
+            for (final AbstractExecutable executable : executableManager.getAllExecutables()) {
                 boolean hasLock = false;
                 try {
                     hasLock = acquireJobLock(executable, 1);
@@ -109,7 +111,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         if (executable.getStatus() == ExecutableState.RUNNING) {
             final String errMsg = "job:" + executable.getId() + " status should not be:" + ExecutableState.RUNNING + ", reset it to ERROR";
             logger.warn(errMsg);
-            jobService.updateJobStatus(executable.getId(), ExecutableState.ERROR, errMsg);
+            executableManager.updateJobStatus(executable.getId(), ExecutableState.ERROR, errMsg);
         }
     }
 
@@ -187,7 +189,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
             zkClient.close();
             return;
         }
-        jobService = ExecutableManager.getInstance(jobEngineConfig.getConfig());
+        executableManager = ExecutableManager.getInstance(jobEngineConfig.getConfig());
         //load all executable, set them to a consistent status
         fetcherPool = Executors.newScheduledThreadPool(1);
         int corePoolSize = jobEngineConfig.getMaxConcurrentJobLimit();
@@ -195,11 +197,13 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         context = new DefaultContext(Maps.<String, Executable>newConcurrentMap(), jobEngineConfig.getConfig());
 
 
-        for (AbstractExecutable executable : jobService.getAllExecutables()) {
-            if (executable.getStatus() == ExecutableState.RUNNING) {
-                jobService.updateJobStatus(executable.getId(), ExecutableState.ERROR, "scheduler initializing work to reset job to ERROR status");
+        for (AbstractExecutable executable : executableManager.getAllExecutables()) {
+            final ExecutableState status = executable.getStatus();
+            if (status == ExecutableState.READY) {
+                executableManager.updateJobStatus(executable.getId(), ExecutableState.ERROR, "scheduler initializing work to reset job to ERROR status");
             }
         }
+        executableManager.updateAllRunningJobsToError();
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {

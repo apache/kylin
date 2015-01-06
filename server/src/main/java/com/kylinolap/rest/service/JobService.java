@@ -33,6 +33,7 @@ import com.kylinolap.job2.common.MapReduceExecutable;
 import com.kylinolap.job2.common.ShellExecutable;
 import com.kylinolap.job2.cube.BuildCubeJob;
 import com.kylinolap.job2.cube.BuildCubeJobBuilder;
+import com.kylinolap.job2.execution.Executable;
 import com.kylinolap.job2.execution.ExecutableState;
 import com.kylinolap.job2.execution.Output;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
@@ -122,7 +123,7 @@ public class JobService extends BasicService {
 
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public String submitJob(CubeInstance cube, long startDate, long endDate, CubeBuildTypeEnum buildType, String submitter) throws IOException, JobException, InvalidJobInstanceException {
+    public JobInstance submitJob(CubeInstance cube, long startDate, long endDate, CubeBuildTypeEnum buildType, String submitter) throws IOException, JobException, InvalidJobInstanceException {
 
         final List<BuildCubeJob> buildCubeJobs = listAllCubingJobs(cube.getName(), null, EnumSet.allOf(ExecutableState.class));
         for (BuildCubeJob job : buildCubeJobs) {
@@ -131,7 +132,6 @@ public class JobService extends BasicService {
             }
         }
 
-        String uuid = null;
         try {
             List<CubeSegment> cubeSegments;
             if (buildType == CubeBuildTypeEnum.BUILD) {
@@ -141,13 +141,14 @@ public class JobService extends BasicService {
             } else {
                 throw new JobException("invalid build type:" + buildType);
             }
+            Preconditions.checkState(cubeSegments.size() == 1, "can only allocate one segment");
+            CubeSegment segment = cubeSegments.get(0);
+            BuildCubeJobBuilder builder = BuildCubeJobBuilder.newBuilder(new JobEngineConfig(getConfig()), segment);
+            final BuildCubeJob job = builder.build();
+            segment.setLastBuildJobID(job.getId());
             getCubeManager().updateCube(cube);
-            for (CubeSegment segment : cubeSegments) {
-                uuid = segment.getUuid();
-                BuildCubeJobBuilder builder = BuildCubeJobBuilder.newBuilder(new JobEngineConfig(getConfig()), segment);
-                getExecutableManager().addJob(builder.build());
-                segment.setLastBuildJobID(uuid);
-            }
+            getExecutableManager().addJob(job);
+            return parseToJobInstance(job);
 //            for (JobInstance job : jobs) {
 //                this.getJobManager().submitJob(job);
 //                permissionService.init(job, null);
@@ -156,8 +157,6 @@ public class JobService extends BasicService {
         } catch (CubeIntegrityException e) {
             throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
-
-        return uuid;
     }
 
     public JobInstance getJobInstance(String uuid) throws IOException, JobException {
@@ -174,6 +173,7 @@ public class JobService extends BasicService {
         result.setSubmitter(cubeJob.getSubmitter());
         result.setUuid(cubeJob.getId());
         result.setType(CubeBuildTypeEnum.BUILD);
+        result.setStatus(parseToJobStatus(job.getStatus()));
         for (int i = 0; i < cubeJob.getTasks().size(); ++i) {
             AbstractExecutable task = cubeJob.getTasks().get(i);
             result.addStep(parseToJobStep(task, i));
@@ -187,7 +187,11 @@ public class JobService extends BasicService {
         result.setSequenceID(i);
         result.setStatus(parseToJobStepStatus(task.getStatus()));
         final Output output = getExecutableManager().getOutput(task.getId());
-        result.putInfo(output.getExtra());
+        for (Map.Entry<String, String> entry: output.getExtra().entrySet()) {
+            if (entry.getKey() != null && entry.getValue() != null) {
+                result.putInfo(entry.getKey(), entry.getValue());
+            }
+        }
         if (task instanceof ShellExecutable) {
             result.setExecCmd(((ShellExecutable) task).getCmd());
         }
@@ -200,6 +204,24 @@ public class JobService extends BasicService {
         return result;
     }
 
+    private JobStatusEnum parseToJobStatus(ExecutableState state) {
+        switch (state) {
+            case READY:
+                return JobStatusEnum.PENDING;
+            case RUNNING:
+                return JobStatusEnum.RUNNING;
+            case ERROR:
+                return JobStatusEnum.ERROR;
+            case DISCARDED:
+                return JobStatusEnum.DISCARDED;
+            case SUCCEED:
+                return JobStatusEnum.FINISHED;
+            case STOPPED:
+            default:
+                throw new RuntimeException("invalid state:" + state);
+        }
+    }
+
     private JobStepStatusEnum parseToJobStepStatus(ExecutableState state) {
         switch (state) {
             case READY:
@@ -208,12 +230,11 @@ public class JobService extends BasicService {
                 return JobStepStatusEnum.RUNNING;
             case ERROR:
                 return JobStepStatusEnum.ERROR;
-            case STOPPED:
-                return JobStepStatusEnum.PENDING;
             case DISCARDED:
                 return JobStepStatusEnum.DISCARDED;
             case SUCCEED:
                 return JobStepStatusEnum.FINISHED;
+            case STOPPED:
             default:
                 throw new RuntimeException("invalid state:" + state);
         }
@@ -222,7 +243,7 @@ public class JobService extends BasicService {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public void resumeJob(JobInstance job) throws IOException, JobException {
-        getExecutableManager().updateJobStatus(job.getId(), ExecutableState.READY);
+        getExecutableManager().resumeJob(job.getId());
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")

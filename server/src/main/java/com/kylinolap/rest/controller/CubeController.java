@@ -197,13 +197,11 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "/{cubeName}/rebuild", method = { RequestMethod.PUT })
     @ResponseBody
     public JobInstance rebuild(@PathVariable String cubeName, @RequestBody JobBuildRequest jobBuildRequest) {
-        JobInstance jobInstance = null;
         try {
             String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
             CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
-            String jobId = jobService.submitJob(cube, jobBuildRequest.getStartTime(), jobBuildRequest.getEndTime(), //
+            return jobService.submitJob(cube, jobBuildRequest.getStartTime(), jobBuildRequest.getEndTime(), //
                     CubeBuildTypeEnum.valueOf(jobBuildRequest.getBuildType()), submitter);
-            jobInstance = jobService.getJobInstance(jobId);
         } catch (JobException e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage());
@@ -214,8 +212,6 @@ public class CubeController extends BasicController {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage());
         }
-
-        return jobInstance;
     }
 
     @RequestMapping(value = "/{cubeName}/disable", method = { RequestMethod.PUT })
