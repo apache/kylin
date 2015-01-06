@@ -66,7 +66,7 @@ public class JoinedFlatTable {
             if (i > 0) {
                 ddl.append(",");
             }
-            ddl.append(col.getCanonicalName() + " " + SqlHiveDataTypeMapping.getHiveDataType(col.getDataType()) + "\n");
+            ddl.append(colName(col.getCanonicalName()) + " " + SqlHiveDataTypeMapping.getHiveDataType(col.getDataType()) + "\n");
         }
         ddl.append(")" + "\n");
 
@@ -236,5 +236,9 @@ public class JoinedFlatTable {
         String str = f.format(date);
         // note "2014-10-01" >= "2014-10-01 00:00:00" is FALSE
         return StringUtil.dropSuffix(str, " 00:00:00");
+    }
+    
+    private static String colName(String canonicalColName) {
+        return canonicalColName.replace(".", "_");
     }
 }

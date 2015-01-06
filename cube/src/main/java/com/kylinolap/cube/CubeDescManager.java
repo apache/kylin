@@ -120,7 +120,6 @@ public class CubeDescManager {
 
     private CubeDesc loadCubeDesc(String path) throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Loading CubeDesc " + store.getReadableResourcePath(path));
 
         CubeDesc ndesc = store.getResource(path, CubeDesc.class, CUBE_DESC_SERIALIZER);
 
