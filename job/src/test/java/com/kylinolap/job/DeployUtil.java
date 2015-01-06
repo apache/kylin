@@ -200,15 +200,15 @@ public class DeployUtil {
             hbaseDataStream.close();
             localFileStream.close();
 
-            config().getCliCommandExecutor().copyFile(localBufferFile.getPath(), config().getCliWorkingDir());
-            localBufferFile.delete();
+            localBufferFile.deleteOnExit();
         }
+        String tableFileDir = temp.getParent();
         temp.delete();
 
         HiveClient hiveClient = new HiveClient();
         
         // create hive tables
-        hiveClient.executeHQL("CREATE DATABASE IF NOT EXISTS EDW;");
+        hiveClient.executeHQL("CREATE DATABASE IF NOT EXISTS EDW");
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CAL_DT.toUpperCase())));
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CATEGORY_GROUPINGS.toUpperCase())));
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_KYLIN_FACT.toUpperCase())));
@@ -217,21 +217,22 @@ public class DeployUtil {
 
         // load data to hive tables
         // LOAD DATA LOCAL INPATH 'filepath' [OVERWRITE] INTO TABLE tablename
-        hiveClient.executeHQL(generateLoadDataHql(TABLE_CAL_DT));
-        hiveClient.executeHQL(generateLoadDataHql(TABLE_CATEGORY_GROUPINGS));
-        hiveClient.executeHQL(generateLoadDataHql(TABLE_KYLIN_FACT));
-        hiveClient.executeHQL(generateLoadDataHql(TABLE_SELLER_TYPE_DIM));
-        hiveClient.executeHQL(generateLoadDataHql(TABLE_SITES));
+        hiveClient.executeHQL(generateLoadDataHql(TABLE_CAL_DT, tableFileDir));
+        hiveClient.executeHQL(generateLoadDataHql(TABLE_CATEGORY_GROUPINGS, tableFileDir));
+        hiveClient.executeHQL(generateLoadDataHql(TABLE_KYLIN_FACT, tableFileDir));
+        hiveClient.executeHQL(generateLoadDataHql(TABLE_SELLER_TYPE_DIM, tableFileDir));
+        hiveClient.executeHQL(generateLoadDataHql(TABLE_SITES, tableFileDir));
     }
 
-    private static String generateLoadDataHql(String tableName) {
-        return "LOAD DATA LOCAL INPATH '" + config().getCliWorkingDir() + "/" + tableName.toUpperCase() + ".csv' OVERWRITE INTO TABLE " + tableName.toUpperCase();
+    private static String generateLoadDataHql(String tableName, String tableFileDir) {
+        return "LOAD DATA LOCAL INPATH '" + tableFileDir + "/" + tableName.toUpperCase() + ".csv' OVERWRITE INTO TABLE " + tableName.toUpperCase();
     }
 
-    private static String generateCreateTableHql(TableDesc tableDesc) {
+    private static String[] generateCreateTableHql(TableDesc tableDesc) {
+        
+        String dropsql = "DROP TABLE IF EXISTS " + tableDesc.getIdentity();
         StringBuilder ddl = new StringBuilder();
 
-        ddl.append("DROP TABLE IF EXISTS " + tableDesc.getIdentity() + ";\n");
         ddl.append("CREATE TABLE " + tableDesc.getIdentity() + "\n");
         ddl.append("(" + "\n");
 
@@ -245,9 +246,9 @@ public class DeployUtil {
 
         ddl.append(")" + "\n");
         ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY ','" + "\n");
-        ddl.append("STORED AS TEXTFILE;");
+        ddl.append("STORED AS TEXTFILE");
 
-        return ddl.toString();
+        return new String[] {dropsql, ddl.toString()};
     }
 
 }

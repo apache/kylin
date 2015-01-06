@@ -81,6 +81,11 @@ public class HiveClient {
             throw new IOException("Failed to execute hql [" + hql + "], return code from hive driver : [" + retCode + "]");
         }
     }
+    
+    public void executeHQL(String[] hqls) throws CommandNeedRetryException, IOException {
+        for(String sql: hqls)
+            executeHQL(sql);
+    }
 
     private HiveMetaStoreClient getMetaStoreClient() throws Exception {
         if (metaStoreClient == null) {
