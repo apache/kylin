@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
@@ -186,7 +187,6 @@ public class MetadataManager {
         srcTableMap.put(tableIdentity, srcTable);
     }
 
-    // sync on update
     private void init(KylinConfig config) throws IOException {
         this.config = config;
         reloadAllSourceTable();
@@ -202,34 +202,45 @@ public class MetadataManager {
 
         List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_EXD_RESOURCE_ROOT, MetadataConstances.FILE_SURFIX);
         for (String path : paths) {
-            Map<String, String> attrContainer = new HashMap<String, String>();
-            String tableName = loadSourceTableExd(getStore(), path, attrContainer);
-            String tableIdentity = tableName;
-            checkNoDupName(tableIdentity, srcTableExdMap.containsKey(tableIdentity), "SourceTableExd", path);
-
-            srcTableExdMap.putLocal(tableIdentity, attrContainer);
+            reloadSourceTableExdAt(path);
         }
+        
         logger.debug("Loaded " + srcTableExdMap.size() + " SourceTable EXD(s)");
     }
 
-    /**
-     * return table name
-     */
-    @SuppressWarnings("unchecked")
-    private String loadSourceTableExd(ResourceStore store, String path, Map<String, String> attrContainer) throws IOException {
+    public Map<String, String> reloadSourceTableExt(String tableIdentity) throws IOException {
+        return reloadSourceTableExdAt(TableDesc.concatExdResourcePath(tableIdentity));
+    }
 
+    @SuppressWarnings("unchecked")
+    private Map<String, String> reloadSourceTableExdAt(String path) throws IOException {
+        Map<String, String> attrs = Maps.newHashMap();
+
+        ResourceStore store = getStore();
         InputStream is = store.getResource(path);
-        if (is != null) {
-            attrContainer.putAll(JsonUtil.readValue(is, HashMap.class));
-            String file = path;
-            if (file.indexOf("/") > -1) {
-                file = file.substring(file.lastIndexOf("/") + 1);
-            }
-            return file.substring(0, file.length() - MetadataConstances.FILE_SURFIX.length());
-        } else {
-            logger.debug("Failed to get table exd info from " + path);
+        if (is == null) {
+            logger.warn("Failed to get table exd info from " + path);
             return null;
         }
+
+        try {
+            attrs.putAll(JsonUtil.readValue(is, HashMap.class));
+        } finally {
+            if (is != null)
+                is.close();
+        }
+
+        // parse table identity from file name
+        String file = path;
+        if (file.indexOf("/") > -1) {
+            file = file.substring(file.lastIndexOf("/") + 1);
+        }
+        String tableIdentity = file.substring(0, file.length() - MetadataConstances.FILE_SURFIX.length());
+        
+        checkNoDupName(tableIdentity, srcTableExdMap.containsKey(tableIdentity), "SourceTableExd", path);
+
+        srcTableExdMap.putLocal(tableIdentity, attrs);
+        return attrs;
     }
 
     private void reloadAllSourceTable() throws IOException {
@@ -240,20 +251,25 @@ public class MetadataManager {
 
         List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_RESOURCE_ROOT, MetadataConstances.FILE_SURFIX);
         for (String path : paths) {
-            TableDesc t = loadSourceTable(path);
-            String tableIdentity = t.getIdentity();
-            checkNoDupName(tableIdentity, srcTableMap.containsKey(tableIdentity), "SourceTable", path);
-
-            srcTableMap.putLocal(tableIdentity, t);
+            reloadSourceTableAt(path);
         }
 
         logger.debug("Loaded " + srcTableMap.size() + " SourceTable(s)");
     }
 
-    private TableDesc loadSourceTable(String path) throws IOException {
+    public TableDesc reloadSourceTable(String tableIdentity) throws IOException {
+        return reloadSourceTableAt(TableDesc.concatResourcePath(tableIdentity));
+    }
+
+    private TableDesc reloadSourceTableAt(String path) throws IOException {
         ResourceStore store = getStore();
         TableDesc t = store.getResource(path, TableDesc.class, TABLE_SERIALIZER);
         t.init();
+
+        String tableIdentity = t.getIdentity();
+        checkNoDupName(tableIdentity, srcTableMap.containsKey(tableIdentity), "SourceTable", path);
+
+        srcTableMap.putLocal(tableIdentity, t);
         return t;
     }
 
@@ -269,17 +285,17 @@ public class MetadataManager {
 
         List<String> paths = store.collectResourceRecursively(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT, MetadataConstances.FILE_SURFIX);
         for (String path : paths) {
-            DataModelDesc modelDesc = loadDataModelDesc(path);
-            String name = modelDesc.getName();
-            checkNoDupName(name, dataModelDescMap.containsKey(name), "DataModel", path);
-
-            dataModelDescMap.putLocal(name, modelDesc);
+            reloadDataModelDescAt(path);
         }
 
         logger.debug("Loaded " + dataModelDescMap.size() + " DataModel(s)");
     }
 
-    private DataModelDesc loadDataModelDesc(String path) throws IOException {
+    public DataModelDesc reloadDataModelDesc(String name) {
+        return reloadDataModelDescAt(DataModelDesc.concatResourcePath(name));
+    }
+
+    private DataModelDesc reloadDataModelDescAt(String path) {
         ResourceStore store = getStore();
         DataModelDesc ndesc = null;
         try {
@@ -294,6 +310,10 @@ public class MetadataManager {
             throw new IllegalStateException("DataModelDesc at " + path + " has issues: " + ndesc.getError());
         }
 
+        String name = ndesc.getName();
+        checkNoDupName(name, dataModelDescMap.containsKey(name), "DataModel", path);
+
+        dataModelDescMap.putLocal(name, ndesc);
         return ndesc;
     }
 
@@ -320,7 +340,7 @@ public class MetadataManager {
         } catch (Exception e) {
             dataModelDesc.addError(e.getMessage(), true);
         }
-        
+
         if (!dataModelDesc.getError().isEmpty()) {
             return dataModelDesc;
         }
