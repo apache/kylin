@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,17 +92,15 @@ public class HiveTable implements ReadableTable {
             return override;
         }
         
-        Table table = null;
+        String hdfsDir = null;
         try {
             HiveClient hiveClient = new HiveClient();
-            HiveMetaStoreClient metaDataClient = hiveClient.getMetaStoreClient();
-            table = metaDataClient.getTable(database, hiveTable);
+            hdfsDir = hiveClient.getHiveTableLocation(database, hiveTable);
         } catch (Exception e) {
             e.printStackTrace();
             throw new IOException(e);
         }
 
-        String hdfsDir = table.getSd().getLocation();
         if (needFilePath) {
             FileSystem fs = HadoopUtil.getFileSystem(hdfsDir);
             FileStatus file = findOnlyFile(hdfsDir, fs);

@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.slf4j.Logger;
@@ -117,9 +116,8 @@ public class HiveSourceTableLoader {
             List<FieldSchema> fields = null;
             try {
                 HiveClient hiveClient = new HiveClient();
-                HiveMetaStoreClient metaDataClient = hiveClient.getMetaStoreClient();
-                table = metaDataClient.getTable(database, tableName);
-                fields = metaDataClient.getFields(database, tableName);
+                table = hiveClient.getHiveTable(database, tableName);
+                fields = hiveClient.getHiveTableFields(database, tableName);
             } catch (Exception e) {
                 e.printStackTrace();
                 throw new IOException(e);
