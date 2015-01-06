@@ -16,10 +16,22 @@
 
 package com.kylinolap.common.util;
 
+import java.io.File;
+
 /**
  * @author ysong1
  */
 public class HBaseMetadataTestCase extends AbstractKylinTestCase {
+
+    static {
+        if (useSandbox()) {
+            try {
+                ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox/").getAbsolutePath());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     @Override
     public void createTestMetadata() throws Exception {
@@ -38,13 +50,12 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
             staticCreateTestMetadata(AbstractKylinTestCase.MINICLUSTER_TEST_DATA);
             HBaseMiniclusterMetadataTestCase.startupMinicluster();
         }
-        
+
     }
-    
+
     public static boolean useSandbox() {
         String useSandbox = System.getProperty("useSandbox");
         return Boolean.parseBoolean(useSandbox);
-
     }
 
 }
