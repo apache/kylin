@@ -8,7 +8,9 @@ import com.kylinolap.job2.dao.JobDao;
 import com.kylinolap.job2.dao.JobOutputPO;
 import com.kylinolap.job2.dao.JobPO;
 import com.kylinolap.job2.exception.PersistentException;
+import com.kylinolap.job2.execution.DefaultOutput;
 import com.kylinolap.job2.execution.ExecutableState;
+import com.kylinolap.job2.execution.Output;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
 import com.kylinolap.job2.impl.threadpool.DefaultChainedExecutable;
 import org.slf4j.Logger;
@@ -88,28 +90,15 @@ public class ExecutableManager {
         }
     }
 
-    public ExecutableState getJobStatus(String uuid) {
+    public Output getOutput(String uuid) {
         try {
-            return ExecutableState.valueOf(jobDao.getJobOutput(uuid).getStatus());
-        } catch (PersistentException e) {
-            logger.error("fail to get job output:" + uuid, e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    public long getJobOutputTimeStamp(String uuid) {
-        try {
-            return jobDao.getJobOutput(uuid).getLastModified();
-        } catch (PersistentException e) {
-            logger.error("fail to get job output:" + uuid, e);
-            throw new RuntimeException(e);
-        }
-    }
-
-
-    public String getJobOutput(String uuid) {
-        try {
-            return jobDao.getJobOutput(uuid).getContent();
+            final JobOutputPO jobOutput = jobDao.getJobOutput(uuid);
+            final DefaultOutput result = new DefaultOutput();
+            result.setExtra(jobOutput.getInfo());
+            result.setState(ExecutableState.valueOf(jobOutput.getStatus()));
+            result.setVerboseMsg(jobOutput.getContent());
+            result.setLastModified(jobOutput.getLastModified());
+            return result;
         } catch (PersistentException e) {
             logger.error("fail to get job output:" + uuid, e);
             throw new RuntimeException(e);
@@ -177,20 +166,10 @@ public class ExecutableManager {
         }
         try {
             JobOutputPO output = jobDao.getJobOutput(id);
-            output.setInfo(info);
+            output.getInfo().putAll(info);
             jobDao.updateJobOutput(output);
         } catch (PersistentException e) {
             logger.error("error update job info, id:" + id + "  info:" + info.toString());
-            throw new RuntimeException(e);
-        }
-    }
-
-    public Map<String, String> getJobInfo(String id) {
-        try {
-            JobOutputPO output = jobDao.getJobOutput(id);
-            return output.getInfo();
-        } catch (PersistentException e) {
-            logger.error("error get job info, id:" + id);
             throw new RuntimeException(e);
         }
     }

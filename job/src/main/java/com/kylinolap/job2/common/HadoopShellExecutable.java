@@ -31,7 +31,7 @@ public class HadoopShellExecutable extends AbstractExecutable {
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         final String mapReduceJobClass = getJobClass();
-        String params = getMapReduceParams();
+        String params = getJobParams();
         Preconditions.checkNotNull(mapReduceJobClass);
         Preconditions.checkNotNull(params);
         try {
@@ -54,15 +54,15 @@ public class HadoopShellExecutable extends AbstractExecutable {
         setParam(KEY_MR_JOB, clazzName.getName());
     }
 
-    String getJobClass() throws ExecuteException {
+    public String getJobClass() throws ExecuteException {
         return getParam(KEY_MR_JOB);
     }
 
-    public void setMapReduceParams(String param) {
+    public void setJobParams(String param) {
         setParam(KEY_PARAMS, param);
     }
 
-    protected String getMapReduceParams() {
+    public String getJobParams() {
         return getParam(KEY_PARAMS);
     }
 

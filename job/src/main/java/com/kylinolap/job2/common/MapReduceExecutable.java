@@ -77,7 +77,7 @@ public class MapReduceExecutable extends AbstractExecutable {
         setParam(KEY_MR_JOB, clazzName.getName());
     }
 
-    String getMapReduceJobClass() throws ExecuteException {
+    public String getMapReduceJobClass() throws ExecuteException {
         return getParam(KEY_MR_JOB);
     }
 
@@ -85,7 +85,7 @@ public class MapReduceExecutable extends AbstractExecutable {
         setParam(KEY_PARAMS, param);
     }
 
-    protected String getMapReduceParams() {
+    public String getMapReduceParams() {
         return getParam(KEY_PARAMS);
     }
 

@@ -47,7 +47,7 @@ public class ShellExecutable extends AbstractExecutable {
         setParam(CMD, cmd);
     }
 
-    private String getCmd() {
+    public String getCmd() {
         return getParam(CMD);
     }
 

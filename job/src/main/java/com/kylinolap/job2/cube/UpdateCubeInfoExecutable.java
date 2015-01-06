@@ -82,15 +82,15 @@ public class UpdateCubeInfoExecutable extends AbstractExecutable {
         final CubeInstance cube = cubeManager.getCube(getCubeName());
         final CubeSegment segment = cube.getSegmentById(getSegmentId());
 
-        String sourceRecordsSize = jobService.getJobInfo(getCreateFlatTableStepId()).get(ExecutableConstants.SOURCE_RECORDS_SIZE);
+        String sourceRecordsSize = jobService.getOutput(getCreateFlatTableStepId()).getExtra().get(ExecutableConstants.SOURCE_RECORDS_SIZE);
         Preconditions.checkState(StringUtils.isNotEmpty(sourceRecordsSize), "Can't get cube source record size.");
         long sourceSize = Long.parseLong(sourceRecordsSize);
 
-        String sourceRecordsCount = jobService.getJobInfo(getBaseCuboidStepId()).get(ExecutableConstants.SOURCE_RECORDS_COUNT);
+        String sourceRecordsCount = jobService.getOutput(getBaseCuboidStepId()).getExtra().get(ExecutableConstants.SOURCE_RECORDS_COUNT);
         Preconditions.checkState(StringUtils.isNotEmpty(sourceRecordsCount), "Can't get cube source record count.");
         long sourceCount = Long.parseLong(sourceRecordsCount);
 
-        String cubeSizeString = jobService.getJobInfo(getConvertToHfileStepId()).get(ExecutableConstants.HDFS_BYTES_WRITTEN);
+        String cubeSizeString = jobService.getOutput(getConvertToHfileStepId()).getExtra().get(ExecutableConstants.HDFS_BYTES_WRITTEN);
         Preconditions.checkState(StringUtils.isNotEmpty(cubeSizeString), "Can't get cube segment size.");
         long size = Long.parseLong(cubeSizeString) / 1024;
 

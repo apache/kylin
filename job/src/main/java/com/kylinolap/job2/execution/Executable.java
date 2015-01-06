@@ -17,7 +17,7 @@ public interface Executable {
 
     ExecutableState getStatus();
 
-    String getOutput();
+    Output getOutput();
 
     boolean isRunnable();
 

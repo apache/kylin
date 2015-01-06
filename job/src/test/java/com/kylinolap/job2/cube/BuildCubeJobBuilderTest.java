@@ -114,7 +114,7 @@ public class BuildCubeJobBuilderTest {
         final BuildCubeJob job = buildCubeJobBuilder.build();
         jobService.addJob(job);
         waitForJob(job.getId());
-        assertEquals(ExecutableState.SUCCEED, jobService.getJobStatus(job.getId()));
+        assertEquals(ExecutableState.SUCCEED, jobService.getOutput(job.getId()).getState());
     }
 
     private int cleanupOldCubes() throws Exception {
