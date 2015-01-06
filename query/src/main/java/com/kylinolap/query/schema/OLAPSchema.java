@@ -16,11 +16,9 @@
 package com.kylinolap.query.schema;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import com.kylinolap.metadata.project.ProjectInstance;
-import com.kylinolap.metadata.project.ProjectManager;
 import net.hydromatic.optiq.Table;
 import net.hydromatic.optiq.impl.AbstractSchema;
 
@@ -28,6 +26,8 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.TableDesc;
+import com.kylinolap.metadata.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectManager;
 
 /**
  * @author xjiang
@@ -70,7 +70,7 @@ public class OLAPSchema extends AbstractSchema {
 
     private Map<String, Table> buildTableMap() {
         Map<String, Table> olapTables = new HashMap<String, Table>();
-        List<TableDesc> projectTables = ProjectManager.getInstance(config).listExposedTables(projectName);
+        Set<TableDesc> projectTables = ProjectManager.getInstance(config).listExposedTables(projectName);
 
         for (TableDesc tableDesc : projectTables) {
             if (tableDesc.getDatabase().equals(schemaName)) {

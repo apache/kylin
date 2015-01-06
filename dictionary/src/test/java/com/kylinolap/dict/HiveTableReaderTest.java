@@ -16,34 +16,25 @@
 
 package com.kylinolap.dict;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.kylinolap.common.util.ClasspathUtil;
+import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.dict.lookup.HiveTableReader;
 
-public class HiveTableReaderTest {
-
-    private static HiveTableReader reader = null;
-
-    @BeforeClass
-    public static void setup() throws Exception {
-        ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox/").getAbsolutePath());
-
-        reader = new HiveTableReader("default", "test_kylin_fact");
-    }
-
-    public static void tearDown() throws IOException {
-        reader.close();
-    }
+/**
+ * This test case need the hive runtime; Please run it with sandbox; It is in the exclude list of default profile in pom.xml
+ * @author shaoshi
+ *
+ */
+public class HiveTableReaderTest extends HBaseMetadataTestCase {
 
     @Test
     public void test() throws IOException {
+        HiveTableReader reader = new HiveTableReader("default", "test_kylin_fact");
         int rowNumber = 0;
         while (reader.next()) {
             String[] row = reader.getRow();
@@ -53,5 +44,6 @@ public class HiveTableReaderTest {
         }
 
         Assert.assertEquals(10000, rowNumber);
+        reader.close();
     }
 }

@@ -29,6 +29,7 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
+import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.CubePartitionDesc;
 import com.kylinolap.cube.model.DimensionDesc;
@@ -40,7 +41,7 @@ import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.metadata.realization.*;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class CubeInstance extends AbstractRealization {
+public class CubeInstance extends RootPersistentEntity implements IRealization {
 
     public static CubeInstance create(String cubeName, String projectName, CubeDesc cubeDesc) {
         CubeInstance cubeInstance = new CubeInstance();
@@ -187,7 +188,7 @@ public class CubeInstance extends AbstractRealization {
 
     @Override
     public String toString() {
-        return getCanonicalName(name);
+        return getCanonicalName();
     }
 
     // ============================================================================
@@ -233,8 +234,24 @@ public class CubeInstance extends AbstractRealization {
         this.config = config;
     }
 
+    @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String getCanonicalName() {
+        return getType() + "[name=" + name + "]";
+    }
+
+    @Override
+    public String getFactTable() {
+        return this.getDescriptor().getFactTable();
+    }
+
+    @Override
+    public List<MeasureDesc> getMeasures() {
+        return getDescriptor().getMeasures();
     }
 
     public void setName(String name) {
@@ -444,16 +461,6 @@ public class CubeInstance extends AbstractRealization {
     @Override
     public List<TblColRef> getAllColumns() {
         return Lists.newArrayList(getDescriptor().listAllColumns());
-    }
-
-    @Override
-    public String getFactTable() {
-        return this.getDescriptor().getFactTable();
-    }
-
-    @Override
-    public List<MeasureDesc> getMeasures() {
-        return getDescriptor().getMeasures();
     }
 
     @Override

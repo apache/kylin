@@ -3,13 +3,19 @@ package com.kylinolap.metadata.tool;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.hadoop.hive.cli.CliSessionState;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
+import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
+import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.metastore.api.UnknownDBException;
+import org.apache.hadoop.hive.metastore.api.UnknownTableException;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.session.SessionState;
@@ -18,6 +24,7 @@ import org.apache.hive.hcatalog.data.transfer.DataTransferFactory;
 import org.apache.hive.hcatalog.data.transfer.HCatReader;
 import org.apache.hive.hcatalog.data.transfer.ReadEntity;
 import org.apache.hive.hcatalog.data.transfer.ReaderContext;
+import org.apache.thrift.TException;
 
 /*
  * Copyright 2013-2014 eBay Software Foundation
@@ -41,15 +48,8 @@ public class HiveClient {
     protected Driver driver = null;
     protected HiveMetaStoreClient metaStoreClient = null;
 
-    public HiveClient() throws MetaException {
-        setup();
-    }
-
-    private void setup() throws MetaException {
-        hiveConf = new HiveConf(HiveSourceTableLoader.class);
-        driver = new Driver(hiveConf);
-        metaStoreClient = new HiveMetaStoreClient(hiveConf);
-        SessionState.start(new CliSessionState(hiveConf));
+    public HiveClient() {
+        hiveConf = new HiveConf(HiveClient.class);
     }
 
     public HiveConf getHiveConf() {
@@ -60,38 +60,53 @@ public class HiveClient {
      * Get the hive ql driver to execute ddl or dml
      * @return
      */
-    public Driver getDriver() {
+    private Driver getDriver() {
+        if (driver == null) {
+            driver = new Driver(hiveConf);
+            SessionState.start(new CliSessionState(hiveConf));
+        }
+
         return driver;
     }
 
     /**
-     * Get the Hive Meta store client;
-     * @return
+     * 
+     * @param hql
+     * @throws CommandNeedRetryException
+     * @throws IOException
      */
-    public HiveMetaStoreClient getMetaStoreClient() {
+    public void executeHQL(String hql) throws CommandNeedRetryException, IOException {
+        int retCode = getDriver().run(hql).getResponseCode();
+        if (retCode != 0) {
+            throw new IOException("Failed to execute hql [" + hql + "], return code from hive driver : [" + retCode + "]");
+        }
+    }
+    
+    public void executeHQL(String[] hqls) throws CommandNeedRetryException, IOException {
+        for(String sql: hqls)
+            executeHQL(sql);
+    }
+
+    private HiveMetaStoreClient getMetaStoreClient() throws Exception {
+        if (metaStoreClient == null) {
+            metaStoreClient = new HiveMetaStoreClient(hiveConf);
+        }
         return metaStoreClient;
     }
 
-    public ReaderContext getReaderContext(String database, String table) throws MetaException, CommandNeedRetryException, IOException, ClassNotFoundException {
-
-        Iterator<Entry<String, String>> itr = hiveConf.iterator();
-        Map<String, String> map = new HashMap<String, String>();
-        while (itr.hasNext()) {
-            Entry<String, String> kv = itr.next();
-            map.put(kv.getKey(), kv.getValue());
-        }
-
-        ReaderContext readCntxt = runsInMaster(map, database, table);
-
-        return readCntxt;
+    public Table getHiveTable(String database, String tableName) throws Exception {
+        return getMetaStoreClient().getTable(database, tableName);
     }
 
-    private ReaderContext runsInMaster(Map<String, String> config, String database, String table) throws HCatException {
-        ReadEntity entity = new ReadEntity.Builder().withDatabase(database).withTable(table).build();
-        HCatReader reader = DataTransferFactory.getHCatReader(entity, config);
-        ReaderContext cntxt = reader.prepareRead();
-        return cntxt;
+    public List<FieldSchema> getHiveTableFields(String database, String tableName) throws Exception {
+        return getMetaStoreClient().getFields(database, tableName);
     }
+
+    public String getHiveTableLocation(String database, String tableName) throws Exception {
+        Table t = getHiveTable(database, tableName);
+        return t.getSd().getLocation();
+    }
+
 
     public HCatReader getHCatReader(ReaderContext cntxt, int slaveNum) throws HCatException {
 

@@ -77,7 +77,7 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         Map<String, Integer> dimensionIndexMap = Maps.newHashMap();
         int columnIndex = 0;
         for (TblColRef col : cubeDesc.listDimensionColumnsExcludingDerived()) {
-            dimensionIndexMap.put(col.getCanonicalName(), columnIndex);
+            dimensionIndexMap.put(colName(col.getCanonicalName()), columnIndex);
             columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), col));
             columnIndex++;
         }
@@ -86,7 +86,7 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         List<TblColRef> cuboidColumns = baseCuboid.getColumns();
         rowKeyColumnIndexes = new int[rowkeyColCount];
         for (int i = 0; i < rowkeyColCount; i++) {
-            String colName = cuboidColumns.get(i).getCanonicalName();
+            String colName = colName(cuboidColumns.get(i).getCanonicalName());
             Integer dimIdx = dimensionIndexMap.get(colName);
             if (dimIdx == null) {
                 throw new RuntimeException("Can't find column " + colName);
@@ -193,4 +193,7 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         return tableAliasMap.get(tableName.toUpperCase());
     }
 
+    private static String colName(String canonicalColName) {
+        return canonicalColName.replace(".", "_");
+    }
 }

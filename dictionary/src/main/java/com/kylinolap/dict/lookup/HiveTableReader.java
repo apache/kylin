@@ -18,23 +18,31 @@ package com.kylinolap.dict.lookup;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.hcatalog.common.HCatException;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.transfer.DataTransferFactory;
 import org.apache.hive.hcatalog.data.transfer.HCatReader;
+import org.apache.hive.hcatalog.data.transfer.ReadEntity;
 import org.apache.hive.hcatalog.data.transfer.ReaderContext;
 
-import com.kylinolap.metadata.tool.HiveClient;
-
+/**
+ * An implementation of TableReader with HCatalog for Hive table.
+ * @author shaoshi
+ *
+ */
 public class HiveTableReader implements TableReader {
 
     private String dbName;
     private String tableName;
     private int currentSplit = -1;
-    private ReaderContext readCntxt;
+    private ReaderContext readCntxt = null;
     private Iterator<HCatRecord> currentHCatRecordItr = null;
     private HCatRecord currentHCatRecord;
     private int numberOfSplits = 0;
@@ -42,9 +50,12 @@ public class HiveTableReader implements TableReader {
     public HiveTableReader(String dbName, String tableName) throws IOException {
         this.dbName = dbName;
         this.tableName = tableName;
+        initialize();
+    }
+
+    private void initialize() throws IOException {
         try {
-            HiveClient hiveClient = new HiveClient();
-            this.readCntxt = hiveClient.getReaderContext(dbName, tableName);
+            this.readCntxt = getHiveReaderContext(dbName, tableName);
         } catch (Exception e) {
             e.printStackTrace();
             throw new IOException(e);
@@ -52,33 +63,22 @@ public class HiveTableReader implements TableReader {
 
         this.numberOfSplits = readCntxt.numSplits();
     }
-
-    @Override
-    public void close() throws IOException {
-        this.readCntxt = null;
-        this.currentHCatRecordItr = null;
-        this.currentHCatRecord = null;
-        this.currentSplit = -1;
-    }
-
+    
     @Override
     public boolean next() throws IOException {
+        
         while (currentHCatRecordItr == null || !currentHCatRecordItr.hasNext()) {
             currentSplit++;
             if (currentSplit == numberOfSplits) {
                 return false;
             }
-            currentHCatRecordItr = loadHCatRecordItr(currentSplit);
+            
+            currentHCatRecordItr = loadHCatRecordItr(readCntxt, currentSplit);
         }
 
         currentHCatRecord = currentHCatRecordItr.next();
 
         return true;
-    }
-
-    private Iterator<HCatRecord> loadHCatRecordItr(int dataSplit) throws HCatException {
-        HCatReader currentHCatReader = DataTransferFactory.getHCatReader(readCntxt, dataSplit);
-        return currentHCatReader.read();
     }
 
     @Override
@@ -97,8 +97,36 @@ public class HiveTableReader implements TableReader {
 
     }
 
+    @Override
+    public void close() throws IOException {
+        this.readCntxt = null;
+        this.currentHCatRecordItr = null;
+        this.currentHCatRecord = null;
+        this.currentSplit = -1;
+    }
+    
     public String toString() {
         return "hive table reader for: " + dbName + "." + tableName;
     }
 
+    private static ReaderContext getHiveReaderContext(String database, String table) throws Exception {
+        HiveConf hiveConf = new HiveConf(HiveTableReader.class);
+        Iterator<Entry<String, String>> itr = hiveConf.iterator();
+        Map<String, String> map = new HashMap<String, String>();
+        while (itr.hasNext()) {
+            Entry<String, String> kv = itr.next();
+            map.put(kv.getKey(), kv.getValue());
+        }
+
+        ReadEntity entity = new ReadEntity.Builder().withDatabase(database).withTable(table).build();
+        HCatReader reader = DataTransferFactory.getHCatReader(entity, map);
+        ReaderContext cntxt = reader.prepareRead();
+
+        return cntxt;
+    }
+
+    private static Iterator<HCatRecord> loadHCatRecordItr(ReaderContext readCntxt, int dataSplit) throws HCatException {
+        HCatReader currentHCatReader = DataTransferFactory.getHCatReader(readCntxt, dataSplit);
+        return currentHCatReader.read();
+    }
 }

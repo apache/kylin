@@ -15,6 +15,38 @@
  */
 package com.kylinolap.rest.service;
 
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
+import com.google.common.io.Files;
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.cube.CubeDescManager;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.job.JobInstance;
+import com.kylinolap.job.JobManager;
+import com.kylinolap.job.engine.JobEngineConfig;
+import com.kylinolap.job.exception.JobException;
+import com.kylinolap.job2.cube.BuildCubeJob;
+import com.kylinolap.job2.execution.ExecutableState;
+import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
+import com.kylinolap.job2.service.ExecutableManager;
+import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectManager;
+import com.kylinolap.metadata.realization.RealizationType;
+import com.kylinolap.query.enumerator.OLAPQuery;
+import com.kylinolap.query.relnode.OLAPContext;
+import com.kylinolap.query.schema.OLAPSchemaFactory;
+import com.kylinolap.rest.controller.QueryController;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+
+import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -27,42 +59,6 @@ import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import javax.sql.DataSource;
-
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-import com.kylinolap.job.JobInstance;
-import com.kylinolap.job2.cube.BuildCubeJob;
-import com.kylinolap.job2.execution.ExecutableState;
-import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
-import com.kylinolap.job2.service.ExecutableManager;
-import com.kylinolap.metadata.project.ProjectInstance;
-import com.kylinolap.metadata.project.ProjectManager;
-import com.kylinolap.metadata.realization.RealizationRegistry;
-
-import com.kylinolap.metadata.realization.RealizationType;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Caching;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
-
-import com.google.common.io.Files;
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.cube.CubeDescManager;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.job.JobManager;
-import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job.exception.JobException;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.query.enumerator.OLAPQuery;
-import com.kylinolap.query.relnode.OLAPContext;
-import com.kylinolap.query.schema.OLAPSchemaFactory;
-import com.kylinolap.rest.controller.QueryController;
 
 public abstract class BasicService {
 
