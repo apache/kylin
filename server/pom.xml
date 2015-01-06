@@ -325,7 +325,22 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
+         <dependency>
+            <groupId>org.apache.hive.hcatalog</groupId>
+            <artifactId>hive-hcatalog-core</artifactId>
+            <version>${hive-hcatalog.version}</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>servlet-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.servlet.jsp</groupId>
+                    <artifactId>jsp-api</artifactId>
+                </exclusion>
+            </exclusions>
+          </dependency>
         <!-- Tomcat Env -->
         <dependency>
             <groupId>org.apache.tomcat</groupId>

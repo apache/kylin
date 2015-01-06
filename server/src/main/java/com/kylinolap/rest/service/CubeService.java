@@ -487,6 +487,7 @@ public class CubeService extends BasicService {
             logger.error("Cannot find table descirptor " + tableName, e);
             throw e;
         }
+        /*
         Map<String, String> exd = getMetadataManager().getTableDescExd(tableName);
         if (exd == null || !Boolean.valueOf(exd.get(MetadataConstances.TABLE_EXD_STATUS_KEY))) {
             throw new IllegalArgumentException("Table " + tableName + " does not exist.");
@@ -503,14 +504,11 @@ public class CubeService extends BasicService {
         if (delimiter != null) {
             delim = delimiter;
         }
+        */
         String jarPath = getKylinConfig().getKylinJobJarPath();
-        String outPath = HiveColumnCardinalityJob.OUTPUT_PATH + "/" + tableName;
-        String[] args = null;
-        if (delim == null) {
-            args = new String[] { "-input", location, "-output", outPath, "-iformat", inputFormat };
-        } else {
-            args = new String[] { "-input", location, "-output", outPath, "-iformat", inputFormat, "-idelim", delim };
-        }
+        String outPath = HiveColumnCardinalityJob.OUTPUT_PATH + "/" + tableName.toUpperCase();
+        String[] args = new String[] {"-table", tableName, "-output", outPath };
+        
         HiveColumnCardinalityJob job = new HiveColumnCardinalityJob(jarPath, null);
         int hresult = 0;
         try {

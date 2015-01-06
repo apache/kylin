@@ -103,4 +103,16 @@ public class HadoopUtil {
         return conf;
     }
 
+    /**
+     * 
+     * @param table the identifier of hive table, in format <db_name>.<table_name>
+     * @return a string array with 2 elements: {"db_name", "table_name"}
+     */
+    public static String[] parseHiveTableName(String table) {
+        int cut = table.indexOf('.');
+        String database = cut >= 0 ? table.substring(0, cut).trim() : "DEFAULT";
+        String tableName = cut >= 0 ? table.substring(cut + 1).trim() : table.trim();
+        
+        return new String[] {database, tableName};
+    }
 }
