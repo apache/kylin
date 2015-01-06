@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.kylinolap.common.KylinConfig;
@@ -35,6 +36,7 @@ import com.kylinolap.job.engine.JobEngineConfig;
  * @author George Song (ysong1)
  * 
  */
+@Ignore("This test just checks the sql's length, has no value.")
 public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
 
     CubeInstance cube = null;

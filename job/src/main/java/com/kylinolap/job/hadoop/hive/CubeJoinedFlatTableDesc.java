@@ -124,13 +124,13 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     private void buildTableAliasMap() {
         tableAliasMap = new HashMap<String, String>();
 
-        tableAliasMap.put(cubeDesc.getFactTable(), FACT_TABLE_ALIAS);
+        tableAliasMap.put(cubeDesc.getFactTable().toUpperCase(), FACT_TABLE_ALIAS);
 
         int i = 1;
         for (DimensionDesc dim : cubeDesc.getDimensions()) {
             JoinDesc join = dim.getJoin();
             if (join != null) {
-                tableAliasMap.put(dim.getTable(), LOOKUP_TABLE_ALAIS_PREFIX + i);
+                tableAliasMap.put(dim.getTable().toUpperCase(), LOOKUP_TABLE_ALAIS_PREFIX + i);
                 i++;
             }
 
@@ -190,7 +190,7 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
 
     @Override
     public String getTableAlias(String tableName) {
-        return tableAliasMap.get(tableName);
+        return tableAliasMap.get(tableName.toUpperCase());
     }
 
 }

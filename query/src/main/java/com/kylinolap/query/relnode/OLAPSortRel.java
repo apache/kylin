@@ -105,7 +105,7 @@ public class OLAPSortRel extends SortRel implements EnumerableRel, OLAPRel {
     }
 
     private MeasureDesc findMeasure(TblColRef col) {
-        for (MeasureDesc measure : this.context.cubeDesc.getMeasures()) {
+        for (MeasureDesc measure : this.context.realization.getMeasures()) {
             if (col.getName().equals(measure.getFunction().getRewriteFieldName())) {
                 return measure;
             }

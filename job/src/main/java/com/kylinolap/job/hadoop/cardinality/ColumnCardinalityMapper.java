@@ -21,13 +21,15 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.StringTokenizer;
 
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hive.hcatalog.data.HCatRecord;
+import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
+import org.apache.hive.hcatalog.data.schema.HCatSchema;
+import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 
 import com.kylinolap.common.hll.HyperLogLogPlusCounter;
 import com.kylinolap.cube.kv.RowConstants;
@@ -36,25 +38,42 @@ import com.kylinolap.cube.kv.RowConstants;
  * @author Jack
  * 
  */
-public class ColumnCardinalityMapper<T> extends Mapper<T, Text, IntWritable, BytesWritable> {
+public class ColumnCardinalityMapper<T> extends Mapper<T, HCatRecord, IntWritable, BytesWritable> {
 
     private Map<Integer, HyperLogLogPlusCounter> hllcMap = new HashMap<Integer, HyperLogLogPlusCounter>();
     public static final String DEFAULT_DELIM = ",";
 
+    private int counter = 0;
+    
+    private HCatSchema schema = null;
+    private int columnSize = 0;
+    
     @Override
-    public void map(T key, Text value, Context context) throws IOException, InterruptedException {
-        String delim = context.getConfiguration().get(HiveColumnCardinalityJob.KEY_INPUT_DELIM);
-        if (delim == null) {
-            delim = DEFAULT_DELIM;
+    protected void setup(Context context) throws IOException {
+        schema = HCatInputFormat.getTableSchema(context.getConfiguration());
+        columnSize = schema.getFields().size();
+    }
+
+    @Override
+    public void map(T key, HCatRecord value, Context context) throws IOException, InterruptedException {
+
+        HCatFieldSchema field;
+        Object fieldValue;
+        for (int m = 0; m < columnSize; m++) {
+            field = schema.get(m);
+            fieldValue = value.get(field.getName(), schema);
+            if (fieldValue == null)
+                fieldValue = "NULL";
+            
+            if (counter < 5 && m < 10) {
+                System.out.println("Get row " + counter + " column '" + field.getName() + "'  value: " + fieldValue);
+            }
+
+            if (fieldValue != null)
+                getHllc(m).add(Bytes.toBytes(fieldValue.toString()));
         }
-        String line = value.toString();
-        StringTokenizer tokenizer = new StringTokenizer(line, delim);
-        int i = 1;
-        while (tokenizer.hasMoreTokens()) {
-            String temp = tokenizer.nextToken();
-            getHllc(i).add(Bytes.toBytes(temp));
-            i++;
-        }
+
+        counter++;
     }
 
     private HyperLogLogPlusCounter getHllc(Integer key) {
@@ -74,7 +93,7 @@ public class ColumnCardinalityMapper<T> extends Mapper<T, Text, IntWritable, Byt
             buf.clear();
             hllc.writeRegisters(buf);
             buf.flip();
-            context.write(new IntWritable(key), new BytesWritable(buf.array()));
+            context.write(new IntWritable(key), new BytesWritable(buf.array(), buf.limit()));
         }
     }
 

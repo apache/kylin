@@ -26,19 +26,14 @@ import net.hydromatic.optiq.rules.java.PhysTypeImpl;
 
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.convert.ConverterRelImpl;
-import org.eigenbase.relopt.ConventionTraitDef;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelOptTable;
-import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 
-import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.metadata.realization.IRealization;
 import com.kylinolap.query.relnode.OLAPRel.JavaImplementor;
 import com.kylinolap.query.relnode.OLAPRel.OLAPImplementor;
 import com.kylinolap.query.relnode.OLAPRel.RewriteImplementor;
-import com.kylinolap.query.routing.CubeNotFoundException;
+import com.kylinolap.query.routing.NoRealizationFoundException;
 import com.kylinolap.query.routing.QueryRouter;
 import com.kylinolap.query.schema.OLAPTable;
 
@@ -70,11 +65,10 @@ public class OLAPToEnumerableConverter extends ConverterRelImpl implements Enume
         // find cube from olap context
         try {
             for (OLAPContext context : OLAPContext.getThreadLocalContexts()) {
-                CubeInstance cube = QueryRouter.findCube(context);
-                context.cubeInstance = cube;
-                context.cubeDesc = cube.getDescriptor();
+                IRealization realization = QueryRouter.selectRealization(context);
+                context.realization = realization;
             }
-        } catch (CubeNotFoundException e) {
+        } catch (NoRealizationFoundException e) {
             OLAPContext ctx0 = (OLAPContext) OLAPContext.getThreadLocalContexts().toArray()[0];
             if (ctx0 != null && ctx0.olapSchema.hasStarSchemaUrl()) {
                 // generate hive result
