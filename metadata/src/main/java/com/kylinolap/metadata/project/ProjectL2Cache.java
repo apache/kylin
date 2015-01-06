@@ -24,9 +24,9 @@ import com.kylinolap.metadata.realization.RealizationRegistry;
  * This is a second level cache that is built on top of first level cached objects,
  * including Realization, TableDesc, ColumnDesc etc, to speed up query time metadata lookup.
  * 
- * On any object update, the L2 cache gets wiped out because it's cheap to rebuild.
+ * On any object update, the L2 cache simply gets wiped out because it's cheap to rebuild.
  */
-public class ProjectL2Cache {
+class ProjectL2Cache {
 
     private static final Logger logger = LoggerFactory.getLogger(ProjectL2Cache.class);
 
