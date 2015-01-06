@@ -56,6 +56,7 @@ public class ProjectInstance extends RootPersistentEntity {
     private String createTime;
 
     @JsonProperty("last_update_time")
+    // FIXME why not RootPersistentEntity.lastModified??
     private String lastUpdateTime;
 
     @JsonProperty("description")

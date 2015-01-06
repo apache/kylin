@@ -27,9 +27,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.kylinolap.metadata.project.ProjectInstance;
-import com.kylinolap.metadata.realization.*;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +41,6 @@ import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.DimensionDesc;
-import com.kylinolap.metadata.project.ProjectManager;
 import com.kylinolap.dict.DateStrDictionary;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryInfo;
@@ -57,6 +53,11 @@ import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.TblColRef;
+import com.kylinolap.metadata.project.ProjectManager;
+import com.kylinolap.metadata.realization.IRealization;
+import com.kylinolap.metadata.realization.IRealizationProvider;
+import com.kylinolap.metadata.realization.RealizationStatusEnum;
+import com.kylinolap.metadata.realization.RealizationType;
 
 /**
  * @author yangli9
@@ -206,7 +207,6 @@ public class CubeManager implements IRealizationProvider {
     public CubeInstance dropCube(String cubeName, boolean deleteDesc) throws IOException {
         logger.info("Dropping cube '" + cubeName + "'");
         // load projects before remove cube from project
-        List<ProjectInstance> projects = ProjectManager.getInstance(config).getProjects(RealizationType.CUBE, cubeName);
 
         ResourceStore store = getStore();
 
@@ -222,7 +222,7 @@ public class CubeManager implements IRealizationProvider {
         ProjectManager.getInstance(config).removeRealizationsFromProjects(RealizationType.CUBE, cubeName);
 
         // clean cube cache
-        this.afterCubeDroped(cube, projects);
+        this.afterCubeDroped(cube);
 
         return cube;
     }
@@ -509,29 +509,11 @@ public class CubeManager implements IRealizationProvider {
     private void afterCubeUpdated(CubeInstance updatedCube) {
         MetadataManager.getInstance(config).reload();
         cubeMap.put(updatedCube.getName().toUpperCase(), updatedCube);
-
-        for (ProjectInstance project : ProjectManager.getInstance(config).getProjects(RealizationType.CUBE, updatedCube.getName())) {
-            try {
-                ProjectManager.getInstance(config).loadProjectCache(project, true);
-            } catch (IOException e) {
-                logger.error(e.getLocalizedMessage(), e);
-            }
-        }
     }
 
-    private void afterCubeDroped(CubeInstance droppedCube, List<ProjectInstance> projects) {
+    private void afterCubeDroped(CubeInstance droppedCube) {
         MetadataManager.getInstance(config).reload();
         removeCubeCache(droppedCube);
-
-        if (null != projects) {
-            for (ProjectInstance project : projects) {
-                try {
-                    ProjectManager.getInstance(config).loadProjectCache(project, true);
-                } catch (IOException e) {
-                    logger.error(e.getLocalizedMessage(), e);
-                }
-            }
-        }
     }
 
     /**

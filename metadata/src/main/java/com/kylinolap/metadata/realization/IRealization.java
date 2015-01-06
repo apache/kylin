@@ -15,10 +15,11 @@ public interface IRealization {
      * is to answer the query.
      *
      * @return -1 if the realization cannot fulfill the query;
-     * or a number between 0-100 if the realization can answer the query, the smaller
-     * the number, the more efficient the realization. Especially,
-     * 0   - means the realization has the exact result pre-calculated, no less no more;
-     * 100 - means the realization will scan the full table with little or no indexing.
+     *         or a number between 0-100 if the realization can answer the query, the smaller
+     *         the number, the more efficient the realization.
+     *         Especially,
+     *           0 - means the realization has the exact result pre-calculated, no less no more;
+     *         100 - means the realization will scan the full table with little or no indexing.
      */
     public int getCost(String factTable, Collection<JoinDesc> joins, Collection<TblColRef> allColumns, //
             Collection<FunctionDesc> aggrFunctions);
@@ -40,6 +41,6 @@ public interface IRealization {
 
     public String getName();
 
-    public String getCanonicalName(String name);
+    public String getCanonicalName();
 
 }
