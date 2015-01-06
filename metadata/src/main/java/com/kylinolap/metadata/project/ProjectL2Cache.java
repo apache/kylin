@@ -75,19 +75,19 @@ public class ProjectL2Cache {
         TableCache tableCache = getCache(project).tables.get(table);
         if (tableCache == null)
             return false;
-        
+
         for (ColumnDesc colDesc : tableCache.exposedColumns) {
             if (colDesc.getName().equals(col))
                 return true;
         }
         return false;
     }
-    
+
     public Set<IRealization> listAllRealizations(String project) {
         ProjectCache prjCache = getCache(project);
         return Collections.unmodifiableSet(prjCache.realizations);
     }
-    
+
     public Set<IRealization> getRealizationsByTable(String project, String table) {
         TableCache tableCache = getCache(project).tables.get(table);
         if (tableCache == null)
@@ -162,7 +162,7 @@ public class ProjectL2Cache {
         }
 
         for (IRealization realization : result.realizations) {
-            if (sanityCheck(realization)) {
+            if (sanityCheck(result, realization)) {
                 mapTableToRealization(result, realization);
                 markExposedTablesAndColumns(result, realization);
             }
@@ -172,7 +172,7 @@ public class ProjectL2Cache {
     }
 
     // check all columns reported by realization does exists
-    private boolean sanityCheck(IRealization realization) {
+    private boolean sanityCheck(ProjectCache prjCache, IRealization realization) {
         MetadataManager metaMgr = mgr.getMetadataManager();
 
         List<TblColRef> allColumns = realization.getAllColumns();
@@ -192,6 +192,12 @@ public class ProjectL2Cache {
                 logger.error("Realization '" + realization.getCanonicalName() + "' reports column '" + col.getCanonicalName() + "', but it is not equal to '" + foundCol + "' according to MetadataManager");
                 return false;
             }
+
+            // auto-define table required by realization for some legacy test case
+            if (prjCache.tables.get(table.getIdentity()) == null) {
+                prjCache.tables.put(table.getIdentity(), new TableCache(table));
+                logger.warn("Realization '" + realization.getCanonicalName() + "' reports columcn '" + col.getCanonicalName() + "' whose table is not defined in project '" + prjCache.project + "'");
+            }
         }
 
         return true;
@@ -200,11 +206,7 @@ public class ProjectL2Cache {
     private void mapTableToRealization(ProjectCache prjCache, IRealization realization) {
         for (TblColRef col : realization.getAllColumns()) {
             TableCache tableCache = prjCache.tables.get(col.getTable());
-            if (tableCache != null) {
-                tableCache.realizations.add(realization);
-            } else {
-                logger.warn("Realization '" + realization.getCanonicalName() + "' reports columcn '" + col.getCanonicalName() + "' whose table is not defined in project '" + prjCache.project + "'");
-            }
+            tableCache.realizations.add(realization);
         }
     }
 
@@ -215,13 +217,9 @@ public class ProjectL2Cache {
 
         for (TblColRef col : realization.getAllColumns()) {
             TableCache tableCache = prjCache.tables.get(col.getTable());
-            if (tableCache != null) {
-                prjCache.exposedTables.add(tableCache.tableDesc);
-                tableCache.exposed = true;
-                tableCache.exposedColumns.add(col.getColumn());
-            } else {
-                logger.warn("Realization '" + realization.getCanonicalName() + "' reports columcn '" + col.getCanonicalName() + "' whose table is not defined in project '" + prjCache.project + "'");
-            }
+            prjCache.exposedTables.add(tableCache.tableDesc);
+            tableCache.exposed = true;
+            tableCache.exposedColumns.add(col.getColumn());
         }
     }
 
