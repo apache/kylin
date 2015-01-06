@@ -20,8 +20,8 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         job.addTask(task1);
         jobService.addJob(job);
         waitForJobFinish(job.getId());
-        assertEquals(ExecutableState.SUCCEED, jobService.getJobStatus(job.getId()));
-        assertEquals(ExecutableState.SUCCEED, jobService.getJobStatus(task1.getId()));
+        assertEquals(ExecutableState.SUCCEED, jobService.getOutput(job.getId()).getState());
+        assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task1.getId()).getState());
     }
 
     @Test
@@ -33,9 +33,9 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         job.addTask(task2);
         jobService.addJob(job);
         waitForJobFinish(job.getId());
-        assertEquals(ExecutableState.SUCCEED, jobService.getJobStatus(job.getId()));
-        assertEquals(ExecutableState.SUCCEED, jobService.getJobStatus(task1.getId()));
-        assertEquals(ExecutableState.SUCCEED, jobService.getJobStatus(task2.getId()));
+        assertEquals(ExecutableState.SUCCEED, jobService.getOutput(job.getId()).getState());
+        assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task1.getId()).getState());
+        assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task2.getId()).getState());
     }
     @Test
     public void testSucceedAndFailed() throws Exception {
@@ -46,9 +46,9 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         job.addTask(task2);
         jobService.addJob(job);
         waitForJobFinish(job.getId());
-        assertEquals(ExecutableState.ERROR, jobService.getJobStatus(job.getId()));
-        assertEquals(ExecutableState.SUCCEED, jobService.getJobStatus(task1.getId()));
-        assertEquals(ExecutableState.ERROR, jobService.getJobStatus(task2.getId()));
+        assertEquals(ExecutableState.ERROR, jobService.getOutput(job.getId()).getState());
+        assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task1.getId()).getState());
+        assertEquals(ExecutableState.ERROR, jobService.getOutput(task2.getId()).getState());
     }
     @Test
     public void testSucceedAndError() throws Exception {
@@ -59,9 +59,9 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         job.addTask(task2);
         jobService.addJob(job);
         waitForJobFinish(job.getId());
-        assertEquals(ExecutableState.ERROR, jobService.getJobStatus(job.getId()));
-        assertEquals(ExecutableState.ERROR, jobService.getJobStatus(task1.getId()));
-        assertEquals(ExecutableState.READY, jobService.getJobStatus(task2.getId()));
+        assertEquals(ExecutableState.ERROR, jobService.getOutput(job.getId()).getState());
+        assertEquals(ExecutableState.ERROR, jobService.getOutput(task1.getId()).getState());
+        assertEquals(ExecutableState.READY, jobService.getOutput(task2.getId()).getState());
     }
 
     @Test
@@ -73,7 +73,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         waitForJobStatus(job.getId(), ExecutableState.RUNNING, 500);
         jobService.stopJob(job.getId());
         waitForJobFinish(job.getId());
-        assertEquals(ExecutableState.STOPPED, jobService.getJobStatus(job.getId()));
-        assertEquals(ExecutableState.STOPPED, jobService.getJobStatus(task1.getId()));
+        assertEquals(ExecutableState.STOPPED, jobService.getOutput(job.getId()).getState());
+        assertEquals(ExecutableState.STOPPED, jobService.getOutput(task1.getId()).getState());
     }
 }

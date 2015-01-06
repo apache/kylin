@@ -17,6 +17,7 @@ package com.kylinolap.job;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -317,6 +318,12 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
 
         public void putInfo(String key, String value) {
             getInfo().put(key, value);
+        }
+
+        public void putInfo(Map<String, String> maps) {
+            if (maps != null) {
+                getInfo().putAll(maps);
+            }
         }
 
         public String getInfo(String key) {

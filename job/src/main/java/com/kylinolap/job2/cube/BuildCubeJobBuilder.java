@@ -197,7 +197,7 @@ public final class BuildCubeJobBuilder {
         appendExecCmdParameters(cmd, "segmentname", segment.getName());
         appendExecCmdParameters(cmd, "input", factDistinctColumnsPath);
 
-        buildDictionaryStep.setMapReduceParams(cmd.toString());
+        buildDictionaryStep.setJobParams(cmd.toString());
         buildDictionaryStep.setJobClass(CreateDictionaryJob.class);
         return buildDictionaryStep;
     }
@@ -267,7 +267,7 @@ public final class BuildCubeJobBuilder {
         appendExecCmdParameters(cmd, "input", getRowkeyDistributionOutputPath() + "/part-r-00000");
         appendExecCmdParameters(cmd, "htablename", getHTableName());
 
-        createHtableStep.setMapReduceParams(cmd.toString());
+        createHtableStep.setJobParams(cmd.toString());
         createHtableStep.setJobClass(CreateHTableJob.class);
 
         return createHtableStep;
@@ -300,7 +300,7 @@ public final class BuildCubeJobBuilder {
         appendExecCmdParameters(cmd, "htablename", getHTableName());
         appendExecCmdParameters(cmd, "cubename", getCubeName());
 
-        bulkLoadStep.setMapReduceParams(cmd.toString());
+        bulkLoadStep.setJobParams(cmd.toString());
         bulkLoadStep.setJobClass(BulkLoadJob.class);
 
         return bulkLoadStep;

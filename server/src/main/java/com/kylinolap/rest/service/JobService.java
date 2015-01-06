@@ -28,9 +28,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
+import com.kylinolap.job2.common.HadoopShellExecutable;
+import com.kylinolap.job2.common.MapReduceExecutable;
+import com.kylinolap.job2.common.ShellExecutable;
 import com.kylinolap.job2.cube.BuildCubeJob;
 import com.kylinolap.job2.cube.BuildCubeJobBuilder;
 import com.kylinolap.job2.execution.ExecutableState;
+import com.kylinolap.job2.execution.Output;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.realization.RealizationType;
@@ -182,6 +186,17 @@ public class JobService extends BasicService {
         result.setName(task.getName());
         result.setSequenceID(i);
         result.setStatus(parseToJobStepStatus(task.getStatus()));
+        final Output output = getExecutableManager().getOutput(task.getId());
+        result.putInfo(output.getExtra());
+        if (task instanceof ShellExecutable) {
+            result.setExecCmd(((ShellExecutable) task).getCmd());
+        }
+        if (task instanceof MapReduceExecutable) {
+            result.setExecCmd(((MapReduceExecutable) task).getMapReduceParams());
+        }
+        if (task instanceof HadoopShellExecutable) {
+            result.setExecCmd(((HadoopShellExecutable) task).getJobParams());
+        }
         return result;
     }
 

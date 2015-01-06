@@ -99,7 +99,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     @Override
     public final ExecutableState getStatus() {
-        return jobService.getJobStatus(this.getId());
+        return jobService.getOutput(this.getId()).getState();
     }
 
     @Override
@@ -111,12 +111,21 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         return job.getParams().get(key);
     }
 
+    protected final long getParamAsLong(String key, long defaultValue) {
+        final String param = getParam(key);
+        if (param != null) {
+            return Long.parseLong(param);
+        } else {
+            return defaultValue;
+        }
+    }
+
     public final void setParam(String key, String value) {
         job.getParams().put(key, value);
     }
 
     public final long getLastModified() {
-        return jobService.getJobOutputTimeStamp(getId());
+        return jobService.getOutput(getId()).getLastModified();
     }
 
     public final void setSubmitter(String submitter) {
@@ -128,8 +137,8 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     }
 
     @Override
-    public String getOutput() {
-        return jobService.getJobOutput(getId());
+    public final Output getOutput() {
+        return jobService.getOutput(getId());
     }
 
     public JobPO getJobPO() {

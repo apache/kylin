@@ -40,16 +40,6 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
     }
 
     @Override
-    protected void onExecuteStart(ExecutableContext executableContext) {
-        jobService.updateJobStatus(getId(), ExecutableState.RUNNING);
-    }
-
-    @Override
-    protected void onExecuteError(Throwable exception, ExecutableContext executableContext) {
-        jobService.updateJobStatus(getId(), ExecutableState.ERROR);
-    }
-
-    @Override
     protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
         if (result.succeed()) {
             List<? extends Executable> jobs = getTasks();
