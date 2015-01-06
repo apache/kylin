@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * Created by qianzhou on 12/15/14.
@@ -27,7 +28,7 @@ public enum ExecutableState {
         VALID_STATE_TRANSFER = Multimaps.newSetMultimap(Maps.<ExecutableState, Collection<ExecutableState>>newEnumMap(ExecutableState.class), new Supplier<Set<ExecutableState>>() {
             @Override
             public Set<ExecutableState> get() {
-                return Sets.newCopyOnWriteArraySet();
+                return new CopyOnWriteArraySet<ExecutableState>();
             }
         });
 

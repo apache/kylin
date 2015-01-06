@@ -96,6 +96,17 @@ public class ExecutableManager {
             throw new RuntimeException(e);
         }
     }
+
+    public long getJobOutputTimeStamp(String uuid) {
+        try {
+            return jobDao.getJobOutput(uuid).getLastModified();
+        } catch (PersistentException e) {
+            logger.error("fail to get job output:" + uuid, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+
     public String getJobOutput(String uuid) {
         try {
             return jobDao.getJobOutput(uuid).getContent();

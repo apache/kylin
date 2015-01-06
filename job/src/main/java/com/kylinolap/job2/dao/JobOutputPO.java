@@ -19,7 +19,7 @@ public class JobOutputPO extends RootPersistentEntity {
     private String content;
 
     @JsonProperty("status")
-    private String status = ExecutableState.READY.toString();
+    private String status = "READY";
 
     @JsonProperty("info")
     private Map<String, String> info = Maps.newHashMap();
