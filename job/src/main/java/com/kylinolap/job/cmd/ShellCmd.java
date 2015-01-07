@@ -73,7 +73,7 @@ public class ShellCmd implements IJobCommand {
                 log.debug("Command is cancelled");
                 exitCode = -2;
             } catch (Exception e) {
-                throw new JobException("Error when exectute job " + executeCommand, e);
+                throw new JobException("Error when execute job " + executeCommand, e);
             } finally {
                 if (exitCode == 0) {
                     output.setStatus(JobStepStatusEnum.FINISHED);

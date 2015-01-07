@@ -163,7 +163,7 @@ abstract public class ResourceStore {
     /**
      * check & set, overwrite a resource
      */
-    final public <T extends RootPersistentEntity> void putResource(String resPath, T obj, Serializer<T> serializer) throws IOException {
+    final public <T extends RootPersistentEntity> long putResource(String resPath, T obj, Serializer<T> serializer) throws IOException {
         resPath = norm(resPath);
         logger.debug("Saving resource " + resPath + " (Store " + kylinConfig.getMetadataUrl() + ")");
 
@@ -180,7 +180,7 @@ abstract public class ResourceStore {
 
             newTS = checkAndPutResourceImpl(resPath, buf.toByteArray(), oldTS, newTS);
             obj.setLastModified(newTS); // update again the confirmed TS
-
+            return newTS;
         } catch (IOException e) {
             obj.setLastModified(oldTS); // roll back TS when write fail
             throw e;
