@@ -1,6 +1,7 @@
 package com.kylinolap.job2.impl.threadpool;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.job2.dao.JobPO;
 import com.kylinolap.job2.exception.ExecuteException;
@@ -18,7 +19,9 @@ import java.util.UUID;
  */
 public abstract class AbstractExecutable implements Executable, Idempotent {
 
-    private static final String SUBMITTER = "submitter";
+    public static final String SUBMITTER = "submitter";
+    public static final String START_TIME = "startTime";
+    public static final String END_TIME = "endTime";
     private JobPO job;
     protected static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
 
@@ -39,21 +42,25 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     }
 
     protected void onExecuteStart(ExecutableContext executableContext) {
-        jobService.updateJobStatus(getId(), ExecutableState.RUNNING);
+        Map<String, String> info = Maps.newHashMap();
+        info.put(START_TIME, Long.toString(System.currentTimeMillis()));
+        jobService.updateJobOutput(getId(), ExecutableState.RUNNING, info, null);
     }
 
     protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
+        jobService.addJobInfo(getId(), END_TIME, Long.toString(System.currentTimeMillis()));
         if (result.succeed()) {
-            jobService.updateJobStatus(getId(), ExecutableState.SUCCEED, result.output());
+            jobService.updateJobOutput(getId(), ExecutableState.SUCCEED, null, result.output());
         } else if (result.state() == ExecuteResult.State.STOPPED) {
-            jobService.updateJobStatus(getId(), ExecutableState.STOPPED, result.output());
+            jobService.updateJobOutput(getId(), ExecutableState.STOPPED, null, result.output());
         } else {
-            jobService.updateJobStatus(getId(), ExecutableState.ERROR, result.output());
+            jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, result.output());
         }
     }
 
     protected void onExecuteError(Throwable exception, ExecutableContext executableContext) {
-        jobService.updateJobStatus(getId(), ExecutableState.ERROR, exception.getLocalizedMessage());
+        jobService.addJobInfo(getId(), END_TIME, Long.toString(System.currentTimeMillis()));
+        jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, exception.getLocalizedMessage());
     }
 
     @Override
@@ -139,6 +146,23 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     @Override
     public final Output getOutput() {
         return jobService.getOutput(getId());
+    }
+
+    public final long getStartTime() {
+        final String str = jobService.getOutput(getId()).getExtra().get(START_TIME);
+        if (str != null) {
+            return Long.parseLong(str);
+        } else {
+            return 0;
+        }
+    }
+    public final long getEndTime() {
+        final String str = jobService.getOutput(getId()).getExtra().get(END_TIME);
+        if (str != null) {
+            return Long.parseLong(str);
+        } else {
+            return 0;
+        }
     }
 
     public JobPO getJobPO() {

@@ -4,6 +4,7 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.job2.BaseTestExecutable;
 import com.kylinolap.job2.SucceedTestExecutable;
+import com.kylinolap.job2.exception.IllegalStateTranferException;
 import com.kylinolap.job2.execution.ChainedExecutable;
 import com.kylinolap.job2.execution.Executable;
 import com.kylinolap.job2.execution.ExecutableState;
@@ -54,7 +55,7 @@ public class ExecutableManagerTest extends LocalFileMetadataTestCase {
         AbstractExecutable another = service.getJob(executable.getId());
         assertJobEqual(executable, another);
 
-        service.updateJobStatus(executable.getId(), ExecutableState.RUNNING, "test output");
+        service.updateJobOutput(executable.getId(), ExecutableState.RUNNING, null, "test output");
         assertJobEqual(executable, service.getJob(executable.getId()));
     }
 
@@ -77,22 +78,22 @@ public class ExecutableManagerTest extends LocalFileMetadataTestCase {
         SucceedTestExecutable job = new SucceedTestExecutable();
         String id = job.getId();
         service.addJob(job);
-        service.updateJobStatus(id, ExecutableState.RUNNING);
-        service.updateJobStatus(id, ExecutableState.ERROR);
-        service.updateJobStatus(id, ExecutableState.READY);
-        service.updateJobStatus(id, ExecutableState.RUNNING);
-        service.updateJobStatus(id, ExecutableState.STOPPED);
-        service.updateJobStatus(id, ExecutableState.READY);
-        service.updateJobStatus(id, ExecutableState.RUNNING);
-        service.updateJobStatus(id, ExecutableState.SUCCEED);
+        service.updateJobOutput(id, ExecutableState.RUNNING, null, null);
+        service.updateJobOutput(id, ExecutableState.ERROR, null, null);
+        service.updateJobOutput(id, ExecutableState.READY, null, null);
+        service.updateJobOutput(id, ExecutableState.RUNNING, null, null);
+        service.updateJobOutput(id, ExecutableState.STOPPED, null, null);
+        service.updateJobOutput(id, ExecutableState.READY, null, null);
+        service.updateJobOutput(id, ExecutableState.RUNNING, null, null);
+        service.updateJobOutput(id, ExecutableState.SUCCEED, null, null);
     }
 
-    @Test
+    @Test(expected = IllegalStateTranferException.class)
     public void testInvalidStateTransfer(){
         SucceedTestExecutable job = new SucceedTestExecutable();
         service.addJob(job);
-        service.updateJobStatus(job.getId(), ExecutableState.RUNNING);
-        assertFalse(service.updateJobStatus(job.getId(), ExecutableState.DISCARDED));
+        service.updateJobOutput(job.getId(), ExecutableState.RUNNING, null, null);
+        service.updateJobOutput(job.getId(), ExecutableState.STOPPED, null, null);
     }
 
 

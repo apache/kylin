@@ -7,6 +7,7 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.job2.dao.JobDao;
 import com.kylinolap.job2.dao.JobOutputPO;
 import com.kylinolap.job2.dao.JobPO;
+import com.kylinolap.job2.exception.IllegalStateTranferException;
 import com.kylinolap.job2.exception.PersistentException;
 import com.kylinolap.job2.execution.DefaultOutput;
 import com.kylinolap.job2.execution.ExecutableState;
@@ -137,12 +138,12 @@ public class ExecutableManager {
 
     public void resumeJob(String jobId) {
         AbstractExecutable job = getJob(jobId);
-        updateJobStatus(jobId, ExecutableState.READY);
+        updateJobOutput(jobId, ExecutableState.READY, null, null);
         if (job instanceof DefaultChainedExecutable) {
             List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
             for (AbstractExecutable task : tasks) {
                 if (task.getStatus() == ExecutableState.ERROR) {
-                    updateJobStatus(task.getId(), ExecutableState.READY);
+                    updateJobOutput(task.getId(), ExecutableState.READY, null, null);
                     break;
                 }
             }
@@ -155,55 +156,79 @@ public class ExecutableManager {
             List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
             for (AbstractExecutable task : tasks) {
                 if (!task.getStatus().isFinalState()) {
-                    updateJobStatus(task.getId(), ExecutableState.DISCARDED);
+                    updateJobOutput(task.getId(), ExecutableState.DISCARDED, null, null);
                 }
             }
         }
-        updateJobStatus(jobId, ExecutableState.DISCARDED);
+        updateJobOutput(jobId, ExecutableState.DISCARDED, null, null);
     }
 
-    public boolean updateJobStatus(String jobId, ExecutableState newStatus) {
+    public void updateJobOutput(String jobId, ExecutableState newStatus, Map<String, String> info, String output) {
         try {
             final JobOutputPO jobOutput = jobDao.getJobOutput(jobId);
             ExecutableState oldStatus = ExecutableState.valueOf(jobOutput.getStatus());
-            if (oldStatus == newStatus) {
-                return true;
+            if (newStatus != null && oldStatus == newStatus) {
+                if (!ExecutableState.isValidStateTransfer(oldStatus, newStatus)) {
+                    throw new IllegalStateTranferException("there is no valid state transfer from:" + oldStatus + " to:" + newStatus);
+                }
+                jobOutput.setStatus(newStatus.toString());
             }
-            if (!ExecutableState.isValidStateTransfer(oldStatus, newStatus)) {
-                throw new RuntimeException("there is no valid state transfer from:" + oldStatus + " to:" + newStatus);
+            if (info != null) {
+                jobOutput.setInfo(info);
             }
-            jobOutput.setStatus(newStatus.toString());
+            if (output != null) {
+                jobOutput.setContent(output);
+            }
             jobDao.updateJobOutput(jobOutput);
             logger.info("job id:" + jobId + " from " + oldStatus + " to " + newStatus);
-            return true;
         } catch (PersistentException e) {
             logger.error("error change job:" + jobId + " to " + newStatus.toString());
             throw new RuntimeException(e);
         }
     }
 
-    public boolean updateJobStatus(String jobId, ExecutableState newStatus, String output) {
-        try {
-            final JobOutputPO jobOutput = jobDao.getJobOutput(jobId);
-            ExecutableState oldStatus = ExecutableState.valueOf(jobOutput.getStatus());
-            if (oldStatus == newStatus) {
-                return true;
-            }
-            if (!ExecutableState.isValidStateTransfer(oldStatus, newStatus)) {
-                throw new RuntimeException("there is no valid state transfer from:" + oldStatus + " to:" + newStatus);
-            }
-            jobOutput.setStatus(newStatus.toString());
-            jobOutput.setContent(output);
-            jobDao.updateJobOutput(jobOutput);
-            logger.info("job id:" + jobId + " from " + oldStatus + " to " + newStatus);
-            return true;
-        } catch (PersistentException e) {
-            logger.error("error change job:" + jobId + " to " + newStatus.toString());
-            throw new RuntimeException(e);
-        }
-    }
+//    public boolean updateJobStatus(String jobId, ExecutableState newStatus) {
+//        try {
+//            final JobOutputPO jobOutput = jobDao.getJobOutput(jobId);
+//            ExecutableState oldStatus = ExecutableState.valueOf(jobOutput.getStatus());
+//            if (oldStatus == newStatus) {
+//                return true;
+//            }
+//            if (!ExecutableState.isValidStateTransfer(oldStatus, newStatus)) {
+//                throw new RuntimeException("there is no valid state transfer from:" + oldStatus + " to:" + newStatus);
+//            }
+//            jobOutput.setStatus(newStatus.toString());
+//            jobDao.updateJobOutput(jobOutput);
+//            logger.info("job id:" + jobId + " from " + oldStatus + " to " + newStatus);
+//            return true;
+//        } catch (PersistentException e) {
+//            logger.error("error change job:" + jobId + " to " + newStatus.toString());
+//            throw new RuntimeException(e);
+//        }
+//    }
+//
+//    public boolean updateJobStatus(String jobId, ExecutableState newStatus, String output) {
+//        try {
+//            final JobOutputPO jobOutput = jobDao.getJobOutput(jobId);
+//            ExecutableState oldStatus = ExecutableState.valueOf(jobOutput.getStatus());
+//            if (oldStatus == newStatus) {
+//                return true;
+//            }
+//            if (!ExecutableState.isValidStateTransfer(oldStatus, newStatus)) {
+//                throw new RuntimeException("there is no valid state transfer from:" + oldStatus + " to:" + newStatus);
+//            }
+//            jobOutput.setStatus(newStatus.toString());
+//            jobOutput.setContent(output);
+//            jobDao.updateJobOutput(jobOutput);
+//            logger.info("job id:" + jobId + " from " + oldStatus + " to " + newStatus);
+//            return true;
+//        } catch (PersistentException e) {
+//            logger.error("error change job:" + jobId + " to " + newStatus.toString());
+//            throw new RuntimeException(e);
+//        }
+//    }
 
-    public void updateJobInfo(String id, Map<String, String> info) {
+    public void addJobInfo(String id, Map<String, String> info) {
         if (info == null) {
             return;
         }
@@ -217,7 +242,7 @@ public class ExecutableManager {
         }
     }
 
-    public void updateJobInfo(String id, String key, String value) {
+    public void addJobInfo(String id, String key, String value) {
         try {
             JobOutputPO output = jobDao.getJobOutput(id);
             output.getInfo().put(key, value);
@@ -231,7 +256,7 @@ public class ExecutableManager {
     private void stopJob(AbstractExecutable job) {
         final ExecutableState status = job.getStatus();
         if (status == ExecutableState.RUNNING) {
-            updateJobStatus(job.getId(), ExecutableState.STOPPED);
+            updateJobOutput(job.getId(), ExecutableState.STOPPED, null, null);
             if (job instanceof DefaultChainedExecutable) {
                 final List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
                 for (AbstractExecutable task: tasks) {
@@ -242,7 +267,7 @@ public class ExecutableManager {
                 }
             }
         } else {
-            updateJobStatus(job.getId(), ExecutableState.STOPPED);
+            updateJobOutput(job.getId(), ExecutableState.STOPPED, null, null);
         }
     }
 

@@ -46,12 +46,12 @@ public class MapReduceExecutable extends AbstractExecutable {
             JobStepStatusEnum status;
             do {
                 status = hadoopCmdOutput.getStatus();
-                jobService.updateJobInfo(getId(), job.getInfo());
+                jobService.addJobInfo(getId(), job.getInfo());
                 if (status.isComplete()) {
                     final Map<String, String> info = job.getInfo();
                     info.put(ExecutableConstants.SOURCE_RECORDS_COUNT, hadoopCmdOutput.getMapInputRecords());
                     info.put(ExecutableConstants.HDFS_BYTES_WRITTEN, hadoopCmdOutput.getHdfsBytesWritten());
-                    jobService.updateJobInfo(getId(), info);
+                    jobService.addJobInfo(getId(), info);
 
                     if (status == JobStepStatusEnum.FINISHED) {
                         return new ExecuteResult(ExecuteResult.State.SUCCEED, hadoopCmdOutput.getOutput());

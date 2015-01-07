@@ -194,6 +194,10 @@ public class JobService extends BasicService {
                 result.putInfo(entry.getKey(), entry.getValue());
             }
         }
+        String str = output.getExtra().get(AbstractExecutable.START_TIME);
+        result.setExecStartTime(str != null?Long.parseLong(str): 0);
+        str = output.getExtra().get(AbstractExecutable.END_TIME);
+        result.setExecEndTime(str != null?Long.parseLong(str): 0);
         if (task instanceof ShellExecutable) {
             result.setExecCmd(((ShellExecutable) task).getCmd());
         }
