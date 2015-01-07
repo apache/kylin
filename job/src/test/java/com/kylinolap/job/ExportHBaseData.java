@@ -25,7 +25,15 @@ public class ExportHBaseData {
     String backupArchive = null;
     String tableNameBase;
 
-    public void setup() throws IOException {
+    public ExportHBaseData() {
+        try {
+            setup();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void setup() throws IOException {
         long currentTIME = System.currentTimeMillis();
         exportFolder = "/tmp/hbase-export/" + currentTIME + "/";
         backupArchive = "/tmp/kylin_" + currentTIME + ".tar.gz";
@@ -115,7 +123,6 @@ public class ExportHBaseData {
     public static void main(String[] args) {
         ExportHBaseData export = new ExportHBaseData();
         try {
-            export.setup();
             export.exportTables();
         } catch (IOException e) {
             e.printStackTrace();
