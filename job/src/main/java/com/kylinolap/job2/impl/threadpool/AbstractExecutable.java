@@ -1,5 +1,6 @@
 package com.kylinolap.job2.impl.threadpool;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.kylinolap.common.KylinConfig;
@@ -176,5 +177,10 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected final boolean isStopped() {
         final ExecutableState status = getStatus();
         return status == ExecutableState.STOPPED || status == ExecutableState.DISCARDED;
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this).add("id", getId()).add("name", getName()).add("state", getStatus()).toString();
     }
 }

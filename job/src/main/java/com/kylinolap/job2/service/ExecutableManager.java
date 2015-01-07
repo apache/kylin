@@ -167,7 +167,7 @@ public class ExecutableManager {
         try {
             final JobOutputPO jobOutput = jobDao.getJobOutput(jobId);
             ExecutableState oldStatus = ExecutableState.valueOf(jobOutput.getStatus());
-            if (newStatus != null && oldStatus == newStatus) {
+            if (newStatus != null && oldStatus != newStatus) {
                 if (!ExecutableState.isValidStateTransfer(oldStatus, newStatus)) {
                     throw new IllegalStateTranferException("there is no valid state transfer from:" + oldStatus + " to:" + newStatus);
                 }

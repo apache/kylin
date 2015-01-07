@@ -55,30 +55,30 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         @Override
         public void run() {
             logger.info("Job Fetcher is running...");
+            Map<String, Executable> runningJobs = context.getRunningJobs();
+            if (runningJobs.size() >= jobEngineConfig.getMaxConcurrentJobLimit()) {
+                logger.warn("There are too many jobs running, Job Fetch will wait until next schedule time");
+                return;
+            }
             for (final AbstractExecutable executable : executableManager.getAllExecutables()) {
-                boolean hasLock = false;
+                final String id = executable.getId();
+                String jobDesc = executable.toString();
+                if (runningJobs.containsKey(id)) {
+                    logger.info(jobDesc + " is already running");
+                    continue;
+                }
+                if (!executable.isRunnable()) {
+                    logger.info(jobDesc + " not runnable");
+                    continue;
+                }
+                logger.info(jobDesc + " prepare to schedule");
                 try {
-                    hasLock = acquireJobLock(executable, 1);
-                } catch (LockException e) {
-                    logger.error("error acquire job lock, id:" + executable.getId(), e);
-                }
-                logger.info("acquire job lock:" + executable.getId() + " status:" + (hasLock ? "succeed" : "failed"));
-                if (hasLock) {
-                    try {
-                        logger.info("start to run job id:" + executable.getId());
-                        context.addRunningJob(executable);
-                        jobPool.execute(new JobRunner(executable));
-                    } finally {
-                        try {
-                            logger.info("finish running job id:" + executable.getId());
-                            releaseJobLock(executable.getId());
-                        } catch (LockException ex) {
-                            logger.error("error release job lock, id:" + executable.getId(), ex);
-                        }
-                    }
-                }
-                if (!context.getRunningJobs().containsKey(executable.getId())) {
-                    resetStatusFromRunningToError(executable);
+                    context.addRunningJob(executable);
+                    jobPool.execute(new JobRunner(executable));
+                    logger.info(jobDesc + " scheduled");
+                } catch (Exception ex) {
+                    context.removeRunningJob(executable);
+                    logger.warn(jobDesc + " fail to schedule", ex);
                 }
             }
             logger.info("Job Fetcher finish running");
@@ -105,32 +105,6 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                 context.removeRunningJob(executable);
             }
         }
-    }
-
-    private void resetStatusFromRunningToError(AbstractExecutable executable) {
-        if (executable.getStatus() == ExecutableState.RUNNING) {
-            final String errMsg = "job:" + executable.getId() + " status should not be:" + ExecutableState.RUNNING + ", reset it to ERROR";
-            logger.warn(errMsg);
-            executableManager.updateJobOutput(executable.getId(), ExecutableState.ERROR, null, errMsg);
-        }
-    }
-
-    private boolean acquireJobLock(Executable executable, long timeoutSeconds) throws LockException {
-        Map<String, Executable> runningJobs = context.getRunningJobs();
-        if (runningJobs.size() >= jobEngineConfig.getMaxConcurrentJobLimit()) {
-            return false;
-        }
-        if (runningJobs.containsKey(executable.getId())) {
-            return false;
-        }
-        if (!executable.isRunnable()) {
-            return false;
-        }
-        return true;
-    }
-
-    private void releaseJobLock(String jobId) throws LockException {
-
     }
 
     private void releaseLock() {
@@ -198,8 +172,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
 
         for (AbstractExecutable executable : executableManager.getAllExecutables()) {
-            final ExecutableState status = executable.getStatus();
-            if (status == ExecutableState.READY) {
+            if (executable.getStatus() == ExecutableState.READY) {
                 executableManager.updateJobOutput(executable.getId(), ExecutableState.ERROR, null, "scheduler initializing work to reset job to ERROR status");
             }
         }
