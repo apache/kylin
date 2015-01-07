@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html ng-app="scrollableContainer">
+<head>
+    <title>Angular Horizontal Demo.</title>
+    <!--styles -->
+    <link rel="stylesheet" type="text/css" href="bower_components/bootstrap-css-only/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="dist/ng-sortable.min.css">
+    <link rel="stylesheet" type="text/css" href="styles/containerPositioning.css">
+    <!--scripts-->
+    <script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
+    <script type="text/javascript" src="dist/ng-sortable.js"></script>
+    <script type="text/javascript" src="containerPositioning.js"></script>
+</head>
+
+<body ng-controller="MainCtrl">
+    <h1>Demonstrating containment without relative positioning</h1>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-3 column">
+                Something on the left
+            </div>
+            <div class="col-xs-9 column">
+                <p>Data on the right</p>
+                <div id="sortable-container1">
+                    <div class="sortable-row" as-sortable="sortableOptions1" ng-model="items1">
+                        <div ng-repeat="item in items1" as-sortable-item="">
+                            <div as-sortable-item-handle="">{{item.name}}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <h1>Demonstrating containment with relative positioning</h1>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-3 column">
+                Something on the left
+            </div>
+            <div class="col-xs-9 column">
+                <p>Data on the right</p>
+                <div id="sortable-container2">
+                    <div class="sortable-row" as-sortable="sortableOptions2" ng-model="items2">
+                        <div ng-repeat="item in items2" as-sortable-item="">
+                            <div as-sortable-item-handle="">{{item.name}}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

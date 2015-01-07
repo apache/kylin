@@ -1,0 +1,19 @@
+<div ng-model="kanbanBoard" id="board" ng-controller="KanbanController">
+    <div id="columns" class="row">
+        <div class="col-sm-{{12/kanbanBoard.numberOfColumns}} col-xs-{{12/kanbanBoard.numberOfColumns}}"
+             ng-repeat="column in kanbanBoard.columns"
+             data-columnindex="{{$index}}" id="column{{$index}}">
+            <div class="column">
+                <div class="columnHeader">
+                    <a title="Add card to column" ng-click="addNewCard(column)"><i
+                            class="glyphicon glyphicon-plus addNewCard"></i></a>
+                    <span>{{column.name}} ({{column.cards.length}})</span>
+                </div>
+                <ul class="cards card-list" as-sortable="kanbanSortOptions" ng-model="column.cards">
+                    <li class="card" ng-repeat="card in column.cards" as-sortable-item ng-include="'views/partials/card.html'">
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

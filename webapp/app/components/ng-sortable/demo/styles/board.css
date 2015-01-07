@@ -1,0 +1,175 @@
+#board { margin: 0; padding: 0 10px 0 10px;}
+#board table {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+#board {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+#board .table td {
+    padding: 5px 5px 0 5px;
+}
+
+#board .table th {
+    padding: 10px 0 10px 5px;
+}
+
+.columnHeader,
+#board .table thead th {
+    text-align: center;
+    background: #fafafa linear-gradient(to bottom, #ffffff, #f2f2f2) repeat-x;
+    padding: 5px 0;
+    font-size: 20px;
+    font-weight: normal;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid #dddddd;
+}
+
+#board .table thead th:first-of-type {
+    padding: 5px 10px 5px 20px;
+    white-space: nowrap;
+}
+
+#board .table thead {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+#board .table > tbody > tr > th,
+#board .table > tbody > tr > td {
+    border-top: none;
+}
+
+#board .table thead i,
+#board .table tbody i {
+    font-size: 14px;
+    color: green;
+}
+
+#board tbody th,
+#board tbody td {
+    background-color: #ffffff;
+    text-align: center;
+}
+
+#board .table td.addTask,
+#board .table td.addStory {
+    margin: 0;
+    padding: 0;
+}
+
+#board .table td.addTask button,
+#board .table th.addStory button {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0 3px;
+    border: none;
+    background-color: #f2f2f2;
+}
+
+#board .table td.addTask button:hover,
+#board .table th.addStory button:hover {
+    background-color: #fafafa;
+}
+
+#board .table .story,
+#board .table .task {
+    -webkit-transform: rotate(-2deg);
+    -o-transform: rotate(-2deg);
+    -moz-transform:rotate(-2deg);
+}
+
+#board .table .story:hover,
+#board .table .story:focus,
+#board .table .task:hover,
+#board .table .task:focus {
+    box-shadow: 3px 6px 20px rgba(0, 0, 0, 0.4);
+    -webkit-transform: scale(1.12);
+    -moz-transform: scale(1.12);
+    -o-transform: scale(1.12);
+    position: relative;
+    z-index: 1035;
+}
+
+div.story,
+div.task {
+    position: relative;
+    padding: 5px 0;
+    margin: 4px 4px 4px 0;
+    text-align: center;
+    box-shadow: 2px 2px 3px rgba(0,0,0,0.1);
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: pointer;
+}
+
+div.story {
+    margin: 0 5px 0 0;
+}
+
+div.story h3,
+div.task h3 {
+    font-size: 13px;
+    line-height: 13px;
+    padding: 0;
+    margin: 5px;
+    text-align: center;
+    text-shadow: none;
+    font-weight: normal;
+    transform-style: preserve-3d;
+    -webkit-backface-vivbility: hidden;
+    -webkit-transform: translate3d(0,0,0);
+    -webkit-transform-style: preserve-3d;
+}
+
+#columns { margin: 20px 0 5px 0;}
+#columns > div { padding-left: 5px; padding-right:5px;}
+
+.column {
+    border: solid 1px darkgrey;
+    box-shadow: rgba(0, 0, 0, 0.7) 0 1px 10px 0;
+}
+.card-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    min-height: 50px;
+}
+
+.noMargin { margin-bottom: 0;}
+
+.default {
+    box-shadow: inset rgba(0, 0, 0, 0.0980392) 0 1px 10px 0;
+}
+.default-color { background-color: #ffffff; }
+
+.card {
+   padding: 10px;
+}
+
+.card-title {
+    color: #7c9eb2;
+    text-decoration: none;
+    font-weight: bold;
+    line-height: 1.5em;
+    padding: 2px 1px;
+    display: block;
+}
+
+.addNewCard {
+    float: right;
+    padding-right: 30px;
+    color:  green;
+}
+
+.removeCard {
+    padding: 12px;
+    color: #444;
+}

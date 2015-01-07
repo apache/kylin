@@ -86,7 +86,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     $scope.$watch('cubeMetaFrame', function (newValue, oldValue) {
         if ($scope.cubeMode=="editExistCube"&&newValue && !newValue.project) {
             initProject();
-            generateCubeStatus($scope.cubeMetaFrame);
         }
     });
 
@@ -259,22 +258,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
             angular.forEach($scope.projects, function (project, index) {
                 $scope.listAccess(project, 'ProjectInstance');
             });
-        });
-    }
-
-    function generateCubeStatus(cubeMeta) {
-        angular.forEach(cubeMeta.dimensions, function (dimension, index) {
-            dimension.status = {};
-            if (dimension.hierarchy) {
-                dimension.status.useHierarchy = true;
-                //dimension.status.joinCount = (!!dimension.join.primary_key) ? dimension.join.primary_key.length : 0;
-                dimension.status.hierarchyCount = (!!dimension.hierarchy) ? dimension.hierarchy.length : 0;
-            }
-
-            // Add 'includeFK' for new cube data model.
-            if (dimension.join) {
-                dimension.status.includeFK = dimension.column === '{FK}';
-            }
         });
     }
 });

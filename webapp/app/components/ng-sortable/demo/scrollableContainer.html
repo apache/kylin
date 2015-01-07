@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html ng-app="scrollableContainer">
+<head>
+    <title>Angular Horizontal Demo.</title>
+    <!--styles -->
+    <link rel="stylesheet" type="text/css" href="bower_components/bootstrap-css-only/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="dist/ng-sortable.min.css">
+    <link rel="stylesheet" type="text/css" href="styles/scrollableContainer.css">
+    <!--scripts-->
+    <script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
+    <script type="text/javascript" src="dist/ng-sortable.js"></script>
+    <script type="text/javascript" src="scrollableContainer.js"></script>
+</head>
+
+<body ng-controller="MainCtrl">
+
+<div id="sortable-container">
+    <div class="sortable-row" as-sortable="sortableOptions" ng-model="itemsList.items1">
+        <div ng-repeat="item in itemsList.items1" as-sortable-item>
+            <div as-sortable-item-handle>{{item.Label}}</div>
+        </div>
+    </div>
+    <div class="sortable-row" as-sortable="sortableOptions" ng-model="itemsList.items2">
+        <div ng-repeat="item in itemsList.items2" as-sortable-item>
+            <div as-sortable-item-handle>{{item.Label}}</div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
