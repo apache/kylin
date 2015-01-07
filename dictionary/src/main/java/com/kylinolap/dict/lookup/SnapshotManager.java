@@ -153,10 +153,12 @@ public class SnapshotManager {
     }
 
     private SnapshotTable load(String resourcePath, boolean loadData) throws IOException {
+        logger.info("Loading snapshotTable from " + resourcePath + ", with loadData: " + loadData);
         ResourceStore store = MetadataManager.getInstance(this.config).getStore();
 
         SnapshotTable table = store.getResource(resourcePath, SnapshotTable.class, loadData ? SnapshotTableSerializer.FULL_SERIALIZER : SnapshotTableSerializer.INFO_SERIALIZER);
 
+        logger.info("snapshotTalbe: " + table);
         if (loadData)
             logger.debug("Loaded snapshot at " + resourcePath);
 
