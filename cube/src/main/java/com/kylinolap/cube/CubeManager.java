@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -293,7 +295,7 @@ public class CubeManager implements IRealizationProvider {
             segments.add(buildSegment(cubeInstance, 0, 0));
         }
 
-        validateNewSegments(cubeInstance, buildType, segments);
+        validateNewSegments(cubeInstance, buildType, segments.get(0));
 
         CubeSegment newSeg = segments.get(0);
         if (buildType == CubeBuildTypeEnum.MERGE) {
@@ -314,6 +316,96 @@ public class CubeManager implements IRealizationProvider {
         return segments;
     }
 
+    private boolean hasOverlap(long startDate, long endDate, long anotherStartDate, long anotherEndDate) {
+        if (startDate >= endDate) {
+            throw new IllegalArgumentException("startDate must be less than endDate");
+        }
+        if (anotherStartDate >= anotherEndDate) {
+            throw new IllegalArgumentException("anotherStartDate must be less than anotherEndDate");
+        }
+        if (startDate <= anotherStartDate && anotherStartDate < endDate) {
+            return true;
+        }
+        if (startDate < anotherEndDate && anotherEndDate <= endDate) {
+            return true;
+        }
+        return false;
+    }
+
+    public CubeSegment mergeSegments(CubeInstance cubeInstance, final long startDate, final long endDate) throws IOException, CubeIntegrityException {
+        if (cubeInstance.getBuildingSegments().size() > 0) {
+            throw new RuntimeException("There is already an allocating segment!");
+        }
+
+        if (cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateColumn() == null) {
+            throw new CubeIntegrityException("there is no partition date, only full build is supported");
+        }
+            List<CubeSegment> readySegments = cubeInstance.getSegment(SegmentStatusEnum.READY);
+            if (readySegments.isEmpty()) {
+                throw new CubeIntegrityException("there are no segments in ready state");
+            }
+            long start = Long.MAX_VALUE;
+            long end = Long.MIN_VALUE;
+            for (CubeSegment readySegment: readySegments) {
+                if (hasOverlap(startDate, endDate, readySegment.getDateRangeStart(), readySegment.getDateRangeEnd())) {
+                    if (start > readySegment.getDateRangeStart()) {
+                        start = readySegment.getDateRangeStart();
+                    }
+                    if (end < readySegment.getDateRangeEnd()) {
+                        end = readySegment.getDateRangeEnd();
+                    }
+                }
+            }
+        CubeSegment newSegment = buildSegment(cubeInstance, start, end);
+
+        validateNewSegments(cubeInstance, CubeBuildTypeEnum.MERGE, newSegment);
+
+        List<CubeSegment> mergingSegments = cubeInstance.getMergingSegments(newSegment);
+        this.makeDictForNewSegment(cubeInstance, newSegment, mergingSegments);
+        this.makeSnapshotForNewSegment(cubeInstance, newSegment, mergingSegments);
+
+        cubeInstance.getSegments().add(newSegment);
+        Collections.sort(cubeInstance.getSegments());
+
+        this.updateCube(cubeInstance);
+
+        return newSegment;
+    }
+
+    public CubeSegment appendSegments(CubeInstance cubeInstance, long startDate, long endDate) throws IOException, CubeIntegrityException {
+        if (cubeInstance.getBuildingSegments().size() > 0) {
+            throw new RuntimeException("There is already an allocating segment!");
+        }
+        List<CubeSegment> readySegments = cubeInstance.getSegments(SegmentStatusEnum.READY);
+        CubeSegment newSegment;
+        final boolean appendBuildOnHllMeasure = cubeInstance.appendBuildOnHllMeasure(startDate, endDate);
+        if (cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateColumn() != null) {
+            if (readySegments.isEmpty()) {
+                newSegment = buildSegment(cubeInstance, cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateStart(), endDate);
+            } else {
+                if (appendBuildOnHllMeasure) {
+                    newSegment = buildSegment(cubeInstance, readySegments.get(0).getDateRangeStart(), endDate);
+                } else {
+                    newSegment = buildSegment(cubeInstance, readySegments.get(readySegments.size() - 1).getDateRangeEnd(), endDate);
+                }
+            }
+        } else {
+            newSegment = buildSegment(cubeInstance, 0, Long.MAX_VALUE);
+        }
+        validateNewSegments(cubeInstance, CubeBuildTypeEnum.BUILD, newSegment);
+        if (appendBuildOnHllMeasure) {
+            List<CubeSegment> mergingSegments = cubeInstance.getSegment(SegmentStatusEnum.READY);
+            this.makeDictForNewSegment(cubeInstance, newSegment, mergingSegments);
+            this.makeSnapshotForNewSegment(cubeInstance, newSegment, mergingSegments);
+        }
+
+        cubeInstance.getSegments().add(newSegment);
+        Collections.sort(cubeInstance.getSegments());
+        this.updateCube(cubeInstance);
+
+        return newSegment;
+    }
+
     public static String getHBaseStorageLocationPrefix() {
         return "KYLIN_";
     }
@@ -330,42 +422,31 @@ public class CubeManager implements IRealizationProvider {
 
         List<CubeSegment> segmentsInNewStatus = cubeInstance.getSegments(SegmentStatusEnum.NEW);
         CubeSegment cubeSegment = cubeInstance.getSegmentById(jobUuid);
-        if (cubeSegment == null) {
-            cubeSegment = cubeInstance.getSegment(segmentName, SegmentStatusEnum.NEW);
-        }
+        Preconditions.checkArgument(segmentsInNewStatus.size() == 1, "there are " + segmentsInNewStatus.size() + " new segments");
 
         switch (buildType) {
-        case BUILD:
-            if (cubeInstance.needMergeImmediatelyAfterBuild(cubeSegment)) {
-                cubeInstance.getSegments().removeAll(cubeInstance.getMergingSegments());
-            } else {
-                if (segmentsInNewStatus.size() == 1) {// if this the last segment in
-                    // status of NEW
-                    // remove all the rebuilding/impacted segments
+            case BUILD:
+                if (cubeInstance.needMergeImmediatelyAfterBuild(cubeSegment)) {
+                    cubeInstance.getSegments().removeAll(cubeInstance.getMergingSegments());
+                } else {
                     cubeInstance.getSegments().removeAll(cubeInstance.getRebuildingSegments());
                 }
-            }
-            break;
-        case MERGE:
-            cubeInstance.getSegments().removeAll(cubeInstance.getMergingSegments());
-            break;
+                break;
+            case MERGE:
+                cubeInstance.getSegments().removeAll(cubeInstance.getMergingSegments());
+                break;
+            case REFRESH:
+                break;
+            default:
+                throw new RuntimeException("invalid build type:" + buildType);
         }
-
         cubeSegment.setLastBuildJobID(jobUuid);
         cubeSegment.setLastBuildTime(lastBuildTime);
         cubeSegment.setSizeKB(sizeKB);
         cubeSegment.setSourceRecords(sourceRecordCount);
         cubeSegment.setSourceRecordsSize(sourceRecordsSize);
-        if (segmentsInNewStatus.size() == 1) {
-            cubeSegment.setStatus(SegmentStatusEnum.READY);
-            cubeInstance.setStatus(RealizationStatusEnum.READY);
-
-            for (CubeSegment seg : cubeInstance.getSegments(SegmentStatusEnum.READY_PENDING)) {
-                seg.setStatus(SegmentStatusEnum.READY);
-            }
-        } else {
-            cubeSegment.setStatus(SegmentStatusEnum.READY_PENDING);
-        }
+        cubeSegment.setStatus(SegmentStatusEnum.READY);
+        cubeInstance.setStatus(RealizationStatusEnum.READY);
         this.updateCube(cubeInstance);
     }
 
@@ -556,24 +637,17 @@ public class CubeManager implements IRealizationProvider {
 
     /**
      */
-    private void validateNewSegments(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, List<CubeSegment> newSegments) throws CubeIntegrityException {
+    private void validateNewSegments(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, CubeSegment newSegment) throws CubeIntegrityException {
         if (null == cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateColumn()) {
             // do nothing for non-incremental build
             return;
         }
-
-        if (newSegments.size() == 0) {
-            throw new CubeIntegrityException("Failed to allocate any segment.");
+        if (newSegment.getDateRangeEnd() <= newSegment.getDateRangeStart()) {
+            throw new CubeIntegrityException(" end date.");
         }
 
-        for (CubeSegment segment : newSegments) {
-            if (segment.getDateRangeEnd() <= segment.getDateRangeStart()) {
-                throw new CubeIntegrityException(" end date.");
-            }
-        }
-
-        CubeSegmentValidator cubeSegmentValidator = CubeSegmentValidator.getCubeSegmentValidator(buildType, cubeInstance.getDescriptor().getCubePartitionDesc().getCubePartitionType());
-        cubeSegmentValidator.validate(cubeInstance, newSegments);
+        CubeSegmentValidator cubeSegmentValidator = CubeSegmentValidator.getCubeSegmentValidator(buildType);
+        cubeSegmentValidator.validate(cubeInstance, newSegment);
     }
 
     private void loadAllCubeInstance() throws IOException {
