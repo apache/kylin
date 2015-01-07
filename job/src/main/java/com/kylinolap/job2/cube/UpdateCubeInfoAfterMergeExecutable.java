@@ -7,6 +7,7 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.job2.constants.ExecutableConstants;
+import com.kylinolap.job2.dao.JobPO;
 import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.execution.ExecutableContext;
 import com.kylinolap.job2.execution.ExecuteResult;
@@ -27,8 +28,17 @@ public class UpdateCubeInfoAfterMergeExecutable extends AbstractExecutable {
     private static final String SEGMENT_ID = "segmentId";
     private static final String MERGING_SEGMENT_IDS = "mergingSegmentIds";
     private static final String CONVERT_TO_HFILE_STEP_ID = "convertToHFileStepId";
+    private static final String CUBING_JOB_ID = "cubingJobId";
 
     private final CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
+
+    public UpdateCubeInfoAfterMergeExecutable() {
+    }
+
+    public UpdateCubeInfoAfterMergeExecutable(JobPO job) {
+        super(job);
+    }
+
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         final CubeInstance cube = cubeManager.getCube(getCubeName());
@@ -61,6 +71,7 @@ public class UpdateCubeInfoAfterMergeExecutable extends AbstractExecutable {
         mergedSegment.setSizeKB(cubeSize);
         mergedSegment.setSourceRecords(sourceCount);
         mergedSegment.setSourceRecordsSize(sourceSize);
+        mergedSegment.setLastBuildJobID(getCubingJobId());
         //remove old segment
         cube.getSegments().removeAll(toBeRemoved);
         try {
@@ -112,5 +123,13 @@ public class UpdateCubeInfoAfterMergeExecutable extends AbstractExecutable {
 
     private String getConvertToHfileStepId() {
         return getParam(CONVERT_TO_HFILE_STEP_ID);
+    }
+
+    public void setCubingJobId(String id) {
+        setParam(CUBING_JOB_ID, id);
+    }
+
+    private String getCubingJobId() {
+        return CUBING_JOB_ID;
     }
 }

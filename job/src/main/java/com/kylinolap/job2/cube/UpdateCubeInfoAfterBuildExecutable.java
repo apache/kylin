@@ -27,6 +27,7 @@ public class UpdateCubeInfoAfterBuildExecutable extends AbstractExecutable {
     private static final String CONVERT_TO_HFILE_STEP_ID = "convertToHFileStepId";
     private static final String BASE_CUBOID_STEP_ID = "baseCuboidStepId";
     private static final String CREATE_FLAT_TABLE_STEP_ID = "createFlatTableStepId";
+    private static final String CUBING_JOB_ID = "cubingJobId";
 
     private final CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
 
@@ -77,6 +78,14 @@ public class UpdateCubeInfoAfterBuildExecutable extends AbstractExecutable {
         return getParam(CREATE_FLAT_TABLE_STEP_ID);
     }
 
+    public void setCubingJobId(String id) {
+        setParam(CUBING_JOB_ID, id);
+    }
+
+    private String getCubingJobId() {
+        return CUBING_JOB_ID;
+    }
+
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         final CubeInstance cube = cubeManager.getCube(getCubeName());
@@ -95,7 +104,7 @@ public class UpdateCubeInfoAfterBuildExecutable extends AbstractExecutable {
         long size = Long.parseLong(cubeSizeString) / 1024;
 
 
-        segment.setLastBuildJobID(getId());
+        segment.setLastBuildJobID(getCubingJobId());
         segment.setLastBuildTime(System.currentTimeMillis());
         segment.setSizeKB(size);
         segment.setSourceRecords(sourceCount);
