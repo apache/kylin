@@ -20,7 +20,7 @@ import java.io.IOException;
 /**
  * Created by qianzhou on 1/4/15.
  */
-public class UpdateCubeInfoExecutable extends AbstractExecutable {
+public class UpdateCubeInfoAfterBuildExecutable extends AbstractExecutable {
 
     private static final String SEGMENT_ID = "segmentId";
     private static final String CUBE_NAME = "cubeName";
@@ -30,10 +30,10 @@ public class UpdateCubeInfoExecutable extends AbstractExecutable {
 
     private final CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
 
-    public UpdateCubeInfoExecutable() {
+    public UpdateCubeInfoAfterBuildExecutable() {
     }
 
-    public UpdateCubeInfoExecutable(JobPO job) {
+    public UpdateCubeInfoAfterBuildExecutable(JobPO job) {
         super(job);
     }
 
@@ -107,6 +107,7 @@ public class UpdateCubeInfoExecutable extends AbstractExecutable {
             cubeManager.updateCube(cube);
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } catch (IOException e) {
+            logger.error("fail to update cube after build", e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         }
     }

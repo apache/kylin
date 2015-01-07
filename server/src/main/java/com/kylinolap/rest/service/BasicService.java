@@ -27,7 +27,7 @@ import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.JobManager;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.exception.JobException;
-import com.kylinolap.job2.cube.BuildCubeJob;
+import com.kylinolap.job2.cube.CubingJob;
 import com.kylinolap.job2.execution.ExecutableState;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
 import com.kylinolap.job2.service.ExecutableManager;
@@ -181,23 +181,23 @@ public abstract class BasicService {
         return ExecutableManager.getInstance(getConfig());
     }
 
-    protected List<BuildCubeJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList) {
-        List<BuildCubeJob> results = Lists.newArrayList(FluentIterable.from(getExecutableManager().getAllExecutables()).filter(new Predicate<AbstractExecutable>() {
+    protected List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList) {
+        List<CubingJob> results = Lists.newArrayList(FluentIterable.from(getExecutableManager().getAllExecutables()).filter(new Predicate<AbstractExecutable>() {
             @Override
             public boolean apply(AbstractExecutable executable) {
                 if (cubeName == null) {
                     return true;
                 }
-                return executable instanceof BuildCubeJob && ((BuildCubeJob) executable).getCubeName().equalsIgnoreCase(cubeName);
+                return executable instanceof CubingJob && ((CubingJob) executable).getCubeName().equalsIgnoreCase(cubeName);
             }
-        }).transform(new Function<AbstractExecutable, BuildCubeJob>() {
+        }).transform(new Function<AbstractExecutable, CubingJob>() {
             @Override
-            public BuildCubeJob apply(AbstractExecutable executable) {
-                return (BuildCubeJob) executable;
+            public CubingJob apply(AbstractExecutable executable) {
+                return (CubingJob) executable;
             }
-        }).filter(new Predicate<BuildCubeJob>() {
+        }).filter(new Predicate<CubingJob>() {
             @Override
-            public boolean apply(BuildCubeJob executable) {
+            public boolean apply(CubingJob executable) {
                 if (null == projectName || null == getProjectManager().getProject(projectName)) {
                     return true;
                 } else {
@@ -206,16 +206,16 @@ public abstract class BasicService {
                     return project.containsRealization(RealizationType.CUBE, executable.getCubeName());
                 }
             }
-        }).filter(new Predicate<BuildCubeJob>() {
+        }).filter(new Predicate<CubingJob>() {
             @Override
-            public boolean apply(BuildCubeJob executable) {
+            public boolean apply(CubingJob executable) {
                 return statusList.contains(executable.getStatus());
             }
         }));
         return results;
     }
 
-    protected List<BuildCubeJob> listAllCubingJobs(final String cubeName, final String projectName) {
+    protected List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName) {
         return listAllCubingJobs(cubeName, projectName, EnumSet.allOf(ExecutableState.class));
     }
 

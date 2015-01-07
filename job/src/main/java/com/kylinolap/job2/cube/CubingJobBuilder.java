@@ -1,9 +1,11 @@
 package com.kylinolap.job2.cube;
 
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.model.CubeBuildTypeEnum;
-import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.JoinedFlatTable;
+import com.kylinolap.job.constant.JobConstants;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.cube.*;
 import com.kylinolap.job.hadoop.dict.CreateDictionaryJob;
@@ -14,43 +16,53 @@ import com.kylinolap.job2.common.HadoopShellExecutable;
 import com.kylinolap.job2.common.MapReduceExecutable;
 import com.kylinolap.job2.common.ShellExecutable;
 import com.kylinolap.job2.constants.ExecutableConstants;
+import org.apache.commons.lang3.StringUtils;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
 /**
  * Created by qianzhou on 12/25/14.
  */
-public final class BuildCubeJobBuilder {
+public final class CubingJobBuilder {
 
     private static final String JOB_WORKING_DIR_PREFIX = "kylin-";
 
-    private final JobEngineConfig jobEngineConfig;
-    private final CubeSegment segment;
+    private JobEngineConfig jobEngineConfig;
+    private CubeSegment segment;
+    private String submitter;
 
-    private BuildCubeJobBuilder(JobEngineConfig engineCfg, CubeSegment segment) {
-        this.jobEngineConfig = engineCfg;
+    private CubingJobBuilder() {}
+
+    public static CubingJobBuilder newBuilder() {
+        return new CubingJobBuilder();
+    }
+
+    public CubingJobBuilder setSegment(CubeSegment segment) {
         this.segment = segment;
+        return this;
     }
 
-    public static BuildCubeJobBuilder newBuilder(JobEngineConfig engineCfg, CubeSegment segment) {
-        return new BuildCubeJobBuilder(engineCfg, segment);
+    public CubingJobBuilder setJobEnginConfig(JobEngineConfig enginConfig) {
+        this.jobEngineConfig = enginConfig;
+        return this;
     }
 
-    public BuildCubeJob build() {
+    public CubingJobBuilder setSubmitter(String submitter) {
+        this.submitter = submitter;
+        return this;
+    }
+
+    public CubingJob buildJob() {
+        checkPreconditions();
         final int groupRowkeyColumnsCount = segment.getCubeDesc().getRowkey().getNCuboidBuildLevels();
         final int totalRowkeyColumnsCount = segment.getCubeDesc().getRowkey().getRowKeyColumns().length;
 
-        SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss");
-        format.setTimeZone(TimeZone.getTimeZone(jobEngineConfig.getTimeZone()));
-
-        BuildCubeJob result = new BuildCubeJob();
-        result.setCubeName(getCubeName());
-        result.setSegmentId(segment.getUuid());
-        result.setName(getCubeName() + " - " + segment.getName() + " - BUILD - " + format.format(new Date(System.currentTimeMillis())));
-        result.setSubmitter(null);
+        CubingJob result = initialJob("BUILD");
         final String jobId = result.getId();
         final CubeJoinedFlatTableDesc intermediateTableDesc = new CubeJoinedFlatTableDesc(segment.getCubeDesc(), this.segment);
         final String intermediateHiveTableName = getIntermediateHiveTableName(intermediateTableDesc, jobId);
@@ -90,8 +102,68 @@ public final class BuildCubeJobBuilder {
         return result;
     }
 
-    private String getJobWorkingDir(String jobUuid) {
-        return jobEngineConfig.getHdfsWorkingDirectory() + "/" + JOB_WORKING_DIR_PREFIX + jobUuid;
+    public CubingJob mergeJob() {
+        checkPreconditions();
+        CubingJob result = initialJob("MERGE");
+        final String jobId = result.getId();
+        List<CubeSegment> mergingSegments = segment.getCubeInstance().getMergingSegments(segment);
+        Preconditions.checkState(mergingSegments != null && mergingSegments.size() > 1, "there should be more than 2 segments to merge");
+        String[] cuboidPaths = new String[mergingSegments.size()];
+        for (int i = 0; i < mergingSegments.size(); i++) {
+            cuboidPaths[i] = getPathToMerge(mergingSegments.get(i));
+        }
+        final String formattedPath = StringUtils.join(cuboidPaths, ",");
+        final String mergedCuboidPath = getJobWorkingDir(jobId) + "/" + getCubeName() + "/cuboid";
+
+        result.addTask(createMergeCuboidDataStep(formattedPath, mergedCuboidPath));
+
+        // get output distribution step
+        result.addTask(createRangeRowkeyDistributionStep(mergedCuboidPath));
+
+        // create htable step
+        result.addTask(createCreateHTableStep());
+
+        // generate hfiles step
+        final MapReduceExecutable convertCuboidToHfileStep = createConvertCuboidToHfileStep(mergedCuboidPath, jobId);
+        result.addTask(convertCuboidToHfileStep);
+
+        // bulk load step
+        result.addTask(createBulkLoadStep(jobId));
+
+        final List<String> mergingSegmentIds = Lists.transform(mergingSegments, new Function<CubeSegment, String>() {
+            @Nullable
+            @Override
+            public String apply(CubeSegment input) {
+                return input.getUuid();
+            }
+        });
+        result.addTask(createUpdateCubeInfoAfterMergeStep(mergingSegmentIds, convertCuboidToHfileStep.getId()));
+
+        return result;
+    }
+
+    private CubingJob initialJob(String type) {
+        CubingJob result = new CubingJob();
+        SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss");
+        format.setTimeZone(TimeZone.getTimeZone(jobEngineConfig.getTimeZone()));
+        result.setCubeName(getCubeName());
+        result.setSegmentId(segment.getUuid());
+        result.setName(getCubeName() + " - " + segment.getName() + " - " + type + " - " + format.format(new Date(System.currentTimeMillis())));
+        result.setSubmitter(this.submitter);
+        return result;
+    }
+
+    private void checkPreconditions() {
+        Preconditions.checkNotNull(this.segment, "segment cannot be null");
+        Preconditions.checkNotNull(this.jobEngineConfig, "jobEngineConfig cannot be null");
+    }
+
+    private String getJobWorkingDir(String uuid) {
+        return jobEngineConfig.getHdfsWorkingDirectory() + "/" + JOB_WORKING_DIR_PREFIX + uuid;
+    }
+
+    private String getPathToMerge(CubeSegment segment) {
+        return getJobWorkingDir(segment.getUuid()) + "/" + getCubeName() + "/cuboid/*";
     }
 
     private String getCubeName() {
@@ -179,7 +251,7 @@ public final class BuildCubeJobBuilder {
         result.setMapReduceJobClass(FactDistinctColumnsJob.class);
         StringBuilder cmd = new StringBuilder();
         appendMapReduceParameters(cmd, jobEngineConfig);
-        appendExecCmdParameters(cmd, "cubename", segment.getCubeInstance().getName());
+        appendExecCmdParameters(cmd, "cubename", getCubeName());
         appendExecCmdParameters(cmd, "input", intermediateHiveTableName);
         appendExecCmdParameters(cmd, "output", getFactDistinctColumnsPath(jobId));
         appendExecCmdParameters(cmd, "jobname", "Kylin_Fact_Distinct_Columns_" + getCubeName() + "_Step");
@@ -195,7 +267,7 @@ public final class BuildCubeJobBuilder {
         buildDictionaryStep.setName(ExecutableConstants.STEP_NAME_BUILD_DICTIONARY);
         StringBuilder cmd = new StringBuilder();
         appendExecCmdParameters(cmd, "cubename", getCubeName());
-        appendExecCmdParameters(cmd, "segmentname", segment.getName());
+        appendExecCmdParameters(cmd, "segmentname", getSegmentName());
         appendExecCmdParameters(cmd, "input", factDistinctColumnsPath);
 
         buildDictionaryStep.setJobParams(cmd.toString());
@@ -308,8 +380,8 @@ public final class BuildCubeJobBuilder {
 
     }
 
-    private UpdateCubeInfoExecutable createUpdateCubeInfoStep(String createFlatTableStepId, String baseCuboidStepId, String convertToHFileStepId) {
-        final UpdateCubeInfoExecutable updateCubeInfoStep = new UpdateCubeInfoExecutable();
+    private UpdateCubeInfoAfterBuildExecutable createUpdateCubeInfoStep(String createFlatTableStepId, String baseCuboidStepId, String convertToHFileStepId) {
+        final UpdateCubeInfoAfterBuildExecutable updateCubeInfoStep = new UpdateCubeInfoAfterBuildExecutable();
         updateCubeInfoStep.setName(ExecutableConstants.STEP_NAME_UPDATE_CUBE_INFO);
         updateCubeInfoStep.setCubeName(getCubeName());
         updateCubeInfoStep.setSegmentId(segment.getUuid());
@@ -319,5 +391,30 @@ public final class BuildCubeJobBuilder {
         return updateCubeInfoStep;
     }
 
+    private MapReduceExecutable createMergeCuboidDataStep(String inputPath, String outputPath) {
+        MapReduceExecutable mergeCuboidDataStep = new MapReduceExecutable();
+        mergeCuboidDataStep.setName(JobConstants.STEP_NAME_MERGE_CUBOID);
+        StringBuilder cmd = new StringBuilder();
+
+        appendMapReduceParameters(cmd, jobEngineConfig);
+        appendExecCmdParameters(cmd, "cubename", getCubeName());
+        appendExecCmdParameters(cmd, "segmentname", getSegmentName());
+        appendExecCmdParameters(cmd, "input", inputPath);
+        appendExecCmdParameters(cmd, "output", outputPath);
+        appendExecCmdParameters(cmd, "jobname", "Kylin_Merge_Cuboid_" + getCubeName() + "_Step");
+
+        mergeCuboidDataStep.setMapReduceParams(cmd.toString());
+        mergeCuboidDataStep.setMapReduceJobClass(MergeCuboidJob.class);
+        return mergeCuboidDataStep;
+    }
+
+    private UpdateCubeInfoAfterMergeExecutable createUpdateCubeInfoAfterMergeStep(List<String> mergingSegmentIds, String convertToHFileStepId) {
+        UpdateCubeInfoAfterMergeExecutable result = new UpdateCubeInfoAfterMergeExecutable();
+        result.setCubeName(getCubeName());
+        result.setSegmentId(segment.getUuid());
+        result.setMergingSegmentIds(mergingSegmentIds);
+        result.setConvertToHFileStepId(convertToHFileStepId);
+        return result;
+    }
 
 }

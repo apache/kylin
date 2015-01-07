@@ -12,6 +12,10 @@ public final class ExecuteResult {
     private final State state;
     private final String output;
 
+    public ExecuteResult(State state) {
+        this(state, "");
+    }
+
     public ExecuteResult(State state, String output) {
         Preconditions.checkArgument(state != null, "state cannot be null");
         this.state = state;
