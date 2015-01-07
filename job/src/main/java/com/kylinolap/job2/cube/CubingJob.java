@@ -6,18 +6,18 @@ import com.kylinolap.job2.impl.threadpool.DefaultChainedExecutable;
 /**
  * Created by qianzhou on 12/25/14.
  */
-public class BuildCubeJob extends DefaultChainedExecutable {
+public class CubingJob extends DefaultChainedExecutable {
 
-    public BuildCubeJob() {
+    public CubingJob() {
         super();
     }
 
-    public BuildCubeJob(JobPO job) {
+    public CubingJob(JobPO job) {
         super(job);
     }
 
-    public static final String CUBE_INSTANCE_NAME = "cubeName";
-    public static final String SEGMENT_ID = "segmentId";
+    private static final String CUBE_INSTANCE_NAME = "cubeName";
+    private static final String SEGMENT_ID = "segmentId";
 
 
     void setCubeName(String name) {
@@ -28,7 +28,7 @@ public class BuildCubeJob extends DefaultChainedExecutable {
         return getParam(CUBE_INSTANCE_NAME);
     }
 
-    public void setSegmentId(String segmentId) {
+    void setSegmentId(String segmentId) {
         setParam(SEGMENT_ID, segmentId);
     }
 
