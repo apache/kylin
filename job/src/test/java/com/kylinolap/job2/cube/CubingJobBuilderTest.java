@@ -23,12 +23,11 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.List;
 
 import static org.junit.Assert.*;
 
 @Ignore
-public class BuildCubeJobBuilderTest {
+public class CubingJobBuilderTest {
 
     private JobEngineConfig jobEngineConfig;
 
@@ -110,8 +109,8 @@ public class BuildCubeJobBuilderTest {
         final CubeInstance cubeInstance = cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty");
         assertNotNull(cubeInstance);
         final CubeSegment cubeSegment = cubeManager.appendSegments(cubeInstance, 0, System.currentTimeMillis());
-        final BuildCubeJobBuilder buildCubeJobBuilder = BuildCubeJobBuilder.newBuilder(jobEngineConfig, cubeSegment);
-        final BuildCubeJob job = buildCubeJobBuilder.build();
+        final CubingJobBuilder cubingJobBuilder = CubingJobBuilder.newBuilder().setJobEnginConfig(jobEngineConfig).setSegment(cubeSegment);
+        final CubingJob job = cubingJobBuilder.buildJob();
         jobService.addJob(job);
         waitForJob(job.getId());
         assertEquals(ExecutableState.SUCCEED, jobService.getOutput(job.getId()).getState());
