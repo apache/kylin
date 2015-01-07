@@ -57,13 +57,21 @@ public class TableDesc extends RootPersistentEntity {
     }
 
     public String getResourcePath() {
-        return ResourceStore.TABLE_RESOURCE_ROOT + "/" + getIdentity() + ".json";
+        return concatResourcePath(getIdentity());
     }
-
+    
     public String getIdentity() {
         return String.format("%s.%s", this.getDatabase().toUpperCase(), this.getName()).toUpperCase();
     }
+    
+    public static String concatResourcePath(String tableIdentity) {
+        return ResourceStore.TABLE_RESOURCE_ROOT + "/" + tableIdentity + ".json";
+    }
 
+    public static String concatExdResourcePath(String tableIdentity) {
+        return ResourceStore.TABLE_EXD_RESOURCE_ROOT + "/" + tableIdentity + ".json";
+    }
+    
     // ============================================================================
 
     public String getName() {

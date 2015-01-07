@@ -105,8 +105,7 @@ public class ProjectManager {
     }
 
     public ProjectInstance reloadProject(String project) throws IOException {
-        ProjectInstance prj = getProject(project);
-        return reloadProjectAt(prj.getResourcePath());
+        return reloadProjectAt(ProjectInstance.concatResourcePath(project));
     }
 
     private ProjectInstance reloadProjectAt(String path) throws IOException {
