@@ -20,20 +20,21 @@ import java.io.IOException;
 /**
  * Created by qianzhou on 1/4/15.
  */
-public class UpdateCubeInfoExecutable extends AbstractExecutable {
+public class UpdateCubeInfoAfterBuildExecutable extends AbstractExecutable {
 
     private static final String SEGMENT_ID = "segmentId";
     private static final String CUBE_NAME = "cubeName";
     private static final String CONVERT_TO_HFILE_STEP_ID = "convertToHFileStepId";
     private static final String BASE_CUBOID_STEP_ID = "baseCuboidStepId";
     private static final String CREATE_FLAT_TABLE_STEP_ID = "createFlatTableStepId";
+    private static final String CUBING_JOB_ID = "cubingJobId";
 
     private final CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
 
-    public UpdateCubeInfoExecutable() {
+    public UpdateCubeInfoAfterBuildExecutable() {
     }
 
-    public UpdateCubeInfoExecutable(JobPO job) {
+    public UpdateCubeInfoAfterBuildExecutable(JobPO job) {
         super(job);
     }
 
@@ -77,6 +78,14 @@ public class UpdateCubeInfoExecutable extends AbstractExecutable {
         return getParam(CREATE_FLAT_TABLE_STEP_ID);
     }
 
+    public void setCubingJobId(String id) {
+        setParam(CUBING_JOB_ID, id);
+    }
+
+    private String getCubingJobId() {
+        return CUBING_JOB_ID;
+    }
+
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         final CubeInstance cube = cubeManager.getCube(getCubeName());
@@ -95,7 +104,7 @@ public class UpdateCubeInfoExecutable extends AbstractExecutable {
         long size = Long.parseLong(cubeSizeString) / 1024;
 
 
-        segment.setLastBuildJobID(getId());
+        segment.setLastBuildJobID(getCubingJobId());
         segment.setLastBuildTime(System.currentTimeMillis());
         segment.setSizeKB(size);
         segment.setSourceRecords(sourceCount);
@@ -107,6 +116,7 @@ public class UpdateCubeInfoExecutable extends AbstractExecutable {
             cubeManager.updateCube(cube);
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } catch (IOException e) {
+            logger.error("fail to update cube after build", e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         }
     }
