@@ -109,8 +109,8 @@ public class BuildCubeJobBuilderTest {
     public void testBuild() throws Exception {
         final CubeInstance cubeInstance = cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty");
         assertNotNull(cubeInstance);
-        final List<CubeSegment> cubeSegments = cubeManager.appendSegments(cubeInstance, 0, System.currentTimeMillis());
-        final BuildCubeJobBuilder buildCubeJobBuilder = BuildCubeJobBuilder.newBuilder(jobEngineConfig, cubeSegments.get(0));
+        final CubeSegment cubeSegment = cubeManager.appendSegments(cubeInstance, 0, System.currentTimeMillis());
+        final BuildCubeJobBuilder buildCubeJobBuilder = BuildCubeJobBuilder.newBuilder(jobEngineConfig, cubeSegment);
         final BuildCubeJob job = buildCubeJobBuilder.build();
         jobService.addJob(job);
         waitForJob(job.getId());
