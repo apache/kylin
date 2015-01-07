@@ -49,7 +49,8 @@ public class JobMetrics implements MetricSet {
     public Map<String, Metric> getMetrics() {
         Map<String, Metric> metricSet = new HashMap<String, Metric>();
 
-        metricSet.put("PercentileJobStepDuration", new Gauge<Double>() {
+        metricSet.put("PercentileJobStepDuration",
+                new Gauge<Double>() {
             @Override
             public Double getValue() {
                 return jobManager.getPercentileJobStepDuration(95);

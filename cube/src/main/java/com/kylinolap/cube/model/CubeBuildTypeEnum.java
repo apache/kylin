@@ -28,5 +28,10 @@ public enum CubeBuildTypeEnum {
     /**
      * merge segments
      */
-    MERGE;
+    MERGE,
+
+    /**
+     * refresh segments
+     */
+    REFRESH
 }

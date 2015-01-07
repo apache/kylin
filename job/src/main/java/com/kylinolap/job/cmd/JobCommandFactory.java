@@ -21,13 +21,7 @@ import com.kylinolap.job.JobInstance.JobStep;
 import com.kylinolap.job.constant.JobStepCmdTypeEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.job.hadoop.cube.BaseCuboidMapper;
-import com.kylinolap.job.hadoop.cube.CubeHFileJob;
-import com.kylinolap.job.hadoop.cube.CuboidJob;
-import com.kylinolap.job.hadoop.cube.FactDistinctColumnsJob;
-import com.kylinolap.job.hadoop.cube.MergeCuboidJob;
-import com.kylinolap.job.hadoop.cube.NDCuboidMapper;
-import com.kylinolap.job.hadoop.cube.RangeKeyDistributionJob;
+import com.kylinolap.job.hadoop.cube.*;
 import com.kylinolap.job.hadoop.dict.CreateDictionaryJob;
 import com.kylinolap.job.hadoop.hbase.BulkLoadJob;
 import com.kylinolap.job.hadoop.hbase.CreateHTableJob;
@@ -57,14 +51,12 @@ public class JobCommandFactory {
             factDistinctJob.setAsync(isAsync);
             return new JavaHadoopCmd(command, instanceID, jobStepID, engineConfig, factDistinctJob, isAsync);
         case JAVA_CMD_HADOOP_BASECUBOID:
-            CuboidJob baseCuboidJob = new CuboidJob();
+            BaseCuboidJob baseCuboidJob = new BaseCuboidJob();
             baseCuboidJob.setAsync(isAsync);
-            baseCuboidJob.setMapperClass(BaseCuboidMapper.class);
             return new JavaHadoopCmd(command, instanceID, jobStepID, engineConfig, baseCuboidJob, isAsync);
         case JAVA_CMD_HADOOP_NDCUBOID:
-            CuboidJob ndCuboidJob = new CuboidJob();
+            NDCuboidJob ndCuboidJob = new NDCuboidJob();
             ndCuboidJob.setAsync(isAsync);
-            ndCuboidJob.setMapperClass(NDCuboidMapper.class);
             return new JavaHadoopCmd(command, instanceID, jobStepID, engineConfig, ndCuboidJob, isAsync);
         case JAVA_CMD_HADOOP_RANGEKEYDISTRIBUTION:
             AbstractHadoopJob rangeKeyDistributionJob = new RangeKeyDistributionJob();

@@ -23,14 +23,10 @@ import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
+import com.kylinolap.job2.cube.CubingJob;
+import com.kylinolap.job2.execution.ExecutableState;
 import com.kylinolap.metadata.realization.RealizationType;
 import com.kylinolap.metadata.project.RealizationEntry;
 import com.kylinolap.metadata.project.ProjectInstance;
@@ -65,11 +61,6 @@ import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.CuboidCLI;
 import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.job.JobDAO;
-import com.kylinolap.job.JobInstance;
-import com.kylinolap.job.JobInstance.JobStep;
-import com.kylinolap.job.constant.JobStatusEnum;
-import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.hadoop.cardinality.HiveColumnCardinalityJob;
 import com.kylinolap.metadata.MetadataConstances;
@@ -228,11 +219,9 @@ public class CubeService extends BasicService {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
     public CubeDesc updateCubeAndDesc(CubeInstance cube, CubeDesc desc, String newProjectName) throws UnknownHostException, IOException, JobException {
-        List<JobInstance> jobInstances = this.getJobManager().listJobs(cube.getName(), null);
-        for (JobInstance jobInstance : jobInstances) {
-            if (jobInstance.getStatus() == JobStatusEnum.PENDING || jobInstance.getStatus() == JobStatusEnum.RUNNING) {
-                throw new JobException("Cube schema shouldn't be changed with running job.");
-            }
+        final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
+        if (!cubingJobs.isEmpty()) {
+            throw new JobException("Cube schema shouldn't be changed with running job.");
         }
 
         try {
@@ -262,11 +251,9 @@ public class CubeService extends BasicService {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
     public void deleteCube(CubeInstance cube) throws IOException, JobException, CubeIntegrityException {
-        List<JobInstance> jobInstances = this.getJobManager().listJobs(cube.getName(), null);
-        for (JobInstance jobInstance : jobInstances) {
-            if (jobInstance.getStatus() == JobStatusEnum.PENDING || jobInstance.getStatus() == JobStatusEnum.RUNNING) {
-                throw new JobException("The cube " + cube.getName() + " has running job, please discard it and try again.");
-            }
+        final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
+        if (!cubingJobs.isEmpty()) {
+            throw new JobException("The cube " + cube.getName() + " has running job, please discard it and try again.");
         }
 
         this.releaseAllSegments(cube);
@@ -391,11 +378,9 @@ public class CubeService extends BasicService {
             throw new InternalErrorException("Cube " + cubeName + " dosen't contain any READY segment");
         }
 
-        List<JobInstance> jobInstances = this.getJobManager().listJobs(cube.getName(), null);
-        for (JobInstance jobInstance : jobInstances) {
-            if (jobInstance.getStatus() == JobStatusEnum.PENDING || jobInstance.getStatus() == JobStatusEnum.RUNNING) {
-                throw new JobException("Enable is not allowed with a running job.");
-            }
+        final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
+        if (!cubingJobs.isEmpty()) {
+            throw new JobException("Enable is not allowed with a running job.");
         }
         if (!cube.getDescriptor().calculateSignature().equals(cube.getDescriptor().getSignature())) {
             this.releaseAllSegments(cube);
@@ -611,17 +596,13 @@ public class CubeService extends BasicService {
      * @throws CubeIntegrityException
      */
     private void releaseAllSegments(CubeInstance cube) throws IOException, JobException, UnknownHostException, CubeIntegrityException {
-        for (JobInstance jobInstance : this.getJobManager().listJobs(cube.getName(), null)) {
-            if (jobInstance.getStatus() != JobStatusEnum.FINISHED && jobInstance.getStatus() != JobStatusEnum.DISCARDED) {
-                for (JobStep jobStep : jobInstance.getSteps()) {
-                    if (jobStep.getStatus() != JobStepStatusEnum.FINISHED) {
-                        jobStep.setStatus(JobStepStatusEnum.DISCARDED);
-                    }
-                }
-                JobDAO.getInstance(this.getConfig()).updateJobInstance(jobInstance);
+        final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null);
+        for (CubingJob cubingJob : cubingJobs) {
+            final ExecutableState status = cubingJob.getStatus();
+            if (status != ExecutableState.SUCCEED && status != ExecutableState.STOPPED && status != ExecutableState.DISCARDED) {
+                getExecutableManager().discardJob(cubingJob.getId());
             }
         }
-
         cube.getSegments().clear();
         CubeManager.getInstance(getConfig()).updateCube(cube);
     }

@@ -399,19 +399,20 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         return new long[] { start, end };
     }
 
-    private boolean appendOnHll() {
-        CubePartitionDesc cubePartitionDesc = getDescriptor().getCubePartitionDesc();
-        if (cubePartitionDesc == null) {
-            return false;
-        }
-        if (cubePartitionDesc.getPartitionDateColumn() == null) {
-            return false;
-        }
-        if (cubePartitionDesc.getCubePartitionType() != CubePartitionDesc.CubePartitionType.APPEND) {
-            return false;
-        }
-        return getDescriptor().hasHolisticCountDistinctMeasures();
+    public boolean appendOnHll() {
+        return false;
     }
+
+//    public boolean appendOnHll() {
+//        CubePartitionDesc cubePartitionDesc = getDescriptor().getCubePartitionDesc();
+//        if (cubePartitionDesc == null) {
+//            return false;
+//        }
+//        if (cubePartitionDesc.getPartitionDateColumn() == null) {
+//            return false;
+//        }
+//        return getDescriptor().hasHolisticCountDistinctMeasures();
+//    }
 
     public boolean appendBuildOnHllMeasure(long startDate, long endDate) {
         if (!appendOnHll()) {
