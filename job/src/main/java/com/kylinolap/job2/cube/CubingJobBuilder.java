@@ -97,7 +97,7 @@ public final class CubingJobBuilder {
         // bulk load step
         result.addTask(createBulkLoadStep(jobId));
 
-        result.addTask(createUpdateCubeInfoStep(intermediateHiveTableStep.getId(), baseCuboidStep.getId(), convertCuboidToHfileStep.getId()));
+        result.addTask(createUpdateCubeInfoStep(intermediateHiveTableStep.getId(), baseCuboidStep.getId(), convertCuboidToHfileStep.getId(), jobId));
 
         return result;
     }
@@ -137,7 +137,7 @@ public final class CubingJobBuilder {
                 return input.getUuid();
             }
         });
-        result.addTask(createUpdateCubeInfoAfterMergeStep(mergingSegmentIds, convertCuboidToHfileStep.getId()));
+        result.addTask(createUpdateCubeInfoAfterMergeStep(mergingSegmentIds, convertCuboidToHfileStep.getId(), jobId));
 
         return result;
     }
@@ -163,7 +163,7 @@ public final class CubingJobBuilder {
     }
 
     private String getPathToMerge(CubeSegment segment) {
-        return getJobWorkingDir(segment.getUuid()) + "/" + getCubeName() + "/cuboid/*";
+        return getJobWorkingDir(segment.getLastBuildJobID()) + "/" + getCubeName() + "/cuboid/*";
     }
 
     private String getCubeName() {
@@ -380,7 +380,7 @@ public final class CubingJobBuilder {
 
     }
 
-    private UpdateCubeInfoAfterBuildExecutable createUpdateCubeInfoStep(String createFlatTableStepId, String baseCuboidStepId, String convertToHFileStepId) {
+    private UpdateCubeInfoAfterBuildExecutable createUpdateCubeInfoStep(String createFlatTableStepId, String baseCuboidStepId, String convertToHFileStepId, String jobId) {
         final UpdateCubeInfoAfterBuildExecutable updateCubeInfoStep = new UpdateCubeInfoAfterBuildExecutable();
         updateCubeInfoStep.setName(ExecutableConstants.STEP_NAME_UPDATE_CUBE_INFO);
         updateCubeInfoStep.setCubeName(getCubeName());
@@ -388,6 +388,7 @@ public final class CubingJobBuilder {
         updateCubeInfoStep.setCreateFlatTableStepId(createFlatTableStepId);
         updateCubeInfoStep.setBaseCuboidStepId(baseCuboidStepId);
         updateCubeInfoStep.setConvertToHFileStepId(convertToHFileStepId);
+        updateCubeInfoStep.setCubingJobId(jobId);
         return updateCubeInfoStep;
     }
 
@@ -408,13 +409,14 @@ public final class CubingJobBuilder {
         return mergeCuboidDataStep;
     }
 
-    private UpdateCubeInfoAfterMergeExecutable createUpdateCubeInfoAfterMergeStep(List<String> mergingSegmentIds, String convertToHFileStepId) {
+    private UpdateCubeInfoAfterMergeExecutable createUpdateCubeInfoAfterMergeStep(List<String> mergingSegmentIds, String convertToHFileStepId, String jobId) {
         UpdateCubeInfoAfterMergeExecutable result = new UpdateCubeInfoAfterMergeExecutable();
         result.setName(ExecutableConstants.STEP_NAME_UPDATE_CUBE_INFO);
         result.setCubeName(getCubeName());
         result.setSegmentId(segment.getUuid());
         result.setMergingSegmentIds(mergingSegmentIds);
         result.setConvertToHFileStepId(convertToHFileStepId);
+        result.setCubingJobId(jobId);
         return result;
     }
 
