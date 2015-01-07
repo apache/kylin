@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import static org.junit.Assert.*;
 
@@ -108,12 +110,28 @@ public class CubingJobBuilderTest {
     public void testBuild() throws Exception {
         final CubeInstance cubeInstance = cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty");
         assertNotNull(cubeInstance);
-        final CubeSegment cubeSegment = cubeManager.appendSegments(cubeInstance, 0, System.currentTimeMillis());
-        final CubingJobBuilder cubingJobBuilder = CubingJobBuilder.newBuilder().setJobEnginConfig(jobEngineConfig).setSegment(cubeSegment);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date date1 = dateFormat.parse("2013-01-01");
+        final CubeSegment cubeSegment1 = cubeManager.appendSegments(cubeInstance, 0, date1.getTime());
+        final CubingJobBuilder cubingJobBuilder = CubingJobBuilder.newBuilder().setJobEnginConfig(jobEngineConfig).setSegment(cubeSegment1);
         final CubingJob job = cubingJobBuilder.buildJob();
         jobService.addJob(job);
         waitForJob(job.getId());
         assertEquals(ExecutableState.SUCCEED, jobService.getOutput(job.getId()).getState());
+
+        Date date2 = dateFormat.parse("2013-04-01");
+        final CubeSegment cubeSegment2 = cubeManager.appendSegments(cubeInstance, date1.getTime(), date2.getTime());
+        final CubingJob job2 = CubingJobBuilder.newBuilder().setJobEnginConfig(jobEngineConfig).setSegment(cubeSegment2).buildJob();
+        jobService.addJob(job2);
+        waitForJob(job2.getId());
+        assertEquals(ExecutableState.SUCCEED, jobService.getOutput(job2.getId()).getState());
+
+        final CubeSegment cubeSegment3 = cubeManager.mergeSegments(cubeInstance, 0, date2.getTime());
+        final CubingJob job3 = CubingJobBuilder.newBuilder().setJobEnginConfig(jobEngineConfig).setSegment(cubeSegment3).mergeJob();
+        jobService.addJob(job3);
+        waitForJob(job3.getId());
+        assertEquals(ExecutableState.SUCCEED, jobService.getOutput(job3.getId()).getState());
+
     }
 
     private int cleanupOldCubes() throws Exception {
