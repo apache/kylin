@@ -6,10 +6,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     //add or edit ?
     var absUrl = $location.absUrl();
     $scope.cubeMode = absUrl.indexOf("/cubes/add")!=-1?'addNewCube':absUrl.indexOf("/cubes/edit")!=-1?'editExistCube':'default';
-    // use this flag to listen when rm or add dimension edited,used in sub-controller cube-schema
-    $scope.editFlag ={
-        dimensionEdited:"init"
-    };
+
     //~ Define metadata & class
     $scope.measureParamType = ['column', 'constant'];
     $scope.measureExpressions = ['SUM', 'MIN', 'MAX', 'COUNT', 'COUNT_DISTINCT'];
@@ -534,13 +531,8 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         }
     });
 
-
-    $scope.$watchCollection('editFlag.dimensionEdited', function (newValue, oldValue) {
-        console.dir(oldValue);console.dir(newValue);
-        if(newValue=="init"){
-            return;
-        }
-        if($scope.cubeMetaFrame){
+    $scope.$on('DimensionsEdited', function (event) {
+        if ($scope.cubeMetaFrame) {
             reGenerateRowKey();
         }
     });

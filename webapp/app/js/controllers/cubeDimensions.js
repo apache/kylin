@@ -319,11 +319,13 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope) {
             }
         });
 
-        $scope.editFlag.dimensionEdited = !$scope.editFlag.dimensionEdited;
         console.dir($scope.cubeMetaFrame.dimensions);
     };
 
     $scope.$on('$destroy', function () {
         $scope.dimensionsAdapter();
+
+        // Emit dimensions edit event in order to re-generate row key.
+        $scope.$emit('DimensionsEdited');
     });
 });
