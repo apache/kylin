@@ -123,7 +123,7 @@ public class SnapshotManager {
             // direct
             // load from
             // store
-            if (sig.equals(existingTable.getSignature()))
+            if (existingTable != null && sig.equals(existingTable.getSignature()))
                 return existing;
         }
 
@@ -158,7 +158,6 @@ public class SnapshotManager {
 
         SnapshotTable table = store.getResource(resourcePath, SnapshotTable.class, loadData ? SnapshotTableSerializer.FULL_SERIALIZER : SnapshotTableSerializer.INFO_SERIALIZER);
 
-        logger.info("snapshotTalbe: " + table);
         if (loadData)
             logger.debug("Loaded snapshot at " + resourcePath);
 
