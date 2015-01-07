@@ -21,6 +21,7 @@ public class MapReduceExecutable extends AbstractExecutable {
 
     private static final String KEY_MR_JOB = "MR_JOB_CLASS";
     private static final String KEY_PARAMS = "MR_JOB_PARAMS";
+    public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
 
     public MapReduceExecutable() {
     }
@@ -43,9 +44,14 @@ public class MapReduceExecutable extends AbstractExecutable {
             ToolRunner.run(job, args);
 
             final HadoopCmdOutput hadoopCmdOutput = new HadoopCmdOutput(context.getConfig().getYarnStatusServiceUrl(), job);
-            JobStepStatusEnum status;
+            JobStepStatusEnum status = JobStepStatusEnum.NEW;
             do {
-                status = hadoopCmdOutput.getStatus();
+                JobStepStatusEnum newStatus = hadoopCmdOutput.getStatus();
+                if (status == JobStepStatusEnum.WAITING && (newStatus == JobStepStatusEnum.FINISHED || newStatus == JobStepStatusEnum.ERROR || newStatus == JobStepStatusEnum.RUNNING)) {
+                    final long waitTime = System.currentTimeMillis() - getStartTime();
+                    addExtraInfo(MAP_REDUCE_WAIT_TIME, Long.toString(waitTime));
+                }
+                status = newStatus;
                 jobService.addJobInfo(getId(), job.getInfo());
                 if (status.isComplete()) {
                     final Map<String, String> info = job.getInfo();
@@ -87,6 +93,10 @@ public class MapReduceExecutable extends AbstractExecutable {
 
     public String getMapReduceParams() {
         return getParam(KEY_PARAMS);
+    }
+
+    public long getMapReduceWaitTime() {
+        return getExtraInfoAsLong(MAP_REDUCE_WAIT_TIME, 0L);
     }
 
 }

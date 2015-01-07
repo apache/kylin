@@ -20,9 +20,10 @@ import java.util.UUID;
  */
 public abstract class AbstractExecutable implements Executable, Idempotent {
 
-    public static final String SUBMITTER = "submitter";
-    public static final String START_TIME = "startTime";
-    public static final String END_TIME = "endTime";
+    private static final String SUBMITTER = "submitter";
+    private static final String START_TIME = "startTime";
+    private static final String END_TIME = "endTime";
+
     private JobPO job;
     protected static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
 
@@ -119,15 +120,6 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         return job.getParams().get(key);
     }
 
-    protected final long getParamAsLong(String key, long defaultValue) {
-        final String param = getParam(key);
-        if (param != null) {
-            return Long.parseLong(param);
-        } else {
-            return defaultValue;
-        }
-    }
-
     public final void setParam(String key, String value) {
         job.getParams().put(key, value);
     }
@@ -149,21 +141,25 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         return jobService.getOutput(getId());
     }
 
-    public final long getStartTime() {
-        final String str = jobService.getOutput(getId()).getExtra().get(START_TIME);
+    protected long getExtraInfoAsLong(String key, long defaultValue) {
+        final String str = jobService.getOutput(getId()).getExtra().get(key);
         if (str != null) {
             return Long.parseLong(str);
         } else {
-            return 0;
+            return defaultValue;
         }
     }
+
+    protected final void addExtraInfo(String key, String value) {
+        jobService.addJobInfo(getId(), key, value);
+    }
+
+    public final long getStartTime() {
+        return getExtraInfoAsLong(START_TIME, 0L);
+    }
+
     public final long getEndTime() {
-        final String str = jobService.getOutput(getId()).getExtra().get(END_TIME);
-        if (str != null) {
-            return Long.parseLong(str);
-        } else {
-            return 0;
-        }
+        return getExtraInfoAsLong(END_TIME, 0L);
     }
 
     public JobPO getJobPO() {

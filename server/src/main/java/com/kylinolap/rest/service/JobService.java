@@ -150,11 +150,6 @@ public class JobService extends BasicService {
             getCubeManager().updateCube(cube);
             getExecutableManager().addJob(job);
             return parseToJobInstance(job);
-//            for (JobInstance job : jobs) {
-//                this.getJobManager().submitJob(job);
-//                permissionService.init(job, null);
-//                permissionService.inherit(job, cube);
-//            }
         } catch (CubeIntegrityException e) {
             throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
@@ -194,15 +189,14 @@ public class JobService extends BasicService {
                 result.putInfo(entry.getKey(), entry.getValue());
             }
         }
-        String str = output.getExtra().get(AbstractExecutable.START_TIME);
-        result.setExecStartTime(str != null?Long.parseLong(str): 0);
-        str = output.getExtra().get(AbstractExecutable.END_TIME);
-        result.setExecEndTime(str != null?Long.parseLong(str): 0);
+        result.setExecStartTime(task.getStartTime());
+        result.setExecEndTime(task.getEndTime());
         if (task instanceof ShellExecutable) {
             result.setExecCmd(((ShellExecutable) task).getCmd());
         }
         if (task instanceof MapReduceExecutable) {
             result.setExecCmd(((MapReduceExecutable) task).getMapReduceParams());
+            result.setExecWaitTime(((MapReduceExecutable) task).getMapReduceWaitTime());
         }
         if (task instanceof HadoopShellExecutable) {
             result.setExecCmd(((HadoopShellExecutable) task).getJobParams());
