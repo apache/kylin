@@ -1,0 +1,18 @@
+{
+  "name": "angular-mocks-unstable",
+  "version": "1.1.5",
+  "main": "./angular-mocks.js",
+  "dependencies": {
+    "angular-unstable": "1.1.5"
+  },
+  "homepage": "https://github.com/meenie/bower-angular-mocks-unstable",
+  "_release": "1.1.5",
+  "_resolution": {
+    "type": "version",
+    "tag": "1.1.5",
+    "commit": "7d163a9b2fa2eb66f912f05e64c371ee12d3c71d"
+  },
+  "_source": "git://github.com/meenie/bower-angular-mocks-unstable.git",
+  "_target": "~1.1.5",
+  "_originalSource": "angular-mocks-unstable"
+}

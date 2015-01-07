@@ -1,0 +1,13 @@
+Y
+y
+N
+n
+T
+t
+F
+f
+0
+1
+NULL
+Null
+null

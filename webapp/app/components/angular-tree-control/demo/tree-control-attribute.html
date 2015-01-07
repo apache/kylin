@@ -1,0 +1,105 @@
+<!doctype html>
+<html>
+<head>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.0.js"></script>
+    <script src="http://code.angularjs.org/1.2.0/angular.js"></script>
+    <script src="../angular-tree-control.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/tree-control-attribute.css">
+    <style>
+        h2, h3 {font-family: Georgia; font-style: italic}
+        .tree-border {flex: 1;border: 1px solid #47a; box-shadow: 2px 2px 2px 2px #257; margin: 0 5px; overflow: scroll}
+        .fake-link {color: blue; text-decoration: underline; cursor: pointer;}
+    </style>
+</head>
+<body ng-app="treeControl">
+<div ng-controller="Controller">
+    <div style="display: flex; flex-direction: row">
+        <div class="tree-border">
+            <h3>Classic Tree</h3>
+            <div>Selected: {{node1.label?node1.label:"N/A"}}</div>
+            <div treecontrol class="tree-classic" tree-model="treedata" options="opt1" on-selection="showSelected(node)" selected-node="node1">
+                label: {{node.label}} ({{node.id}})
+            </div>
+        </div>
+        <div class="tree-border">
+            <h3>Light Tree</h3>
+            <div>Selected: {{node2.label?node2.label:"N/A"}}</div>
+            <div treecontrol class="tree-light" tree-model="treedata" options="opt2" on-selection="showSelected(node)" selected-node="node2">
+                label: {{node.label}} ({{node.id}})
+            </div>
+        </div>
+        <div class="tree-border" style=" background: #555;">
+            <h3 style="color: white">Dark Tree</h3>
+            <div style="color: white">Selected: {{node3.label?node3.label:"N/A"}}</div>
+            <div treecontrol class="tree-dark" tree-model="treedata" options="opt3" on-selection="showSelected(node)" selected-node="node3">
+                label: {{node.label}} ({{node.id}})
+            </div>
+        </div>
+    </div>
+    <h2>Selection</h2>
+    Based on callback (on-selection): {{selected}}</br>
+    Based on binding (selected-node): {{node1.label}}, {{node2.label}}, {{node3.label}}
+    <h2>Mutate the tree</h2>
+    <a class="fake-link" ng-click="addRoot()">add root</a></br>
+    <a class="fake-link" ng-click="addChild()">add child (to the first root of the tree)</a></br>
+    <script>
+
+        function Controller($scope) {
+
+            var num = 1;
+            function getNum() {
+                return num++;
+            }
+
+            $scope.treedata=createSubTree(3);
+            function createSubTree(level) {
+                if (level > 0)
+                    return [
+                        { "label" : "Node " + getNum(), "id" : "id", "children": createSubTree(level-1) },
+                        { "label" : "Node " + getNum(), "id" : "id", "children": createSubTree(level-1) },
+                        { "label" : "Node " + getNum(), "id" : "id", "children": createSubTree(level-1) },
+                        { "label" : "Node " + getNum(), "id" : "id", "children": createSubTree(level-1) }
+                    ];
+                else
+                    return [];
+            }
+
+            $scope.showSelected = function(sel) {
+                $scope.selected = sel.label;
+            };
+
+            $scope.addRoot = function() {
+                $scope.treedata.push({ "label" : "New Node " + getNum(), "id" : "id", "children": [] });
+            };
+            $scope.addChild = function() {
+                $scope.treedata[0].children.push({ "label" : "New Node " + getNum(), "id" : "id", "children": [] });
+            };
+
+            $scope.opt1 = {
+                nodeChildren: "children",
+                dirSelectable: true
+            };
+
+            $scope.opt2 = {
+                nodeChildren: "children",
+                dirSelectable: false
+            };
+
+            $scope.opt3 = {
+                nodeChildren: "children",
+                dirSelectable: true,
+                injectClasses: {
+                    ul: "a1",
+                    li: "a2",
+                    iExpanded: "a3",
+                    iCollapsed: "a4",
+                    iLeaf: "a5",
+                    label: "a6"
+                }
+            }
+        }
+
+    </script>
+</div>
+</body>
+</html>

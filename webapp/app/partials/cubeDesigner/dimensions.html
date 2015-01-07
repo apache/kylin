@@ -1,0 +1,357 @@
+<!-- Fact Table Name -->
+<div class="form-group">
+    <div class="row">
+        <label class="col-xs-12 col-sm-2 control-label no-padding-right font-color-default">
+            <b>Fact Table</b>
+        </label>
+        <div class="col-xs-12 col-sm-6">
+            <typeahead ng-if="state.mode=='edit'" items="srcTablesInProject" prompt="Fact Table Name.."
+                       title="name" model="cubeMetaFrame.fact_table" required="true"></typeahead>
+            <span ng-if="state.mode=='view'">{{cubeMetaFrame.fact_table}}</span>
+        </div>
+    </div>
+</div>
+
+<!-- Dimensions Summary -->
+<div class="dataTables_wrapper form-inline no-footer" ng-if="cubeMetaFrame.dimensions.length > 0">
+    <div class="row">
+        <span class="input-icon input-icon-right nav-search" style="margin-left: 22px;">
+            <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="state.dimensionFilter"/>
+            <i class="ace-icon fa fa-search nav-search-icon"></i>
+        </span>
+    </div>
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Table Name</th>
+                <th>Column Name</th>
+                <!--<th>Data Type</th>-->
+                <th>Join</th>
+                <th>Derived</th>
+                <th>Hierarchy</th>
+                <th ng-if="state.mode=='edit'">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="dimension in cubeMetaFrame.dimensions | filter:state.dimensionFilter track by $index">
+                <!--ID -->
+                <td>
+                    <b>{{dimension.id = ($index + 1)}}</b>
+                </td>
+                <!--Name -->
+                <td>
+                    <span tooltip="dimension name..">{{dimension.name}}</span>
+                </td>
+                <!--Table Name -->
+                <td>
+                    <span tooltip="dimension table name..">{{dimension.table}}</span>
+                </td>
+                <!--Column Name -->
+                <td>
+                <span tooltip="dimension column name..">{{dimension.column}}</span>
+                </td>
+                <!--Data Type -->
+                <!--<td>-->
+                    <!--<span>{{dimension.datatype}}</span>-->
+                <!--</td>-->
+                <!--Join Type -->
+                <td>
+                    <span tooltip-html-unsafe="{{getJoinToolTip(dimension)}}">{{dimension.join.type}}</span>
+                </td>
+                <!-- Derived -->
+                <td style="max-width: 150px">
+                <span style="word-wrap:break-word"
+                      tooltip="{{derived}}">{{dimension.derived}}</span>
+                </td>
+                <!--Use Hierarchy -->
+                <td>
+                <span tooltip="Level: {{dimension.hierarchy[$index].level}}&nbsp;
+                            Column: {{dimension.hierarchy[$index].column}}">{{dimension.status.useHierarchy? 'Y':'N'}}</span>
+                </td>
+                <td ng-if="state.mode=='edit'">
+                    <!--edit button-->
+                    <button class="btn btn-xs btn-info"
+                            ng-click="addNewDimension(dimension)"><i class="fa fa-pencil"></i>
+                    </button>
+                    <!-- remove button-->
+                    <button class="btn btn-xs btn-danger"
+                            ng-click="removeDimension(cubeMetaFrame.dimensions, dimension)"><i class="fa fa-trash-o"></i>
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- New Dimension Button -->
+<div class="form-group">
+    <button id="dimButton" class="btn btn-sm btn-info" ng-click="addNewDimension()" ng-show="state.mode=='edit' && !newDimension">
+        <i class="fa fa-plus"></i> Dimension
+    </button>
+</div>
+
+<!-- Edit Dimension Form -->
+<ng-form name="edit_dim_form">
+<div class="box box-solid" ng-if="newDimension">
+    <div class="box-header">
+        <h4 class="box-title lighter">Edit Dimension</h4>
+    </div>
+    <div class="box-body">
+        <div class="row">
+            <div class="col-xs-8">
+                <!--Name-->
+                    <div class="form-group">
+                        <div class="row">
+                            <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Name</b></label>
+                            <div class="col-xs-12 col-sm-6">
+                                <input type="text" placeholder="Name.." class="form-control" name="dim_name"
+                                       tooltip="dimension name.." tooltip-trigger="focus"
+                                       ng-model="newDimension.name" required ng-if="state.mode=='edit'" />
+                            </div>
+                            <div class="col-xs-12 col-sm-3">
+                                <div class="text-warning" ng-if="edit_dim_form.dim_name.$error.required  && edit_dim_form.dim_name.$dirty">
+                                    The Dimension Name is required.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--Data Type-->
+                    <div class="form-group" ng-if="state.mode=='edit'" ng-hide="true">
+                        <div class="row">
+                            <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Data Type</b></label>
+                            <div class="col-xs-12 col-sm-6">
+                                <select class="form-control" ng-if="state.mode=='edit'"
+                                        chosen ng-model="string"
+                                        ng-options="ddt as ddt for ddt in dimensionDataTypes">
+                                    <option value="">-- Select a Data Type --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--Table Name-->
+                    <div class="form-group">
+                        <div class="row">
+                            <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Table Name</b></label>
+                            <div class="col-xs-12 col-sm-6">
+                                <typeahead ng-if="state.mode=='edit'" items="srcTablesInProject"
+                                           prompt="Table Name.." title="name" model="newDimension.table" required="true"></typeahead>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--Column Name-->
+                    <div class="form-group" ng-if="state.mode=='edit'">
+                        <div class="row">
+                            <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Column Name</b></label>
+                            <div class="col-xs-12 col-sm-6">
+                                <typeahead ng-if="state.mode=='edit'" style="width: 70%" items="getColumnsByTable(newDimension.table)"
+                                           prompt="Column Name.." title="name" model="newDimension.column" required="false"></typeahead>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--Tab-->
+                    <div class="tabbable form-group nav-tabs-custom">
+                        <ul class="nav nav-tabs">
+                            <li class="active">
+                                <a data-toggle="tab" href="#joinon">&nbsp;Join&nbsp;</a>
+                            </li>
+                            <li>
+                                <a data-toggle="tab" href="#hierarchy">Hierarchy</a>
+                            </li>
+                            <li>
+                                <a data-toggle="tab" href="#derived">Derived</a>
+                            </li>
+                        </ul>
+                        <!-- border css here since widget-main erases the border -->
+                        <div class="tab-content">
+                            <!--Join-->
+                            <div id="joinon" class="tab-pane active">
+                                <!--Has Join Relation or NOT-->
+                                <div class="form-group">
+                                    <div class="row">
+                                        <label class="col-sm-3 control-label font-color-default">
+                                            <b>Join Relation</b>
+                                        </label>
+                                        <label class="col-sm-6">
+                                            <input type="checkbox" class="ace ace-switch ace-switch-5"
+                                                      ng-model="newDimension.status.useJoin"
+                                                      ng-click="toggleJoin(newDimension,$event);" >
+                                            <span class="lbl middle"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <!--Join Type and Columns-->
+                                <div ng-if="newDimension.join&&newDimension.join.type">
+                                    <div class="form-group">
+                                        <div class="row">
+                                            <label class="col-sm-3 control-label font-color-default"><b>Type</b></label>
+                                            <div class="col-sm-6">
+                                                <select class="form-control" chosen ng-model="newDimension.join.type"
+                                                    ng-options="joinType.value as joinType.name for joinType in joinTypes">
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div ng-repeat="joinIndex in [] | range: newDimension.join.primary_key.length">
+                                            <div>
+                                                <select style="width: 45%" chosen data-placeholder="Fact Table Column"
+                                                        ng-model="newDimension.join.foreign_key[$index]"
+                                                        ng-options="columns.name as columns.name for columns in getColumnsByTable(cubeMetaFrame.fact_table)" >
+                                                    <option value=""></option>
+                                                </select>
+                                                <b>=</b>
+                                                <select style="width: 45%" chosen data-placeholder="Dimension Table Column"
+                                                        ng-model="newDimension.join.primary_key[$index]"
+                                                        ng-options="columns.name as columns.name for columns in getColumnsByTable(newDimension.table)" >
+                                                        <option value=""></option>
+                                                </select>
+                                                <button class="btn btn-xs btn-danger" style="cursor: pointer " tooltip="Delete"
+                                                        ng-click="newDimension.join.primary_key.length=newDimension.join.primary_key.length-1;
+                                                                removeElement(newDimension.join.primary_key, newDimension.join.primary_key[$index]);
+                                                                removeElement(newDimension.join.foreign_key, newDimension.join.foreign_key[$index]);">
+                                                    <i class="fa fa-trash-o"></i>
+                                                </button>
+                                            </div>
+                                            <div class="space-4"></div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="row">
+                                            <div class="col-sm-3">
+                                            <button class="btn btn-xs btn-info"
+                                                    ng-if="newDimension.join.type"
+                                                    ng-click="newDimension.join.primary_key.length=newDimension.join.primary_key.length+1; ">
+                                                <i class="fa fa-plus"></i> New Join</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--Hierarchy-->
+                            <div id="hierarchy" class="tab-pane">
+                                <div class="form-group">
+                                    <div class="row">
+                                        <label class="control-label font-color-default col-sm-3" >
+                                            <b>Hierarchy</b>
+                                        </label>
+                                        <label class="col-sm-6">
+                                            <input type="checkbox" class="ace ace-switch ace-switch-5"
+                                                   ng-click="toggleHierarchy(newDimension)"
+                                                   ng-model="newDimension.status.useHierarchy" >
+                                            <span class="lbl middle"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <!--Use Hierarchy-->
+                                <table ng-if="newDimension.status.useHierarchy && newDimension.hierarchy.length" class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 10%">Level</th>
+                                            <th style="width: 80%">Column</th>
+                                            <th style="width: 10%"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody ng-if="state.mode=='edit'">
+                                        <tr ng-repeat="hierarchyIndex in [] | range: newDimension.hierarchy.length">
+                                            <td style="width: 10%; vertical-align:middle; text-align: center" >
+                                                <input ng-model="newDimension.hierarchy[$index].level" placeholder="Level.."
+                                                      tooltip="dimension hierarchy level.." tooltip-trigger="focus"
+                                                      style="height: 30px; text-align: center; width: 100%" class="form-control"/>
+                                            </td>
+                                            <td style="width: 80%">
+                                                <select chosen style="width: 100%"
+                                                        data-placeholder="Dimension Hierarchy Column"
+                                                        ng-model="newDimension.hierarchy[$index].column"
+                                                        ng-options="columns.name as columns.name for columns in getColumnsByTable(newDimension.table)" >
+                                                    <option value="">-- Select Column --</option>
+                                                </select>
+                                            </td>
+                                            <td style="width: 10%; vertical-align:middle" >
+                                                <button class="btn btn-xs btn-danger" style="cursor: pointer " tooltip="Delete"
+                                                        ng-click="removeElement(newDimension.hierarchy, newDimension.hierarchy[$index])">
+                                                    <i class="fa fa-trash-o"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="form-group" ng-show="newDimension.status.useHierarchy">
+                                    <div class="row">
+                                        <div class="col-sm-3">
+                                            <button class="btn btn-xs btn-info"
+                                                    ng-click="addNewHierarchy(newDimension);">
+                                                <i class="fa fa-plus"></i> New Hierarchy</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!--Derived-->
+                            <div id="derived" class="tab-pane">
+                                <div class="form-group">
+                                    <div ng-repeat="derived in newDimension.derived track by $index">
+                                        <div>
+                                            <select chosen style="width:85%;" width="200"
+                                                    data-placeholder="Derived Columns.."
+                                                    ng-model="newDimension.derived[$index]"
+                                                    ng-options="columns.name as columns.name for columns in getColumnsByTable(newDimension.table)" >
+                                                    <option value=""></option>
+                                            </select>
+                                            <button class="btn btn-xs btn-danger" style="cursor: pointer " tooltip="Delete"
+                                                    ng-click="removeElement(newDimension.derived, newDimension.derived[$index])">
+                                                    <i class="fa fa-trash-o"></i>
+                                            </button>
+                                            <div class="space-4"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="row">
+                                        <div class="col-sm-3">
+                                            <button class="btn btn-xs btn-info" ng-click="addNewDerived(newDimension);">
+                                                <i class="fa fa-plus"></i> New Derived</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+
+            <!--Tips-->
+            <div class="col-xs-4">
+                <div class="box box-solid">
+                    <div class="box-header">
+                        <h4 class="box-title">Tips</h4>
+                    </div>
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <ol class="text-info">
+                                    <li>Type in any input box for auto suggestion</li>
+                                    <li>Pick up Fact Table from Star Schema Tables first</li>
+                                    <li>Data Type should match with Hive Table's Data Type</li>
+                                    <li>Join Type have to be same as will be used in query</li>
+                                    <li>Using Hierarchy to inherit one dimension another</li>
+                                    <li>Using Derived for One-One relationship between columns, like ID and Name</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="box-footer">
+        <button class="btn btn-sm btn-info" ng-disabled="edit_dim_form.$invalid"
+                ng-click="saveNewDimension()" ng-show="state.mode=='edit'">OK</button>
+        <button class="btn btn-link" ng-click="clearNewDimension()">Cancel</button>
+    </div>
+</div>
+</ng-form>

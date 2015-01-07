@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+<head>
+    <title>Angular.js nvd3.js Line Chart Directive</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF8">
+    <script src="js/angular.js"></script>
+    <script src="js/d3.js"></script>
+    <script src="js/nv.d3.js"></script>
+    <script src="../dist/angularjs-nvd3-directives.js"></script>
+    <link rel="stylesheet" href="stylesheets/nv.d3.css"/>
+    <script>
+        var app = angular.module("nvd3TestApp", ['nvd3ChartDirectives']);
+
+        function ExampleCtrl($scope){
+
+            $scope.fetchData = function() {
+                var sin = [], cos = [];
+
+                for (var i = 0; i < 100; i++) {
+                    sin.push({x: i, y: Math.sin(i/Math.random())});
+                    cos.push({x: i, y: .5 * Math.cos(i/Math.random())});
+                }
+
+                return [
+                    {
+                        values: sin,
+                        key: 'Sine Wave',
+                        color: '#ff7f0e'
+                    },
+                    {
+                        values: cos,
+                        key: 'Cosine Wave',
+                        color: '#2ca02c'
+                    }
+                ];
+            }
+
+
+            $scope.xFunction = function(){
+                return function(d){
+                    return d.x;
+                }
+            }
+
+            $scope.yFunction = function(){
+                return function(d){
+                    return d.y;
+                }
+            }
+
+            $scope.exampleData = $scope.fetchData();
+
+            setInterval(function(){
+                $scope.$apply(function(){
+                    var data = $scope.exampleData;
+                    var i = (data[1].values[data[1].values.length -1].x + 1);
+
+                    data[0].values.shift();
+                    data[1].values.shift();
+
+                    data[0].values.push({x: i , y: Math.sin(i/Math.random())});
+                    data[1].values.push({x: i, y: .5 * Math.cos(i/Math.random())});
+
+                    //var data = $scope.fetchData();
+                    $scope.exampleData = data;
+                })
+            }, 10000);
+
+
+        }
+    </script>
+
+</head>
+<body ng-app='nvd3TestApp'>
+
+<div ng-controller="ExampleCtrl">
+
+    <nvd3-line-chart
+            data="exampleData"
+            id="withoutObjectEquality"
+            width="800"
+            height="400"
+            showXAxis="true"
+            showYAxis="true"
+            x="xFunction()"
+            y="yFunction()"
+            tooltips="true"
+            interactive="true"
+            margin="{left:50,top:50,bottom:50,right:50}">
+        <svg></svg>
+    </nvd3-line-chart>
+
+
+    <nvd3-line-chart
+            data="exampleData"
+            id="withObjectEqaulity"
+            width="800"
+            height="400"
+            showXAxis="true"
+            showYAxis="true"
+            x="xFunction()"
+            y="yFunction()"
+            tooltips="true"
+            interactive="true"
+            margin="{left:50,top:50,bottom:50,right:50}"
+            objectEquality="true">
+        <svg></svg>
+    </nvd3-line-chart>
+
+</div>
+
+</body>
+</html>

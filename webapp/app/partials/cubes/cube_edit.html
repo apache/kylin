@@ -1,0 +1,16 @@
+<div class="row">
+    <div class="col-xs-3">
+        <div ng-include src="'partials/tables/source_table_tree.html'" ng-controller="SourceMetaCtrl"></div>
+    </div>
+    <div class="col-xs-9">
+        <form role="form" name="cube_form" novalidate>
+            <!-- This margin in order to align with table tree in left part -->
+            <div style="margin-top: 20px;">
+                <div ng-include="'partials/cubes/cube_schema.html'" ng-controller="CubeSchemaCtrl"
+                     ng-init="state={mode:'edit', dimension: {isImageMode: true}, measure: {isImageMode: true}, cubeName: routeParams.cubeName}">
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
