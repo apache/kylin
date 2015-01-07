@@ -81,7 +81,7 @@ public class MapReduceExecutable extends AbstractExecutable {
     }
 
     /*
-    * stop is triggered by JobService, the Scheduler is not awake of that, so much get the latest value from service
+    * stop is triggered by JobService, the Scheduler is not awake of that, so
     *
     * */
     private boolean isStopped() {
