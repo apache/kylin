@@ -7,11 +7,23 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope) {
     // Columns selected and disabled status bound to UI, group by table.
     $scope.selectedColumns = {};
 
-    /**
-     * Initialize cube dimension status, this is already done in:
-     * cubeSchema.js::generateCubeStatus()
-     * TODO migrate above from cubeSchema.js to here.
-     */
+    // Do some cube dimensions adaption between new and old cube schema. TODO new cube schema change.
+    $scope.prepareDimensions = function (dimensions) {
+        angular.forEach(dimensions, function (dim) {
+            // Flatten hierarchy array by stripping level replacing with array index.
+            if (dim.hierarchy && dim.hierarchy.length) {
+                var flatten = [];
+
+                angular.forEach(dim.hierarchy, function (value) {
+                    flatten.push(value.column);
+                });
+
+                dim.hierarchy = flatten;
+            }
+        });
+    };
+
+    $scope.prepareDimensions($scope.cubeMetaFrame.dimensions);
 
     // Helper func to get join info from cube data model.
     var getJoin = function (tableName) {
@@ -27,19 +39,36 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope) {
         return join;
     };
 
-    // Helper func to get columns that dimensions based on.
+    /**
+     * Helper func to get columns that dimensions based on, three cases:
+     * 1. normal dimension: column array.
+     * 2. hierarchy dimension: column array, the array index is the hierarchy level.
+     * 3. derived dimension: derived columns array, plus the column array which in fact is the FK in fact table.
+     * TODO new cube schema change
+     */
     var dimCols = function (dim) {
-        if (dim.column) {
-            if (dim.status.includeFK) {
-                var join = getJoin(dim.table);
+        var referredCols = [];
 
-                return join != null ? join.primary_key : [];
-            } else {
-                return [dim.column];
-            }
-        } else {
-            return [];
+        // Case 3.
+        if (dim.derived && dim.derived.length) {
+            referredCols = referredCols.concat(dim.derived);
+
+            // Get foreign key.
+            /*var join = getJoin(dim.table);
+            referredCols = referredCols.concat(join != null ? join.foreign_key : []);*/
         }
+
+        // Case 2.
+        if (dim.hierarchy && dim.hierarchy.length) {
+            referredCols = referredCols.concat(dim.hierarchy);
+        }
+
+        // Case 1.
+        if (!dim.derived && !dim.hierarchy) {
+            referredCols.push(dim.column);
+        }
+
+        return referredCols;
     };
 
     // Dump available columns plus column table name, whether is from lookup table.
@@ -106,33 +135,76 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope) {
 
 
     // Watch on selected columns status to check whether any item newly selected.
-    $scope.anyAvailableSelected = false;
+    $scope.currentSelectedCols = [];
+    $scope.currentSelectedTables = [];
 
     $scope.$watch('selectedColumns', function (newVal, oldVal) {
-        for (var i in newVal) {
-            if (newVal.hasOwnProperty(i)) {
-                var cols = newVal[i];
+        var currentTables = [];
+        var currentCols = [];
 
-                for (var j in cols) {
-                    if (cols.hasOwnProperty(j)) {
-                        if (cols[j].selected && !cols[j].disabled) {
-                            $scope.anyAvailableSelected = true;
+        for (var table in newVal) {
+            if (newVal.hasOwnProperty(table)) {
+                var cols = newVal[table];
 
-                            return;
+                for (var colName in cols) {
+                    if (cols.hasOwnProperty(colName)) {
+                        if (cols[colName].selected && !cols[colName].disabled) {
+                            if (currentTables.indexOf(table) == -1) {
+                                currentTables.push(table);
+                            }
+
+                            currentCols.push(colName);
                         }
                     }
                 }
             }
         }
 
-        // If here, none selected.
-        $scope.anyAvailableSelected = false;
+        $scope.currentSelectedTables = currentTables;
+        $scope.currentSelectedCols = currentCols;
     }, true);
 
+    // Whether cols in lookup table selected.
+    $scope.isLookupTableSelected = function () {
+        var lookupSelected = false;
 
-    // Helper func to get identity of the column.
-    var columnKey = function (col) {
-        return col.table + '.' + col.name;
+        if ($scope.currentSelectedTables.length == 1) {
+            var tableName = $scope.currentSelectedTables[0];
+
+            for (var j = 0; j < $scope.cubeMetaFrame.model.lookups.length; j++) {
+                if ($scope.cubeMetaFrame.model.lookups[j].table == tableName) {
+                    lookupSelected = true;
+
+                    break;
+                }
+            }
+        }
+
+        return lookupSelected;
+    };
+
+    $scope.canAddDimension = function (dimType) {
+        if ($scope.currentSelectedTables.length != 1) {
+            return false;
+        }
+
+        var flag = false;
+
+        switch (dimType) {
+            case 'normal':
+                flag = $scope.currentSelectedCols.length == 1;
+                break;
+
+            case 'derived':
+                flag = $scope.isLookupTableSelected() && $scope.currentSelectedCols.length;
+                break;
+
+            case 'hierarchy':
+                flag = $scope.currentSelectedCols.length > 1;
+                break;
+        }
+
+        return flag;
     };
 
     // Helper func to reset status of available list of columns status.
@@ -144,45 +216,28 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope) {
         }
     };
 
-    // Get selected available column and disable them.
-    $scope.selectedAvailable = function() {
-        var found = [];
-        var list = $scope.selectedColumns;
-
-        angular.forEach(list, function (value, tableName) {
-            // Key is table name.
-            angular.forEach(value, function (v, colName) {
-                if (v.selected && !v.disabled) {
-                    found.push($scope.availableColumns[tableName][colName]);
-
-                    // Disable the selected at this time.
-                    if (!v.disabled) {
-                        v.disabled = true;
-                    }
-                }
-            });
-        });
-
-        return found;
-    };
-
-    // Init the dimension option, dimension name default as the column key.
+    // Init the dimension option, dimension name default as the column key. TODO new cube schema change.
     var DimensionOption = {
-        init: function (dimCol) {
+        init: function (table, selectedCols, dimType) {
             var origin = {
-                name: columnKey(dimCol),
-                column: dimCol.name,
-                table: dimCol.table,
-                hierarchy: [],
-                derived: [],
-                status: {
-                    hierarchyCount: 1,
-                    useHierarchy: false
-                }
+                // Default name as 1st column name.
+                name: table + '.' + selectedCols[0],
+                table: table
             };
 
-            if (dimCol.isLookup) {
-                origin.status.includeFK = false;
+            switch (dimType) {
+                case 'normal':
+                    origin.column = selectedCols[0];
+                    break;
+
+                case 'derived':
+                    origin.column = '{FK}';
+                    origin.derived = selectedCols;
+                    break;
+
+                case 'hierarchy':
+                    origin.hierarchy = selectedCols;
+                    break;
             }
 
             return origin;
@@ -190,19 +245,42 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope) {
     };
 
     $scope.newDimensionOption = {};
+    // Since old schema may be both derived and hierarchy. TODO new cube schema change.
+    $scope.newDimensionOptionType = [];
 
     // Switch on dimensions.
     $scope.switchDim = function (dim) {
         $scope.newDimensionOption = dim;
+
+        // Since old schema may be both derived and hierarchy. TODO new cube schema change.
+        var types = [];
+
+        if (dim.derived && dim.derived.length) {
+            types.push('derived');
+        }
+
+        if (dim.hierarchy && dim.hierarchy.length) {
+            types.push('hierarchy');
+        }
+
+        if (!types.length) {
+            types.push('normal');
+        }
+
+        $scope.newDimensionOptionType = types;
     };
 
     // Add dimension alternative.
-    $scope.addDim = function () {
-        var selected = $scope.selectedAvailable();
+    $scope.addDim = function (type) {
+        // Suppose only one table selected, this is ensured in UI.
+        var table = $scope.currentSelectedTables[0];
+        var cols = $scope.currentSelectedCols;
 
-        angular.forEach(selected, function (selectedCol) {
-            $scope.cubeMetaFrame.dimensions.push(DimensionOption.init(selectedCol));
-        });
+        var dim = DimensionOption.init(table, cols, type);
+        $scope.cubeMetaFrame.dimensions.push(dim);
+
+        // Disable selected cols.
+        refreshAvailable(table, cols, false);
     };
 
     // Remove dimension alternative.
@@ -220,53 +298,24 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope) {
         }
     };
 
-    // Add hierarchy option.
-    $scope.addNewHierarchy = function (dimension) {
-        if (!dimension.hierarchy) {
-            dimension.hierarchy = [];
-        }
-        dimension.hierarchy.push({
-            "level": (dimension.hierarchy.length + 1),
-            "column": undefined
-        });
-    };
-
-    // Toggle hierarchy.
-    $scope.toggleHierarchy = function (dimension) {
-        if (dimension.status.useHierarchy) {
-            dimension.hierarchy = [];
-        }
-    };
-
-    // Add derived option.
-    $scope.addNewDerived = function (dimension) {
-        if(!dimension.derived){
-            dimension.derived = [];
-        }
-        dimension.derived.push("");
-    };
 
     // Adapter between new data model/dimensions and original dimensions.
     $scope.dimensionsAdapter = function () {
         angular.forEach($scope.cubeMetaFrame.dimensions, function (dim) {
-            // Derived and hierarchy info.
-            if (dim.derived && !dim.derived.length) {
-                delete dim.derived
-            }
-
-            if (dim.hierarchy && !dim.hierarchy.length) {
-                delete dim.hierarchy;
-            }
-
-            // Lookup table column, add 'join' info.
-            if (dim.status.hasOwnProperty('includeFK')) {
-                // Whether include FK.
-                if (dim.status.includeFK) {
-                    dim.column = '{FK}';
-                }
-
-                // TODO this is for legacy cube schema, adapter to old schema.
+            // Lookup table column, add 'join' info. TODO new cube schema change.
+            if (dim.derived && dim.derived.length) {
                 dim.join = getJoin(dim.table);
+            }
+
+            // Hierarchy level. TODO new cube schema change.
+            if (dim.hierarchy && dim.hierarchy.length) {
+                var h2 = [];
+
+                angular.forEach(dim.hierarchy, function (value, index) {
+                    h2.push({level: index + 1, column: value});
+                });
+
+                dim.hierarchy = h2;
             }
         });
 
