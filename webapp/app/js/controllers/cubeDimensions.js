@@ -319,6 +319,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope) {
             }
         });
 
+        $scope.editFlag.dimensionEdited = !$scope.editFlag.dimensionEdited;
         console.dir($scope.cubeMetaFrame.dimensions);
     };
 

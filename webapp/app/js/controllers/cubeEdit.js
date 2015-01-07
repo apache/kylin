@@ -453,7 +453,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
     function sliceGroupItemToGroups(groupItems){
         if(!groupItems.length){
-            return;
+            return [];
         }
         var groups = [];
         var j = -1;
@@ -536,6 +536,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
 
     $scope.$watchCollection('editFlag.dimensionEdited', function (newValue, oldValue) {
+        console.dir(oldValue);console.dir(newValue);
         if(newValue=="init"){
             return;
         }
