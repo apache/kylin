@@ -134,19 +134,18 @@ public class JobService extends BasicService {
         }
 
         try {
-            List<CubeSegment> cubeSegments;
+            CubeSegment cubeSegment = null;
             if (buildType == CubeBuildTypeEnum.BUILD) {
-                cubeSegments = this.getCubeManager().appendSegments(cube, startDate, endDate);
+                cubeSegment = this.getCubeManager().appendSegments(cube, startDate, endDate);
             } else if (buildType == CubeBuildTypeEnum.MERGE) {
-                cubeSegments = this.getCubeManager().mergeSegments(cube, startDate, endDate);
+                throw new RuntimeException("has not implemented yet");
+//                cubeSegment = this.getCubeManager().mergeSegments(cube, startDate, endDate);
             } else {
                 throw new JobException("invalid build type:" + buildType);
             }
-            Preconditions.checkState(cubeSegments.size() == 1, "can only allocate one segment");
-            CubeSegment segment = cubeSegments.get(0);
-            BuildCubeJobBuilder builder = BuildCubeJobBuilder.newBuilder(new JobEngineConfig(getConfig()), segment);
+            BuildCubeJobBuilder builder = BuildCubeJobBuilder.newBuilder(new JobEngineConfig(getConfig()), cubeSegment);
             final BuildCubeJob job = builder.build();
-            segment.setLastBuildJobID(job.getId());
+            cubeSegment.setLastBuildJobID(job.getId());
             getCubeManager().updateCube(cube);
             getExecutableManager().addJob(job);
             return parseToJobInstance(job);
@@ -196,7 +195,7 @@ public class JobService extends BasicService {
         }
         if (task instanceof MapReduceExecutable) {
             result.setExecCmd(((MapReduceExecutable) task).getMapReduceParams());
-            result.setExecWaitTime(((MapReduceExecutable) task).getMapReduceWaitTime());
+            result.setExecWaitTime(((MapReduceExecutable) task).getMapReduceWaitTime()/1000);
         }
         if (task instanceof HadoopShellExecutable) {
             result.setExecCmd(((HadoopShellExecutable) task).getJobParams());
