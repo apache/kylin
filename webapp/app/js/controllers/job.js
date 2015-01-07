@@ -134,6 +134,7 @@ KylinApp
             });
         }
 
+
         $scope.cancel = function (job) {
             SweetAlert.swal({
                 title: '',
@@ -147,10 +148,13 @@ KylinApp
                 loadingRequest.show();
                 JobService.cancel({jobId: job.uuid}, {}, function (job) {
                     loadingRequest.hide();
-                    $scope.jobs[job.uuid] = job;
-                    if (angular.isDefined($scope.state.selectedJob)) {
-                        $scope.state.selectedJob = $scope.jobs[ $scope.state.selectedJob.uuid];
-                    }
+                    $scope.safeApply(function() {
+                        $scope.jobs[job.uuid] = job;
+                        if (angular.isDefined($scope.state.selectedJob)) {
+                            $scope.state.selectedJob = $scope.jobs[ $scope.state.selectedJob.uuid];
+                        }
+
+                    });
                     SweetAlert.swal('Success!', 'Job has been discarded successfully!', 'success');
                 },function(e){
                     loadingRequest.hide();

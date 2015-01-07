@@ -167,6 +167,24 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
 
     });
 
+    /*
+     *global method for all scope to use
+     * */
+
+     //update scope value to view
+    $scope.safeApply = function(fn) {
+        var phase = this.$root.$$phase;
+        if(phase == '$apply' || phase == '$digest') {
+            if(fn && (typeof(fn) === 'function')) {
+                fn();
+            }
+        } else {
+            this.$apply(fn);
+        }
+    };
+
+
+
 });
 
 var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService, projects, project,SweetAlert) {
@@ -229,6 +247,7 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
     $scope.cancel = function () {
         $modalInstance.dismiss('cancel');
     };
+
 
 };
 
