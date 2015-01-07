@@ -70,11 +70,6 @@ public class HiveSourceTableLoader {
             set.add(dbtableNames[1]);
         }
 
-        // metadata tmp dir
-        File metaTmpDir = File.createTempFile("meta_tmp", null);
-        metaTmpDir.delete();
-        metaTmpDir.mkdirs();
-
         for (String database : db2tables.keySet()) {
             for (String table : db2tables.get(database)) {
                 TableDesc tableDesc = MetadataManager.getInstance(config).getTableDesc(table);
@@ -92,17 +87,20 @@ public class HiveSourceTableLoader {
         // extract from hive
         Set<String> loadedTables = Sets.newHashSet();
         for (String database : db2tables.keySet()) {
-            List<String> loaded = extractHiveTables(database, db2tables.get(database), metaTmpDir, config);
+            List<String> loaded = extractHiveTables(database, db2tables.get(database), config);
             loadedTables.addAll(loaded);
         }
-
-        // save loaded tables
-        ResourceTool.copy(KylinConfig.createInstanceFromUri(metaTmpDir.getAbsolutePath()), config);
 
         return loadedTables;
     }
 
-    private static List<String> extractHiveTables(String database, Set<String> tables, File metaTmpDir, KylinConfig config) throws IOException {
+    private static List<String> extractHiveTables(String database, Set<String> tables, KylinConfig config) throws IOException {
+
+        // metadata tmp dir
+        File metaTmpDir = File.createTempFile("meta_tmp", null);
+        metaTmpDir.delete();
+        metaTmpDir.mkdirs();
+        
         File tableDescDir = new File(metaTmpDir, TABLE_FOLDER_NAME);
         File tableExdDir = new File(metaTmpDir, TABLE_EXD_FOLDER_NAME);
         mkdirs(tableDescDir);
@@ -155,7 +153,10 @@ public class HiveSourceTableLoader {
             map.put("owner", table.getOwner());
             map.put("lastAccessTime", String.valueOf(table.getLastAccessTime()));
             map.put("partitionColumns", partitionColumnString.toString());
+            map.put("partitioned", Boolean.valueOf(partitionCols != null && partitionCols.size()>0).toString());
             tableAttrsList.add(map);
+            
+            MetadataManager.getInstance(KylinConfig.getInstanceFromEnv()).saveTableExd(tableDesc.getIdentity(), map);
         }
 
         List<String> loadedTables = Lists.newArrayList();
@@ -171,6 +172,8 @@ public class HiveSourceTableLoader {
             JsonUtil.writeValueIndent(new FileOutputStream(file), tableAttrs);
         }
 
+        // save loaded tables
+        ResourceTool.copy(KylinConfig.createInstanceFromUri(metaTmpDir.getAbsolutePath()), config);
         return loadedTables;
     }
 

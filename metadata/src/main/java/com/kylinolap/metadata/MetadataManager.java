@@ -358,6 +358,10 @@ public class MetadataManager {
         getStore().deleteResource(path);
         dataModelDescMap.remove(dataModelDesc.getName());
     }
+    
+    public void saveTableExd(String tableId, Map<String, String> tableExdProperties) {
+        
+    }
 
     private void checkNoDupName(String name, boolean containsKey, String entityType, String path) {
         if (StringUtils.isBlank(name)) {
