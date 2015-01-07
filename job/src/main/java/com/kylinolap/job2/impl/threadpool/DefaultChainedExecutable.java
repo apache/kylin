@@ -55,20 +55,20 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
                 }
             }
             if (allSucceed) {
-                jobService.updateJobStatus(getId(), ExecutableState.SUCCEED);
+                jobService.updateJobOutput(getId(), ExecutableState.SUCCEED, null, null);
             } else if (hasError) {
-                jobService.updateJobStatus(getId(), ExecutableState.ERROR);
+                jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, null);
             } else {
-                jobService.updateJobStatus(getId(), ExecutableState.READY);
+                jobService.updateJobOutput(getId(), ExecutableState.READY, null, null);
             }
         } else if (result.state() == ExecuteResult.State.STOPPED) {
             if (getStatus() == ExecutableState.STOPPED) {
                 //
             } else {
-                jobService.updateJobStatus(getId(), ExecutableState.ERROR);
+                jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, null);
             }
         } else {
-            jobService.updateJobStatus(getId(), ExecutableState.ERROR, null);
+            jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, null);
         }
     }
 

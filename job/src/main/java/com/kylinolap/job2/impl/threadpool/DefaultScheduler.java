@@ -111,7 +111,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         if (executable.getStatus() == ExecutableState.RUNNING) {
             final String errMsg = "job:" + executable.getId() + " status should not be:" + ExecutableState.RUNNING + ", reset it to ERROR";
             logger.warn(errMsg);
-            executableManager.updateJobStatus(executable.getId(), ExecutableState.ERROR, errMsg);
+            executableManager.updateJobOutput(executable.getId(), ExecutableState.ERROR, null, errMsg);
         }
     }
 
@@ -200,7 +200,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         for (AbstractExecutable executable : executableManager.getAllExecutables()) {
             final ExecutableState status = executable.getStatus();
             if (status == ExecutableState.READY) {
-                executableManager.updateJobStatus(executable.getId(), ExecutableState.ERROR, "scheduler initializing work to reset job to ERROR status");
+                executableManager.updateJobOutput(executable.getId(), ExecutableState.ERROR, null, "scheduler initializing work to reset job to ERROR status");
             }
         }
         executableManager.updateAllRunningJobsToError();
