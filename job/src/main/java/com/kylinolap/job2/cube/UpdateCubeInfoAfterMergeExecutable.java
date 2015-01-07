@@ -130,6 +130,6 @@ public class UpdateCubeInfoAfterMergeExecutable extends AbstractExecutable {
     }
 
     private String getCubingJobId() {
-        return CUBING_JOB_ID;
+        return getParam(CUBING_JOB_ID);
     }
 }
