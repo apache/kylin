@@ -152,10 +152,10 @@ public class DataModelDesc extends RootPersistentEntity {
     }
 
     public String getResourcePath() {
-        return getDataModelDescResourcePath(name);
+        return concatResourcePath(name);
     }
 
-    public static String getDataModelDescResourcePath(String descName) {
+    public static String concatResourcePath(String descName) {
         return ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstances.FILE_SURFIX;
     }
 
