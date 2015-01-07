@@ -62,27 +62,12 @@
 </div>
 
 <!-- Hierarchy Dimension -->
-<div id="hierarchyContainer">
 <div class="box" ng-if="newDimensionOption.hierarchy && newDimensionOption.hierarchy.length" >
     <div class="box-header">
         <h5 class="box-title">Hierarchy Columns</h5>
     </div>
     <div class="box-body no-padding-top">
         <p class="help-block">Drag level into the order you prefer.</p>
-        <!--<div as-sortable="{containment: '#hierarchyContainer'}" ng-model="newDimensionOption.hierarchy">
-            <div class="as-sortable-item" ng-repeat="item in newDimensionOption.hierarchy" as-sortable-item>
-                <div as-sortable-item-handle class="as-sortable-item-handle">
-                    <div class="row">
-                        <div class="col-xs-2">
-                            <span>{{$index + 1}}</span>
-                        </div>
-                        <div class="col-xs-10">
-                            <span>{{item}}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>-->
 
         <div ui-sortable="{containment: 'parent', placeholder: 'hierarchy-item-placeholder', forcePlaceholderSize: true, opacity: 0.8}"
              ng-model="newDimensionOption.hierarchy" class="hierarchy-container">
@@ -98,7 +83,6 @@
             </div>
         </div>
     </div>
-</div>
 </div>
 
 </ng-form>
