@@ -410,6 +410,7 @@ public final class CubingJobBuilder {
 
     private UpdateCubeInfoAfterMergeExecutable createUpdateCubeInfoAfterMergeStep(List<String> mergingSegmentIds, String convertToHFileStepId) {
         UpdateCubeInfoAfterMergeExecutable result = new UpdateCubeInfoAfterMergeExecutable();
+        result.setName(ExecutableConstants.STEP_NAME_UPDATE_CUBE_INFO);
         result.setCubeName(getCubeName());
         result.setSegmentId(segment.getUuid());
         result.setMergingSegmentIds(mergingSegmentIds);
