@@ -46,16 +46,35 @@ public class HiveTableReader implements TableReader {
     private Iterator<HCatRecord> currentHCatRecordItr = null;
     private HCatRecord currentHCatRecord;
     private int numberOfSplits = 0;
+    private Map<String, String> partitionKV = null;
 
+    /**
+     * Constructor for reading whole hive table
+     * @param dbName
+     * @param tableName
+     * @throws IOException
+     */
     public HiveTableReader(String dbName, String tableName) throws IOException {
+        this(dbName, tableName, null);
+    }
+
+    /**
+     * Constructor for reading a partition of the hive table
+     * @param dbName
+     * @param tableName
+     * @param partitionKV key-value pairs condition on the partition
+     * @throws IOException
+     */
+    public HiveTableReader(String dbName, String tableName, Map<String, String> partitionKV) throws IOException {
         this.dbName = dbName;
         this.tableName = tableName;
+        this.partitionKV = partitionKV;
         initialize();
     }
 
     private void initialize() throws IOException {
         try {
-            this.readCntxt = getHiveReaderContext(dbName, tableName);
+            this.readCntxt = getHiveReaderContext(dbName, tableName, partitionKV);
         } catch (Exception e) {
             e.printStackTrace();
             throw new IOException(e);
@@ -63,16 +82,16 @@ public class HiveTableReader implements TableReader {
 
         this.numberOfSplits = readCntxt.numSplits();
     }
-    
+
     @Override
     public boolean next() throws IOException {
-        
+
         while (currentHCatRecordItr == null || !currentHCatRecordItr.hasNext()) {
             currentSplit++;
             if (currentSplit == numberOfSplits) {
                 return false;
             }
-            
+
             currentHCatRecordItr = loadHCatRecordItr(readCntxt, currentSplit);
         }
 
@@ -86,7 +105,7 @@ public class HiveTableReader implements TableReader {
         List<Object> allFields = currentHCatRecord.getAll();
         List<String> rowValues = new ArrayList<String>(allFields.size());
         for (Object o : allFields) {
-            rowValues.add(o != null ? o.toString() : "NULL");
+            rowValues.add(o != null ? o.toString() : "");
         }
 
         return rowValues.toArray(new String[allFields.size()]);
@@ -104,12 +123,12 @@ public class HiveTableReader implements TableReader {
         this.currentHCatRecord = null;
         this.currentSplit = -1;
     }
-    
+
     public String toString() {
         return "hive table reader for: " + dbName + "." + tableName;
     }
 
-    private static ReaderContext getHiveReaderContext(String database, String table) throws Exception {
+    private static ReaderContext getHiveReaderContext(String database, String table, Map<String, String> partitionKV) throws Exception {
         HiveConf hiveConf = new HiveConf(HiveTableReader.class);
         Iterator<Entry<String, String>> itr = hiveConf.iterator();
         Map<String, String> map = new HashMap<String, String>();
@@ -118,7 +137,13 @@ public class HiveTableReader implements TableReader {
             map.put(kv.getKey(), kv.getValue());
         }
 
-        ReadEntity entity = new ReadEntity.Builder().withDatabase(database).withTable(table).build();
+        ReadEntity entity;
+        if (partitionKV == null || partitionKV.size() == 0) {
+            entity = new ReadEntity.Builder().withDatabase(database).withTable(table).build();
+        } else {
+            entity = new ReadEntity.Builder().withDatabase(database).withTable(table).withPartition(partitionKV).build();
+        }
+
         HCatReader reader = DataTransferFactory.getHCatReader(entity, map);
         ReaderContext cntxt = reader.prepareRead();
 
