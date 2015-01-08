@@ -17,42 +17,41 @@
 package com.kylinolap.rest.service;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-
-import com.google.common.collect.Sets;
-import com.kylinolap.job.constant.JobStepStatusEnum;
-import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job2.common.HadoopShellExecutable;
-import com.kylinolap.job2.common.MapReduceExecutable;
-import com.kylinolap.job2.common.ShellExecutable;
-import com.kylinolap.job2.cube.BuildCubeJob;
-import com.kylinolap.job2.cube.BuildCubeJobBuilder;
-import com.kylinolap.job2.execution.Executable;
-import com.kylinolap.job2.execution.ExecutableState;
-import com.kylinolap.job2.execution.Output;
-import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
-import com.kylinolap.metadata.model.SegmentStatusEnum;
-import com.kylinolap.metadata.project.ProjectInstance;
-import com.kylinolap.metadata.realization.RealizationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.constant.JobStatusEnum;
+import com.kylinolap.job.constant.JobStepStatusEnum;
+import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.exception.InvalidJobInstanceException;
 import com.kylinolap.job.exception.JobException;
+import com.kylinolap.job2.common.HadoopShellExecutable;
+import com.kylinolap.job2.common.MapReduceExecutable;
+import com.kylinolap.job2.common.ShellExecutable;
+import com.kylinolap.job2.cube.BuildCubeJob;
+import com.kylinolap.job2.cube.BuildCubeJobBuilder;
+import com.kylinolap.job2.execution.ExecutableState;
+import com.kylinolap.job2.execution.Output;
+import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.rest.constant.Constant;
 import com.kylinolap.rest.exception.InternalErrorException;
 
@@ -62,6 +61,7 @@ import com.kylinolap.rest.exception.InternalErrorException;
 @Component("jobService")
 public class JobService extends BasicService {
 
+    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(CubeService.class);
 
     public List<JobInstance> listAllJobs(final String cubeName, final String projectName, final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue) throws IOException, JobException {
