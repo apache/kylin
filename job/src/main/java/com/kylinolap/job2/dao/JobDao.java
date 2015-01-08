@@ -168,7 +168,6 @@ public class JobDao {
 
     public void updateJobOutput(JobOutputPO output) throws PersistentException {
         try {
-            Preconditions.checkArgument(output.getLastModified() > 0, "timestamp should be greater than 0 inf");
             final long ts = writeJobOutputResource(pathOfJobOutput(output.getUuid()), output);
             output.setLastModified(ts);
         } catch (IOException e) {
