@@ -38,7 +38,7 @@ public class RemoveUnmatchedCubesRule extends RoutingRule {
     public void apply(List<IRealization> realizations, OLAPContext olapContext) {
 
         // retrieve members from olapContext
-        String factTableName = olapContext.firstTableScan.getCubeTable();
+        String factTableName = olapContext.firstTableScan.getTableName();
         String projectName = olapContext.olapSchema.getProjectName();
         Collection<TblColRef> dimensionColumns = (olapContext).getDimensionColumns();
         Collection<FunctionDesc> functions = olapContext.aggregations;

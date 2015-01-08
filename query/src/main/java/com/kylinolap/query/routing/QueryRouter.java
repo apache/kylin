@@ -35,15 +35,15 @@ public class QueryRouter {
     public static IRealization selectRealization(OLAPContext olapContext) throws NoRealizationFoundException {
 
         ProjectManager prjMgr = ProjectManager.getInstance(olapContext.olapSchema.getConfig());
-        String factTableName = olapContext.firstTableScan.getCubeTable();
+        String factTableName = olapContext.firstTableScan.getTableName();
         String projectName = olapContext.olapSchema.getProjectName();
         List<IRealization> realizations = Lists.newArrayList(prjMgr.getRealizationsByTable(projectName, factTableName));
 
-        //rule based realization selection
+        //rule based realization selection, rules might reorder realizations or remove specific realization
         RoutingRule.applyRules(realizations, olapContext);
 
         if (realizations.size() == 0) {
-            throw new NoRealizationFoundException("Can't find any realization for fact table " + olapContext.firstTableScan.getCubeTable() //
+            throw new NoRealizationFoundException("Can't find any realization for fact table " + olapContext.firstTableScan.getTableName() //
                     + " in project " + olapContext.olapSchema.getProjectName() + " with dimensions " //
                     + olapContext.getDimensionColumns() + " and measures " + olapContext.aggregations //
                     + ". Also please check whether join types match what defined in realization.");
