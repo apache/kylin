@@ -9,6 +9,7 @@ import com.kylinolap.job2.exception.LockException;
 import com.kylinolap.job2.exception.SchedulerException;
 import com.kylinolap.job2.execution.Executable;
 import com.kylinolap.job2.execution.ExecutableState;
+import com.kylinolap.job2.execution.Output;
 import com.kylinolap.job2.service.ExecutableManager;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -60,17 +61,18 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                 logger.warn("There are too many jobs running, Job Fetch will wait until next schedule time");
                 return;
             }
-            for (final AbstractExecutable executable : executableManager.getAllExecutables()) {
-                final String id = executable.getId();
-                String jobDesc = executable.toString();
+            for (final String id : executableManager.getAllJobIds()) {
                 if (runningJobs.containsKey(id)) {
-                    logger.info(jobDesc + " is already running");
+                    logger.info("Job id:" + id + " is already running");
                     continue;
                 }
-                if (!executable.isRunnable()) {
-                    logger.info(jobDesc + " not runnable");
+                final Output output = executableManager.getOutput(id);
+                if ((output.getState() != ExecutableState.READY)) {
+                    logger.info("Job id:" + id + " not runnable");
                     continue;
                 }
+                AbstractExecutable executable = executableManager.getJob(id);
+                String jobDesc = executable.toString();
                 logger.info(jobDesc + " prepare to schedule");
                 try {
                     context.addRunningJob(executable);

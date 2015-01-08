@@ -73,11 +73,11 @@ public class ExecutableManager {
     }
 
     //for ut
-    public void deleteJob(AbstractExecutable executable) {
+    public void deleteJob(String jobId) {
         try {
-            jobDao.deleteJob(executable.getId());
+            jobDao.deleteJob(jobId);
         } catch (PersistentException e) {
-            logger.error("fail to delete job:" + executable.getId(), e);
+            logger.error("fail to delete job:" + jobId, e);
             throw new RuntimeException(e);
         }
     }
@@ -117,6 +117,15 @@ public class ExecutableManager {
             });
         } catch (PersistentException e) {
             logger.error("error get All Jobs", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<String> getAllJobIds() {
+        try {
+            return jobDao.getJobIds();
+        } catch (PersistentException e) {
+            logger.error("error get All Job Ids", e);
             throw new RuntimeException(e);
         }
     }
