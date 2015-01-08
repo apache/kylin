@@ -75,5 +75,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         waitForJobFinish(job.getId());
         assertEquals(ExecutableState.DISCARDED, jobService.getOutput(job.getId()).getState());
         assertEquals(ExecutableState.DISCARDED, jobService.getOutput(task1.getId()).getState());
+        Thread.sleep(5000);
+        System.out.println(job);
     }
 }
