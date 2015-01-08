@@ -94,7 +94,7 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
 
     private CubeSegment findSegmentWithUuid(String jobID, CubeInstance cubeInstance) {
         for (CubeSegment segment : cubeInstance.getSegments()) {
-            if (segment.getUuid().equalsIgnoreCase(jobID)) {
+            if (segment.getLastBuildJobID().equalsIgnoreCase(jobID)) {
                 return segment;
             }
         }
