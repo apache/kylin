@@ -5,7 +5,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.job.JoinedFlatTable;
-import com.kylinolap.job.constant.JobConstants;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.cube.*;
 import com.kylinolap.job.hadoop.dict.CreateDictionaryJob;
@@ -394,7 +393,7 @@ public final class CubingJobBuilder {
 
     private MapReduceExecutable createMergeCuboidDataStep(String inputPath, String outputPath) {
         MapReduceExecutable mergeCuboidDataStep = new MapReduceExecutable();
-        mergeCuboidDataStep.setName(JobConstants.STEP_NAME_MERGE_CUBOID);
+        mergeCuboidDataStep.setName(ExecutableConstants.STEP_NAME_MERGE_CUBOID);
         StringBuilder cmd = new StringBuilder();
 
         appendMapReduceParameters(cmd, jobEngineConfig);

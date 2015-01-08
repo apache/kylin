@@ -7,7 +7,7 @@ import com.google.common.base.Preconditions;
  */
 public final class ExecuteResult {
 
-    public static enum State {SUCCEED, FAILED, ERROR, STOPPED}
+    public static enum State {SUCCEED, FAILED, ERROR, STOPPED, DISCARDED}
 
     private final State state;
     private final String output;

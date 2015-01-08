@@ -158,11 +158,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
         String cubeName = "test_kylin_cube_without_slr_left_join_ready_2_segments";
 
-        List<CubeSegment> newSegments = cubeManager.allocateSegments(cube, CubeBuildTypeEnum.MERGE, 1384240200000L, 1386835200000L);
-
-        logger.info("Size of new segments: " + newSegments.size());
-
-        CubeSegment newSeg = newSegments.get(0);
+        CubeSegment newSeg = cubeManager.mergeSegments(cube, 1384240200000L, 1386835200000L);
         String segmentName = newSeg.getName();
 
         ((TrieDictionary) cubeManager.getDictionary(newSeg, lfn)).dump(System.out);

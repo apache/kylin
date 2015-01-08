@@ -24,16 +24,11 @@ public class SelfStopExecutable extends BaseTestExecutable {
             Thread.sleep(5000);
         } catch (InterruptedException e) {
         }
-        if (isStopped()) {
+        if (isDiscarded()) {
             return new ExecuteResult(ExecuteResult.State.STOPPED, "stopped");
         } else {
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         }
-    }
-
-    private boolean isStopped() {
-        final ExecutableState status = jobService.getOutput(getId()).getState();
-        return status == ExecutableState.STOPPED || status == ExecutableState.DISCARDED;
     }
 
 }

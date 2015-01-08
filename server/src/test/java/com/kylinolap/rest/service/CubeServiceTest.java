@@ -38,7 +38,6 @@ public class CubeServiceTest extends ServiceTestBase {
 
     @Test
     public void testBasics() throws JsonProcessingException, JobException, UnknownHostException {
-        Assert.assertNotNull(cubeService.getJobManager());
         Assert.assertNotNull(cubeService.getConfig());
         Assert.assertNotNull(cubeService.getKylinConfig());
         Assert.assertNotNull(cubeService.getMetadataManager());

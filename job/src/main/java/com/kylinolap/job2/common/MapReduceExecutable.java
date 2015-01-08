@@ -73,7 +73,7 @@ public class MapReduceExecutable extends AbstractExecutable {
             String mrJobId = hadoopCmdOutput.getMrJobId();
             HadoopStatusChecker statusChecker = new HadoopStatusChecker(context.getConfig().getYarnStatusServiceUrl(), mrJobId, output);
             JobStepStatusEnum status = JobStepStatusEnum.NEW;
-            do {
+            while (!isDiscarded()) {
                 JobStepStatusEnum newStatus = statusChecker.checkStatus();
                 if (status == JobStepStatusEnum.WAITING && (newStatus == JobStepStatusEnum.FINISHED || newStatus == JobStepStatusEnum.ERROR || newStatus == JobStepStatusEnum.RUNNING)) {
                     final long waitTime = System.currentTimeMillis() - getStartTime();
@@ -95,9 +95,9 @@ public class MapReduceExecutable extends AbstractExecutable {
                     }
                 }
                 Thread.sleep(context.getConfig().getYarnStatusCheckIntervalSeconds() * 1000);
-            } while (!isStopped());
+            }
 
-            return new ExecuteResult(ExecuteResult.State.STOPPED, output.toString());
+            return new ExecuteResult(ExecuteResult.State.DISCARDED, output.toString());
 
         } catch (ReflectiveOperationException e) {
             logger.error("error getMapReduceJobClass, class name:" + getParam(KEY_MR_JOB), e);
@@ -106,15 +106,6 @@ public class MapReduceExecutable extends AbstractExecutable {
             logger.error("error execute MapReduceJob, id:" + getId(), e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         }
-    }
-
-    /*
-    * stop is triggered by JobService, the Scheduler is not awake of that, so
-    *
-    * */
-    private boolean isStopped() {
-        final ExecutableState status = jobService.getOutput(getId()).getState();
-        return status == ExecutableState.STOPPED || status == ExecutableState.DISCARDED;
     }
 
     public void setMapReduceJobClass(Class<? extends AbstractHadoopJob> clazzName) {

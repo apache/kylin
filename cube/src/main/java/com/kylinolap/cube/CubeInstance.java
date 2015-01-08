@@ -399,55 +399,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         return new long[] { start, end };
     }
 
-    public boolean appendOnHll() {
-        return false;
-    }
-
-//    public boolean appendOnHll() {
-//        CubePartitionDesc cubePartitionDesc = getDescriptor().getCubePartitionDesc();
-//        if (cubePartitionDesc == null) {
-//            return false;
-//        }
-//        if (cubePartitionDesc.getPartitionDateColumn() == null) {
-//            return false;
-//        }
-//        return getDescriptor().hasHolisticCountDistinctMeasures();
-//    }
-
-    public boolean appendBuildOnHllMeasure(long startDate, long endDate) {
-        if (!appendOnHll()) {
-            return false;
-        }
-        List<CubeSegment> readySegments = getSegment(SegmentStatusEnum.READY);
-        if (readySegments.isEmpty()) {
-            return false;
-        }
-        for (CubeSegment readySegment : readySegments) {
-            if (readySegment.getDateRangeStart() == startDate && readySegment.getDateRangeEnd() == endDate) {
-                //refresh build
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public boolean needMergeImmediatelyAfterBuild(CubeSegment segment) {
-        if (!appendOnHll()) {
-            return false;
-        }
-        List<CubeSegment> readySegments = getSegment(SegmentStatusEnum.READY);
-        if (readySegments.isEmpty()) {
-            return false;
-        }
-        for (CubeSegment readySegment : readySegments) {
-            if (readySegment.getDateRangeEnd() > segment.getDateRangeStart()) {
-                //has overlap and not refresh
-                return true;
-            }
-        }
-        return false;
-    }
-
     @Override
     public int getCost(String factTable, Collection<JoinDesc> joins, Collection<TblColRef> allColumns, Collection<FunctionDesc> aggrFunctions) {
         return 0;
