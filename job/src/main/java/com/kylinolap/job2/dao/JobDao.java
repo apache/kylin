@@ -1,6 +1,7 @@
 package com.kylinolap.job2.dao;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
@@ -102,6 +103,23 @@ public class JobDao {
             ArrayList<JobPO> result = new ArrayList<JobPO>(resources.size());
             for (String path : resources) {
                 result.add(readJobResource(path));
+            }
+            return result;
+        } catch (IOException e) {
+            logger.error("error get all Jobs:", e);
+            throw new PersistentException(e);
+        }
+    }
+
+    public List<String> getJobIds() throws PersistentException {
+        try {
+            ArrayList<String> resources = store.listResources(JOB_PATH_ROOT);
+            if (resources == null) {
+                return Collections.emptyList();
+            }
+            ArrayList<String> result = Lists.newArrayListWithExpectedSize(resources.size());
+            for (String path : resources) {
+                result.add(path.substring(path.lastIndexOf("/") + 1));
             }
             return result;
         } catch (IOException e) {

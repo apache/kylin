@@ -77,8 +77,8 @@ public class BuildCubeWithEngineTest {
         }
         cubeManager = CubeManager.getInstance(kylinConfig);
         jobEngineConfig = new JobEngineConfig(kylinConfig);
-        for (AbstractExecutable job: jobService.getAllExecutables()) {
-            jobService.deleteJob(job);
+        for (String jobId: jobService.getAllJobIds()) {
+            jobService.deleteJob(jobId);
         }
 
     }

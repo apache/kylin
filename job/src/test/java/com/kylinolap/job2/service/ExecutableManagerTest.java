@@ -30,9 +30,9 @@ public class ExecutableManagerTest extends LocalFileMetadataTestCase {
         createTestMetadata();
         service = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
 
-        for (AbstractExecutable executable: service.getAllExecutables()) {
-            System.out.println("deleting " + executable.getId());
-            service.deleteJob(executable);
+        for (String jobId: service.getAllJobIds()) {
+            System.out.println("deleting " + jobId);
+            service.deleteJob(jobId);
         }
 
     }
