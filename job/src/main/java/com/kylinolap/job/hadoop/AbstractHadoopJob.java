@@ -325,4 +325,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         this.isAsync = isAsync;
     }
 
+    public Job getJob() {
+        return this.job;
+    }
+
 }
