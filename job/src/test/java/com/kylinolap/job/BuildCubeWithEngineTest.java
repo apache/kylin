@@ -29,7 +29,6 @@ import java.util.Date;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-@Ignore
 public class BuildCubeWithEngineTest {
 
     private JobEngineConfig jobEngineConfig;
