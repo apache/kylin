@@ -58,8 +58,8 @@ public class MapReduceExecutable extends AbstractExecutable {
             Job job;
             final Map<String, String> extra = jobService.getOutput(getId()).getExtra();
             if (extra.containsKey(ExecutableConstants.MR_JOB_ID)) {
-                logger.info("mr_job_id:" + extra.get(ExecutableConstants.MR_JOB_ID));
                 job = new Cluster(new Configuration()).getJob(JobID.forName(extra.get(ExecutableConstants.MR_JOB_ID)));
+                logger.info("mr_job_id:" + extra.get(ExecutableConstants.MR_JOB_ID + " resumed"));
             } else {
                 final Constructor<? extends AbstractHadoopJob> constructor = (Constructor<? extends AbstractHadoopJob>) Class.forName(mapReduceJobClass).getConstructor();
                 final AbstractHadoopJob hadoopJob = constructor.newInstance();
