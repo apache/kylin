@@ -1,31 +1,3 @@
-package com.kylinolap.metadata.tool;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.apache.hadoop.hive.cli.CliSessionState;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.metastore.api.MetaException;
-import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
-import org.apache.hadoop.hive.metastore.api.Table;
-import org.apache.hadoop.hive.metastore.api.UnknownDBException;
-import org.apache.hadoop.hive.metastore.api.UnknownTableException;
-import org.apache.hadoop.hive.ql.CommandNeedRetryException;
-import org.apache.hadoop.hive.ql.Driver;
-import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.hive.hcatalog.common.HCatException;
-import org.apache.hive.hcatalog.data.transfer.DataTransferFactory;
-import org.apache.hive.hcatalog.data.transfer.HCatReader;
-import org.apache.hive.hcatalog.data.transfer.ReadEntity;
-import org.apache.hive.hcatalog.data.transfer.ReaderContext;
-import org.apache.thrift.TException;
-
 /*
  * Copyright 2013-2014 eBay Software Foundation
  *
@@ -41,6 +13,24 @@ import org.apache.thrift.TException;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package com.kylinolap.metadata.tool;
+
+import java.io.IOException;
+import java.util.List;
+
+import org.apache.hadoop.hive.cli.CliSessionState;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.ql.CommandNeedRetryException;
+import org.apache.hadoop.hive.ql.Driver;
+import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.hive.hcatalog.common.HCatException;
+import org.apache.hive.hcatalog.data.transfer.DataTransferFactory;
+import org.apache.hive.hcatalog.data.transfer.HCatReader;
+import org.apache.hive.hcatalog.data.transfer.ReaderContext;
 
 public class HiveClient {
 
