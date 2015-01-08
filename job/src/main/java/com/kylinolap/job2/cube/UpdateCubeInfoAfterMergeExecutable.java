@@ -12,6 +12,7 @@ import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.execution.ExecutableContext;
 import com.kylinolap.job2.execution.ExecuteResult;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
@@ -72,6 +73,8 @@ public class UpdateCubeInfoAfterMergeExecutable extends AbstractExecutable {
         mergedSegment.setSourceRecords(sourceCount);
         mergedSegment.setSourceRecordsSize(sourceSize);
         mergedSegment.setLastBuildJobID(getCubingJobId());
+        mergedSegment.setStatus(SegmentStatusEnum.READY);
+        mergedSegment.setLastBuildTime(System.currentTimeMillis());
         //remove old segment
         cube.getSegments().removeAll(toBeRemoved);
         try {

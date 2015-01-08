@@ -16,15 +16,21 @@
 
 package com.kylinolap.job2.common;
 
+import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.job.tools.HadoopStatusChecker;
 import com.kylinolap.job2.constants.ExecutableConstants;
 import org.apache.hadoop.mapreduce.Counters;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.TaskCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author xduo
@@ -34,55 +40,33 @@ public class HadoopCmdOutput {
 
     protected static final Logger log = LoggerFactory.getLogger(HadoopCmdOutput.class);
 
-    private StringBuilder output;
-    private final String yarnUrl;
-    private final AbstractHadoopJob job;
-    private String mrJobID = null;
-    private String trackUrl = null;
+    private final StringBuilder output;
+    private final Job job;
 
-    public HadoopCmdOutput(String yarnUrl, AbstractHadoopJob job) {
+    public HadoopCmdOutput(Job job, StringBuilder output) {
         super();
-        this.yarnUrl = yarnUrl;
         this.job = job;
-        this.output = new StringBuilder();
-    }
-
-    public JobStepStatusEnum getStatus() {
-        getTrackUrl();
-        getMrJobId();
-        final JobStepStatusEnum jobStepStatusEnum = new HadoopStatusChecker(this.yarnUrl, this.mrJobID, output).checkStatus();
-        if (jobStepStatusEnum.isComplete()) {
-            updateJobCounter();
-        }
-        return jobStepStatusEnum;
-    }
-
-    public String getOutput() {
-        return output.toString();
+        this.output = output;
     }
 
     public String getMrJobId() {
-        try {
-            if (mrJobID == null) {
-                mrJobID = job.getInfo().get(ExecutableConstants.MR_JOB_ID);
-            }
-            return mrJobID;
-        } catch (JobException e) {
-            throw new RuntimeException(e);
-        }
+        return getInfo().get(ExecutableConstants.MR_JOB_ID);
     }
 
-    public String getTrackUrl() {
-        try {
-            if (trackUrl == null) {
-                trackUrl = job.getInfo().get(ExecutableConstants.YARN_APP_URL);
+    public Map<String, String> getInfo() {
+        if (job != null) {
+            Map<String, String> status = new HashMap<String, String>();
+            if (null != job.getJobID()) {
+                status.put(ExecutableConstants.MR_JOB_ID, job.getJobID().toString());
             }
-            return trackUrl;
-        } catch (JobException e) {
-            throw new RuntimeException(e);
+            if (null != job.getTrackingURL()) {
+                status.put(ExecutableConstants.YARN_APP_URL, job.getTrackingURL().toString());
+            }
+            return status;
+        } else {
+            return Collections.emptyMap();
         }
     }
-
 
     private String mapInputRecords;
     private String hdfsBytesWritten;
@@ -95,11 +79,11 @@ public class HadoopCmdOutput {
         return hdfsBytesWritten;
     }
 
-    private void updateJobCounter() {
+    public void updateJobCounter() {
         try {
             Counters counters = job.getCounters();
             if (counters == null) {
-                String errorMsg = "no counters for job " + mrJobID;
+                String errorMsg = "no counters for job " + getMrJobId();
                 log.warn(errorMsg);
                 output.append(errorMsg);
                 return;
