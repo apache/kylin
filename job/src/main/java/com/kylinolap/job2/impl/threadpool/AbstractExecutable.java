@@ -50,18 +50,22 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
         jobService.addJobInfo(getId(), END_TIME, Long.toString(System.currentTimeMillis()));
-        if (result.succeed()) {
-            jobService.updateJobOutput(getId(), ExecutableState.SUCCEED, null, result.output());
-        } else if (result.state() == ExecuteResult.State.STOPPED) {
-            jobService.updateJobOutput(getId(), ExecutableState.STOPPED, null, result.output());
-        } else {
-            jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, result.output());
+        if (!isDiscarded()) {
+            if (result.succeed()) {
+                jobService.updateJobOutput(getId(), ExecutableState.SUCCEED, null, result.output());
+            } else if (result.state() == ExecuteResult.State.DISCARDED) {
+                jobService.updateJobOutput(getId(), ExecutableState.DISCARDED, null, result.output());
+            } else {
+                jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, result.output());
+            }
         }
     }
 
     protected void onExecuteError(Throwable exception, ExecutableContext executableContext) {
-        jobService.addJobInfo(getId(), END_TIME, Long.toString(System.currentTimeMillis()));
-        jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, exception.getLocalizedMessage());
+        if (!isDiscarded()) {
+            jobService.addJobInfo(getId(), END_TIME, Long.toString(System.currentTimeMillis()));
+            jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, exception.getLocalizedMessage());
+        }
     }
 
     @Override
@@ -163,6 +167,15 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     public JobPO getJobPO() {
         return job;
+    }
+
+    /*
+    * discarded is triggered by JobService, the Scheduler is not awake of that, so
+    *
+    * */
+    protected final boolean isDiscarded() {
+        final ExecutableState status = jobService.getOutput(getId()).getState();
+        return status == ExecutableState.DISCARDED;
     }
 
     @Override

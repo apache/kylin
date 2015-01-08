@@ -39,7 +39,6 @@ public class QueryServiceTest extends ServiceTestBase {
 
     @Test
     public void testBasics() throws JobException, IOException, SQLException {
-        Assert.assertNotNull(queryService.getJobManager());
         Assert.assertNotNull(queryService.getConfig());
         Assert.assertNotNull(queryService.getKylinConfig());
         Assert.assertNotNull(queryService.getMetadataManager());

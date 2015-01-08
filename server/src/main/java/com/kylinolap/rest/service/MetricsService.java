@@ -16,15 +16,12 @@
 
 package com.kylinolap.rest.service;
 
+import com.codahale.metrics.MetricRegistry;
+import com.kylinolap.rest.metrics.QueryMetrics;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-
-import com.codahale.metrics.MetricRegistry;
-import com.kylinolap.job.JobManager;
-import com.kylinolap.rest.metrics.JobMetrics;
-import com.kylinolap.rest.metrics.QueryMetrics;
 
 /**
  * @author xduo
@@ -36,12 +33,6 @@ public class MetricsService implements InitializingBean {
     @Autowired
     @Qualifier("metrics")
     private MetricRegistry metricRegistry;
-
-    public void registerJobMetrics(final JobManager jobManager) {
-        JobMetrics jobMetrics = JobMetrics.getInstance();
-        jobMetrics.setJobManager(jobManager);
-        metricRegistry.register("JobMetrics", jobMetrics);
-    }
 
     public void registerQueryMetrics() {
         metricRegistry.register("QueryMetrics", QueryMetrics.getInstance());
