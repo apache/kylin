@@ -290,7 +290,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         return cost;
     }
 
-    @Override
     public void setCost(int cost) {
         this.cost = cost;
     }
