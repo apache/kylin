@@ -1,8 +1,10 @@
 package com.kylinolap.job2.common;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
+import com.kylinolap.job.tools.HadoopStatusChecker;
 import com.kylinolap.job2.constants.ExecutableConstants;
 import com.kylinolap.job2.dao.JobPO;
 import com.kylinolap.job2.exception.ExecuteException;
@@ -10,6 +12,10 @@ import com.kylinolap.job2.execution.ExecutableContext;
 import com.kylinolap.job2.execution.ExecutableState;
 import com.kylinolap.job2.execution.ExecuteResult;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.Cluster;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.util.ToolRunner;
 
 import java.lang.reflect.Constructor;
@@ -32,44 +38,66 @@ public class MapReduceExecutable extends AbstractExecutable {
     }
 
     @Override
+    protected void onExecuteStart(ExecutableContext executableContext) {
+        if (!jobService.getOutput(getId()).getExtra().containsKey(START_TIME)) {
+            Map<String, String> info = Maps.newHashMap();
+            info.put(START_TIME, Long.toString(System.currentTimeMillis()));
+            jobService.updateJobOutput(getId(), ExecutableState.RUNNING, info, null);;
+        } else {
+            jobService.updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
+        }
+    }
+
+    @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         final String mapReduceJobClass = getMapReduceJobClass();
         String params = getMapReduceParams();
         Preconditions.checkNotNull(mapReduceJobClass);
         Preconditions.checkNotNull(params);
         try {
-            final Constructor<? extends AbstractHadoopJob> constructor = (Constructor<? extends AbstractHadoopJob>) Class.forName(mapReduceJobClass).getConstructor();
-            final AbstractHadoopJob job = constructor.newInstance();
-            job.setAsync(true);
-            String[] args = params.trim().split("\\s+");
-            ToolRunner.run(job, args);
-
-            final HadoopCmdOutput hadoopCmdOutput = new HadoopCmdOutput(context.getConfig().getYarnStatusServiceUrl(), job);
+            Job job;
+            final Map<String, String> extra = jobService.getOutput(getId()).getExtra();
+            if (extra.containsKey(ExecutableConstants.MR_JOB_ID)) {
+                job = new Cluster(new Configuration()).getJob(JobID.forName(extra.get(ExecutableConstants.MR_JOB_ID)));
+                logger.info("mr_job_id:" + extra.get(ExecutableConstants.MR_JOB_ID + " resumed"));
+            } else {
+                final Constructor<? extends AbstractHadoopJob> constructor = (Constructor<? extends AbstractHadoopJob>) Class.forName(mapReduceJobClass).getConstructor();
+                final AbstractHadoopJob hadoopJob = constructor.newInstance();
+                hadoopJob.setAsync(true);
+                String[] args = params.trim().split("\\s+");
+                ToolRunner.run(hadoopJob, args);
+                job = hadoopJob.getJob();
+            }
+            final StringBuilder output = new StringBuilder();
+            final HadoopCmdOutput hadoopCmdOutput = new HadoopCmdOutput(job, output);
+            String mrJobId = hadoopCmdOutput.getMrJobId();
+            HadoopStatusChecker statusChecker = new HadoopStatusChecker(context.getConfig().getYarnStatusServiceUrl(), mrJobId, output);
             JobStepStatusEnum status = JobStepStatusEnum.NEW;
             do {
-                JobStepStatusEnum newStatus = hadoopCmdOutput.getStatus();
+                JobStepStatusEnum newStatus = statusChecker.checkStatus();
                 if (status == JobStepStatusEnum.WAITING && (newStatus == JobStepStatusEnum.FINISHED || newStatus == JobStepStatusEnum.ERROR || newStatus == JobStepStatusEnum.RUNNING)) {
                     final long waitTime = System.currentTimeMillis() - getStartTime();
                     addExtraInfo(MAP_REDUCE_WAIT_TIME, Long.toString(waitTime));
                 }
                 status = newStatus;
-                jobService.addJobInfo(getId(), job.getInfo());
+                jobService.addJobInfo(getId(), hadoopCmdOutput.getInfo());
                 if (status.isComplete()) {
-                    final Map<String, String> info = job.getInfo();
+                    hadoopCmdOutput.updateJobCounter();
+                    final Map<String, String> info = hadoopCmdOutput.getInfo();
                     info.put(ExecutableConstants.SOURCE_RECORDS_COUNT, hadoopCmdOutput.getMapInputRecords());
                     info.put(ExecutableConstants.HDFS_BYTES_WRITTEN, hadoopCmdOutput.getHdfsBytesWritten());
                     jobService.addJobInfo(getId(), info);
 
                     if (status == JobStepStatusEnum.FINISHED) {
-                        return new ExecuteResult(ExecuteResult.State.SUCCEED, hadoopCmdOutput.getOutput());
+                        return new ExecuteResult(ExecuteResult.State.SUCCEED, output.toString());
                     } else {
-                        return new ExecuteResult(ExecuteResult.State.FAILED, hadoopCmdOutput.getOutput());
+                        return new ExecuteResult(ExecuteResult.State.FAILED, output.toString());
                     }
                 }
                 Thread.sleep(context.getConfig().getYarnStatusCheckIntervalSeconds() * 1000);
             } while (!isStopped());
 
-            return new ExecuteResult(ExecuteResult.State.STOPPED, hadoopCmdOutput.getOutput());
+            return new ExecuteResult(ExecuteResult.State.STOPPED, output.toString());
 
         } catch (ReflectiveOperationException e) {
             logger.error("error getMapReduceJobClass, class name:" + getParam(KEY_MR_JOB), e);

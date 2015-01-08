@@ -129,29 +129,31 @@ public class HadoopStatusChecker {
             }
 
             HttpMethod get = new GetMethod(url);
-            client.executeMethod(get);
+            try {
+                client.executeMethod(get);
 
-            String redirect = null;
-            Header h = get.getResponseHeader("Refresh");
-            if (h != null) {
-                String s = h.getValue();
-                int cut = s.indexOf("url=");
-                if (cut >= 0) {
-                    redirect = s.substring(cut + 4);
+                String redirect = null;
+                Header h = get.getResponseHeader("Refresh");
+                if (h != null) {
+                    String s = h.getValue();
+                    int cut = s.indexOf("url=");
+                    if (cut >= 0) {
+                        redirect = s.substring(cut + 4);
+                    }
                 }
-            }
 
-            if (redirect == null) {
-                response = get.getResponseBodyAsString();
-                output.append("Job " + mrJobID + " get status check result.\n");
-                log.debug("Job " + mrJobID + " get status check result.\n");
-            } else {
-                url = redirect;
-                output.append("Job " + mrJobID + " check redirect url " + url + ".\n");
-                log.debug("Job " + mrJobID + " check redirect url " + url + ".\n");
+                if (redirect == null) {
+                    response = get.getResponseBodyAsString();
+                    output.append("Job " + mrJobID + " get status check result.\n");
+                    log.debug("Job " + mrJobID + " get status check result.\n");
+                } else {
+                    url = redirect;
+                    output.append("Job " + mrJobID + " check redirect url " + url + ".\n");
+                    log.debug("Job " + mrJobID + " check redirect url " + url + ".\n");
+                }
+            } finally {
+                get.releaseConnection();
             }
-
-            get.releaseConnection();
         }
 
         return response;
