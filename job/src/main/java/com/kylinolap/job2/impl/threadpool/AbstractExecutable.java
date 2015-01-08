@@ -20,9 +20,9 @@ import java.util.UUID;
  */
 public abstract class AbstractExecutable implements Executable, Idempotent {
 
-    private static final String SUBMITTER = "submitter";
-    private static final String START_TIME = "startTime";
-    private static final String END_TIME = "endTime";
+    protected static final String SUBMITTER = "submitter";
+    protected static final String START_TIME = "startTime";
+    protected static final String END_TIME = "endTime";
 
     private JobPO job;
     protected static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
