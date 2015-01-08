@@ -15,31 +15,6 @@
  */
 package com.kylinolap.rest.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.nio.charset.Charset;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
-import javax.sql.DataSource;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Caching;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
-
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -48,9 +23,6 @@ import com.google.common.io.Files;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeDescManager;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.job.JobManager;
-import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job2.cube.CubingJob;
 import com.kylinolap.job2.execution.ExecutableState;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
@@ -63,6 +35,27 @@ import com.kylinolap.query.enumerator.OLAPQuery;
 import com.kylinolap.query.relnode.OLAPContext;
 import com.kylinolap.query.schema.OLAPSchemaFactory;
 import com.kylinolap.rest.controller.QueryController;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+
+import javax.sql.DataSource;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public abstract class BasicService {
 
@@ -170,15 +163,6 @@ public abstract class BasicService {
 
     public final ProjectManager getProjectManager() {
         return ProjectManager.getInstance(getConfig());
-    }
-
-    public JobManager getJobManager() throws JobException, UnknownHostException {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-
-        JobEngineConfig engineCntx = new JobEngineConfig(config);
-
-        InetAddress ia = InetAddress.getLocalHost();
-        return new JobManager(ia.getCanonicalHostName(), engineCntx);
     }
 
     public final ExecutableManager getExecutableManager() {
