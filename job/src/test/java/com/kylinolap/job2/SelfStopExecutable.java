@@ -3,6 +3,7 @@ package com.kylinolap.job2;
 import com.kylinolap.job2.dao.JobPO;
 import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.execution.ExecutableContext;
+import com.kylinolap.job2.execution.ExecutableState;
 import com.kylinolap.job2.execution.ExecuteResult;
 
 /**
@@ -28,6 +29,11 @@ public class SelfStopExecutable extends BaseTestExecutable {
         } else {
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         }
+    }
+
+    private boolean isStopped() {
+        final ExecutableState status = jobService.getOutput(getId()).getState();
+        return status == ExecutableState.STOPPED || status == ExecutableState.DISCARDED;
     }
 
 }
