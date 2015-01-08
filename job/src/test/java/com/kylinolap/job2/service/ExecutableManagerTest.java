@@ -82,7 +82,6 @@ public class ExecutableManagerTest extends LocalFileMetadataTestCase {
         service.updateJobOutput(id, ExecutableState.ERROR, null, null);
         service.updateJobOutput(id, ExecutableState.READY, null, null);
         service.updateJobOutput(id, ExecutableState.RUNNING, null, null);
-        service.updateJobOutput(id, ExecutableState.STOPPED, null, null);
         service.updateJobOutput(id, ExecutableState.READY, null, null);
         service.updateJobOutput(id, ExecutableState.RUNNING, null, null);
         service.updateJobOutput(id, ExecutableState.SUCCEED, null, null);

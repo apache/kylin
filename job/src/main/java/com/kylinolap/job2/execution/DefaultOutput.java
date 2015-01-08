@@ -1,5 +1,7 @@
 package com.kylinolap.job2.execution;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.Map;
 
 /**
@@ -46,5 +48,33 @@ public class DefaultOutput implements Output {
 
     public void setLastModified(long lastModified) {
         this.lastModified = lastModified;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int hashCode = state.hashCode();
+        hashCode = hashCode * prime + extra.hashCode();
+        hashCode = hashCode * prime + verboseMsg.hashCode();
+        hashCode = hashCode * prime + Long.valueOf(lastModified).hashCode();
+        return hashCode;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof DefaultOutput)) {
+            return false;
+        }
+        DefaultOutput another = ((DefaultOutput) obj);
+        if (this.state != another.state) {
+            return false;
+        }
+        if (!extra.equals(another.extra)) {
+            return false;
+        }
+        if (this.lastModified != another.lastModified) {
+            return false;
+        }
+        return StringUtils.equals(verboseMsg, another.verboseMsg);
     }
 }
