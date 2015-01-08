@@ -24,8 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
-import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job2.impl.threadpool.DefaultScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -38,8 +36,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.job.JobInstance;
-import com.kylinolap.job.JobManager;
 import com.kylinolap.job.constant.JobStatusEnum;
+import com.kylinolap.job.engine.JobEngineConfig;
+import com.kylinolap.job2.impl.threadpool.DefaultScheduler;
 import com.kylinolap.rest.constant.Constant;
 import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.request.JobListRequest;
@@ -153,9 +152,9 @@ public class JobController extends BasicController implements InitializingBean {
         Map<String, String> result = new HashMap<String, String>();
         result.put("jobId", jobId);
         result.put("stepId", String.valueOf(stepId));
-        long start = System.currentTimeMillis();
-        String output = "";
-
+        
+//        long start = System.currentTimeMillis();
+//        String output = "";
 //        try {
 //            output = jobService.getExecutableManager().getJobOutput(jobId);//.getJobStepOutput(jobId, stepId);
 //        } catch (Exception e) {
