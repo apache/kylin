@@ -24,8 +24,6 @@ public interface IRealization {
     public int getCost(String factTable, Collection<JoinDesc> joins, Collection<TblColRef> allColumns, //
             Collection<FunctionDesc> aggrFunctions);
 
-    public void setCost(int cost);
-
     /**
      * Get whether this specific realization is a cube or InvertedIndex
      *

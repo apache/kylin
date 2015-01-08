@@ -271,10 +271,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return cost;
     }
 
-    @Override
-    public void setCost(int cost) {
-        this.cost = cost;
-    }
 
     public RealizationStatusEnum getStatus() {
         return status;

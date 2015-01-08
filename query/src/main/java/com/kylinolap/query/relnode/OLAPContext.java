@@ -122,7 +122,7 @@ public class OLAPContext {
         return (joins.size() == 0) && (groupByColumns.size() == 0) && (aggregations.size() == 0);
     }
 
-    public  Collection<TblColRef> getDimensionColumns() {
+    public Collection<TblColRef> getDimensionColumns() {
         Collection<TblColRef> dimensionColumns = new HashSet<TblColRef>();
         dimensionColumns.addAll(allColumns);
         for (TblColRef measureColumn : metricsColumns) {
