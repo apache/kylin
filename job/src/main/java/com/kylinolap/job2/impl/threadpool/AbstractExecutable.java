@@ -34,7 +34,6 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         this.job = new JobPO();
         this.job.setType(this.getClass().getName());
         this.job.setUuid(uuid);
-
     }
 
     protected AbstractExecutable(JobPO job) {
@@ -164,15 +163,6 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     public JobPO getJobPO() {
         return job;
-    }
-
-    /*
-    * stop is triggered by JobService, the Scheduler is not awake of that, so
-    *
-    * */
-    protected final boolean isStopped() {
-        final ExecutableState status = getStatus();
-        return status == ExecutableState.STOPPED || status == ExecutableState.DISCARDED;
     }
 
     @Override

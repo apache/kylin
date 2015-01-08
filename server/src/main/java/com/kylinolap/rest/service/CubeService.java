@@ -62,7 +62,7 @@ import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.hadoop.cardinality.HiveColumnCardinalityJob;
-import com.kylinolap.job2.cube.BuildCubeJob;
+import com.kylinolap.job2.cube.CubingJob;
 import com.kylinolap.job2.execution.ExecutableState;
 import com.kylinolap.metadata.MetadataConstances;
 import com.kylinolap.metadata.model.ColumnDesc;
@@ -225,8 +225,8 @@ public class CubeService extends BasicService {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
     public CubeDesc updateCubeAndDesc(CubeInstance cube, CubeDesc desc, String newProjectName) throws UnknownHostException, IOException, JobException {
-        final List<BuildCubeJob> buildCubeJobs = listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
-        if (!buildCubeJobs.isEmpty()) {
+        final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
+        if (!cubingJobs.isEmpty()) {
             throw new JobException("Cube schema shouldn't be changed with running job.");
         }
 
@@ -257,8 +257,8 @@ public class CubeService extends BasicService {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
     public void deleteCube(CubeInstance cube) throws IOException, JobException, CubeIntegrityException {
-        final List<BuildCubeJob> buildCubeJobs = listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
-        if (!buildCubeJobs.isEmpty()) {
+        final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
+        if (!cubingJobs.isEmpty()) {
             throw new JobException("The cube " + cube.getName() + " has running job, please discard it and try again.");
         }
 
@@ -384,8 +384,8 @@ public class CubeService extends BasicService {
             throw new InternalErrorException("Cube " + cubeName + " dosen't contain any READY segment");
         }
 
-        final List<BuildCubeJob> buildCubeJobs = listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
-        if (!buildCubeJobs.isEmpty()) {
+        final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
+        if (!cubingJobs.isEmpty()) {
             throw new JobException("Enable is not allowed with a running job.");
         }
         if (!cube.getDescriptor().calculateSignature().equals(cube.getDescriptor().getSignature())) {
@@ -602,11 +602,11 @@ public class CubeService extends BasicService {
      * @throws CubeIntegrityException
      */
     private void releaseAllSegments(CubeInstance cube) throws IOException, JobException, UnknownHostException, CubeIntegrityException {
-        final List<BuildCubeJob> buildCubeJobs = listAllCubingJobs(cube.getName(), null);
-        for (BuildCubeJob buildCubeJob : buildCubeJobs) {
-            final ExecutableState status = buildCubeJob.getStatus();
+        final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null);
+        for (CubingJob cubingJob : cubingJobs) {
+            final ExecutableState status = cubingJob.getStatus();
             if (status != ExecutableState.SUCCEED && status != ExecutableState.STOPPED && status != ExecutableState.DISCARDED) {
-                getExecutableManager().discardJob(buildCubeJob.getId());
+                getExecutableManager().discardJob(cubingJob.getId());
             }
         }
         cube.getSegments().clear();

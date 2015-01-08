@@ -7,6 +7,7 @@ import com.kylinolap.job2.constants.ExecutableConstants;
 import com.kylinolap.job2.dao.JobPO;
 import com.kylinolap.job2.exception.ExecuteException;
 import com.kylinolap.job2.execution.ExecutableContext;
+import com.kylinolap.job2.execution.ExecutableState;
 import com.kylinolap.job2.execution.ExecuteResult;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
 import org.apache.hadoop.util.ToolRunner;
@@ -77,6 +78,15 @@ public class MapReduceExecutable extends AbstractExecutable {
             logger.error("error execute MapReduceJob, id:" + getId(), e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         }
+    }
+
+    /*
+    * stop is triggered by JobService, the Scheduler is not awake of that, so
+    *
+    * */
+    private boolean isStopped() {
+        final ExecutableState status = jobService.getOutput(getId()).getState();
+        return status == ExecutableState.STOPPED || status == ExecutableState.DISCARDED;
     }
 
     public void setMapReduceJobClass(Class<? extends AbstractHadoopJob> clazzName) {

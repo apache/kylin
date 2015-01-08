@@ -46,8 +46,8 @@ import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job2.common.HadoopShellExecutable;
 import com.kylinolap.job2.common.MapReduceExecutable;
 import com.kylinolap.job2.common.ShellExecutable;
-import com.kylinolap.job2.cube.BuildCubeJob;
-import com.kylinolap.job2.cube.BuildCubeJobBuilder;
+import com.kylinolap.job2.cube.CubingJob;
+import com.kylinolap.job2.cube.CubingJobBuilder;
 import com.kylinolap.job2.execution.ExecutableState;
 import com.kylinolap.job2.execution.Output;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
@@ -95,10 +95,10 @@ public class JobService extends BasicService {
                 states.add(parseToExecutableState(status));
             }
         }
-        return Lists.newArrayList(FluentIterable.from(listAllCubingJobs(cubeName, projectName, states)).transform(new Function<BuildCubeJob, JobInstance>() {
+        return Lists.newArrayList(FluentIterable.from(listAllCubingJobs(cubeName, projectName, states)).transform(new Function<CubingJob, JobInstance>() {
             @Override
-            public JobInstance apply(BuildCubeJob buildCubeJob) {
-                return parseToJobInstance(buildCubeJob);
+            public JobInstance apply(CubingJob cubingJob) {
+                return parseToJobInstance(cubingJob);
             }
         }));
     }
@@ -126,27 +126,25 @@ public class JobService extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
     public JobInstance submitJob(CubeInstance cube, long startDate, long endDate, CubeBuildTypeEnum buildType, String submitter) throws IOException, JobException, InvalidJobInstanceException {
 
-        final List<BuildCubeJob> buildCubeJobs = listAllCubingJobs(cube.getName(), null, EnumSet.allOf(ExecutableState.class));
-        for (BuildCubeJob job : buildCubeJobs) {
+        final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.allOf(ExecutableState.class));
+        for (CubingJob job : cubingJobs) {
             if (job.getStatus() == ExecutableState.READY || job.getStatus() == ExecutableState.RUNNING) {
                 throw new JobException("The cube " + cube.getName() + " has running job(" + job.getId() + ") please discard it and try again.");
             }
         }
 
         try {
-            CubeSegment cubeSegment = null;
+            CubingJob job;
+            CubingJobBuilder builder = CubingJobBuilder.newBuilder().setJobEnginConfig(new JobEngineConfig(getConfig())).setSubmitter(submitter);
             if (buildType == CubeBuildTypeEnum.BUILD) {
-                cubeSegment = this.getCubeManager().appendSegments(cube, startDate, endDate);
+                builder.setSegment(getCubeManager().appendSegments(cube, startDate, endDate));
+                job = builder.buildJob();
             } else if (buildType == CubeBuildTypeEnum.MERGE) {
-                throw new RuntimeException("has not implemented yet");
-//                cubeSegment = this.getCubeManager().mergeSegments(cube, startDate, endDate);
+                builder.setSegment(getCubeManager().mergeSegments(cube, startDate, endDate));
+                job = builder.mergeJob();
             } else {
                 throw new JobException("invalid build type:" + buildType);
             }
-            BuildCubeJobBuilder builder = BuildCubeJobBuilder.newBuilder(new JobEngineConfig(getConfig()), cubeSegment);
-            final BuildCubeJob job = builder.build();
-            cubeSegment.setLastBuildJobID(job.getId());
-            getCubeManager().updateCube(cube);
             getExecutableManager().addJob(job);
             return parseToJobInstance(job);
         } catch (CubeIntegrityException e) {
@@ -159,8 +157,8 @@ public class JobService extends BasicService {
     }
 
     private JobInstance parseToJobInstance(AbstractExecutable job) {
-        Preconditions.checkState(job instanceof BuildCubeJob, "illegal job type, id:" + job.getId());
-        BuildCubeJob cubeJob = (BuildCubeJob) job;
+        Preconditions.checkState(job instanceof CubingJob, "illegal job type, id:" + job.getId());
+        CubingJob cubeJob = (CubingJob) job;
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
         result.setRelatedCube(cubeJob.getCubeName());
