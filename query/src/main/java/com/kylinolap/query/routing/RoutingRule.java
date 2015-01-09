@@ -19,13 +19,14 @@ public abstract class RoutingRule {
     private static final Logger logger = LoggerFactory.getLogger(QueryRouter.class);
     private static List<RoutingRule> rules = Lists.newLinkedList();
 
+    //TODO: two rules are left out:
+    //1. simple query use II prior to cube
+    //2. exact match prior to week match
     static {
-        rules.add(new RemoveUnmatchedCubesRule());
-        rules.add(new RemoveUnmatchedIIRule());
-        rules.add(new IIPriorityRule());
+        rules.add(new RemoveUncapableRealizationsRule());
+        rules.add(new RealizationPriorityRule());
         rules.add(new SimpleQueryMoreColumsCubeFirstRule());
         rules.add(new CubesSortRule());
-        rules.add(new ExactMatchCubePrecedeRule());
         rules.add(new AdjustForWeeklyMatchCubeRule());//this rule might modify olapcontext content, better put it at last
     }
 
@@ -49,7 +50,8 @@ public abstract class RoutingRule {
             sb.append(r.getName());
             sb.append(",");
         }
-        sb.deleteCharAt(sb.length() - 1);
+        if (sb.charAt(sb.length() - 1) != '[')
+            sb.deleteCharAt(sb.length() - 1);
         sb.append("]");
         return sb.toString();
     }

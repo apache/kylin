@@ -2,6 +2,7 @@ package com.kylinolap.job.hadoop.hive;
 
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -11,6 +12,7 @@ import com.kylinolap.metadata.model.DataModelDesc;
 import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.LookupDesc;
 import com.kylinolap.metadata.model.TblColRef;
+import com.sun.org.apache.xml.internal.utils.StringComparable;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/30/14.
@@ -39,7 +41,7 @@ public class IIJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     }
 
     private void buildTableAliasMap() {
-        tableAliasMap = Maps.newHashMap();
+        tableAliasMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
         tableAliasMap.put(iiDesc.getFactTableName(), FACT_TABLE_ALIAS);
 
