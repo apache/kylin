@@ -152,7 +152,7 @@ public abstract class CubeSegmentValidator {
                     throw new CubeIntegrityException("there is gap in cube segments");
                 }
             }
-            if (newSegment.getDateRangeStart() == initStartDate && startDate < newSegment.getDateRangeEnd()) {
+            if (newSegment.getDateRangeStart() == startDate && startDate < newSegment.getDateRangeEnd()) {
                 return;
             }
             throw new CubeIntegrityException("invalid segment date range from " + newSegment.getDateRangeStart() + " to " + newSegment.getDateRangeEnd());

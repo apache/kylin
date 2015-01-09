@@ -198,7 +198,7 @@ public class JoinedFlatTable {
             long dateStart = cubeSegment.getDateRangeStart();
             long dateEnd = cubeSegment.getDateRangeEnd();
 
-            if (!(dateStart == 0 && dateEnd == 0)) {
+            if (!(dateStart == 0 && dateEnd == Long.MAX_VALUE)) {
                 String partitionColumnName = cubeDesc.getCubePartitionDesc().getPartitionDateColumn();
                 int indexOfDot = partitionColumnName.lastIndexOf(".");
 
