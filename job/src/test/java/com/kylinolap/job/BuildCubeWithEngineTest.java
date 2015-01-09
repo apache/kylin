@@ -91,12 +91,12 @@ public class BuildCubeWithEngineTest {
 
     @After
     public void after() throws Exception {
-//        int exitCode = cleanupOldCubes();
-//        if (exitCode == 0) {
-//            exportHBaseData();
-//        }
-//
-//        HBaseMetadataTestCase.staticCleanupTestMetadata();
+        int exitCode = cleanupOldCubes();
+        if (exitCode == 0) {
+            exportHBaseData();
+        }
+
+        HBaseMetadataTestCase.staticCleanupTestMetadata();
     }
 
     @Test
