@@ -108,7 +108,7 @@ public class BuildCubeWithEngineTest {
         waitForJob(job.getId());
         assertEquals(ExecutableState.SUCCEED, jobService.getOutput(job.getId()).getState());
 
-        Date date2 = dateFormat.parse("2013-04-01");
+        Date date2 = dateFormat.parse("2015-01-01");
         final CubeSegment cubeSegment2 = cubeManager.appendSegments(testCube, date1.getTime(), date2.getTime());
         final CubingJob job2 = CubingJobBuilder.newBuilder().setJobEnginConfig(jobEngineConfig).setSegment(cubeSegment2).buildJob();
         jobService.addJob(job2);
