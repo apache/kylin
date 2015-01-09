@@ -1,14 +1,13 @@
 package com.kylinolap.metadata.realization;
 
-import java.util.Collection;
 import java.util.List;
 
-import com.kylinolap.metadata.model.FunctionDesc;
-import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.metadata.model.TblColRef;
 
 public interface IRealization {
+
+    public boolean isCapable(SQLDigest digest);
 
     /**
      * Given the features of a query, return an integer indicating how capable the realization
@@ -21,8 +20,7 @@ public interface IRealization {
      *           0 - means the realization has the exact result pre-calculated, no less no more;
      *         100 - means the realization will scan the full table with little or no indexing.
      */
-    public int getCost(String factTable, Collection<JoinDesc> joins, Collection<TblColRef> allColumns, //
-            Collection<FunctionDesc> aggrFunctions);
+    public int getCost(SQLDigest digest);
 
     /**
      * Get whether this specific realization is a cube or InvertedIndex

@@ -32,6 +32,7 @@ import com.kylinolap.metadata.model.*;
 import com.kylinolap.metadata.realization.IRealization;
 import com.kylinolap.metadata.realization.RealizationType;
 import com.kylinolap.metadata.realization.RealizationStatusEnum;
+import com.kylinolap.metadata.realization.SQLDigest;
 
 /**
  * @author honma
@@ -376,8 +377,15 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return new long[] { start, end };
     }
 
+
     @Override
-    public int getCost(String factTable, Collection<JoinDesc> joins, Collection<TblColRef> allColumns, Collection<FunctionDesc> aggrFunctions) {
+    public boolean isCapable(SQLDigest digest) {
+        //TODO: currently II is omnipotent
+        return true;
+    }
+
+    @Override
+    public int getCost(SQLDigest digest) {
         return 0;
     }
 

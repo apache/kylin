@@ -15,11 +15,9 @@
  */
 package com.kylinolap.query.relnode;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
+import com.google.common.collect.Sets;
 import net.hydromatic.optiq.rules.java.EnumerableConvention;
 import net.hydromatic.optiq.rules.java.EnumerableRel;
 import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
@@ -276,6 +274,22 @@ public class OLAPFilterRel extends FilterRelBase implements OLAPRel, EnumerableR
 
         TupleFilterVisitor visitor = new TupleFilterVisitor(this.columnRowType, context);
         context.filter = this.condition.accept(visitor);
+        context.filterColumns = collectColumns(context.filter);
+    }
+
+    private Set<TblColRef> collectColumns(TupleFilter filter) {
+        Set<TblColRef> ret = Sets.newHashSet();
+        collectColumnsRecursively(filter, ret);
+        return ret;
+    }
+
+    private void collectColumnsRecursively(TupleFilter filter, Set<TblColRef> collector) {
+        if (filter instanceof ColumnTupleFilter) {
+            collector.add(((ColumnTupleFilter) filter).getColumn());
+        }
+        for (TupleFilter child : filter.getChildren()) {
+            collectColumnsRecursively(child, collector);
+        }
     }
 
     @Override

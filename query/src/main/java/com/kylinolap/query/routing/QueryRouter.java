@@ -17,6 +17,7 @@ package com.kylinolap.query.routing;
 
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,15 +39,13 @@ public class QueryRouter {
         String factTableName = olapContext.firstTableScan.getTableName();
         String projectName = olapContext.olapSchema.getProjectName();
         List<IRealization> realizations = Lists.newArrayList(prjMgr.getRealizationsByTable(projectName, factTableName));
+        logger.info("Find candidates by table " + factTableName + " and project=" + projectName + " : " + StringUtils.join(realizations, ","));
 
         //rule based realization selection, rules might reorder realizations or remove specific realization
         RoutingRule.applyRules(realizations, olapContext);
 
         if (realizations.size() == 0) {
-            throw new NoRealizationFoundException("Can't find any realization for fact table " + olapContext.firstTableScan.getTableName() //
-                    + " in project " + olapContext.olapSchema.getProjectName() + " with dimensions " //
-                    + olapContext.getDimensionColumns() + " and measures " + olapContext.aggregations //
-                    + ". Also please check whether join types match what defined in realization.");
+            throw new NoRealizationFoundException("Can't find any realization. Please confirm with providers. SQL digest: " + olapContext.getSQLDigest().toString());
         }
 
         logger.info("The realizations remaining: ");

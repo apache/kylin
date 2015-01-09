@@ -31,7 +31,6 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.cube.model.CubePartitionDesc;
 import com.kylinolap.cube.model.DimensionDesc;
 import com.kylinolap.metadata.model.FunctionDesc;
 import com.kylinolap.metadata.model.JoinDesc;
@@ -399,7 +398,12 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
     }
 
     @Override
-    public int getCost(String factTable, Collection<JoinDesc> joins, Collection<TblColRef> allColumns, Collection<FunctionDesc> aggrFunctions) {
+    public boolean isCapable(SQLDigest digest) {
+        return CubeCapabilityChecker.check(this, digest, true);
+    }
+
+    @Override
+    public int getCost(SQLDigest digest) {
         return 0;
     }
 
