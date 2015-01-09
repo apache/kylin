@@ -1,12 +1,10 @@
 package com.kylinolap.common.util;
 
-import org.junit.Ignore;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Set;
-import java.util.TreeSet;
+
+import org.junit.Ignore;
+import org.junit.Test;
 
 /**
  * Created by honma on 10/17/14.
@@ -33,14 +31,14 @@ public class BasicTest {
 
     @Test
     @Ignore("convenient trial tool for dev")
-    public void test1() throws IOException {
-        // only for trial
+    public void test1() throws IOException, InterruptedException {
+
     }
 
     @Test
     @Ignore("fix it later")
     public void test2() throws IOException {
-        // fix it later
+
     }
 
 }

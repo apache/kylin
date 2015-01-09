@@ -18,13 +18,15 @@ public class SimpleQueryMoreColumsCubeFirstRule extends RoutingRule {
     public void apply(List<IRealization> realizations, OLAPContext olapContext) {
         List<Integer> itemIndexes = super.findRealizationsOf(realizations, RealizationType.CUBE);
 
-        PartialSorter.partialSort(realizations, itemIndexes, new Comparator<IRealization>() {
-            @Override
-            public int compare(IRealization o1, IRealization o2) {
-                CubeInstance c1 = (CubeInstance) o1;
-                CubeInstance c2 = (CubeInstance) o2;
-                return c1.getDescriptor().listDimensionColumnsIncludingDerived().size() - c2.getDescriptor().listDimensionColumnsIncludingDerived().size();
-            }
-        });
+        if (olapContext.isSimpleQuery()) {
+            PartialSorter.partialSort(realizations, itemIndexes, new Comparator<IRealization>() {
+                @Override
+                public int compare(IRealization o1, IRealization o2) {
+                    CubeInstance c1 = (CubeInstance) o1;
+                    CubeInstance c2 = (CubeInstance) o2;
+                    return c1.getDescriptor().listDimensionColumnsIncludingDerived().size() - c2.getDescriptor().listDimensionColumnsIncludingDerived().size();
+                }
+            });
+        }
     }
 }
