@@ -1,9 +1,9 @@
 <div class="query-content" ng-controller="QueryResultCtrl" ng-if="curQuery">
 <div>
-<div ng-if="curQuery.result.isResponsePartial" class="text-info">
-    Note: Current results are partial, please click rerun button to get all results.
+<div ng-if="curQuery.result.partial" class="text-info">
+    Note: Current results are partial, please click 'Show All' button to get all results.
     <button class="btn btn-default btn-xs" ng-click="reset(curQuery);curQuery.acceptPartial=false;query(curQuery)">
-        Rerun
+        Show All
     </button>
 </div>
 <div class="pull-right">
