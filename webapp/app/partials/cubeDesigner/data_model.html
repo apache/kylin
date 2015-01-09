@@ -19,11 +19,18 @@
 <!-- Lookup Tables Summary -->
 <div class="dataTables_wrapper form-inline no-footer">
     <div class="row">
-        <span><b>Lookup Tables</b></span>
-        <span class="input-icon input-icon-right nav-search" style="margin-left: 22px;" ng-if="cubeMetaFrame.model.lookups.length > 0">
-            <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="lookupState.filter"/>
-            <i class="ace-icon fa fa-search nav-search-icon"></i>
-        </span>
+        <div class="col-xs-6">
+            <button type="button" class="btn btn-primary" ng-if="state.mode=='edit'" ng-disabled="!cubeMetaFrame.model.fact_table.length"
+                    ng-click="openLookupModal()">
+                <i class="fa fa-plus"></i> Add Lookup Table
+            </button>
+        </div>
+        <div class="col-xs-6">
+            <span class="pull-right input-icon input-icon-right nav-search" style="margin-left: 22px;" ng-if="cubeMetaFrame.model.lookups.length > 0">
+                <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="lookupState.filter"/>
+                <i class="ace-icon fa fa-search nav-search-icon"></i>
+            </span>
+        </div>
     </div>
     <table class="table table-striped table-hover" ng-if="cubeMetaFrame.model.lookups.length > 0">
         <thead>
@@ -32,7 +39,7 @@
             <th>Table Name</th>
             <th>Join Type</th>
             <th>Join Condition</th>
-            <th>Actions</th>
+            <th ng-if="state.mode=='edit'">Actions</th>
         </tr>
         </thead>
         <tbody>
@@ -56,7 +63,7 @@
                     </li>
                 </ul>
             </td>
-            <td>
+            <td ng-if="state.mode=='edit'">
                 <!-- edit button -->
                 <button class="btn btn-xs btn-info" ng-disabled="lookupState.editing"
                         ng-click="editLookup(lookup)" tooltip="Edit Lookup"><i class="fa fa-pencil"></i>
@@ -73,11 +80,11 @@
 </ng-form>
 
 <!-- Add Lookup Table Form -->
-<div class="box box-solid">
-    <div class="box-header">
+<script type="text/ng-template" id="dataModelLookupTable.html">
+    <div class="modal-header">
         <h4 class="box-title lighter">{{lookupState.editing ? 'Edit' : 'Add'}} Lookup</h4>
     </div>
-    <div class="box-body">
+    <div class="modal-body">
         <div class="row">
             <div class="col-xs-8">
                 <ng-form name="lookup_form">
@@ -94,7 +101,7 @@
                 <!--Join Type and Columns-->
                 <div class="form-group">
                     <div class="row">
-                        <label class="col-sm-3 control-label font-color-default"><b>Type</b></label>
+                        <label class="col-sm-3 control-label font-color-default"><b>Join Type</b></label>
                         <div class="col-sm-6">
                             <select class="form-control" chosen ng-model="newLookup.join.type"
                                     ng-options="joinType.value as joinType.name for joinType in joinTypes">
@@ -103,27 +110,31 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <div ng-repeat="joinIndex in [] | range: newLookup.join.primary_key.length">
-                        <div>
-                            <select style="width: 45%" chosen data-placeholder="Fact Table Column"
-                                    ng-model="newLookup.join.foreign_key[$index]"
-                                    ng-options="columns.name as columns.name for columns in getColumnsByTable(cubeMetaFrame.model.fact_table)" >
-                                <option value=""></option>
-                            </select>
-                            <b>=</b>
-                            <select style="width: 45%" chosen data-placeholder="Lookup Table Column"
-                                    ng-model="newLookup.join.primary_key[$index]"
-                                    ng-options="columns.name as columns.name for columns in getColumnsByTable(newLookup.table)" >
-                                <option value=""></option>
-                            </select>
-                            <button class="btn btn-xs btn-danger" style="cursor: pointer" tooltip="Delete Join Condition"
-                                    ng-click="newLookup.join.primary_key.length=newLookup.join.primary_key.length-1;
-                                                    removeElement(newLookup.join.primary_key, newLookup.join.primary_key[$index]);
-                                                    removeElement(newLookup.join.foreign_key, newLookup.join.foreign_key[$index]);">
-                                <i class="fa fa-trash-o"></i>
-                            </button>
+                    <div class="row">
+                        <div class="col-xs-9">
+                            <div ng-repeat="joinIndex in [] | range: newLookup.join.primary_key.length">
+                                <div>
+                                    <select style="width: 45%" chosen data-placeholder="Fact Table Column"
+                                            ng-model="newLookup.join.foreign_key[$index]"
+                                            ng-options="columns.name as columns.name for columns in getColumnsByTable(cubeMetaFrame.model.fact_table)" >
+                                        <option value=""></option>
+                                    </select>
+                                    <b>=</b>
+                                    <select style="width: 45%" chosen data-placeholder="Lookup Table Column"
+                                            ng-model="newLookup.join.primary_key[$index]"
+                                            ng-options="columns.name as columns.name for columns in getColumnsByTable(newLookup.table)" >
+                                        <option value=""></option>
+                                    </select>
+                                    <button class="pull-right btn btn-xs btn-danger" style="cursor: pointer" tooltip="Delete Join Condition"
+                                            ng-click="newLookup.join.primary_key.length=newLookup.join.primary_key.length-1;
+                                                            removeElement(newLookup.join.primary_key, newLookup.join.primary_key[$index]);
+                                                            removeElement(newLookup.join.foreign_key, newLookup.join.foreign_key[$index]);">
+                                        <i class="fa fa-trash-o"></i>
+                                    </button>
+                                </div>
+                                <div class="space-4"></div>
+                            </div>
                         </div>
-                        <div class="space-4"></div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -136,15 +147,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="form-group">
-                    <div class="row">
-                        <div class="col-sm-6 col-sm-offset-3">
-                            <button class="btn btn-sm btn-info" ng-disabled="lookup_form.$invalid || newLookup.join.primary_key.length == 0"
-                                    ng-click="lookupState.editing ? doneEditLookup() : addLookup()">OK</button>
-                            <button class="btn btn-link" ng-click="cancelLookup()">Cancel</button>
-                        </div>
-                    </div>
-                </div>
+
                 </ng-form>
             </div>
 
@@ -169,6 +172,10 @@
             </div>
         </div>
     </div>
-</div>
+    <div class="modal-footer">
+        <button class="btn btn-primary" ng-disabled="lookup_form.$invalid || newLookup.join.primary_key.length == 0" ng-click="ok()">OK</button>
+        <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+    </div>
+</script>
 
 </div>

@@ -1,11 +1,14 @@
 'use strict';
 
-KylinApp.controller('CubeDimensionsCtrl', function ($scope) {
+KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal) {
     // Available columns list derived from cube data model.
     $scope.availableColumns = {};
 
     // Columns selected and disabled status bound to UI, group by table.
     $scope.selectedColumns = {};
+
+    // Available tables cache: 1st is the fact table, next are lookup tables.
+    $scope.availableTables = [];
 
     // Do some cube dimensions adaption between new and old cube schema. TODO new cube schema change.
     $scope.prepareDimensions = function (dimensions) {
@@ -43,7 +46,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope) {
      * Helper func to get columns that dimensions based on, three cases:
      * 1. normal dimension: column array.
      * 2. hierarchy dimension: column array, the array index is the hierarchy level.
-     * 3. derived dimension: derived columns array, plus the column array which in fact is the FK in fact table.
+     * 3. derived dimension: derived columns array.
      * TODO new cube schema change
      */
     var dimCols = function (dim) {
@@ -52,10 +55,6 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope) {
         // Case 3.
         if (dim.derived && dim.derived.length) {
             referredCols = referredCols.concat(dim.derived);
-
-            // Get foreign key.
-            /*var join = getJoin(dim.table);
-            referredCols = referredCols.concat(join != null ? join.foreign_key : []);*/
         }
 
         // Case 2.
@@ -73,15 +72,17 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope) {
 
     // Dump available columns plus column table name, whether is from lookup table.
     $scope.initColumns = function () {
+        var factTable = $scope.cubeMetaFrame.model.fact_table;
+
         // At first dump the columns of fact table.
-        var cols = $scope.getColumnsByTable($scope.cubeMetaFrame.model.fact_table);
+        var cols = $scope.getColumnsByTable(factTable);
 
         // Initialize selected available.
         var factAvailable = {};
         var factSelectAvailable = {};
 
         for (var i = 0; i < cols.length; i++) {
-            cols[i].table = $scope.cubeMetaFrame.model.fact_table;
+            cols[i].table = factTable;
             cols[i].isLookup = false;
 
             factAvailable[cols[i].name] = cols[i];
@@ -90,8 +91,9 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope) {
             factSelectAvailable[cols[i].name] = {selected: false, disabled: false};
         }
 
-        $scope.availableColumns[$scope.cubeMetaFrame.model.fact_table] = factAvailable;
-        $scope.selectedColumns[$scope.cubeMetaFrame.model.fact_table] = factSelectAvailable;
+        $scope.availableColumns[factTable] = factAvailable;
+        $scope.selectedColumns[factTable] = factSelectAvailable;
+        $scope.availableTables.push(factTable);
 
         // Then dump each lookup tables.
         var lookups = $scope.cubeMetaFrame.model.lookups;
@@ -115,6 +117,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope) {
 
             $scope.availableColumns[lookups[j].table] = lookupAvailable;
             $scope.selectedColumns[lookups[j].table] = lookupSelectAvailable;
+            $scope.availableTables.push(lookups[j].table);
         }
     };
 
@@ -129,130 +132,54 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope) {
         });
     };
 
-    // Initialize data for columns widget.
+    // Initialize data for columns widget in auto-gen.
     $scope.initColumns();
-    $scope.initColumnStatus();
 
 
-    // Watch on selected columns status to check whether any item newly selected.
-    $scope.currentSelectedCols = [];
-    $scope.currentSelectedTables = [];
-
-    $scope.$watch('selectedColumns', function (newVal, oldVal) {
-        var currentTables = [];
-        var currentCols = [];
-
-        for (var table in newVal) {
-            if (newVal.hasOwnProperty(table)) {
-                var cols = newVal[table];
-
-                for (var colName in cols) {
-                    if (cols.hasOwnProperty(colName)) {
-                        if (cols[colName].selected && !cols[colName].disabled) {
-                            if (currentTables.indexOf(table) == -1) {
-                                currentTables.push(table);
-                            }
-
-                            currentCols.push(colName);
-                        }
-                    }
-                }
-            }
-        }
-
-        $scope.currentSelectedTables = currentTables;
-        $scope.currentSelectedCols = currentCols;
-    }, true);
-
-    // Whether cols in lookup table selected.
-    $scope.isLookupTableSelected = function () {
-        var lookupSelected = false;
-
-        if ($scope.currentSelectedTables.length == 1) {
-            var tableName = $scope.currentSelectedTables[0];
-
-            for (var j = 0; j < $scope.cubeMetaFrame.model.lookups.length; j++) {
-                if ($scope.cubeMetaFrame.model.lookups[j].table == tableName) {
-                    lookupSelected = true;
-
-                    break;
-                }
-            }
-        }
-
-        return lookupSelected;
+    // Initialize params for add/edit dimension.
+    $scope.dimState = {
+        editing: false,
+        editingIndex: -1,
+        filter: ''
     };
 
-    $scope.canAddDimension = function (dimType) {
-        if ($scope.currentSelectedTables.length != 1) {
-            return false;
-        }
-
-        var flag = false;
+    // Init the dimension, dimension name default as the column key. TODO new cube schema change.
+    var Dimension = function (table, selectedCols, dimType) {
+        var origin = {name: '', table: table};
 
         switch (dimType) {
             case 'normal':
-                flag = $scope.currentSelectedCols.length == 1;
+                // Default name as 1st column name.
+                if (table && selectedCols.length) {
+                    origin.name = table + '.' + selectedCols[0];
+                }
+
+                origin.column = selectedCols[0];
                 break;
 
             case 'derived':
-                flag = $scope.isLookupTableSelected() && $scope.currentSelectedCols.length;
+                if (table && selectedCols.length) {
+                    origin.name = table + '_derived';
+                }
+
+                origin.column = '{FK}';
+                origin.derived = selectedCols;
                 break;
 
             case 'hierarchy':
-                flag = $scope.currentSelectedCols.length > 1;
+                if (table && selectedCols.length) {
+                    origin.name = table + '_hierarchy';
+                }
+
+                origin.hierarchy = selectedCols;
                 break;
         }
 
-        return flag;
+        return origin;
     };
 
-    // Helper func to reset status of available list of columns status.
-    var refreshAvailable = function (table, colNames, toEnabled) {
-        for (var i = 0; i < colNames.length; i++) {
-            var availableCol = $scope.selectedColumns[table][colNames[i]];
-            availableCol.selected = !toEnabled;
-            availableCol.disabled = !toEnabled;
-        }
-    };
-
-    // Init the dimension option, dimension name default as the column key. TODO new cube schema change.
-    var DimensionOption = {
-        init: function (table, selectedCols, dimType) {
-            var origin = {
-                // Default name as 1st column name.
-                name: table + '.' + selectedCols[0],
-                table: table
-            };
-
-            switch (dimType) {
-                case 'normal':
-                    origin.column = selectedCols[0];
-                    break;
-
-                case 'derived':
-                    origin.column = '{FK}';
-                    origin.derived = selectedCols;
-                    break;
-
-                case 'hierarchy':
-                    origin.hierarchy = selectedCols;
-                    break;
-            }
-
-            return origin;
-        }
-    };
-
-    $scope.newDimensionOption = {};
     // Since old schema may be both derived and hierarchy. TODO new cube schema change.
-    $scope.newDimensionOptionType = [];
-
-    // Switch on dimensions.
-    $scope.switchDim = function (dim) {
-        $scope.newDimensionOption = dim;
-
-        // Since old schema may be both derived and hierarchy. TODO new cube schema change.
+    $scope.getDimType = function (dim) {
         var types = [];
 
         if (dim.derived && dim.derived.length) {
@@ -267,36 +194,212 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope) {
             types.push('normal');
         }
 
-        $scope.newDimensionOptionType = types;
+        return types;
     };
 
-    // Add dimension alternative.
-    $scope.addDim = function (type) {
-        // Suppose only one table selected, this is ensured in UI.
-        var table = $scope.currentSelectedTables[0];
-        var cols = $scope.currentSelectedCols;
+    var dimList = $scope.cubeMetaFrame.dimensions;
 
-        var dim = DimensionOption.init(table, cols, type);
-        $scope.cubeMetaFrame.dimensions.push(dim);
+    // Open add/edit dimension modal.
+    $scope.openDimModal = function (dimType) {
+        var modalInstance = $modal.open({
+            templateUrl: 'addEditDimension.html',
+            controller: cubeDimModalCtrl,
+            backdrop: 'static',
+            scope: $scope,
+            resolve: {
+                dimType: function () {
+                    // For old schema compatibility, convert into array here. TODO new cube schema change.
+                    return angular.isArray(dimType) ? dimType : [dimType];
+                }
+            }
+        });
 
-        // Disable selected cols.
-        refreshAvailable(table, cols, false);
+        modalInstance.result.then(function () {
+            if (!$scope.dimState.editing) {
+                $scope.doneAddDim();
+            } else {
+                $scope.doneEditDim();
+            }
+
+        }, function () {
+            $scope.cancelDim();
+        });
     };
 
-    // Remove dimension alternative.
-    $scope.removeDim = function () {
-        // Restore selected and disabled status of available columns.
-        refreshAvailable($scope.newDimensionOption.table, dimCols($scope.newDimensionOption), true);
+    // Controller for cube dimension add/edit modal.
+    var cubeDimModalCtrl = function ($scope, $modalInstance, dimType) {
+        $scope.dimType = dimType;
 
-        // Remove selected dimension.
-        var index = $scope.cubeMetaFrame.dimensions.indexOf($scope.newDimensionOption);
+        $scope.ok = function () {
+            $modalInstance.close();
+        };
 
-        if (index > -1) {
-            $scope.cubeMetaFrame.dimensions.splice(index, 1);
+        $scope.cancel = function () {
+            $modalInstance.dismiss('cancel');
+        };
+    };
 
-            $scope.newDimensionOption = {};
+    $scope.addDim = function (dimType) {
+        $scope.newDimension = Dimension('', [], dimType);
+
+        $scope.openDimModal(dimType);
+    };
+
+    $scope.editDim = function (dim) {
+        $scope.dimState.editingIndex = dimList.indexOf(dim);
+        $scope.dimState.editing = true;
+
+        // Make a copy of model will be editing.
+        $scope.newDimension = angular.copy(dim);
+
+        $scope.openDimModal($scope.getDimType(dim));
+    };
+
+    $scope.doneAddDim = function () {
+        // Push new dimension which bound user input data.
+        dimList.push(angular.copy($scope.newDimension));
+
+        $scope.resetParams();
+    };
+
+    $scope.doneEditDim = function () {
+        // Copy edited model to destination model.
+        angular.copy($scope.newDimension, dimList[$scope.dimState.editingIndex]);
+
+        $scope.resetParams();
+    };
+
+    $scope.cancelDim = function () {
+        $scope.resetParams();
+    };
+
+    $scope.removeDim = function (dim) {
+        dimList.splice(dimList.indexOf(dim), 1);
+    };
+
+    $scope.resetParams = function () {
+        $scope.dimState.editing = false;
+        $scope.dimState.editingIndex = -1;
+
+        $scope.newDimension = {};
+    };
+
+    // Open auto-gen dimension modal.
+    $scope.openAutoGenModal = function (dimType) {
+        // Init columns status.
+        $scope.initColumnStatus();
+
+        var modalInstance = $modal.open({
+            templateUrl: 'autoGenDimension.html',
+            controller: cubeAutoGenDimModalCtrl,
+            backdrop: 'static',
+            scope: $scope
+        });
+
+        modalInstance.result.then(function () {
+            $scope.autoGenDims();
+        }, function () {
+            $scope.resetGenDims();
+        });
+    };
+
+    // Controller for cube dimension auto-gen modal.
+    var cubeAutoGenDimModalCtrl = function ($scope, $modalInstance) {
+        $scope.ok = function () {
+            $modalInstance.close();
+        };
+
+        $scope.cancel = function () {
+            $modalInstance.dismiss('cancel');
+        };
+    };
+
+    // Helper func to get the selected status in auto gen.
+    $scope.getSelectedCols = function () {
+        var selectedCols = {};
+
+        angular.forEach($scope.selectedColumns, function (value, table) {
+            angular.forEach(value, function (status, colName) {
+                if (status.selected && !status.disabled) {
+                    if (!selectedCols[table]) {
+                        selectedCols[table] = [];
+                    }
+
+                    selectedCols[table].push(colName);
+                }
+            });
+        });
+
+        return selectedCols;
+    };
+
+    // Auto generate dimensions.
+    $scope.autoGenDims = function () {
+        var selectedCols = $scope.getSelectedCols();
+
+        angular.forEach(selectedCols, function (cols, table) {
+            if ($scope.cubeMetaFrame.model.fact_table == table) {
+                // Fact table: for each selected column, create one normal dimension.
+                for (var i = 0; i < cols.length; i++) {
+                    dimList.push(Dimension(table, [cols[i]], 'normal'));
+                }
+            } else {
+                // Per lookup table, create one derived dimension for all its selected columns;
+                if (cols.length) {
+                    dimList.push(Dimension(table, cols, 'derived'));
+                }
+            }
+        });
+    };
+
+    // Just reset the selected status of columns.
+    $scope.resetGenDims = function () {
+        var selectedCols = $scope.getSelectedCols();
+
+        angular.forEach(selectedCols, function (cols, table) {
+            for (var i = 0; i < cols.length; i++) {
+                $scope.selectedColumns[table][cols[i]].selected = false;
+            }
+        });
+    };
+
+    // Check whether there is column conflicts.
+    $scope.dimConflicts = [];
+
+    $scope.$watch('cubeMetaFrame.dimensions', function (newVal, oldVal) {
+        if (!newVal || !newVal.length) {
+            return;
         }
-    };
+
+        var referredCols = {};
+
+        angular.forEach(newVal, function (curDim) {
+            var table = curDim.table;
+            var cols = dimCols(curDim);
+
+            for (var i = 0; i < cols.length; i++) {
+                var key = table + '.' + cols[i];
+
+                if (!referredCols[key]) {
+                    referredCols[key] = [];
+                }
+
+                referredCols[key].push({id: curDim.id, name: curDim.name});
+            }
+        });
+
+        var conflicts = [];
+
+        angular.forEach(referredCols, function (dims, key) {
+            if (dims.length > 1) {
+                // More than 1 dimensions has referred this column.
+                var colInfo = key.split('.');
+                conflicts.push({table: colInfo[0], column: colInfo[1], dims: dims});
+            }
+        });
+
+        $scope.dimConflicts = conflicts;
+    }, true);
 
 
     // Adapter between new data model/dimensions and original dimensions.

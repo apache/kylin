@@ -11,8 +11,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     $scope.wizardSteps = [
         {title: 'Cube Info', src: 'partials/cubeDesigner/info.html', isComplete: false},
         {title: 'Data Model', src: 'partials/cubeDesigner/data_model.html', isComplete: false},
-        {title: 'Dimensions', src: 'partials/cubeDesigner/data_dimensions.html', isComplete: false},
-        //{title: 'Dimensions', src: 'partials/cubeDesigner/dimensions.html', isComplete: false},
+        {title: 'Dimensions', src: 'partials/cubeDesigner/dimensions.html', isComplete: false},
         {title: 'Measures', src: 'partials/cubeDesigner/measures.html', isComplete: false},
         {title: 'Filter', src: 'partials/cubeDesigner/filter.html', isComplete: false},
         {title: 'Refresh Setting', src: 'partials/cubeDesigner/incremental.html', isComplete: false}
@@ -23,35 +22,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     $scope.wizardSteps.push({title: 'Overview', src: 'partials/cubeDesigner/overview.html', isComplete: false});
 
     $scope.curStep = $scope.wizardSteps[0];
-
-    /**
-    var Dimension = {
-        createNew: function () {
-            var dimension = {
-                "id": "",
-                "name": "",
-                "table": "",
-                "column": "",
-                "datatype": "",
-                "derived": [],
-                "join": {
-                    "type": "",
-                    "primary_key": [],
-                    "foreign_key": []
-                },
-                "hierarchy": [],
-                "status": {
-                    "joinCount": 1,
-                    "hierarchyCount": 1,
-                    "useHierarchy": false,
-                    "useJoin": false
-                }
-            };
-
-            return dimension;
-        }
-    };
-     **/
 
     var Measure = {
         createNew: function () {
@@ -94,35 +64,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         return $scope.userService.hasRole('ROLE_ADMIN') || $scope.hasPermission(project,$scope.permissions.ADMINISTRATION.mask);
     };
 
-    /**
-    $scope.addNewDimension = function (dimension) {
-        $scope.newDimension = (!!dimension)? dimension: Dimension.createNew();
-        if(!$scope.newDimension.join){
-            $scope.newDimension.join = { "type": "","primary_key": [],"foreign_key": []}
-        }
-        if($scope.newDimension.status&&$scope.newDimension.status.useJoin||$scope.newDimension.join.foreign_key.length!=0){
-            $scope.newDimension.status.useJoin = true;
-        }
-    }
-
-    $scope.clearNewDimension = function () {
-        $scope.newDimension = null;
-    }
-
-    $scope.saveNewDimension = function () {
-        if($scope.editFlag.dimensionEdited=="init"){
-            $scope.editFlag.dimensionEdited = false;
-        }else{
-            $scope.editFlag.dimensionEdited=!$scope.editFlag.dimensionEdited;
-        }
-
-        if ($scope.cubeMetaFrame.dimensions.indexOf($scope.newDimension) === -1) {
-            $scope.cubeMetaFrame.dimensions.push($scope.newDimension);
-        }
-        $scope.newDimension = null;
-    }
-    **/
-
     $scope.addNewMeasure = function (measure) {
         $scope.newMeasure = (!!measure)? measure:Measure.createNew();
     };
@@ -157,43 +98,12 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         }
     };
 
-    /**
-    $scope.toggleJoin = function (dimension,$event) {
-        if (dimension.join&&dimension.join.type!='') {
-            if(!confirm('Delete the join relation?')){
-                $event.preventDefault();
-                return;
-            }else{
-                delete dimension.join;
-            }
-        }
-        else {
-            dimension.join = dimension.join==undefined?{}:dimension.join;
-            dimension.join.type = 'left';
-        }
-    }
-    **/
-
     $scope.removeElement = function (arr, element) {
         var index = arr.indexOf(element);
         if (index > -1) {
             arr.splice(index, 1);
         }
     };
-
-    /**
-    $scope.removeDimension = function (arr, element) {
-        var index = arr.indexOf(element);
-        if (index > -1) {
-            arr.splice(index, 1);
-            if($scope.editFlag.dimensionEdited=="init"){
-                $scope.editFlag.dimensionEdited = false;
-            }else{
-                $scope.editFlag.dimensionEdited=!$scope.editFlag.dimensionEdited;
-            }
-        }
-    };
-    **/
 
     $scope.open = function ($event) {
         $event.preventDefault();
@@ -221,20 +131,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
             });
         }
     };
-
-    /**
-    $scope.getJoinToolTip = function (dimension) {
-        var tooltip = "";
-
-        if (dimension.join) {
-            angular.forEach(dimension.join.primary_key, function (pk, index) {
-                tooltip += (pk + " = " + dimension.join.foreign_key[index] + "<br>");
-            });
-        }
-
-        return tooltip;
-    };
-     **/
 
     // ~ private methods
     function initProject() {
