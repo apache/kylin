@@ -16,7 +16,6 @@
 package com.kylinolap.cube;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -32,12 +31,13 @@ import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.DimensionDesc;
-import com.kylinolap.metadata.model.FunctionDesc;
-import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.metadata.realization.*;
+import com.kylinolap.metadata.realization.IRealization;
+import com.kylinolap.metadata.realization.RealizationStatusEnum;
+import com.kylinolap.metadata.realization.RealizationType;
+import com.kylinolap.metadata.realization.SQLDigest;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeInstance extends RootPersistentEntity implements IRealization {
