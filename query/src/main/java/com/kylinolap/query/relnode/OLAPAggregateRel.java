@@ -235,6 +235,7 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
                 TblColRef column = buildRewriteColumn(aggFunc);
                 this.context.metricsColumns.add(column);
             }
+
             AggregateCall aggCall = this.rewriteAggCalls.get(i);
             if (!aggCall.getArgList().isEmpty()) {
                 int index = aggCall.getArgList().get(0);

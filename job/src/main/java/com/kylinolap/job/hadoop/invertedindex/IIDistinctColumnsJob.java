@@ -26,8 +26,6 @@ import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
@@ -73,14 +71,14 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
 
             System.out.println("Starting: " + job.getJobName());
 
-            setupMapInput(input, inputFormat, inputDelim);
-            setupReduceOutput(output);
-
             // pass table and columns
             MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
             TableDesc table = metaMgr.getTableDesc(tableName);
             job.getConfiguration().set(BatchConstants.TABLE_NAME, tableName);
             job.getConfiguration().set(BatchConstants.TABLE_COLUMNS, getColumns(table));
+
+            setupMapInput(input, inputFormat, inputDelim);
+            setupReduceOutput(output);
 
             return waitForCompletion(job);
 
