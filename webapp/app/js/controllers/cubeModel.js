@@ -1,6 +1,6 @@
 'use strict';
 
-KylinApp.controller('CubeModelCtrl', function ($scope) {
+KylinApp.controller('CubeModelCtrl', function ($scope, $modal) {
     var DataModel = {
         init: function () {
             return {
@@ -63,7 +63,6 @@ KylinApp.controller('CubeModelCtrl', function ($scope) {
     $scope.lookupState = {
         editing: false,
         editingIndex: -1,
-        showPanel: false,
         filter: ''
     };
 
@@ -71,11 +70,35 @@ KylinApp.controller('CubeModelCtrl', function ($scope) {
 
     var lookupList = $scope.cubeMetaFrame.model.lookups;
 
-    $scope.addLookup = function () {
-        // Push newLookup which bound user input data.
-        lookupList.push(angular.copy($scope.newLookup));
+    $scope.openLookupModal = function () {
+        var modalInstance = $modal.open({
+            templateUrl: 'dataModelLookupTable.html',
+            controller: cubeModelLookupModalCtrl,
+            backdrop: 'static',
+            scope: $scope
+        });
 
-        $scope.resetParams();
+        modalInstance.result.then(function () {
+            if (!$scope.lookupState.editing) {
+                $scope.doneAddLookup();
+            } else {
+                $scope.doneEditLookup();
+            }
+
+        }, function () {
+            $scope.cancelLookup();
+        });
+    };
+
+    // Controller for cube model lookup modal.
+    var cubeModelLookupModalCtrl = function ($scope, $modalInstance) {
+        $scope.ok = function () {
+            $modalInstance.close();
+        };
+
+        $scope.cancel = function () {
+            $modalInstance.dismiss('cancel');
+        };
     };
 
     $scope.editLookup = function (lookup) {
@@ -85,7 +108,14 @@ KylinApp.controller('CubeModelCtrl', function ($scope) {
         // Make a copy of model will be editing.
         $scope.newLookup = angular.copy(lookup);
 
-        $scope.lookupState.showPanel = true;
+        $scope.openLookupModal();
+    };
+
+    $scope.doneAddLookup = function () {
+        // Push newLookup which bound user input data.
+        lookupList.push(angular.copy($scope.newLookup));
+
+        $scope.resetParams();
     };
 
     $scope.doneEditLookup = function () {
@@ -106,7 +136,6 @@ KylinApp.controller('CubeModelCtrl', function ($scope) {
     $scope.resetParams = function () {
         $scope.lookupState.editing = false;
         $scope.lookupState.editingIndex = -1;
-        $scope.lookupState.showPanel = false;
 
         $scope.newLookup = Lookup.init();
     };
