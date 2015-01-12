@@ -143,6 +143,7 @@ public class DataType {
             }
         }
 
+
         // FIXME 256 for unknown string precision
         if ((name.equals("char") || name.equals("varchar")) && precision == -1) {
             precision = 256; // to save memory at frontend, e.g. tableau will

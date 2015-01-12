@@ -1,12 +1,23 @@
 package com.kylinolap.storage.hbase.coprocessor.endpoint;
 
+import java.io.IOException;
+import java.util.*;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.coprocessor.Batch;
+import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
+import org.apache.hadoop.hbase.ipc.ServerRpcController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 import com.kylinolap.invertedindex.IISegment;
 import com.kylinolap.invertedindex.index.TableRecord;
 import com.kylinolap.invertedindex.index.TableRecordInfo;
-import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.DataType;
 import com.kylinolap.metadata.model.FunctionDesc;
 import com.kylinolap.metadata.model.TblColRef;
@@ -22,17 +33,6 @@ import com.kylinolap.storage.tuple.ITuple;
 import com.kylinolap.storage.tuple.ITupleIterator;
 import com.kylinolap.storage.tuple.Tuple;
 import com.kylinolap.storage.tuple.TupleInfo;
-import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HTableInterface;
-import org.apache.hadoop.hbase.client.coprocessor.Batch;
-import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
-import org.apache.hadoop.hbase.ipc.ServerRpcController;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.*;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/2/14.
@@ -45,6 +45,7 @@ public class EndpointTupleIterator implements ITupleIterator {
     private final StorageContext context;
     private final List<FunctionDesc> measures;
 
+    private final String factTableName;
     private final List<TblColRef> columns;
     private final List<String> columnNames;
     private final TupleInfo tupleInfo;
@@ -61,10 +62,11 @@ public class EndpointTupleIterator implements ITupleIterator {
 
     int rowsInAllMetric = 0;
 
-    public EndpointTupleIterator(IISegment cubeSegment, ColumnDesc[] columnDescs, TupleFilter rootFilter, Collection<TblColRef> groupBy, List<FunctionDesc> measures, StorageContext context, HConnection conn) throws Throwable {
+    public EndpointTupleIterator(IISegment cubeSegment, TupleFilter rootFilter, Collection<TblColRef> groupBy, List<FunctionDesc> measures, StorageContext context, HConnection conn) throws Throwable {
 
         String tableName = cubeSegment.getStorageLocationIdentifier();
         table = conn.getTable(tableName);
+        factTableName = cubeSegment.getIIDesc().getFactTableName();
 
         if (rootFilter == null) {
             rootFilter = ConstantTupleFilter.TRUE;
@@ -77,22 +79,19 @@ public class EndpointTupleIterator implements ITupleIterator {
         if (measures == null) {
             measures = Lists.newArrayList();
         }
-        initMeaureParameters(measures, columnDescs);
+        initMeaureParameters(measures, cubeSegment.getColumns());
 
         this.seg = cubeSegment;
         this.context = context;
         this.measures = measures;
 
-        this.columns = Lists.newArrayList();
-        for (ColumnDesc columnDesc : columnDescs) {
-            columns.add(new TblColRef(columnDesc));
-        }
-        columnNames = getColumnNames(columns);
+        this.columns = cubeSegment.getColumns();
+        this.columnNames = getColumnNames(columns);
 
         this.tupleInfo = buildTupleInfo();
         this.tableRecordInfo = new TableRecordInfo(this.seg);
 
-        this.pushedDownRowType = CoprocessorRowType.fromTableRecordInfo(tableRecordInfo, columnDescs);
+        this.pushedDownRowType = CoprocessorRowType.fromTableRecordInfo(tableRecordInfo, this.columns);
         this.pushedDownFilter = CoprocessorFilter.fromFilter(this.seg, rootFilter);
         this.pushedDownProjector = CoprocessorProjector.makeForEndpoint(tableRecordInfo, groupBy);
         this.pushedDownAggregators = EndpointAggregators.fromFunctions(tableRecordInfo, measures);
@@ -113,19 +112,24 @@ public class EndpointTupleIterator implements ITupleIterator {
      * @param measures
      * @param columns
      */
-    private void initMeaureParameters(List<FunctionDesc> measures, ColumnDesc[] columns) {
+    private void initMeaureParameters(List<FunctionDesc> measures, List<TblColRef> columns) {
         for (FunctionDesc functionDesc : measures) {
             if (functionDesc.isCount()) {
                 functionDesc.setReturnType("bigint");
                 functionDesc.setReturnDataType(DataType.getInstance(functionDesc.getReturnType()));
             } else {
-                for (ColumnDesc columnDesc : columns) {
-                    if (functionDesc.getParameter().getValue().equalsIgnoreCase(columnDesc.getName())) {
-                        functionDesc.setReturnType(columnDesc.getTypeName());
+                boolean updated = false;
+                for (TblColRef column : columns) {
+                    if (column.isSameAs(factTableName, functionDesc.getParameter().getValue())) {
+                        functionDesc.setReturnType(column.getColumn().getType().toString());
                         functionDesc.setReturnDataType(DataType.getInstance(functionDesc.getReturnType()));
-                        functionDesc.getParameter().setColRefs(ImmutableList.of(new TblColRef(columnDesc)));
+                        functionDesc.getParameter().setColRefs(ImmutableList.of(column));
+                        updated = true;
                         break;
                     }
+                }
+                if (!updated) {
+                    throw new RuntimeException("Func " + functionDesc + " is not related to any column in fact table " + factTableName);
                 }
             }
         }
@@ -255,13 +259,8 @@ public class EndpointTupleIterator implements ITupleIterator {
             }
 
             IIRow currentRow = rows.get(index);
-            //ByteBuffer columnsBuffer = currentRow.getColumns().asReadOnlyByteBuffer();//avoid creating byte[], if possible
-            //this.tableRecord.setBytes(columnsBuffer.array(), columnsBuffer.position(), columnsBuffer.limit());
             byte[] columnsBytes = currentRow.getColumns().toByteArray();
             this.tableRecord.setBytes(columnsBytes, 0, columnsBytes.length);
-
-            //            ByteBuffer measuresBuffer = currentRow.getMeasures().asReadOnlyByteBuffer();
-            //            this.measureValues = pushedDownAggregators.deserializeMetricValues(measuresBuffer.array(), measuresBuffer.position());
             if (currentRow.hasMeasures()) {
                 byte[] measuresBytes = currentRow.getMeasures().toByteArray();
                 this.measureValues = pushedDownAggregators.deserializeMetricValues(measuresBytes, 0);

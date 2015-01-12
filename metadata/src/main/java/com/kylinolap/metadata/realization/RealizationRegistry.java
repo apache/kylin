@@ -59,7 +59,7 @@ public class RealizationRegistry {
         providers = Maps.newConcurrentMap();
         
         // use reflection to load providers
-        List<String> realizationProviders = Lists.newArrayList("com.kylinolap.cube.CubeManager");
+        List<String> realizationProviders = Lists.newArrayList("com.kylinolap.cube.CubeManager","com.kylinolap.invertedindex.IIManager");
         List<Throwable> es = Lists.newArrayList();
         for (String clsName : realizationProviders) {
             try {

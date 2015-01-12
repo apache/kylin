@@ -42,12 +42,9 @@ public class InvertedIndexStorageEngine implements IStorageEngine {
 
     private String hbaseUrl;
     private IISegment seg;
-    private ColumnDesc[] columnDescs;
 
     public InvertedIndexStorageEngine(IIInstance ii) {
         this.seg = ii.getFirstSegment();
-        IIDesc cubeDesc = this.seg.getIIDesc();
-        this.columnDescs = MetadataManager.getInstance(cubeDesc.getConfig()).getTableDesc(cubeDesc.getFactTableName()).getColumns();
         this.hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
     }
 
@@ -58,7 +55,7 @@ public class InvertedIndexStorageEngine implements IStorageEngine {
         //HConnection is cached, so need not be closed
         HConnection conn = HBaseConnection.get(context.getConnUrl());
         try {
-            return new EndpointTupleIterator(seg, columnDescs, filter, groups, new ArrayList(metrics), context, conn);
+            return new EndpointTupleIterator(seg, filter, groups, new ArrayList(metrics), context, conn);
         } catch (Throwable e) {
             e.printStackTrace();
             throw new IllegalStateException("Error when connecting to II htable " + tableName, e);
