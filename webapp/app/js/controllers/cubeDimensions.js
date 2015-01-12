@@ -422,8 +422,6 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal) {
                 dim.hierarchy = h2;
             }
         });
-
-        console.dir($scope.cubeMetaFrame.dimensions);
     };
 
     if ($scope.state.mode == 'edit') {
