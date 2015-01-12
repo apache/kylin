@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package com.kylinolap.storage.filter;
+package com.kylinolap.metadata.filter;
+
+import com.kylinolap.metadata.tuple.ITuple;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import com.kylinolap.storage.tuple.ITuple;
 
 /**
  * @author xjiang

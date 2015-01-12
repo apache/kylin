@@ -18,8 +18,10 @@ package com.kylinolap.storage.test;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import com.kylinolap.metadata.realization.SQLDigest;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -40,15 +42,15 @@ import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.IStorageEngine;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.StorageEngineFactory;
-import com.kylinolap.storage.filter.ColumnTupleFilter;
-import com.kylinolap.storage.filter.CompareTupleFilter;
-import com.kylinolap.storage.filter.ConstantTupleFilter;
-import com.kylinolap.storage.filter.LogicalTupleFilter;
-import com.kylinolap.storage.filter.TupleFilter;
-import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
+import com.kylinolap.metadata.filter.ColumnTupleFilter;
+import com.kylinolap.metadata.filter.CompareTupleFilter;
+import com.kylinolap.metadata.filter.ConstantTupleFilter;
+import com.kylinolap.metadata.filter.LogicalTupleFilter;
+import com.kylinolap.metadata.filter.TupleFilter;
+import com.kylinolap.metadata.filter.TupleFilter.FilterOperatorEnum;
 import com.kylinolap.storage.hbase.ScanOutOfLimitException;
-import com.kylinolap.storage.tuple.ITuple;
-import com.kylinolap.storage.tuple.ITupleIterator;
+import com.kylinolap.metadata.tuple.ITuple;
+import com.kylinolap.metadata.tuple.ITupleIterator;
 
 public class StorageTest extends HBaseMetadataTestCase {
 
@@ -146,7 +148,8 @@ public class StorageTest extends HBaseMetadataTestCase {
         int count = 0;
         ITupleIterator iterator = null;
         try {
-            iterator = storageEngine.search(groups, filter, groups, aggregations, context);
+            SQLDigest sqlDigest = new SQLDigest("default.test_kylin_fact", filter, null, Collections.<TblColRef> emptySet(), groups, Collections.<TblColRef> emptySet(), Collections.<TblColRef> emptySet(), aggregations);
+            iterator = storageEngine.search(context, sqlDigest);
             while (iterator.hasNext()) {
                 ITuple tuple = iterator.next();
                 System.out.println("Tuple = " + tuple);

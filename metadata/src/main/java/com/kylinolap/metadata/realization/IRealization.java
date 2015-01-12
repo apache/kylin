@@ -35,8 +35,6 @@ public interface IRealization {
 
     public List<MeasureDesc> getMeasures();
 
-    public List<TblColRef> getDimensions();
-
     public boolean isReady();
 
     public String getName();

@@ -21,6 +21,8 @@ import static org.junit.Assert.*;
 import java.util.Collection;
 import java.util.List;
 
+import com.kylinolap.metadata.filter.TupleFilter;
+import com.kylinolap.metadata.filter.TupleFilterSerializer;
 import org.junit.Test;
 
 import com.kylinolap.metadata.model.TblColRef;

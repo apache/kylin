@@ -417,7 +417,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         return Lists.newArrayList(getDescriptor().listAllColumns());
     }
 
-    @Override
     public List<TblColRef> getDimensions() {
         List<TblColRef> ret = Lists.newArrayList();
         for (DimensionDesc dim : getDescriptor().getDimensions()) {

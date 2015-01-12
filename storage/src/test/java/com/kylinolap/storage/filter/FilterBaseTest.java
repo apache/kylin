@@ -21,10 +21,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
+import com.kylinolap.metadata.filter.*;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
+import com.kylinolap.metadata.filter.TupleFilter.FilterOperatorEnum;
 import com.kylinolap.storage.tuple.Tuple;
 import com.kylinolap.storage.tuple.TupleInfo;
 
