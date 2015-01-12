@@ -38,7 +38,7 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.constant.JobStatusEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job2.impl.threadpool.DefaultScheduler;
+import com.kylinolap.job.impl.threadpool.DefaultScheduler;
 import com.kylinolap.rest.constant.Constant;
 import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.request.JobListRequest;
