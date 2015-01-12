@@ -28,6 +28,7 @@ import java.util.UUID;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.ql.stats.StatsUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,9 +115,9 @@ public class HiveSourceTableLoader {
         MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
         for (String tableName : tables) {
             Table table = null;
+            HiveClient hiveClient = new HiveClient();
             List<FieldSchema> fields = null;
             try {
-                HiveClient hiveClient = new HiveClient();
                 table = hiveClient.getHiveTable(database, tableName);
                 fields = hiveClient.getHiveTableFields(database, tableName);
             } catch (Exception e) {
@@ -124,6 +125,8 @@ public class HiveSourceTableLoader {
                 throw new IOException(e);
             } 
 
+            long tableSize = hiveClient.getFileSizeForTable(table);
+            long tableFileNum = hiveClient.getFileNumberForTable(table);
             TableDesc tableDesc = metaMgr.getTableDesc(database + "." + tableName);
             if (tableDesc == null) {
                 tableDesc = new TableDesc();
@@ -161,6 +164,8 @@ public class HiveSourceTableLoader {
             map.put(MetadataConstances.TABLE_EXD_OWNER, table.getOwner());
             map.put(MetadataConstances.TABLE_EXD_LAT, String.valueOf(table.getLastAccessTime()));
             map.put(MetadataConstances.TABLE_EXD_PC, partitionColumnString.toString());
+            map.put(MetadataConstances.TABLE_EXD_TFS, String.valueOf(tableSize));
+            map.put(MetadataConstances.TABLE_EXD_TNF, String.valueOf(tableFileNum));
             map.put(MetadataConstances.TABLE_EXD_PARTITIONED, Boolean.valueOf(partitionCols != null && partitionCols.size()>0).toString());
 
             metaMgr.saveSourceTable(tableDesc);
