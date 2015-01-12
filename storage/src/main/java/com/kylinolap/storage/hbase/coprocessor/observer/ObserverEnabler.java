@@ -39,7 +39,7 @@ import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowValueDecoder;
 import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.StorageContext;
-import com.kylinolap.storage.filter.TupleFilter;
+import com.kylinolap.metadata.filter.TupleFilter;
 import com.kylinolap.storage.hbase.RegionScannerAdapter;
 import com.kylinolap.storage.hbase.ResultScannerAdapter;
 

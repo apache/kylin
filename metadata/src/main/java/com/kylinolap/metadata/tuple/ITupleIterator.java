@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kylinolap.storage.tuple;
+package com.kylinolap.metadata.tuple;
 
 /**
  * @author xjiang
@@ -26,7 +26,7 @@ public interface ITupleIterator {
         }
 
         @Override
-        public Tuple next() {
+        public ITuple next() {
             return null;
         }
 

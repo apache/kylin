@@ -28,7 +28,7 @@ import com.kylinolap.storage.IStorageEngine;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.hbase.coprocessor.endpoint.EndpointTupleIterator;
 import com.kylinolap.metadata.realization.SQLDigest;
-import com.kylinolap.storage.tuple.ITupleIterator;
+import com.kylinolap.metadata.tuple.ITupleIterator;
 
 /**
  * @author yangli9

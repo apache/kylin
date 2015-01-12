@@ -409,8 +409,4 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return getDescriptor().getMeasures();
     }
 
-    @Override
-    public List<TblColRef> getDimensions() {
-        throw new UnsupportedOperationException();
-    }
 }

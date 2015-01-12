@@ -23,12 +23,12 @@ import com.kylinolap.invertedindex.model.IIKeyValueCodec;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.*;
 import com.kylinolap.storage.StorageContext;
-import com.kylinolap.storage.filter.ColumnTupleFilter;
-import com.kylinolap.storage.filter.CompareTupleFilter;
-import com.kylinolap.storage.filter.ConstantTupleFilter;
-import com.kylinolap.storage.filter.TupleFilter;
+import com.kylinolap.metadata.filter.ColumnTupleFilter;
+import com.kylinolap.metadata.filter.CompareTupleFilter;
+import com.kylinolap.metadata.filter.ConstantTupleFilter;
+import com.kylinolap.metadata.filter.TupleFilter;
 import com.kylinolap.storage.hbase.coprocessor.endpoint.EndpointTupleIterator;
-import com.kylinolap.storage.tuple.ITuple;
+import com.kylinolap.metadata.tuple.ITuple;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 11/14/14.

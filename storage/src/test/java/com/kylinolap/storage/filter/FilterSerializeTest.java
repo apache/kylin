@@ -19,12 +19,15 @@ package com.kylinolap.storage.filter;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.kylinolap.metadata.filter.LogicalTupleFilter;
+import com.kylinolap.metadata.filter.TupleFilter;
+import com.kylinolap.metadata.filter.TupleFilterSerializer;
 import org.junit.Test;
 
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
+import com.kylinolap.metadata.filter.TupleFilter.FilterOperatorEnum;
 
 /**
  * @author xjiang

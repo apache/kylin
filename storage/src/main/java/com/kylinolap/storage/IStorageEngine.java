@@ -16,7 +16,7 @@
 package com.kylinolap.storage;
 
 import com.kylinolap.metadata.realization.SQLDigest;
-import com.kylinolap.storage.tuple.ITupleIterator;
+import com.kylinolap.metadata.tuple.ITupleIterator;
 
 /**
  * 

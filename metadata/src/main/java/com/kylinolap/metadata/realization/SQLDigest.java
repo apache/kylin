@@ -2,10 +2,10 @@ package com.kylinolap.metadata.realization;
 
 import java.util.Collection;
 
+import com.kylinolap.metadata.filter.TupleFilter;
 import com.kylinolap.metadata.model.FunctionDesc;
 import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.storage.filter.TupleFilter;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 1/8/15.
