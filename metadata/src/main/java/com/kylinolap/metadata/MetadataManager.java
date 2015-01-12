@@ -375,6 +375,8 @@ public class MetadataManager {
         os.flush();
         InputStream is = new ByteArrayInputStream(os.toByteArray());
         getStore().putResource(path, is, System.currentTimeMillis());
+        os.close();
+        is.close();
 
         srcTableExdMap.putLocal(tableId, tableExdProperties);
     }

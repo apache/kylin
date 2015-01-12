@@ -43,7 +43,7 @@ public class HiveTableReaderTest extends HBaseMetadataTestCase {
             rowNumber++;
         }
 
-        Assert.assertEquals(10000, rowNumber);
         reader.close();
+        Assert.assertEquals(10000, rowNumber);
     }
 }
