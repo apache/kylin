@@ -26,6 +26,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IIManager;
+import com.kylinolap.invertedindex.IISegment;
 import com.kylinolap.metadata.model.SegmentStatusEnum;
 
 import org.apache.commons.io.IOUtils;
@@ -266,8 +269,20 @@ public class DeployCoprocessorCLI {
         for (CubeInstance cube : cubeMgr.listAllCubes()) {
             for (CubeSegment seg : cube.getSegments(SegmentStatusEnum.READY)) {
                 String tableName = seg.getStorageLocationIdentifier();
-                if (StringUtils.isBlank(tableName) == false)
+                if (StringUtils.isBlank(tableName) == false) {
                     result.add(tableName);
+                    System.out.println("added new table: " + tableName);
+                }
+            }
+        }
+
+        for (IIInstance ii : IIManager.getInstance(config).listAllIIs()) {
+            for (IISegment seg : ii.getSegment(SegmentStatusEnum.READY)) {
+                String tableName = seg.getStorageLocationIdentifier();
+                if (StringUtils.isBlank(tableName) == false) {
+                    result.add(tableName);
+                    System.out.println("added new table: " + tableName);
+                }
             }
         }
 

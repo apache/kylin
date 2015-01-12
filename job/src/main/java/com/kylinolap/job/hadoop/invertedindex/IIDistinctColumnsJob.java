@@ -132,8 +132,7 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
 
         log.info("setting hcat input format, db name {} , table name {}", dbTableNames[0],dbTableNames[1]);
 
-        //HCatInputFormat.setInput(job, dbTableNames[0], dbTableNames[1]);
-        HCatInputFormat.setInput(job,"default", "test_kylin_fact");
+        HCatInputFormat.setInput(job, dbTableNames[0], dbTableNames[1]);
 
         job.setInputFormatClass(HCatInputFormat.class);
 
