@@ -15,6 +15,8 @@
  */
 package com.kylinolap.metadata;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
@@ -172,19 +174,17 @@ public class MetadataManager {
         return result;
     }
 
-    public void createSourceTable(TableDesc srcTable) throws IOException {
+    public void saveSourceTable(TableDesc srcTable) throws IOException {
         if (srcTable.getUuid() == null || srcTable.getIdentity() == null) {
             throw new IllegalArgumentException();
         }
-        String tableIdentity = srcTable.getIdentity();
-        if (srcTableMap.containsKey(tableIdentity)) {
-            throw new IllegalArgumentException("SourceTable '" + srcTable.getIdentity() + "' already exists");
-        }
 
+        srcTable.init();
+        
         String path = srcTable.getResourcePath();
         getStore().putResource(path, srcTable, TABLE_SERIALIZER);
 
-        srcTableMap.put(tableIdentity, srcTable);
+        srcTableMap.put(srcTable.getIdentity(), srcTable);
     }
 
     private void init(KylinConfig config) throws IOException {
@@ -357,6 +357,28 @@ public class MetadataManager {
         String path = dataModelDesc.getResourcePath();
         getStore().deleteResource(path);
         dataModelDescMap.remove(dataModelDesc.getName());
+    }
+    
+    public void saveTableExd(String tableId, Map<String, String> tableExdProperties) throws IOException {
+        if (tableId == null) {
+            throw new IllegalArgumentException("tableId couldn't be null");
+        }
+        TableDesc srcTable = srcTableMap.get(tableId);
+        if(srcTable == null) {
+            throw new IllegalArgumentException("Couldn't find Source Table with identifier: " + tableId);
+        }
+
+        String path = TableDesc.concatExdResourcePath(tableId);
+        
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        JsonUtil.writeValueIndent(os, tableExdProperties);
+        os.flush();
+        InputStream is = new ByteArrayInputStream(os.toByteArray());
+        getStore().putResource(path, is, System.currentTimeMillis());
+        os.close();
+        is.close();
+
+        srcTableExdMap.putLocal(tableId, tableExdProperties);
     }
 
     private void checkNoDupName(String name, boolean containsKey, String entityType, String path) {

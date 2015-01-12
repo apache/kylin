@@ -28,6 +28,7 @@ import java.util.UUID;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.ql.stats.StatsUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +39,7 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceTool;
 import com.kylinolap.common.util.HadoopUtil;
 import com.kylinolap.common.util.JsonUtil;
+import com.kylinolap.metadata.MetadataConstances;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
@@ -70,11 +72,6 @@ public class HiveSourceTableLoader {
             set.add(dbtableNames[1]);
         }
 
-        // metadata tmp dir
-        File metaTmpDir = File.createTempFile("meta_tmp", null);
-        metaTmpDir.delete();
-        metaTmpDir.mkdirs();
-
         for (String database : db2tables.keySet()) {
             for (String table : db2tables.get(database)) {
                 TableDesc tableDesc = MetadataManager.getInstance(config).getTableDesc(table);
@@ -92,30 +89,35 @@ public class HiveSourceTableLoader {
         // extract from hive
         Set<String> loadedTables = Sets.newHashSet();
         for (String database : db2tables.keySet()) {
-            List<String> loaded = extractHiveTables(database, db2tables.get(database), metaTmpDir, config);
+            List<String> loaded = extractHiveTables(database, db2tables.get(database), config);
             loadedTables.addAll(loaded);
         }
-
-        // save loaded tables
-        ResourceTool.copy(KylinConfig.createInstanceFromUri(metaTmpDir.getAbsolutePath()), config);
 
         return loadedTables;
     }
 
-    private static List<String> extractHiveTables(String database, Set<String> tables, File metaTmpDir, KylinConfig config) throws IOException {
-        File tableDescDir = new File(metaTmpDir, TABLE_FOLDER_NAME);
-        File tableExdDir = new File(metaTmpDir, TABLE_EXD_FOLDER_NAME);
-        mkdirs(tableDescDir);
-        mkdirs(tableExdDir);
+    private static List<String> extractHiveTables(String database, Set<String> tables, KylinConfig config) throws IOException {
 
-        List<TableDesc> tableDescList = new ArrayList<TableDesc>();
-        List<Map<String, String>> tableAttrsList = new ArrayList<Map<String, String>>();
+        // metadata tmp dir
+//        File metaTmpDir = File.createTempFile("meta_tmp", null);
+//        metaTmpDir.delete();
+//        metaTmpDir.mkdirs();
         
+//        File tableDescDir = new File(metaTmpDir, TABLE_FOLDER_NAME);
+//        File tableExdDir = new File(metaTmpDir, TABLE_EXD_FOLDER_NAME);
+//        mkdirs(tableDescDir);
+//        mkdirs(tableExdDir);
+
+//        List<TableDesc> tableDescList = new ArrayList<TableDesc>();
+//        List<Map<String, String>> tableAttrsList = new ArrayList<Map<String, String>>();
+
+        List<String> loadedTables = Lists.newArrayList();
+        MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
         for (String tableName : tables) {
             Table table = null;
+            HiveClient hiveClient = new HiveClient();
             List<FieldSchema> fields = null;
             try {
-                HiveClient hiveClient = new HiveClient();
                 table = hiveClient.getHiveTable(database, tableName);
                 fields = hiveClient.getHiveTableFields(database, tableName);
             } catch (Exception e) {
@@ -123,10 +125,17 @@ public class HiveSourceTableLoader {
                 throw new IOException(e);
             } 
 
-            TableDesc tableDesc = new TableDesc();
-            tableDesc.setDatabase(database.toUpperCase());
-            tableDesc.setName(tableName.toUpperCase());
-            tableDesc.setUuid(UUID.randomUUID().toString());
+            long tableSize = hiveClient.getFileSizeForTable(table);
+            long tableFileNum = hiveClient.getFileNumberForTable(table);
+            TableDesc tableDesc = metaMgr.getTableDesc(database + "." + tableName);
+            if (tableDesc == null) {
+                tableDesc = new TableDesc();
+                tableDesc.setDatabase(database.toUpperCase());
+                tableDesc.setName(tableName.toUpperCase());
+                tableDesc.setUuid(UUID.randomUUID().toString());
+                tableDesc.setLastModified(0);
+            }
+
             int columnNumber = fields.size();
             List<ColumnDesc> columns = new ArrayList<ColumnDesc>(columnNumber);
             for (int i = 0; i < columnNumber; i++) {
@@ -146,20 +155,26 @@ public class HiveSourceTableLoader {
                     partitionColumnString.append(", ");
                 partitionColumnString.append(partitionCols.get(i).getName().toUpperCase());
             }
-            tableDescList.add(tableDesc);
+//            tableDescList.add(tableDesc);
             Map<String, String> map =  new HashMap<String, String>(); //table.getParameters();
-            map.put("tableName", table.getTableName());
-            map.put("location", table.getSd().getLocation());
-            map.put("inputformat", table.getSd().getInputFormat());
-            map.put("outputformat", table.getSd().getOutputFormat());
-            map.put("owner", table.getOwner());
-            map.put("lastAccessTime", String.valueOf(table.getLastAccessTime()));
-            map.put("partitionColumns", partitionColumnString.toString());
-            tableAttrsList.add(map);
+            map.put(MetadataConstances.TABLE_EXD_TABLENAME, table.getTableName());
+            map.put(MetadataConstances.TABLE_EXD_LOCATION, table.getSd().getLocation());
+            map.put(MetadataConstances.TABLE_EXD_IF, table.getSd().getInputFormat());
+            map.put(MetadataConstances.TABLE_EXD_OF, table.getSd().getOutputFormat());
+            map.put(MetadataConstances.TABLE_EXD_OWNER, table.getOwner());
+            map.put(MetadataConstances.TABLE_EXD_LAT, String.valueOf(table.getLastAccessTime()));
+            map.put(MetadataConstances.TABLE_EXD_PC, partitionColumnString.toString());
+            map.put(MetadataConstances.TABLE_EXD_TFS, String.valueOf(tableSize));
+            map.put(MetadataConstances.TABLE_EXD_TNF, String.valueOf(tableFileNum));
+            map.put(MetadataConstances.TABLE_EXD_PARTITIONED, Boolean.valueOf(partitionCols != null && partitionCols.size()>0).toString());
+
+            metaMgr.saveSourceTable(tableDesc);
+            metaMgr.saveTableExd(tableDesc.getIdentity(), map);
+            loadedTables.add(tableDesc.getIdentity());
         }
 
-        List<String> loadedTables = Lists.newArrayList();
 
+        /*
         for (TableDesc table : tableDescList) {
             File file = new File(tableDescDir, table.getIdentity().toUpperCase() + "." + OUTPUT_SURFIX);
             JsonUtil.writeValueIndent(new FileOutputStream(file), table);
@@ -171,17 +186,21 @@ public class HiveSourceTableLoader {
             JsonUtil.writeValueIndent(new FileOutputStream(file), tableAttrs);
         }
 
+        // save loaded tables
+        ResourceTool.copy(KylinConfig.createInstanceFromUri(metaTmpDir.getAbsolutePath()), config);
+        
+        */
         return loadedTables;
     }
 
 
-    private static void mkdirs(File metaTmpDir) {
-        if (!metaTmpDir.exists()) {
-            if (!metaTmpDir.mkdirs()) {
-                throw new IllegalArgumentException("Failed to create Output dir : " + metaTmpDir.getAbsolutePath());
-            }
-        }
-    }
+//    private static void mkdirs(File metaTmpDir) {
+//        if (!metaTmpDir.exists()) {
+//            if (!metaTmpDir.mkdirs()) {
+//                throw new IllegalArgumentException("Failed to create Output dir : " + metaTmpDir.getAbsolutePath());
+//            }
+//        }
+//    }
 
     /**
      */
