@@ -16,11 +16,15 @@
 
 package com.kylinolap.job.hadoop.cube;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.job.JobInstance;
+import com.kylinolap.job.engine.JobEngineConfig;
+import com.kylinolap.job.execution.ExecutableState;
+import com.kylinolap.job.hadoop.AbstractHadoopJob;
+import com.kylinolap.job.service.ExecutableManager;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -37,15 +41,10 @@ import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.job.JobDAO;
-import com.kylinolap.job.JobInstance;
-import com.kylinolap.job.constant.JobStatusEnum;
-import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job.hadoop.AbstractHadoopJob;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author ysong1
@@ -58,6 +57,8 @@ public class StorageCleanupJob extends AbstractHadoopJob {
     protected static final Logger log = LoggerFactory.getLogger(StorageCleanupJob.class);
 
     boolean delete = false;
+
+    protected static ExecutableManager executableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
 
     /*
      * (non-Javadoc)
@@ -88,14 +89,6 @@ public class StorageCleanupJob extends AbstractHadoopJob {
             e.printStackTrace(System.err);
             log.error(e.getLocalizedMessage(), e);
             return 2;
-        }
-    }
-
-    private boolean isJobInUse(JobInstance job) {
-        if (job.getStatus().equals(JobStatusEnum.NEW) || job.getStatus().equals(JobStatusEnum.PENDING) || job.getStatus().equals(JobStatusEnum.RUNNING) || job.getStatus().equals(JobStatusEnum.ERROR)) {
-            return true;
-        } else {
-            return false;
         }
     }
 
@@ -166,13 +159,14 @@ public class StorageCleanupJob extends AbstractHadoopJob {
             }
         }
 
-        List<JobInstance> allJobs = JobDAO.getInstance(KylinConfig.getInstanceFromEnv()).listAllJobs();
-        for (JobInstance jobInstance : allJobs) {
+        List<String> allJobs = executableManager.getAllJobIds();
+        for (String jobId : allJobs) {
             // only remove FINISHED and DISCARDED job intermediate files
-            if (isJobInUse(jobInstance) == true) {
-                String path = JobInstance.getJobWorkingDir(jobInstance, engineConfig);
+            final ExecutableState state = executableManager.getOutput(jobId).getState();
+            if (!state.isFinalState()) {
+                String path = JobInstance.getJobWorkingDir(jobId, engineConfig.getHdfsWorkingDirectory());
                 allHdfsPathsNeedToBeDeleted.remove(path);
-                log.info("Remove " + path + " from deletion list, as the path belongs to job " + jobInstance.getUuid() + " with status " + jobInstance.getStatus());
+                log.info("Remove " + path + " from deletion list, as the path belongs to job " + jobId + " with status " + state);
             }
         }
 

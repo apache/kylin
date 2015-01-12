@@ -14,7 +14,7 @@ import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
 import com.kylinolap.job.common.HadoopShellExecutable;
 import com.kylinolap.job.common.MapReduceExecutable;
 import com.kylinolap.job.common.ShellExecutable;
-import com.kylinolap.job.constants.ExecutableConstants;
+import com.kylinolap.job.constant.ExecutableConstants;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;

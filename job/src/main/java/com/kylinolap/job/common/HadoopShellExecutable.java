@@ -1,16 +1,14 @@
 package com.kylinolap.job.common;
 
 import com.google.common.base.Preconditions;
-import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.job.dao.JobPO;
 import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.execution.ExecutableContext;
 import com.kylinolap.job.execution.ExecuteResult;
+import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.job.impl.threadpool.AbstractExecutable;
-import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.util.ToolRunner;
 
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 
 /**

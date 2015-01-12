@@ -5,7 +5,7 @@ import com.google.common.collect.Maps;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.job.tools.HadoopStatusChecker;
-import com.kylinolap.job.constants.ExecutableConstants;
+import com.kylinolap.job.constant.ExecutableConstants;
 import com.kylinolap.job.dao.JobPO;
 import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.execution.ExecutableContext;
@@ -96,6 +96,7 @@ public class MapReduceExecutable extends AbstractExecutable {
                 }
                 Thread.sleep(context.getConfig().getYarnStatusCheckIntervalSeconds() * 1000);
             }
+            //TODO kill discarded mr job using "hadoop job -kill " + mrJobId
 
             return new ExecuteResult(ExecuteResult.State.DISCARDED, output.toString());
 
