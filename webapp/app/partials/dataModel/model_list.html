@@ -1,0 +1,55 @@
+<div class="dataTables_wrapper form-inline no-footer">
+    <div class="row">
+        <span><b>Data Models</b></span>
+        <span class="input-icon input-icon-right nav-search" style="margin-left: 22px;" ng-if="dataModelList.length > 0">
+            <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="modelState.filter"/>
+            <i class="ace-icon fa fa-search nav-search-icon"></i>
+        </span>
+        <button type="button" class="btn btn-primary btn-sm pull-right" ng-disabled="modelState.showPanel"
+                ng-click="modelState.showPanel=true;"><i class="fa fa-plus"></i> Add Model</button>
+    </div>
+    <table class="table table-striped table-hover" ng-if="dataModelList.length > 0">
+        <thead>
+        <tr>
+            <th>Model Name</th>
+            <th>Fact Table</th>
+            <th>Lookup Tables</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="dm in dataModelList | filter:modelState.filter track by $index">
+            <td>
+                <span>{{dm.name}}</span>
+            </td>
+            <td>
+                <span>{{dm.fact_table}}</span>
+            </td>
+            <td>
+                <ul class="list-unstyled">
+                    <li ng-repeat="lookup in dm.lookups">
+                        <label class="label-info">{{lookup.join.type}}</label> {{lookup.table}}
+                        <ul>
+                            <li ng-repeat="pk in lookup.join.primary_key">
+                                <code>{{pk}} = {{lookup.join.foreign_key[$index]}}</code>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </td>
+            <td>
+                <button type="button" class="btn btn-xs btn-info" ng-disabled="modelState.showPanel"
+                        ng-click="editDataModel(dm)" tooltip="Edit Model"><i class="fa fa-pencil"></i>
+                </button>
+                <button type="button" class="btn btn-xs btn-danger" ng-disabled="modelState.showPanel"
+                        ng-click="removeDataModel(dm)" tooltip="Remove Model"><i class="fa fa-trash-o"></i>
+                </button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div ng-if="modelState.showPanel" class="data-model-animation">
+    <div ng-include="'partials/dataModel/model.html'" ng-controller="DataModelCtrl"></div>
+</div>
