@@ -22,7 +22,8 @@
     "angularjs-nvd3-directives": "0.0.5-beta",
     "angular-sweetalert": "~1.0.3",
     "bootstrap-sweetalert": "~0.4.3",
-    "angular-underscore": "~0.5.0"
+    "angular-underscore": "~0.5.0",
+    "angular-ui-sortable": "0.13.1"
   },
   "devDependencies": {
     "less.js": "~1.4.0",
