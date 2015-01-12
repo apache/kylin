@@ -122,7 +122,8 @@ public class TableController extends BasicController {
         String[] arr = cubeMgmtService.reloadHiveTable(tables);
         cubeMgmtService.syncTableToProject(tables, project);
         Map<String, String[]> result = new HashMap<String, String[]>();
-        result.put("result", arr);
+        result.put("result.loaded", arr);
+        result.put("result.unloaded", new String[]{});
         return result;
     }
 
