@@ -291,6 +291,9 @@ public class ExecutableManager {
     }
 
     private AbstractExecutable parseTo(JobPO jobPO) {
+        if (jobPO == null) {
+            return null;
+        }
         String type = jobPO.getType();
         try {
             Class<? extends AbstractExecutable> clazz = (Class<? extends AbstractExecutable>) Class.forName(type);
