@@ -41,7 +41,11 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
 
     @Override
     protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
-        if (result.succeed()) {
+        if (result.state() == ExecuteResult.State.DISCARDED) {
+            jobService.updateJobOutput(getId(), ExecutableState.DISCARDED, null, null);
+        } else if (isDiscarded()) {
+            //do nothing
+        } else if (result.succeed()) {
             List<? extends Executable> jobs = getTasks();
             boolean allSucceed = true;
             boolean hasError = false;
@@ -60,12 +64,6 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
                 jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, null);
             } else {
                 jobService.updateJobOutput(getId(), ExecutableState.READY, null, null);
-            }
-        } else if (result.state() == ExecuteResult.State.STOPPED) {
-            if (getStatus() == ExecutableState.STOPPED) {
-                //
-            } else {
-                jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, null);
             }
         } else {
             jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, null);

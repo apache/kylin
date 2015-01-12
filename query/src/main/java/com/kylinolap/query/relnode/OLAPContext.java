@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.kylinolap.metadata.realization.SQLDigest;
 import org.eigenbase.reltype.RelDataType;
 
 import com.google.common.collect.Maps;
@@ -103,14 +104,14 @@ public class OLAPContext {
     // cube metadata
     public IRealization realization;
 
-    public Map<IRealization, Boolean> isWeekMatch = Maps.newHashMap();
 
     public Collection<TblColRef> allColumns = new HashSet<TblColRef>();
-    public Collection<TblColRef> metricsColumns = new HashSet<TblColRef>();
     public Collection<TblColRef> groupByColumns = new ArrayList<TblColRef>();
+    public Collection<TblColRef> metricsColumns = new HashSet<TblColRef>();
     public List<FunctionDesc> aggregations = new ArrayList<FunctionDesc>();
-    public List<JoinDesc> joins = new LinkedList<JoinDesc>();
+    public Collection<TblColRef> filterColumns = new HashSet<TblColRef>();
     public TupleFilter filter;
+    public List<JoinDesc> joins = new LinkedList<JoinDesc>();
 
     // rewrite info
     public Map<String, RelDataType> rewriteFields = new HashMap<String, RelDataType>();
@@ -122,12 +123,11 @@ public class OLAPContext {
         return (joins.size() == 0) && (groupByColumns.size() == 0) && (aggregations.size() == 0);
     }
 
-    public  Collection<TblColRef> getDimensionColumns() {
-        Collection<TblColRef> dimensionColumns = new HashSet<TblColRef>();
-        dimensionColumns.addAll(allColumns);
-        for (TblColRef measureColumn : metricsColumns) {
-            dimensionColumns.remove(measureColumn);
-        }
-        return dimensionColumns;
+    private SQLDigest sqlDigest;
+
+    public SQLDigest getSQLDigest() {
+        if (sqlDigest == null)
+            sqlDigest = new SQLDigest(firstTableScan.getTableName(), joins, allColumns, groupByColumns, filterColumns, metricsColumns, aggregations);
+        return sqlDigest;
     }
 }

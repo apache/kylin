@@ -1,12 +1,11 @@
 package com.kylinolap.common.util;
 
-import org.junit.Ignore;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Set;
-import java.util.TreeSet;
+
+import org.junit.Ignore;
+import org.junit.Test;
+import org.slf4j.*;
 
 /**
  * Created by honma on 10/17/14.
@@ -17,6 +16,7 @@ import java.util.TreeSet;
 @Ignore("convenient trial tool for dev")
 @SuppressWarnings("unused")
 public class BasicTest {
+    protected static final org.slf4j.Logger log = LoggerFactory.getLogger(BasicTest.class);
     private void log(ByteBuffer a) {
         Integer x = 4;
         foo(x);
@@ -33,14 +33,15 @@ public class BasicTest {
 
     @Test
     @Ignore("convenient trial tool for dev")
-    public void test1() throws IOException {
-        // only for trial
+    public void test1() throws IOException, InterruptedException {
+        log.info("xxx {} yyy {}",100,290);
+
     }
 
     @Test
     @Ignore("fix it later")
     public void test2() throws IOException {
-        // fix it later
+
     }
 
 }

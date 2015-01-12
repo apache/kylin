@@ -1,6 +1,7 @@
 package com.kylinolap.job2.dao;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
@@ -110,6 +111,23 @@ public class JobDao {
         }
     }
 
+    public List<String> getJobIds() throws PersistentException {
+        try {
+            ArrayList<String> resources = store.listResources(JOB_PATH_ROOT);
+            if (resources == null) {
+                return Collections.emptyList();
+            }
+            ArrayList<String> result = Lists.newArrayListWithExpectedSize(resources.size());
+            for (String path : resources) {
+                result.add(path.substring(path.lastIndexOf("/") + 1));
+            }
+            return result;
+        } catch (IOException e) {
+            logger.error("error get all Jobs:", e);
+            throw new PersistentException(e);
+        }
+    }
+
     public JobPO getJob(String uuid) throws PersistentException {
         try {
             return readJobResource(pathOfJob(uuid));
@@ -168,7 +186,6 @@ public class JobDao {
 
     public void updateJobOutput(JobOutputPO output) throws PersistentException {
         try {
-            Preconditions.checkArgument(output.getLastModified() > 0, "timestamp should be greater than 0 inf");
             final long ts = writeJobOutputResource(pathOfJobOutput(output.getUuid()), output);
             output.setLastModified(ts);
         } catch (IOException e) {

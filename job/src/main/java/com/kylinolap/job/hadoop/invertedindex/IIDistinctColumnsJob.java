@@ -26,8 +26,6 @@ import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
@@ -42,6 +40,7 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
+
 
 /**
  * @author yangli9
@@ -71,16 +70,16 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
 
             // ----------------------------------------------------------------------------
 
-            System.out.println("Starting: " + job.getJobName());
-
-            setupMapInput(input, inputFormat, inputDelim);
-            setupReduceOutput(output);
+            log.info("Starting: " + job.getJobName());
 
             // pass table and columns
             MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
             TableDesc table = metaMgr.getTableDesc(tableName);
             job.getConfiguration().set(BatchConstants.TABLE_NAME, tableName);
             job.getConfiguration().set(BatchConstants.TABLE_COLUMNS, getColumns(table));
+
+            setupMapInput(input, inputFormat, inputDelim);
+            setupReduceOutput(output);
 
             return waitForCompletion(job);
 
@@ -130,9 +129,12 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
         */
         String tableName = job.getConfiguration().get(BatchConstants.TABLE_NAME);
         String[] dbTableNames = HadoopUtil.parseHiveTableName(tableName);
-        HCatInputFormat.setInput(job, dbTableNames[0],
-                dbTableNames[1]);
-        
+
+        log.info("setting hcat input format, db name {} , table name {}", dbTableNames[0],dbTableNames[1]);
+
+        //HCatInputFormat.setInput(job, dbTableNames[0], dbTableNames[1]);
+        HCatInputFormat.setInput(job,"default", "test_kylin_fact");
+
         job.setInputFormatClass(HCatInputFormat.class);
 
         job.setMapperClass(IIDistinctColumnsMapper.class);

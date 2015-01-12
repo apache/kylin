@@ -23,10 +23,6 @@ import com.google.common.io.Files;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeDescManager;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.job.JobInstance;
-import com.kylinolap.job.JobManager;
-import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job2.cube.CubingJob;
 import com.kylinolap.job2.execution.ExecutableState;
 import com.kylinolap.job2.impl.threadpool.AbstractExecutable;
@@ -49,14 +45,15 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.*;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -168,15 +165,6 @@ public abstract class BasicService {
         return ProjectManager.getInstance(getConfig());
     }
 
-    public JobManager getJobManager() throws JobException, UnknownHostException {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-
-        JobEngineConfig engineCntx = new JobEngineConfig(config);
-
-        InetAddress ia = InetAddress.getLocalHost();
-        return new JobManager(ia.getCanonicalHostName(), engineCntx);
-    }
-
     public final ExecutableManager getExecutableManager() {
         return ExecutableManager.getInstance(getConfig());
     }
@@ -201,7 +189,6 @@ public abstract class BasicService {
                 if (null == projectName || null == getProjectManager().getProject(projectName)) {
                     return true;
                 } else {
-                    List<JobInstance> filtedJobs = new ArrayList<JobInstance>();
                     ProjectInstance project = getProjectManager().getProject(projectName);
                     return project.containsRealization(RealizationType.CUBE, executable.getCubeName());
                 }
