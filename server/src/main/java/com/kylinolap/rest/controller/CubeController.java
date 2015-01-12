@@ -23,13 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.job.JoinedFlatTable;
-import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
-import com.kylinolap.metadata.model.SegmentStatusEnum;
-import com.kylinolap.metadata.project.ProjectInstance;
-import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
-
 import org.apache.commons.lang.StringUtils;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
@@ -56,8 +49,12 @@ import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.JobInstance;
+import com.kylinolap.job.JoinedFlatTable;
 import com.kylinolap.job.exception.InvalidJobInstanceException;
 import com.kylinolap.job.exception.JobException;
+import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
+import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.rest.exception.BadRequestException;
 import com.kylinolap.rest.exception.ForbiddenException;
 import com.kylinolap.rest.exception.InternalErrorException;
@@ -68,6 +65,7 @@ import com.kylinolap.rest.response.GeneralResponse;
 import com.kylinolap.rest.response.HBaseResponse;
 import com.kylinolap.rest.service.CubeService;
 import com.kylinolap.rest.service.JobService;
+import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
 
 /**
  * CubeController is defined as Restful API entrance for UI.

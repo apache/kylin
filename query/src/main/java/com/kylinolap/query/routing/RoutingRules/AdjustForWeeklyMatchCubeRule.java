@@ -5,6 +5,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.kylinolap.cube.CubeCapabilityChecker;
+import com.kylinolap.cube.CubeDimensionDeriver;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.metadata.model.FunctionDesc;
@@ -24,16 +26,19 @@ public class AdjustForWeeklyMatchCubeRule extends RoutingRule {
 
     @Override
     public void apply(List<IRealization> realizations, OLAPContext olapContext) {
-        if(realizations.size() > 0) {
-            if (olapContext.isWeekMatch.containsKey(realizations.get(0))) {
-                CubeInstance cube = (CubeInstance) realizations.get(0);
-                adjustOLAPContext(cube, olapContext);
+        if (realizations.size() > 0) {
+            IRealization first = realizations.get(0);
+            if (first instanceof CubeInstance) {
+                CubeInstance cube = (CubeInstance) first;
+                if (!CubeCapabilityChecker.check(cube, olapContext.getSQLDigest(), false)) {
+                    adjustOLAPContext(cube, olapContext);
+                }
             }
         }
     }
 
     private static void adjustOLAPContext(CubeInstance cube, OLAPContext olapContext) {
-        Collection<TblColRef> dimensionColumns = (olapContext).getDimensionColumns();
+        Collection<TblColRef> dimensionColumns = CubeDimensionDeriver.getDimensionColumns(olapContext.groupByColumns, olapContext.filterColumns);
         Collection<FunctionDesc> functions = olapContext.aggregations;
         Collection<TblColRef> metricsColumns = olapContext.metricsColumns;
         Map<String, RelDataType> rewriteFields = olapContext.rewriteFields;

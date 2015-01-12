@@ -30,9 +30,9 @@ public class ExecutableManagerTest extends LocalFileMetadataTestCase {
         createTestMetadata();
         service = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
 
-        for (AbstractExecutable executable: service.getAllExecutables()) {
-            System.out.println("deleting " + executable.getId());
-            service.deleteJob(executable);
+        for (String jobId: service.getAllJobIds()) {
+            System.out.println("deleting " + jobId);
+            service.deleteJob(jobId);
         }
 
     }
@@ -82,7 +82,6 @@ public class ExecutableManagerTest extends LocalFileMetadataTestCase {
         service.updateJobOutput(id, ExecutableState.ERROR, null, null);
         service.updateJobOutput(id, ExecutableState.READY, null, null);
         service.updateJobOutput(id, ExecutableState.RUNNING, null, null);
-        service.updateJobOutput(id, ExecutableState.STOPPED, null, null);
         service.updateJobOutput(id, ExecutableState.READY, null, null);
         service.updateJobOutput(id, ExecutableState.RUNNING, null, null);
         service.updateJobOutput(id, ExecutableState.SUCCEED, null, null);

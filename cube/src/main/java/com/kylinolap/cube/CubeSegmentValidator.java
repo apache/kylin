@@ -152,89 +152,10 @@ public abstract class CubeSegmentValidator {
                     throw new CubeIntegrityException("there is gap in cube segments");
                 }
             }
-            if (cubeInstance.appendOnHll()) {
-                if (newSegment.getDateRangeStart() == initStartDate && startDate < newSegment.getDateRangeEnd()) {
-                    return;
-                }
-            } else {
-                if (newSegment.getDateRangeStart() == startDate) {
-                    return;
-                }
+            if (newSegment.getDateRangeStart() == startDate && startDate < newSegment.getDateRangeEnd()) {
+                return;
             }
             throw new CubeIntegrityException("invalid segment date range from " + newSegment.getDateRangeStart() + " to " + newSegment.getDateRangeEnd());
-        }
-    }
-
-    private static class IncrementalBuildOperationValidator extends CubeSegmentValidator {
-        /*
-         * (non-Javadoc)
-         *
-         * @see
-         * com.kylinolap.cube.CubeSegmentValidator#validate(com.kylinolap.cube
-         * .CubeInstance, java.util.List)
-         */
-        @Override
-        void validate(CubeInstance cubeInstance, CubeSegment newSegment) throws CubeIntegrityException {
-            if (cubeInstance.needMergeImmediatelyAfterBuild(newSegment)) {
-
-            } else {
-                // check if user will rebuild one specified segment
-                boolean hasMatchSegment = false;
-                for (CubeSegment segment : cubeInstance.getSegments()) {
-                    if (segment.getDateRangeStart() == newSegment.getDateRangeStart()) {
-                        if (segment.getDateRangeEnd() == newSegment.getDateRangeEnd()) {
-                            hasMatchSegment = true;
-                        } else {
-                            throw new CubeIntegrityException("Invalid date range.");
-                        }
-                    }
-                }
-
-                if (!hasMatchSegment) {
-                    if (cubeInstance.getSegments().size() == 0) {
-                        if (cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateStart() != newSegment.getDateRangeStart()) {
-                            throw new CubeIntegrityException("Invalid start date.");
-                        }
-                    } else {
-                        CubeSegment lastSegment = cubeInstance.getSegments().get(cubeInstance.getSegments().size() - 1);
-                        if (newSegment.getDateRangeStart() != lastSegment.getDateRangeEnd()) {
-                            throw new CubeIntegrityException("Invalid start date.");
-                        }
-                    }
-                }
-            }
-        }
-
-    }
-
-    private static class UpdateBuildOperationValidator extends CubeSegmentValidator {
-
-        /*
-         * (non-Javadoc)
-         *
-         * @see
-         * com.kylinolap.cube.CubeSegmentValidator#validate(com.kylinolap.cube
-         * .CubeInstance, java.util.List)
-         */
-        @Override
-        void validate(CubeInstance cubeInstance, CubeSegment newSegment) throws CubeIntegrityException {
-
-            CubeSegment previousSeg = null;
-
-            if (cubeInstance.getSegments().size() == 0) {
-                if (cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateStart() != newSegment.getDateRangeStart()) {
-                    throw new CubeIntegrityException("Invalid start date.");
-                }
-            } else {
-                CubeSegment startSegment = newSegment;
-                CubeSegment matchSeg = null;
-                for (CubeSegment segment : cubeInstance.getSegments()) {
-                    if (segment.getDateRangeStart() == startSegment.getDateRangeStart()) {
-                        matchSeg = segment;
-                    }
-                }
-
-            }
         }
     }
 

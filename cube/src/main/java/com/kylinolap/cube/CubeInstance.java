@@ -16,7 +16,6 @@
 package com.kylinolap.cube;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,14 +30,14 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.cube.model.CubePartitionDesc;
 import com.kylinolap.cube.model.DimensionDesc;
-import com.kylinolap.metadata.model.FunctionDesc;
-import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.metadata.realization.*;
+import com.kylinolap.metadata.realization.IRealization;
+import com.kylinolap.metadata.realization.RealizationStatusEnum;
+import com.kylinolap.metadata.realization.RealizationType;
+import com.kylinolap.metadata.realization.SQLDigest;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeInstance extends RootPersistentEntity implements IRealization {
@@ -290,7 +289,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         return cost;
     }
 
-    @Override
     public void setCost(int cost) {
         this.cost = cost;
     }
@@ -399,57 +397,13 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         return new long[] { start, end };
     }
 
-    public boolean appendOnHll() {
-        return false;
-    }
-
-//    public boolean appendOnHll() {
-//        CubePartitionDesc cubePartitionDesc = getDescriptor().getCubePartitionDesc();
-//        if (cubePartitionDesc == null) {
-//            return false;
-//        }
-//        if (cubePartitionDesc.getPartitionDateColumn() == null) {
-//            return false;
-//        }
-//        return getDescriptor().hasHolisticCountDistinctMeasures();
-//    }
-
-    public boolean appendBuildOnHllMeasure(long startDate, long endDate) {
-        if (!appendOnHll()) {
-            return false;
-        }
-        List<CubeSegment> readySegments = getSegment(SegmentStatusEnum.READY);
-        if (readySegments.isEmpty()) {
-            return false;
-        }
-        for (CubeSegment readySegment : readySegments) {
-            if (readySegment.getDateRangeStart() == startDate && readySegment.getDateRangeEnd() == endDate) {
-                //refresh build
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public boolean needMergeImmediatelyAfterBuild(CubeSegment segment) {
-        if (!appendOnHll()) {
-            return false;
-        }
-        List<CubeSegment> readySegments = getSegment(SegmentStatusEnum.READY);
-        if (readySegments.isEmpty()) {
-            return false;
-        }
-        for (CubeSegment readySegment : readySegments) {
-            if (readySegment.getDateRangeEnd() > segment.getDateRangeStart()) {
-                //has overlap and not refresh
-                return true;
-            }
-        }
-        return false;
+    @Override
+    public boolean isCapable(SQLDigest digest) {
+        return CubeCapabilityChecker.check(this, digest, true);
     }
 
     @Override
-    public int getCost(String factTable, Collection<JoinDesc> joins, Collection<TblColRef> allColumns, Collection<FunctionDesc> aggrFunctions) {
+    public int getCost(SQLDigest digest) {
         return 0;
     }
 

@@ -3,6 +3,7 @@ package com.kylinolap.job2.service;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.job2.dao.JobDao;
 import com.kylinolap.job2.dao.JobOutputPO;
@@ -73,11 +74,11 @@ public class ExecutableManager {
     }
 
     //for ut
-    public void deleteJob(AbstractExecutable executable) {
+    public void deleteJob(String jobId) {
         try {
-            jobDao.deleteJob(executable.getId());
+            jobDao.deleteJob(jobId);
         } catch (PersistentException e) {
-            logger.error("fail to delete job:" + executable.getId(), e);
+            logger.error("fail to delete job:" + jobId, e);
             throw new RuntimeException(e);
         }
     }
@@ -94,6 +95,7 @@ public class ExecutableManager {
     public Output getOutput(String uuid) {
         try {
             final JobOutputPO jobOutput = jobDao.getJobOutput(uuid);
+            Preconditions.checkArgument(jobOutput != null, "there is no related output for job id:" + uuid);
             final DefaultOutput result = new DefaultOutput();
             result.setExtra(jobOutput.getInfo());
             result.setState(ExecutableState.valueOf(jobOutput.getStatus()));
@@ -117,6 +119,15 @@ public class ExecutableManager {
             });
         } catch (PersistentException e) {
             logger.error("error get All Jobs", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<String> getAllJobIds() {
+        try {
+            return jobDao.getJobIds();
+        } catch (PersistentException e) {
+            logger.error("error get All Job Ids", e);
             throw new RuntimeException(e);
         }
     }
@@ -166,6 +177,7 @@ public class ExecutableManager {
     public void updateJobOutput(String jobId, ExecutableState newStatus, Map<String, String> info, String output) {
         try {
             final JobOutputPO jobOutput = jobDao.getJobOutput(jobId);
+            Preconditions.checkArgument(jobOutput != null, "there is no related output for job id:" + jobId);
             ExecutableState oldStatus = ExecutableState.valueOf(jobOutput.getStatus());
             if (newStatus != null && oldStatus != newStatus) {
                 if (!ExecutableState.isValidStateTransfer(oldStatus, newStatus)) {
@@ -234,6 +246,7 @@ public class ExecutableManager {
         }
         try {
             JobOutputPO output = jobDao.getJobOutput(id);
+            Preconditions.checkArgument(output != null, "there is no related output for job id:" + id);
             output.getInfo().putAll(info);
             jobDao.updateJobOutput(output);
         } catch (PersistentException e) {
@@ -243,14 +256,9 @@ public class ExecutableManager {
     }
 
     public void addJobInfo(String id, String key, String value) {
-        try {
-            JobOutputPO output = jobDao.getJobOutput(id);
-            output.getInfo().put(key, value);
-            jobDao.updateJobOutput(output);
-        } catch (PersistentException e) {
-            logger.error("error update job info, id:" + id + "  key:" + key + " value:" + value);
-            throw new RuntimeException(e);
-        }
+        Map<String, String> info = Maps.newHashMap();
+        info.put(key, value);
+        addJobInfo(id, info);
     }
 
     private void stopJob(AbstractExecutable job) {
