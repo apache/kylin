@@ -133,9 +133,11 @@ public class IIManager {
     }
 
     public void buildInvertedIndexDictionary(IISegment iiSeg, String factColumnsPath) throws IOException {
+        logger.info("Start building ii dictionary");
         DictionaryManager dictMgr = getDictionaryManager();
         IIDesc iiDesc = iiSeg.getIIInstance().getDescriptor();
         for (TblColRef column : iiDesc.listAllColumns()) {
+            logger.info("Dealing with column {}", column);
             if (iiDesc.isMetricsCol(column)) {
                 continue;
             }

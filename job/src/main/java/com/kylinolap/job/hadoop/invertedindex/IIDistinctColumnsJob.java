@@ -41,6 +41,7 @@ import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
 
+
 /**
  * @author yangli9
  */
@@ -69,7 +70,7 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
 
             // ----------------------------------------------------------------------------
 
-            System.out.println("Starting: " + job.getJobName());
+            log.info("Starting: " + job.getJobName());
 
             // pass table and columns
             MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
@@ -128,9 +129,11 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
         */
         String tableName = job.getConfiguration().get(BatchConstants.TABLE_NAME);
         String[] dbTableNames = HadoopUtil.parseHiveTableName(tableName);
-        HCatInputFormat.setInput(job, dbTableNames[0],
-                dbTableNames[1]);
-        
+
+        log.info("setting hcat input format, db name {} , table name {}", dbTableNames[0],dbTableNames[1]);
+
+        HCatInputFormat.setInput(job, dbTableNames[0], dbTableNames[1]);
+
         job.setInputFormatClass(HCatInputFormat.class);
 
         job.setMapperClass(IIDistinctColumnsMapper.class);
