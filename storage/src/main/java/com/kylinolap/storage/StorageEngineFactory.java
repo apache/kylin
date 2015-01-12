@@ -19,7 +19,7 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.metadata.realization.RealizationType;
 import com.kylinolap.metadata.realization.IRealization;
-import com.kylinolap.storage.hbase.HBaseStorageEngine;
+import com.kylinolap.storage.hbase.CubeStorageEngine;
 import com.kylinolap.storage.hbase.InvertedIndexStorageEngine;
 
 /**
@@ -31,7 +31,7 @@ public class StorageEngineFactory {
         if (realization.getType() == RealizationType.INVERTED_INDEX) {
             return new InvertedIndexStorageEngine((IIInstance) realization);
         } else {
-            return new HBaseStorageEngine((CubeInstance) realization);
+            return new CubeStorageEngine((CubeInstance) realization);
         }
     }
 

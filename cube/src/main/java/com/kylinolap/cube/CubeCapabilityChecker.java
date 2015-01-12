@@ -24,8 +24,8 @@ public class CubeCapabilityChecker {
 
         // retrieve members from olapContext
         Collection<TblColRef> dimensionColumns = CubeDimensionDeriver.getDimensionColumns(digest.groupbyColumns, digest.filterColumns);
-        Collection<FunctionDesc> functions = digest.aggregateFunc;
-        Collection<TblColRef> metricsColumns = digest.aggregatedColumns;
+        Collection<FunctionDesc> functions = digest.aggregations;
+        Collection<TblColRef> metricsColumns = digest.metricColumns;
         Collection<JoinDesc> joins = digest.joinDescs;
 
         // match dimensions & aggregations & joins

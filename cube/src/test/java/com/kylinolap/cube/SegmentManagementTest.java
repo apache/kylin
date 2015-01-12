@@ -21,7 +21,6 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.List;
 import java.util.TimeZone;
 
 import com.kylinolap.metadata.model.SegmentStatusEnum;
