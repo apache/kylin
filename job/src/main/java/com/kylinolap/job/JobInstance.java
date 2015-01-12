@@ -17,7 +17,6 @@ package com.kylinolap.job;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -33,7 +32,6 @@ import com.kylinolap.job.constant.JobStatusEnum;
 import com.kylinolap.job.constant.JobStepCmdTypeEnum;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
-import org.apache.hadoop.mapred.JobStatus;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class JobInstance extends RootPersistentEntity implements Comparable<JobInstance> {

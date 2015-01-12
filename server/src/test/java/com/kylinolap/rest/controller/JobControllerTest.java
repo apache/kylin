@@ -20,7 +20,6 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.Map;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -33,8 +32,9 @@ import com.kylinolap.cube.CubeDescManager;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.job.JobDAO;
 import com.kylinolap.job.JobInstance;
+import com.kylinolap.job.dao.JobDao;
+import com.kylinolap.job.exception.PersistentException;
 import com.kylinolap.rest.request.JobBuildRequest;
 import com.kylinolap.rest.request.JobListRequest;
 import com.kylinolap.rest.service.CubeService;
@@ -57,7 +57,7 @@ public class JobControllerTest extends ServiceTestBase {
 
     private CubeManager cubeManager;
     private CubeDescManager cubeDescManager;
-    private JobDAO jobDAO;
+    private JobDao jobDAO;
 
     @Before
     public void setup() throws Exception {
@@ -72,7 +72,7 @@ public class JobControllerTest extends ServiceTestBase {
         cubeManager = CubeManager.getInstance(testConfig);
         cubeDescManager = CubeDescManager.getInstance(testConfig);
 
-        jobDAO = JobDAO.getInstance(testConfig);
+        jobDAO = JobDao.getInstance(testConfig);
 
     }
 
@@ -84,7 +84,7 @@ public class JobControllerTest extends ServiceTestBase {
     }
 
     @Test
-    public void testBasics() throws IOException {
+    public void testBasics() throws IOException, PersistentException {
         CubeDesc cubeDesc = cubeDescManager.getCubeDesc("test_kylin_cube_with_slr_left_join_desc");
         CubeInstance cube = cubeManager.createCube(CUBE_NAME, "DEFAULT", cubeDesc, "test");
         assertNotNull(cube);
@@ -99,7 +99,7 @@ public class JobControllerTest extends ServiceTestBase {
         JobInstance job = cubeController.rebuild(CUBE_NAME, jobBuildRequest);
 
         Assert.assertNotNull(jobSchedulerController.get(job.getId()));
-        jobDAO.deleteJob(job);
+        jobDAO.deleteJob(job.getId());
         if (cubeManager.getCube(CUBE_NAME) != null) {
             cubeManager.dropCube(CUBE_NAME, false);
         }
