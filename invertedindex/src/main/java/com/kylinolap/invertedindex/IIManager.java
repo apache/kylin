@@ -25,6 +25,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.kylinolap.metadata.realization.IRealization;
+import com.kylinolap.metadata.realization.IRealizationProvider;
+import com.kylinolap.metadata.realization.RealizationType;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +51,7 @@ import com.kylinolap.metadata.model.TblColRef;
 /**
  * @author honma
  */
-public class IIManager {
+public class IIManager implements IRealizationProvider {
 
     private static String ALPHA_NUM = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private static int HBASE_TABLE_LENGTH = 10;
@@ -313,5 +316,15 @@ public class IIManager {
 
     private ResourceStore getStore() {
         return ResourceStore.getStore(this.config);
+    }
+
+    @Override
+    public RealizationType getRealizationType() {
+        return RealizationType.INVERTED_INDEX;
+    }
+
+    @Override
+    public IRealization getRealization(String name) {
+        return getII(name);
     }
 }

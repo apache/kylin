@@ -39,18 +39,13 @@ import com.kylinolap.metadata.model.TblColRef;
 public class CoprocessorRowType {
 
     //for endpoint
-    public static CoprocessorRowType fromTableRecordInfo(TableRecordInfo tableRecordInfo, ColumnDesc[] columnDescs) {
+    public static CoprocessorRowType fromTableRecordInfo(TableRecordInfo tableRecordInfo, List<TblColRef> cols) {
 
-        TblColRef[] cols = new TblColRef[columnDescs.length];
-        for (int i = 0; i < columnDescs.length; ++i) {
-            cols[i] = new TblColRef(columnDescs[i]);
-        }
-
-        int[] colSizes = new int[cols.length];
-        for (int i = 0; i < cols.length; i++) {
+        int[] colSizes = new int[cols.size()];
+        for (int i = 0; i < cols.size(); i++) {
             colSizes[i] = tableRecordInfo.getDigest().length(i);
         }
-        return new CoprocessorRowType(cols, colSizes);
+        return new CoprocessorRowType(cols.toArray(new TblColRef[cols.size()]), colSizes);
     }
 
     //for observer
