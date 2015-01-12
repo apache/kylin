@@ -112,6 +112,9 @@ public class ProjectManager {
         ResourceStore store = getStore();
 
         ProjectInstance projectInstance = store.getResource(path, ProjectInstance.class, PROJECT_SERIALIZER);
+        if(projectInstance == null)
+            return null;
+        
         projectInstance.init();
 
         if (StringUtils.isBlank(projectInstance.getName()))
