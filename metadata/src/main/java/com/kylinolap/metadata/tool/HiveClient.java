@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.hadoop.hive.cli.CliSessionState;
+import org.apache.hadoop.hive.common.StatsSetupConst;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -27,10 +28,7 @@ import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.hive.hcatalog.common.HCatException;
-import org.apache.hive.hcatalog.data.transfer.DataTransferFactory;
-import org.apache.hive.hcatalog.data.transfer.HCatReader;
-import org.apache.hive.hcatalog.data.transfer.ReaderContext;
+import org.apache.hadoop.hive.ql.stats.StatsUtils;
 
 public class HiveClient {
 
@@ -71,9 +69,9 @@ public class HiveClient {
             throw new IOException("Failed to execute hql [" + hql + "], return code from hive driver : [" + retCode + "]");
         }
     }
-    
+
     public void executeHQL(String[] hqls) throws CommandNeedRetryException, IOException {
-        for(String sql: hqls)
+        for (String sql : hqls)
             executeHQL(sql);
     }
 
@@ -97,12 +95,12 @@ public class HiveClient {
         return t.getSd().getLocation();
     }
 
+    public long getFileSizeForTable(Table table) {
+        return StatsUtils.getTotalSize(new org.apache.hadoop.hive.ql.metadata.Table(table));
+    }
 
-    public HCatReader getHCatReader(ReaderContext cntxt, int slaveNum) throws HCatException {
-
-        HCatReader reader = DataTransferFactory.getHCatReader(cntxt, slaveNum);
-        return reader;
-
+    public long getFileNumberForTable(Table table) {
+        return StatsUtils.getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.NUM_FILES);
     }
 
 }

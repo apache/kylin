@@ -1,15 +1,24 @@
 package com.kylinolap.job.coprocessor;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import org.apache.hadoop.hbase.client.HConnection;
+import org.junit.*;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.kylinolap.common.persistence.HBaseConnection;
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.invertedindex.IISegment;
-import com.kylinolap.invertedindex.model.IIDesc;
 import com.kylinolap.invertedindex.model.IIKeyValueCodec;
-import com.kylinolap.job.hadoop.invertedindex.IIBulkLoadJob;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.*;
 import com.kylinolap.storage.StorageContext;
@@ -18,29 +27,7 @@ import com.kylinolap.storage.filter.CompareTupleFilter;
 import com.kylinolap.storage.filter.ConstantTupleFilter;
 import com.kylinolap.storage.filter.TupleFilter;
 import com.kylinolap.storage.hbase.coprocessor.endpoint.EndpointTupleIterator;
-import com.kylinolap.storage.hbase.coprocessor.endpoint.IIEndpoint;
 import com.kylinolap.storage.tuple.ITuple;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HBaseTestingUtility;
-import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HConnectionManager;
-import org.apache.hadoop.hbase.coprocessor.CoprocessorHost;
-import org.apache.hadoop.hbase.security.User;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.util.ToolRunner;
-import org.junit.*;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 11/14/14.
@@ -48,11 +35,6 @@ import static org.junit.Assert.assertEquals;
 @Ignore("ii not ready")
 public class IIEndpointTest extends HBaseMetadataTestCase {
 
-    private static final TableName TEST_TABLE = TableName.valueOf("test_III");
-    private static final byte[] TEST_COLUMN = Bytes.toBytes("f");
-
-    private static HBaseTestingUtility TEST_UTIL = null;
-    private static Configuration CONF = null;
     private static HConnection hconn;
 
     private static StorageContext context = new StorageContext();
@@ -66,56 +48,13 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
     public static void setupBeforeClass() throws Exception {
         staticCreateTestMetadata(SANDBOX_TEST_DATA);
 
-        TEST_UTIL = new HBaseTestingUtility();
-        CONF = TEST_UTIL.getConfiguration();
-
-        //add endpoint coprocessor
-        CONF.setStrings(CoprocessorHost.REGION_COPROCESSOR_CONF_KEY, IIEndpoint.class.getName());
-
-        //create table and bulk load data
-        TEST_UTIL.startMiniCluster();
-
-        //simulate bulk load
-        mockIIHtable();
-
-        hconn = HConnectionManager.createConnection(CONF);
+        hconn = HBaseConnection.get(context.getConnUrl());
     }
 
     @AfterClass
     public static void cleanUpAfterClass() throws Exception {
         staticCleanupTestMetadata();
-
         hconn.close();
-        TEST_UTIL.shutdownMiniCluster();
-    }
-
-    private static void mockIIHtable() throws Exception {
-        org.apache.hadoop.fs.FileSystem fs = org.apache.hadoop.fs.FileSystem.get(CONF);
-        fs.copyFromLocalFile(false, new Path("../examples/test_case_cube/II_hfile/"), new Path("/tmp/test_III_hfile"));
-
-        int sharding = 4;
-
-        HTableDescriptor tableDesc = new HTableDescriptor(TEST_TABLE);
-        HColumnDescriptor cf = new HColumnDescriptor(IIDesc.HBASE_FAMILY);
-        cf.setMaxVersions(1);
-        tableDesc.addFamily(cf);
-
-        if (User.isHBaseSecurityEnabled(CONF)) {
-            // add coprocessor for bulk load
-            tableDesc.addCoprocessor("org.apache.hadoop.hbase.security.access.SecureBulkLoadEndpoint");
-        }
-
-        byte[][] splitKeys = getSplits(sharding);
-        if (splitKeys.length == 0)
-            splitKeys = null;
-
-        TEST_UTIL.createTable(tableDesc.getTableName(), TEST_COLUMN, splitKeys);
-
-        HBaseAdmin hBaseAdmin = new HBaseAdmin(CONF);
-        TableName[] tables = hBaseAdmin.listTableNames();
-
-        String temp = "-iiname \"test_kylin_ii\"  -input \"/tmp/test_III_hfile\"  -htablename \"test_III\"";
-        ToolRunner.run(CONF, new IIBulkLoadJob(), temp.split("\\s+"));
     }
 
     @Before
