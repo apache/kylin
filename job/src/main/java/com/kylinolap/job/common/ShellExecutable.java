@@ -2,7 +2,7 @@ package com.kylinolap.job.common;
 
 import com.google.common.collect.Maps;
 import com.kylinolap.common.util.Logger;
-import com.kylinolap.job.constants.ExecutableConstants;
+import com.kylinolap.job.constant.ExecutableConstants;
 import com.kylinolap.job.dao.JobPO;
 import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.execution.ExecutableContext;

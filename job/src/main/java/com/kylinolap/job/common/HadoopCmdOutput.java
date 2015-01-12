@@ -16,12 +16,7 @@
 
 package com.kylinolap.job.common;
 
-import com.kylinolap.job.JobInstance;
-import com.kylinolap.job.constant.JobStepStatusEnum;
-import com.kylinolap.job.exception.JobException;
-import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.job.tools.HadoopStatusChecker;
-import com.kylinolap.job.constants.ExecutableConstants;
+import com.kylinolap.job.constant.ExecutableConstants;
 import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.TaskCounter;

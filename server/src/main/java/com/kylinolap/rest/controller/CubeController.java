@@ -50,7 +50,6 @@ import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.JoinedFlatTable;
-import com.kylinolap.job.exception.InvalidJobInstanceException;
 import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
 import com.kylinolap.metadata.model.SegmentStatusEnum;
@@ -190,7 +189,6 @@ public class CubeController extends BasicController {
      * @return
      * @throws SchedulerException
      * @throws IOException
-     * @throws InvalidJobInstanceException
      */
     @RequestMapping(value = "/{cubeName}/rebuild", method = { RequestMethod.PUT })
     @ResponseBody
@@ -204,9 +202,6 @@ public class CubeController extends BasicController {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage());
         } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
-        } catch (InvalidJobInstanceException e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage());
         }
