@@ -285,12 +285,12 @@
                     <div class="box-header"><h4>Columns</h4></div>
                     <div class="box-body">
                         <ul class="list-unstyled columns-region">
-                            <li ng-repeat="(table, cols) in availableColumns">
+                            <li ng-repeat="table in availableTables">
                                 <h5 class="table-name-underline">
                                     <b>{{table}}</b>{{$index == 0 ? ' [Fact Table]' : ' [Lookup Table]'}}
                                 </h5>
                                 <ul class="list-unstyled">
-                                    <li ng-repeat="col in cols track by col.table + '.' + col.name">
+                                    <li ng-repeat="col in availableColumns[table] track by col.table + '.' + col.name">
                                         <label>
                                             <input type="checkbox" ng-model="selectedColumns[table][col.name].selected"
                                                    ng-disabled="selectedColumns[table][col.name].disabled">
