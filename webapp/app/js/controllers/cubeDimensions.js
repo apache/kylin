@@ -132,9 +132,10 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal) {
         });
     };
 
-    // Initialize data for columns widget in auto-gen.
-    $scope.initColumns();
-
+    // Initialize data for columns widget in auto-gen when add/edit cube.
+    if ($scope.state.mode == 'edit') {
+        $scope.initColumns();
+    }
 
     // Initialize params for add/edit dimension.
     $scope.dimState = {
@@ -425,10 +426,12 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal) {
         console.dir($scope.cubeMetaFrame.dimensions);
     };
 
-    $scope.$on('$destroy', function () {
-        $scope.dimensionsAdapter();
+    if ($scope.state.mode == 'edit') {
+        $scope.$on('$destroy', function () {
+            $scope.dimensionsAdapter();
 
-        // Emit dimensions edit event in order to re-generate row key.
-        $scope.$emit('DimensionsEdited');
-    });
+            // Emit dimensions edit event in order to re-generate row key.
+            $scope.$emit('DimensionsEdited');
+        });
+    }
 });
