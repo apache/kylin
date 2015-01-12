@@ -97,13 +97,35 @@ public class BuildCubeWithEngineTest {
     }
 
     @Test
-    public void testBuild() throws Exception {
+    public void testInner() throws Exception {
         DeployUtil.prepareTestData("inner", "test_kylin_cube_with_slr_empty");
-        DeployUtil.prepareTestData("left", "test_kylin_cube_with_slr_left_join_empty");
+
 
         String[] testCase = new String[]{
                 "testInnerJoinCube",
                 "testInnerJoinCube2",
+        };
+        ExecutorService executorService = Executors.newFixedThreadPool(testCase.length);
+        final CountDownLatch countDownLatch = new CountDownLatch(testCase.length);
+        List<Future<List<String>>> tasks = Lists.newArrayListWithExpectedSize(testCase.length);
+        for (int i = 0; i < testCase.length; i++) {
+            tasks.add(executorService.submit(new TestCallable(testCase[i], countDownLatch)));
+        }
+        countDownLatch.await();
+        for (int i = 0; i < tasks.size(); ++i) {
+            Future<List<String>> task = tasks.get(i);
+            final List<String> jobIds = task.get();
+            for (String jobId: jobIds) {
+                assertJobSucceed(jobId);
+            }
+        }
+    }
+
+    @Test
+    public void testLeft() throws Exception {
+        DeployUtil.prepareTestData("left", "test_kylin_cube_with_slr_left_join_empty");
+        
+        String[] testCase = new String[]{
                 "testLeftJoinCube",
                 "testLeftJoinCube2",
         };
