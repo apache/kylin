@@ -27,7 +27,6 @@ import java.util.Map;
 import com.kylinolap.metadata.realization.SQLDigest;
 import org.eigenbase.reltype.RelDataType;
 
-import com.google.common.collect.Maps;
 import com.kylinolap.metadata.model.FunctionDesc;
 import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.TblColRef;

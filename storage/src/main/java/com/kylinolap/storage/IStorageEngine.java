@@ -15,11 +15,7 @@
  */
 package com.kylinolap.storage;
 
-import java.util.Collection;
-
-import com.kylinolap.metadata.model.FunctionDesc;
-import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.storage.filter.TupleFilter;
+import com.kylinolap.metadata.realization.SQLDigest;
 import com.kylinolap.storage.tuple.ITupleIterator;
 
 /**
@@ -29,6 +25,6 @@ import com.kylinolap.storage.tuple.ITupleIterator;
  */
 public interface IStorageEngine {
 
-    ITupleIterator search(Collection<TblColRef> dimensions, TupleFilter filter, Collection<TblColRef> groups, Collection<FunctionDesc> metrics, StorageContext context);
+    ITupleIterator search(StorageContext context, SQLDigest sqlDigest);
 
 }
