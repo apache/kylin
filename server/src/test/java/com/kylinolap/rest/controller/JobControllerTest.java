@@ -99,8 +99,6 @@ public class JobControllerTest extends ServiceTestBase {
         JobInstance job = cubeController.rebuild(CUBE_NAME, jobBuildRequest);
 
         Assert.assertNotNull(jobSchedulerController.get(job.getId()));
-        Map<String, String> output = jobSchedulerController.getStepOutput(job.getId(), 0);
-        Assert.assertNotNull(output);
         jobDAO.deleteJob(job);
         if (cubeManager.getCube(CUBE_NAME) != null) {
             cubeManager.dropCube(CUBE_NAME, false);
