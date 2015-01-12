@@ -3,8 +3,8 @@
 <!-- Dimensions Summary -->
 <div class="dataTables_wrapper form-inline no-footer">
     <div class="row">
-        <div class="col-xs-6">
-            <div class="btn-group" ng-if="state.mode=='edit'">
+        <div class="col-xs-6" ng-if="state.mode=='edit'">
+            <div class="btn-group">
                 <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
                     <i class="fa fa-plus"></i> Add Dimension <span class="ace-icon fa fa-caret-down icon-on-right"></span>
                 </button>
@@ -14,10 +14,13 @@
                     <li><a ng-click="addDim('derived')">Derived</a></li>
                 </ul>
             </div>
-            <button type="button" class="btn btn-default" ng-if="state.mode=='edit'" ng-disabled="!cubeMetaFrame.model.fact_table.length"
+            <button type="button" class="btn btn-default" ng-disabled="!cubeMetaFrame.model.fact_table.length"
                     ng-click="openAutoGenModal()">
                 <i class="fa fa-building-o"></i> Auto Generator
             </button>
+        </div>
+        <div class="col-xs-6" ng-if="state.mode!='edit'">
+            <b>Dimensions</b>
         </div>
         <div class="col-xs-6">
             <span class="pull-right input-icon input-icon-right nav-search" style="margin-left: 22px;">
@@ -45,11 +48,11 @@
                 </td>
                 <!--Name -->
                 <td>
-                    <span tooltip="dimension name..">{{dimension.name}}</span>
+                    <span>{{dimension.name}}</span>
                 </td>
                 <!--Table Name -->
                 <td>
-                    <span tooltip="dimension table name..">{{dimension.table}}</span>
+                    <span tooltip="{{dimension.table == cubeMetaFrame.model.fact_table ? 'Fact Table' : 'Lookup Table'}}">{{dimension.table}}</span>
                 </td>
                 <!--Type-->
                 <td>
@@ -109,7 +112,7 @@
 <script type="text/ng-template" id="addEditDimension.html">
     <div class="modal-header">
         <h4 class="box-title lighter">{{dimState.editing ? 'Edit' : 'Add'}} Dimension
-            <small class="badge bg-light-blue" ng-repeat="t in dimType">{{t}}</small>
+            <span class="label label-primary" ng-repeat="t in dimType">{{t}}</span>
         </h4>
     </div>
     <div class="modal-body">
@@ -224,7 +227,7 @@
                                                 ng-options="columns.name as columns.name for columns in getColumnsByTable(newDimension.table)" >
                                             <option value=""></option>
                                         </select>
-                                        <button class="btn btn-xs btn-danger" style="cursor: pointer " tooltip="Delete"
+                                        <button class="pull-right btn btn-xs btn-danger" style="cursor: pointer " tooltip="Delete"
                                                 ng-click="newDimension.derived.splice($index, 1);">
                                             <i class="fa fa-trash-o"></i>
                                         </button>
