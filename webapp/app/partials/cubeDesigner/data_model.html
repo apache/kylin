@@ -94,7 +94,7 @@
                 <!--Table Name-->
                 <div class="form-group">
                     <div class="row">
-                        <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Table Name</b></label>
+                        <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Lookup Table Name</b></label>
                         <div class="col-xs-12 col-sm-6">
                             <typeahead items="srcTablesInProject" prompt="Lookup Table Name" title="name" model="newLookup.table"></typeahead>
                         </div>
@@ -117,15 +117,15 @@
                         <div class="col-xs-9">
                             <div ng-repeat="joinIndex in [] | range: newLookup.join.primary_key.length">
                                 <div>
-                                    <select style="width: 45%" chosen data-placeholder="Fact Table Column"
-                                            ng-model="newLookup.join.foreign_key[$index]"
-                                            ng-options="columns.name as columns.name for columns in getColumnsByTable(cubeMetaFrame.model.fact_table)" >
-                                        <option value=""></option>
-                                    </select>
-                                    <b>=</b>
                                     <select style="width: 45%" chosen data-placeholder="Lookup Table Column"
                                             ng-model="newLookup.join.primary_key[$index]"
                                             ng-options="columns.name as columns.name for columns in getColumnsByTable(newLookup.table)" >
+                                        <option value=""></option>
+                                    </select>
+                                    <b>=</b>
+                                    <select style="width: 45%" chosen data-placeholder="Fact Table Column"
+                                            ng-model="newLookup.join.foreign_key[$index]"
+                                            ng-options="columns.name as columns.name for columns in getColumnsByTable(cubeMetaFrame.model.fact_table)" >
                                         <option value=""></option>
                                     </select>
                                     <button class="pull-right btn btn-xs btn-danger" style="cursor: pointer" tooltip="Delete Join Condition"
@@ -164,8 +164,8 @@
                         <div class="row">
                             <div class="col-xs-12">
                                 <ol class="text-info">
-                                    <li>Pick up Fact Table from Star Schema Tables first</li>
-                                    <li>At least one lookup table should be added</li>
+                                    <li>Pick up lookup table at first</li>
+                                    <li>Specify join relationship between chosen lookup table and fact table</li>
                                     <li>Join Type have to be same as will be used in query</li>
                                 </ol>
                             </div>
