@@ -24,7 +24,7 @@ KylinApp.controller('CubeModelCtrl', function ($scope, $modal) {
 
                 angular.forEach($scope.cubeMetaFrame.dimensions, function (dim) {
                     // De-duplicate: adopt 1st one.
-                    if (tables.indexOf(dim.table) == -1 && dim.join) {
+                    if (tables.indexOf(dim.table) == -1 && dim.join && dim.join.primary_key.length) {
                         tables.push(dim.table);
                         model.lookups.push({table: dim.table, join: dim.join});
                     }
