@@ -21,7 +21,7 @@ public class BitMapFilterEvaluator {
     public static interface BitMapProvider {
 
         /** return records whose specified column having specified value */
-        ConciseSet getBitMap(TblColRef col, int valueId);
+        ConciseSet getBitMap(TblColRef col, int startIncludsiveId, int endExclusiveId);
 
         /** return the size of the group */
         int getRecordCount();
@@ -101,14 +101,7 @@ public class BitMapFilterEvaluator {
     }
 
     private ConciseSet collectRange(TblColRef column, int from, int to) {
-        ConciseSet set = new ConciseSet();
-        for (int i = from; i <= to; i++) {
-            ConciseSet bitMap = provider.getBitMap(column, i);
-            if (bitMap == null)
-                return null;
-            set.addAll(bitMap);
-        }
-        return set;
+        return provider.getBitMap(column,from,to+1);
     }
 
     private ConciseSet evalCompareEqual(CompareTupleFilter filter) {
