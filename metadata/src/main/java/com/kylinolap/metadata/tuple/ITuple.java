@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.storage.tuple;
+package com.kylinolap.metadata.tuple;
 
 import java.util.List;
 

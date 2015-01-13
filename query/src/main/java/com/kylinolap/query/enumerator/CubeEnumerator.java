@@ -15,8 +15,6 @@
  */
 package com.kylinolap.query.enumerator;
 
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -29,16 +27,13 @@ import org.eigenbase.reltype.RelDataTypeField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kylinolap.metadata.model.FunctionDesc;
-import com.kylinolap.metadata.model.MeasureDesc;
-import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.query.relnode.OLAPContext;
 import com.kylinolap.storage.IStorageEngine;
 import com.kylinolap.storage.StorageEngineFactory;
-import com.kylinolap.storage.filter.CompareTupleFilter;
-import com.kylinolap.storage.filter.TupleFilter;
-import com.kylinolap.storage.tuple.ITuple;
-import com.kylinolap.storage.tuple.ITupleIterator;
+import com.kylinolap.metadata.filter.CompareTupleFilter;
+import com.kylinolap.metadata.filter.TupleFilter;
+import com.kylinolap.metadata.tuple.ITuple;
+import com.kylinolap.metadata.tuple.ITupleIterator;
 
 /**
  * @author xjiang
@@ -137,14 +132,11 @@ public class CubeEnumerator implements Enumerator<Object[]> {
         // bind dynamic variables
         bindVariable(olapContext.filter);
 
-        // build dimension & metrics
-        Collection<TblColRef> dimensions = new HashSet<TblColRef>();
-        Collection<FunctionDesc> metrics = new HashSet<FunctionDesc>();
-        buildDimensionsAndMetrics(dimensions, metrics);
+
 
         // query storage engine
         IStorageEngine storageEngine = StorageEngineFactory.getStorageEngine(olapContext.realization);
-        ITupleIterator iterator = storageEngine.search(dimensions, olapContext.filter, olapContext.groupByColumns, metrics, olapContext.storageContext);
+        ITupleIterator iterator = storageEngine.search(olapContext.storageContext,olapContext.getSQLDigest());
         if (logger.isDebugEnabled()) {
             logger.debug("return TupleIterator...");
         }
@@ -153,40 +145,6 @@ public class CubeEnumerator implements Enumerator<Object[]> {
         return iterator;
     }
 
-    private void buildDimensionsAndMetrics(Collection<TblColRef> dimensions, Collection<FunctionDesc> metrics) {
-
-        for (FunctionDesc func : olapContext.aggregations) {
-            if (!func.isAppliedOnDimension()) {
-                metrics.add(func);
-            }
-        }
-
-        if (olapContext.isSimpleQuery()) {
-            // In order to prevent coprocessor from doing the real aggregating,
-            // All dimensions are injected
-            for (TblColRef col : olapContext.realization.getDimensions()) {
-                dimensions.add(col);
-            }
-
-            // select sth from fact table
-            for (MeasureDesc measure : olapContext.realization.getMeasures()) {
-                FunctionDesc func = measure.getFunction();
-                if (func.isSum()) {
-                    // the rewritten name for sum(metric) is metric itself
-                    metrics.add(func);
-                }
-            }
-            olapContext.storageContext.markAvoidAggregation();
-        } else {
-            for (TblColRef column : olapContext.allColumns) {
-                // skip measure columns
-                if (olapContext.metricsColumns.contains(column)) {
-                    continue;
-                }
-                dimensions.add(column);
-            }
-        }
-    }
 
     private void bindVariable(TupleFilter filter) {
         if (filter == null) {

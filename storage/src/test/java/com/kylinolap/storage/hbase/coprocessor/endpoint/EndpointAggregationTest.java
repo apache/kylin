@@ -10,10 +10,10 @@ import com.kylinolap.invertedindex.index.TableRecordInfo;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.measure.MeasureAggregator;
 import com.kylinolap.metadata.model.*;
-import com.kylinolap.storage.filter.ColumnTupleFilter;
-import com.kylinolap.storage.filter.CompareTupleFilter;
-import com.kylinolap.storage.filter.ConstantTupleFilter;
-import com.kylinolap.storage.filter.TupleFilter;
+import com.kylinolap.metadata.filter.ColumnTupleFilter;
+import com.kylinolap.metadata.filter.CompareTupleFilter;
+import com.kylinolap.metadata.filter.ConstantTupleFilter;
+import com.kylinolap.metadata.filter.TupleFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorFilter;
 import com.kylinolap.storage.hbase.coprocessor.CoprocessorProjector;
 

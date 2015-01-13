@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kylinolap.storage.filter;
+package com.kylinolap.metadata.filter;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.storage.tuple.ITuple;
+import com.kylinolap.metadata.tuple.ITuple;
 
 /**
  * 

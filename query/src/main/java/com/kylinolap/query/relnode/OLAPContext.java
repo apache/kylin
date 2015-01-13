@@ -27,14 +27,13 @@ import java.util.Map;
 import com.kylinolap.metadata.realization.SQLDigest;
 import org.eigenbase.reltype.RelDataType;
 
-import com.google.common.collect.Maps;
 import com.kylinolap.metadata.model.FunctionDesc;
 import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.metadata.realization.IRealization;
 import com.kylinolap.query.schema.OLAPSchema;
 import com.kylinolap.storage.StorageContext;
-import com.kylinolap.storage.filter.TupleFilter;
+import com.kylinolap.metadata.filter.TupleFilter;
 
 /**
  * @author xjiang
@@ -104,7 +103,6 @@ public class OLAPContext {
     // cube metadata
     public IRealization realization;
 
-
     public Collection<TblColRef> allColumns = new HashSet<TblColRef>();
     public Collection<TblColRef> groupByColumns = new ArrayList<TblColRef>();
     public Collection<TblColRef> metricsColumns = new HashSet<TblColRef>();
@@ -127,7 +125,7 @@ public class OLAPContext {
 
     public SQLDigest getSQLDigest() {
         if (sqlDigest == null)
-            sqlDigest = new SQLDigest(firstTableScan.getTableName(), joins, allColumns, groupByColumns, filterColumns, metricsColumns, aggregations);
+            sqlDigest = new SQLDigest(firstTableScan.getTableName(), filter, joins, allColumns, groupByColumns, filterColumns, metricsColumns, aggregations);
         return sqlDigest;
     }
 }

@@ -32,7 +32,7 @@ public class OLAPQuery extends AbstractEnumerable<Object[]> implements Enumerabl
     public static final String PROP_SCAN_THRESHOLD = "scan_threshold";
 
     public enum EnumeratorTypeEnum {
-        CUBE, LOOKUP_TABLE, HIVE
+        INDEX, LOOKUP_TABLE, HIVE
     }
 
     private final DataContext optiqContext;
@@ -52,7 +52,7 @@ public class OLAPQuery extends AbstractEnumerable<Object[]> implements Enumerabl
     public Enumerator<Object[]> enumerator() {
         OLAPContext olapContext = OLAPContext.getThreadLocalContextById(contextId);
         switch (type) {
-        case CUBE:
+        case INDEX:
             return new CubeEnumerator(olapContext, optiqContext);
         case LOOKUP_TABLE:
             return new LookupTableEnumerator(olapContext);

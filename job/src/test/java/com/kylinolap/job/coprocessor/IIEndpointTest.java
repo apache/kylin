@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.kylinolap.common.KylinConfig;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.junit.*;
 
@@ -22,12 +23,12 @@ import com.kylinolap.invertedindex.model.IIKeyValueCodec;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.*;
 import com.kylinolap.storage.StorageContext;
-import com.kylinolap.storage.filter.ColumnTupleFilter;
-import com.kylinolap.storage.filter.CompareTupleFilter;
-import com.kylinolap.storage.filter.ConstantTupleFilter;
-import com.kylinolap.storage.filter.TupleFilter;
+import com.kylinolap.metadata.filter.ColumnTupleFilter;
+import com.kylinolap.metadata.filter.CompareTupleFilter;
+import com.kylinolap.metadata.filter.ConstantTupleFilter;
+import com.kylinolap.metadata.filter.TupleFilter;
 import com.kylinolap.storage.hbase.coprocessor.endpoint.EndpointTupleIterator;
-import com.kylinolap.storage.tuple.ITuple;
+import com.kylinolap.metadata.tuple.ITuple;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 11/14/14.
@@ -47,8 +48,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
     @BeforeClass
     public static void setupBeforeClass() throws Exception {
         staticCreateTestMetadata(SANDBOX_TEST_DATA);
-
-        hconn = HBaseConnection.get(context.getConnUrl());
+        hconn = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl());
     }
 
     @AfterClass
@@ -62,8 +62,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
 
         this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii");
         this.seg = ii.getFirstSegment();
-        this.tableDesc = MetadataManager.getInstance(getTestConfig()).getTableDesc("test_kylin_fact");
-
+        this.tableDesc = MetadataManager.getInstance(getTestConfig()).getTableDesc("default.test_kylin_fact");
         this.tableName = seg.getStorageLocationIdentifier();
 
     }
@@ -141,7 +140,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
 
     @Test
     public void testSimpleCount() throws Throwable {
-        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc.getColumns(), null, null, null, context, hconn);
+        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, null, null, null, context, hconn);
 
         int count = 0;
         while (iterator.hasNext()) {
@@ -149,13 +148,13 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
             System.out.println(tuple);
             count++;
         }
-        assertEquals(count, 10000);
+        assertEquals(count, 402);
         iterator.close();
     }
 
     private int filteredCount(TupleFilter tupleFilter) throws Throwable {
 
-        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc.getColumns(), tupleFilter, null, null, context, hconn);
+        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tupleFilter, null, null, context, hconn);
 
         int count = 0;
         while (iterator.hasNext()) {
@@ -180,7 +179,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         Collection<TblColRef> groupby = ImmutableSet.of(lfn);
 
         List<FunctionDesc> measures = buildAggregations(priceDesc);
-        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc.getColumns(), tupleFilter, groupby, measures, context, hconn);
+        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tupleFilter, groupby, measures, context, hconn);
 
         int count = 0;
         while (iterator.hasNext()) {
@@ -202,7 +201,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         Collection<TblColRef> groupby = ImmutableSet.of(lfn);
 
         List<FunctionDesc> measures = buildAggregations(sellerDessc);
-        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc.getColumns(), tupleFilter, groupby, measures, context, hconn);
+        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tupleFilter, groupby, measures, context, hconn);
 
         int count = 0;
         while (iterator.hasNext()) {
@@ -224,7 +223,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
 
         int countA = filteredCount(filterA);
         int countB = filteredCount(filterB);
-        assertEquals(countA + countB, 10000);
+        assertEquals(countA + countB, 402);
     }
 
     private int filteredGrouByCount(TupleFilter tupleFilter) throws Throwable {
@@ -236,7 +235,7 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         ColumnDesc priceColumn = tableDesc.findColumnByName("PRICE");
         List<FunctionDesc> measures = buildAggregations(priceColumn);
 
-        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tableDesc.getColumns(), tupleFilter, groupby, measures, context, hconn);
+        EndpointTupleIterator iterator = new EndpointTupleIterator(seg, tupleFilter, groupby, measures, context, hconn);
 
         int count = 0;
         while (iterator.hasNext()) {
@@ -258,6 +257,6 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
 
         int countA = filteredGrouByCount(filterA);
         int countB = filteredGrouByCount(filterB);
-        assertEquals(countA + countB, 10000);
+        assertEquals(countA + countB, 402);
     }
 }

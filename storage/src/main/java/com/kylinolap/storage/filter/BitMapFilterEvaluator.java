@@ -3,6 +3,9 @@ package com.kylinolap.storage.filter;
 import java.util.List;
 
 import com.kylinolap.dict.Dictionary;
+import com.kylinolap.metadata.filter.CompareTupleFilter;
+import com.kylinolap.metadata.filter.LogicalTupleFilter;
+import com.kylinolap.metadata.filter.TupleFilter;
 import com.kylinolap.metadata.model.TblColRef;
 
 import it.uniroma3.mat.extendedset.intset.ConciseSet;

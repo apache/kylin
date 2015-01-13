@@ -23,7 +23,7 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.storage.tuple.ITuple;
+import com.kylinolap.metadata.tuple.ITuple;
 
 /**
  * A special kind of tuple that exposes column value (dictionary ID) directly on
