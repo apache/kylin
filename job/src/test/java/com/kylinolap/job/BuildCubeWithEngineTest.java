@@ -86,8 +86,7 @@ public class BuildCubeWithEngineTest {
 
     }
 
-    @After
-    public void after() throws Exception {
+    private void backup() throws Exception {
         int exitCode = cleanupOldCubes();
         if (exitCode == 0) {
             exportHBaseData();
@@ -97,7 +96,13 @@ public class BuildCubeWithEngineTest {
     }
 
     @Test
-    public void testInner() throws Exception {
+    public void test() throws Exception {
+        testInner();
+        testLeft();
+        backup();
+    }
+
+    private void testInner() throws Exception {
         DeployUtil.prepareTestData("inner", "test_kylin_cube_with_slr_empty");
 
 
@@ -121,8 +126,7 @@ public class BuildCubeWithEngineTest {
         }
     }
 
-    @Test
-    public void testLeft() throws Exception {
+    private void testLeft() throws Exception {
         DeployUtil.prepareTestData("left", "test_kylin_cube_with_slr_left_join_empty");
         
         String[] testCase = new String[]{
