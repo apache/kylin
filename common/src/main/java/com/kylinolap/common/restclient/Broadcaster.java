@@ -140,7 +140,7 @@ public class Broadcaster {
     }
 
     public static enum TYPE {
-        CUBE("realization"), METADATA("metadata"), PROJECT("project");
+        CUBE("cube"), METADATA("metadata"), PROJECT("project"), INVERTED_INDEX("inverted_index");
         private String text;
 
         private TYPE(String text) {
