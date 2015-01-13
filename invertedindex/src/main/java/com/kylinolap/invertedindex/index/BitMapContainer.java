@@ -16,6 +16,7 @@
 
 package com.kylinolap.invertedindex.index;
 
+import com.kylinolap.metadata.model.ParameterDesc;
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 import java.nio.ByteBuffer;
@@ -74,8 +75,35 @@ public class BitMapContainer implements ColumnValueContainer {
         valueBytes.set(temp, 0, valueLen);
     }
 
+    /**
+     * if endExclusiveId == startInclusiveId + 1, the performance should be
+     * nearly as good as {@link #getBitMap(int startInclusiveId )}
+     */
     @Override
-    public ConciseSet getBitMap(int valueId) {
+    public ConciseSet getBitMap(int startInclusiveId, int endExclusiveId) {
+        if (startInclusiveId == endExclusiveId) {
+            //entry for getting null value
+            return sets[this.nValues];
+        }
+
+        ConciseSet ret = null;
+        for (int i = startInclusiveId; i < endExclusiveId; ++i) {
+            ConciseSet temp = getBitMap(i);
+            if (ret == null) {
+                ret = temp;
+            } else {
+                ret.addAll(temp);
+            }
+        }
+
+        if (ret != null) {
+            return ret;
+        } else {
+            return new ConciseSet();
+        }
+    }
+
+    private ConciseSet getBitMap(int valueId) {
         if (valueId >= 0 && valueId <= getMaxValueId())
             return sets[valueId];
         else

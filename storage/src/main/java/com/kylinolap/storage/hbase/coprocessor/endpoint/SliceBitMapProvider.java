@@ -22,8 +22,8 @@ public class SliceBitMapProvider implements BitMapFilterEvaluator.BitMapProvider
     }
 
     @Override
-    public ConciseSet getBitMap(TblColRef col, int valueId) {
-        return slice.getColumnValueContainer(type.getColIndexByTblColRef(col)).getBitMap(valueId);
+    public ConciseSet getBitMap(TblColRef col, int startIncludsiveId, int endExclusiveId) {
+        return slice.getColumnValueContainer(type.getColIndexByTblColRef(col)).getBitMap(startIncludsiveId,endExclusiveId);
     }
 
     @Override

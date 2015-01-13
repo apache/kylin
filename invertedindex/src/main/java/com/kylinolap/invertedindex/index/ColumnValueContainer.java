@@ -33,7 +33,7 @@ public interface ColumnValueContainer {
 	// works only after closeForChange()
 	void getValueAt(int i, ImmutableBytesWritable valueBytes);
 
-	ConciseSet getBitMap(int valueId);
+	ConciseSet getBitMap(int startIncludsiveId, int endExclusiveId);
 
 	int getMaxValueId();
 
