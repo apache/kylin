@@ -93,10 +93,6 @@ public class Broadcaster {
         return BroadcasterHolder.INSTANCE;
     }
 
-    public void queueSyncMetadata() {
-        queue(TYPE.METADATA.getType(), EVENT.CREATE.getType(), "metadata");
-    }
-
     /**
      * Broadcast the cubedesc event out
      * 
@@ -109,11 +105,6 @@ public class Broadcaster {
         } catch (Exception e) {
             logger.error("error putting BroadcastEvent", e);
         }
-    }
-
-    public static String genEventkey(String type, String action, String name) {
-        String time = String.valueOf(System.currentTimeMillis());
-        return time + "_" + type + "_" + action + "_" + name;
     }
 
     public static enum EVENT {

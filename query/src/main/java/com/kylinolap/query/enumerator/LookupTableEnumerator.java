@@ -44,7 +44,7 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
 
     public LookupTableEnumerator(OLAPContext olapContext) {
 
-        //TODO: assuming LookupTableEnumerator is hanlded by a cube
+        //TODO: assuming LookupTableEnumerator is handled by a cube
         CubeInstance cube = (CubeInstance) olapContext.realization;
 
         String lookupTableName = olapContext.firstTableScan.getTableName();
