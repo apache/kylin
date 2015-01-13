@@ -1,1 +1,1 @@
-select price, SELLER_ID from test_kylin_fact   where SELLER_ID > 10000570
+select price, SELLER_ID from test_kylin_fact   where SELLER_ID > 10000149
