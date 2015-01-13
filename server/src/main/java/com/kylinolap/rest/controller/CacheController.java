@@ -108,6 +108,8 @@ public class CacheController extends BasicController {
                 break;
             }
             break;
+        default:
+            throw new RuntimeException("invalid type:" + wipeType);
         }
     }
 }
