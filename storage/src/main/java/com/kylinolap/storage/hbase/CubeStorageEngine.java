@@ -599,7 +599,7 @@ public class CubeStorageEngine implements IStorageEngine {
     }
 
     private void setLimit(TupleFilter filter, StorageContext context) {
-        boolean goodAggr = context.isExactAggregation() || context.isAvoidAggregation();
+        boolean goodAggr = context.isExactAggregation() ;
         boolean goodFilter = filter == null || (TupleFilter.isEvaluableRecursively(filter) && context.isCoprocessorEnabled());
         boolean goodSort = context.hasSort() == false;
         if (goodAggr && goodFilter && goodSort) {

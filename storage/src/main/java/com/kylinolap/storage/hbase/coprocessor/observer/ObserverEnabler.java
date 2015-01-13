@@ -88,10 +88,6 @@ public class ObserverEnabler {
 
     private static boolean isCoprocessorBeneficial(CubeInstance cube, Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders, StorageContext context) {
 
-        if (context.isAvoidAggregation()) {
-            logger.info("Coprocessor is disabled because context tells to avoid aggregation");
-            return false;
-        }
 
         String forceFlag = System.getProperty(FORCE_COPROCESSOR);
         if (forceFlag != null) {
