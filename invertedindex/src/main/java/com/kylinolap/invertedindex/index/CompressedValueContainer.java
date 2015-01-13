@@ -56,6 +56,7 @@ public class CompressedValueContainer implements ColumnValueContainer {
 		size++;
 	}
 
+
 	@Override
 	public void getValueAt(int i, ImmutableBytesWritable valueBytes) {
 		valueBytes.set(uncompressed, valueLen * i, valueLen);
