@@ -23,20 +23,24 @@ import org.springframework.stereotype.Component;
 
 import com.kylinolap.common.restclient.Broadcaster;
 
+import java.util.regex.Pattern;
+
 /**
  * @author xduo
  * 
  */
 @Aspect
 @Component("cacheIntercaptor")
-public class CacheIntercaptor {
+public class CacheInterceptor {
+
+    private static Pattern UPDATE_PATTERN = Pattern.compile("(update|create|save|disable|enable|delete|drop|purge)");
 
     @After("execution(public * com.kylinolap.rest.controller.CubeController.*(..)) || execution(public * com.kylinolap.rest.controller.ProjectController.*(..))")
     public void flush(JoinPoint joinPoint) {
         String methodName = joinPoint.getSignature().getName();
 
-        if (methodName.matches("(update|create|save|disable|enable|delete|drop|purge)")) {
-            Broadcaster.flush();
+        if (UPDATE_PATTERN.matcher(methodName).find()) {
+//            Broadcaster.flush();
         }
     }
 }
