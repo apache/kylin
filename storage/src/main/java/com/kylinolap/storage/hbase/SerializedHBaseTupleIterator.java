@@ -31,9 +31,9 @@ import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.kv.RowValueDecoder;
 import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.StorageContext;
-import com.kylinolap.storage.filter.TupleFilter;
-import com.kylinolap.storage.tuple.ITuple;
-import com.kylinolap.storage.tuple.ITupleIterator;
+import com.kylinolap.metadata.filter.TupleFilter;
+import com.kylinolap.metadata.tuple.ITuple;
+import com.kylinolap.metadata.tuple.ITupleIterator;
 
 /**
  * @author xjiang

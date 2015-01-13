@@ -177,14 +177,6 @@ public class StorageContext {
         this.partialResultReturned = partialResultReturned;
     }
 
-    public boolean isAvoidAggregation() {
-        return avoidAggregation;
-    }
-
-    public void markAvoidAggregation() {
-        this.avoidAggregation = true;
-    }
-
     public void setExactAggregation(boolean isExactAggregation) {
         this.exactAggregation = isExactAggregation;
     }

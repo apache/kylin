@@ -1,11 +1,11 @@
 package com.kylinolap.storage.filter;
 
-import static org.junit.Assert.*;
-
 import java.util.ArrayList;
 
 import com.kylinolap.dict.Dictionary;
+import com.kylinolap.metadata.filter.*;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
@@ -14,7 +14,7 @@ import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.filter.BitMapFilterEvaluator.BitMapProvider;
-import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
+import com.kylinolap.metadata.filter.TupleFilter.FilterOperatorEnum;
 
 public class BitMapFilterEvaluatorTest {
 

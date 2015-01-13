@@ -15,17 +15,10 @@
  */
 package com.kylinolap.storage.hbase;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
+import com.kylinolap.metadata.model.*;
+import com.kylinolap.metadata.realization.SQLDigest;
 import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
 
 import org.apache.hadoop.hbase.client.HConnection;
@@ -46,27 +39,23 @@ import com.kylinolap.cube.kv.RowValueDecoder;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.HBaseColumnDesc;
 import com.kylinolap.cube.model.HBaseMappingDesc;
-import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.cube.model.CubeDesc.DeriveInfo;
 import com.kylinolap.dict.lookup.LookupStringTable;
-import com.kylinolap.metadata.model.FunctionDesc;
-import com.kylinolap.metadata.model.SegmentStatusEnum;
-import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.IStorageEngine;
 import com.kylinolap.storage.StorageContext;
-import com.kylinolap.storage.filter.ColumnTupleFilter;
-import com.kylinolap.storage.filter.CompareTupleFilter;
-import com.kylinolap.storage.filter.LogicalTupleFilter;
-import com.kylinolap.storage.filter.TupleFilter;
-import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
-import com.kylinolap.storage.tuple.ITupleIterator;
+import com.kylinolap.metadata.filter.ColumnTupleFilter;
+import com.kylinolap.metadata.filter.CompareTupleFilter;
+import com.kylinolap.metadata.filter.LogicalTupleFilter;
+import com.kylinolap.metadata.filter.TupleFilter;
+import com.kylinolap.metadata.filter.TupleFilter.FilterOperatorEnum;
+import com.kylinolap.metadata.tuple.ITupleIterator;
 
 /**
  * @author xjiang, yangli9
  */
-public class HBaseStorageEngine implements IStorageEngine {
+public class CubeStorageEngine implements IStorageEngine {
 
-    private static final Logger logger = LoggerFactory.getLogger(HBaseStorageEngine.class);
+    private static final Logger logger = LoggerFactory.getLogger(CubeStorageEngine.class);
 
     private static final int MERGE_KEYRANGE_THRESHOLD = 7;
     private static final long MEM_BUDGET_PER_QUERY = 3L * 1024 * 1024 * 1024; // 3G
@@ -74,14 +63,21 @@ public class HBaseStorageEngine implements IStorageEngine {
     private final CubeInstance cubeInstance;
     private final CubeDesc cubeDesc;
 
-    public HBaseStorageEngine(CubeInstance cube) {
+    public CubeStorageEngine(CubeInstance cube) {
         this.cubeInstance = cube;
         this.cubeDesc = cube.getDescriptor();
     }
 
     @Override
-    public ITupleIterator search(Collection<TblColRef> dimensions, TupleFilter filter, //
-            Collection<TblColRef> groups, Collection<FunctionDesc> metrics, StorageContext context) {
+    public ITupleIterator search(StorageContext context, SQLDigest sqlDigest) {
+
+        Collection<TblColRef> groups = sqlDigest.groupbyColumns;
+        TupleFilter filter = sqlDigest.filter;
+
+        // build dimension & metrics
+        Collection<TblColRef> dimensions = new HashSet<TblColRef>();
+        Collection<FunctionDesc> metrics = new HashSet<FunctionDesc>();
+        buildDimensionsAndMetrics(dimensions, metrics, sqlDigest);
 
         // all dimensions = groups + others
         Set<TblColRef> others = Sets.newHashSet(dimensions);
@@ -129,6 +125,23 @@ public class HBaseStorageEngine implements IStorageEngine {
 
         HConnection conn = HBaseConnection.get(context.getConnUrl());
         return new SerializedHBaseTupleIterator(conn, scans, cubeInstance, dimensionsD, filterD, groupsCopD, valueDecoders, context);
+    }
+
+    private void buildDimensionsAndMetrics(Collection<TblColRef> dimensions, Collection<FunctionDesc> metrics, SQLDigest sqlDigest) {
+
+        for (FunctionDesc func : sqlDigest.aggregations) {
+            if (!func.isAppliedOnDimension()) {
+                metrics.add(func);
+            }
+        }
+
+        for (TblColRef column : sqlDigest.allColumns) {
+            // skip measure columns
+            if (sqlDigest.metricColumns.contains(column)) {
+                continue;
+            }
+            dimensions.add(column);
+        }
     }
 
     private Cuboid identifyCuboid(Set<TblColRef> dimensions) {
@@ -586,7 +599,7 @@ public class HBaseStorageEngine implements IStorageEngine {
     }
 
     private void setLimit(TupleFilter filter, StorageContext context) {
-        boolean goodAggr = context.isExactAggregation() || context.isAvoidAggregation();
+        boolean goodAggr = context.isExactAggregation() ;
         boolean goodFilter = filter == null || (TupleFilter.isEvaluableRecursively(filter) && context.isCoprocessorEnabled());
         boolean goodSort = context.hasSort() == false;
         if (goodAggr && goodFilter && goodSort) {

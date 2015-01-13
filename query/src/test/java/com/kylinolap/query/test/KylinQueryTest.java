@@ -133,7 +133,7 @@ public class KylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = "src/test/resources/query/sql/query01.sql";
+        String queryFileName = "src/test/resources/query/sql_ii/query02.sql";
 
         File sqlFile = new File(queryFileName);
         runSQL(sqlFile, true, true);
@@ -252,6 +252,7 @@ public class KylinQueryTest extends KylinTestBase {
         execAndCompDynamicQuery("src/test/resources/query/sql_dynamic", null, true);
     }
 
+    @Ignore("simple query will be supported by ii")
     @Test
     public void testLimitEnabled() throws Exception {
         runSqlFile("src/test/resources/query/sql_optimize/enable-limit01.sql");

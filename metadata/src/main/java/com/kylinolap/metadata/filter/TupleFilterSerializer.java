@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.storage.filter;
+package com.kylinolap.metadata.filter;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.Stack;
 
 import com.kylinolap.common.util.BytesUtil;
-import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
 
 /**
  * http://eli.thegreenplace.net/2011/09/29/an-interesting-tree-serialization-algorithm-from-dwarf
@@ -37,10 +36,10 @@ public class TupleFilterSerializer {
     }
 
     private static final int BUFFER_SIZE = 65536;
-    private static final Map<Integer, FilterOperatorEnum> ID_OP_MAP = new HashMap<Integer, FilterOperatorEnum>();
+    private static final Map<Integer, TupleFilter.FilterOperatorEnum> ID_OP_MAP = new HashMap<Integer, TupleFilter.FilterOperatorEnum>();
 
     static {
-        for (FilterOperatorEnum op : FilterOperatorEnum.values()) {
+        for (TupleFilter.FilterOperatorEnum op : TupleFilter.FilterOperatorEnum.values()) {
             ID_OP_MAP.put(op.getValue(), op);
         }
     }
@@ -134,7 +133,7 @@ public class TupleFilterSerializer {
     }
 
     private static TupleFilter createTupleFilter(int opVal) {
-        FilterOperatorEnum op = ID_OP_MAP.get(opVal);
+        TupleFilter.FilterOperatorEnum op = ID_OP_MAP.get(opVal);
         if (op == null) {
             throw new IllegalStateException("operator value is " + opVal);
         }

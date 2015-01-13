@@ -39,7 +39,7 @@ import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowValueDecoder;
 import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.StorageContext;
-import com.kylinolap.storage.filter.TupleFilter;
+import com.kylinolap.metadata.filter.TupleFilter;
 import com.kylinolap.storage.hbase.RegionScannerAdapter;
 import com.kylinolap.storage.hbase.ResultScannerAdapter;
 
@@ -88,10 +88,6 @@ public class ObserverEnabler {
 
     private static boolean isCoprocessorBeneficial(CubeInstance cube, Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders, StorageContext context) {
 
-        if (context.isAvoidAggregation()) {
-            logger.info("Coprocessor is disabled because context tells to avoid aggregation");
-            return false;
-        }
 
         String forceFlag = System.getProperty(FORCE_COPROCESSOR);
         if (forceFlag != null) {

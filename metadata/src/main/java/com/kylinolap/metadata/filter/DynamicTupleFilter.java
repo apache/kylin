@@ -13,41 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kylinolap.storage.filter;
+package com.kylinolap.metadata.filter;
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 
 import com.kylinolap.common.util.BytesUtil;
-import com.kylinolap.storage.tuple.ITuple;
+import com.kylinolap.metadata.tuple.ITuple;
 
 /**
  * 
  * @author xjiang
  * 
  */
-public class ConstantTupleFilter extends TupleFilter {
+public class DynamicTupleFilter extends TupleFilter {
 
-    public static final ConstantTupleFilter FALSE = new ConstantTupleFilter();
-    public static final ConstantTupleFilter TRUE = new ConstantTupleFilter("TRUE");
+    private String variableName;
 
-    private Collection<String> constantValues;
-
-    public ConstantTupleFilter() {
-        super(Collections.<TupleFilter> emptyList(), FilterOperatorEnum.CONSTANT);
-        this.constantValues = new HashSet<String>();
+    public DynamicTupleFilter(String name) {
+        super(Collections.<TupleFilter> emptyList(), FilterOperatorEnum.DYNAMIC);
+        this.variableName = name;
     }
 
-    public ConstantTupleFilter(String value) {
-        this();
-        this.constantValues.add(value);
-    }
-
-    public ConstantTupleFilter(Collection<String> values) {
-        this();
-        this.constantValues.addAll(values);
+    public String getVariableName() {
+        return variableName;
     }
 
     @Override
@@ -57,12 +47,12 @@ public class ConstantTupleFilter extends TupleFilter {
 
     @Override
     public String toString() {
-        return "ConstantFilter [constant=" + constantValues + "]";
+        return "DynamicFilter [variableName=" + variableName + "]";
     }
 
     @Override
     public boolean evaluate(ITuple tuple) {
-        return constantValues.size() > 0;
+        return true;
     }
 
     @Override
@@ -72,17 +62,13 @@ public class ConstantTupleFilter extends TupleFilter {
 
     @Override
     public Collection<String> getValues() {
-        return this.constantValues;
+        return Collections.emptyList();
     }
 
     @Override
     public byte[] serialize() {
         ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
-        int size = this.constantValues.size();
-        BytesUtil.writeVInt(size, buffer);
-        for (String val : this.constantValues) {
-            BytesUtil.writeUTFString(val, buffer);
-        }
+        BytesUtil.writeUTFString(variableName, buffer);
         byte[] result = new byte[buffer.position()];
         System.arraycopy(buffer.array(), 0, result, 0, buffer.position());
         return result;
@@ -90,12 +76,8 @@ public class ConstantTupleFilter extends TupleFilter {
 
     @Override
     public void deserialize(byte[] bytes) {
-        this.constantValues.clear();
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
-        int size = BytesUtil.readVInt(buffer);
-        for (int i = 0; i < size; i++) {
-            this.constantValues.add(BytesUtil.readUTFString(buffer));
-        }
+        this.variableName = BytesUtil.readUTFString(buffer);
     }
 
 }
