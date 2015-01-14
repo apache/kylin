@@ -53,9 +53,9 @@ public class CacheController extends BasicController {
      * Wipe system cache
      * 
      * @param type
-     *            {@link MetadataConstances.TYPE}
+     *            {@link Broadcaster.TYPE}
      * @param event
-     *            {@link MetadataConstances.EVENT}
+     *            {@link Broadcaster.EVENT}
      * @param name
      * @return if the action success
      * @throws IOException
@@ -108,6 +108,8 @@ public class CacheController extends BasicController {
                 break;
             }
             break;
+        default:
+            throw new RuntimeException("invalid type:" + wipeType);
         }
     }
 }

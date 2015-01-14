@@ -61,7 +61,7 @@ import com.kylinolap.metadata.model.TblColRef;
 public class CubeDesc extends RootPersistentEntity {
 
     public static enum RealizationCapacity {
-        SMALL, MEDIUM, LARGE;
+        SMALL, MEDIUM, LARGE
     }
 
     public static enum DeriveType {

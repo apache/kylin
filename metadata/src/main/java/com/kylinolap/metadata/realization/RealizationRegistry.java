@@ -3,12 +3,16 @@ package com.kylinolap.metadata.realization;
 import com.google.common.collect.*;
 import com.kylinolap.common.KylinConfig;
 
+import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.jvm.hotspot.oops.InstanceKlass;
+import sun.jvm.hotspot.tools.jcore.ClassFilter;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -59,11 +63,10 @@ public class RealizationRegistry {
         providers = Maps.newConcurrentMap();
         
         // use reflection to load providers
-        List<String> realizationProviders = Lists.newArrayList("com.kylinolap.cube.CubeManager","com.kylinolap.invertedindex.IIManager");
+        final Set<Class<? extends IRealizationProvider>> realizationProviders = new Reflections("").getSubTypesOf(IRealizationProvider.class);
         List<Throwable> es = Lists.newArrayList();
-        for (String clsName : realizationProviders) {
+        for (Class<? extends IRealizationProvider> cls : realizationProviders) {
             try {
-                Class<?> cls = Class.forName(clsName);
                 IRealizationProvider p = (IRealizationProvider) cls.getMethod("getInstance", KylinConfig.class).invoke(null, config);
                 providers.put(p.getRealizationType(), p);
                 
