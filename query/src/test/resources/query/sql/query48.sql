@@ -1,1 +1,0 @@
-select count(*) as CNT from test_sites

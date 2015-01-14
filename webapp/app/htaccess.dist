@@ -1,3 +1,0 @@
-# nginx rewrite rule
-rewrite ^(.*)$  /index.html break;
-# end nginx rewrite rule
