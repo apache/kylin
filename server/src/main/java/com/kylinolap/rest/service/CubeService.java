@@ -527,10 +527,9 @@ public class CubeService extends BasicService {
      *
      * @throws IOException
      * @throws JobException
-     * @throws UnknownHostException
      * @throws CubeIntegrityException
      */
-    private void releaseAllSegments(CubeInstance cube) throws IOException, JobException, UnknownHostException, CubeIntegrityException {
+    private void releaseAllSegments(CubeInstance cube) throws IOException, JobException, CubeIntegrityException {
         final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null);
         for (CubingJob cubingJob : cubingJobs) {
             final ExecutableState status = cubingJob.getStatus();
@@ -545,7 +544,6 @@ public class CubeService extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER)
     public String[] reloadHiveTable(String tables) throws IOException {
         Set<String> loaded = HiveSourceTableLoader.reloadHiveTables(tables.split(","), getConfig());
-        getMetadataManager().reload();
         return (String[]) loaded.toArray(new String[loaded.size()]);
     }
 

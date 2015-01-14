@@ -65,16 +65,30 @@ public class CacheController extends BasicController {
     public void wipeCache(@PathVariable String type, @PathVariable String event, @PathVariable String name) throws IOException {
         Broadcaster.TYPE wipeType = Broadcaster.TYPE.getType(type);
         EVENT wipeEvent = Broadcaster.EVENT.getEvent(event);
+        final String log = "wipe cache type: " + wipeType + " event:" + wipeEvent + " name:" + name;
+        logger.debug(log);
         switch (wipeType) {
-        case METADATA:
-            logger.debug("Reload all metadata");
-            cubeMgmtService.reloadMetadataCache();
-            projectService.cleanDataCache();
-            cubeMgmtService.cleanDataCache();
+            case TABLE:
+            switch (wipeEvent) {
+                case CREATE:
+                case UPDATE:
+                    cubeMgmtService.getMetadataManager().reloadTableCache(name);
+                    break;
+                case DROP:
+                    throw new UnsupportedOperationException(log);
+            }
+            break;
+        case DATA_MODEL:
+            switch (wipeEvent) {
+                case CREATE:
+                case UPDATE:
+                    cubeMgmtService.getMetadataManager().reloadDataModelDesc(name);
+                    break;
+                case DROP:
+                    throw new UnsupportedOperationException(log);
+            }
             break;
         case CUBE:
-            logger.debug("Reload cube " + name + " with type:" + type + ", event type " + event);
-            cubeMgmtService.reloadMetadataCache();
             if ("ALL".equalsIgnoreCase(name.toUpperCase())) {
                 cubeMgmtService.cleanDataCache();
                 break;
@@ -91,8 +105,6 @@ public class CacheController extends BasicController {
             }
             break;
         case PROJECT:
-            logger.debug("Reload project " + name + " with type:" + type + ", event type " + event);
-            cubeMgmtService.reloadMetadataCache();
             if ("ALL".equalsIgnoreCase(name.toUpperCase())) {
                 projectService.cleanDataCache();
                 break;
@@ -109,7 +121,7 @@ public class CacheController extends BasicController {
             }
             break;
         default:
-            throw new RuntimeException("invalid type:" + wipeType);
+            throw new UnsupportedOperationException(log);
         }
     }
 }

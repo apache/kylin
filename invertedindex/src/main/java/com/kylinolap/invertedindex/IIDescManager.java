@@ -51,7 +51,7 @@ public class IIDescManager {
 
     private KylinConfig config;
     // name ==> IIDesc
-    private SingleValueCache<String, IIDesc> iiDescMap = new SingleValueCache<String, IIDesc>(Broadcaster.TYPE.METADATA);
+    private SingleValueCache<String, IIDesc> iiDescMap = new SingleValueCache<String, IIDesc>(Broadcaster.TYPE.INVERTED_INDEX);
 
     public static IIDescManager getInstance(KylinConfig config) {
         IIDescManager r = CACHE.get(config);
