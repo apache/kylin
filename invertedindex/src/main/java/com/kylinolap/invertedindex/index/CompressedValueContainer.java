@@ -60,12 +60,12 @@ public class CompressedValueContainer implements ColumnValueContainer {
     }
 
     @Override
-    public ConciseSet getBitMap(int startInclusiveId, int endExclusiveId) {
+    public ConciseSet getBitMap(Integer startId, Integer endId) {
         ConciseSet ret = new ConciseSet();
+        int nullId = com.kylinolap.dict.Dictionary.NULL_ID[valueLen];
 
-        if (startInclusiveId == endExclusiveId) {
+        if (startId == null && endId == null) {
             //entry for getting null values 
-            int nullId = com.kylinolap.dict.Dictionary.NULL_ID[valueLen];
             for (int i = 0; i < size; ++i) {
                 int valueID = BytesUtil.readUnsigned(uncompressed, i * valueLen, valueLen);
                 if (nullId == valueID) {
@@ -78,9 +78,19 @@ public class CompressedValueContainer implements ColumnValueContainer {
         //normal values
         for (int i = 0; i < size; ++i) {
             int valueID = BytesUtil.readUnsigned(uncompressed, i * valueLen, valueLen);
-            if (valueID >= startInclusiveId && valueID < endExclusiveId) {
-                ret.add(i);
+            if (valueID == nullId) {
+                continue;
             }
+
+            if (startId != null && valueID < startId) {
+                continue;
+            }
+
+            if (endId != null && valueID > endId) {
+                continue;
+            }
+
+            ret.add(i);
         }
         return ret;
 
