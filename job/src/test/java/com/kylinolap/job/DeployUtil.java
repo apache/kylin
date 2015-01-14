@@ -20,6 +20,7 @@ import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.ResourceTool;
 import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.CliCommandExecutor;
+import com.kylinolap.common.util.HiveClient;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.job.dataGen.FactTableGenerator;
@@ -29,7 +30,6 @@ import com.kylinolap.job.tools.LZOSupportnessChecker;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.tool.HiveClient;
 
 public class DeployUtil {
     @SuppressWarnings("unused")
