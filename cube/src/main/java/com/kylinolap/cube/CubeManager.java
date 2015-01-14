@@ -102,7 +102,7 @@ public class CubeManager implements IRealizationProvider {
     // cube name ==> CubeInstance
     private SingleValueCache<String, CubeInstance> cubeMap = new SingleValueCache<String, CubeInstance>(Broadcaster.TYPE.CUBE);
     // "table/column" ==> lookup table
-    private SingleValueCache<String, LookupStringTable> lookupTables = new SingleValueCache<String, LookupStringTable>(Broadcaster.TYPE.METADATA);
+//    private SingleValueCache<String, LookupStringTable> lookupTables = new SingleValueCache<String, LookupStringTable>(Broadcaster.TYPE.METADATA);
 
     // for generation hbase table name of a new segment
     private HashSet<String> usedStorageLocation = new HashSet<String>();
@@ -468,26 +468,17 @@ public class CubeManager implements IRealizationProvider {
 
         String tableName = dim.getTable();
         String[] pkCols = dim.getJoin().getPrimaryKey();
-        String key = tableName + "#" + StringUtils.join(pkCols, ",");
+        String snapshotResPath = cubeSegment.getSnapshotResPath(tableName);
+        if (snapshotResPath == null)
+            throw new IllegalStateException("No snaphot for table '" + tableName + "' found on cube segment" + cubeSegment.getCubeInstance().getName() + "/" + cubeSegment);
 
-        LookupStringTable r = lookupTables.get(key);
-        if (r == null) {
-            String snapshotResPath = cubeSegment.getSnapshotResPath(tableName);
-            if (snapshotResPath == null)
-                throw new IllegalStateException("No snaphot for table '" + tableName + "' found on cube segment" + cubeSegment.getCubeInstance().getName() + "/" + cubeSegment);
-
-            try {
-                SnapshotTable snapshot = getSnapshotManager().getSnapshotTable(snapshotResPath);
-                TableDesc tableDesc = getMetadataManager().getTableDesc(tableName);
-                r = new LookupStringTable(tableDesc, pkCols, snapshot);
-            } catch (IOException e) {
-                throw new IllegalStateException("Failed to load lookup table " + tableName + " from snapshot " + snapshotResPath, e);
-            }
-
-            lookupTables.putLocal(key, r);
+        try {
+            SnapshotTable snapshot = getSnapshotManager().getSnapshotTable(snapshotResPath);
+            TableDesc tableDesc = getMetadataManager().getTableDesc(tableName);
+            return new LookupStringTable(tableDesc, pkCols, snapshot);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to load lookup table " + tableName + " from snapshot " + snapshotResPath, e);
         }
-
-        return r;
     }
 
     /**
