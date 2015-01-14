@@ -156,6 +156,9 @@ public class JobService extends BasicService {
     }
 
     private JobInstance parseToJobInstance(AbstractExecutable job) {
+        if (job == null) {
+            return null;
+        }
         Preconditions.checkState(job instanceof CubingJob, "illegal job type, id:" + job.getId());
         CubingJob cubeJob = (CubingJob) job;
         final JobInstance result = new JobInstance();
