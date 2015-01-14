@@ -28,6 +28,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -119,10 +120,12 @@ public class TableController extends BasicController {
     @RequestMapping(value = "/{tables}/{project}", method = { RequestMethod.POST })
     @ResponseBody
     public Map<String, String[]> loadHiveTable(@PathVariable String tables, @PathVariable String project) throws IOException {
-        String[] arr = cubeMgmtService.reloadHiveTable(tables);
+        String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
+        String[] loaded = cubeMgmtService.reloadHiveTable(tables);
+        cubeMgmtService.calculateCardinalityIfNotPresent(loaded, submitter);
         cubeMgmtService.syncTableToProject(tables, project);
         Map<String, String[]> result = new HashMap<String, String[]>();
-        result.put("result.loaded", arr);
+        result.put("result.loaded", loaded);
         result.put("result.unloaded", new String[]{});
         return result;
     }
@@ -136,9 +139,10 @@ public class TableController extends BasicController {
     @RequestMapping(value = "/{tableNames}/cardinality", method = { RequestMethod.PUT })
     @ResponseBody
     public CardinalityRequest generateCardinality(@PathVariable String tableNames, @RequestBody CardinalityRequest request) {
+        String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
         String[] tables = tableNames.split(",");
         for (String table : tables) {
-            cubeMgmtService.generateCardinality(table.trim(), request.getFormat(), request.getDelimiter());
+            cubeMgmtService.calculateCardinality(table.trim().toUpperCase(), submitter);
         }
         return request;
     }
