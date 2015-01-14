@@ -131,14 +131,6 @@ public abstract class BasicService {
         BasicService.resetOLAPDataSources();
     }
 
-    /**
-     * Reload the cube desc with name {name} into cache
-     * 
-     */
-    public void reloadMetadataCache() {
-        MetadataManager.getInstance(getConfig()).reload();
-    }
-
     public final KylinConfig getKylinConfig() {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
 

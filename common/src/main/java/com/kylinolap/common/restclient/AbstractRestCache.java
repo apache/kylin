@@ -28,9 +28,8 @@ public abstract class AbstractRestCache<K, V> {
         this.syncType = syncType;
     }
 
-    protected final void syncRemote(Object key, Broadcaster.EVENT syncAction) {
-        String syncKey = (syncType == Broadcaster.TYPE.METADATA) ? "metadata" : key.toString();
-        Broadcaster.getInstance().queue(syncType.getType(), syncAction.getType(), syncKey);
+    protected final void syncRemote(K key, Broadcaster.EVENT syncAction) {
+        Broadcaster.getInstance().queue(syncType.getType(), syncAction.getType(), key.toString());
     }
 
     public abstract void put(K key, V value);

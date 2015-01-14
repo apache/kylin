@@ -220,7 +220,6 @@ public class IIManager implements IRealizationProvider {
     }
 
     private void afterIIUpdated(IIInstance updatedII) {
-        MetadataManager.getInstance(config).reload();
         iiMap.put(updatedII.getName().toUpperCase(), updatedII);
     }
 
