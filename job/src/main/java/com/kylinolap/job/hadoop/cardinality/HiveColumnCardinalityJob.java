@@ -1,54 +1,57 @@
+/*
+ * Copyright 2013-2014 eBay Software Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.kylinolap.job.hadoop.cardinality;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.compress.CompressionCodec;
-import org.apache.hadoop.io.compress.CompressionCodecFactory;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.util.ToolRunner;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 
 import com.kylinolap.common.util.HadoopUtil;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
+/**
+ * This hadoop job will scan all rows of the hive table and then calculate the cardinality on each column.
+ * @author shaoshi
+ *
+ */
 public class HiveColumnCardinalityJob extends AbstractHadoopJob {
     public static final String JOB_TITLE = "Kylin Hive Column Cardinality Job";
 
     @SuppressWarnings("static-access")
     protected static final Option OPTION_TABLE = OptionBuilder.withArgName("table name").hasArg().isRequired(true).withDescription("The hive table name").create("table");
 
-    public static final String KEY_INPUT_DELIM = "INPUT_DELIM";
     public static final String OUTPUT_PATH = "/tmp/cardinality";
 
     /**
      * This is the jar path
      */
     private String jarPath;
-    private Configuration conf;
-    
+
     private String table;
 
     /**
@@ -63,48 +66,6 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
     public HiveColumnCardinalityJob(String path, String tokenPath) {
         this.jarPath = path;
         this.tokenPath = tokenPath;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.hadoop.conf.Configured#getConf()
-     */
-    @Override
-    public Configuration getConf() {
-        if (conf != null) {
-            return conf;
-        }
-        conf = new JobConf();
-        String path = "/apache/hadoop/conf/";
-        File file = new File(path);
-        if (file.isDirectory()) {
-            File[] files = file.listFiles();
-            for (int i = 0; i < files.length; i++) {
-                File tmp = files[i];
-                if (tmp.getName().endsWith(".xml")) {
-                    try {
-                        conf.addResource(new FileInputStream(tmp));
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-
-        // conf.addResource("/apache/hadoop/conf/mapred-site.xml");
-        if (tokenPath != null) {
-            conf.set(MRJobConfig.MAPREDUCE_JOB_CREDENTIALS_BINARY, tokenPath);
-            conf.set("hadoop.security.authentication", "kerberos");
-            UserGroupInformation.setConfiguration(conf);
-            try {
-                UserGroupInformation.loginUserFromKeytab("b_kylin@CORP.EBAY.COM", "~/.keytabs/b_kylin.keytab");
-                System.out.println("###" + UserGroupInformation.getLoginUser());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return conf;
     }
 
     @SuppressWarnings("unchecked")
@@ -138,13 +99,9 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
 
             // Mapper
             this.table = getOptionValue(OPTION_TABLE);
-            System.out.println("Going to start HiveColumnCardinalityJob on table '" + table + "'");
             String[] dbTableNames = HadoopUtil.parseHiveTableName(table);
-            HCatInputFormat.setInput(job, dbTableNames[0],
-                    dbTableNames[1]);
+            HCatInputFormat.setInput(job, dbTableNames[0], dbTableNames[1]);
 
-            System.out.println("Set input format as HCat on table '" + table + "'");
-            
             job.setInputFormatClass(HCatInputFormat.class);
             job.setMapperClass(ColumnCardinalityMapper.class);
             job.setMapOutputKeyClass(IntWritable.class);
@@ -156,17 +113,12 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
             job.setOutputKeyClass(IntWritable.class);
             job.setOutputValueClass(LongWritable.class);
             job.setNumReduceTasks(1);
-            
 
             this.deletePath(job.getConfiguration(), output);
 
-            isAsync = true;
             System.out.println("Going to submit HiveColumnCardinalityJob for table '" + table + "'");
             int result = waitForCompletion(job);
 
-            System.out.println("Get job track url " + job.getJobID() + "\n");
-            System.out.println("Get job track url " + job.getTrackingURL() + "\n");
-            
             return result;
         } catch (Exception e) {
             printUsage(options);
@@ -175,45 +127,6 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
             return 2;
         }
 
-    }
-
-    public static void main1(String[] args) throws Exception {
-        int exitCode = ToolRunner.run(new HiveColumnCardinalityJob(), args);
-        System.exit(exitCode);
-    }
-
-    public List<String> readLines(Path location, Configuration conf) throws Exception {
-        FileSystem fileSystem = FileSystem.get(location.toUri(), conf);
-        CompressionCodecFactory factory = new CompressionCodecFactory(conf);
-        FileStatus[] items = fileSystem.listStatus(location);
-        if (items == null)
-            return new ArrayList<String>();
-        List<String> results = new ArrayList<String>();
-        for (FileStatus item : items) {
-
-            // ignoring files like _SUCCESS
-            if (item.getPath().getName().startsWith("_")) {
-                continue;
-            }
-
-            CompressionCodec codec = factory.getCodec(item.getPath());
-            InputStream stream = null;
-
-            // check if we have a compression codec we need to use
-            if (codec != null) {
-                stream = codec.createInputStream(fileSystem.open(item.getPath()));
-            } else {
-                stream = fileSystem.open(item.getPath());
-            }
-
-            StringWriter writer = new StringWriter();
-            IOUtils.copy(stream, writer, "UTF-8");
-            String raw = writer.toString();
-            for (String str : raw.split("\n")) {
-                results.add(str);
-            }
-        }
-        return results;
     }
 
 }

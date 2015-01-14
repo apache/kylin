@@ -15,10 +15,7 @@
  */
 package com.kylinolap.rest.service;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -32,11 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,25 +41,24 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.util.HBaseRegionSizeCalculator;
 import com.kylinolap.common.util.HadoopUtil;
-import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.CuboidCLI;
 import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.job.exception.JobException;
-import com.kylinolap.job.hadoop.cardinality.HiveColumnCardinalityJob;
+import com.kylinolap.job.common.HadoopShellExecutable;
 import com.kylinolap.job.cube.CubingJob;
+import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.execution.ExecutableState;
+import com.kylinolap.job.hadoop.cardinality.HiveColumnCardinalityJob;
+import com.kylinolap.job.hadoop.cardinality.HiveColumnCardinalityUpdateJob;
+import com.kylinolap.job.impl.threadpool.DefaultChainedExecutable;
 import com.kylinolap.metadata.MetadataConstances;
-import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.project.ProjectInstance;
@@ -473,109 +466,45 @@ public class CubeService extends BasicService {
     }
 
     /**
-     * Generate cardinality for table This will trigger a hadoop job and nothing
+     * Generate cardinality for table This will trigger a hadoop job
      * The result will be merged into table exd info
      *
      * @param tableName
-     * @param delimiter
-     * @param format
      */
-    public void generateCardinality(String tableName, String format, String delimiter) {
+    public void calculateCardinality(String tableName, String submitter) {
+        String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
+        tableName = dbTableName[0] + "." + dbTableName[1];
         TableDesc table = getMetadataManager().getTableDesc(tableName);
-        Map<String, String> tableExd = getMetadataManager().getTableDescExd(tableName);
+        final Map<String, String> tableExd = getMetadataManager().getTableDescExd(tableName);
         if (tableExd == null || table == null) {
             IllegalArgumentException e = new IllegalArgumentException("Cannot find table descirptor " + tableName);
             logger.error("Cannot find table descirptor " + tableName, e);
             throw e;
         }
-        /*
-        Map<String, String> exd = getMetadataManager().getTableDescExd(tableName);
-        if (exd == null || !Boolean.valueOf(exd.get(MetadataConstances.TABLE_EXD_STATUS_KEY))) {
-            throw new IllegalArgumentException("Table " + tableName + " does not exist.");
-        }
-        String location = exd.get(MetadataConstances.TABLE_EXD_LOCATION);
-        if (location == null || MetadataConstances.TABLE_EXD_DEFAULT_VALUE.equals(location)) {
-            throw new IllegalArgumentException("Cannot get table " + tableName + " location, the location is " + location);
-        }
-        String inputFormat = exd.get(MetadataConstances.TABLE_EXD_IF);
-        if (inputFormat == null || MetadataConstances.TABLE_EXD_DEFAULT_VALUE.equals(inputFormat)) {
-            throw new IllegalArgumentException("Cannot get table " + tableName + " input format, the format is " + inputFormat);
-        }
-        String delim = exd.get(MetadataConstances.TABLE_EXD_DELIM);
-        if (delimiter != null) {
-            delim = delimiter;
-        }
-        */
-        String jarPath = getKylinConfig().getKylinJobJarPath();
-        String outPath = HiveColumnCardinalityJob.OUTPUT_PATH + "/" + tableName.toUpperCase();
-        String[] args = new String[] {"-table", tableName, "-output", outPath };
         
-        HiveColumnCardinalityJob job = new HiveColumnCardinalityJob(jarPath, null);
-        int hresult = 0;
-        try {
-            hresult = ToolRunner.run(job, args);
-        } catch (Exception e) {
-            logger.error("Cardinality calculation failed. ", e);
-            throw new IllegalArgumentException("Hadoop job failed with exception ", e);
-        }
+        DefaultChainedExecutable job = new DefaultChainedExecutable();
+        job.setName("Hive Column Cardinality calculation for table '" + tableName + "'");
+        job.setSubmitter(submitter);
 
-        // Get calculate result;
-        if (hresult != 0) {
-            throw new IllegalArgumentException("Hadoop job failed with result " + hresult);
-        }
-        List<String> columns = null;
-        try {
-            columns = job.readLines(new Path(outPath), job.getConf());
-        } catch (IllegalArgumentException e) {
-            logger.error("Failed to resolve cardinality for " + tableName + " from " + outPath, e);
-            return;
-        } catch (Exception e) {
-            logger.error("Failed to resolve cardinality for " + tableName + " from " + outPath, e);
-            return;
-        }
-        StringBuffer cardi = new StringBuffer();
-        ColumnDesc[] cols = table.getColumns();
-        if (columns.isEmpty() || cols.length != columns.size()) {
-            logger.error("The hadoop cardinality column size " + columns.size() + " is not equal metadata column size " + cols.length + ". Table " + tableName);
-        }
-        Iterator<String> it = columns.iterator();
-        while (it.hasNext()) {
-            String string = (String) it.next();
-            String[] ss = StringUtils.split(string, "\t");
-
-            if (ss.length != 2) {
-                logger.error("The hadoop cardinality value is not valid " + string);
-                continue;
-            }
-            cardi.append(ss[1]);
-            cardi.append(",");
-        }
-        String scardi = cardi.toString();
-        scardi = scardi.substring(0, scardi.length() - 1);
-        tableExd.put(MetadataConstances.TABLE_EXD_CARDINALITY, scardi);
-
-        try {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            JsonUtil.writeValueIndent(bos, tableExd);
-            System.out.println(bos.toString());
-            ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
-            String xPath = ResourceStore.TABLE_EXD_RESOURCE_ROOT + "/" + tableName.toUpperCase() + "." + HiveSourceTableLoader.OUTPUT_SURFIX;
-            writeResource(bis, KylinConfig.getInstanceFromEnv(), xPath);
-        } catch (JsonGenerationException e) {
-            e.printStackTrace();
-        } catch (JsonMappingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        getMetadataManager().reload();
+        String outPath = HiveColumnCardinalityJob.OUTPUT_PATH + "/" + tableName;
+        String param = "-table " + tableName + " -output " + outPath;
+        
+        HadoopShellExecutable step1 = new HadoopShellExecutable();
+        
+        step1.setJobClass(HiveColumnCardinalityJob.class);
+        step1.setJobParams(param);
+        
+        job.addTask(step1);
+        
+        HadoopShellExecutable step2 = new HadoopShellExecutable();
+        
+        step2.setJobClass(HiveColumnCardinalityUpdateJob.class);
+        step2.setJobParams(param);
+        job.addTask(step2);
+        
+        getExecutableManager().addJob(job);
     }
 
-    private static void writeResource(InputStream source, KylinConfig dstConfig, String path) throws IOException {
-        ResourceStore store = ResourceStore.getStore(dstConfig);
-        store.putResource(path, source, System.currentTimeMillis());
-    }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
     public void updateCubeNotifyList(CubeInstance cube, List<String> notifyList) throws IOException, CubeIntegrityException {
@@ -624,4 +553,18 @@ public class CubeService extends BasicService {
     public void syncTableToProject(String tables, String project) throws IOException {
         getProjectManager().addTableDescToProject(tables, project);
     }
+    
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER)
+    public void calculateCardinalityIfNotPresent(String[] tables, String submitter) throws IOException {
+        MetadataManager metaMgr = getMetadataManager();
+        for (String table : tables) {
+            Map<String, String> exdMap = metaMgr.getTableDescExd(table);
+            if (exdMap == null || !exdMap.containsKey(MetadataConstances.TABLE_EXD_CARDINALITY)) {
+                calculateCardinality(table, submitter);
+            }
+        }
+    }
+
+    
 }

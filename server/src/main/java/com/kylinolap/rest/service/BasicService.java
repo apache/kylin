@@ -173,10 +173,14 @@ public abstract class BasicService {
         List<CubingJob> results = Lists.newArrayList(FluentIterable.from(getExecutableManager().getAllExecutables()).filter(new Predicate<AbstractExecutable>() {
             @Override
             public boolean apply(AbstractExecutable executable) {
-                if (cubeName == null) {
-                    return true;
+                if (executable instanceof CubingJob) {
+                    if (cubeName == null) {
+                        return true;
+                    }
+                    return ((CubingJob) executable).getCubeName().equalsIgnoreCase(cubeName);                    
+                } else {
+                    return false;
                 }
-                return executable instanceof CubingJob && ((CubingJob) executable).getCubeName().equalsIgnoreCase(cubeName);
             }
         }).transform(new Function<AbstractExecutable, CubingJob>() {
             @Override

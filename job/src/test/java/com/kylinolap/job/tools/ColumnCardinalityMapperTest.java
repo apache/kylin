@@ -75,7 +75,6 @@ public class ColumnCardinalityMapperTest {
             s = breader.readLine();
         }
         // breader.close();
-        mapDriver.getConfiguration().set(HiveColumnCardinalityJob.KEY_INPUT_DELIM, "\20");
         List<Pair<IntWritable, BytesWritable>> result = mapDriver.run();
         breader.close();
         assertEquals(9, result.size());
