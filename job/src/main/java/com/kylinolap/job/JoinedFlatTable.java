@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -31,6 +32,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import com.google.common.collect.Lists;
 import com.kylinolap.common.util.StringUtil;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.model.CubeDesc;
@@ -72,7 +74,7 @@ public class JoinedFlatTable {
 
         ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\177'" + "\n");
         ddl.append("STORED AS SEQUENCEFILE" + "\n");
-        ddl.append("LOCATION '" + storageDfsDir + "/" + intermediateTableDesc.getTableName(jobUUID) + "'" + ";");
+        ddl.append("LOCATION '" + storageDfsDir + "/" + intermediateTableDesc.getTableName(jobUUID) + "'");
         // ddl.append("TBLPROPERTIES ('serialization.null.format'='\\\\N')" +
         // ";\n");
         return ddl.toString();
@@ -80,12 +82,12 @@ public class JoinedFlatTable {
 
     public static String generateDropTableStatement(IJoinedFlatTableDesc intermediateTableDesc, String jobUUID) {
         StringBuilder ddl = new StringBuilder();
-        ddl.append("DROP TABLE IF EXISTS " + intermediateTableDesc.getTableName(jobUUID) + ";");
+        ddl.append("DROP TABLE IF EXISTS " + intermediateTableDesc.getTableName(jobUUID));
         return ddl.toString();
     }
 
-    public static String generateInsertDataStatement(IJoinedFlatTableDesc intermediateTableDesc, String jobUUID, JobEngineConfig engineConfig) throws IOException {
-        StringBuilder sql = new StringBuilder();
+    public static String[] generateInsertDataStatement(IJoinedFlatTableDesc intermediateTableDesc, String jobUUID, JobEngineConfig engineConfig) throws IOException {
+        List<String> sqlList = Lists.newArrayList();
 
         File hadoopPropertiesFile = new File(engineConfig.getHadoopJobConfFilePath(intermediateTableDesc.getCapacity()));
 
@@ -101,7 +103,7 @@ public class JoinedFlatTable {
                     String name = doc.getElementsByTagName("name").item(i).getFirstChild().getNodeValue();
                     String value = doc.getElementsByTagName("value").item(i).getFirstChild().getNodeValue();
                     if (name.equals("tmpjars") == false) {
-                        sql.append("SET " + name + "=" + value + ";\n");
+                        sqlList.add("SET " + name + "=" + value);
                     }
                 }
 
@@ -113,14 +115,12 @@ public class JoinedFlatTable {
         }
 
         // hard coded below mr parameters to enable map-side join
-        sql.append("SET hive.exec.compress.output=true;" + "\n");
-        sql.append("SET hive.auto.convert.join.noconditionaltask = true;" + "\n");
-        sql.append("SET hive.auto.convert.join.noconditionaltask.size = 300000000;" + "\n");
-        sql.append("INSERT OVERWRITE TABLE " + intermediateTableDesc.getTableName(jobUUID) + "\n");
+        sqlList.add("SET hive.exec.compress.output=true");
+        sqlList.add("SET hive.auto.convert.join.noconditionaltask = true");
+        sqlList.add("SET hive.auto.convert.join.noconditionaltask.size = 300000000");
+        sqlList.add("INSERT OVERWRITE TABLE " + intermediateTableDesc.getTableName(jobUUID) + " " + generateSelectDataStatement(intermediateTableDesc));
 
-        sql.append(generateSelectDataStatement(intermediateTableDesc));
-        sql.append(";");
-        return sql.toString();
+        return sqlList.toArray(new String[sqlList.size()]);
     }
 
     public static String generateSelectDataStatement(IJoinedFlatTableDesc intermediateTableDesc) {
