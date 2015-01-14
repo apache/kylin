@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.kylinolap.rest.exception.BadRequestException;
 import com.kylinolap.rest.exception.ForbiddenException;
-import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.exception.NotFoundException;
 import com.kylinolap.rest.response.ErrorResponse;
 import com.kylinolap.rest.service.MetricsService;
@@ -48,6 +47,7 @@ public class BasicController {
     @ExceptionHandler(Exception.class)
     @ResponseBody
     ErrorResponse handleError(HttpServletRequest req, Exception ex) {
+        logger.error("", ex);
         return new ErrorResponse(req.getRequestURL().toString(), ex);
     }
     
@@ -70,6 +70,7 @@ public class BasicController {
     @ExceptionHandler(BadRequestException.class)
     @ResponseBody
     ErrorResponse handleBadRequest(HttpServletRequest req, Exception ex) {
+        logger.error("", ex);
         return new ErrorResponse(req.getRequestURL().toString(), ex);
     }
 }

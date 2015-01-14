@@ -9,6 +9,7 @@
                         style="width: 150px"
                         data-placeholder="select a project"
                         class="chosen-select">
+                    <option ng-if="userService.hasRole('ROLE_ADMIN')"  ng-selected="project.selectedProject==null"  value=""> -- Select All -- </option>
                 </select>
                 <!--Project-->
                 <a class="btn btn-xs btn-info" href="/projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
@@ -31,7 +32,7 @@
 
 <!--Jobs Table-->
 <div class="row">
-    <div ng-class="{'col-xs-8': state.showSteps, 'col-xs-12': !state.showSteps}" ng-animate="{enter: 'animated fadeInLeft'}">
+    <div ng-class="{'col-xs-8': state.showSteps, 'col-xs-12': !state.showSteps}">
         <div  class="dataTables_wrapper form-inline no-footer" >
             <!--Jobs Table Header-->
             <div class="row">
@@ -146,7 +147,7 @@
 
         <kylin-pagination data="jobs" load-func="list" action="action"/>
     </div>
-    <div class="col-xs-4" ng-if="state.showSteps" ng-animate="{enter: 'animated fadeInRight'}">
+    <div class="col-xs-4" ng-if="state.showSteps">
         <div ng-include src="'partials/jobs/job_steps.html'"></div>
     </div>
 </div>
