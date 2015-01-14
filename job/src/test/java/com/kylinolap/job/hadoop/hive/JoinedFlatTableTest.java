@@ -36,7 +36,6 @@ import com.kylinolap.job.engine.JobEngineConfig;
  * @author George Song (ysong1)
  * 
  */
-@Ignore("This test just checks the sql's length, has no value.")
 public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
 
     CubeInstance cube = null;
@@ -62,22 +61,26 @@ public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
         String ddl = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, "/tmp", fakeJobUUID);
         System.out.println(ddl);
 
-        System.out.println("The length for the ddl is" + 515);
+        System.out.println("The length for the ddl is " + ddl.length());
     }
 
     @Test
     public void testGenDropTableDDL() {
         String ddl = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc, fakeJobUUID);
         System.out.println(ddl);
-        assertEquals(108, ddl.length());
+        assertEquals(107, ddl.length());
     }
 
     @Test
     public void testGenerateInsertSql() throws IOException {
-        String sql = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, fakeJobUUID, new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
-        System.out.println(sql);
+        String[] sqls = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, fakeJobUUID, new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
+        System.out.println(sqls);
 
-        assertEquals(1132, sql.length());
+        int length = 0;
+        for(String sql : sqls) {
+            length += sql.length();
+        }
+        assertEquals(1155, length);
     }
 
 }
