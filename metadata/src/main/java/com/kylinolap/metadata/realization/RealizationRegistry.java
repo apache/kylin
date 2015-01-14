@@ -6,8 +6,6 @@ import com.kylinolap.common.KylinConfig;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.jvm.hotspot.oops.InstanceKlass;
-import sun.jvm.hotspot.tools.jcore.ClassFilter;
 
 import java.io.IOException;
 import java.util.List;
