@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.HiveClient;
 import com.kylinolap.invertedindex.IIDescManager;
 import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IIManager;
@@ -16,7 +17,6 @@ import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.job.hadoop.hive.IIJoinedFlatTableDesc;
 import com.kylinolap.job.hadoop.hive.IJoinedFlatTableDesc;
-import com.kylinolap.metadata.tool.HiveClient;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/30/14.

@@ -29,9 +29,9 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.HadoopUtil;
+import com.kylinolap.common.util.HiveClient;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.tool.HiveClient;
 
 /**
  * @author yangli9
