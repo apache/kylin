@@ -1,0 +1,165 @@
+/*
+ * Copyright 2013-2014 eBay Software Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.kylinolap.job.hadoop.cardinality;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.CompressionCodecFactory;
+
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.job.hadoop.AbstractHadoopJob;
+import com.kylinolap.metadata.MetadataConstances;
+import com.kylinolap.metadata.MetadataManager;
+
+/**
+ * This job will update save the cardinality result into Kylin table metadata store.
+ * @author shaoshi
+ *
+ */
+public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
+    public static final String JOB_TITLE = "Kylin Hive Column Cardinality Update Job";
+
+    @SuppressWarnings("static-access")
+    protected static final Option OPTION_TABLE = OptionBuilder.withArgName("table name").hasArg().isRequired(true).withDescription("The hive table name").create("table");
+
+    /**
+     * This is the jar path
+     */
+
+    private String table;
+
+    /**
+     * MRJobConfig.MAPREDUCE_JOB_CREDENTIALS_BINARY
+     */
+
+    public HiveColumnCardinalityUpdateJob() {
+
+    }
+
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public int run(String[] args) throws Exception {
+
+        Options options = new Options();
+
+        try {
+            options.addOption(OPTION_TABLE);
+            options.addOption(OPTION_OUTPUT_PATH);
+
+            parseOptions(options, args);
+
+            this.table = getOptionValue(OPTION_TABLE).toUpperCase();
+            // start job
+            String jobName = JOB_TITLE + getOptionsAsString();
+            System.out.println("Starting: " + jobName);
+            Configuration conf = getConf();
+            Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
+
+            updateKylinTableExd(table.toUpperCase(), output.toString(), conf);
+            return 0;
+        } catch (Exception e) {
+            printUsage(options);
+            e.printStackTrace(System.err);
+            log.error(e.getLocalizedMessage(), e);
+            return 2;
+        }
+
+    }
+
+    public void updateKylinTableExd(String tableName, String outPath, Configuration config) throws IOException {
+        List<String> columns = null;
+        try {
+            columns = readLines(new Path(outPath), config);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Failed to resolve cardinality for " + tableName + " from " + outPath);
+            return;
+        }
+
+        StringBuffer cardi = new StringBuffer();
+        Iterator<String> it = columns.iterator();
+        while (it.hasNext()) {
+            String string = (String) it.next();
+            String[] ss = StringUtils.split(string, "\t");
+
+            if (ss.length != 2) {
+                System.out.println("The hadoop cardinality value is not valid " + string);
+                continue;
+            }
+            cardi.append(ss[1]);
+            cardi.append(",");
+        }
+        String scardi = cardi.toString();
+        scardi = scardi.substring(0, scardi.length() - 1);
+        MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        Map<String, String> tableExd = metaMgr.getTableDescExd(tableName);
+        tableExd.put(MetadataConstances.TABLE_EXD_CARDINALITY, scardi);
+        metaMgr.saveTableExd(tableName.toUpperCase(), tableExd);
+    }
+
+    private static List<String> readLines(Path location, Configuration conf) throws Exception {
+        FileSystem fileSystem = FileSystem.get(location.toUri(), conf);
+        CompressionCodecFactory factory = new CompressionCodecFactory(conf);
+        FileStatus[] items = fileSystem.listStatus(location);
+        if (items == null)
+            return new ArrayList<String>();
+        List<String> results = new ArrayList<String>();
+        for (FileStatus item : items) {
+
+            // ignoring files like _SUCCESS
+            if (item.getPath().getName().startsWith("_")) {
+                continue;
+            }
+
+            CompressionCodec codec = factory.getCodec(item.getPath());
+            InputStream stream = null;
+
+            // check if we have a compression codec we need to use
+            if (codec != null) {
+                stream = codec.createInputStream(fileSystem.open(item.getPath()));
+            } else {
+                stream = fileSystem.open(item.getPath());
+            }
+
+            StringWriter writer = new StringWriter();
+            IOUtils.copy(stream, writer, "UTF-8");
+            String raw = writer.toString();
+            for (String str : raw.split("\n")) {
+                results.add(str);
+            }
+        }
+        return results;
+    }
+
+}
