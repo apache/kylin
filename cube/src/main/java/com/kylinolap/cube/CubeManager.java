@@ -216,7 +216,7 @@ public class CubeManager implements IRealizationProvider {
         ProjectManager.getInstance(config).removeRealizationsFromProjects(RealizationType.CUBE, cubeName);
 
         // clean cube cache
-        this.afterCubeDroped(cube);
+        this.afterCubeDropped(cube);
 
         return cube;
     }
@@ -557,12 +557,10 @@ public class CubeManager implements IRealizationProvider {
     }
 
     private void afterCubeUpdated(CubeInstance updatedCube) {
-        MetadataManager.getInstance(config).reload();
         cubeMap.put(updatedCube.getName().toUpperCase(), updatedCube);
     }
 
-    private void afterCubeDroped(CubeInstance droppedCube) {
-        MetadataManager.getInstance(config).reload();
+    private void afterCubeDropped(CubeInstance droppedCube) {
         removeCubeCache(droppedCube);
     }
 

@@ -90,19 +90,15 @@ public class MetadataManager {
         CACHE.remove(config);
     }
 
-    public static void dropCache() {
-        CACHE.clear();
-    }
-
     // ============================================================================
 
     private KylinConfig config;
     // table name ==> SourceTable
-    private SingleValueCache<String, TableDesc> srcTableMap = new SingleValueCache<String, TableDesc>(Broadcaster.TYPE.METADATA);
+    private SingleValueCache<String, TableDesc> srcTableMap = new SingleValueCache<String, TableDesc>(Broadcaster.TYPE.TABLE);
     // name => value
-    private SingleValueCache<String, Map<String, String>> srcTableExdMap = new SingleValueCache<String, Map<String, String>>(Broadcaster.TYPE.METADATA);
+    private SingleValueCache<String, Map<String, String>> srcTableExdMap = new SingleValueCache<String, Map<String, String>>(Broadcaster.TYPE.TABLE);
     // name => DataModelDesc
-    private SingleValueCache<String, DataModelDesc> dataModelDescMap = new SingleValueCache<String, DataModelDesc>(Broadcaster.TYPE.METADATA);
+    private SingleValueCache<String, DataModelDesc> dataModelDescMap = new SingleValueCache<String, DataModelDesc>(Broadcaster.TYPE.DATA_MODEL);
 
     private MetadataManager(KylinConfig config) throws IOException {
         init(config);
@@ -208,10 +204,6 @@ public class MetadataManager {
         logger.debug("Loaded " + srcTableExdMap.size() + " SourceTable EXD(s)");
     }
 
-    public Map<String, String> reloadSourceTableExt(String tableIdentity) throws IOException {
-        return reloadSourceTableExdAt(TableDesc.concatExdResourcePath(tableIdentity));
-    }
-
     @SuppressWarnings("unchecked")
     private Map<String, String> reloadSourceTableExdAt(String path) throws IOException {
         Map<String, String> attrs = Maps.newHashMap();
@@ -235,10 +227,8 @@ public class MetadataManager {
         if (file.indexOf("/") > -1) {
             file = file.substring(file.lastIndexOf("/") + 1);
         }
-        String tableIdentity = file.substring(0, file.length() - MetadataConstances.FILE_SURFIX.length());
+        String tableIdentity = file.substring(0, file.length() - MetadataConstances.FILE_SURFIX.length()).toUpperCase();
         
-        checkNoDupName(tableIdentity, srcTableExdMap.containsKey(tableIdentity), "SourceTableExd", path);
-
         srcTableExdMap.putLocal(tableIdentity, attrs);
         return attrs;
     }
@@ -257,20 +247,29 @@ public class MetadataManager {
         logger.debug("Loaded " + srcTableMap.size() + " SourceTable(s)");
     }
 
-    public TableDesc reloadSourceTable(String tableIdentity) throws IOException {
-        return reloadSourceTableAt(TableDesc.concatResourcePath(tableIdentity));
-    }
-
     private TableDesc reloadSourceTableAt(String path) throws IOException {
         ResourceStore store = getStore();
         TableDesc t = store.getResource(path, TableDesc.class, TABLE_SERIALIZER);
         t.init();
 
         String tableIdentity = t.getIdentity();
-        checkNoDupName(tableIdentity, srcTableMap.containsKey(tableIdentity), "SourceTable", path);
 
         srcTableMap.putLocal(tableIdentity, t);
         return t;
+    }
+
+    public void reloadSourceTableExt(String tableIdentity) throws IOException {
+        reloadSourceTableExdAt(TableDesc.concatExdResourcePath(tableIdentity));
+    }
+
+
+    public void reloadSourceTable(String tableIdentity) throws IOException {
+        reloadSourceTableAt(TableDesc.concatResourcePath(tableIdentity));
+    }
+
+    public void reloadTableCache(String tableIdentity) throws IOException {
+        reloadSourceTableExt(tableIdentity);
+        reloadSourceTable(tableIdentity);
     }
 
     public DataModelDesc getDataModelDesc(String name) {
@@ -297,24 +296,18 @@ public class MetadataManager {
 
     private DataModelDesc reloadDataModelDescAt(String path) {
         ResourceStore store = getStore();
-        DataModelDesc ndesc = null;
         try {
-            ndesc = store.getResource(path, DataModelDesc.class, MODELDESC_SERIALIZER);
+            DataModelDesc dataModelDesc = store.getResource(path, DataModelDesc.class, MODELDESC_SERIALIZER);
+            dataModelDesc.init(this.getAllTablesMap());
+            if (dataModelDesc.getError().isEmpty() == false) {
+                throw new IllegalStateException("DataModelDesc at " + path + " has issues: " + dataModelDesc.getError());
+            }
+            String name = dataModelDesc.getName();
+            dataModelDescMap.putLocal(name, dataModelDesc);
+            return dataModelDesc;
         } catch (IOException e) {
             throw new IllegalStateException("Error to load" + path, e);
         }
-
-        ndesc.init(this.getAllTablesMap());
-
-        if (ndesc.getError().isEmpty() == false) {
-            throw new IllegalStateException("DataModelDesc at " + path + " has issues: " + ndesc.getError());
-        }
-
-        String name = ndesc.getName();
-        checkNoDupName(name, dataModelDescMap.containsKey(name), "DataModel", path);
-
-        dataModelDescMap.putLocal(name, ndesc);
-        return ndesc;
     }
 
     public DataModelDesc createDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
@@ -352,13 +345,6 @@ public class MetadataManager {
         return dataModelDesc;
     }
 
-    public void deleteDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
-        // remove dataModelDesc
-        String path = dataModelDesc.getResourcePath();
-        getStore().deleteResource(path);
-        dataModelDescMap.remove(dataModelDesc.getName());
-    }
-    
     public void saveTableExd(String tableId, Map<String, String> tableExdProperties) throws IOException {
         if (tableId == null) {
             throw new IllegalArgumentException("tableId couldn't be null");
@@ -379,15 +365,6 @@ public class MetadataManager {
         is.close();
 
         srcTableExdMap.putLocal(tableId, tableExdProperties);
-    }
-
-    private void checkNoDupName(String name, boolean containsKey, String entityType, String path) {
-        if (StringUtils.isBlank(name)) {
-            throw new IllegalStateException(entityType + " name at " + path + ", must not be blank");
-        }
-        if (containsKey) {
-            throw new IllegalStateException("Dup " + entityType + " name '" + name + "' at " + path);
-        }
     }
 
 }
