@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.kylinolap.common.util.HiveClient;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.job.JoinedFlatTable;
 import com.kylinolap.job.common.HadoopShellExecutable;
@@ -33,7 +34,6 @@ import com.kylinolap.job.hadoop.hbase.BulkLoadJob;
 import com.kylinolap.job.hadoop.hbase.CreateHTableJob;
 import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
 import com.kylinolap.job.impl.threadpool.AbstractExecutable;
-import com.kylinolap.metadata.tool.HiveClient;
 
 /**
  * Created by qianzhou on 12/25/14.
