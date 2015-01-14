@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.metadata.tool;
+package com.kylinolap.common.util;
 
 import java.io.IOException;
 import java.util.List;
