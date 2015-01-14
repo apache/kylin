@@ -1,1 +1,0 @@
-select count(*) as CNT  from test_seller_type_dim

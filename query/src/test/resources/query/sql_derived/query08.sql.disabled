@@ -1,1 +1,0 @@
-select distinct leaf_categ_id, lstg_site_id from test_kylin_fact 
