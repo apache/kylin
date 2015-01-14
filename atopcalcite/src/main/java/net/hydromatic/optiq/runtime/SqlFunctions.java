@@ -1,5 +1,5 @@
 /*
- * OVERRIDE POINTS:
+ * OVERRIDE POINT:
  * - divide(BigDecimal,BigDecimal), was `b0.divide(b1)`, now `b0.divide(b1, MathContext.DECIMAL64);` 
  */
 

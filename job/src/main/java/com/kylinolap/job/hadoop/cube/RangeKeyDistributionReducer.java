@@ -32,9 +32,9 @@ import com.kylinolap.metadata.model.cube.CubeDesc.CubeCapacity;
  */
 public class RangeKeyDistributionReducer extends Reducer<Text, LongWritable, Text, LongWritable> {
 
-    public static final long FIVE_GIGA_BYTES = 5L * 1024L * 1024L * 1024L;
     public static final long TEN_GIGA_BYTES = 10L * 1024L * 1024L * 1024L;
     public static final long TWENTY_GIGA_BYTES = 20L * 1024L * 1024L * 1024L;
+    public static final long HUNDRED_GIGA_BYTES = 100L * 1024L * 1024L * 1024L;
 
     private LongWritable outputValue = new LongWritable(0);
 
@@ -49,13 +49,13 @@ public class RangeKeyDistributionReducer extends Reducer<Text, LongWritable, Tex
         cubeCapacity = CubeCapacity.valueOf(context.getConfiguration().get(BatchConstants.CUBE_CAPACITY));
         switch (cubeCapacity) {
         case SMALL:
-            cut = FIVE_GIGA_BYTES;
-            break;
-        case MEDIUM:
             cut = TEN_GIGA_BYTES;
             break;
-        case LARGE:
+        case MEDIUM:
             cut = TWENTY_GIGA_BYTES;
+            break;
+        case LARGE:
+            cut = HUNDRED_GIGA_BYTES;
             break;
         }
     }

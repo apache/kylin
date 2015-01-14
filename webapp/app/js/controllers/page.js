@@ -28,7 +28,6 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
             $location.path('/login');
 
             console.debug("Logout Completed.");
-            $scope.project.selectedProject = null;
         }).error(function () {
             UserService.setCurUser({});
             $scope.username = $scope.password = null;
@@ -123,17 +122,24 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
         selectedProject: null
     };
 
+    $scope.projectVisible = function(project){
+        $log.info(project);
+        return project!='-- Select All --';
+    }
+
     ProjectService.list({}, function (projects) {
         angular.forEach(projects, function(project, index){
             $scope.project.projects.push(project.name);
         });
+        $scope.project.projects.sort();
+
         var absUrl = $location.absUrl();
 
         var projectInCookie = $cookieStore.get("project");
         if(absUrl.indexOf("/login")==-1){
-            $scope.project.selectedProject=$scope.project.selectedProject!=null?$scope.project.selectedProject:projectInCookie!=null?projectInCookie:$scope.project.projects[0]
-        }else{
             $scope.project.selectedProject=projectInCookie!=null?projectInCookie:null;
+        }else{
+            $scope.project.selectedProject=$scope.project.selectedProject!=null?$scope.project.selectedProject:projectInCookie!=null?projectInCookie:$scope.project.projects[0];
         }
     });
 
@@ -154,12 +160,30 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
 
 
     $scope.$watch('project.selectedProject', function (newValue, oldValue) {
-        if(newValue){
-            $log.log("project updated in page controller");
+        if(newValue!=oldValue){
+            $log.log("project updated in page controller,from:"+oldValue+" To:"+newValue);
             $cookieStore.put("project",$scope.project.selectedProject);
         }
 
     });
+
+    /*
+     *global method for all scope to use
+     * */
+
+     //update scope value to view
+    $scope.safeApply = function(fn) {
+        var phase = this.$root.$$phase;
+        if(phase == '$apply' || phase == '$digest') {
+            if(fn && (typeof(fn) === 'function')) {
+                fn();
+            }
+        } else {
+            this.$apply(fn);
+        }
+    };
+
+
 
 });
 
@@ -181,6 +205,7 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
     $scope.createOrUpdate = function () {
         if ($scope.state.isEdit)
         {
+
             var requestBody = {
                 formerProjectName: $scope.state.oldProjName,
                 newProjectName: $scope.proj.name,
@@ -223,4 +248,6 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
         $modalInstance.dismiss('cancel');
     };
 
+
 };
+

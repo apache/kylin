@@ -1,0 +1,11 @@
+{
+  "name": "angular-underscore",
+  "description": "Underscore adapter for AngularJS.",
+  "version": "0.5.0",
+  "author": "floydsoft <floydsoft@gmail.com>",
+  "main": "angular-underscore.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/floydsoft/angular-underscore"
+  }
+}

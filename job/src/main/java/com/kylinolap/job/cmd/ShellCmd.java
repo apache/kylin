@@ -228,7 +228,7 @@ public class ShellCmd implements IJobCommand {
         ShellCmdOutput output = new ShellCmdOutput();
         ShellCmd shellCmd = new ShellCmd(args[0], output, args[1], args[2], args[3], false);
         shellCmd.execute();
-        
+
         System.out.println("============================================================================");
         System.out.println(output.getExitCode());
         System.out.println(output.getOutput());
