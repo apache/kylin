@@ -75,7 +75,29 @@ public class BitMapContainer implements ColumnValueContainer {
     }
 
     @Override
-    public ConciseSet getBitMap(int valueId) {
+    public ConciseSet getBitMap(Integer startId, Integer endId) {
+        if (startId == null && endId == null) {
+            return sets[this.nValues];
+        }
+
+        int start = 0;
+        int end = this.nValues - 1;
+        if (startId != null) {
+            start = startId;
+        }
+        if (endId != null) {
+            end = endId;
+        }
+
+        ConciseSet ret = new ConciseSet();
+        for (int i = start; i <= end; ++i) {
+            ConciseSet temp = getBitMap(i);
+            ret.addAll(temp);
+        }
+        return ret;
+    }
+
+    private ConciseSet getBitMap(int valueId) {
         if (valueId >= 0 && valueId <= getMaxValueId())
             return sets[valueId];
         else

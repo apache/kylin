@@ -43,6 +43,35 @@ public class BitMapFilterEvaluatorTest {
         private static final int REC_COUNT = 10;
 
         @Override
+        public ConciseSet getBitMap(TblColRef col, Integer startId, Integer endId) {
+            if (!col.equals(colA))
+                return null;
+
+            // i-th record has value ID i, and last record has value null
+            if (startId == null && endId == null) {
+                //entry for getting null value
+                ConciseSet s = new ConciseSet();
+                s.add(getRecordCount() - 1);
+                return s;
+            }
+
+            int start = 0;
+            int end = MAX_ID;
+            if (startId != null) {
+                start = startId;
+            }
+            if (endId != null) {
+                end = endId;
+            }
+
+            ConciseSet ret = new ConciseSet();
+            for (int i = start; i <= end; ++i) {
+                ConciseSet temp = getBitMap(col, i);
+                ret.addAll(temp);
+            }
+            return ret;
+        }
+
         public ConciseSet getBitMap(TblColRef col, int valueId) {
             if (!col.equals(colA))
                 return null;

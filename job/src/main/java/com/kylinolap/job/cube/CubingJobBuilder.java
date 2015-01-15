@@ -1,28 +1,39 @@
 package com.kylinolap.job.cube;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.job.JoinedFlatTable;
-import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job.hadoop.cube.*;
-import com.kylinolap.job.hadoop.dict.CreateDictionaryJob;
-import com.kylinolap.job.hadoop.hbase.BulkLoadJob;
-import com.kylinolap.job.hadoop.hbase.CreateHTableJob;
-import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
-import com.kylinolap.job.common.HadoopShellExecutable;
-import com.kylinolap.job.common.MapReduceExecutable;
-import com.kylinolap.job.common.ShellExecutable;
-import com.kylinolap.job.constant.ExecutableConstants;
-import org.apache.commons.lang3.StringUtils;
-
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+
+import javax.annotation.Nullable;
+
+import org.apache.commons.lang3.StringUtils;
+
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.kylinolap.common.util.HiveClient;
+import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.job.JoinedFlatTable;
+import com.kylinolap.job.common.HadoopShellExecutable;
+import com.kylinolap.job.common.MapReduceExecutable;
+import com.kylinolap.job.constant.ExecutableConstants;
+import com.kylinolap.job.engine.JobEngineConfig;
+import com.kylinolap.job.exception.ExecuteException;
+import com.kylinolap.job.execution.ExecutableContext;
+import com.kylinolap.job.execution.ExecuteResult;
+import com.kylinolap.job.hadoop.cube.BaseCuboidJob;
+import com.kylinolap.job.hadoop.cube.CubeHFileJob;
+import com.kylinolap.job.hadoop.cube.FactDistinctColumnsJob;
+import com.kylinolap.job.hadoop.cube.MergeCuboidJob;
+import com.kylinolap.job.hadoop.cube.NDCuboidJob;
+import com.kylinolap.job.hadoop.cube.RangeKeyDistributionJob;
+import com.kylinolap.job.hadoop.dict.CreateDictionaryJob;
+import com.kylinolap.job.hadoop.hbase.BulkLoadJob;
+import com.kylinolap.job.hadoop.hbase.CreateHTableJob;
+import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
+import com.kylinolap.job.impl.threadpool.AbstractExecutable;
 
 /**
  * Created by qianzhou on 12/25/14.
@@ -70,7 +81,7 @@ public final class CubingJobBuilder {
         final String cuboidPath = cuboidRootPath + "*";
         final String[] cuboidOutputTempPath = getCuboidOutputPaths(cuboidRootPath, totalRowkeyColumnsCount, groupRowkeyColumnsCount);
 
-        final ShellExecutable intermediateHiveTableStep = createIntermediateHiveTableStep(intermediateTableDesc, jobId);
+        final AbstractExecutable intermediateHiveTableStep = createIntermediateHiveTableStep(intermediateTableDesc, jobId);
         result.addTask(intermediateHiveTableStep);
 
         result.addTask(createFactDistinctColumnsStep(intermediateHiveTableName, jobId));
@@ -221,27 +232,38 @@ public final class CubingJobBuilder {
         return getJobWorkingDir(jobId) + "/" + getCubeName() + "/hfile/";
     }
 
-    private ShellExecutable createIntermediateHiveTableStep(CubeJoinedFlatTableDesc intermediateTableDesc, String jobId) {
+    private AbstractExecutable createIntermediateHiveTableStep(CubeJoinedFlatTableDesc intermediateTableDesc, String jobId) {
+
+        final String dropTableHql = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc, jobId);
+        final String createTableHql = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, getJobWorkingDir(jobId), jobId);
+        String[] insertDataHqls;
         try {
-            ShellExecutable result = new ShellExecutable();
-            result.setName(ExecutableConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
-            String dropTableHql = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc, jobId);
-            String createTableHql = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, getJobWorkingDir(jobId), jobId);
-            String insertDataHql = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, jobId, this.jobEngineConfig);
-
-
-            StringBuilder buf = new StringBuilder();
-            buf.append("hive -e \"");
-            buf.append(dropTableHql + "\n");
-            buf.append(createTableHql + "\n");
-            buf.append(insertDataHql + "\n");
-            buf.append("\"");
-
-            result.setCmd(buf.toString());
-            return result;
-        } catch (IOException e) {
-            throw new RuntimeException("fail to create job", e);
+            insertDataHqls = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, jobId, this.jobEngineConfig);
+        } catch (IOException e1) {
+            e1.printStackTrace();
+            throw new RuntimeException("Failed to generate insert data SQL for intermediate table.");
         }
+
+        final String[] insertDataHqlsCopy = insertDataHqls;
+        AbstractExecutable step = new AbstractExecutable() {
+
+            @Override
+            protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+                HiveClient hiveClient = new HiveClient();
+                try {
+                    hiveClient.executeHQL(new String[] { dropTableHql, createTableHql });
+                    hiveClient.executeHQL(insertDataHqlsCopy);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    throw new ExecuteException("Failed to createIntermediateHiveTable;", e);
+                }
+                return new ExecuteResult(ExecuteResult.State.SUCCEED);
+            }
+        };
+
+        step.setName(ExecutableConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
+
+        return step;
     }
 
     private MapReduceExecutable createFactDistinctColumnsStep(String intermediateHiveTableName, String jobId) {
