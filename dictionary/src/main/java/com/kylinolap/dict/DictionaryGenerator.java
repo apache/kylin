@@ -40,6 +40,8 @@ import com.kylinolap.metadata.model.DataType;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class DictionaryGenerator {
 
+    private static final int DICT_MAX_CARDINALITY = 2000000; // 2 million
+
     private static final Logger logger = LoggerFactory.getLogger(DictionaryGenerator.class);
 
     private static final String[] DATE_PATTERNS = new String[] { "yyyy-MM-dd" };
@@ -71,8 +73,8 @@ public class DictionaryGenerator {
         logger.info("Dictionary value samples: " + buf.toString());
         logger.info("Dictionary cardinality " + info.getCardinality());
 
-        if (values.size() > 1000000)
-            throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary! Are the values stable enough for incremental load??");
+        if (values.size() > DICT_MAX_CARDINALITY)
+            throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary -- " + info.getSourceTable() + "." + info.getSourceColumn() + " cardinality: " + values.size());
 
         return dict;
     }

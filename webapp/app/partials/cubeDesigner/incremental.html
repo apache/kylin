@@ -7,7 +7,6 @@
                 <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Partition Type</b></label>
                 <div class="col-xs-12 col-sm-6">
                     <select class="form-control"
-                        ng-init="cubeMetaFrame.cube_partition_desc.cube_partition_type =dftSelections.cubePartitionType"
                         ng-if="state.mode=='edit'"
                         chosen ng-model="cubeMetaFrame.cube_partition_desc.cube_partition_type" required
                         ng-options="ddt as ddt for ddt in cubePartitionTypes">

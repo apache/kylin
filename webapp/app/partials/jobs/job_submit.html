@@ -15,7 +15,7 @@
                             <td>{{cube.detail.cube_partition_desc.partition_date_column}}</td>
                         </tr>
                         <tr>
-                            <td>START DATE</td>
+                            <td>Start Date (Include)</td>
                             <td>
                                 <div ng-if="cube.segments.length == 0">
                                     {{jobBuildRequest.startTime =
@@ -38,7 +38,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>END DATE</td>
+                            <td>End Date (Exclude)</td>
                             <td>
                                 <input type="text" datepicker-popup="yyyy-MM-dd" class="input-sm" style="width: 98%"
                                        ng-model="jobBuildRequest.endTime"
