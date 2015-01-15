@@ -61,7 +61,6 @@ KylinApp
                         $scope.loadDetail(cube);
                     }
                 });
-                $scope.cubes=[];
                 $scope.cubes = $scope.cubes.concat(cubes);
                 $scope.loading = false;
                 defer.resolve(cubes.length);

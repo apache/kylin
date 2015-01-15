@@ -238,7 +238,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
                 throw new IllegalStateException("No resource found at -- " + path);
             long ts = from.getResourceTimestamp(path);
             to.putResource(path, in, ts);
-            log.info("Dumped resource " + path + " to " + metaDir.getAbsolutePath());
+            //The following log is duplicate with in ResourceStore
+            //log.info("Dumped resource " + path + " to " + metaDir.getAbsolutePath());
         }
     }
 

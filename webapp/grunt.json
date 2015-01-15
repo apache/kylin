@@ -11,6 +11,7 @@
                 "app/components/jquery/dist/jquery.min.js",
                 "app/components/bootstrap/dist/js/bootstrap.min.js",
                 "app/components/angular/angular.min.js",
+                "app/components/angular-animate/angular-animate.min.js",
                 "app/components/angular-route/angular-route.min.js",
                 "app/components/angular-resource/angular-resource.min.js",
                 "app/components/angular-bootstrap/ui-bootstrap-tpls.min.js",
@@ -37,6 +38,8 @@
                 "app/components/angular-sweetalert/SweetAlert.js",
                 "app/components/underscore/underscore.js",
                 "app/components/angular-underscore/angular-underscore.js",
+                "app/components/angular-ui-sortable/jquery-ui.min.js",
+                "app/components/angular-ui-sortable/sortable.min.js",
                 "tmp/js/scripts.js"
             ],
             "dest": "tmp/js/scripts.min.js"

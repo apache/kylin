@@ -45,14 +45,27 @@
 		</listener-class>
 	</listener>
 	
-	<filter>
-	    <filter-name>crossDomainFilter</filter-name>
-	    <filter-class>com.kylinolap.rest.security.CrossDomainFilter</filter-class>
-	</filter>
-	<filter-mapping>
-	    <filter-name>crossDomainFilter</filter-name>
-	    <url-pattern>/*</url-pattern>
-	</filter-mapping>
+<filter>
+   <filter-name>CORS</filter-name>
+   <filter-class>com.thetransactioncompany.cors.CORSFilter</filter-class>       
+   <init-param>
+      <param-name>cors.supportedHeaders</param-name>
+      <param-value>Authorization,Origin, No-Cache, X-Requested-With, If-Modified-Since, Pragma, Last-Modified, Cache-Control, Expires, Content-Type, X-E4M-With, Accept</param-value>
+   </init-param>   
+  <init-param>
+      <param-name>cors.supportedMethods</param-name>
+      <param-value>GET, POST, PUT, DELETE, OPTIONS</param-value>
+   </init-param>     
+  <init-param>
+      <param-name>cors.supportsCredentials </param-name>
+      <param-value>true</param-value>
+   </init-param>    
+</filter>
+
+<filter-mapping>
+   <filter-name>CORS</filter-name>
+   <url-pattern>/*</url-pattern>
+</filter-mapping>
 	
 	<!--
 		Apply Spring Security Filter to all Requests 
