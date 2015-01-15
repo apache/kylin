@@ -111,7 +111,7 @@ public class IIDescManager {
         IIDesc ndesc = loadIIDesc(path);
 
         // Here replace the old one
-        iiDescMap.put(ndesc.getName(), ndesc);
+        iiDescMap.putLocal(ndesc.getName(), ndesc);
         return ndesc;
     }
 
@@ -164,6 +164,10 @@ public class IIDescManager {
         String path = iiDesc.getResourcePath();
         getStore().deleteResource(path);
         iiDescMap.remove(iiDesc.getName());
+    }
+
+    public void removeIIDescLocal(String name) throws IOException {
+        iiDescMap.remove(name);
     }
 
     private void reloadAllIIDesc() throws IOException {
