@@ -21,7 +21,7 @@ public class BitMapFilterEvaluator {
     public static interface BitMapProvider {
 
         /** return records whose specified column having specified value */
-        ConciseSet getBitMap(TblColRef col, int valueId);
+        ConciseSet getBitMap(TblColRef col, Integer startId, Integer endId);
 
         /** return the size of the group */
         int getRecordCount();
@@ -82,38 +82,31 @@ public class BitMapFilterEvaluator {
 
     private ConciseSet evalCompareLT(CompareTupleFilter filter) {
         int id = Dictionary.stringToDictId(filter.getFirstValue());
-        return collectRange(filter.getColumn(), 0, id - 1);
+        return collectRange(filter.getColumn(), null, id - 1);
     }
 
     private ConciseSet evalCompareLTE(CompareTupleFilter filter) {
         int id = Dictionary.stringToDictId(filter.getFirstValue());
-        return collectRange(filter.getColumn(), 0, id);
+        return collectRange(filter.getColumn(), null, id);
     }
 
     private ConciseSet evalCompareGT(CompareTupleFilter filter) {
         int id = Dictionary.stringToDictId(filter.getFirstValue());
-        return collectRange(filter.getColumn(), id + 1, provider.getMaxValueId(filter.getColumn()));
+        return collectRange(filter.getColumn(), id + 1, null);
     }
 
     private ConciseSet evalCompareGTE(CompareTupleFilter filter) {
         int id = Dictionary.stringToDictId(filter.getFirstValue());
-        return collectRange(filter.getColumn(), id, provider.getMaxValueId(filter.getColumn()));
+        return collectRange(filter.getColumn(), id, null);
     }
 
-    private ConciseSet collectRange(TblColRef column, int from, int to) {
-        ConciseSet set = new ConciseSet();
-        for (int i = from; i <= to; i++) {
-            ConciseSet bitMap = provider.getBitMap(column, i);
-            if (bitMap == null)
-                return null;
-            set.addAll(bitMap);
-        }
-        return set;
+    private ConciseSet collectRange(TblColRef column, Integer startId, Integer endId) {
+        return provider.getBitMap(column, startId, endId);
     }
 
     private ConciseSet evalCompareEqual(CompareTupleFilter filter) {
         int id = Dictionary.stringToDictId(filter.getFirstValue());
-        ConciseSet bitMap = provider.getBitMap(filter.getColumn(), id);
+        ConciseSet bitMap = provider.getBitMap(filter.getColumn(), id, id);
         if (bitMap == null)
             return null;
         return bitMap.clone(); // NOTE the clone() to void messing provider's cache
@@ -130,7 +123,7 @@ public class BitMapFilterEvaluator {
         ConciseSet set = new ConciseSet();
         for (String value : filter.getValues()) {
             int id = Dictionary.stringToDictId(value);
-            ConciseSet bitMap = provider.getBitMap(filter.getColumn(), id);
+            ConciseSet bitMap = provider.getBitMap(filter.getColumn(), id, id);
             if (bitMap == null)
                 return null;
             set.addAll(bitMap);
@@ -154,8 +147,7 @@ public class BitMapFilterEvaluator {
     }
 
     private ConciseSet evalCompareIsNull(CompareTupleFilter filter) {
-        int nullId = Dictionary.stringToDictId(filter.getNullString());
-        ConciseSet bitMap = provider.getBitMap(filter.getColumn(), nullId);
+        ConciseSet bitMap = provider.getBitMap(filter.getColumn(), null, null);
         if (bitMap == null)
             return null;
         return bitMap.clone(); // NOTE the clone() to void messing provider's cache

@@ -272,7 +272,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return cost;
     }
 
-
     public RealizationStatusEnum getStatus() {
         return status;
     }
@@ -377,10 +376,12 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return new long[] { start, end };
     }
 
-
     @Override
     public boolean isCapable(SQLDigest digest) {
-        //TODO: currently II is omnipotent
+        //TODO: currently II is nearly omnipotent
+        if (!digest.factTable.equalsIgnoreCase(this.getFactTable()))
+            return false;
+
         return true;
     }
 

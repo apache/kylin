@@ -1,16 +1,15 @@
 package com.kylinolap.job.hadoop.invertedindex;
 
-import com.kylinolap.invertedindex.IIInstance;
-import com.kylinolap.invertedindex.IIManager;
-import com.kylinolap.job.cmd.ICommandOutput;
-import com.kylinolap.job.cmd.ShellCmd;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.HiveClient;
 import com.kylinolap.invertedindex.IIDescManager;
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.invertedindex.model.IIDesc;
 import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.JoinedFlatTable;
@@ -45,23 +44,20 @@ public class IIFlattenHiveJob extends AbstractHadoopJob {
             String dropTableHql = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc, jobUUID);
             String createTableHql = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, //
                     JobInstance.getJobWorkingDir(jobUUID, engineConfig.getHdfsWorkingDirectory()), jobUUID);
-            String insertDataHql = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, jobUUID, engineConfig);
+            String[] insertDataHqls = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, jobUUID, engineConfig);
 
             StringBuffer buf = new StringBuffer();
-            buf.append("hive -e \"");
             buf.append(dropTableHql + "\n");
             buf.append(createTableHql + "\n");
-            buf.append(insertDataHql + "\n");
-            buf.append("\"");
+            buf.append(insertDataHqls + "\n");
 
             System.out.println(buf.toString());
             System.out.println("========================");
 
-            ShellCmd cmd = new ShellCmd(buf.toString(), null, null, null, false);
-            ICommandOutput output = cmd.execute();
-            System.out.println(output.getOutput());
-            System.out.println(output.getExitCode());
-
+            HiveClient hiveClient = new HiveClient();
+            hiveClient.executeHQL(new String[] { dropTableHql, createTableHql });
+            hiveClient.executeHQL(insertDataHqls);
+            
             return 0;
         } catch (Exception e) {
             printUsage(options);
