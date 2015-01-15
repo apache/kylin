@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
+import com.kylinolap.common.restclient.CaseInsensitiveStringCache;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,6 @@ import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.common.restclient.Broadcaster;
-import com.kylinolap.common.restclient.SingleValueCache;
 import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.cube.model.CubeDesc;
@@ -103,7 +102,7 @@ public class CubeManager implements IRealizationProvider {
 
     private KylinConfig config;
     // cube name ==> CubeInstance
-    private SingleValueCache<String, CubeInstance> cubeMap = new SingleValueCache<String, CubeInstance>(Broadcaster.TYPE.CUBE);
+    private CaseInsensitiveStringCache<CubeInstance> cubeMap = new CaseInsensitiveStringCache<CubeInstance>(Broadcaster.TYPE.CUBE);
     // "table/column" ==> lookup table
 //    private SingleValueCache<String, LookupStringTable> lookupTables = new SingleValueCache<String, LookupStringTable>(Broadcaster.TYPE.METADATA);
 
@@ -502,7 +501,7 @@ public class CubeManager implements IRealizationProvider {
     }
 
     private void afterCubeUpdated(CubeInstance updatedCube) {
-        cubeMap.put(updatedCube.getName().toUpperCase(), updatedCube);
+        cubeMap.put(updatedCube.getName(), updatedCube);
     }
 
     private void afterCubeDropped(CubeInstance droppedCube) {

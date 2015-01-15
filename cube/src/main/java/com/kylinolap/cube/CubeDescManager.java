@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.kylinolap.common.restclient.CaseInsensitiveStringCache;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +30,6 @@ import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.common.restclient.Broadcaster;
-import com.kylinolap.common.restclient.SingleValueCache;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.validation.CubeMetadataValidator;
 import com.kylinolap.cube.model.validation.ValidateContext;
@@ -54,7 +54,7 @@ public class CubeDescManager {
 
     private KylinConfig config;
     // name ==> CubeDesc
-    private SingleValueCache<String, CubeDesc> cubeDescMap = new SingleValueCache<String, CubeDesc>(Broadcaster.TYPE.CUBE);
+    private CaseInsensitiveStringCache<CubeDesc> cubeDescMap = new CaseInsensitiveStringCache<CubeDesc>(Broadcaster.TYPE.CUBE_DESC);
 
     public static CubeDescManager getInstance(KylinConfig config) {
         CubeDescManager r = CACHE.get(config);
@@ -179,6 +179,11 @@ public class CubeDescManager {
         String path = cubeDesc.getResourcePath();
         getStore().deleteResource(path);
         cubeDescMap.remove(cubeDesc.getName());
+    }
+
+    // remove cubeDesc
+    public void removeLocalCubeDesc(String name) throws IOException {
+        cubeDescMap.removeLocal(name);
     }
 
     private void reloadAllCubeDesc() throws IOException {
