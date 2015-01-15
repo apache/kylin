@@ -5,7 +5,7 @@
     <groupId>com.kylinolap</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>0.6.4-SNAPSHOT</version>
+    <version>0.7.1-SNAPSHOT</version>
     <name>Kylin:HadoopOLAPEngine</name>
 
     <properties>
@@ -17,11 +17,11 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- Hadoop versions -->
-        <hadoop2.version>2.4.1</hadoop2.version>
-        <yarn.version>2.4.1</yarn.version>
+        <hadoop2.version>2.6.0</hadoop2.version>
+        <yarn.version>2.6.0</yarn.version>
+        <zookeeper.version>3.4.6</zookeeper.version>
+        <hive.version>0.14.0</hive.version>
         <hbase-hadoop2.version>0.98.8-hadoop2</hbase-hadoop2.version>
-        <zookeeper.version>3.4.5</zookeeper.version>
-        <hive.version>0.13.0</hive.version>
         <hive-hcatalog.version>0.13.0.2.1.1.0-385</hive-hcatalog.version>
 
         <!-- Dependency versions -->
