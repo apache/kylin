@@ -8,9 +8,7 @@ KylinApp.controller('LoginCtrl', function ($scope, $rootScope, $location, $base6
     $scope.login = function () {
         // set the basic authentication header that will be parsed in the next request and used to authenticate
         httpHeaders.common['Authorization'] = 'Basic ' + $base64.encode($scope.username + ':' + $scope.password);
-
         $scope.loading = true;
-
         //verify project
         if($scope.project.projects.length&&!$scope.project.selectedProject){
             $scope.loading = false;

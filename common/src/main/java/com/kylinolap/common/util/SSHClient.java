@@ -45,7 +45,7 @@ public class SSHClient {
     public SSHClient(String hostname, String username, String password) {
         this.hostname = hostname;
         this.username = username;
-        if (new File(password).exists()) {
+        if (password != null && new File(password).exists()) {
             this.identityPath = new File(password).getAbsolutePath();
             this.password = null;
         } else {
