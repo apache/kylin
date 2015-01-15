@@ -17,6 +17,8 @@ package com.kylinolap.rest.controller;
 
 import java.io.IOException;
 
+import com.kylinolap.cube.CubeDescManager;
+import com.kylinolap.invertedindex.IIDescManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,9 +35,9 @@ import com.kylinolap.rest.service.ProjectService;
 
 /**
  * CubeController is defined as Restful API entrance for UI.
- * 
+ *
  * @author jianliu
- * 
+ *
  */
 @Controller
 @RequestMapping(value = "/cache")
@@ -50,7 +52,7 @@ public class CacheController extends BasicController {
 
     /**
      * Wipe system cache
-     * 
+     *
      * @param type
      *            {@link Broadcaster.TYPE}
      * @param event
@@ -68,60 +70,88 @@ public class CacheController extends BasicController {
         logger.info(log);
         switch (wipeType) {
             case TABLE:
-            switch (wipeEvent) {
-                case CREATE:
-                case UPDATE:
-                    cubeMgmtService.getMetadataManager().reloadTableCache(name);
-                    break;
-                case DROP:
-                    throw new UnsupportedOperationException(log);
-            }
-            break;
-        case DATA_MODEL:
-            switch (wipeEvent) {
-                case CREATE:
-                case UPDATE:
-                    cubeMgmtService.getMetadataManager().reloadDataModelDesc(name);
-                    break;
-                case DROP:
-                    throw new UnsupportedOperationException(log);
-            }
-            break;
-        case CUBE:
-            switch (wipeEvent) {
-            case CREATE:
-            case UPDATE:
-                cubeMgmtService.reloadCubeCache(name);
+                switch (wipeEvent) {
+                    case CREATE:
+                    case UPDATE:
+                        cubeMgmtService.getMetadataManager().reloadTableCache(name);
+                        break;
+                    case DROP:
+                        throw new UnsupportedOperationException(log);
+                    default:
+                        break;
+                }
+                IIDescManager.clearCache();
+                CubeDescManager.clearCache();
                 break;
-            case DROP:
-                cubeMgmtService.removeCubeCache(name);
+            case DATA_MODEL:
+                switch (wipeEvent) {
+                    case CREATE:
+                    case UPDATE:
+                        cubeMgmtService.getMetadataManager().reloadDataModelDesc(name);
+                        break;
+                    case DROP:
+                        throw new UnsupportedOperationException(log);
+                }
+                IIDescManager.clearCache();
+                CubeDescManager.clearCache();
                 break;
-            }
-            break;
-        case INVERTED_INDEX:
-            switch (wipeEvent) {
-                case CREATE:
-                case UPDATE:
-                    cubeMgmtService.getIIDescManager().reloadIIDesc(name);
-                    break;
-                case DROP:
-                    cubeMgmtService.getIIDescManager().removeIIDescLocal(name);
-                    break;
-            }
-            break;
-        case PROJECT:
-            switch (wipeEvent) {
-            case CREATE:
-            case UPDATE:
-                projectService.reloadProjectCache(name);
+            case CUBE:
+                switch (wipeEvent) {
+                    case CREATE:
+                    case UPDATE:
+                        cubeMgmtService.reloadCubeCache(name);
+                        break;
+                    case DROP:
+                        cubeMgmtService.removeCubeCache(name);
+                        break;
+                }
                 break;
-            case DROP:
-                projectService.removeProjectCache(name);
+            case INVERTED_INDEX_DESC:
+                switch (wipeEvent) {
+                    case CREATE:
+                    case UPDATE:
+                        cubeMgmtService.getIIDescManager().reloadIIDesc(name);
+                        break;
+                    case DROP:
+                        cubeMgmtService.getIIDescManager().removeIIDescLocal(name);
+                        break;
+                }
                 break;
-            }
-            break;
-        default:
-            throw new UnsupportedOperationException(log);
+            case CUBE_DESC:
+                switch (wipeEvent) {
+                    case CREATE:
+                    case UPDATE:
+                        cubeMgmtService.getCubeDescManager().reloadCubeDesc(name);
+                        break;
+                    case DROP:
+                        cubeMgmtService.getCubeDescManager().removeLocalCubeDesc(name);
+                        break;
+                }
+                break;
+            case PROJECT:
+                switch (wipeEvent) {
+                    case CREATE:
+                    case UPDATE:
+                        projectService.reloadProjectCache(name);
+                        break;
+                    case DROP:
+                        projectService.removeProjectCache(name);
+                        break;
+                }
+                break;
+            case INVERTED_INDEX:
+                switch (wipeEvent) {
+                    case CREATE:
+                    case UPDATE:
+                        cubeMgmtService.getIIManager().loadIICache(name);
+                        break;
+                    case DROP:
+                        cubeMgmtService.getIIManager().removeIILocalCache(name);
+                        break;
+                }
+                break;
+            default:
+                throw new UnsupportedOperationException(log);
         }
     }
 }

@@ -131,7 +131,7 @@ public class Broadcaster {
     }
 
     public static enum TYPE {
-        CUBE("cube"), PROJECT("project"), INVERTED_INDEX("inverted_index"), TABLE("table"), DATA_MODEL("data_model");
+        CUBE("cube"), CUBE_DESC("cube_desc"), PROJECT("project"), INVERTED_INDEX("inverted_index"), INVERTED_INDEX_DESC("ii_desc"), TABLE("table"), DATA_MODEL("data_model");
         private String text;
 
         private TYPE(String text) {

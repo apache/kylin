@@ -21,7 +21,7 @@ import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.common.restclient.Broadcaster;
-import com.kylinolap.common.restclient.SingleValueCache;
+import com.kylinolap.common.restclient.CaseInsensitiveStringCache;
 import com.kylinolap.invertedindex.model.IIDesc;
 import com.kylinolap.metadata.MetadataConstances;
 import com.kylinolap.metadata.MetadataManager;
@@ -51,7 +51,7 @@ public class IIDescManager {
 
     private KylinConfig config;
     // name ==> IIDesc
-    private SingleValueCache<String, IIDesc> iiDescMap = new SingleValueCache<String, IIDesc>(Broadcaster.TYPE.INVERTED_INDEX);
+    private CaseInsensitiveStringCache<IIDesc> iiDescMap = new CaseInsensitiveStringCache<IIDesc>(Broadcaster.TYPE.INVERTED_INDEX_DESC);
 
     public static IIDescManager getInstance(KylinConfig config) {
         IIDescManager r = CACHE.get(config);
