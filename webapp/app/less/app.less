@@ -546,3 +546,48 @@ ul.messenger .messenger-message-inner {
 .load-hive-metawrapper input[type="radio"]{
   margin-left:0px !important;
 }
+
+/** cube data model and dimensions **/
+.table-name-underline {
+  margin: 0 0 5px 0;
+  border-bottom: 1px dashed #ddd;
+  padding-bottom: 3px;
+}
+
+.columns-region, .dimensions-region {
+  max-height: 400px;
+  overflow: auto;
+}
+
+.dimensions-region li {
+  cursor: pointer;
+}
+
+.dimensions-region li:hover {
+  background: #f6f6f6;
+}
+
+.dimensions-region li.active {
+  background-color: lightskyblue;
+}
+
+/** cube dimension hierarchy sortable styles **/
+.hierarchy-item, .hierarchy-item-placeholder {
+  margin: 1px 2px 5px 1px;
+  border-radius: 5px;
+  background-color: #ffffff;
+}
+
+.hierarchy-item {
+  border: solid 1px darkgrey;
+  cursor: move;
+}
+
+.hierarchy-item-placeholder {
+  border: 1px dotted #0000ff !important;
+}
+
+.dimensions-conflict-area {
+  max-height: 300px;
+  overflow-y: auto;
+}
