@@ -28,7 +28,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.kylinolap.common.restclient.Broadcaster;
 import com.kylinolap.common.restclient.Broadcaster.EVENT;
-import com.kylinolap.metadata.MetadataConstances;
 import com.kylinolap.rest.service.CubeService;
 import com.kylinolap.rest.service.ProjectService;
 
@@ -66,7 +65,7 @@ public class CacheController extends BasicController {
         Broadcaster.TYPE wipeType = Broadcaster.TYPE.getType(type);
         EVENT wipeEvent = Broadcaster.EVENT.getEvent(event);
         final String log = "wipe cache type: " + wipeType + " event:" + wipeEvent + " name:" + name;
-        logger.debug(log);
+        logger.info(log);
         switch (wipeType) {
             case TABLE:
             switch (wipeEvent) {
@@ -89,11 +88,6 @@ public class CacheController extends BasicController {
             }
             break;
         case CUBE:
-            if ("ALL".equalsIgnoreCase(name.toUpperCase())) {
-                cubeMgmtService.cleanDataCache();
-                break;
-            }
-
             switch (wipeEvent) {
             case CREATE:
             case UPDATE:
@@ -104,12 +98,18 @@ public class CacheController extends BasicController {
                 break;
             }
             break;
-        case PROJECT:
-            if ("ALL".equalsIgnoreCase(name.toUpperCase())) {
-                projectService.cleanDataCache();
-                break;
+        case INVERTED_INDEX:
+            switch (wipeEvent) {
+                case CREATE:
+                case UPDATE:
+                    cubeMgmtService.getIIDescManager().reloadIIDesc(name);
+                    break;
+                case DROP:
+                    cubeMgmtService.getIIDescManager().removeIIDescLocal(name);
+                    break;
             }
-
+            break;
+        case PROJECT:
             switch (wipeEvent) {
             case CREATE:
             case UPDATE:
