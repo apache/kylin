@@ -16,11 +16,11 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- Hadoop versions -->
-        <hadoop2.version>2.4.1</hadoop2.version>
-        <yarn.version>2.4.1</yarn.version>
-        <hbase-hadoop2.version>0.98.0-hadoop2</hbase-hadoop2.version>
-        <zookeeper.version>3.4.5</zookeeper.version>
-        <hive.version>0.13.0</hive.version>
+        <hadoop2.version>2.6.0</hadoop2.version>
+        <yarn.version>2.6.0</yarn.version>
+        <hbase-hadoop2.version>0.98.4-hadoop2</hbase-hadoop2.version>
+        <zookeeper.version>3.4.6</zookeeper.version>
+        <hive.version>0.14.0</hive.version>
 
         <!-- Dependency versions -->
         <antlr.version>3.4</antlr.version>
