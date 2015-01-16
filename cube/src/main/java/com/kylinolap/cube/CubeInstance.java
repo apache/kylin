@@ -416,6 +416,11 @@ public class CubeInstance extends RootPersistentEntity {
     }
 
     public boolean needMergeImmediatelyAfterBuild(CubeSegment segment) {
+        // HARD CODE TO FALSE, AS THIS IS PROBLEMATIC RIGHT NOW
+        // WILL FIX IN INVERTED-INDEX BRANCH
+        if (true)
+            return false;
+        
         if (!appendOnHll()) {
             return false;
         }
