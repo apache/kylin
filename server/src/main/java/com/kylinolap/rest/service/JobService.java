@@ -134,7 +134,7 @@ public class JobService extends BasicService {
 
         try {
             CubingJob job;
-            CubingJobBuilder builder = CubingJobBuilder.newBuilder().setJobEnginConfig(new JobEngineConfig(getConfig())).setSubmitter(submitter);
+            CubingJobBuilder builder = (CubingJobBuilder)CubingJobBuilder.newBuilder().setJobEnginConfig(new JobEngineConfig(getConfig())).setSubmitter(submitter);
             if (buildType == CubeBuildTypeEnum.BUILD) {
                 builder.setSegment(getCubeManager().appendSegments(cube, startDate, endDate));
                 job = builder.buildJob();
