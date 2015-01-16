@@ -164,6 +164,8 @@ public class CubeSegmentValidator {
                     if (segment.getDateRangeStart() == newSegment.getDateRangeStart()) {
                         if (segment.getDateRangeEnd() == newSegment.getDateRangeEnd()) {
                             hasMatchSegment = true;
+                        } else {
+                            throw new CubeIntegrityException("Invalid date range.");
                         }
                     }
                 }
