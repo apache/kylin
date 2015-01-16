@@ -25,7 +25,6 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
@@ -55,30 +54,26 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
         try {
             options.addOption(OPTION_JOB_NAME);
             options.addOption(OPTION_TABLE_NAME);
-            options.addOption(OPTION_INPUT_PATH);
-            options.addOption(OPTION_INPUT_FORMAT);
-            options.addOption(OPTION_INPUT_DELIM);
+//            options.addOption(OPTION_INPUT_PATH);
             options.addOption(OPTION_OUTPUT_PATH);
             parseOptions(options, args);
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
             String tableName = getOptionValue(OPTION_TABLE_NAME).toUpperCase();
-            Path input = new Path(getOptionValue(OPTION_INPUT_PATH));
-            String inputFormat = getOptionValue(OPTION_INPUT_FORMAT);
-            String inputDelim = getOptionValue(OPTION_INPUT_DELIM);
+//            Path input = new Path(getOptionValue(OPTION_INPUT_PATH));
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
 
             // ----------------------------------------------------------------------------
 
-            log.info("Starting: " + job.getJobName());
+            log.info("Starting: " + job.getJobName() + " on table " + tableName);
 
             // pass table and columns
             MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
             TableDesc table = metaMgr.getTableDesc(tableName);
-            job.getConfiguration().set(BatchConstants.TABLE_NAME, tableName);
+            job.getConfiguration().set(BatchConstants.TABLE_NAME, table.getIdentity());
             job.getConfiguration().set(BatchConstants.TABLE_COLUMNS, getColumns(table));
 
-            setupMapInput(input, inputFormat, inputDelim);
+            setupMapInput();
             setupReduceOutput(output);
 
             return waitForCompletion(job);
@@ -101,8 +96,8 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
         return buf.toString();
     }
 
-    private void setupMapInput(Path input, String inputFormat, String inputDelim) throws IOException {
-        FileInputFormat.setInputPaths(job, input);
+    private void setupMapInput() throws IOException {
+//        FileInputFormat.setInputPaths(job, input);
 
         File JarFile = new File(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
         if (JarFile.exists()) {
