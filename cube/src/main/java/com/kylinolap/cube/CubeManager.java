@@ -585,7 +585,7 @@ public class CubeManager implements IRealizationProvider {
             if (StringUtils.isBlank(cubeInstance.getName()))
                 throw new IllegalStateException("CubeInstance name must not be blank");
 
-            final String cubeName = cubeInstance.getName().toUpperCase();
+            final String cubeName = cubeInstance.getName();
             cubeMap.putLocal(cubeName, cubeInstance);
 
             for (CubeSegment segment : cubeInstance.getSegments()) {
