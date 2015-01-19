@@ -112,7 +112,7 @@ public class CubeManager implements IRealizationProvider {
     // cube name ==> CubeInstance
     private SingleValueCache<String, CubeInstance> cubeMap = new SingleValueCache<String, CubeInstance>(Broadcaster.TYPE.CUBE);
     // "table/column" ==> lookup table
-//    private SingleValueCache<String, LookupStringTable> lookupTables = new SingleValueCache<String, LookupStringTable>(Broadcaster.TYPE.METADATA);
+    //    private SingleValueCache<String, LookupStringTable> lookupTables = new SingleValueCache<String, LookupStringTable>(Broadcaster.TYPE.METADATA);
 
     // for generation hbase table name of a new segment
     private Multimap<String, String> usedStorageLocation = HashMultimap.create();
@@ -256,7 +256,6 @@ public class CubeManager implements IRealizationProvider {
         return cube;
     }
 
-
     private boolean hasOverlap(long startDate, long endDate, long anotherStartDate, long anotherEndDate) {
         if (startDate >= endDate) {
             throw new IllegalArgumentException("startDate must be less than endDate");
@@ -281,22 +280,23 @@ public class CubeManager implements IRealizationProvider {
         if (cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateColumn() == null) {
             throw new CubeIntegrityException("there is no partition date, only full build is supported");
         }
-            List<CubeSegment> readySegments = cubeInstance.getSegment(SegmentStatusEnum.READY);
-            if (readySegments.isEmpty()) {
-                throw new CubeIntegrityException("there are no segments in ready state");
-            }
-            long start = Long.MAX_VALUE;
-            long end = Long.MIN_VALUE;
-            for (CubeSegment readySegment: readySegments) {
-                if (hasOverlap(startDate, endDate, readySegment.getDateRangeStart(), readySegment.getDateRangeEnd())) {
-                    if (start > readySegment.getDateRangeStart()) {
-                        start = readySegment.getDateRangeStart();
-                    }
-                    if (end < readySegment.getDateRangeEnd()) {
-                        end = readySegment.getDateRangeEnd();
-                    }
+
+        List<CubeSegment> readySegments = cubeInstance.getSegment(SegmentStatusEnum.READY);
+        if (readySegments.isEmpty()) {
+            throw new CubeIntegrityException("there are no segments in ready state");
+        }
+        long start = Long.MAX_VALUE;
+        long end = Long.MIN_VALUE;
+        for (CubeSegment readySegment : readySegments) {
+            if (hasOverlap(startDate, endDate, readySegment.getDateRangeStart(), readySegment.getDateRangeEnd())) {
+                if (start > readySegment.getDateRangeStart()) {
+                    start = readySegment.getDateRangeStart();
+                }
+                if (end < readySegment.getDateRangeEnd()) {
+                    end = readySegment.getDateRangeEnd();
                 }
             }
+        }
         CubeSegment newSegment = buildSegment(cubeInstance, start, end);
 
         validateNewSegments(cubeInstance, CubeBuildTypeEnum.MERGE, newSegment);
@@ -349,23 +349,24 @@ public class CubeManager implements IRealizationProvider {
         return "KYLIN_HOST";
     }
 
-    public void updateSegmentOnJobSucceed(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, String segmentName, String jobUuid, long lastBuildTime, long sizeKB, long sourceRecordCount, long sourceRecordsSize) throws IOException, CubeIntegrityException {
+    public void updateSegmentOnJobSucceed(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, String segmentName, //
+            String jobUuid, long lastBuildTime, long sizeKB, long sourceRecordCount, long sourceRecordsSize) throws IOException, CubeIntegrityException {
 
         List<CubeSegment> segmentsInNewStatus = cubeInstance.getSegments(SegmentStatusEnum.NEW);
         CubeSegment cubeSegment = cubeInstance.getSegmentById(jobUuid);
         Preconditions.checkArgument(segmentsInNewStatus.size() == 1, "there are " + segmentsInNewStatus.size() + " new segments");
 
         switch (buildType) {
-            case BUILD:
-                cubeInstance.getSegments().removeAll(cubeInstance.getMergingSegments());
-                break;
-            case MERGE:
-                cubeInstance.getSegments().removeAll(cubeInstance.getMergingSegments());
-                break;
-            case REFRESH:
-                break;
-            default:
-                throw new RuntimeException("invalid build type:" + buildType);
+        case BUILD:
+            cubeInstance.getSegments().removeAll(cubeInstance.getMergingSegments());
+            break;
+        case MERGE:
+            cubeInstance.getSegments().removeAll(cubeInstance.getMergingSegments());
+            break;
+        case REFRESH:
+            break;
+        default:
+            throw new RuntimeException("invalid build type:" + buildType);
         }
         cubeSegment.setLastBuildJobID(jobUuid);
         cubeSegment.setLastBuildTime(lastBuildTime);
