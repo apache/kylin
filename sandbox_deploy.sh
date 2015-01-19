@@ -169,12 +169,6 @@ cd $CATALINA_HOME/webapps;
 chmod 644 $WAR_NAME;
 echo "REST service deployed"
 
-rm -rf /var/www/html/kylin
-mkdir -p /var/www/html/kylin
-cd $KYLIN_HOME/
-tar -xf webapp/dist/Web.tar -C /var/www/html/kylin
-echo "Web deployed"
-
 cd $KYLIN_HOME/
 #deploy setenv.sh
 rm -rf $CATALINA_HOME/bin/setenv.sh

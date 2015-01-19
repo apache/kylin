@@ -1,4 +1,4 @@
-pwd
+#!/bin/sh
 
 mvn clean
 mvn install -DskipTests
@@ -16,4 +16,10 @@ npm install
 npm install -g grunt-cli
 grunt dev --buildEnv=dev
 cd dist
-tar -cvf Web.tar * .htaccess
+
+# pack webapp into kylin.war so that we have a all-in-one war
+for f in * .[^.]*
+do
+        echo "Adding $f to kylin.war"
+        jar -uf ../../server/target/kylin.war $f
+done
