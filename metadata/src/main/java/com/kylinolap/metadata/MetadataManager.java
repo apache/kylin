@@ -307,8 +307,7 @@ public class MetadataManager {
             if (dataModelDesc.getError().isEmpty() == false) {
                 throw new IllegalStateException("DataModelDesc at " + path + " has issues: " + dataModelDesc.getError());
             }
-            String name = dataModelDesc.getName();
-            dataModelDescMap.putLocal(name, dataModelDesc);
+            dataModelDescMap.putLocal(dataModelDesc.getName(), dataModelDesc);
             return dataModelDesc;
         } catch (IOException e) {
             throw new IllegalStateException("Error to load" + path, e);
