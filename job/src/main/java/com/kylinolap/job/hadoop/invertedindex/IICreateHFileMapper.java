@@ -20,21 +20,23 @@ import static com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc.*;
 
 import java.io.IOException;
 
+import com.kylinolap.common.mr.KylinMapper;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValue.Type;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.mapreduce.Mapper;
 
 /**
  * @author yangli9
  * 
  */
-public class IICreateHFileMapper extends Mapper<ImmutableBytesWritable, ImmutableBytesWritable, ImmutableBytesWritable, KeyValue> {
+public class IICreateHFileMapper extends KylinMapper<ImmutableBytesWritable, ImmutableBytesWritable, ImmutableBytesWritable, KeyValue> {
 
     long timestamp;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
+        super.publishConfiguration(context.getConfiguration());
+
         timestamp = System.currentTimeMillis();
     }
 

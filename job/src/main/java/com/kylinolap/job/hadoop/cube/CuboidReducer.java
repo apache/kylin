@@ -19,8 +19,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
+import com.kylinolap.common.mr.KylinReducer;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Reducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +38,7 @@ import com.kylinolap.metadata.model.cube.MeasureDesc;
  * @author George Song (ysong1)
  * 
  */
-public class CuboidReducer extends Reducer<Text, Text, Text, Text> {
+public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
 
     private static final Logger logger = LoggerFactory.getLogger(CuboidReducer.class);
 
@@ -58,6 +58,7 @@ public class CuboidReducer extends Reducer<Text, Text, Text, Text> {
 
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
 
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(context.getConfiguration());

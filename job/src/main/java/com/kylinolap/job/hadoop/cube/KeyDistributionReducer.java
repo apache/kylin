@@ -31,7 +31,7 @@ package com.kylinolap.job.hadoop.cube;
 // * @author xjiang
 // *
 // */
-//public class KeyDistributionReducer extends Reducer<Text, LongWritable, Text, LongWritable> {
+//public class KeyDistributionReducer extends KylinReducer<Text, LongWritable, Text, LongWritable> {
 //
 //    private static final Logger logger = LoggerFactory.getLogger(KeyDistributionReducer.class);
 //
@@ -44,6 +44,8 @@ package com.kylinolap.job.hadoop.cube;
 //
 //    @Override
 //    protected void setup(Context context) throws IOException, InterruptedException {
+//        super.publishConfiguration(context.getConfiguration());
+
 //        String splitStr = context.getConfiguration().get(KeyDistributionJob.KEY_SPLIT_NUMBER);
 //        splitNumber = Integer.valueOf(splitStr).intValue();
 //        outputValue = new LongWritable();

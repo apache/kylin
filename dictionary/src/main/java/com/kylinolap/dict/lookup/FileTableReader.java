@@ -66,7 +66,7 @@ public class FileTableReader implements TableReader {
         FileSystem fs = HadoopUtil.getFileSystem(filePath);
 
         try {
-            this.reader = new SeqRowReader(HadoopUtil.getDefaultConfiguration(), fs, filePath);
+            this.reader = new SeqRowReader(HadoopUtil.getCurrentConfiguration(), fs, filePath);
 
         } catch (IOException e) {
             if (isExceptionSayingNotSeqFile(e) == false)

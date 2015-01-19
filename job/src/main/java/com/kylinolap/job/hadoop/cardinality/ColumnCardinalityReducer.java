@@ -18,29 +18,29 @@ package com.kylinolap.job.hadoop.cardinality;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.mapreduce.Reducer;
 
 import com.kylinolap.common.hll.HyperLogLogPlusCounter;
+import com.kylinolap.common.mr.KylinReducer;
 import com.kylinolap.cube.kv.RowConstants;
 
 /**
  * @author Jack
  * 
  */
-public class ColumnCardinalityReducer extends Reducer<IntWritable, BytesWritable, IntWritable, LongWritable> {
+public class ColumnCardinalityReducer extends KylinReducer<IntWritable, BytesWritable, IntWritable, LongWritable> {
 
     public static final int ONE = 1;
     private Map<Integer, HyperLogLogPlusCounter> hllcMap = new HashMap<Integer, HyperLogLogPlusCounter>();
+
+    @Override
+    protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+    }
 
     @Override
     public void reduce(IntWritable key, Iterable<BytesWritable> values, Context context) throws IOException, InterruptedException {

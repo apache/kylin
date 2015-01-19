@@ -39,7 +39,7 @@ import com.kylinolap.cube.CubeManager;
 public class InvertedIndexCLI {
 
     public static void main(String[] args) throws IOException {
-        Configuration hconf = HadoopUtil.getDefaultConfiguration();
+        Configuration hconf = HadoopUtil.getCurrentConfiguration();
         CubeManager mgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
 
         String cubeName = args[0];
