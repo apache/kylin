@@ -14,7 +14,7 @@
   </property>
     <property>
     <name>dfs.cluster.administrators</name>
-    <value> hdfs</value>
+    <value>hdfs</value>
   </property>
     <property>
     <name>dfs.namenode.checkpoint.dir</name>
