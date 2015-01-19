@@ -36,8 +36,6 @@ public class IIDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, HCatRecord, Sh
     private HCatSchema schema = null;
     private int columnSize = 0;
     
-    public static final byte[] NULL_VALUE = Bytes.toBytes("NULL");
-
     @Override
     protected void setup(Context context) throws IOException {
         schema = HCatInputFormat.getTableSchema(context.getConfiguration());
@@ -52,12 +50,9 @@ public class IIDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, HCatRecord, Sh
             outputKey.set(i);
             fieldSchema = schema.get(i);
             Object fieldValue = record.get(fieldSchema.getName(), schema);
-            byte[] bytes;
-            if (fieldValue != null) {
-                bytes = Bytes.toBytes(fieldValue.toString());
-            } else {
-                bytes = NULL_VALUE;
-            }
+            if (fieldValue == null)
+                continue;
+            byte[] bytes = Bytes.toBytes(fieldValue.toString());
             outputValue.set(bytes, 0, bytes.length);
             context.write(outputKey, outputValue);
         }
