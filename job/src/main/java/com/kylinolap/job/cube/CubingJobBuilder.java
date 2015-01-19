@@ -98,8 +98,10 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         checkPreconditions();
         CubingJob result = initialJob("MERGE");
         final String jobId = result.getId();
-        List<CubeSegment> mergingSegments = ((CubeSegment) segment).getCubeInstance().getMergingSegments((CubeSegment) segment);
+        CubeSegment seg = (CubeSegment) segment;
+        List<CubeSegment> mergingSegments = seg.getCubeInstance().getMergingSegments(seg);
         Preconditions.checkState(mergingSegments != null && mergingSegments.size() > 1, "there should be more than 2 segments to merge");
+        
         String[] cuboidPaths = new String[mergingSegments.size()];
         for (int i = 0; i < mergingSegments.size(); i++) {
             cuboidPaths[i] = getPathToMerge(mergingSegments.get(i));

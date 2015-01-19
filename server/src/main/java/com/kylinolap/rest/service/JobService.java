@@ -104,23 +104,22 @@ public class JobService extends BasicService {
 
     private ExecutableState parseToExecutableState(JobStatusEnum status) {
         switch (status) {
-            case DISCARDED:
-                return ExecutableState.DISCARDED;
-            case ERROR:
-                return ExecutableState.ERROR;
-            case FINISHED:
-                return ExecutableState.SUCCEED;
-            case NEW:
-                return ExecutableState.READY;
-            case PENDING:
-                return ExecutableState.READY;
-            case RUNNING:
-                return ExecutableState.RUNNING;
-            default:
-                throw new RuntimeException("illegal status:" + status);
+        case DISCARDED:
+            return ExecutableState.DISCARDED;
+        case ERROR:
+            return ExecutableState.ERROR;
+        case FINISHED:
+            return ExecutableState.SUCCEED;
+        case NEW:
+            return ExecutableState.READY;
+        case PENDING:
+            return ExecutableState.READY;
+        case RUNNING:
+            return ExecutableState.RUNNING;
+        default:
+            throw new RuntimeException("illegal status:" + status);
         }
     }
-
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
     public JobInstance submitJob(CubeInstance cube, long startDate, long endDate, CubeBuildTypeEnum buildType, String submitter) throws IOException, JobException {
@@ -134,7 +133,7 @@ public class JobService extends BasicService {
 
         try {
             CubingJob job;
-            CubingJobBuilder builder = (CubingJobBuilder)CubingJobBuilder.newBuilder().setJobEnginConfig(new JobEngineConfig(getConfig())).setSubmitter(submitter);
+            CubingJobBuilder builder = (CubingJobBuilder) CubingJobBuilder.newBuilder().setJobEnginConfig(new JobEngineConfig(getConfig())).setSubmitter(submitter);
             if (buildType == CubeBuildTypeEnum.BUILD) {
                 builder.setSegment(getCubeManager().appendSegments(cube, startDate, endDate));
                 job = builder.buildJob();
@@ -183,7 +182,7 @@ public class JobService extends BasicService {
         result.setSequenceID(i);
         result.setStatus(parseToJobStepStatus(task.getStatus()));
         final Output output = getExecutableManager().getOutput(task.getId());
-        for (Map.Entry<String, String> entry: output.getExtra().entrySet()) {
+        for (Map.Entry<String, String> entry : output.getExtra().entrySet()) {
             if (entry.getKey() != null && entry.getValue() != null) {
                 result.putInfo(entry.getKey(), entry.getValue());
             }
@@ -195,7 +194,7 @@ public class JobService extends BasicService {
         }
         if (task instanceof MapReduceExecutable) {
             result.setExecCmd(((MapReduceExecutable) task).getMapReduceParams());
-            result.setExecWaitTime(((MapReduceExecutable) task).getMapReduceWaitTime()/1000);
+            result.setExecWaitTime(((MapReduceExecutable) task).getMapReduceWaitTime() / 1000);
         }
         if (task instanceof HadoopShellExecutable) {
             result.setExecCmd(((HadoopShellExecutable) task).getJobParams());
@@ -205,40 +204,39 @@ public class JobService extends BasicService {
 
     private JobStatusEnum parseToJobStatus(ExecutableState state) {
         switch (state) {
-            case READY:
-                return JobStatusEnum.PENDING;
-            case RUNNING:
-                return JobStatusEnum.RUNNING;
-            case ERROR:
-                return JobStatusEnum.ERROR;
-            case DISCARDED:
-                return JobStatusEnum.DISCARDED;
-            case SUCCEED:
-                return JobStatusEnum.FINISHED;
-            case STOPPED:
-            default:
-                throw new RuntimeException("invalid state:" + state);
+        case READY:
+            return JobStatusEnum.PENDING;
+        case RUNNING:
+            return JobStatusEnum.RUNNING;
+        case ERROR:
+            return JobStatusEnum.ERROR;
+        case DISCARDED:
+            return JobStatusEnum.DISCARDED;
+        case SUCCEED:
+            return JobStatusEnum.FINISHED;
+        case STOPPED:
+        default:
+            throw new RuntimeException("invalid state:" + state);
         }
     }
 
     private JobStepStatusEnum parseToJobStepStatus(ExecutableState state) {
         switch (state) {
-            case READY:
-                return JobStepStatusEnum.PENDING;
-            case RUNNING:
-                return JobStepStatusEnum.RUNNING;
-            case ERROR:
-                return JobStepStatusEnum.ERROR;
-            case DISCARDED:
-                return JobStepStatusEnum.DISCARDED;
-            case SUCCEED:
-                return JobStepStatusEnum.FINISHED;
-            case STOPPED:
-            default:
-                throw new RuntimeException("invalid state:" + state);
+        case READY:
+            return JobStepStatusEnum.PENDING;
+        case RUNNING:
+            return JobStepStatusEnum.RUNNING;
+        case ERROR:
+            return JobStepStatusEnum.ERROR;
+        case DISCARDED:
+            return JobStepStatusEnum.DISCARDED;
+        case SUCCEED:
+            return JobStepStatusEnum.FINISHED;
+        case STOPPED:
+        default:
+            throw new RuntimeException("invalid state:" + state);
         }
     }
-
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public void resumeJob(JobInstance job) throws IOException, JobException {
@@ -247,10 +245,10 @@ public class JobService extends BasicService {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public JobInstance cancelJob(String jobId) throws IOException, JobException, CubeIntegrityException {
-//        CubeInstance cube = this.getCubeManager().getCube(job.getRelatedCube());
-//        for (BuildCubeJob cubeJob: listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING))) {
-//            getExecutableManager().stopJob(cubeJob.getId());
-//        }
+        //        CubeInstance cube = this.getCubeManager().getCube(job.getRelatedCube());
+        //        for (BuildCubeJob cubeJob: listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING))) {
+        //            getExecutableManager().stopJob(cubeJob.getId());
+        //        }
         final JobInstance jobInstance = getJobInstance(jobId);
         final String segmentId = jobInstance.getRelatedSegment();
         CubeInstance cubeInstance = getCubeManager().getCube(jobInstance.getRelatedCube());
