@@ -118,7 +118,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
 
     public List<CubeSegment> getMergingSegments(CubeSegment cubeSegment) {
         CubeSegment buildingSegment;
-        if (cubeSegment == null) {
+        if (cubeSegment == null) { // this path goes tests only
             List<CubeSegment> buildingSegments = getBuildingSegments();
             if (buildingSegments.size() == 0) {
                 return Collections.emptyList();
