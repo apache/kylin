@@ -1,6 +1,6 @@
 <script type="text/ng-template" id="jobRefresh.html">
     <div class="modal-header">
-        <h4>CUBE REFRESH CONFIRM</h4>
+        <h4 tooltip="refresh">CUBE REFRESH CONFIRM</h4>
     </div>
     <div class="modal-body" style="background-color: white">
         <div ng-if="cube.detail.cube_partition_desc.partition_date_column" class="row">
@@ -74,7 +74,7 @@
 
     <div class="modal-footer">
         <button class="btn btn-primary" ng-click="cancel()">Close</button>
-        <button class="btn btn-success" ng-click="rebuild()"
+        <button class="btn btn-success" ng-click="updateDate();rebuild()"
                 ng-disabled="!(jobBuildRequest.startTime >= 0 && jobBuildRequest.endTime > 0)">Submit
         </button>
     </div>

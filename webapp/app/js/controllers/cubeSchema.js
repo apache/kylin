@@ -48,6 +48,9 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     }
 
     $scope.$watch('cube.detail', function (newValue, oldValue) {
+        if(!newValue){
+            return;
+        }
         if (newValue) {
             $scope.cubeMetaFrame = newValue;
         }
@@ -57,6 +60,11 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         if ($scope.cubeMode=="editExistCube"&&newValue && !newValue.project) {
             initProject();
         }
+        if($scope.cubeMetaFrame&&$scope.cubeMetaFrame.cube_partition_desc.partition_date_start||$scope.cubeMetaFrame.cube_partition_desc.partition_date_start==0)
+        {
+            $scope.cubeMetaFrame.cube_partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
+        }
+
     });
 
     // ~ public methods
@@ -141,8 +149,8 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
             if (cubeName) {
                 var projName = null;
                 angular.forEach($scope.projects, function (project, index) {
-                    angular.forEach(project.cubes, function (cube, index) {
-                        if (!projName && cube === cubeName.toUpperCase()) {
+                    angular.forEach(project.datamodels, function (model, index) {
+                        if (!projName && model.type=="CUBE"&&model.realization === cubeName) {
                             projName = project.name;
                         }
                     });
