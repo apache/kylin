@@ -337,6 +337,7 @@ public class MetadataManager {
         try {
             dataModelDesc.init(this.getAllTablesMap());
         } catch (Exception e) {
+            e.printStackTrace();
             dataModelDesc.addError(e.getMessage(), true);
         }
 
