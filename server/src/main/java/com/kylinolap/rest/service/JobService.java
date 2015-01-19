@@ -241,8 +241,8 @@ public class JobService extends BasicService {
 
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
-    public void resumeJob(JobInstance job) throws IOException, JobException {
-        getExecutableManager().resumeJob(job.getId());
+    public void resumeJob(String jobId) throws IOException, JobException {
+        getExecutableManager().resumeJob(jobId);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")

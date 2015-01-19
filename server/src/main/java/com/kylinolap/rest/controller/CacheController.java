@@ -15,8 +15,9 @@
  */
 package com.kylinolap.rest.controller;
 
-import java.io.IOException;
-
+import com.kylinolap.common.restclient.Broadcaster;
+import com.kylinolap.common.restclient.Broadcaster.EVENT;
+import com.kylinolap.rest.service.CacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,16 +27,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.kylinolap.common.restclient.Broadcaster;
-import com.kylinolap.common.restclient.Broadcaster.EVENT;
-import com.kylinolap.rest.service.CubeService;
-import com.kylinolap.rest.service.ProjectService;
+import java.io.IOException;
 
 /**
  * CubeController is defined as Restful API entrance for UI.
- * 
+ *
  * @author jianliu
- * 
+ *
  */
 @Controller
 @RequestMapping(value = "/cache")
@@ -43,14 +41,11 @@ public class CacheController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(CacheController.class);
 
     @Autowired
-    private CubeService cubeMgmtService;
-
-    @Autowired
-    private ProjectService projectService;
+    private CacheService cacheService;
 
     /**
      * Wipe system cache
-     * 
+     *
      * @param type
      *            {@link Broadcaster.TYPE}
      * @param event
@@ -66,62 +61,16 @@ public class CacheController extends BasicController {
         EVENT wipeEvent = Broadcaster.EVENT.getEvent(event);
         final String log = "wipe cache type: " + wipeType + " event:" + wipeEvent + " name:" + name;
         logger.info(log);
-        switch (wipeType) {
-            case TABLE:
-            switch (wipeEvent) {
-                case CREATE:
-                case UPDATE:
-                    cubeMgmtService.getMetadataManager().reloadTableCache(name);
-                    break;
-                case DROP:
-                    throw new UnsupportedOperationException(log);
-            }
-            break;
-        case DATA_MODEL:
-            switch (wipeEvent) {
-                case CREATE:
-                case UPDATE:
-                    cubeMgmtService.getMetadataManager().reloadDataModelDesc(name);
-                    break;
-                case DROP:
-                    throw new UnsupportedOperationException(log);
-            }
-            break;
-        case CUBE:
-            switch (wipeEvent) {
+        switch (wipeEvent) {
             case CREATE:
             case UPDATE:
-                cubeMgmtService.reloadCubeCache(name);
+                cacheService.rebuildCache(wipeType, name);
                 break;
             case DROP:
-                cubeMgmtService.removeCubeCache(name);
+                cacheService.removeCache(wipeType, name);
                 break;
-            }
-            break;
-        case INVERTED_INDEX:
-            switch (wipeEvent) {
-                case CREATE:
-                case UPDATE:
-                    cubeMgmtService.getIIDescManager().reloadIIDesc(name);
-                    break;
-                case DROP:
-                    cubeMgmtService.getIIDescManager().removeIIDescLocal(name);
-                    break;
-            }
-            break;
-        case PROJECT:
-            switch (wipeEvent) {
-            case CREATE:
-            case UPDATE:
-                projectService.reloadProjectCache(name);
-                break;
-            case DROP:
-                projectService.removeProjectCache(name);
-                break;
-            }
-            break;
-        default:
-            throw new UnsupportedOperationException(log);
+            default:
+                throw new RuntimeException("invalid type:" + wipeEvent);
         }
     }
 }

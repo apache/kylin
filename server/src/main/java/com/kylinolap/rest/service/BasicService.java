@@ -24,6 +24,7 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeDescManager;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.invertedindex.IIDescManager;
+import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.job.cube.CubingJob;
 import com.kylinolap.job.execution.ExecutableState;
 import com.kylinolap.job.impl.threadpool.AbstractExecutable;
@@ -164,6 +165,10 @@ public abstract class BasicService {
 
     public final IIDescManager getIIDescManager() {
         return IIDescManager.getInstance(getConfig());
+    }
+
+    public final IIManager getIIManager() {
+        return IIManager.getInstance(getConfig());
     }
 
     protected List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList) {
