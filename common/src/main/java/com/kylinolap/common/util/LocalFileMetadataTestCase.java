@@ -28,7 +28,8 @@ import com.kylinolap.common.persistence.ResourceStore;
  * @author ysong1
  */
 public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
-    private String tempTestMetadataUrl = null;
+
+    protected String tempTestMetadataUrl = null;
 
     @Override
     public void createTestMetadata() {

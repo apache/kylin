@@ -19,7 +19,7 @@ public class CacheService extends BasicService {
         try {
             switch (cacheType) {
                 case CUBE:
-                    getCubeManager().loadCubeCache(getCubeManager().getCube(cacheKey));
+                    getCubeManager().loadCubeCache(cacheKey);
                     break;
                 case CUBE_DESC:
                     getCubeDescManager().reloadCubeDesc(cacheKey);

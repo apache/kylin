@@ -382,11 +382,11 @@ public class CubeManager implements IRealizationProvider {
     /**
      * After cube update, reload cube related cache
      *
-     * @param cube
+     * @param cubeName
      */
-    public void loadCubeCache(CubeInstance cube) {
+    public void loadCubeCache(String cubeName) {
         try {
-            loadCubeInstance(cube.getResourcePath());
+            loadCubeInstance(CubeInstance.concatResourcePath(cubeName));
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
         }

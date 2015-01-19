@@ -1,21 +1,20 @@
-package com.kylinolap.rest.broadcaster;
+package com.kylinolap.rest.service;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.restclient.Broadcaster;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeDescManager;
-import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.project.ProjectManager;
-import com.kylinolap.rest.controller.CacheController;
+import com.kylinolap.rest.broadcaster.BroadcasterReceiveServlet;
+import com.kylinolap.rest.service.CacheService;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.junit.*;
-
-import java.lang.reflect.Method;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -24,10 +23,9 @@ import static org.junit.Assert.assertTrue;
  * Created by qianzhou on 1/16/15.
  */
 
-public class BroadcasterTest extends LocalFileMetadataTestCase {
+public class CacheServiceTest extends LocalFileMetadataTestCase {
 
     private Server server;
-    private CacheController cacheController = new CacheController();
 
     private KylinConfig configA;
     private KylinConfig configB;
@@ -42,12 +40,36 @@ public class BroadcasterTest extends LocalFileMetadataTestCase {
         context.setContextPath("/");
         server.setHandler(context);
 
-        // http://localhost:8080/hello
-        context.addServlet(new ServletHolder(new BroadcasterReceiveServlet(null)), "/");
-        server.start();
-
         configA = KylinConfig.getInstanceFromEnv();
         configB = KylinConfig.getKylinConfigFromInputStream(KylinConfig.getKylinPropertiesAsInputSteam());
+        configB.setMetadataUrl(tempTestMetadataUrl);
+
+        context.addServlet(new ServletHolder(new BroadcasterReceiveServlet(new BroadcasterReceiveServlet.BroadcasterHandler() {
+            @Override
+            public void handle(String type, String name, String event) {
+                final CacheService cacheService = new CacheService() {
+                    @Override
+                    public KylinConfig getConfig() {
+                        return configB;
+                    }
+                };
+                Broadcaster.TYPE wipeType = Broadcaster.TYPE.getType(type);
+                Broadcaster.EVENT wipeEvent = Broadcaster.EVENT.getEvent(event);
+                final String log = "wipe cache type: " + wipeType + " event:" + wipeEvent + " name:" + name;
+                switch (wipeEvent) {
+                    case CREATE:
+                    case UPDATE:
+                        cacheService.rebuildCache(wipeType, name);
+                        break;
+                    case DROP:
+                        cacheService.removeCache(wipeType, name);
+                        break;
+                    default:
+                        throw new RuntimeException("invalid type:" + wipeEvent);
+                }
+            }
+        })), "/");
+        server.start();
     }
 
     @After
@@ -101,12 +123,16 @@ public class BroadcasterTest extends LocalFileMetadataTestCase {
     @Test
     public void test() throws Exception {
 
-
         getStore().deleteResource("/cube/a_whole_new_cube.json");
 
         CubeDesc desc = getCubeDescManager(configA).getCubeDesc("test_kylin_cube_with_slr_desc");
-        CubeInstance createdCube = getCubeManager(configA).createCube("a_whole_new_cube", ProjectInstance.DEFAULT_PROJECT_NAME, desc, null);
-        assertTrue(createdCube == getCubeManager(configA).getCube("a_whole_new_cube"));
+        final String cubeName = "a_whole_new_cube";
+        assertTrue(getCubeManager(configA).getCube(cubeName) == null);
+        assertTrue(getCubeManager(configB).getCube(cubeName) == null);
+        getCubeManager(configA).createCube(cubeName, ProjectInstance.DEFAULT_PROJECT_NAME, desc, null);
+        assertNotNull(getCubeManager(configA).getCube(cubeName));
+        Thread.sleep(1000);
+        assertNotNull(getCubeManager(configB).getCube(cubeName));
 
         getStore().deleteResource("/cube/a_whole_new_cube.json");
     }
