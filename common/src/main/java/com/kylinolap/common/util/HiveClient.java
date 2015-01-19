@@ -18,6 +18,8 @@ package com.kylinolap.common.util;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.hadoop.hive.cli.CliSessionState;
 import org.apache.hadoop.hive.common.StatsSetupConst;
@@ -27,9 +29,15 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
+import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.ql.stats.StatsUtils;
 
+/**
+ * Hive meta API client for Kylin
+ * @author shaoshi
+ *
+ */
 public class HiveClient {
 
     protected HiveConf hiveConf = null;
@@ -38,6 +46,11 @@ public class HiveClient {
 
     public HiveClient() {
         hiveConf = new HiveConf(HiveClient.class);
+    }
+
+    public HiveClient(Map<String, String> configMap) {
+        this();
+        appendConfiguration(configMap);
     }
 
     public HiveConf getHiveConf() {
@@ -58,15 +71,29 @@ public class HiveClient {
     }
 
     /**
+     * Append or overwrite the default hive client configuration; You need call this before invoke #executeHQL;
+     * @param configMap
+     */
+    public void appendConfiguration(Map<String, String> configMap) {
+        if (configMap != null && configMap.size() > 0) {
+            for (Entry<String, String> e : configMap.entrySet()) {
+                hiveConf.set(e.getKey(), e.getValue());
+            }
+        }
+    }
+
+    /**
      * 
      * @param hql
      * @throws CommandNeedRetryException
      * @throws IOException
      */
     public void executeHQL(String hql) throws CommandNeedRetryException, IOException {
-        int retCode = getDriver().run(hql).getResponseCode();
+        CommandProcessorResponse response = getDriver().run(hql);
+        int retCode = response.getResponseCode();
         if (retCode != 0) {
-            throw new IOException("Failed to execute hql [" + hql + "], return code from hive driver : [" + retCode + "]");
+            String err  = response.getErrorMessage();
+            throw new IOException("Failed to execute hql [" + hql + "], error message is: " + err);
         }
     }
 

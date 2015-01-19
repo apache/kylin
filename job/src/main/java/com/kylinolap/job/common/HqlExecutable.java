@@ -1,16 +1,21 @@
 package com.kylinolap.job.common;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+import org.datanucleus.store.types.backed.HashMap;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.util.HiveClient;
+import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.job.dao.JobPO;
 import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.execution.ExecutableContext;
 import com.kylinolap.job.execution.ExecuteResult;
 import com.kylinolap.job.impl.threadpool.AbstractExecutable;
-import org.apache.commons.lang.StringUtils;
-
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Created by qianzhou on 1/15/15.
@@ -18,6 +23,7 @@ import java.util.List;
 public class HqlExecutable extends AbstractExecutable {
 
     private static final String HQL = "hql";
+    private static final String HIVE_CONFIG = "hive-config";
 
     public HqlExecutable() {
     }
@@ -29,7 +35,9 @@ public class HqlExecutable extends AbstractExecutable {
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         try {
-            HiveClient hiveClient = new HiveClient();
+            Map<String, String> configMap = getConfiguration();
+            HiveClient hiveClient = new HiveClient(configMap);
+            
             for (String hql: getHqls()) {
                 hiveClient.executeHQL(hql);
             }
@@ -39,15 +47,42 @@ public class HqlExecutable extends AbstractExecutable {
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         }
     }
+    
+    public void setConfiguration(Map<String, String> configMap) {
+        if(configMap != null) {
+            String configStr = "";
+            try {
+                configStr = JsonUtil.writeValueAsString(configMap);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+            setParam(HIVE_CONFIG, configStr);
+        }
+    }
 
+
+    private Map<String, String> getConfiguration() {
+        String configStr = getParam(HIVE_CONFIG);
+        Map<String, String> result = null;
+        if(configStr != null) {
+            try {
+                result = JsonUtil.readValue(configStr, HashMap.class);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        
+        return result;
+    }
+    
     public void setHqls(List<String> hqls) {
-        setParam(HQL, StringUtils.join(hqls, ","));
+        setParam(HQL, StringUtils.join(hqls, ";"));
     }
 
     private List<String> getHqls() {
         final String hqls = getParam(HQL);
         if (hqls != null) {
-            return Lists.newArrayList(StringUtils.split(hqls, ","));
+            return Lists.newArrayList(StringUtils.split(hqls, ";"));
         } else {
             return Collections.emptyList();
         }

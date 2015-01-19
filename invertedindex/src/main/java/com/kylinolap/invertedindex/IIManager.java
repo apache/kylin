@@ -239,7 +239,7 @@ public class IIManager implements IRealizationProvider {
      *            (pass 0 if full build)
      * @return
      */
-    private IISegment buildSegment(IIInstance IIInstance, long startDate, long endDate) {
+    public IISegment buildSegment(IIInstance IIInstance, long startDate, long endDate) {
         IISegment segment = new IISegment();
         String incrementalSegName = IISegment.getSegmentName(startDate, endDate);
         segment.setUuid(UUID.randomUUID().toString());
