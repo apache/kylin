@@ -27,13 +27,17 @@ import java.util.concurrent.ConcurrentMap;
  * @author xjiang
  * 
  */
-public class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
+public abstract class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
 
     private final ConcurrentMap<K, V> innerCache;
 
     public SingleValueCache(Broadcaster.TYPE syncType) {
+        this(syncType, new ConcurrentHashMap<K, V>());
+    }
+
+    public SingleValueCache(Broadcaster.TYPE syncType, ConcurrentMap<K, V> innerCache) {
         super(syncType);
-        innerCache = new ConcurrentHashMap<K, V>();
+        this.innerCache = innerCache;
     }
 
     public void put(K key, V value) {

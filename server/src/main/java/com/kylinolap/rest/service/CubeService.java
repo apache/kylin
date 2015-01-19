@@ -291,8 +291,7 @@ public class CubeService extends BasicService {
     }
 
     public void reloadCubeCache(String cubeName) {
-        CubeInstance cube = CubeManager.getInstance(this.getConfig()).getCube(cubeName);
-        CubeManager.getInstance(this.getConfig()).loadCubeCache(cube);
+        CubeManager.getInstance(this.getConfig()).loadCubeCache(cubeName);
     }
 
     public void removeCubeCache(String cubeName) {
