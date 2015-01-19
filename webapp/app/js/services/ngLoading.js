@@ -6,7 +6,7 @@ module.provider('loadingRequest', function () {
 
         var loadTemplate = angular.element('<div class="kylinLoadingRequest"><div class="loadingOverlay" ></div>' +
             '<div id="loadingCntnr" class="showbox" style="opacity: 0; margin-top: 250px;">'+
-            '<div class="loadingWord" ><img src="/image/waiting.gif"><span>Please wait...</span></div>'+
+            '<div class="loadingWord" ><img src="image/waiting.gif"><span>Please wait...</span></div>'+
             '</div> </div>');
 
         var createOverlay = function () {
