@@ -19,11 +19,11 @@ import java.io.IOException;
 import java.util.Collection;
 
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.mr.KylinMapper;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
@@ -40,7 +40,7 @@ import com.kylinolap.metadata.model.cube.CubeDesc;
  * @author George Song (ysong1)
  * 
  */
-public class NDCuboidMapper extends Mapper<Text, Text, Text, Text> {
+public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
 
     private static final Logger logger = LoggerFactory.getLogger(NDCuboidMapper.class);
 
@@ -58,6 +58,8 @@ public class NDCuboidMapper extends Mapper<Text, Text, Text, Text> {
 
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+
 
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
         segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME).toUpperCase();

@@ -20,8 +20,8 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
 
+import com.kylinolap.common.mr.KylinMapper;
 import com.kylinolap.cube.common.BytesSplitter;
 import com.kylinolap.cube.common.SplittedBytes;
 import com.kylinolap.job.constant.BatchConstants;
@@ -29,7 +29,7 @@ import com.kylinolap.job.constant.BatchConstants;
 /**
  * @author yangli9
  */
-public class IIDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, Text, ShortWritable, Text> {
+public class IIDistinctColumnsMapper<KEYIN> extends KylinMapper<KEYIN, Text, ShortWritable, Text> {
 
     private String[] columns;
     private int delim;
@@ -40,6 +40,8 @@ public class IIDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, Text, ShortWri
 
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+
         Configuration conf = context.getConfiguration();
         this.columns = conf.get(BatchConstants.TABLE_COLUMNS).split(",");
         String inputDelim = conf.get(BatchConstants.INPUT_DELIM);

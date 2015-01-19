@@ -28,7 +28,7 @@ package com.kylinolap.job.hadoop.cube;
 // * @author xjiang
 // *
 // */
-//public class KeyDistributionMapper extends Mapper<Text, Text, Text, LongWritable> {
+//public class KeyDistributionMapper extends KylinMapper<Text, Text, Text, LongWritable> {
 //
 //    private int headerLength;
 //
@@ -41,6 +41,8 @@ package com.kylinolap.job.hadoop.cube;
 //
 //    @Override
 //    protected void setup(Context context) throws IOException {
+//super.publishConfiguration(context.getConfiguration());
+
 //        String percentStr = context.getConfiguration().get(KeyDistributionJob.KEY_COLUMN_PERCENTAGE);
 //        this.columnPercentage = Integer.valueOf(percentStr).intValue();
 //        if (this.columnPercentage <= 0 || this.columnPercentage >= 100) {

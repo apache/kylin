@@ -23,10 +23,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.mr.KylinMapper;
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
@@ -46,7 +46,7 @@ import com.kylinolap.metadata.model.cube.TblColRef;
 /**
  * @author ysong1, honma
  */
-public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
+public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
 
     private KylinConfig config;
     private String cubeName;
@@ -101,6 +101,8 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
+        super.publishConfiguration(context.getConfiguration());
+
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
         segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME).toUpperCase();
 

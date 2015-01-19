@@ -21,19 +21,21 @@ import java.util.HashSet;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Reducer;
 
+import com.kylinolap.common.mr.KylinReducer;
 import com.kylinolap.common.util.ByteArray;
 
 /**
  * @author yangli9
  */
-public class IIDistinctColumnsCombiner extends Reducer<ShortWritable, Text, ShortWritable, Text> {
+public class IIDistinctColumnsCombiner extends KylinReducer<ShortWritable, Text, ShortWritable, Text> {
 
     private Text outputValue = new Text();
 
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+
     }
 
     @Override

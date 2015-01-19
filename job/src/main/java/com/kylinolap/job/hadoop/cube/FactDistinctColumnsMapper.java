@@ -22,9 +22,9 @@ import java.util.List;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.mr.KylinMapper;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.common.BytesSplitter;
@@ -41,7 +41,7 @@ import com.kylinolap.metadata.model.cube.TblColRef;
 /**
  * @author yangli9
  */
-public class FactDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, Text, ShortWritable, Text> {
+public class FactDistinctColumnsMapper<KEYIN> extends KylinMapper<KEYIN, Text, ShortWritable, Text> {
 
     private String cubeName;
     private CubeInstance cube;
@@ -59,6 +59,8 @@ public class FactDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, Text, ShortW
 
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+
         Configuration conf = context.getConfiguration();
         intermediateTableRowDelimiter = conf.get(BatchConstants.CFG_CUBE_INTERMEDIATE_TABLE_ROW_DELIMITER, Character.toString(BatchConstants.INTERMEDIATE_TABLE_ROW_DELIMITER));
         byteRowDelimiter = intermediateTableRowDelimiter.getBytes("UTF-8")[0];
