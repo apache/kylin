@@ -5,14 +5,12 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.invertedindex.model.IIDesc;
 import com.kylinolap.metadata.model.DataModelDesc;
 import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.LookupDesc;
 import com.kylinolap.metadata.model.TblColRef;
-import com.sun.org.apache.xml.internal.utils.StringComparable;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/30/14.

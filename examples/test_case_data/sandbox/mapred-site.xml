@@ -102,11 +102,6 @@
   </property>
   
   <property>
-    <name>hive.metastore.uris</name>
-    <value>thrift://sandbox.hortonworks.com:9083</value>
-  </property>
-
-  <property>
     <name>mapreduce.map.output.compress</name>
     <value>false</value>
   </property>
