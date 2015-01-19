@@ -188,16 +188,7 @@ rm -rf ${CATALINA_HOME}/conf/server.xml
 cp deploy/server.xml ${CATALINA_HOME}/conf/server.xml
 echo "server.xml copied"
 
-#deploy web.xml
-rm -rf ${CATALINA_HOME}/conf/web.xml
-cp deploy/web.xml ${CATALINA_HOME}/conf/web.xml
-echo "web.xml copied"
-
 echo "Tomcat ready"
-
-# redeploy coprocessor
-#hbase org.apache.hadoop.util.RunJar /usr/lib/kylin/kylin-job-latest.jar com.kylinolap.job.tools.DeployCoprocessorCLI /usr/lib/kylin/kylin-coprocessor-latest.jar
-
 
 sudo -i "${CATALINA_HOME}/bin/startup.sh"
 
