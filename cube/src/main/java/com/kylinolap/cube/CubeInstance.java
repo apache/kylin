@@ -386,6 +386,10 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
     }
 
     public long getCreateTimeUTC() {
+        if(createTimeUTC ==0 && createTime !=null) {
+            createTimeUTC = parseTime(createTime);
+        }
+        
         return createTimeUTC;
     }
 
