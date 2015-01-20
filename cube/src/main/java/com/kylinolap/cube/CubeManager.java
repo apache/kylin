@@ -20,10 +20,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,7 +38,7 @@ import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.common.restclient.Broadcaster;
-import com.kylinolap.common.restclient.SingleValueCache;
+import com.kylinolap.common.restclient.CaseInsensitiveStringCache;
 import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.cube.model.CubeDesc;
@@ -110,7 +108,7 @@ public class CubeManager implements IRealizationProvider {
 
     private KylinConfig config;
     // cube name ==> CubeInstance
-    private SingleValueCache<String, CubeInstance> cubeMap = new SingleValueCache<String, CubeInstance>(Broadcaster.TYPE.CUBE);
+    private CaseInsensitiveStringCache<CubeInstance> cubeMap = new CaseInsensitiveStringCache<CubeInstance>(Broadcaster.TYPE.CUBE);
     // "table/column" ==> lookup table
     //    private SingleValueCache<String, LookupStringTable> lookupTables = new SingleValueCache<String, LookupStringTable>(Broadcaster.TYPE.METADATA);
 
@@ -392,11 +390,11 @@ public class CubeManager implements IRealizationProvider {
     /**
      * After cube update, reload cube related cache
      *
-     * @param cube
+     * @param cubeName
      */
-    public void loadCubeCache(CubeInstance cube) {
+    public void loadCubeCache(String cubeName) {
         try {
-            loadCubeInstance(cube.getResourcePath());
+            loadCubeInstance(CubeInstance.concatResourcePath(cubeName));
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
         }
@@ -442,7 +440,7 @@ public class CubeManager implements IRealizationProvider {
     }
 
     private void afterCubeUpdated(CubeInstance updatedCube) {
-        cubeMap.put(updatedCube.getName().toUpperCase(), updatedCube);
+        cubeMap.put(updatedCube.getName(), updatedCube);
     }
 
     private void afterCubeDropped(CubeInstance droppedCube) {
@@ -526,7 +524,7 @@ public class CubeManager implements IRealizationProvider {
             if (StringUtils.isBlank(cubeInstance.getName()))
                 throw new IllegalStateException("CubeInstance name must not be blank");
 
-            final String cubeName = cubeInstance.getName().toUpperCase();
+            final String cubeName = cubeInstance.getName();
             cubeMap.putLocal(cubeName, cubeInstance);
 
             for (CubeSegment segment : cubeInstance.getSegments()) {
