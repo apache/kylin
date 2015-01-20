@@ -1,5 +1,6 @@
 package com.kylinolap.cube.model;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -7,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -38,80 +40,96 @@ public class CubeMetadataUpgrade {
     private KylinConfig config = null;
     private ResourceStore store;
 
+    private List<String> updatedResources = Lists.newArrayList();
+    private List<String> errorMsgs = Lists.newArrayList();
+
     private static final Log logger = LogFactory.getLog(CubeMetadataUpgrade.class);
 
     public CubeMetadataUpgrade() {
         config = KylinConfig.getInstanceFromEnv();
         store = getStore();
     }
-    private void upgradeCubeDesc() throws IOException {
+
+    private List<String> listResourceStore(String pathRoot) {
+        List<String> paths = null;
+        try {
+            paths = store.collectResourceRecursively(pathRoot, MetadataConstances.FILE_SURFIX);
+        } catch (IOException e1) {
+            e1.printStackTrace();
+            errorMsgs.add("Get IOException when scan resource store at: " + ResourceStore.CUBE_DESC_RESOURCE_ROOT);
+        }
+
+        return paths;
+    }
+
+    private void upgradeCubeDesc() {
         logger.info("Reloading Cube Metadata from folder " + store.getReadableResourcePath(ResourceStore.CUBE_DESC_RESOURCE_ROOT));
 
-        List<String> paths = store.collectResourceRecursively(ResourceStore.CUBE_DESC_RESOURCE_ROOT, MetadataConstances.FILE_SURFIX);
+        List<String> paths = listResourceStore(ResourceStore.CUBE_DESC_RESOURCE_ROOT);
         for (String path : paths) {
-            CubeDesc ndesc;
-            try {
-                ndesc = store.getResource(path, CubeDesc.class, CubeDescManager.CUBE_DESC_SERIALIZER);
-            } catch (IOException e) {
-                logger.debug("Get exception when load CubeDesc on " + path + ", going to do CubeDesc upgrade...");
-                CubeDescUpgrader upgrade = new CubeDescUpgrader(path);
-                ndesc = upgrade.upgrade();
-                ndesc.setUpgraded(true);
-                logger.debug("CubeDesc upgrade successful for " + path);
-            }
-            if (path.equals(ndesc.getResourcePath()) == false) {
-                logger.error("Skip suspicious desc at " + path + ", " + ndesc + " should be at " + ndesc.getResourcePath());
-                continue;
-            }
 
-            if (ndesc.isUpgraded()) {
+            try {
+                CubeDescUpgrader upgrade = new CubeDescUpgrader(path);
+                CubeDesc ndesc = upgrade.upgrade();
+                ndesc.setSignature(ndesc.calculateSignature());
+                
                 getStore().putResource(ndesc.getModel().getResourcePath(), ndesc.getModel(), MetadataManager.MODELDESC_SERIALIZER);
                 getStore().putResource(ndesc.getResourcePath(), ndesc, CubeDescManager.CUBE_DESC_SERIALIZER);
+                updatedResources.add(ndesc.getResourcePath());
+            } catch (IOException e) {
+                e.printStackTrace();
+                errorMsgs.add("Upgrade CubeDesc at '" + path + "' failed: " + e.getLocalizedMessage());
             }
         }
 
     }
 
-    private void upgradeTableDesc() throws IOException {
-        logger.debug("Reloading SourceTable from folder " + store.getReadableResourcePath(ResourceStore.TABLE_RESOURCE_ROOT));
-
-        List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_RESOURCE_ROOT, MetadataConstances.FILE_SURFIX);
+    private void upgradeTableDesc() {
+        List<String> paths = listResourceStore(ResourceStore.TABLE_RESOURCE_ROOT);
         for (String path : paths) {
-            TableDesc t = store.getResource(path, TableDesc.class, MetadataManager.TABLE_SERIALIZER);
-            t.init();
+            TableDesc t;
+            try {
+                t = store.getResource(path, TableDesc.class, MetadataManager.TABLE_SERIALIZER);
+                t.init();
 
-            // if it only has 1 "." in the path, delete the old resource if it exists
-            if (path.substring(path.indexOf(".")).length() == MetadataConstances.FILE_SURFIX.length()) {
-                String old_path = t.getResourcePathV1();
-                if (getStore().exists(old_path)) {
-                    getStore().deleteResource(old_path);
+                // if it only has 1 "." in the path, delete the old resource if it exists
+                if (path.substring(path.indexOf(".")).length() == MetadataConstances.FILE_SURFIX.length()) {
+                    getStore().deleteResource(path);
                     // the new source will be new;
                     t.setLastModified(0);
                     getStore().putResource(t.getResourcePath(), t, MetadataManager.TABLE_SERIALIZER);
+                    updatedResources.add(t.getResourcePath());
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
+                errorMsgs.add("Upgrade TableDesc at '" + path + "' failed: " + e.getLocalizedMessage());
             }
+
         }
 
     }
 
-    private void upgradeTableDesceExd() throws IOException {
-        logger.debug("Reloading SourceTable exd info from folder " + store.getReadableResourcePath(ResourceStore.TABLE_EXD_RESOURCE_ROOT));
+    private void upgradeTableDesceExd() {
 
-        List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_EXD_RESOURCE_ROOT, MetadataConstances.FILE_SURFIX);
+        List<String> paths = listResourceStore(ResourceStore.TABLE_EXD_RESOURCE_ROOT);
         for (String path : paths) {
             Map<String, String> attrs = Maps.newHashMap();
 
-            InputStream is = store.getResource(path);
-            if (is == null) {
-                logger.warn("Failed to get table exd info from " + path);
-                continue;
-            }
-
+            InputStream is = null;
             try {
-                attrs.putAll(JsonUtil.readValue(is, HashMap.class));
-            } finally {
-                if (is != null)
-                    is.close();
+                is = store.getResource(path);
+                if (is == null) {
+                    continue;
+                }
+                try {
+                    attrs.putAll(JsonUtil.readValue(is, HashMap.class));
+                } finally {
+                    if (is != null)
+                        is.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                errorMsgs.add("Upgrade TableDescExd at '" + path + "' failed: " + e.getLocalizedMessage());
             }
 
             // parse table identity from file name
@@ -123,15 +141,17 @@ public class CubeMetadataUpgrade {
 
             // for metadata upgrade, convert resource path to new pattern (<DB>.<TABLE>.json)
             if (tableIdentity.indexOf(".") < 0) {
-                String oldResPath = TableDesc.concatExdResourcePath(tableIdentity);
-
                 tableIdentity = appendDBName(tableIdentity);
-                this.getMetadataManager().saveTableExd(tableIdentity, attrs);
-
-                //delete old resoruce if it exists;
-                if (getStore().exists(oldResPath)) {
-                    getStore().deleteResource(oldResPath);
+                try {
+                    getMetadataManager().saveTableExd(tableIdentity, attrs);
+                    //delete old resoruce if it exists;
+                    getStore().deleteResource(path);
+                    updatedResources.add(path);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    errorMsgs.add("Upgrade TableDescExd at '" + path + "' failed: " + e.getLocalizedMessage());
                 }
+
             }
 
         }
@@ -158,24 +178,15 @@ public class CubeMetadataUpgrade {
             return result;
 
         if (count > 1) {
-            logger.warn("There are more than 1 table named with '" + table + "' in different database; The program couldn't determine, randomly pick '" + result + "'");
+            errorMsgs.add("There are more than 1 table named with '" + table + "' in different database; The program couldn't determine, randomly pick '" + result + "'");
         }
         return result;
     }
 
-    private void upgradeProjectInstance() throws IOException {
-        ResourceStore store = getStore();
-        List<String> paths = store.collectResourceRecursively(ResourceStore.PROJECT_RESOURCE_ROOT, ".json");
-
-        logger.debug("Loading Project from folder " + store.getReadableResourcePath(ResourceStore.PROJECT_RESOURCE_ROOT));
-
+    private void upgradeProjectInstance() {
+        List<String> paths = listResourceStore(ResourceStore.PROJECT_RESOURCE_ROOT);
         for (String path : paths) {
-            path = ProjectInstance.concatResourcePath(path);
-
             try {
-                store.getResource(path, ProjectInstance.class, ProjectManager.PROJECT_SERIALIZER);
-            } catch (IOException e) {
-                logger.debug("Get exception when load Project on " + path + ", going to do Project upgrade...");
                 com.kylinolap.cube.model.v1.ProjectInstance oldPrj = store.getResource(path, com.kylinolap.cube.model.v1.ProjectInstance.class, new JsonSerializer<com.kylinolap.cube.model.v1.ProjectInstance>(com.kylinolap.cube.model.v1.ProjectInstance.class));
 
                 ProjectInstance newPrj = new ProjectInstance();
@@ -188,26 +199,29 @@ public class CubeMetadataUpgrade {
                 newPrj.setCreateTime(oldPrj.getCreateTime());
                 newPrj.setStatus(oldPrj.getStatus());
                 List<RealizationEntry> realizationEntries = Lists.newArrayList();
-                for(String cube: oldPrj.getCubes()) {
+                for (String cube : oldPrj.getCubes()) {
                     RealizationEntry entry = new RealizationEntry();
                     entry.setType(RealizationType.CUBE);
                     entry.setRealization(cube);
                     realizationEntries.add(entry);
                 }
                 newPrj.setRealizationEntries(realizationEntries);
-                
+
                 Set<String> tables = Sets.newHashSet();
-                for(String table: oldPrj.getTables()) {
+                for (String table : oldPrj.getTables()) {
                     tables.add(this.appendDBName(table));
                 }
                 newPrj.setTables(tables);
-                
+
                 store.putResource(newPrj.getResourcePath(), newPrj, ProjectManager.PROJECT_SERIALIZER);
+                updatedResources.add(path);
+            } catch (IOException e) {
+                e.printStackTrace();
+                errorMsgs.add("Upgrade Project at '" + path + "' failed: " + e.getLocalizedMessage());
             }
         }
 
     }
-
 
     private MetadataManager getMetadataManager() {
         return MetadataManager.getInstance(config);
@@ -217,16 +231,41 @@ public class CubeMetadataUpgrade {
         return ResourceStore.getStore(config);
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
         if (!(args != null && args.length == 1)) {
-            System.out.println("Usage: java CubeMetadataUpgrade <kylin_config_folder>; e.g, /etc/kylin/");
+            System.out.println("Usage: java CubeMetadataUpgrade <metadata_export_folder>; e.g, /export/kylin/meta");
             return;
         }
 
-        String kylinConfigFolder = args[0];
+        String exportFolder = args[0];
         KylinConfig.destoryInstance();
-        System.setProperty(KylinConfig.KYLIN_CONF, kylinConfigFolder);
+        System.setProperty(KylinConfig.KYLIN_CONF, exportFolder);
+        
+        File oldMetaFolder = new File(exportFolder);
+        if(!oldMetaFolder.exists()) {
+            System.out.println("Provided folder doesn't exist: '" + exportFolder + "'");
+            return;
+        }
+        
+        if(!oldMetaFolder.isDirectory()) {
+            System.out.println("Provided folder is not a directory: '" + exportFolder + "'");
+            return;
+        }
+        
+        
+        String newMetadataUrl = oldMetaFolder.getAbsolutePath() + "_v2";
+        try {
+            FileUtils.deleteDirectory(new File(newMetadataUrl));
+            FileUtils.copyDirectory(oldMetaFolder, new File(newMetadataUrl));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null)
+            System.setProperty(KylinConfig.KYLIN_CONF, newMetadataUrl);
+
+        KylinConfig.getInstanceFromEnv().setMetadataUrl(newMetadataUrl);
 
         CubeMetadataUpgrade instance = new CubeMetadataUpgrade();
 
@@ -234,5 +273,20 @@ public class CubeMetadataUpgrade {
         instance.upgradeTableDesceExd();
         instance.upgradeCubeDesc();
         instance.upgradeProjectInstance();
+        
+        logger.info("Run CubeMetadataUpgrade completed, check the following messages.");
+        logger.info("The following resources have been successfully updated in : " + newMetadataUrl);
+        for (String s : instance.updatedResources) {
+            logger.info(s);
+        }
+
+        if (instance.errorMsgs.size() > 0) {
+            logger.info("Here are the error/warning messages, you may need check:");
+            for (String s : instance.errorMsgs) {
+                logger.warn(s);
+            }
+        } else {
+            logger.info("No error or warning messages; Looks all good.");
+        }
     }
 }
