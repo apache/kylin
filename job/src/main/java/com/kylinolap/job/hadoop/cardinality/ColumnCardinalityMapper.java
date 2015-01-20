@@ -25,20 +25,20 @@ import java.util.Map;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 
 import com.kylinolap.common.hll.HyperLogLogPlusCounter;
+import com.kylinolap.common.mr.KylinMapper;
 import com.kylinolap.cube.kv.RowConstants;
 
 /**
  * @author Jack
  * 
  */
-public class ColumnCardinalityMapper<T> extends Mapper<T, HCatRecord, IntWritable, BytesWritable> {
+public class ColumnCardinalityMapper<T> extends KylinMapper<T, HCatRecord, IntWritable, BytesWritable> {
 
     private Map<Integer, HyperLogLogPlusCounter> hllcMap = new HashMap<Integer, HyperLogLogPlusCounter>();
     public static final String DEFAULT_DELIM = ",";
@@ -50,6 +50,7 @@ public class ColumnCardinalityMapper<T> extends Mapper<T, HCatRecord, IntWritabl
     
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
         schema = HCatInputFormat.getTableSchema(context.getConfiguration());
         columnSize = schema.getFields().size();
     }

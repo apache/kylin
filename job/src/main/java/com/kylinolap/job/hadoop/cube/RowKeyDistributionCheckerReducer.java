@@ -20,15 +20,21 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Reducer;
+
+import com.kylinolap.common.mr.KylinReducer;
 
 /**
  * @author ysong1
  * 
  */
-public class RowKeyDistributionCheckerReducer extends Reducer<Text, LongWritable, Text, LongWritable> {
+public class RowKeyDistributionCheckerReducer extends KylinReducer<Text, LongWritable, Text, LongWritable> {
 
     LongWritable outputKey = new LongWritable(0L);
+
+    @Override
+    protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+    }
 
     @Override
     public void reduce(Text key, Iterable<LongWritable> values, Context context) throws IOException, InterruptedException {

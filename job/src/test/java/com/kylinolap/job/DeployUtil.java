@@ -63,24 +63,24 @@ public class DeployUtil {
 
     public static void deployJobJars() throws IOException {
         Pair<File, File> files = getJobJarFiles();
-        File jobJar = files.getFirst();
-        File coprocessorJar = files.getSecond();
+        File originalJobJar = files.getFirst();
+        File originalCoprocessorJar = files.getSecond();
 
-        File jobJarRemote = new File(config().getKylinJobJarPath());
-        File jobJarLocal = new File(jobJar.getParentFile(), jobJarRemote.getName());
-        if (jobJar.equals(jobJarLocal) == false) {
-            FileUtils.copyFile(jobJar, jobJarLocal);
+        File targetJobJar = new File(config().getKylinJobJarPath());
+        File jobJarRenamedAsTarget = new File(originalJobJar.getParentFile(), targetJobJar.getName());
+        if (originalJobJar.equals(jobJarRenamedAsTarget) == false) {
+            FileUtils.copyFile(originalJobJar, jobJarRenamedAsTarget);
         }
-
-        File coprocessorJarRemote = new File(config().getCoprocessorLocalJar());
-        File coprocessorJarLocal = new File(coprocessorJar.getParentFile(), coprocessorJarRemote.getName());
-        if (coprocessorJar.equals(coprocessorJarLocal) == false) {
-            FileUtils.copyFile(coprocessorJar, coprocessorJarLocal);
+        
+        File targetCoprocessorJar = new File(config().getCoprocessorLocalJar());
+        File coprocessorJarRenamedAsTarget = new File(originalCoprocessorJar.getParentFile(), targetCoprocessorJar.getName());
+        if (originalCoprocessorJar.equals(coprocessorJarRenamedAsTarget) == false) {
+            FileUtils.copyFile(originalCoprocessorJar, coprocessorJarRenamedAsTarget);
         }
 
         CliCommandExecutor cmdExec = config().getCliCommandExecutor();
-        cmdExec.copyFile(jobJarLocal.getAbsolutePath(), jobJarRemote.getParent());
-        cmdExec.copyFile(coprocessorJar.getAbsolutePath(), coprocessorJarRemote.getParent());
+        cmdExec.copyFile(jobJarRenamedAsTarget.getAbsolutePath(), targetJobJar.getParent());
+        cmdExec.copyFile(coprocessorJarRenamedAsTarget.getAbsolutePath(), targetCoprocessorJar.getParent());
     }
 
     private static Pair<File, File> getJobJarFiles() {

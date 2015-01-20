@@ -299,10 +299,6 @@ public class CubeManager implements IRealizationProvider {
 
         validateNewSegments(cubeInstance, CubeBuildTypeEnum.MERGE, newSegment);
 
-        List<CubeSegment> mergingSegments = cubeInstance.getMergingSegments(newSegment);
-        this.makeDictForNewSegment(cubeInstance, newSegment, mergingSegments);
-        this.makeSnapshotForNewSegment(cubeInstance, newSegment, mergingSegments);
-
         cubeInstance.getSegments().add(newSegment);
         Collections.sort(cubeInstance.getSegments());
 

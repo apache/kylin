@@ -7,6 +7,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
+import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
@@ -24,8 +27,9 @@ import com.kylinolap.metadata.model.TblColRef;
 
 public class MergeDictionaryStep extends AbstractExecutable {
 
-    private static final String SEGMENT_ID = "segmentId";
     private static final String CUBE_NAME = "cubeName";
+    private static final String SEGMENT_ID = "segmentId";
+    private static final String MERGING_SEGMENT_IDS = "mergingSegmentIds";
 
     public MergeDictionaryStep() {
     }
@@ -34,31 +38,15 @@ public class MergeDictionaryStep extends AbstractExecutable {
         super(job);
     }
 
-    public void setCubeName(String cubeName) {
-        this.setParam(CUBE_NAME, cubeName);
-    }
-
-    private String getCubeName() {
-        return getParam(CUBE_NAME);
-    }
-
-    public void setSegmentId(String segmentId) {
-        this.setParam(SEGMENT_ID, segmentId);
-    }
-
-    private String getSegmentId() {
-        return getParam(SEGMENT_ID);
-    }
-
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         KylinConfig conf = context.getConfig();
         final CubeManager mgr = CubeManager.getInstance(conf);
         final CubeInstance cube = mgr.getCube(getCubeName());
         final CubeSegment newSegment = cube.getSegmentById(getSegmentId());
-
+        final List<CubeSegment> mergingSegments = getMergingSegments(cube);
+        
         try {
-            List<CubeSegment> mergingSegments = cube.getMergingSegments(newSegment);
             makeDictForNewSegment(conf, cube, newSegment, mergingSegments);
             makeSnapshotForNewSegment(cube, newSegment, mergingSegments);
 
@@ -71,6 +59,15 @@ public class MergeDictionaryStep extends AbstractExecutable {
             logger.error("fail to merge dictionary or lookup snapshots", e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         }
+    }
+    
+    private List<CubeSegment> getMergingSegments(CubeInstance cube) {
+        List<String> mergingSegmentIds = getMergingSegmentIds();
+        List<CubeSegment> result = Lists.newArrayListWithCapacity(mergingSegmentIds.size());
+        for (String id : mergingSegmentIds) {
+            result.add(cube.getSegmentById(id));
+        }
+        return result;
     }
 
     /**
@@ -138,6 +135,40 @@ public class MergeDictionaryStep extends AbstractExecutable {
     private void makeSnapshotForNewSegment(CubeInstance cube, CubeSegment newSeg, List<CubeSegment> mergingSegments) {
         for (Map.Entry<String, String> entry : mergingSegments.get(0).getSnapshots().entrySet()) {
             newSeg.putSnapshotResPath(entry.getKey(), entry.getValue());
+        }
+    }
+
+    public void setCubeName(String cubeName) {
+        this.setParam(CUBE_NAME, cubeName);
+    }
+
+    private String getCubeName() {
+        return getParam(CUBE_NAME);
+    }
+
+    public void setSegmentId(String segmentId) {
+        this.setParam(SEGMENT_ID, segmentId);
+    }
+
+    private String getSegmentId() {
+        return getParam(SEGMENT_ID);
+    }
+
+    public void setMergingSegmentIds(List<String> ids) {
+        setParam(MERGING_SEGMENT_IDS, StringUtils.join(ids, ","));
+    }
+
+    private List<String> getMergingSegmentIds() {
+        final String ids = getParam(MERGING_SEGMENT_IDS);
+        if (ids != null) {
+            final String[] splitted = StringUtils.split(ids, ",");
+            ArrayList<String> result = Lists.newArrayListWithExpectedSize(splitted.length);
+            for (String id: splitted) {
+                result.add(id);
+            }
+            return result;
+        } else {
+            return Collections.emptyList();
         }
     }
 
