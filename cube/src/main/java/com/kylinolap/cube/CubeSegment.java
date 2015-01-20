@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.dict.ISegment;
 import com.kylinolap.dict.Dictionary;
@@ -190,6 +191,9 @@ public class CubeSegment implements Comparable<CubeSegment>, ISegment {
     }
 
     public long getCreateTimeUTC() {
+        if (createTimeUTC == 0 && createTime != null) {
+            createTimeUTC = RootPersistentEntity.parseTime(createTime);
+        }
         return createTimeUTC;
     }
 

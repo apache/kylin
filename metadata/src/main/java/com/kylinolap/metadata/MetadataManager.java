@@ -229,19 +229,6 @@ public class MetadataManager {
         }
         String tableIdentity = file.substring(0, file.length() - MetadataConstances.FILE_SURFIX.length()).toUpperCase();
         
-        // for metadata upgrade, convert resource path to new pattern (<DB>.<TABLE>.json)
-        if (tableIdentity.indexOf(".") < 0) {
-            String oldResPath = TableDesc.concatExdResourcePath(tableIdentity);
-            
-            tableIdentity = appendDBName(tableIdentity);
-            this.saveTableExd(tableIdentity, attrs);
-
-            //delete old resoruce if it exists;
-            if (getStore().exists(oldResPath)) {
-                getStore().deleteResource(oldResPath);
-            }
-        }
-        
         srcTableExdMap.putLocal(tableIdentity, attrs);
         return attrs;
     }
@@ -268,18 +255,6 @@ public class MetadataManager {
         String tableIdentity = t.getIdentity();
 
         srcTableMap.putLocal(tableIdentity, t);
-
-        // delete the old resource if it exists; it has more than 1 "." in the path
-        if(path.substring(path.indexOf(".")).length() > 4) {  // longer than "json"
-            String old_path = t.getResourcePathV1();
-            if(getStore().exists(old_path)) {
-                getStore().deleteResource(old_path);
-                // the new source will be new;
-                t.setLastModified(0);
-                saveSourceTable(t);
-            }
-        }
-       
 
         return t;
     }
