@@ -134,6 +134,10 @@ public class ProjectInstance extends RootPersistentEntity {
     }
 
     public long getCreateTimeUTC() {
+        if(createTimeUTC ==0 && createTime !=null) {
+            createTimeUTC = parseTime(createTime);
+        }
+        
         return createTimeUTC;
     }
 
@@ -231,6 +235,9 @@ public class ProjectInstance extends RootPersistentEntity {
         this.owner = owner;
     }
 
+    /**
+     * @deprecated use lastModified instead
+     */
     public String getLastUpdateTime() {
         return lastUpdateTime;
     }

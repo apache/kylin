@@ -15,6 +15,10 @@
  */
 package com.kylinolap.common.persistence;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.UUID;
 
 import org.apache.commons.lang.time.FastDateFormat;
@@ -35,10 +39,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 abstract public class RootPersistentEntity implements AclEntity {
 
-    static FastDateFormat format = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss z");
-
+    static final String DATE_PATTERN = "yyyy-MM-dd HH:mm:ss z";
+    static FastDateFormat format = FastDateFormat.getInstance(DATE_PATTERN);
+    static DateFormat df = new SimpleDateFormat(DATE_PATTERN);
+  
     public static String formatTime(long millis) {
         return format.format(millis);
+    }
+    
+    public static long parseTime(String timeString) {
+        try {
+            Date dt = df.parse(timeString);
+            return dt.getTime();
+        } catch (ParseException e) {
+        }
+        return 0l;
     }
 
     // ============================================================================

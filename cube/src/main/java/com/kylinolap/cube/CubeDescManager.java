@@ -120,18 +120,7 @@ public class CubeDescManager {
 
     private CubeDesc loadCubeDesc(String path) throws IOException {
         ResourceStore store = getStore();
-        CubeDesc ndesc = null;
-        try {
-            ndesc = store.getResource(path, CubeDesc.class, CUBE_DESC_SERIALIZER);
-        } catch (IOException e) {
-            logger.debug("Get exception when load CubeDesc on " + path + ", going to do CubeDesc upgrade...");
-            CubeDescUpgrader upgrade = new CubeDescUpgrader(path);
-            ndesc = upgrade.upgrade();
-            ndesc.setUpgraded(true);
-
-            getMetadataManager().createDataModelDesc(ndesc.getModel());
-            logger.debug("CubeDesc upgrade successful for " + path);
-        }
+        CubeDesc ndesc = store.getResource(path, CubeDesc.class, CUBE_DESC_SERIALIZER);
         
         if (StringUtils.isBlank(ndesc.getName())) {
             throw new IllegalStateException("CubeDesc name must not be blank");
@@ -221,10 +210,6 @@ public class CubeDescManager {
             }
 
             cubeDescMap.putLocal(desc.getName(), desc);
-
-            if(desc.isUpgraded()) {
-                updateCubeDesc(desc);
-            }
         }
 
         logger.debug("Loaded " + cubeDescMap.size() + " Cube(s)");
