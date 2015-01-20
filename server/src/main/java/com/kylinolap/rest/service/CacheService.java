@@ -72,9 +72,7 @@ public class CacheService extends BasicService {
                     getIIDescManager().removeIIDescLocal(cacheKey);
                     break;
                 case TABLE:
-                    IIDescManager.clearCache();
-                    CubeDescManager.clearCache();
-                    break;
+                    throw new UnsupportedOperationException(log);
                 case DATA_MODEL:
                     throw new UnsupportedOperationException(log);
                 default:
