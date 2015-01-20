@@ -8,25 +8,25 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="/home" style="padding: 2px 10px 0px 0px"><img src="image/logo.png" height="40px" width="40px"/><small> Kylin </small></a>
+                <a class="navbar-brand" href="home" style="padding: 2px 10px 0px 0px"><img src="image/logo.png" height="40px" width="40px"/><small> Kylin </small></a>
             </div>
 
             <div class="navbar-collapse collapse" collapse="isCollapsed">
                 <ul class="nav navbar-nav">
                     <li class="{{activeTab=='query'?'purple':'green'}}" ng-if="userService.isAuthorized()">
-                        <a href="/query">Query</a>
+                        <a href="query">Query</a>
                     </li>
                     <li class="{{activeTab=='cubes'?'purple':'green'}}" ng-if="userService.isAuthorized()">
-                        <a href="/cubes">Cubes</a>
+                        <a href="cubes">Cubes</a>
                     </li>
                     <li class="{{activeTab=='jobs'?'purple':'green'}}" ng-if="userService.isAuthorized()">
-                        <a href="/jobs">Jobs</a>
+                        <a href="jobs">Jobs</a>
                     </li>
                     <li class="{{activeTab=='sourceMeta'?'purple':'green'}}" ng-if="userService.isAuthorized()">
-                        <a href="/sourceMeta">Tables</a>
+                        <a href="sourceMeta">Tables</a>
                     </li>
                     <li class="{{activeTab=='admin'?'purple':'green'}}" ng-if="userService.hasRole('ROLE_ADMIN')">
-                        <a href="/admin">Admin</a>
+                        <a href="admin">Admin</a>
                     </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
@@ -38,7 +38,7 @@
                             </li>
                         </ul>
                     </li>
-                    <li class="purple" ng-if="!userService.isAuthorized()"><a href="/login">Login</a></li>
+                    <li class="purple" ng-if="!userService.isAuthorized()"><a href="login">Login</a></li>
                     <li class="dropdown light-blue" ng-if="userService.isAuthorized()">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                             <span class="user-info"><small>Welcome,</small> {{userService.getCurUser().userDetails.username}}</span>

@@ -159,48 +159,26 @@ fi )
 cd $KYLIN_HOME
 mvn test -Dtest=com.kylinolap.job.SampleCubeSetupTest -DfailIfNoTests=false
 
-sudo -i "${CATALINA_HOME}/bin/shutdown.sh" || true # avoid trapping
-cd $KYLIN_HOME/server/target
-WAR_NAME="kylin.war"
-rm -rf $CATALINA_HOME/webapps/kylin
-rm -f $CATALINA_HOME/webapps/$WAR_NAME
-cp $KYLIN_HOME/server/target/$WAR_NAME $CATALINA_HOME/webapps/
-cd $CATALINA_HOME/webapps;
-chmod 644 $WAR_NAME;
-echo "REST service deployed"
-
-rm -rf /var/www/html/kylin
-mkdir -p /var/www/html/kylin
-cd $KYLIN_HOME/
-tar -xf webapp/dist/Web.tar -C /var/www/html/kylin
-echo "Web deployed"
-
-cd $KYLIN_HOME/
-#deploy setenv.sh
-rm -rf $CATALINA_HOME/bin/setenv.sh
-echo JAVA_OPTS=\"-Djava.library.path=${KYLIN_LD_LIBRARY_PATH}\" >> ${CATALINA_HOME}/bin/setenv.sh
-echo CATALINA_OPTS=\"-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true -Dspring.profiles.active=sandbox \" >> ${CATALINA_HOME}/bin/setenv.sh
-echo CLASSPATH=\"${CATALINA_HOME}/lib/*:${KYLIN_HBASE_CLASSPATH}:/etc/kylin\" >> ${CATALINA_HOME}/bin/setenv.sh
-echo "setenv.sh created"
-
-#deploy server.xml
-rm -rf ${CATALINA_HOME}/conf/server.xml
+#overwrite server.xml
+mv ${CATALINA_HOME}/conf/server.xml ${CATALINA_HOME}/conf/server.xml.bak
 cp deploy/server.xml ${CATALINA_HOME}/conf/server.xml
-echo "server.xml copied"
+echo "server.xml overwritten..."
 
-#deploy web.xml
-rm -rf ${CATALINA_HOME}/conf/web.xml
-cp deploy/web.xml ${CATALINA_HOME}/conf/web.xml
-echo "web.xml copied"
+#deploy kylin.war
+rm -rf $CATALINA_HOME/webapps/kylin
+rm -f $CATALINA_HOME/webapps/kylin.war
+cp $KYLIN_HOME/server/target/kylin.war $CATALINA_HOME/webapps/
+chmod 644 $CATALINA_HOME/webapps/kylin.war
+echo "Tomcat war deployed..."
 
-echo "Tomcat ready"
+#start tomcat service from hbase runjar
+export HBASE_CLASSPATH_PREFIX=/etc/kylin:${CATALINA_HOME}/bin/bootstrap.jar:${CATALINA_HOME}/bin/tomcat-juli.jar:${CATALINA_HOME}/lib/*:$HBASE_CLASSPATH_PREFIX
+hbase -Djava.util.logging.config.file=${CATALINA_HOME}/conf/logging.properties -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
+    -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true \
+    -Dspring.profiles.active=sandbox -Djava.endorsed.dirs=${CATALINA_HOME}/endorsed  -Dcatalina.base=${CATALINA_HOME} \
+    -Dcatalina.home=${CATALINA_HOME} -Djava.io.tmpdir=${CATALINA_HOME}/temp  \
+    -Djava.library.path=${KYLIN_LD_LIBRARY_PATH} \
+    org.apache.hadoop.util.RunJar ${CATALINA_HOME}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start > ${CATALINA_HOME}/logs/kylin_sandbox.log 2>&1 &
 
-# redeploy coprocessor
-#hbase org.apache.hadoop.util.RunJar /usr/lib/kylin/kylin-job-latest.jar com.kylinolap.job.tools.DeployCoprocessorCLI /usr/lib/kylin/kylin-coprocessor-latest.jar
-
-
-sudo -i "${CATALINA_HOME}/bin/startup.sh"
-
-
-echo "Kylin-Deploy Success!"
+echo "Kylin is launched successfully!!!"
 echo "Please visit http://<your_sandbox_ip>:7070 to play with the cubes! (Useranme: ADMIN, Password: KYLIN)"

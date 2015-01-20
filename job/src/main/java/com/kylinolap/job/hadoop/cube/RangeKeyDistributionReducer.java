@@ -20,19 +20,19 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.util.StringUtils;
-
-import com.kylinolap.cube.model.CubeDesc.RealizationCapacity;
-import com.kylinolap.job.constant.BatchConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.kylinolap.common.mr.KylinReducer;
+import com.kylinolap.cube.model.CubeDesc.RealizationCapacity;
+import com.kylinolap.job.constant.BatchConstants;
 
 /**
  * @author ysong1
  * 
  */
-public class RangeKeyDistributionReducer extends Reducer<Text, LongWritable, Text, LongWritable> {
+public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable, Text, LongWritable> {
 
     public static final long TEN_GIGA_BYTES = 10L * 1024L * 1024L * 1024L;
     public static final long TWENTY_GIGA_BYTES = 20L * 1024L * 1024L * 1024L;
@@ -50,6 +50,8 @@ public class RangeKeyDistributionReducer extends Reducer<Text, LongWritable, Tex
 
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+        
         realizationCapacity = RealizationCapacity.valueOf(context.getConfiguration().get(BatchConstants.CUBE_CAPACITY));
         switch (realizationCapacity) {
         case SMALL:

@@ -34,17 +34,21 @@ import org.slf4j.LoggerFactory;
 public class HadoopUtil {
     private static final Logger logger = LoggerFactory.getLogger(HadoopUtil.class);
 
-    private static Configuration hadoopConfig;
+    private static ThreadLocal<Configuration> hadoopConfig = new ThreadLocal<>();
 
-    public static Configuration getDefaultConfiguration() {
-        if (hadoopConfig == null) {
-            hadoopConfig = new Configuration();
+    public static void setCurrentConfiguration(Configuration conf) {
+        hadoopConfig.set(conf);
+    }
+
+    public static Configuration getCurrentConfiguration() {
+        if (hadoopConfig.get() == null) {
+            hadoopConfig.set(new Configuration());
         }
-        return hadoopConfig;
+        return hadoopConfig.get();
     }
 
     public static FileSystem getFileSystem(String path) throws IOException {
-        return FileSystem.get(makeURI(path), getDefaultConfiguration());
+        return FileSystem.get(makeURI(path), getCurrentConfiguration());
     }
 
     public static URI makeURI(String filePath) {

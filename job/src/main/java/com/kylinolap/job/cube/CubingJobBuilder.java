@@ -101,7 +101,15 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         CubeSegment seg = (CubeSegment) segment;
         List<CubeSegment> mergingSegments = seg.getCubeInstance().getMergingSegments(seg);
         Preconditions.checkState(mergingSegments != null && mergingSegments.size() > 1, "there should be more than 2 segments to merge");
-        
+
+        final List<String> mergingSegmentIds = Lists.transform(mergingSegments, new Function<CubeSegment, String>() {
+            @Nullable
+            @Override
+            public String apply(CubeSegment input) {
+                return input.getUuid();
+            }
+        });
+
         String[] cuboidPaths = new String[mergingSegments.size()];
         for (int i = 0; i < mergingSegments.size(); i++) {
             cuboidPaths[i] = getPathToMerge(mergingSegments.get(i));
@@ -109,6 +117,8 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         final String formattedPath = StringUtils.join(cuboidPaths, ",");
         final String mergedCuboidPath = getJobWorkingDir(jobId) + "/" + getCubeName() + "/cuboid";
 
+        result.addTask(createMergeDictionaryStep(mergingSegmentIds));
+        
         result.addTask(createMergeCuboidDataStep(formattedPath, mergedCuboidPath));
 
         // get output distribution step
@@ -124,13 +134,6 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         // bulk load step
         result.addTask(createBulkLoadStep(jobId));
 
-        final List<String> mergingSegmentIds = Lists.transform(mergingSegments, new Function<CubeSegment, String>() {
-            @Nullable
-            @Override
-            public String apply(CubeSegment input) {
-                return input.getUuid();
-            }
-        });
         result.addTask(createUpdateCubeInfoAfterMergeStep(mergingSegmentIds, convertCuboidToHfileStep.getId(), jobId));
 
         return result;
@@ -344,6 +347,15 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         updateCubeInfoStep.setConvertToHFileStepId(convertToHFileStepId);
         updateCubeInfoStep.setCubingJobId(jobId);
         return updateCubeInfoStep;
+    }
+
+    private UpdateCubeInfoAfterMergeStep createMergeDictionaryStep(List<String> mergingSegmentIds) {
+        UpdateCubeInfoAfterMergeStep result = new UpdateCubeInfoAfterMergeStep();
+        result.setName(ExecutableConstants.STEP_NAME_UPDATE_CUBE_INFO);
+        result.setCubeName(getCubeName());
+        result.setSegmentId(segment.getUuid());
+        result.setMergingSegmentIds(mergingSegmentIds);
+        return result;
     }
 
     private MapReduceExecutable createMergeCuboidDataStep(String inputPath, String outputPath) {
