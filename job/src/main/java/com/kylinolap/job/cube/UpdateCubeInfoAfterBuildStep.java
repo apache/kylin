@@ -1,7 +1,10 @@
 package com.kylinolap.job.cube;
 
+import java.io.IOException;
+
+import org.apache.commons.lang.StringUtils;
+
 import com.google.common.base.Preconditions;
-import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
@@ -13,14 +16,11 @@ import com.kylinolap.job.execution.ExecuteResult;
 import com.kylinolap.job.impl.threadpool.AbstractExecutable;
 import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.realization.RealizationStatusEnum;
-import org.apache.commons.lang.StringUtils;
-
-import java.io.IOException;
 
 /**
  * Created by qianzhou on 1/4/15.
  */
-public class UpdateCubeInfoAfterBuildExecutable extends AbstractExecutable {
+public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
 
     private static final String SEGMENT_ID = "segmentId";
     private static final String CUBE_NAME = "cubeName";
@@ -29,12 +29,10 @@ public class UpdateCubeInfoAfterBuildExecutable extends AbstractExecutable {
     private static final String CREATE_FLAT_TABLE_STEP_ID = "createFlatTableStepId";
     private static final String CUBING_JOB_ID = "cubingJobId";
 
-    private final CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-
-    public UpdateCubeInfoAfterBuildExecutable() {
+    public UpdateCubeInfoAfterBuildStep() {
     }
 
-    public UpdateCubeInfoAfterBuildExecutable(JobPO job) {
+    public UpdateCubeInfoAfterBuildStep(JobPO job) {
         super(job);
     }
 
@@ -88,6 +86,7 @@ public class UpdateCubeInfoAfterBuildExecutable extends AbstractExecutable {
 
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+        final CubeManager cubeManager = CubeManager.getInstance(context.getConfig());
         final CubeInstance cube = cubeManager.getCube(getCubeName());
         final CubeSegment segment = cube.getSegmentById(getSegmentId());
 
