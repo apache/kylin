@@ -45,7 +45,7 @@ public class CubeDescManager {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeDescManager.class);
 
-    private static final Serializer<CubeDesc> CUBE_DESC_SERIALIZER = new JsonSerializer<CubeDesc>(CubeDesc.class);
+    public static final Serializer<CubeDesc> CUBE_DESC_SERIALIZER = new JsonSerializer<CubeDesc>(CubeDesc.class);
 
     // static cached instances
     private static final ConcurrentHashMap<KylinConfig, CubeDescManager> CACHE = new ConcurrentHashMap<KylinConfig, CubeDescManager>();
@@ -128,6 +128,8 @@ public class CubeDescManager {
             CubeDescUpgrader upgrade = new CubeDescUpgrader(path);
             ndesc = upgrade.upgrade();
             ndesc.setUpgraded(true);
+
+            getMetadataManager().createDataModelDesc(ndesc.getModel());
             logger.debug("CubeDesc upgrade successful for " + path);
         }
         

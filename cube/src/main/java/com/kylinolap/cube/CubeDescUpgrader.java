@@ -45,9 +45,9 @@ public class CubeDescUpgrader {
         updatePartitionDesc(oldModel, newModel);
 
         DataModelDesc model = extractDataModel(oldModel, newModel);
+        newModel.setModel(model);
+        
         updateDimensions(oldModel, newModel);
-
-        getMetadataManager().createDataModelDesc(model);
 
         return newModel;
     }
@@ -89,7 +89,7 @@ public class CubeDescUpgrader {
 
             newDim.setId(dim.getId());
             newDim.setName(dim.getName());
-            newDim.setTable(appendDBName(dim.getTable()));
+            newDim.setTable(getMetadataManager().appendDBName(dim.getTable()));
             newDim.setDerived(dim.getDerived());
 
             if ("{FK}".equalsIgnoreCase(dim.getColumn()) || dim.getColumn() == null) {
@@ -118,7 +118,7 @@ public class CubeDescUpgrader {
         dm.setUuid(UUID.randomUUID().toString());
         String factTable = oldModel.getFactTable();
         dm.setName("model_" + oldModel.getName());
-        dm.setFactTable(appendDBName(factTable));
+        dm.setFactTable(getMetadataManager().appendDBName(factTable));
 
         newModel.setModelName(dm.getName());
 
@@ -131,7 +131,7 @@ public class CubeDescUpgrader {
                 LookupDesc lookup = new LookupDesc();
                 lookup.setJoin(join);
                 String table = dim.getTable();
-                lookup.setTable(appendDBName(table));
+                lookup.setTable(getMetadataManager().appendDBName(table));
 
                 lookups.add(lookup);
             }
@@ -139,31 +139,6 @@ public class CubeDescUpgrader {
 
         dm.setLookups(lookups.toArray(new LookupDesc[lookups.size()]));
         return dm;
-    }
-
-    private String appendDBName(String table) {
-
-        if (table.indexOf(".") > 0)
-            return table;
-
-        Map<String, TableDesc> map = getMetadataManager().getAllTablesMap();
-
-        int count = 0;
-        String result = null;
-        for (TableDesc t : map.values()) {
-            if (t.getName().equalsIgnoreCase(table)) {
-                result = t.getIdentity();
-                count++;
-            }
-        }
-
-        if (count == 1)
-            return result;
-
-        if (count > 1) {
-            logger.warn("There are more than 1 table named with '" + table + "' in different database; The program couldn't determine, randomly pick '" + result + "'");
-        }
-        return result;
     }
 
     private void updatePartitionDesc(com.kylinolap.cube.model.v1.CubeDesc oldModel, com.kylinolap.cube.model.CubeDesc newModel) {
@@ -175,7 +150,7 @@ public class CubeDescUpgrader {
         if (partition.getPartitionDateColumn() != null) {
             String[] tablecolumn = partition.getPartitionDateColumn().split("\\.");
             if (tablecolumn != null && tablecolumn.length == 2) {
-                String tableFullName = this.appendDBName(tablecolumn[0]);
+                String tableFullName = getMetadataManager().appendDBName(tablecolumn[0]);
                 newPartition.setPartitionDateColumn(tableFullName + "." + tablecolumn[1]);
             } else {
                 newPartition.setPartitionDateColumn(partition.getPartitionDateColumn());
@@ -223,11 +198,11 @@ public class CubeDescUpgrader {
         return ndesc;
     }
 
-    private MetadataManager getMetadataManager() {
+    private static MetadataManager getMetadataManager() {
         return MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
     }
 
-    protected ResourceStore getStore() {
+    protected static ResourceStore getStore() {
         return ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
     }
 }

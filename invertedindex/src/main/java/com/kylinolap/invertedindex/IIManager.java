@@ -236,7 +236,7 @@ public class IIManager implements IRealizationProvider {
         String incrementalSegName = IISegment.getSegmentName(startDate, endDate);
         segment.setUuid(UUID.randomUUID().toString());
         segment.setName(incrementalSegName);
-        segment.setCreateTime(DateStrDictionary.dateToString(new Date()));
+        segment.setCreateTimeUTC(System.currentTimeMillis());
         segment.setDateRangeStart(startDate);
         segment.setDateRangeEnd(endDate);
         segment.setStatus(SegmentStatusEnum.NEW);
