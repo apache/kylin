@@ -60,7 +60,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         if ($scope.cubeMode=="editExistCube"&&newValue && !newValue.project) {
             initProject();
         }
-        if($scope.cubeMetaFrame&&$scope.cubeMetaFrame.cube_partition_desc.partition_date_start||$scope.cubeMetaFrame.cube_partition_desc.partition_date_start==0)
+        if($scope.cubeMetaFrame&&($scope.cubeMetaFrame.cube_partition_desc.partition_date_start||$scope.cubeMetaFrame.cube_partition_desc.partition_date_start==0))
         {
             $scope.cubeMetaFrame.cube_partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
         }
