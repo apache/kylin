@@ -66,6 +66,11 @@ public class BuildIIWithEngineTest {
         }
     }
 
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        ClasspathUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
+    }
+
     @Before
     public void before() throws Exception {
         HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
@@ -98,16 +103,10 @@ public class BuildIIWithEngineTest {
 
 
     @Test
-    public void test() throws Exception {
-        testInner();
-    }
-
-    private void testInner() throws Exception {
-        DeployUtil.prepareTestData("inner", "test_kylin_cube_with_slr_empty");
-
+    private void testBuildII() throws Exception {
 
         String[] testCase = new String[]{
-                "testBuildII"
+                "buildII"
         };
         ExecutorService executorService = Executors.newFixedThreadPool(testCase.length);
         final CountDownLatch countDownLatch = new CountDownLatch(testCase.length);
@@ -153,7 +152,7 @@ public class BuildIIWithEngineTest {
     }
 
 
-    protected List<String> testBuildII() throws Exception {
+    protected List<String> buildII() throws Exception {
         clearSegment(TEST_II_NAME);
 
 
@@ -182,7 +181,10 @@ public class BuildIIWithEngineTest {
 
 
     private String buildSegment(String iiName, long startDate, long endDate) throws Exception {
-        IISegment segment = iiManager.buildSegment(iiManager.getII(iiName), startDate, endDate);
+        IIInstance iiInstance = iiManager.getII(iiName);
+        IISegment segment = iiManager.buildSegment(iiInstance, startDate, endDate);
+        iiInstance.getSegments().add(segment);
+        iiManager.updateII(iiInstance);
         IIJobBuilder iiJobBuilder = (IIJobBuilder)IIJobBuilder.newBuilder().setJobEnginConfig(jobEngineConfig).setSegment(segment);
         IIJob job = iiJobBuilder.buildJob();
         jobService.addJob(job);
@@ -190,5 +192,13 @@ public class BuildIIWithEngineTest {
         return job.getId();
     }
 
+    public static void main(String[] args) throws Exception {
+        BuildIIWithEngineTest instance = new BuildIIWithEngineTest();
+        
+        BuildIIWithEngineTest.beforeClass();
+        instance.before();
+        instance.testBuildII();
+        
+    }
 
 }

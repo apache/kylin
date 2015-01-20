@@ -58,8 +58,6 @@ public final class IIJobBuilder extends AbstractJobBuilder {
         final String jobId = result.getId();
         final IIJoinedFlatTableDesc intermediateTableDesc = new IIJoinedFlatTableDesc(getIIDesc());
         final String intermediateHiveTableName = getIntermediateHiveTableName(intermediateTableDesc, jobId);
-        final String intermediateHiveTableLocation = getIntermediateHiveTableLocation(intermediateTableDesc, jobId);
-        final String factTableName = getIIDesc().getFactTableName();
         final String factDistinctColumnsPath = getIIDistinctColumnsPath(jobId);
         final String iiRootPath = getJobWorkingDir(jobId) + "/" + getIIName() + "/";
         final String iiPath = iiRootPath + "*";
@@ -67,11 +65,11 @@ public final class IIJobBuilder extends AbstractJobBuilder {
         final AbstractExecutable intermediateHiveTableStep = createIntermediateHiveTableStep(intermediateTableDesc, jobId);
         result.addTask(intermediateHiveTableStep);
 
-        result.addTask(createFactDistinctColumnsStep(factTableName, jobId, factDistinctColumnsPath));
+        result.addTask(createFactDistinctColumnsStep(intermediateHiveTableName, jobId, factDistinctColumnsPath));
 
         result.addTask(createBuildDictionaryStep(factDistinctColumnsPath));
 
-        result.addTask(createInvertedIndexStep(intermediateHiveTableLocation, iiRootPath));
+        result.addTask(createInvertedIndexStep(intermediateHiveTableName, iiRootPath));
 
         result.addTask(this.createCreateHTableStep());
 
@@ -108,7 +106,7 @@ public final class IIJobBuilder extends AbstractJobBuilder {
     }
 
     private String getIIName() {
-        return getIIDesc().getName();
+        return ((IISegment)segment).getIIInstance().getName();
     }
 
     private void appendMapReduceParameters(StringBuilder builder, JobEngineConfig engineConfig) {
@@ -142,6 +140,7 @@ public final class IIJobBuilder extends AbstractJobBuilder {
         StringBuilder cmd = new StringBuilder();
         appendMapReduceParameters(cmd, jobEngineConfig);
         appendExecCmdParameters(cmd, "tablename", factTableName);
+        appendExecCmdParameters(cmd, "iiname", getIIName());
         appendExecCmdParameters(cmd, "output", output);
         appendExecCmdParameters(cmd, "jobname", "Kylin_Fact_Distinct_Columns_" + getIIName() + "_Step");
 
@@ -155,7 +154,6 @@ public final class IIJobBuilder extends AbstractJobBuilder {
         buildDictionaryStep.setName(ExecutableConstants.STEP_NAME_BUILD_DICTIONARY);
         StringBuilder cmd = new StringBuilder();
         appendExecCmdParameters(cmd, "iiname", getIIName());
-        appendExecCmdParameters(cmd, "segmentname", segment.getName());
         appendExecCmdParameters(cmd, "input", factDistinctColumnsPath);
 
         buildDictionaryStep.setJobParams(cmd.toString());
@@ -163,24 +161,23 @@ public final class IIJobBuilder extends AbstractJobBuilder {
         return buildDictionaryStep;
     }
 
-    private MapReduceExecutable createInvertedIndexStep(String intermediateHiveTableLocation, String iiOutputTempPath) {
+    private MapReduceExecutable createInvertedIndexStep(String intermediateHiveTable, String iiOutputTempPath) {
         // base cuboid job
-        MapReduceExecutable baseCuboidStep = new MapReduceExecutable();
+        MapReduceExecutable buildIIStep = new MapReduceExecutable();
 
         StringBuilder cmd = new StringBuilder();
         appendMapReduceParameters(cmd, jobEngineConfig);
 
-        baseCuboidStep.setName(ExecutableConstants.STEP_NAME_BUILD_BASE_CUBOID);
+        buildIIStep.setName(ExecutableConstants.STEP_NAME_BUILD_BASE_CUBOID);
 
         appendExecCmdParameters(cmd, "iiname", getIIName());
-        appendExecCmdParameters(cmd, "segmentname", segment.getName());
-        appendExecCmdParameters(cmd, "input", intermediateHiveTableLocation);
+        appendExecCmdParameters(cmd, "tablename", intermediateHiveTable);
         appendExecCmdParameters(cmd, "output", iiOutputTempPath);
         appendExecCmdParameters(cmd, "jobname", ExecutableConstants.STEP_NAME_BUILD_II);
 
-        baseCuboidStep.setMapReduceParams(cmd.toString());
-        baseCuboidStep.setMapReduceJobClass(InvertedIndexJob.class);
-        return baseCuboidStep;
+        buildIIStep.setMapReduceParams(cmd.toString());
+        buildIIStep.setMapReduceJobClass(InvertedIndexJob.class);
+        return buildIIStep;
     }
 
 
@@ -222,7 +219,7 @@ public final class IIJobBuilder extends AbstractJobBuilder {
         StringBuilder cmd = new StringBuilder();
         appendExecCmdParameters(cmd, "input", getHFilePath(jobId));
         appendExecCmdParameters(cmd, "htablename", getHTableName());
-        appendExecCmdParameters(cmd, "cubename", getIIName());
+        appendExecCmdParameters(cmd, "iiname", getIIName());
 
         bulkLoadStep.setJobParams(cmd.toString());
         bulkLoadStep.setJobClass(IIBulkLoadJob.class);

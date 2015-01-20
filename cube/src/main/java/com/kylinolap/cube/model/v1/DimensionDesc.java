@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kylinolap.cube.model;
+package com.kylinolap.cube.model.v1;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kylinolap.common.util.StringUtil;
+import com.kylinolap.cube.model.HierarchyDesc;
 import com.kylinolap.metadata.model.JoinDesc;
-import com.kylinolap.metadata.model.LookupDesc;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.TblColRef;
 
@@ -38,22 +36,20 @@ public class DimensionDesc {
 
     @JsonProperty("id")
     private int id;
-
     @JsonProperty("name")
     private String name;
-
+    @JsonProperty("join")
+    private JoinDesc join;
     @JsonProperty("hierarchy")
-    private boolean isHierarchy;
+    private HierarchyDesc[] hierarchy;
     @JsonProperty("table")
     private String table;
     @JsonProperty("column")
-    private String[] column;
+    private String column;
+    @JsonProperty("datatype")
+    private String datatype;
     @JsonProperty("derived")
     private String[] derived;
-
-    private TableDesc tableDesc;
-    private JoinDesc join;
-    private HierarchyDesc[] hierarchy;
 
     // computed
     private TblColRef[] columnRefs;
@@ -70,15 +66,20 @@ public class DimensionDesc {
         return false;
     }
 
-    public boolean isHierarchy() {
-        return isHierarchy;
+    public String getDatatype() {
+        return datatype;
     }
 
-    /**
-     * @return
-     */
+    public void setDatatype(String datatype) {
+        this.datatype = datatype;
+    }
+
     public String getTable() {
-        return table;
+        return table.toUpperCase();
+    }
+
+    public void setTable(String table) {
+        this.table = table;
     }
 
     public int getId() {
@@ -91,6 +92,10 @@ public class DimensionDesc {
 
     public JoinDesc getJoin() {
         return join;
+    }
+
+    public void setJoin(JoinDesc join) {
+        this.join = join;
     }
 
     public String getName() {
@@ -109,12 +114,14 @@ public class DimensionDesc {
         this.columnRefs = colRefs;
     }
 
-    public String[] getColumn() {
+    public String getColumn() {
         return this.column;
     }
 
-    public void setColumn(String[] column) {
+    public void setColumn(String column) {
         this.column = column;
+        if (this.column != null)
+            this.column = this.column.toUpperCase();
     }
 
     public HierarchyDesc[] getHierarchy() {
@@ -139,10 +146,6 @@ public class DimensionDesc {
 
     public void setDerivedColRefs(TblColRef[] derivedColRefs) {
         this.derivedColRefs = derivedColRefs;
-    }
-
-    public TableDesc getTableDesc() {
-        return this.tableDesc;
     }
 
     @Override
@@ -171,44 +174,30 @@ public class DimensionDesc {
 
     @Override
     public String toString() {
-        return "DimensionDesc [name=" + name + ", join=" + join + ", hierarchy=" + Arrays.toString(hierarchy) + ", table=" + table + ", column=" + Arrays.toString(column) + ", derived=" + Arrays.toString(derived) + "]";
+        return "DimensionDesc [name=" + name + ", join=" + join + ", hierarchy=" + Arrays.toString(hierarchy) + ", table=" + table + ", column=" + column + ", datatype=" + datatype + ", derived=" + Arrays.toString(derived) + "]";
     }
 
-    public void init(CubeDesc cubeDesc, Map<String, TableDesc> tables, Map<String, List<TableDesc>> columnTableMap, Map<String, List<String>> tableDatabaseMap) {
+    public void init(Map<String, TableDesc> tables) {
         if (name != null)
             name = name.toUpperCase();
-
         if (table != null)
             table = table.toUpperCase();
+        if (column != null)
+            column = column.toUpperCase();
 
-        tableDesc = tables.get(this.getTable());
+        TableDesc tableDesc = tables.get(table);
         if (tableDesc == null)
-            throw new IllegalStateException("Can't find table " + table + " for dimension " + name);
-
-        for (LookupDesc lookup : cubeDesc.getModel().getLookups()) {
-            if (lookup.getTable().equalsIgnoreCase(this.getTable())) {
-                this.join = lookup.getJoin();
-                break;
-            }
-        }
-
-        if (isHierarchy && this.column.length > 0) {
-            List<HierarchyDesc> hierarchyList = new ArrayList<HierarchyDesc>(3);
-            for (int i = 0, n = this.column.length; i < n; i++) {
-                String aColumn = this.column[i];
-                HierarchyDesc aHierarchy = new HierarchyDesc();
-                aHierarchy.setLevel(String.valueOf(i + 1));
-                aHierarchy.setColumn(aColumn);
-                hierarchyList.add(aHierarchy);
-            }
-
-            this.hierarchy = hierarchyList.toArray(new HierarchyDesc[hierarchyList.size()]);
-        }
+            throw new IllegalStateException("Can't find table " + table + " on dimension " + name);
 
         if (hierarchy != null && hierarchy.length == 0)
             hierarchy = null;
         if (derived != null && derived.length == 0)
             derived = null;
+
+        if (join != null) {
+            StringUtil.toUpperCaseArray(join.getForeignKey(), join.getForeignKey());
+            StringUtil.toUpperCaseArray(join.getPrimaryKey(), join.getPrimaryKey());
+        }
 
         if (hierarchy != null) {
             for (HierarchyDesc h : hierarchy)
@@ -218,14 +207,6 @@ public class DimensionDesc {
         if (derived != null) {
             StringUtil.toUpperCaseArray(derived, derived);
         }
-    }
-
-    public void setHierarchy(boolean isHierarchy) {
-        this.isHierarchy = isHierarchy;
-    }
-
-    public void setTable(String table) {
-        this.table = table;
     }
 
 }

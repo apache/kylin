@@ -66,9 +66,10 @@ public class IISegment implements Comparable<IISegment>, ISegment {
     private long lastBuildTime;
     @JsonProperty("last_build_job_id")
     private String lastBuildJobID;
-    @JsonProperty("create_time")
-    private String createTime;
 
+    @JsonProperty("create_time_utc")
+    private long createTimeUTC;
+    
     @JsonProperty("binary_signature")
     private String binarySignature; // a hash of schema and dictionary ID,
     // used for sanity check
@@ -183,14 +184,6 @@ public class IISegment implements Comparable<IISegment>, ISegment {
         this.lastBuildJobID = lastBuildJobID;
     }
 
-    public String getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(String createTime) {
-        this.createTime = createTime;
-    }
-
     public String getBinarySignature() {
         return binarySignature;
     }
@@ -297,7 +290,7 @@ public class IISegment implements Comparable<IISegment>, ISegment {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("uuid", uuid).add("create_time:", createTime).add("name", name).add("last_build_job_id", lastBuildJobID).add("status", status).toString();
+        return Objects.toStringHelper(this).add("uuid", uuid).add("create_time_utc:", createTimeUTC).add("name", name).add("last_build_job_id", lastBuildJobID).add("status", status).toString();
     }
 
     @Override
@@ -313,4 +306,14 @@ public class IISegment implements Comparable<IISegment>, ISegment {
         int index = getTableRecordInfo().findColumn(col);
         return getTableRecordInfo().dict(index);
     }
+
+    public long getCreateTimeUTC() {
+        return createTimeUTC;
+    }
+
+    public void setCreateTimeUTC(long createTimeUTC) {
+        this.createTimeUTC = createTimeUTC;
+    }
+    
+    
 }
