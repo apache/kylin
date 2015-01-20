@@ -44,7 +44,7 @@ public class ProjectInstance extends RootPersistentEntity {
     private String name;
 
     @JsonProperty("tables")
-    private Set<String> tables;
+    private Set<String> tables = new TreeSet<String>();
 
     @JsonProperty("owner")
     private String owner;
@@ -63,7 +63,7 @@ public class ProjectInstance extends RootPersistentEntity {
     private String description;
 
     @JsonProperty("datamodels")
-    private List<RealizationEntry> realizationEntries;
+    private List<RealizationEntry> realizationEntries = new ArrayList<RealizationEntry>();
 
     public String getResourcePath() {
         return concatResourcePath(name);

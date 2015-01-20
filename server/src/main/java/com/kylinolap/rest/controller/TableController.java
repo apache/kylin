@@ -123,7 +123,7 @@ public class TableController extends BasicController {
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
         String[] loaded = cubeMgmtService.reloadHiveTable(tables);
         cubeMgmtService.calculateCardinalityIfNotPresent(loaded, submitter);
-        cubeMgmtService.syncTableToProject(tables, project);
+        cubeMgmtService.syncTableToProject(loaded, project);
         Map<String, String[]> result = new HashMap<String, String[]>();
         result.put("result.loaded", loaded);
         result.put("result.unloaded", new String[]{});
