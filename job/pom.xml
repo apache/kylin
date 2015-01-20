@@ -181,7 +181,7 @@
             <groupId>org.apache.hive.hcatalog</groupId>
             <artifactId>hive-hcatalog-core</artifactId>
             <version>${hive-hcatalog.version}</version>
-            <!--<scope>provided</scope>-->
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hbase</groupId>
@@ -215,13 +215,6 @@
                     <artifactId>jsp-api</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>com.kylinolap</groupId>
-            <artifactId>kylin-storage</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>test</scope>
         </dependency>
 
     </dependencies>

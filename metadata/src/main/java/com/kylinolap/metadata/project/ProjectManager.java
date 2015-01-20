@@ -112,16 +112,16 @@ public class ProjectManager {
         ResourceStore store = getStore();
 
         ProjectInstance projectInstance = store.getResource(path, ProjectInstance.class, PROJECT_SERIALIZER);
-        if(projectInstance == null)
+        if (projectInstance == null)
             return null;
-        
+
         projectInstance.init();
 
         if (StringUtils.isBlank(projectInstance.getName()))
             throw new IllegalStateException("Project name must not be blank");
 
         projectMap.putLocal(projectInstance.getName(), projectInstance);
-        
+
         clearL2Cache();
         return projectInstance;
     }
@@ -220,26 +220,25 @@ public class ProjectManager {
         }
     }
 
-    public ProjectInstance addTableDescToProject(String tables, String projectName) throws IOException {
+    public ProjectInstance addTableDescToProject(String[] tableIdentities, String projectName) throws IOException {
         MetadataManager metaMgr = getMetadataManager();
         ProjectInstance projectInstance = getProject(projectName);
-        String[] tokens = StringUtils.split(tables, ",");
-        for (int i = 0; i < tokens.length; i++) {
-            String token = tokens[i].trim();
-            TableDesc table = metaMgr.getTableDesc(token);
-            if (table != null) {
-                projectInstance.addTable(table.getIdentity());
+        for (String tableId : tableIdentities) {
+            TableDesc table = metaMgr.getTableDesc(tableId);
+            if (table == null) {
+                throw new IllegalStateException("Cannot find table '" + table + "' in metadata manager");
             }
+            projectInstance.addTable(table.getIdentity());
         }
 
         saveResource(projectInstance);
         return projectInstance;
     }
-    
+
     private void saveResource(ProjectInstance prj) throws IOException {
         ResourceStore store = getStore();
         store.putResource(prj.getResourcePath(), prj, PROJECT_SERIALIZER);
-        
+
         prj = reloadProjectAt(prj.getResourcePath());
         projectMap.put(norm(prj.getName()), prj); // triggers update broadcast
         clearL2Cache();

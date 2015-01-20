@@ -144,11 +144,6 @@ public class MetadataManager {
      */
     public TableDesc getTableDesc(String tableName) {
         TableDesc result = srcTableMap.get(tableName.toUpperCase());
-        if(result == null) {
-            logger.info("No TableDesc found for table '" + tableName.toUpperCase() + "'");
-            return null;
-        }
-        
         return result;
     }
 
