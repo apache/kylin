@@ -33,12 +33,16 @@ public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
 
     @Override
     public void createTestMetadata() {
+        createTestMetadata(LOCALMETA_TEST_DATA);
+    }
+    
+    public void createTestMetadata(String test_data_folder) {
         KylinConfig.destoryInstance();
 
         this.tempTestMetadataUrl = "../examples/test_metadata";
         try {
             FileUtils.deleteDirectory(new File(tempTestMetadataUrl));
-            FileUtils.copyDirectory(new File(LOCALMETA_TEST_DATA), new File(tempTestMetadataUrl));
+            FileUtils.copyDirectory(new File(test_data_folder), new File(tempTestMetadataUrl));
         } catch (IOException e) {
             e.printStackTrace();
         }
