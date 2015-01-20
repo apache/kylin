@@ -178,17 +178,13 @@ public class JobController extends BasicController implements InitializingBean {
     @RequestMapping(value = "/{jobId}/resume", method = { RequestMethod.PUT })
     @ResponseBody
     public JobInstance resume(@PathVariable String jobId) {
-        JobInstance jobInstance = null;
         try {
-            jobInstance = jobService.getJobInstance(jobId);
-            jobService.resumeJob(jobInstance);
-            jobInstance = jobService.getJobInstance(jobId);
+            jobService.resumeJob(jobId);
+            return jobService.getJobInstance(jobId);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e);
         }
-
-        return jobInstance;
     }
 
     /**

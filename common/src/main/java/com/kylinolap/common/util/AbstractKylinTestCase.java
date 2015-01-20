@@ -34,7 +34,7 @@ public abstract class AbstractKylinTestCase {
 
     public abstract void cleanupTestMetadata() throws Exception;
 
-    public KylinConfig getTestConfig() {
+    public static KylinConfig getTestConfig() {
         return KylinConfig.getInstanceFromEnv();
     }
 

@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.kylinolap.common.restclient.CaseInsensitiveStringCache;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,6 @@ import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.common.restclient.Broadcaster;
-import com.kylinolap.common.restclient.SingleValueCache;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.MeasureDesc;
@@ -77,7 +77,7 @@ public class ProjectManager {
     private KylinConfig config;
     private ProjectL2Cache l2Cache;
     // project name => ProjrectInstance
-    private SingleValueCache<String, ProjectInstance> projectMap = new SingleValueCache<String, ProjectInstance>(Broadcaster.TYPE.PROJECT);
+    private CaseInsensitiveStringCache<ProjectInstance> projectMap = new CaseInsensitiveStringCache<ProjectInstance>(Broadcaster.TYPE.PROJECT);
 
     private ProjectManager(KylinConfig config) throws IOException {
         logger.info("Initializing ProjectManager with metadata url " + config);
@@ -120,7 +120,7 @@ public class ProjectManager {
         if (StringUtils.isBlank(projectInstance.getName()))
             throw new IllegalStateException("Project name must not be blank");
 
-        projectMap.putLocal(projectInstance.getName().toUpperCase(), projectInstance);
+        projectMap.putLocal(projectInstance.getName(), projectInstance);
         
         clearL2Cache();
         return projectInstance;
