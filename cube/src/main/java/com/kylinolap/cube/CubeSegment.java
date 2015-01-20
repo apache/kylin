@@ -62,6 +62,9 @@ public class CubeSegment implements Comparable<CubeSegment>, ISegment {
     @JsonProperty("create_time")
     private String createTime;
 
+    @JsonProperty("create_time_utc")
+    private long createTimeUTC;
+    
     @JsonProperty("binary_signature")
     private String binarySignature; // a hash of cube schema and dictionary ID,
     // used for sanity check
@@ -174,12 +177,24 @@ public class CubeSegment implements Comparable<CubeSegment>, ISegment {
         this.lastBuildJobID = lastBuildJobID;
     }
 
+    /**
+     * @deprecated
+     * @return
+     */
     public String getCreateTime() {
         return createTime;
     }
 
     public void setCreateTime(String createTime) {
         this.createTime = createTime;
+    }
+
+    public long getCreateTimeUTC() {
+        return createTimeUTC;
+    }
+
+    public void setCreateTimeUTC(long createTimeUTC) {
+        this.createTimeUTC = createTimeUTC;
     }
 
     public String getBinarySignature() {
@@ -297,7 +312,7 @@ public class CubeSegment implements Comparable<CubeSegment>, ISegment {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("uuid", uuid).add("create_time:", createTime).add("name", name).add("last_build_job_id", lastBuildJobID).add("status", status).toString();
+        return Objects.toStringHelper(this).add("uuid", uuid).add("create_time_utc:", createTimeUTC).add("name", name).add("last_build_job_id", lastBuildJobID).add("status", status).toString();
     }
 
     @Override

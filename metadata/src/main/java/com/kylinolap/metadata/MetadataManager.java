@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,8 +54,8 @@ public class MetadataManager {
 
     private static final Logger logger = LoggerFactory.getLogger(MetadataManager.class);
 
-    private static final Serializer<TableDesc> TABLE_SERIALIZER = new JsonSerializer<TableDesc>(TableDesc.class);
-    private static final Serializer<DataModelDesc> MODELDESC_SERIALIZER = new JsonSerializer<DataModelDesc>(DataModelDesc.class);
+    public static final Serializer<TableDesc> TABLE_SERIALIZER = new JsonSerializer<TableDesc>(TableDesc.class);
+    public static final Serializer<DataModelDesc> MODELDESC_SERIALIZER = new JsonSerializer<DataModelDesc>(DataModelDesc.class);
 
     // static cached instances
     private static final ConcurrentHashMap<KylinConfig, MetadataManager> CACHE = new ConcurrentHashMap<KylinConfig, MetadataManager>();
@@ -182,10 +181,10 @@ public class MetadataManager {
         }
 
         srcTable.init();
-        
+
         String path = srcTable.getResourcePath();
         getStore().putResource(path, srcTable, TABLE_SERIALIZER);
-
+        
         srcTableMap.put(srcTable.getIdentity(), srcTable);
     }
 
@@ -235,6 +234,19 @@ public class MetadataManager {
         }
         String tableIdentity = file.substring(0, file.length() - MetadataConstances.FILE_SURFIX.length()).toUpperCase();
         
+        // for metadata upgrade, convert resource path to new pattern (<DB>.<TABLE>.json)
+        if (tableIdentity.indexOf(".") < 0) {
+            String oldResPath = TableDesc.concatExdResourcePath(tableIdentity);
+            
+            tableIdentity = appendDBName(tableIdentity);
+            this.saveTableExd(tableIdentity, attrs);
+
+            //delete old resoruce if it exists;
+            if (getStore().exists(oldResPath)) {
+                getStore().deleteResource(oldResPath);
+            }
+        }
+        
         srcTableExdMap.putLocal(tableIdentity, attrs);
         return attrs;
     }
@@ -261,6 +273,19 @@ public class MetadataManager {
         String tableIdentity = t.getIdentity();
 
         srcTableMap.putLocal(tableIdentity, t);
+
+        // delete the old resource if it exists; it has more than 1 "." in the path
+        if(path.substring(path.indexOf(".")).length() > 4) {  // longer than "json"
+            String old_path = t.getResourcePathV1();
+            if(getStore().exists(old_path)) {
+                getStore().deleteResource(old_path);
+                // the new source will be new;
+                t.setLastModified(0);
+                saveSourceTable(t);
+            }
+        }
+       
+
         return t;
     }
 
@@ -357,12 +382,12 @@ public class MetadataManager {
             throw new IllegalArgumentException("tableId couldn't be null");
         }
         TableDesc srcTable = srcTableMap.get(tableId);
-        if(srcTable == null) {
+        if (srcTable == null) {
             throw new IllegalArgumentException("Couldn't find Source Table with identifier: " + tableId);
         }
 
         String path = TableDesc.concatExdResourcePath(tableId);
-        
+
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         JsonUtil.writeValueIndent(os, tableExdProperties);
         os.flush();
@@ -372,6 +397,32 @@ public class MetadataManager {
         is.close();
 
         srcTableExdMap.putLocal(tableId, tableExdProperties);
+    }
+
+
+    public String appendDBName(String table) {
+
+        if (table.indexOf(".") > 0)
+            return table;
+
+        Map<String, TableDesc> map = getAllTablesMap();
+
+        int count = 0;
+        String result = null;
+        for (TableDesc t : map.values()) {
+            if (t.getName().equalsIgnoreCase(table)) {
+                result = t.getIdentity();
+                count++;
+            }
+        }
+
+        if (count == 1)
+            return result;
+
+        if (count > 1) {
+            logger.warn("There are more than 1 table named with '" + table + "' in different database; The program couldn't determine, randomly pick '" + result + "'");
+        }
+        return result;
     }
 
 }
