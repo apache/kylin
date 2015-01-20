@@ -11,6 +11,18 @@ echo "ERROR exit from ${SCRIPT} : line ${LASTLINE} with exit code ${LASTERR}"
 exit 1
 }
 
+function escape_sed_replacement(){
+        v=$1
+        v=$(sed -e 's/[\/&]/\\&/g' <<< $v)
+        echo $v
+}
+
+function escape_sed_pattern(){
+        v=$1
+        v=$(sed -e 's/[]\/$*.^|[]/\\&/g' <<< $v)
+        echo $v
+}
+
 trap 'error ${LINENO} ${?}' ERR
 
 echo ""
@@ -128,15 +140,34 @@ KYLIN_ZOOKEEPER_URL=${KYLIN_ZOOKEEPER_QUORUM}:${KYLIN_ZOOKEEPER_CLIENT_PORT}:${K
 echo "Kylin install script requires root password for ${HOSTNAME}"
 echo "(The default root password for hortonworks VM is hadoop, and for cloudera VM is cloudera)"
 
-[[ "$SILENT" ]] || read -s -p "Enter Password for root: " ROOTPASS
+[[ "$SILENT" ]] || read -r -s -p  "Enter Password for root: " ROOTPASS
+
+#escape special characters for sed
+CHECK_URL_DEFAULT=$(escape_sed_pattern $CHECK_URL_DEFAULT)
+CLI_HOSTNAME_DEFAULT=$(escape_sed_pattern $CLI_HOSTNAME_DEFAULT)
+CLI_PASSWORD_DEFAULT=$(escape_sed_pattern $CLI_PASSWORD_DEFAULT)
+METADATA_URL_DEFAULT=$(escape_sed_pattern $METADATA_URL_DEFAULT)
+STORAGE_URL_DEFAULT=$(escape_sed_pattern $STORAGE_URL_DEFAULT)
+
+
+NEW_CHECK_URL_PREFIX=$(escape_sed_replacement $NEW_CHECK_URL_PREFIX)
+NEW_CLI_HOSTNAME_PREFIX=$(escape_sed_replacement $NEW_CLI_HOSTNAME_PREFIX)
+NEW_CLI_PASSWORD_PREFIX=$(escape_sed_replacement $NEW_CLI_PASSWORD_PREFIX)
+NEW_METADATA_URL_PREFIX=$(escape_sed_replacement $NEW_METADATA_URL_PREFIX)
+NEW_STORAGE_URL_PREFIX=$(escape_sed_replacement $NEW_STORAGE_URL_PREFIX)
+HOSTNAME=$(escape_sed_replacement $HOSTNAME)
+ROOTPASS=$(escape_sed_replacement $ROOTPASS)
+KYLIN_ZOOKEEPER_URL=$(escape_sed_replacement $KYLIN_ZOOKEEPER_URL)
+
+
 
 #deploy kylin.properties to /etc/kylin
 cat examples/test_case_data/sandbox/kylin.properties | \
-    sed -e "s,${CHECK_URL_DEFAULT},${NEW_CHECK_URL_PREFIX}${HOSTNAME}," | \
-    sed -e "s,${CLI_HOSTNAME_DEFAULT},${NEW_CLI_HOSTNAME_PREFIX}${HOSTNAME}," | \
-    sed -e "s,${CLI_PASSWORD_DEFAULT},${NEW_CLI_PASSWORD_PREFIX}${ROOTPASS}," | \
-    sed -e "s,${METADATA_URL_DEFAULT},${NEW_METADATA_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," | \
-    sed -e "s,${STORAGE_URL_DEFAULT},${NEW_STORAGE_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," >  /etc/kylin/kylin.properties
+    sed -e "s/${CHECK_URL_DEFAULT}/${NEW_CHECK_URL_PREFIX}${HOSTNAME}/g" | \
+    sed -e "s/${CLI_HOSTNAME_DEFAULT}/${NEW_CLI_HOSTNAME_PREFIX}${HOSTNAME}/g" | \
+    sed -e "s/${CLI_PASSWORD_DEFAULT}/${NEW_CLI_PASSWORD_PREFIX}${ROOTPASS}/g" | \
+    sed -e "s/${METADATA_URL_DEFAULT}/${NEW_METADATA_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}/g" | \
+    sed -e "s/${STORAGE_URL_DEFAULT}/${NEW_STORAGE_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}/g" >  /etc/kylin/kylin.properties
 
 
 echo "a copy of kylin config is generated at /etc/kylin/kylin.properties:"
