@@ -45,9 +45,23 @@ public class CubeMetadataUpgrade {
 
     private static final Log logger = LogFactory.getLog(CubeMetadataUpgrade.class);
 
-    public CubeMetadataUpgrade() {
+    public CubeMetadataUpgrade(String newMetadataUrl) {
+        KylinConfig.destoryInstance();
+        System.setProperty(KylinConfig.KYLIN_CONF, newMetadataUrl);
+        KylinConfig.getInstanceFromEnv().setMetadataUrl(newMetadataUrl);
+
+        
         config = KylinConfig.getInstanceFromEnv();
         store = getStore();
+    }
+    
+    public void upgrade() {
+
+        upgradeTableDesc();
+        upgradeTableDesceExd();
+        upgradeCubeDesc();
+        upgradeProjectInstance();
+        
     }
 
     private List<String> listResourceStore(String pathRoot) {
@@ -206,6 +220,7 @@ public class CubeMetadataUpgrade {
                     realizationEntries.add(entry);
                 }
                 newPrj.setRealizationEntries(realizationEntries);
+                newPrj.getCreateTimeUTC();
 
                 Set<String> tables = Sets.newHashSet();
                 for (String table : oldPrj.getTables()) {
@@ -239,8 +254,6 @@ public class CubeMetadataUpgrade {
         }
 
         String exportFolder = args[0];
-        KylinConfig.destoryInstance();
-        System.setProperty(KylinConfig.KYLIN_CONF, exportFolder);
         
         File oldMetaFolder = new File(exportFolder);
         if(!oldMetaFolder.exists()) {
@@ -252,7 +265,7 @@ public class CubeMetadataUpgrade {
             System.out.println("Provided folder is not a directory: '" + exportFolder + "'");
             return;
         }
-        
+
         
         String newMetadataUrl = oldMetaFolder.getAbsolutePath() + "_v2";
         try {
@@ -262,17 +275,9 @@ public class CubeMetadataUpgrade {
             e.printStackTrace();
         }
 
-        if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null)
-            System.setProperty(KylinConfig.KYLIN_CONF, newMetadataUrl);
+        CubeMetadataUpgrade instance = new CubeMetadataUpgrade(newMetadataUrl);
 
-        KylinConfig.getInstanceFromEnv().setMetadataUrl(newMetadataUrl);
-
-        CubeMetadataUpgrade instance = new CubeMetadataUpgrade();
-
-        instance.upgradeTableDesc();
-        instance.upgradeTableDesceExd();
-        instance.upgradeCubeDesc();
-        instance.upgradeProjectInstance();
+        instance.upgrade();
         
         logger.info("Run CubeMetadataUpgrade completed, check the following messages.");
         logger.info("The following resources have been successfully updated in : " + newMetadataUrl);
