@@ -44,7 +44,7 @@ public class ProjectInstance extends RootPersistentEntity {
     private String name;
 
     @JsonProperty("tables")
-    private Set<String> tables;
+    private Set<String> tables = new TreeSet<String>();
 
     @JsonProperty("owner")
     private String owner;

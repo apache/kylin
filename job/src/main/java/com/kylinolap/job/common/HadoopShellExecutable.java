@@ -1,5 +1,9 @@
 package com.kylinolap.job.common;
 
+import java.lang.reflect.Constructor;
+
+import org.apache.hadoop.util.ToolRunner;
+
 import com.google.common.base.Preconditions;
 import com.kylinolap.job.dao.JobPO;
 import com.kylinolap.job.exception.ExecuteException;
@@ -7,9 +11,6 @@ import com.kylinolap.job.execution.ExecutableContext;
 import com.kylinolap.job.execution.ExecuteResult;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.job.impl.threadpool.AbstractExecutable;
-import org.apache.hadoop.util.ToolRunner;
-
-import java.lang.reflect.Constructor;
 
 /**
  * Created by qianzhou on 12/26/14.
@@ -26,6 +27,7 @@ public class HadoopShellExecutable extends AbstractExecutable {
         super(job);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         final String mapReduceJobClass = getJobClass();
@@ -35,7 +37,6 @@ public class HadoopShellExecutable extends AbstractExecutable {
         try {
             final Constructor<? extends AbstractHadoopJob> constructor = (Constructor<? extends AbstractHadoopJob>) Class.forName(mapReduceJobClass).getConstructor();
             final AbstractHadoopJob job = constructor.newInstance();
-            job.setAsync(true);
             String[] args = params.trim().split("\\s+");
             final int result = ToolRunner.run(job, args);
             return result == 0 ? new ExecuteResult(ExecuteResult.State.SUCCEED, ""):new ExecuteResult(ExecuteResult.State.FAILED, "result code:" + result);

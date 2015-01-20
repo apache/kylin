@@ -16,24 +16,20 @@
 
 package com.kylinolap.common.restclient;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingDeque;
-
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
+import com.kylinolap.common.KylinConfig;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kylinolap.common.KylinConfig;
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Broadcast kylin event out
@@ -45,7 +41,9 @@ public class Broadcaster {
 
     private static final Logger logger = LoggerFactory.getLogger(Broadcaster.class);
 
-    private static BlockingDeque<BroadcastEvent> broadcaseEvents = new LinkedBlockingDeque<>();
+    private BlockingDeque<BroadcastEvent> broadcaseEvents = new LinkedBlockingDeque<>();
+
+    private AtomicLong counter = new AtomicLong();
 
     static class BroadcasterHolder {
         static final Broadcaster INSTANCE = new Broadcaster();
@@ -61,15 +59,15 @@ public class Broadcaster {
                     return;
                 }
                 final List<RestClient> restClients = Lists.newArrayList();
-                for (String node: nodes) {
+                for (String node : nodes) {
                     restClients.add(new RestClient(node));
                 }
                 final ExecutorService wipingCachePool = Executors.newFixedThreadPool(restClients.size());
-                while(true) {
+                while (true) {
                     try {
                         final BroadcastEvent broadcastEvent = broadcaseEvents.takeFirst();
                         logger.info("new broadcast event:" + broadcastEvent);
-                        for (final RestClient restClient: restClients) {
+                        for (final RestClient restClient : restClients) {
                             wipingCachePool.execute(new Runnable() {
                                 @Override
                                 public void run() {
@@ -101,10 +99,16 @@ public class Broadcaster {
      */
     public void queue(String type, String action, String key) {
         try {
+            counter.incrementAndGet();
             broadcaseEvents.putFirst(new BroadcastEvent(type, action, key));
         } catch (Exception e) {
+            counter.decrementAndGet();
             logger.error("error putting BroadcastEvent", e);
         }
+    }
+
+    public long getCounterAndClear() {
+        return counter.getAndSet(0);
     }
 
     public static enum EVENT {
@@ -131,7 +135,7 @@ public class Broadcaster {
     }
 
     public static enum TYPE {
-        CUBE("cube"), PROJECT("project"), INVERTED_INDEX("inverted_index"), TABLE("table"), DATA_MODEL("data_model");
+        CUBE("cube"), CUBE_DESC("cube_desc"), PROJECT("project"), INVERTED_INDEX("inverted_index"), INVERTED_INDEX_DESC("ii_desc"), TABLE("table"), DATA_MODEL("data_model");
         private String text;
 
         private TYPE(String text) {

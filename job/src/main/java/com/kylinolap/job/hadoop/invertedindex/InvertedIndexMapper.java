@@ -22,13 +22,13 @@ import java.util.List;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.mr.KylinMapper;
 import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.invertedindex.IISegment;
@@ -41,7 +41,7 @@ import com.kylinolap.metadata.model.SegmentStatusEnum;
 /**
  * @author yangli9
  */
-public class InvertedIndexMapper<KEYIN> extends Mapper<KEYIN, HCatRecord, LongWritable, ImmutableBytesWritable> {
+public class InvertedIndexMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, LongWritable, ImmutableBytesWritable> {
 
     private TableRecordInfo info;
     private TableRecord rec;
@@ -53,6 +53,8 @@ public class InvertedIndexMapper<KEYIN> extends Mapper<KEYIN, HCatRecord, LongWr
     
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+
         Configuration conf = context.getConfiguration();
 
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);

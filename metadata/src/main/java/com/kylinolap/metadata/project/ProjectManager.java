@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.kylinolap.common.restclient.CaseInsensitiveStringCache;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,6 @@ import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.common.restclient.Broadcaster;
-import com.kylinolap.common.restclient.SingleValueCache;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.MeasureDesc;
@@ -77,7 +77,7 @@ public class ProjectManager {
     private KylinConfig config;
     private ProjectL2Cache l2Cache;
     // project name => ProjrectInstance
-    private SingleValueCache<String, ProjectInstance> projectMap = new SingleValueCache<String, ProjectInstance>(Broadcaster.TYPE.PROJECT);
+    private CaseInsensitiveStringCache<ProjectInstance> projectMap = new CaseInsensitiveStringCache<ProjectInstance>(Broadcaster.TYPE.PROJECT);
 
     private ProjectManager(KylinConfig config) throws IOException {
         logger.info("Initializing ProjectManager with metadata url " + config);
@@ -112,16 +112,16 @@ public class ProjectManager {
         ResourceStore store = getStore();
 
         ProjectInstance projectInstance = store.getResource(path, ProjectInstance.class, PROJECT_SERIALIZER);
-        if(projectInstance == null)
+        if (projectInstance == null)
             return null;
-        
+
         projectInstance.init();
 
         if (StringUtils.isBlank(projectInstance.getName()))
             throw new IllegalStateException("Project name must not be blank");
 
-        projectMap.putLocal(projectInstance.getName().toUpperCase(), projectInstance);
-        
+        projectMap.putLocal(projectInstance.getName(), projectInstance);
+
         clearL2Cache();
         return projectInstance;
     }
@@ -220,26 +220,25 @@ public class ProjectManager {
         }
     }
 
-    public ProjectInstance addTableDescToProject(String tables, String projectName) throws IOException {
+    public ProjectInstance addTableDescToProject(String[] tableIdentities, String projectName) throws IOException {
         MetadataManager metaMgr = getMetadataManager();
         ProjectInstance projectInstance = getProject(projectName);
-        String[] tokens = StringUtils.split(tables, ",");
-        for (int i = 0; i < tokens.length; i++) {
-            String token = tokens[i].trim();
-            TableDesc table = metaMgr.getTableDesc(token);
-            if (table != null) {
-                projectInstance.addTable(table.getIdentity());
+        for (String tableId : tableIdentities) {
+            TableDesc table = metaMgr.getTableDesc(tableId);
+            if (table == null) {
+                throw new IllegalStateException("Cannot find table '" + table + "' in metadata manager");
             }
+            projectInstance.addTable(table.getIdentity());
         }
 
         saveResource(projectInstance);
         return projectInstance;
     }
-    
+
     private void saveResource(ProjectInstance prj) throws IOException {
         ResourceStore store = getStore();
         store.putResource(prj.getResourcePath(), prj, PROJECT_SERIALIZER);
-        
+
         prj = reloadProjectAt(prj.getResourcePath());
         projectMap.put(norm(prj.getName()), prj); // triggers update broadcast
         clearL2Cache();

@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * Created by qianzhou on 1/7/15.
  */
-public class UpdateCubeInfoAfterMergeExecutable extends AbstractExecutable {
+public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
 
     private static final String CUBE_NAME = "cubeName";
     private static final String SEGMENT_ID = "segmentId";
@@ -33,10 +33,10 @@ public class UpdateCubeInfoAfterMergeExecutable extends AbstractExecutable {
 
     private final CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
 
-    public UpdateCubeInfoAfterMergeExecutable() {
+    public UpdateCubeInfoAfterMergeStep() {
     }
 
-    public UpdateCubeInfoAfterMergeExecutable(JobPO job) {
+    public UpdateCubeInfoAfterMergeStep(JobPO job) {
         super(job);
     }
 

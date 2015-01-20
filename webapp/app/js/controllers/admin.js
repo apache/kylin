@@ -1,6 +1,6 @@
 'use strict';
 
-KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, TableService,loadingRequest, MessageService, $modal,SweetAlert) {
+KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, TableService,loadingRequest, MessageService, $modal,SweetAlert,kylinConfig) {
     $scope.configStr = "";
     $scope.envStr = "";
 

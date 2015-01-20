@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.kylinolap.common.restclient.CaseInsensitiveStringCache;
 import com.kylinolap.metadata.realization.IRealization;
 import com.kylinolap.metadata.realization.IRealizationProvider;
 import com.kylinolap.metadata.realization.RealizationType;
@@ -37,7 +38,6 @@ import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.common.restclient.Broadcaster;
-import com.kylinolap.common.restclient.SingleValueCache;
 import com.kylinolap.dict.DateStrDictionary;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryInfo;
@@ -99,7 +99,7 @@ public class IIManager implements IRealizationProvider {
 
     private KylinConfig config;
     // ii name ==> IIInstance
-    private SingleValueCache<String, IIInstance> iiMap = new SingleValueCache<String, IIInstance>(Broadcaster.TYPE.CUBE);
+    private CaseInsensitiveStringCache<IIInstance> iiMap = new CaseInsensitiveStringCache<IIInstance>(Broadcaster.TYPE.INVERTED_INDEX);
 
     // for generation hbase table name of a new segment
     private HashSet<String> usedStorageLocation = new HashSet<String>();
@@ -197,20 +197,28 @@ public class IIManager implements IRealizationProvider {
         return "KYLIN_HOST";
     }
 
-    public void loadIICache(IIInstance ii) {
+    public void loadIICache(String iiName) {
         try {
-            loadIIInstance(ii.getResourcePath());
+            loadIIInstance(IIInstance.concatResourcePath(iiName));
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
         }
     }
 
     public void removeIICache(IIInstance ii) {
-        iiMap.remove(ii.getName().toUpperCase());
+        iiMap.remove(ii.getName());
 
         for (IISegment segment : ii.getSegments()) {
             usedStorageLocation.remove(segment.getName());
         }
+    }
+
+    public void removeIILocalCache(String name) {
+        iiMap.removeLocal(name);
+//TODO
+//        for (IISegment segment : ii.getSegments()) {
+//            usedStorageLocation.remove(segment.getName());
+//        }
     }
 
     private void saveResource(IIInstance ii) throws IOException {
@@ -220,7 +228,7 @@ public class IIManager implements IRealizationProvider {
     }
 
     private void afterIIUpdated(IIInstance updatedII) {
-        iiMap.put(updatedII.getName().toUpperCase(), updatedII);
+        iiMap.put(updatedII.getName(), updatedII);
     }
 
     /**
@@ -288,7 +296,7 @@ public class IIManager implements IRealizationProvider {
             if (StringUtils.isBlank(IIInstance.getName()))
                 throw new IllegalStateException("IIInstance name must not be blank");
 
-            iiMap.putLocal(IIInstance.getName().toUpperCase(), IIInstance);
+            iiMap.putLocal(IIInstance.getName(), IIInstance);
 
             for (IISegment segment : IIInstance.getSegments()) {
                 usedStorageLocation.add(segment.getName());
