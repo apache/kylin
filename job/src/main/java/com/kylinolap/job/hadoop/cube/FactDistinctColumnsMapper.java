@@ -107,7 +107,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends KylinMapper<KEYIN, HCatRec
                 fieldSchema = schema.get(flatTableIndexes[i]);
                 Object fieldValue = record.get(fieldSchema.getName(), schema);
                 if (fieldValue == null)
-                    fieldValue = "NULL";
+                    continue;
                 byte[] bytes = Bytes.toBytes(fieldValue.toString());
                 outputValue.set(bytes, 0, bytes.length);
                 context.write(outputKey, outputValue);

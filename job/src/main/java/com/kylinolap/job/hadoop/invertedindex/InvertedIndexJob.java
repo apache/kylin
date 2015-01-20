@@ -19,25 +19,24 @@ package com.kylinolap.job.hadoop.invertedindex;
 import java.io.File;
 import java.io.IOException;
 
-import com.kylinolap.invertedindex.IIInstance;
-import com.kylinolap.invertedindex.IIManager;
-import com.kylinolap.invertedindex.IISegment;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.HadoopUtil;
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IIManager;
+import com.kylinolap.invertedindex.IISegment;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
@@ -54,17 +53,13 @@ public class InvertedIndexJob extends AbstractHadoopJob {
         try {
             options.addOption(OPTION_JOB_NAME);
             options.addOption(OPTION_II_NAME);
-            options.addOption(OPTION_INPUT_PATH);
-            options.addOption(OPTION_INPUT_FORMAT);
-            options.addOption(OPTION_INPUT_DELIM);
+            options.addOption(OPTION_TABLE_NAME);
             options.addOption(OPTION_OUTPUT_PATH);
             parseOptions(options, args);
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
             String iiname = getOptionValue(OPTION_II_NAME);
-            Path input = new Path(getOptionValue(OPTION_INPUT_PATH));
-            String inputFormat = getOptionValue(OPTION_INPUT_FORMAT);
-            String inputDelim = getOptionValue(OPTION_INPUT_DELIM);
+            String intermediateTable = getOptionValue(OPTION_TABLE_NAME);
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
 
             // ----------------------------------------------------------------------------
@@ -74,7 +69,7 @@ public class InvertedIndexJob extends AbstractHadoopJob {
             IIInstance ii = getII(iiname);
             short sharding = ii.getDescriptor().getSharding();
 
-            setupMapInput(input, inputFormat, inputDelim);
+            setupMapInput(intermediateTable);
             setupReduceOutput(output, sharding);
             attachMetadata(ii);
 
@@ -110,8 +105,7 @@ public class InvertedIndexJob extends AbstractHadoopJob {
         conf.set(BatchConstants.CFG_II_SEGMENT_NAME, seg.getName());
     }
 
-    private void setupMapInput(Path input, String inputFormat, String inputDelim) throws IOException {
-        FileInputFormat.setInputPaths(job, input);
+    private void setupMapInput(String intermediateTable) throws IOException {
 
         File JarFile = new File(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
         if (JarFile.exists()) {
@@ -120,20 +114,12 @@ public class InvertedIndexJob extends AbstractHadoopJob {
             job.setJarByClass(this.getClass());
         }
 
-        if ("textinputformat".equalsIgnoreCase(inputFormat) || "text".equalsIgnoreCase(inputFormat)) {
-            job.setInputFormatClass(TextInputFormat.class);
-        } else {
-            job.setInputFormatClass(SequenceFileInputFormat.class);
-        }
 
-        if ("t".equals(inputDelim)) {
-            inputDelim = "\t";
-        } else if ("177".equals(inputDelim)) {
-            inputDelim = "\177";
-        }
-        if (inputDelim != null) {
-            job.getConfiguration().set(BatchConstants.INPUT_DELIM, inputDelim);
-        }
+        String[] dbTableNames = HadoopUtil.parseHiveTableName(intermediateTable);
+        HCatInputFormat.setInput(job, dbTableNames[0],
+                dbTableNames[1]);
+        
+        job.setInputFormatClass(HCatInputFormat.class);
 
         job.setMapperClass(InvertedIndexMapper.class);
         job.setMapOutputKeyClass(LongWritable.class);

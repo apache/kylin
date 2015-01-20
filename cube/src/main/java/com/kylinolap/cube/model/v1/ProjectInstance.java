@@ -13,24 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kylinolap.metadata.project;
+package com.kylinolap.cube.model.v1;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.kylinolap.common.persistence.ResourceStore;
-import com.kylinolap.common.persistence.RootPersistentEntity;
-import com.kylinolap.metadata.realization.RealizationType;
-
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kylinolap.common.persistence.ResourceStore;
+import com.kylinolap.common.persistence.RootPersistentEntity;
+import com.kylinolap.metadata.project.ProjectStatusEnum;
 
 /**
  * Project is a concept in Kylin similar to schema in DBMS
@@ -43,8 +38,12 @@ public class ProjectInstance extends RootPersistentEntity {
     @JsonProperty("name")
     private String name;
 
+    @JsonProperty("cubes")
+    private List<String> cubes;
+
     @JsonProperty("tables")
-    private Set<String> tables = new TreeSet<String>();
+    private Set<String> tables;
+
 
     @JsonProperty("owner")
     private String owner;
@@ -55,18 +54,11 @@ public class ProjectInstance extends RootPersistentEntity {
     @JsonProperty("create_time")
     private String createTime;
 
-    @JsonProperty("create_time_utc")
-    private long createTimeUTC;
-
     @JsonProperty("last_update_time")
-    // FIXME why not RootPersistentEntity.lastModified??
     private String lastUpdateTime;
 
     @JsonProperty("description")
     private String description;
-
-    @JsonProperty("realizations")
-    private List<RealizationEntry> realizationEntries;
 
     public String getResourcePath() {
         return concatResourcePath(name);
@@ -83,7 +75,9 @@ public class ProjectInstance extends RootPersistentEntity {
         return project.toUpperCase();
     }
 
-    public static ProjectInstance create(String name, String owner, String description, List<RealizationEntry> realizationEntries) {
+    // ============================================================================
+
+    public static ProjectInstance create(String name, String owner, String description, List<String> cubes) {
         ProjectInstance projectInstance = new ProjectInstance();
 
         projectInstance.updateRandomUuid();
@@ -91,18 +85,23 @@ public class ProjectInstance extends RootPersistentEntity {
         projectInstance.setOwner(owner);
         projectInstance.setDescription(description);
         projectInstance.setStatus(ProjectStatusEnum.ENABLED);
-        projectInstance.setCreateTimeUTC(System.currentTimeMillis());
-        if (realizationEntries != null)
-            projectInstance.setRealizationEntries(realizationEntries);
+        projectInstance.setCreateTime(formatTime(System.currentTimeMillis()));
+        if (cubes != null)
+            projectInstance.setCubes(cubes);
         else
-            projectInstance.setRealizationEntries(Lists.<RealizationEntry> newArrayList());
+            projectInstance.setCubes(new ArrayList<String>());
 
         return projectInstance;
     }
 
-    // ============================================================================
-
     public ProjectInstance() {
+
+    }
+
+    public ProjectInstance(String name, List<String> cubes, String owner) {
+        this.name = name;
+        this.cubes = cubes;
+        this.owner = owner;
     }
 
     public String getDescription() {
@@ -133,18 +132,6 @@ public class ProjectInstance extends RootPersistentEntity {
         this.createTime = createTime;
     }
 
-    public long getCreateTimeUTC() {
-        if(createTimeUTC ==0 && createTime !=null) {
-            createTimeUTC = parseTime(createTime);
-        }
-        
-        return createTimeUTC;
-    }
-
-    public void setCreateTimeUTC(long createTimeUTC) {
-        this.createTimeUTC = createTimeUTC;
-    }
-
     public String getName() {
         return this.name;
     }
@@ -153,54 +140,32 @@ public class ProjectInstance extends RootPersistentEntity {
         this.name = name;
     }
 
-    public boolean containsRealization(final RealizationType type, final String realization) {
-        return Iterables.any(this.realizationEntries, new Predicate<RealizationEntry>() {
-            @Override
-            public boolean apply(RealizationEntry input) {
-                return input.getType() == type && input.getRealization().equalsIgnoreCase(realization);
-            }
-        });
+    public boolean containsCube(String cubeName) {
+        cubeName = cubeName.toUpperCase();
+        return cubes.contains(cubeName);
     }
 
-    public void removeRealization(final RealizationType type, final String realization) {
-        Iterables.removeIf(this.realizationEntries, new Predicate<RealizationEntry>() {
-            @Override
-            public boolean apply(RealizationEntry input) {
-                return input.getType() == type && input.getRealization().equalsIgnoreCase(realization);
-            }
-        });
+    public void removeCube(String cubeName) {
+        cubeName = cubeName.toUpperCase();
+        cubes.remove(cubeName);
     }
 
-    public List<RealizationEntry> getRealizationEntries(final RealizationType type) {
-        if (type == null)
-            return getRealizationEntries();
-
-        return ImmutableList.copyOf(Iterables.filter(realizationEntries, new Predicate<RealizationEntry>() {
-            @Override
-            public boolean apply(@Nullable RealizationEntry input) {
-                return input.getType() == type;
-            }
-        }));
+    public int getCubesCount() {
+        return cubes.size();
     }
 
-    public int getRealizationCount(final RealizationType type) {
-
-        if (type == null)
-            return this.realizationEntries.size();
-
-        return Iterables.size(Iterables.filter(this.realizationEntries, new Predicate<RealizationEntry>() {
-            @Override
-            public boolean apply(RealizationEntry input) {
-                return input.getType() == type;
-            }
-        }));
+    public void addCube(String cubeName) {
+        cubeName = cubeName.toUpperCase();
+        this.cubes.add(cubeName);
     }
 
-    public void addRealizationEntry(final RealizationType type, final String realizationName) {
-        RealizationEntry pdm = new RealizationEntry();
-        pdm.setType(type);
-        pdm.setRealization(realizationName);
-        this.realizationEntries.add(pdm);
+    public List<String> getCubes() {
+        return cubes;
+    }
+
+
+    public void setCubes(List<String> cubes) {
+        this.cubes = cubes;
     }
 
     public void setTables(Set<String> tables) {
@@ -208,11 +173,13 @@ public class ProjectInstance extends RootPersistentEntity {
     }
 
     public boolean containsTable(String tableName) {
-        return tables.contains(tableName.toUpperCase());
+        tableName = tableName.toUpperCase();
+        return tables.contains(tableName);
     }
 
     public void removeTable(String tableName) {
-        tables.remove(tableName.toUpperCase());
+        tableName = tableName.toUpperCase();
+        tables.remove(tableName);
     }
 
     public int getTablesCount() {
@@ -220,10 +187,13 @@ public class ProjectInstance extends RootPersistentEntity {
     }
 
     public void addTable(String tableName) {
-        this.getTables().add(tableName.toUpperCase());
+        tableName = tableName.toUpperCase();
+        this.getTables().add(tableName);
     }
 
+    //will return new Set for null
     public Set<String> getTables() {
+        tables = tables == null ? new TreeSet<String>() : tables;
         return tables;
     }
 
@@ -235,9 +205,6 @@ public class ProjectInstance extends RootPersistentEntity {
         this.owner = owner;
     }
 
-    /**
-     * @deprecated use lastModified instead
-     */
     public String getLastUpdateTime() {
         return lastUpdateTime;
     }
@@ -250,29 +217,23 @@ public class ProjectInstance extends RootPersistentEntity {
         this.lastUpdateTime = formatTime(timeMillis);
     }
 
-    public List<RealizationEntry> getRealizationEntries() {
-        return realizationEntries;
-    }
-
-    public void setRealizationEntries(List<RealizationEntry> entries) {
-        this.realizationEntries = entries;
-    }
 
     public void init() {
         if (name == null)
             name = ProjectInstance.DEFAULT_PROJECT_NAME;
 
-        if (realizationEntries == null) {
-            realizationEntries = new ArrayList<RealizationEntry>();
+        if (cubes == null) {
+            cubes = new ArrayList<String>();
         }
 
-        if (tables == null)
-            tables = new TreeSet<String>();
+        for (int i = 0; i < cubes.size(); ++i) {
+            if (cubes.get(i) != null)
+                cubes.set(i, cubes.get(i).toUpperCase());
+        }
     }
 
     @Override
     public String toString() {
         return "ProjectDesc [name=" + name + "]";
     }
-
 }
