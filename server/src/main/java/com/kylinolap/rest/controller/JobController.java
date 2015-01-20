@@ -152,20 +152,6 @@ public class JobController extends BasicController implements InitializingBean {
         Map<String, String> result = new HashMap<String, String>();
         result.put("jobId", jobId);
         result.put("stepId", String.valueOf(stepId));
-        
-//        long start = System.currentTimeMillis();
-//        String output = "";
-//        try {
-//            output = jobService.getExecutableManager().getJobOutput(jobId);//.getJobStepOutput(jobId, stepId);
-//        } catch (Exception e) {
-//            logger.error(e.getLocalizedMessage(), e);
-//            throw new InternalErrorException(e);
-//        }
-//
-//        result.put("cmd_output", output);
-//        long end = System.currentTimeMillis();
-//        logger.info("Complete fetching step " + jobId + ":" + stepId + " output in " + (end - start) + " seconds");
-//        return result;
         throw new RuntimeException("please use step uuid to query the output");
     }
 
