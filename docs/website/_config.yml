@@ -1,0 +1,17 @@
+# Site settings
+title: kylin.io
+email: dev@kylin.incubator.apache.org
+description: Apache Kylin Home
+baseurl: "" # the subpath of your site, e.g. /blog/
+url: "http://kyli.io" # the base hostname & protocol for your site
+twitter_username: ApacheKylin
+github_username:  KylinOLAP
+
+# Build settings
+markdown: kramdown
+# Permalinks, default is pretty
+permalink:        pretty
+
+
+
+
