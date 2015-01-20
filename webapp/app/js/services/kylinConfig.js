@@ -14,11 +14,15 @@ KylinApp.service('kylinConfig', function(AdminService,$log) {
     this.getProperty = function(name){
         var keyIndex = _config.indexOf(name);
         var keyLength = name.length;
-        var partialResult = _config.substr(keyIndexkeyLength);
+        var partialResult = _config.substr(keyIndex);
         var preValueIndex = partialResult.indexOf("=");
-        var sufValueIndex = partialResult.indexOf("\r\n");
-        return partialResult.substr(preValueIndex1,sufValueIndex);
+        var sufValueIndex = partialResult.indexOf("\n\r");
+        return partialResult.substring(preValueIndex+1,sufValueIndex);
 
+    }
+
+    this.getTimeZone = function(){
+        return this.getProperty("kylin.display.timezone");
     }
 });
 

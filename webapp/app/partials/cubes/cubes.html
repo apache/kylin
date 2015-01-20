@@ -84,9 +84,9 @@
                 Source Table Size: {{dataSize(cube.source_records_size)}}<br/>
                 Expansion Rate: {{(cube.source_records_size>0? cube.size_kb*1024/cube.source_records_size : 0) * 100 | number:2}}%
                 </div>">{{ cube.source_records_count | number:0}}</span></td>
-            <td>{{ (cube.last_build_time | date:'yyyy-MM-dd HH:mm:ss') }}</td>
+            <td>{{ (cube.last_build_time | utcToConfigTimeZoneMillis:displayTimeZone) }}</td>
             <td>{{ cube.owner}}</td>
-            <td>{{ cube.create_time | date:'yyyy-MM-dd HH:mm:ss'}}</td>
+            <td>{{ cube.create_time | utcToConfigTimeZoneMillis:displayTimeZone}}</td>
             <td>
                 <div class="btn-group" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
                     <button type="button" class="btn btn-default btn-xs dropdown-toggle"

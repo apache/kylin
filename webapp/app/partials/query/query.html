@@ -135,7 +135,7 @@
                     <tr ng-repeat="query in cachedQueries | reverse"
                         ng-if="$index >= (cachedQueries.curPage-1)*cachedQueries.perPage && $index < cachedQueries.curPage*cachedQueries.perPage">
                         <td>
-                            <span style="color: #808080;line-height: 25px">Queried At: {{query.savedAt | date:'yyyy-MM-dd HH:mm:ss'}} <span ng-if="query.project">in Project: {{query.project}}</span></span>
+                            <span style="color: #808080;line-height: 25px">Queried At: {{query.savedAt | utcToConfigTimeZoneMillis:displayTimeZone}} <span ng-if="query.project">in Project: {{query.project}}</span></span>
 
                             <div class="pull-right">
                                 <button class="btn btn-default btn-xs" ng-click="submitQuery(query.sql, query.project)"><i class="fa fa-refresh"></i>

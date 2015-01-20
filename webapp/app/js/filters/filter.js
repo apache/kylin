@@ -84,4 +84,34 @@ KylinApp
             }
             return 1300;
         }
+    }).filter('utcToConfigTimeZoneMillis',function($filter){
+
+        //convert utc time to specified Timezone
+        return function(item,timezone){
+
+            var localOffset = new Date().getTimezoneOffset();
+
+            var convertedMillis = item;
+
+            if(timezone.indexOf('GMT+')!=-1){
+                var offset = timezone.substr(4,1);
+                convertedMillis= item+offset*60*60000+localOffset*60000;
+            }
+            else if(timezone.indexOf('GMT-')!=-1){
+                var offset = timezone.substr(4,1);
+                convertedMillis= item-offset*60*60000+localOffset*60000;
+            }
+            else if(timezone=="GMT"){
+                convertedMillis = item+localOffset*60000;
+            }
+            else{
+                convertedMillis = item-7*60*60000+localOffset*60000;
+            }
+
+            return $filter('date')(convertedMillis, "yyyy-MM-dd HH:mm:ss")+ " "+timezone;
+
+
+           // return PST by default
+
+        }
     });
