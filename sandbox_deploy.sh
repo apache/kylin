@@ -122,38 +122,22 @@ cd $KYLIN_HOME
 mkdir -p /etc/kylin
 
 HOSTNAME=`hostname`
-CLI_HOSTNAME_DEFAULT="kylin.job.remote.cli.hostname=sandbox.hortonworks.com"
-CLI_PASSWORD_DEFAULT="kylin.job.remote.cli.password=hadoop"
-CHECK_URL_DEFAULT="kylin.job.yarn.app.rest.check.status.url=http://sandbox"
-
-
-NEW_CLI_HOSTNAME_PREFIX="kylin.job.remote.cli.hostname="
-NEW_CLI_PASSWORD_PREFIX="kylin.job.remote.cli.password="
+DEFAULT_CHECK_URL="kylin.job.yarn.app.rest.check.status.url=http://sandbox"
+DEFAULT_SERVER_LIST="kylin.rest.servers=sandbox"
 NEW_CHECK_URL_PREFIX="kylin.job.yarn.app.rest.check.status.url=http://"
-
-echo "Kylin install script requires root password for ${HOSTNAME}"
-echo "(The default root password for hortonworks VM is hadoop, and for cloudera VM is cloudera)"
-
-[[ "$SILENT" ]] || read -r -s -p  "Enter Password for root: " ROOTPASS
+NEW_SERVER_LIST_PREFIX="kylin.rest.servers="
 
 #escape special characters for sed
-CHECK_URL_DEFAULT=$(escape_sed_pattern $CHECK_URL_DEFAULT)
-CLI_HOSTNAME_DEFAULT=$(escape_sed_pattern $CLI_HOSTNAME_DEFAULT)
-CLI_PASSWORD_DEFAULT=$(escape_sed_pattern $CLI_PASSWORD_DEFAULT)
-
+DEFAULT_CHECK_URL=$(escape_sed_pattern $DEFAULT_CHECK_URL)
+DEFAULT_SERVER_LIST=$(escape_sed_pattern $DEFAULT_SERVER_LIST)
 NEW_CHECK_URL_PREFIX=$(escape_sed_replacement $NEW_CHECK_URL_PREFIX)
-NEW_CLI_HOSTNAME_PREFIX=$(escape_sed_replacement $NEW_CLI_HOSTNAME_PREFIX)
-NEW_CLI_PASSWORD_PREFIX=$(escape_sed_replacement $NEW_CLI_PASSWORD_PREFIX)
+NEW_SERVER_LIST_PREFIX=$(escape_sed_replacement $NEW_SERVER_LIST_PREFIX)
 HOSTNAME=$(escape_sed_replacement $HOSTNAME)
-ROOTPASS=$(escape_sed_replacement $ROOTPASS)
-
-
 
 #deploy kylin.properties to /etc/kylin
 cat examples/test_case_data/sandbox/kylin.properties | \
-    sed -e "s/${CHECK_URL_DEFAULT}/${NEW_CHECK_URL_PREFIX}${HOSTNAME}/g" | \
-    sed -e "s/${CLI_HOSTNAME_DEFAULT}/${NEW_CLI_HOSTNAME_PREFIX}${HOSTNAME}/g" | \
-    sed -e "s/${CLI_PASSWORD_DEFAULT}/${NEW_CLI_PASSWORD_PREFIX}${ROOTPASS}/g" >  /etc/kylin/kylin.properties
+    sed -e "s/${DEFAULT_CHECK_URL}/${NEW_CHECK_URL_PREFIX}${HOSTNAME}/g"  | \
+    sed -e "s/${DEFAULT_SERVER_LIST}/${NEW_SERVER_LIST_PREFIX}${HOSTNAME}/g"   >  /etc/kylin/kylin.properties
 
 
 echo "a copy of kylin config is generated at /etc/kylin/kylin.properties:"
@@ -163,7 +147,7 @@ echo ""
 echo "==================================================================="
 echo ""
 
-[[ "$SILENT" ]] || ( read -p "please ensure the CLI address/username/password is correct, and press y to proceed: " -n 1 -r
+[[ "$SILENT" ]] || ( read -p "please ensure the configuration is correct, and press y to proceed: " -n 1 -r
 echo    # (optional) move to a new line
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then
