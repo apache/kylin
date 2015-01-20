@@ -114,7 +114,7 @@ public class CubeDescManager {
         CubeDesc ndesc = loadCubeDesc(path);
 
         // Here replace the old one
-        cubeDescMap.put(ndesc.getName(), ndesc);
+        cubeDescMap.putLocal(ndesc.getName(), ndesc);
         return ndesc;
     }
 
