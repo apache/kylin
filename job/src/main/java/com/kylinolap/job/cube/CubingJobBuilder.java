@@ -334,8 +334,8 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
 
     }
 
-    private UpdateCubeInfoAfterBuildExecutable createUpdateCubeInfoStep(String createFlatTableStepId, String baseCuboidStepId, String convertToHFileStepId, String jobId) {
-        final UpdateCubeInfoAfterBuildExecutable updateCubeInfoStep = new UpdateCubeInfoAfterBuildExecutable();
+    private UpdateCubeInfoAfterBuildStep createUpdateCubeInfoStep(String createFlatTableStepId, String baseCuboidStepId, String convertToHFileStepId, String jobId) {
+        final UpdateCubeInfoAfterBuildStep updateCubeInfoStep = new UpdateCubeInfoAfterBuildStep();
         updateCubeInfoStep.setName(ExecutableConstants.STEP_NAME_UPDATE_CUBE_INFO);
         updateCubeInfoStep.setCubeName(getCubeName());
         updateCubeInfoStep.setSegmentId(segment.getUuid());
@@ -363,8 +363,8 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         return mergeCuboidDataStep;
     }
 
-    private UpdateCubeInfoAfterMergeExecutable createUpdateCubeInfoAfterMergeStep(List<String> mergingSegmentIds, String convertToHFileStepId, String jobId) {
-        UpdateCubeInfoAfterMergeExecutable result = new UpdateCubeInfoAfterMergeExecutable();
+    private UpdateCubeInfoAfterMergeStep createUpdateCubeInfoAfterMergeStep(List<String> mergingSegmentIds, String convertToHFileStepId, String jobId) {
+        UpdateCubeInfoAfterMergeStep result = new UpdateCubeInfoAfterMergeStep();
         result.setName(ExecutableConstants.STEP_NAME_UPDATE_CUBE_INFO);
         result.setCubeName(getCubeName());
         result.setSegmentId(segment.getUuid());

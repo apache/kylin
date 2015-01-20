@@ -131,10 +131,9 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         List<CubeSegment> mergingSegments = new ArrayList<CubeSegment>();
         if (null != this.segments) {
             for (CubeSegment segment : this.segments) {
-                if (segment.getStatus() == SegmentStatusEnum.READY) {
-                    if (buildingSegment.getDateRangeStart() <= segment.getDateRangeStart() && buildingSegment.getDateRangeEnd() >= segment.getDateRangeEnd()) {
-                        mergingSegments.add(segment);
-                    }
+                if (!buildingSegment.equals(segment) //
+                        && buildingSegment.getDateRangeStart() <= segment.getDateRangeStart() && buildingSegment.getDateRangeEnd() >= segment.getDateRangeEnd()) {
+                    mergingSegments.add(segment);
                 }
             }
         }
