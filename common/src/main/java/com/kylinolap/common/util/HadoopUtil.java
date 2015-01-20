@@ -61,6 +61,7 @@ public class HadoopUtil {
 
     /**
      * e.g.
+     * 0. hbase (recommended way)
      * 1. hbase:zk-1.hortonworks.com,zk-2.hortonworks.com,zk-3.hortonworks.com:2181:/hbase-unsecure
      * 2. hbase:zk-1.hortonworks.com,zk-2.hortonworks.com,zk-3.hortonworks.com:2181
      * 3. hbase:zk-1.hortonworks.com:2181:/hbase-unsecure
@@ -71,16 +72,16 @@ public class HadoopUtil {
         if (StringUtils.isEmpty(url))
             return conf;
 
-        // chop off "hbase:"
-        if (url.startsWith("hbase:") == false)
-            throw new IllegalArgumentException("hbase url must start with 'hbase:' -- " + url);
+        // chop off "hbase"
+        if (url.startsWith("hbase") == false)
+            throw new IllegalArgumentException("hbase url must start with 'hbase' -- " + url);
 
-        url = StringUtils.substringAfter(url, "hbase:");
+        url = StringUtils.substringAfter(url, "hbase");
         if (StringUtils.isEmpty(url))
             return conf;
 
         // case of "hbase:domain.com:2181:/hbase-unsecure"
-        Pattern urlPattern = Pattern.compile("((?:[\\w\\-.]+)(?:\\,[\\w\\-.]+)*)[:](\\d+)(?:[:](.+))?");
+        Pattern urlPattern = Pattern.compile("[:]((?:[\\w\\-.]+)(?:\\,[\\w\\-.]+)*)[:](\\d+)(?:[:](.+))");
         Matcher m = urlPattern.matcher(url);
         if (m.matches() == false)
             throw new IllegalArgumentException("HBase URL '" + url + "' is invalid, expected url is like '" + "hbase:domain.com:2181:/hbase-unsecure" + "'");
@@ -103,9 +104,8 @@ public class HadoopUtil {
         String port = m.group(2);
         conf.set(HConstants.ZOOKEEPER_CLIENT_PORT, port);
 
-        String znodePath = m.group(3) == null ? "" : m.group(3);
-        if (StringUtils.isEmpty(znodePath) == false)
-            conf.set(HConstants.ZOOKEEPER_ZNODE_PARENT, znodePath);
+        String znodePath = m.group(3);
+        conf.set(HConstants.ZOOKEEPER_ZNODE_PARENT, znodePath);
 
         // reduce rpc retry
         conf.set(HConstants.HBASE_CLIENT_PAUSE, "3000");
