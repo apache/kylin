@@ -20,31 +20,33 @@ import java.io.IOException;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 
+import com.kylinolap.common.mr.KylinMapper;
+
 /**
  * @author yangli9
  */
-public class IIDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, HCatRecord, ShortWritable, Text> {
+public class IIDistinctColumnsMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, ShortWritable, Text> {
 
     private ShortWritable outputKey = new ShortWritable();
     private Text outputValue = new Text();
     private HCatSchema schema = null;
     private int columnSize = 0;
-    
+
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
         schema = HCatInputFormat.getTableSchema(context.getConfiguration());
         columnSize = schema.getFields().size();
     }
-    
+
     @Override
     public void map(KEYIN key, HCatRecord record, Context context) throws IOException, InterruptedException {
-        
+
         HCatFieldSchema fieldSchema = null;
         for (short i = 0; i < columnSize; i++) {
             outputKey.set(i);
@@ -56,7 +58,7 @@ public class IIDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, HCatRecord, Sh
             outputValue.set(bytes, 0, bytes.length);
             context.write(outputKey, outputValue);
         }
-        
+
     }
 
 }

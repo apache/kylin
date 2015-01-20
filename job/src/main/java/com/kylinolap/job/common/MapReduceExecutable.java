@@ -12,6 +12,7 @@ import com.kylinolap.job.execution.ExecutableContext;
 import com.kylinolap.job.execution.ExecutableState;
 import com.kylinolap.job.execution.ExecuteResult;
 import com.kylinolap.job.impl.threadpool.AbstractExecutable;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Cluster;
 import org.apache.hadoop.mapreduce.Job;
@@ -48,6 +49,7 @@ public class MapReduceExecutable extends AbstractExecutable {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         final String mapReduceJobClass = getMapReduceJobClass();
@@ -63,7 +65,7 @@ public class MapReduceExecutable extends AbstractExecutable {
             } else {
                 final Constructor<? extends AbstractHadoopJob> constructor = (Constructor<? extends AbstractHadoopJob>) Class.forName(mapReduceJobClass).getConstructor();
                 final AbstractHadoopJob hadoopJob = constructor.newInstance();
-                hadoopJob.setAsync(true);
+                hadoopJob.setAsync(true); // so the ToolRunner.run() returns right away
                 String[] args = params.trim().split("\\s+");
                 ToolRunner.run(hadoopJob, args);
                 job = hadoopJob.getJob();

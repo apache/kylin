@@ -141,7 +141,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
     private void initHTableCoprocessor(HTableDescriptor desc) throws IOException {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        Configuration hconf = HadoopUtil.getDefaultConfiguration();
+        Configuration hconf = HadoopUtil.getCurrentConfiguration();
         FileSystem fileSystem = FileSystem.get(hconf);
 
         String localCoprocessorJar = kylinConfig.getCoprocessorLocalJar();

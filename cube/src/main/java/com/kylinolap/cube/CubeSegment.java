@@ -300,6 +300,11 @@ public class CubeSegment implements Comparable<CubeSegment>, ISegment {
                 return false;
         } else if (!cubeInstance.equals(other.cubeInstance))
             return false;
+        if (uuid == null) {
+            if (other.uuid != null)
+                return false;
+        } else if (!uuid.equals(other.uuid))
+            return false;
         if (name == null) {
             if (other.name != null)
                 return false;

@@ -23,13 +23,13 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.mr.KylinMapper;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.cuboid.Cuboid;
@@ -44,7 +44,7 @@ import com.kylinolap.metadata.model.TblColRef;
 /**
  * @author yangli9
  */
-public class FactDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, HCatRecord, ShortWritable, Text> {
+public class FactDistinctColumnsMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, ShortWritable, Text> {
 
     private String cubeName;
     private CubeInstance cube;
@@ -61,6 +61,8 @@ public class FactDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, HCatRecord, 
 
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+
         Configuration conf = context.getConfiguration();
 
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);

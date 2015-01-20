@@ -43,7 +43,7 @@ import com.kylinolap.common.util.HadoopUtil;
 public class IICLI {
 
 	public static void main(String[] args) throws IOException {
-		Configuration hconf = HadoopUtil.getDefaultConfiguration();
+		Configuration hconf = HadoopUtil.getCurrentConfiguration();
 		IIManager mgr = IIManager.getInstance(KylinConfig.getInstanceFromEnv());
 
 		String iiName = args[0];

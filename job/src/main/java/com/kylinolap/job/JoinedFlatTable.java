@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -32,7 +31,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import com.google.common.collect.Lists;
 import com.kylinolap.common.util.StringUtil;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.model.CubeDesc;
