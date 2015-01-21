@@ -58,6 +58,10 @@ public class DebugTomcat {
 
         ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox").getAbsolutePath());
         String webBase = new File("../webapp/app").getAbsolutePath();
+        
+        if (new File(webBase, "WEB-INF").exists() == false) {
+            throw new RuntimeException("In order to launch Kylin web app from IDE, please make a symblink from webapp/app/WEB-INF to server/src/main/webapp/WEB-INF");
+        }
 
         Tomcat tomcat = new Tomcat();
         tomcat.setPort(port);
