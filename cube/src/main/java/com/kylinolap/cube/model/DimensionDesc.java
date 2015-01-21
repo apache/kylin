@@ -220,4 +220,12 @@ public class DimensionDesc {
         }
     }
 
+    public void setHierarchy(boolean isHierarchy) {
+        this.isHierarchy = isHierarchy;
+    }
+
+    public void setTable(String table) {
+        this.table = table;
+    }
+
 }

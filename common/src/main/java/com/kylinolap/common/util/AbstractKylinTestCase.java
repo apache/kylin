@@ -25,6 +25,8 @@ import com.kylinolap.common.KylinConfig;
 public abstract class AbstractKylinTestCase {
 
     public static final String LOCALMETA_TEST_DATA = "../examples/test_case_data/localmeta";
+    
+    public static final String LOCALMETA_TEST_DATA_V1 = "../examples/test_case_data/localmeta_v1";
 
     public static final String MINICLUSTER_TEST_DATA = "../examples/test_case_data/minicluster";
 
@@ -34,7 +36,7 @@ public abstract class AbstractKylinTestCase {
 
     public abstract void cleanupTestMetadata() throws Exception;
 
-    public KylinConfig getTestConfig() {
+    public static KylinConfig getTestConfig() {
         return KylinConfig.getInstanceFromEnv();
     }
 

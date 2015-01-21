@@ -120,10 +120,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         } else {
             job.waitForCompletion(true);
             retVal = job.isSuccessful() ? 0 : 1;
+            log.debug("Job '" + job.getJobName() + "' finished " + (job.isSuccessful() ? "successfully in " : "with failures.  Time taken ") + StringUtils.formatTime((System.nanoTime() - start) / 1000000L));
         }
-
-        log.debug("Job '" + job.getJobName() + "' finished " + (job.isSuccessful() ? "successfully in " : "with failures.  Time taken ") + StringUtils.formatTime((System.nanoTime() - start) / 1000000L));
-
         return retVal;
     }
 

@@ -22,12 +22,12 @@ import java.util.List;
 
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.mr.KylinMapper;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
@@ -49,7 +49,7 @@ import com.kylinolap.metadata.model.SegmentStatusEnum;
 /**
  * @author George Song (ysong1)
  */
-public class BaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> {
+public class BaseCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Text, Text, Text> {
 
     private static final Logger logger = LoggerFactory.getLogger(BaseCuboidMapper.class);
 
@@ -82,6 +82,8 @@ public class BaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> {
 
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
         segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME);
         intermediateTableRowDelimiter = context.getConfiguration().get(BatchConstants.CFG_CUBE_INTERMEDIATE_TABLE_ROW_DELIMITER, Character.toString(BatchConstants.INTERMEDIATE_TABLE_ROW_DELIMITER));
@@ -206,7 +208,7 @@ public class BaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> {
         try {
             bytesSplitter.split(value.getBytes(), value.getLength(), byteRowDelimiter);
             intermediateTableDesc.sanityCheck(bytesSplitter);
-            
+
             byte[] rowKey = buildKey(bytesSplitter.getSplitBuffers());
             outputKey.set(rowKey, 0, rowKey.length);
 
@@ -220,10 +222,10 @@ public class BaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> {
     }
 
     private void handleErrorRecord(BytesSplitter bytesSplitter, Exception ex) throws IOException {
-        
+
         System.err.println("Insane record: " + bytesSplitter);
         ex.printStackTrace(System.err);
-        
+
         errorRecordCounter++;
         if (errorRecordCounter > BatchConstants.ERROR_RECORD_THRESHOLD) {
             if (ex instanceof IOException)

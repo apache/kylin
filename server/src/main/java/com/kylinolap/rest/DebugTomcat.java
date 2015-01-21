@@ -16,12 +16,15 @@
 package com.kylinolap.rest;
 
 import java.io.File;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.core.AprLifecycleListener;
 import org.apache.catalina.core.StandardServer;
 import org.apache.catalina.deploy.ErrorPage;
 import org.apache.catalina.startup.Tomcat;
+import org.apache.hadoop.util.Shell;
 
 import com.kylinolap.rest.util.ClasspathUtil;
 
@@ -33,9 +36,32 @@ public class DebugTomcat {
             port = Integer.parseInt(args[0]);
         }
 
+        // workaround for job submission from win to linux -- https://issues.apache.org/jira/browse/MAPREDUCE-4052
+        if (Shell.WINDOWS) {
+            {
+                Field field = Shell.class.getDeclaredField("WINDOWS");
+                field.setAccessible(true);
+                Field modifiersField = Field.class.getDeclaredField("modifiers");
+                modifiersField.setAccessible(true);
+                modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+                field.set(null, false);
+            }
+            {
+                Field field = java.io.File.class.getDeclaredField("pathSeparator");
+                field.setAccessible(true);
+                Field modifiersField = Field.class.getDeclaredField("modifiers");
+                modifiersField.setAccessible(true);
+                modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+                field.set(null, ":");
+            }
+        }
+
         ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox").getAbsolutePath());
         String webBase = new File("../webapp/app").getAbsolutePath();
-        String apiBase = new File("src/main/webapp").getAbsolutePath();
+        
+        if (new File(webBase, "WEB-INF").exists() == false) {
+            throw new RuntimeException("In order to launch Kylin web app from IDE, please make a symblink from webapp/app/WEB-INF to server/src/main/webapp/WEB-INF");
+        }
 
         Tomcat tomcat = new Tomcat();
         tomcat.setPort(port);
@@ -46,8 +72,7 @@ public class DebugTomcat {
         AprLifecycleListener listener = new AprLifecycleListener();
         server.addLifecycleListener(listener);
 
-        tomcat.addWebapp("/kylin", apiBase);
-        Context webContext = tomcat.addWebapp("/", webBase);
+        Context webContext = tomcat.addWebapp("/kylin", webBase);
         ErrorPage notFound = new ErrorPage();
         notFound.setErrorCode(404);
         notFound.setLocation("/index.html");

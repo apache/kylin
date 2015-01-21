@@ -17,46 +17,45 @@
 package com.kylinolap.job.hadoop.invertedindex;
 
 import java.io.IOException;
+import java.util.List;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hive.hcatalog.data.HCatRecord;
+import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
+import org.apache.hive.hcatalog.data.schema.HCatSchema;
+import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
+
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.mr.KylinMapper;
 import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.invertedindex.IISegment;
 import com.kylinolap.invertedindex.index.TableRecord;
 import com.kylinolap.invertedindex.index.TableRecordInfo;
-import com.kylinolap.metadata.model.SegmentStatusEnum;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
-
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.BytesSplitter;
-import com.kylinolap.common.util.SplittedBytes;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 
 /**
  * @author yangli9
  */
-public class InvertedIndexMapper<KEYIN> extends Mapper<KEYIN, Text, LongWritable, ImmutableBytesWritable> {
+public class InvertedIndexMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, LongWritable, ImmutableBytesWritable> {
 
     private TableRecordInfo info;
     private TableRecord rec;
-    private int delim;
-    private BytesSplitter splitter;
 
     private LongWritable outputKey;
     private ImmutableBytesWritable outputValue;
-
+    private HCatSchema schema = null;
+    private List<HCatFieldSchema> fields;
+    
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+
         Configuration conf = context.getConfiguration();
-        String inputDelim = conf.get(BatchConstants.INPUT_DELIM);
-        this.delim = inputDelim == null ? -1 : inputDelim.codePointAt(0);
-        this.splitter = new BytesSplitter(200, 4096);
 
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
         IIManager mgr = IIManager.getInstance(config);
@@ -67,24 +66,19 @@ public class InvertedIndexMapper<KEYIN> extends Mapper<KEYIN, Text, LongWritable
 
         outputKey = new LongWritable();
         outputValue = new ImmutableBytesWritable(rec.getBytes());
+
+        schema = HCatInputFormat.getTableSchema(context.getConfiguration());
+        
+        fields = schema.getFields();
     }
 
     @Override
-    public void map(KEYIN key, Text value, Context context) throws IOException, InterruptedException {
-        if (delim == -1) {
-            delim = splitter.detectDelim(value, info.getDigest().getColumnCount());
-        }
-
-        int nParts = splitter.split(value.getBytes(), value.getLength(), (byte) delim);
-        SplittedBytes[] parts = splitter.getSplitBuffers();
-
-        if (nParts != info.getDigest().getColumnCount()) {
-            throw new RuntimeException("Got " + parts.length + " from -- " + value.toString() + " -- but only " + info.getDigest().getColumnCount() + " expected");
-        }
+    public void map(KEYIN key, HCatRecord record, Context context) throws IOException, InterruptedException {
 
         rec.reset();
-        for (int i = 0; i < nParts; i++) {
-            rec.setValueString(i, Bytes.toString(parts[i].value, 0, parts[i].length));
+        for (int i = 0; i < fields.size(); i++) {
+            Object fieldValue = record.get(i);
+            rec.setValueString(i, fieldValue == null? null : fieldValue.toString());
         }
 
         outputKey.set(rec.getTimestamp());

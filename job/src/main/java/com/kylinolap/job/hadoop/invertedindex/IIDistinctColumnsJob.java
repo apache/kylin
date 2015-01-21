@@ -34,11 +34,12 @@ import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.HadoopUtil;
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.ColumnDesc;
-import com.kylinolap.metadata.model.TableDesc;
+import com.kylinolap.job.hadoop.hive.IIJoinedFlatTableDesc;
+import com.kylinolap.job.hadoop.hive.IntermediateColumnDesc;
 
 
 /**
@@ -54,24 +55,23 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
         try {
             options.addOption(OPTION_JOB_NAME);
             options.addOption(OPTION_TABLE_NAME);
-//            options.addOption(OPTION_INPUT_PATH);
+            options.addOption(OPTION_II_NAME);
             options.addOption(OPTION_OUTPUT_PATH);
             parseOptions(options, args);
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
             String tableName = getOptionValue(OPTION_TABLE_NAME).toUpperCase();
-//            Path input = new Path(getOptionValue(OPTION_INPUT_PATH));
+            String iiName = getOptionValue(OPTION_II_NAME);
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
 
             // ----------------------------------------------------------------------------
 
             log.info("Starting: " + job.getJobName() + " on table " + tableName);
 
-            // pass table and columns
-            MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-            TableDesc table = metaMgr.getTableDesc(tableName);
-            job.getConfiguration().set(BatchConstants.TABLE_NAME, table.getIdentity());
-            job.getConfiguration().set(BatchConstants.TABLE_COLUMNS, getColumns(table));
+            IIManager iiMgr = IIManager.getInstance(KylinConfig.getInstanceFromEnv());
+            IIInstance ii = iiMgr.getII(iiName);
+            job.getConfiguration().set(BatchConstants.TABLE_NAME, tableName);
+            job.getConfiguration().set(BatchConstants.TABLE_COLUMNS, getColumns(ii));
 
             setupMapInput();
             setupReduceOutput(output);
@@ -86,18 +86,18 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
 
     }
 
-    private String getColumns(TableDesc table) {
+    private String getColumns(IIInstance ii) {
+        IIJoinedFlatTableDesc iiflat = new IIJoinedFlatTableDesc(ii.getDescriptor());
         StringBuilder buf = new StringBuilder();
-        for (ColumnDesc col : table.getColumns()) {
+        for (IntermediateColumnDesc col : iiflat.getColumnList()) {
             if (buf.length() > 0)
                 buf.append(",");
-            buf.append(col.getName());
+            buf.append(col.getColumnName());
         }
         return buf.toString();
     }
 
     private void setupMapInput() throws IOException {
-//        FileInputFormat.setInputPaths(job, input);
 
         File JarFile = new File(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
         if (JarFile.exists()) {
@@ -106,22 +106,6 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
             job.setJarByClass(this.getClass());
         }
 
-        /*
-        if ("textinputformat".equalsIgnoreCase(inputFormat) || "text".equalsIgnoreCase(inputFormat)) {
-            job.setInputFormatClass(TextInputFormat.class);
-        } else {
-            job.setInputFormatClass(SequenceFileInputFormat.class);
-        }
-
-        if ("t".equals(inputDelim)) {
-            inputDelim = "\t";
-        } else if ("177".equals(inputDelim)) {
-            inputDelim = "\177";
-        }
-        if (inputDelim != null) {
-            job.getConfiguration().set(BatchConstants.INPUT_DELIM, inputDelim);
-        }
-        */
         String tableName = job.getConfiguration().get(BatchConstants.TABLE_NAME);
         String[] dbTableNames = HadoopUtil.parseHiveTableName(tableName);
 

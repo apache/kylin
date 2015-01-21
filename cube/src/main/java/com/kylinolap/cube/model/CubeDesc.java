@@ -35,6 +35,7 @@ import com.kylinolap.common.util.CaseInsensitiveStringMap;
 import com.kylinolap.metadata.model.*;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.net.util.Base64;
+import org.apache.hadoop.hbase.util.Strings;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -124,6 +125,8 @@ public class CubeDesc extends RootPersistentEntity {
     private Map<TblColRef, DeriveInfo> derivedToHostMap = Maps.newHashMap();
     private Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedMap = Maps.newHashMap();
 
+    /* indicate whether this object was upgraded on an old version*/
+    private boolean upgraded = false;
     /**
      * Error messages during resolving json metadata
      */
@@ -681,7 +684,7 @@ public class CubeDesc extends RootPersistentEntity {
             if (m.getDependentMeasureRef() != null) {
                 m.setDependentMeasureRef(m.getDependentMeasureRef().toUpperCase());
             }
-
+            
             FunctionDesc f = m.getFunction();
             f.setExpression(f.getExpression().toUpperCase());
             f.setReturnDataType(DataType.getInstance(f.getReturnType()));
@@ -699,6 +702,11 @@ public class CubeDesc extends RootPersistentEntity {
                 }
                 if (colRefs.isEmpty() == false)
                     p.setColRefs(colRefs);
+            }
+            
+            // verify holistic count distinct as a dependent measure
+            if (m.isHolisticCountDistinct() && Strings.isEmpty(m.getDependentMeasureRef())) {
+                throw new IllegalStateException(m + " is a holistic count distinct but it has no DependentMeasureRef defined!");
             }
         }
     }
@@ -806,4 +814,25 @@ public class CubeDesc extends RootPersistentEntity {
         return this.errors;
     }
 
+    public HBaseMappingDesc getHbaseMapping() {
+        return hbaseMapping;
+    }
+
+    public void setHbaseMapping(HBaseMappingDesc hbaseMapping) {
+        this.hbaseMapping = hbaseMapping;
+    }
+
+    public void setNullStrings(String[] nullStrings) {
+        this.nullStrings = nullStrings;
+    }
+
+    public boolean isUpgraded() {
+        return upgraded;
+    }
+
+    public void setUpgraded(boolean upgraded) {
+        this.upgraded = upgraded;
+    }
+
+    
 }

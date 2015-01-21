@@ -17,6 +17,13 @@ package com.kylinolap.job.hadoop.invertedindex;
 
 import java.io.IOException;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.util.Pair;
+import org.apache.hadoop.io.LongWritable;
+
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.mr.KylinReducer;
 import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.invertedindex.IISegment;
@@ -25,22 +32,14 @@ import com.kylinolap.invertedindex.index.SliceBuilder;
 import com.kylinolap.invertedindex.index.TableRecord;
 import com.kylinolap.invertedindex.index.TableRecordInfo;
 import com.kylinolap.invertedindex.model.IIKeyValueCodec;
-import com.kylinolap.metadata.model.SegmentStatusEnum;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.util.Pair;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.mapreduce.Reducer;
-
-import com.kylinolap.common.KylinConfig;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 
 /**
  * @author yangli9
  */
-public class InvertedIndexReducer extends Reducer<LongWritable, ImmutableBytesWritable, ImmutableBytesWritable, ImmutableBytesWritable> {
+public class InvertedIndexReducer extends KylinReducer<LongWritable, ImmutableBytesWritable, ImmutableBytesWritable, ImmutableBytesWritable> {
 
     private TableRecordInfo info;
     private TableRecord rec;
@@ -49,6 +48,8 @@ public class InvertedIndexReducer extends Reducer<LongWritable, ImmutableBytesWr
 
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+
         Configuration conf = context.getConfiguration();
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
         IIManager mgr = IIManager.getInstance(config);

@@ -141,14 +141,6 @@
                 <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs"
                        prefix="localhost_access_log." suffix=".txt"
                        pattern="%h %l %u %t &quot;%r&quot; %s %b" />
-                <Context path="" docBase="/var/www/html/kylin">
-                    <!-- Default set of monitored resources -->
-                    <WatchedResource>WEB-INF/web.xml</WatchedResource>
-                </Context>
-                <Context path="/ROOT" docBase="ROOT">
-                    <!-- Default set of monitored resources -->
-                    <WatchedResource>WEB-INF/web.xml</WatchedResource>
-                </Context>
 
             </Host>
         </Engine>

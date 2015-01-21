@@ -60,6 +60,15 @@ public class TableDesc extends RootPersistentEntity {
         return concatResourcePath(getIdentity());
     }
     
+
+    /**
+     * @deprecated this is for compatible with data model v1;
+     * @return
+     */
+    public String getResourcePathV1() {
+        return concatResourcePath(name);
+    }
+    
     public String getIdentity() {
         return String.format("%s.%s", this.getDatabase().toUpperCase(), this.getName()).toUpperCase();
     }
