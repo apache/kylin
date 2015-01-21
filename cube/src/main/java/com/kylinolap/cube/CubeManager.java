@@ -275,8 +275,8 @@ public class CubeManager implements IRealizationProvider {
             throw new RuntimeException("There is already an allocating segment!");
         }
 
-        if (cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateColumn() == null) {
-            throw new CubeIntegrityException("there is no partition date, only full build is supported");
+        if (cubeInstance.getDescriptor().getCubePartitionDesc().isPartitioned() == false) {
+            throw new CubeIntegrityException("there is no partition date column specified, only full build is supported");
         }
 
         List<CubeSegment> readySegments = cubeInstance.getSegment(SegmentStatusEnum.READY);
@@ -313,7 +313,7 @@ public class CubeManager implements IRealizationProvider {
         }
         List<CubeSegment> readySegments = cubeInstance.getSegments(SegmentStatusEnum.READY);
         CubeSegment newSegment;
-        if (cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateColumn() != null) {
+        if (cubeInstance.getDescriptor().getCubePartitionDesc().isPartitioned()) {
             if (readySegments.isEmpty()) {
                 newSegment = buildSegment(cubeInstance, cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateStart(), endDate);
             } else {

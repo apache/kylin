@@ -568,7 +568,7 @@ public class CubeStorageEngine implements IStorageEngine {
     }
 
     private void dropUnhitSegments(List<HBaseKeyRange> scans) {
-        if (cubeDesc.getCubePartitionDesc().getPartitionDateColumn() != null) {
+        if (cubeDesc.getCubePartitionDesc().isPartitioned()) {
             Iterator<HBaseKeyRange> iterator = scans.iterator();
             while (iterator.hasNext()) {
                 HBaseKeyRange scan = iterator.next();
