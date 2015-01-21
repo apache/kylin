@@ -48,7 +48,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         cubeInstance.setConfig(cubeDesc.getConfig());
         cubeInstance.setName(cubeName);
         cubeInstance.setDescName(cubeDesc.getName());
-        cubeInstance.setCreateTime(formatTime(System.currentTimeMillis()));
+        cubeInstance.setCreateTimeUTC(System.currentTimeMillis());
         cubeInstance.setSegments(new ArrayList<CubeSegment>());
         cubeInstance.setStatus(RealizationStatusEnum.DISABLED);
         cubeInstance.updateRandomUuid();
@@ -79,6 +79,11 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
     @JsonProperty("create_time")
     private String createTime;
 
+    @JsonProperty("create_time_utc")
+    private long createTimeUTC;
+    
+    private String projectName;
+    
     public List<CubeSegment> getBuildingSegments() {
         List<CubeSegment> buildingSegments = new ArrayList<CubeSegment>();
         if (null != segments) {
@@ -118,7 +123,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
 
     public List<CubeSegment> getMergingSegments(CubeSegment cubeSegment) {
         CubeSegment buildingSegment;
-        if (cubeSegment == null) {
+        if (cubeSegment == null) { // this path goes tests only
             List<CubeSegment> buildingSegments = getBuildingSegments();
             if (buildingSegments.size() == 0) {
                 return Collections.emptyList();
@@ -131,10 +136,9 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         List<CubeSegment> mergingSegments = new ArrayList<CubeSegment>();
         if (null != this.segments) {
             for (CubeSegment segment : this.segments) {
-                if (segment.getStatus() == SegmentStatusEnum.READY) {
-                    if (buildingSegment.getDateRangeStart() <= segment.getDateRangeStart() && buildingSegment.getDateRangeEnd() >= segment.getDateRangeEnd()) {
-                        mergingSegments.add(segment);
-                    }
+                if (!buildingSegment.equals(segment) //
+                        && buildingSegment.getDateRangeStart() <= segment.getDateRangeStart() && buildingSegment.getDateRangeEnd() >= segment.getDateRangeEnd()) {
+                    mergingSegments.add(segment);
                 }
             }
         }
@@ -371,12 +375,28 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         return null;
     }
 
+    /**
+     * @deprecated use createTimeUTC instead
+     * @return
+     */
     public String getCreateTime() {
         return createTime;
     }
 
     public void setCreateTime(String createTime) {
         this.createTime = createTime;
+    }
+
+    public long getCreateTimeUTC() {
+        if(createTimeUTC ==0 && createTime !=null) {
+            createTimeUTC = parseTime(createTime);
+        }
+        
+        return createTimeUTC;
+    }
+
+    public void setCreateTimeUTC(long createTimeUTC) {
+        this.createTimeUTC = createTimeUTC;
     }
 
     public long[] getDateRange() {
@@ -426,4 +446,13 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         }
         return ret;
     }
+
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
+    }
+    
 }

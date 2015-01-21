@@ -1,6 +1,5 @@
 package com.kylinolap.job.cube;
 
-import com.kylinolap.job.dao.JobOutputPO;
 import com.kylinolap.job.dao.JobPO;
 import com.kylinolap.job.impl.threadpool.AbstractExecutable;
 

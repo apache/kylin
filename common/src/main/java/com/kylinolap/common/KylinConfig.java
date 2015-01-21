@@ -295,24 +295,6 @@ public class KylinConfig {
         return getOptional(KYLIN_STORAGE_URL);
     }
 
-    public String getZookeeperString() {
-        // storage url format is: hbase:zookeeperHostname:port:/znode
-
-        String zookeeperString = "";
-        String storageString = this.getStorageUrl();
-        if (!storageString.startsWith("hbase:")) {
-            return "";
-        }
-
-        int cut = storageString.indexOf("/");
-        if (cut != -1) {
-            zookeeperString = storageString.substring(6, cut - 1);
-        } else {
-            zookeeperString = storageString.substring(6);
-        }
-        return zookeeperString;
-    }
-
     public String getHiveUrl() {
         return getOptional(HIVE_URL, "");
     }

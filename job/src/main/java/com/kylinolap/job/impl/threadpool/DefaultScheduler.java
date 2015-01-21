@@ -1,15 +1,14 @@
 package com.kylinolap.job.impl.threadpool;
 
-import com.google.common.collect.Maps;
-import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job.Scheduler;
-import com.kylinolap.job.constant.ExecutableConstants;
-import com.kylinolap.job.exception.ExecuteException;
-import com.kylinolap.job.exception.SchedulerException;
-import com.kylinolap.job.execution.Executable;
-import com.kylinolap.job.execution.ExecutableState;
-import com.kylinolap.job.execution.Output;
-import com.kylinolap.job.service.ExecutableManager;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -18,11 +17,22 @@ import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-import java.util.concurrent.*;
+import com.google.common.collect.Maps;
+import com.kylinolap.common.util.HadoopUtil;
+import com.kylinolap.job.Scheduler;
+import com.kylinolap.job.constant.ExecutableConstants;
+import com.kylinolap.job.engine.JobEngineConfig;
+import com.kylinolap.job.exception.ExecuteException;
+import com.kylinolap.job.exception.SchedulerException;
+import com.kylinolap.job.execution.Executable;
+import com.kylinolap.job.execution.ExecutableState;
+import com.kylinolap.job.execution.Output;
+import com.kylinolap.job.service.ExecutableManager;
 
 /**
  * Created by qianzhou on 12/15/14.
@@ -125,6 +135,12 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     private String schedulerId() {
         return ZOOKEEPER_LOCK_PATH + "/" + jobEngineConfig.getConfig().getMetadataUrlPrefix();
     }
+    
+    private String getZKConnectString(JobEngineConfig context)
+        {
+            Configuration conf =HadoopUtil.newHBaseConfiguration(context.getConfig().getStorageUrl());
+            return conf.get(HConstants.ZOOKEEPER_QUORUM);
+        }
 
     public static DefaultScheduler getInstance() {
         return INSTANCE;
@@ -148,9 +164,14 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         } else {
             return;
         }
+        String ZKConnectString = getZKConnectString(jobEngineConfig);
+        if (StringUtils.isEmpty(ZKConnectString)) {
+            throw new IllegalArgumentException("ZOOKEEPER_QUORUM is empty!");
+        }
+
         this.jobEngineConfig = jobEngineConfig;
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
-        this.zkClient = CuratorFrameworkFactory.newClient(jobEngineConfig.getZookeeperString(), retryPolicy);
+        this.zkClient = CuratorFrameworkFactory.newClient(ZKConnectString, retryPolicy);
         this.zkClient.start();
         this.sharedLock = new InterProcessMutex(zkClient, schedulerId());
         boolean hasLock = false;

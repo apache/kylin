@@ -1,41 +1,15 @@
 package com.kylinolap.job.coprocessor;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import com.kylinolap.common.KylinConfig;
-import org.apache.hadoop.hbase.client.HConnection;
-import org.junit.*;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.kylinolap.common.persistence.HBaseConnection;
-import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
-import com.kylinolap.invertedindex.IIInstance;
-import com.kylinolap.invertedindex.IIManager;
-import com.kylinolap.invertedindex.IISegment;
-import com.kylinolap.invertedindex.model.IIKeyValueCodec;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.*;
-import com.kylinolap.storage.StorageContext;
-import com.kylinolap.metadata.filter.ColumnTupleFilter;
-import com.kylinolap.metadata.filter.CompareTupleFilter;
-import com.kylinolap.metadata.filter.ConstantTupleFilter;
-import com.kylinolap.metadata.filter.TupleFilter;
-import com.kylinolap.storage.hbase.coprocessor.endpoint.EndpointTupleIterator;
-import com.kylinolap.metadata.tuple.ITuple;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 11/14/14.
  */
 @Ignore("ii not ready")
 public class IIEndpointTest extends HBaseMetadataTestCase {
-
+/*
     private static HConnection hconn;
 
     private static StorageContext context = new StorageContext();
@@ -259,4 +233,5 @@ public class IIEndpointTest extends HBaseMetadataTestCase {
         int countB = filteredGrouByCount(filterB);
         assertEquals(countA + countB, 402);
     }
+*/
 }

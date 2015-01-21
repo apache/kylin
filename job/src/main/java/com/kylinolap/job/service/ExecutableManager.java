@@ -149,6 +149,9 @@ public class ExecutableManager {
 
     public void resumeJob(String jobId) {
         AbstractExecutable job = getJob(jobId);
+        if (job == null) {
+            return;
+        }
         updateJobOutput(jobId, ExecutableState.READY, null, null);
         if (job instanceof DefaultChainedExecutable) {
             List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();

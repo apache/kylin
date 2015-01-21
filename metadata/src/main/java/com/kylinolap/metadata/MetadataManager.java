@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +37,7 @@ import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.common.restclient.Broadcaster;
-import com.kylinolap.common.restclient.SingleValueCache;
+import com.kylinolap.common.restclient.CaseInsensitiveStringCache;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.metadata.model.DataModelDesc;
 import com.kylinolap.metadata.model.TableDesc;
@@ -55,8 +54,8 @@ public class MetadataManager {
 
     private static final Logger logger = LoggerFactory.getLogger(MetadataManager.class);
 
-    private static final Serializer<TableDesc> TABLE_SERIALIZER = new JsonSerializer<TableDesc>(TableDesc.class);
-    private static final Serializer<DataModelDesc> MODELDESC_SERIALIZER = new JsonSerializer<DataModelDesc>(DataModelDesc.class);
+    public static final Serializer<TableDesc> TABLE_SERIALIZER = new JsonSerializer<TableDesc>(TableDesc.class);
+    public static final Serializer<DataModelDesc> MODELDESC_SERIALIZER = new JsonSerializer<DataModelDesc>(DataModelDesc.class);
 
     // static cached instances
     private static final ConcurrentHashMap<KylinConfig, MetadataManager> CACHE = new ConcurrentHashMap<KylinConfig, MetadataManager>();
@@ -94,11 +93,11 @@ public class MetadataManager {
 
     private KylinConfig config;
     // table name ==> SourceTable
-    private SingleValueCache<String, TableDesc> srcTableMap = new SingleValueCache<String, TableDesc>(Broadcaster.TYPE.TABLE);
+    private CaseInsensitiveStringCache<TableDesc> srcTableMap = new CaseInsensitiveStringCache<TableDesc>(Broadcaster.TYPE.TABLE);
     // name => value
-    private SingleValueCache<String, Map<String, String>> srcTableExdMap = new SingleValueCache<String, Map<String, String>>(Broadcaster.TYPE.TABLE);
+    private CaseInsensitiveStringCache<Map<String, String>> srcTableExdMap = new CaseInsensitiveStringCache<Map<String, String>>(Broadcaster.TYPE.TABLE);
     // name => DataModelDesc
-    private SingleValueCache<String, DataModelDesc> dataModelDescMap = new SingleValueCache<String, DataModelDesc>(Broadcaster.TYPE.DATA_MODEL);
+    private CaseInsensitiveStringCache<DataModelDesc> dataModelDescMap = new CaseInsensitiveStringCache<DataModelDesc>(Broadcaster.TYPE.DATA_MODEL);
 
     private MetadataManager(KylinConfig config) throws IOException {
         init(config);
@@ -145,11 +144,6 @@ public class MetadataManager {
      */
     public TableDesc getTableDesc(String tableName) {
         TableDesc result = srcTableMap.get(tableName.toUpperCase());
-        if(result == null) {
-            logger.info("No TableDesc found for table '" + tableName.toUpperCase() + "'");
-            return null;
-        }
-        
         return result;
     }
 
@@ -182,10 +176,10 @@ public class MetadataManager {
         }
 
         srcTable.init();
-        
+
         String path = srcTable.getResourcePath();
         getStore().putResource(path, srcTable, TABLE_SERIALIZER);
-
+        
         srcTableMap.put(srcTable.getIdentity(), srcTable);
     }
 
@@ -261,6 +255,7 @@ public class MetadataManager {
         String tableIdentity = t.getIdentity();
 
         srcTableMap.putLocal(tableIdentity, t);
+
         return t;
     }
 
@@ -308,8 +303,7 @@ public class MetadataManager {
             if (dataModelDesc.getError().isEmpty() == false) {
                 throw new IllegalStateException("DataModelDesc at " + path + " has issues: " + dataModelDesc.getError());
             }
-            String name = dataModelDesc.getName();
-            dataModelDescMap.putLocal(name, dataModelDesc);
+            dataModelDescMap.putLocal(dataModelDesc.getName(), dataModelDesc);
             return dataModelDesc;
         } catch (IOException e) {
             throw new IllegalStateException("Error to load" + path, e);
@@ -337,6 +331,7 @@ public class MetadataManager {
         try {
             dataModelDesc.init(this.getAllTablesMap());
         } catch (Exception e) {
+            e.printStackTrace();
             dataModelDesc.addError(e.getMessage(), true);
         }
 
@@ -356,12 +351,12 @@ public class MetadataManager {
             throw new IllegalArgumentException("tableId couldn't be null");
         }
         TableDesc srcTable = srcTableMap.get(tableId);
-        if(srcTable == null) {
+        if (srcTable == null) {
             throw new IllegalArgumentException("Couldn't find Source Table with identifier: " + tableId);
         }
 
         String path = TableDesc.concatExdResourcePath(tableId);
-        
+
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         JsonUtil.writeValueIndent(os, tableExdProperties);
         os.flush();
@@ -371,6 +366,32 @@ public class MetadataManager {
         is.close();
 
         srcTableExdMap.putLocal(tableId, tableExdProperties);
+    }
+
+
+    public String appendDBName(String table) {
+
+        if (table.indexOf(".") > 0)
+            return table;
+
+        Map<String, TableDesc> map = getAllTablesMap();
+
+        int count = 0;
+        String result = null;
+        for (TableDesc t : map.values()) {
+            if (t.getName().equalsIgnoreCase(table)) {
+                result = t.getIdentity();
+                count++;
+            }
+        }
+
+        if (count == 1)
+            return result;
+
+        if (count > 1) {
+            logger.warn("There are more than 1 table named with '" + table + "' in different database; The program couldn't determine, randomly pick '" + result + "'");
+        }
+        return result;
     }
 
 }

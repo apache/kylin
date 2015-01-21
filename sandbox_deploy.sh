@@ -11,6 +11,18 @@ echo "ERROR exit from ${SCRIPT} : line ${LASTLINE} with exit code ${LASTERR}"
 exit 1
 }
 
+function escape_sed_replacement(){
+        v=$1
+        v=$(sed -e 's/[\/&]/\\&/g' <<< $v)
+        echo $v
+}
+
+function escape_sed_pattern(){
+        v=$1
+        v=$(sed -e 's/[]\/$*.^|[]/\\&/g' <<< $v)
+        echo $v
+}
+
 trap 'error ${LINENO} ${?}' ERR
 
 echo ""
@@ -101,7 +113,7 @@ source ./package.sh
 echo "retrieving classpath..."
 cd $KYLIN_HOME/job/target
 JOB_JAR_NAME="kylin-job-latest.jar"
-#generate config variables
+#export hbase configs, most of the configurations are useless now, but KYLIN_HBASE_CONF_PATH is used by SampleCubeSetupTest now
 hbase org.apache.hadoop.util.RunJar $JOB_JAR_NAME com.kylinolap.job.deployment.HbaseConfigPrinter /tmp/kylin_retrieve.sh
 #load config variables
 source /tmp/kylin_retrieve.sh
@@ -110,33 +122,22 @@ cd $KYLIN_HOME
 mkdir -p /etc/kylin
 
 HOSTNAME=`hostname`
-CLI_HOSTNAME_DEFAULT="kylin.job.remote.cli.hostname=sandbox.hortonworks.com"
-CLI_PASSWORD_DEFAULT="kylin.job.remote.cli.password=hadoop"
-METADATA_URL_DEFAULT="kylin.metadata.url=kylin_metadata_qa@hbase:sandbox.hortonworks.com:2181:/hbase-unsecure"
-STORAGE_URL_DEFAULT="kylin.storage.url=hbase:sandbox.hortonworks.com:2181:/hbase-unsecure"
-CHECK_URL_DEFAULT="kylin.job.yarn.app.rest.check.status.url=http://sandbox"
-
-
-NEW_CLI_HOSTNAME_PREFIX="kylin.job.remote.cli.hostname="
-NEW_CLI_PASSWORD_PREFIX="kylin.job.remote.cli.password="
-NEW_METADATA_URL_PREFIX="kylin.metadata.url=kylin_metadata_qa@hbase:"
-NEW_STORAGE_URL_PREFIX="kylin.storage.url=hbase:"
+DEFAULT_CHECK_URL="kylin.job.yarn.app.rest.check.status.url=http://sandbox"
+DEFAULT_SERVER_LIST="kylin.rest.servers=sandbox"
 NEW_CHECK_URL_PREFIX="kylin.job.yarn.app.rest.check.status.url=http://"
+NEW_SERVER_LIST_PREFIX="kylin.rest.servers="
 
-KYLIN_ZOOKEEPER_URL=${KYLIN_ZOOKEEPER_QUORUM}:${KYLIN_ZOOKEEPER_CLIENT_PORT}:${KYLIN_ZOOKEEPER_ZNODE_PARENT}
-
-echo "Kylin install script requires root password for ${HOSTNAME}"
-echo "(The default root password for hortonworks VM is hadoop, and for cloudera VM is cloudera)"
-
-[[ "$SILENT" ]] || read -s -p "Enter Password for root: " ROOTPASS
+#escape special characters for sed
+DEFAULT_CHECK_URL=$(escape_sed_pattern $DEFAULT_CHECK_URL)
+DEFAULT_SERVER_LIST=$(escape_sed_pattern $DEFAULT_SERVER_LIST)
+NEW_CHECK_URL_PREFIX=$(escape_sed_replacement $NEW_CHECK_URL_PREFIX)
+NEW_SERVER_LIST_PREFIX=$(escape_sed_replacement $NEW_SERVER_LIST_PREFIX)
+HOSTNAME=$(escape_sed_replacement $HOSTNAME)
 
 #deploy kylin.properties to /etc/kylin
 cat examples/test_case_data/sandbox/kylin.properties | \
-    sed -e "s,${CHECK_URL_DEFAULT},${NEW_CHECK_URL_PREFIX}${HOSTNAME}," | \
-    sed -e "s,${CLI_HOSTNAME_DEFAULT},${NEW_CLI_HOSTNAME_PREFIX}${HOSTNAME}," | \
-    sed -e "s,${CLI_PASSWORD_DEFAULT},${NEW_CLI_PASSWORD_PREFIX}${ROOTPASS}," | \
-    sed -e "s,${METADATA_URL_DEFAULT},${NEW_METADATA_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," | \
-    sed -e "s,${STORAGE_URL_DEFAULT},${NEW_STORAGE_URL_PREFIX}${KYLIN_ZOOKEEPER_URL}," >  /etc/kylin/kylin.properties
+    sed -e "s/${DEFAULT_CHECK_URL}/${NEW_CHECK_URL_PREFIX}${HOSTNAME}/g"  | \
+    sed -e "s/${DEFAULT_SERVER_LIST}/${NEW_SERVER_LIST_PREFIX}${HOSTNAME}/g"   >  /etc/kylin/kylin.properties
 
 
 echo "a copy of kylin config is generated at /etc/kylin/kylin.properties:"
@@ -146,7 +147,7 @@ echo ""
 echo "==================================================================="
 echo ""
 
-[[ "$SILENT" ]] || ( read -p "please ensure the CLI address/username/password is correct, and press y to proceed: " -n 1 -r
+[[ "$SILENT" ]] || ( read -p "please ensure the configuration is correct, and press y to proceed: " -n 1 -r
 echo    # (optional) move to a new line
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then
@@ -159,48 +160,26 @@ fi )
 cd $KYLIN_HOME
 mvn test -Dtest=com.kylinolap.job.SampleCubeSetupTest -DfailIfNoTests=false
 
-sudo -i "${CATALINA_HOME}/bin/shutdown.sh" || true # avoid trapping
-cd $KYLIN_HOME/server/target
-WAR_NAME="kylin.war"
-rm -rf $CATALINA_HOME/webapps/kylin
-rm -f $CATALINA_HOME/webapps/$WAR_NAME
-cp $KYLIN_HOME/server/target/$WAR_NAME $CATALINA_HOME/webapps/
-cd $CATALINA_HOME/webapps;
-chmod 644 $WAR_NAME;
-echo "REST service deployed"
-
-rm -rf /var/www/html/kylin
-mkdir -p /var/www/html/kylin
-cd $KYLIN_HOME/
-tar -xf webapp/dist/Web.tar -C /var/www/html/kylin
-echo "Web deployed"
-
-cd $KYLIN_HOME/
-#deploy setenv.sh
-rm -rf $CATALINA_HOME/bin/setenv.sh
-echo JAVA_OPTS=\"-Djava.library.path=${KYLIN_LD_LIBRARY_PATH}\" >> ${CATALINA_HOME}/bin/setenv.sh
-echo CATALINA_OPTS=\"-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true -Dspring.profiles.active=sandbox \" >> ${CATALINA_HOME}/bin/setenv.sh
-echo CLASSPATH=\"${CATALINA_HOME}/lib/*:${KYLIN_HBASE_CLASSPATH}:/etc/kylin\" >> ${CATALINA_HOME}/bin/setenv.sh
-echo "setenv.sh created"
-
-#deploy server.xml
-rm -rf ${CATALINA_HOME}/conf/server.xml
+#overwrite server.xml
+mv ${CATALINA_HOME}/conf/server.xml ${CATALINA_HOME}/conf/server.xml.bak
 cp deploy/server.xml ${CATALINA_HOME}/conf/server.xml
-echo "server.xml copied"
+echo "server.xml overwritten..."
 
-#deploy web.xml
-rm -rf ${CATALINA_HOME}/conf/web.xml
-cp deploy/web.xml ${CATALINA_HOME}/conf/web.xml
-echo "web.xml copied"
+#deploy kylin.war
+rm -rf $CATALINA_HOME/webapps/kylin
+rm -f $CATALINA_HOME/webapps/kylin.war
+cp $KYLIN_HOME/server/target/kylin.war $CATALINA_HOME/webapps/
+chmod 644 $CATALINA_HOME/webapps/kylin.war
+echo "Tomcat war deployed..."
 
-echo "Tomcat ready"
+#start tomcat service from hbase runjar
+export HBASE_CLASSPATH_PREFIX=/etc/kylin:${CATALINA_HOME}/bin/bootstrap.jar:${CATALINA_HOME}/bin/tomcat-juli.jar:${CATALINA_HOME}/lib/*:$HBASE_CLASSPATH_PREFIX
+hbase -Djava.util.logging.config.file=${CATALINA_HOME}/conf/logging.properties -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
+    -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true \
+    -Dspring.profiles.active=sandbox -Djava.endorsed.dirs=${CATALINA_HOME}/endorsed  -Dcatalina.base=${CATALINA_HOME} \
+    -Dcatalina.home=${CATALINA_HOME} -Djava.io.tmpdir=${CATALINA_HOME}/temp  \
+    -Djava.library.path=${KYLIN_LD_LIBRARY_PATH} \
+    org.apache.hadoop.util.RunJar ${CATALINA_HOME}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start > ${CATALINA_HOME}/logs/kylin_sandbox.log 2>&1 &
 
-# redeploy coprocessor
-#hbase org.apache.hadoop.util.RunJar /usr/lib/kylin/kylin-job-latest.jar com.kylinolap.job.tools.DeployCoprocessorCLI /usr/lib/kylin/kylin-coprocessor-latest.jar
-
-
-sudo -i "${CATALINA_HOME}/bin/startup.sh"
-
-
-echo "Kylin-Deploy Success!"
-echo "Please visit http://<your_sandbox_ip>:7070 to play with the cubes! (Useranme: ADMIN, Password: KYLIN)"
+echo "Kylin is launched successfully!!!"
+echo "Please visit http://<your_sandbox_ip>:7070/kylin to play with the cubes! (Useranme: ADMIN, Password: KYLIN)"
