@@ -127,17 +127,20 @@ public class ProjectManager {
         clearL2Cache();
         return projectInstance;
     }
-    
+
     private void wireProjectAndRealizations(Collection<ProjectInstance> projectInstances) {
 
         RealizationRegistry registry = RealizationRegistry.getInstance(config);
         for (ProjectInstance projectInstance : projectInstances) {
             for (RealizationEntry realization : projectInstance.getRealizationEntries()) {
                 IRealization rel = registry.getRealization(realization.getType(), realization.getRealization());
-                rel.setProjectName(projectInstance.getName());
+                if (rel != null) {
+                    rel.setProjectName(projectInstance.getName());
+                } else {
+                    logger.warn("Realization '" + realization + "' defined under project '" + projectInstance + "' is not found");
+                }
             }
         }
-
     }
 
     public List<ProjectInstance> listAllProjects() {

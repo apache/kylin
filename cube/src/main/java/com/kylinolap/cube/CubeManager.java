@@ -518,7 +518,10 @@ public class CubeManager implements IRealizationProvider {
             cubeInstance.setConfig(config);
 
             if (StringUtils.isBlank(cubeInstance.getName()))
-                throw new IllegalStateException("CubeInstance name must not be blank");
+                throw new IllegalStateException("CubeInstance name must not be blank, at " + path);
+
+            if (cubeInstance.getDescriptor() == null)
+                throw new IllegalStateException("CubeInstance desc not found '" + cubeInstance.getDescName() + "', at " + path);
 
             final String cubeName = cubeInstance.getName();
             cubeMap.putLocal(cubeName, cubeInstance);
