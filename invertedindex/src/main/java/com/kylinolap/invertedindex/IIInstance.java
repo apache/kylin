@@ -46,7 +46,7 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         iii.setConfig(iiDesc.getConfig());
         iii.setName(iiName);
         iii.setDescName(iiDesc.getName());
-        iii.setCreateTime(formatTime(System.currentTimeMillis()));
+        iii.setCreateTimeUTC(System.currentTimeMillis());
         iii.setStatus(RealizationStatusEnum.DISABLED);
         iii.updateRandomUuid();
 
@@ -73,9 +73,11 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
     @JsonProperty("segments")
     private List<IISegment> segments = new ArrayList<IISegment>();
 
-    @JsonProperty("create_time")
-    private String createTime;
+    @JsonProperty("create_time_utc")
+    private long createTimeUTC;
 
+    private String projectName;
+    
     public List<IISegment> getBuildingSegments() {
         List<IISegment> buildingSegments = new ArrayList<IISegment>();
         if (null != segments) {
@@ -350,12 +352,12 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return null;
     }
 
-    public String getCreateTime() {
-        return createTime;
+    public long getCreateTimeUTC() {
+        return createTimeUTC;
     }
 
-    public void setCreateTime(String createTime) {
-        this.createTime = createTime;
+    public void setCreateTimeUTC(long createTimeUTC) {
+        this.createTimeUTC = createTimeUTC;
     }
 
     public long[] getDateRange() {
@@ -408,6 +410,14 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
     @Override
     public List<MeasureDesc> getMeasures() {
         return getDescriptor().getMeasures();
+    }
+
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
     }
 
 }

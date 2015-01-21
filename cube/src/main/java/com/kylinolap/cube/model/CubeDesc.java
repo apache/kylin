@@ -125,6 +125,8 @@ public class CubeDesc extends RootPersistentEntity {
     private Map<TblColRef, DeriveInfo> derivedToHostMap = Maps.newHashMap();
     private Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedMap = Maps.newHashMap();
 
+    /* indicate whether this object was upgraded on an old version*/
+    private boolean upgraded = false;
     /**
      * Error messages during resolving json metadata
      */
@@ -812,4 +814,25 @@ public class CubeDesc extends RootPersistentEntity {
         return this.errors;
     }
 
+    public HBaseMappingDesc getHbaseMapping() {
+        return hbaseMapping;
+    }
+
+    public void setHbaseMapping(HBaseMappingDesc hbaseMapping) {
+        this.hbaseMapping = hbaseMapping;
+    }
+
+    public void setNullStrings(String[] nullStrings) {
+        this.nullStrings = nullStrings;
+    }
+
+    public boolean isUpgraded() {
+        return upgraded;
+    }
+
+    public void setUpgraded(boolean upgraded) {
+        this.upgraded = upgraded;
+    }
+
+    
 }

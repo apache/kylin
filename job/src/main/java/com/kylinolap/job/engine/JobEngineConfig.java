@@ -136,13 +136,6 @@ public class JobEngineConfig {
     }
 
     /**
-     * @return the zookeeperString
-     */
-    public String getZookeeperString() {
-        return config.getZookeeperString();
-    }
-
-    /**
      * @return the remoteHadoopCliHostname
      */
     public String getRemoteHadoopCliHostname() {
