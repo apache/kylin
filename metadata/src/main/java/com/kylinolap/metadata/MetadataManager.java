@@ -179,7 +179,7 @@ public class MetadataManager {
 
         String path = srcTable.getResourcePath();
         getStore().putResource(path, srcTable, TABLE_SERIALIZER);
-        
+
         srcTableMap.put(srcTable.getIdentity(), srcTable);
     }
 
@@ -200,7 +200,7 @@ public class MetadataManager {
         for (String path : paths) {
             reloadSourceTableExdAt(path);
         }
-        
+
         logger.debug("Loaded " + srcTableExdMap.size() + " SourceTable EXD(s)");
     }
 
@@ -228,7 +228,7 @@ public class MetadataManager {
             file = file.substring(file.lastIndexOf("/") + 1);
         }
         String tableIdentity = file.substring(0, file.length() - MetadataConstances.FILE_SURFIX.length()).toUpperCase();
-        
+
         srcTableExdMap.putLocal(tableIdentity, attrs);
         return attrs;
     }
@@ -262,7 +262,6 @@ public class MetadataManager {
     public void reloadSourceTableExt(String tableIdentity) throws IOException {
         reloadSourceTableExdAt(TableDesc.concatExdResourcePath(tableIdentity));
     }
-
 
     public void reloadSourceTable(String tableIdentity) throws IOException {
         reloadSourceTableAt(TableDesc.concatResourcePath(tableIdentity));
@@ -300,9 +299,6 @@ public class MetadataManager {
         try {
             DataModelDesc dataModelDesc = store.getResource(path, DataModelDesc.class, MODELDESC_SERIALIZER);
             dataModelDesc.init(this.getAllTablesMap());
-            if (dataModelDesc.getError().isEmpty() == false) {
-                throw new IllegalStateException("DataModelDesc at " + path + " has issues: " + dataModelDesc.getError());
-            }
             dataModelDescMap.putLocal(dataModelDesc.getName(), dataModelDesc);
             return dataModelDesc;
         } catch (IOException e) {
@@ -328,16 +324,7 @@ public class MetadataManager {
     }
 
     private DataModelDesc saveDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
-        try {
-            dataModelDesc.init(this.getAllTablesMap());
-        } catch (Exception e) {
-            e.printStackTrace();
-            dataModelDesc.addError(e.getMessage(), true);
-        }
-
-        if (!dataModelDesc.getError().isEmpty()) {
-            return dataModelDesc;
-        }
+        dataModelDesc.init(this.getAllTablesMap());
 
         String path = dataModelDesc.getResourcePath();
         getStore().putResource(path, dataModelDesc, MODELDESC_SERIALIZER);
@@ -367,7 +354,6 @@ public class MetadataManager {
 
         srcTableExdMap.putLocal(tableId, tableExdProperties);
     }
-
 
     public String appendDBName(String table) {
 

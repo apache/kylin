@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by Hongbin Ma(Binmahone) on 12/18/14.
  */
 public class RealizationRegistry {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(RealizationRegistry.class);
     private static final ConcurrentHashMap<KylinConfig, RealizationRegistry> CACHE = new ConcurrentHashMap<KylinConfig, RealizationRegistry>();
 
@@ -59,7 +59,7 @@ public class RealizationRegistry {
 
     private void init() {
         providers = Maps.newConcurrentMap();
-        
+
         // use reflection to load providers
         final Set<Class<? extends IRealizationProvider>> realizationProviders = new Reflections("").getSubTypesOf(IRealizationProvider.class);
         List<Throwable> es = Lists.newArrayList();
@@ -67,7 +67,7 @@ public class RealizationRegistry {
             try {
                 IRealizationProvider p = (IRealizationProvider) cls.getMethod("getInstance", KylinConfig.class).invoke(null, config);
                 providers.put(p.getRealizationType(), p);
-                
+
             } catch (Exception | NoClassDefFoundError e) {
                 es.add(e);
             }
@@ -79,7 +79,7 @@ public class RealizationRegistry {
                 throw new IllegalArgumentException("Failed to find metadata store by url: " + config.getMetadataUrl());
             }
         }
-        
+
         logger.info("RealizationRegistry is " + providers);
     }
 
@@ -87,8 +87,14 @@ public class RealizationRegistry {
         IRealizationProvider p = providers.get(type);
         if (p == null)
             throw new IllegalStateException("No provider for realization type " + type);
-        
-        return p.getRealization(name);
+
+        try {
+            return p.getRealization(name);
+        } catch (Exception ex) {
+            // exception is possible if e.g. cube metadata is wrong
+            logger.warn("Failed to load realization " + type + ":" + name, ex);
+            return null;
+        }
     }
 
 }
