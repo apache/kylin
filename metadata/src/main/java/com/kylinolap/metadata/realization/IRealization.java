@@ -40,5 +40,9 @@ public interface IRealization {
     public String getName();
 
     public String getCanonicalName();
+    
+    public String getProjectName();
+    
+    public void setProjectName(String prjName);
 
 }

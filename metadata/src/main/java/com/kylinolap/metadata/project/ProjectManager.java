@@ -17,11 +17,11 @@ package com.kylinolap.metadata.project;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.kylinolap.common.restclient.CaseInsensitiveStringCache;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,11 +32,13 @@ import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.common.restclient.Broadcaster;
+import com.kylinolap.common.restclient.CaseInsensitiveStringCache;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.realization.IRealization;
+import com.kylinolap.metadata.realization.RealizationRegistry;
 import com.kylinolap.metadata.realization.RealizationType;
 
 public class ProjectManager {
@@ -100,7 +102,7 @@ public class ProjectManager {
         for (String path : paths) {
             reloadProjectAt(path);
         }
-
+        wireProjectAndRealizations(projectMap.values());
         logger.debug("Loaded " + projectMap.size() + " Project(s)");
     }
 
@@ -124,6 +126,18 @@ public class ProjectManager {
 
         clearL2Cache();
         return projectInstance;
+    }
+    
+    private void wireProjectAndRealizations(Collection<ProjectInstance> projectInstances) {
+
+        RealizationRegistry registry = RealizationRegistry.getInstance(config);
+        for (ProjectInstance projectInstance : projectInstances) {
+            for (RealizationEntry realization : projectInstance.getRealizationEntries()) {
+                IRealization rel = registry.getRealization(realization.getType(), realization.getRealization());
+                rel.setProjectName(projectInstance.getName());
+            }
+        }
+
     }
 
     public List<ProjectInstance> listAllProjects() {
