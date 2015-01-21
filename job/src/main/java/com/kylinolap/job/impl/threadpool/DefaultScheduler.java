@@ -41,7 +41,6 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
     private static final String ZOOKEEPER_LOCK_PATH = "/kylin/job_engine/lock";
 
-
     private ExecutableManager executableManager;
     private ScheduledExecutorService fetcherPool;
     private ExecutorService jobPool;
@@ -55,31 +54,35 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     private InterProcessMutex sharedLock;
 
     private static final DefaultScheduler INSTANCE = new DefaultScheduler();
-    private static final String SCHEDULER_RESET_STATUS_HINT = "scheduler initializing work to reset job to ERROR status";
 
-
-    private DefaultScheduler() {}
+    private DefaultScheduler() {
+    }
 
     private class FetcherRunner implements Runnable {
 
         @Override
         public void run() {
-            logger.info("Job Fetcher is running...");
+            // logger.debug("Job Fetcher is running...");
             Map<String, Executable> runningJobs = context.getRunningJobs();
             if (runningJobs.size() >= jobEngineConfig.getMaxConcurrentJobLimit()) {
                 logger.warn("There are too many jobs running, Job Fetch will wait until next schedule time");
                 return;
             }
+
+            int nRunning = 0, nReady = 0, nOthers = 0;
             for (final String id : executableManager.getAllJobIds()) {
                 if (runningJobs.containsKey(id)) {
-                    logger.info("Job id:" + id + " is already running");
+                    // logger.debug("Job id:" + id + " is already running");
+                    nRunning++;
                     continue;
                 }
                 final Output output = executableManager.getOutput(id);
                 if ((output.getState() != ExecutableState.READY)) {
-                    logger.info("Job id:" + id + " not runnable");
+                    // logger.debug("Job id:" + id + " not runnable");
+                    nOthers++;
                     continue;
                 }
+                nReady++;
                 AbstractExecutable executable = executableManager.getJob(id);
                 String jobDesc = executable.toString();
                 logger.info(jobDesc + " prepare to schedule");
@@ -92,7 +95,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                     logger.warn(jobDesc + " fail to schedule", ex);
                 }
             }
-            logger.info("Job Fetcher finish running");
+            logger.info("Job Fetcher: " + nRunning + " running, " + runningJobs.size() + " actual running, " + nReady + " ready, " + nOthers + " others");
         }
     }
 
@@ -135,12 +138,11 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     private String schedulerId() {
         return ZOOKEEPER_LOCK_PATH + "/" + jobEngineConfig.getConfig().getMetadataUrlPrefix();
     }
-    
-    private String getZKConnectString(JobEngineConfig context)
-        {
-            Configuration conf =HadoopUtil.newHBaseConfiguration(context.getConfig().getStorageUrl());
-            return conf.get(HConstants.ZOOKEEPER_QUORUM);
-        }
+
+    private String getZKConnectString(JobEngineConfig context) {
+        Configuration conf = HadoopUtil.newHBaseConfiguration(context.getConfig().getStorageUrl());
+        return conf.get(HConstants.ZOOKEEPER_QUORUM);
+    }
 
     public static DefaultScheduler getInstance() {
         return INSTANCE;
@@ -190,8 +192,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         fetcherPool = Executors.newScheduledThreadPool(1);
         int corePoolSize = jobEngineConfig.getMaxConcurrentJobLimit();
         jobPool = new ThreadPoolExecutor(corePoolSize, corePoolSize, Long.MAX_VALUE, TimeUnit.DAYS, new SynchronousQueue<Runnable>());
-        context = new DefaultContext(Maps.<String, Executable>newConcurrentMap(), jobEngineConfig.getConfig());
-
+        context = new DefaultContext(Maps.<String, Executable> newConcurrentMap(), jobEngineConfig.getConfig());
 
         for (AbstractExecutable executable : executableManager.getAllExecutables()) {
             if (executable.getStatus() == ExecutableState.READY) {
@@ -202,12 +203,12 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-            logger.debug("Closing zk connection");
-            try {
-                shutdown();
-            } catch (SchedulerException e) {
-                logger.error("error shutdown scheduler", e);
-            }
+                logger.debug("Closing zk connection");
+                try {
+                    shutdown();
+                } catch (SchedulerException e) {
+                    logger.error("error shutdown scheduler", e);
+                }
             }
         });
 

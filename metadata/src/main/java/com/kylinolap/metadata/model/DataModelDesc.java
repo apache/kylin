@@ -25,11 +25,6 @@ public class DataModelDesc extends RootPersistentEntity {
     @JsonProperty("lookups")
     private LookupDesc[] lookups;
 
-    /**
-     * Error messages during resolving json metadata
-     */
-    private List<String> errors = new ArrayList<String>();
-
     public String getName() {
         return name;
     }
@@ -45,7 +40,6 @@ public class DataModelDesc extends RootPersistentEntity {
             ret.add(lookupDesc.getTable());
         return ret;
     }
-
 
     public String getFactTable() {
         return factTable;
@@ -90,7 +84,6 @@ public class DataModelDesc extends RootPersistentEntity {
     }
 
     public void init(Map<String, TableDesc> tables) {
-        this.errors.clear();
         initJoinColumns(tables);
     }
 
@@ -101,6 +94,9 @@ public class DataModelDesc extends RootPersistentEntity {
         for (LookupDesc lookup : this.lookups) {
             lookup.setTable(lookup.getTable().toUpperCase());
             TableDesc dimTable = tables.get(lookup.getTable());
+            if (dimTable == null) {
+                throw new IllegalStateException("Table " + lookup.getTable() + " does not exist for " + this);
+            }
 
             JoinDesc join = lookup.getJoin();
             if (join == null)
@@ -114,7 +110,7 @@ public class DataModelDesc extends RootPersistentEntity {
             for (int i = 0; i < pks.length; i++) {
                 ColumnDesc col = dimTable.findColumnByName(pks[i]);
                 if (col == null) {
-                    addError("Can't find column " + pks[i] + " in table " + dimTable.getIdentity());
+                    throw new IllegalStateException("Can't find column " + pks[i] + " in table " + dimTable.getIdentity());
                 }
                 TblColRef colRef = new TblColRef(col);
                 pks[i] = colRef.getName();
@@ -124,14 +120,14 @@ public class DataModelDesc extends RootPersistentEntity {
             // foreign key
             TableDesc factTable = tables.get(this.factTable.toUpperCase());
             if (factTable == null) {
-                addError("Fact table does not exist:" + this.getFactTable());
+                throw new IllegalStateException("Fact table does not exist:" + this.getFactTable());
             }
             String[] fks = join.getForeignKey();
             TblColRef[] fkCols = new TblColRef[fks.length];
             for (int i = 0; i < fks.length; i++) {
                 ColumnDesc col = factTable.findColumnByName(fks[i]);
                 if (col == null) {
-                    addError("Can't find column " + fks[i] + " in table " + this.getFactTable());
+                    throw new IllegalStateException("Can't find column " + fks[i] + " in table " + this.getFactTable());
                 }
                 TblColRef colRef = new TblColRef(col);
                 fks[i] = colRef.getName();
@@ -140,15 +136,20 @@ public class DataModelDesc extends RootPersistentEntity {
             join.setForeignKeyColumns(fkCols);
             // Validate join in dimension
             if (pkCols.length != fkCols.length) {
-                addError("Primary keys(" + lookup.getTable() + ")" + Arrays.toString(pks) + " are not consistent with Foreign keys(" + this.getFactTable() + ") " + Arrays.toString(fks));
+                throw new IllegalStateException("Primary keys(" + lookup.getTable() + ")" + Arrays.toString(pks) + " are not consistent with Foreign keys(" + this.getFactTable() + ") " + Arrays.toString(fks));
             }
             for (int i = 0; i < fkCols.length; i++) {
                 if (!fkCols[i].getDatatype().equals(pkCols[i].getDatatype())) {
-                    addError("Primary key " + lookup.getTable() + "." + pkCols[i].getName() + "." + pkCols[i].getDatatype() + " are not consistent with Foreign key " + this.getFactTable() + "." + fkCols[i].getName() + "." + fkCols[i].getDatatype());
+                    throw new IllegalStateException("Primary key " + lookup.getTable() + "." + pkCols[i].getName() + "." + pkCols[i].getDatatype() + " are not consistent with Foreign key " + this.getFactTable() + "." + fkCols[i].getName() + "." + fkCols[i].getDatatype());
                 }
             }
 
         }
+    }
+
+    @Override
+    public String toString() {
+        return "DataModelDesc [name=" + name + "]";
     }
 
     public String getResourcePath() {
@@ -157,22 +158,6 @@ public class DataModelDesc extends RootPersistentEntity {
 
     public static String concatResourcePath(String descName) {
         return ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstances.FILE_SURFIX;
-    }
-
-    public void addError(String message) {
-        addError(message, false);
-    }
-
-    public void addError(String message, boolean silent) {
-        if (!silent) {
-            throw new IllegalStateException(message);
-        } else {
-            this.errors.add(message);
-        }
-    }
-
-    public List<String> getError() {
-        return this.errors;
     }
 
 }
