@@ -5,9 +5,9 @@ mvn install -DskipTests
 
 #Copy war to kylin.war
 ls -t server/target/*.war| head -1 | awk '{print "cp " $1 " server/target/kylin.war"}' | sh
-#Copy index jar
+#Copy job jar
 ls -t job/target/*-job.jar| head -1 | awk '{print "cp " $1 " job/target/kylin-job-latest.jar"}' | sh
-#Copy query jar
+#Copy coprocessor jar
 ls -t storage/target/*-coprocessor.jar | head -1 | awk '{print "cp " $1 " storage/target/kylin-coprocessor-latest.jar"}' | sh
 
 #package webapp
