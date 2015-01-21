@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Kylin.IO | Docs</title>
+  <meta name="description" content="Apache Kylin Home">
+  <meta name="author"      content="Kylin.IO">
+  <link rel="shortcut icon" href="fav.png" type="image/png">
+
+
+
+<link rel="stylesheet" href="/assets/css/animate.css">
+<!-- Bootstrap -->
+<link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+
+<!-- Fonts -->
+<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Alice|Open+Sans:400,300,700">
+
+<!-- Icons -->
+<link rel="stylesheet" href="/assets/css/font-awesome.min.css">
+
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="/assets/css/styles.css">
+
+  <link rel="canonical" href="http://kyli.io/docs/">
+  <link rel="alternate" type="application/rss+xml" title="kylin.io" href="http://kyli.io/feed.xml" />
+
+<!--[if lt IE 9]> <script src="assets/js/html5shiv.js"></script> <![endif]-->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-55534813-1', 'auto');
+  ga('send', 'pageview');
+
+
+</script>
+
+</head>
+
+
+  <body>
+
+    <header id="header" >
+  <div id="head" class="parallax" parallax-speed="3" >
+    <div id="logo" class="text-center"> <img class="img-circle" id="circlelogo" src="/assets/images/kylin_logo.jpg"> <span class="title" >Apache Kylin</span> <span class="tagline">Extreme OLAP Engine for Big Data<br>
+      </span> 
+      <!--
+       <div id="download"><a href="https://github.com/KylinOLAP/Kylin/releases">DOWNLOAD</a></div>
+       -->
+       </div>
+  </div>
+
+  <!-- Main Menu -->
+  <nav class="navbar navbar-default" role="navigation" id="nav-wrapper">
+  <div class="container-fluid" id="nav">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+     
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+     <li><a href="/"><b>Home</b></a></li>
+          <li><a href="/docs" >Docs</a></li>
+          <li><a href="/community" >Community</a></li>
+          <li><a href="/blog">Blog</li>
+          <li><a href="/about" >About</a></li>
+      </ul>
+      
+
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+ </header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <main id="main" >
+  <div class="container" >
+    <div id="zero" class=" main" >
+      <header style=" padding:2em 0 4em 0">
+        <div class="container" >
+          <h4 class="section-title"><span>Kylin Docs</span></h4>
+
+         
+     <div id="content-container" class="animated fadeIn">
+       
+
+<p class="content-header" style="margin-top:0.25em">What should I use Kylin for?</p>
+<p class="content-p">
+If you want to do multi-dimension analysis on large data sets (billion+ rows) with low query latency (sub-seconds), Kylin is a good option. Kylin also provides good integration with existing BI tools (e.g Tableau).
+</p>
+
+<hr/>
+ 
+<p class="content-header">Why existing SQL-on-Hadoop solutions fall short?</p>
+<p class="content-p">
+The existing SQL-on-Hadoop needs to scan partial or whole data set to answer a user query. Due to large data scan, many queries are very slow (minute+ latency).  
+</p>
+<hr/>
+ 
+<p class="content-header">What is MOLAP/ROLAP?</p>
+<p class="content-p">
+MOLAP (Multi-dimensional OLAP) is to pre-compute data along different dimensions of interest and store resultant values in the cube. MOLAP is much faster but is inflexible.
+ROLAP (Relational-OLAP) is to use star or snow-flake schema to do runtime aggregation. ROLAP is flexible but much slower.
+</p>
+<hr/>
+
+<p class="content-header">How does Kylin support ROLAP/MOLAP?</p>
+<p class="content-p">
+Kylin builds data cube (MOLAP) from hive table (ROLAP) according to the metadata definition.
+If the query can be fulfilled by data cube, Kylin will route the query to data cube that is MOLAP.
+If the query can’t be fulfilled by data cube, Kylin will route the query to hive table that is ROLAP.
+Basically, you can think Kylin as HOLAP on top of MOLAP and ROLAP. 
+</p>
+<hr/>
+<p class="content-header">What does a Kylin query look like?</p>
+<p class="content-p">
+Kylin supports join, projection, filter, aggregation, groups and sub-query. For example:
+<div align="left">
+
+<pre class="prettyprint" style="margin-top:1em;">select test_cal_dt.week_beg_dt, test_category.lv1_categ, test_category.lv2_categ, test_kylin_fact.format_name, test_sites.site_name, sum(test_kylin_fact.price) as total_price, count(*) as total_count from test_kylin_fact left join test_cal_dt on test_kylin_fact.cal_dt = test_cal_dt.cal_dt left join test_category on test_kylin_fact.leaf_categ_id = test_category.leaf_categ_id and test_kylin_fact.site_id = test_category.site_id left join test_sites on test_kylin_fact.site_id = test_sites.site_id where test_kylin_fact.seller_id = 123456 or test_kylin_fact.format_name = 'New' group by test_cal_dt.week_beg_dt, test_category.lv1_categ, test_category.lv2_categ, test_kylin_fact.format_name, test_sites.site_name</pre>
+</div>
+<hr/>
+
+<p class="content-header">What Hadoop components does it work with?</p>
+<p class="content-p">
+Kylin depends on HDFS, MapReduce, Hive and HBase.
+Hive and MapReduce is used for cube building. Hive is used for pre-join and MapReduce is used for pre-aggregation.
+HDFS is used to store intermediated files during cube building.
+HBase is used to store data cube and answer the query. HBase coprocessor is also used for query processing.
+</p>
+<hr/>
+
+<!-- Migrate wiki to here 
+<p class="content-header">Where can I find the technical details about Kylin?</p>
+<p class="content-p"><a href="http://www.slideshare.net/XuJiang2/kylin-hadoop-olap-engine" target="_blank">Kylin Wiki</a></p>
+
+-->
+
+     </div>
+         
+         </div><!--end of rightcontent-->
+         
+         </div><!--end of row-->
+        </div>
+        <!-- /container --> 
+        
+        
+        
+      </header>
+    </div>
+    <!-- / section --> 
+  </div>
+  <!-- /container -->
+ 
+
+  
+
+      
+    </header>
+  </section>
+</main>
+
+      </div>
+    </div>
+
+    <footer id="underfooter">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12 widget" >
+        <div class="widget-body" style="text-align:center">
+          <ul class="icons">
+            <li><a href="https://www.linkedin.com/groups/KylinOLAP-6785709?home=&gid=6785709&trk=anet_ug_hm" target="_blank" class="fa fa-linkedin fa-lg"></a></li>
+            <li><a href="https://twitter.com/debashis_saha/status/519612003443146752" target="_blank" class="fa fa-twitter fa-lg"></a></li>
+            <li><a href="https://www.facebook.com/kylinio?skip_nax_wizard=true&ref_type=logout_gear" target="_blank" class="fa fa-facebook fa-lg"></a></li>
+            <li><a href="https://plus.google.com/communities/101138166999680123468" target="_blank" class="fa fa-google-plus fa-lg"></a></li>
+            <li><a href="https://github.com/KylinOLAP/Kylin" target="_blank" class="fa fa-github-alt fa-lg"></a></li>
+            <!--  <li><a href="#" class="fa fa-weibo fa-lg"></a></li>
+         <li><a href="#" class="fa fa-weixin fa-lg"></a></li>-->
+          </ul>
+          <p style="text-align:center" > Copyright ©2014 <a href="http://kylin.io">Kylin.io</a> All Rights Reserved. | From <a href="http://www.ebayinc.com/">eBay Inc.</a> |<a href="#">back to top</a><br>
+          </p>
+        </div>
+      </div>
+    </div>
+    <!-- /row of widgets --> 
+
+  </div>
+  <div></div>
+  
+</footer>
+
+  <script src="/assets/js/jquery-1.9.1.min.js"></script> 
+  <script src="/assets/js/bootstrap.min.js"></script> 
+  <script src="/assets/js/main.js"></script>
+  </body>
+
+</html>
