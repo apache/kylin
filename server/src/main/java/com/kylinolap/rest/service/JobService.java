@@ -171,6 +171,8 @@ public class JobService extends BasicService {
         result.setUuid(cubeJob.getId());
         result.setType(CubeBuildTypeEnum.BUILD);
         result.setStatus(parseToJobStatus(job.getStatus()));
+        result.setMrWaiting(cubeJob.getMapReduceWaitTime());
+        result.setDuration(cubeJob.getDuration());
         for (int i = 0; i < cubeJob.getTasks().size(); ++i) {
             AbstractExecutable task = cubeJob.getTasks().get(i);
             result.addStep(parseToJobStep(task, i));

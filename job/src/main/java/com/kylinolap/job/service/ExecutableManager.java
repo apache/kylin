@@ -31,6 +31,7 @@ public class ExecutableManager {
 
     private static final Logger logger = LoggerFactory.getLogger(ExecutableManager.class);
     private static final ConcurrentHashMap<KylinConfig, ExecutableManager> CACHE = new ConcurrentHashMap<KylinConfig, ExecutableManager>();
+    private final KylinConfig config;
 
     private JobDao jobDao;
 
@@ -49,6 +50,7 @@ public class ExecutableManager {
 
     private ExecutableManager(KylinConfig config) {
         logger.info("Using metadata url: " + config);
+        this.config = config;
         this.jobDao = JobDao.getInstance(config);
     }
 
@@ -291,6 +293,10 @@ public class ExecutableManager {
             }
         }
         return result;
+    }
+
+    public String getAdminDls() {
+        return config.getAdminDls();
     }
 
     private AbstractExecutable parseTo(JobPO jobPO) {
