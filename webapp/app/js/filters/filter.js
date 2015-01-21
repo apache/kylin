@@ -84,34 +84,52 @@ KylinApp
             }
             return 1300;
         }
-    }).filter('utcToConfigTimeZoneMillis',function($filter){
+    }).filter('utcToConfigTimeZone',function($filter){
 
+        var gmttimezone;
         //convert utc time to specified Timezone
         return function(item,timezone){
+
+            if(){
+
+            }
+            //convert short timezone to GMT
+
+            switch(timezone){
+                case "PST":
+                    gmttimezone= "GMT-8";
+                    break;
+                default:
+                    gmttimezone = timezone;
+            }
+
 
             var localOffset = new Date().getTimezoneOffset();
 
             var convertedMillis = item;
 
-            if(timezone.indexOf('GMT+')!=-1){
-                var offset = timezone.substr(4,1);
+            if(gmttimezone.indexOf("GMT+")!=-1){
+                var offset = gmttimezone.substr(4,1);
                 convertedMillis= item+offset*60*60000+localOffset*60000;
             }
-            else if(timezone.indexOf('GMT-')!=-1){
-                var offset = timezone.substr(4,1);
+            else if(gmttimezone.indexOf("GMT-")!=-1){
+                var offset = gmttimezone.substr(4,1);
                 convertedMillis= item-offset*60*60000+localOffset*60000;
             }
-            else if(timezone=="GMT"){
+            else if(gmttimezone=="GMT"){
                 convertedMillis = item+localOffset*60000;
             }
             else{
+                timezone="GMT-7";
                 convertedMillis = item-7*60*60000+localOffset*60000;
             }
 
             return $filter('date')(convertedMillis, "yyyy-MM-dd HH:mm:ss")+ " "+timezone;
-
-
            // return PST by default
 
+        }
+    }).filter('reverseToUtc',function(){
+        return function(item) {
+            return item += new Date().getTimezoneOffset() * 60000
         }
     });

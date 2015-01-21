@@ -52,11 +52,11 @@ KylinApp
                                 cube.last_build_time = cube.segments[i].last_build_time;
                                 break;
                             }else if(i===0){
-                                cube.last_build_time = cube.create_time;
+                                cube.last_build_time = cube.create_time_utc;
                             }
                         }
                     } else {
-                        cube.last_build_time = cube.create_time;
+                        cube.last_build_time = cube.create_time_utc;
                     }
                     if($routeParams.showDetail == 'true'){
                         cube.showDetail = true;
