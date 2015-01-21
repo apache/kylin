@@ -88,10 +88,11 @@ KylinApp
 
         var gmttimezone;
         //convert utc time to specified Timezone
-        return function(item,timezone){
+        return function(item,timezone,kylinConfig){
 
-            if(){
-
+            //to-do
+            if(!timezone){
+                timezone = kylinConfig.getTimeZone();
             }
             //convert short timezone to GMT
 
