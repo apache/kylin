@@ -76,6 +76,8 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
     @JsonProperty("create_time_utc")
     private long createTimeUTC;
 
+    private String projectName;
+    
     public List<IISegment> getBuildingSegments() {
         List<IISegment> buildingSegments = new ArrayList<IISegment>();
         if (null != segments) {
@@ -408,6 +410,14 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
     @Override
     public List<MeasureDesc> getMeasures() {
         return getDescriptor().getMeasures();
+    }
+
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
     }
 
 }
