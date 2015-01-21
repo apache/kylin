@@ -55,6 +55,9 @@ public class ProjectInstance extends RootPersistentEntity {
     @JsonProperty("create_time")
     private String createTime;
 
+    @JsonProperty("create_time_utc")
+    private long createTimeUTC;
+
     @JsonProperty("last_update_time")
     // FIXME why not RootPersistentEntity.lastModified??
     private String lastUpdateTime;
@@ -62,8 +65,8 @@ public class ProjectInstance extends RootPersistentEntity {
     @JsonProperty("description")
     private String description;
 
-    @JsonProperty("datamodels")
-    private List<RealizationEntry> realizationEntries = new ArrayList<RealizationEntry>();
+    @JsonProperty("realizations")
+    private List<RealizationEntry> realizationEntries;
 
     public String getResourcePath() {
         return concatResourcePath(name);
@@ -88,7 +91,7 @@ public class ProjectInstance extends RootPersistentEntity {
         projectInstance.setOwner(owner);
         projectInstance.setDescription(description);
         projectInstance.setStatus(ProjectStatusEnum.ENABLED);
-        projectInstance.setCreateTime(formatTime(System.currentTimeMillis()));
+        projectInstance.setCreateTimeUTC(System.currentTimeMillis());
         if (realizationEntries != null)
             projectInstance.setRealizationEntries(realizationEntries);
         else
@@ -118,12 +121,28 @@ public class ProjectInstance extends RootPersistentEntity {
         this.status = status;
     }
 
+    /**
+     * @deprecated use createTimeUTC instead
+     * @return
+     */
     public String getCreateTime() {
         return createTime;
     }
 
     public void setCreateTime(String createTime) {
         this.createTime = createTime;
+    }
+
+    public long getCreateTimeUTC() {
+        if(createTimeUTC ==0 && createTime !=null) {
+            createTimeUTC = parseTime(createTime);
+        }
+        
+        return createTimeUTC;
+    }
+
+    public void setCreateTimeUTC(long createTimeUTC) {
+        this.createTimeUTC = createTimeUTC;
     }
 
     public String getName() {
@@ -216,6 +235,9 @@ public class ProjectInstance extends RootPersistentEntity {
         this.owner = owner;
     }
 
+    /**
+     * @deprecated use lastModified instead
+     */
     public String getLastUpdateTime() {
         return lastUpdateTime;
     }
