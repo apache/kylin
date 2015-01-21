@@ -1,5 +1,5 @@
 /**
- * Created by jiazhong on 2015/1/15.
+ * Created by jiazhong on 2015/1/19.
  */
 KylinApp.service('kylinConfig', function(AdminService,$log) {
     var _config;
@@ -14,10 +14,15 @@ KylinApp.service('kylinConfig', function(AdminService,$log) {
     this.getProperty = function(name){
         var keyIndex = _config.indexOf(name);
         var keyLength = name.length;
-        var partialResult = _config.substr(keyIndex+keyLength);
+        var partialResult = _config.substr(keyIndex);
         var preValueIndex = partialResult.indexOf("=");
-        var sufValueIndex = partialResult.indexOf("\r\n");
-        return partialResult.substr(preValueIndex+1,sufValueIndex);
+        var sufValueIndex = partialResult.indexOf("\n\r");
+        return partialResult.substring(preValueIndex+1,sufValueIndex);
 
     }
+
+    this.getTimeZone = function(){
+        return this.getProperty("kylin.rest.timezone").trim();
+    }
 });
+

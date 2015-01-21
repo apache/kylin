@@ -1,7 +1,9 @@
 'use strict';
 
 KylinApp
-    .controller('ProjectCtrl', function ($scope, $modal, $q, ProjectService, MessageService,SweetAlert,$log) {
+    .controller('ProjectCtrl', function ($scope, $modal, $q, ProjectService, MessageService,SweetAlert,$log,kylinConfig) {
+        $scope.displayTimeZone =kylinConfig.getTimeZone();
+
         $scope.projects = [];
         $scope.loading = false;
         $scope.theaditems = [

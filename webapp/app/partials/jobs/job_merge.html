@@ -50,7 +50,7 @@
                                     </tr>
                                     <tr>
                                         <td>Last build Time</td>
-                                        <td>{{mergeStartSeg.last_build_time | date: 'fullDate'}}</td>
+                                        <td>{{mergeStartSeg.last_build_time | utcToConfigTimeZone:displayTimeZone}}</td>
                                     </tr>
                                     <tr>
                                         <td>Last build ID</td>
@@ -73,7 +73,7 @@
                                     </tr>
                                     <tr>
                                         <td>Last build Time</td>
-                                        <td>{{mergeEndSeg.last_build_time | date: 'fullDate'}}</td>
+                                        <td>{{mergeEndSeg.last_build_time | utcToConfigTimeZone:displayTimeZone}}</td>
                                     </tr>
                                     <tr>
                                         <td>Last build ID</td>

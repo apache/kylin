@@ -65,8 +65,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         }
         if($scope.cubeMetaFrame&&($scope.cubeMetaFrame.cube_partition_desc.partition_date_start||$scope.cubeMetaFrame.cube_partition_desc.partition_date_start==0))
         {
-            $scope.cubeMetaFrame.cube_partition_desc.partition_date_start+=new Date().getTimezoneOffset()*git st
-        ;
+            $scope.cubeMetaFrame.cube_partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
         }
         //convert from UTC to local timezone
 
