@@ -181,5 +181,5 @@ hbase -Djava.util.logging.config.file=${CATALINA_HOME}/conf/logging.properties -
     -Djava.library.path=${KYLIN_LD_LIBRARY_PATH} \
     org.apache.hadoop.util.RunJar ${CATALINA_HOME}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start > ${CATALINA_HOME}/logs/kylin_sandbox.log 2>&1 &
 
-echo "Kylin is launched successfully!!!"
-echo "Please visit http://<your_sandbox_ip>:7070/kylin to play with the cubes! (Useranme: ADMIN, Password: KYLIN)"
+echo "Kylin is deployed successfully!!!"
+echo "You need to manually start kylin tomcat by using \"./kylin.sh start\""
