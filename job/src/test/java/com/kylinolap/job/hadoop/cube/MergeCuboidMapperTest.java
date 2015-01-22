@@ -22,8 +22,6 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.kylinolap.metadata.project.ProjectManager;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -39,7 +37,6 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.exception.CubeIntegrityException;
-import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryGenerator;
 import com.kylinolap.dict.DictionaryInfo;
@@ -49,6 +46,7 @@ import com.kylinolap.dict.lookup.TableSignature;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.TblColRef;
+import com.kylinolap.metadata.project.ProjectManager;
 
 /**
  * @author honma
@@ -90,12 +88,12 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
         createTestMetadata();
 
-        logger.info("The metadataUrl is : " + this.getTestConfig());
+        logger.info("The metadataUrl is : " + getTestConfig());
 
-        MetadataManager.removeInstance(this.getTestConfig());
-        CubeManager.removeInstance(this.getTestConfig());
-        ProjectManager.removeInstance(this.getTestConfig());
-        DictionaryManager.removeInstance(this.getTestConfig());
+        MetadataManager.removeInstance(getTestConfig());
+        CubeManager.removeInstance(getTestConfig());
+        ProjectManager.removeInstance(getTestConfig());
+        DictionaryManager.removeInstance(getTestConfig());
 
         // hack for distributed cache
         // CubeManager.removeInstance(KylinConfig.createInstanceFromUri("../job/meta"));//to
@@ -105,7 +103,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
         MergeCuboidMapper mapper = new MergeCuboidMapper();
         mapDriver = MapDriver.newMapDriver(mapper);
 
-        cubeManager = CubeManager.getInstance(this.getTestConfig());
+        cubeManager = CubeManager.getInstance(getTestConfig());
         cube = cubeManager.getCube("test_kylin_cube_without_slr_left_join_ready_2_segments");
         dictionaryManager = DictionaryManager.getInstance(getTestConfig());
         lfn = cube.getDescriptor().findColumnRef("DEFAULT.TEST_KYLIN_FACT", "LSTG_FORMAT_NAME");
@@ -165,7 +163,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
         // hack for distributed cache
         File metaDir = new File("../job/meta");
-        FileUtils.copyDirectory(new File(this.getTestConfig().getMetadataUrl()), metaDir);
+        FileUtils.copyDirectory(new File(getTestConfig().getMetadataUrl()), metaDir);
 
         mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
         mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
