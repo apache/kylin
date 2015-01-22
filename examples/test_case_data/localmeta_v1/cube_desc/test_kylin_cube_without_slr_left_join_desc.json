@@ -181,9 +181,9 @@
         "parameter": {
           "type": "column",
           "value": "seller_id"
-        },
-        "dependent_measure_ref" : "seller_cnt_hll"
-      }
+        }
+      },
+      "dependent_measure_ref" : "seller_cnt_hll"
     },
     {
       "id": "7",

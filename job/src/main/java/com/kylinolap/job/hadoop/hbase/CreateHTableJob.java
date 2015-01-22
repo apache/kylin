@@ -37,6 +37,7 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
+import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -152,17 +153,20 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
     @SuppressWarnings("deprecation")
     public byte[][] getSplits(Configuration conf, Path path) throws Exception {
+        FileSystem fs = path.getFileSystem(conf);
+        if (fs.exists(path) == false) {
+            System.err.println("Path " + path + " not found, no region split, HTable will be one region");
+            return null;
+        }
+
         List<byte[]> rowkeyList = new ArrayList<byte[]>();
         SequenceFile.Reader reader = null;
         try {
-            reader = new SequenceFile.Reader(path.getFileSystem(conf), path, conf);
+            reader = new SequenceFile.Reader(fs, path, conf);
             Writable key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
             Writable value = (Writable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
             while (reader.next(key, value)) {
-                byte[] tmp = ((Text) key).copyBytes();
-                if (rowkeyList.contains(tmp) == false) {
-                    rowkeyList.add(tmp);
-                }
+                rowkeyList.add(((Text) key).copyBytes());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -170,13 +174,15 @@ public class CreateHTableJob extends AbstractHadoopJob {
         } finally {
             IOUtils.closeStream(reader);
         }
-
-        byte[][] retValue = rowkeyList.toArray(new byte[rowkeyList.size()][]);
-        if (retValue.length == 0) {
-            throw new IllegalStateException("Split number is 0, no records in cube??");
+        
+        System.out.println((rowkeyList.size() + 1) + " regions");
+        System.out.println(rowkeyList.size() + " splits");
+        for (byte[] split : rowkeyList) {
+            System.out.println(StringUtils.byteToHexString(split));
         }
 
-        return retValue;
+        byte[][] retValue = rowkeyList.toArray(new byte[rowkeyList.size()][]);
+        return retValue.length == 0 ? null : retValue;
     }
 
     public static void main(String[] args) throws Exception {

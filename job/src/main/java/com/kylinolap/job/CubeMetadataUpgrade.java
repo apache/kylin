@@ -82,6 +82,14 @@ public class CubeMetadataUpgrade {
 //        upgradeProjectInstance();
         upgradeJobInstance();
         
+        verify();
+        
+    }
+    
+    private void verify() {
+        MetadataManager.getInstance(config).reload();
+        CubeDescManager.clearCache();
+        CubeDescManager.getInstance(config);
     }
 
     private List<String> listResourceStore(String pathRoot) {
@@ -479,20 +487,20 @@ public class CubeMetadataUpgrade {
         CubeMetadataUpgrade instance = new CubeMetadataUpgrade(newMetadataUrl);
 
         instance.upgrade();
-        
-        logger.info("Run CubeMetadataUpgrade completed, check the following messages.");
-        logger.info("The following resources have been successfully updated in : " + newMetadataUrl);
+        logger.info("=================================================================");
+        logger.info("Run CubeMetadataUpgrade completed; The following resources have been successfully updated in : " + newMetadataUrl);
         for (String s : instance.updatedResources) {
             logger.info(s);
         }
 
+        logger.info("=================================================================");
         if (instance.errorMsgs.size() > 0) {
             logger.info("Here are the error/warning messages, you may need check:");
             for (String s : instance.errorMsgs) {
                 logger.warn(s);
             }
         } else {
-            logger.info("No error or warning messages; Looks all good.");
+            logger.info("No error or warning messages; The migration is success.");
         }
     }
 }

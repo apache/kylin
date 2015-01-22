@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;
 import org.apache.hadoop.mrunit.types.Pair;
@@ -35,9 +34,9 @@ import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.kv.RowKeyDecoder;
+import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.metadata.measure.MeasureCodec;
 import com.kylinolap.metadata.model.MeasureDesc;
-import com.kylinolap.job.constant.BatchConstants;
 
 /**
  * @author George Song (ysong1)
@@ -54,7 +53,7 @@ public class BaseCuboidMapperTest extends LocalFileMetadataTestCase {
 
         // hack for distributed cache
         FileUtils.deleteDirectory(new File("../job/meta"));
-        FileUtils.copyDirectory(new File(this.getTestConfig().getMetadataUrl()), new File("../job/meta"));
+        FileUtils.copyDirectory(new File(getTestConfig().getMetadataUrl()), new File("../job/meta"));
 
         BaseCuboidMapper<Text> mapper = new BaseCuboidMapper<Text>();
         mapDriver = MapDriver.newMapDriver(mapper);
@@ -77,7 +76,7 @@ public class BaseCuboidMapperTest extends LocalFileMetadataTestCase {
         mapDriver.withInput(new Text("key"), new Text("2012-12-15118480Health & BeautyFragrancesWomenAuction15123456789132.33"));
         List<Pair<Text, Text>> result = mapDriver.run();
 
-        CubeManager cubeMgr = CubeManager.getInstance(this.getTestConfig());
+        CubeManager cubeMgr = CubeManager.getInstance(getTestConfig());
         CubeInstance cube = cubeMgr.getCube(cubeName);
 
         assertEquals(1, result.size());
@@ -119,7 +118,7 @@ public class BaseCuboidMapperTest extends LocalFileMetadataTestCase {
         mapDriver.withInput(new Text("key"), new Text("2012-12-15118480Health & BeautyFragrances\\NAuction15123456789\\N"));
         List<Pair<Text, Text>> result = mapDriver.run();
 
-        CubeManager cubeMgr = CubeManager.getInstance(this.getTestConfig());
+        CubeManager cubeMgr = CubeManager.getInstance(getTestConfig());
         CubeInstance cube = cubeMgr.getCube(cubeName);
 
         assertEquals(1, result.size());

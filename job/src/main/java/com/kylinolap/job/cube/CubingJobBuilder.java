@@ -350,9 +350,9 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         return updateCubeInfoStep;
     }
 
-    private UpdateCubeInfoAfterMergeStep createMergeDictionaryStep(List<String> mergingSegmentIds) {
-        UpdateCubeInfoAfterMergeStep result = new UpdateCubeInfoAfterMergeStep();
-        result.setName(ExecutableConstants.STEP_NAME_UPDATE_CUBE_INFO);
+    private MergeDictionaryStep createMergeDictionaryStep(List<String> mergingSegmentIds) {
+        MergeDictionaryStep result = new MergeDictionaryStep();
+        result.setName(ExecutableConstants.STEP_NAME_MERGE_DICTIONARY);
         result.setCubeName(getCubeName());
         result.setSegmentId(segment.getUuid());
         result.setMergingSegmentIds(mergingSegmentIds);
