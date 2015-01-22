@@ -77,6 +77,10 @@ public class RowKeyColDesc {
         this.colRef = colRef;
     }
 
+    public void setDictionary(String dictionary) {
+        this.dictionary = dictionary;
+    }
+
     @Override
     public String toString() {
         return "RowKeyColDesc [column=" + column + ", length=" + length + ", dictionary=" + dictionary + ", mandatory=" + mandatory + "]";

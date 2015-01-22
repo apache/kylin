@@ -5,6 +5,7 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.kylinolap.common.KylinConfig;
@@ -23,6 +24,7 @@ import com.kylinolap.metadata.model.TableDesc;
  * @author shaoshi
  *
  */
+@Ignore("Not needed, the migrate and test has been moved to CubeMetadataUpgrade.java")
 public class MetadataUpgradeTest extends LocalFileMetadataTestCase {
 
     @Before
