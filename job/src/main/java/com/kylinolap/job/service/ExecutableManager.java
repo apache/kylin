@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Constructor;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -204,46 +205,20 @@ public class ExecutableManager {
         }
     }
 
-//    public boolean updateJobStatus(String jobId, ExecutableState newStatus) {
-//        try {
-//            final JobOutputPO jobOutput = jobDao.getJobOutput(jobId);
-//            ExecutableState oldStatus = ExecutableState.valueOf(jobOutput.getStatus());
-//            if (oldStatus == newStatus) {
-//                return true;
-//            }
-//            if (!ExecutableState.isValidStateTransfer(oldStatus, newStatus)) {
-//                throw new RuntimeException("there is no valid state transfer from:" + oldStatus + " to:" + newStatus);
-//            }
-//            jobOutput.setStatus(newStatus.toString());
-//            jobDao.updateJobOutput(jobOutput);
-//            logger.info("job id:" + jobId + " from " + oldStatus + " to " + newStatus);
-//            return true;
-//        } catch (PersistentException e) {
-//            logger.error("error change job:" + jobId + " to " + newStatus.toString());
-//            throw new RuntimeException(e);
-//        }
-//    }
-//
-//    public boolean updateJobStatus(String jobId, ExecutableState newStatus, String output) {
-//        try {
-//            final JobOutputPO jobOutput = jobDao.getJobOutput(jobId);
-//            ExecutableState oldStatus = ExecutableState.valueOf(jobOutput.getStatus());
-//            if (oldStatus == newStatus) {
-//                return true;
-//            }
-//            if (!ExecutableState.isValidStateTransfer(oldStatus, newStatus)) {
-//                throw new RuntimeException("there is no valid state transfer from:" + oldStatus + " to:" + newStatus);
-//            }
-//            jobOutput.setStatus(newStatus.toString());
-//            jobOutput.setContent(output);
-//            jobDao.updateJobOutput(jobOutput);
-//            logger.info("job id:" + jobId + " from " + oldStatus + " to " + newStatus);
-//            return true;
-//        } catch (PersistentException e) {
-//            logger.error("error change job:" + jobId + " to " + newStatus.toString());
-//            throw new RuntimeException(e);
-//        }
-//    }
+    //for migration only
+    //TODO delete when migration finished
+    public void resetJobOutput(String jobId, ExecutableState state, String output) {
+        try {
+            final JobOutputPO jobOutput = jobDao.getJobOutput(jobId);
+            jobOutput.setStatus(state.toString());
+            if (output != null) {
+                jobOutput.setContent(output);
+            }
+            jobDao.updateJobOutput(jobOutput);
+        } catch (PersistentException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public void addJobInfo(String id, Map<String, String> info) {
         if (info == null) {

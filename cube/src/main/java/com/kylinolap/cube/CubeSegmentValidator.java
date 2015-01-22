@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
-import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.CubePartitionDesc;
@@ -49,13 +48,13 @@ public abstract class CubeSegmentValidator {
         }
     }
 
-    abstract void validate(CubeInstance cubeInstance, CubeSegment newSegment) throws CubeIntegrityException;
+    abstract void validate(CubeInstance cubeInstance, CubeSegment newSegment);
 
     private static class MergeOperationValidator extends CubeSegmentValidator {
 
-        private void checkContingency(CubeInstance cubeInstance, CubeSegment newSegment) throws CubeIntegrityException {
+        private void checkContingency(CubeInstance cubeInstance, CubeSegment newSegment) {
             if (cubeInstance.getSegments().size() < 2) {
-                throw new CubeIntegrityException("No segments to merge.");
+                throw new IllegalStateException("No segments to merge.");
             }
             CubeSegment startSeg = null;
             CubeSegment endSeg = null;
@@ -69,11 +68,11 @@ public abstract class CubeSegmentValidator {
             }
 
             if (null == startSeg || null == endSeg || startSeg.getDateRangeStart() >= endSeg.getDateRangeStart()) {
-                throw new CubeIntegrityException("Invalid date range.");
+                throw new IllegalStateException("Invalid date range.");
             }
         }
 
-        private void checkLoopTableConsistency(CubeInstance cube, CubeSegment newSegment) throws CubeIntegrityException {
+        private void checkLoopTableConsistency(CubeInstance cube, CubeSegment newSegment) {
 
             DictionaryManager dictMgr = DictionaryManager.getInstance(cube.getConfig());
             List<CubeSegment> segmentList = cube.getMergingSegments(newSegment);
@@ -91,7 +90,7 @@ public abstract class CubeSegmentValidator {
                             }
                         }
                     } catch (IOException e) {
-                        throw new CubeIntegrityException("checkLoopTableConsistency not passed when allocating a new segment.");
+                        throw new IllegalStateException("checkLoopTableConsistency not passed when allocating a new segment.");
                     }
                 }
             }
@@ -102,14 +101,14 @@ public abstract class CubeSegmentValidator {
                 for (CubeSegment segment : segmentList) {
                     String temp = segment.getDictResPath(col);
                     if (temp == null) {
-                        throw new CubeIntegrityException("Dictionary is null on column: " + col + " Segment: " + segment);
+                        throw new IllegalStateException("Dictionary is null on column: " + col + " Segment: " + segment);
                     }
 
                     if (dictOfFirstSegment == null) {
                         dictOfFirstSegment = temp;
                     } else {
                         if (!dictOfFirstSegment.equalsIgnoreCase(temp)) {
-                            throw new CubeIntegrityException("Segments with different dictionaries(on lookup table) cannot be merged");
+                            throw new IllegalStateException("Segments with different dictionaries(on lookup table) cannot be merged");
                         }
                     }
                 }
@@ -124,14 +123,14 @@ public abstract class CubeSegmentValidator {
                     Collection<String> a = firstSegment.getSnapshots().values();
                     Collection<String> b = segment.getSnapshots().values();
                     if (!((a.size() == b.size()) && a.containsAll(b)))
-                        throw new CubeIntegrityException("Segments with different snapshots cannot be merged");
+                        throw new IllegalStateException("Segments with different snapshots cannot be merged");
                 }
             }
 
         }
 
         @Override
-        public void validate(CubeInstance cubeInstance, CubeSegment newSegment) throws CubeIntegrityException {
+        public void validate(CubeInstance cubeInstance, CubeSegment newSegment) {
             this.checkContingency(cubeInstance, newSegment);
             this.checkLoopTableConsistency(cubeInstance, newSegment);
         }
@@ -140,7 +139,7 @@ public abstract class CubeSegmentValidator {
     private static class BuildOperationValidator extends CubeSegmentValidator {
 
         @Override
-        void validate(CubeInstance cubeInstance, CubeSegment newSegment) throws CubeIntegrityException {
+        void validate(CubeInstance cubeInstance, CubeSegment newSegment) {
             List<CubeSegment> readySegments = cubeInstance.getSegments(SegmentStatusEnum.READY);
             CubePartitionDesc cubePartitionDesc = cubeInstance.getDescriptor().getCubePartitionDesc();
             final long initStartDate = cubePartitionDesc.isPartitioned() ? cubePartitionDesc.getPartitionDateStart() : 0;
@@ -149,13 +148,13 @@ public abstract class CubeSegmentValidator {
                 if (startDate == readySegment.getDateRangeStart() && startDate < readySegment.getDateRangeEnd()) {
                     startDate = readySegment.getDateRangeEnd();
                 } else {
-                    throw new CubeIntegrityException("there is gap in cube segments");
+                    throw new IllegalStateException("there is gap in cube segments");
                 }
             }
             if (newSegment.getDateRangeStart() == startDate && startDate < newSegment.getDateRangeEnd()) {
                 return;
             }
-            throw new CubeIntegrityException("invalid segment date range from " + newSegment.getDateRangeStart() + " to " + newSegment.getDateRangeEnd());
+            throw new IllegalStateException("invalid segment date range from " + newSegment.getDateRangeStart() + " to " + newSegment.getDateRangeEnd());
         }
     }
 
