@@ -315,9 +315,11 @@ public class CubeManager implements IRealizationProvider {
         CubeSegment newSegment;
         if (cubeInstance.getDescriptor().getCubePartitionDesc().isPartitioned()) {
             if (readySegments.isEmpty()) {
-                newSegment = buildSegment(cubeInstance, cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateStart(), endDate);
+                startDate = cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateStart();
+                newSegment = buildSegment(cubeInstance, startDate, endDate);
             } else {
-                newSegment = buildSegment(cubeInstance, readySegments.get(readySegments.size() - 1).getDateRangeEnd(), endDate);
+                startDate = readySegments.get(readySegments.size() - 1).getDateRangeEnd();
+                newSegment = buildSegment(cubeInstance, startDate, endDate);
             }
         } else {
             newSegment = buildSegment(cubeInstance, 0, Long.MAX_VALUE);
