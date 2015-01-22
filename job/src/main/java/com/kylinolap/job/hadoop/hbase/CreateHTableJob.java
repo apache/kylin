@@ -58,7 +58,7 @@ import com.kylinolap.job.tools.LZOSupportnessChecker;
 
 public class CreateHTableJob extends AbstractHadoopJob {
 
-    protected static final Logger log = LoggerFactory.getLogger(CreateHTableJob.class);
+    protected static final Logger logger = LoggerFactory.getLogger(CreateHTableJob.class);
 
     @Override
     public int run(String[] args) throws Exception {
@@ -97,10 +97,10 @@ public class CreateHTableJob extends AbstractHadoopJob {
                 cf.setMaxVersions(1);
 
                 if (LZOSupportnessChecker.getSupportness()) {
-                    log.info("hbase will use lzo to compress data");
+                    logger.info("hbase will use lzo to compress data");
                     cf.setCompressionType(Algorithm.LZO);
                 } else {
-                    log.info("hbase will not use lzo to compress data");
+                    logger.info("hbase will not use lzo to compress data");
                 }
 
                 cf.setDataBlockEncoding(DataBlockEncoding.FAST_DIFF);
@@ -119,21 +119,21 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
             try {
                 initHTableCoprocessor(tableDesc);
-                log.info("hbase table " + tableName + " deployed with coprocessor.");
+                logger.info("hbase table " + tableName + " deployed with coprocessor.");
 
             } catch (Exception ex) {
-                log.error("Error deploying coprocessor on " + tableName, ex);
-                log.error("Will try creating the table without coprocessor.");
+                logger.error("Error deploying coprocessor on " + tableName, ex);
+                logger.error("Will try creating the table without coprocessor.");
             }
 
             admin.createTable(tableDesc, splitKeys);
-            log.info("create hbase table " + tableName + " done.");
+            logger.info("create hbase table " + tableName + " done.");
 
             return 0;
         } catch (Exception e) {
             printUsage(options);
             e.printStackTrace(System.err);
-            log.error(e.getLocalizedMessage(), e);
+            logger.error(e.getLocalizedMessage(), e);
             return 2;
         } finally {
             admin.close();
@@ -175,8 +175,8 @@ public class CreateHTableJob extends AbstractHadoopJob {
             IOUtils.closeStream(reader);
         }
         
-        System.out.println((rowkeyList.size() + 1) + " regions");
-        System.out.println(rowkeyList.size() + " splits");
+        logger.info((rowkeyList.size() + 1) + " regions");
+        logger.info(rowkeyList.size() + " splits");
         for (byte[] split : rowkeyList) {
             System.out.println(StringUtils.byteToHexString(split));
         }
