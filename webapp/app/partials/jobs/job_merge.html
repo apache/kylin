@@ -42,11 +42,11 @@
                                 <table class="table table-condensed">
                                     <tr>
                                         <td>Start Date (Include)</td>
-                                        <td>{{mergeStartSeg.date_range_start | date: 'fullDate'}}</td>
+                                        <td>{{mergeStartSeg.date_range_start | reverseToGMT0}}</td>
                                     </tr>
                                     <tr>
                                         <td>End Date (Exclude)</td>
-                                        <td>{{mergeStartSeg.date_range_end | date: 'fullDate'}}</td>
+                                        <td>{{mergeStartSeg.date_range_end | reverseToGMT0}}</td>
                                     </tr>
                                     <tr>
                                         <td>Last build Time</td>
@@ -65,11 +65,11 @@
                                 <table class="table table-condensed">
                                     <tr>
                                         <td>Start Date (Include)</td>
-                                        <td>{{mergeEndSeg.date_range_start | date: 'fullDate'}}</td>
+                                        <td>{{mergeEndSeg.date_range_start |  reverseToGMT0}}</td>
                                     </tr>
                                     <tr>
                                         <td>End Date (Exclude)</td>
-                                        <td>{{mergeEndSeg.date_range_end | date: 'fullDate'}}</td>
+                                        <td>{{mergeEndSeg.date_range_end |  reverseToGMT0}}</td>
                                     </tr>
                                     <tr>
                                         <td>Last build Time</td>
@@ -106,7 +106,7 @@
     </div>
     <div class="modal-footer">
         <button class="btn btn-primary" ng-click="cancel()">Close</button>
-        <button class="btn btn-success" ng-click="updateDate();rebuild()"
+        <button class="btn btn-success" ng-click="rebuild(false)"
                 ng-disabled="!(jobBuildRequest.startTime >= 0 && jobBuildRequest.endTime > 0)">
             Submit
         </button>

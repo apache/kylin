@@ -53,7 +53,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     $scope.srcTablesInProject = [];
 
     $scope.getColumnsByTable = function (name) {
-        var temp = null;
+        var temp = [];
         angular.forEach($scope.srcTablesInProject, function (table) {
             if (table.name == name) {
                 temp = table.columns;
@@ -224,6 +224,8 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         loadingRequest.hide();
                         recoveryCubeStatus();
                     }, function (e) {
+                        $scope.saveCubeRollBack();
+
                         if(e.data&& e.data.exception){
                             var message =e.data.exception;
                             var msg = !!(message) ? message : 'Failed to take action.';
@@ -251,6 +253,8 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         loadingRequest.hide();
                         recoveryCubeStatus();
                     }, function (e) {
+                        $scope.saveCubeRollBack();
+
                         if (e.data && e.data.exception) {
                             var message =e.data.exception;
                             var msg = !!(message) ? message : 'Failed to take action.';
@@ -261,12 +265,23 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         //end loading
                         loadingRequest.hide();
                         recoveryCubeStatus();
+
                     });
                 }
+            }
+            else{
+                $scope.saveCubeRollBack();
             }
         });
     };
 
+//    reverse the date
+    $scope.saveCubeRollBack = function (){
+        if($scope.cubeMetaFrame&&($scope.cubeMetaFrame.cube_partition_desc.partition_date_start||$scope.cubeMetaFrame.cube_partition_desc.partition_date_start==0))
+        {
+            $scope.cubeMetaFrame.cube_partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
+        }
+    }
 
     function reGenerateRowKey(){
         $log.log("reGen rowkey & agg group");

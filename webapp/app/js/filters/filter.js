@@ -117,9 +117,6 @@ KylinApp
                 var offset = gmttimezone.substr(4,1);
                 convertedMillis= item-offset*60*60000+localOffset*60000;
             }
-            else if(gmttimezone=="GMT"){
-                convertedMillis = item+localOffset*60000;
-            }
             else{
                 timezone="GMT-7";
                 convertedMillis = item-7*60*60000+localOffset*60000;
@@ -129,8 +126,10 @@ KylinApp
            // return PST by default
 
         }
-    }).filter('reverseToUtc',function(){
+    }).filter('reverseToGMT0',function(){
+        //backend store GMT 0 ,by default front will show local,so convert to GMT Date String format
         return function(item) {
-            return item += new Date().getTimezoneOffset() * 60000
+             item += new Date().getTimezoneOffset() * 60000;
+             return $filter('date')(item, "yyyy-MM-dd HH:mm:ss");
         }
     });
