@@ -95,17 +95,6 @@ public class DeployUtil {
         return new Pair<File, File>(jobJar, coprocessorJar);
     }
     
-    public static void overrideJobConf(String confDir) throws IOException {
-        boolean enableLzo = LZOSupportnessChecker.getSupportness();
-        overrideJobConf(confDir, enableLzo);
-    }
-
-    public static void overrideJobConf(String confDir, boolean enableLzo) throws IOException {
-        File src = new File(confDir, JobEngineConfig.HADOOP_JOB_CONF_FILENAME + (enableLzo ? ".lzo_enabled" : ".lzo_disabled") + ".xml");
-        File dst = new File(confDir, JobEngineConfig.HADOOP_JOB_CONF_FILENAME + ".xml");
-        FileUtils.copyFile(src, dst);
-    }
-
     private static void execCliCommand(String cmd) throws IOException {
         config().getCliCommandExecutor().execute(cmd);
     }
