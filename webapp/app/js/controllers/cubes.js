@@ -362,7 +362,7 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
     };
     $scope.message = "";
 
-    $scope.rebuild = function () {
+    $scope.rebuild = function (jobsubmit) {
 
                 $scope.message = null;
                 $scope.jobBuildRequest.startTime = new Date($scope.jobBuildRequest.startTime).getTime();
@@ -370,6 +370,11 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
 
                 if ($scope.jobBuildRequest.startTime >= $scope.jobBuildRequest.endTime) {
                     $scope.message = "WARNING: End time should be later than the start time.";
+
+                    //rollback date setting
+                    if(jobsubmit){
+                        $scope.rebuildRollback();
+                    }
                     return;
                 }
 
@@ -381,6 +386,11 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
                     SweetAlert.swal('Success!', 'Rebuild job was submitted successfully', 'success');
                 },function(e){
 
+                    //rollback date setting
+                    if(jobsubmit){
+                        $scope.rebuildRollback();
+                    }
+
                     loadingRequest.hide();
                     if(e.data&& e.data.exception){
                         var message =e.data.exception;
@@ -391,6 +401,20 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
                     }
                 });
     };
+
+    $scope.rebuildRollback = function(){
+
+          //to-do pending test,if necessary to rollback this
+//        if($scope.cube.segments.length==0){
+//            $scope.jobBuildRequest.startTime-=new Date().getTimezoneOffset()*60000;
+//        }
+
+        if ($scope.cube.detail.cube_partition_desc.cube_partition_type=='UPDATE_INSERT')
+        {
+            $scope.jobBuildRequest.startTime+=+=new Date().getTimezoneOffset()*60000;
+        }
+        $scope.jobBuildRequest.endTime+=new Date().getTimezoneOffset()*60000;
+    }
 
     // used by cube segment refresh
     $scope.segmentSelected = function (selectedSegment) {
@@ -424,6 +448,12 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
     };
 
     $scope.updateDate = function() {
+
+//      convert to true value as backend GMT+0 time
+        if($scope.cube.segments.length==0){
+            $scope.jobBuildRequest.startTime-=new Date().getTimezoneOffset()*60000;
+        }
+
         if ($scope.cube.detail.cube_partition_desc.cube_partition_type=='UPDATE_INSERT')
         {
             $scope.jobBuildRequest.startTime=$scope.formatDate($scope.jobBuildRequest.startTime);

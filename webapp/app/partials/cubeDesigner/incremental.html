@@ -42,8 +42,7 @@
                            ng-model="cubeMetaFrame.cube_partition_desc.partition_date_start" ng-if="state.mode=='edit'"
                            placeholder="Click to choose start date..." is-open="opened" />
                     <span ng-if="state.mode=='view'">{{
-                        (cubeMetaFrame.cube_partition_desc.partition_date_start |
-                        date:'fullDate') }}</span>
+                        (cubeMetaFrame.cube_partition_desc.partition_date_start|ddate:'fullDate') }}</span>
                 </div>
             </div>
         </div>

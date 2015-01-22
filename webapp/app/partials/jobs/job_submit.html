@@ -17,15 +17,17 @@
                         <tr>
                             <td>Start Date (Include)</td>
                             <td>
+                                <!--cubes.js loadDetail function has convert from GMT mills to GMT string,reverse local -->
+                                <!--no need convert UTC again-->
                                 <div ng-if="cube.segments.length == 0">
                                     {{jobBuildRequest.startTime =
                                     (!!cube.detail.cube_partition_desc.partition_date_start)?cube.detail.cube_partition_desc.partition_date_start:0
                                     | date: 'fullDate'}}
                                 </div>
                                 <div ng-if="cube.segments.length > 0">
+                                    <!--no need to convert-->
                                     <div ng-if="cube.detail.cube_partition_desc.cube_partition_type=='APPEND'">
-                                        {{ jobBuildRequest.startTime =
-                                        cube.segments[cube.segments.length-1].date_range_end | date: 'fullDate' }}
+                                        {{ jobBuildRequest.startTime = cube.segments[cube.segments.length-1].date_range_end| reverseToGMT0 }}
                                     </div>
                                     <div ng-if="cube.detail.cube_partition_desc.cube_partition_type=='UPDATE_INSERT'">
                                         <!--<datepicker ng-model="jobBuildRequest.startTime" show-weeks="true"-->
@@ -60,7 +62,7 @@
         </div>
     </div>
     <div class="modal-footer">
-        <button class="btn btn-success" ng-click="updateDate();rebuild()" ng-disabled="jobBuildRequest.endTime<=0">Submit</button>
+        <button class="btn btn-success" ng-click="updateDate();rebuild(true)" ng-disabled="jobBuildRequest.endTime<=0">Submit</button>
         <button class="btn btn-primary" ng-click="cancel()">Close</button>
     </div>
 </script>
