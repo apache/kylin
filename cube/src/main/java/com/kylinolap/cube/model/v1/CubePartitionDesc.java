@@ -55,6 +55,10 @@ public class CubePartitionDesc {
             }
         }
     }
+    
+    public boolean isPartitioned() {
+        return partitionDateColumnRef != null;
+    }
 
     public String getPartitionDateColumn() {
         return partitionDateColumn;

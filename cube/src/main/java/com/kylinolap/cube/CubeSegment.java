@@ -271,13 +271,15 @@ public class CubeSegment implements Comparable<CubeSegment>, ISegment {
 
     @Override
     public int compareTo(CubeSegment other) {
-        if (this.dateRangeEnd < other.dateRangeEnd) {
-            return -1;
-        } else if (this.dateRangeEnd > other.dateRangeEnd) {
-            return 1;
-        } else {
+        long comp = this.dateRangeStart - other.dateRangeStart;
+        if (comp != 0)
+            return comp < 0 ? -1 : 1;
+        
+        comp = this.dateRangeEnd - other.dateRangeEnd;
+        if (comp != 0)
+            return comp < 0 ? -1 : 1;
+        else
             return 0;
-        }
     }
 
     @Override

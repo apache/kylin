@@ -143,7 +143,7 @@ public abstract class CubeSegmentValidator {
         void validate(CubeInstance cubeInstance, CubeSegment newSegment) throws CubeIntegrityException {
             List<CubeSegment> readySegments = cubeInstance.getSegments(SegmentStatusEnum.READY);
             CubePartitionDesc cubePartitionDesc = cubeInstance.getDescriptor().getCubePartitionDesc();
-            final long initStartDate = cubePartitionDesc.getPartitionDateColumn() != null ? cubePartitionDesc.getPartitionDateStart() : 0;
+            final long initStartDate = cubePartitionDesc.isPartitioned() ? cubePartitionDesc.getPartitionDateStart() : 0;
             long startDate = initStartDate;
             for (CubeSegment readySegment: readySegments) {
                 if (startDate == readySegment.getDateRangeStart() && startDate < readySegment.getDateRangeEnd()) {

@@ -54,6 +54,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         final int totalRowkeyColumnsCount = getCubeDesc().getRowkey().getRowKeyColumns().length;
 
         CubingJob result = initialJob("BUILD");
+        result.setNotifyList(((CubeSegment) segment).getCubeInstance().getDescriptor().getNotifyList());
         final String jobId = result.getId();
         final CubeJoinedFlatTableDesc intermediateTableDesc = new CubeJoinedFlatTableDesc(getCubeDesc(), (CubeSegment) this.segment);
         final String intermediateHiveTableName = getIntermediateHiveTableName(intermediateTableDesc, jobId);
