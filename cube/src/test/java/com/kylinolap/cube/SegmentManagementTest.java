@@ -23,11 +23,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
-import com.kylinolap.metadata.model.SegmentStatusEnum;
-import com.kylinolap.metadata.project.ProjectInstance;
-import com.kylinolap.metadata.project.ProjectManager;
-import com.kylinolap.metadata.realization.RealizationStatusEnum;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -36,10 +31,13 @@ import org.junit.Test;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
+import com.kylinolap.metadata.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectManager;
+import com.kylinolap.metadata.realization.RealizationStatusEnum;
 
 /**
  * @author ysong1
@@ -53,10 +51,10 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
-        MetadataManager.removeInstance(this.getTestConfig());
-        CubeManager.removeInstance(this.getTestConfig());
-        ProjectManager.removeInstance(this.getTestConfig());
-        cubeMgr = CubeManager.getInstance(this.getTestConfig());
+        MetadataManager.removeInstance(getTestConfig());
+        CubeManager.removeInstance(getTestConfig());
+        ProjectManager.removeInstance(getTestConfig());
+        cubeMgr = CubeManager.getInstance(getTestConfig());
     }
 
     @After
@@ -76,7 +74,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testInitialAndAppend() throws ParseException, IOException, CubeIntegrityException {
+    public void testInitialAndAppend() throws ParseException, IOException {
         // create a new cube
         CubeDescManager cubeDescMgr = getCubeDescManager();
         CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
@@ -144,7 +142,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testRebuildSegment() throws IOException, CubeIntegrityException {
+    public void testRebuildSegment() throws IOException {
         CubeInstance cubeInstance = cubeMgr.getCube("test_kylin_cube_with_slr_ready");
 
         // rebuild segment
@@ -174,8 +172,8 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
     }
 
-    @Test(expected = CubeIntegrityException.class)
-    public void testInvalidRebuild() throws IOException, CubeIntegrityException {
+    @Test(expected = IllegalStateException.class)
+    public void testInvalidRebuild() throws IOException {
         CubeInstance cubeInstance = cubeMgr.getCube("test_kylin_cube_with_slr_ready");
 
         // rebuild segment
@@ -184,7 +182,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testMergeSegments() throws IOException, CubeIntegrityException {
+    public void testMergeSegments() throws IOException {
         CubeInstance cubeInstance = cubeMgr.getCube("test_kylin_cube_with_slr_ready_2_segments");
 
         // merge segments
@@ -215,7 +213,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testNonPartitionedCube() throws ParseException, IOException, CubeIntegrityException {
+    public void testNonPartitionedCube() throws ParseException, IOException {
         // create a new cube
         CubeDescManager cubeDescMgr = getCubeDescManager();
         CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_without_slr_desc");
@@ -285,8 +283,8 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
     }
 
-    @Test(expected = CubeIntegrityException.class)
-    public void testInvalidAppend() throws ParseException, IOException, CubeIntegrityException {
+    @Test(expected = IllegalStateException.class)
+    public void testInvalidAppend() throws ParseException, IOException {
         // create a new cube
         CubeDescManager cubeDescMgr = getCubeDescManager();
         CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
