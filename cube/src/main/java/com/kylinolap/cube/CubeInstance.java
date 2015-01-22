@@ -81,6 +81,9 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
 
     @JsonProperty("create_time_utc")
     private long createTimeUTC;
+
+    @JsonProperty("notify_list")
+    private String notifyList;
     
     private String projectName;
     
@@ -454,5 +457,12 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
     public void setProjectName(String projectName) {
         this.projectName = projectName;
     }
-    
+
+    public String getNotifyList() {
+        return notifyList;
+    }
+
+    public void setNotifyList(String notifyList) {
+        this.notifyList = notifyList;
+    }
 }

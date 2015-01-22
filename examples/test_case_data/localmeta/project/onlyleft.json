@@ -1,7 +1,7 @@
 {
 "uuid" : "1eaca32a-a33e-4b69-83dd-0bb8b1f8c93b",
   "name": "onlyleft",
-  "datamodels": [
+  "realizations": [
     {
       "name": "test_kylin_with_slr_left_join_model_desc",
       "type": "CUBE",
