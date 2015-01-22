@@ -72,10 +72,6 @@ public class SampleCubeSetupTest extends HBaseMetadataTestCase {
     }
 
     private void deployJobConfToEtc() throws IOException {
-        String lzoSupportness = System.getenv("KYLIN_LZO_SUPPORTED");
-        boolean enableLzo = "true".equalsIgnoreCase(lzoSupportness);
-        DeployUtil.overrideJobConf(SANDBOX_TEST_DATA, enableLzo);
-        
         File src = new File(SANDBOX_TEST_DATA, JobEngineConfig.HADOOP_JOB_CONF_FILENAME + ".xml");
         File dst = new File("/etc/kylin", src.getName());
         FileUtils.copyFile(src, dst);

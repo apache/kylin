@@ -65,7 +65,6 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
         DeployUtil.initCliWorkDir();
         DeployUtil.deployMetadata();
         DeployUtil.overrideJobJarLocations();
-        DeployUtil.overrideJobConf(SANDBOX_TEST_DATA);
 
         engineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
         jobManager = new JobManager("Build_Test_Cube_Engine", engineConfig);
