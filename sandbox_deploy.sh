@@ -139,20 +139,6 @@ cat examples/test_case_data/sandbox/kylin.properties | \
     sed -e "s/${DEFAULT_SERVER_LIST}/${NEW_SERVER_LIST_PREFIX}${HOSTNAME}/g"   >  /etc/kylin/kylin.properties
 
 
-echo "a copy of kylin config is generated at /etc/kylin/kylin.properties:"
-echo "==================================================================="
-cat /etc/kylin/kylin.properties
-echo ""
-echo "==================================================================="
-echo ""
-
-[[ "$SILENT" ]] || ( read -p "please ensure the configuration is correct, and press y to proceed: " -n 1 -r
-echo    # (optional) move to a new line
-if [[ ! $REPLY =~ ^[Yy]$ ]]
-then
-    echo "Not going to proceed, quit without finishing! You can rerun the script to have another try."
-    exit 1
-fi )
 
 # 1. generate synthetic fact table(test_kylin_fact) data and dump it into hive
 # 2. create empty cubes on these data, ready to be built
@@ -181,4 +167,15 @@ hbase -Djava.util.logging.config.file=${CATALINA_HOME}/conf/logging.properties -
     org.apache.hadoop.util.RunJar ${CATALINA_HOME}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start > ${CATALINA_HOME}/logs/kylin_sandbox.log 2>&1 &
 
 echo "Kylin is deployed successfully!!!"
-echo "You need to manually start kylin tomcat by using \"./kylin.sh start\""
+echo ""
+echo ""
+echo "Please check the configuration:"
+echo ""
+echo "==================================================================="
+cat /etc/kylin/kylin.properties
+echo "==================================================================="
+echo ""
+echo "You can directly modify it by editing /etc/kylin/kylin.properties"
+echo "If you're using standard hadoop sandbox, you might keep it untouched"
+echo "After checking, please start kylin by using \"./kylin.sh start\""
+
