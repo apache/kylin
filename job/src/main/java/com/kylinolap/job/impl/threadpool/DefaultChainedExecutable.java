@@ -1,6 +1,7 @@
 package com.kylinolap.job.impl.threadpool;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.job.dao.JobPO;
 import com.kylinolap.job.exception.ExecuteException;
@@ -8,6 +9,7 @@ import com.kylinolap.job.execution.*;
 import com.kylinolap.job.service.ExecutableManager;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by qianzhou on 12/16/14.
@@ -40,11 +42,22 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
     }
 
     @Override
+    protected void onExecuteStart(ExecutableContext executableContext) {
+        Map<String, String> info = Maps.newHashMap();
+        info.put(START_TIME, Long.toString(System.currentTimeMillis()));
+        final long startTime = getStartTime();
+        if (startTime > 0) {
+            jobService.updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
+        } else {
+            jobService.updateJobOutput(getId(), ExecutableState.RUNNING, info, null);
+        }
+    }
+
+    @Override
     protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
-        if (result.state() == ExecuteResult.State.DISCARDED) {
-            jobService.updateJobOutput(getId(), ExecutableState.DISCARDED, null, null);
-        } else if (isDiscarded()) {
-            //do nothing
+        if (isDiscarded()) {
+            setEndTime(System.currentTimeMillis());
+            notifyUserStatusChange(ExecutableState.DISCARDED);
         } else if (result.succeed()) {
             List<? extends Executable> jobs = getTasks();
             boolean allSucceed = true;
@@ -59,14 +72,20 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
                 }
             }
             if (allSucceed) {
+                setEndTime(System.currentTimeMillis());
                 jobService.updateJobOutput(getId(), ExecutableState.SUCCEED, null, null);
+                notifyUserStatusChange(ExecutableState.SUCCEED);
             } else if (hasError) {
+                setEndTime(System.currentTimeMillis());
                 jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, null);
+                notifyUserStatusChange(ExecutableState.ERROR);
             } else {
                 jobService.updateJobOutput(getId(), ExecutableState.READY, null, null);
             }
         } else {
+            setEndTime(System.currentTimeMillis());
             jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, null);
+            notifyUserStatusChange(ExecutableState.ERROR);
         }
     }
 

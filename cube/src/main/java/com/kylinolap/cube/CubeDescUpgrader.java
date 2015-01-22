@@ -162,7 +162,7 @@ public class CubeDescUpgrader {
         com.kylinolap.cube.model.CubePartitionDesc newPartition = new com.kylinolap.cube.model.CubePartitionDesc();
         newModel.setCubePartitionDesc(newPartition);
 
-        if (partition.getPartitionDateColumn() != null) {
+        if (partition.isPartitioned()) {
             String[] tablecolumn = partition.getPartitionDateColumn().split("\\.");
             if (tablecolumn != null && tablecolumn.length == 2) {
                 String tableFullName = getMetadataManager().appendDBName(tablecolumn[0]);
