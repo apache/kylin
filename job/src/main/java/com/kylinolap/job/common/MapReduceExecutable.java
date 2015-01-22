@@ -100,7 +100,7 @@ public class MapReduceExecutable extends AbstractExecutable {
                 JobStepStatusEnum newStatus = statusChecker.checkStatus();
                 if (status == JobStepStatusEnum.WAITING && (newStatus == JobStepStatusEnum.FINISHED || newStatus == JobStepStatusEnum.ERROR || newStatus == JobStepStatusEnum.RUNNING)) {
                     final long waitTime = System.currentTimeMillis() - getStartTime();
-                    addExtraInfo(MAP_REDUCE_WAIT_TIME, Long.toString(waitTime));
+                    setMapReduceWaitTime(waitTime);
                 }
                 status = newStatus;
                 jobService.addJobInfo(getId(), hadoopCmdOutput.getInfo());
@@ -132,6 +132,14 @@ public class MapReduceExecutable extends AbstractExecutable {
         }
     }
 
+    public long getMapReduceWaitTime() {
+        return getExtraInfoAsLong(MAP_REDUCE_WAIT_TIME, 0L);
+    }
+
+    public void setMapReduceWaitTime(long t) {
+        addExtraInfo(MAP_REDUCE_WAIT_TIME, t + "");
+    }
+
     public void setMapReduceJobClass(Class<? extends AbstractHadoopJob> clazzName) {
         setParam(KEY_MR_JOB, clazzName.getName());
     }
@@ -146,10 +154,6 @@ public class MapReduceExecutable extends AbstractExecutable {
 
     public String getMapReduceParams() {
         return getParam(KEY_PARAMS);
-    }
-
-    public long getMapReduceWaitTime() {
-        return getExtraInfoAsLong(MAP_REDUCE_WAIT_TIME, 0L);
     }
 
 }
