@@ -115,6 +115,10 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         return job.getId();
     }
 
+    public final void setId(String id) {
+        this.job.setUuid(id);
+    }
+
     @Override
     public final ExecutableState getStatus() {
         return jobService.getOutput(this.getId()).getState();
