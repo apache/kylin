@@ -54,6 +54,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         final int totalRowkeyColumnsCount = getCubeDesc().getRowkey().getRowKeyColumns().length;
 
         CubingJob result = initialJob("BUILD");
+        result.setNotifyList(((CubeSegment) segment).getCubeInstance().getDescriptor().getNotifyList());
         final String jobId = result.getId();
         final CubeJoinedFlatTableDesc intermediateTableDesc = new CubeJoinedFlatTableDesc(getCubeDesc(), (CubeSegment) this.segment);
         final String intermediateHiveTableName = getIntermediateHiveTableName(intermediateTableDesc, jobId);
@@ -349,9 +350,9 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         return updateCubeInfoStep;
     }
 
-    private UpdateCubeInfoAfterMergeStep createMergeDictionaryStep(List<String> mergingSegmentIds) {
-        UpdateCubeInfoAfterMergeStep result = new UpdateCubeInfoAfterMergeStep();
-        result.setName(ExecutableConstants.STEP_NAME_UPDATE_CUBE_INFO);
+    private MergeDictionaryStep createMergeDictionaryStep(List<String> mergingSegmentIds) {
+        MergeDictionaryStep result = new MergeDictionaryStep();
+        result.setName(ExecutableConstants.STEP_NAME_MERGE_DICTIONARY);
         result.setCubeName(getCubeName());
         result.setSegmentId(segment.getUuid());
         result.setMergingSegmentIds(mergingSegmentIds);

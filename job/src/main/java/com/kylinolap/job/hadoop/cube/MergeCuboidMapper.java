@@ -23,6 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 import com.kylinolap.common.KylinConfig;
@@ -94,7 +95,8 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
 
     private CubeSegment findSegmentWithUuid(String jobID, CubeInstance cubeInstance) {
         for (CubeSegment segment : cubeInstance.getSegments()) {
-            if (segment.getLastBuildJobID().equalsIgnoreCase(jobID)) {
+            String lastBuildJobID = segment.getLastBuildJobID();
+            if (lastBuildJobID != null && lastBuildJobID.equalsIgnoreCase(jobID)) {
                 return segment;
             }
         }
@@ -121,10 +123,13 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         newKeyBuf = new byte[256];// size will auto-grow
 
         // decide which source segment
-        org.apache.hadoop.mapreduce.InputSplit inputSplit = context.getInputSplit();
+        InputSplit inputSplit = context.getInputSplit();
         String filePath = ((FileSplit) inputSplit).getPath().toString();
+        System.out.println("filePath:" + filePath);
         String jobID = extractJobIDFromPath(filePath);
+        System.out.println("jobID:" + jobID);
         sourceCubeSegment = findSegmentWithUuid(jobID, cube);
+        System.out.println(sourceCubeSegment);
 
         this.rowKeySplitter = new RowKeySplitter(sourceCubeSegment, 65, 255);
     }

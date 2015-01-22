@@ -1,5 +1,26 @@
 package com.kylinolap.job;
 
+import static org.junit.Assert.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.TimeZone;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.util.ToolRunner;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.AbstractKylinTestCase;
@@ -17,22 +38,6 @@ import com.kylinolap.job.impl.threadpool.AbstractExecutable;
 import com.kylinolap.job.impl.threadpool.DefaultScheduler;
 import com.kylinolap.job.service.ExecutableManager;
 
-import org.apache.hadoop.util.ToolRunner;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.TimeZone;
-import java.util.concurrent.*;
-
-import static org.junit.Assert.assertEquals;
-
 public class BuildCubeWithEngineTest {
 
     private JobEngineConfig jobEngineConfig;
@@ -43,6 +48,7 @@ public class BuildCubeWithEngineTest {
 
     protected ExecutableManager jobService;
 
+    private static final Log logger = LogFactory.getLog(BuildCubeWithEngineTest.class);
     protected void waitForJob(String jobId) {
         while (true) {
             AbstractExecutable job = jobService.getJob(jobId);
@@ -60,6 +66,7 @@ public class BuildCubeWithEngineTest {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
+        logger.info("Adding to classpath: " + new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         ClasspathUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         System.setProperty("hdp.version", "2.2.0.0-2041"); // mapred-site.xml ref this
     }
