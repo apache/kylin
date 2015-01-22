@@ -16,6 +16,7 @@ import com.kylinolap.job.hadoop.cube.StorageCleanupJob;
 import com.kylinolap.job.impl.threadpool.AbstractExecutable;
 import com.kylinolap.job.impl.threadpool.DefaultScheduler;
 import com.kylinolap.job.service.ExecutableManager;
+
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.After;
 import org.junit.Before;
@@ -60,6 +61,7 @@ public class BuildCubeWithEngineTest {
     @BeforeClass
     public static void beforeClass() throws Exception {
         ClasspathUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
+        System.setProperty("hdp.version", "2.2.0.0-2041"); // mapred-site.xml ref this
     }
 
     @Before
