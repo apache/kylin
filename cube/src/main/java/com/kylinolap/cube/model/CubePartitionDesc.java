@@ -32,7 +32,8 @@ import com.kylinolap.metadata.model.TblColRef;
 public class CubePartitionDesc {
 
     public static enum CubePartitionType {
-        APPEND, UPDATE_INSERT
+        APPEND, //
+        UPDATE_INSERT // not used since 0.7.1
     }
 
     @JsonProperty("partition_date_column")
@@ -44,7 +45,7 @@ public class CubePartitionDesc {
 
     private TblColRef partitionDateColumnRef;
 
-    public void init(Map<String, Map<String, TblColRef>> columnMap) {
+    void init(Map<String, Map<String, TblColRef>> columnMap) {
         if (null != partitionDateColumn) {
             partitionDateColumn = partitionDateColumn.toUpperCase();
 
@@ -62,6 +63,10 @@ public class CubePartitionDesc {
                 throw new IllegalStateException("The 'partition_date_column' format is invalid: " + partitionDateColumn + ", it should be {db}.{table}.{column}.");
             }
         }
+    }
+    
+    public boolean isPartitioned() {
+        return partitionDateColumnRef != null;
     }
 
     public String getPartitionDateColumn() {

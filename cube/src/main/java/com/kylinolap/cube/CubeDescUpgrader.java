@@ -17,6 +17,8 @@ import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.cube.model.HierarchyDesc;
+import com.kylinolap.cube.model.RowKeyColDesc;
+import com.kylinolap.cube.model.RowKeyDesc;
 import com.kylinolap.cube.model.v1.CubePartitionDesc;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.DataModelDesc;
@@ -46,10 +48,23 @@ public class CubeDescUpgrader {
 
         DataModelDesc model = extractDataModel(oldModel, newModel);
         newModel.setModel(model);
-        
+
         updateDimensions(oldModel, newModel);
 
+        updateRowkeyDictionary(oldModel, newModel);
+
         return newModel;
+    }
+
+    private void updateRowkeyDictionary(com.kylinolap.cube.model.v1.CubeDesc oldModel, com.kylinolap.cube.model.CubeDesc newModel) {
+
+        RowKeyDesc rowKey = newModel.getRowkey();
+
+        for (RowKeyColDesc rowkeyCol : rowKey.getRowKeyColumns()) {
+            if (rowkeyCol.getDictionary() != null && rowkeyCol.getDictionary().length() > 0)
+                rowkeyCol.setDictionary("true");
+        }
+
     }
 
     private void copyUnChangedProperties(com.kylinolap.cube.model.v1.CubeDesc oldModel, com.kylinolap.cube.model.CubeDesc newModel) {
@@ -147,7 +162,7 @@ public class CubeDescUpgrader {
         com.kylinolap.cube.model.CubePartitionDesc newPartition = new com.kylinolap.cube.model.CubePartitionDesc();
         newModel.setCubePartitionDesc(newPartition);
 
-        if (partition.getPartitionDateColumn() != null) {
+        if (partition.isPartitioned()) {
             String[] tablecolumn = partition.getPartitionDateColumn().split("\\.");
             if (tablecolumn != null && tablecolumn.length == 2) {
                 String tableFullName = getMetadataManager().appendDBName(tablecolumn[0]);

@@ -2,16 +2,21 @@ package com.kylinolap.job.impl.threadpool;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.MailService;
 import com.kylinolap.job.dao.JobPO;
 import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.execution.*;
 import com.kylinolap.job.service.ExecutableManager;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -21,6 +26,7 @@ import java.util.UUID;
 public abstract class AbstractExecutable implements Executable, Idempotent {
 
     protected static final String SUBMITTER = "submitter";
+    protected static final String NOTIFY_LIST = "notify_list";
     protected static final String START_TIME = "startTime";
     protected static final String END_TIME = "endTime";
 
@@ -49,15 +55,14 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     }
 
     protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
-        jobService.addJobInfo(getId(), END_TIME, Long.toString(System.currentTimeMillis()));
+        setEndTime(System.currentTimeMillis());
         if (!isDiscarded()) {
             if (result.succeed()) {
                 jobService.updateJobOutput(getId(), ExecutableState.SUCCEED, null, result.output());
-            } else if (result.state() == ExecuteResult.State.DISCARDED) {
-                jobService.updateJobOutput(getId(), ExecutableState.DISCARDED, null, result.output());
             } else {
                 jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, result.output());
             }
+        } else {
         }
     }
 
@@ -65,6 +70,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         if (!isDiscarded()) {
             jobService.addJobInfo(getId(), END_TIME, Long.toString(System.currentTimeMillis()));
             jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, exception.getLocalizedMessage());
+        } else {
         }
     }
 
@@ -109,6 +115,10 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         return job.getId();
     }
 
+    public final void setId(String id) {
+        this.job.setUuid(id);
+    }
+
     @Override
     public final ExecutableState getStatus() {
         return jobService.getOutput(this.getId()).getState();
@@ -135,6 +145,54 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         setParam(SUBMITTER, submitter);
     }
 
+    public final List<String> getNotifyList() {
+        final String str = getParam(NOTIFY_LIST);
+        if (str != null) {
+            return Lists.newArrayList(StringUtils.split(str, ","));
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    public final void setNotifyList(String notifications) {
+        setParam(NOTIFY_LIST, notifications);
+    }
+
+    public final void setNotifyList(List<String> notifications) {
+        setNotifyList(StringUtils.join(notifications, ","));
+    }
+
+    protected Pair<String, String> formatNotifications(ExecutableState state) {
+        return null;
+    }
+
+    protected final void notifyUserStatusChange(ExecutableState state) {
+        try {
+            List<String> users = Lists.newArrayList();
+            users.addAll(getNotifyList());
+            final String adminDls = KylinConfig.getInstanceFromEnv().getAdminDls();
+            if (null != adminDls) {
+                for (String adminDl : adminDls.split(",")) {
+                    users.add(adminDl);
+                }
+            }
+            if (users.isEmpty()) {
+                return;
+            }
+            final Pair<String, String> email = formatNotifications(state);
+            if (email == null) {
+                return;
+            }
+            logger.info("prepare to send email to:" + users);
+            logger.info("job name:" + getName());
+            logger.info("submitter:" + getSubmitter());
+            logger.info("notify list:" + users);
+            new MailService().sendMail(users, email.getLeft(), email.getRight());
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+        }
+    }
+
     public final String getSubmitter() {
         return getParam(SUBMITTER);
     }
@@ -157,12 +215,33 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         jobService.addJobInfo(getId(), key, value);
     }
 
+    public final void setStartTime(long time) {
+        addExtraInfo(START_TIME, time + "");
+    }
+
+    public final void setEndTime(long time) {
+        addExtraInfo(END_TIME, time + "");
+    }
+
     public final long getStartTime() {
         return getExtraInfoAsLong(START_TIME, 0L);
     }
 
     public final long getEndTime() {
         return getExtraInfoAsLong(END_TIME, 0L);
+    }
+
+    public final long getDuration() {
+        final long startTime = getStartTime();
+        if (startTime == 0) {
+            return 0;
+        }
+        final long endTime = getEndTime();
+        if (endTime == 0) {
+            return System.currentTimeMillis() - startTime;
+        } else {
+            return endTime - startTime;
+        }
     }
 
     public JobPO getJobPO() {
