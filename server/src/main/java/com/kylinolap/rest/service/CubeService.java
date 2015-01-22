@@ -48,7 +48,6 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.CuboidCLI;
-import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.common.HadoopShellExecutable;
 import com.kylinolap.job.cube.CubingJob;
@@ -131,7 +130,7 @@ public class CubeService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public CubeInstance updateCubeCost(String cubeName, int cost) throws IOException, CubeIntegrityException {
+    public CubeInstance updateCubeCost(String cubeName, int cost) throws IOException {
         CubeInstance cube = getCubeManager().getCube(cubeName);
         if (cube == null) {
             throw new IOException("Cannot find cube " + cubeName);
@@ -243,13 +242,11 @@ public class CubeService extends BasicService {
             return updatedCubeDesc;
         } catch (IOException e) {
             throw new InternalErrorException("Failed to deal with the request.", e);
-        } catch (CubeIntegrityException e) {
-            throw new InternalErrorException("Failed to deal with the request.", e);
         }
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public void deleteCube(CubeInstance cube) throws IOException, JobException, CubeIntegrityException {
+    public void deleteCube(CubeInstance cube) throws IOException, JobException {
         final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
         if (!cubingJobs.isEmpty()) {
             throw new JobException("The cube " + cube.getName() + " has running job, please discard it and try again.");
@@ -309,7 +306,7 @@ public class CubeService extends BasicService {
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
     @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
-    public CubeInstance purgeCube(CubeInstance cube) throws IOException, CubeIntegrityException, JobException {
+    public CubeInstance purgeCube(CubeInstance cube) throws IOException, JobException {
         String cubeName = cube.getName();
 
         RealizationStatusEnum ostatus = cube.getStatus();
@@ -336,7 +333,7 @@ public class CubeService extends BasicService {
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
     @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
-    public CubeInstance disableCube(CubeInstance cube) throws IOException, CubeIntegrityException, JobException {
+    public CubeInstance disableCube(CubeInstance cube) throws IOException, JobException {
         String cubeName = cube.getName();
 
         RealizationStatusEnum ostatus = cube.getStatus();
@@ -363,7 +360,7 @@ public class CubeService extends BasicService {
      * @throws JobException
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
-    public CubeInstance enableCube(CubeInstance cube) throws IOException, CubeIntegrityException, JobException {
+    public CubeInstance enableCube(CubeInstance cube) throws IOException, JobException {
         String cubeName = cube.getName();
 
         RealizationStatusEnum ostatus = cube.getStatus();
@@ -505,7 +502,7 @@ public class CubeService extends BasicService {
 
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
-    public void updateCubeNotifyList(CubeInstance cube, List<String> notifyList) throws IOException, CubeIntegrityException {
+    public void updateCubeNotifyList(CubeInstance cube, List<String> notifyList) throws IOException {
         CubeDesc desc = cube.getDescriptor();
         desc.setNotifyList(notifyList);
         getCubeDescManager().updateCubeDesc(desc);
@@ -527,7 +524,7 @@ public class CubeService extends BasicService {
      * @throws JobException
      * @throws CubeIntegrityException
      */
-    private void releaseAllSegments(CubeInstance cube) throws IOException, JobException, CubeIntegrityException {
+    private void releaseAllSegments(CubeInstance cube) throws IOException, JobException {
         final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null);
         for (CubingJob cubingJob : cubingJobs) {
             final ExecutableState status = cubingJob.getStatus();

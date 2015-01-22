@@ -36,7 +36,6 @@ import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryGenerator;
 import com.kylinolap.dict.DictionaryInfo;
@@ -152,7 +151,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void test() throws IOException, ParseException, CubeIntegrityException {
+    public void test() throws IOException, ParseException {
 
         String cubeName = "test_kylin_cube_without_slr_left_join_ready_2_segments";
 

@@ -35,24 +35,22 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.job.JobInstance;
-import com.kylinolap.job.constant.JobStatusEnum;
-import com.kylinolap.job.constant.JobStepStatusEnum;
-import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.common.HadoopShellExecutable;
 import com.kylinolap.job.common.MapReduceExecutable;
 import com.kylinolap.job.common.ShellExecutable;
+import com.kylinolap.job.constant.JobStatusEnum;
+import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.cube.CubingJob;
 import com.kylinolap.job.cube.CubingJobBuilder;
+import com.kylinolap.job.engine.JobEngineConfig;
+import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.execution.ExecutableState;
 import com.kylinolap.job.execution.Output;
 import com.kylinolap.job.impl.threadpool.AbstractExecutable;
 import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.rest.constant.Constant;
-import com.kylinolap.rest.exception.InternalErrorException;
 
 /**
  * @author ysong1
@@ -131,25 +129,21 @@ public class JobService extends BasicService {
             }
         }
 
-        try {
-            CubingJob job;
-            CubingJobBuilder builder = (CubingJobBuilder) CubingJobBuilder.newBuilder().setJobEnginConfig(new JobEngineConfig(getConfig())).setSubmitter(submitter);
-            if (buildType == CubeBuildTypeEnum.BUILD) {
-                CubeSegment newSeg = getCubeManager().appendSegments(cube, startDate, endDate);
-                builder.setSegment(newSeg);
-                job = builder.buildJob();
-            } else if (buildType == CubeBuildTypeEnum.MERGE) {
-                CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate);
-                builder.setSegment(newSeg);
-                job = builder.mergeJob();
-            } else {
-                throw new JobException("invalid build type:" + buildType);
-            }
-            getExecutableManager().addJob(job);
-            return parseToJobInstance(job);
-        } catch (CubeIntegrityException e) {
-            throw new InternalErrorException(e.getLocalizedMessage(), e);
+        CubingJob job;
+        CubingJobBuilder builder = (CubingJobBuilder) CubingJobBuilder.newBuilder().setJobEnginConfig(new JobEngineConfig(getConfig())).setSubmitter(submitter);
+        if (buildType == CubeBuildTypeEnum.BUILD) {
+            CubeSegment newSeg = getCubeManager().appendSegments(cube, startDate, endDate);
+            builder.setSegment(newSeg);
+            job = builder.buildJob();
+        } else if (buildType == CubeBuildTypeEnum.MERGE) {
+            CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate);
+            builder.setSegment(newSeg);
+            job = builder.mergeJob();
+        } else {
+            throw new JobException("invalid build type:" + buildType);
         }
+        getExecutableManager().addJob(job);
+        return parseToJobInstance(job);
     }
 
     public JobInstance getJobInstance(String uuid) throws IOException, JobException {
@@ -248,7 +242,7 @@ public class JobService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
-    public JobInstance cancelJob(String jobId) throws IOException, JobException, CubeIntegrityException {
+    public JobInstance cancelJob(String jobId) throws IOException, JobException {
         //        CubeInstance cube = this.getCubeManager().getCube(job.getRelatedCube());
         //        for (BuildCubeJob cubeJob: listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING))) {
         //            getExecutableManager().stopJob(cubeJob.getId());
