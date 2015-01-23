@@ -1,11 +1,13 @@
 package com.kylinolap.job;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HConnection;
+import org.codehaus.plexus.util.FileUtils;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.HBaseConnection;
@@ -111,12 +113,17 @@ public class ExportHBaseData {
     }
 
     public void downloadToLocal() throws IOException {
+        String localArchive = "../examples/test_case_data/minicluster/hbase-export.tar.gz";
 
-        SSHClient ssh = new SSHClient(kylinConfig.getRemoteHadoopCliHostname(), kylinConfig.getRemoteHadoopCliUsername(), kylinConfig.getRemoteHadoopCliPassword());
-        try {
-            ssh.scpFileToLocal(backupArchive, "../examples/test_case_data/minicluster/hbase-export.tar.gz");
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (kylinConfig.getRunAsRemoteCommand()) {
+            SSHClient ssh = new SSHClient(kylinConfig.getRemoteHadoopCliHostname(), kylinConfig.getRemoteHadoopCliUsername(), kylinConfig.getRemoteHadoopCliPassword());
+            try {
+                ssh.scpFileToLocal(backupArchive, localArchive);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            FileUtils.copyFile(new File(backupArchive), new File(localArchive));
         }
     }
 
