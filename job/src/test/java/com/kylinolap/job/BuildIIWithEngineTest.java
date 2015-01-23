@@ -27,11 +27,11 @@ import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.invertedindex.IISegment;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.execution.ExecutableState;
-import com.kylinolap.job.impl.threadpool.AbstractExecutable;
+import com.kylinolap.job.execution.AbstractExecutable;
 import com.kylinolap.job.impl.threadpool.DefaultScheduler;
 import com.kylinolap.job.invertedindex.IIJob;
 import com.kylinolap.job.invertedindex.IIJobBuilder;
-import com.kylinolap.job.service.ExecutableManager;
+import com.kylinolap.job.manager.ExecutableManager;
 import com.kylinolap.metadata.realization.RealizationStatusEnum;
 
 /**

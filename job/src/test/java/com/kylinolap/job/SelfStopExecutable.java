@@ -1,9 +1,8 @@
 package com.kylinolap.job;
 
-import com.kylinolap.job.dao.JobPO;
+import com.kylinolap.job.dao.ExecutablePO;
 import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.execution.ExecutableContext;
-import com.kylinolap.job.execution.ExecutableState;
 import com.kylinolap.job.execution.ExecuteResult;
 
 /**
@@ -14,7 +13,7 @@ public class SelfStopExecutable extends BaseTestExecutable {
     public SelfStopExecutable() {
     }
 
-    public SelfStopExecutable(JobPO job) {
+    public SelfStopExecutable(ExecutablePO job) {
         super(job);
     }
 

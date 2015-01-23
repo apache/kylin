@@ -1,6 +1,7 @@
 package com.kylinolap.job.impl.threadpool;
 
 import com.kylinolap.job.*;
+import com.kylinolap.job.execution.DefaultChainedExecutable;
 import com.kylinolap.job.execution.ExecutableState;
 import org.junit.Test;
 

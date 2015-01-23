@@ -7,11 +7,11 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.job.constant.ExecutableConstants;
-import com.kylinolap.job.dao.JobPO;
+import com.kylinolap.job.dao.ExecutablePO;
 import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.execution.ExecutableContext;
 import com.kylinolap.job.execution.ExecuteResult;
-import com.kylinolap.job.impl.threadpool.AbstractExecutable;
+import com.kylinolap.job.execution.AbstractExecutable;
 import com.kylinolap.metadata.model.SegmentStatusEnum;
 import org.apache.commons.lang.StringUtils;
 
@@ -36,7 +36,7 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
     public UpdateCubeInfoAfterMergeStep() {
     }
 
-    public UpdateCubeInfoAfterMergeStep(JobPO job) {
+    public UpdateCubeInfoAfterMergeStep(ExecutablePO job) {
         super(job);
     }
 
@@ -51,7 +51,7 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
         if (mergedSegment == null) {
             return new ExecuteResult(ExecuteResult.State.FAILED, "there is no segment with id:" + getSegmentId());
         }
-        String cubeSizeString = jobService.getOutput(getConvertToHfileStepId()).getExtra().get(ExecutableConstants.HDFS_BYTES_WRITTEN);
+        String cubeSizeString = executableManager.getOutput(getConvertToHfileStepId()).getExtra().get(ExecutableConstants.HDFS_BYTES_WRITTEN);
         Preconditions.checkState(StringUtils.isNotEmpty(cubeSizeString), "Can't get cube segment size.");
         long cubeSize = Long.parseLong(cubeSizeString) / 1024;
 

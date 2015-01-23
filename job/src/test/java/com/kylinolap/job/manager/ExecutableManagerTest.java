@@ -1,4 +1,4 @@
-package com.kylinolap.job.service;
+package com.kylinolap.job.manager;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
@@ -8,8 +8,8 @@ import com.kylinolap.job.exception.IllegalStateTranferException;
 import com.kylinolap.job.execution.ChainedExecutable;
 import com.kylinolap.job.execution.Executable;
 import com.kylinolap.job.execution.ExecutableState;
-import com.kylinolap.job.impl.threadpool.AbstractExecutable;
-import com.kylinolap.job.impl.threadpool.DefaultChainedExecutable;
+import com.kylinolap.job.execution.AbstractExecutable;
+import com.kylinolap.job.execution.DefaultChainedExecutable;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

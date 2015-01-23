@@ -1,7 +1,6 @@
 package com.kylinolap.job;
 
-import com.kylinolap.job.dao.JobOutputPO;
-import com.kylinolap.job.dao.JobPO;
+import com.kylinolap.job.dao.ExecutablePO;
 import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.execution.ExecutableContext;
 import com.kylinolap.job.execution.ExecuteResult;
@@ -14,7 +13,7 @@ public class SucceedTestExecutable extends BaseTestExecutable {
     public SucceedTestExecutable() {
     }
 
-    public SucceedTestExecutable(JobPO job) {
+    public SucceedTestExecutable(ExecutablePO job) {
         super(job);
     }
 

@@ -33,7 +33,7 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.JobInstance;
-import com.kylinolap.job.dao.JobDao;
+import com.kylinolap.job.dao.ExecutableDao;
 import com.kylinolap.job.exception.PersistentException;
 import com.kylinolap.rest.request.JobBuildRequest;
 import com.kylinolap.rest.request.JobListRequest;
@@ -57,7 +57,7 @@ public class JobControllerTest extends ServiceTestBase {
 
     private CubeManager cubeManager;
     private CubeDescManager cubeDescManager;
-    private JobDao jobDAO;
+    private ExecutableDao executableDAO;
 
     @Before
     public void setup() throws Exception {
@@ -72,7 +72,7 @@ public class JobControllerTest extends ServiceTestBase {
         cubeManager = CubeManager.getInstance(testConfig);
         cubeDescManager = CubeDescManager.getInstance(testConfig);
 
-        jobDAO = JobDao.getInstance(testConfig);
+        executableDAO = ExecutableDao.getInstance(testConfig);
 
     }
 
@@ -99,7 +99,7 @@ public class JobControllerTest extends ServiceTestBase {
         JobInstance job = cubeController.rebuild(CUBE_NAME, jobBuildRequest);
 
         Assert.assertNotNull(jobSchedulerController.get(job.getId()));
-        jobDAO.deleteJob(job.getId());
+        executableDAO.deleteJob(job.getId());
         if (cubeManager.getCube(CUBE_NAME) != null) {
             cubeManager.dropCube(CUBE_NAME, false);
         }
