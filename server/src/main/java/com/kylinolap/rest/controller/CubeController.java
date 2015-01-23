@@ -45,7 +45,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.JobInstance;
