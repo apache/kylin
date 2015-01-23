@@ -24,10 +24,6 @@ public class CubingJob extends DefaultChainedExecutable {
         super();
     }
 
-    public CubingJob(ExecutablePO job) {
-        super(job);
-    }
-
     private static final String CUBE_INSTANCE_NAME = "cubeName";
     private static final String SEGMENT_ID = "segmentId";
     public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";

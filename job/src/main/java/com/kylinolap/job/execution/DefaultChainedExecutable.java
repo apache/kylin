@@ -23,10 +23,6 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
         super();
     }
 
-    public DefaultChainedExecutable(ExecutablePO job) {
-        super(job);
-    }
-
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         List<? extends Executable> executables = getTasks();

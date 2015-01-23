@@ -32,10 +32,7 @@ public class MergeDictionaryStep extends AbstractExecutable {
     private static final String MERGING_SEGMENT_IDS = "mergingSegmentIds";
 
     public MergeDictionaryStep() {
-    }
-
-    public MergeDictionaryStep(ExecutablePO job) {
-        super(job);
+        super();
     }
 
     @Override

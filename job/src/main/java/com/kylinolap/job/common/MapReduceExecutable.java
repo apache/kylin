@@ -34,10 +34,7 @@ public class MapReduceExecutable extends AbstractExecutable {
     public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
 
     public MapReduceExecutable() {
-    }
-
-    public MapReduceExecutable(ExecutablePO job) {
-        super(job);
+        super();
     }
 
     @Override

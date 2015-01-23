@@ -28,10 +28,7 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
     private static final String CUBING_JOB_ID = "cubingJobId";
 
     public UpdateCubeInfoAfterBuildStep() {
-    }
-
-    public UpdateCubeInfoAfterBuildStep(ExecutablePO job) {
-        super(job);
+        super();
     }
 
     public void setCubeName(String cubeName) {

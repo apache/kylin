@@ -27,10 +27,6 @@ public class IIJob extends DefaultChainedExecutable {
         super();
     }
 
-    public IIJob(ExecutablePO job) {
-        super(job);
-    }
-
     private static final String II_INSTANCE_NAME = "iiName";
     private static final String SEGMENT_ID = "segmentId";
 
