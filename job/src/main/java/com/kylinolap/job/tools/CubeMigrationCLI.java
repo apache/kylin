@@ -263,7 +263,7 @@ public class CubeMigrationCLI {
             String tableName = (String) opt.params[0];
             HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
             hbaseAdmin.disableTable(tableName);
-            desc.setValue(CubeManager.getHtableMetadataKey(), dstConfig.getMetadataUrlPrefix());
+            desc.setValue(CubeManager.getHTableMetadataKey(), dstConfig.getMetadataUrlPrefix());
             hbaseAdmin.modifyTable(tableName, desc);
             hbaseAdmin.enableTable(tableName);
             logger.info("CHANGE_HTABLE_HOST is completed");
@@ -380,7 +380,7 @@ public class CubeMigrationCLI {
             String tableName = (String) opt.params[0];
             HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
             hbaseAdmin.disableTable(tableName);
-            desc.setValue(CubeManager.getHtableMetadataKey(), srcConfig.getMetadataUrlPrefix());
+            desc.setValue(CubeManager.getHTableMetadataKey(), srcConfig.getMetadataUrlPrefix());
             hbaseAdmin.modifyTable(tableName, desc);
             hbaseAdmin.enableTable(tableName);
             break;
