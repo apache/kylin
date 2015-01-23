@@ -268,9 +268,7 @@ public class CubeManager implements IRealizationProvider {
     }
 
     public CubeSegment mergeSegments(CubeInstance cubeInstance, final long startDate, final long endDate) throws IOException {
-        if (cubeInstance.getBuildingSegments().size() > 0) {
-            throw new RuntimeException("There is already an allocating segment!");
-        }
+        checkNoBuildingSegment(cubeInstance);
 
         if (cubeInstance.getDescriptor().getCubePartitionDesc().isPartitioned() == false) {
             throw new IllegalStateException("there is no partition date column specified, only full build is supported");
@@ -305,9 +303,8 @@ public class CubeManager implements IRealizationProvider {
     }
 
     public CubeSegment appendSegments(CubeInstance cubeInstance, long startDate, long endDate) throws IOException {
-        if (cubeInstance.getBuildingSegments().size() > 0) {
-            throw new RuntimeException("There is already an allocating segment!");
-        }
+        checkNoBuildingSegment(cubeInstance);
+        
         List<CubeSegment> readySegments = cubeInstance.getSegments(SegmentStatusEnum.READY);
         CubeSegment newSegment;
         if (cubeInstance.getDescriptor().getCubePartitionDesc().isPartitioned()) {
@@ -326,6 +323,12 @@ public class CubeManager implements IRealizationProvider {
         this.updateCube(cubeInstance);
 
         return newSegment;
+    }
+
+    private void checkNoBuildingSegment(CubeInstance cubeInstance) {
+        if (cubeInstance.getBuildingSegments().size() > 0) {
+            throw new IllegalStateException("There is already a building segment!");
+        }
     }
 
     public static String getHBaseStorageLocationPrefix() {
