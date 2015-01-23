@@ -1,6 +1,5 @@
 package com.kylinolap.job;
 
-import com.kylinolap.job.dao.ExecutablePO;
 import com.kylinolap.job.execution.AbstractExecutable;
 
 /**
@@ -10,10 +9,7 @@ public abstract class BaseTestExecutable extends AbstractExecutable {
 
 
     public BaseTestExecutable() {
-    }
-
-    public BaseTestExecutable(ExecutablePO job) {
-        super(job);
+        super();
     }
 
 }

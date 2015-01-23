@@ -76,10 +76,10 @@ public class CubeMetadataUpgrade {
     
     public void upgrade() {
 
-//        upgradeTableDesc();
-//        upgradeTableDesceExd();
-//        upgradeCubeDesc();
-//        upgradeProjectInstance();
+        upgradeTableDesc();
+        upgradeTableDesceExd();
+        upgradeCubeDesc();
+        upgradeProjectInstance();
         upgradeJobInstance();
         
         verify();

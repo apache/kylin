@@ -26,10 +26,7 @@ public class HqlExecutable extends AbstractExecutable {
     private static final String HIVE_CONFIG = "hive-config";
 
     public HqlExecutable() {
-    }
-
-    public HqlExecutable(ExecutablePO job) {
-        super(job);
+        super();
     }
 
     @Override

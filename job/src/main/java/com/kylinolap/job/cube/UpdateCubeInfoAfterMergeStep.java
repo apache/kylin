@@ -33,10 +33,7 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
     private final CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
 
     public UpdateCubeInfoAfterMergeStep() {
-    }
-
-    public UpdateCubeInfoAfterMergeStep(ExecutablePO job) {
-        super(job);
+        super();
     }
 
     @Override

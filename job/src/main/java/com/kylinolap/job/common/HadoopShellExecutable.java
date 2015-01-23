@@ -21,10 +21,7 @@ public class HadoopShellExecutable extends AbstractExecutable {
     private static final String KEY_PARAMS = "HADOOP_SHELL_JOB_PARAMS";
 
     public HadoopShellExecutable() {
-    }
-
-    public HadoopShellExecutable(ExecutablePO job) {
-        super(job);
+        super();
     }
 
     @SuppressWarnings("unchecked")

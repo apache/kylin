@@ -19,7 +19,7 @@ public class ExecutablePO extends RootPersistentEntity {
     private String name;
 
     @JsonProperty("tasks")
-    private List<ExecutablePO> tasks = Lists.newArrayList();
+    private List<ExecutablePO> tasks;
 
     @JsonProperty("type")
     private String type;

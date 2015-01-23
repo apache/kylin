@@ -6,7 +6,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.MailService;
-import com.kylinolap.job.dao.ExecutablePO;
 import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.impl.threadpool.DefaultContext;
 import com.kylinolap.job.manager.ExecutableManager;
@@ -30,22 +29,16 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected static final String START_TIME = "startTime";
     protected static final String END_TIME = "endTime";
 
-    private ExecutablePO executablePO;
     protected static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
+
+    private String name;
+    private String id;
+    private Map<String, String> params = Maps.newHashMap();
 
     protected static ExecutableManager executableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
 
     public AbstractExecutable() {
-        String uuid = UUID.randomUUID().toString();
-        this.executablePO = new ExecutablePO();
-        this.executablePO.setType(this.getClass().getName());
-        this.executablePO.setUuid(uuid);
-    }
-
-    protected AbstractExecutable(ExecutablePO job) {
-        Preconditions.checkArgument(job != null, "job cannot be null");
-        Preconditions.checkArgument(job.getId() != null, "job id cannot be null");
-        this.executablePO = job;
+        setId(UUID.randomUUID().toString());
     }
 
     protected void onExecuteStart(ExecutableContext executableContext) {
@@ -103,20 +96,20 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     @Override
     public String getName() {
-        return executablePO.getName();
+        return name;
     }
 
     public void setName(String name) {
-        executablePO.setName(name);
+        this.name = name;
     }
 
     @Override
     public final String getId() {
-        return executablePO.getId();
+        return this.id;
     }
 
     public final void setId(String id) {
-        this.executablePO.setUuid(id);
+        this.id = id;
     }
 
     @Override
@@ -126,15 +119,19 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     @Override
     public final Map<String, String> getParams() {
-        return Collections.unmodifiableMap(executablePO.getParams());
+        return Collections.unmodifiableMap(this.params);
     }
 
     public final String getParam(String key) {
-        return executablePO.getParams().get(key);
+        return this.params.get(key);
     }
 
     public final void setParam(String key, String value) {
-        executablePO.getParams().put(key, value);
+        this.params.put(key, value);
+    }
+
+    public final void setParams(Map<String, String> params) {
+        this.params.putAll(params);
     }
 
     public final long getLastModified() {
@@ -244,12 +241,8 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         }
     }
 
-    public ExecutablePO getJobPO() {
-        return executablePO;
-    }
-
     /*
-    * discarded is triggered by JobService, the Scheduler is not awake of that, so
+    * discarded is triggered by JobService, the Scheduler is not awake of that
     *
     * */
     protected final boolean isDiscarded() {

@@ -56,7 +56,7 @@ public class ExecutableManager {
 
     public void addJob(AbstractExecutable executable) {
         try {
-            executableDao.addJob(getJobPO(executable));
+            executableDao.addJob(parse(executable));
             addJobOutput(executable);
         } catch (PersistentException e) {
             logger.error("fail to submit job:" + executable.getId(), e);
@@ -258,30 +258,34 @@ public class ExecutableManager {
         }
     }
 
-
-    private ExecutablePO getJobPO(AbstractExecutable executable) {
-        final ExecutablePO result = executable.getJobPO();
+    private static ExecutablePO parse(AbstractExecutable executable) {
+        ExecutablePO result = new ExecutablePO();
+        result.setName(executable.getName());
+        result.setUuid(executable.getId());
+        result.setType(executable.getClass().getName());
+        result.setParams(executable.getParams());
         if (executable instanceof DefaultChainedExecutable) {
-            for (AbstractExecutable task: ((DefaultChainedExecutable) executable).getTasks()) {
-                result.getTasks().add(getJobPO(task));
+            List<ExecutablePO> tasks = Lists.newArrayList();
+            for (AbstractExecutable task : ((DefaultChainedExecutable) executable).getTasks()) {
+                tasks.add(parse(task));
             }
+            result.setTasks(tasks);
         }
         return result;
     }
 
-    public String getAdminDls() {
-        return config.getAdminDls();
-    }
-
-    private AbstractExecutable parseTo(ExecutablePO executablePO) {
+    private static AbstractExecutable parseTo(ExecutablePO executablePO) {
         if (executablePO == null) {
             return null;
         }
         String type = executablePO.getType();
         try {
             Class<? extends AbstractExecutable> clazz = (Class<? extends AbstractExecutable>) Class.forName(type);
-            Constructor<? extends AbstractExecutable> constructor = clazz.getConstructor(ExecutablePO.class);
-            AbstractExecutable result = constructor.newInstance(executablePO);
+            Constructor<? extends AbstractExecutable> constructor = clazz.getConstructor();
+            AbstractExecutable result = constructor.newInstance();
+            result.setId(executablePO.getUuid());
+            result.setName(executablePO.getName());
+            result.setParams(executablePO.getParams());
             List<ExecutablePO> tasks = executablePO.getTasks();
             if (tasks != null && !tasks.isEmpty()) {
                 Preconditions.checkArgument(result instanceof DefaultChainedExecutable);

@@ -23,10 +23,7 @@ public class ShellExecutable extends AbstractExecutable {
     private static final String CMD = "cmd";
 
     public ShellExecutable() {
-    }
-
-    public ShellExecutable(ExecutablePO job) {
-        super(job);
+        super();
     }
 
     @Override

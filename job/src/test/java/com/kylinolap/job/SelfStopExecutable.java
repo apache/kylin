@@ -1,6 +1,5 @@
 package com.kylinolap.job;
 
-import com.kylinolap.job.dao.ExecutablePO;
 import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.execution.ExecutableContext;
 import com.kylinolap.job.execution.ExecuteResult;
@@ -11,10 +10,7 @@ import com.kylinolap.job.execution.ExecuteResult;
 public class SelfStopExecutable extends BaseTestExecutable {
 
     public SelfStopExecutable() {
-    }
-
-    public SelfStopExecutable(ExecutablePO job) {
-        super(job);
+        super();
     }
 
     @Override
