@@ -17,4 +17,8 @@ public class LZOSupportnessChecker {
         }
         return true;
     }
+
+    public static void main(String[] args) throws Exception {
+        System.out.println("LZO supported by current env? " + getSupportness());
+    }
 }
