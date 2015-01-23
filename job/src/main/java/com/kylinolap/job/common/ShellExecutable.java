@@ -3,11 +3,11 @@ package com.kylinolap.job.common;
 import com.google.common.collect.Maps;
 import com.kylinolap.common.util.Logger;
 import com.kylinolap.job.constant.ExecutableConstants;
-import com.kylinolap.job.dao.JobPO;
+import com.kylinolap.job.dao.ExecutablePO;
 import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.execution.ExecutableContext;
 import com.kylinolap.job.execution.ExecuteResult;
-import com.kylinolap.job.impl.threadpool.AbstractExecutable;
+import com.kylinolap.job.execution.AbstractExecutable;
 import org.apache.hadoop.hbase.util.Pair;
 
 import java.io.IOException;
@@ -23,10 +23,7 @@ public class ShellExecutable extends AbstractExecutable {
     private static final String CMD = "cmd";
 
     public ShellExecutable() {
-    }
-
-    public ShellExecutable(JobPO job) {
-        super(job);
+        super();
     }
 
     @Override
@@ -35,7 +32,7 @@ public class ShellExecutable extends AbstractExecutable {
             logger.info("executing:" + getCmd());
             final ShellExecutableLogger logger = new ShellExecutableLogger();
             final Pair<Integer, String> result = context.getConfig().getCliCommandExecutor().execute(getCmd(), logger);
-            jobService.addJobInfo(getId(), logger.getInfo());
+            executableManager.addJobInfo(getId(), logger.getInfo());
             return new ExecuteResult(result.getFirst() == 0? ExecuteResult.State.SUCCEED: ExecuteResult.State.FAILED, result.getSecond());
         } catch (IOException e) {
             logger.error("job:" + getId() + " execute finished with exception", e);

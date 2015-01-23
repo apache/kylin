@@ -29,7 +29,7 @@ import com.kylinolap.job.hadoop.dict.CreateDictionaryJob;
 import com.kylinolap.job.hadoop.hbase.BulkLoadJob;
 import com.kylinolap.job.hadoop.hbase.CreateHTableJob;
 import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
-import com.kylinolap.job.impl.threadpool.AbstractExecutable;
+import com.kylinolap.job.execution.AbstractExecutable;
 
 /**
  * Created by qianzhou on 12/25/14.
