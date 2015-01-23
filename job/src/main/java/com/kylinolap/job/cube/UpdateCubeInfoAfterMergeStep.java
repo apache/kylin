@@ -43,6 +43,7 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         final CubeInstance cube = cubeManager.getCube(getCubeName());
+        
         CubeSegment mergedSegment = cube.getSegmentById(getSegmentId());
         if (mergedSegment == null) {
             return new ExecuteResult(ExecuteResult.State.FAILED, "there is no segment with id:" + getSegmentId());
@@ -51,11 +52,11 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
         Preconditions.checkState(StringUtils.isNotEmpty(cubeSizeString), "Can't get cube segment size.");
         long cubeSize = Long.parseLong(cubeSizeString) / 1024;
 
+        // collect source statistics
         List<String> mergingSegmentIds = getMergingSegmentIds();
         if (mergingSegmentIds.isEmpty()) {
             return new ExecuteResult(ExecuteResult.State.FAILED, "there are no merging segments");
         }
-        
         long sourceCount = 0L;
         long sourceSize = 0L;
         for (String id : mergingSegmentIds) {
