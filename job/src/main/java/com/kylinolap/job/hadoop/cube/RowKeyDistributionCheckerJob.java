@@ -84,7 +84,7 @@ public class RowKeyDistributionCheckerJob extends AbstractHadoopJob {
             return waitForCompletion(job);
         } catch (Exception e) {
             printUsage(options);
-            log.error(e.getLocalizedMessage(), e);
+            logger.error(e.getLocalizedMessage(), e);
             return 2;
         }
     }
