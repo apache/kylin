@@ -156,6 +156,10 @@ public class JobService extends BasicService {
         return parseToJobInstance(getExecutableManager().getJob(uuid));
     }
 
+    public Output getOutput(String id) {
+        return getExecutableManager().getOutput(id);
+    }
+
     private JobInstance parseToJobInstance(AbstractExecutable job) {
         if (job == null) {
             return null;
