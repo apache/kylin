@@ -5,8 +5,8 @@
     <description>Apache Kylin Home</description>
     <link>http://kyli.io/</link>
     <atom:link href="http://kyli.io/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 20 Jan 2015 23:03:54 +0800</pubDate>
-    <lastBuildDate>Tue, 20 Jan 2015 23:03:54 +0800</lastBuildDate>
+    <pubDate>Fri, 23 Jan 2015 10:55:31 +0800</pubDate>
+    <lastBuildDate>Fri, 23 Jan 2015 10:55:31 +0800</lastBuildDate>
     <generator>Jekyll v2.5.3</generator>
     
       <item>
@@ -27,8 +27,8 @@
 
 </description>
         <pubDate>Wed, 21 Jan 2015 05:52:58 +0800</pubDate>
-        <link>http://kyli.io/jekyll/update/2015/01/21/welcome-to-jekyll.html</link>
-        <guid isPermaLink="true">http://kyli.io/jekyll/update/2015/01/21/welcome-to-jekyll.html</guid>
+        <link>http://kyli.io/jekyll/update/2015/01/21/welcome-to-jekyll/</link>
+        <guid isPermaLink="true">http://kyli.io/jekyll/update/2015/01/21/welcome-to-jekyll/</guid>
         
         
         <category>jekyll</category>
