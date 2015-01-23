@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 set -o pipefail  # trace ERR through pipes
 set -o errtrace  # trace ERR through 'time command' and other functions
@@ -31,7 +31,6 @@ echo "This script will help you:"
 echo "1. Check environment"
 echo "2. Build Kylin artifacts"
 echo "3. Prepare test cube related data"
-echo "4. Lauch a web service to build cube and query with (at http://localhost:7070)"
 echo "Please make sure you are running this script on a hadoop CLI machine, and you have enough permissions."
 echo "Also, We assume you have installed: JAVA, TOMCAT, NPM and MAVEN."
 echo "[Warning] The installation may break existing tomcat applications on this CLI"
@@ -140,20 +139,6 @@ cat examples/test_case_data/sandbox/kylin.properties | \
     sed -e "s/${DEFAULT_SERVER_LIST}/${NEW_SERVER_LIST_PREFIX}${HOSTNAME}/g"   >  /etc/kylin/kylin.properties
 
 
-echo "a copy of kylin config is generated at /etc/kylin/kylin.properties:"
-echo "==================================================================="
-cat /etc/kylin/kylin.properties
-echo ""
-echo "==================================================================="
-echo ""
-
-[[ "$SILENT" ]] || ( read -p "please ensure the configuration is correct, and press y to proceed: " -n 1 -r
-echo    # (optional) move to a new line
-if [[ ! $REPLY =~ ^[Yy]$ ]]
-then
-    echo "Not going to proceed, quit without finishing! You can rerun the script to have another try."
-    exit 1
-fi )
 
 # 1. generate synthetic fact table(test_kylin_fact) data and dump it into hive
 # 2. create empty cubes on these data, ready to be built
@@ -172,14 +157,16 @@ cp $KYLIN_HOME/server/target/kylin.war $CATALINA_HOME/webapps/
 chmod 644 $CATALINA_HOME/webapps/kylin.war
 echo "Tomcat war deployed..."
 
-#start tomcat service from hbase runjar
-export HBASE_CLASSPATH_PREFIX=/etc/kylin:${CATALINA_HOME}/bin/bootstrap.jar:${CATALINA_HOME}/bin/tomcat-juli.jar:${CATALINA_HOME}/lib/*:$HBASE_CLASSPATH_PREFIX
-hbase -Djava.util.logging.config.file=${CATALINA_HOME}/conf/logging.properties -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
-    -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true \
-    -Dspring.profiles.active=sandbox -Djava.endorsed.dirs=${CATALINA_HOME}/endorsed  -Dcatalina.base=${CATALINA_HOME} \
-    -Dcatalina.home=${CATALINA_HOME} -Djava.io.tmpdir=${CATALINA_HOME}/temp  \
-    -Djava.library.path=${KYLIN_LD_LIBRARY_PATH} \
-    org.apache.hadoop.util.RunJar ${CATALINA_HOME}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start > ${CATALINA_HOME}/logs/kylin_sandbox.log 2>&1 &
+echo "Kylin is deployed successfully!!!"
+echo ""
+echo ""
+echo "Please check the configuration:"
+echo ""
+echo "==================================================================="
+cat /etc/kylin/kylin.properties
+echo "==================================================================="
+echo ""
+echo "You can directly modify it by editing /etc/kylin/kylin.properties"
+echo "If you're using standard hadoop sandbox, you might keep it untouched"
+echo "After checking, please start kylin by using \"./kylin.sh start\""
 
-echo "Kylin is launched successfully!!!"
-echo "Please visit http://<your_sandbox_ip>:7070/kylin to play with the cubes! (Useranme: ADMIN, Password: KYLIN)"
