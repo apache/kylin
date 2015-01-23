@@ -5,12 +5,12 @@ import java.lang.reflect.Constructor;
 import org.apache.hadoop.util.ToolRunner;
 
 import com.google.common.base.Preconditions;
-import com.kylinolap.job.dao.JobPO;
+import com.kylinolap.job.dao.ExecutablePO;
 import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.execution.ExecutableContext;
 import com.kylinolap.job.execution.ExecuteResult;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.job.impl.threadpool.AbstractExecutable;
+import com.kylinolap.job.execution.AbstractExecutable;
 
 /**
  * Created by qianzhou on 12/26/14.
@@ -23,7 +23,7 @@ public class HadoopShellExecutable extends AbstractExecutable {
     public HadoopShellExecutable() {
     }
 
-    public HadoopShellExecutable(JobPO job) {
+    public HadoopShellExecutable(ExecutablePO job) {
         super(job);
     }
 

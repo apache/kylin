@@ -36,7 +36,7 @@ import com.kylinolap.job.hadoop.invertedindex.IICreateHFileJob;
 import com.kylinolap.job.hadoop.invertedindex.IICreateHTableJob;
 import com.kylinolap.job.hadoop.invertedindex.IIDistinctColumnsJob;
 import com.kylinolap.job.hadoop.invertedindex.InvertedIndexJob;
-import com.kylinolap.job.impl.threadpool.AbstractExecutable;
+import com.kylinolap.job.execution.AbstractExecutable;
 
 /**
  * Created by shaoshi on 1/15/15.

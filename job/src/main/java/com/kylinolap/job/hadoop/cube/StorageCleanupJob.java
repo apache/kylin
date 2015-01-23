@@ -24,7 +24,7 @@ import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.execution.ExecutableState;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.job.service.ExecutableManager;
+import com.kylinolap.job.manager.ExecutableManager;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;

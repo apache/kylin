@@ -1,18 +1,17 @@
 package com.kylinolap.job.common;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.execution.Output;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.job.tools.HadoopStatusChecker;
 import com.kylinolap.job.constant.ExecutableConstants;
-import com.kylinolap.job.dao.JobPO;
+import com.kylinolap.job.dao.ExecutablePO;
 import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.execution.ExecutableContext;
 import com.kylinolap.job.execution.ExecutableState;
 import com.kylinolap.job.execution.ExecuteResult;
-import com.kylinolap.job.impl.threadpool.AbstractExecutable;
+import com.kylinolap.job.execution.AbstractExecutable;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Cluster;
@@ -37,17 +36,17 @@ public class MapReduceExecutable extends AbstractExecutable {
     public MapReduceExecutable() {
     }
 
-    public MapReduceExecutable(JobPO job) {
+    public MapReduceExecutable(ExecutablePO job) {
         super(job);
     }
 
     @Override
     protected void onExecuteStart(ExecutableContext executableContext) {
-        final Output output = jobService.getOutput(getId());
+        final Output output = executableManager.getOutput(getId());
         if (output.getExtra().containsKey(START_TIME)) {
             final String mrJobId = output.getExtra().get(ExecutableConstants.MR_JOB_ID);
             if (mrJobId == null) {
-                jobService.updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
+                executableManager.updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
                 return;
             }
             try {
@@ -56,7 +55,7 @@ public class MapReduceExecutable extends AbstractExecutable {
                     //remove previous mr job info
                     super.onExecuteStart(executableContext);
                 } else {
-                    jobService.updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
+                    executableManager.updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
                 }
             } catch (IOException e) {
                 logger.warn("error get hadoop status");
@@ -79,7 +78,7 @@ public class MapReduceExecutable extends AbstractExecutable {
         Preconditions.checkNotNull(params);
         try {
             Job job;
-            final Map<String, String> extra = jobService.getOutput(getId()).getExtra();
+            final Map<String, String> extra = executableManager.getOutput(getId()).getExtra();
             if (extra.containsKey(ExecutableConstants.MR_JOB_ID)) {
                 job = new Cluster(new Configuration()).getJob(JobID.forName(extra.get(ExecutableConstants.MR_JOB_ID)));
                 logger.info("mr_job_id:" + extra.get(ExecutableConstants.MR_JOB_ID + " resumed"));
@@ -103,13 +102,13 @@ public class MapReduceExecutable extends AbstractExecutable {
                     setMapReduceWaitTime(waitTime);
                 }
                 status = newStatus;
-                jobService.addJobInfo(getId(), hadoopCmdOutput.getInfo());
+                executableManager.addJobInfo(getId(), hadoopCmdOutput.getInfo());
                 if (status.isComplete()) {
                     hadoopCmdOutput.updateJobCounter();
                     final Map<String, String> info = hadoopCmdOutput.getInfo();
                     info.put(ExecutableConstants.SOURCE_RECORDS_COUNT, hadoopCmdOutput.getMapInputRecords());
                     info.put(ExecutableConstants.HDFS_BYTES_WRITTEN, hadoopCmdOutput.getHdfsBytesWritten());
-                    jobService.addJobInfo(getId(), info);
+                    executableManager.addJobInfo(getId(), info);
 
                     if (status == JobStepStatusEnum.FINISHED) {
                         return new ExecuteResult(ExecuteResult.State.SUCCEED, output.toString());

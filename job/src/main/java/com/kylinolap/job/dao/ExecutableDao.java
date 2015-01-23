@@ -1,13 +1,11 @@
 package com.kylinolap.job.dao;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.job.exception.PersistentException;
-import com.kylinolap.job.execution.ExecutableState;
 import com.kylinolap.metadata.MetadataManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,21 +19,21 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by qianzhou on 12/15/14.
  */
-public class JobDao {
+public class ExecutableDao {
 
-    private static final Serializer<JobPO> JOB_SERIALIZER = new JsonSerializer<JobPO>(JobPO.class);
-    private static final Serializer<JobOutputPO> JOB_OUTPUT_SERIALIZER = new JsonSerializer<JobOutputPO>(JobOutputPO.class);
-    private static final Logger logger = LoggerFactory.getLogger(JobDao.class);
-    private static final ConcurrentHashMap<KylinConfig, JobDao> CACHE = new ConcurrentHashMap<KylinConfig, JobDao>();
+    private static final Serializer<ExecutablePO> JOB_SERIALIZER = new JsonSerializer<ExecutablePO>(ExecutablePO.class);
+    private static final Serializer<ExecutableOutputPO> JOB_OUTPUT_SERIALIZER = new JsonSerializer<ExecutableOutputPO>(ExecutableOutputPO.class);
+    private static final Logger logger = LoggerFactory.getLogger(ExecutableDao.class);
+    private static final ConcurrentHashMap<KylinConfig, ExecutableDao> CACHE = new ConcurrentHashMap<KylinConfig, ExecutableDao>();
     public static final String JOB_PATH_ROOT = "/execute";
     public static final String JOB_OUTPUT_ROOT = "/execute_output";
 
     private ResourceStore store;
 
-    public static JobDao getInstance(KylinConfig config) {
-        JobDao r = CACHE.get(config);
+    public static ExecutableDao getInstance(KylinConfig config) {
+        ExecutableDao r = CACHE.get(config);
         if (r == null) {
-            r = new JobDao(config);
+            r = new ExecutableDao(config);
             CACHE.put(config, r);
             if (CACHE.size() > 1) {
                 logger.warn("More than one singleton exist");
@@ -45,12 +43,12 @@ public class JobDao {
         return r;
     }
 
-    private JobDao(KylinConfig config) {
+    private ExecutableDao(KylinConfig config) {
         logger.info("Using metadata url: " + config);
         this.store = MetadataManager.getInstance(config).getStore();
     }
 
-    private String pathOfJob(JobPO job) {
+    private String pathOfJob(ExecutablePO job) {
         return pathOfJob(job.getUuid());
     }
     private String pathOfJob(String uuid) {
@@ -61,29 +59,29 @@ public class JobDao {
         return JOB_OUTPUT_ROOT + "/" + uuid;
     }
 
-    private JobPO readJobResource(String path) throws IOException {
-        return store.getResource(path, JobPO.class, JOB_SERIALIZER);
+    private ExecutablePO readJobResource(String path) throws IOException {
+        return store.getResource(path, ExecutablePO.class, JOB_SERIALIZER);
     }
 
-    private void writeJobResource(String path, JobPO job) throws IOException {
+    private void writeJobResource(String path, ExecutablePO job) throws IOException {
         store.putResource(path, job, JOB_SERIALIZER);
     }
 
-    private JobOutputPO readJobOutputResource(String path) throws IOException {
-        return store.getResource(path, JobOutputPO.class, JOB_OUTPUT_SERIALIZER);
+    private ExecutableOutputPO readJobOutputResource(String path) throws IOException {
+        return store.getResource(path, ExecutableOutputPO.class, JOB_OUTPUT_SERIALIZER);
     }
 
-    private long writeJobOutputResource(String path, JobOutputPO output) throws IOException {
+    private long writeJobOutputResource(String path, ExecutableOutputPO output) throws IOException {
         return store.putResource(path, output, JOB_OUTPUT_SERIALIZER);
     }
 
-    public List<JobOutputPO> getJobOutputs() throws PersistentException {
+    public List<ExecutableOutputPO> getJobOutputs() throws PersistentException {
         try {
             ArrayList<String> resources = store.listResources(JOB_OUTPUT_ROOT);
             if (resources == null) {
                 return Collections.emptyList();
             }
-            ArrayList<JobOutputPO> result = new ArrayList<JobOutputPO>(resources.size());
+            ArrayList<ExecutableOutputPO> result = new ArrayList<ExecutableOutputPO>(resources.size());
             for (String path : resources) {
                 result.add(readJobOutputResource(path));
             }
@@ -94,13 +92,13 @@ public class JobDao {
         }
     }
 
-    public List<JobPO> getJobs() throws PersistentException {
+    public List<ExecutablePO> getJobs() throws PersistentException {
         try {
             ArrayList<String> resources = store.listResources(JOB_PATH_ROOT);
             if (resources == null) {
                 return Collections.emptyList();
             }
-            ArrayList<JobPO> result = new ArrayList<JobPO>(resources.size());
+            ArrayList<ExecutablePO> result = new ArrayList<ExecutablePO>(resources.size());
             for (String path : resources) {
                 result.add(readJobResource(path));
             }
@@ -128,7 +126,7 @@ public class JobDao {
         }
     }
 
-    public JobPO getJob(String uuid) throws PersistentException {
+    public ExecutablePO getJob(String uuid) throws PersistentException {
         try {
             return readJobResource(pathOfJob(uuid));
         } catch (IOException e) {
@@ -137,7 +135,7 @@ public class JobDao {
         }
     }
 
-    public JobPO addJob(JobPO job) throws PersistentException {
+    public ExecutablePO addJob(ExecutablePO job) throws PersistentException {
         try {
             if (getJob(job.getUuid()) != null) {
                 throw new IllegalArgumentException("job id:" + job.getUuid() + " already exists");
@@ -159,11 +157,11 @@ public class JobDao {
         }
     }
 
-    public JobOutputPO getJobOutput(String uuid) throws PersistentException {
+    public ExecutableOutputPO getJobOutput(String uuid) throws PersistentException {
         try {
-            JobOutputPO result = readJobOutputResource(pathOfJobOutput(uuid));
+            ExecutableOutputPO result = readJobOutputResource(pathOfJobOutput(uuid));
             if (result == null) {
-                result = new JobOutputPO();
+                result = new ExecutableOutputPO();
                 result.setUuid(uuid);
                 return result;
             }
@@ -174,7 +172,7 @@ public class JobDao {
         }
     }
 
-    public void addJobOutput(JobOutputPO output) throws PersistentException {
+    public void addJobOutput(ExecutableOutputPO output) throws PersistentException {
         try {
             output.setLastModified(0);
             writeJobOutputResource(pathOfJobOutput(output.getUuid()), output);
@@ -184,7 +182,7 @@ public class JobDao {
         }
     }
 
-    public void updateJobOutput(JobOutputPO output) throws PersistentException {
+    public void updateJobOutput(ExecutableOutputPO output) throws PersistentException {
         try {
             final long ts = writeJobOutputResource(pathOfJobOutput(output.getUuid()), output);
             output.setLastModified(ts);

@@ -1,12 +1,11 @@
-package com.kylinolap.job.impl.threadpool;
+package com.kylinolap.job.execution;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.job.dao.JobPO;
+import com.kylinolap.job.dao.ExecutablePO;
 import com.kylinolap.job.exception.ExecuteException;
-import com.kylinolap.job.execution.*;
-import com.kylinolap.job.service.ExecutableManager;
+import com.kylinolap.job.manager.ExecutableManager;
 
 import java.util.List;
 import java.util.Map;
@@ -24,7 +23,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
         super();
     }
 
-    public DefaultChainedExecutable(JobPO job) {
+    public DefaultChainedExecutable(ExecutablePO job) {
         super(job);
     }
 
