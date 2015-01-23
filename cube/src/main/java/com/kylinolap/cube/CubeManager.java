@@ -39,7 +39,6 @@ import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.common.restclient.Broadcaster;
 import com.kylinolap.common.restclient.CaseInsensitiveStringCache;
-import com.kylinolap.cube.exception.CubeIntegrityException;
 import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.DimensionDesc;
@@ -270,18 +269,18 @@ public class CubeManager implements IRealizationProvider {
         return false;
     }
 
-    public CubeSegment mergeSegments(CubeInstance cubeInstance, final long startDate, final long endDate) throws IOException, CubeIntegrityException {
+    public CubeSegment mergeSegments(CubeInstance cubeInstance, final long startDate, final long endDate) throws IOException {
         if (cubeInstance.getBuildingSegments().size() > 0) {
             throw new RuntimeException("There is already an allocating segment!");
         }
 
         if (cubeInstance.getDescriptor().getCubePartitionDesc().isPartitioned() == false) {
-            throw new CubeIntegrityException("there is no partition date column specified, only full build is supported");
+            throw new IllegalStateException("there is no partition date column specified, only full build is supported");
         }
 
         List<CubeSegment> readySegments = cubeInstance.getSegment(SegmentStatusEnum.READY);
         if (readySegments.isEmpty()) {
-            throw new CubeIntegrityException("there are no segments in ready state");
+            throw new IllegalStateException("there are no segments in ready state");
         }
         long start = Long.MAX_VALUE;
         long end = Long.MIN_VALUE;
@@ -307,7 +306,7 @@ public class CubeManager implements IRealizationProvider {
         return newSegment;
     }
 
-    public CubeSegment appendSegments(CubeInstance cubeInstance, long startDate, long endDate) throws IOException, CubeIntegrityException {
+    public CubeSegment appendSegments(CubeInstance cubeInstance, long startDate, long endDate) throws IOException {
         if (cubeInstance.getBuildingSegments().size() > 0) {
             throw new RuntimeException("There is already an allocating segment!");
         }
@@ -347,7 +346,7 @@ public class CubeManager implements IRealizationProvider {
 
     // this method goes tests only
     public void updateSegmentOnJobSucceed(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, String segmentName, //
-            String jobUuid, long lastBuildTime, long sizeKB, long sourceRecordCount, long sourceRecordsSize) throws IOException, CubeIntegrityException {
+            String jobUuid, long lastBuildTime, long sizeKB, long sourceRecordCount, long sourceRecordsSize) throws IOException {
 
         List<CubeSegment> segmentsInNewStatus = cubeInstance.getSegments(SegmentStatusEnum.NEW);
         CubeSegment cubeSegment = cubeInstance.getSegmentById(jobUuid);
@@ -375,7 +374,7 @@ public class CubeManager implements IRealizationProvider {
         this.updateCube(cubeInstance);
     }
 
-    public void updateSegmentOnJobDiscard(CubeInstance cubeInstance, String segmentName) throws IOException, CubeIntegrityException {
+    public void updateSegmentOnJobDiscard(CubeInstance cubeInstance, String segmentName) throws IOException {
         for (int i = 0; i < cubeInstance.getSegments().size(); i++) {
             CubeSegment segment = cubeInstance.getSegments().get(i);
             if (segment.getName().equals(segmentName) && segment.getStatus() != SegmentStatusEnum.READY) {
@@ -485,13 +484,13 @@ public class CubeManager implements IRealizationProvider {
 
     /**
      */
-    private void validateNewSegments(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, CubeSegment newSegment) throws CubeIntegrityException {
-        if (null == cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateColumn()) {
+    private void validateNewSegments(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, CubeSegment newSegment) {
+        if (cubeInstance.getDescriptor().getCubePartitionDesc().isPartitioned() == false) {
             // do nothing for non-incremental build
             return;
         }
         if (newSegment.getDateRangeEnd() <= newSegment.getDateRangeStart()) {
-            throw new CubeIntegrityException(" end date.");
+            throw new IllegalStateException(" end date.");
         }
 
         CubeSegmentValidator cubeSegmentValidator = CubeSegmentValidator.getCubeSegmentValidator(buildType);
