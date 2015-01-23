@@ -57,7 +57,6 @@ public class MergeCuboidJob extends CuboidJob {
             KylinConfig config = KylinConfig.getInstanceFromEnv();
             CubeManager cubeMgr = CubeManager.getInstance(config);
             CubeInstance cube = cubeMgr.getCube(cubeName);
-            // CubeSegment cubeSeg = cubeMgr.findSegment(cube, segmentName);
 
             // start job
             String jobName = getOptionValue(OPTION_JOB_NAME);
@@ -72,7 +71,7 @@ public class MergeCuboidJob extends CuboidJob {
                 job.setJarByClass(this.getClass());
             }
 
-            // setJobJar(job);
+            // set inputs
             addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
 
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));

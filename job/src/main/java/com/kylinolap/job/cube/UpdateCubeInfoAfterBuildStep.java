@@ -14,8 +14,6 @@ import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.execution.ExecutableContext;
 import com.kylinolap.job.execution.ExecuteResult;
 import com.kylinolap.job.impl.threadpool.AbstractExecutable;
-import com.kylinolap.metadata.model.SegmentStatusEnum;
-import com.kylinolap.metadata.realization.RealizationStatusEnum;
 
 /**
  * Created by qianzhou on 1/4/15.
@@ -102,17 +100,14 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         Preconditions.checkState(StringUtils.isNotEmpty(cubeSizeString), "Can't get cube segment size.");
         long size = Long.parseLong(cubeSizeString) / 1024;
 
-
         segment.setLastBuildJobID(getCubingJobId());
         segment.setLastBuildTime(System.currentTimeMillis());
         segment.setSizeKB(size);
         segment.setSourceRecords(sourceCount);
         segment.setSourceRecordsSize(sourceSize);
-        segment.setStatus(SegmentStatusEnum.READY);
-        cube.setStatus(RealizationStatusEnum.READY);
 
         try {
-            cubeManager.updateCube(cube);
+            cubeManager.promoteNewlyBuiltSegments(cube, segment);
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } catch (IOException e) {
             logger.error("fail to update cube after build", e);
