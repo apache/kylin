@@ -451,7 +451,9 @@ public class CubeManager implements IRealizationProvider {
         String incrementalSegName = CubeSegment.getSegmentName(startDate, endDate);
         segment.setUuid(UUID.randomUUID().toString());
         segment.setName(incrementalSegName);
-        segment.setCreateTime(DateStrDictionary.dateToString(new Date()));
+        Date creatTime = new Date();
+        segment.setCreateTime(DateStrDictionary.dateToString(creatTime));
+        segment.setCreateTimeUTC(creatTime.getTime());
         segment.setDateRangeStart(startDate);
         segment.setDateRangeEnd(endDate);
         segment.setStatus(SegmentStatusEnum.NEW);
@@ -523,9 +525,6 @@ public class CubeManager implements IRealizationProvider {
     private List<CubeSegment> calculateToBeSegments(CubeInstance cube, CubeSegment... extraSegments) {
         CubeDesc cubeDesc = cube.getDescriptor();
         CubePartitionDesc partDesc = cubeDesc.getCubePartitionDesc();
-        if (partDesc.isPartitioned() == false) {
-            return cube.getSegments(); // do nothing for non-incremental build
-        }
 
         List<CubeSegment> tobe = Lists.newArrayList(cube.getSegments());
         if (extraSegments != null)

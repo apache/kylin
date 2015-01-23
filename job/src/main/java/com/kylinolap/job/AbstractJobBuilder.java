@@ -21,7 +21,7 @@ import com.kylinolap.job.common.ShellExecutable;
 import com.kylinolap.job.constant.ExecutableConstants;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.hive.IJoinedFlatTableDesc;
-import com.kylinolap.job.impl.threadpool.AbstractExecutable;
+import com.kylinolap.job.execution.AbstractExecutable;
 
 public abstract class AbstractJobBuilder {
 

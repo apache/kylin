@@ -11,11 +11,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.util.HiveClient;
 import com.kylinolap.common.util.JsonUtil;
-import com.kylinolap.job.dao.JobPO;
+import com.kylinolap.job.dao.ExecutablePO;
 import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.execution.ExecutableContext;
 import com.kylinolap.job.execution.ExecuteResult;
-import com.kylinolap.job.impl.threadpool.AbstractExecutable;
+import com.kylinolap.job.execution.AbstractExecutable;
 
 /**
  * Created by qianzhou on 1/15/15.
@@ -26,10 +26,7 @@ public class HqlExecutable extends AbstractExecutable {
     private static final String HIVE_CONFIG = "hive-config";
 
     public HqlExecutable() {
-    }
-
-    public HqlExecutable(JobPO job) {
-        super(job);
+        super();
     }
 
     @Override

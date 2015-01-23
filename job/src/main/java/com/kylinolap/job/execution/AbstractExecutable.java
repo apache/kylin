@@ -1,4 +1,4 @@
-package com.kylinolap.job.impl.threadpool;
+package com.kylinolap.job.execution;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -6,10 +6,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.MailService;
-import com.kylinolap.job.dao.JobPO;
 import com.kylinolap.job.exception.ExecuteException;
-import com.kylinolap.job.execution.*;
-import com.kylinolap.job.service.ExecutableManager;
+import com.kylinolap.job.impl.threadpool.DefaultContext;
+import com.kylinolap.job.manager.ExecutableManager;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -30,37 +29,31 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected static final String START_TIME = "startTime";
     protected static final String END_TIME = "endTime";
 
-    private JobPO job;
     protected static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
 
-    protected static ExecutableManager jobService = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
+    private String name;
+    private String id;
+    private Map<String, String> params = Maps.newHashMap();
+
+    protected static ExecutableManager executableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
 
     public AbstractExecutable() {
-        String uuid = UUID.randomUUID().toString();
-        this.job = new JobPO();
-        this.job.setType(this.getClass().getName());
-        this.job.setUuid(uuid);
-    }
-
-    protected AbstractExecutable(JobPO job) {
-        Preconditions.checkArgument(job != null, "job cannot be null");
-        Preconditions.checkArgument(job.getId() != null, "job id cannot be null");
-        this.job = job;
+        setId(UUID.randomUUID().toString());
     }
 
     protected void onExecuteStart(ExecutableContext executableContext) {
         Map<String, String> info = Maps.newHashMap();
         info.put(START_TIME, Long.toString(System.currentTimeMillis()));
-        jobService.updateJobOutput(getId(), ExecutableState.RUNNING, info, null);
+        executableManager.updateJobOutput(getId(), ExecutableState.RUNNING, info, null);
     }
 
     protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
         setEndTime(System.currentTimeMillis());
         if (!isDiscarded()) {
             if (result.succeed()) {
-                jobService.updateJobOutput(getId(), ExecutableState.SUCCEED, null, result.output());
+                executableManager.updateJobOutput(getId(), ExecutableState.SUCCEED, null, result.output());
             } else {
-                jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, result.output());
+                executableManager.updateJobOutput(getId(), ExecutableState.ERROR, null, result.output());
             }
         } else {
         }
@@ -68,8 +61,8 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     protected void onExecuteError(Throwable exception, ExecutableContext executableContext) {
         if (!isDiscarded()) {
-            jobService.addJobInfo(getId(), END_TIME, Long.toString(System.currentTimeMillis()));
-            jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, exception.getLocalizedMessage());
+            executableManager.addJobInfo(getId(), END_TIME, Long.toString(System.currentTimeMillis()));
+            executableManager.updateJobOutput(getId(), ExecutableState.ERROR, null, exception.getLocalizedMessage());
         } else {
         }
     }
@@ -103,42 +96,46 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     @Override
     public String getName() {
-        return job.getName();
+        return name;
     }
 
     public void setName(String name) {
-        job.setName(name);
+        this.name = name;
     }
 
     @Override
     public final String getId() {
-        return job.getId();
+        return this.id;
     }
 
     public final void setId(String id) {
-        this.job.setUuid(id);
+        this.id = id;
     }
 
     @Override
     public final ExecutableState getStatus() {
-        return jobService.getOutput(this.getId()).getState();
+        return executableManager.getOutput(this.getId()).getState();
     }
 
     @Override
     public final Map<String, String> getParams() {
-        return Collections.unmodifiableMap(job.getParams());
+        return Collections.unmodifiableMap(this.params);
     }
 
     public final String getParam(String key) {
-        return job.getParams().get(key);
+        return this.params.get(key);
     }
 
     public final void setParam(String key, String value) {
-        job.getParams().put(key, value);
+        this.params.put(key, value);
+    }
+
+    public final void setParams(Map<String, String> params) {
+        this.params.putAll(params);
     }
 
     public final long getLastModified() {
-        return jobService.getOutput(getId()).getLastModified();
+        return executableManager.getOutput(getId()).getLastModified();
     }
 
     public final void setSubmitter(String submitter) {
@@ -199,11 +196,11 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     @Override
     public final Output getOutput() {
-        return jobService.getOutput(getId());
+        return executableManager.getOutput(getId());
     }
 
     protected long getExtraInfoAsLong(String key, long defaultValue) {
-        final String str = jobService.getOutput(getId()).getExtra().get(key);
+        final String str = executableManager.getOutput(getId()).getExtra().get(key);
         if (str != null) {
             return Long.parseLong(str);
         } else {
@@ -212,7 +209,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     }
 
     protected final void addExtraInfo(String key, String value) {
-        jobService.addJobInfo(getId(), key, value);
+        executableManager.addJobInfo(getId(), key, value);
     }
 
     public final void setStartTime(long time) {
@@ -244,16 +241,12 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         }
     }
 
-    public JobPO getJobPO() {
-        return job;
-    }
-
     /*
-    * discarded is triggered by JobService, the Scheduler is not awake of that, so
+    * discarded is triggered by JobService, the Scheduler is not awake of that
     *
     * */
     protected final boolean isDiscarded() {
-        final ExecutableState status = jobService.getOutput(getId()).getState();
+        final ExecutableState status = executableManager.getOutput(getId()).getState();
         return status == ExecutableState.DISCARDED;
     }
 

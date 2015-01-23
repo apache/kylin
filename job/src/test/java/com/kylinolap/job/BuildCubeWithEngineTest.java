@@ -1,26 +1,5 @@
 package com.kylinolap.job;
 
-import static org.junit.Assert.*;
-
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.TimeZone;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.util.ToolRunner;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.AbstractKylinTestCase;
@@ -32,11 +11,27 @@ import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.job.cube.CubingJob;
 import com.kylinolap.job.cube.CubingJobBuilder;
 import com.kylinolap.job.engine.JobEngineConfig;
+import com.kylinolap.job.execution.AbstractExecutable;
 import com.kylinolap.job.execution.ExecutableState;
 import com.kylinolap.job.hadoop.cube.StorageCleanupJob;
-import com.kylinolap.job.impl.threadpool.AbstractExecutable;
 import com.kylinolap.job.impl.threadpool.DefaultScheduler;
-import com.kylinolap.job.service.ExecutableManager;
+import com.kylinolap.job.manager.ExecutableManager;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.util.ToolRunner;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.TimeZone;
+import java.util.concurrent.*;
+
+import static org.junit.Assert.assertEquals;
 
 public class BuildCubeWithEngineTest {
 
@@ -113,35 +108,23 @@ public class BuildCubeWithEngineTest {
 
     private void testInner() throws Exception {
         DeployUtil.prepareTestData("inner", "test_kylin_cube_with_slr_empty");
-
-
         String[] testCase = new String[]{
                 "testInnerJoinCube",
                 "testInnerJoinCube2",
         };
-        ExecutorService executorService = Executors.newFixedThreadPool(testCase.length);
-        final CountDownLatch countDownLatch = new CountDownLatch(testCase.length);
-        List<Future<List<String>>> tasks = Lists.newArrayListWithExpectedSize(testCase.length);
-        for (int i = 0; i < testCase.length; i++) {
-            tasks.add(executorService.submit(new TestCallable(testCase[i], countDownLatch)));
-        }
-        countDownLatch.await();
-        for (int i = 0; i < tasks.size(); ++i) {
-            Future<List<String>> task = tasks.get(i);
-            final List<String> jobIds = task.get();
-            for (String jobId: jobIds) {
-                assertJobSucceed(jobId);
-            }
-        }
+        runTestAndAssertSucceed(testCase);
     }
 
     private void testLeft() throws Exception {
         DeployUtil.prepareTestData("left", "test_kylin_cube_with_slr_left_join_empty");
-        
         String[] testCase = new String[]{
                 "testLeftJoinCube",
                 "testLeftJoinCube2",
         };
+        runTestAndAssertSucceed(testCase);
+    }
+
+    private void runTestAndAssertSucceed(String[] testCase) throws Exception {
         ExecutorService executorService = Executors.newFixedThreadPool(testCase.length);
         final CountDownLatch countDownLatch = new CountDownLatch(testCase.length);
         List<Future<List<String>>> tasks = Lists.newArrayListWithExpectedSize(testCase.length);
@@ -149,12 +132,17 @@ public class BuildCubeWithEngineTest {
             tasks.add(executorService.submit(new TestCallable(testCase[i], countDownLatch)));
         }
         countDownLatch.await();
-        for (int i = 0; i < tasks.size(); ++i) {
-            Future<List<String>> task = tasks.get(i);
-            final List<String> jobIds = task.get();
-            for (String jobId: jobIds) {
-                assertJobSucceed(jobId);
+        try {
+            for (int i = 0; i < tasks.size(); ++i) {
+                Future<List<String>> task = tasks.get(i);
+                final List<String> jobIds = task.get();
+                for (String jobId : jobIds) {
+                    assertJobSucceed(jobId);
+                }
             }
+        } catch (Exception ex) {
+            logger.error(ex);
+            throw ex;
         }
     }
 

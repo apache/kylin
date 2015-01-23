@@ -1,12 +1,5 @@
 package com.kylinolap.job.cube;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import org.apache.commons.lang.StringUtils;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
@@ -14,11 +7,17 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.job.constant.ExecutableConstants;
-import com.kylinolap.job.dao.JobPO;
+import com.kylinolap.job.dao.ExecutablePO;
 import com.kylinolap.job.exception.ExecuteException;
+import com.kylinolap.job.execution.AbstractExecutable;
 import com.kylinolap.job.execution.ExecutableContext;
 import com.kylinolap.job.execution.ExecuteResult;
-import com.kylinolap.job.impl.threadpool.AbstractExecutable;
+import org.apache.commons.lang.StringUtils;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by qianzhou on 1/7/15.
@@ -34,10 +33,7 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
     private final CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
 
     public UpdateCubeInfoAfterMergeStep() {
-    }
-
-    public UpdateCubeInfoAfterMergeStep(JobPO job) {
-        super(job);
+        super();
     }
 
     @Override
@@ -48,7 +44,7 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
         if (mergedSegment == null) {
             return new ExecuteResult(ExecuteResult.State.FAILED, "there is no segment with id:" + getSegmentId());
         }
-        String cubeSizeString = jobService.getOutput(getConvertToHfileStepId()).getExtra().get(ExecutableConstants.HDFS_BYTES_WRITTEN);
+        String cubeSizeString = executableManager.getOutput(getConvertToHfileStepId()).getExtra().get(ExecutableConstants.HDFS_BYTES_WRITTEN);
         Preconditions.checkState(StringUtils.isNotEmpty(cubeSizeString), "Can't get cube segment size.");
         long cubeSize = Long.parseLong(cubeSizeString) / 1024;
 

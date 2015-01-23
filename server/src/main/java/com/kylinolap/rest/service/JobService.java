@@ -48,7 +48,7 @@ import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.execution.ExecutableState;
 import com.kylinolap.job.execution.Output;
-import com.kylinolap.job.impl.threadpool.AbstractExecutable;
+import com.kylinolap.job.execution.AbstractExecutable;
 import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.rest.constant.Constant;
 
