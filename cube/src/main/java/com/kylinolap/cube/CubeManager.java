@@ -313,11 +313,8 @@ public class CubeManager implements IRealizationProvider {
         if (cubeInstance.getDescriptor().getCubePartitionDesc().isPartitioned()) {
             if (readySegments.isEmpty()) {
                 startDate = cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateStart();
-                newSegment = newSegment(cubeInstance, startDate, endDate);
-            } else {
-                startDate = readySegments.get(readySegments.size() - 1).getDateRangeEnd();
-                newSegment = newSegment(cubeInstance, startDate, endDate);
             }
+            newSegment = newSegment(cubeInstance, startDate, endDate);
         } else {
             newSegment = newSegment(cubeInstance, 0, Long.MAX_VALUE);
         }
@@ -339,7 +336,7 @@ public class CubeManager implements IRealizationProvider {
      * For each cube htable, we leverage htable's metadata to keep track of
      * which kylin server(represented by its kylin_metadata prefix) owns this htable
      */
-    public static String getHtableMetadataKey() {
+    public static String getHTableMetadataKey() {
         return "KYLIN_HOST";
     }
 
@@ -444,6 +441,9 @@ public class CubeManager implements IRealizationProvider {
     }
 
     private CubeSegment newSegment(CubeInstance cubeInstance, long startDate, long endDate) {
+        if (startDate >= endDate)
+            throw new IllegalArgumentException("New segment range invalid, start date must be earlier than end date, " + startDate + " < " + endDate);
+
         CubeSegment segment = new CubeSegment();
         String incrementalSegName = CubeSegment.getSegmentName(startDate, endDate);
         segment.setUuid(UUID.randomUUID().toString());
