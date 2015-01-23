@@ -78,7 +78,7 @@ public class BuildCubeWithEngineTest {
         DeployUtil.initCliWorkDir();
         DeployUtil.deployMetadata();
         DeployUtil.overrideJobJarLocations();
-        DeployUtil.overrideJobConf(HBaseMetadataTestCase.SANDBOX_TEST_DATA);
+        
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         jobService = ExecutableManager.getInstance(kylinConfig);

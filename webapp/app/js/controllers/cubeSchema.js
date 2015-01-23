@@ -61,10 +61,10 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
             initProject();
         }
         //convert from UTC to local timezone
-        if($scope.cubeMetaFrame.cube_partition_desc.partition_date_start)
-        {
-            $scope.cubeMetaFrame.cube_partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
-        }
+        //if($scope.cubeMetaFrame.cube_partition_desc.partition_date_start)
+        //{
+        //    $scope.cubeMetaFrame.cube_partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
+        //}
     });
 
     // ~ public methods
