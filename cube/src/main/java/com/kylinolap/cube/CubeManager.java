@@ -522,9 +522,6 @@ public class CubeManager implements IRealizationProvider {
     private List<CubeSegment> calculateToBeSegments(CubeInstance cube, CubeSegment... extraSegments) {
         CubeDesc cubeDesc = cube.getDescriptor();
         CubePartitionDesc partDesc = cubeDesc.getCubePartitionDesc();
-        if (partDesc.isPartitioned() == false) {
-            return cube.getSegments(); // do nothing for non-incremental build
-        }
 
         List<CubeSegment> tobe = Lists.newArrayList(cube.getSegments());
         if (extraSegments != null)
