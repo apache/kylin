@@ -47,7 +47,7 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
  */
 public class CuboidJob extends AbstractHadoopJob {
 
-    protected static final Logger log = LoggerFactory.getLogger(CuboidJob.class);
+    protected static final Logger logger = LoggerFactory.getLogger(CuboidJob.class);
     private static final String MAPRED_REDUCE_TASKS = "mapred.reduce.tasks";
 
     @SuppressWarnings("rawtypes")
@@ -78,7 +78,7 @@ public class CuboidJob extends AbstractHadoopJob {
             CubeInstance cube = cubeMgr.getCube(cubeName);
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
-            System.out.println("Starting: " + job.getJobName());
+            logger.info("Starting: " + job.getJobName());
             FileInputFormat.setInputPaths(job, input);
 
             File jarFile = new File(config.getKylinJobJarPath());
@@ -130,7 +130,7 @@ public class CuboidJob extends AbstractHadoopJob {
             return waitForCompletion(job);
         } catch (Exception e) {
             printUsage(options);
-            log.error(e.getLocalizedMessage(), e);
+            logger.error(e.getLocalizedMessage(), e);
             return 2;
         }
     }
@@ -176,10 +176,10 @@ public class CuboidJob extends AbstractHadoopJob {
 
         jobConf.setInt(MAPRED_REDUCE_TASKS, numReduceTasks);
 
-        System.out.println("Having total map input MB " + Math.round(totalMapInputMB));
-        System.out.println("Having level " + level + ", pre-level cuboids " + preLevelCuboids + ", this level cuboids " + thisLevelCuboids);
-        System.out.println("Having per reduce MB " + perReduceInputMB + ", reduce count ratio " + reduceCountRatio);
-        System.out.println("Setting " + MAPRED_REDUCE_TASKS + "=" + numReduceTasks);
+        logger.info("Having total map input MB " + Math.round(totalMapInputMB));
+        logger.info("Having level " + level + ", pre-level cuboids " + preLevelCuboids + ", this level cuboids " + thisLevelCuboids);
+        logger.info("Having per reduce MB " + perReduceInputMB + ", reduce count ratio " + reduceCountRatio);
+        logger.info("Setting " + MAPRED_REDUCE_TASKS + "=" + numReduceTasks);
     }
 
     /**

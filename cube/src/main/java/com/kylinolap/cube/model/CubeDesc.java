@@ -31,11 +31,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.kylinolap.common.util.CaseInsensitiveStringMap;
-import com.kylinolap.metadata.model.*;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.net.util.Base64;
-import org.apache.hadoop.hbase.util.Strings;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -47,11 +45,18 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.common.util.Array;
+import com.kylinolap.common.util.CaseInsensitiveStringMap;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.metadata.MetadataConstances;
 import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.DataModelDesc;
+import com.kylinolap.metadata.model.DataType;
 import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.JoinDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.metadata.model.ParameterDesc;
+import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.TblColRef;
 
 /**
@@ -705,7 +710,7 @@ public class CubeDesc extends RootPersistentEntity {
             }
             
             // verify holistic count distinct as a dependent measure
-            if (m.isHolisticCountDistinct() && Strings.isEmpty(m.getDependentMeasureRef())) {
+            if (m.isHolisticCountDistinct() && StringUtils.isBlank(m.getDependentMeasureRef())) {
                 throw new IllegalStateException(m + " is a holistic count distinct but it has no DependentMeasureRef defined!");
             }
         }
