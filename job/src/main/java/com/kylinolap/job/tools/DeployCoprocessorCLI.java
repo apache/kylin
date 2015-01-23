@@ -203,7 +203,7 @@ public class DeployCoprocessorCLI {
                 IOUtils.closeQuietly(out);
             }
 
-            fileSystem.setTimes(uploadPath, localCoprocessorFile.lastModified(), System.currentTimeMillis());
+            fileSystem.setTimes(uploadPath, localCoprocessorFile.lastModified(), -1);
 
         }
 
