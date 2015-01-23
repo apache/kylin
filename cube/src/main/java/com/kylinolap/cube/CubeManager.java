@@ -455,7 +455,9 @@ public class CubeManager implements IRealizationProvider {
         String incrementalSegName = CubeSegment.getSegmentName(startDate, endDate);
         segment.setUuid(UUID.randomUUID().toString());
         segment.setName(incrementalSegName);
-        segment.setCreateTime(DateStrDictionary.dateToString(new Date()));
+        Date creatTime = new Date();
+        segment.setCreateTime(DateStrDictionary.dateToString(creatTime));
+        segment.setCreateTimeUTC(creatTime.getTime());
         segment.setDateRangeStart(startDate);
         segment.setDateRangeEnd(endDate);
         segment.setStatus(SegmentStatusEnum.NEW);
