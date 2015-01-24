@@ -1,9 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,SweetAlert,loadingRequest,UserService,kylinConfig) {
-        $scope.displayTimeZone =kylinConfig.getTimeZone();
-
+    .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,SweetAlert,loadingRequest,UserService) {
         $scope.cubeName = null;
         $scope.jobs = {};
         $scope.projects = [];

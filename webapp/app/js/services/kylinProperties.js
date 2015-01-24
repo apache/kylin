@@ -3,6 +3,7 @@
  */
 KylinApp.service('kylinConfig', function(AdminService,$log) {
     var _config;
+    var timezone;
     this.init = function (){
         AdminService.config({}, function(config){
             _config = config.config;
@@ -22,7 +23,10 @@ KylinApp.service('kylinConfig', function(AdminService,$log) {
     }
 
     this.getTimeZone = function(){
-        return this.getProperty("kylin.rest.timezone").trim();
+        if(!this.timezone){
+            this.timezone = this.getProperty("kylin.rest.timezone").trim();
+        }
+        return this.timezone;
     }
 });
 

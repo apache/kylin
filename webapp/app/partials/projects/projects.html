@@ -37,7 +37,7 @@
                 </td>
                 <td>{{ project.owner}}</td>
                 <td>{{ project.description}}</td>
-                <td>{{ project.create_time_utc | utcToConfigTimeZone:displayTimeZone}}</td>
+                <td>{{ project.create_time_utc | utcToConfigTimeZone}}</td>
                 <td>
                     <button class="btn btn-xs btn-info" ng-click="toEdit(project)" tooltip="Edit"
                             ng-disabled="!(userService.hasRole('ROLE_ADMIN') || hasPermission(project, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))">
