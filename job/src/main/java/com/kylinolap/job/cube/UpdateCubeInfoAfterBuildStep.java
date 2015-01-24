@@ -9,13 +9,11 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.job.constant.ExecutableConstants;
-import com.kylinolap.job.dao.JobPO;
+import com.kylinolap.job.dao.ExecutablePO;
 import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.execution.ExecutableContext;
 import com.kylinolap.job.execution.ExecuteResult;
-import com.kylinolap.job.impl.threadpool.AbstractExecutable;
-import com.kylinolap.metadata.model.SegmentStatusEnum;
-import com.kylinolap.metadata.realization.RealizationStatusEnum;
+import com.kylinolap.job.execution.AbstractExecutable;
 
 /**
  * Created by qianzhou on 1/4/15.
@@ -30,10 +28,7 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
     private static final String CUBING_JOB_ID = "cubingJobId";
 
     public UpdateCubeInfoAfterBuildStep() {
-    }
-
-    public UpdateCubeInfoAfterBuildStep(JobPO job) {
-        super(job);
+        super();
     }
 
     public void setCubeName(String cubeName) {
@@ -90,29 +85,26 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         final CubeInstance cube = cubeManager.getCube(getCubeName());
         final CubeSegment segment = cube.getSegmentById(getSegmentId());
 
-        String sourceRecordsSize = jobService.getOutput(getCreateFlatTableStepId()).getExtra().get(ExecutableConstants.SOURCE_RECORDS_SIZE);
+        String sourceRecordsSize = executableManager.getOutput(getCreateFlatTableStepId()).getExtra().get(ExecutableConstants.SOURCE_RECORDS_SIZE);
         Preconditions.checkState(StringUtils.isNotEmpty(sourceRecordsSize), "Can't get cube source record size.");
         long sourceSize = Long.parseLong(sourceRecordsSize);
 
-        String sourceRecordsCount = jobService.getOutput(getBaseCuboidStepId()).getExtra().get(ExecutableConstants.SOURCE_RECORDS_COUNT);
+        String sourceRecordsCount = executableManager.getOutput(getBaseCuboidStepId()).getExtra().get(ExecutableConstants.SOURCE_RECORDS_COUNT);
         Preconditions.checkState(StringUtils.isNotEmpty(sourceRecordsCount), "Can't get cube source record count.");
         long sourceCount = Long.parseLong(sourceRecordsCount);
 
-        String cubeSizeString = jobService.getOutput(getConvertToHfileStepId()).getExtra().get(ExecutableConstants.HDFS_BYTES_WRITTEN);
+        String cubeSizeString = executableManager.getOutput(getConvertToHfileStepId()).getExtra().get(ExecutableConstants.HDFS_BYTES_WRITTEN);
         Preconditions.checkState(StringUtils.isNotEmpty(cubeSizeString), "Can't get cube segment size.");
         long size = Long.parseLong(cubeSizeString) / 1024;
-
 
         segment.setLastBuildJobID(getCubingJobId());
         segment.setLastBuildTime(System.currentTimeMillis());
         segment.setSizeKB(size);
         segment.setSourceRecords(sourceCount);
         segment.setSourceRecordsSize(sourceSize);
-        segment.setStatus(SegmentStatusEnum.READY);
-        cube.setStatus(RealizationStatusEnum.READY);
 
         try {
-            cubeManager.updateCube(cube);
+            cubeManager.promoteNewlyBuiltSegments(cube, segment);
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } catch (IOException e) {
             logger.error("fail to update cube after build", e);

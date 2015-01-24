@@ -18,6 +18,7 @@ package com.kylinolap.cube;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
@@ -32,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.JsonSerializer;
@@ -41,6 +43,7 @@ import com.kylinolap.common.restclient.Broadcaster;
 import com.kylinolap.common.restclient.CaseInsensitiveStringCache;
 import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.CubePartitionDesc;
 import com.kylinolap.cube.model.DimensionDesc;
 import com.kylinolap.dict.DateStrDictionary;
 import com.kylinolap.dict.Dictionary;
@@ -244,12 +247,7 @@ public class CubeManager implements IRealizationProvider {
 
     public CubeInstance updateCube(CubeInstance cube) throws IOException {
         logger.info("Updating cube instance '" + cube.getName());
-
-        // save resource
         saveResource(cube);
-
-        logger.info("Cube with " + cube.getSegments().size() + " segments is saved");
-
         return cube;
     }
 
@@ -270,9 +268,7 @@ public class CubeManager implements IRealizationProvider {
     }
 
     public CubeSegment mergeSegments(CubeInstance cubeInstance, final long startDate, final long endDate) throws IOException {
-        if (cubeInstance.getBuildingSegments().size() > 0) {
-            throw new RuntimeException("There is already an allocating segment!");
-        }
+        checkNoBuildingSegment(cubeInstance);
 
         if (cubeInstance.getDescriptor().getCubePartitionDesc().isPartitioned() == false) {
             throw new IllegalStateException("there is no partition date column specified, only full build is supported");
@@ -294,9 +290,9 @@ public class CubeManager implements IRealizationProvider {
                 }
             }
         }
-        CubeSegment newSegment = buildSegment(cubeInstance, start, end);
 
-        validateNewSegments(cubeInstance, CubeBuildTypeEnum.MERGE, newSegment);
+        CubeSegment newSegment = newSegment(cubeInstance, start, end);
+        validateNewSegments(cubeInstance, newSegment);
 
         cubeInstance.getSegments().add(newSegment);
         Collections.sort(cubeInstance.getSegments());
@@ -307,29 +303,32 @@ public class CubeManager implements IRealizationProvider {
     }
 
     public CubeSegment appendSegments(CubeInstance cubeInstance, long startDate, long endDate) throws IOException {
-        if (cubeInstance.getBuildingSegments().size() > 0) {
-            throw new RuntimeException("There is already an allocating segment!");
-        }
+        checkNoBuildingSegment(cubeInstance);
+        
         List<CubeSegment> readySegments = cubeInstance.getSegments(SegmentStatusEnum.READY);
         CubeSegment newSegment;
         if (cubeInstance.getDescriptor().getCubePartitionDesc().isPartitioned()) {
             if (readySegments.isEmpty()) {
                 startDate = cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateStart();
-                newSegment = buildSegment(cubeInstance, startDate, endDate);
-            } else {
-                startDate = readySegments.get(readySegments.size() - 1).getDateRangeEnd();
-                newSegment = buildSegment(cubeInstance, startDate, endDate);
             }
+            newSegment = newSegment(cubeInstance, startDate, endDate);
         } else {
-            newSegment = buildSegment(cubeInstance, 0, Long.MAX_VALUE);
+            newSegment = newSegment(cubeInstance, 0, Long.MAX_VALUE);
         }
-        validateNewSegments(cubeInstance, CubeBuildTypeEnum.BUILD, newSegment);
+
+        validateNewSegments(cubeInstance, newSegment);
 
         cubeInstance.getSegments().add(newSegment);
         Collections.sort(cubeInstance.getSegments());
         this.updateCube(cubeInstance);
 
         return newSegment;
+    }
+
+    private void checkNoBuildingSegment(CubeInstance cubeInstance) {
+        if (cubeInstance.getBuildingSegments().size() > 0) {
+            throw new IllegalStateException("There is already a building segment!");
+        }
     }
 
     public static String getHBaseStorageLocationPrefix() {
@@ -340,7 +339,7 @@ public class CubeManager implements IRealizationProvider {
      * For each cube htable, we leverage htable's metadata to keep track of
      * which kylin server(represented by its kylin_metadata prefix) owns this htable
      */
-    public static String getHtableMetadataKey() {
+    public static String getHTableMetadataKey() {
         return "KYLIN_HOST";
     }
 
@@ -444,18 +443,17 @@ public class CubeManager implements IRealizationProvider {
         removeCubeCache(droppedCube);
     }
 
-    /**
-     * @param cubeInstance
-     * @param startDate    (pass 0 if full build)
-     * @param endDate      (pass 0 if full build)
-     * @return
-     */
-    private CubeSegment buildSegment(CubeInstance cubeInstance, long startDate, long endDate) {
+    private CubeSegment newSegment(CubeInstance cubeInstance, long startDate, long endDate) {
+        if (startDate >= endDate)
+            throw new IllegalArgumentException("New segment range invalid, start date must be earlier than end date, " + startDate + " < " + endDate);
+
         CubeSegment segment = new CubeSegment();
         String incrementalSegName = CubeSegment.getSegmentName(startDate, endDate);
         segment.setUuid(UUID.randomUUID().toString());
         segment.setName(incrementalSegName);
-        segment.setCreateTime(DateStrDictionary.dateToString(new Date()));
+        Date creatTime = new Date();
+        segment.setCreateTime(DateStrDictionary.dateToString(creatTime));
+        segment.setCreateTimeUTC(creatTime.getTime());
         segment.setDateRangeStart(startDate);
         segment.setDateRangeEnd(endDate);
         segment.setStatus(SegmentStatusEnum.NEW);
@@ -482,19 +480,122 @@ public class CubeManager implements IRealizationProvider {
         return tableName;
     }
 
-    /**
-     */
-    private void validateNewSegments(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, CubeSegment newSegment) {
-        if (cubeInstance.getDescriptor().getCubePartitionDesc().isPartitioned() == false) {
-            // do nothing for non-incremental build
-            return;
-        }
-        if (newSegment.getDateRangeEnd() <= newSegment.getDateRangeStart()) {
-            throw new IllegalStateException(" end date.");
+    public void promoteNewlyBuiltSegments(CubeInstance cube, CubeSegment... newSegments) throws IOException {
+        List<CubeSegment> tobe = calculateToBeSegments(cube);
+
+        for (CubeSegment seg : newSegments) {
+            if (tobe.contains(seg) == false)
+                throw new IllegalStateException("For cube " + cube + ", segment " + seg + " is expected but not in the tobe " + tobe);
+
+            if (StringUtils.isBlank(seg.getStorageLocationIdentifier()))
+                throw new IllegalStateException("For cube " + cube + ", segment " + seg + " missing StorageLocationIdentifier");
+
+            if (StringUtils.isBlank(seg.getLastBuildJobID()))
+                throw new IllegalStateException("For cube " + cube + ", segment " + seg + " missing LastBuildJobID");
+
+            seg.setStatus(SegmentStatusEnum.READY);
         }
 
-        CubeSegmentValidator cubeSegmentValidator = CubeSegmentValidator.getCubeSegmentValidator(buildType);
-        cubeSegmentValidator.validate(cubeInstance, newSegment);
+        for (CubeSegment seg : tobe) {
+            if (isReady(seg) == false)
+                throw new IllegalStateException("For cube " + cube + ", segment " + seg + " should be READY but is not");
+        }
+
+        cube.setSegments(tobe);
+        cube.setStatus(RealizationStatusEnum.READY);
+
+        logger.info("Promoting cube " + cube + ", new segments " + newSegments);
+        saveResource(cube);
+    }
+
+    private void validateNewSegments(CubeInstance cube, CubeSegment... newSegments) {
+        List<CubeSegment> tobe = calculateToBeSegments(cube, newSegments);
+        List<CubeSegment> newList = Arrays.asList(newSegments);
+        if (tobe.containsAll(newList) == false) {
+            throw new IllegalStateException("For cube " + cube + ", the new segments " + newList + " do not fit in its current " + cube.getSegments() + "; the resulted tobe is " + tobe);
+        }
+    }
+
+    /**
+     * Smartly figure out the TOBE segments once all new segments are built.
+     * - Ensures no gap, no overlap 
+     * - Favors new segments over the old
+     * - Favors big segments over the small
+     */
+    private List<CubeSegment> calculateToBeSegments(CubeInstance cube, CubeSegment... extraSegments) {
+        CubeDesc cubeDesc = cube.getDescriptor();
+        CubePartitionDesc partDesc = cubeDesc.getCubePartitionDesc();
+
+        List<CubeSegment> tobe = Lists.newArrayList(cube.getSegments());
+        if (extraSegments != null)
+            tobe.addAll(Arrays.asList(extraSegments));
+        if (tobe.size() == 0)
+            return tobe;
+
+        // sort by start time, then end time
+        Collections.sort(tobe);
+
+        // check first segment start time
+        CubeSegment firstSeg = tobe.get(0);
+        if (firstSeg.getDateRangeStart() != partDesc.getPartitionDateStart()) {
+            throw new IllegalStateException("For " + cube + ", the first segment, " + firstSeg + ", must start at " + partDesc.getPartitionDateStart());
+        }
+
+        for (int i = 0, j = 1; j < tobe.size();) {
+            CubeSegment is = tobe.get(i);
+            CubeSegment js = tobe.get(j);
+
+            // check i is either ready or new
+            if (!isNew(is) && !isReady(is)) {
+                tobe.remove(i);
+                continue;
+            }
+
+            // check j is either ready or new
+            if (!isNew(js) && !isReady(js)) {
+                tobe.remove(j);
+                continue;
+            }
+
+            // if i, j competes
+            if (is.getDateRangeStart() == js.getDateRangeStart()) {
+                // if both new or ready, favor the bigger segment
+                if (isReady(is) && isReady(js) || isNew(is) && isNew(js)) {
+                    if (is.getDateRangeEnd() <= js.getDateRangeEnd()) {
+                        tobe.remove(i);
+                    } else {
+                        tobe.remove(j);
+                    }
+                }
+                // otherwise, favor the new segment
+                else if (isNew(is)) {
+                    tobe.remove(j);
+                } else {
+                    tobe.remove(i);
+                }
+                continue;
+            }
+
+            // if i, j in sequence
+            if (is.getDateRangeEnd() == js.getDateRangeStart()) {
+                i++;
+                j++;
+                continue;
+            }
+
+            // seems j not fitting
+            tobe.remove(j);
+        }
+
+        return tobe;
+    }
+
+    private boolean isReady(CubeSegment seg) {
+        return seg.getStatus() == SegmentStatusEnum.READY;
+    }
+
+    private boolean isNew(CubeSegment seg) {
+        return seg.getStatus() == SegmentStatusEnum.NEW || seg.getStatus() == SegmentStatusEnum.READY_PENDING;
     }
 
     private void loadAllCubeInstance() throws IOException {

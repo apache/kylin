@@ -55,7 +55,7 @@ import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.execution.ExecutableState;
 import com.kylinolap.job.hadoop.cardinality.HiveColumnCardinalityJob;
 import com.kylinolap.job.hadoop.cardinality.HiveColumnCardinalityUpdateJob;
-import com.kylinolap.job.impl.threadpool.DefaultChainedExecutable;
+import com.kylinolap.job.execution.DefaultChainedExecutable;
 import com.kylinolap.metadata.MetadataConstances;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.SegmentStatusEnum;

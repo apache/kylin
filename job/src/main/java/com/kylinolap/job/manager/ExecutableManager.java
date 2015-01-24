@@ -1,26 +1,25 @@
-package com.kylinolap.job.service;
+package com.kylinolap.job.manager;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.job.dao.JobDao;
-import com.kylinolap.job.dao.JobOutputPO;
-import com.kylinolap.job.dao.JobPO;
+import com.kylinolap.job.dao.ExecutableDao;
+import com.kylinolap.job.dao.ExecutableOutputPO;
+import com.kylinolap.job.dao.ExecutablePO;
 import com.kylinolap.job.exception.IllegalStateTranferException;
 import com.kylinolap.job.exception.PersistentException;
 import com.kylinolap.job.execution.DefaultOutput;
 import com.kylinolap.job.execution.ExecutableState;
 import com.kylinolap.job.execution.Output;
-import com.kylinolap.job.impl.threadpool.AbstractExecutable;
-import com.kylinolap.job.impl.threadpool.DefaultChainedExecutable;
+import com.kylinolap.job.execution.AbstractExecutable;
+import com.kylinolap.job.execution.DefaultChainedExecutable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Constructor;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,7 +33,7 @@ public class ExecutableManager {
     private static final ConcurrentHashMap<KylinConfig, ExecutableManager> CACHE = new ConcurrentHashMap<KylinConfig, ExecutableManager>();
     private final KylinConfig config;
 
-    private JobDao jobDao;
+    private ExecutableDao executableDao;
 
     public static ExecutableManager getInstance(KylinConfig config) {
         ExecutableManager r = CACHE.get(config);
@@ -52,12 +51,12 @@ public class ExecutableManager {
     private ExecutableManager(KylinConfig config) {
         logger.info("Using metadata url: " + config);
         this.config = config;
-        this.jobDao = JobDao.getInstance(config);
+        this.executableDao = ExecutableDao.getInstance(config);
     }
 
     public void addJob(AbstractExecutable executable) {
         try {
-            jobDao.addJob(getJobPO(executable));
+            executableDao.addJob(parse(executable));
             addJobOutput(executable);
         } catch (PersistentException e) {
             logger.error("fail to submit job:" + executable.getId(), e);
@@ -66,9 +65,9 @@ public class ExecutableManager {
     }
 
     private void addJobOutput(AbstractExecutable executable) throws PersistentException {
-        JobOutputPO jobOutputPO = new JobOutputPO();
-        jobOutputPO.setUuid(executable.getId());
-        jobDao.addJobOutput(jobOutputPO);
+        ExecutableOutputPO executableOutputPO = new ExecutableOutputPO();
+        executableOutputPO.setUuid(executable.getId());
+        executableDao.addJobOutput(executableOutputPO);
         if (executable instanceof DefaultChainedExecutable) {
             for (AbstractExecutable subTask: ((DefaultChainedExecutable) executable).getTasks()) {
                 addJobOutput(subTask);
@@ -79,7 +78,7 @@ public class ExecutableManager {
     //for ut
     public void deleteJob(String jobId) {
         try {
-            jobDao.deleteJob(jobId);
+            executableDao.deleteJob(jobId);
         } catch (PersistentException e) {
             logger.error("fail to delete job:" + jobId, e);
             throw new RuntimeException(e);
@@ -88,7 +87,7 @@ public class ExecutableManager {
 
     public AbstractExecutable getJob(String uuid) {
         try {
-            return parseTo(jobDao.getJob(uuid));
+            return parseTo(executableDao.getJob(uuid));
         } catch (PersistentException e) {
             logger.error("fail to get job:" + uuid, e);
             throw new RuntimeException(e);
@@ -97,7 +96,7 @@ public class ExecutableManager {
 
     public Output getOutput(String uuid) {
         try {
-            final JobOutputPO jobOutput = jobDao.getJobOutput(uuid);
+            final ExecutableOutputPO jobOutput = executableDao.getJobOutput(uuid);
             Preconditions.checkArgument(jobOutput != null, "there is no related output for job id:" + uuid);
             final DefaultOutput result = new DefaultOutput();
             result.setExtra(jobOutput.getInfo());
@@ -113,10 +112,10 @@ public class ExecutableManager {
 
     public List<AbstractExecutable> getAllExecutables() {
         try {
-            return Lists.transform(jobDao.getJobs(), new Function<JobPO, AbstractExecutable>() {
+            return Lists.transform(executableDao.getJobs(), new Function<ExecutablePO, AbstractExecutable>() {
                 @Nullable
                 @Override
-                public AbstractExecutable apply(JobPO input) {
+                public AbstractExecutable apply(ExecutablePO input) {
                         return parseTo(input);
                 }
             });
@@ -128,7 +127,7 @@ public class ExecutableManager {
 
     public List<String> getAllJobIds() {
         try {
-            return jobDao.getJobIds();
+            return executableDao.getJobIds();
         } catch (PersistentException e) {
             logger.error("error get All Job Ids", e);
             throw new RuntimeException(e);
@@ -137,11 +136,11 @@ public class ExecutableManager {
 
     public void updateAllRunningJobsToError() {
         try {
-            final List<JobOutputPO> jobOutputs = jobDao.getJobOutputs();
-            for (JobOutputPO jobOutputPO: jobOutputs) {
-                if (jobOutputPO.getStatus().equalsIgnoreCase(ExecutableState.RUNNING.toString())) {
-                    jobOutputPO.setStatus(ExecutableState.ERROR.toString());
-                    jobDao.updateJobOutput(jobOutputPO);
+            final List<ExecutableOutputPO> jobOutputs = executableDao.getJobOutputs();
+            for (ExecutableOutputPO executableOutputPO : jobOutputs) {
+                if (executableOutputPO.getStatus().equalsIgnoreCase(ExecutableState.RUNNING.toString())) {
+                    executableOutputPO.setStatus(ExecutableState.ERROR.toString());
+                    executableDao.updateJobOutput(executableOutputPO);
                 }
             }
         } catch (PersistentException e) {
@@ -182,7 +181,7 @@ public class ExecutableManager {
 
     public void updateJobOutput(String jobId, ExecutableState newStatus, Map<String, String> info, String output) {
         try {
-            final JobOutputPO jobOutput = jobDao.getJobOutput(jobId);
+            final ExecutableOutputPO jobOutput = executableDao.getJobOutput(jobId);
             Preconditions.checkArgument(jobOutput != null, "there is no related output for job id:" + jobId);
             ExecutableState oldStatus = ExecutableState.valueOf(jobOutput.getStatus());
             if (newStatus != null && oldStatus != newStatus) {
@@ -197,7 +196,7 @@ public class ExecutableManager {
             if (output != null) {
                 jobOutput.setContent(output);
             }
-            jobDao.updateJobOutput(jobOutput);
+            executableDao.updateJobOutput(jobOutput);
             logger.info("job id:" + jobId + " from " + oldStatus + " to " + newStatus);
         } catch (PersistentException e) {
             logger.error("error change job:" + jobId + " to " + newStatus.toString());
@@ -209,12 +208,12 @@ public class ExecutableManager {
     //TODO delete when migration finished
     public void resetJobOutput(String jobId, ExecutableState state, String output) {
         try {
-            final JobOutputPO jobOutput = jobDao.getJobOutput(jobId);
+            final ExecutableOutputPO jobOutput = executableDao.getJobOutput(jobId);
             jobOutput.setStatus(state.toString());
             if (output != null) {
                 jobOutput.setContent(output);
             }
-            jobDao.updateJobOutput(jobOutput);
+            executableDao.updateJobOutput(jobOutput);
         } catch (PersistentException e) {
             throw new RuntimeException(e);
         }
@@ -225,10 +224,10 @@ public class ExecutableManager {
             return;
         }
         try {
-            JobOutputPO output = jobDao.getJobOutput(id);
+            ExecutableOutputPO output = executableDao.getJobOutput(id);
             Preconditions.checkArgument(output != null, "there is no related output for job id:" + id);
             output.getInfo().putAll(info);
-            jobDao.updateJobOutput(output);
+            executableDao.updateJobOutput(output);
         } catch (PersistentException e) {
             logger.error("error update job info, id:" + id + "  info:" + info.toString());
             throw new RuntimeException(e);
@@ -259,40 +258,44 @@ public class ExecutableManager {
         }
     }
 
-
-    private JobPO getJobPO(AbstractExecutable executable) {
-        final JobPO result = executable.getJobPO();
+    private static ExecutablePO parse(AbstractExecutable executable) {
+        ExecutablePO result = new ExecutablePO();
+        result.setName(executable.getName());
+        result.setUuid(executable.getId());
+        result.setType(executable.getClass().getName());
+        result.setParams(executable.getParams());
         if (executable instanceof DefaultChainedExecutable) {
-            for (AbstractExecutable task: ((DefaultChainedExecutable) executable).getTasks()) {
-                result.getTasks().add(getJobPO(task));
+            List<ExecutablePO> tasks = Lists.newArrayList();
+            for (AbstractExecutable task : ((DefaultChainedExecutable) executable).getTasks()) {
+                tasks.add(parse(task));
             }
+            result.setTasks(tasks);
         }
         return result;
     }
 
-    public String getAdminDls() {
-        return config.getAdminDls();
-    }
-
-    private AbstractExecutable parseTo(JobPO jobPO) {
-        if (jobPO == null) {
+    private static AbstractExecutable parseTo(ExecutablePO executablePO) {
+        if (executablePO == null) {
             return null;
         }
-        String type = jobPO.getType();
+        String type = executablePO.getType();
         try {
             Class<? extends AbstractExecutable> clazz = (Class<? extends AbstractExecutable>) Class.forName(type);
-            Constructor<? extends AbstractExecutable> constructor = clazz.getConstructor(JobPO.class);
-            AbstractExecutable result = constructor.newInstance(jobPO);
-            List<JobPO> tasks = jobPO.getTasks();
+            Constructor<? extends AbstractExecutable> constructor = clazz.getConstructor();
+            AbstractExecutable result = constructor.newInstance();
+            result.setId(executablePO.getUuid());
+            result.setName(executablePO.getName());
+            result.setParams(executablePO.getParams());
+            List<ExecutablePO> tasks = executablePO.getTasks();
             if (tasks != null && !tasks.isEmpty()) {
                 Preconditions.checkArgument(result instanceof DefaultChainedExecutable);
-                for (JobPO subTask: tasks) {
+                for (ExecutablePO subTask: tasks) {
                     ((DefaultChainedExecutable) result).addTask(parseTo(subTask));
                 }
             }
             return result;
         } catch (ReflectiveOperationException e) {
-            throw new IllegalArgumentException("cannot parse this job:" + jobPO.getId(), e);
+            throw new IllegalArgumentException("cannot parse this job:" + executablePO.getId(), e);
         }
     }
 

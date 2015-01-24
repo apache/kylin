@@ -13,13 +13,13 @@ import java.util.Map;
  * Created by qianzhou on 12/15/14.
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-public class JobPO extends RootPersistentEntity {
+public class ExecutablePO extends RootPersistentEntity {
 
     @JsonProperty("name")
     private String name;
 
     @JsonProperty("tasks")
-    private List<JobPO> tasks = Lists.newArrayList();
+    private List<ExecutablePO> tasks;
 
     @JsonProperty("type")
     private String type;
@@ -35,11 +35,11 @@ public class JobPO extends RootPersistentEntity {
         this.name = name;
     }
 
-    public List<JobPO> getTasks() {
+    public List<ExecutablePO> getTasks() {
         return tasks;
     }
 
-    public void setTasks(List<JobPO> tasks) {
+    public void setTasks(List<ExecutablePO> tasks) {
         this.tasks = tasks;
     }
 

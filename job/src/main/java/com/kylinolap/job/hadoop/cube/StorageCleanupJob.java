@@ -24,7 +24,7 @@ import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.execution.ExecutableState;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.job.service.ExecutableManager;
+import com.kylinolap.job.manager.ExecutableManager;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -101,7 +101,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
         HTableDescriptor[] tableDescriptors = hbaseAdmin.listTables(tableNamePrefix + ".*");
         List<String> allTablesNeedToBeDropped = new ArrayList<String>();
         for (HTableDescriptor desc : tableDescriptors) {
-            String host = desc.getValue(CubeManager.getHtableMetadataKey());
+            String host = desc.getValue(CubeManager.getHTableMetadataKey());
             if (KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix().equalsIgnoreCase(host)) {
                 //only take care htables that belongs to self
                 allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());

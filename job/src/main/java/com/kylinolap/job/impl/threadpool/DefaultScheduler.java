@@ -8,6 +8,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import com.kylinolap.job.execution.AbstractExecutable;
 import org.apache.commons.lang.StringUtils;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -32,7 +33,7 @@ import com.kylinolap.job.exception.SchedulerException;
 import com.kylinolap.job.execution.Executable;
 import com.kylinolap.job.execution.ExecutableState;
 import com.kylinolap.job.execution.Output;
-import com.kylinolap.job.service.ExecutableManager;
+import com.kylinolap.job.manager.ExecutableManager;
 
 /**
  * Created by qianzhou on 12/15/14.
