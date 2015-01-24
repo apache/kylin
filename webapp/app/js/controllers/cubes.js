@@ -1,8 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,kylinConfig) {
-        $scope.displayTimeZone =kylinConfig.getTimeZone();
+    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log) {
 
         $scope.listParams={
             cubeName: $routeParams.cubeName,
@@ -411,7 +410,7 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
 
         if ($scope.cube.detail.cube_partition_desc.cube_partition_type=='UPDATE_INSERT')
         {
-            $scope.jobBuildRequest.startTime+=+=new Date().getTimezoneOffset()*60000;
+            $scope.jobBuildRequest.startTime+=new Date().getTimezoneOffset()*60000;
         }
         $scope.jobBuildRequest.endTime+=new Date().getTimezoneOffset()*60000;
     }

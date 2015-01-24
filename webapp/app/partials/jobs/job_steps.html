@@ -51,7 +51,7 @@
         <!--Start Label-->
         <li class="time-label">
             <span class="bg-blue">
-                <b>Start &nbsp;&nbsp;{{state.selectedJob.steps[0].exec_start_time !=0 ? (state.selectedJob.steps[0].exec_start_time | date:'yyyy-MM-dd HH:mm:ss') :''}}</b>
+                <b>Start &nbsp;&nbsp;{{state.selectedJob.steps[0].exec_start_time !=0 ? (state.selectedJob.steps[0].exec_start_time | utcToConfigTimeZone) :''}}</b>
             </span>
         </li>
 
@@ -63,8 +63,8 @@
                     Status: {{step.step_status}}<br>
                     Duration: {{step.exec_start_time != 0 ?  (step.exec_end_time != 0 ? ((step.exec_end_time - step.exec_start_time)/1000/60 | number:2) + ' mins' : '0 seconds') : '0 seconds'}}<br>
                     Waiting: {{(step.exec_wait_time > 60)? (step.exec_wait_time/60 | number:2) + ' mins': step.exec_wait_time + ' seconds'}}<br>
-                    Start At: {{step.exec_start_time !=0 ? (step.exec_start_time | utcToConfigTimeZone:displayTimeZone ) :''}}<br>
-                    End At: {{step.exec_end_time !=0 ? (step.exec_end_time | utcToConfigTimeZoneMillis:displayTimeZone):''}}<br>
+                    Start At: {{step.exec_start_time !=0 ? (step.exec_start_time | utcToConfigTimeZone) :''}}<br>
+                    End At: {{step.exec_end_time !=0 ? (step.exec_end_time | utcToConfigTimeZone) :''}}<br>
                     {{step.info.hdfs_bytes_written ? ('Data Size: ' + dataSize(step.info.hdfs_bytes_written) +'<br>') : ''}}
                     {{step.info.mr_job_id ? ('MR Job: <br>' + step.info.mr_job_id + '<br>') :''}}</div>"
                 ng-class="{
@@ -78,7 +78,7 @@
             <div class="timeline-item">
                 <div class="timeline-header">
                     <i class="ace-icon fa fa-clock-o bigger-110"></i>
-                    {{step.exec_start_time !=0 ? (step.exec_start_time | date:'HH:mm:ss') :''}}
+                    {{step.exec_start_time !=0 ? (step.exec_start_time | utcToConfigTimeZone):''}}
                 </div>
                 <div class="timeline-body">
                     <span style="color: #4383B4">#{{$index+1}} Step Name: </span>{{step.name}}<br>
@@ -117,7 +117,7 @@
 
         <li class="time-label">
             <span class="bg-blue">
-                <b>End &nbsp;&nbsp; {{state.selectedJob.steps[state.selectedJob.steps.length-1].exec_end_time !=0 ? (state.selectedJob.steps[state.selectedJob.steps.length-1].exec_end_time | utcToConfigTimeZone:displayTimeZone):''}}</b>
+                <b>End &nbsp;&nbsp; {{state.selectedJob.steps[state.selectedJob.steps.length-1].exec_end_time !=0 ? (state.selectedJob.steps[state.selectedJob.steps.length-1].exec_end_time | utcToConfigTimeZone):''}}</b>
             </span>
         </li>
     </ul>

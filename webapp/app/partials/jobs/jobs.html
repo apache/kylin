@@ -117,7 +117,7 @@
                             </div>
                         </div>
                     </td>
-                    <td>{{ job.last_modified == 0 ? '' : (job.last_modified |utcToConfigTimeZone:displayTimeZone)}}</td>
+                    <td>{{ job.last_modified == 0 ? '' : (job.last_modified |utcToConfigTimeZone)}}</td>
                     <td>{{(job.duration/60 | number:2) + ' mins'}}</td>
                     <td>
                         <div class="btn-group"
