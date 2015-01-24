@@ -18,11 +18,11 @@ import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.DimensionDesc;
 import com.kylinolap.dict.DictionaryInfo;
 import com.kylinolap.dict.DictionaryManager;
-import com.kylinolap.job.dao.JobPO;
+import com.kylinolap.job.dao.ExecutablePO;
 import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.execution.ExecutableContext;
 import com.kylinolap.job.execution.ExecuteResult;
-import com.kylinolap.job.impl.threadpool.AbstractExecutable;
+import com.kylinolap.job.execution.AbstractExecutable;
 import com.kylinolap.metadata.model.TblColRef;
 
 public class MergeDictionaryStep extends AbstractExecutable {
@@ -32,10 +32,7 @@ public class MergeDictionaryStep extends AbstractExecutable {
     private static final String MERGING_SEGMENT_IDS = "mergingSegmentIds";
 
     public MergeDictionaryStep() {
-    }
-
-    public MergeDictionaryStep(JobPO job) {
-        super(job);
+        super();
     }
 
     @Override
@@ -46,10 +43,14 @@ public class MergeDictionaryStep extends AbstractExecutable {
         final CubeSegment newSegment = cube.getSegmentById(getSegmentId());
         final List<CubeSegment> mergingSegments = getMergingSegments(cube);
         
+        Collections.sort(mergingSegments);
+        
         try {
+            checkLookupSnapshotsMustIncremental(mergingSegments);
+            
             makeDictForNewSegment(conf, cube, newSegment, mergingSegments);
             makeSnapshotForNewSegment(cube, newSegment, mergingSegments);
-
+            
             mgr.updateCube(cube);
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } catch (IOException e) {
@@ -65,6 +66,11 @@ public class MergeDictionaryStep extends AbstractExecutable {
             result.add(cube.getSegmentById(id));
         }
         return result;
+    }
+
+    private void checkLookupSnapshotsMustIncremental(List<CubeSegment> mergingSegments) {
+
+        // FIXME check each newer snapshot has only NEW rows but no MODIFIED rows
     }
 
     /**
@@ -130,7 +136,8 @@ public class MergeDictionaryStep extends AbstractExecutable {
      * @param newSeg
      */
     private void makeSnapshotForNewSegment(CubeInstance cube, CubeSegment newSeg, List<CubeSegment> mergingSegments) {
-        for (Map.Entry<String, String> entry : mergingSegments.get(0).getSnapshots().entrySet()) {
+        CubeSegment lastSeg = mergingSegments.get(mergingSegments.size() - 1);
+        for (Map.Entry<String, String> entry : lastSeg.getSnapshots().entrySet()) {
             newSeg.putSnapshotResPath(entry.getKey(), entry.getValue());
         }
     }

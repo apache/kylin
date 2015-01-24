@@ -4,8 +4,9 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.job.constant.ExecutableConstants;
 import com.kylinolap.job.engine.JobEngineConfig;
+import com.kylinolap.job.execution.AbstractExecutable;
 import com.kylinolap.job.execution.ExecutableState;
-import com.kylinolap.job.service.ExecutableManager;
+import com.kylinolap.job.manager.ExecutableManager;
 import org.junit.After;
 import org.junit.Before;
 

@@ -48,7 +48,7 @@ import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.execution.ExecutableState;
 import com.kylinolap.job.execution.Output;
-import com.kylinolap.job.impl.threadpool.AbstractExecutable;
+import com.kylinolap.job.execution.AbstractExecutable;
 import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.rest.constant.Constant;
 
@@ -130,15 +130,15 @@ public class JobService extends BasicService {
         }
 
         CubingJob job;
-        CubingJobBuilder builder = (CubingJobBuilder) CubingJobBuilder.newBuilder().setJobEnginConfig(new JobEngineConfig(getConfig())).setSubmitter(submitter);
+        CubingJobBuilder builder = new CubingJobBuilder(new JobEngineConfig(getConfig()));
+        builder.setSubmitter(submitter);
+        
         if (buildType == CubeBuildTypeEnum.BUILD) {
             CubeSegment newSeg = getCubeManager().appendSegments(cube, startDate, endDate);
-            builder.setSegment(newSeg);
-            job = builder.buildJob();
+            job = builder.buildJob(newSeg);
         } else if (buildType == CubeBuildTypeEnum.MERGE) {
             CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate);
-            builder.setSegment(newSeg);
-            job = builder.mergeJob();
+            job = builder.mergeJob(newSeg);
         } else {
             throw new JobException("invalid build type:" + buildType);
         }
@@ -148,6 +148,10 @@ public class JobService extends BasicService {
 
     public JobInstance getJobInstance(String uuid) throws IOException, JobException {
         return parseToJobInstance(getExecutableManager().getJob(uuid));
+    }
+
+    public Output getOutput(String id) {
+        return getExecutableManager().getOutput(id);
     }
 
     private JobInstance parseToJobInstance(AbstractExecutable job) {

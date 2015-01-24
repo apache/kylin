@@ -13,7 +13,7 @@ import java.util.Map;
  * Created by qianzhou on 12/15/14.
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-public class JobOutputPO extends RootPersistentEntity {
+public class ExecutableOutputPO extends RootPersistentEntity {
 
     @JsonProperty("content")
     private String content;

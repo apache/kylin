@@ -27,11 +27,11 @@ import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.invertedindex.IISegment;
 import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.execution.ExecutableState;
-import com.kylinolap.job.impl.threadpool.AbstractExecutable;
+import com.kylinolap.job.execution.AbstractExecutable;
 import com.kylinolap.job.impl.threadpool.DefaultScheduler;
 import com.kylinolap.job.invertedindex.IIJob;
 import com.kylinolap.job.invertedindex.IIJobBuilder;
-import com.kylinolap.job.service.ExecutableManager;
+import com.kylinolap.job.manager.ExecutableManager;
 import com.kylinolap.metadata.realization.RealizationStatusEnum;
 
 /**
@@ -79,7 +79,6 @@ public class BuildIIWithEngineTest {
         DeployUtil.initCliWorkDir();
 //        DeployUtil.deployMetadata();
         DeployUtil.overrideJobJarLocations();
-        DeployUtil.overrideJobConf(HBaseMetadataTestCase.SANDBOX_TEST_DATA);
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         jobService = ExecutableManager.getInstance(kylinConfig);
@@ -186,8 +185,8 @@ public class BuildIIWithEngineTest {
         IISegment segment = iiManager.buildSegment(iiInstance, startDate, endDate);
         iiInstance.getSegments().add(segment);
         iiManager.updateII(iiInstance);
-        IIJobBuilder iiJobBuilder = (IIJobBuilder)IIJobBuilder.newBuilder().setJobEnginConfig(jobEngineConfig).setSegment(segment);
-        IIJob job = iiJobBuilder.buildJob();
+        IIJobBuilder iiJobBuilder = new IIJobBuilder(jobEngineConfig);
+        IIJob job = iiJobBuilder.buildJob(segment);
         jobService.addJob(job);
         waitForJob(job.getId());
         return job.getId();

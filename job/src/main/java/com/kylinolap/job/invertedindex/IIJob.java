@@ -15,8 +15,8 @@
  */
 package com.kylinolap.job.invertedindex;
 
-import com.kylinolap.job.dao.JobPO;
-import com.kylinolap.job.impl.threadpool.DefaultChainedExecutable;
+import com.kylinolap.job.dao.ExecutablePO;
+import com.kylinolap.job.execution.DefaultChainedExecutable;
 
 /**
  * Created by shaoshi on 1/15/15.
@@ -25,10 +25,6 @@ public class IIJob extends DefaultChainedExecutable {
 
     public IIJob() {
         super();
-    }
-
-    public IIJob(JobPO job) {
-        super(job);
     }
 
     private static final String II_INSTANCE_NAME = "iiName";

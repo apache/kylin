@@ -7,12 +7,11 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.job.constant.ExecutableConstants;
-import com.kylinolap.job.dao.JobPO;
+import com.kylinolap.job.dao.ExecutablePO;
 import com.kylinolap.job.exception.ExecuteException;
+import com.kylinolap.job.execution.AbstractExecutable;
 import com.kylinolap.job.execution.ExecutableContext;
 import com.kylinolap.job.execution.ExecuteResult;
-import com.kylinolap.job.impl.threadpool.AbstractExecutable;
-import com.kylinolap.metadata.model.SegmentStatusEnum;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
@@ -34,51 +33,43 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
     private final CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
 
     public UpdateCubeInfoAfterMergeStep() {
-    }
-
-    public UpdateCubeInfoAfterMergeStep(JobPO job) {
-        super(job);
+        super();
     }
 
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         final CubeInstance cube = cubeManager.getCube(getCubeName());
-        List<String> mergingSegmentIds = getMergingSegmentIds();
-        if (mergingSegmentIds.isEmpty()) {
-            return new ExecuteResult(ExecuteResult.State.FAILED, "there are no merging segments");
-        }
+        
         CubeSegment mergedSegment = cube.getSegmentById(getSegmentId());
         if (mergedSegment == null) {
             return new ExecuteResult(ExecuteResult.State.FAILED, "there is no segment with id:" + getSegmentId());
         }
-        String cubeSizeString = jobService.getOutput(getConvertToHfileStepId()).getExtra().get(ExecutableConstants.HDFS_BYTES_WRITTEN);
+        String cubeSizeString = executableManager.getOutput(getConvertToHfileStepId()).getExtra().get(ExecutableConstants.HDFS_BYTES_WRITTEN);
         Preconditions.checkState(StringUtils.isNotEmpty(cubeSizeString), "Can't get cube segment size.");
         long cubeSize = Long.parseLong(cubeSizeString) / 1024;
 
-        List<CubeSegment> toBeRemoved = Lists.newArrayListWithExpectedSize(mergingSegmentIds.size());
-        for (CubeSegment segment : cube.getSegments()) {
-            if (mergingSegmentIds.contains(segment.getUuid())) {
-                toBeRemoved.add(segment);
-            }
+        // collect source statistics
+        List<String> mergingSegmentIds = getMergingSegmentIds();
+        if (mergingSegmentIds.isEmpty()) {
+            return new ExecuteResult(ExecuteResult.State.FAILED, "there are no merging segments");
         }
-
         long sourceCount = 0L;
         long sourceSize = 0L;
-        for (CubeSegment segment : toBeRemoved) {
+        for (String id : mergingSegmentIds) {
+            CubeSegment segment = cube.getSegmentById(id);
             sourceCount += segment.getSourceRecords();
             sourceSize += segment.getSourceRecordsSize();
         }
-        //update segment info
+        
+        // update segment info
         mergedSegment.setSizeKB(cubeSize);
         mergedSegment.setSourceRecords(sourceCount);
         mergedSegment.setSourceRecordsSize(sourceSize);
         mergedSegment.setLastBuildJobID(getCubingJobId());
-        mergedSegment.setStatus(SegmentStatusEnum.READY);
         mergedSegment.setLastBuildTime(System.currentTimeMillis());
-        //remove old segment
-        cube.getSegments().removeAll(toBeRemoved);
+        
         try {
-            cubeManager.updateCube(cube);
+            cubeManager.promoteNewlyBuiltSegments(cube, mergedSegment);
             return new ExecuteResult(ExecuteResult.State.SUCCEED);
         } catch (IOException e) {
             logger.error("fail to update cube after merge", e);
