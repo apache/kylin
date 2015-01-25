@@ -102,7 +102,7 @@ public class ProjectManager {
         for (String path : paths) {
             reloadProjectAt(path);
         }
-        wireProjectAndRealizations(projectMap.values());
+//        wireProjectAndRealizations(projectMap.values());
         logger.debug("Loaded " + projectMap.size() + " Project(s)");
     }
 
