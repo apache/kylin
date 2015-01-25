@@ -133,6 +133,11 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         CubeDescService.get({cube_name: $routeParams.cubeName}, function (detail) {
             if (detail.length > 0) {
                 $scope.cubeMetaFrame = detail[0];
+                //convert GMT mills ,to make sure partition date show GMT Date
+                    if($scope.cubeMetaFrame.cube_partition_desc&&$scope.cubeMetaFrame.cube_partition_desc.partition_date_start)
+                      {
+                         $scope.cubeMetaFrame.cube_partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
+                      }
                 $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
             }
         });
