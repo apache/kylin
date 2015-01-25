@@ -280,6 +280,9 @@ public class KylinConfig {
     }
 
     private PropertiesConfiguration kylinConfig = new PropertiesConfiguration();
+    
+    private String metadataUrl;
+    private String storageUrl;
 
     public CliCommandExecutor getCliCommandExecutor() throws IOException {
         CliCommandExecutor exec = new CliCommandExecutor();
@@ -292,7 +295,7 @@ public class KylinConfig {
     // ============================================================================
 
     public String getStorageUrl() {
-        return getOptional(KYLIN_STORAGE_URL);
+        return storageUrl;
     }
 
     public String getHiveUrl() {
@@ -487,6 +490,8 @@ public class KylinConfig {
             }
         }
         this.kylinConfig = config;
+        this.metadataUrl = getOptional(KYLIN_METADATA_URL);
+        this.storageUrl = getOptional(KYLIN_STORAGE_URL);
     }
 
     public void writeProperties(File file) throws IOException {
@@ -551,7 +556,7 @@ public class KylinConfig {
     }
 
     public String getMetadataUrl() {
-        return getOptional(KYLIN_METADATA_URL);
+        return metadataUrl;
     }
 
     public String getMetadataUrlPrefix() {
@@ -569,10 +574,12 @@ public class KylinConfig {
 
     public void setMetadataUrl(String metadataUrl) {
         kylinConfig.setProperty(KYLIN_METADATA_URL, metadataUrl);
+        this.metadataUrl = metadataUrl;
     }
 
     public void setStorageUrl(String storageUrl) {
         kylinConfig.setProperty(KYLIN_STORAGE_URL, storageUrl);
+        this.storageUrl = storageUrl;
     }
 
     public void setRunAsRemoteCommand(String v) {
@@ -628,6 +635,37 @@ public class KylinConfig {
 
     public String toString() {
         return getMetadataUrl();
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((metadataUrl == null) ? 0 : metadataUrl.hashCode());
+        result = prime * result + ((storageUrl == null) ? 0 : storageUrl.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        KylinConfig other = (KylinConfig) obj;
+        if (metadataUrl == null) {
+            if (other.metadataUrl != null)
+                return false;
+        } else if (!metadataUrl.equals(other.metadataUrl))
+            return false;
+        if (storageUrl == null) {
+            if (other.storageUrl != null)
+                return false;
+        } else if (!storageUrl.equals(other.storageUrl))
+            return false;
+        return true;
     }
 
 }
