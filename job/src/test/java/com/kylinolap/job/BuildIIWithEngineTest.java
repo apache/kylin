@@ -103,7 +103,7 @@ public class BuildIIWithEngineTest {
 
 
     @Test
-    private void testBuildII() throws Exception {
+    public void testBuildII() throws Exception {
 
         String[] testCase = new String[]{
                 "buildII"
