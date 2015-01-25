@@ -402,16 +402,6 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
     };
 
     $scope.rebuildRollback = function(){
-
-          //to-do pending test,if necessary to rollback this
-//        if($scope.cube.segments.length==0){
-//            $scope.jobBuildRequest.startTime-=new Date().getTimezoneOffset()*60000;
-//        }
-
-        if ($scope.cube.detail.cube_partition_desc.cube_partition_type=='UPDATE_INSERT')
-        {
-            $scope.jobBuildRequest.startTime+=new Date().getTimezoneOffset()*60000;
-        }
         $scope.jobBuildRequest.endTime+=new Date().getTimezoneOffset()*60000;
     }
 
@@ -448,10 +438,6 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
 
     $scope.updateDate = function() {
 
-//      convert to true value as backend GMT+0 time
-        if($scope.cube.segments.length==0){
-            $scope.jobBuildRequest.startTime-=new Date().getTimezoneOffset()*60000;
-        }
 
         if ($scope.cube.detail.cube_partition_desc.cube_partition_type=='UPDATE_INSERT')
         {

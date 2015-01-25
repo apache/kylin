@@ -22,20 +22,20 @@
                                 <div ng-if="cube.segments.length == 0">
                                     {{jobBuildRequest.startTime =
                                     (!!cube.detail.cube_partition_desc.partition_date_start)?cube.detail.cube_partition_desc.partition_date_start:0
-                                    | date: 'fullDate'}}
+                                    | reverseToGMT0 }}
                                 </div>
                                 <div ng-if="cube.segments.length > 0">
                                     <!--no need to convert-->
                                     <div ng-if="cube.detail.cube_partition_desc.cube_partition_type=='APPEND'">
                                         {{ jobBuildRequest.startTime = cube.segments[cube.segments.length-1].date_range_end| reverseToGMT0 }}
                                     </div>
-                                    <div ng-if="cube.detail.cube_partition_desc.cube_partition_type=='UPDATE_INSERT'">
-                                        <!--<datepicker ng-model="jobBuildRequest.startTime" show-weeks="true"-->
-                                                    <!--required class="well well-sm"></datepicker>-->
-                                        <input type="text" datepicker-popup="yyyy-MM-dd" class="input-sm" style="width: 98%"
-                                               ng-model="jobBuildRequest.startTime"
-                                               placeholder="Click to choose START date..." is-open="opened" />
-                                    </div>
+                                    <!--<div ng-if="cube.detail.cube_partition_desc.cube_partition_type=='UPDATE_INSERT'">-->
+                                        <!--&lt;!&ndash;<datepicker ng-model="jobBuildRequest.startTime" show-weeks="true"&ndash;&gt;-->
+                                                    <!--&lt;!&ndash;required class="well well-sm"></datepicker>&ndash;&gt;-->
+                                        <!--<input type="text" datepicker-popup="yyyy-MM-dd" class="input-sm" style="width: 98%"-->
+                                               <!--ng-model="jobBuildRequest.startTime"-->
+                                               <!--placeholder="Click to choose START date..." is-open="opened" />-->
+                                    <!--</div>-->
                                 </div>
                             </td>
                         </tr>

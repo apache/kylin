@@ -3,7 +3,9 @@
 KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter) {
     //~ Define metadata & class
     $scope.capacities = ['SMALL', 'MEDIUM', 'LARGE'];
-    $scope.cubePartitionTypes = ['APPEND', 'UPDATE_INSERT'];
+//    $scope.cubePartitionTypes = ['APPEND', 'UPDATE_INSERT'];
+    //hide UPDATE_INSERT NOW
+    $scope.cubePartitionTypes = ['APPEND'];
     $scope.projects = [];
     $scope.newDimension = null;
     $scope.newMeasure = null;
@@ -62,10 +64,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         }
         if ($scope.cubeMode=="editExistCube"&&newValue && !newValue.project) {
             initProject();
-        }
-        if($scope.cubeMetaFrame&&($scope.cubeMetaFrame.cube_partition_desc.partition_date_start||$scope.cubeMetaFrame.cube_partition_desc.partition_date_start==0))
-        {
-            $scope.cubeMetaFrame.cube_partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
         }
 
     });
@@ -152,8 +150,8 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
             if (cubeName) {
                 var projName = null;
                 angular.forEach($scope.projects, function (project, index) {
-                    angular.forEach(project.datamodels, function (model, index) {
-                        if (!projName && model.type=="CUBE"&&model.realization === cubeName) {
+                    angular.forEach(project.realizations, function (unit, index) {
+                        if (!projName && unit.type=="CUBE"&&unit.realization === cubeName) {
                             projName = project.name;
                         }
                     });
