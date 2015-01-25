@@ -215,6 +215,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                                 design_form.$invalid = true;
                             }
                         } else {
+                            $scope.saveCubeRollBack();
                             $scope.cubeMetaFrame.project = $scope.state.project;
                                 var message =request.message;
                                 var msg = !!(message) ? message : 'Failed to take action.';
@@ -243,6 +244,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
                             MessageService.sendMsg($scope.cubeResultTmpl({'text':'Created the cube successfully.',type:'success'}), 'success', {}, true, 'top_center');
                         } else {
+                            $scope.saveCubeRollBack();
                             $scope.cubeMetaFrame.project = $scope.state.project;
                             var message =request.message;
                             var msg = !!(message) ? message : 'Failed to take action.';
