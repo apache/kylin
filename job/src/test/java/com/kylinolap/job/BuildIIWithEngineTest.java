@@ -103,7 +103,7 @@ public class BuildIIWithEngineTest {
 
 
     @Test
-    private void testBuildII() throws Exception {
+    public void testBuildII() throws Exception {
 
         String[] testCase = new String[]{
                 "buildII"
@@ -185,8 +185,8 @@ public class BuildIIWithEngineTest {
         IISegment segment = iiManager.buildSegment(iiInstance, startDate, endDate);
         iiInstance.getSegments().add(segment);
         iiManager.updateII(iiInstance);
-        IIJobBuilder iiJobBuilder = (IIJobBuilder)IIJobBuilder.newBuilder().setJobEnginConfig(jobEngineConfig).setSegment(segment);
-        IIJob job = iiJobBuilder.buildJob();
+        IIJobBuilder iiJobBuilder = new IIJobBuilder(jobEngineConfig);
+        IIJob job = iiJobBuilder.buildJob(segment);
         jobService.addJob(job);
         waitForJob(job.getId());
         return job.getId();

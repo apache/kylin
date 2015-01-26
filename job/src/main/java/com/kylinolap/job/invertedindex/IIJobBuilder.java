@@ -23,7 +23,6 @@ import java.util.TimeZone;
 import com.google.common.base.Preconditions;
 import com.kylinolap.cube.model.CubeDesc.RealizationCapacity;
 import com.kylinolap.invertedindex.IISegment;
-import com.kylinolap.invertedindex.model.IIDesc;
 import com.kylinolap.job.AbstractJobBuilder;
 import com.kylinolap.job.common.HadoopShellExecutable;
 import com.kylinolap.job.common.MapReduceExecutable;
@@ -42,71 +41,58 @@ import com.kylinolap.job.execution.AbstractExecutable;
  * Created by shaoshi on 1/15/15.
  */
 public final class IIJobBuilder extends AbstractJobBuilder {
-    
-    private IIJobBuilder() {
-        
-    }
-    
-    public static IIJobBuilder newBuilder() {
-        return new IIJobBuilder();
+
+    public IIJobBuilder(JobEngineConfig engineConfig) {
+        super(engineConfig);
     }
 
-    public IIJob buildJob() {
-        checkPreconditions();
+    public IIJob buildJob(IISegment seg) {
+        checkPreconditions(seg);
 
-        IIJob result = initialJob("BUILD");
+        IIJob result = initialJob(seg, "BUILD");
         final String jobId = result.getId();
-        final IIJoinedFlatTableDesc intermediateTableDesc = new IIJoinedFlatTableDesc(getIIDesc());
+        final IIJoinedFlatTableDesc intermediateTableDesc = new IIJoinedFlatTableDesc(seg.getIIDesc());
         final String intermediateHiveTableName = getIntermediateHiveTableName(intermediateTableDesc, jobId);
-        final String factDistinctColumnsPath = getIIDistinctColumnsPath(jobId);
-        final String iiRootPath = getJobWorkingDir(jobId) + "/" + getIIName() + "/";
+        final String factDistinctColumnsPath = getIIDistinctColumnsPath(seg, jobId);
+        final String iiRootPath = getJobWorkingDir(jobId) + "/" + seg.getIIInstance().getName() + "/";
         final String iiPath = iiRootPath + "*";
 
         final AbstractExecutable intermediateHiveTableStep = createIntermediateHiveTableStep(intermediateTableDesc, jobId);
         result.addTask(intermediateHiveTableStep);
 
-        result.addTask(createFactDistinctColumnsStep(intermediateHiveTableName, jobId, factDistinctColumnsPath));
+        result.addTask(createFactDistinctColumnsStep(seg, intermediateHiveTableName, jobId, factDistinctColumnsPath));
 
-        result.addTask(createBuildDictionaryStep(factDistinctColumnsPath));
+        result.addTask(createBuildDictionaryStep(seg, factDistinctColumnsPath));
 
-        result.addTask(createInvertedIndexStep(intermediateHiveTableName, iiRootPath));
+        result.addTask(createInvertedIndexStep(seg, intermediateHiveTableName, iiRootPath));
 
-        result.addTask(this.createCreateHTableStep());
+        result.addTask(createCreateHTableStep(seg));
 
         // create htable step
-        result.addTask(createCreateHTableStep());
-        
-        // generate hfiles step
-        result.addTask(createConvertToHfileStep(iiPath, jobId));
-        // bulk load step
-        result.addTask(createBulkLoadStep(jobId));
+        result.addTask(createCreateHTableStep(seg));
 
+        // generate hfiles step
+        result.addTask(createConvertToHfileStep(seg, iiPath, jobId));
+        // bulk load step
+        result.addTask(createBulkLoadStep(seg, jobId));
 
         return result;
     }
-    
-    protected IIDesc getIIDesc() {
-        return ((IISegment)segment).getIIDesc();
-    }
 
-    private IIJob initialJob(String type) {
+    private IIJob initialJob(IISegment seg, String type) {
         IIJob result = new IIJob();
         SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss");
-        format.setTimeZone(TimeZone.getTimeZone(jobEngineConfig.getTimeZone()));
-        result.setIIName(getIIName());
-        result.setSegmentId(segment.getUuid());
-        result.setName(getIIName() + " - " + segment.getName() + " - " + type + " - " + format.format(new Date(System.currentTimeMillis())));
+        format.setTimeZone(TimeZone.getTimeZone(engineConfig.getTimeZone()));
+        result.setIIName(seg.getIIInstance().getName());
+        result.setSegmentId(seg.getUuid());
+        result.setName(seg.getIIInstance().getName() + " - " + seg.getName() + " - " + type + " - " + format.format(new Date(System.currentTimeMillis())));
         result.setSubmitter(this.submitter);
         return result;
     }
 
-    private void checkPreconditions() {
-        Preconditions.checkNotNull(this.segment, "segment cannot be null");
-        Preconditions.checkNotNull(this.jobEngineConfig, "jobEngineConfig cannot be null");
-    }
-
-    private String getIIName() {
-        return ((IISegment)segment).getIIInstance().getName();
+    private void checkPreconditions(IISegment seg) {
+        Preconditions.checkNotNull(seg, "segment cannot be null");
+        Preconditions.checkNotNull(engineConfig, "jobEngineConfig cannot be null");
     }
 
     private void appendMapReduceParameters(StringBuilder builder, JobEngineConfig engineConfig) {
@@ -119,41 +105,36 @@ public final class IIJobBuilder extends AbstractJobBuilder {
             throw new RuntimeException(e);
         }
     }
-    
 
-    private String getIIDistinctColumnsPath(String jobUuid) {
-        return getJobWorkingDir(jobUuid) + "/" + getIIName() + "/ii_distinct_columns";
+    private String getIIDistinctColumnsPath(IISegment seg, String jobUuid) {
+        return getJobWorkingDir(jobUuid) + "/" + seg.getIIInstance().getName() + "/ii_distinct_columns";
     }
 
-    private String getHTableName() {
-        return ((IISegment)segment).getStorageLocationIdentifier();
+    private String getHFilePath(IISegment seg, String jobId) {
+        return getJobWorkingDir(jobId) + "/" + seg.getIIInstance().getName() + "/hfile/";
     }
 
-    private String getHFilePath(String jobId) {
-        return getJobWorkingDir(jobId) + "/" + getIIName() + "/hfile/";
-    }
-
-    private MapReduceExecutable createFactDistinctColumnsStep(String factTableName, String jobId, String output) {
+    private MapReduceExecutable createFactDistinctColumnsStep(IISegment seg, String factTableName, String jobId, String output) {
         MapReduceExecutable result = new MapReduceExecutable();
         result.setName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS);
         result.setMapReduceJobClass(IIDistinctColumnsJob.class);
         StringBuilder cmd = new StringBuilder();
-        appendMapReduceParameters(cmd, jobEngineConfig);
+        appendMapReduceParameters(cmd, engineConfig);
         appendExecCmdParameters(cmd, "tablename", factTableName);
-        appendExecCmdParameters(cmd, "iiname", getIIName());
+        appendExecCmdParameters(cmd, "iiname", seg.getIIInstance().getName());
         appendExecCmdParameters(cmd, "output", output);
-        appendExecCmdParameters(cmd, "jobname", "Kylin_Fact_Distinct_Columns_" + getIIName() + "_Step");
+        appendExecCmdParameters(cmd, "jobname", "Kylin_Fact_Distinct_Columns_" + seg.getIIInstance().getName() + "_Step");
 
         result.setMapReduceParams(cmd.toString());
         return result;
     }
 
-    private HadoopShellExecutable createBuildDictionaryStep(String factDistinctColumnsPath) {
+    private HadoopShellExecutable createBuildDictionaryStep(IISegment seg, String factDistinctColumnsPath) {
         // base cuboid job
         HadoopShellExecutable buildDictionaryStep = new HadoopShellExecutable();
         buildDictionaryStep.setName(ExecutableConstants.STEP_NAME_BUILD_DICTIONARY);
         StringBuilder cmd = new StringBuilder();
-        appendExecCmdParameters(cmd, "iiname", getIIName());
+        appendExecCmdParameters(cmd, "iiname", seg.getIIInstance().getName());
         appendExecCmdParameters(cmd, "input", factDistinctColumnsPath);
 
         buildDictionaryStep.setJobParams(cmd.toString());
@@ -161,16 +142,16 @@ public final class IIJobBuilder extends AbstractJobBuilder {
         return buildDictionaryStep;
     }
 
-    private MapReduceExecutable createInvertedIndexStep(String intermediateHiveTable, String iiOutputTempPath) {
+    private MapReduceExecutable createInvertedIndexStep(IISegment seg, String intermediateHiveTable, String iiOutputTempPath) {
         // base cuboid job
         MapReduceExecutable buildIIStep = new MapReduceExecutable();
 
         StringBuilder cmd = new StringBuilder();
-        appendMapReduceParameters(cmd, jobEngineConfig);
+        appendMapReduceParameters(cmd, engineConfig);
 
         buildIIStep.setName(ExecutableConstants.STEP_NAME_BUILD_BASE_CUBOID);
 
-        appendExecCmdParameters(cmd, "iiname", getIIName());
+        appendExecCmdParameters(cmd, "iiname", seg.getIIInstance().getName());
         appendExecCmdParameters(cmd, "tablename", intermediateHiveTable);
         appendExecCmdParameters(cmd, "output", iiOutputTempPath);
         appendExecCmdParameters(cmd, "jobname", ExecutableConstants.STEP_NAME_BUILD_II);
@@ -180,13 +161,12 @@ public final class IIJobBuilder extends AbstractJobBuilder {
         return buildIIStep;
     }
 
-
-    private HadoopShellExecutable createCreateHTableStep() {
+    private HadoopShellExecutable createCreateHTableStep(IISegment seg) {
         HadoopShellExecutable createHtableStep = new HadoopShellExecutable();
         createHtableStep.setName(ExecutableConstants.STEP_NAME_CREATE_HBASE_TABLE);
         StringBuilder cmd = new StringBuilder();
-        appendExecCmdParameters(cmd, "iiname", getIIName());
-        appendExecCmdParameters(cmd, "htablename", getHTableName());
+        appendExecCmdParameters(cmd, "iiname", seg.getIIInstance().getName());
+        appendExecCmdParameters(cmd, "htablename", seg.getStorageLocationIdentifier());
 
         createHtableStep.setJobParams(cmd.toString());
         createHtableStep.setJobClass(IICreateHTableJob.class);
@@ -194,17 +174,17 @@ public final class IIJobBuilder extends AbstractJobBuilder {
         return createHtableStep;
     }
 
-    private MapReduceExecutable createConvertToHfileStep(String inputPath, String jobId) {
+    private MapReduceExecutable createConvertToHfileStep(IISegment seg, String inputPath, String jobId) {
         MapReduceExecutable createHFilesStep = new MapReduceExecutable();
         createHFilesStep.setName(ExecutableConstants.STEP_NAME_CONVERT_II_TO_HFILE);
         StringBuilder cmd = new StringBuilder();
 
-        appendMapReduceParameters(cmd, jobEngineConfig);
-        appendExecCmdParameters(cmd, "iiname", getIIName());
+        appendMapReduceParameters(cmd, engineConfig);
+        appendExecCmdParameters(cmd, "iiname", seg.getIIInstance().getName());
         appendExecCmdParameters(cmd, "input", inputPath);
-        appendExecCmdParameters(cmd, "output", getHFilePath(jobId));
-        appendExecCmdParameters(cmd, "htablename", getHTableName());
-        appendExecCmdParameters(cmd, "jobname", "Kylin_HFile_Generator_" + getIIName() + "_Step");
+        appendExecCmdParameters(cmd, "output", getHFilePath(seg, jobId));
+        appendExecCmdParameters(cmd, "htablename", seg.getStorageLocationIdentifier());
+        appendExecCmdParameters(cmd, "jobname", "Kylin_HFile_Generator_" + seg.getIIInstance().getName() + "_Step");
 
         createHFilesStep.setMapReduceParams(cmd.toString());
         createHFilesStep.setMapReduceJobClass(IICreateHFileJob.class);
@@ -212,14 +192,14 @@ public final class IIJobBuilder extends AbstractJobBuilder {
         return createHFilesStep;
     }
 
-    private HadoopShellExecutable createBulkLoadStep(String jobId) {
+    private HadoopShellExecutable createBulkLoadStep(IISegment seg, String jobId) {
         HadoopShellExecutable bulkLoadStep = new HadoopShellExecutable();
         bulkLoadStep.setName(ExecutableConstants.STEP_NAME_BULK_LOAD_HFILE);
 
         StringBuilder cmd = new StringBuilder();
-        appendExecCmdParameters(cmd, "input", getHFilePath(jobId));
-        appendExecCmdParameters(cmd, "htablename", getHTableName());
-        appendExecCmdParameters(cmd, "iiname", getIIName());
+        appendExecCmdParameters(cmd, "input", getHFilePath(seg, jobId));
+        appendExecCmdParameters(cmd, "htablename", seg.getStorageLocationIdentifier());
+        appendExecCmdParameters(cmd, "iiname", seg.getIIInstance().getName());
 
         bulkLoadStep.setJobParams(cmd.toString());
         bulkLoadStep.setJobClass(IIBulkLoadJob.class);
