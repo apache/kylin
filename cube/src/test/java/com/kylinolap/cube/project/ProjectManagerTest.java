@@ -32,11 +32,9 @@ import com.kylinolap.cube.CubeDescManager;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.project.ProjectManager;
 import com.kylinolap.metadata.realization.IRealization;
-import com.kylinolap.metadata.realization.RealizationRegistry;
 import com.kylinolap.metadata.realization.RealizationType;
 
 /**
@@ -47,11 +45,6 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
-        MetadataManager.removeInstance(this.getTestConfig());
-        CubeManager.removeInstance(this.getTestConfig());
-        CubeDescManager.removeInstance(this.getTestConfig());
-        ProjectManager.removeInstance(this.getTestConfig());
-        RealizationRegistry.removeInstance(this.getTestConfig());
     }
 
     @After
