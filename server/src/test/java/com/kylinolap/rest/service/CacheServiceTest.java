@@ -46,7 +46,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
     public void setUp() throws Exception {
         this.createTestMetadata();
 
-        server = new Server(8080);
+        server = new Server(7070);
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
