@@ -53,7 +53,7 @@
                                 </tr>
                                 <tr>
                                     <th>SNAPSHOT TIME</th>
-                                    <td>{{selectedSrcTable.exd.lastUpdateTime | date:'yyyy-MM-dd HH:mm:ss'}}</td>
+                                    <td>{{selectedSrcTable.exd.lastUpdateTime | utcToConfigTimeZone}}</td>
                                 </tr>
                                 <tr>
                                     <th>LOCATION</th>
