@@ -52,6 +52,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         cubeInstance.setSegments(new ArrayList<CubeSegment>());
         cubeInstance.setStatus(RealizationStatusEnum.DISABLED);
         cubeInstance.updateRandomUuid();
+        cubeInstance.setProjectName(projectName);
 
         return cubeInstance;
     }

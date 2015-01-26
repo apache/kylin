@@ -65,7 +65,7 @@ public abstract class AbstractKylinTestCase {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         for (String serviceClass : SERVICES_WITH_CACHE) {
             try {
-                Class cls = Class.forName(serviceClass);
+                Class<?> cls = Class.forName(serviceClass);
                 Method method = cls.getDeclaredMethod("removeInstance", KylinConfig.class);
                 method.invoke(null, config);
             } catch (Exception e) {
