@@ -17,7 +17,7 @@ KylinApp.service('kylinConfig', function(AdminService,$log) {
         var keyLength = name.length;
         var partialResult = _config.substr(keyIndex);
         var preValueIndex = partialResult.indexOf("=");
-        var sufValueIndex = partialResult.indexOf("\n\r");
+        var sufValueIndex = partialResult.indexOf("\n");
         return partialResult.substring(preValueIndex+1,sufValueIndex);
 
     }
