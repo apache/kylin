@@ -66,8 +66,6 @@ public final class IIJobBuilder extends AbstractJobBuilder {
 
         result.addTask(createInvertedIndexStep(seg, intermediateHiveTableName, iiRootPath));
 
-        result.addTask(createCreateHTableStep(seg));
-
         // create htable step
         result.addTask(createCreateHTableStep(seg));
 
