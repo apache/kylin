@@ -77,8 +77,9 @@ public class NumberDictionaryTest {
         NumberDictionaryBuilder<String> builder = new NumberDictionaryBuilder<String>(new StringBytesConverter());
         for (int i = 0; i < n; i++) {
             String num = randNumber();
-            builder.addValue(num);
-            set.add(new BigDecimal(num));
+            if (set.add(new BigDecimal(num))) {
+                builder.addValue(num);
+            }
         }
 
         List<BigDecimal> sorted = Lists.newArrayList();
