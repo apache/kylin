@@ -637,35 +637,4 @@ public class KylinConfig {
         return getMetadataUrl();
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((metadataUrl == null) ? 0 : metadataUrl.hashCode());
-        result = prime * result + ((storageUrl == null) ? 0 : storageUrl.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        KylinConfig other = (KylinConfig) obj;
-        if (metadataUrl == null) {
-            if (other.metadataUrl != null)
-                return false;
-        } else if (!metadataUrl.equals(other.metadataUrl))
-            return false;
-        if (storageUrl == null) {
-            if (other.storageUrl != null)
-                return false;
-        } else if (!storageUrl.equals(other.storageUrl))
-            return false;
-        return true;
-    }
-
 }
