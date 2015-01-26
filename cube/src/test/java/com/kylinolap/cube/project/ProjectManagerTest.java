@@ -19,10 +19,8 @@ package com.kylinolap.cube.project;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.util.Set;
 
-import com.kylinolap.metadata.project.ProjectInstance;
-import com.kylinolap.metadata.project.ProjectManager;
-import com.kylinolap.metadata.realization.RealizationType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,6 +33,11 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectManager;
+import com.kylinolap.metadata.realization.IRealization;
+import com.kylinolap.metadata.realization.RealizationRegistry;
+import com.kylinolap.metadata.realization.RealizationType;
 
 /**
  * @author xduo
@@ -46,7 +49,9 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
         this.createTestMetadata();
         MetadataManager.removeInstance(this.getTestConfig());
         CubeManager.removeInstance(this.getTestConfig());
+        CubeDescManager.removeInstance(this.getTestConfig());
         ProjectManager.removeInstance(this.getTestConfig());
+        RealizationRegistry.removeInstance(this.getTestConfig());
     }
 
     @After
@@ -81,7 +86,9 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
         CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
         CubeInstance createdCube = cubeMgr.createCube("cube_in_alien_project", "alien", desc, null);
         assertTrue(createdCube == cubeMgr.getCube("cube_in_alien_project"));
-        assertTrue(ProjectManager.getInstance(getTestConfig()).listAllRealizations("alien").contains(createdCube));
+        ProjectManager proMgr = ProjectManager.getInstance(getTestConfig());
+        Set<IRealization> realizations = proMgr.listAllRealizations("alien");
+        assertTrue(realizations.contains(createdCube));
 
         System.out.println(JsonUtil.writeValueAsIndentString(createdCube));
 
