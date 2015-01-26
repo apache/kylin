@@ -4,10 +4,12 @@ import com.google.common.collect.*;
 import com.kylinolap.common.KylinConfig;
 
 import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -61,7 +63,7 @@ public class RealizationRegistry {
         providers = Maps.newConcurrentMap();
 
         // use reflection to load providers
-        final Set<Class<? extends IRealizationProvider>> realizationProviders = new Reflections("").getSubTypesOf(IRealizationProvider.class);
+        final Set<Class<? extends IRealizationProvider>> realizationProviders = new Reflections("com.kylinolap", new SubTypesScanner()).getSubTypesOf(IRealizationProvider.class);
         List<Throwable> es = Lists.newArrayList();
         for (Class<? extends IRealizationProvider> cls : realizationProviders) {
             try {
@@ -81,6 +83,10 @@ public class RealizationRegistry {
         }
 
         logger.info("RealizationRegistry is " + providers);
+    }
+
+    public Set<RealizationType> getRealizationTypes() {
+        return Collections.unmodifiableSet(providers.keySet());
     }
 
     public IRealization getRealization(RealizationType type, String name) {
