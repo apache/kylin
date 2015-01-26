@@ -72,7 +72,7 @@
                     <div no-result text="No Saved Query."></div>
                 </div>
                 <table class="table table-hover table-striped list">
-                    <tr ng-repeat="query in savedQueries | reverse"
+                    <tr ng-repeat="query in savedQueries | reverse track by $index"
                         ng-if="$index >= (savedQueries.curPage-1)*savedQueries.perPage && $index < savedQueries.curPage*savedQueries.perPage"
                         class="query-content">
                         <td>
@@ -132,10 +132,10 @@
                     <div no-result text="No Query History."></div>
                 </div>
                 <table class="table table-hover table-striped list">
-                    <tr ng-repeat="query in cachedQueries | reverse"
+                    <tr ng-repeat="query in cachedQueries | reverse track by $index"
                         ng-if="$index >= (cachedQueries.curPage-1)*cachedQueries.perPage && $index < cachedQueries.curPage*cachedQueries.perPage">
                         <td>
-                            <span style="color: #808080;line-height: 25px">Queried At: {{query.savedAt | date:'yyyy-MM-dd HH:mm:ss'}} <span ng-if="query.project">in Project: {{query.project}}</span></span>
+                            <span style="color: #808080;line-height: 25px">Queried At: {{query.savedAt | utcToConfigTimeZone}} <span ng-if="query.project">in Project: {{query.project}}</span></span>
 
                             <div class="pull-right">
                                 <button class="btn btn-default btn-xs" ng-click="submitQuery(query.sql, query.project)"><i class="fa fa-refresh"></i>

@@ -53,7 +53,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     $scope.srcTablesInProject = [];
 
     $scope.getColumnsByTable = function (name) {
-        var temp = null;
+        var temp = [];
         angular.forEach($scope.srcTablesInProject, function (table) {
             if (table.name == name) {
                 temp = table.columns;
@@ -133,6 +133,11 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         CubeDescService.get({cube_name: $routeParams.cubeName}, function (detail) {
             if (detail.length > 0) {
                 $scope.cubeMetaFrame = detail[0];
+                //convert GMT mills ,to make sure partition date show GMT Date
+                    if($scope.cubeMetaFrame.cube_partition_desc&&$scope.cubeMetaFrame.cube_partition_desc.partition_date_start)
+                      {
+                         $scope.cubeMetaFrame.cube_partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
+                      }
                 $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
             }
         });
@@ -215,6 +220,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                                 design_form.$invalid = true;
                             }
                         } else {
+                            $scope.saveCubeRollBack();
                             $scope.cubeMetaFrame.project = $scope.state.project;
                                 var message =request.message;
                                 var msg = !!(message) ? message : 'Failed to take action.';
@@ -224,6 +230,8 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         loadingRequest.hide();
                         recoveryCubeStatus();
                     }, function (e) {
+                        $scope.saveCubeRollBack();
+
                         if(e.data&& e.data.exception){
                             var message =e.data.exception;
                             var msg = !!(message) ? message : 'Failed to take action.';
@@ -241,6 +249,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
                             MessageService.sendMsg($scope.cubeResultTmpl({'text':'Created the cube successfully.',type:'success'}), 'success', {}, true, 'top_center');
                         } else {
+                            $scope.saveCubeRollBack();
                             $scope.cubeMetaFrame.project = $scope.state.project;
                             var message =request.message;
                             var msg = !!(message) ? message : 'Failed to take action.';
@@ -251,6 +260,8 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         loadingRequest.hide();
                         recoveryCubeStatus();
                     }, function (e) {
+                        $scope.saveCubeRollBack();
+
                         if (e.data && e.data.exception) {
                             var message =e.data.exception;
                             var msg = !!(message) ? message : 'Failed to take action.';
@@ -261,12 +272,23 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         //end loading
                         loadingRequest.hide();
                         recoveryCubeStatus();
+
                     });
                 }
+            }
+            else{
+                $scope.saveCubeRollBack();
             }
         });
     };
 
+//    reverse the date
+    $scope.saveCubeRollBack = function (){
+        if($scope.cubeMetaFrame&&($scope.cubeMetaFrame.cube_partition_desc.partition_date_start||$scope.cubeMetaFrame.cube_partition_desc.partition_date_start==0))
+        {
+            $scope.cubeMetaFrame.cube_partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
+        }
+    }
 
     function reGenerateRowKey(){
         $log.log("reGen rowkey & agg group");

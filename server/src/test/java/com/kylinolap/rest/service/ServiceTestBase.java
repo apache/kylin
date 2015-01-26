@@ -76,6 +76,6 @@ public class ServiceTestBase extends HBaseMetadataTestCase { //HBaseMetadataTest
      * com.kylinolap.rest.service.TestBase.initializationError
      */
     @Test
-    public void test() {
+    public void test() throws Exception {
     }
 }
