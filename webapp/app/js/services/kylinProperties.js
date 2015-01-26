@@ -4,6 +4,7 @@
 KylinApp.service('kylinConfig', function(AdminService,$log) {
     var _config;
     var timezone;
+    var deployEnv;
     this.init = function (){
         AdminService.config({}, function(config){
             _config = config.config;
@@ -27,6 +28,13 @@ KylinApp.service('kylinConfig', function(AdminService,$log) {
             this.timezone = this.getProperty("kylin.rest.timezone").trim();
         }
         return this.timezone;
+    }
+
+    this.getDeployEnv = function(){
+        if(!this.deployEnv){
+            this.deployEnv = this.getProperty("deploy.env").trim();
+        }
+        return this.deployEnv.toUpperCase();
     }
 });
 
