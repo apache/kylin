@@ -240,24 +240,6 @@ public class ExecutableManager {
         addJobInfo(id, info);
     }
 
-    private void stopJob(AbstractExecutable job) {
-        final ExecutableState status = job.getStatus();
-        if (status == ExecutableState.RUNNING) {
-            updateJobOutput(job.getId(), ExecutableState.STOPPED, null, null);
-            if (job instanceof DefaultChainedExecutable) {
-                final List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
-                for (AbstractExecutable task: tasks) {
-                    if (task.getStatus() == ExecutableState.RUNNING) {
-                        stopJob(task);
-                        break;
-                    }
-                }
-            }
-        } else {
-            updateJobOutput(job.getId(), ExecutableState.STOPPED, null, null);
-        }
-    }
-
     private static ExecutablePO parse(AbstractExecutable executable) {
         ExecutablePO result = new ExecutablePO();
         result.setName(executable.getName());
