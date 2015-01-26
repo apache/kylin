@@ -4,6 +4,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
 
     //init kylinConfig to get kylin.Propeties
     kylinConfig.init();
+    $scope.kylinConfig = kylinConfig;
 
     $scope.header = {show: true};
     $scope.footer = {
