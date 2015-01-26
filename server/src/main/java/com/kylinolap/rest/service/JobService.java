@@ -130,15 +130,15 @@ public class JobService extends BasicService {
         }
 
         CubingJob job;
-        CubingJobBuilder builder = (CubingJobBuilder) CubingJobBuilder.newBuilder().setJobEnginConfig(new JobEngineConfig(getConfig())).setSubmitter(submitter);
+        CubingJobBuilder builder = new CubingJobBuilder(new JobEngineConfig(getConfig()));
+        builder.setSubmitter(submitter);
+        
         if (buildType == CubeBuildTypeEnum.BUILD) {
             CubeSegment newSeg = getCubeManager().appendSegments(cube, startDate, endDate);
-            builder.setSegment(newSeg);
-            job = builder.buildJob();
+            job = builder.buildJob(newSeg);
         } else if (buildType == CubeBuildTypeEnum.MERGE) {
             CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate);
-            builder.setSegment(newSeg);
-            job = builder.mergeJob();
+            job = builder.mergeJob(newSeg);
         } else {
             throw new JobException("invalid build type:" + buildType);
         }
