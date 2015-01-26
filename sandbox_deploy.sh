@@ -122,7 +122,7 @@ mkdir -p /etc/kylin
 
 HOSTNAME=`hostname`
 DEFAULT_CHECK_URL="kylin.job.yarn.app.rest.check.status.url=http://sandbox"
-DEFAULT_SERVER_LIST="kylin.rest.servers=sandbox"
+DEFAULT_SERVER_LIST="kylin.rest.servers=localhost"
 NEW_CHECK_URL_PREFIX="kylin.job.yarn.app.rest.check.status.url=http://"
 NEW_SERVER_LIST_PREFIX="kylin.rest.servers="
 
