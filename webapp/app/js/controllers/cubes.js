@@ -2,6 +2,7 @@
 
 KylinApp
     .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log) {
+
         $scope.listParams={
             cubeName: $routeParams.cubeName,
             projectName: $routeParams.projectName
@@ -50,11 +51,11 @@ KylinApp
                                 cube.last_build_time = cube.segments[i].last_build_time;
                                 break;
                             }else if(i===0){
-                                cube.last_build_time = cube.create_time;
+                                cube.last_build_time = cube.create_time_utc;
                             }
                         }
                     } else {
-                        cube.last_build_time = cube.create_time;
+                        cube.last_build_time = cube.create_time_utc;
                     }
                     if($routeParams.showDetail == 'true'){
                         cube.showDetail = true;
@@ -360,7 +361,7 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
     };
     $scope.message = "";
 
-    $scope.rebuild = function () {
+    $scope.rebuild = function (jobsubmit) {
 
                 $scope.message = null;
                 $scope.jobBuildRequest.startTime = new Date($scope.jobBuildRequest.startTime).getTime();
@@ -368,6 +369,11 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
 
                 if ($scope.jobBuildRequest.startTime >= $scope.jobBuildRequest.endTime) {
                     $scope.message = "WARNING: End time should be later than the start time.";
+
+                    //rollback date setting
+                    if(jobsubmit){
+                        $scope.rebuildRollback();
+                    }
                     return;
                 }
 
@@ -379,6 +385,11 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
                     SweetAlert.swal('Success!', 'Rebuild job was submitted successfully', 'success');
                 },function(e){
 
+                    //rollback date setting
+                    if(jobsubmit){
+                        $scope.rebuildRollback();
+                    }
+
                     loadingRequest.hide();
                     if(e.data&& e.data.exception){
                         var message =e.data.exception;
@@ -389,6 +400,10 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
                     }
                 });
     };
+
+    $scope.rebuildRollback = function(){
+        $scope.jobBuildRequest.endTime+=new Date().getTimezoneOffset()*60000;
+    }
 
     // used by cube segment refresh
     $scope.segmentSelected = function (selectedSegment) {
@@ -422,6 +437,8 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
     };
 
     $scope.updateDate = function() {
+
+
         if ($scope.cube.detail.cube_partition_desc.cube_partition_type=='UPDATE_INSERT')
         {
             $scope.jobBuildRequest.startTime=$scope.formatDate($scope.jobBuildRequest.startTime);

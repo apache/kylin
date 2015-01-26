@@ -1,9 +1,11 @@
 'use strict';
 
-KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService) {
+KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter) {
     //~ Define metadata & class
     $scope.capacities = ['SMALL', 'MEDIUM', 'LARGE'];
-    $scope.cubePartitionTypes = ['APPEND', 'UPDATE_INSERT'];
+//    $scope.cubePartitionTypes = ['APPEND', 'UPDATE_INSERT'];
+    //hide UPDATE_INSERT NOW
+    $scope.cubePartitionTypes = ['APPEND'];
     $scope.projects = [];
     $scope.newDimension = null;
     $scope.newMeasure = null;
@@ -48,6 +50,9 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     }
 
     $scope.$watch('cube.detail', function (newValue, oldValue) {
+        if(!newValue){
+            return;
+        }
         if (newValue) {
             $scope.cubeMetaFrame = newValue;
         }
@@ -60,11 +65,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         if ($scope.cubeMode=="editExistCube"&&newValue && !newValue.project) {
             initProject();
         }
-        //convert from UTC to local timezone
-        //if($scope.cubeMetaFrame.cube_partition_desc.partition_date_start)
-        //{
-        //    $scope.cubeMetaFrame.cube_partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
-        //}
+
     });
 
     // ~ public methods
@@ -149,8 +150,8 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
             if (cubeName) {
                 var projName = null;
                 angular.forEach($scope.projects, function (project, index) {
-                    angular.forEach(project.cubes, function (cube, index) {
-                        if (!projName && cube === cubeName.toUpperCase()) {
+                    angular.forEach(project.realizations, function (unit, index) {
+                        if (!projName && unit.type=="CUBE"&&unit.realization === cubeName) {
                             projName = project.name;
                         }
                     });

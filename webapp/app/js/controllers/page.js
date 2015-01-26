@@ -1,8 +1,10 @@
 'use strict';
 
-KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService,SweetAlert,$cookieStore,$log,kylinConfig) {
+KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService,SweetAlert,$cookieStore,$log, kylinConfig) {
 
-     kylinConfig.init();
+    //init kylinConfig to get kylin.Propeties
+    kylinConfig.init();
+
     $scope.header = {show: true};
     $scope.footer = {
         year: new Date().getFullYear(),
@@ -123,16 +125,12 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
         selectedProject: null
     };
 
-    $scope.projectVisible = function(project){
-        $log.info(project);
-        return project!='-- Select All --';
-    }
 
     ProjectService.list({}, function (projects) {
         angular.forEach(projects, function(project, index){
             $scope.project.projects.push(project.name);
         });
-        $scope.project.projects.sort();
+        $scope.project.projects = _.sortBy($scope.project.projects, function (i) { return i.toLowerCase(); });
 
         var absUrl = $location.absUrl();
 
@@ -251,4 +249,3 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
 
 
 };
-
