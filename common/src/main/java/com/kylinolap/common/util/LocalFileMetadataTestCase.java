@@ -61,8 +61,7 @@ public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
         } catch (IOException e) {
             throw new IllegalStateException("Can't delete directory " + tempTestMetadataUrl, e);
         }
-        System.clearProperty(KylinConfig.KYLIN_CONF);
-        KylinConfig.destoryInstance();
+        staticCleanupTestMetadata();
         this.tempTestMetadataUrl = null;
     }
 
