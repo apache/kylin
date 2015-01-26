@@ -5,35 +5,55 @@
     <description>Apache Kylin Home</description>
     <link>http://kyli.io/</link>
     <atom:link href="http://kyli.io/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 20 Jan 2015 23:03:54 +0800</pubDate>
-    <lastBuildDate>Tue, 20 Jan 2015 23:03:54 +0800</lastBuildDate>
+    <pubDate>Sun, 25 Jan 2015 23:08:46 +0800</pubDate>
+    <lastBuildDate>Sun, 25 Jan 2015 23:08:46 +0800</lastBuildDate>
     <generator>Jekyll v2.5.3</generator>
     
       <item>
-        <title>Welcome to Jekyll!</title>
-        <description>&lt;p&gt;You’ll find this post in your &lt;code&gt;_posts&lt;/code&gt; directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run &lt;code&gt;jekyll serve&lt;/code&gt;, which launches a web server and auto-regenerates your site when a file is updated.&lt;/p&gt;
+        <title>Introduce Data Model of Cube Designer</title>
+        <description>&lt;h3 id=&quot;background&quot;&gt;Background&lt;/h3&gt;
+&lt;p&gt;In previous version (before v0.6.4), Kylin introduced a GUI tool called Cube Designer for user (we called this role as &lt;strong&gt;Cube Modeler&lt;/strong&gt;) to architect OLAP Cube with dimensions, measures and other settings. It works well for most of the features but still not user friendly yet: &lt;/p&gt;
 
-&lt;p&gt;To add new posts, simply add a file in the &lt;code&gt;_posts&lt;/code&gt; directory that follows the convention &lt;code&gt;YYYY-MM-DD-name-of-post.ext&lt;/code&gt; and includes the necessary front matter. Take a look at the source for this post to get an idea about how it works.&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;A user has to add dimension one by one, considering there are 20+ even 50+ dimensions, the entire process is really boring. &lt;/li&gt;
+  &lt;li&gt;Each dimension requires define join condition between fact table and lookup table which even already be defined in previous dimensions many times.&lt;/li&gt;
+  &lt;li&gt;Less validation check, especially for Hierarchy and Derived dimension, there are many exceptions in further steps which blocked many people to save the cube definition without any idea about the issue.&lt;/li&gt;
+  &lt;li&gt;Save/Next buttons are confusing user to click which one for real next step or just save current dimension settings&lt;/li&gt;
+&lt;/ol&gt;
 
-&lt;p&gt;Jekyll also offers powerful support for code snippets:&lt;/p&gt;
+&lt;h3 id=&quot;data-model-of-cube-designer&quot;&gt;Data Model of Cube Designer&lt;/h3&gt;
+&lt;p&gt;With the feedback from our internal users and external community, we have came up one idea and would like to introduce a new concept (widely known in Data Warehouse and Business Intelligence domain): Data Model: a data model organises data elements and standardises how the data elements relate to one another.&lt;a href=&quot;http://en.wikipedia.org/wiki/Data_model&quot;&gt;Wikipedia&lt;/a&gt;. In Kylin, it using &lt;a href=&quot;http://en.wikipedia.org/wiki/Star_schema&quot;&gt;Star Schema&lt;/a&gt; as Data Model, which is the simplest style of data warehouse schema. The star schema consists of a few “fact tables” (possibly only one, justifying the name) referencing any number of “dimension tables”. It actually already there behind dimensions and measures and now just come to first step to define the relationship between different tables before create each dimension. 
+Now (after v0.6.4), to create a cube will follow below steps:&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ruby&quot; data-lang=&quot;ruby&quot;&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;print_hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-  &lt;span class=&quot;nb&quot;&gt;puts&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;Hi, &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;#{&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;print_hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;Tom&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;#=&amp;gt; prints &amp;#39;Hi, Tom&amp;#39; to STDOUT.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;ol&gt;
+  &lt;li&gt;Define data model first: pick up one fact table and then add other lookup tables (with their join conditions). The data mode must be presents as Star Schema.&lt;/li&gt;
+  &lt;li&gt;Then add dimensions, since all join conditions already presented in data model, each dimension could be more easy to create, just need to know what’s kind of type: normal, hierarchy and derived (will have another blog to introduce them). There’s also one helper called &lt;em&gt;Auto Generator&lt;/em&gt; to help generate many dimensions within simple clicks.&lt;/li&gt;
+  &lt;li&gt;Then define measures and others as previous cube designer did&lt;/li&gt;
+&lt;/ol&gt;
 
-&lt;p&gt;Check out the &lt;a href=&quot;http://jekyllrb.com&quot;&gt;Jekyll docs&lt;/a&gt; for more info on how to get the most out of Jekyll. File all bugs/feature requests at &lt;a href=&quot;https://github.com/jekyll/jekyll&quot;&gt;Jekyll’s GitHub repo&lt;/a&gt;. If you have questions, you can ask them on &lt;a href=&quot;https://github.com/jekyll/jekyll-help&quot;&gt;Jekyll’s dedicated Help repository&lt;/a&gt;.&lt;/p&gt;
+&lt;h3 id=&quot;benefits&quot;&gt;Benefits&lt;/h3&gt;
+&lt;ol&gt;
+  &lt;li&gt;A data model is very easy to communicate between different roles and teams. Most of cases it just mapping to real database table relationship, like from Hive tables&lt;/li&gt;
+  &lt;li&gt;More easy to create dimensions and measures based on the data model&lt;/li&gt;
+  &lt;li&gt;Friendly error message with enhanced validation check when save cube&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;whats-next&quot;&gt;What’s Next&lt;/h3&gt;
+&lt;p&gt;After this refactor, Kylin is now be able to introduce more powerful features, the major idea is to using different storages to serve same data model:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Logical Model&lt;/strong&gt;: A Data Model presents logical data structure like Star Schema beyond data tables with more business meaning&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Physical Model&lt;/strong&gt;: define how the underlying data to be stored in persistent system, like HBase. There are already two of them: MOLAP (current Kylin version) and InvertedIndex (coming with 0.7.x release). And it also easy to extend to support others without change the Logical Model.&lt;/li&gt;
+  &lt;li&gt;A new GUI of Cube Designer to support above is on the way.&lt;/li&gt;
+&lt;/ul&gt;
 
 </description>
-        <pubDate>Wed, 21 Jan 2015 05:52:58 +0800</pubDate>
-        <link>http://kyli.io/jekyll/update/2015/01/21/welcome-to-jekyll.html</link>
-        <guid isPermaLink="true">http://kyli.io/jekyll/update/2015/01/21/welcome-to-jekyll.html</guid>
+        <pubDate>Mon, 26 Jan 2015 06:28:00 +0800</pubDate>
+        <link>http://kyli.io/blog/2015/01/26/introduce-data-model/</link>
+        <guid isPermaLink="true">http://kyli.io/blog/2015/01/26/introduce-data-model/</guid>
         
         
-        <category>jekyll</category>
-        
-        <category>update</category>
+        <category>blog</category>
         
       </item>
     

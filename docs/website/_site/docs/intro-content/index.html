@@ -6,8 +6,8 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>Kylin.IO | Welcome to Jekyll!</title>
-  <meta name="description" content="You’ll find this post in your _posts directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different wa...">
+  <title>Kylin.IO | Docs</title>
+  <meta name="description" content="Apache Kylin Home">
   <meta name="author"      content="Kylin.IO">
   <link rel="shortcut icon" href="fav.png" type="image/png">
 
@@ -26,7 +26,7 @@
   <!-- Custom styles -->
   <link rel="stylesheet" href="/assets/css/styles.css">
 
-  <link rel="canonical" href="http://kyli.io/jekyll/update/2015/01/21/welcome-to-jekyll.html">
+  <link rel="canonical" href="http://kyli.io/docs/intro-content/">
   <link rel="alternate" type="application/rss+xml" title="kylin.io" href="http://kyli.io/feed.xml" />
 
 <!--[if lt IE 9]> <script src="assets/js/html5shiv.js"></script> <![endif]-->
@@ -79,6 +79,7 @@
           <li><a href="/community" >Community</a></li>
           <li><a href="/blog">Blog</li>
           <li><a href="/about" >About</a></li>
+          <li><a href="/cn" >中文版</a></li>
       </ul>
       
 
@@ -90,32 +91,55 @@
 
     <div class="page-content">
       <div class="wrapper">
-        <div class="post">
+        <p class="content-header" style="margin-top:0.25em">What should I use Kylin for?</p>
+<p class="content-p">
+If you want to do multi-dimension analysis on large data sets (billion+ rows) with low query latency (sub-seconds), Kylin is a good option. Kylin also provides good integration with existing BI tools (e.g Tableau).
+</p>
 
-  <header class="post-header">
-    <h1 class="post-title">Welcome to Jekyll!</h1>
-    <p class="post-meta">Jan 21, 2015</p>
-  </header>
+<hr/>
+ 
+<p class="content-header">Why existing SQL-on-Hadoop solutions fall short?</p>
+<p class="content-p">
+The existing SQL-on-Hadoop needs to scan partial or whole data set to answer a user query. Due to large data scan, many queries are very slow (minute+ latency).  
+</p>
+<hr/>
+ 
+<p class="content-header">What is MOLAP/ROLAP?</p>
+<p class="content-p">
+MOLAP (Multi-dimensional OLAP) is to pre-compute data along different dimensions of interest and store resultant values in the cube. MOLAP is much faster but is inflexible.
+ROLAP (Relational-OLAP) is to use star or snow-flake schema to do runtime aggregation. ROLAP is flexible but much slower.
+</p>
+<hr/>
 
-  <article class="post-content">
-    <p>You’ll find this post in your <code>_posts</code> directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run <code>jekyll serve</code>, which launches a web server and auto-regenerates your site when a file is updated.</p>
+<p class="content-header">How does Kylin support ROLAP/MOLAP?</p>
+<p class="content-p">
+Kylin builds data cube (MOLAP) from hive table (ROLAP) according to the metadata definition.
+If the query can be fulfilled by data cube, Kylin will route the query to data cube that is MOLAP.
+If the query can’t be fulfilled by data cube, Kylin will route the query to hive table that is ROLAP.
+Basically, you can think Kylin as HOLAP on top of MOLAP and ROLAP. 
+</p>
+<hr/>
+<p class="content-header">What does a Kylin query look like?</p>
+<p class="content-p">
+Kylin supports join, projection, filter, aggregation, groups and sub-query. For example:
+<div align="left">
 
-<p>To add new posts, simply add a file in the <code>_posts</code> directory that follows the convention <code>YYYY-MM-DD-name-of-post.ext</code> and includes the necessary front matter. Take a look at the source for this post to get an idea about how it works.</p>
-
-<p>Jekyll also offers powerful support for code snippets:</p>
-
-<div class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">def</span> <span class="nf">print_hi</span><span class="p">(</span><span class="nb">name</span><span class="p">)</span>
-  <span class="nb">puts</span> <span class="s2">&quot;Hi, </span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">&quot;</span>
-<span class="k">end</span>
-<span class="n">print_hi</span><span class="p">(</span><span class="s1">&#39;Tom&#39;</span><span class="p">)</span>
-<span class="c1">#=&gt; prints &#39;Hi, Tom&#39; to STDOUT.</span></code></pre></div>
-
-<p>Check out the <a href="http://jekyllrb.com">Jekyll docs</a> for more info on how to get the most out of Jekyll. File all bugs/feature requests at <a href="https://github.com/jekyll/jekyll">Jekyll’s GitHub repo</a>. If you have questions, you can ask them on <a href="https://github.com/jekyll/jekyll-help">Jekyll’s dedicated Help repository</a>.</p>
-
-
-  </article>
-
+<pre class="prettyprint" style="margin-top:1em;">select test_cal_dt.week_beg_dt, test_category.lv1_categ, test_category.lv2_categ, test_kylin_fact.format_name, test_sites.site_name, sum(test_kylin_fact.price) as total_price, count(*) as total_count from test_kylin_fact left join test_cal_dt on test_kylin_fact.cal_dt = test_cal_dt.cal_dt left join test_category on test_kylin_fact.leaf_categ_id = test_category.leaf_categ_id and test_kylin_fact.site_id = test_category.site_id left join test_sites on test_kylin_fact.site_id = test_sites.site_id where test_kylin_fact.seller_id = 123456 or test_kylin_fact.format_name = 'New' group by test_cal_dt.week_beg_dt, test_category.lv1_categ, test_category.lv2_categ, test_kylin_fact.format_name, test_sites.site_name</pre>
 </div>
+<hr/>
+
+<p class="content-header">What Hadoop components does it work with?</p>
+<p class="content-p">
+Kylin depends on HDFS, MapReduce, Hive and HBase.
+Hive and MapReduce is used for cube building. Hive is used for pre-join and MapReduce is used for pre-aggregation.
+HDFS is used to store intermediated files during cube building.
+HBase is used to store data cube and answer the query. HBase coprocessor is also used for query processing.
+</p>
+<hr/>
+
+<p class="content-header">Where can I find the technical details about Kylin?</p>
+<p class="content-p"><a href="http://www.slideshare.net/XuJiang2/kylin-hadoop-olap-engine" target="_blank">Kylin OLAP</a></p>
+
 
       </div>
     </div>
