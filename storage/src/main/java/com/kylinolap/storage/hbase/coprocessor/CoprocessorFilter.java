@@ -19,22 +19,17 @@ package com.kylinolap.storage.hbase.coprocessor;
 import java.util.Collection;
 import java.util.Set;
 
-import com.kylinolap.invertedindex.IISegment;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import com.google.common.collect.Sets;
 import com.kylinolap.common.util.BytesUtil;
-import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.kv.RowKeyColumnIO;
 import com.kylinolap.dict.Dictionary;
-import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.metadata.filter.ColumnTupleFilter;
-import com.kylinolap.metadata.filter.CompareTupleFilter;
-import com.kylinolap.metadata.filter.ConstantTupleFilter;
-import com.kylinolap.metadata.filter.TupleFilter;
+import com.kylinolap.dict.ISegment;
+import com.kylinolap.metadata.filter.*;
 import com.kylinolap.metadata.filter.TupleFilter.FilterOperatorEnum;
-import com.kylinolap.metadata.filter.TupleFilterSerializer;
 import com.kylinolap.metadata.filter.TupleFilterSerializer.Decorator;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.metadata.tuple.ITuple;
 
 /**
@@ -46,11 +41,7 @@ public class CoprocessorFilter {
 
         private RowKeyColumnIO columnIO;
 
-        public FilterDecorator(CubeSegment seg) {
-            columnIO = new RowKeyColumnIO(seg);
-        }
-
-        public FilterDecorator(IISegment seg) {
+        public FilterDecorator(ISegment seg) {
             columnIO = new RowKeyColumnIO(seg);
         }
 
@@ -173,17 +164,9 @@ public class CoprocessorFilter {
             columnIO.writeColumn(column, value, value.length, roundingFlag, Dictionary.NULL, id, 0);
             return Dictionary.dictIdToString(id, 0, id.length);
         }
-
     }
 
-    public static CoprocessorFilter fromFilter(final IISegment seg, TupleFilter rootFilter) {
-        // translate constants into dictionary IDs via a serialize copy
-        byte[] bytes = TupleFilterSerializer.serialize(rootFilter, new FilterDecorator(seg));
-        TupleFilter copy = TupleFilterSerializer.deserialize(bytes);
-        return new CoprocessorFilter(copy);
-    }
-
-    public static CoprocessorFilter fromFilter(final CubeSegment seg, TupleFilter rootFilter) {
+    public static CoprocessorFilter fromFilter(final ISegment seg, TupleFilter rootFilter) {
         // translate constants into dictionary IDs via a serialize copy
         byte[] bytes = TupleFilterSerializer.serialize(rootFilter, new FilterDecorator(seg));
         TupleFilter copy = TupleFilterSerializer.deserialize(bytes);
@@ -195,9 +178,7 @@ public class CoprocessorFilter {
     }
 
     public static CoprocessorFilter deserialize(byte[] filterBytes) {
-        TupleFilter filter = (filterBytes == null || filterBytes.length == 0) //
-        ? null //
-                : TupleFilterSerializer.deserialize(filterBytes);
+        TupleFilter filter = (filterBytes == null || filterBytes.length == 0) ? null : TupleFilterSerializer.deserialize(filterBytes);
         return new CoprocessorFilter(filter);
     }
 

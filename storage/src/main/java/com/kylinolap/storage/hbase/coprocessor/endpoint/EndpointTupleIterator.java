@@ -165,7 +165,11 @@ public class EndpointTupleIterator implements ITupleIterator {
     }
 
     private IIProtos.IIRequest prepareRequest() throws IOException {
-        IIProtos.IIRequest request = IIProtos.IIRequest.newBuilder().setType(ByteString.copyFrom(CoprocessorRowType.serialize(pushedDownRowType))).setFilter(ByteString.copyFrom(CoprocessorFilter.serialize(pushedDownFilter))).setProjector(ByteString.copyFrom(CoprocessorProjector.serialize(pushedDownProjector))).setAggregator(ByteString.copyFrom(EndpointAggregators.serialize(pushedDownAggregators))).build();
+        IIProtos.IIRequest request = IIProtos.IIRequest.newBuilder() //
+                .setType(ByteString.copyFrom(CoprocessorRowType.serialize(pushedDownRowType))) //
+                .setFilter(ByteString.copyFrom(CoprocessorFilter.serialize(pushedDownFilter))) //
+                .setProjector(ByteString.copyFrom(CoprocessorProjector.serialize(pushedDownProjector))) //
+                .setAggregator(ByteString.copyFrom(EndpointAggregators.serialize(pushedDownAggregators))).build();
 
         return request;
     }
