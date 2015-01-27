@@ -70,8 +70,7 @@ public class IIBulkLoadJob extends AbstractHadoopJob {
 
         } catch (Exception e) {
             printUsage(options);
-            e.printStackTrace(System.err);
-            return 2;
+            throw e;
         }
     }
 

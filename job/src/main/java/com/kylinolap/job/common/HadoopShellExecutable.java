@@ -1,5 +1,7 @@
 package com.kylinolap.job.common;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 
 import org.apache.hadoop.util.ToolRunner;
@@ -36,13 +38,24 @@ public class HadoopShellExecutable extends AbstractExecutable {
             String[] args = params.trim().split("\\s+");
             logger.info("parameters of the HadoopShellExecutable:");
             logger.info(params);
-            final int result = ToolRunner.run(job, args);
-            return result == 0 ? new ExecuteResult(ExecuteResult.State.SUCCEED, ""):new ExecuteResult(ExecuteResult.State.FAILED, "result code:" + result);
+            int result;
+            StringBuilder log = new StringBuilder();
+            try {
+                result = ToolRunner.run(job, args);
+            } catch (Exception ex) {
+                logger.error("error execute " + this.toString(), ex);
+                StringWriter stringWriter = new StringWriter();
+                ex.printStackTrace(new PrintWriter(stringWriter));
+                log.append(stringWriter.toString()).append("\n");
+                result = 2;
+            }
+            log.append("result code:").append(result);
+            return result == 0 ? new ExecuteResult(ExecuteResult.State.SUCCEED, log.toString()):new ExecuteResult(ExecuteResult.State.FAILED, log.toString());
         } catch (ReflectiveOperationException e) {
             logger.error("error getMapReduceJobClass, class name:" + getParam(KEY_MR_JOB), e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         } catch (Exception e) {
-            logger.error("error execute MapReduceJob, id:" + getId(), e);
+            logger.error("error execute " + this.toString(), e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         }
     }

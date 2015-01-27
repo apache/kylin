@@ -94,9 +94,7 @@ public class IICreateHTableJob extends AbstractHadoopJob {
             return 0;
         } catch (Exception e) {
             printUsage(options);
-            e.printStackTrace(System.err);
-            logger.error(e.getLocalizedMessage(), e);
-            return 2;
+            throw e;
         }
     }
 
