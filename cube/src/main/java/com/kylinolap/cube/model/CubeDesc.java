@@ -452,7 +452,7 @@ public class CubeDesc extends RootPersistentEntity {
 
     public Map<String, TblColRef> buildColumnNameAbbreviation() {
         Map<String, TblColRef> r = new CaseInsensitiveStringMap<TblColRef>();
-        for (TblColRef col : listDimensionColumnsExcludingDerived()) {
+        for (TblColRef col : this.listDimensionColumnsIncludingDerived()) {
             r.put(col.getName(), col);
         }
         return r;
@@ -538,26 +538,28 @@ public class CubeDesc extends RootPersistentEntity {
             ArrayList<TblColRef> hostColList = new ArrayList<TblColRef>();
 
             // dimension column
-            if (dim.getColumn() != null) {
-                //if ("{FK}".equals(dim.getColumn())) {
-                if (join != null) {
-                    // this dimension is defined on lookup table
-                    for (TblColRef ref : join.getForeignKeyColumns()) {
-                        TblColRef inited = initDimensionColRef(ref);
-                        dimColList.add(inited);
-                        hostColList.add(inited);
-                    }
-                } else {
-                    // this dimension is defined on fact table
-                    for (String aColumn : dim.getColumn()) {
-                        TblColRef ref = initDimensionColRef(dimTable, aColumn);
-                        if (!dimColList.contains(ref)) {
-                            dimColList.add(ref);
-                            //hostColList.add(ref);
+                
+                if (join != null && !StringUtils.isEmpty(join.getType()) && !ArrayUtils.isEmpty(join.getForeignKey())) {
+                    if (dim.getDerived() != null && dim.getDerived().length > 0) {
+                        for (TblColRef ref : join.getForeignKeyColumns()) {
+                            TblColRef inited = initDimensionColRef(ref);
+                            dimColList.add(inited);
+                            hostColList.add(inited);
                         }
                     }
                 }
-            }
+                
+
+             if(!ArrayUtils.isEmpty(dim.getColumn())) {
+                for (String aColumn : dim.getColumn()) {
+                    TblColRef ref = initDimensionColRef(dimTable, aColumn);
+                    if (!dimColList.contains(ref)) {
+                        dimColList.add(ref);
+                        hostColList.add(ref);
+                    }
+                }
+             }
+                //                }
 
             // hierarchy columns
             if (dim.getHierarchy() != null) {
@@ -588,10 +590,12 @@ public class CubeDesc extends RootPersistentEntity {
                     derivedCols[i] = initDimensionColRef(dimTable, derivedNames[i]);
                 }
                 initDerivedMap(hostCols, DeriveType.LOOKUP, dim, derivedCols, derivedExtra);
+                
+                
             }
 
             // FK derived column
-            if (join != null) {
+            if (join != null && !StringUtils.isEmpty(join.getType()) && join.getForeignKey() != null && join.getForeignKey().length > 0) {
                 TblColRef[] fk = join.getForeignKeyColumns();
                 TblColRef[] pk = join.getPrimaryKeyColumns();
                 for (int i = 0; i < fk.length; i++) {
@@ -601,6 +605,8 @@ public class CubeDesc extends RootPersistentEntity {
                         initDerivedMap(hostCols[find], DeriveType.PK_FK, dim, derivedCol);
                     }
                 }
+                
+                /*
                 for (int i = 0; i < pk.length; i++) {
                     int find = ArrayUtils.indexOf(hostCols, pk[i]);
                     if (find >= 0) {
@@ -608,6 +614,7 @@ public class CubeDesc extends RootPersistentEntity {
                         initDerivedMap(hostCols[find], DeriveType.PK_FK, dim, derivedCol);
                     }
                 }
+                */
             }
         }
     }

@@ -454,6 +454,35 @@ public class CubeMetadataUpgrade {
         result.setName(step.getName());
         return result;
     }
+    
+
+
+    public static void main1(String[] args) {
+
+        if (!(args != null && args.length == 1)) {
+            System.out.println("Usage: java CubeMetadataUpgrade <metadata_export_folder>; e.g, /export/kylin/meta");
+            return;
+        }
+
+        String exportFolder = args[0];
+        
+        File oldMetaFolder = new File(exportFolder);
+        if(!oldMetaFolder.exists()) {
+            System.out.println("Provided folder doesn't exist: '" + exportFolder + "'");
+            return;
+        }
+        
+        if(!oldMetaFolder.isDirectory()) {
+            System.out.println("Provided folder is not a directory: '" + exportFolder + "'");
+            return;
+        }
+
+        
+        String newMetadataUrl = oldMetaFolder.getAbsolutePath() + "_v2";
+        CubeMetadataUpgrade instance = new CubeMetadataUpgrade(newMetadataUrl);
+        instance.verify();
+    }
+    
 
     public static void main(String[] args) {
 
