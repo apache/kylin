@@ -16,6 +16,8 @@
 
 package com.kylinolap.common.util;
 
+import java.lang.reflect.Method;
+
 import com.kylinolap.common.KylinConfig;
 
 /**
@@ -25,12 +27,14 @@ import com.kylinolap.common.KylinConfig;
 public abstract class AbstractKylinTestCase {
 
     public static final String LOCALMETA_TEST_DATA = "../examples/test_case_data/localmeta";
-    
+
     public static final String LOCALMETA_TEST_DATA_V1 = "../examples/test_case_data/localmeta_v1";
 
     public static final String MINICLUSTER_TEST_DATA = "../examples/test_case_data/minicluster";
 
     public static final String SANDBOX_TEST_DATA = "../examples/test_case_data/sandbox";
+
+    public static final String[] SERVICES_WITH_CACHE = { "com.kylinolap.cube.CubeManager", "com.kylinolap.cube.CubeDescManager", "com.kylinolap.metadata.project.ProjectManager", "com.kylinolap.metadata.MetadataManager", "com.kylinolap.metadata.realization.RealizationRegistry" };
 
     public abstract void createTestMetadata() throws Exception;
 
@@ -50,8 +54,23 @@ public abstract class AbstractKylinTestCase {
     }
 
     public static void staticCleanupTestMetadata() {
+        cleanupCache();
         System.clearProperty(KylinConfig.KYLIN_CONF);
         KylinConfig.destoryInstance();
 
+    }
+
+    private static void cleanupCache() {
+
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        for (String serviceClass : SERVICES_WITH_CACHE) {
+            try {
+                Class<?> cls = Class.forName(serviceClass);
+                Method method = cls.getDeclaredMethod("removeInstance", KylinConfig.class);
+                method.invoke(null, config);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
