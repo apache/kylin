@@ -1,11 +1,13 @@
 package com.kylinolap.cube;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -44,10 +46,10 @@ public class CubeDescUpgrader {
         com.kylinolap.cube.model.CubeDesc newModel = new com.kylinolap.cube.model.CubeDesc();
 
         copyUnChangedProperties(oldModel, newModel);
-        updatePartitionDesc(oldModel, newModel);
 
         DataModelDesc model = extractDataModel(oldModel, newModel);
         newModel.setModel(model);
+        updatePartitionDesc(oldModel, newModel);
 
         updateDimensions(oldModel, newModel);
 
@@ -92,38 +94,64 @@ public class CubeDescUpgrader {
         newModel.setLastModified(oldModel.getLastModified());
     }
 
+    private com.kylinolap.cube.model.DimensionDesc newDimensionDesc(com.kylinolap.cube.model.v1.DimensionDesc dim, int dimId, String name) {
+        com.kylinolap.cube.model.DimensionDesc newDim = new com.kylinolap.cube.model.DimensionDesc();
+
+        newDim.setId(dimId);
+        newDim.setName(name);
+        newDim.setTable(getMetadataManager().appendDBName(dim.getTable()));
+
+        return newDim;
+    }
+
     private void updateDimensions(com.kylinolap.cube.model.v1.CubeDesc oldModel, com.kylinolap.cube.model.CubeDesc newModel) {
         List<com.kylinolap.cube.model.v1.DimensionDesc> oldDimensions = oldModel.getDimensions();
 
         List<com.kylinolap.cube.model.DimensionDesc> newDimensions = Lists.newArrayList();
         newModel.setDimensions(newDimensions);
 
+        int dimId = 0;
         for (com.kylinolap.cube.model.v1.DimensionDesc dim : oldDimensions) {
-            com.kylinolap.cube.model.DimensionDesc newDim = new com.kylinolap.cube.model.DimensionDesc();
-            newDimensions.add(newDim);
 
-            newDim.setId(dim.getId());
-            newDim.setName(dim.getName());
-            newDim.setTable(getMetadataManager().appendDBName(dim.getTable()));
-            newDim.setDerived(dim.getDerived());
+            com.kylinolap.cube.model.DimensionDesc newDim = null;
+            // if a dimension defines "column", "derived" and "hierarchy" at the sametime, separate it into three dimensions;
 
-            if ("{FK}".equalsIgnoreCase(dim.getColumn()) || dim.getColumn() == null) {
-                if (dim.getHierarchy() == null || dim.getHierarchy().length == 0) {
-                    newDim.setHierarchy(false);
-                    newDim.setColumn(dim.getJoin().getPrimaryKey());
-                } else {
-                    newDim.setHierarchy(true);
-
-                    List<String> columns = Lists.newArrayList();
-                    for (HierarchyDesc hierarch : dim.getHierarchy()) {
-                        columns.add(hierarch.getColumn());
-                    }
-
-                    newDim.setColumn(columns.toArray(new String[columns.size()]));
-                }
-            } else {
+            if (dim.getColumn() != null && !"{FK}".equals(dim.getColumn())) {
+                //column on fact table
+                newDim = newDimensionDesc(dim, dimId++, dim.getName());
+                newDimensions.add(newDim);
                 newDim.setColumn(new String[] { dim.getColumn() });
+            } else if (ArrayUtils.isEmpty(dim.getDerived()) && ArrayUtils.isEmpty(dim.getHierarchy())) {
+                // user defines a lookup table, but didn't use any column other than the pk, in this case, covnert to use fact table's fk
+                newDim = newDimensionDesc(dim, dimId++, dim.getName());
+                newDimensions.add(newDim);
+                newDim.setTable(getMetadataManager().appendDBName(newModel.getFactTable()));
+
+                newDim.setColumn(dim.getJoin().getForeignKey());
             }
+
+            if (!ArrayUtils.isEmpty(dim.getDerived())) {
+                newDim = newDimensionDesc(dim, dimId++, dim.getName() + "_derived");
+                newDimensions.add(newDim);
+                newDim.setDerived(dim.getDerived());
+                newDim.setColumn(null);
+            }
+
+            if (!ArrayUtils.isEmpty(dim.getHierarchy())) {
+                newDim = newDimensionDesc(dim, dimId++, dim.getName() + "_hierarchy");
+                newDimensions.add(newDim);
+
+                newDim.setHierarchy(true);
+
+                List<String> columns = Lists.newArrayList();
+                for (HierarchyDesc hierarch : dim.getHierarchy()) {
+                    String col = hierarch.getColumn();
+                    columns.add(col);
+                }
+
+                newDim.setColumn(columns.toArray(new String[columns.size()]));
+            }
+
         }
     }
 
@@ -142,7 +170,7 @@ public class CubeDescUpgrader {
         List<LookupDesc> lookups = Lists.newArrayList();
         for (com.kylinolap.cube.model.v1.DimensionDesc dim : oldDimensions) {
             JoinDesc join = dim.getJoin();
-            if (join != null && join.getType() != null) {
+            if (join != null && !StringUtils.isEmpty(join.getType()) && join.getForeignKey() != null && join.getForeignKey().length > 0) {
                 LookupDesc lookup = new LookupDesc();
                 lookup.setJoin(join);
                 String table = dim.getTable();
@@ -162,13 +190,22 @@ public class CubeDescUpgrader {
         com.kylinolap.cube.model.CubePartitionDesc newPartition = new com.kylinolap.cube.model.CubePartitionDesc();
         newModel.setCubePartitionDesc(newPartition);
 
-        if (partition.isPartitioned()) {
-            String[] tablecolumn = partition.getPartitionDateColumn().split("\\.");
+        if (partition.getPartitionDateColumn() != null) {
+            String partitionCol = partition.getPartitionDateColumn();
+            
+            String[] tablecolumn = partitionCol.split("\\.");
             if (tablecolumn != null && tablecolumn.length == 2) {
+                // pattern is <tablename>.<colname>
                 String tableFullName = getMetadataManager().appendDBName(tablecolumn[0]);
                 newPartition.setPartitionDateColumn(tableFullName + "." + tablecolumn[1]);
             } else {
-                newPartition.setPartitionDateColumn(partition.getPartitionDateColumn());
+                
+                if(partitionCol.indexOf(".") < 0) {
+                // pattern is <colname>
+                    partitionCol = newModel.getFactTable() + "." + partitionCol;
+                }
+                
+                newPartition.setPartitionDateColumn(partitionCol);
             }
         }
 

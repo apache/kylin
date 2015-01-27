@@ -19,6 +19,7 @@ import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.invertedindex.model.IIDesc;
 import com.kylinolap.invertedindex.model.IIKeyValueCodec;
+import com.kylinolap.job.tools.DeployCoprocessorCLI;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -67,6 +68,8 @@ public class IICreateHTableJob extends AbstractHadoopJob {
                 // add coprocessor for bulk load
                 tableDesc.addCoprocessor("org.apache.hadoop.hbase.security.access.SecureBulkLoadEndpoint");
             }
+
+            DeployCoprocessorCLI.deployCoprocessor(tableDesc);
 
             // drop the table first
             HBaseAdmin admin = new HBaseAdmin(conf);

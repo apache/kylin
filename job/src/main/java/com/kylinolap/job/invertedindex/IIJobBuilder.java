@@ -71,6 +71,7 @@ public final class IIJobBuilder extends AbstractJobBuilder {
 
         // generate hfiles step
         result.addTask(createConvertToHfileStep(seg, iiPath, jobId));
+
         // bulk load step
         result.addTask(createBulkLoadStep(seg, jobId));
 
