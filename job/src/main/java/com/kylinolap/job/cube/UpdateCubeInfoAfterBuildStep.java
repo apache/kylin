@@ -92,9 +92,16 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         Preconditions.checkState(StringUtils.isNotEmpty(sourceRecordsCount), "Can't get cube source record count.");
         long sourceCount = Long.parseLong(sourceRecordsCount);
 
-        String cubeSizeString = executableManager.getOutput(getConvertToHfileStepId()).getExtra().get(ExecutableConstants.HDFS_BYTES_WRITTEN);
-        Preconditions.checkState(StringUtils.isNotEmpty(cubeSizeString), "Can't get cube segment size.");
-        long size = Long.parseLong(cubeSizeString) / 1024;
+        long size = 0;
+        boolean segmentReady = true;
+        if (!StringUtils.isBlank(getConvertToHfileStepId())) {
+            String cubeSizeString = executableManager.getOutput(getConvertToHfileStepId()).getExtra().get(ExecutableConstants.HDFS_BYTES_WRITTEN);
+            Preconditions.checkState(StringUtils.isNotEmpty(cubeSizeString), "Can't get cube segment size.");
+            size = Long.parseLong(cubeSizeString) / 1024;
+        } else {
+            // for the increment & merge case, the increment segment is only built to be merged, won't serve query by itself
+            segmentReady = false;
+        }
 
         segment.setLastBuildJobID(getCubingJobId());
         segment.setLastBuildTime(System.currentTimeMillis());
@@ -103,7 +110,11 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         segment.setSourceRecordsSize(sourceSize);
 
         try {
-            cubeManager.promoteNewlyBuiltSegments(cube, segment);
+            if (segmentReady) {
+                cubeManager.promoteNewlyBuiltSegments(cube, segment);
+            } else {
+                cubeManager.updateCube(cube);
+            }
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } catch (IOException e) {
             logger.error("fail to update cube after build", e);

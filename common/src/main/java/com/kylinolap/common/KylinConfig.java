@@ -154,32 +154,6 @@ public class KylinConfig {
         ENV_INSTANCE = null;
     }
 
-    /**
-     * This method only for test case. You can get a KylinConfig instance by
-     * path "/a/b/c", where "/a/b/c/kylin.properties" exists. By default, the
-     * getInstanceFromEnv() should be called.
-     *
-     * @param confPath
-     * @return
-     * @deprecated
-     */
-    public static KylinConfig getInstanceForTest(String confPath) {
-        File file = new File(confPath);
-        if (!file.exists() || !file.isDirectory()) {
-            throw new IllegalArgumentException(confPath + " is not a valid path");
-        }
-
-        String env = System.getProperty(KYLIN_CONF);
-        System.setProperty(KYLIN_CONF, confPath);
-        KylinConfig config = getInstanceFromEnv();
-        if (env == null) {
-            System.clearProperty(KYLIN_CONF);
-        } else {
-            System.setProperty(KYLIN_CONF, env);
-        }
-        return config;
-    }
-
     public static enum UriType {
         PROPERTIES_FILE, REST_ADDR, LOCAL_FOLDER
     }

@@ -13,6 +13,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -42,14 +44,13 @@ import com.kylinolap.metadata.realization.RealizationStatusEnum;
 public class BuildIIWithEngineTest {
 
     private JobEngineConfig jobEngineConfig;
-
     private IIManager iiManager;
 
     private DefaultScheduler scheduler;
-
     protected ExecutableManager jobService;
     
     protected static final String TEST_II_NAME = "test_kylin_ii";
+    private static final Log logger = LogFactory.getLog(BuildCubeWithEngineTest.class);
 
     protected void waitForJob(String jobId) {
         while (true) {
@@ -68,6 +69,7 @@ public class BuildIIWithEngineTest {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
+        logger.info("Adding to classpath: " + new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         ClasspathUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         System.setProperty("hdp.version", "2.2.0.0-2041"); // mapred-site.xml ref this
     }
@@ -159,9 +161,9 @@ public class BuildIIWithEngineTest {
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
 
-        // this cube's start date is 0, end date is 20501112000000
+        // this cube's start date is 0, end date is 2015-1-1
         long date1 = 0;
-        long date2 = f.parse("2013-01-01").getTime();
+        long date2 = f.parse("2015-01-01").getTime();
 
 
         // this cube doesn't support incremental build, always do full build

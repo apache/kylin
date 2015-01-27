@@ -5,7 +5,6 @@ import java.lang.reflect.Constructor;
 import org.apache.hadoop.util.ToolRunner;
 
 import com.google.common.base.Preconditions;
-import com.kylinolap.job.dao.ExecutablePO;
 import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.execution.ExecutableContext;
 import com.kylinolap.job.execution.ExecuteResult;
@@ -35,6 +34,8 @@ public class HadoopShellExecutable extends AbstractExecutable {
             final Constructor<? extends AbstractHadoopJob> constructor = (Constructor<? extends AbstractHadoopJob>) Class.forName(mapReduceJobClass).getConstructor();
             final AbstractHadoopJob job = constructor.newInstance();
             String[] args = params.trim().split("\\s+");
+            logger.info("parameters of the HadoopShellExecutable:");
+            logger.info(params);
             final int result = ToolRunner.run(job, args);
             return result == 0 ? new ExecuteResult(ExecuteResult.State.SUCCEED, ""):new ExecuteResult(ExecuteResult.State.FAILED, "result code:" + result);
         } catch (ReflectiveOperationException e) {

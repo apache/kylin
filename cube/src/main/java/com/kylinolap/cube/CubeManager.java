@@ -28,6 +28,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.hbase.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -251,6 +252,79 @@ public class CubeManager implements IRealizationProvider {
         return cube;
     }
 
+    public Pair<CubeSegment, CubeSegment> appendAndMergeSegments(CubeInstance cube, long startDate, long endDate) throws IOException {
+        checkNoBuildingSegment(cube);
+        checkCubeIsPartitioned(cube);
+
+        long appendStart = calculateStartDateForAppendSegment(cube);
+        CubeSegment appendSegment = newSegment(cube, appendStart, endDate);
+
+        Pair<Long, Long> range = alignMergeRange(cube, startDate, endDate);
+        CubeSegment mergeSegment = newSegment(cube, range.getFirst(), range.getSecond());
+
+        validateNewSegments(cube, appendSegment, mergeSegment);
+        cube.getSegments().add(appendSegment);
+        cube.getSegments().add(mergeSegment);
+        Collections.sort(cube.getSegments());
+        updateCube(cube);
+
+        return new Pair<CubeSegment, CubeSegment>(appendSegment, mergeSegment);
+    }
+
+    public CubeSegment appendSegments(CubeInstance cube, long startDate, long endDate) throws IOException {
+        checkNoBuildingSegment(cube);
+
+        CubeSegment newSegment;
+        if (cube.getDescriptor().getCubePartitionDesc().isPartitioned()) {
+            startDate = calculateStartDateForAppendSegment(cube);
+            newSegment = newSegment(cube, startDate, endDate);
+        } else {
+            newSegment = newSegment(cube, 0, Long.MAX_VALUE);
+        }
+
+        validateNewSegments(cube, newSegment);
+        cube.getSegments().add(newSegment);
+        Collections.sort(cube.getSegments());
+        updateCube(cube);
+
+        return newSegment;
+    }
+
+    public CubeSegment mergeSegments(CubeInstance cube, final long startDate, final long endDate) throws IOException {
+        checkNoBuildingSegment(cube);
+        checkCubeIsPartitioned(cube);
+
+        Pair<Long, Long> range = alignMergeRange(cube, startDate, endDate);
+        CubeSegment newSegment = newSegment(cube, range.getFirst(), range.getSecond());
+
+        validateNewSegments(cube, newSegment);
+        cube.getSegments().add(newSegment);
+        Collections.sort(cube.getSegments());
+        updateCube(cube);
+
+        return newSegment;
+    }
+
+    private Pair<Long, Long> alignMergeRange(CubeInstance cube, long startDate, long endDate) {
+        List<CubeSegment> readySegments = cube.getSegment(SegmentStatusEnum.READY);
+        if (readySegments.isEmpty()) {
+            throw new IllegalStateException("there are no segments in ready state");
+        }
+        long start = Long.MAX_VALUE;
+        long end = Long.MIN_VALUE;
+        for (CubeSegment readySegment : readySegments) {
+            if (hasOverlap(startDate, endDate, readySegment.getDateRangeStart(), readySegment.getDateRangeEnd())) {
+                if (start > readySegment.getDateRangeStart()) {
+                    start = readySegment.getDateRangeStart();
+                }
+                if (end < readySegment.getDateRangeEnd()) {
+                    end = readySegment.getDateRangeEnd();
+                }
+            }
+        }
+        return new Pair<Long, Long>(start, end);
+    }
+
     private boolean hasOverlap(long startDate, long endDate, long anotherStartDate, long anotherEndDate) {
         if (startDate >= endDate) {
             throw new IllegalArgumentException("startDate must be less than endDate");
@@ -267,67 +341,24 @@ public class CubeManager implements IRealizationProvider {
         return false;
     }
 
-    public CubeSegment mergeSegments(CubeInstance cubeInstance, final long startDate, final long endDate) throws IOException {
-        checkNoBuildingSegment(cubeInstance);
-
-        if (cubeInstance.getDescriptor().getCubePartitionDesc().isPartitioned() == false) {
-            throw new IllegalStateException("there is no partition date column specified, only full build is supported");
-        }
-
-        List<CubeSegment> readySegments = cubeInstance.getSegment(SegmentStatusEnum.READY);
-        if (readySegments.isEmpty()) {
-            throw new IllegalStateException("there are no segments in ready state");
-        }
-        long start = Long.MAX_VALUE;
-        long end = Long.MIN_VALUE;
-        for (CubeSegment readySegment : readySegments) {
-            if (hasOverlap(startDate, endDate, readySegment.getDateRangeStart(), readySegment.getDateRangeEnd())) {
-                if (start > readySegment.getDateRangeStart()) {
-                    start = readySegment.getDateRangeStart();
-                }
-                if (end < readySegment.getDateRangeEnd()) {
-                    end = readySegment.getDateRangeEnd();
-                }
-            }
-        }
-
-        CubeSegment newSegment = newSegment(cubeInstance, start, end);
-        validateNewSegments(cubeInstance, newSegment);
-
-        cubeInstance.getSegments().add(newSegment);
-        Collections.sort(cubeInstance.getSegments());
-
-        this.updateCube(cubeInstance);
-
-        return newSegment;
-    }
-
-    public CubeSegment appendSegments(CubeInstance cubeInstance, long startDate, long endDate) throws IOException {
-        checkNoBuildingSegment(cubeInstance);
-        
-        List<CubeSegment> readySegments = cubeInstance.getSegments(SegmentStatusEnum.READY);
-        CubeSegment newSegment;
-        if (cubeInstance.getDescriptor().getCubePartitionDesc().isPartitioned()) {
-            if (readySegments.isEmpty()) {
-                startDate = cubeInstance.getDescriptor().getCubePartitionDesc().getPartitionDateStart();
-            }
-            newSegment = newSegment(cubeInstance, startDate, endDate);
+    private long calculateStartDateForAppendSegment(CubeInstance cube) {
+        List<CubeSegment> existing = cube.getSegments();
+        if (existing.isEmpty()) {
+            return cube.getDescriptor().getCubePartitionDesc().getPartitionDateStart();
         } else {
-            newSegment = newSegment(cubeInstance, 0, Long.MAX_VALUE);
+            return existing.get(existing.size() - 1).getDateRangeEnd();
         }
-
-        validateNewSegments(cubeInstance, newSegment);
-
-        cubeInstance.getSegments().add(newSegment);
-        Collections.sort(cubeInstance.getSegments());
-        this.updateCube(cubeInstance);
-
-        return newSegment;
     }
 
-    private void checkNoBuildingSegment(CubeInstance cubeInstance) {
-        if (cubeInstance.getBuildingSegments().size() > 0) {
+    private void checkNoBuildingSegment(CubeInstance cube) {
+        if (cube.getBuildingSegments().size() > 0) {
             throw new IllegalStateException("There is already a building segment!");
+        }
+    }
+
+    private void checkCubeIsPartitioned(CubeInstance cube) {
+        if (cube.getDescriptor().getCubePartitionDesc().isPartitioned() == false) {
+            throw new IllegalStateException("there is no partition date column specified, only full build is supported");
         }
     }
 
@@ -522,13 +553,13 @@ public class CubeManager implements IRealizationProvider {
      * - Favors new segments over the old
      * - Favors big segments over the small
      */
-    private List<CubeSegment> calculateToBeSegments(CubeInstance cube, CubeSegment... extraSegments) {
+    private List<CubeSegment> calculateToBeSegments(CubeInstance cube, CubeSegment... newSegments) {
         CubeDesc cubeDesc = cube.getDescriptor();
         CubePartitionDesc partDesc = cubeDesc.getCubePartitionDesc();
 
         List<CubeSegment> tobe = Lists.newArrayList(cube.getSegments());
-        if (extraSegments != null)
-            tobe.addAll(Arrays.asList(extraSegments));
+        if (newSegments != null)
+            tobe.addAll(Arrays.asList(newSegments));
         if (tobe.size() == 0)
             return tobe;
 
@@ -664,4 +695,5 @@ public class CubeManager implements IRealizationProvider {
     public IRealization getRealization(String name) {
         return getCube(name);
     }
+
 }
