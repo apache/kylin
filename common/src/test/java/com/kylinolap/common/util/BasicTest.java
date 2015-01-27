@@ -36,7 +36,7 @@ public class BasicTest {
         String leftAlignFormat = "| %-100s | %n";
 
         System.out.format("+------------------------------------------------------------------------------------------------------+%n");
-        System.out.format(leftAlignFormat, null);
+        System.out.format(leftAlignFormat, "aaaadfafdsadddaaaadfafdsaddddddddddddddddddaaaadfafdsaddddddddddddddddddaaaadfafdsaddddddddddddddddddaaaadfafdsaddddddddddddddddddaaaadfafdsaddddddddddddddddddaaaadfafdsaddddddddddddddddddddddddddddddddd");
         System.out.format("+------------------------------------------------------------------------------------------------------+%n");
 
     }

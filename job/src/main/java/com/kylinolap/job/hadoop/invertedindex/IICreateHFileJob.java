@@ -19,6 +19,7 @@ import java.io.File;
 
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
@@ -73,7 +74,7 @@ public class IICreateHFileJob extends AbstractHadoopJob {
             job.setMapOutputValueClass(KeyValue.class);
 
             String tableName = getOptionValue(OPTION_HTABLE_NAME);
-            HTable htable = new HTable(getConf(), tableName);
+            HTable htable = new HTable(HBaseConfiguration.create(getConf()), tableName);
             HFileOutputFormat.configureIncrementalLoad(job, htable);
 
             this.deletePath(job.getConfiguration(), output);
