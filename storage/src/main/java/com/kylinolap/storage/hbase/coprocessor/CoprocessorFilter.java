@@ -40,9 +40,15 @@ public class CoprocessorFilter {
     private static class FilterDecorator implements Decorator {
 
         private RowKeyColumnIO columnIO;
+        private Set<TblColRef> unstrictlyFilteredColumns;
 
         public FilterDecorator(ISegment seg) {
-            columnIO = new RowKeyColumnIO(seg);
+            this.columnIO = new RowKeyColumnIO(seg);
+            this.unstrictlyFilteredColumns = Sets.newHashSet();
+        }
+
+        public Set<TblColRef> getUnstrictlyFilteredColumns() {
+            return unstrictlyFilteredColumns;
         }
 
         @Override
@@ -50,14 +56,19 @@ public class CoprocessorFilter {
             if (filter == null)
                 return null;
 
-            if (filter.getOperator() == FilterOperatorEnum.NOT && !TupleFilter.isEvaluableRecursively(filter))
+            //askliyang
+            if (filter.getOperator() == FilterOperatorEnum.NOT && !TupleFilter.isEvaluableRecursively(filter)) {
+                TupleFilter.collectColumns(filter, unstrictlyFilteredColumns);
                 return ConstantTupleFilter.TRUE;
+            }
 
             if (!(filter instanceof CompareTupleFilter))
                 return filter;
 
-            if (!TupleFilter.isEvaluableRecursively(filter))
+            if (!TupleFilter.isEvaluableRecursively(filter)) {
+                TupleFilter.collectColumns(filter, unstrictlyFilteredColumns);
                 return ConstantTupleFilter.TRUE;
+            }
 
             // extract ColumnFilter & ConstantFilter
             CompareTupleFilter compf = (CompareTupleFilter) filter;
@@ -168,9 +179,10 @@ public class CoprocessorFilter {
 
     public static CoprocessorFilter fromFilter(final ISegment seg, TupleFilter rootFilter) {
         // translate constants into dictionary IDs via a serialize copy
-        byte[] bytes = TupleFilterSerializer.serialize(rootFilter, new FilterDecorator(seg));
+        FilterDecorator filterDecorator = new FilterDecorator(seg);
+        byte[] bytes = TupleFilterSerializer.serialize(rootFilter, filterDecorator);
         TupleFilter copy = TupleFilterSerializer.deserialize(bytes);
-        return new CoprocessorFilter(copy);
+        return new CoprocessorFilter(copy, filterDecorator.getUnstrictlyFilteredColumns());
     }
 
     public static byte[] serialize(CoprocessorFilter o) {
@@ -179,19 +191,25 @@ public class CoprocessorFilter {
 
     public static CoprocessorFilter deserialize(byte[] filterBytes) {
         TupleFilter filter = (filterBytes == null || filterBytes.length == 0) ? null : TupleFilterSerializer.deserialize(filterBytes);
-        return new CoprocessorFilter(filter);
+        return new CoprocessorFilter(filter, null);
     }
 
     // ============================================================================
+
+    private final TupleFilter filter;
+    private final Set<TblColRef> unstrictlyFilteredColumns;
+
+    public CoprocessorFilter(TupleFilter filter, Set<TblColRef> unstrictlyFilteredColumns) {
+        this.filter = filter;
+        this.unstrictlyFilteredColumns = unstrictlyFilteredColumns;
+    }
 
     public TupleFilter getFilter() {
         return filter;
     }
 
-    private final TupleFilter filter;
-
-    public CoprocessorFilter(TupleFilter filter) {
-        this.filter = filter;
+    public Set<TblColRef> getUnstrictlyFilteredColumns() {
+        return unstrictlyFilteredColumns;
     }
 
     public boolean evaluate(ITuple tuple) {

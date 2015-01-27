@@ -15,13 +15,14 @@
  */
 package com.kylinolap.metadata.filter;
 
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.metadata.tuple.ITuple;
+
+import javax.jdo.annotations.Column;
 
 /**
  * 
@@ -195,13 +196,28 @@ public abstract class TupleFilter {
         if (filter == null)
             return true;
 
-        if (filter.isEvaluable() == false)
+        if (!filter.isEvaluable())
             return false;
 
         for (TupleFilter child : filter.getChildren()) {
-            if (isEvaluableRecursively(child) == false)
+            if (!isEvaluableRecursively(child))
                 return false;
         }
         return true;
     }
+
+    public static void collectColumns(TupleFilter filter, Set<TblColRef> columns) {
+        if (filter == null)
+            return;
+
+        if (filter instanceof ColumnTupleFilter) {
+            ColumnTupleFilter columnTupleFilter = (ColumnTupleFilter) filter;
+            columns.add(columnTupleFilter.getColumn());
+        }
+
+        for (TupleFilter child : filter.getChildren()) {
+            collectColumns(child, columns);
+        }
+    }
+
 }

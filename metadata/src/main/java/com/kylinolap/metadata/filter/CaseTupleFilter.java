@@ -107,4 +107,5 @@ public class CaseTupleFilter extends TupleFilter {
     @Override
     public void deserialize(byte[] bytes) {
     }
+
 }
