@@ -148,11 +148,12 @@ public class JobController extends BasicController implements InitializingBean {
      */
     @RequestMapping(value = "/{jobId}/steps/{stepId}/output", method = { RequestMethod.GET })
     @ResponseBody
-    public Map<String, String> getStepOutput(@PathVariable String jobId, @PathVariable int stepId) {
+    public Map<String, String> getStepOutput(@PathVariable String jobId, @PathVariable String stepId) {
         Map<String, String> result = new HashMap<String, String>();
         result.put("jobId", jobId);
         result.put("stepId", String.valueOf(stepId));
-        throw new RuntimeException("please use step uuid to query the output");
+        result.put("cmd_output", jobService.getExecutableManager().getOutput(stepId).getVerboseMsg());
+        return result;
     }
 
     /**
