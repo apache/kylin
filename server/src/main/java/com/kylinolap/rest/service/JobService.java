@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.hadoop.hbase.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -134,8 +135,13 @@ public class JobService extends BasicService {
         builder.setSubmitter(submitter);
         
         if (buildType == CubeBuildTypeEnum.BUILD) {
-            CubeSegment newSeg = getCubeManager().appendSegments(cube, startDate, endDate);
-            job = builder.buildJob(newSeg);
+            if (cube.getDescriptor().hasHolisticCountDistinctMeasures() && cube.getSegments().size() > 0) {
+                Pair<CubeSegment, CubeSegment> segs = getCubeManager().appendAndMergeSegments(cube, startDate, endDate);
+                job = builder.buildAndMergeJob(segs.getFirst(), segs.getSecond());
+            } else {
+                CubeSegment newSeg = getCubeManager().appendSegments(cube, startDate, endDate);
+                job = builder.buildJob(newSeg);
+            }
         } else if (buildType == CubeBuildTypeEnum.MERGE) {
             CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate);
             job = builder.mergeJob(newSeg);

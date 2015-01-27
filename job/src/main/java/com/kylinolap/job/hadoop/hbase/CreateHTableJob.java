@@ -117,14 +117,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
                 throw new RuntimeException("HBase table " + tableName + " exists!");
             }
 
-            try {
-                initHTableCoprocessor(tableDesc);
-                logger.info("hbase table " + tableName + " deployed with coprocessor.");
-
-            } catch (Exception ex) {
-                logger.error("Error deploying coprocessor on " + tableName, ex);
-                logger.error("Will try creating the table without coprocessor.");
-            }
+            DeployCoprocessorCLI.deployCoprocessor(tableDesc);
 
             admin.createTable(tableDesc, splitKeys);
             logger.info("create hbase table " + tableName + " done.");
@@ -140,16 +133,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         }
     }
 
-    private void initHTableCoprocessor(HTableDescriptor desc) throws IOException {
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        Configuration hconf = HadoopUtil.getCurrentConfiguration();
-        FileSystem fileSystem = FileSystem.get(hconf);
 
-        String localCoprocessorJar = kylinConfig.getCoprocessorLocalJar();
-        Path hdfsCoprocessorJar = DeployCoprocessorCLI.uploadCoprocessorJar(localCoprocessorJar, fileSystem, null);
-
-        DeployCoprocessorCLI.setCoprocessorOnHTable(desc, hdfsCoprocessorJar);
-    }
 
     @SuppressWarnings("deprecation")
     public byte[][] getSplits(Configuration conf, Path path) throws Exception {

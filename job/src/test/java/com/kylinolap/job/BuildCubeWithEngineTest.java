@@ -44,6 +44,7 @@ public class BuildCubeWithEngineTest {
     protected ExecutableManager jobService;
 
     private static final Log logger = LogFactory.getLog(BuildCubeWithEngineTest.class);
+
     protected void waitForJob(String jobId) {
         while (true) {
             AbstractExecutable job = jobService.getJob(jobId);

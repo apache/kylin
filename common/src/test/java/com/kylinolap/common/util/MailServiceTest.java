@@ -20,19 +20,31 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import com.kylinolap.common.KylinConfig;
 
 @Ignore("convenient trial tool for dev")
-public class MailServiceTest {
+public class MailServiceTest extends LocalFileMetadataTestCase {
+
+    @Before
+    public void setup() throws Exception {
+        this.createTestMetadata();
+
+    }
+
+    @After
+    public void after() throws Exception {
+        this.cleanupTestMetadata();
+    }
 
     @Test
     public void testSendEmail() throws IOException {
 
-        @SuppressWarnings("deprecation")
-        KylinConfig config = KylinConfig.getInstanceForTest(AbstractKylinTestCase.SANDBOX_TEST_DATA);
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
 
         MailService mailservice = new MailService(config);
         boolean sent = sendTestEmail(mailservice);

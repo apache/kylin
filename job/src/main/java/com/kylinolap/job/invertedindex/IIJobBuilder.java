@@ -71,6 +71,7 @@ public final class IIJobBuilder extends AbstractJobBuilder {
 
         // generate hfiles step
         result.addTask(createConvertToHfileStep(seg, iiPath, jobId));
+
         // bulk load step
         result.addTask(createBulkLoadStep(seg, jobId));
 
@@ -147,7 +148,7 @@ public final class IIJobBuilder extends AbstractJobBuilder {
         StringBuilder cmd = new StringBuilder();
         appendMapReduceParameters(cmd, engineConfig);
 
-        buildIIStep.setName(ExecutableConstants.STEP_NAME_BUILD_BASE_CUBOID);
+        buildIIStep.setName(ExecutableConstants.STEP_NAME_BUILD_II);
 
         appendExecCmdParameters(cmd, "iiname", seg.getIIInstance().getName());
         appendExecCmdParameters(cmd, "tablename", intermediateHiveTable);

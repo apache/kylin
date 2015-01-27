@@ -5,6 +5,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.LogTitlePrinter;
 import com.kylinolap.common.util.MailService;
 import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.impl.threadpool.DefaultContext;
@@ -69,6 +70,10 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     @Override
     public final ExecuteResult execute(ExecutableContext executableContext) throws ExecuteException {
+
+        //print a eye-catching title in log
+        LogTitlePrinter.printTitle(this.getName());
+
         Preconditions.checkArgument(executableContext instanceof DefaultContext);
         ExecuteResult result;
         try {
