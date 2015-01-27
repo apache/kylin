@@ -93,7 +93,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // initial build
         System.out.println("Initial Build");
-        CubeSegment initialSegment = cubeMgr.appendSegments(cubeInstance, desc.getCubePartitionDesc().getPartitionDateStart(), dateEnd);
+        CubeSegment initialSegment = cubeMgr.appendSegments(cubeInstance, dateEnd);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.DISABLED, cubeInstance.getStatus());
         assertEquals(SegmentStatusEnum.NEW, cubeInstance.getBuildingSegments().get(0).getStatus());
@@ -118,7 +118,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         // incremental build
         System.out.println("Incremental Build");
         long dateEnd2 = f.parse("2013-12-12").getTime();
-        CubeSegment incrementalSegment = cubeMgr.appendSegments(cubeInstance, dateEnd, dateEnd2);
+        CubeSegment incrementalSegment = cubeMgr.appendSegments(cubeInstance, dateEnd2);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(2, cubeInstance.getSegments().size());
@@ -147,7 +147,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // rebuild segment
         System.out.println("Rebuild Segment");
-        CubeSegment rebuildSegment = cubeMgr.appendSegments(cubeInstance, 1364688000000L, 1386806400000L);
+        CubeSegment rebuildSegment = cubeMgr.appendSegments(cubeInstance, 1386806400000L);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(1, cubeInstance.getBuildingSegments().size());
@@ -178,7 +178,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // rebuild segment
         System.out.println("Rebuild Segment");
-        cubeMgr.appendSegments(cubeInstance, 1364688000000L + 1000L, 1386806400000L);
+        cubeMgr.appendSegments(cubeInstance, 1386806400000L);
     }
 
     @Test
@@ -232,7 +232,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // initial build
         System.out.println("Initial Build");
-        CubeSegment initialSegment = cubeMgr.appendSegments(cubeInstance, desc.getCubePartitionDesc().getPartitionDateStart(), dateEnd);
+        CubeSegment initialSegment = cubeMgr.appendSegments(cubeInstance, dateEnd);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.DISABLED, cubeInstance.getStatus());
         assertEquals(SegmentStatusEnum.NEW, cubeInstance.getBuildingSegments().get(0).getStatus());
@@ -258,7 +258,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // rebuild segment
         System.out.println("Rebuild Segment");
-        CubeSegment rebuildSegment = cubeMgr.appendSegments(cubeInstance, 1364688000000L, 1386806400000L);
+        CubeSegment rebuildSegment = cubeMgr.appendSegments(cubeInstance, 1386806400000L);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.READY, cubeInstance.getStatus());
         assertEquals(SegmentStatusEnum.NEW, cubeInstance.getBuildingSegments().get(0).getStatus());
@@ -303,7 +303,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
 
         // initial build
         System.out.println("Initial Build");
-        CubeSegment initialSegment = cubeMgr.appendSegments(cubeInstance, desc.getCubePartitionDesc().getPartitionDateStart(), dateEnd);
+        CubeSegment initialSegment = cubeMgr.appendSegments(cubeInstance, dateEnd);
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
         assertEquals(RealizationStatusEnum.DISABLED, cubeInstance.getStatus());
         assertEquals(SegmentStatusEnum.NEW, cubeInstance.getBuildingSegments().get(0).getStatus());
@@ -328,7 +328,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         // incremental build
         System.out.println("Invalid Incremental Build");
         long dateEnd2 = f.parse("2013-12-12").getTime();
-        cubeMgr.appendSegments(cubeInstance, dateEnd + 1000, dateEnd2);
+        cubeMgr.appendSegments(cubeInstance, dateEnd2);
 
     }
 

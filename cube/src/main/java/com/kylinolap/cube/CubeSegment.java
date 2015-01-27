@@ -65,10 +65,9 @@ public class CubeSegment implements Comparable<CubeSegment>, ISegment {
 
     @JsonProperty("create_time_utc")
     private long createTimeUTC;
-    
+
     @JsonProperty("binary_signature")
-    private String binarySignature; // a hash of cube schema and dictionary ID,
-    // used for sanity check
+    private String binarySignature; // a hash of cube schema and dictionary ID, used for sanity check
 
     @JsonProperty("dictionaries")
     private ConcurrentHashMap<String, String> dictionaries; // table/column ==> dictionary resource path
@@ -262,11 +261,28 @@ public class CubeSegment implements Comparable<CubeSegment>, ISegment {
         return col.getTable() + "/" + col.getName();
     }
 
-    /**
-     * @param storageLocationIdentifier the storageLocationIdentifier to set
-     */
     public void setStorageLocationIdentifier(String storageLocationIdentifier) {
         this.storageLocationIdentifier = storageLocationIdentifier;
+    }
+
+    @Override
+    public int getColumnLength(TblColRef col) {
+        Dictionary<?> dict = getDictionary(col);
+        if (dict == null) {
+            return this.getCubeDesc().getRowkey().getColumnLength(col);
+        } else {
+            return dict.getSizeOfId();
+        }
+    }
+
+    @Override
+    public Dictionary<?> getDictionary(TblColRef col) {
+        return CubeManager.getInstance(this.getCubeInstance().getConfig()).getDictionary(this, col);
+    }
+
+    public void validate() {
+        if (dateRangeStart >= dateRangeEnd)
+            throw new IllegalStateException("dateRangeStart(" + dateRangeStart + ") must be greater than dateRangeEnd(" + dateRangeEnd + ") in segment " + this);
     }
 
     @Override
@@ -274,7 +290,7 @@ public class CubeSegment implements Comparable<CubeSegment>, ISegment {
         long comp = this.dateRangeStart - other.dateRangeStart;
         if (comp != 0)
             return comp < 0 ? -1 : 1;
-        
+
         comp = this.dateRangeEnd - other.dateRangeEnd;
         if (comp != 0)
             return comp < 0 ? -1 : 1;
@@ -326,18 +342,4 @@ public class CubeSegment implements Comparable<CubeSegment>, ISegment {
         return Objects.toStringHelper(this).add("uuid", uuid).add("create_time_utc:", createTimeUTC).add("name", name).add("last_build_job_id", lastBuildJobID).add("status", status).toString();
     }
 
-    @Override
-    public int getColumnLength(TblColRef col) {
-        Dictionary<?> dict = getDictionary(col);
-        if (dict == null) {
-            return this.getCubeDesc().getRowkey().getColumnLength(col);
-        } else {
-            return dict.getSizeOfId();
-        }
-    }
-
-    @Override
-    public Dictionary<?> getDictionary(TblColRef col) {
-        return CubeManager.getInstance(this.getCubeInstance().getConfig()).getDictionary(this, col);
-    }
 }
