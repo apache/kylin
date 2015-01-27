@@ -159,9 +159,9 @@ public class BuildIIWithEngineTest {
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
 
-        // this cube's start date is 0, end date is 20501112000000
+        // this cube's start date is 0, end date is 2015-1-1
         long date1 = 0;
-        long date2 = f.parse("2013-01-01").getTime();
+        long date2 = f.parse("2015-01-01").getTime();
 
 
         // this cube doesn't support incremental build, always do full build
