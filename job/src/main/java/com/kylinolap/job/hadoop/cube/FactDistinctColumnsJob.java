@@ -81,6 +81,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
         } catch (Exception e) {
             printUsage(options);
             log.error(e.getLocalizedMessage(), e);
+            addErrorLog(e);
             return 2;
         }
 
