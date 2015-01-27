@@ -87,8 +87,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
             return 0;
         } catch (Exception e) {
             e.printStackTrace(System.err);
-            log.error(e.getLocalizedMessage(), e);
-            return 2;
+            throw e;
         }
     }
 

@@ -77,8 +77,7 @@ public class InvertedIndexJob extends AbstractHadoopJob {
 
         } catch (Exception e) {
             printUsage(options);
-            log.error(e.getLocalizedMessage(), e);
-            return 2;
+            throw e;
         }
 
     }

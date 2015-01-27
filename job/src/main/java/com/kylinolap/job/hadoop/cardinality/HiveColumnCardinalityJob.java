@@ -122,9 +122,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
             return result;
         } catch (Exception e) {
             printUsage(options);
-            e.printStackTrace(System.err);
-            logger.error(e.getLocalizedMessage(), e);
-            return 2;
+            throw e;
         }
 
     }

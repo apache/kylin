@@ -1,9 +1,12 @@
 package com.kylinolap.job.common;
 
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.util.Map;
-
+import com.google.common.base.Preconditions;
+import com.kylinolap.job.constant.ExecutableConstants;
+import com.kylinolap.job.constant.JobStepStatusEnum;
+import com.kylinolap.job.exception.ExecuteException;
+import com.kylinolap.job.execution.*;
+import com.kylinolap.job.hadoop.AbstractHadoopJob;
+import com.kylinolap.job.tools.HadoopStatusChecker;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Cluster;
 import org.apache.hadoop.mapreduce.Job;
@@ -11,17 +14,11 @@ import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.JobStatus;
 import org.apache.hadoop.util.ToolRunner;
 
-import com.google.common.base.Preconditions;
-import com.kylinolap.job.constant.ExecutableConstants;
-import com.kylinolap.job.constant.JobStepStatusEnum;
-import com.kylinolap.job.exception.ExecuteException;
-import com.kylinolap.job.execution.AbstractExecutable;
-import com.kylinolap.job.execution.ExecutableContext;
-import com.kylinolap.job.execution.ExecutableState;
-import com.kylinolap.job.execution.ExecuteResult;
-import com.kylinolap.job.execution.Output;
-import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.job.tools.HadoopStatusChecker;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.lang.reflect.Constructor;
+import java.util.Map;
 
 /**
  * Created by qianzhou on 12/25/14.
@@ -85,7 +82,18 @@ public class MapReduceExecutable extends AbstractExecutable {
                 logger.info("parameters of the MapReduceExecutable:");
                 logger.info(params);
                 String[] args = params.trim().split("\\s+");
-                ToolRunner.run(hadoopJob, args);
+                try {
+                    //for async mr job, ToolRunner just return 0;
+                    ToolRunner.run(hadoopJob, args);
+                } catch (Exception ex) {
+                    StringBuilder log = new StringBuilder();
+                    logger.error("error execute " + this.toString(), ex);
+                    StringWriter stringWriter = new StringWriter();
+                    ex.printStackTrace(new PrintWriter(stringWriter));
+                    log.append(stringWriter.toString()).append("\n");
+                    log.append("result code:").append(2);
+                    return new ExecuteResult(ExecuteResult.State.ERROR, log.toString());
+                }
                 job = hadoopJob.getJob();
             }
             final StringBuilder output = new StringBuilder();
@@ -125,7 +133,7 @@ public class MapReduceExecutable extends AbstractExecutable {
             logger.error("error getMapReduceJobClass, class name:" + getParam(KEY_MR_JOB), e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         } catch (Exception e) {
-            logger.error("error execute MapReduceJob, id:" + getId(), e);
+            logger.error("error execute " + this.toString(), e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         }
     }
