@@ -82,6 +82,8 @@ public class MapReduceExecutable extends AbstractExecutable {
                 final Constructor<? extends AbstractHadoopJob> constructor = (Constructor<? extends AbstractHadoopJob>) Class.forName(mapReduceJobClass).getConstructor();
                 final AbstractHadoopJob hadoopJob = constructor.newInstance();
                 hadoopJob.setAsync(true); // so the ToolRunner.run() returns right away
+                logger.info("parameters of the MapReduceExecutable:");
+                logger.info(params);
                 String[] args = params.trim().split("\\s+");
                 ToolRunner.run(hadoopJob, args);
                 job = hadoopJob.getJob();
