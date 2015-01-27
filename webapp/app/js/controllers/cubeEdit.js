@@ -53,7 +53,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     $scope.srcTablesInProject = [];
 
     $scope.getColumnsByTable = function (name) {
-        var temp = null;
+        var temp = [];
         angular.forEach($scope.srcTablesInProject, function (table) {
             if (table.name == name) {
                 temp = table.columns;
