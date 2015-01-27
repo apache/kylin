@@ -528,6 +528,7 @@
                         <configuration>
                             <excludes>
                                 <exclude>**/BuildCubeWithEngineTest.java</exclude>
+                                <exclude>**/BuildIIWithEngineTest.java</exclude>
                                 <exclude>**/SampleCubeSetupTest.java</exclude>
                                 <exclude>**/KylinQueryTest.java</exclude>
                                 <exclue>**/SnapshotManagerTest.java</exclue>
