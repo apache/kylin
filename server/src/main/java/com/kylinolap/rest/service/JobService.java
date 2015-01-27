@@ -186,6 +186,7 @@ public class JobService extends BasicService {
 
     private JobInstance.JobStep parseToJobStep(AbstractExecutable task, int i) {
         JobInstance.JobStep result = new JobInstance.JobStep();
+        result.setId(task.getId());
         result.setName(task.getName());
         result.setSequenceID(i);
         result.setStatus(parseToJobStepStatus(task.getStatus()));

@@ -174,11 +174,12 @@ KylinApp
                 if ($scope.state.stepAttrToShow == "output") {
                     $scope.state.selectedStep.loadingOp = true;
                     internalOpenModal();
-                    JobService.stepOutput({jobId: $scope.state.selectedJob.uuid, propValue: $scope.state.selectedStep.sequence_id}, function (result) {
+                    var stepId = $scope.state.selectedStep.sequence_id;
+                    JobService.stepOutput({jobId: $scope.state.selectedJob.uuid, propValue: $scope.state.selectedStep.id}, function (result) {
                         if (angular.isDefined($scope.jobs[result['jobId']])) {
                             var tjob = $scope.jobs[result['jobId']];
-                            tjob.steps[parseInt(result['stepId'])].cmd_output = result['cmd_output'];
-                            tjob.steps[parseInt(result['stepId'])].loadingOp = false;
+                            tjob.steps[stepId].cmd_output = result['cmd_output'];
+                            tjob.steps[stepId].loadingOp = false;
                         }
                     });
                 } else {
