@@ -18,8 +18,8 @@ public class RealizationPriorityRule extends RoutingRule {
     public void apply(List<IRealization> realizations, OLAPContext olapContext) {
 
         final HashMap<RealizationType, Integer> priority = Maps.newHashMap();
-        priority.put(RealizationType.CUBE, 0);
-        priority.put(RealizationType.INVERTED_INDEX, 1);
+        priority.put(RealizationType.CUBE, 1);
+        priority.put(RealizationType.INVERTED_INDEX, 0);
 
         Collections.sort(realizations, new Comparator<IRealization>() {
             @Override
