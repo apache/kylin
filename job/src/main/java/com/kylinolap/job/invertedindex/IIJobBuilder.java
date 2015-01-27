@@ -147,7 +147,7 @@ public final class IIJobBuilder extends AbstractJobBuilder {
         StringBuilder cmd = new StringBuilder();
         appendMapReduceParameters(cmd, engineConfig);
 
-        buildIIStep.setName(ExecutableConstants.STEP_NAME_BUILD_BASE_CUBOID);
+        buildIIStep.setName(ExecutableConstants.STEP_NAME_BUILD_II);
 
         appendExecCmdParameters(cmd, "iiname", seg.getIIInstance().getName());
         appendExecCmdParameters(cmd, "tablename", intermediateHiveTable);

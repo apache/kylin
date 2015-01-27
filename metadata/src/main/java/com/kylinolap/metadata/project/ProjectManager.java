@@ -102,7 +102,7 @@ public class ProjectManager {
         for (String path : paths) {
             reloadProjectAt(path);
         }
-//        wireProjectAndRealizations(projectMap.values());
+        wireProjectAndRealizations(projectMap.values());
         logger.debug("Loaded " + projectMap.size() + " Project(s)");
     }
 
@@ -129,6 +129,8 @@ public class ProjectManager {
     }
 
     private void wireProjectAndRealizations(Collection<ProjectInstance> projectInstances) {
+        if (projectInstances.isEmpty())
+            return;
 
         RealizationRegistry registry = RealizationRegistry.getInstance(config);
         for (ProjectInstance projectInstance : projectInstances) {
