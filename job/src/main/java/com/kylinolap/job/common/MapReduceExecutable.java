@@ -1,17 +1,8 @@
 package com.kylinolap.job.common;
 
-import com.google.common.base.Preconditions;
-import com.kylinolap.job.constant.JobStepStatusEnum;
-import com.kylinolap.job.execution.Output;
-import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.job.tools.HadoopStatusChecker;
-import com.kylinolap.job.constant.ExecutableConstants;
-import com.kylinolap.job.dao.ExecutablePO;
-import com.kylinolap.job.exception.ExecuteException;
-import com.kylinolap.job.execution.ExecutableContext;
-import com.kylinolap.job.execution.ExecutableState;
-import com.kylinolap.job.execution.ExecuteResult;
-import com.kylinolap.job.execution.AbstractExecutable;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Cluster;
@@ -20,9 +11,17 @@ import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.JobStatus;
 import org.apache.hadoop.util.ToolRunner;
 
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.util.Map;
+import com.google.common.base.Preconditions;
+import com.kylinolap.job.constant.ExecutableConstants;
+import com.kylinolap.job.constant.JobStepStatusEnum;
+import com.kylinolap.job.exception.ExecuteException;
+import com.kylinolap.job.execution.AbstractExecutable;
+import com.kylinolap.job.execution.ExecutableContext;
+import com.kylinolap.job.execution.ExecutableState;
+import com.kylinolap.job.execution.ExecuteResult;
+import com.kylinolap.job.execution.Output;
+import com.kylinolap.job.hadoop.AbstractHadoopJob;
+import com.kylinolap.job.tools.HadoopStatusChecker;
 
 /**
  * Created by qianzhou on 12/25/14.
@@ -104,6 +103,7 @@ public class MapReduceExecutable extends AbstractExecutable {
                     hadoopCmdOutput.updateJobCounter();
                     final Map<String, String> info = hadoopCmdOutput.getInfo();
                     info.put(ExecutableConstants.SOURCE_RECORDS_COUNT, hadoopCmdOutput.getMapInputRecords());
+                    info.put(ExecutableConstants.SOURCE_RECORDS_SIZE, hadoopCmdOutput.getHdfsBytesRead());
                     info.put(ExecutableConstants.HDFS_BYTES_WRITTEN, hadoopCmdOutput.getHdfsBytesWritten());
                     executableManager.addJobInfo(getId(), info);
 

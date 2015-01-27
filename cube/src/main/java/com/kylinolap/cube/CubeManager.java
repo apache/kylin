@@ -260,10 +260,9 @@ public class CubeManager implements IRealizationProvider {
         CubeSegment appendSegment = newSegment(cube, appendStart, endDate);
 
         long startDate = cube.getDescriptor().getCubePartitionDesc().getPartitionDateStart();
-        Pair<Long, Long> range = alignMergeRange(cube, startDate, endDate);
-        CubeSegment mergeSegment = newSegment(cube, range.getFirst(), range.getSecond());
+        CubeSegment mergeSegment = newSegment(cube, startDate, endDate);
 
-        validateNewSegments(cube, appendSegment, mergeSegment);
+        validateNewSegments(cube, mergeSegment);
         cube.getSegments().add(appendSegment);
         cube.getSegments().add(mergeSegment);
         Collections.sort(cube.getSegments());
@@ -493,6 +492,7 @@ public class CubeManager implements IRealizationProvider {
 
         segment.setCubeInstance(cubeInstance);
 
+        segment.validate();
         return segment;
     }
 
