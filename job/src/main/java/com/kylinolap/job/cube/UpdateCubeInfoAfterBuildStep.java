@@ -13,6 +13,7 @@ import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.execution.AbstractExecutable;
 import com.kylinolap.job.execution.ExecutableContext;
 import com.kylinolap.job.execution.ExecuteResult;
+import com.kylinolap.job.execution.Output;
 
 /**
  * Created by qianzhou on 1/4/15.
@@ -66,10 +67,6 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         setParam(CREATE_FLAT_TABLE_STEP_ID, id);
     }
 
-    private String getCreateFlatTableStepId() {
-        return getParam(CREATE_FLAT_TABLE_STEP_ID);
-    }
-
     public void setCubingJobId(String id) {
         setParam(CUBING_JOB_ID, id);
     }
@@ -84,13 +81,14 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         final CubeInstance cube = cubeManager.getCube(getCubeName());
         final CubeSegment segment = cube.getSegmentById(getSegmentId());
 
-        String sourceRecordsSize = executableManager.getOutput(getCreateFlatTableStepId()).getExtra().get(ExecutableConstants.SOURCE_RECORDS_SIZE);
-        Preconditions.checkState(StringUtils.isNotEmpty(sourceRecordsSize), "Can't get cube source record size.");
-        long sourceSize = Long.parseLong(sourceRecordsSize);
-
-        String sourceRecordsCount = executableManager.getOutput(getBaseCuboidStepId()).getExtra().get(ExecutableConstants.SOURCE_RECORDS_COUNT);
+        Output baseCuboidOutput = executableManager.getOutput(getBaseCuboidStepId());
+        String sourceRecordsCount = baseCuboidOutput.getExtra().get(ExecutableConstants.SOURCE_RECORDS_COUNT);
         Preconditions.checkState(StringUtils.isNotEmpty(sourceRecordsCount), "Can't get cube source record count.");
         long sourceCount = Long.parseLong(sourceRecordsCount);
+
+        String sourceRecordsSize = baseCuboidOutput.getExtra().get(ExecutableConstants.SOURCE_RECORDS_SIZE);
+        Preconditions.checkState(StringUtils.isNotEmpty(sourceRecordsSize), "Can't get cube source record size.");
+        long sourceSize = Long.parseLong(sourceRecordsSize);
 
         long size = 0;
         boolean segmentReady = true;

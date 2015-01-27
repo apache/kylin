@@ -252,13 +252,14 @@ public class CubeManager implements IRealizationProvider {
         return cube;
     }
 
-    public Pair<CubeSegment, CubeSegment> appendAndMergeSegments(CubeInstance cube, long startDate, long endDate) throws IOException {
+    public Pair<CubeSegment, CubeSegment> appendAndMergeSegments(CubeInstance cube, long endDate) throws IOException {
         checkNoBuildingSegment(cube);
         checkCubeIsPartitioned(cube);
 
         long appendStart = calculateStartDateForAppendSegment(cube);
         CubeSegment appendSegment = newSegment(cube, appendStart, endDate);
 
+        long startDate = cube.getDescriptor().getCubePartitionDesc().getPartitionDateStart();
         Pair<Long, Long> range = alignMergeRange(cube, startDate, endDate);
         CubeSegment mergeSegment = newSegment(cube, range.getFirst(), range.getSecond());
 
@@ -271,12 +272,12 @@ public class CubeManager implements IRealizationProvider {
         return new Pair<CubeSegment, CubeSegment>(appendSegment, mergeSegment);
     }
 
-    public CubeSegment appendSegments(CubeInstance cube, long startDate, long endDate) throws IOException {
+    public CubeSegment appendSegments(CubeInstance cube, long endDate) throws IOException {
         checkNoBuildingSegment(cube);
 
         CubeSegment newSegment;
         if (cube.getDescriptor().getCubePartitionDesc().isPartitioned()) {
-            startDate = calculateStartDateForAppendSegment(cube);
+            long startDate = calculateStartDateForAppendSegment(cube);
             newSegment = newSegment(cube, startDate, endDate);
         } else {
             newSegment = newSegment(cube, 0, Long.MAX_VALUE);
@@ -571,10 +572,12 @@ public class CubeManager implements IRealizationProvider {
         if (firstSeg.getDateRangeStart() != partDesc.getPartitionDateStart()) {
             throw new IllegalStateException("For " + cube + ", the first segment, " + firstSeg + ", must start at " + partDesc.getPartitionDateStart());
         }
+        firstSeg.validate();
 
         for (int i = 0, j = 1; j < tobe.size();) {
             CubeSegment is = tobe.get(i);
             CubeSegment js = tobe.get(j);
+            js.validate();
 
             // check i is either ready or new
             if (!isNew(is) && !isReady(is)) {

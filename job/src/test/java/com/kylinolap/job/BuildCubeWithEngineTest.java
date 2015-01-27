@@ -250,7 +250,7 @@ public class BuildCubeWithEngineTest {
 
 
     private String buildSegment(String cubeName, long startDate, long endDate) throws Exception {
-        CubeSegment segment = cubeManager.appendSegments(cubeManager.getCube(cubeName), startDate, endDate);
+        CubeSegment segment = cubeManager.appendSegments(cubeManager.getCube(cubeName), endDate);
         CubingJobBuilder cubingJobBuilder = new CubingJobBuilder(jobEngineConfig);
         CubingJob job = cubingJobBuilder.buildJob(segment);
         jobService.addJob(job);
