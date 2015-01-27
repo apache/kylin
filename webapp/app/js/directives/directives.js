@@ -47,6 +47,9 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
 
             scope.reload = function () {
                 var length = scope.getLength(scope.data);
+                if(!length){
+                    return;
+                }
                 scope.loadFunc(0, scope.limit).then(function (dataLength) {
                     scope.data = $parse(attrs.data)(scope.$parent);
                     scope.hasMore = dataLength == scope.limit;

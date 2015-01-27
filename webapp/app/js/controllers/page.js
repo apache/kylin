@@ -2,7 +2,9 @@
 
 KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService,SweetAlert,$cookieStore,$log,kylinConfig) {
 
-     kylinConfig.init();
+    kylinConfig.init();
+    $scope.kylinConfig = kylinConfig;
+
     $scope.header = {show: true};
     $scope.footer = {
         year: new Date().getFullYear(),
