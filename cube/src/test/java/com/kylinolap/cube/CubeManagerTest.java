@@ -52,12 +52,12 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBasics() throws Exception {
-        CubeInstance cube = CubeManager.getInstance(this.getTestConfig()).getCube("test_kylin_cube_without_slr_ready");
+        CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_without_slr_ready");
         CubeDesc desc = cube.getDescriptor();
         System.out.println(JsonUtil.writeValueAsIndentString(desc));
 
         String signature = desc.calculateSignature();
-        desc.getCubePartitionDesc().setPartitionDateColumn("test_column");
+        desc.getModel().getPartitionDesc().setPartitionDateColumn("test_column");
         assertTrue(!signature.equals(desc.calculateSignature()));
     }
 

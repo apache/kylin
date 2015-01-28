@@ -18,17 +18,12 @@ package com.kylinolap.invertedindex;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.kylinolap.common.restclient.CaseInsensitiveStringCache;
-import com.kylinolap.metadata.realization.IRealization;
-import com.kylinolap.metadata.realization.IRealizationProvider;
-import com.kylinolap.metadata.realization.RealizationType;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +33,7 @@ import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.common.restclient.Broadcaster;
-import com.kylinolap.dict.DateStrDictionary;
+import com.kylinolap.common.restclient.CaseInsensitiveStringCache;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryInfo;
 import com.kylinolap.dict.DictionaryManager;
@@ -47,6 +42,9 @@ import com.kylinolap.invertedindex.model.IIDesc;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.model.TblColRef;
+import com.kylinolap.metadata.realization.IRealization;
+import com.kylinolap.metadata.realization.IRealizationProvider;
+import com.kylinolap.metadata.realization.RealizationType;
 
 /**
  * @author honma

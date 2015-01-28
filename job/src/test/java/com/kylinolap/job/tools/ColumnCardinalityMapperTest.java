@@ -37,7 +37,6 @@ import org.junit.Test;
 
 import com.kylinolap.common.hll.HyperLogLogPlusCounter;
 import com.kylinolap.job.hadoop.cardinality.ColumnCardinalityMapper;
-import com.kylinolap.job.hadoop.cardinality.HiveColumnCardinalityJob;
 
 /**
  * @author ysong1

@@ -101,7 +101,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         assertEquals(1, cubeInstance.getBuildingSegments().size());
         assertEquals(0, cubeInstance.getRebuildingSegments().size());
         assertTrue("".equals(initialSegment.getStorageLocationIdentifier()) == false);
-        assertEquals(desc.getCubePartitionDesc().getPartitionDateStart(), cubeInstance.getAllocatedStartDate());
+        assertEquals(desc.getModel().getPartitionDesc().getPartitionDateStart(), cubeInstance.getAllocatedStartDate());
         assertEquals(dateEnd, cubeInstance.getAllocatedEndDate());
 
         // initial build success
@@ -112,7 +112,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         assertEquals(1, cubeInstance.getSegments(SegmentStatusEnum.READY).size());
         assertEquals(0, cubeInstance.getBuildingSegments().size());
         assertEquals(0, cubeInstance.getRebuildingSegments().size());
-        assertEquals(desc.getCubePartitionDesc().getPartitionDateStart(), cubeInstance.getAllocatedStartDate());
+        assertEquals(desc.getModel().getPartitionDesc().getPartitionDateStart(), cubeInstance.getAllocatedStartDate());
         assertEquals(dateEnd, cubeInstance.getAllocatedEndDate());
 
         // incremental build
@@ -124,7 +124,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         assertEquals(2, cubeInstance.getSegments().size());
         assertEquals(1, cubeInstance.getSegments(SegmentStatusEnum.NEW).size());
         assertEquals(1, cubeInstance.getBuildingSegments().size());
-        assertEquals(desc.getCubePartitionDesc().getPartitionDateStart(), cubeInstance.getAllocatedStartDate());
+        assertEquals(desc.getModel().getPartitionDesc().getPartitionDateStart(), cubeInstance.getAllocatedStartDate());
         assertEquals(dateEnd2, cubeInstance.getAllocatedEndDate());
         assertEquals(dateEnd, cubeInstance.getBuildingSegments().get(0).getDateRangeStart());
         assertEquals(dateEnd2, cubeInstance.getBuildingSegments().get(0).getDateRangeEnd());
@@ -137,7 +137,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         assertEquals(2, cubeInstance.getSegments().size());
         assertEquals(2, cubeInstance.getSegments(SegmentStatusEnum.READY).size());
         assertEquals(0, cubeInstance.getBuildingSegments().size());
-        assertEquals(desc.getCubePartitionDesc().getPartitionDateStart(), cubeInstance.getAllocatedStartDate());
+        assertEquals(desc.getModel().getPartitionDesc().getPartitionDateStart(), cubeInstance.getAllocatedStartDate());
         assertEquals(dateEnd2, cubeInstance.getAllocatedEndDate());
     }
 
@@ -242,7 +242,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         assertEquals(0, cubeInstance.getRebuildingSegments().size());
         assertTrue("".equals(initialSegment.getStorageLocationIdentifier()) == false);
         assertEquals("FULL_BUILD", initialSegment.getName());
-        assertEquals(desc.getCubePartitionDesc().getPartitionDateStart(), cubeInstance.getAllocatedStartDate());
+        assertEquals(desc.getModel().getPartitionDesc().getPartitionDateStart(), cubeInstance.getAllocatedStartDate());
         assertEquals(0, cubeInstance.getAllocatedEndDate());
 
         // initial build success
@@ -311,7 +311,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         assertEquals(1, cubeInstance.getBuildingSegments().size());
         assertEquals(0, cubeInstance.getRebuildingSegments().size());
         assertTrue("".equals(initialSegment.getStorageLocationIdentifier()) == false);
-        assertEquals(desc.getCubePartitionDesc().getPartitionDateStart(), cubeInstance.getAllocatedStartDate());
+        assertEquals(desc.getModel().getPartitionDesc().getPartitionDateStart(), cubeInstance.getAllocatedStartDate());
         assertEquals(dateEnd, cubeInstance.getAllocatedEndDate());
 
         // initial build success
@@ -322,7 +322,7 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         assertEquals(1, cubeInstance.getSegments(SegmentStatusEnum.READY).size());
         assertEquals(0, cubeInstance.getBuildingSegments().size());
         assertEquals(0, cubeInstance.getRebuildingSegments().size());
-        assertEquals(desc.getCubePartitionDesc().getPartitionDateStart(), cubeInstance.getAllocatedStartDate());
+        assertEquals(desc.getModel().getPartitionDesc().getPartitionDateStart(), cubeInstance.getAllocatedStartDate());
         assertEquals(dateEnd, cubeInstance.getAllocatedEndDate());
 
         // incremental build
