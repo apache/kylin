@@ -1,7 +1,6 @@
 package com.kylinolap.cube;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -49,7 +48,6 @@ public class CubeDescUpgrader {
 
         DataModelDesc model = extractDataModel(oldModel, newModel);
         newModel.setModel(model);
-        updatePartitionDesc(oldModel, newModel);
 
         updateDimensions(oldModel, newModel);
 
@@ -75,20 +73,12 @@ public class CubeDescUpgrader {
         newModel.setName(oldModel.getName());
         newModel.setDescription(oldModel.getDescription());
         newModel.setNullStrings(oldModel.getNullStrings());
-        newModel.setFilterCondition(oldModel.getFilterCondition());
 
         newModel.setMeasures(oldModel.getMeasures());
         newModel.setRowkey(oldModel.getRowkey());
         newModel.setHbaseMapping(oldModel.getHBaseMapping());
 
         newModel.setSignature(oldModel.getSignature());
-        if (oldModel.getCapacity() == com.kylinolap.cube.model.v1.CubeDesc.CubeCapacity.SMALL) {
-            newModel.setCapacity(com.kylinolap.cube.model.CubeDesc.RealizationCapacity.SMALL);
-        } else if (oldModel.getCapacity() == com.kylinolap.cube.model.v1.CubeDesc.CubeCapacity.MEDIUM) {
-            newModel.setCapacity(com.kylinolap.cube.model.CubeDesc.RealizationCapacity.MEDIUM);
-        } else if (oldModel.getCapacity() == com.kylinolap.cube.model.v1.CubeDesc.CubeCapacity.LARGE) {
-            newModel.setCapacity(com.kylinolap.cube.model.CubeDesc.RealizationCapacity.LARGE);
-        }
 
         newModel.setNotifyList(oldModel.getNotifyList());
         newModel.setLastModified(oldModel.getLastModified());
@@ -114,7 +104,7 @@ public class CubeDescUpgrader {
         for (com.kylinolap.cube.model.v1.DimensionDesc dim : oldDimensions) {
 
             com.kylinolap.cube.model.DimensionDesc newDim = null;
-            // if a dimension defines "column", "derived" and "hierarchy" at the sametime, separate it into three dimensions;
+            // if a dimension defines "column", "derived" and "hierarchy" at the same time, separate it into three dimensions;
 
             if (dim.getColumn() != null && !"{FK}".equals(dim.getColumn())) {
                 //column on fact table
@@ -122,7 +112,7 @@ public class CubeDescUpgrader {
                 newDimensions.add(newDim);
                 newDim.setColumn(new String[] { dim.getColumn() });
             } else if (ArrayUtils.isEmpty(dim.getDerived()) && ArrayUtils.isEmpty(dim.getHierarchy())) {
-                // user defines a lookup table, but didn't use any column other than the pk, in this case, covnert to use fact table's fk
+                // user defines a lookup table, but didn't use any column other than the pk, in this case, convert to use fact table's fk
                 newDim = newDimensionDesc(dim, dimId++, dim.getName());
                 newDimensions.add(newDim);
                 newDim.setTable(getMetadataManager().appendDBName(newModel.getFactTable()));
@@ -134,7 +124,7 @@ public class CubeDescUpgrader {
                 newDim = newDimensionDesc(dim, dimId++, dim.getName() + "_derived");
                 newDimensions.add(newDim);
                 newDim.setDerived(dim.getDerived());
-                newDim.setColumn(null);
+                newDim.setColumn(null); // derived column must come from a lookup table; in this case the fk will be the dimension column, no need to explicitly declare it;
             }
 
             if (!ArrayUtils.isEmpty(dim.getHierarchy())) {
@@ -181,45 +171,55 @@ public class CubeDescUpgrader {
         }
 
         dm.setLookups(lookups.toArray(new LookupDesc[lookups.size()]));
+        dm.setFilterCondition(oldModel.getFilterCondition());
+        updatePartitionDesc(oldModel, dm);
+        
+
+        if (oldModel.getCapacity() == com.kylinolap.cube.model.v1.CubeDesc.CubeCapacity.SMALL) {
+            dm.setCapacity(com.kylinolap.metadata.model.DataModelDesc.RealizationCapacity.SMALL);
+        } else if (oldModel.getCapacity() == com.kylinolap.cube.model.v1.CubeDesc.CubeCapacity.MEDIUM) {
+            dm.setCapacity(com.kylinolap.metadata.model.DataModelDesc.RealizationCapacity.MEDIUM);
+        } else if (oldModel.getCapacity() == com.kylinolap.cube.model.v1.CubeDesc.CubeCapacity.LARGE) {
+            dm.setCapacity(com.kylinolap.metadata.model.DataModelDesc.RealizationCapacity.LARGE);
+        }
+        
         return dm;
     }
 
-    private void updatePartitionDesc(com.kylinolap.cube.model.v1.CubeDesc oldModel, com.kylinolap.cube.model.CubeDesc newModel) {
+    private void updatePartitionDesc(com.kylinolap.cube.model.v1.CubeDesc oldModel, com.kylinolap.metadata.model.DataModelDesc dm) {
 
         com.kylinolap.cube.model.v1.CubePartitionDesc partition = oldModel.getCubePartitionDesc();
-        com.kylinolap.cube.model.CubePartitionDesc newPartition = new com.kylinolap.cube.model.CubePartitionDesc();
-        newModel.setCubePartitionDesc(newPartition);
+        com.kylinolap.metadata.model.PartitionDesc newPartition = new com.kylinolap.metadata.model.PartitionDesc();
 
         if (partition.getPartitionDateColumn() != null) {
             String partitionCol = partition.getPartitionDateColumn();
-            
+
             String[] tablecolumn = partitionCol.split("\\.");
             if (tablecolumn != null && tablecolumn.length == 2) {
                 // pattern is <tablename>.<colname>
                 String tableFullName = getMetadataManager().appendDBName(tablecolumn[0]);
                 newPartition.setPartitionDateColumn(tableFullName + "." + tablecolumn[1]);
             } else {
-                
-                if(partitionCol.indexOf(".") < 0) {
-                // pattern is <colname>
-                    partitionCol = newModel.getFactTable() + "." + partitionCol;
+
+                if (partitionCol.indexOf(".") < 0) {
+                    // pattern is <colname>
+                    partitionCol = dm.getFactTable() + "." + partitionCol;
                 }
-                
+
                 newPartition.setPartitionDateColumn(partitionCol);
             }
         }
 
         if (partition.getCubePartitionType() == com.kylinolap.cube.model.v1.CubePartitionDesc.CubePartitionType.APPEND) {
-            newPartition.setCubePartitionType(com.kylinolap.cube.model.CubePartitionDesc.CubePartitionType.APPEND);
-        }
-
-        if (partition.getCubePartitionType() == CubePartitionDesc.CubePartitionType.UPDATE_INSERT) {
-            newPartition.setCubePartitionType(com.kylinolap.cube.model.CubePartitionDesc.CubePartitionType.UPDATE_INSERT);
+            newPartition.setCubePartitionType(com.kylinolap.metadata.model.PartitionDesc.PartitionType.APPEND);
+        } else if (partition.getCubePartitionType() == CubePartitionDesc.CubePartitionType.UPDATE_INSERT) {
+            newPartition.setCubePartitionType(com.kylinolap.metadata.model.PartitionDesc.PartitionType.UPDATE_INSERT);
 
         }
 
         newPartition.setPartitionDateStart(partition.getPartitionDateStart());
 
+        dm.setPartitionDesc(newPartition);
     }
 
     private com.kylinolap.cube.model.v1.CubeDesc loadOldCubeDesc(String path) throws IOException {

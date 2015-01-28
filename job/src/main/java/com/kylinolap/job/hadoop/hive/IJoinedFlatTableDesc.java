@@ -1,9 +1,8 @@
 package com.kylinolap.job.hadoop.hive;
 
-import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.metadata.model.DataModelDesc;
-
 import java.util.List;
+
+import com.kylinolap.metadata.model.DataModelDesc;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/30/14.
@@ -20,7 +19,7 @@ public interface IJoinedFlatTableDesc {
 
     public DataModelDesc getDataModel();
 
-    public CubeDesc.RealizationCapacity getCapacity();
+    public DataModelDesc.RealizationCapacity getCapacity();
 
     public String getTableAlias(String tableName);
 }

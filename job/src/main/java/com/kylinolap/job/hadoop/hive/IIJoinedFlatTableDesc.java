@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import com.google.common.collect.Lists;
-import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.invertedindex.model.IIDesc;
 import com.kylinolap.metadata.model.DataModelDesc;
 import com.kylinolap.metadata.model.JoinDesc;
@@ -68,8 +67,8 @@ public class IIJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     }
 
     @Override
-    public CubeDesc.RealizationCapacity getCapacity() {
-        return CubeDesc.RealizationCapacity.SMALL;
+    public DataModelDesc.RealizationCapacity getCapacity() {
+        return DataModelDesc.RealizationCapacity.SMALL;
     }
 
     @Override

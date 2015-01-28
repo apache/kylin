@@ -114,7 +114,7 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
             stopValues.put(column, dimRange.getEndValue());
             fuzzyValues.put(column, dimRange.getEqualValues());
 
-            TblColRef partitionDateColumnRef = cubeSeg.getCubeDesc().getCubePartitionDesc().getPartitionDateColumnRef();
+            TblColRef partitionDateColumnRef = cubeSeg.getCubeDesc().getModel().getPartitionDesc().getPartitionDateColumnRef();
             if (column.equals(partitionDateColumnRef)) {
                 initPartitionRange(dimRange);
             }
