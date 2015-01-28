@@ -13,7 +13,7 @@
                             <div class="col-xs-12 col-sm-6">
                                 <select class="form-control" ng-if="state.mode=='edit'" style="width: 360px;"
                                         chosen ng-model="cubeMetaFrame.capacity" required
-                                        ng-options="cc as cc for cc in cubeCapacities">
+                                        ng-options="cc as cc for cc in cubeConfig.cubeCapacities">
                                 </select>
                                 <span ng-if="state.mode=='view'">{{cubeMetaFrame.capacity}}</span>
                             </div>
@@ -106,7 +106,7 @@
                     <div>
                         <select ng-if="state.mode=='edit'" style="width:80px;"
                                 chosen ng-model="rowkey_column.dictionary"
-                                ng-options="dt as dt for dt in dictionaries">
+                                ng-options="dt as dt for dt in cubeConfig.dictionaries">
                         </select>
                         <span ng-if="state.mode=='view'">{{rowkey_column.dictionary}}</span>
                     </div>

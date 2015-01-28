@@ -45,7 +45,7 @@ KylinApp
                 var query = {
                     originSql: sql,
                     sql: sql,
-                    project: (!!project)? project:$scope.project.selectedProject,
+                    project: (!!project)? project:$scope.projectModel.selectedProject,
                     status: 'executing',
                     acceptPartial: true,
                     result: {
