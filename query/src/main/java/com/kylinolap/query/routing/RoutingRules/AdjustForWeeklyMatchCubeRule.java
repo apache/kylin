@@ -51,7 +51,7 @@ public class AdjustForWeeklyMatchCubeRule extends RoutingRule {
             FunctionDesc functionDesc = it.next();
             if (!cubeFuncs.contains(functionDesc)) {
                 // try to convert the metric to dimension to see if it works
-                TblColRef col = functionDesc.selectTblColByMetrics(metricsColumns, cubeDesc.getFactTable());
+                TblColRef col = functionDesc.selectTblColRef(metricsColumns, cubeDesc.getFactTable());
                 functionDesc.setAppliedOnDimension(true);
                 rewriteFields.remove(functionDesc.getRewriteFieldName());
                 if (col != null) {

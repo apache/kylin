@@ -54,6 +54,7 @@ public class ExtractTupleFilter extends TupleFilter {
         return true;
     }
 
+    //askliyang
     private int extractDate(String type, int inDate) {
         // this shifts the epoch back to astronomical year -4800 instead of the
         // start of the Christian era in year AD 1 of the proleptic Gregorian

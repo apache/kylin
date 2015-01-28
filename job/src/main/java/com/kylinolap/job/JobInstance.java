@@ -287,6 +287,9 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
 
         @JsonBackReference
         private JobInstance jobInstance;
+        
+        @JsonProperty("id")
+        private String id;
 
         @JsonProperty("name")
         private String name;
@@ -365,6 +368,16 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
 
         public void setStatus(JobStepStatusEnum status) {
             this.status = status;
+        }
+        
+        
+
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
         }
 
         /**

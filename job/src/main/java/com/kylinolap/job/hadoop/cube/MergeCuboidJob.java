@@ -103,8 +103,7 @@ public class MergeCuboidJob extends CuboidJob {
             return waitForCompletion(job);
         } catch (Exception e) {
             printUsage(options);
-            log.error(e.getLocalizedMessage(), e);
-            return 2;
+            throw e;
         }
     }
 

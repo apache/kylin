@@ -19,22 +19,17 @@ package com.kylinolap.storage.hbase.coprocessor;
 import java.util.Collection;
 import java.util.Set;
 
-import com.kylinolap.invertedindex.IISegment;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import com.google.common.collect.Sets;
 import com.kylinolap.common.util.BytesUtil;
-import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.kv.RowKeyColumnIO;
 import com.kylinolap.dict.Dictionary;
-import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.metadata.filter.ColumnTupleFilter;
-import com.kylinolap.metadata.filter.CompareTupleFilter;
-import com.kylinolap.metadata.filter.ConstantTupleFilter;
-import com.kylinolap.metadata.filter.TupleFilter;
+import com.kylinolap.dict.ISegment;
+import com.kylinolap.metadata.filter.*;
 import com.kylinolap.metadata.filter.TupleFilter.FilterOperatorEnum;
-import com.kylinolap.metadata.filter.TupleFilterSerializer;
 import com.kylinolap.metadata.filter.TupleFilterSerializer.Decorator;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.metadata.tuple.ITuple;
 
 /**
@@ -45,13 +40,15 @@ public class CoprocessorFilter {
     private static class FilterDecorator implements Decorator {
 
         private RowKeyColumnIO columnIO;
+        private Set<TblColRef> unstrictlyFilteredColumns;
 
-        public FilterDecorator(CubeSegment seg) {
-            columnIO = new RowKeyColumnIO(seg);
+        public FilterDecorator(ISegment seg) {
+            this.columnIO = new RowKeyColumnIO(seg);
+            this.unstrictlyFilteredColumns = Sets.newHashSet();
         }
 
-        public FilterDecorator(IISegment seg) {
-            columnIO = new RowKeyColumnIO(seg);
+        public Set<TblColRef> getUnstrictlyFilteredColumns() {
+            return unstrictlyFilteredColumns;
         }
 
         @Override
@@ -59,14 +56,19 @@ public class CoprocessorFilter {
             if (filter == null)
                 return null;
 
-            if (filter.getOperator() == FilterOperatorEnum.NOT && !TupleFilter.isEvaluableRecursively(filter))
+            //askliyang
+            if (filter.getOperator() == FilterOperatorEnum.NOT && !TupleFilter.isEvaluableRecursively(filter)) {
+                TupleFilter.collectColumns(filter, unstrictlyFilteredColumns);
                 return ConstantTupleFilter.TRUE;
+            }
 
             if (!(filter instanceof CompareTupleFilter))
                 return filter;
 
-            if (!TupleFilter.isEvaluableRecursively(filter))
+            if (!TupleFilter.isEvaluableRecursively(filter)) {
+                TupleFilter.collectColumns(filter, unstrictlyFilteredColumns);
                 return ConstantTupleFilter.TRUE;
+            }
 
             // extract ColumnFilter & ConstantFilter
             CompareTupleFilter compf = (CompareTupleFilter) filter;
@@ -173,21 +175,14 @@ public class CoprocessorFilter {
             columnIO.writeColumn(column, value, value.length, roundingFlag, Dictionary.NULL, id, 0);
             return Dictionary.dictIdToString(id, 0, id.length);
         }
-
     }
 
-    public static CoprocessorFilter fromFilter(final IISegment seg, TupleFilter rootFilter) {
+    public static CoprocessorFilter fromFilter(final ISegment seg, TupleFilter rootFilter) {
         // translate constants into dictionary IDs via a serialize copy
-        byte[] bytes = TupleFilterSerializer.serialize(rootFilter, new FilterDecorator(seg));
+        FilterDecorator filterDecorator = new FilterDecorator(seg);
+        byte[] bytes = TupleFilterSerializer.serialize(rootFilter, filterDecorator);
         TupleFilter copy = TupleFilterSerializer.deserialize(bytes);
-        return new CoprocessorFilter(copy);
-    }
-
-    public static CoprocessorFilter fromFilter(final CubeSegment seg, TupleFilter rootFilter) {
-        // translate constants into dictionary IDs via a serialize copy
-        byte[] bytes = TupleFilterSerializer.serialize(rootFilter, new FilterDecorator(seg));
-        TupleFilter copy = TupleFilterSerializer.deserialize(bytes);
-        return new CoprocessorFilter(copy);
+        return new CoprocessorFilter(copy, filterDecorator.getUnstrictlyFilteredColumns());
     }
 
     public static byte[] serialize(CoprocessorFilter o) {
@@ -195,22 +190,26 @@ public class CoprocessorFilter {
     }
 
     public static CoprocessorFilter deserialize(byte[] filterBytes) {
-        TupleFilter filter = (filterBytes == null || filterBytes.length == 0) //
-        ? null //
-                : TupleFilterSerializer.deserialize(filterBytes);
-        return new CoprocessorFilter(filter);
+        TupleFilter filter = (filterBytes == null || filterBytes.length == 0) ? null : TupleFilterSerializer.deserialize(filterBytes);
+        return new CoprocessorFilter(filter, null);
     }
 
     // ============================================================================
+
+    private final TupleFilter filter;
+    private final Set<TblColRef> unstrictlyFilteredColumns;
+
+    public CoprocessorFilter(TupleFilter filter, Set<TblColRef> unstrictlyFilteredColumns) {
+        this.filter = filter;
+        this.unstrictlyFilteredColumns = unstrictlyFilteredColumns;
+    }
 
     public TupleFilter getFilter() {
         return filter;
     }
 
-    private final TupleFilter filter;
-
-    public CoprocessorFilter(TupleFilter filter) {
-        this.filter = filter;
+    public Set<TblColRef> getUnstrictlyFilteredColumns() {
+        return unstrictlyFilteredColumns;
     }
 
     public boolean evaluate(ITuple tuple) {

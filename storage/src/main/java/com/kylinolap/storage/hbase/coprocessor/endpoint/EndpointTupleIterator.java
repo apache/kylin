@@ -3,6 +3,7 @@ package com.kylinolap.storage.hbase.coprocessor.endpoint;
 import java.io.IOException;
 import java.util.*;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
@@ -73,7 +74,7 @@ public class EndpointTupleIterator implements ITupleIterator {
         }
 
         if (groupBy == null) {
-            groupBy = Lists.newArrayList();
+            groupBy = Sets.newHashSet();
         }
 
         if (measures == null) {
@@ -93,6 +94,11 @@ public class EndpointTupleIterator implements ITupleIterator {
 
         this.pushedDownRowType = CoprocessorRowType.fromTableRecordInfo(tableRecordInfo, this.columns);
         this.pushedDownFilter = CoprocessorFilter.fromFilter(this.seg, rootFilter);
+
+        for (TblColRef column : this.pushedDownFilter.getUnstrictlyFilteredColumns()) {
+            groupBy.add(column);
+        }
+
         this.pushedDownProjector = CoprocessorProjector.makeForEndpoint(tableRecordInfo, groupBy);
         this.pushedDownAggregators = EndpointAggregators.fromFunctions(tableRecordInfo, measures);
 
@@ -165,7 +171,11 @@ public class EndpointTupleIterator implements ITupleIterator {
     }
 
     private IIProtos.IIRequest prepareRequest() throws IOException {
-        IIProtos.IIRequest request = IIProtos.IIRequest.newBuilder().setType(ByteString.copyFrom(CoprocessorRowType.serialize(pushedDownRowType))).setFilter(ByteString.copyFrom(CoprocessorFilter.serialize(pushedDownFilter))).setProjector(ByteString.copyFrom(CoprocessorProjector.serialize(pushedDownProjector))).setAggregator(ByteString.copyFrom(EndpointAggregators.serialize(pushedDownAggregators))).build();
+        IIProtos.IIRequest request = IIProtos.IIRequest.newBuilder() //
+                .setType(ByteString.copyFrom(CoprocessorRowType.serialize(pushedDownRowType))) //
+                .setFilter(ByteString.copyFrom(CoprocessorFilter.serialize(pushedDownFilter))) //
+                .setProjector(ByteString.copyFrom(CoprocessorProjector.serialize(pushedDownProjector))) //
+                .setAggregator(ByteString.copyFrom(EndpointAggregators.serialize(pushedDownAggregators))).build();
 
         return request;
     }

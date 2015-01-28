@@ -65,6 +65,7 @@ public class HadoopCmdOutput {
 
     private String mapInputRecords;
     private String hdfsBytesWritten;
+    private String hdfsBytesRead;
 
     public String getMapInputRecords() {
         return mapInputRecords;
@@ -74,6 +75,10 @@ public class HadoopCmdOutput {
         return hdfsBytesWritten;
     }
 
+    public String getHdfsBytesRead() {
+        return hdfsBytesRead;
+    }
+    
     public void updateJobCounter() {
         try {
             Counters counters = job.getCounters();
@@ -88,6 +93,7 @@ public class HadoopCmdOutput {
 
             mapInputRecords = String.valueOf(counters.findCounter(TaskCounter.MAP_INPUT_RECORDS).getValue());
             hdfsBytesWritten = String.valueOf(counters.findCounter("FileSystemCounters", "HDFS_BYTES_WRITTEN").getValue());
+            hdfsBytesRead = String.valueOf(counters.findCounter("FileSystemCounters", "HDFS_BYTES_READ").getValue());
         } catch (Exception e) {
             log.error(e.getLocalizedMessage(), e);
             output.append(e.getLocalizedMessage());

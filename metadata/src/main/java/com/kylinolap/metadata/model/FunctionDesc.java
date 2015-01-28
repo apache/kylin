@@ -152,7 +152,7 @@ public class FunctionDesc {
         this.returnType = returnType;
     }
 
-    public TblColRef selectTblColByMetrics(Collection<TblColRef> dimensionColumns, String factTableName) {
+    public TblColRef selectTblColRef(Collection<TblColRef> metricColumns, String factTableName) {
         if (this.isCount())
             return null; // count is not about any column but the whole row
 
@@ -161,7 +161,7 @@ public class FunctionDesc {
             return null;
 
         String columnName = parameter.getValue();
-        for (TblColRef col : dimensionColumns) {
+        for (TblColRef col : metricColumns) {
             if (col.isSameAs(factTableName, columnName)) {
                 return col;
             }
