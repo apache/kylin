@@ -107,7 +107,7 @@
                         <label class="col-sm-3 control-label font-color-default"><b>Join Type</b></label>
                         <div class="col-sm-6">
                             <select class="form-control" chosen ng-model="newLookup.join.type"
-                                    ng-options="joinType.value as joinType.name for joinType in joinTypes">
+                                    ng-options="joinType.value as joinType.name for joinType in cubeConfig.joinTypes">
                             </select>
                         </div>
                     </div>

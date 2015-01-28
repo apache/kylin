@@ -1,6 +1,7 @@
 'use strict';
 
-KylinApp.controller('CubeModelCtrl', function ($scope, $modal) {
+KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig) {
+    $scope.cubeConfig = cubeConfig;
     var DataModel = function () {
         return {
             name: '',

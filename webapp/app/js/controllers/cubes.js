@@ -1,14 +1,15 @@
 'use strict';
 
 KylinApp
-    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log) {
+    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,ProjectModel) {
 
         $scope.listParams={
             cubeName: $routeParams.cubeName,
             projectName: $routeParams.projectName
         };
         if($routeParams.projectName){
-            $scope.project.selectedProject = $routeParams.projectName;
+            $scope.projectModel.selectedProject = $routeParams.projectName;
+            $scope.projectModel.setSelectedProject($routeParams.projectName);
         }
         $scope.cubes = [];
         $scope.loading = false;
@@ -28,7 +29,7 @@ KylinApp
             dimensionFilter: '', measureFilter: ''};
 
         $scope.list = function (offset, limit) {
-            if(!$scope.project.projects.length){
+            if(!$scope.projectModel.projects.length){
                 return [];
             }
             offset = (!!offset) ? offset : 0;
@@ -39,7 +40,7 @@ KylinApp
             if ($scope.listParams.cubeName) {
                 queryParam.cubeName = $scope.listParams.cubeName;
             }
-               queryParam.projectName = $scope.project.selectedProject;
+               queryParam.projectName = $scope.projectModel.selectedProject;
 
             $scope.loading = true;
             CubeService.list(queryParam, function (cubes) {
@@ -70,7 +71,7 @@ KylinApp
             return defer.promise;
         };
 
-        $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+        $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
             if(newValue!=oldValue||newValue==null){
                 $scope.cubes=[];
                 $scope.reload();
