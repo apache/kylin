@@ -74,8 +74,6 @@
         <sonar.language>java</sonar.language>
         <sonar.jacoco.excludes>com/kylinolap/**/tools/**:net/hydromatic/optiq/**:org/eigenbase/sql2rel/**</sonar.jacoco.excludes>
         
-        <!-- Surefire -->
-        <surefire.reportsDirectory>${project.basedir}/../target/surefire-reports</surefire.reportsDirectory>
     </properties>
 
     <dependencyManagement>
@@ -528,6 +526,7 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>2.16</version>
                         <configuration>
+                            <reportsDirectory>${project.basedir}/../target/surefire-reports</reportsDirectory>
                             <excludes>
                                 <exclude>**/BuildCubeWithEngineTest.java</exclude>
                                 <exclude>**/BuildIIWithEngineTest.java</exclude>
@@ -567,6 +566,7 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>2.16</version>
                         <configuration>
+                            <reportsDirectory>${project.basedir}/../target/surefire-reports</reportsDirectory>
                             <excludes>
                                 <exclude>**/BuildCubeWithEngineTest.java</exclude>
                                 <exclude>**/BuildIIWithEngineTest.java</exclude>

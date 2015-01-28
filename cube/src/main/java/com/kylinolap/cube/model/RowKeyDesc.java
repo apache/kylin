@@ -59,7 +59,7 @@ public class RowKeyDesc {
     private String[][] aggregationGroups;
 
     // computed content
-    private CubeDesc cubeRef;
+    private CubeDesc cubeDesc;
     private Map<TblColRef, RowKeyColDesc> columnMap;
 
     private long fullMask;
@@ -106,11 +106,11 @@ public class RowKeyDesc {
     }
 
     public CubeDesc getCubeRef() {
-        return cubeRef;
+        return cubeDesc;
     }
 
     public void setCubeRef(CubeDesc cubeRef) {
-        this.cubeRef = cubeRef;
+        this.cubeDesc = cubeRef;
     }
 
     public long getFullMask() {
@@ -195,7 +195,7 @@ public class RowKeyDesc {
             rowKeyColDesc.setBitIndex(rowkeyColumns.length - i - 1);
             rowKeyColDesc.setColRef(colNameAbbr.get(column));
             if (rowKeyColDesc.getColRef() == null) {
-                throw new IllegalArgumentException("Cannot find rowkey column " + column + " in cube " + cubeRef);
+                throw new IllegalArgumentException("Cannot find rowkey column " + column + " in cube " + cubeDesc);
             }
 
             columnMap.put(rowKeyColDesc.getColRef(), rowKeyColDesc);
@@ -228,7 +228,7 @@ public class RowKeyDesc {
             for (int j = 0; j < aggGrp.length; j++) {
                 TblColRef aggCol = colNameAbbr.get(aggGrp[j].toUpperCase());
                 if (aggCol == null) {
-                    throw new IllegalArgumentException("Can't find aggregation column " + aggGrp[j] + " in  cube " + this.cubeRef.getName());
+                    throw new IllegalArgumentException("Can't find aggregation column " + aggGrp[j] + " in  cube " + this.cubeDesc.getName());
                 }
                 Integer index = getColumnBitIndex(aggCol);
                 mask.groupMask |= 1L << index;
@@ -262,7 +262,7 @@ public class RowKeyDesc {
     private void buildHierarchyMasks() {
         this.hierarchyMasks = new ArrayList<HierarchyMask>();
 
-        for (DimensionDesc dimension : this.cubeRef.getDimensions()) {
+        for (DimensionDesc dimension : this.cubeDesc.getDimensions()) {
             HierarchyDesc[] hierarchies = dimension.getHierarchy();
             if (hierarchies == null || hierarchies.length == 0)
                 continue;
