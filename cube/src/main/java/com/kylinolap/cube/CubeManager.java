@@ -72,7 +72,7 @@ public class CubeManager implements IRealizationProvider {
     private static String ALPHA_NUM = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     private static int HBASE_TABLE_LENGTH = 10;
-    private static final Serializer<CubeInstance> CUBE_SERIALIZER = new JsonSerializer<CubeInstance>(CubeInstance.class);
+    public static final Serializer<CubeInstance> CUBE_SERIALIZER = new JsonSerializer<CubeInstance>(CubeInstance.class);
 
     private static final Logger logger = LoggerFactory.getLogger(CubeManager.class);
 
@@ -397,8 +397,8 @@ public class CubeManager implements IRealizationProvider {
         cubeSegment.setLastBuildJobID(jobUuid);
         cubeSegment.setLastBuildTime(lastBuildTime);
         cubeSegment.setSizeKB(sizeKB);
-        cubeSegment.setSourceRecords(sourceRecordCount);
-        cubeSegment.setSourceRecordsSize(sourceRecordsSize);
+        cubeSegment.setInputRecords(sourceRecordCount);
+        cubeSegment.setInputRecordsSize(sourceRecordsSize);
         cubeSegment.setStatus(SegmentStatusEnum.READY);
         cubeInstance.setStatus(RealizationStatusEnum.READY);
         this.updateCube(cubeInstance);
@@ -483,7 +483,6 @@ public class CubeManager implements IRealizationProvider {
         segment.setUuid(UUID.randomUUID().toString());
         segment.setName(incrementalSegName);
         Date creatTime = new Date();
-        segment.setCreateTime(DateStrDictionary.dateToString(creatTime));
         segment.setCreateTimeUTC(creatTime.getTime());
         segment.setDateRangeStart(startDate);
         segment.setDateRangeEnd(endDate);

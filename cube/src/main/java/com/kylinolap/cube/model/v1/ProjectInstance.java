@@ -120,10 +120,6 @@ public class ProjectInstance extends RootPersistentEntity {
         this.status = status;
     }
 
-    /**
-     * @deprecated use createTimeUTC instead
-     * @return
-     */
     public String getCreateTime() {
         return createTime;
     }

@@ -26,10 +26,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
-import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.dict.ISegment;
 import com.kylinolap.dict.Dictionary;
+import com.kylinolap.dict.ISegment;
 import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.model.TblColRef;
 
@@ -52,17 +51,14 @@ public class CubeSegment implements Comparable<CubeSegment>, ISegment {
     private SegmentStatusEnum status;
     @JsonProperty("size_kb")
     private long sizeKB;
-    @JsonProperty("source_records")
-    private long sourceRecords;
-    @JsonProperty("source_records_size")
-    private long sourceRecordsSize;
+    @JsonProperty("input_records")
+    private long inputRecords;
+    @JsonProperty("input_records_size")
+    private long inputRecordsSize;
     @JsonProperty("last_build_time")
     private long lastBuildTime;
     @JsonProperty("last_build_job_id")
     private String lastBuildJobID;
-    @JsonProperty("create_time")
-    private String createTime;
-
     @JsonProperty("create_time_utc")
     private long createTimeUTC;
     
@@ -146,20 +142,20 @@ public class CubeSegment implements Comparable<CubeSegment>, ISegment {
         this.sizeKB = sizeKB;
     }
 
-    public long getSourceRecords() {
-        return sourceRecords;
+    public long getInputRecords() {
+        return inputRecords;
     }
 
-    public void setSourceRecords(long sourceRecords) {
-        this.sourceRecords = sourceRecords;
+    public void setInputRecords(long inputRecords) {
+        this.inputRecords = inputRecords;
     }
 
-    public long getSourceRecordsSize() {
-        return sourceRecordsSize;
+    public long getInputRecordsSize() {
+        return inputRecordsSize;
     }
 
-    public void setSourceRecordsSize(long sourceRecordsSize) {
-        this.sourceRecordsSize = sourceRecordsSize;
+    public void setInputRecordsSize(long inputRecordsSize) {
+        this.inputRecordsSize = inputRecordsSize;
     }
 
     public long getLastBuildTime() {
@@ -178,22 +174,8 @@ public class CubeSegment implements Comparable<CubeSegment>, ISegment {
         this.lastBuildJobID = lastBuildJobID;
     }
 
-    /**
-     * @deprecated
-     * @return
-     */
-    public String getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(String createTime) {
-        this.createTime = createTime;
-    }
 
     public long getCreateTimeUTC() {
-        if (createTimeUTC == 0 && createTime != null) {
-            createTimeUTC = RootPersistentEntity.parseTime(createTime);
-        }
         return createTimeUTC;
     }
 
@@ -340,4 +322,14 @@ public class CubeSegment implements Comparable<CubeSegment>, ISegment {
     public Dictionary<?> getDictionary(TblColRef col) {
         return CubeManager.getInstance(this.getCubeInstance().getConfig()).getDictionary(this, col);
     }
+
+    public void setDictionaries(ConcurrentHashMap<String, String> dictionaries) {
+        this.dictionaries = dictionaries;
+    }
+
+    public void setSnapshots(ConcurrentHashMap<String, String> snapshots) {
+        this.snapshots = snapshots;
+    }
+    
+    
 }

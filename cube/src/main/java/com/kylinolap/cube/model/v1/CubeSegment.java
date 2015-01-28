@@ -13,37 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kylinolap.invertedindex;
+package com.kylinolap.cube.model.v1;
+
+import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
-import com.kylinolap.dict.ISegment;
-import com.kylinolap.dict.Dictionary;
-import com.kylinolap.invertedindex.index.TableRecordInfo;
-import com.kylinolap.invertedindex.model.IIDesc;
-import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.model.TblColRef;
 
-import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.concurrent.ConcurrentHashMap;
-
-/**
- * @author honma
- */
-
-// TODO: remove segment concept for II, append old hbase table
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class IISegment implements Comparable<IISegment>, ISegment {
+public class CubeSegment implements Comparable<CubeSegment> {
 
     @JsonBackReference
-    private IIInstance iiInstance;
+    private CubeInstance cubeInstance;
     @JsonProperty("uuid")
     private String uuid;
     @JsonProperty("name")
@@ -55,37 +44,38 @@ public class IISegment implements Comparable<IISegment>, ISegment {
     @JsonProperty("date_range_end")
     private long dateRangeEnd;
     @JsonProperty("status")
-    private SegmentStatusEnum status;
+    private CubeSegmentStatusEnum status;
     @JsonProperty("size_kb")
     private long sizeKB;
-    @JsonProperty("input_records")
-    private long inputRecords;
-    @JsonProperty("input_records_size")
-    private long inputRecordsSize;
+    @JsonProperty("source_records")
+    private long sourceRecords;
+    @JsonProperty("source_records_size")
+    private long sourceRecordsSize;
     @JsonProperty("last_build_time")
     private long lastBuildTime;
     @JsonProperty("last_build_job_id")
     private String lastBuildJobID;
+    @JsonProperty("create_time")
+    private String createTime;
 
-    @JsonProperty("create_time_utc")
-    private long createTimeUTC;
-    
     @JsonProperty("binary_signature")
-    private String binarySignature; // a hash of schema and dictionary ID,
-    // used for sanity check
+    private String binarySignature; // a hash of cube schema and dictionary ID,
+                                    // used for sanity check
 
     @JsonProperty("dictionaries")
-    private ConcurrentHashMap<String, String> dictionaries; // table/column ==>
-    // dictionary
-    // resource path
+    private ConcurrentHashMap<String, String> dictionaries; // table/column ==> dictionary resource path
+    @JsonProperty("snapshots")
+    private ConcurrentHashMap<String, String> snapshots; // table name ==> snapshot resource path
 
-    private transient TableRecordInfo tableRecordInfo;
+//    public CubeDesc getCubeDesc() {
+//        return getCubeInstance().getDescriptor();
+//    }
 
     /**
      * @param startDate
      * @param endDate
      * @return if(startDate == 0 && endDate == 0), returns "FULL_BUILD", else
-     * returns "yyyyMMddHHmmss_yyyyMMddHHmmss"
+     *         returns "yyyyMMddHHmmss_yyyyMMddHHmmss"
      */
     public static String getSegmentName(long startDate, long endDate) {
         if (startDate == 0 && endDate == 0) {
@@ -98,11 +88,8 @@ public class IISegment implements Comparable<IISegment>, ISegment {
         return dateFormat.format(startDate) + "_" + dateFormat.format(endDate);
     }
 
-    public IIDesc getIIDesc() {
-        return getIIInstance().getDescriptor();
-    }
-
     // ============================================================================
+
 
     public String getUuid() {
         return uuid;
@@ -136,11 +123,11 @@ public class IISegment implements Comparable<IISegment>, ISegment {
         this.dateRangeEnd = dateRangeEnd;
     }
 
-    public SegmentStatusEnum getStatus() {
+    public CubeSegmentStatusEnum getStatus() {
         return status;
     }
 
-    public void setStatus(SegmentStatusEnum status) {
+    public void setStatus(CubeSegmentStatusEnum status) {
         this.status = status;
     }
 
@@ -152,20 +139,20 @@ public class IISegment implements Comparable<IISegment>, ISegment {
         this.sizeKB = sizeKB;
     }
 
-    public long getInputRecords() {
-        return inputRecords;
+    public long getSourceRecords() {
+        return sourceRecords;
     }
 
-    public void setInputRecords(long inputRecords) {
-        this.inputRecords = inputRecords;
+    public void setSourceRecords(long sourceRecords) {
+        this.sourceRecords = sourceRecords;
     }
 
-    public long getInputRecordsSize() {
-        return inputRecordsSize;
+    public long getSourceRecordsSize() {
+        return sourceRecordsSize;
     }
 
-    public void setInputRecordsSize(long inputRecordsSize) {
-        this.inputRecordsSize = inputRecordsSize;
+    public void setSourceRecordsSize(long sourceRecordsSize) {
+        this.sourceRecordsSize = sourceRecordsSize;
     }
 
     public long getLastBuildTime() {
@@ -184,6 +171,14 @@ public class IISegment implements Comparable<IISegment>, ISegment {
         this.lastBuildJobID = lastBuildJobID;
     }
 
+    public String getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(String createTime) {
+        this.createTime = createTime;
+    }
+
     public String getBinarySignature() {
         return binarySignature;
     }
@@ -192,15 +187,16 @@ public class IISegment implements Comparable<IISegment>, ISegment {
         this.binarySignature = binarySignature;
     }
 
-    public IIInstance getIIInstance() {
-        return iiInstance;
+    public CubeInstance getCubeInstance() {
+        return cubeInstance;
     }
 
-    public void setIIInstance(IIInstance iiInstance) {
-        this.iiInstance = iiInstance;
+    public void setCubeInstance(CubeInstance cubeInstance) {
+        this.cubeInstance = cubeInstance;
     }
 
     public String getStorageLocationIdentifier() {
+
         return storageLocationIdentifier;
     }
 
@@ -210,8 +206,26 @@ public class IISegment implements Comparable<IISegment>, ISegment {
         return dictionaries;
     }
 
+    public Map<String, String> getSnapshots() {
+        if (snapshots == null)
+            snapshots = new ConcurrentHashMap<String, String>();
+        return snapshots;
+    }
+
+    public String getSnapshotResPath(String table) {
+        return getSnapshots().get(table);
+    }
+
+    public void putSnapshotResPath(String table, String snapshotResPath) {
+        getSnapshots().put(table, snapshotResPath);
+    }
+
     public Collection<String> getDictionaryPaths() {
         return getDictionaries().values();
+    }
+
+    public Collection<String> getSnapshotPaths() {
+        return getSnapshots().values();
     }
 
     public String getDictResPath(TblColRef col) {
@@ -227,14 +241,15 @@ public class IISegment implements Comparable<IISegment>, ISegment {
     }
 
     /**
-     * @param storageLocationIdentifier the storageLocationIdentifier to set
+     * @param storageLocationIdentifier
+     *            the storageLocationIdentifier to set
      */
     public void setStorageLocationIdentifier(String storageLocationIdentifier) {
         this.storageLocationIdentifier = storageLocationIdentifier;
     }
 
     @Override
-    public int compareTo(IISegment other) {
+    public int compareTo(CubeSegment other) {
         if (this.dateRangeEnd < other.dateRangeEnd) {
             return -1;
         } else if (this.dateRangeEnd > other.dateRangeEnd) {
@@ -248,7 +263,7 @@ public class IISegment implements Comparable<IISegment>, ISegment {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((iiInstance == null) ? 0 : iiInstance.hashCode());
+        result = prime * result + ((cubeInstance == null) ? 0 : cubeInstance.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + ((status == null) ? 0 : status.hashCode());
         return result;
@@ -262,11 +277,11 @@ public class IISegment implements Comparable<IISegment>, ISegment {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        IISegment other = (IISegment) obj;
-        if (iiInstance == null) {
-            if (other.iiInstance != null)
+        CubeSegment other = (CubeSegment) obj;
+        if (cubeInstance == null) {
+            if (other.cubeInstance != null)
                 return false;
-        } else if (!iiInstance.equals(other.iiInstance))
+        } else if (!cubeInstance.equals(other.cubeInstance))
             return false;
         if (name == null) {
             if (other.name != null)
@@ -278,42 +293,14 @@ public class IISegment implements Comparable<IISegment>, ISegment {
         return true;
     }
 
-    private TableRecordInfo getTableRecordInfo() {
-        if (tableRecordInfo == null)
-            tableRecordInfo = new TableRecordInfo(this);
-        return tableRecordInfo;
-    }
-
-    public List<TblColRef> getColumns() {
-        return this.getTableRecordInfo().getColumns();
-    }
-
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("uuid", uuid).add("create_time_utc:", createTimeUTC).add("name", name).add("last_build_job_id", lastBuildJobID).add("status", status).toString();
+        return Objects.toStringHelper(this)
+                .add("uuid", uuid)
+                .add("create_time:", createTime)
+                .add("name", name)
+                .add("last_build_job_id", lastBuildJobID)
+                .add("status", status)
+                .toString();
     }
-
-    @Override
-    public int getColumnLength(TblColRef col) {
-
-        int index = getTableRecordInfo().findColumn(col);
-        return getTableRecordInfo().getDigest().length(index);
-    }
-
-    @Override
-    public Dictionary<?> getDictionary(TblColRef col) {
-
-        int index = getTableRecordInfo().findColumn(col);
-        return getTableRecordInfo().dict(index);
-    }
-
-    public long getCreateTimeUTC() {
-        return createTimeUTC;
-    }
-
-    public void setCreateTimeUTC(long createTimeUTC) {
-        this.createTimeUTC = createTimeUTC;
-    }
-    
-    
 }
