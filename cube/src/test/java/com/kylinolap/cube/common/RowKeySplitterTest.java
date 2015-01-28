@@ -35,7 +35,7 @@ public class RowKeySplitterTest extends LocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
-        MetadataManager.removeInstance(this.getTestConfig());
+        MetadataManager.removeInstance(getTestConfig());
     }
 
     @After
@@ -45,7 +45,7 @@ public class RowKeySplitterTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testWithSlr() throws Exception {
-        CubeInstance cube = CubeManager.getInstance(this.getTestConfig()).getCube("TEST_KYLIN_CUBE_WITH_SLR_READY");
+        CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("TEST_KYLIN_CUBE_WITH_SLR_READY");
 
         RowKeySplitter rowKeySplitter = new RowKeySplitter(cube.getFirstSegment(), 10, 20);
         // base cuboid rowkey
@@ -57,7 +57,7 @@ public class RowKeySplitterTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testWithoutSlr() throws Exception {
-        CubeInstance cube = CubeManager.getInstance(this.getTestConfig()).getCube("TEST_KYLIN_CUBE_WITHOUT_SLR_READY");
+        CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("TEST_KYLIN_CUBE_WITHOUT_SLR_READY");
 
         RowKeySplitter rowKeySplitter = new RowKeySplitter(cube.getFirstSegment(), 10, 20);
         // base cuboid rowkey

@@ -41,7 +41,7 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
-        MetadataManager.removeInstance(this.getTestConfig());
+        MetadataManager.removeInstance(getTestConfig());
     }
 
     @After
@@ -51,7 +51,7 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testDecodeWithoutSlr() throws Exception {
-        CubeInstance cube = CubeManager.getInstance(this.getTestConfig()).getCube("TEST_KYLIN_CUBE_WITHOUT_SLR_READY");
+        CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("TEST_KYLIN_CUBE_WITHOUT_SLR_READY");
 
         RowKeyDecoder rowKeyDecoder = new RowKeyDecoder(cube.getFirstSegment());
 
@@ -68,7 +68,7 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testDecodeWithSlr() throws Exception {
-        CubeInstance cube = CubeManager.getInstance(this.getTestConfig()).getCube("TEST_KYLIN_CUBE_WITH_SLR_READY");
+        CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("TEST_KYLIN_CUBE_WITH_SLR_READY");
 
         RowKeyDecoder rowKeyDecoder = new RowKeyDecoder(cube.getFirstSegment());
 
@@ -85,7 +85,7 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testEncodeAndDecodeWithUtf8() throws IOException {
-        CubeInstance cube = CubeManager.getInstance(this.getTestConfig()).getCube("TEST_KYLIN_CUBE_WITHOUT_SLR_READY");
+        CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("TEST_KYLIN_CUBE_WITHOUT_SLR_READY");
         CubeDesc cubeDesc = cube.getDescriptor();
 
         byte[][] data = new byte[8][];
