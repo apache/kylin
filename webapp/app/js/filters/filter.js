@@ -88,11 +88,15 @@ KylinApp
 
         var gmttimezone;
         //convert GMT+0 time to specified Timezone
-        return function(item,timezone){
+        return function(item,timezone,format){
 
             if(!timezone){
                 timezone = kylinConfig.getTimeZone();
             }
+            if(!format){
+                format ="yyyy-MM-dd HH:mm:ss";
+            }
+
             //convert short name timezone to GMT
             switch(timezone){
                 //convert PST to GMT

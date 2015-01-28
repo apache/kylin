@@ -34,7 +34,7 @@ KylinApp
 
 
         // projectName from page ctrl
-        $scope.state = {loading: false, refreshing: false, filterAttr: 'last_modified', filterReverse: true, reverseColumn: 'last_modified', projectName:$scope.project.selectedProject};
+        $scope.state = {loading: false, refreshing: false, filterAttr: 'last_modified', filterReverse: true, reverseColumn: 'last_modified', projectName:$scope.projectModel.selectedProject};
 
         ProjectService.list({}, function (projects) {
             angular.forEach(projects, function(project, index){
@@ -43,7 +43,7 @@ KylinApp
         });
 
         $scope.list = function (offset, limit) {
-            if(!$scope.project.projects.length){
+            if(!$scope.projectModel.projects.length){
                 return [];
             }
             offset = (!!offset) ? offset : 0;
@@ -95,7 +95,7 @@ KylinApp
         };
 
 
-        $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+        $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
             if(newValue!=oldValue||newValue==null){
                 $scope.jobs={};
                 $scope.state.projectName = newValue;
