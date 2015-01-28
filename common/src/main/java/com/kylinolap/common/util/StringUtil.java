@@ -18,8 +18,6 @@ package com.kylinolap.common.util;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.apache.commons.lang.StringUtils;
-
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 12/2/13 Time: 11:43 AM To
  * change this template use File | Settings | File Templates.
@@ -99,13 +97,4 @@ public class StringUtil {
             return s1.compareTo(s2) > 0 ? s1 : s2;
     }
 
-    public static boolean contains(String[] haystack, String needle) {
-        if (haystack != null) {
-            for (int i = 0, n = haystack.length; i < n; i++) {
-                if (StringUtils.equals(haystack[i], needle))
-                    return true;
-            }
-        }
-        return false;
-    }
 }

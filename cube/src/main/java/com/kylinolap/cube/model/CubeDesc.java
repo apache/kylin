@@ -46,7 +46,6 @@ import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.common.util.Array;
 import com.kylinolap.common.util.CaseInsensitiveStringMap;
 import com.kylinolap.common.util.JsonUtil;
-import com.kylinolap.common.util.StringUtil;
 import com.kylinolap.metadata.MetadataConstances;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.ColumnDesc;
@@ -467,7 +466,7 @@ public class CubeDesc extends RootPersistentEntity {
             String[] colStrs = dim.getColumn();
             
             // when column is omitted, special case
-            if (colStrs == null && dim.isDerived() || StringUtil.contains(colStrs, "{FK}")) {
+            if (colStrs == null && dim.isDerived() || ArrayUtils.contains(colStrs, "{FK}")) {
                 for (TblColRef col : join.getForeignKeyColumns()) {
                     dimCols.add(initDimensionColRef(col));
                 }
@@ -572,9 +571,17 @@ public class CubeDesc extends RootPersistentEntity {
         if (col == null)
             throw new IllegalArgumentException("No column '" + colName + "' found in table " + table);
         
-        // always use FK instead PK, FK could be shared to join more than one lookup tables
-
         TblColRef ref = new TblColRef(col);
+        
+        // always use FK instead PK, FK could be shared by more than one lookup tables
+        JoinDesc join = dim.getJoin();
+        if (join != null) {
+            int idx = ArrayUtils.indexOf(join.getPrimaryKeyColumns(), ref);
+            if (idx >= 0) {
+                ref = join.getForeignKeyColumns()[idx];
+            }
+        }
+
         return initDimensionColRef(ref);
     }
 
