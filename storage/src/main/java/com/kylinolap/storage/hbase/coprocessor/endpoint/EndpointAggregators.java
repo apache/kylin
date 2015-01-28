@@ -50,7 +50,9 @@ public class EndpointAggregators {
             dataTypes[i] = functionDesc.getReturnType();
 
             if (functionDesc.isCount()) {
-                refColIndex[i] = -1;
+                refColIndex[i] = -1;//-1 for count, -2 for metricOnDimension
+            } else if (functionDesc.isAppliedOnDimension()) {
+                refColIndex[i] = -2;
             } else {
                 refColIndex[i] = tableInfo.findMetric(functionDesc.getParameter().getValue());
                 if (refColIndex[i] < 0) {
