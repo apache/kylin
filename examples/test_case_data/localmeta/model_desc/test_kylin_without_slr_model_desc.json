@@ -1,6 +1,6 @@
 {
   "uuid" : "0928468a-9fab-4185-9a14-6f2e7c74823f",
-  "name" : "test_kylin_cube_without_slr_desc",
+  "name" : "test_kylin_without_slr_model_desc",
   "lookups" : [ {
     "table" : "EDW.TEST_CAL_DT",
     "join" : {
