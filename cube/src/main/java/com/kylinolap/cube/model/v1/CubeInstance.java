@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kylinolap.invertedindex;
+package com.kylinolap.cube.model.v1;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -27,30 +29,23 @@ import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
-import com.kylinolap.invertedindex.model.IIDesc;
-import com.kylinolap.metadata.model.*;
-import com.kylinolap.metadata.realization.IRealization;
-import com.kylinolap.metadata.realization.RealizationType;
-import com.kylinolap.metadata.realization.RealizationStatusEnum;
-import com.kylinolap.metadata.realization.SQLDigest;
+import com.kylinolap.cube.CubeDescManager;
 
-/**
- * @author honma
- */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class IIInstance extends RootPersistentEntity implements IRealization {
+public class CubeInstance extends RootPersistentEntity {
 
-    public static IIInstance create(String iiName, String projectName, IIDesc iiDesc) {
-        IIInstance iii = new IIInstance();
+    public static CubeInstance create(String cubeName, String projectName, CubeDesc cubeDesc) {
+        CubeInstance cubeInstance = new CubeInstance();
 
-        iii.setConfig(iiDesc.getConfig());
-        iii.setName(iiName);
-        iii.setDescName(iiDesc.getName());
-        iii.setCreateTimeUTC(System.currentTimeMillis());
-        iii.setStatus(RealizationStatusEnum.DISABLED);
-        iii.updateRandomUuid();
+        cubeInstance.setConfig(cubeDesc.getConfig());
+        cubeInstance.setName(cubeName);
+        cubeInstance.setDescName(cubeDesc.getName());
+        cubeInstance.setCreateTime(formatTime(System.currentTimeMillis()));
+        cubeInstance.setSegments(new ArrayList<CubeSegment>());
+        cubeInstance.setStatus(CubeStatusEnum.DISABLED);
+        cubeInstance.updateRandomUuid();
 
-        return iii;
+        return cubeInstance;
     }
 
     @JsonIgnore
@@ -67,22 +62,20 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
     @JsonProperty("cost")
     private int cost = 50;
     @JsonProperty("status")
-    private RealizationStatusEnum status;
+    private CubeStatusEnum status;
 
     @JsonManagedReference
     @JsonProperty("segments")
-    private List<IISegment> segments = new ArrayList<IISegment>();
+    private List<CubeSegment> segments = new ArrayList<CubeSegment>();
 
-    @JsonProperty("create_time_utc")
-    private long createTimeUTC;
+    @JsonProperty("create_time")
+    private String createTime;
 
-    private String projectName;
-    
-    public List<IISegment> getBuildingSegments() {
-        List<IISegment> buildingSegments = new ArrayList<IISegment>();
+    public List<CubeSegment> getBuildingSegments() {
+        List<CubeSegment> buildingSegments = new ArrayList<CubeSegment>();
         if (null != segments) {
-            for (IISegment segment : segments) {
-                if (SegmentStatusEnum.NEW == segment.getStatus() || SegmentStatusEnum.READY_PENDING == segment.getStatus()) {
+            for (CubeSegment segment : segments) {
+                if (CubeSegmentStatusEnum.NEW == segment.getStatus() || CubeSegmentStatusEnum.READY_PENDING == segment.getStatus()) {
                     buildingSegments.add(segment);
                 }
             }
@@ -111,26 +104,26 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return segments.get(0).getDateRangeStart();
     }
 
-    public List<IISegment> getMergingSegments() {
+    public List<CubeSegment> getMergingSegments() {
         return this.getMergingSegments(null);
     }
 
-    public List<IISegment> getMergingSegments(IISegment iiSegment) {
-        IISegment buildingSegment;
-        if (iiSegment == null) {
-            List<IISegment> buildingSegments = getBuildingSegments();
+    public List<CubeSegment> getMergingSegments(CubeSegment cubeSegment) {
+        CubeSegment buildingSegment;
+        if (cubeSegment == null) {
+            List<CubeSegment> buildingSegments = getBuildingSegments();
             if (buildingSegments.size() == 0) {
                 return Collections.emptyList();
             }
             buildingSegment = buildingSegments.get(0);
         } else {
-            buildingSegment = iiSegment;
+            buildingSegment = cubeSegment;
         }
 
-        List<IISegment> mergingSegments = new ArrayList<IISegment>();
+        List<CubeSegment> mergingSegments = new ArrayList<CubeSegment>();
         if (null != this.segments) {
-            for (IISegment segment : this.segments) {
-                if (segment.getStatus() == SegmentStatusEnum.READY) {
+            for (CubeSegment segment : this.segments) {
+                if (segment.getStatus() == CubeSegmentStatusEnum.READY) {
                     if (buildingSegment.getDateRangeStart() <= segment.getDateRangeStart() && buildingSegment.getDateRangeEnd() >= segment.getDateRangeEnd()) {
                         mergingSegments.add(segment);
                     }
@@ -141,17 +134,17 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
 
     }
 
-    public List<IISegment> getRebuildingSegments() {
-        List<IISegment> buildingSegments = getBuildingSegments();
+    public List<CubeSegment> getRebuildingSegments() {
+        List<CubeSegment> buildingSegments = getBuildingSegments();
         if (buildingSegments.size() == 0) {
             return Collections.emptyList();
         } else {
-            List<IISegment> rebuildingSegments = new ArrayList<IISegment>();
+            List<CubeSegment> rebuildingSegments = new ArrayList<CubeSegment>();
             if (null != this.segments) {
                 long startDate = buildingSegments.get(0).getDateRangeStart();
                 long endDate = buildingSegments.get(buildingSegments.size() - 1).getDateRangeEnd();
-                for (IISegment segment : this.segments) {
-                    if (segment.getStatus() == SegmentStatusEnum.READY) {
+                for (CubeSegment segment : this.segments) {
+                    if (segment.getStatus() == CubeSegmentStatusEnum.READY) {
                         if (startDate >= segment.getDateRangeStart() && startDate < segment.getDateRangeEnd() && segment.getDateRangeEnd() < endDate) {
                             rebuildingSegments.add(segment);
                             continue;
@@ -168,12 +161,13 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         }
     }
 
-    public IIDesc getDescriptor() {
-        return IIDescManager.getInstance(config).getIIDesc(descName);
-    }
+//    public CubeDesc getDescriptor() {
+//        return CubeDescManager.getInstance(config).getCubeDesc(descName);
+//    }
+
 
     public boolean isReady() {
-        return getStatus() == RealizationStatusEnum.READY;
+        return getStatus() == CubeStatusEnum.READY;
     }
 
     public String getResourcePath() {
@@ -181,12 +175,12 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
     }
 
     public static String concatResourcePath(String cubeName) {
-        return ResourceStore.II_RESOURCE_ROOT + "/" + cubeName + ".json";
+        return ResourceStore.CUBE_RESOURCE_ROOT + "/" + cubeName + ".json";
     }
 
     @Override
     public String toString() {
-        return getCanonicalName();
+        return "Cube [name=" + name + "]";
     }
 
     // ============================================================================
@@ -195,30 +189,30 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
     public long getSizeKB() {
         long sizeKb = 0L;
 
-        for (IISegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
+        for (CubeSegment cubeSegment : this.getSegments(CubeSegmentStatusEnum.READY)) {
             sizeKb += cubeSegment.getSizeKB();
         }
 
         return sizeKb;
     }
 
-    @JsonProperty("input_records_count")
-    public long getInputRecordCount() {
+    @JsonProperty("source_records_count")
+    public long getSourceRecordCount() {
         long sizeRecordCount = 0L;
 
-        for (IISegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
-            sizeRecordCount += cubeSegment.getInputRecords();
+        for (CubeSegment cubeSegment : this.getSegments(CubeSegmentStatusEnum.READY)) {
+            sizeRecordCount += cubeSegment.getSourceRecords();
         }
 
         return sizeRecordCount;
     }
 
-    @JsonProperty("input_records_size")
-    public long getInputRecordSize() {
+    @JsonProperty("source_records_size")
+    public long getSourceRecordSize() {
         long sizeRecordSize = 0L;
 
-        for (IISegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
-            sizeRecordSize += cubeSegment.getInputRecordsSize();
+        for (CubeSegment cubeSegment : this.getSegments(CubeSegmentStatusEnum.READY)) {
+            sizeRecordSize += cubeSegment.getSourceRecordsSize();
         }
 
         return sizeRecordSize;
@@ -232,12 +226,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         this.config = config;
     }
 
-    @Override
-    public String getCanonicalName() {
-        return getType() + "[name=" + name + "]";
-    }
-
-    @Override
     public String getName() {
         return name;
     }
@@ -263,6 +251,10 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
     }
 
     public String getDescName() {
+        return descName.toUpperCase();
+    }
+
+    public String getOriginDescName() {
         return descName;
     }
 
@@ -274,15 +266,19 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return cost;
     }
 
-    public RealizationStatusEnum getStatus() {
+    public void setCost(int cost) {
+        this.cost = cost;
+    }
+
+    public CubeStatusEnum getStatus() {
         return status;
     }
 
-    public void setStatus(RealizationStatusEnum status) {
+    public void setStatus(CubeStatusEnum status) {
         this.status = status;
     }
 
-    public IISegment getFirstSegment() {
+    public CubeSegment getFirstSegment() {
         if (this.segments == null || this.segments.size() == 0) {
             return null;
         } else {
@@ -290,11 +286,11 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         }
     }
 
-    public IISegment getLatestReadySegment() {
-        IISegment latest = null;
+    public CubeSegment getLatestReadySegment() {
+        CubeSegment latest = null;
         for (int i = segments.size() - 1; i >= 0; i--) {
-            IISegment seg = segments.get(i);
-            if (seg.getStatus() != SegmentStatusEnum.READY)
+            CubeSegment seg = segments.get(i);
+            if (seg.getStatus() != CubeSegmentStatusEnum.READY)
                 continue;
             if (latest == null || latest.getDateRangeEnd() < seg.getDateRangeEnd()) {
                 latest = seg;
@@ -303,14 +299,14 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return latest;
     }
 
-    public List<IISegment> getSegments() {
+    public List<CubeSegment> getSegments() {
         return segments;
     }
 
-    public List<IISegment> getSegments(SegmentStatusEnum status) {
-        List<IISegment> result = new ArrayList<IISegment>();
+    public List<CubeSegment> getSegments(CubeSegmentStatusEnum status) {
+        List<CubeSegment> result = new ArrayList<CubeSegment>();
 
-        for (IISegment segment : segments) {
+        for (CubeSegment segment : segments) {
             if (segment.getStatus() == status) {
                 result.add(segment);
             }
@@ -319,9 +315,9 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return result;
     }
 
-    public List<IISegment> getSegment(SegmentStatusEnum status) {
-        List<IISegment> result = Lists.newArrayList();
-        for (IISegment segment : segments) {
+    public List<CubeSegment> getSegment(CubeSegmentStatusEnum status) {
+        List<CubeSegment> result = Lists.newArrayList();
+        for (CubeSegment segment : segments) {
             if (segment.getStatus() == status) {
                 result.add(segment);
             }
@@ -329,8 +325,8 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return result;
     }
 
-    public IISegment getSegment(String name, SegmentStatusEnum status) {
-        for (IISegment segment : segments) {
+    public CubeSegment getSegment(String name, CubeSegmentStatusEnum status) {
+        for (CubeSegment segment : segments) {
             if ((null != segment.getName() && segment.getName().equals(name)) && segment.getStatus() == status) {
                 return segment;
             }
@@ -339,12 +335,12 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return null;
     }
 
-    public void setSegments(List<IISegment> segments) {
+    public void setSegments(List<CubeSegment> segments) {
         this.segments = segments;
     }
 
-    public IISegment getSegmentById(String segmentId) {
-        for (IISegment segment : segments) {
+    public CubeSegment getSegmentById(String segmentId) {
+        for (CubeSegment segment : segments) {
             if (Objects.equal(segment.getUuid(), segmentId)) {
                 return segment;
             }
@@ -352,22 +348,22 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return null;
     }
 
-    public long getCreateTimeUTC() {
-        return createTimeUTC;
+    public String getCreateTime() {
+        return createTime;
     }
 
-    public void setCreateTimeUTC(long createTimeUTC) {
-        this.createTimeUTC = createTimeUTC;
+    public void setCreateTime(String createTime) {
+        this.createTime = createTime;
     }
 
     public long[] getDateRange() {
-        List<IISegment> readySegments = getSegment(SegmentStatusEnum.READY);
+        List<CubeSegment> readySegments = getSegment(CubeSegmentStatusEnum.READY);
         if (readySegments.isEmpty()) {
-            return new long[] { 0L, 0L };
+            return new long[]{0L, 0L};
         }
         long start = Long.MAX_VALUE;
         long end = Long.MIN_VALUE;
-        for (IISegment segment : readySegments) {
+        for (CubeSegment segment : readySegments) {
             if (segment.getDateRangeStart() < start) {
                 start = segment.getDateRangeStart();
             }
@@ -375,49 +371,55 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
                 end = segment.getDateRangeEnd();
             }
         }
-        return new long[] { start, end };
+        return new long[]{start, end};
     }
 
-    @Override
-    public boolean isCapable(SQLDigest digest) {
-        //TODO: currently II is nearly omnipotent
-        if (!digest.factTable.equalsIgnoreCase(this.getFactTable()))
-            return false;
+//    private boolean appendOnHll() {
+//        CubePartitionDesc cubePartitionDesc = getDescriptor().getCubePartitionDesc();
+//        if (cubePartitionDesc == null) {
+//            return false;
+//        }
+//        if (cubePartitionDesc.getPartitionDateColumn() == null) {
+//            return false;
+//        }
+//        if (cubePartitionDesc.getCubePartitionType() != CubePartitionDesc.CubePartitionType.APPEND) {
+//            return false;
+//        }
+//        return getDescriptor().hasHolisticCountDistinctMeasures();
+//    }
 
-        return true;
-    }
+//    public boolean appendBuildOnHllMeasure(long startDate, long endDate) {
+//        if (!appendOnHll()) {
+//            return false;
+//        }
+//        List<CubeSegment> readySegments = getSegment(CubeSegmentStatusEnum.READY);
+//        if (readySegments.isEmpty()) {
+//            return false;
+//        }
+//        for (CubeSegment readySegment: readySegments) {
+//            if (readySegment.getDateRangeStart() == startDate && readySegment.getDateRangeEnd() == endDate) {
+//                //refresh build
+//                return false;
+//            }
+//        }
+//        return true;
+//    }
 
-    @Override
-    public int getCost(SQLDigest digest) {
-        return 0;
-    }
-
-    @Override
-    public RealizationType getType() {
-        return RealizationType.INVERTED_INDEX;
-    }
-
-    @Override
-    public List<TblColRef> getAllColumns() {
-        return getDescriptor().listAllColumns();
-    }
-
-    @Override
-    public String getFactTable() {
-        return getDescriptor().getFactTableName();
-    }
-
-    @Override
-    public List<MeasureDesc> getMeasures() {
-        return getDescriptor().getMeasures();
-    }
-
-    public String getProjectName() {
-        return projectName;
-    }
-
-    public void setProjectName(String projectName) {
-        this.projectName = projectName;
-    }
+//    public boolean needMergeImmediatelyAfterBuild(CubeSegment segment) {
+//        if (!appendOnHll()) {
+//            return false;
+//        }
+//        List<CubeSegment> readySegments = getSegment(CubeSegmentStatusEnum.READY);
+//        if (readySegments.isEmpty()) {
+//            return false;
+//        }
+//        for (CubeSegment readySegment: readySegments) {
+//            if (readySegment.getDateRangeEnd() > segment.getDateRangeStart()) {
+//                //has overlap and not refresh
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
 
 }

@@ -77,9 +77,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
     @JsonProperty("segments")
     private List<CubeSegment> segments = new ArrayList<CubeSegment>();
 
-    @JsonProperty("create_time")
-    private String createTime;
-
     @JsonProperty("create_time_utc")
     private long createTimeUTC;
 
@@ -208,23 +205,23 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         return sizeKb;
     }
 
-    @JsonProperty("source_records_count")
-    public long getSourceRecordCount() {
+    @JsonProperty("input_records_count")
+    public long getInputRecordCount() {
         long sizeRecordCount = 0L;
 
         for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
-            sizeRecordCount += cubeSegment.getSourceRecords();
+            sizeRecordCount += cubeSegment.getInputRecords();
         }
 
         return sizeRecordCount;
     }
 
-    @JsonProperty("source_records_size")
-    public long getSourceRecordSize() {
+    @JsonProperty("input_records_size")
+    public long getInputRecordSize() {
         long sizeRecordSize = 0L;
 
         for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
-            sizeRecordSize += cubeSegment.getSourceRecordsSize();
+            sizeRecordSize += cubeSegment.getInputRecordsSize();
         }
 
         return sizeRecordSize;
@@ -376,23 +373,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         return null;
     }
 
-    /**
-     * @deprecated use createTimeUTC instead
-     * @return
-     */
-    public String getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(String createTime) {
-        this.createTime = createTime;
-    }
-
     public long getCreateTimeUTC() {
-        if(createTimeUTC ==0 && createTime !=null) {
-            createTimeUTC = parseTime(createTime);
-        }
-        
         return createTimeUTC;
     }
 
