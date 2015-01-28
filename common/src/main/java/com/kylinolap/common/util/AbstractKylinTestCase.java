@@ -68,7 +68,10 @@ public abstract class AbstractKylinTestCase {
                 Class<?> cls = Class.forName(serviceClass);
                 Method method = cls.getDeclaredMethod("removeInstance", KylinConfig.class);
                 method.invoke(null, config);
+            } catch (ClassNotFoundException e) {
+                // acceptable because lower module test does have CubeManager etc on classpath
             } catch (Exception e) {
+                System.err.println("Error clean up cache " + serviceClass);
                 e.printStackTrace();
             }
         }
