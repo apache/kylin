@@ -15,10 +15,14 @@
  */
 package com.kylinolap.job.hadoop.hbase;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.HBaseColumnFamilyDesc;
+import com.kylinolap.job.hadoop.AbstractHadoopJob;
+import com.kylinolap.job.tools.DeployCoprocessorCLI;
+import com.kylinolap.job.tools.LZOSupportnessChecker;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -42,15 +46,8 @@ import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.HadoopUtil;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.cube.model.HBaseColumnFamilyDesc;
-import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.job.tools.DeployCoprocessorCLI;
-import com.kylinolap.job.tools.LZOSupportnessChecker;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author George Song (ysong1)
