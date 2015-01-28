@@ -106,11 +106,13 @@ public class CubeDescUpgrader {
             com.kylinolap.cube.model.DimensionDesc newDim = null;
             // if a dimension defines "column", "derived" and "hierarchy" at the same time, separate it into three dimensions;
 
+            boolean needNameSuffix = false;
             if (dim.getColumn() != null && !"{FK}".equals(dim.getColumn())) {
                 //column on fact table
                 newDim = newDimensionDesc(dim, dimId++, dim.getName());
                 newDimensions.add(newDim);
                 newDim.setColumn(new String[] { dim.getColumn() });
+                needNameSuffix = true;
             } else if (ArrayUtils.isEmpty(dim.getDerived()) && ArrayUtils.isEmpty(dim.getHierarchy())) {
                 // user defines a lookup table, but didn't use any column other than the pk, in this case, convert to use fact table's fk
                 newDim = newDimensionDesc(dim, dimId++, dim.getName());
@@ -121,14 +123,15 @@ public class CubeDescUpgrader {
             }
 
             if (!ArrayUtils.isEmpty(dim.getDerived())) {
-                newDim = newDimensionDesc(dim, dimId++, dim.getName() + "_derived");
+                newDim = newDimensionDesc(dim, dimId++, dim.getName() + (needNameSuffix ? "_DERIVED" : ""));
                 newDimensions.add(newDim);
                 newDim.setDerived(dim.getDerived());
                 newDim.setColumn(null); // derived column must come from a lookup table; in this case the fk will be the dimension column, no need to explicitly declare it;
+                needNameSuffix = true;
             }
 
             if (!ArrayUtils.isEmpty(dim.getHierarchy())) {
-                newDim = newDimensionDesc(dim, dimId++, dim.getName() + "_hierarchy");
+                newDim = newDimensionDesc(dim, dimId++, dim.getName() + (needNameSuffix ? "_HIERARCHY" : ""));
                 newDimensions.add(newDim);
 
                 newDim.setHierarchy(true);
@@ -150,7 +153,7 @@ public class CubeDescUpgrader {
         DataModelDesc dm = new DataModelDesc();
         dm.setUuid(UUID.randomUUID().toString());
         String factTable = oldModel.getFactTable();
-        dm.setName("model_" + oldModel.getName());
+        dm.setName(oldModel.getName());
         dm.setFactTable(getMetadataManager().appendDBName(factTable));
 
         newModel.setModelName(dm.getName());
