@@ -56,7 +56,9 @@ public class CoprocessorFilter {
             if (filter == null)
                 return null;
 
-            //askliyang
+            // In case of NOT(unEvaluatableFilter), we should immediatedly replace it as TRUE,
+            // Otherwise, unEvaluatableFilter will later be replace with TRUE and NOT(unEvaluatableFilter) will
+            // always return FALSE
             if (filter.getOperator() == FilterOperatorEnum.NOT && !TupleFilter.isEvaluableRecursively(filter)) {
                 TupleFilter.collectColumns(filter, unstrictlyFilteredColumns);
                 return ConstantTupleFilter.TRUE;

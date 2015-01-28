@@ -174,7 +174,7 @@ public class FunctionDesc {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((expression == null) ? 0 : expression.hashCode());
-        result = prime * result + ((parameter == null) ? 0 : parameter.hashCode());
+        result = prime * result + ((isCount() || parameter == null) ? 0 : parameter.hashCode());
         return result;
     }
 

@@ -2,6 +2,7 @@ package com.kylinolap.invertedindex.model;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
@@ -138,6 +139,7 @@ public class IIDesc extends RootPersistentEntity {
             measureDescs.add(makeMeasureDescs("MAX", col));
             // TODO support for HLL
         }
+        measureDescs.add(makeCountMeasure());
 
         // partitioning column
         tsCol = -1;
@@ -169,6 +171,14 @@ public class IIDesc extends RootPersistentEntity {
         return measureDescs;
     }
 
+    public List<FunctionDesc> listAllFunctions() {
+        List<FunctionDesc> functions = new ArrayList<FunctionDesc>();
+        for (MeasureDesc m : measureDescs) {
+            functions.add(m.getFunction());
+        }
+        return functions;
+    }
+
     private MeasureDesc makeMeasureDescs(String func, ColumnDesc columnDesc) {
         String columnName = columnDesc.getName();
         String returnType = columnDesc.getTypeName();
@@ -181,6 +191,19 @@ public class IIDesc extends RootPersistentEntity {
         p1.setColRefs(ImmutableList.of(new TblColRef(columnDesc)));
         f1.setParameter(p1);
         f1.setReturnType(returnType);
+        measureDesc.setFunction(f1);
+        return measureDesc;
+    }
+
+    private MeasureDesc makeCountMeasure() {
+        MeasureDesc measureDesc = new MeasureDesc();
+        FunctionDesc f1 = new FunctionDesc();
+        f1.setExpression("COUNT");
+        ParameterDesc p1 = new ParameterDesc();
+        p1.setType("constant");
+        p1.setValue("1");
+        f1.setParameter(p1);
+        f1.setReturnType("bigint");
         measureDesc.setFunction(f1);
         return measureDesc;
     }

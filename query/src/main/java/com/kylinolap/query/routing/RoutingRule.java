@@ -27,7 +27,7 @@ public abstract class RoutingRule {
         rules.add(new RealizationPriorityRule());
         rules.add(new SimpleQueryMoreColumsCubeFirstRule());
         rules.add(new CubesSortRule());
-        rules.add(new AdjustForWeeklyMatchCubeRule());//this rule might modify olapcontext content, better put it at last
+        rules.add(new AdjustForWeeklyMatchedRealization());//this rule might modify olapcontext content, better put it at last
     }
 
     public static void applyRules(List<IRealization> realizations, OLAPContext olapContext) {
