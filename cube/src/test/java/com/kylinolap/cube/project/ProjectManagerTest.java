@@ -54,12 +54,12 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
 
     @Test(expected = IllegalStateException.class)
     public void testDropNonemptyProject() throws IOException {
-        ProjectManager.getInstance(this.getTestConfig()).dropProject("DEFAULT");
+        ProjectManager.getInstance(getTestConfig()).dropProject("DEFAULT");
     }
 
     @Test(expected = IllegalStateException.class)
     public void testDropNonexistProject() throws IOException {
-        ProjectManager.getInstance(this.getTestConfig()).dropProject("DEFAULT???");
+        ProjectManager.getInstance(getTestConfig()).dropProject("DEFAULT???");
     }
 
     @Test

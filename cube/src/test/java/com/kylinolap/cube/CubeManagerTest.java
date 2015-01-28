@@ -40,9 +40,9 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
-        MetadataManager.removeInstance(this.getTestConfig());
-        CubeManager.removeInstance(this.getTestConfig());
-        ProjectManager.removeInstance(this.getTestConfig());
+        MetadataManager.removeInstance(getTestConfig());
+        CubeManager.removeInstance(getTestConfig());
+        ProjectManager.removeInstance(getTestConfig());
     }
 
     @After
@@ -79,12 +79,12 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
         assertTrue(prjMgr.listAllRealizations(ProjectInstance.DEFAULT_PROJECT_NAME).contains(createdCube));
 
-        CubeInstance droppedCube = CubeManager.getInstance(this.getTestConfig()).dropCube("a_whole_new_cube", true);
+        CubeInstance droppedCube = CubeManager.getInstance(getTestConfig()).dropCube("a_whole_new_cube", true);
         assertTrue(createdCube == droppedCube);
 
         assertTrue(!prjMgr.listAllRealizations(ProjectInstance.DEFAULT_PROJECT_NAME).contains(droppedCube));
 
-        assertNull(CubeManager.getInstance(this.getTestConfig()).getCube("a_whole_new_cube"));
+        assertNull(CubeManager.getInstance(getTestConfig()).getCube("a_whole_new_cube"));
     }
 
     public CubeDescManager getCubeDescManager() {
