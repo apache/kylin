@@ -194,7 +194,7 @@ public class ProjectManager {
         if (!project.getName().equals(newName)) {
             ProjectInstance newProject = this.createProject(newName, project.getOwner(), newDesc);
             // FIXME table lost??
-            newProject.setCreateTime(project.getCreateTime());
+            newProject.setCreateTimeUTC(project.getCreateTimeUTC());
             newProject.recordUpdateTime(System.currentTimeMillis());
             newProject.setRealizationEntries(project.getRealizationEntries());
 
