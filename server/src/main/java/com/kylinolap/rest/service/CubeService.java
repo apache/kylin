@@ -390,7 +390,6 @@ public class CubeService extends BasicService {
     }
 
     public MetricsResponse calculateMetrics(MetricsRequest request) {
-        DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
         List<CubeInstance> cubes = this.getCubeManager().listAllCubes();
         MetricsResponse metrics = new MetricsResponse();
         Date startTime = (null == request.getStartTime()) ? new Date(-1) : request.getStartTime();
@@ -400,11 +399,7 @@ public class CubeService extends BasicService {
 
         for (CubeInstance cube : cubes) {
             Date createdDate = new Date(-1);
-            try {
-                createdDate = (null == cube.getCreateTime()) ? createdDate : format.parse(cube.getCreateTime());
-            } catch (ParseException e) {
-                logger.error("", e);
-            }
+            createdDate = (cube.getCreateTimeUTC() == 0) ? createdDate : new Date(cube.getCreateTimeUTC());
 
             if (createdDate.getTime() > startTime.getTime() && createdDate.getTime() < endTime.getTime()) {
                 metrics.increase("totalCubes");

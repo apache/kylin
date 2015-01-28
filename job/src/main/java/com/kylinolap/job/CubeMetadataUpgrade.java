@@ -8,25 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.job.common.HadoopShellExecutable;
-import com.kylinolap.job.common.MapReduceExecutable;
-import com.kylinolap.job.common.ShellExecutable;
-import com.kylinolap.job.constant.ExecutableConstants;
-import com.kylinolap.job.constant.JobStatusEnum;
-import com.kylinolap.job.constant.JobStepStatusEnum;
-import com.kylinolap.job.cube.CubingJob;
-import com.kylinolap.job.execution.ExecutableState;
-import com.kylinolap.job.hadoop.cube.*;
-import com.kylinolap.job.hadoop.dict.CreateDictionaryJob;
-import com.kylinolap.job.hadoop.hbase.BulkLoadJob;
-import com.kylinolap.job.hadoop.hbase.CreateHTableJob;
-import com.kylinolap.job.execution.AbstractExecutable;
-import com.kylinolap.job.manager.ExecutableManager;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,18 +17,47 @@ import org.apache.commons.logging.LogFactory;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
+import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.cube.CubeDescManager;
 import com.kylinolap.cube.CubeDescUpgrader;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.v1.CubeSegmentStatusEnum;
+import com.kylinolap.cube.model.v1.CubeStatusEnum;
+import com.kylinolap.job.common.HadoopShellExecutable;
+import com.kylinolap.job.common.MapReduceExecutable;
+import com.kylinolap.job.common.ShellExecutable;
+import com.kylinolap.job.constant.ExecutableConstants;
+import com.kylinolap.job.constant.JobStatusEnum;
+import com.kylinolap.job.constant.JobStepStatusEnum;
+import com.kylinolap.job.cube.CubingJob;
+import com.kylinolap.job.execution.AbstractExecutable;
+import com.kylinolap.job.execution.ExecutableState;
+import com.kylinolap.job.hadoop.cube.BaseCuboidJob;
+import com.kylinolap.job.hadoop.cube.CubeHFileJob;
+import com.kylinolap.job.hadoop.cube.FactDistinctColumnsJob;
+import com.kylinolap.job.hadoop.cube.MergeCuboidJob;
+import com.kylinolap.job.hadoop.cube.NDCuboidJob;
+import com.kylinolap.job.hadoop.cube.RangeKeyDistributionJob;
+import com.kylinolap.job.hadoop.dict.CreateDictionaryJob;
+import com.kylinolap.job.hadoop.hbase.BulkLoadJob;
+import com.kylinolap.job.hadoop.hbase.CreateHTableJob;
+import com.kylinolap.job.manager.ExecutableManager;
 import com.kylinolap.metadata.MetadataConstances;
 import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.metadata.project.ProjectManager;
 import com.kylinolap.metadata.project.RealizationEntry;
+import com.kylinolap.metadata.realization.RealizationStatusEnum;
 import com.kylinolap.metadata.realization.RealizationType;
 
 /**
@@ -80,6 +92,7 @@ public class CubeMetadataUpgrade {
         upgradeTableDesceExd();
         upgradeCubeDesc();
         upgradeProjectInstance();
+        upgradeCubeInstance();
         upgradeJobInstance();
         
         verify();
@@ -125,7 +138,7 @@ public class CubeMetadataUpgrade {
         }
 
     }
-
+    
     private void upgradeTableDesc() {
         List<String> paths = listResourceStore(ResourceStore.TABLE_RESOURCE_ROOT);
         for (String path : paths) {
@@ -238,7 +251,7 @@ public class CubeMetadataUpgrade {
                 newPrj.setDescription(oldPrj.getDescription());
                 newPrj.setLastModified(oldPrj.getLastModified());
                 newPrj.setLastUpdateTime(oldPrj.getLastUpdateTime());
-                newPrj.setCreateTime(oldPrj.getCreateTime());
+                newPrj.setCreateTimeUTC(RootPersistentEntity.parseTime(oldPrj.getCreateTime()));
                 newPrj.setStatus(oldPrj.getStatus());
                 List<RealizationEntry> realizationEntries = Lists.newArrayList();
                 for (String cube : oldPrj.getCubes()) {
@@ -264,6 +277,75 @@ public class CubeMetadataUpgrade {
             }
         }
 
+    }
+    
+    private void upgradeCubeInstance() {
+
+        ResourceStore store = getStore();
+        List<String> paths = listResourceStore(ResourceStore.CUBE_RESOURCE_ROOT);
+        for (String path : paths) {
+
+            com.kylinolap.cube.model.v1.CubeInstance cubeInstance = null;
+            try {
+                cubeInstance = store.getResource(path, com.kylinolap.cube.model.v1.CubeInstance.class, new JsonSerializer<com.kylinolap.cube.model.v1.CubeInstance>(com.kylinolap.cube.model.v1.CubeInstance.class));
+                cubeInstance.setConfig(config);
+
+                com.kylinolap.cube.CubeInstance newInstance = new com.kylinolap.cube.CubeInstance();
+                newInstance.setName(cubeInstance.getName());
+                newInstance.setDescName(cubeInstance.getDescName());
+                newInstance.setOwner(cubeInstance.getOwner());
+                newInstance.setUuid(cubeInstance.getUuid());
+                newInstance.setVersion(cubeInstance.getVersion());
+                newInstance.setCreateTimeUTC(RootPersistentEntity.parseTime(cubeInstance.getCreateTime()));
+                
+                //status
+                if(cubeInstance.getStatus() == CubeStatusEnum.BUILDING) {
+                    newInstance.setStatus(RealizationStatusEnum.BUILDING);
+                } else if(cubeInstance.getStatus() == CubeStatusEnum.DESCBROKEN) {
+                    newInstance.setStatus(RealizationStatusEnum.DESCBROKEN);
+                } else if(cubeInstance.getStatus() == CubeStatusEnum.DISABLED) {
+                    newInstance.setStatus(RealizationStatusEnum.DISABLED);
+                } else if(cubeInstance.getStatus() == CubeStatusEnum.READY) {
+                    newInstance.setStatus(RealizationStatusEnum.READY);
+                } 
+                
+                List<com.kylinolap.cube.CubeSegment> newSegments = Lists.newArrayList();
+                // segment
+                for (com.kylinolap.cube.model.v1.CubeSegment segment : cubeInstance.getSegments()) {
+                    com.kylinolap.cube.CubeSegment newSeg = new com.kylinolap.cube.CubeSegment();
+                    newSegments.add(newSeg);
+                    
+                    newSeg.setUuid(segment.getUuid());
+                    newSeg.setName(segment.getName());
+                    newSeg.setStorageLocationIdentifier(segment.getStorageLocationIdentifier());
+                    newSeg.setDateRangeStart(segment.getDateRangeStart());
+                    newSeg.setDateRangeEnd(segment.getDateRangeEnd());
+                    
+                    if(segment.getStatus() == CubeSegmentStatusEnum.NEW) {
+                        newSeg.setStatus(SegmentStatusEnum.NEW);
+                    } else if(segment.getStatus() == CubeSegmentStatusEnum.READY) {
+                        newSeg.setStatus(SegmentStatusEnum.READY);
+                    } else if(segment.getStatus() == CubeSegmentStatusEnum.READY_PENDING) {
+                        newSeg.setStatus(SegmentStatusEnum.READY_PENDING);
+                    } 
+                    
+                    newSeg.setSizeKB(segment.getSizeKB());
+                    newSeg.setInputRecords(segment.getSourceRecords());
+                    newSeg.setInputRecordsSize(segment.getSourceRecordsSize());
+                    newSeg.setLastBuildTime(segment.getLastBuildTime());
+                    newSeg.setLastBuildJobID(segment.getLastBuildJobID());
+                    newSeg.setCreateTimeUTC(RootPersistentEntity.parseTime(segment.getCreateTime()));
+                    newSeg.setBinarySignature(segment.getBinarySignature());
+                    newSeg.setDictionaries((ConcurrentHashMap<String, String>)segment.getDictionaries());
+                    newSeg.setSnapshots((ConcurrentHashMap<String, String>)segment.getSnapshots());
+                }
+
+                newInstance.setSegments(newSegments);
+                store.putResource(newInstance.getResourcePath(), newInstance, CubeManager.CUBE_SERIALIZER);
+            } catch (Exception e) {
+                logger.error("Error during load cube instance " + path, e);
+            }
+        }
     }
 
     private MetadataManager getMetadataManager() {

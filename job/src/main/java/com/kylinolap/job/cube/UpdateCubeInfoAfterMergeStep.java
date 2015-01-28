@@ -57,14 +57,14 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
         long sourceSize = 0L;
         for (String id : mergingSegmentIds) {
             CubeSegment segment = cube.getSegmentById(id);
-            sourceCount += segment.getSourceRecords();
-            sourceSize += segment.getSourceRecordsSize();
+            sourceCount += segment.getInputRecords();
+            sourceSize += segment.getInputRecordsSize();
         }
         
         // update segment info
         mergedSegment.setSizeKB(cubeSize);
-        mergedSegment.setSourceRecords(sourceCount);
-        mergedSegment.setSourceRecordsSize(sourceSize);
+        mergedSegment.setInputRecords(sourceCount);
+        mergedSegment.setInputRecordsSize(sourceSize);
         mergedSegment.setLastBuildJobID(getCubingJobId());
         mergedSegment.setLastBuildTime(System.currentTimeMillis());
         

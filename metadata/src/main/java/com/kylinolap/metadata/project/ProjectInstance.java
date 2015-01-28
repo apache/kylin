@@ -52,9 +52,6 @@ public class ProjectInstance extends RootPersistentEntity {
     @JsonProperty("status")
     private ProjectStatusEnum status;
 
-    @JsonProperty("create_time")
-    private String createTime;
-
     @JsonProperty("create_time_utc")
     private long createTimeUTC;
 
@@ -121,23 +118,7 @@ public class ProjectInstance extends RootPersistentEntity {
         this.status = status;
     }
 
-    /**
-     * @deprecated use createTimeUTC instead
-     * @return
-     */
-    public String getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(String createTime) {
-        this.createTime = createTime;
-    }
-
     public long getCreateTimeUTC() {
-        if(createTimeUTC ==0 && createTime !=null) {
-            createTimeUTC = parseTime(createTime);
-        }
-        
         return createTimeUTC;
     }
 

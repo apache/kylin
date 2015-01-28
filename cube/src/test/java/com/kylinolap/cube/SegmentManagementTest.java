@@ -207,8 +207,8 @@ public class SegmentManagementTest extends LocalFileMetadataTestCase {
         assertEquals(1384240200000L, cubeInstance.getAllocatedStartDate());
         assertEquals(1386835200000L, cubeInstance.getAllocatedEndDate());
         assertEquals("job_4", cubeInstance.getSegments().get(0).getLastBuildJobID());
-        assertEquals(20000L, cubeInstance.getSegments().get(0).getSourceRecords());
-        assertEquals(1216024L, cubeInstance.getSegments().get(0).getSourceRecordsSize());
+        assertEquals(20000L, cubeInstance.getSegments().get(0).getInputRecords());
+        assertEquals(1216024L, cubeInstance.getSegments().get(0).getInputRecordsSize());
         System.out.println(JsonUtil.writeValueAsIndentString(cubeInstance));
     }
 
