@@ -494,7 +494,6 @@ public class CubeDesc extends RootPersistentEntity {
 
     private void initDimensionColumns(Map<String, TableDesc> tables) {
         for (DimensionDesc dim : dimensions) {
-            TableDesc dimTable = dim.getTableDesc();
             JoinDesc join = dim.getJoin();
 
             // init dimension columns
@@ -513,7 +512,7 @@ public class CubeDesc extends RootPersistentEntity {
                     throw new IllegalStateException("Dimension column must not be blank " + dim);
                 
                 for (String colStr : colStrs) {
-                    dimCols.add(initDimensionColRef(dimTable, colStr));
+                    dimCols.add(initDimensionColRef(dim, colStr));
                 }
                 
                 // fill back column ref in hierarchy
@@ -535,7 +534,7 @@ public class CubeDesc extends RootPersistentEntity {
                 String[] derivedExtra = split[1];
                 TblColRef[] derivedCols = new TblColRef[derivedNames.length];
                 for (int i = 0; i < derivedNames.length; i++) {
-                    derivedCols[i] = initDimensionColRef(dimTable, derivedNames[i]);
+                    derivedCols[i] = initDimensionColRef(dim, derivedNames[i]);
                 }
                 initDerivedMap(hostCols, DeriveType.LOOKUP, dim, derivedCols, derivedExtra);
             }
@@ -601,10 +600,13 @@ public class CubeDesc extends RootPersistentEntity {
         }
     }
 
-    private TblColRef initDimensionColRef(TableDesc table, String colName) {
+    private TblColRef initDimensionColRef(DimensionDesc dim, String colName) {
+        TableDesc table = dim.getTableDesc();
         ColumnDesc col = table.findColumnByName(colName);
         if (col == null)
             throw new IllegalArgumentException("No column '" + colName + "' found in table " + table);
+        
+        // always use FK instead PK, FK could be shared to join more than one lookup tables
 
         TblColRef ref = new TblColRef(col);
         return initDimensionColRef(ref);
