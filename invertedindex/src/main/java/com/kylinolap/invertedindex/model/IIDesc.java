@@ -44,8 +44,6 @@ public class IIDesc extends RootPersistentEntity {
     private String name;
     @JsonProperty("model_name")
     private String modelName;
-    @JsonProperty("fact_table")
-    private String factTableName;
     @JsonProperty("timestamp_dimension")
     private String timestampDimension;
     @JsonProperty("bitmap_dimensions")
@@ -106,7 +104,7 @@ public class IIDesc extends RootPersistentEntity {
             }
         }
         for (String column : metricNames) {
-            TableDesc tableDesc = this.getTableDesc(this.factTableName);
+            TableDesc tableDesc = this.getTableDesc(this.getFactTableName());
             ColumnDesc columnDesc = tableDesc.findColumnByName(column);
             allColumns.add(new TblColRef(columnDesc));
             if (!allTableNames.contains(tableDesc.getIdentity())) {
@@ -120,7 +118,7 @@ public class IIDesc extends RootPersistentEntity {
         valueCols = new int[IIDimension.getColumnCount(valueDimensions)];
         metricsCols = new int[metricNames.length];
 
-        metricsColSet = new BitSet(this.getTableDesc(this.factTableName).getColumnCount());
+        metricsColSet = new BitSet(this.getTableDesc(this.getFactTableName()).getColumnCount());
         measureDescs = Lists.newArrayList();
 
         int totalIndex = 0;
@@ -134,7 +132,7 @@ public class IIDesc extends RootPersistentEntity {
             metricsCols[i] = totalIndex;
             metricsColSet.set(totalIndex);
 
-            ColumnDesc col = this.getTableDesc(this.factTableName).findColumnByName(metricNames[i]);
+            ColumnDesc col = this.getTableDesc(this.getFactTableName()).findColumnByName(metricNames[i]);
             measureDescs.add(makeMeasureDescs("SUM", col));
             measureDescs.add(makeMeasureDescs("MIN", col));
             measureDescs.add(makeMeasureDescs("MAX", col));
@@ -146,7 +144,7 @@ public class IIDesc extends RootPersistentEntity {
         for (int i = 0; i < allColumns.size(); ++i) {
             TblColRef col = allColumns.get(i);
 
-            if (col.isSameAs(this.factTableName, this.timestampDimension)) {
+            if (col.isSameAs(this.getFactTableName(), this.timestampDimension)) {
                 tsCol = i;
                 break;
             }
@@ -266,7 +264,7 @@ public class IIDesc extends RootPersistentEntity {
     }
 
     public boolean isMetricsCol(TblColRef col) {
-        if (!col.getTable().equalsIgnoreCase(this.factTableName))
+        if (!col.getTable().equalsIgnoreCase(this.getFactTableName()))
             return false;
         return isMetricsCol(this.findColumn(col));
     }
@@ -281,7 +279,7 @@ public class IIDesc extends RootPersistentEntity {
      * @return
      */
     public String getFactTableName() {
-        return factTableName.toUpperCase();
+        return this.model.getFactTable().toUpperCase();
     }
 
     public String getTimestampDimension() {

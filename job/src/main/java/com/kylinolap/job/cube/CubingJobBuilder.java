@@ -211,7 +211,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
 
     private void appendMapReduceParameters(StringBuilder builder, CubeSegment seg) {
         try {
-            String jobConf = engineConfig.getHadoopJobConfFilePath(seg.getCubeDesc().getCapacity());
+            String jobConf = engineConfig.getHadoopJobConfFilePath(seg.getCubeDesc().getModel().getCapacity());
             if (jobConf != null && jobConf.length() > 0) {
                 builder.append(" -conf ").append(jobConf);
             }

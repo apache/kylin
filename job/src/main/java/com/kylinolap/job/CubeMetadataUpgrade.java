@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -93,7 +94,7 @@ public class CubeMetadataUpgrade {
         upgradeCubeDesc();
         upgradeProjectInstance();
         upgradeCubeInstance();
-        upgradeJobInstance();
+//        upgradeJobInstance();
         
         verify();
         
@@ -103,6 +104,8 @@ public class CubeMetadataUpgrade {
         MetadataManager.getInstance(config).reload();
         CubeDescManager.clearCache();
         CubeDescManager.getInstance(config);
+        CubeManager.getInstance(config);
+        ProjectManager.getInstance(config);
     }
 
     private List<String> listResourceStore(String pathRoot) {
@@ -235,6 +238,11 @@ public class CubeMetadataUpgrade {
         if (count > 1) {
             errorMsgs.add("There are more than 1 table named with '" + table + "' in different database; The program couldn't determine, randomly pick '" + result + "'");
         }
+        
+        if (count ==0) {
+            errorMsgs.add("There is no table named with '" + table + "'");
+        }
+        
         return result;
     }
 
@@ -250,7 +258,6 @@ public class CubeMetadataUpgrade {
                 newPrj.setOwner(oldPrj.getOwner());
                 newPrj.setDescription(oldPrj.getDescription());
                 newPrj.setLastModified(oldPrj.getLastModified());
-                newPrj.setLastUpdateTime(oldPrj.getLastUpdateTime());
                 newPrj.setCreateTimeUTC(RootPersistentEntity.parseTime(oldPrj.getCreateTime()));
                 newPrj.setStatus(oldPrj.getStatus());
                 List<RealizationEntry> realizationEntries = Lists.newArrayList();
@@ -261,7 +268,6 @@ public class CubeMetadataUpgrade {
                     realizationEntries.add(entry);
                 }
                 newPrj.setRealizationEntries(realizationEntries);
-                newPrj.getCreateTimeUTC();
 
                 Set<String> tables = Sets.newHashSet();
                 for (String table : oldPrj.getTables()) {
@@ -297,6 +303,7 @@ public class CubeMetadataUpgrade {
                 newInstance.setUuid(cubeInstance.getUuid());
                 newInstance.setVersion(cubeInstance.getVersion());
                 newInstance.setCreateTimeUTC(RootPersistentEntity.parseTime(cubeInstance.getCreateTime()));
+                newInstance.setLastModified(cubeInstance.getLastModified());
                 
                 //status
                 if(cubeInstance.getStatus() == CubeStatusEnum.BUILDING) {
@@ -336,8 +343,23 @@ public class CubeMetadataUpgrade {
                     newSeg.setLastBuildJobID(segment.getLastBuildJobID());
                     newSeg.setCreateTimeUTC(RootPersistentEntity.parseTime(segment.getCreateTime()));
                     newSeg.setBinarySignature(segment.getBinarySignature());
-                    newSeg.setDictionaries((ConcurrentHashMap<String, String>)segment.getDictionaries());
-                    newSeg.setSnapshots((ConcurrentHashMap<String, String>)segment.getSnapshots());
+                    
+                    ConcurrentHashMap<String, String> newDictionaries = new ConcurrentHashMap<String, String>();
+                    
+                    for (Map.Entry<String, String> e : segment.getDictionaries().entrySet()) {
+                        String key = e.getKey();
+                        String[] tableCol = StringUtils.split(key, "/");
+                        key = appendDBName(tableCol[0]) + "/" + tableCol[1];
+                        newDictionaries.put(key, e.getValue());
+                    }
+                    newSeg.setDictionaries(newDictionaries);
+                    
+                    ConcurrentHashMap<String, String> newSnapshots = new ConcurrentHashMap<String, String>();
+                    
+                    for(Map.Entry<String, String> e: segment.getSnapshots().entrySet()) {
+                        newSnapshots.put(appendDBName(e.getKey()), e.getValue());
+                    }
+                    newSeg.setSnapshots(newSnapshots);
                 }
 
                 newInstance.setSegments(newSegments);

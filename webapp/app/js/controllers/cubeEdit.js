@@ -1,55 +1,13 @@
 'use strict';
 
 
-KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert,$log) {
+KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel) {
+    $scope.cubeConfig = cubeConfig;
 
     //add or edit ?
     var absUrl = $location.absUrl();
     $scope.cubeMode = absUrl.indexOf("/cubes/add")!=-1?'addNewCube':absUrl.indexOf("/cubes/edit")!=-1?'editExistCube':'default';
 
-    //~ Define metadata & class
-    $scope.measureParamType = ['column', 'constant'];
-    $scope.measureExpressions = ['SUM', 'MIN', 'MAX', 'COUNT', 'COUNT_DISTINCT'];
-    $scope.dimensionDataTypes = ["string", "tinyint", "int", "bigint", "date"];
-    $scope.cubeCapacities = ["MEDIUM", "SMALL", "LARGE"];
-    $scope.cubePartitionTypes = ['APPEND', 'UPDATE_INSERT'];
-    $scope.joinTypes = [
-        {name: 'Left', value: 'left'},
-        {name: 'Inner', value: 'inner'},
-        {name: 'Right', value: 'right'}
-    ];
-    $scope.queryPriorities = [
-        {name: 'NORMAL', value: 50},
-        {name: 'LOW', value: 70},
-        {name: 'HIGH', value: 30}
-    ];
-    $scope.measureDataTypes = [
-        {name: 'INT', value: 'int'},
-        {name: 'BIGINT', value: 'bigint'},
-        {name: 'DECIMAL', value: 'decimal'},
-        {name: 'DOUBLE', value: 'double'},
-        {name: 'DATE', value: 'date'},
-        {name: 'STRING', value: 'string'}
-    ];
-    $scope.distinctDataTypes = [
-        {name: 'Error Rate < 9.75%', value: 'hllc10'},
-        {name: 'Error Rate < 4.88%', value: 'hllc12'},
-        {name: 'Error Rate < 2.44%', value: 'hllc14'},
-        {name: 'Error Rate < 1.72%', value: 'hllc15'},
-        {name: 'Error Rate < 1.22%', value: 'hllc16'}
-    ];
-
-    $scope.dftSelections = {
-        measureExpression: 'SUM',
-        measureParamType: 'column',
-        measureDataType: {name: 'BIGINT', value: 'bigint'},
-        distinctDataType: {name: 'Error Rate < 2.44%', value: 'hllc14'},
-        cubeCapacity: 'MEDIUM',
-        queryPriority: {name: 'NORMAL', value: 50},
-        cubePartitionType: 'APPEND'
-    };
-
-    $scope.dictionaries = ["true", "false"];
     $scope.srcTablesInProject = [];
 
     $scope.getColumnsByTable = function (name) {
@@ -81,47 +39,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         }
     };
 
-    var CubeMeta = {
-        createNew: function () {
-            var cubeMeta = {
-                "name": "",
-                "description": "",
-                "fact_table": "",
-                "filter_condition": null,
-                "notify_list": [],
-                "cube_partition_desc": {
-                    "partition_date_column": null,
-                    "partition_date_start": null,
-                    "cube_partition_type": 'APPEND'
-                },
-                "capacity": "MEDIUM",
-                "cost": 50,
-                "dimensions": [],
-                "measures": [
-                    {   "id": 1,
-                        "name": "_COUNT_",
-                        "function": {
-                            "expression": "COUNT",
-                            "returntype": "bigint",
-                            "parameter": {
-                                "type": "constant",
-                                "value": "1"
-                            }
-                        }
-                    }
-                ],
-                "rowkey": {
-                    "rowkey_columns": [],
-                    "aggregation_groups": []
-                },
-                "hbase_mapping": {
-                    "column_family": []
-                }
-            };
-
-            return cubeMeta;
-        }
-    };
 
     // ~ Define data
     $scope.state = {
@@ -142,8 +59,8 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
             }
         });
     } else {
-        $scope.cubeMetaFrame = CubeMeta.createNew();
-        $scope.cubeMetaFrame.project = $scope.project.selectedProject;
+        $scope.cubeMetaFrame = CubeDescModel.createNew();
+        $scope.cubeMetaFrame.project = $scope.projectModel.selectedProject;
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
     }
 
@@ -535,7 +452,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         });
     }
 
-    $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+    $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
         if(!newValue){
             return;
         }

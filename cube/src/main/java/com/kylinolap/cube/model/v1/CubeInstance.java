@@ -29,7 +29,6 @@ import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
-import com.kylinolap.cube.CubeDescManager;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeInstance extends RootPersistentEntity {

@@ -9,10 +9,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 /**
  * A simple test case to check whether the Hive JDBC interface can fulfill Kylin's need; 
  * Before run it, you need startup the hive server on localhost: $HIVE_HOME/bin/hiveserver2

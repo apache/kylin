@@ -1,13 +1,16 @@
 package com.kylinolap.metadata.model;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
 
-import com.google.common.collect.Sets;
 import org.apache.commons.lang.ArrayUtils;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Sets;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.common.util.StringUtil;
@@ -15,6 +18,10 @@ import com.kylinolap.metadata.MetadataConstances;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class DataModelDesc extends RootPersistentEntity {
+
+    public static enum RealizationCapacity {
+        SMALL, MEDIUM, LARGE
+    }
 
     @JsonProperty("name")
     private String name;
@@ -24,6 +31,14 @@ public class DataModelDesc extends RootPersistentEntity {
 
     @JsonProperty("lookups")
     private LookupDesc[] lookups;
+
+    @JsonProperty("filter_condition")
+    private String filterCondition;
+    @JsonProperty("partition_desc")
+    PartitionDesc partitionDesc;
+    
+    @JsonProperty("capacity")
+    private RealizationCapacity capacity = RealizationCapacity.MEDIUM;
 
     public String getName() {
         return name;
@@ -59,6 +74,31 @@ public class DataModelDesc extends RootPersistentEntity {
 
     public boolean isFactTable(String factTable) {
         return this.factTable.equalsIgnoreCase(factTable);
+    }
+    
+
+    public String getFilterCondition() {
+        return filterCondition;
+    }
+
+    public void setFilterCondition(String filterCondition) {
+        this.filterCondition = filterCondition;
+    }
+
+    public PartitionDesc getPartitionDesc() {
+        return partitionDesc;
+    }
+
+    public void setPartitionDesc(PartitionDesc partitionDesc) {
+        this.partitionDesc = partitionDesc;
+    }
+
+    public RealizationCapacity getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(RealizationCapacity capacity) {
+        this.capacity = capacity;
     }
 
     public TblColRef findPKByFK(TblColRef fk) {

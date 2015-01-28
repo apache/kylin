@@ -216,17 +216,6 @@ public class ProjectInstance extends RootPersistentEntity {
         this.owner = owner;
     }
 
-    /**
-     * @deprecated use lastModified instead
-     */
-    public String getLastUpdateTime() {
-        return lastUpdateTime;
-    }
-
-    public void setLastUpdateTime(String lastUpdateTime) {
-        this.lastUpdateTime = lastUpdateTime;
-    }
-
     public void recordUpdateTime(long timeMillis) {
         this.lastUpdateTime = formatTime(timeMillis);
     }

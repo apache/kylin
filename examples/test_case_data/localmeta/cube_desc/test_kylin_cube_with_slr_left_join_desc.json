@@ -1,133 +1,167 @@
 {
-  "uuid": "bbbba905-1fc6-4f67-985c-38fa5aeafd92",
-  "name": "test_kylin_cube_with_slr_left_join_desc",
-  "model_name": "test_kylin_with_slr_left_join_model_desc",
-  "cube_partition_desc": {
-    "partition_date_column": "default.test_kylin_fact.cal_dt",
-    "partition_date_start": 0,
-    "cube_partition_type": "APPEND"
+  "uuid" : "bbbba905-1fc6-4f67-985c-38fa5aeafd92",
+  "name" : "test_kylin_cube_with_slr_left_join_desc",
+  "description" : null,
+  "dimensions" : [ {
+    "id" : 0,
+    "name" : "CAL_DT",
+    "table" : "EDW.TEST_CAL_DT",
+    "column" : null,
+    "derived" : [ "WEEK_BEG_DT" ],
+    "hierarchy" : false
+  }, {
+    "id" : 1,
+    "name" : "CATEGORY",
+    "table" : "DEFAULT.TEST_CATEGORY_GROUPINGS",
+    "column" : [ "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME" ],
+    "derived" : null,
+    "hierarchy" : true
+  }, {
+    "id" : 2,
+    "name" : "CATEGORY_DERIVED",
+    "table" : "DEFAULT.TEST_CATEGORY_GROUPINGS",
+    "column" : null,
+    "derived" : [ "USER_DEFINED_FIELD1", "USER_DEFINED_FIELD3", "UPD_DATE", "UPD_USER" ],
+    "hierarchy" : false
+  }, {
+    "id" : 3,
+    "name" : "LSTG_FORMAT_NAME",
+    "table" : "DEFAULT.TEST_KYLIN_FACT",
+    "column" : [ "LSTG_FORMAT_NAME" ],
+    "derived" : null,
+    "hierarchy" : false
+  }, {
+    "id" : 4,
+    "name" : "SITE_ID",
+    "table" : "EDW.TEST_SITES",
+    "column" : null,
+    "derived" : [ "SITE_NAME", "CRE_USER" ],
+    "hierarchy" : false
+  }, {
+    "id" : 5,
+    "name" : "SELLER_TYPE_CD",
+    "table" : "EDW.TEST_SELLER_TYPE_DIM",
+    "column" : null,
+    "derived" : [ "SELLER_TYPE_DESC" ],
+    "hierarchy" : false
+  }, {
+    "id" : 6,
+    "name" : "SELLER_ID",
+    "table" : "DEFAULT.TEST_KYLIN_FACT",
+    "column" : [ "SELLER_ID" ],
+    "derived" : null,
+    "hierarchy" : false
+  } ],
+  "measures" : [ {
+    "id" : 1,
+    "name" : "GMV_SUM",
+    "function" : {
+      "expression" : "SUM",
+      "parameter" : {
+        "type" : "column",
+        "value" : "PRICE"
+      },
+      "returntype" : "decimal"
+    },
+    "dependent_measure_ref" : null
+  }, {
+    "id" : 2,
+    "name" : "GMV_MIN",
+    "function" : {
+      "expression" : "MIN",
+      "parameter" : {
+        "type" : "column",
+        "value" : "PRICE"
+      },
+      "returntype" : "decimal"
+    },
+    "dependent_measure_ref" : null
+  }, {
+    "id" : 3,
+    "name" : "GMV_MAX",
+    "function" : {
+      "expression" : "MAX",
+      "parameter" : {
+        "type" : "column",
+        "value" : "PRICE"
+      },
+      "returntype" : "decimal"
+    },
+    "dependent_measure_ref" : null
+  }, {
+    "id" : 4,
+    "name" : "TRANS_CNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameter" : {
+        "type" : "constant",
+        "value" : "1"
+      },
+      "returntype" : "bigint"
+    },
+    "dependent_measure_ref" : null
+  } ],
+  "rowkey" : {
+    "rowkey_columns" : [ {
+      "column" : "seller_id",
+      "length" : 18,
+      "dictionary" : null,
+      "mandatory" : true
+    }, {
+      "column" : "cal_dt",
+      "length" : 0,
+      "dictionary" : "true",
+      "mandatory" : false
+    }, {
+      "column" : "leaf_categ_id",
+      "length" : 0,
+      "dictionary" : "true",
+      "mandatory" : false
+    }, {
+      "column" : "meta_categ_name",
+      "length" : 0,
+      "dictionary" : "true",
+      "mandatory" : false
+    }, {
+      "column" : "categ_lvl2_name",
+      "length" : 0,
+      "dictionary" : "true",
+      "mandatory" : false
+    }, {
+      "column" : "categ_lvl3_name",
+      "length" : 0,
+      "dictionary" : "true",
+      "mandatory" : false
+    }, {
+      "column" : "lstg_format_name",
+      "length" : 12,
+      "dictionary" : null,
+      "mandatory" : false
+    }, {
+      "column" : "lstg_site_id",
+      "length" : 0,
+      "dictionary" : "true",
+      "mandatory" : false
+    }, {
+      "column" : "slr_segment_cd",
+      "length" : 0,
+      "dictionary" : "true",
+      "mandatory" : false
+    } ],
+    "aggregation_groups" : [ [ "leaf_categ_id", "meta_categ_name", "categ_lvl2_name", "categ_lvl3_name", "cal_dt" ] ]
   },
-  "filter_condition": null,
-  "dimensions": [
-    {
-      "name": "cal_dt",
-      "table": "edw.test_cal_dt",
-      "derived": ["week_beg_dt"]
-    },
-    {
-      "name": "category",
-      "table": "default.test_category_groupings",
-      "column": ["meta_categ_name", "categ_lvl2_name", "categ_lvl3_name"],
-      "hierarchy": true
-    },
-    {
-      "name": "category_derived",
-      "table": "default.test_category_groupings",
-      "derived": ["USER_DEFINED_FIELD1", "USER_DEFINED_FIELD3", "UPD_DATE", "UPD_USER"]
-    },
-    {
-      "name": "lstg_format_name",
-      "table": "default.test_kylin_fact",
-      "column": ["lstg_format_name"]
-    },
-    {
-      "name": "site_id",
-      "table": "edw.test_sites",
-      "derived": ["site_name", "cre_user"]
-    },
-    {
-      "name": "seller_type_cd",
-      "table": "edw.test_seller_type_dim",
-      "derived": ["seller_type_desc"]
-    },
-    {
-      "name": "seller_id",
-      "table": "default.test_kylin_fact",
-      "column": ["seller_id"]
-    }
-  ],
-  "measures": [
-    {
-      "id": "1",
-      "name": "gmv_sum",
-      "function": {
-        "expression": "sum",
-        "returntype": "decimal",
-        "parameter": {
-          "type": "column",
-          "value": "price"
-        }
-      }
-    },
-    {
-      "id": "2",
-      "name": "gmv_min",
-      "function": {
-        "expression": "min",
-        "returntype": "decimal",
-        "parameter": {
-          "type": "column",
-          "value": "price"
-        }
-      }
-    },
-    {
-      "id": "3",
-      "name": "gmv_max",
-      "function": {
-        "expression": "max",
-        "returntype": "decimal",
-        "parameter": {
-          "type": "column",
-          "value": "price"
-        }
-      }
-    },
-    {
-      "id": "4",
-      "name": "trans_cnt",
-      "function": {
-        "expression": "count",
-        "returntype": "bigint",
-        "parameter": {
-          "type": "constant",
-          "value": "1"
-        }
-      }
-    }
-  ],
-  "rowkey":{
-    "rowkey_columns": [
-      { "column": "seller_id",        "dictionary": "true",  "mandatory": "true" },
-      { "column": "cal_dt",           "dictionary": "true" },
-      { "column": "leaf_categ_id",    "dictionary": "true" },
-      { "column": "meta_categ_name",  "dictionary": "true" },
-      { "column": "categ_lvl2_name",  "dictionary": "true" },
-      { "column": "categ_lvl3_name",  "dictionary": "true" },
-      { "column": "lstg_format_name", "dictionary": "true" },
-      { "column": "lstg_site_id",     "dictionary": "true" },
-      { "column": "slr_segment_cd",   "dictionary": "true" }
-    ],
-	"aggregation_groups": [
-	  ["leaf_categ_id","meta_categ_name","categ_lvl2_name","categ_lvl3_name","cal_dt"]
-	]
+  "signature" : "ljba0vaTnt00lU4rdhG9Xw==",
+  "last_modified" : 1422435345352,
+  "model_name" : "test_kylin_with_slr_left_join_model_desc",
+  "null_string" : null,
+  "hbase_mapping" : {
+    "column_family" : [ {
+      "name" : "f1",
+      "columns" : [ {
+        "qualifier" : "m",
+        "measure_refs" : [ "gmv_sum", "gmv_min", "gmv_max", "trans_cnt" ]
+      } ]
+    } ]
   },
-  "hbase_mapping": {
-    "column_family": [
-      {
-        "name": "f1",
-        "columns": [
-          {
-            "qualifier": "m",
-            "measure_refs": [
-              "gmv_sum",
-              "gmv_min",
-              "gmv_max",
-              "trans_cnt"
-            ]
-          }
-        ]
-      }
-    ]
-  }
+  "notify_list" : null
 }

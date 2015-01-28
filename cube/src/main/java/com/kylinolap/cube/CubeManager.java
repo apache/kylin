@@ -44,9 +44,7 @@ import com.kylinolap.common.restclient.Broadcaster;
 import com.kylinolap.common.restclient.CaseInsensitiveStringCache;
 import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.cube.model.CubePartitionDesc;
 import com.kylinolap.cube.model.DimensionDesc;
-import com.kylinolap.dict.DateStrDictionary;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryInfo;
 import com.kylinolap.dict.DictionaryManager;
@@ -55,6 +53,7 @@ import com.kylinolap.dict.lookup.LookupStringTable;
 import com.kylinolap.dict.lookup.SnapshotManager;
 import com.kylinolap.dict.lookup.SnapshotTable;
 import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.PartitionDesc;
 import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.metadata.model.TblColRef;
@@ -259,7 +258,7 @@ public class CubeManager implements IRealizationProvider {
         long appendStart = calculateStartDateForAppendSegment(cube);
         CubeSegment appendSegment = newSegment(cube, appendStart, endDate);
 
-        long startDate = cube.getDescriptor().getCubePartitionDesc().getPartitionDateStart();
+        long startDate = cube.getDescriptor().getModel().getPartitionDesc().getPartitionDateStart();
         CubeSegment mergeSegment = newSegment(cube, startDate, endDate);
 
         validateNewSegments(cube, mergeSegment);
@@ -275,7 +274,7 @@ public class CubeManager implements IRealizationProvider {
         checkNoBuildingSegment(cube);
 
         CubeSegment newSegment;
-        if (cube.getDescriptor().getCubePartitionDesc().isPartitioned()) {
+        if (cube.getDescriptor().getModel().getPartitionDesc().isPartitioned()) {
             long startDate = calculateStartDateForAppendSegment(cube);
             newSegment = newSegment(cube, startDate, endDate);
         } else {
@@ -344,7 +343,7 @@ public class CubeManager implements IRealizationProvider {
     private long calculateStartDateForAppendSegment(CubeInstance cube) {
         List<CubeSegment> existing = cube.getSegments();
         if (existing.isEmpty()) {
-            return cube.getDescriptor().getCubePartitionDesc().getPartitionDateStart();
+            return cube.getDescriptor().getModel().getPartitionDesc().getPartitionDateStart();
         } else {
             return existing.get(existing.size() - 1).getDateRangeEnd();
         }
@@ -357,7 +356,7 @@ public class CubeManager implements IRealizationProvider {
     }
 
     private void checkCubeIsPartitioned(CubeInstance cube) {
-        if (cube.getDescriptor().getCubePartitionDesc().isPartitioned() == false) {
+        if (cube.getDescriptor().getModel().getPartitionDesc().isPartitioned() == false) {
             throw new IllegalStateException("there is no partition date column specified, only full build is supported");
         }
     }
@@ -555,7 +554,7 @@ public class CubeManager implements IRealizationProvider {
      */
     private List<CubeSegment> calculateToBeSegments(CubeInstance cube, CubeSegment... newSegments) {
         CubeDesc cubeDesc = cube.getDescriptor();
-        CubePartitionDesc partDesc = cubeDesc.getCubePartitionDesc();
+        PartitionDesc partDesc = cubeDesc.getModel().getPartitionDesc();
 
         List<CubeSegment> tobe = Lists.newArrayList(cube.getSegments());
         if (newSegments != null)

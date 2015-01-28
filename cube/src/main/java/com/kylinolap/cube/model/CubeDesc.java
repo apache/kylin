@@ -66,10 +66,6 @@ import com.kylinolap.metadata.model.TblColRef;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeDesc extends RootPersistentEntity {
 
-    public static enum RealizationCapacity {
-        SMALL, MEDIUM, LARGE
-    }
-
     public static enum DeriveType {
         LOOKUP, PK_FK
     }
@@ -105,10 +101,6 @@ public class CubeDesc extends RootPersistentEntity {
     private String description;
     @JsonProperty("null_string")
     private String[] nullStrings;
-    @JsonProperty("filter_condition")
-    private String filterCondition;
-    @JsonProperty("cube_partition_desc")
-    CubePartitionDesc cubePartitionDesc;
     @JsonProperty("dimensions")
     private List<DimensionDesc> dimensions;
     @JsonProperty("measures")
@@ -119,8 +111,6 @@ public class CubeDesc extends RootPersistentEntity {
     private HBaseMappingDesc hbaseMapping;
     @JsonProperty("signature")
     private String signature;
-    @JsonProperty("capacity")
-    private RealizationCapacity capacity = RealizationCapacity.MEDIUM;
     @JsonProperty("notify_list")
     private List<String> notifyList;
 
@@ -336,22 +326,6 @@ public class CubeDesc extends RootPersistentEntity {
         return nullStrings;
     }
 
-    public String getFilterCondition() {
-        return filterCondition;
-    }
-
-    public void setFilterCondition(String filterCondition) {
-        this.filterCondition = filterCondition;
-    }
-
-    public CubePartitionDesc getCubePartitionDesc() {
-        return cubePartitionDesc;
-    }
-
-    public void setCubePartitionDesc(CubePartitionDesc cubePartitionDesc) {
-        this.cubePartitionDesc = cubePartitionDesc;
-    }
-
     public List<DimensionDesc> getDimensions() {
         return dimensions;
     }
@@ -382,14 +356,6 @@ public class CubeDesc extends RootPersistentEntity {
 
     public void setSignature(String signature) {
         this.signature = signature;
-    }
-
-    public RealizationCapacity getCapacity() {
-        return capacity;
-    }
-
-    public void setCapacity(RealizationCapacity capacity) {
-        this.capacity = capacity;
     }
 
     public List<String> getNotifyList() {
@@ -435,7 +401,7 @@ public class CubeDesc extends RootPersistentEntity {
         try {
             md = MessageDigest.getInstance("MD5");
             StringBuilder sigString = new StringBuilder();
-            sigString.append(this.name).append("|").append(this.getFactTable()).append("|").append(JsonUtil.writeValueAsString(this.cubePartitionDesc)).append("|").append(JsonUtil.writeValueAsString(this.dimensions)).append("|").append(JsonUtil.writeValueAsString(this.measures)).append("|").append(JsonUtil.writeValueAsString(this.rowkey)).append("|").append(JsonUtil.writeValueAsString(this.hbaseMapping));
+            sigString.append(this.name).append("|").append(this.getFactTable()).append("|").append(JsonUtil.writeValueAsString(this.model.getPartitionDesc())).append("|").append(JsonUtil.writeValueAsString(this.dimensions)).append("|").append(JsonUtil.writeValueAsString(this.measures)).append("|").append(JsonUtil.writeValueAsString(this.rowkey)).append("|").append(JsonUtil.writeValueAsString(this.hbaseMapping));
 
             byte[] signature = md.digest(sigString.toString().getBytes());
             return new String(Base64.encodeBase64(signature));
@@ -481,8 +447,8 @@ public class CubeDesc extends RootPersistentEntity {
 
         initMeasureReferenceToColumnFamily();
 
-        if (null != this.cubePartitionDesc) {
-            this.cubePartitionDesc.init(columnMap);
+        if (null != this.model.getPartitionDesc()) {
+            this.model.getPartitionDesc().init(columnMap);
         }
 
         // check all dimension columns are presented on rowkey
