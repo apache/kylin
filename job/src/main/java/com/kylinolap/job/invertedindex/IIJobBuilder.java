@@ -21,13 +21,13 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import com.google.common.base.Preconditions;
-import com.kylinolap.cube.model.CubeDesc.RealizationCapacity;
 import com.kylinolap.invertedindex.IISegment;
 import com.kylinolap.job.AbstractJobBuilder;
 import com.kylinolap.job.common.HadoopShellExecutable;
 import com.kylinolap.job.common.MapReduceExecutable;
 import com.kylinolap.job.constant.ExecutableConstants;
 import com.kylinolap.job.engine.JobEngineConfig;
+import com.kylinolap.job.execution.AbstractExecutable;
 import com.kylinolap.job.hadoop.dict.CreateInvertedIndexDictionaryJob;
 import com.kylinolap.job.hadoop.hive.IIJoinedFlatTableDesc;
 import com.kylinolap.job.hadoop.invertedindex.IIBulkLoadJob;
@@ -35,7 +35,7 @@ import com.kylinolap.job.hadoop.invertedindex.IICreateHFileJob;
 import com.kylinolap.job.hadoop.invertedindex.IICreateHTableJob;
 import com.kylinolap.job.hadoop.invertedindex.IIDistinctColumnsJob;
 import com.kylinolap.job.hadoop.invertedindex.InvertedIndexJob;
-import com.kylinolap.job.execution.AbstractExecutable;
+import com.kylinolap.metadata.model.DataModelDesc.RealizationCapacity;
 
 /**
  * Created by shaoshi on 1/15/15.

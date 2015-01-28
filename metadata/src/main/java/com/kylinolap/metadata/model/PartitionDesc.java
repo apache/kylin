@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kylinolap.cube.model;
+package com.kylinolap.metadata.model;
 
 import java.util.Map;
 
@@ -29,9 +29,9 @@ import com.kylinolap.metadata.model.TblColRef;
  * 
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class CubePartitionDesc {
+public class PartitionDesc {
 
-    public static enum CubePartitionType {
+    public static enum PartitionType {
         APPEND, //
         UPDATE_INSERT // not used since 0.7.1
     }
@@ -40,12 +40,12 @@ public class CubePartitionDesc {
     private String partitionDateColumn;
     @JsonProperty("partition_date_start")
     private long partitionDateStart = 0L;
-    @JsonProperty("cube_partition_type")
-    private CubePartitionType cubePartitionType = CubePartitionType.APPEND;
+    @JsonProperty("partition_type")
+    private PartitionType partitionType = PartitionType.APPEND;
 
     private TblColRef partitionDateColumnRef;
 
-    void init(Map<String, Map<String, TblColRef>> columnMap) {
+    public void init(Map<String, Map<String, TblColRef>> columnMap) {
         if (null != partitionDateColumn) {
             partitionDateColumn = partitionDateColumn.toUpperCase();
 
@@ -85,12 +85,12 @@ public class CubePartitionDesc {
         this.partitionDateStart = partitionDateStart;
     }
 
-    public CubePartitionType getCubePartitionType() {
-        return cubePartitionType;
+    public PartitionType getCubePartitionType() {
+        return partitionType;
     }
 
-    public void setCubePartitionType(CubePartitionType cubePartitionType) {
-        this.cubePartitionType = cubePartitionType;
+    public void setCubePartitionType(PartitionType partitionType) {
+        this.partitionType = partitionType;
     }
 
     public TblColRef getPartitionDateColumnRef() {

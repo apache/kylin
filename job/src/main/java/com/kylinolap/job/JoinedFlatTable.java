@@ -185,8 +185,8 @@ public class JoinedFlatTable {
 
         CubeDesc cubeDesc = desc.getCubeDesc();
 
-        if (cubeDesc.getFilterCondition() != null && cubeDesc.getFilterCondition().equals("") == false) {
-            whereBuilder.append(" (").append(cubeDesc.getFilterCondition()).append(") ");
+        if (cubeDesc.getModel().getFilterCondition() != null && cubeDesc.getModel().getFilterCondition().equals("") == false) {
+            whereBuilder.append(" (").append(cubeDesc.getModel().getFilterCondition()).append(") ");
             hasCondition = true;
         }
 
@@ -197,7 +197,7 @@ public class JoinedFlatTable {
             long dateEnd = cubeSegment.getDateRangeEnd();
 
             if (!(dateStart == 0 && dateEnd == Long.MAX_VALUE)) {
-                String partitionColumnName = cubeDesc.getCubePartitionDesc().getPartitionDateColumn();
+                String partitionColumnName = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumn();
                 int indexOfDot = partitionColumnName.lastIndexOf(".");
 
                 // convert to use table alias;

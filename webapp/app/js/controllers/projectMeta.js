@@ -31,7 +31,7 @@ KylinApp
             var defer = $q.defer();
             $scope.selectedSrcDb = [];
             $scope.loading = true;
-            QueryService.getTables({project: $scope.project.selectedProject}, {}, function (tables) {
+            QueryService.getTables({project: $scope.projectModel.selectedProject}, {}, function (tables) {
                 var tableMap = [];
                 angular.forEach(tables, function (table) {
                     if (!tableMap[table.table_SCHEM]) {
@@ -59,7 +59,7 @@ KylinApp
         };
 
 
-        $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+        $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
             if(newValue){
                 $scope.projectMetaLoad();
             }

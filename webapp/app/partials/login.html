@@ -27,8 +27,8 @@
                                 <div class="form-group">
                                     <span>
 
-                                        <select  ng-required="project.projects.length" chosen ng-model="project.selectedProject" ng-init="newAccess.permission=permissions.READ.value;"
-                                                ng-options="project as project for project in project.projects "
+                                        <select  ng-required="projectModel.projects.length" chosen ng-model="projectModel.selectedProject" ng-init="newAccess.permission=permissions.READ.value;"
+                                                ng-options="project as project for project in projectModel.projects "
                                                 style="width: 100% !important;"
                                                 data-placeholder="select a project"
                                                 class="chosen-select">

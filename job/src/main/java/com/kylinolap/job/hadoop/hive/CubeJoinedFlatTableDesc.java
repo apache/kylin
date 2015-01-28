@@ -184,8 +184,8 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     }
 
     @Override
-    public CubeDesc.RealizationCapacity getCapacity() {
-        return cubeDesc.getCapacity();
+    public DataModelDesc.RealizationCapacity getCapacity() {
+        return cubeDesc.getModel().getCapacity();
     }
 
     @Override

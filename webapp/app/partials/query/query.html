@@ -3,12 +3,12 @@
     <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
         <div class="form-group">
             <span><b>Project: </b></span>
-            <select chosen ng-model="project.selectedProject" ng-init="newAccess.permission=permissions.READ.value;"
-                    ng-options="project as project for project in project.projects"
+            <select chosen ng-model="projectModel.selectedProject" ng-init="newAccess.permission=permissions.READ.value;"
+                    ng-options="project as project for project in projectModel.projects"
                     style="width: 150px"
                     data-placeholder="select a project"
                     class="chosen-select">
-                <option ng-if="userService.hasRole('ROLE_ADMIN')" ng-selected="project.selectedProject==null"  value=""> -- Choose Project -- </option>
+                <option ng-if="userService.hasRole('ROLE_ADMIN')" ng-selected="projectModel.selectedProject==null"  value=""> -- Choose Project -- </option>
             </select>
             <!--Project-->
             <a class="btn btn-xs btn-info" href="projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
@@ -54,7 +54,7 @@
                     </p>
                     <div class="pull-left">
                         <h4>
-                            Project: <span class="label label-info">{{project.selectedProject}}</span>
+                            Project: <span class="label label-info">{{projectModel.selectedProject}}</span>
                         </h4>
                     </div>
                     <div class="pull-right">

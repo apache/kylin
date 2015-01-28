@@ -211,7 +211,7 @@ public class BuildCubeWithEngineTest {
         List<String> result = Lists.newArrayList();
         final String cubeName = "test_kylin_cube_without_slr_left_join_empty";
         // this cube's start date is 0, end date is 20120601000000
-        long dateStart = cubeManager.getCube(cubeName).getDescriptor().getCubePartitionDesc().getPartitionDateStart();
+        long dateStart = cubeManager.getCube(cubeName).getDescriptor().getModel().getPartitionDesc().getPartitionDateStart();
         long dateEnd = f.parse("2012-06-01").getTime();
 
         clearSegment(cubeName);
@@ -232,7 +232,7 @@ public class BuildCubeWithEngineTest {
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
-        long dateStart = cubeManager.getCube(cubeName).getDescriptor().getCubePartitionDesc().getPartitionDateStart();
+        long dateStart = cubeManager.getCube(cubeName).getDescriptor().getModel().getPartitionDesc().getPartitionDateStart();
         long dateEnd = f.parse("2050-11-12").getTime();
 
         // this cube's start date is 0, end date is 20501112000000
