@@ -58,6 +58,6 @@ public class FixedPointLongCodec extends FixedLenMeasureCodec<LongWritable> {
 
     @Override
     public void write(LongWritable v, byte[] buf, int offset) {
-        BytesUtil.writeLong(v.get(), buf, offset, SIZE);
+        BytesUtil.writeLong(v == null ? 0 : v.get(), buf, offset, SIZE);
     }
 }
