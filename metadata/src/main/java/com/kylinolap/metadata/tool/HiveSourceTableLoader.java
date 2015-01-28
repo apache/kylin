@@ -58,27 +58,13 @@ public class HiveSourceTableLoader {
         
         Map<String, Set<String>> db2tables = Maps.newHashMap();
         for (String table : hiveTables) {
-            String[] dbtableNames = HadoopUtil.parseHiveTableName(table);
-            Set<String> set = db2tables.get(dbtableNames[0]);
+            String[] parts = HadoopUtil.parseHiveTableName(table);
+            Set<String> set = db2tables.get(parts[0]);
             if (set == null) {
                 set = Sets.newHashSet();
-                db2tables.put(dbtableNames[0], set);
+                db2tables.put(parts[0], set);
             }
-            set.add(dbtableNames[1]);
-        }
-
-        for (String database : db2tables.keySet()) {
-            for (String table : db2tables.get(database)) {
-                TableDesc tableDesc = MetadataManager.getInstance(config).getTableDesc(table);
-                if (tableDesc == null) {
-                    continue;
-                }
-                if (tableDesc.getDatabase().equalsIgnoreCase(database)) {
-                    continue;
-                } else {
-                    throw new UnsupportedOperationException(String.format("there is already a table[%s] in database[%s]", tableDesc.getName(), tableDesc.getDatabase()));
-                }
-            }
+            set.add(parts[1]);
         }
 
         // extract from hive
