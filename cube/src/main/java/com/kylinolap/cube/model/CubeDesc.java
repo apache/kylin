@@ -427,7 +427,7 @@ public class CubeDesc extends RootPersistentEntity {
 
     @Override
     public String toString() {
-        return "CubeDesc [name=" + name + ", factTable=" + getFactTable() + ", cubePartitionDesc=" + cubePartitionDesc + ", dimensions=" + dimensions + ", measures=" + measures + ", rowkey=" + rowkey + ", hbaseMapping=" + hbaseMapping + "]";
+        return "CubeDesc [name=" + name + "]";
     }
 
     public String calculateSignature() {
