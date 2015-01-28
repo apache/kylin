@@ -25,7 +25,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -47,6 +46,7 @@ import com.kylinolap.common.persistence.RootPersistentEntity;
 import com.kylinolap.common.util.Array;
 import com.kylinolap.common.util.CaseInsensitiveStringMap;
 import com.kylinolap.common.util.JsonUtil;
+import com.kylinolap.common.util.StringUtil;
 import com.kylinolap.metadata.MetadataConstances;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.ColumnDesc;
@@ -130,8 +130,6 @@ public class CubeDesc extends RootPersistentEntity {
     private Map<TblColRef, DeriveInfo> derivedToHostMap = Maps.newHashMap();
     private Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedMap = Maps.newHashMap();
 
-    /* indicate whether this object was upgraded on an old version*/
-    private boolean upgraded = false;
     /**
      * Error messages during resolving json metadata
      */
@@ -240,10 +238,6 @@ public class CubeDesc extends RootPersistentEntity {
 
         return result;
     }
-
-    //    public boolean isFactTable(String factTable) {
-    //        return this.factTable.equalsIgnoreCase(factTable);
-    //    }
 
     public boolean isDerived(TblColRef col) {
         return derivedToHostMap.containsKey(col);
@@ -472,38 +466,8 @@ public class CubeDesc extends RootPersistentEntity {
             this.addError("No data model found with name '" + modelName + "'.");
         }
 
-        //key: column name; value: list of tables;
-        Map<String, List<TableDesc>> columnTableMap = new HashMap<String, List<TableDesc>>();
-
-        String colName;
-        for (TableDesc table : tables.values()) {
-            for (ColumnDesc col : table.getColumns()) {
-                colName = col.getName();
-                List<TableDesc> tableNames = columnTableMap.get(colName);
-                if (tableNames == null) {
-                    tableNames = new LinkedList<TableDesc>();
-                    columnTableMap.put(colName, tableNames);
-                }
-                tableNames.add(table);
-            }
-        }
-
-        // key: table name; value: list of databases;
-        Map<String, List<String>> tableDatabaseMap = new HashMap<String, List<String>>();
-
-        String tableName;
-        for (TableDesc table : tables.values()) {
-            tableName = table.getName();
-            List<String> dbNames = tableDatabaseMap.get(tableName);
-            if (dbNames == null) {
-                dbNames = new LinkedList<String>();
-                tableDatabaseMap.put(tableName, dbNames);
-            }
-            dbNames.add(table.getDatabase());
-        }
-
         for (DimensionDesc dim : dimensions) {
-            dim.init(this, tables, columnTableMap, tableDatabaseMap);
+            dim.init(this, tables);
         }
 
         sortDimAndMeasure();
@@ -529,57 +493,43 @@ public class CubeDesc extends RootPersistentEntity {
     }
 
     private void initDimensionColumns(Map<String, TableDesc> tables) {
-        // fill back ColRefDesc
         for (DimensionDesc dim : dimensions) {
             TableDesc dimTable = dim.getTableDesc();
             JoinDesc join = dim.getJoin();
 
-            ArrayList<TblColRef> dimColList = new ArrayList<TblColRef>();
-            ArrayList<TblColRef> hostColList = new ArrayList<TblColRef>();
-
-            // dimension column
-            if (dim.getColumn() != null) {
-                //if ("{FK}".equals(dim.getColumn())) {
-                if (join != null) {
-                    // this dimension is defined on lookup table
-                    for (TblColRef ref : join.getForeignKeyColumns()) {
-                        TblColRef inited = initDimensionColRef(ref);
-                        dimColList.add(inited);
-                        hostColList.add(inited);
-                    }
-                } else {
-                    // this dimension is defined on fact table
-                    for (String aColumn : dim.getColumn()) {
-                        TblColRef ref = initDimensionColRef(dimTable, aColumn);
-                        if (!dimColList.contains(ref)) {
-                            dimColList.add(ref);
-                            //hostColList.add(ref);
-                        }
-                    }
+            // init dimension columns
+            ArrayList<TblColRef> dimCols = Lists.newArrayList();
+            String[] colStrs = dim.getColumn();
+            
+            // when column is omitted, special case
+            if (colStrs == null && dim.isDerived() || StringUtil.contains(colStrs, "{FK}")) {
+                for (TblColRef col : join.getForeignKeyColumns()) {
+                    dimCols.add(initDimensionColRef(col));
                 }
             }
-
-            // hierarchy columns
-            if (dim.getHierarchy() != null) {
-                for (HierarchyDesc hier : dim.getHierarchy()) {
-                    TblColRef ref = initDimensionColRef(dimTable, hier.getColumn());
-                    hier.setColumnRef(ref);
-                    if (!dimColList.contains(ref))
-                        dimColList.add(ref);
+            // normal case
+            else {
+                if (colStrs == null || colStrs.length == 0)
+                    throw new IllegalStateException("Dimension column must not be blank " + dim);
+                
+                for (String colStr : colStrs) {
+                    dimCols.add(initDimensionColRef(dimTable, colStr));
                 }
-                if (hostColList.isEmpty()) { // the last hierarchy could serve
-                                             // as host when col is
-                                             // unspecified
-                    hostColList.add(dimColList.get(dimColList.size() - 1));
+                
+                // fill back column ref in hierarchy
+                if (dim.isHierarchy()) {
+                    for (int i = 0; i < dimCols.size(); i++)
+                        dim.getHierarchy()[i].setColumnRef(dimCols.get(i));
                 }
             }
-            TblColRef[] dimCols = (TblColRef[]) dimColList.toArray(new TblColRef[dimColList.size()]);
-            dim.setColumnRefs(dimCols);
+            
+            TblColRef[] dimColArray = (TblColRef[]) dimCols.toArray(new TblColRef[dimCols.size()]);
+            dim.setColumnRefs(dimColArray);
 
-            // lookup derived columns
-            TblColRef[] hostCols = (TblColRef[]) hostColList.toArray(new TblColRef[hostColList.size()]);
-            String[] derived = dim.getDerived();
-            if (derived != null) {
+            // init derived columns
+            TblColRef[] hostCols = dimColArray;
+            if (dim.isDerived()) {
+                String[] derived = dim.getDerived();
                 String[][] split = splitDerivedColumnAndExtra(derived);
                 String[] derivedNames = split[0];
                 String[] derivedExtra = split[1];
@@ -590,7 +540,7 @@ public class CubeDesc extends RootPersistentEntity {
                 initDerivedMap(hostCols, DeriveType.LOOKUP, dim, derivedCols, derivedExtra);
             }
 
-            // FK derived column
+            // init FK derived column
             if (join != null) {
                 TblColRef[] fk = join.getForeignKeyColumns();
                 TblColRef[] pk = join.getPrimaryKeyColumns();
@@ -831,13 +781,4 @@ public class CubeDesc extends RootPersistentEntity {
         this.nullStrings = nullStrings;
     }
 
-    public boolean isUpgraded() {
-        return upgraded;
-    }
-
-    public void setUpgraded(boolean upgraded) {
-        this.upgraded = upgraded;
-    }
-
-    
 }
