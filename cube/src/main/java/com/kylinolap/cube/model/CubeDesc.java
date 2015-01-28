@@ -540,7 +540,7 @@ public class CubeDesc extends RootPersistentEntity {
                 initDerivedMap(hostCols, DeriveType.LOOKUP, dim, derivedCols, derivedExtra);
             }
 
-            // init FK derived column
+            // PK-FK derive the other side
             if (join != null) {
                 TblColRef[] fk = join.getForeignKeyColumns();
                 TblColRef[] pk = join.getPrimaryKeyColumns();
