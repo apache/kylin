@@ -1,6 +1,6 @@
 'use strict';
 
-KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService,SweetAlert,$cookieStore,$log, kylinConfig) {
+KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService,SweetAlert,$cookieStore,$log, kylinConfig,ProjectModel) {
 
     //init kylinConfig to get kylin.Propeties
     kylinConfig.init();
@@ -22,6 +22,30 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
     $scope.angular = angular;
     $scope.userService = UserService;
     $scope.activeTab = "";
+    $scope.projectModel = ProjectModel;
+
+    //init
+    ProjectService.list({}, function (projects) {
+        var _projects = [];
+        angular.forEach(projects, function(project, index){
+            _projects.push(project.name);
+        });
+        _projects = _.sortBy(_projects, function (i) { return i.toLowerCase(); });
+
+        ProjectModel.setProjects(_projects);
+
+        var absUrl = $location.absUrl();
+
+        var projectInCookie = $cookieStore.get("project");
+        if(absUrl.indexOf("/login")==-1){
+            var selectedProject=projectInCookie!=null?projectInCookie:null;
+            $scope.projectModel.setSelectedProject(selectedProject);
+        }else{
+            var selectedProject=$scope.projectModel.selectedProject!=null?$scope.projectModel.selectedProject:projectInCookie!=null?projectInCookie:$scope.projectModel.projects[0];
+            $scope.projectModel.setSelectedProject(selectedProject);
+        }
+    });
+
 
     // Set up common methods
     $scope.logout = function () {
@@ -120,29 +144,6 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
     };
 
 
-
-    $scope.project = {
-        projects:[],
-        selectedProject: null
-    };
-
-
-    ProjectService.list({}, function (projects) {
-        angular.forEach(projects, function(project, index){
-            $scope.project.projects.push(project.name);
-        });
-        $scope.project.projects = _.sortBy($scope.project.projects, function (i) { return i.toLowerCase(); });
-
-        var absUrl = $location.absUrl();
-
-        var projectInCookie = $cookieStore.get("project");
-        if(absUrl.indexOf("/login")==-1){
-            $scope.project.selectedProject=projectInCookie!=null?projectInCookie:null;
-        }else{
-            $scope.project.selectedProject=$scope.project.selectedProject!=null?$scope.project.selectedProject:projectInCookie!=null?projectInCookie:$scope.project.projects[0];
-        }
-    });
-
     $scope.toCreateProj = function () {
         $modal.open({
             templateUrl: 'project.html',
@@ -159,10 +160,10 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
     };
 
 
-    $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+    $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
         if(newValue!=oldValue){
             $log.log("project updated in page controller,from:"+oldValue+" To:"+newValue);
-            $cookieStore.put("project",$scope.project.selectedProject);
+            $cookieStore.put("project",$scope.projectModel.selectedProject);
         }
 
     });
@@ -183,11 +184,9 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
         }
     };
 
-
-
 });
 
-var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService, projects, project,SweetAlert) {
+var projCtrl = function ($scope,$location, $modalInstance, ProjectService, MessageService, projects, project,SweetAlert,ProjectModel,$cookieStore,$route) {
     $scope.state = {
         isEdit: false,
         oldProjName: null
@@ -213,6 +212,11 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
             };
             ProjectService.update({}, requestBody, function (newProj) {
                 SweetAlert.swal('Success!', 'Project update successfully!', 'success');
+
+                //update project in project model
+                ProjectModel.updateProject($scope.proj.name,$scope.state.oldProjName);
+                $cookieStore.put("project",$scope.proj.name);
+                ProjectModel.setSelectedProject($scope.proj.name);
                 $modalInstance.dismiss('cancel');
             },function(e){
                 if(e.data&& e.data.exception){
@@ -232,6 +236,10 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
                 if(projects) {
                     projects.push(newProj);
                 }
+                ProjectModel.addProject(newProj.name);
+                $cookieStore.put("project",newProj.name);
+                location.reload();
+
             }, function(e){
                 if(e.data&& e.data.exception){
                     var message =e.data.exception;
@@ -247,6 +255,5 @@ var projCtrl = function ($scope, $modalInstance, ProjectService, MessageService,
     $scope.cancel = function () {
         $modalInstance.dismiss('cancel');
     };
-
 
 };
