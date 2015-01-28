@@ -59,6 +59,57 @@ public class DimensionDesc {
     private TblColRef[] columnRefs;
     private TblColRef[] derivedColRefs;
 
+    public void init(CubeDesc cubeDesc, Map<String, TableDesc> tables) {
+        if (name != null)
+            name = name.toUpperCase();
+
+        if (table != null)
+            table = table.toUpperCase();
+
+        tableDesc = tables.get(this.getTable());
+        if (tableDesc == null)
+            throw new IllegalStateException("Can't find table " + table + " for dimension " + name);
+
+        join = null;
+        for (LookupDesc lookup : cubeDesc.getModel().getLookups()) {
+            if (lookup.getTable().equalsIgnoreCase(this.getTable())) {
+                join = lookup.getJoin();
+                break;
+            }
+        }
+
+        if (isHierarchy && this.column.length > 0) {
+            List<HierarchyDesc> hierarchyList = new ArrayList<HierarchyDesc>(3);
+            for (int i = 0, n = this.column.length; i < n; i++) {
+                String aColumn = this.column[i];
+                HierarchyDesc aHierarchy = new HierarchyDesc();
+                aHierarchy.setLevel(String.valueOf(i + 1));
+                aHierarchy.setColumn(aColumn);
+                hierarchyList.add(aHierarchy);
+            }
+
+            this.hierarchy = hierarchyList.toArray(new HierarchyDesc[hierarchyList.size()]);
+        }
+
+        if (hierarchy != null && hierarchy.length == 0)
+            hierarchy = null;
+        if (derived != null && derived.length == 0)
+            derived = null;
+
+        if (hierarchy != null) {
+            for (HierarchyDesc h : hierarchy)
+                h.setColumn(h.getColumn().toUpperCase());
+        }
+
+        if (derived != null) {
+            StringUtil.toUpperCaseArray(derived, derived);
+        }
+        
+        if (derived != null && join == null) {
+            throw new IllegalStateException("Derived can only be defined on lookup table, cube " + cubeDesc + ", " + this);
+        }
+    }
+
     public boolean isHierarchyColumn(TblColRef col) {
         if (hierarchy == null)
             return false;
@@ -69,16 +120,25 @@ public class DimensionDesc {
         }
         return false;
     }
+    
+    public boolean isDerived() {
+        return derived != null;
+    }
 
     public boolean isHierarchy() {
         return isHierarchy;
     }
 
-    /**
-     * @return
-     */
+    public void setHierarchy(boolean isHierarchy) {
+        this.isHierarchy = isHierarchy;
+    }
+
     public String getTable() {
         return table;
+    }
+
+    public void setTable(String table) {
+        this.table = table;
     }
 
     public int getId() {
@@ -172,60 +232,6 @@ public class DimensionDesc {
     @Override
     public String toString() {
         return "DimensionDesc [name=" + name + ", join=" + join + ", hierarchy=" + Arrays.toString(hierarchy) + ", table=" + table + ", column=" + Arrays.toString(column) + ", derived=" + Arrays.toString(derived) + "]";
-    }
-
-    public void init(CubeDesc cubeDesc, Map<String, TableDesc> tables, Map<String, List<TableDesc>> columnTableMap, Map<String, List<String>> tableDatabaseMap) {
-        if (name != null)
-            name = name.toUpperCase();
-
-        if (table != null)
-            table = table.toUpperCase();
-
-        tableDesc = tables.get(this.getTable());
-        if (tableDesc == null)
-            throw new IllegalStateException("Can't find table " + table + " for dimension " + name);
-
-        for (LookupDesc lookup : cubeDesc.getModel().getLookups()) {
-            if (lookup.getTable().equalsIgnoreCase(this.getTable())) {
-                this.join = lookup.getJoin();
-                break;
-            }
-        }
-
-        if (isHierarchy && this.column.length > 0) {
-            List<HierarchyDesc> hierarchyList = new ArrayList<HierarchyDesc>(3);
-            for (int i = 0, n = this.column.length; i < n; i++) {
-                String aColumn = this.column[i];
-                HierarchyDesc aHierarchy = new HierarchyDesc();
-                aHierarchy.setLevel(String.valueOf(i + 1));
-                aHierarchy.setColumn(aColumn);
-                hierarchyList.add(aHierarchy);
-            }
-
-            this.hierarchy = hierarchyList.toArray(new HierarchyDesc[hierarchyList.size()]);
-        }
-
-        if (hierarchy != null && hierarchy.length == 0)
-            hierarchy = null;
-        if (derived != null && derived.length == 0)
-            derived = null;
-
-        if (hierarchy != null) {
-            for (HierarchyDesc h : hierarchy)
-                h.setColumn(h.getColumn().toUpperCase());
-        }
-
-        if (derived != null) {
-            StringUtil.toUpperCaseArray(derived, derived);
-        }
-    }
-
-    public void setHierarchy(boolean isHierarchy) {
-        this.isHierarchy = isHierarchy;
-    }
-
-    public void setTable(String table) {
-        this.table = table;
     }
 
 }
