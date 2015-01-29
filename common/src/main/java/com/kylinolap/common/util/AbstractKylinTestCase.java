@@ -66,7 +66,7 @@ public abstract class AbstractKylinTestCase {
 
         try {
             config = KylinConfig.getInstanceFromEnv();
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             // do nothing.
         }
         if (config == null) // there is no Kylin config in current env.
