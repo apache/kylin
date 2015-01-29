@@ -48,8 +48,8 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBasic() throws Exception {
-        TableDesc siteTable = MetadataManager.getInstance(this.getTestConfig()).getTableDesc("EDW.TEST_SITES");
-        TableDesc categoryTable = MetadataManager.getInstance(this.getTestConfig()).getTableDesc("DEFAULT.test_category_groupings");
+        TableDesc siteTable = MetadataManager.getInstance(getTestConfig()).getTableDesc("EDW.TEST_SITES");
+        TableDesc categoryTable = MetadataManager.getInstance(getTestConfig()).getTableDesc("DEFAULT.test_category_groupings");
         LookupBytesTable lookup;
 
         System.out.println("============================================================================");

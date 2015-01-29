@@ -15,14 +15,15 @@
  */
 package com.kylinolap.metadata.filter;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.metadata.tuple.ITuple;
-
-import javax.jdo.annotations.Column;
 
 /**
  * 

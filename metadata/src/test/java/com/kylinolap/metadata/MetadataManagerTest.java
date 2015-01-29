@@ -43,14 +43,14 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testListAllTables() throws Exception {
-        List<TableDesc> tables = MetadataManager.getInstance(this.getTestConfig()).listAllTables();
+        List<TableDesc> tables = MetadataManager.getInstance(getTestConfig()).listAllTables();
         Assert.assertNotNull(tables);
         Assert.assertTrue(tables.size() > 0);
     }
 
     @Test
     public void testFindTableByName() throws Exception {
-        TableDesc table = MetadataManager.getInstance(this.getTestConfig()).getTableDesc("EDW.TEST_CAL_DT");
+        TableDesc table = MetadataManager.getInstance(getTestConfig()).getTableDesc("EDW.TEST_CAL_DT");
         Assert.assertNotNull(table);
         Assert.assertEquals("EDW.TEST_CAL_DT", table.getIdentity());
     }
@@ -58,9 +58,9 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
     @Test
     public void testGetInstance() throws Exception {
 
-        Assert.assertNotNull(MetadataManager.getInstance(this.getTestConfig()));
-        Assert.assertNotNull(MetadataManager.getInstance(this.getTestConfig()).listAllTables());
-        Assert.assertTrue(MetadataManager.getInstance(this.getTestConfig()).listAllTables().size() > 0);
+        Assert.assertNotNull(MetadataManager.getInstance(getTestConfig()));
+        Assert.assertNotNull(MetadataManager.getInstance(getTestConfig()).listAllTables());
+        Assert.assertTrue(MetadataManager.getInstance(getTestConfig()).listAllTables().size() > 0);
     }
 
 }
