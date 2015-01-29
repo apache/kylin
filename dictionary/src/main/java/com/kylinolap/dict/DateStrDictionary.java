@@ -55,11 +55,7 @@ public class DateStrDictionary extends Dictionary<String> {
         SimpleDateFormat format = formatThreadLocal.get();
         if (format == null) {
             format = new SimpleDateFormat(datePattern);
-            format.setTimeZone(TimeZone.getTimeZone("GMT")); // NOTE: this must
-                                                             // be GMT to
-                                                             // calculate
-                                                             // epoch date
-                                                             // correctly
+            format.setTimeZone(TimeZone.getTimeZone("GMT")); // NOTE: this must be GMT to calculate epoch date correctly
             formatThreadLocal.set(format);
         }
         return format;

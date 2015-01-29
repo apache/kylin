@@ -62,21 +62,11 @@ public abstract class AbstractKylinTestCase {
 
     private static void cleanupCache() {
 
-        KylinConfig config = null;
-
-        try {
-            config = KylinConfig.getInstanceFromEnv();
-        } catch (IllegalArgumentException e) {
-            // do nothing.
-        }
-        if (config == null) // there is no Kylin config in current env.
-            return;
-
         for (String serviceClass : SERVICES_WITH_CACHE) {
             try {
                 Class<?> cls = Class.forName(serviceClass);
-                Method method = cls.getDeclaredMethod("removeInstance", KylinConfig.class);
-                method.invoke(null, config);
+                Method method = cls.getDeclaredMethod("clearCache");
+                method.invoke(null);
             } catch (ClassNotFoundException e) {
                 // acceptable because lower module test does have CubeManager etc on classpath
             } catch (Exception e) {

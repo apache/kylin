@@ -63,7 +63,7 @@ public class CacheService extends BasicService {
                     getCubeDescManager().removeLocalCubeDesc(cacheKey);
                     break;
                 case PROJECT:
-                    ProjectManager.removeInstance(getConfig());
+                    ProjectManager.clearCache();
                     break;
                 case INVERTED_INDEX:
                     getIIManager().removeIILocalCache(cacheKey);

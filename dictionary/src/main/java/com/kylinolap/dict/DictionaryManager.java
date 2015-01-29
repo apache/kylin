@@ -48,22 +48,22 @@ public class DictionaryManager {
     private static final DictionaryInfo NONE_INDICATOR = new DictionaryInfo();
 
     // static cached instances
-    private static final ConcurrentHashMap<KylinConfig, DictionaryManager> SERVICE_CACHE = new ConcurrentHashMap<KylinConfig, DictionaryManager>();
+    private static final ConcurrentHashMap<KylinConfig, DictionaryManager> CACHE = new ConcurrentHashMap<KylinConfig, DictionaryManager>();
 
     public static DictionaryManager getInstance(KylinConfig config) {
-        DictionaryManager r = SERVICE_CACHE.get(config);
+        DictionaryManager r = CACHE.get(config);
         if (r == null) {
             r = new DictionaryManager(config);
-            SERVICE_CACHE.put(config, r);
-            if (SERVICE_CACHE.size() > 1) {
+            CACHE.put(config, r);
+            if (CACHE.size() > 1) {
                 logger.warn("More than one singleton exist");
             }
         }
         return r;
     }
 
-    public static void removeInstance(KylinConfig config) {
-        SERVICE_CACHE.remove(config);
+    public static void clearCache() {
+        CACHE.clear();
     }
 
     // ============================================================================

@@ -112,7 +112,7 @@ public class ProjectService extends BasicService {
     }
 
     public void removeProjectCache(String name) {
-        ProjectManager.removeInstance(getConfig());
+        ProjectManager.clearCache();
     }
 
 }
