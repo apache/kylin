@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.kylinolap.metadata.realization.SQLDigest;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -231,6 +232,7 @@ public class StorageTest extends HBaseMetadataTestCase {
         return compareFilter;
     }
 
+    @SuppressWarnings("unused")
     private TupleFilter buildAndFilter(List<TblColRef> columns) {
         CompareTupleFilter compareFilter1 = buildFilter1(columns.get(0));
         CompareTupleFilter compareFilter2 = buildFilter2(columns.get(1));
@@ -240,6 +242,7 @@ public class StorageTest extends HBaseMetadataTestCase {
         return andFilter;
     }
 
+    @SuppressWarnings("unused")
     private TupleFilter buildOrFilter(List<TblColRef> columns) {
         CompareTupleFilter compareFilter1 = buildFilter1(columns.get(0));
         CompareTupleFilter compareFilter2 = buildFilter2(columns.get(1));

@@ -47,8 +47,6 @@ public class StorageContext {
     private boolean acceptPartialResult;
     private BiMap<TblColRef, String> aliasMap;
 
-    // To hint records shall be returned at most granular level, avoid aggregation (coprocessor) wherever possible.
-    private boolean avoidAggregation;
     private boolean exactAggregation;
     private Set<TblColRef> otherMandatoryColumns;
     private boolean enableLimit;
@@ -68,7 +66,6 @@ public class StorageContext {
         this.sortOrders = new ArrayList<OrderEnum>();
         this.sortMeasures = new ArrayList<MeasureDesc>();
 
-        this.avoidAggregation = false;
         this.exactAggregation = false;
         this.otherMandatoryColumns = new HashSet<TblColRef>();
         this.enableLimit = false;

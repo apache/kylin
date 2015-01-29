@@ -20,27 +20,24 @@ import java.util.ArrayList;
 
 import org.apache.hadoop.hbase.client.HConnection;
 
-import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.HBaseConnection;
 import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IISegment;
+import com.kylinolap.metadata.realization.SQLDigest;
+import com.kylinolap.metadata.tuple.ITupleIterator;
 import com.kylinolap.storage.IStorageEngine;
 import com.kylinolap.storage.StorageContext;
 import com.kylinolap.storage.hbase.coprocessor.endpoint.EndpointTupleIterator;
-import com.kylinolap.metadata.realization.SQLDigest;
-import com.kylinolap.metadata.tuple.ITupleIterator;
 
 /**
  * @author yangli9
  */
 public class InvertedIndexStorageEngine implements IStorageEngine {
 
-    private String hbaseUrl;
     private IISegment seg;
 
     public InvertedIndexStorageEngine(IIInstance ii) {
         this.seg = ii.getFirstSegment();
-        this.hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
     }
 
     @Override
