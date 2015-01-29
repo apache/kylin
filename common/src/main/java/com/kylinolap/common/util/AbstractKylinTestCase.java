@@ -62,7 +62,16 @@ public abstract class AbstractKylinTestCase {
 
     private static void cleanupCache() {
 
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        KylinConfig config = null;
+
+        try {
+            config = KylinConfig.getInstanceFromEnv();
+        } catch (IllegalArgumentException e) {
+            // do nothing.
+        }
+        if (config == null) // there is no Kylin config in current env.
+            return;
+
         for (String serviceClass : SERVICES_WITH_CACHE) {
             try {
                 Class<?> cls = Class.forName(serviceClass);

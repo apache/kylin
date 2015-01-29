@@ -2,12 +2,10 @@ package com.kylinolap.storage.minicluster;
 
 import java.io.File;
 import java.sql.SQLException;
-import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.MiniHBaseCluster;
@@ -36,8 +34,6 @@ public class HBaseMiniClusterTest {
     protected static MiniMRCluster mrCluster = null;
     protected static MiniHBaseCluster hbaseCluster = null;
     protected static JobConf conf = null;
-    private static final int NAMENODE_PORT = 9010;
-    private static final int JOBTRACKER_PORT = 9011;
     protected static String LOG_DIR = "/tmp/logs";
 
     //@Before
