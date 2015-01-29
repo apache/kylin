@@ -1,27 +1,19 @@
 package com.kylinolap.query.test;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.ClasspathUtil;
-import com.kylinolap.metadata.realization.RealizationRegistry;
-import com.kylinolap.metadata.realization.RealizationType;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
-import java.io.File;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
+
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.metadata.realization.RealizationRegistry;
+import com.kylinolap.metadata.realization.RealizationType;
 
 /**
  * Created by qianzhou on 1/26/15.
  */
 public class RealizationRegistryTest extends KylinQueryTest {
-
-//    @Before
-//    public void before() throws Exception {
-//        ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox/").getAbsolutePath());
-//    }
 
     @Test
     public void test() throws Exception {
