@@ -16,6 +16,7 @@ import com.kylinolap.job.execution.ExecutableState;
 import com.kylinolap.job.hadoop.cube.StorageCleanupJob;
 import com.kylinolap.job.impl.threadpool.DefaultScheduler;
 import com.kylinolap.job.manager.ExecutableManager;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.util.ToolRunner;
@@ -161,6 +162,7 @@ public class BuildCubeWithEngineTest {
             this.countDownLatch = countDownLatch;
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public List<String> call() throws Exception {
             try {
@@ -173,6 +175,7 @@ public class BuildCubeWithEngineTest {
         }
     }
 
+    @SuppressWarnings("unused") // called by reflection
     private List<String> testInnerJoinCube2() throws Exception {
         clearSegment("test_kylin_cube_with_slr_empty");
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
@@ -186,6 +189,7 @@ public class BuildCubeWithEngineTest {
         return result;
     }
 
+    @SuppressWarnings("unused") // called by reflection
     private List<String> testInnerJoinCube() throws Exception {
         clearSegment("test_kylin_cube_without_slr_empty");
 
@@ -205,6 +209,7 @@ public class BuildCubeWithEngineTest {
         return result;
     }
 
+    @SuppressWarnings("unused") // called by reflection
     private List<String> testLeftJoinCube2() throws Exception {
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -226,6 +231,7 @@ public class BuildCubeWithEngineTest {
 
     }
 
+    @SuppressWarnings("unused") // called by reflection
     private List<String> testLeftJoinCube() throws Exception {
         String cubeName = "test_kylin_cube_with_slr_left_join_empty";
         clearSegment(cubeName);

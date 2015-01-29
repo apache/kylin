@@ -167,6 +167,7 @@ public class CubeMetadataUpgrade {
 
     }
 
+    @SuppressWarnings("unchecked")
     private void upgradeTableDesceExd() {
 
         List<String> paths = listResourceStore(ResourceStore.TABLE_EXD_RESOURCE_ROOT);

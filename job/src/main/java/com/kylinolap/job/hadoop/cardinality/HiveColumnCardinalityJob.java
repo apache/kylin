@@ -54,21 +54,13 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
 
     private String table;
 
-    /**
-     * MRJobConfig.MAPREDUCE_JOB_CREDENTIALS_BINARY
-     */
-    private String tokenPath;
-
     public HiveColumnCardinalityJob() {
-
     }
 
     public HiveColumnCardinalityJob(String path, String tokenPath) {
         this.jarPath = path;
-        this.tokenPath = tokenPath;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public int run(String[] args) throws Exception {
 

@@ -52,22 +52,12 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
     @SuppressWarnings("static-access")
     protected static final Option OPTION_TABLE = OptionBuilder.withArgName("table name").hasArg().isRequired(true).withDescription("The hive table name").create("table");
 
-    /**
-     * This is the jar path
-     */
-
     private String table;
-
-    /**
-     * MRJobConfig.MAPREDUCE_JOB_CREDENTIALS_BINARY
-     */
 
     public HiveColumnCardinalityUpdateJob() {
 
     }
 
-
-    @SuppressWarnings("unchecked")
     @Override
     public int run(String[] args) throws Exception {
 

@@ -1,13 +1,12 @@
 package com.kylinolap.job.dao;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.kylinolap.common.persistence.RootPersistentEntity;
-
 import java.util.List;
 import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Maps;
+import com.kylinolap.common.persistence.RootPersistentEntity;
 
 /**
  * Created by qianzhou on 12/15/14.
