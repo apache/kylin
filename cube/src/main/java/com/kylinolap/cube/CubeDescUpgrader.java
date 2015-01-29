@@ -31,6 +31,7 @@ public class CubeDescUpgrader {
 
     private String resourcePath;
 
+    @SuppressWarnings("unused")
     private static final Log logger = LogFactory.getLog(CubeDescUpgrader.class);
 
     private static final Serializer<com.kylinolap.cube.model.v1.CubeDesc> CUBE_DESC_SERIALIZER_V1 = new JsonSerializer<com.kylinolap.cube.model.v1.CubeDesc>(com.kylinolap.cube.model.v1.CubeDesc.class);

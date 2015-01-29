@@ -53,6 +53,7 @@ public class MetadataUpgradeTest extends LocalFileMetadataTestCase {
         MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
         TableDesc fact = metaMgr.getTableDesc("default.test_kylin_fact");
         
+        @SuppressWarnings("deprecation")
         String oldResLocation = fact.getResourcePathV1();
         String newResLocation = fact.getResourcePath();
         
