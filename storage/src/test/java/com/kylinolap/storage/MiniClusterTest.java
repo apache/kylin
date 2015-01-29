@@ -6,14 +6,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.MiniHBaseCluster;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.util.AbstractKylinTestCase;
 
 public class MiniClusterTest {
 
-    private static Logger logger = LoggerFactory.getLogger(MiniClusterTest.class);
     private static HBaseTestingUtility testUtil = new HBaseTestingUtility();
 
     public static void main(String[] args) throws Exception {
