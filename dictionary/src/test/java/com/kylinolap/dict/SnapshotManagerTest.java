@@ -18,13 +18,10 @@ package com.kylinolap.dict;
 
 import static org.junit.Assert.*;
 
-import java.io.File;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.kylinolap.common.util.ClasspathUtil;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.dict.lookup.HiveTable;
 import com.kylinolap.dict.lookup.SnapshotManager;
