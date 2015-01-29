@@ -44,8 +44,8 @@ public class RealizationRegistry {
         }
     }
 
-    public static void removeInstance(KylinConfig config) {
-        CACHE.remove(config);
+    public static void clearCache() {
+        CACHE.clear();
     }
 
     // ============================================================================

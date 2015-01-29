@@ -84,10 +84,6 @@ public class CubeDescManager {
         CACHE.clear();
     }
 
-    public static synchronized void removeInstance(KylinConfig config) {
-        CACHE.remove(config);
-    }
-
     private CubeDescManager(KylinConfig config) throws IOException {
         logger.info("Initializing CubeDescManager with config " + config);
         this.config = config;

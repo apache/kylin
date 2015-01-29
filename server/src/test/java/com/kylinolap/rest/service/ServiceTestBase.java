@@ -59,11 +59,11 @@ public class ServiceTestBase extends HBaseMetadataTestCase { //HBaseMetadataTest
     public void setUp() throws Exception {
         this.createTestMetadata();
 
-        MetadataManager.removeInstance(this.getTestConfig());
-        DictionaryManager.removeInstance(this.getTestConfig());
-        CubeManager.removeInstance(this.getTestConfig());
-        IIManager.removeInstance(this.getTestConfig());
-        ProjectManager.removeInstance(this.getTestConfig());
+        MetadataManager.clearCache();
+        DictionaryManager.clearCache();
+        CubeManager.clearCache();
+        IIManager.clearCache();
+        ProjectManager.clearCache();
     }
 
     @After

@@ -81,10 +81,6 @@ public class IIDescManager {
         CACHE.clear();
     }
 
-    public static synchronized void removeInstance(KylinConfig config) {
-        CACHE.remove(config);
-    }
-
     private IIDescManager(KylinConfig config) throws IOException {
         logger.info("Initializing IIDescManager with config " + config);
         this.config = config;
