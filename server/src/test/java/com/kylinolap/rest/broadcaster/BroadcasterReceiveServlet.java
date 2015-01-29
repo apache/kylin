@@ -1,20 +1,20 @@
 package com.kylinolap.rest.broadcaster;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Created by qianzhou on 1/16/15.
  */
 public class BroadcasterReceiveServlet extends HttpServlet {
+
+    private static final long serialVersionUID = 1L;
 
     public static interface BroadcasterHandler {
 
@@ -26,8 +26,6 @@ public class BroadcasterReceiveServlet extends HttpServlet {
     public BroadcasterReceiveServlet(BroadcasterHandler handler) {
         this.handler = handler;
     }
-
-    private static Logger logger = LoggerFactory.getLogger(BroadcasterReceiveServlet.class);
 
     private static final Pattern PATTERN = Pattern.compile("/(.+)/(.+)/(.+)");
     @Override
