@@ -97,7 +97,7 @@ public class HBaseMiniClusterTest2 {
         stopCluster();
         // clean up the hdfs files created by mini cluster
         //        String baseTempDir = "build" + File.separator + "test" + File.separator;
-        String baseTempDir = dfsCluster.getBaseDirectory();
+        String baseTempDir = MiniDFSCluster.getBaseDirectory();
         //        String dfsDir = baseTempDir + "data";
         //        System.out.println("------" + new File(dfsDir).getAbsolutePath());
         //        FileUtils.deleteDirectory(new File(dfsDir));
@@ -133,7 +133,7 @@ public class HBaseMiniClusterTest2 {
         }
 
         System.out.println("dfs uri: -------" + dfsCluster.getFileSystem().getUri().toString());
-        System.out.println("dfs base directory: -------" + dfsCluster.getBaseDirectory().toString());
+        System.out.println("dfs base directory: -------" + MiniDFSCluster.getBaseDirectory().toString());
 
         Configuration config = hbaseCluster.getConf();
         String host = config.get(HConstants.ZOOKEEPER_QUORUM);
