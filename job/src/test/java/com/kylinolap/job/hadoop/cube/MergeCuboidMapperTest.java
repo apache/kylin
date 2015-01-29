@@ -89,10 +89,10 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
         logger.info("The metadataUrl is : " + getTestConfig());
 
-        MetadataManager.removeInstance(getTestConfig());
-        CubeManager.removeInstance(getTestConfig());
-        ProjectManager.removeInstance(getTestConfig());
-        DictionaryManager.removeInstance(getTestConfig());
+        MetadataManager.clearCache();
+        CubeManager.clearCache();
+        ProjectManager.clearCache();
+        DictionaryManager.clearCache();
 
         // hack for distributed cache
         // CubeManager.removeInstance(KylinConfig.createInstanceFromUri("../job/meta"));//to

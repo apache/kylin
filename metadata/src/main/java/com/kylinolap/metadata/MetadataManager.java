@@ -85,8 +85,8 @@ public class MetadataManager {
         }
     }
 
-    public static synchronized void removeInstance(KylinConfig config) {
-        CACHE.remove(config);
+    public static void clearCache() {
+        CACHE.clear();
     }
 
     // ============================================================================
@@ -112,7 +112,7 @@ public class MetadataManager {
      * @throws IOException
      */
     public void reload() {
-        removeInstance(config);
+        clearCache();
         getInstance(config);
     }
 

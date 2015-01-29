@@ -89,10 +89,6 @@ public class IIManager implements IRealizationProvider {
         CACHE.clear();
     }
 
-    public static synchronized void removeInstance(KylinConfig config) {
-        CACHE.remove(config);
-    }
-
     // ============================================================================
 
     private KylinConfig config;

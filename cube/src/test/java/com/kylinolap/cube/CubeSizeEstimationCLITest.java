@@ -21,7 +21,7 @@ public class CubeSizeEstimationCLITest extends LocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
-        MetadataManager.removeInstance(getTestConfig());
+        MetadataManager.clearCache();
 
         String cubeName = "test_kylin_cube_with_slr_ready";
         CubeManager cubeManager = CubeManager.getInstance(getTestConfig());

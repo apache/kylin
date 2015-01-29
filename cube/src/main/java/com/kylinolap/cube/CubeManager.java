@@ -102,8 +102,8 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
-    public static synchronized void removeInstance(KylinConfig config) {
-        CACHE.remove(config);
+    public static void clearCache() {
+        CACHE.clear();
     }
 
     // ============================================================================

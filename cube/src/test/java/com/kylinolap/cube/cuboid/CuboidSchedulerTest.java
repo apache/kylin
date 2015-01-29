@@ -39,7 +39,7 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
-        MetadataManager.removeInstance(getTestConfig());
+        MetadataManager.clearCache();
     }
 
     @After

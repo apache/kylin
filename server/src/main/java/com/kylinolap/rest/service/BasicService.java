@@ -128,8 +128,8 @@ public abstract class BasicService {
      */
     @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
     public void cleanDataCache() {
-        CubeManager.removeInstance(getConfig());
-        ProjectManager.removeInstance(getConfig());
+        CubeManager.clearCache();
+        ProjectManager.clearCache();
         BasicService.resetOLAPDataSources();
     }
 

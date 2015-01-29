@@ -18,7 +18,7 @@ public class DataGenTest extends LocalFileMetadataTestCase {
     @Before
     public void before() throws Exception {
         this.createTestMetadata();
-        MetadataManager.removeInstance(this.getTestConfig());
+        MetadataManager.clearCache();
     }
 
     @After
