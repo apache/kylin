@@ -70,8 +70,8 @@ public class ProjectManager {
         }
     }
 
-    public static synchronized void removeInstance(KylinConfig config) {
-        CACHE.remove(config);
+    public static void clearCache() {
+        CACHE.clear();
     }
 
     // ============================================================================

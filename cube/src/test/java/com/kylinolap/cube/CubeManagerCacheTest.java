@@ -40,9 +40,9 @@ public class CubeManagerCacheTest extends LocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
-        MetadataManager.removeInstance(getTestConfig());
-        CubeManager.removeInstance(getTestConfig());
-        ProjectManager.removeInstance(getTestConfig());
+        MetadataManager.clearCache();
+        CubeManager.clearCache();
+        ProjectManager.clearCache();
         cubeManager = CubeManager.getInstance(getTestConfig());
     }
 
