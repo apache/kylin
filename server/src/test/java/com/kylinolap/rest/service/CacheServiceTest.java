@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.*;
 
@@ -35,26 +36,26 @@ import static org.junit.Assert.*;
 
 public class CacheServiceTest extends LocalFileMetadataTestCase {
 
-    private Server server;
+    private static Server server;
 
-    private KylinConfig configA;
-    private KylinConfig configB;
+    private static KylinConfig configA;
+    private static KylinConfig configB;
 
     private static final Logger logger = org.slf4j.LoggerFactory.getLogger(CacheServiceTest.class);
 
-    @Before
-    public void setUp() throws Exception {
-        this.createTestMetadata();
+    private static AtomicLong counter = new AtomicLong();
+
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        createTestMetadata(LOCALMETA_TEST_DATA);
+        configA = KylinConfig.getInstanceFromEnv();
+        configB = KylinConfig.getKylinConfigFromInputStream(KylinConfig.getKylinPropertiesAsInputSteam());
+        configB.setMetadataUrl("../examples/test_metadata");
 
         server = new Server(7070);
-
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
         server.setHandler(context);
-
-        configA = KylinConfig.getInstanceFromEnv();
-        configB = KylinConfig.getKylinConfigFromInputStream(KylinConfig.getKylinPropertiesAsInputSteam());
-        configB.setMetadataUrl(tempTestMetadataUrl);
 
         context.addServlet(new ServletHolder(new BroadcasterReceiveServlet(new BroadcasterReceiveServlet.BroadcasterHandler() {
             @Override
@@ -69,6 +70,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
                 Broadcaster.EVENT wipeEvent = Broadcaster.EVENT.getEvent(event);
                 final String log = "wipe cache type: " + wipeType + " event:" + wipeEvent + " name:" + name;
                 logger.info(log);
+                counter.incrementAndGet();
                 switch (wipeEvent) {
                     case CREATE:
                     case UPDATE:
@@ -85,10 +87,33 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         server.start();
     }
 
+    @AfterClass
+    public static void afterClass() throws Exception {
+        cleanAfterClass();
+        server.stop();
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        counter.set(0L);
+    }
+
     @After
     public void after() throws Exception {
-        this.cleanupTestMetadata();
-        server.stop();
+    }
+
+    private void waitForCounterAndClear(long count) {
+        int retryTimes = 0;
+        while ((!counter.compareAndSet(count, 0L))) {
+            if (++retryTimes > 30) {
+                throw new RuntimeException("timeout");
+            }
+            try {
+                Thread.sleep(100L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @BeforeClass
@@ -131,11 +156,12 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         assertTrue(!getCubeDescManager(configA).equals(getCubeDescManager(configB)));
         assertTrue(!getProjectManager(configA).equals(getProjectManager(configB)));
         assertTrue(!getMetadataManager(configA).equals(getMetadataManager(configB)));
+
+        assertEquals(getProjectManager(configA).listAllProjects().size(), getProjectManager(configB).listAllProjects().size());
     }
 
     @Test
     public void testCubeCRUD() throws Exception {
-        final int sleepTime = 400;
         final Broadcaster broadcaster = Broadcaster.getInstance();
         broadcaster.getCounterAndClear();
 
@@ -160,7 +186,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         assertNotNull(cubeManager.getCube(cubeName));
         //one for cube update, one for project update
         assertEquals(2, broadcaster.getCounterAndClear());
-        Thread.sleep(sleepTime);
+        waitForCounterAndClear(2);
         assertNotNull(cubeManagerB.getCube(cubeName));
         assertTrue(containsRealization(projectManager.listAllRealizations(ProjectInstance.DEFAULT_PROJECT_NAME), RealizationType.CUBE, cubeName));
         assertTrue(containsRealization(projectManagerB.listAllRealizations(ProjectInstance.DEFAULT_PROJECT_NAME), RealizationType.CUBE, cubeName));
@@ -175,7 +201,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         cubeManager.updateCube(cube);
         //only one for update cube
         assertEquals(1, broadcaster.getCounterAndClear());
-        Thread.sleep(sleepTime);
+        waitForCounterAndClear(1);
         assertEquals(1, cubeManagerB.getCube(cubeName).getSegments().size());
         assertEquals(segment.getName(), cubeManagerB.getCube(cubeName).getSegments().get(0).getName());
 
@@ -185,7 +211,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         assertTrue(!containsRealization(projectManager.listAllRealizations(ProjectInstance.DEFAULT_PROJECT_NAME), RealizationType.CUBE, cubeName));
         //one for cube update, one for project update
         assertEquals(2, broadcaster.getCounterAndClear());
-        Thread.sleep(sleepTime);
+        waitForCounterAndClear(2);
         assertTrue(cubeManagerB.getCube(cubeName) == null);
         assertTrue(!containsRealization(projectManagerB.listAllRealizations(ProjectInstance.DEFAULT_PROJECT_NAME), RealizationType.CUBE, cubeName));
 
@@ -198,7 +224,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         cubeDescManager.createCubeDesc(cubeDesc);
         //one for add cube desc
         assertEquals(1, broadcaster.getCounterAndClear());
-        Thread.sleep(sleepTime);
+        waitForCounterAndClear(1);
         assertNotNull(cubeDescManager.getCubeDesc(cubeDescName));
         assertNotNull(cubeDescManagerB.getCubeDesc(cubeDescName));
 
@@ -206,13 +232,13 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         cubeDesc.setNotifyList(Arrays.asList("test@email", "test@email", "test@email"));
         cubeDescManager.updateCubeDesc(cubeDesc);
         assertEquals(1, broadcaster.getCounterAndClear());
-        Thread.sleep(sleepTime);
+        waitForCounterAndClear(1);
         assertEquals(cubeDesc.getNotifyList(), cubeDescManagerB.getCubeDesc(cubeDescName).getNotifyList());
 
         cubeDescManager.removeCubeDesc(cubeDesc);
         //one for add cube desc
         assertEquals(1, broadcaster.getCounterAndClear());
-        Thread.sleep(sleepTime);
+        waitForCounterAndClear(1);
         assertTrue(cubeDescManager.getCubeDesc(cubeDescName) == null);
         assertTrue(cubeDescManagerB.getCubeDesc(cubeDescName) == null);
 
@@ -233,7 +259,6 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testMetaCRUD() throws Exception {
-        final int sleepTime = 400;
         final MetadataManager metadataManager = MetadataManager.getInstance(configA);
         final MetadataManager metadataManagerB = MetadataManager.getInstance(configB);
         final Broadcaster broadcaster = Broadcaster.getInstance();
@@ -245,7 +270,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         metadataManager.saveSourceTable(tableDesc);
         //only one for table insert
         assertEquals(1, broadcaster.getCounterAndClear());
-        Thread.sleep(sleepTime);
+        waitForCounterAndClear(1);
         assertNotNull(metadataManager.getTableDesc(tableDesc.getIdentity()));
         assertNotNull(metadataManagerB.getTableDesc(tableDesc.getIdentity()));
 
@@ -263,7 +288,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         metadataManager.createDataModelDesc(dataModelDesc);
         //only one for data model update
         assertEquals(1, broadcaster.getCounterAndClear());
-        Thread.sleep(sleepTime);
+        waitForCounterAndClear(1);
         assertEquals(dataModelDesc.getName(), metadataManagerB.getDataModelDesc(dataModelName).getName());
 
         final LookupDesc[] lookups = dataModelDesc.getLookups();
@@ -272,7 +297,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         metadataManager.updateDataModelDesc(dataModelDesc);
         //only one for data model update
         assertEquals(1, broadcaster.getCounterAndClear());
-        Thread.sleep(sleepTime);
+        waitForCounterAndClear(1);
         assertEquals(dataModelDesc.getLookups().length, metadataManagerB.getDataModelDesc(dataModelName).getLookups().length);
 
     }
