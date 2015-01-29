@@ -36,28 +36,26 @@ import static org.junit.Assert.*;
 
 public class CacheServiceTest extends LocalFileMetadataTestCase {
 
-    private Server server;
+    private static Server server;
 
-    private KylinConfig configA;
-    private KylinConfig configB;
+    private static KylinConfig configA;
+    private static KylinConfig configB;
 
     private static final Logger logger = org.slf4j.LoggerFactory.getLogger(CacheServiceTest.class);
 
-    private AtomicLong counter = new AtomicLong();
+    private static AtomicLong counter = new AtomicLong();
 
-    @Before
-    public void setUp() throws Exception {
-        this.createTestMetadata();
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        createTestMetadata(LOCALMETA_TEST_DATA);
+        configA = KylinConfig.getInstanceFromEnv();
+        configB = KylinConfig.getKylinConfigFromInputStream(KylinConfig.getKylinPropertiesAsInputSteam());
+        configB.setMetadataUrl("../examples/test_metadata");
 
         server = new Server(7070);
-
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
         server.setHandler(context);
-
-        configA = KylinConfig.getInstanceFromEnv();
-        configB = KylinConfig.getKylinConfigFromInputStream(KylinConfig.getKylinPropertiesAsInputSteam());
-        configB.setMetadataUrl(tempTestMetadataUrl);
 
         context.addServlet(new ServletHolder(new BroadcasterReceiveServlet(new BroadcasterReceiveServlet.BroadcasterHandler() {
             @Override
@@ -87,23 +85,35 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
             }
         })), "/");
         server.start();
+    }
+
+    @AfterClass
+    public static void afterClass() throws Exception {
+        cleanAfterClass();
+        server.stop();
+    }
+
+    @Before
+    public void setUp() throws Exception {
         counter.set(0L);
     }
 
+    @After
+    public void after() throws Exception {
+    }
+
     private void waitForCounterAndClear(long count) {
-        while (!counter.compareAndSet(count, 0L)) {
+        int retryTimes = 0;
+        while ((!counter.compareAndSet(count, 0L))) {
+            if (++retryTimes > 30) {
+                throw new RuntimeException("timeout");
+            }
             try {
                 Thread.sleep(100L);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-    }
-
-    @After
-    public void after() throws Exception {
-        this.cleanupTestMetadata();
-        server.stop();
     }
 
     @BeforeClass
@@ -146,6 +156,8 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         assertTrue(!getCubeDescManager(configA).equals(getCubeDescManager(configB)));
         assertTrue(!getProjectManager(configA).equals(getProjectManager(configB)));
         assertTrue(!getMetadataManager(configA).equals(getMetadataManager(configB)));
+
+        assertEquals(getProjectManager(configA).listAllProjects().size(), getProjectManager(configB).listAllProjects().size());
     }
 
     @Test
