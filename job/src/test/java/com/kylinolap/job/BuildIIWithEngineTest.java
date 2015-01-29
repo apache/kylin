@@ -141,6 +141,7 @@ public class BuildIIWithEngineTest {
             this.countDownLatch = countDownLatch;
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public List<String> call() throws Exception {
             try {

@@ -26,7 +26,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 
 /**

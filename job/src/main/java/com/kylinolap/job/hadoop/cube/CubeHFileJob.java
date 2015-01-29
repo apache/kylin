@@ -40,9 +40,7 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**
  * @author George Song (ysong1)
- * 
  */
-
 public class CubeHFileJob extends AbstractHadoopJob {
 
     protected static final Logger logger = LoggerFactory.getLogger(CubeHFileJob.class);

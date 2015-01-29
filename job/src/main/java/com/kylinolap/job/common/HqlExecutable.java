@@ -11,11 +11,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.util.HiveClient;
 import com.kylinolap.common.util.JsonUtil;
-import com.kylinolap.job.dao.ExecutablePO;
 import com.kylinolap.job.exception.ExecuteException;
+import com.kylinolap.job.execution.AbstractExecutable;
 import com.kylinolap.job.execution.ExecutableContext;
 import com.kylinolap.job.execution.ExecuteResult;
-import com.kylinolap.job.execution.AbstractExecutable;
 
 /**
  * Created by qianzhou on 1/15/15.
@@ -58,6 +57,7 @@ public class HqlExecutable extends AbstractExecutable {
     }
 
 
+    @SuppressWarnings("unchecked")
     private Map<String, String> getConfiguration() {
         String configStr = getParam(HIVE_CONFIG);
         Map<String, String> result = null;

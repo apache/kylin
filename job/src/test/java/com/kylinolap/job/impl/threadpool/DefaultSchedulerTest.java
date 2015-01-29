@@ -1,13 +1,16 @@
 package com.kylinolap.job.impl.threadpool;
 
-import com.kylinolap.job.*;
-import com.kylinolap.job.execution.DefaultChainedExecutable;
-import com.kylinolap.job.execution.ExecutableState;
+import static org.junit.Assert.*;
+
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import com.kylinolap.job.BaseTestExecutable;
+import com.kylinolap.job.ErrorTestExecutable;
+import com.kylinolap.job.FailedTestExecutable;
+import com.kylinolap.job.SelfStopExecutable;
+import com.kylinolap.job.SucceedTestExecutable;
+import com.kylinolap.job.execution.DefaultChainedExecutable;
+import com.kylinolap.job.execution.ExecutableState;
 
 /**
  * Created by qianzhou on 12/19/14.
