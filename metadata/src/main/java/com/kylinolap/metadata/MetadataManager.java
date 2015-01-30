@@ -253,6 +253,9 @@ public class MetadataManager {
     private TableDesc reloadSourceTableAt(String path) throws IOException {
         ResourceStore store = getStore();
         TableDesc t = store.getResource(path, TableDesc.class, TABLE_SERIALIZER);
+        if (t == null) {
+            return null;
+        }
         t.init();
 
         String tableIdentity = t.getIdentity();
