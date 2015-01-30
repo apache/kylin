@@ -1,6 +1,6 @@
 'use strict';
 
-KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter) {
+KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter,ModelService ) {
     //~ Define metadata & class
     $scope.capacities = ['SMALL', 'MEDIUM', 'LARGE'];
 //    $scope.cubePartitionTypes = ['APPEND', 'UPDATE_INSERT'];
@@ -9,6 +9,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     $scope.projects = [];
     $scope.newDimension = null;
     $scope.newMeasure = null;
+    $scope.metaModel={};
 
     $scope.wizardSteps = [
         {title: 'Cube Info', src: 'partials/cubeDesigner/info.html', isComplete: false},
@@ -55,6 +56,20 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         }
         if (newValue) {
             $scope.cubeMetaFrame = newValue;
+
+            //init model
+            ModelService.get({model_name: $scope.cubeMetaFrame.model_name}, function (model) {
+                if (model) {
+                    $scope.metaModel = model;
+                    //convert GMT mills ,to make sure partition date show GMT Date
+                    //should run only one time
+                    if($scope.metaModel.partition_desc&&$scope.metaModel.partition_desc.partition_date_start)
+                    {
+                        $scope.metaModel.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
+                    }
+                }
+            });
+
         }
     });
 

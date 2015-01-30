@@ -42,6 +42,7 @@ import com.codahale.metrics.annotation.Metered;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
@@ -51,6 +52,8 @@ import com.kylinolap.job.JobInstance;
 import com.kylinolap.job.JoinedFlatTable;
 import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
+import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.DataModelDesc;
 import com.kylinolap.metadata.model.SegmentStatusEnum;
 import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.rest.exception.BadRequestException;
@@ -289,6 +292,21 @@ public class CubeController extends BasicController {
     @ResponseBody
     @Metered(name = "saveCube")
     public CubeRequest saveCubeDesc(@RequestBody CubeRequest cubeRequest) {
+        //Update Model 
+        MetadataManager metaManager= MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        DataModelDesc modelDesc = deserializeDataModelDesc(cubeRequest);
+        if(modelDesc==null){
+            return cubeRequest; 
+        }
+        try {
+            metaManager.createDataModelDesc(modelDesc);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            logger.error("Failed to deal with the request:"+e.getLocalizedMessage(), e);
+            throw new InternalErrorException("Failed to deal with the request: "+e.getLocalizedMessage() + e.getMessage());
+           }
+        
+        
         CubeDesc desc = deserializeCubeDesc(cubeRequest);
         if (desc == null) {
             return cubeRequest;
@@ -325,6 +343,24 @@ public class CubeController extends BasicController {
     @ResponseBody
     @Metered(name = "updateCube")
     public CubeRequest updateCubeDesc(@RequestBody CubeRequest cubeRequest) throws JsonProcessingException {
+        
+        //Update Model 
+        MetadataManager metaManager= MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        DataModelDesc modelDesc = deserializeDataModelDesc(cubeRequest);
+        if(modelDesc==null){
+            return cubeRequest; 
+        }
+        try {
+            metaManager.updateDataModelDesc(modelDesc);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            logger.error("Failed to deal with the request:"+e.getLocalizedMessage(), e);
+            throw new InternalErrorException("Failed to deal with the request: "+e.getLocalizedMessage() + e.getMessage());
+           }
+        
+        
+
+        //update cube
         CubeDesc desc = deserializeCubeDesc(cubeRequest);
 
         if (desc == null) {
@@ -421,6 +457,24 @@ public class CubeController extends BasicController {
         }
         return desc;
     }
+    
+    private DataModelDesc deserializeDataModelDesc(CubeRequest cubeRequest) {
+        DataModelDesc desc = null;
+        try {
+            logger.debug("Saving cube " + cubeRequest.getModelDescData());
+            desc = JsonUtil.readValue(cubeRequest.getModelDescData(), DataModelDesc.class);
+        } catch (JsonParseException e) {
+            logger.error("The data model definition is not valid.", e);
+            updateRequest(cubeRequest, false, e.getMessage());
+        } catch (JsonMappingException e) {
+            logger.error("The data model definition is not valid.", e);
+            updateRequest(cubeRequest, false, e.getMessage());
+        } catch (IOException e) {
+            logger.error("Failed to deal with the request.", e);
+            throw new InternalErrorException("Failed to deal with the request:"+e.getMessage(), e);
+        }
+        return desc;
+    }    
 
     /**
      * @return
