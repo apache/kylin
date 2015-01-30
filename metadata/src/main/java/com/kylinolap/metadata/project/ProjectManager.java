@@ -114,8 +114,10 @@ public class ProjectManager {
         ResourceStore store = getStore();
 
         ProjectInstance projectInstance = store.getResource(path, ProjectInstance.class, PROJECT_SERIALIZER);
-        if (projectInstance == null)
+        if (projectInstance == null) {
+            logger.warn("reload project at path:" + path + " not found, this:" + this.toString());
             return null;
+        }
 
         projectInstance.init();
 
@@ -332,7 +334,7 @@ public class ProjectManager {
     }
 
     private String norm(String project) {
-        return ProjectInstance.getNormalizedProjectName(project);
+        return project;
     }
 
 }
