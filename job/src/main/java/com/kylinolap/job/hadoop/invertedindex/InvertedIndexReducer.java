@@ -17,6 +17,7 @@ package com.kylinolap.job.hadoop.invertedindex;
 
 import java.io.IOException;
 
+import com.kylinolap.common.mr.KylinReducer;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Pair;
@@ -39,7 +40,7 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 /**
  * @author yangli9
  */
-public class InvertedIndexReducer extends Reducer<LongWritable, ImmutableBytesWritable, ImmutableBytesWritable, ImmutableBytesWritable> {
+public class InvertedIndexReducer extends KylinReducer<LongWritable, ImmutableBytesWritable, ImmutableBytesWritable, ImmutableBytesWritable> {
 
     private TableRecordInfo info;
     private TableRecord rec;
@@ -48,6 +49,8 @@ public class InvertedIndexReducer extends Reducer<LongWritable, ImmutableBytesWr
 
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+
         Configuration conf = context.getConfiguration();
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
         CubeManager mgr = CubeManager.getInstance(config);

@@ -23,16 +23,17 @@ import java.util.List;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.util.ReflectionUtils;
 
+import com.kylinolap.common.mr.KylinReducer;
 import com.kylinolap.job.constant.BatchConstants;
 
 /**
  * @author ysong1
  * 
  */
-public class RandomKeyDistributionReducer<KEY extends Writable> extends Reducer<KEY, NullWritable, KEY, NullWritable> {
+public class RandomKeyDistributionReducer<KEY extends Writable> extends KylinReducer<KEY, NullWritable, KEY, NullWritable> {
+
 
     private Configuration conf;
     private int regionNumber;
@@ -40,6 +41,8 @@ public class RandomKeyDistributionReducer<KEY extends Writable> extends Reducer<
 
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+
         conf = context.getConfiguration();
         allSplits = new ArrayList<KEY>();
         regionNumber = Integer.parseInt(context.getConfiguration().get(BatchConstants.REGION_NUMBER));

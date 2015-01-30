@@ -16,6 +16,7 @@
 
 package com.kylinolap.job.cmd;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +57,10 @@ public class JavaHadoopCmd implements IJobCommand {
             output.appendOutput(e.getLocalizedMessage());
             output.setExitCode(-1);
         }
-
+        final String errorLog = job.getErrorLog();
+        if (!StringUtils.isEmpty(errorLog)) {
+            output.appendOutput(errorLog);
+        }
         output.appendOutput("Command execute return code " + output.getExitCode());
 
         if (output.getExitCode() != 0) {

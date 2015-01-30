@@ -26,7 +26,9 @@ import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.HadoopUtil;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.math.stat.descriptive.rank.Percentile;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -36,6 +38,8 @@ import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.quartz.Scheduler;
 import org.slf4j.Logger;
@@ -70,18 +74,26 @@ public class JobEngine implements ConnectionStateListener {
         return r;
     }
 
+    private String getZKConnectString(JobEngineConfig context)
+    {
+        Configuration conf =HadoopUtil.newHBaseConfiguration(context.getConfig().getStorageUrl());
+        return conf.get(HConstants.ZOOKEEPER_QUORUM);
+    }
+
     private JobEngine(String engineID, JobEngineConfig context) throws JobException {
-        if (context.getZookeeperString() == null || context.getZookeeperString().equals("")) {
-            throw new IllegalArgumentException("Zookeeper connection string is null or empty");
-        }
         log.info("Using metadata url: " + context.getConfig());
+
+        String ZKConnectString = getZKConnectString(context);
+        if (StringUtils.isEmpty(ZKConnectString)) {
+            throw new IllegalArgumentException("ZOOKEEPER_QUORUM is empty!");
+        }
 
         this.engineID = engineID;
         this.engineConfig = context;
         this.scheduler = new QuatzScheduler();
 
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
-        this.zkClient = CuratorFrameworkFactory.newClient(context.getZookeeperString(), retryPolicy);
+        this.zkClient = CuratorFrameworkFactory.newClient(ZKConnectString, retryPolicy);
         this.zkClient.start();
 
         Runtime.getRuntime().addShutdownHook(new Thread() {

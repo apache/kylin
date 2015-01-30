@@ -38,7 +38,10 @@ public class DebugTomcat {
 
         ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox").getAbsolutePath());
         String webBase = new File("../webapp/app").getAbsolutePath();
-        String apiBase = new File("src/main/webapp").getAbsolutePath();
+//        String apiBase = new File("src/main/webapp").getAbsolutePath();
+        if (new File(webBase, "WEB-INF").exists() == false) {
+            throw new RuntimeException("In order to launch Kylin web app from IDE, please make a symblink from webapp/app/WEB-INF to server/src/main/webapp/WEB-INF");
+        }
 
         Tomcat tomcat = new Tomcat();
         tomcat.setPort(port);
@@ -49,8 +52,8 @@ public class DebugTomcat {
         AprLifecycleListener listener = new AprLifecycleListener();
         server.addLifecycleListener(listener);
 
-        tomcat.addWebapp("/kylin", apiBase);
-        Context webContext = tomcat.addWebapp("/", webBase);
+//        tomcat.addWebapp("/kylin", apiBase);
+        Context webContext = tomcat.addWebapp("/kylin", webBase);
         ErrorPage notFound = new ErrorPage();
         notFound.setErrorCode(404);
         notFound.setLocation("/index.html");
