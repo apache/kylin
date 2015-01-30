@@ -25,7 +25,7 @@ public abstract class RoutingRule {
     static {
         rules.add(new RemoveUncapableRealizationsRule());
         rules.add(new RealizationPriorityRule());
-        rules.add(new SimpleQueryMoreColumsCubeFirstRule());
+        rules.add(new SimpleQueryMoreColumnsCubeFirstRule());
         rules.add(new CubesSortRule());
         rules.add(new AdjustForWeeklyMatchedRealization());//this rule might modify olapcontext content, better put it at last
     }
