@@ -23,9 +23,9 @@ import java.util.List;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.util.ReflectionUtils;
 
+import com.kylinolap.common.mr.KylinMapper;
 import com.kylinolap.common.util.RandomSampler;
 import com.kylinolap.job.constant.BatchConstants;
 
@@ -33,7 +33,7 @@ import com.kylinolap.job.constant.BatchConstants;
  * @author ysong1
  * 
  */
-public class RandomKeyDistributionMapper<KEY extends Writable, VALUE> extends Mapper<KEY, VALUE, KEY, NullWritable> {
+public class RandomKeyDistributionMapper<KEY extends Writable, VALUE> extends KylinMapper<KEY, VALUE, KEY, NullWritable> {
 
     private Configuration conf;
     private int sampleNumber;
@@ -41,6 +41,8 @@ public class RandomKeyDistributionMapper<KEY extends Writable, VALUE> extends Ma
 
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+
         conf = context.getConfiguration();
         allKeys = new ArrayList<KEY>();
         sampleNumber = Integer.parseInt(conf.get(BatchConstants.MAPPER_SAMPLE_NUMBER));

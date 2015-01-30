@@ -23,9 +23,9 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.mr.KylinMapper;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
@@ -41,7 +41,7 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
  * @author yangli9
  * 
  */
-public class InvertedIndexMapper<KEYIN> extends Mapper<KEYIN, Text, LongWritable, ImmutableBytesWritable> {
+public class InvertedIndexMapper<KEYIN> extends KylinMapper<KEYIN, Text, LongWritable, ImmutableBytesWritable> {
 
     private TableRecordInfo info;
     private TableRecord rec;
@@ -53,6 +53,8 @@ public class InvertedIndexMapper<KEYIN> extends Mapper<KEYIN, Text, LongWritable
 
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+
         Configuration conf = context.getConfiguration();
         String inputDelim = conf.get(BatchConstants.INPUT_DELIM);
         this.delim = inputDelim == null ? -1 : inputDelim.codePointAt(0);

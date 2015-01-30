@@ -1,0 +1,3 @@
+# kylin.apache.org
+baseurl: ""
+noindex: 0 # Make sure this gets indexed by Google

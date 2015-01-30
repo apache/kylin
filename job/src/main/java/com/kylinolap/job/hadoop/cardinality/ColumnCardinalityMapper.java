@@ -27,19 +27,24 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
 
 import com.kylinolap.common.hll.HyperLogLogPlusCounter;
+import com.kylinolap.common.mr.KylinMapper;
 import com.kylinolap.cube.kv.RowConstants;
 
 /**
  * @author Jack
  * 
  */
-public class ColumnCardinalityMapper<T> extends Mapper<T, Text, IntWritable, BytesWritable> {
+public class ColumnCardinalityMapper<T> extends KylinMapper<T, Text, IntWritable, BytesWritable> {
 
     private Map<Integer, HyperLogLogPlusCounter> hllcMap = new HashMap<Integer, HyperLogLogPlusCounter>();
     public static final String DEFAULT_DELIM = ",";
+
+    @Override
+    protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+    }
 
     @Override
     public void map(T key, Text value, Context context) throws IOException, InterruptedException {

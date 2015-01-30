@@ -96,7 +96,7 @@ public class JobDAO {
         ArrayList<JobInstance> result = new ArrayList<JobInstance>();
         for (JobInstance job : allJobs) {
             if (job != null) {
-                if (job.getRelatedCube().toLowerCase().contains(cubeName.toLowerCase())) {
+                if (job.getRelatedCube().equalsIgnoreCase(cubeName)) {
                     result.add(job);
                 }
             }
