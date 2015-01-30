@@ -299,7 +299,9 @@ public class EndpointTupleIterator implements ITupleIterator {
 
             if (measureValues != null) {
                 for (int i = 0; i < measures.size(); ++i) {
-                    tuple.setValue(measures.get(i).getRewriteFieldName(), measureValues.get(i));
+                    if (!measures.get(i).isAppliedOnDimension()) {
+                        tuple.setValue(measures.get(i).getRewriteFieldName(), measureValues.get(i));
+                    }
                 }
             }
             return tuple;

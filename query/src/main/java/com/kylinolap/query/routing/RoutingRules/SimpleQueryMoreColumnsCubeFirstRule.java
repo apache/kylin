@@ -13,7 +13,7 @@ import com.kylinolap.query.routing.RoutingRule;
 /**
  * Created by Hongbin Ma(Binmahone) on 1/5/15.
  */
-public class SimpleQueryMoreColumsCubeFirstRule extends RoutingRule {
+public class SimpleQueryMoreColumnsCubeFirstRule extends RoutingRule {
     @Override
     public void apply(List<IRealization> realizations, OLAPContext olapContext) {
         List<Integer> itemIndexes = super.findRealizationsOf(realizations, RealizationType.CUBE);

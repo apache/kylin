@@ -57,10 +57,10 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
     @Override
     public void getRows(RpcController controller, IIProtos.IIRequest request, RpcCallback<IIProtos.IIResponse> done) {
 
-        CoprocessorRowType type = null;
-        CoprocessorProjector projector = null;
-        EndpointAggregators aggregators = null;
-        CoprocessorFilter filter = null;
+        CoprocessorRowType type;
+        CoprocessorProjector projector;
+        EndpointAggregators aggregators;
+        CoprocessorFilter filter;
 
         type = CoprocessorRowType.deserialize(request.getType().toByteArray());
         projector = CoprocessorProjector.deserialize(request.getProjector().toByteArray());
@@ -88,7 +88,6 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
                     response = getAggregatedResponse(slices, filter, type, projector, aggregators);
                 }
             }
-
         } catch (IOException ioe) {
             ResponseConverter.setControllerException(controller, ioe);
         } finally {
@@ -106,7 +105,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         done.run(response);
     }
 
-    //TODO check memory usage
+    //TODO check current memory checking is good enough
     private IIProtos.IIResponse getAggregatedResponse(Iterable<Slice> slices, CoprocessorFilter filter, CoprocessorRowType type, CoprocessorProjector projector, EndpointAggregators aggregators) {
         EndpointAggregationCache aggCache = new EndpointAggregationCache(aggregators);
         IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
