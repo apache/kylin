@@ -113,7 +113,6 @@ public class InvertedIndexJob extends AbstractHadoopJob {
             job.setJarByClass(this.getClass());
         }
 
-
         String[] dbTableNames = HadoopUtil.parseHiveTableName(intermediateTable);
         HCatInputFormat.setInput(job, dbTableNames[0],
                 dbTableNames[1]);
