@@ -1,7 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,ProjectModel) {
+    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,ProjectModel,ModelService) {
 
         $scope.listParams={
             cubeName: $routeParams.cubeName,
@@ -45,24 +45,27 @@ KylinApp
             $scope.loading = true;
             CubeService.list(queryParam, function (cubes) {
                 angular.forEach(cubes, function (cube, index) {
-                    $scope.listAccess(cube, 'CubeInstance');
-                    if (cube.segments && cube.segments.length > 0) {
-                        for(var i= cube.segments.length-1;i>=0;i--){
-                            if(cube.segments[i].status==="READY"){
-                                cube.last_build_time = cube.segments[i].last_build_time;
-                                break;
-                            }else if(i===0){
-                                cube.last_build_time = cube.create_time_utc;
+                    if(cube.name){
+                        $scope.listAccess(cube, 'CubeInstance');
+                        if (cube.segments && cube.segments.length > 0) {
+                            for(var i= cube.segments.length-1;i>=0;i--){
+                                if(cube.segments[i].status==="READY"){
+                                    cube.last_build_time = cube.segments[i].last_build_time;
+                                    break;
+                                }else if(i===0){
+                                    cube.last_build_time = cube.create_time_utc;
+                                }
                             }
+                        } else {
+                            cube.last_build_time = cube.create_time_utc;
                         }
-                    } else {
-                        cube.last_build_time = cube.create_time_utc;
-                    }
-                    if($routeParams.showDetail == 'true'){
-                        cube.showDetail = true;
-                        $scope.loadDetail(cube);
+                        if($routeParams.showDetail == 'true'){
+                            cube.showDetail = true;
+                            $scope.loadDetail(cube);
+                        }
                     }
                 });
+                cubes = _.filter(cubes,function(cube){return cube.name!=undefined});
                 $scope.cubes = $scope.cubes.concat(cubes);
                 $scope.loading = false;
                 defer.resolve(cubes.length);
@@ -255,16 +258,19 @@ KylinApp
         };
 
         $scope.startJobSubmit = function (cube) {
-            CubeDescService.get({cube_name: cube.name}, {}, function (detail) {
-                if (detail.length > 0) {
-                    cube.detail = detail[0];
-                    if (cube.detail.cube_partition_desc.partition_date_column) {
+            ModelService.get({model_name: cube.detail.model_name}, function (model) {
+                if (model.name) {
+                    $scope.metaModel= model;
+                    if (model.partition_desc.partition_date_column) {
                         $modal.open({
                             templateUrl: 'jobSubmit.html',
                             controller: jobSubmitCtrl,
                             resolve: {
                                 cube: function () {
                                     return cube;
+                                },
+                                metaModel:function(){
+                                    return $scope.metaModel;
                                 },
                                 buildType: function () {
                                     return 'BUILD';
@@ -352,9 +358,9 @@ KylinApp
         }
     });
 
-var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube, buildType,SweetAlert,loadingRequest) {
+var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube,metaModel, buildType,SweetAlert,loadingRequest) {
     $scope.cube = cube;
-
+    $scope.metaModel = metaModel;
     $scope.jobBuildRequest = {
         buildType: buildType,
         startTime: 0,
@@ -440,10 +446,10 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
     $scope.updateDate = function() {
 
 
-        if ($scope.cube.detail.cube_partition_desc.cube_partition_type=='UPDATE_INSERT')
-        {
-            $scope.jobBuildRequest.startTime=$scope.formatDate($scope.jobBuildRequest.startTime);
-        }
+//        if ($scope.cube.detail.partition_desc.cube_partition_type=='UPDATE_INSERT')
+//        {
+//            $scope.jobBuildRequest.startTime=$scope.formatDate($scope.jobBuildRequest.startTime);
+//        }
         $scope.jobBuildRequest.endTime=$scope.formatDate($scope.jobBuildRequest.endTime);
     };
 
