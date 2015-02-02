@@ -309,6 +309,10 @@ public class IIDesc extends RootPersistentEntity {
         return timestampDimension;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String calculateSignature() {
         MessageDigest md = null;
         try {
@@ -323,6 +327,7 @@ public class IIDesc extends RootPersistentEntity {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to calculate signature");
         }
+
     }
 
 }
