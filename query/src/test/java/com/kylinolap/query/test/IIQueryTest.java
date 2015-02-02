@@ -16,7 +16,7 @@ import java.util.Map;
 public class IIQueryTest extends KylinQueryTest {
     @BeforeClass
     public static void setUp() throws Exception {
-        KylinQueryTest.setUp();
+        KylinQueryTest.setUp();//invoke super class
         distinctCountSupported = false;
 
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
@@ -27,7 +27,7 @@ public class IIQueryTest extends KylinQueryTest {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        KylinQueryTest.tearDown();
+        KylinQueryTest.tearDown();//invoke super class
         distinctCountSupported = true;
 
         Map<RealizationType, Integer> priorities = Maps.newHashMap();

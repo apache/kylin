@@ -69,8 +69,8 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             System.out.println("Starting: " + job.getJobName());
 
-            setupMapInput(intermediateTable);
-            setupReduceOutput(output);
+            setupMapper(intermediateTable);
+            setupReducer(output);
 
             // CubeSegment seg = cubeMgr.getCube(cubeName).getTheOnlySegment();
             attachKylinPropsAndMetadata(cubeInstance, job.getConfiguration());
@@ -84,7 +84,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
 
     }
 
-    private void setupMapInput(String intermediateTable) throws IOException {
+    private void setupMapper(String intermediateTable) throws IOException {
 //        FileInputFormat.setInputPaths(job, input);
 
         File JarFile = new File(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
@@ -105,7 +105,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
         job.setMapOutputValueClass(Text.class);
     }
 
-    private void setupReduceOutput(Path output) throws IOException {
+    private void setupReducer(Path output) throws IOException {
         job.setReducerClass(FactDistinctColumnsReducer.class);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
         job.setOutputKeyClass(NullWritable.class);

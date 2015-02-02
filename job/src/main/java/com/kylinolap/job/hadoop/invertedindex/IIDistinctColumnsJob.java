@@ -73,8 +73,8 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
             job.getConfiguration().set(BatchConstants.TABLE_NAME, tableName);
             job.getConfiguration().set(BatchConstants.TABLE_COLUMNS, getColumns(ii));
 
-            setupMapInput();
-            setupReduceOutput(output);
+            setupMapper();
+            setupReducer(output);
 
             return waitForCompletion(job);
 
@@ -96,7 +96,7 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
         return buf.toString();
     }
 
-    private void setupMapInput() throws IOException {
+    private void setupMapper() throws IOException {
 
         File JarFile = new File(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
         if (JarFile.exists()) {
@@ -120,7 +120,7 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
         job.setMapOutputValueClass(Text.class);
     }
 
-    private void setupReduceOutput(Path output) throws IOException {
+    private void setupReducer(Path output) throws IOException {
         job.setReducerClass(IIDistinctColumnsReducer.class);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
         job.setOutputKeyClass(NullWritable.class);
