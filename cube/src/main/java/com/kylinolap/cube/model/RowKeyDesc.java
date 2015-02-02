@@ -161,15 +161,6 @@ public class RowKeyDesc {
         return !StringUtils.isBlank(useDictionary) && !"false".equals(useDictionary);
     }
 
-    public boolean isUseDictionary() {
-        for (RowKeyColDesc col : getRowKeyColumns()) {
-            if (isUseDictionary(col.getColRef())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public void init(CubeDesc cube) {
         setCubeRef(cube);
         Map<String, TblColRef> colNameAbbr = cube.buildColumnNameAbbreviation();
