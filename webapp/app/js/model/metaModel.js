@@ -1,11 +1,11 @@
 KylinApp.service('MetaModel',function(){
 
     this.model={
-        name: '',
-        fact_table: '',
+        name: null,
+        fact_table: null,
         lookups: [],
-        filter_condition:'',
-        capacity:'',
+        filter_condition:null,
+        capacity:null,
         "partition_desc" : {
             "partition_date_column" : '',
             "partition_date_start" : 0,
