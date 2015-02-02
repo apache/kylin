@@ -2,7 +2,7 @@
 
 KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelService,MetaModel) {
 
-    if(MetaModel.model){
+    if(!$scope.metaModel.name){
         $scope.metaModel = MetaModel.getMetaModel();
     }
     $scope.cubeConfig = cubeConfig;
