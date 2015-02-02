@@ -87,30 +87,5 @@ title: Home
         <!-- /container --> 
       </div>
     </header>
-  </section>
-  
-  <!-- fifth-->
-  <section id="fifth" class="main">
-    <header style="background-color:#efefef;" >
-      <div class="container" >
-        <h4 class="section-title"><span>For Developers</span></h4>
-        <div class="row">
-          <div class="col-sm-4 col-md-4">
-            <p><b>Source Code:</b></p>
-            <p class="less-margin"><a href="https://github.com/apache/incubator-kylin" target="_blank">Fork me on GitHub</a></p>
-          </div>
-          <div class="col-sm-4 col-md-4">
-            <p><b>Google Group:</b> </p>
-            <p class="less-margin"><a href="https://groups.google.com/forum/#!forum/kylin-olap" target="_blank"> Kylin OLAP Group</a></p>
-          </div>
-          <div class="col-sm-4 col-md-4">
-            <p><b>Developer Mail:</b></p>
-            <p class="less-margin"> <a href="mailto:dev@kylin.incubator.apache.org" target="_blank"> dev@kylin.incubator.apache.org</a></p>
-          </div>
-        </div>
-      </div>
-      <!-- /container --> 
-      
-    </header>
-  </section>
+  </section>  
 </main>
