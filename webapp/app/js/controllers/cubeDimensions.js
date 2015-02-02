@@ -1,6 +1,11 @@
 'use strict';
 
-KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal) {
+KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
+
+    if(MetaModel.model){
+        $scope.metaModel = MetaModel.getMetaModel();
+    }
+
     // Available columns list derived from cube data model.
     $scope.availableColumns = {};
 
@@ -32,9 +37,9 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal) {
     var getJoin = function (tableName) {
         var join = null;
 
-        for (var j = 0; j < $scope.cubeMetaFrame.model.lookups.length; j++) {
-            if ($scope.cubeMetaFrame.model.lookups[j].table == tableName) {
-                join = $scope.cubeMetaFrame.model.lookups[j].join;
+        for (var j = 0; j < $scope.metaModel.lookups.length; j++) {
+            if ($scope.metaModel.lookups[j].table == tableName) {
+                join = $scope.metaModel.lookups[j].join;
                 break;
             }
         }
@@ -72,7 +77,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal) {
 
     // Dump available columns plus column table name, whether is from lookup table.
     $scope.initColumns = function () {
-        var factTable = $scope.cubeMetaFrame.model.fact_table;
+        var factTable = $scope.metaModel.fact_table;
 
         // At first dump the columns of fact table.
         var cols = $scope.getColumnsByTable(factTable);
@@ -96,7 +101,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal) {
         $scope.availableTables.push(factTable);
 
         // Then dump each lookup tables.
-        var lookups = $scope.cubeMetaFrame.model.lookups;
+        var lookups = $scope.metaModel.lookups;
 
         for (var j = 0; j < lookups.length; j++) {
             var cols2 = $scope.getColumnsByTable(lookups[j].table);
@@ -339,7 +344,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal) {
         var selectedCols = $scope.getSelectedCols();
 
         angular.forEach(selectedCols, function (cols, table) {
-            if ($scope.cubeMetaFrame.model.fact_table == table) {
+            if ($scope.metaModel.fact_table == table) {
                 // Fact table: for each selected column, create one normal dimension.
                 for (var i = 0; i < cols.length; i++) {
                     dimList.push(Dimension(table, [cols[i]], 'normal'));

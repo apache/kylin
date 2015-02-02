@@ -129,7 +129,9 @@ KylinApp
     }).filter('reverseToGMT0',function($filter){
         //backend store GMT+0 timezone ,by default front will show local,so convert to GMT+0 Date String format
         return function(item) {
+            if(item||item==0){
              item += new Date().getTimezoneOffset() * 60000;
              return $filter('date')(item, "yyyy-MM-dd HH:mm:ss");
+            }
         }
     });

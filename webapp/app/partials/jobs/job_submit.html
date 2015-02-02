@@ -1,9 +1,9 @@
 <script type="text/ng-template" id="jobSubmit.html">
     <div class="modal-header">
-        <h4 tooltip="submit">CUBE BUILD CONFIRM</h4>
+        <h4 tooltip="submit">CUBE BUILD CONFIRM}</h4>
     </div>
     <div class="modal-body" style="background-color: white">
-        <div ng-if="cube.detail.cube_partition_desc.partition_date_column" class="row">
+        <div ng-if="metaModel.partition_desc.partition_date_column" class="row">
             <div class="col-md-2"></div>
             <div class="col-md-8">
                 <div class="row">
@@ -12,7 +12,7 @@
                         <tbody>
                         <tr>
                             <td>PARTITION DATE COLUMN</td>
-                            <td>{{cube.detail.cube_partition_desc.partition_date_column}}</td>
+                            <td>{{metaModel.partition_desc.partition_date_column}}</td>
                         </tr>
                         <tr>
                             <td>Start Date (Include)</td>
@@ -21,15 +21,15 @@
                                 <!--no need convert UTC again-->
                                 <div ng-if="cube.segments.length == 0">
                                     {{jobBuildRequest.startTime =
-                                    (!!cube.detail.cube_partition_desc.partition_date_start)?cube.detail.cube_partition_desc.partition_date_start:0
+                                    (!!metaModel.partition_desc.partition_date_start)?metaModel.partition_desc.partition_date_start:0
                                     | reverseToGMT0 }}
                                 </div>
                                 <div ng-if="cube.segments.length > 0">
                                     <!--no need to convert-->
-                                    <div ng-if="cube.detail.cube_partition_desc.cube_partition_type=='APPEND'">
+                                    <div ng-if="metaModel.partition_desc.partition_type=='APPEND'">
                                         {{ jobBuildRequest.startTime = cube.segments[cube.segments.length-1].date_range_end| reverseToGMT0 }}
                                     </div>
-                                    <!--<div ng-if="cube.detail.cube_partition_desc.cube_partition_type=='UPDATE_INSERT'">-->
+                                    <!--<div ng-if="metaModel.partition_desc.cube_partition_type=='UPDATE_INSERT'">-->
                                         <!--&lt;!&ndash;<datepicker ng-model="jobBuildRequest.startTime" show-weeks="true"&ndash;&gt;-->
                                                     <!--&lt;!&ndash;required class="well well-sm"></datepicker>&ndash;&gt;-->
                                         <!--<input type="text" datepicker-popup="yyyy-MM-dd" class="input-sm" style="width: 98%"-->
