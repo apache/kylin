@@ -14,7 +14,7 @@
                     <li><a ng-click="addDim('derived')">Derived</a></li>
                 </ul>
             </div>
-            <button type="button" class="btn btn-default" ng-disabled="!cubeMetaFrame.model.fact_table.length"
+            <button type="button" class="btn btn-default" ng-disabled="!metaModel.fact_table.length"
                     ng-click="openAutoGenModal()">
                 <i class="fa fa-building-o"></i> Auto Generator
             </button>
@@ -52,7 +52,7 @@
                 </td>
                 <!--Table Name -->
                 <td>
-                    <span tooltip="{{dimension.table == cubeMetaFrame.model.fact_table ? 'Fact Table' : 'Lookup Table'}}">{{dimension.table}}</span>
+                    <span tooltip="{{dimension.table == metaModel.fact_table ? 'Fact Table' : 'Lookup Table'}}">{{dimension.table}}</span>
                 </td>
                 <!--Type-->
                 <td>
@@ -285,7 +285,7 @@
                     <div class="box-header"><h4>Columns</h4></div>
                     <div class="box-body">
                         <ul class="list-unstyled columns-region">
-                            <li ng-repeat="table in availableTables">
+                            <li ng-repeat="table in availableTables track by $index">
                                 <h5 class="table-name-underline">
                                     <b>{{table}}</b>{{$index == 0 ? ' [Fact Table]' : ' [Lookup Table]'}}
                                 </h5>
