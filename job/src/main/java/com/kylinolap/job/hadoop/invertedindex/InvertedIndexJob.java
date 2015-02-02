@@ -69,8 +69,8 @@ public class InvertedIndexJob extends AbstractHadoopJob {
             IIInstance ii = getII(iiname);
             short sharding = ii.getDescriptor().getSharding();
 
-            setupMapInput(intermediateTable);
-            setupReduceOutput(output, sharding);
+            setupMapper(intermediateTable);
+            setupReducer(output, sharding);
             attachMetadata(ii);
 
             return waitForCompletion(job);
@@ -82,10 +82,6 @@ public class InvertedIndexJob extends AbstractHadoopJob {
 
     }
 
-    /**
-     * @param iiName
-     * @return
-     */
     private IIInstance getII(String iiName) {
         IIManager mgr = IIManager.getInstance(KylinConfig.getInstanceFromEnv());
         IIInstance ii = mgr.getII(iiName);
@@ -104,7 +100,7 @@ public class InvertedIndexJob extends AbstractHadoopJob {
         conf.set(BatchConstants.CFG_II_SEGMENT_NAME, seg.getName());
     }
 
-    private void setupMapInput(String intermediateTable) throws IOException {
+    private void setupMapper(String intermediateTable) throws IOException {
 
         File JarFile = new File(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
         if (JarFile.exists()) {
@@ -112,7 +108,6 @@ public class InvertedIndexJob extends AbstractHadoopJob {
         } else {
             job.setJarByClass(this.getClass());
         }
-
 
         String[] dbTableNames = HadoopUtil.parseHiveTableName(intermediateTable);
         HCatInputFormat.setInput(job, dbTableNames[0],
@@ -126,7 +121,7 @@ public class InvertedIndexJob extends AbstractHadoopJob {
         job.setPartitionerClass(InvertedIndexPartitioner.class);
     }
 
-    private void setupReduceOutput(Path output, short sharding) throws IOException {
+    private void setupReducer(Path output, short sharding) throws IOException {
         job.setReducerClass(InvertedIndexReducer.class);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
         job.setOutputKeyClass(ImmutableBytesWritable.class);

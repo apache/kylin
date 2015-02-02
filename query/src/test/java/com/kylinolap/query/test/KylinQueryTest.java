@@ -53,6 +53,14 @@ public class KylinQueryTest extends KylinTestBase {
         preferCubeOf(joinType);
     }
 
+    @AfterClass
+    public static void tearDown() throws Exception {
+        printInfo("tearDown");
+        printInfo("Closing connection...");
+        clean();
+
+    }
+
     protected static void setupAll() throws Exception {
         setUpEnv();
         setUpCubeConn();
@@ -79,14 +87,6 @@ public class KylinQueryTest extends KylinTestBase {
         // Load H2 Tables (inner join)
         H2Database h2DB = new H2Database(h2Connection, config);
         h2DB.loadAllTables(joinType);
-    }
-
-    @AfterClass
-    public static void tearDown() throws Exception {
-        printInfo("tearDown");
-        printInfo("Closing connection...");
-        clean();
-
     }
 
     protected static void clean() {
@@ -123,8 +123,7 @@ public class KylinQueryTest extends KylinTestBase {
         }
     }
 
-    // for debug purpose
-    @Ignore
+    @Ignore("this is only for debug")
     @Test
     public void testTempQuery() throws Exception {
         execAndCompQuery("src/test/resources/query/temp", null, true);
@@ -163,12 +162,6 @@ public class KylinQueryTest extends KylinTestBase {
         execAndCompQuery("src/test/resources/query/sql", null, true);
     }
 
-    @Test
-    @Ignore("ii not ready")
-    public void testIIQuery() throws Exception {
-        execAndCompQuery("src/test/resources/query/sql_ii", null, true);
-    }
-
     @Ignore
     @Test
     public void testSimpleQuery() throws Exception {
@@ -196,7 +189,11 @@ public class KylinQueryTest extends KylinTestBase {
 
     @Test
     public void testDistinctCountQuery() throws Exception {
-        batchExecuteQuery("src/test/resources/query/sql_distinct");
+        if (distinctCountSupported) {
+            batchExecuteQuery("src/test/resources/query/sql_distinct");
+        } else {
+            System.out.println("distinct count query omiited");
+        }
     }
 
     @Test

@@ -19,6 +19,7 @@ public class CombinationTest extends KylinQueryTest {
 
     @BeforeClass
     public static void setUp() throws SQLException {
+        System.out.println("setUp in CombinationTest");
     }
 
     @AfterClass

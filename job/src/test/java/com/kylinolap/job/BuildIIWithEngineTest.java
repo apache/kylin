@@ -3,6 +3,7 @@ package com.kylinolap.job;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.concurrent.Future;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -100,7 +102,15 @@ public class BuildIIWithEngineTest {
             ii.setStatus(RealizationStatusEnum.DISABLED);
             iiManager.updateII(ii);
         }
+    }
 
+    @After
+    public void after() throws IOException {
+        IIInstance ii = iiManager.getII(TEST_II_NAME);
+        if(ii.getStatus() != RealizationStatusEnum.READY) {
+            ii.setStatus(RealizationStatusEnum.READY);
+            iiManager.updateII(ii);
+        }
     }
 
 

@@ -9,8 +9,9 @@
                 <div class="col-xs-12 col-sm-6">
                     <select class="form-control"
                         ng-if="state.mode=='edit'"
-                        chosen ng-model="metaModel.partition_desc.partition_type" required
+                        chosen ng-model="metaModel.partition_desc.partition_type"
                         ng-options="ddt as ddt for ddt in cubeConfig.cubePartitionTypes">
+                        <option value="">-- Choose Partition Type --</option>
                     </select>
                     <span ng-if="state.mode=='view'">{{metaModel.partition_desc.partition_type}}</span>
                 </div>

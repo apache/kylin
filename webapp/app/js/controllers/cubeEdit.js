@@ -266,7 +266,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                     tmpAggregationItems.push(dimension.column[0]);
                 }
             }
-            if(dimension.hierarchy && dimension.hierarchy.length){
+            if(dimension.hierarchy && dimension.column.length){
                 angular.forEach(dimension.column, function (hier_column, index) {
                     for (var i = 0; i < tmpRowKeyColumns.length; i++) {
                         if(tmpRowKeyColumns[i].column == hier_column)
@@ -459,10 +459,10 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         $scope.cubeMetaFrame.project = $scope.state.project;
         angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
             dimension.status = {};
-            if (dimension.hierarchy&&dimension.hierarchy.length) {
+            if (dimension.hierarchy&&dimension.column.length) {
                 dimension.status.useHierarchy = true;
                 dimension.status.joinCount = (!!dimension.join.primary_key) ? dimension.join.primary_key.length : 0;
-                dimension.status.hierarchyCount = (!!dimension.hierarchy) ? dimension.hierarchy.length : 0;
+                dimension.status.hierarchyCount = (!!dimension.hierarchy) ? dimension.column.length : 0;
             }
             if(dimension.join&&dimension.join.type) {
                 dimension.status.useJoin = true;
