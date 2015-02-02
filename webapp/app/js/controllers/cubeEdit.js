@@ -1,12 +1,13 @@
 'use strict';
 
 
-KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel) {
+KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel,ModelService,MetaModel) {
     $scope.cubeConfig = cubeConfig;
 
     //add or edit ?
     var absUrl = $location.absUrl();
     $scope.cubeMode = absUrl.indexOf("/cubes/add")!=-1?'addNewCube':absUrl.indexOf("/cubes/edit")!=-1?'editExistCube':'default';
+    $scope.metaModel={};
 
     $scope.srcTablesInProject = [];
 
@@ -50,14 +51,28 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         CubeDescService.get({cube_name: $routeParams.cubeName}, function (detail) {
             if (detail.length > 0) {
                 $scope.cubeMetaFrame = detail[0];
-                //convert GMT mills ,to make sure partition date show GMT Date
-                    if($scope.cubeMetaFrame.cube_partition_desc&&$scope.cubeMetaFrame.cube_partition_desc.partition_date_start)
-                      {
-                         $scope.cubeMetaFrame.cube_partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
-                      }
+                $scope.metaModel={};
+                ModelService.get({model_name: $scope.cubeMetaFrame.model_name}, function (model) {
+                    if (model) {
+                        $scope.metaModel = model;
+                        MetaModel.setMetaModel(model);
+                        //use
+                        //convert GMT mills ,to make sure partition date show GMT Date
+                        //should run only one time
+                        if(model.partition_desc&&model.partition_desc.partition_date_start)
+                        {
+                            //$scope.metaModel.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
+                            MetaModel.converDateToGMT();
+                        }
+                    }
+                });
                 $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
             }
         });
+
+        //
+        //            $scope.metaModel = null;
+
     } else {
         $scope.cubeMetaFrame = CubeDescModel.createNew();
         $scope.cubeMetaFrame.project = $scope.projectModel.selectedProject;
@@ -87,17 +102,18 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         });
 
 
-        if ($scope.cubeMetaFrame.cube_partition_desc.partition_date_start) {
-            var dateStart = new Date($scope.cubeMetaFrame.cube_partition_desc.partition_date_start);
+        if ($scope.metaModel.partition_desc.partition_date_start) {
+            var dateStart = new Date($scope.metaModel.partition_desc.partition_date_start);
             dateStart = (dateStart.getFullYear() + "-" + (dateStart.getMonth() + 1) + "-" + dateStart.getDate());
             //switch selected time to utc timestamp
-            $scope.cubeMetaFrame.cube_partition_desc.partition_date_start = new Date(moment.utc(dateStart, "YYYY-MM-DD").format()).getTime();
+            $scope.metaModel.partition_desc.partition_date_start = new Date(moment.utc(dateStart, "YYYY-MM-DD").format()).getTime();
         }
 
         $scope.state.project = $scope.cubeMetaFrame.project;
 //        delete $scope.cubeMetaFrame.project;
 
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
+        $scope.state.modelSchema = angular.toJson($scope.metaModel, true);
     };
 
     $scope.cubeResultTmpl = function (notification) {
@@ -128,7 +144,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                 loadingRequest.show();
 
                 if ($scope.isEdit) {
-                    CubeService.update({}, {cubeDescData: $scope.state.cubeSchema, cubeName: $routeParams.cubeName, project: $scope.state.project}, function (request) {
+                    CubeService.update({}, {cubeDescData: $scope.state.cubeSchema,modelDescData:$scope.state.modelSchema, cubeName: $routeParams.cubeName, project: $scope.state.project}, function (request) {
                         if (request.successful) {
                             $scope.state.cubeSchema = request.cubeDescData;
                             MessageService.sendMsg($scope.cubeResultTmpl({'text':'Updated the cube successfully.',type:'success'}), 'success', {}, true, 'top_center');
@@ -160,7 +176,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         recoveryCubeStatus();
                     });
                 } else {
-                    CubeService.save({}, {cubeDescData: $scope.state.cubeSchema, project: $scope.state.project}, function (request) {
+                    CubeService.save({}, {cubeDescData: $scope.state.cubeSchema,modelDescData:$scope.state.modelSchema, project: $scope.state.project}, function (request) {
                         if(request.successful) {
                             $scope.state.cubeSchema = request.cubeDescData;
 
@@ -201,9 +217,9 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
 //    reverse the date
     $scope.saveCubeRollBack = function (){
-        if($scope.cubeMetaFrame&&($scope.cubeMetaFrame.cube_partition_desc.partition_date_start||$scope.cubeMetaFrame.cube_partition_desc.partition_date_start==0))
+        if($scope.metaModel&&($scope.metaModel.partition_desc.partition_date_start||$scope.metaModel.partition_desc.partition_date_start==0))
         {
-            $scope.cubeMetaFrame.cube_partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
+            $scope.metaModel.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
         }
     }
 
@@ -213,9 +229,10 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         var tmpAggregationItems = [];
         var hierarchyItems = [];
         angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
-            if (dimension.column == '{FK}' && dimension.join && dimension.join.foreign_key.length > 0) {
-                angular.forEach(dimension.join.foreign_key, function (fk, index) {
 
+            if(dimension.derived&&dimension.derived.length){
+                var lookup = _.find($scope.metaModel.lookups,function(lookup){return lookup.table==dimension.table});
+                angular.forEach(lookup.join.foreign_key, function (fk, index) {
                     for (var i = 0; i < tmpRowKeyColumns.length; i++) {
                         if(tmpRowKeyColumns[i].column == fk)
                             break;
@@ -231,40 +248,41 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
                         tmpAggregationItems.push(fk);
                     }
-                });
+                })
+
             }
-            else if (dimension.column) {
+            else if (dimension.column&&dimension.column.length==1) {
                 for (var i = 0; i < tmpRowKeyColumns.length; i++) {
-                    if(tmpRowKeyColumns[i].column == dimension.column)
+                    if(tmpRowKeyColumns[i].column == dimension.column[0])
                         break;
                 }
                 if(i == tmpRowKeyColumns.length) {
                     tmpRowKeyColumns.push({
-                        "column": dimension.column,
+                        "column": dimension.column[0],
                         "length": 0,
                         "dictionary": "true",
                         "mandatory": false
                     });
-                    tmpAggregationItems.push(dimension.column);
+                    tmpAggregationItems.push(dimension.column[0]);
                 }
             }
-            if (dimension.hierarchy && dimension.hierarchy.length > 0) {
-                angular.forEach(dimension.hierarchy, function (hierarchy, index) {
+            if(dimension.hierarchy && dimension.hierarchy.length){
+                angular.forEach(dimension.column, function (hier_column, index) {
                     for (var i = 0; i < tmpRowKeyColumns.length; i++) {
-                        if(tmpRowKeyColumns[i].column == hierarchy.column)
+                        if(tmpRowKeyColumns[i].column == hier_column)
                             break;
                     }
                     if(i == tmpRowKeyColumns.length) {
                         tmpRowKeyColumns.push({
-                            "column": hierarchy.column,
+                            "column": hier_column,
                             "length": 0,
                             "dictionary": "true",
                             "mandatory": false
                         });
-                    tmpAggregationItems.push(hierarchy.column);
+                        tmpAggregationItems.push(hier_column);
                     }
-                    if(hierarchyItems.indexOf(hierarchy.column)==-1){
-                        hierarchyItems.push(hierarchy.column);
+                    if(hierarchyItems.indexOf(hier_column)==-1){
+                        hierarchyItems.push(hier_column);
                     }
                 });
             }
@@ -281,7 +299,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
         if($scope.cubeMode==="editExistCube") {
             var aggregationGroups = $scope.cubeMetaFrame.rowkey.aggregation_groups;
-            // rm unused item from group
+            // rm unused item from group,will only rm when [edit] dimension
             angular.forEach(aggregationGroups, function (group, index) {
                 if (group) {
                     for (var j = 0; j < group.length; j++) {
@@ -464,6 +482,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         if(newValue){
             TableService.list(param, function (tables) {
                 angular.forEach(tables, function (table) {
+                    table.name = table.database+"."+table.name;
                     $scope.srcTablesInProject.push(table);
                 });
             });
