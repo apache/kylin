@@ -20,11 +20,12 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
-import com.kylinolap.invertedindex.IIDescManager;
-import com.kylinolap.invertedindex.IIManager;
+import org.apache.kylin.invertedindex.IIDescManager;
+import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.job.cube.CubingJob;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -45,6 +46,7 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import javax.sql.DataSource;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;

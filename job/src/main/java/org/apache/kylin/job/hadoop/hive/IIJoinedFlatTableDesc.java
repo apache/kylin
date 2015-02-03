@@ -5,7 +5,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import com.google.common.collect.Lists;
-import com.kylinolap.invertedindex.model.IIDesc;
+
+import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.LookupDesc;

@@ -19,15 +19,6 @@ package org.apache.kylin.storage.hbase;
 import java.util.List;
 
 import org.apache.kylin.common.util.BytesUtil;
-import com.kylinolap.invertedindex.IIInstance;
-import com.kylinolap.invertedindex.IIManager;
-import com.kylinolap.invertedindex.IISegment;
-import com.kylinolap.invertedindex.index.Slice;
-import com.kylinolap.invertedindex.index.TableRecord;
-import com.kylinolap.invertedindex.index.RawTableRecord;
-import com.kylinolap.invertedindex.index.TableRecordInfo;
-import com.kylinolap.invertedindex.model.IIDesc;
-import com.kylinolap.invertedindex.model.IIKeyValueCodec;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.*;
 import org.junit.After;
@@ -36,9 +27,19 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.invertedindex.IIInstance;
+import org.apache.kylin.invertedindex.IIManager;
+import org.apache.kylin.invertedindex.IISegment;
+import org.apache.kylin.invertedindex.index.RawTableRecord;
+import org.apache.kylin.invertedindex.index.Slice;
+import org.apache.kylin.invertedindex.index.TableRecord;
+import org.apache.kylin.invertedindex.index.TableRecordInfo;
+import org.apache.kylin.invertedindex.model.IIDesc;
+import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 
 /**
  * @author yangli9

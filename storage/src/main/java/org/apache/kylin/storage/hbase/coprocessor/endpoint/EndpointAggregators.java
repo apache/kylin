@@ -17,12 +17,13 @@
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
 import com.google.common.collect.Lists;
+
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.invertedindex.index.TableRecordInfo;
+import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
-import com.kylinolap.invertedindex.index.TableRecordInfo;
-import com.kylinolap.invertedindex.index.TableRecordInfoDigest;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorConstants;

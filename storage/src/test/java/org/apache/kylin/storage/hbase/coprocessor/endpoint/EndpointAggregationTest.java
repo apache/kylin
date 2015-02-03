@@ -3,10 +3,10 @@ package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 import static org.junit.Assert.assertEquals;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.invertedindex.IIInstance;
-import com.kylinolap.invertedindex.IIManager;
-import com.kylinolap.invertedindex.index.TableRecord;
-import com.kylinolap.invertedindex.index.TableRecordInfo;
+import org.apache.kylin.invertedindex.IIInstance;
+import org.apache.kylin.invertedindex.IIManager;
+import org.apache.kylin.invertedindex.index.TableRecord;
+import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
@@ -16,7 +16,6 @@ import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.*;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
-
 import org.apache.hadoop.io.LongWritable;
 import org.junit.After;
 import org.junit.Before;

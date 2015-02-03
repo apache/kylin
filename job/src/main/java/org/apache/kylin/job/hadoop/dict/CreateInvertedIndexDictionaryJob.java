@@ -16,12 +16,11 @@
 
 package org.apache.kylin.job.hadoop.dict;
 
-import com.kylinolap.invertedindex.IIInstance;
-import com.kylinolap.invertedindex.IIManager;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.util.ToolRunner;
-
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.invertedindex.IIInstance;
+import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 
 /**

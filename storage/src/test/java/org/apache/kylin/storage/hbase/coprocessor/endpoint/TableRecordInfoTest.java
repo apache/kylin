@@ -1,10 +1,10 @@
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.invertedindex.IIInstance;
-import com.kylinolap.invertedindex.IIManager;
-import com.kylinolap.invertedindex.index.TableRecordInfo;
-import com.kylinolap.invertedindex.index.TableRecordInfoDigest;
+import org.apache.kylin.invertedindex.IIInstance;
+import org.apache.kylin.invertedindex.IIManager;
+import org.apache.kylin.invertedindex.index.TableRecordInfo;
+import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

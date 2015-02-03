@@ -21,7 +21,8 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import com.google.common.base.Preconditions;
-import com.kylinolap.invertedindex.IISegment;
+
+import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.job.AbstractJobBuilder;
 import org.apache.kylin.job.common.HadoopShellExecutable;
 import org.apache.kylin.job.common.MapReduceExecutable;

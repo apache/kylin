@@ -19,10 +19,9 @@ package org.apache.kylin.storage.hbase;
 import java.util.ArrayList;
 
 import org.apache.hadoop.hbase.client.HConnection;
-
 import org.apache.kylin.common.persistence.HBaseConnection;
-import com.kylinolap.invertedindex.IIInstance;
-import com.kylinolap.invertedindex.IISegment;
+import org.apache.kylin.invertedindex.IIInstance;
+import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.storage.IStorageEngine;

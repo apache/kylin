@@ -15,10 +15,10 @@
  */
 package org.apache.kylin.job.hadoop.invertedindex;
 
-import com.kylinolap.invertedindex.IIInstance;
-import com.kylinolap.invertedindex.IIManager;
-import com.kylinolap.invertedindex.model.IIDesc;
-import com.kylinolap.invertedindex.model.IIKeyValueCodec;
+import org.apache.kylin.invertedindex.IIInstance;
+import org.apache.kylin.invertedindex.IIManager;
+import org.apache.kylin.invertedindex.model.IIDesc;
+import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.job.tools.DeployCoprocessorCLI;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
@@ -30,7 +30,6 @@ import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
 import org.apache.hadoop.hbase.security.User;
 import org.apache.hadoop.util.ToolRunner;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.HadoopUtil;
