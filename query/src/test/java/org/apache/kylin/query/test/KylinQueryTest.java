@@ -38,7 +38,7 @@ import com.kylinolap.cube.CubeManager;
 import com.kylinolap.metadata.project.ProjectInstance;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
-import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
+import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
 
 @Ignore("KylinQueryTest is contained by CombinationTest")
 public class KylinQueryTest extends KylinTestBase {

@@ -29,7 +29,7 @@ import com.kylinolap.dict.lookup.LookupStringTable;
 import com.kylinolap.metadata.model.ColumnDesc;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.schema.OLAPTable;
-import com.kylinolap.storage.tuple.Tuple;
+import org.apache.kylin.storage.tuple.Tuple;
 
 /**
  * @author yangli9

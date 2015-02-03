@@ -66,7 +66,7 @@ import com.kylinolap.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.CubeRequest;
 import org.apache.kylin.rest.service.JobService;
-import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
+import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
 
 /**
  * CubeController is defined as Restful API entrance for UI.

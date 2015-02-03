@@ -32,7 +32,7 @@ import com.kylinolap.metadata.model.FunctionDesc;
 import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.metadata.realization.IRealization;
-import com.kylinolap.storage.StorageContext;
+import org.apache.kylin.storage.StorageContext;
 import com.kylinolap.metadata.filter.TupleFilter;
 
 /**
