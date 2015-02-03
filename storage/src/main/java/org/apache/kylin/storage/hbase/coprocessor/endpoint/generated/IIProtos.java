@@ -450,7 +450,7 @@ public final class IIProtos {
                 return IIProtos.internal_static_IIRequest_fieldAccessorTable.ensureFieldAccessorsInitialized(IIProtos.IIRequest.class, IIProtos.IIRequest.Builder.class);
             }
 
-            // Construct using com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIRequest.newBuilder()
+            // Construct using org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIRequest.newBuilder()
             private Builder() {
                 maybeForceBuilderInitialization();
             }
@@ -1211,7 +1211,7 @@ public final class IIProtos {
                     return IIProtos.internal_static_IIResponse_IIRow_fieldAccessorTable.ensureFieldAccessorsInitialized(IIProtos.IIResponse.IIRow.class, IIProtos.IIResponse.IIRow.Builder.class);
                 }
 
-                // Construct using com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.newBuilder()
+                // Construct using org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.newBuilder()
                 private Builder() {
                     maybeForceBuilderInitialization();
                 }
@@ -1613,7 +1613,7 @@ public final class IIProtos {
                 return IIProtos.internal_static_IIResponse_fieldAccessorTable.ensureFieldAccessorsInitialized(IIProtos.IIResponse.class, IIProtos.IIResponse.Builder.class);
             }
 
-            // Construct using com.kylinolap.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.newBuilder()
+            // Construct using org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.newBuilder()
             private Builder() {
                 maybeForceBuilderInitialization();
             }

@@ -34,7 +34,7 @@ public abstract class AbstractKylinTestCase {
 
     public static final String SANDBOX_TEST_DATA = "../examples/test_case_data/sandbox";
 
-    public static final String[] SERVICES_WITH_CACHE = { "com.kylinolap.cube.CubeManager", "com.kylinolap.cube.CubeDescManager", "com.kylinolap.metadata.project.ProjectManager", "com.kylinolap.metadata.MetadataManager", "com.kylinolap.metadata.realization.RealizationRegistry" };
+    public static final String[] SERVICES_WITH_CACHE = { "org.apache.kylin.cube.CubeManager", "org.apache.kylin.cube.CubeDescManager", "org.apache.kylin.metadata.project.ProjectManager", "org.apache.kylin.metadata.MetadataManager", "org.apache.kylin.metadata.realization.RealizationRegistry" };
 
     public abstract void createTestMetadata() throws Exception;
 

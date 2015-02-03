@@ -16,7 +16,7 @@ package org.apache.kylin.job.hadoop.cube;
 // * limitations under the License.
 // */
 //
-//package com.kylinolap.index.cube;
+//package org.apache.kylin.index.cube;
 //
 //import static org.junit.Assert.*;
 //
@@ -29,7 +29,7 @@ package org.apache.kylin.job.hadoop.cube;
 //import org.junit.Before;
 //import org.junit.Test;
 //
-//import com.kylinolap.metadata.MetadataManager;
+//import org.apache.kylin.metadata.MetadataManager;
 //
 ///**
 // * @author xjiang

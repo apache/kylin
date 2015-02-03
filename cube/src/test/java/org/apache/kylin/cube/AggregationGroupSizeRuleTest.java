@@ -53,7 +53,7 @@ public class AggregationGroupSizeRuleTest {
              * (non-Javadoc)
              * 
              * @see
-             * com.kylinolap.metadata.validation.rule.AggregationGroupSizeRule
+             * org.apache.kylin.metadata.validation.rule.AggregationGroupSizeRule
              * #getMaxAgrGroupSize()
              */
             @Override
@@ -78,7 +78,7 @@ public class AggregationGroupSizeRuleTest {
              * (non-Javadoc)
              * 
              * @see
-             * com.kylinolap.metadata.validation.rule.AggregationGroupSizeRule
+             * org.apache.kylin.metadata.validation.rule.AggregationGroupSizeRule
              * #getMaxAgrGroupSize()
              */
             @Override

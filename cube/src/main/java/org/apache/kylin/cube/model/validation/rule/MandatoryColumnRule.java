@@ -39,8 +39,8 @@ public class MandatoryColumnRule implements IValidatorRule<CubeDesc> {
      * (non-Javadoc)
      * 
      * @see
-     * com.kylinolap.metadata.validation.IValidatorRule#validate(java.lang.Object
-     * , com.kylinolap.metadata.validation.ValidateContext)
+     * org.apache.kylin.metadata.validation.IValidatorRule#validate(java.lang.Object
+     * , org.apache.kylin.metadata.validation.ValidateContext)
      */
     @Override
     public void validate(CubeDesc cube, ValidateContext context) {

@@ -16,7 +16,7 @@ package org.apache.kylin.job.hadoop.cube;
 // * limitations under the License.
 // */
 //
-//package com.kylinolap.index.cube;
+//package org.apache.kylin.index.cube;
 //
 //import org.apache.commons.cli.Options;
 //import org.apache.hadoop.fs.FileSystem;
@@ -29,13 +29,13 @@ package org.apache.kylin.job.hadoop.cube;
 //import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 //import org.apache.hadoop.util.ToolRunner;
 //
-//import com.kylinolap.cube.CubeInstance;
-//import com.kylinolap.cube.CubeManager;
-//import com.kylinolap.cube.cuboid.Cuboid;
-//import com.kylinolap.cube.kv.AbstractRowKeyEncoder;
-//import com.kylinolap.cube.kv.RowKeyEncoder;
-//import com.kylinolap.index.AbstractHadoopJob;
-//import com.kylinolap.metadata.model.cube.CubeDesc;
+//import org.apache.kylin.cube.CubeInstance;
+//import org.apache.kylin.cube.CubeManager;
+//import org.apache.kylin.cube.cuboid.Cuboid;
+//import org.apache.kylin.cube.kv.AbstractRowKeyEncoder;
+//import org.apache.kylin.cube.kv.RowKeyEncoder;
+//import org.apache.kylin.index.AbstractHadoopJob;
+//import org.apache.kylin.metadata.model.cube.CubeDesc;
 //
 ///**
 // * @author xjiang

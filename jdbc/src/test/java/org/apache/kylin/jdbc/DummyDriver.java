@@ -8,7 +8,7 @@ public class DummyDriver extends Driver {
 
     @Override
     protected String getFactoryClassName(JdbcVersion jdbcVersion) {
-        return "com.kylinolap.jdbc.DummyJdbc41Factory";
+        return "org.apache.kylin.jdbc.DummyJdbc41Factory";
     }
 
 }
