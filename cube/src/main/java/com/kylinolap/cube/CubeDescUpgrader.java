@@ -1,16 +1,5 @@
 package com.kylinolap.cube;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.UUID;
-
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.kylinolap.common.KylinConfig;
@@ -20,12 +9,21 @@ import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.cube.model.HierarchyDesc;
 import com.kylinolap.cube.model.RowKeyColDesc;
 import com.kylinolap.cube.model.RowKeyDesc;
-import com.kylinolap.cube.model.v1.CubePartitionDesc;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.DataModelDesc;
 import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.LookupDesc;
 import com.kylinolap.metadata.model.TableDesc;
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.UUID;
 
 public class CubeDescUpgrader {
 
@@ -112,7 +110,7 @@ public class CubeDescUpgrader {
                 //column on fact table
                 newDim = newDimensionDesc(dim, dimId++, dim.getName());
                 newDimensions.add(newDim);
-                newDim.setColumn(new String[] { dim.getColumn() });
+                newDim.setColumn(new String[]{dim.getColumn()});
                 needNameSuffix = true;
             } else if (ArrayUtils.isEmpty(dim.getDerived()) && ArrayUtils.isEmpty(dim.getHierarchy())) {
                 // user defines a lookup table, but didn't use any column other than the pk, in this case, convert to use fact table's fk
@@ -177,7 +175,7 @@ public class CubeDescUpgrader {
         dm.setLookups(lookups.toArray(new LookupDesc[lookups.size()]));
         dm.setFilterCondition(oldModel.getFilterCondition());
         updatePartitionDesc(oldModel, dm);
-        
+
 
         if (oldModel.getCapacity() == com.kylinolap.cube.model.v1.CubeDesc.CubeCapacity.SMALL) {
             dm.setCapacity(com.kylinolap.metadata.model.DataModelDesc.RealizationCapacity.SMALL);
@@ -186,7 +184,7 @@ public class CubeDescUpgrader {
         } else if (oldModel.getCapacity() == com.kylinolap.cube.model.v1.CubeDesc.CubeCapacity.LARGE) {
             dm.setCapacity(com.kylinolap.metadata.model.DataModelDesc.RealizationCapacity.LARGE);
         }
-        
+
         return dm;
     }
 
@@ -214,12 +212,8 @@ public class CubeDescUpgrader {
             }
         }
 
-        if (partition.getCubePartitionType() == com.kylinolap.cube.model.v1.CubePartitionDesc.CubePartitionType.APPEND) {
-            newPartition.setCubePartitionType(com.kylinolap.metadata.model.PartitionDesc.PartitionType.APPEND);
-        } else if (partition.getCubePartitionType() == CubePartitionDesc.CubePartitionType.UPDATE_INSERT) {
-            newPartition.setCubePartitionType(com.kylinolap.metadata.model.PartitionDesc.PartitionType.UPDATE_INSERT);
-
-        }
+        // only append is supported
+        newPartition.setCubePartitionType(com.kylinolap.metadata.model.PartitionDesc.PartitionType.APPEND);
 
         newPartition.setPartitionDateStart(partition.getPartitionDateStart());
 
