@@ -27,8 +27,8 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.Text;
 
 import com.google.common.collect.Lists;
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.mr.KylinMapper;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.mr.KylinMapper;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.kv.RowConstants;
 import com.kylinolap.metadata.measure.MeasureCodec;

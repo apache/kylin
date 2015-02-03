@@ -20,7 +20,7 @@ import java.io.UnsupportedEncodingException;
 
 import org.apache.hadoop.io.Writable;
 
-import com.kylinolap.common.util.BytesUtil;
+import org.apache.kylin.common.util.BytesUtil;
 
 /**
  * A bi-way dictionary that maps from dimension/column values to IDs and vice

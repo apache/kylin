@@ -11,9 +11,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Sets;
-import com.kylinolap.common.persistence.ResourceStore;
-import com.kylinolap.common.persistence.RootPersistentEntity;
-import com.kylinolap.common.util.StringUtil;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.util.StringUtil;
 import com.kylinolap.metadata.MetadataConstances;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)

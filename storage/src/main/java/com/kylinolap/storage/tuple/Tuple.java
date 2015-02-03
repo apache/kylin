@@ -19,7 +19,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
-import com.kylinolap.common.util.Array;
+import org.apache.kylin.common.util.Array;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.model.CubeDesc.DeriveInfo;

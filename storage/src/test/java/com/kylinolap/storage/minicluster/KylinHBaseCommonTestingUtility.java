@@ -3,7 +3,6 @@ package com.kylinolap.storage.minicluster;
 import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
-import java.util.UUID;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -12,9 +11,8 @@ import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.MiniHBaseCluster;
 import org.apache.hadoop.hbase.master.HMaster;
 import org.apache.hadoop.hbase.zookeeper.MiniZooKeeperCluster;
-import org.apache.hadoop.mapred.JobConf;
 
-import com.kylinolap.common.util.AbstractKylinTestCase;
+import org.apache.kylin.common.util.AbstractKylinTestCase;
 
 /**
  * HBase minicluster Testing utility class for Kylin, extended from HBase's;

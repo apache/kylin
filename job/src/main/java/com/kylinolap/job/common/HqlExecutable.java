@@ -9,8 +9,8 @@ import org.datanucleus.store.types.backed.HashMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
-import com.kylinolap.common.util.HiveClient;
-import com.kylinolap.common.util.JsonUtil;
+import org.apache.kylin.common.util.HiveClient;
+import org.apache.kylin.common.util.JsonUtil;
 import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.execution.AbstractExecutable;
 import com.kylinolap.job.execution.ExecutableContext;

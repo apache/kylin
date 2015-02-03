@@ -1,9 +1,9 @@
 package com.kylinolap.job.tools;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.persistence.JsonSerializer;
-import com.kylinolap.common.persistence.ResourceStore;
-import com.kylinolap.common.persistence.Serializer;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.JsonSerializer;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.Serializer;
 import com.kylinolap.cube.*;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.dict.DictionaryInfo;

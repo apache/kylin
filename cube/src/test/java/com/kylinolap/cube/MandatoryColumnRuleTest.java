@@ -21,7 +21,7 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.kylinolap.common.util.JsonUtil;
+import org.apache.kylin.common.util.JsonUtil;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.validation.IValidatorRule;
 import com.kylinolap.cube.model.validation.ValidateContext;

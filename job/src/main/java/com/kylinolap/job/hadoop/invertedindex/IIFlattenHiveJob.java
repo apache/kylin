@@ -5,7 +5,7 @@ import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kylinolap.common.KylinConfig;
+import org.apache.kylin.common.KylinConfig;
 import com.kylinolap.invertedindex.IIDescManager;
 import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IIManager;

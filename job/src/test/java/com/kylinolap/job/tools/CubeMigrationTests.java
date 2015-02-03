@@ -9,9 +9,9 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.kylinolap.common.util.AbstractKylinTestCase;
-import com.kylinolap.common.util.ClasspathUtil;
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.AbstractKylinTestCase;
+import org.apache.kylin.common.util.ClasspathUtil;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 
 /**
  * Created by honma on 9/17/14.

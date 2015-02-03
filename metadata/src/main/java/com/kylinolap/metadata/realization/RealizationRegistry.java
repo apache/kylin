@@ -1,7 +1,7 @@
 package com.kylinolap.metadata.realization;
 
 import com.google.common.collect.*;
-import com.kylinolap.common.KylinConfig;
+import org.apache.kylin.common.KylinConfig;
 
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;

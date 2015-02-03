@@ -21,7 +21,7 @@ import java.io.IOException;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
-import com.kylinolap.common.mr.KylinReducer;
+import org.apache.kylin.common.mr.KylinReducer;
 
 /**
  * @author ysong1

@@ -1,6 +1,5 @@
 package com.kylinolap.storage.hbase.coprocessor.endpoint;
 
-import com.kylinolap.common.util.BytesUtil;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;

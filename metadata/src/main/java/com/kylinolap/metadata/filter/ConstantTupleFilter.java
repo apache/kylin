@@ -20,7 +20,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 
-import com.kylinolap.common.util.BytesUtil;
+import org.apache.kylin.common.util.BytesUtil;
 import com.kylinolap.metadata.tuple.ITuple;
 
 /**

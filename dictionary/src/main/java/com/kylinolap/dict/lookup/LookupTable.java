@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.hadoop.hbase.util.Pair;
 
 import com.google.common.collect.Sets;
-import com.kylinolap.common.util.Array;
+import org.apache.kylin.common.util.Array;
 import com.kylinolap.metadata.model.TableDesc;
 
 /**

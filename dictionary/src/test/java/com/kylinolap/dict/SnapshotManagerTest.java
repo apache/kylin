@@ -22,7 +22,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.kylinolap.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import com.kylinolap.dict.lookup.HiveTable;
 import com.kylinolap.dict.lookup.SnapshotManager;
 import com.kylinolap.dict.lookup.SnapshotTable;

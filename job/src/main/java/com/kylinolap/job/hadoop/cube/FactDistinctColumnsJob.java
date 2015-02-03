@@ -32,8 +32,8 @@ import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.HadoopUtil;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HadoopUtil;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.job.constant.BatchConstants;

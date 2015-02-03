@@ -29,8 +29,8 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
 import org.apache.hadoop.util.ToolRunner;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.HadoopUtil;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HadoopUtil;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**

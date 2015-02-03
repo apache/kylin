@@ -19,7 +19,7 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
 
-import com.kylinolap.common.util.BytesUtil;
+import org.apache.kylin.common.util.BytesUtil;
 import com.kylinolap.metadata.tuple.ITuple;
 
 /**

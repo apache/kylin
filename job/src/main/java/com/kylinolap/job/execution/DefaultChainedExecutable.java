@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.kylinolap.common.KylinConfig;
+import org.apache.kylin.common.KylinConfig;
 import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.manager.ExecutableManager;
 

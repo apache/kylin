@@ -33,7 +33,7 @@
 	<bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder" />
 
 	<!-- acl config -->
-	<bean id="aclPermissionFactory" class="com.kylinolap.rest.security.AclPermissionFactory" />
+	<bean id="aclPermissionFactory" class="org.apache.kylin.rest.security.AclPermissionFactory" />
 
 	<bean id="expressionHandler" class="org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler">
 		<property name="permissionEvaluator" ref="permissionEvaluator" />
@@ -69,7 +69,7 @@
 	</bean>
 	
 	<beans profile="default">
-		<bean id="ldapUserAuthProvider" class="com.kylinolap.rest.security.LdapProvider">
+		<bean id="ldapUserAuthProvider" class="org.apache.kylin.rest.security.LdapProvider">
 			<constructor-arg>
 				<bean class="org.springframework.security.ldap.authentication.BindAuthenticator">
 					<constructor-arg ref="ldapSource" />
@@ -83,7 +83,7 @@
 				</bean>
 			</constructor-arg>
 			<constructor-arg>
-				<bean class="com.kylinolap.rest.security.AuthoritiesPopulator">
+				<bean class="org.apache.kylin.rest.security.AuthoritiesPopulator">
 					<constructor-arg index="0" ref="ldapSource" />
 					<constructor-arg index="1" value="${ldap.user.groupSearchBase}" />
 					<constructor-arg index="2" value="${acl.adminRole}" />
@@ -92,7 +92,7 @@
 			</constructor-arg>
 		</bean>
 
-		<bean id="ldapServiceAccountAuthProvider" class="com.kylinolap.rest.security.LdapProvider">
+		<bean id="ldapServiceAccountAuthProvider" class="org.apache.kylin.rest.security.LdapProvider">
 			<constructor-arg>
 				<bean class="org.springframework.security.ldap.authentication.BindAuthenticator">
 					<constructor-arg ref="ldapSource" />
@@ -106,7 +106,7 @@
 				</bean>
 			</constructor-arg>
 			<constructor-arg>
-				<bean class="com.kylinolap.rest.security.AuthoritiesPopulator">
+				<bean class="org.apache.kylin.rest.security.AuthoritiesPopulator">
 					<constructor-arg index="0" ref="ldapSource" />
 					<constructor-arg index="1" value="${ldap.service.groupSearchBase}" />
 					<constructor-arg index="2" value="${acl.adminRole}" />

@@ -17,7 +17,7 @@ package com.kylinolap.cube.common;
 
 import static org.junit.Assert.*;
 
-import com.kylinolap.common.util.BytesSplitter;
+import org.apache.kylin.common.util.BytesSplitter;
 import org.junit.Test;
 
 /**

@@ -31,7 +31,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import com.kylinolap.common.util.StringUtil;
+import org.apache.kylin.common.util.StringUtil;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.engine.JobEngineConfig;

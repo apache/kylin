@@ -5,7 +5,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Maps;
-import com.kylinolap.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
 
 /**
  * Created by qianzhou on 12/15/14.

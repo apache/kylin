@@ -23,7 +23,7 @@ import org.apache.hadoop.hbase.util.Pair;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.kylinolap.common.util.Array;
+import org.apache.kylin.common.util.Array;
 import com.kylinolap.cube.kv.RowKeyColumnOrder;
 import com.kylinolap.cube.model.CubeDesc.DeriveInfo;
 import com.kylinolap.cube.model.CubeDesc.DeriveType;

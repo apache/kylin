@@ -29,9 +29,9 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.mr.KylinReducer;
-import com.kylinolap.common.util.ByteArray;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.mr.KylinReducer;
+import org.apache.kylin.common.util.ByteArray;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.cuboid.Cuboid;

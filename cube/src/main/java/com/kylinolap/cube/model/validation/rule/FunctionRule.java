@@ -24,7 +24,7 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.kylinolap.common.KylinConfig;
+import org.apache.kylin.common.KylinConfig;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.cube.model.validation.IValidatorRule;

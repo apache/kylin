@@ -22,7 +22,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.kylinolap.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import com.kylinolap.dict.lookup.HiveTableReader;
 
 /**

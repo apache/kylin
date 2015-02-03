@@ -22,8 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.google.common.collect.Maps;
-import com.kylinolap.common.util.BytesSerializer;
-import com.kylinolap.common.util.BytesUtil;
+import org.apache.kylin.common.util.BytesSerializer;
+import org.apache.kylin.common.util.BytesUtil;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowConstants;

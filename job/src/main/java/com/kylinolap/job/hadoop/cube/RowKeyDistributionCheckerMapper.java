@@ -28,7 +28,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import com.kylinolap.common.mr.KylinMapper;
+import org.apache.kylin.common.mr.KylinMapper;
 
 /**
  * @author ysong1

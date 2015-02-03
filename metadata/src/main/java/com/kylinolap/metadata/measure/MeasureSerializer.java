@@ -18,7 +18,7 @@ package com.kylinolap.metadata.measure;
 
 import java.util.HashMap;
 
-import com.kylinolap.common.util.BytesSerializer;
+import org.apache.kylin.common.util.BytesSerializer;
 import com.kylinolap.metadata.model.DataType;
 
 /**

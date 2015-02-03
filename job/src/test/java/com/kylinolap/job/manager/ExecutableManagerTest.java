@@ -1,7 +1,7 @@
 package com.kylinolap.job.manager;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.job.BaseTestExecutable;
 import com.kylinolap.job.SucceedTestExecutable;
 import com.kylinolap.job.exception.IllegalStateTranferException;
