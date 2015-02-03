@@ -30,7 +30,7 @@ import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryInfo;
 import com.kylinolap.dict.DictionaryManager;
-import com.kylinolap.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.TblColRef;
 
 public class DictionaryManagerTest extends LocalFileMetadataTestCase {
 

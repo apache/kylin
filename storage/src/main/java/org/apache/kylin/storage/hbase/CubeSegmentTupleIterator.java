@@ -54,11 +54,11 @@ import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowKeyDecoder;
 import com.kylinolap.cube.kv.RowValueDecoder;
 import com.kylinolap.cube.model.HBaseColumnDesc;
-import com.kylinolap.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import com.kylinolap.cube.model.CubeDesc.DeriveInfo;
-import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.metadata.filter.TupleFilter;
-import com.kylinolap.metadata.tuple.ITupleIterator;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.storage.tuple.Tuple;
 import org.apache.kylin.storage.tuple.Tuple.IDerivedColumnFiller;
 

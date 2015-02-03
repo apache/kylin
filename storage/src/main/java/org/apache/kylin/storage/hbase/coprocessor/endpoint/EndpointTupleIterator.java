@@ -25,14 +25,14 @@ import com.google.protobuf.ByteString;
 import com.kylinolap.invertedindex.IISegment;
 import com.kylinolap.invertedindex.index.TableRecord;
 import com.kylinolap.invertedindex.index.TableRecordInfo;
-import com.kylinolap.metadata.model.DataType;
-import com.kylinolap.metadata.model.FunctionDesc;
-import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.metadata.filter.ConstantTupleFilter;
-import com.kylinolap.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.model.DataType;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.filter.ConstantTupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
-import com.kylinolap.metadata.tuple.ITuple;
-import com.kylinolap.metadata.tuple.ITupleIterator;
+import org.apache.kylin.metadata.tuple.ITuple;
+import org.apache.kylin.metadata.tuple.ITupleIterator;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/2/14.

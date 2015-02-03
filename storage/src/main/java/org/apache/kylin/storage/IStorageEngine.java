@@ -15,8 +15,8 @@
  */
 package org.apache.kylin.storage;
 
-import com.kylinolap.metadata.realization.SQLDigest;
-import com.kylinolap.metadata.tuple.ITupleIterator;
+import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.metadata.tuple.ITupleIterator;
 
 /**
  * 

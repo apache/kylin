@@ -3,10 +3,10 @@ package org.apache.kylin.storage.filter;
 import java.util.List;
 
 import com.kylinolap.dict.Dictionary;
-import com.kylinolap.metadata.filter.CompareTupleFilter;
-import com.kylinolap.metadata.filter.LogicalTupleFilter;
-import com.kylinolap.metadata.filter.TupleFilter;
-import com.kylinolap.metadata.model.TblColRef;
+import org.apache.kylin.metadata.filter.CompareTupleFilter;
+import org.apache.kylin.metadata.filter.LogicalTupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.model.TblColRef;
 
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 

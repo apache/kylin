@@ -39,12 +39,12 @@ import com.kylinolap.dict.DictionaryInfo;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.dict.lookup.SnapshotManager;
 import com.kylinolap.invertedindex.model.IIDesc;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.SegmentStatusEnum;
-import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.metadata.realization.IRealization;
-import com.kylinolap.metadata.realization.IRealizationProvider;
-import com.kylinolap.metadata.realization.RealizationType;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.IRealizationProvider;
+import org.apache.kylin.metadata.realization.RealizationType;
 
 /**
  * @author honma

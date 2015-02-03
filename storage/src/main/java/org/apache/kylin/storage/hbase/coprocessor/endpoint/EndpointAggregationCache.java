@@ -1,6 +1,6 @@
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
-import com.kylinolap.metadata.measure.MeasureAggregator;
+import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.storage.hbase.coprocessor.AggregationCache;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
 

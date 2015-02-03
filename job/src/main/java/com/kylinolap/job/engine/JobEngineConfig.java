@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.kylin.common.KylinConfig;
 import com.kylinolap.job.tools.OptionsHelper;
-import com.kylinolap.metadata.model.DataModelDesc.RealizationCapacity;
+import org.apache.kylin.metadata.model.DataModelDesc.RealizationCapacity;
 
 /**
  * @author ysong1

@@ -28,14 +28,14 @@ import com.kylinolap.cube.kv.RowKeyColumnOrder;
 import com.kylinolap.cube.model.CubeDesc.DeriveInfo;
 import com.kylinolap.cube.model.CubeDesc.DeriveType;
 import com.kylinolap.dict.lookup.LookupStringTable;
-import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.metadata.filter.ColumnTupleFilter;
-import com.kylinolap.metadata.filter.CompareTupleFilter;
-import com.kylinolap.metadata.filter.ConstantTupleFilter;
-import com.kylinolap.metadata.filter.LogicalTupleFilter;
-import com.kylinolap.metadata.filter.TupleFilter;
-import com.kylinolap.metadata.filter.TupleFilter.FilterOperatorEnum;
-import com.kylinolap.metadata.tuple.ITuple;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.filter.ColumnTupleFilter;
+import org.apache.kylin.metadata.filter.CompareTupleFilter;
+import org.apache.kylin.metadata.filter.ConstantTupleFilter;
+import org.apache.kylin.metadata.filter.LogicalTupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
+import org.apache.kylin.metadata.tuple.ITuple;
 
 /**
  * @author yangli9

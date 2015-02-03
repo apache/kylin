@@ -35,7 +35,7 @@ import com.kylinolap.cube.kv.FuzzyMaskEncoder;
 import com.kylinolap.cube.kv.RowConstants;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.dict.DateStrDictionary;
-import com.kylinolap.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * 

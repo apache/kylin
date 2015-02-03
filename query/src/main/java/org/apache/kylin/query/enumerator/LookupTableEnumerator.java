@@ -26,7 +26,7 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.model.DimensionDesc;
 import com.kylinolap.dict.lookup.LookupStringTable;
-import com.kylinolap.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.schema.OLAPTable;
 import org.apache.kylin.storage.tuple.Tuple;

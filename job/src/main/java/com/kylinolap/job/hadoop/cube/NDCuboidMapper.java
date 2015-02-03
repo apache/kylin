@@ -18,7 +18,7 @@ package com.kylinolap.job.hadoop.cube;
 import java.io.IOException;
 import java.util.Collection;
 
-import com.kylinolap.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 
 import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;

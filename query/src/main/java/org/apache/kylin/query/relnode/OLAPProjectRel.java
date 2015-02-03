@@ -51,8 +51,8 @@ import org.eigenbase.sql.validate.SqlUserDefinedFunction;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.metadata.model.TblColRef.InnerDataTypeEnum;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
 
 /**
  * 

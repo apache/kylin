@@ -15,7 +15,7 @@
  */
 package com.kylinolap.cube.model.validation;
 
-import com.kylinolap.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableDesc;
 
 /**
  * Validate Table metadata from source.

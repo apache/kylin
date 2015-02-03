@@ -28,8 +28,8 @@ import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.dict.lookup.FileTable;
 import com.kylinolap.dict.lookup.LookupBytesTable;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.TableDesc;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
 
 /**
  * @author yangli9

@@ -2,7 +2,7 @@ package com.kylinolap.job.hadoop.hive;
 
 import java.util.List;
 
-import com.kylinolap.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataModelDesc;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/30/14.

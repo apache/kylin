@@ -51,15 +51,15 @@ import com.kylinolap.job.hadoop.dict.CreateDictionaryJob;
 import com.kylinolap.job.hadoop.hbase.BulkLoadJob;
 import com.kylinolap.job.hadoop.hbase.CreateHTableJob;
 import com.kylinolap.job.manager.ExecutableManager;
-import com.kylinolap.metadata.MetadataConstances;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.SegmentStatusEnum;
-import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.project.ProjectInstance;
-import com.kylinolap.metadata.project.ProjectManager;
-import com.kylinolap.metadata.project.RealizationEntry;
-import com.kylinolap.metadata.realization.RealizationStatusEnum;
-import com.kylinolap.metadata.realization.RealizationType;
+import org.apache.kylin.metadata.MetadataConstances;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.project.RealizationEntry;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.metadata.realization.RealizationType;
 
 /**
  * This is the utility class to migrate the Kylin metadata format from v1 to v2;

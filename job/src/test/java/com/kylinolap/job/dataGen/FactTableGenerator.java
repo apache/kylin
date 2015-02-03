@@ -14,12 +14,12 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.DimensionDesc;
-import com.kylinolap.metadata.model.MeasureDesc;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.ColumnDesc;
-import com.kylinolap.metadata.model.DataType;
-import com.kylinolap.metadata.model.JoinDesc;
-import com.kylinolap.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.DataType;
+import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * Created by hongbin on 5/20/14.

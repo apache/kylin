@@ -12,9 +12,9 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.model.IIDesc;
-import com.kylinolap.metadata.model.FunctionDesc;
-import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.metadata.realization.IRealization;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.RoutingRule;
 

@@ -30,10 +30,10 @@ import org.slf4j.LoggerFactory;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.storage.IStorageEngine;
 import org.apache.kylin.storage.StorageEngineFactory;
-import com.kylinolap.metadata.filter.CompareTupleFilter;
-import com.kylinolap.metadata.filter.TupleFilter;
-import com.kylinolap.metadata.tuple.ITuple;
-import com.kylinolap.metadata.tuple.ITupleIterator;
+import org.apache.kylin.metadata.filter.CompareTupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.tuple.ITuple;
+import org.apache.kylin.metadata.tuple.ITupleIterator;
 
 /**
  * @author xjiang

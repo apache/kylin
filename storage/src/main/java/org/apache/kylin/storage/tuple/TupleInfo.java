@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.kylinolap.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.tuple.Tuple.IDerivedColumnFiller;
 
 /**

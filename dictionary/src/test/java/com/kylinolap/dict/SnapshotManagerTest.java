@@ -27,8 +27,8 @@ import com.kylinolap.dict.lookup.HiveTable;
 import com.kylinolap.dict.lookup.SnapshotManager;
 import com.kylinolap.dict.lookup.SnapshotTable;
 import com.kylinolap.dict.lookup.TableReader;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.TableDesc;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
 
 /**
  * @author yangli9

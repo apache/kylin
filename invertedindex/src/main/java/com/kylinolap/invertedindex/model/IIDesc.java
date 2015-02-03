@@ -23,9 +23,9 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.StringUtil;
-import com.kylinolap.metadata.MetadataConstances;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.*;
+import org.apache.kylin.metadata.MetadataConstances;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.*;
 
 /**
  * @author yangli9

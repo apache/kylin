@@ -21,8 +21,8 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.kylinolap.cube.kv.RowKeyColumnOrder;
-import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.metadata.filter.TupleFilter.FilterOperatorEnum;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 
 /**
  * 

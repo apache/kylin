@@ -37,9 +37,9 @@ import com.kylinolap.dict.lookup.FileTable;
 import com.kylinolap.dict.lookup.HiveTable;
 import com.kylinolap.dict.lookup.ReadableTable;
 import com.kylinolap.dict.lookup.TableSignature;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.DataModelDesc;
-import com.kylinolap.metadata.model.TblColRef;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 
 public class DictionaryManager {
 

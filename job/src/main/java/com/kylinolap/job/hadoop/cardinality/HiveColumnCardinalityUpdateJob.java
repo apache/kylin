@@ -38,8 +38,8 @@ import org.apache.hadoop.io.compress.CompressionCodecFactory;
 
 import org.apache.kylin.common.KylinConfig;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.MetadataConstances;
-import com.kylinolap.metadata.MetadataManager;
+import org.apache.kylin.metadata.MetadataConstances;
+import org.apache.kylin.metadata.MetadataManager;
 
 /**
  * This job will update save the cardinality result into Kylin table metadata store.

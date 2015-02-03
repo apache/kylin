@@ -9,15 +9,16 @@ import org.apache.kylin.common.persistence.Serializer;
 import com.kylinolap.cube.model.HierarchyDesc;
 import com.kylinolap.cube.model.RowKeyColDesc;
 import com.kylinolap.cube.model.RowKeyDesc;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.DataModelDesc;
-import com.kylinolap.metadata.model.JoinDesc;
-import com.kylinolap.metadata.model.LookupDesc;
-import com.kylinolap.metadata.model.TableDesc;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.LookupDesc;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.kylin.metadata.model.PartitionDesc;
 
 import java.io.IOException;
 import java.util.List;
@@ -178,20 +179,20 @@ public class CubeDescUpgrader {
 
 
         if (oldModel.getCapacity() == com.kylinolap.cube.model.v1.CubeDesc.CubeCapacity.SMALL) {
-            dm.setCapacity(com.kylinolap.metadata.model.DataModelDesc.RealizationCapacity.SMALL);
+            dm.setCapacity(DataModelDesc.RealizationCapacity.SMALL);
         } else if (oldModel.getCapacity() == com.kylinolap.cube.model.v1.CubeDesc.CubeCapacity.MEDIUM) {
-            dm.setCapacity(com.kylinolap.metadata.model.DataModelDesc.RealizationCapacity.MEDIUM);
+            dm.setCapacity(DataModelDesc.RealizationCapacity.MEDIUM);
         } else if (oldModel.getCapacity() == com.kylinolap.cube.model.v1.CubeDesc.CubeCapacity.LARGE) {
-            dm.setCapacity(com.kylinolap.metadata.model.DataModelDesc.RealizationCapacity.LARGE);
+            dm.setCapacity(DataModelDesc.RealizationCapacity.LARGE);
         }
 
         return dm;
     }
 
-    private void updatePartitionDesc(com.kylinolap.cube.model.v1.CubeDesc oldModel, com.kylinolap.metadata.model.DataModelDesc dm) {
+    private void updatePartitionDesc(com.kylinolap.cube.model.v1.CubeDesc oldModel, DataModelDesc dm) {
 
         com.kylinolap.cube.model.v1.CubePartitionDesc partition = oldModel.getCubePartitionDesc();
-        com.kylinolap.metadata.model.PartitionDesc newPartition = new com.kylinolap.metadata.model.PartitionDesc();
+        PartitionDesc newPartition = new PartitionDesc();
 
         if (partition.getPartitionDateColumn() != null) {
             String partitionCol = partition.getPartitionDateColumn();
@@ -213,7 +214,7 @@ public class CubeDescUpgrader {
         }
 
         // only append is supported
-        newPartition.setCubePartitionType(com.kylinolap.metadata.model.PartitionDesc.PartitionType.APPEND);
+        newPartition.setCubePartitionType(PartitionDesc.PartitionType.APPEND);
 
         newPartition.setPartitionDateStart(partition.getPartitionDateStart());
 

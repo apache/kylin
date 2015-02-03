@@ -29,7 +29,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.common.util.StringUtil;
-import com.kylinolap.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * Created by lukhan on 1/2/14.

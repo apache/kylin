@@ -33,8 +33,8 @@ import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.invertedindex.IIManager;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.project.ProjectManager;
 
 /**
  * @author xduo

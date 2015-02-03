@@ -3,7 +3,7 @@ package org.apache.kylin.query.routing.RoutingRules;
 import java.util.Iterator;
 import java.util.List;
 
-import com.kylinolap.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.RoutingRule;
 

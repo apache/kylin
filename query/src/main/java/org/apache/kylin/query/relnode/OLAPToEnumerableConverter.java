@@ -32,7 +32,7 @@ import org.eigenbase.rel.convert.ConverterRelImpl;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 
-import com.kylinolap.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.IRealization;
 
 /**
  * @author xjiang

@@ -35,7 +35,7 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.model.DataModelDesc.RealizationCapacity;
+import org.apache.kylin.metadata.model.DataModelDesc.RealizationCapacity;
 
 /**
  * @author xjiang, ysong1

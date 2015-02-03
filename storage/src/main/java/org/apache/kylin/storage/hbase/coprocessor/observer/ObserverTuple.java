@@ -22,8 +22,8 @@ import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 
 import com.kylinolap.dict.Dictionary;
-import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.metadata.tuple.ITuple;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.tuple.ITuple;
 
 /**
  * A special kind of tuple that exposes column value (dictionary ID) directly on

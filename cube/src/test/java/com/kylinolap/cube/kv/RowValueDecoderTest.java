@@ -29,12 +29,12 @@ import org.junit.Test;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.metadata.measure.MeasureCodec;
+import org.apache.kylin.metadata.measure.MeasureCodec;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.HBaseColumnDesc;
-import com.kylinolap.metadata.model.MeasureDesc;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.FunctionDesc;
 
 /**
  * @author George Song (ysong1)

@@ -23,7 +23,7 @@ import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.invertedindex.IISegment;
 import com.kylinolap.invertedindex.index.TableRecord;
 import com.kylinolap.invertedindex.index.TableRecordInfo;
-import com.kylinolap.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;

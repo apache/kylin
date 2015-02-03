@@ -27,7 +27,7 @@ import org.apache.hadoop.hbase.util.Pair;
 
 import com.google.common.collect.Sets;
 import org.apache.kylin.common.util.Array;
-import com.kylinolap.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableDesc;
 
 /**
  * An in-memory lookup table, in which each cell is an object of type T. The

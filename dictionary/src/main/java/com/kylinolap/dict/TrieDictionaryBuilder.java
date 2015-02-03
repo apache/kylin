@@ -92,7 +92,7 @@ public class TrieDictionaryBuilder<T> {
         int n = node.part.length, nn = value.length;
         int comp = 0;
         for (; i < n && j < nn; i++, j++) {
-            comp = compareByteUnsigned(node.part[i], value[j]);
+            comp = BytesUtil.compareByteUnsigned(node.part[i], value[j]);
             if (comp != 0)
                 break;
         }
@@ -105,8 +105,8 @@ public class TrieDictionaryBuilder<T> {
             }
             // otherwise, split the current node into two
             else {
-                Node c = new Node(subarray(node.part, i, n), node.isEndOfValue, node.children);
-                node.reset(subarray(node.part, 0, i), true);
+                Node c = new Node(BytesUtil.subarray(node.part, i, n), node.isEndOfValue, node.children);
+                node.reset(BytesUtil.subarray(node.part, 0, i), true);
                 node.children.add(c);
             }
             return;
@@ -115,9 +115,9 @@ public class TrieDictionaryBuilder<T> {
         // if partially matched the current, split the current node, add the new
         // value, make a 3-way
         if (i < n) {
-            Node c1 = new Node(subarray(node.part, i, n), node.isEndOfValue, node.children);
-            Node c2 = new Node(subarray(value, j, nn), true);
-            node.reset(subarray(node.part, 0, i), false);
+            Node c1 = new Node(BytesUtil.subarray(node.part, i, n), node.isEndOfValue, node.children);
+            Node c2 = new Node(BytesUtil.subarray(value, j, nn), true);
+            node.reset(BytesUtil.subarray(node.part, 0, i), false);
             if (comp < 0) {
                 node.children.add(c1);
                 node.children.add(c2);
@@ -138,7 +138,7 @@ public class TrieDictionaryBuilder<T> {
         comp = 0;
         while (!found && lo <= hi) {
             mid = lo + (hi - lo) / 2;
-            comp = compareByteUnsigned(lookfor, node.children.get(mid).part[0]);
+            comp = BytesUtil.compareByteUnsigned(lookfor, node.children.get(mid).part[0]);
             if (comp < 0)
                 hi = mid - 1;
             else if (comp > 0)
@@ -152,7 +152,7 @@ public class TrieDictionaryBuilder<T> {
         }
         // otherwise, make the value a new child
         else {
-            Node c = new Node(subarray(value, j, nn), true);
+            Node c = new Node(BytesUtil.subarray(value, j, nn), true);
             node.children.add(comp <= 0 ? mid : mid + 1, c);
         }
     }

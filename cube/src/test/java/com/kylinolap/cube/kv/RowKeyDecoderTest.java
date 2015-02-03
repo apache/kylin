@@ -30,7 +30,7 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.metadata.MetadataManager;
+import org.apache.kylin.metadata.MetadataManager;
 
 /**
  * @author George Song (ysong1)

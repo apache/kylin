@@ -8,7 +8,7 @@ import com.kylinolap.invertedindex.index.Slice;
 import com.kylinolap.invertedindex.index.RawTableRecord;
 import com.kylinolap.invertedindex.index.TableRecordInfoDigest;
 import com.kylinolap.invertedindex.model.IIKeyValueCodec;
-import com.kylinolap.metadata.measure.MeasureAggregator;
+import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.storage.filter.BitMapFilterEvaluator;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorConstants;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;

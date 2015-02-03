@@ -21,7 +21,7 @@ import java.io.IOException;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import org.apache.kylin.common.util.ByteArray;
-import com.kylinolap.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableDesc;
 
 /**
  * @author yangli9

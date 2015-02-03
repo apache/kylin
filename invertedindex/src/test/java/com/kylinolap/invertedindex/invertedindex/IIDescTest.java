@@ -4,7 +4,7 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.invertedindex.IIDescManager;
 import com.kylinolap.invertedindex.model.IIDesc;
-import com.kylinolap.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

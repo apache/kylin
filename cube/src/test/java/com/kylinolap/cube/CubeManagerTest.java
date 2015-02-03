@@ -18,8 +18,8 @@ package com.kylinolap.cube;
 
 import static org.junit.Assert.*;
 
-import com.kylinolap.metadata.project.ProjectInstance;
-import com.kylinolap.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
 
 import org.junit.After;
 import org.junit.Before;
@@ -30,7 +30,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.metadata.MetadataManager;
+import org.apache.kylin.metadata.MetadataManager;
 
 /**
  * @author yangli9

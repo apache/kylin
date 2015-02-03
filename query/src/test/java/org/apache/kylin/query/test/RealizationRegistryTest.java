@@ -7,8 +7,8 @@ import java.util.Set;
 import org.junit.Test;
 
 import org.apache.kylin.common.KylinConfig;
-import com.kylinolap.metadata.realization.RealizationRegistry;
-import com.kylinolap.metadata.realization.RealizationType;
+import org.apache.kylin.metadata.realization.RealizationRegistry;
+import org.apache.kylin.metadata.realization.RealizationType;
 
 /**
  * Created by qianzhou on 1/26/15.

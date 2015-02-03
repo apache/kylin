@@ -35,7 +35,7 @@ import org.junit.Test;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.metadata.measure.MeasureCodec;
+import org.apache.kylin.metadata.measure.MeasureCodec;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.constant.BatchConstants;
 

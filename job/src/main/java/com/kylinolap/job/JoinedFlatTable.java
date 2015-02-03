@@ -39,10 +39,10 @@ import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
 import com.kylinolap.job.hadoop.hive.IJoinedFlatTableDesc;
 import com.kylinolap.job.hadoop.hive.IntermediateColumnDesc;
 import com.kylinolap.job.hadoop.hive.SqlHiveDataTypeMapping;
-import com.kylinolap.metadata.model.DataModelDesc;
-import com.kylinolap.metadata.model.JoinDesc;
-import com.kylinolap.metadata.model.LookupDesc;
-import com.kylinolap.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.LookupDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * @author George Song (ysong1)

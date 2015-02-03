@@ -29,11 +29,11 @@ import com.google.common.collect.Maps;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.kv.RowValueDecoder;
-import com.kylinolap.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.StorageContext;
-import com.kylinolap.metadata.filter.TupleFilter;
-import com.kylinolap.metadata.tuple.ITuple;
-import com.kylinolap.metadata.tuple.ITupleIterator;
+import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.tuple.ITuple;
+import org.apache.kylin.metadata.tuple.ITupleIterator;
 
 /**
  * @author xjiang
