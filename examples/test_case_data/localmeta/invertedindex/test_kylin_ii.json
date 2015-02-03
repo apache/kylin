@@ -39,8 +39,8 @@
       "date_range_start": 0,
       "date_range_end": 0,
       "size_kb": 0,
-      "source_records": 0,
-      "source_records_size": 0,
+      "input_records": 0,
+      "input_records_size": 0,
       "last_build_time": 0,
       "last_build_job_id": null,
       "create_time": null,
@@ -50,7 +50,7 @@
   "last_modified": 1420016227424,
   "descriptor": "test_kylin_ii_desc",
   "create_time": null,
-  "source_records_size": 0,
+  "input_records_size": 0,
   "size_kb": 0,
   "source_records_count": 0
 }

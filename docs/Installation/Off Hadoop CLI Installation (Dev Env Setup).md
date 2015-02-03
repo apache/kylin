@@ -62,7 +62,7 @@ An alternative to the host replacement is updating your `hosts` file to resolve 
 
 Run a end-to-end cube building test
  
-	mvn test -Dtest=com.kylinolap.job.BuildCubeWithEngineTest -DfailIfNoTests=false
+	mvn test -Dtest=org.apache.kylin.job.BuildCubeWithEngineTest -DfailIfNoTests=false
 	
 Run other tests, the end-to-end cube building test is exclueded
 
@@ -70,7 +70,7 @@ Run other tests, the end-to-end cube building test is exclueded
 
 ### Launch Kylin Web Server
 
-In your Eclipse IDE, launch `com.kylinolap.rest.DebugTomcat` with specifying VM arguments "-Dspring.profiles.active=sandbox". (By default Kylin server will listen on 7070 port; If you want to use another port, please specify it as a parameter when run `DebugTomcat)
+In your Eclipse IDE, launch `org.apache.kylin.rest.DebugTomcat` with specifying VM arguments "-Dspring.profiles.active=sandbox". (By default Kylin server will listen on 7070 port; If you want to use another port, please specify it as a parameter when run `DebugTomcat)
 
 Check Kylin Web available at http://localhost:7070 (user:ADMIN,password:KYLIN)
 

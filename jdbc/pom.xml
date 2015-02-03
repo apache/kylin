@@ -9,7 +9,7 @@
 	<url>https://github.scm.corp.ebay.com/BIPlatform/Kylin</url>
 
 	<parent>
-		<groupId>com.kylinolap</groupId>
+		<groupId>org.apache.kylin</groupId>
 		<artifactId>kylin</artifactId>
 		<version>0.7.1-SNAPSHOT</version>
 	</parent>
