@@ -16,14 +16,14 @@ import org.apache.kylin.job.tools.LZOSupportnessChecker;
  * Created by honma on 9/30/14.
  * <p/>
  * This class is assumed to be run by
- * "hbase org.apache.hadoop.util.RunJar kylin-job-0.5.7-SNAPSHOT-job.jar com.kylinolap.job.deployment.HadoopConfigPrinter "
+ * "hbase org.apache.hadoop.util.RunJar kylin-job-0.5.7-SNAPSHOT-job.jar org.apache.kylin.job.deployment.HadoopConfigPrinter "
  * in the shell, so that hbase and hadoop related environment variables will be
  * visible to this class.
  */
 public class HbaseConfigPrinter {
     public static void main(String[] args) throws IOException {
         if (args.length != 1) {
-            System.out.println("Usage: hbase org.apache.hadoop.util.RunJar kylin-job-0.5.7-SNAPSHOT-job.jar com.kylinolap.job.deployment.HadoopConfigPrinter targetFile");
+            System.out.println("Usage: hbase org.apache.hadoop.util.RunJar kylin-job-0.5.7-SNAPSHOT-job.jar org.apache.kylin.job.deployment.HadoopConfigPrinter targetFile");
             System.exit(1);
         }
 

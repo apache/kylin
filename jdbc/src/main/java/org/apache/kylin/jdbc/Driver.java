@@ -62,7 +62,7 @@ import org.apache.kylin.jdbc.stub.ConnectionException;
  * Driver init code sample:<br>
  * 
  * <pre>
- * Driver driver = (Driver) Class.forName(&quot;com.kylinolap.kylin.jdbc.Driver&quot;).newInstance();
+ * Driver driver = (Driver) Class.forName(&quot;org.apache.kylin.kylin.jdbc.Driver&quot;).newInstance();
  * Properties info = new Properties();
  * info.put(&quot;user&quot;, &quot;user&quot;);
  * info.put(&quot;password&quot;, &quot;password&quot;);
@@ -91,10 +91,10 @@ public class Driver extends UnregisteredDriver {
         case JDBC_30:
             throw new UnsupportedOperationException();
         case JDBC_40:
-            return "com.kylinolap.jdbc.KylinJdbc40Factory";
+            return "org.apache.kylin.jdbc.KylinJdbc40Factory";
         case JDBC_41:
         default:
-            return "com.kylinolap.jdbc.KylinJdbc41Factory";
+            return "org.apache.kylin.jdbc.KylinJdbc41Factory";
         }
     }
 

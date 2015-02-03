@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-option java_package = "com.kylinolap.storage.hbase.coprocessor.example.generated";
+option java_package = "org.apache.kylin.storage.hbase.coprocessor.example.generated";
 option java_outer_classname = "ExampleProtos";
 option java_generic_services = true;
 option java_generate_equals_and_hash = true;

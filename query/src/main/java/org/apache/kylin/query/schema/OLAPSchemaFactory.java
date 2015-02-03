@@ -103,14 +103,14 @@ public class OLAPSchemaFactory implements SchemaFactory {
                 out.write("        {\n");
                 out.write("            \"type\": \"custom\",\n");
                 out.write("            \"name\": \"" + schemaName + "\",\n");
-                out.write("            \"factory\": \"com.kylinolap.query.schema.OLAPSchemaFactory\",\n");
+                out.write("            \"factory\": \"org.apache.kylin.query.schema.OLAPSchemaFactory\",\n");
                 out.write("            \"operand\": {\n");
                 out.write("                \"" + SCHEMA_PROJECT + "\": \"" + project + "\"\n");
                 out.write("            },\n");
                 out.write("           \"functions\": [\n");
                 out.write("                 {\n");
                 out.write("                     \"name\": \"QUARTER\",\n");
-                out.write("                     \"className\": \"com.kylinolap.query.sqlfunc.QuarterFunc\"\n");
+                out.write("                     \"className\": \"org.apache.kylin.query.sqlfunc.QuarterFunc\"\n");
                 out.write("                 }\n");
                 out.write("            ]\n");
                 out.write("        }\n");

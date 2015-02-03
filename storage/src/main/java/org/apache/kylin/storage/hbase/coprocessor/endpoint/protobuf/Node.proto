@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-option java_package = "com.kylinolap.storage.hbase.coprocessor.example.generated";
+option java_package = "org.apache.kylin.storage.hbase.coprocessor.example.generated";
 option java_outer_classname = "NodeProtos";
 
 message Node

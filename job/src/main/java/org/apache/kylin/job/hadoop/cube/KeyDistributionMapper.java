@@ -16,7 +16,7 @@ package org.apache.kylin.job.hadoop.cube;
 // * limitations under the License.
 // */
 //
-//package com.kylinolap.index.cube;
+//package org.apache.kylin.index.cube;
 //
 //import java.io.IOException;
 //

@@ -417,7 +417,7 @@ public final class NodeProtos {
                 return NodeProtos.internal_static_Node_fieldAccessorTable.ensureFieldAccessorsInitialized(NodeProtos.Node.class, NodeProtos.Node.Builder.class);
             }
 
-            // Construct using com.kylinolap.storage.hbase.coprocessor.example.generated.NodeProtos.Node.newBuilder()
+            // Construct using org.apache.kylin.storage.hbase.coprocessor.example.generated.NodeProtos.Node.newBuilder()
             private Builder() {
                 maybeForceBuilderInitialization();
             }
@@ -896,7 +896,7 @@ public final class NodeProtos {
 
     private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
     static {
-        java.lang.String[] descriptorData = { "\n\nNode.proto\"?\n\004Node\022\014\n\004name\030\001 \002(\t\022\023\n\004le" + "ft\030\002 \001(\0132\005.Node\022\024\n\005right\030\003 \001(\0132\005.NodeBG\n" + "9com.kylinolap.storage.hbase.coprocessor" + ".example.generatedB\nNodeProtos" };
+        java.lang.String[] descriptorData = { "\n\nNode.proto\"?\n\004Node\022\014\n\004name\030\001 \002(\t\022\023\n\004le" + "ft\030\002 \001(\0132\005.Node\022\024\n\005right\030\003 \001(\0132\005.NodeBG\n" + "9org.apache.kylin.storage.hbase.coprocessor" + ".example.generatedB\nNodeProtos" };
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
                 descriptor = root;

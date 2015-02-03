@@ -30,7 +30,7 @@
 	<mvc:annotation-driven />
 	<aop:aspectj-autoproxy />
 
-	<context:component-scan base-package="com.kylinolap.rest" />
+	<context:component-scan base-package="org.apache.kylin.rest" />
 
 	<!-- Matric Spring -->
 	<!-- Registry should be defined in only one context XML file -->

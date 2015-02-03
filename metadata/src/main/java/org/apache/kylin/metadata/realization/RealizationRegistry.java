@@ -63,7 +63,7 @@ public class RealizationRegistry {
         providers = Maps.newConcurrentMap();
 
         // use reflection to load providers
-        final Set<Class<? extends IRealizationProvider>> realizationProviders = new Reflections("com.kylinolap", new SubTypesScanner()).getSubTypesOf(IRealizationProvider.class);
+        final Set<Class<? extends IRealizationProvider>> realizationProviders = new Reflections("org.apache.kylin", new SubTypesScanner()).getSubTypesOf(IRealizationProvider.class);
         List<Throwable> es = Lists.newArrayList();
         for (Class<? extends IRealizationProvider> cls : realizationProviders) {
             try {

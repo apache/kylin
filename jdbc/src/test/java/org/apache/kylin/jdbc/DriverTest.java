@@ -73,7 +73,7 @@ public class DriverTest {
     @Ignore("not maintaining")
     @Test
     public void testWithCubeData() throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
-        Driver driver = (Driver) Class.forName("com.kylinolap.kylin.jdbc.Driver").newInstance();
+        Driver driver = (Driver) Class.forName("org.apache.kylin.kylin.jdbc.Driver").newInstance();
         Properties info = new Properties();
         info.put("user", "");
         info.put("password", "");

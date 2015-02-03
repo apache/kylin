@@ -236,7 +236,7 @@ public final class ExampleProtos {
                 return ExampleProtos.internal_static_CountRequest_fieldAccessorTable.ensureFieldAccessorsInitialized(ExampleProtos.CountRequest.class, ExampleProtos.CountRequest.Builder.class);
             }
 
-            // Construct using com.kylinolap.storage.hbase.coprocessor.example.generated.ExampleProtos.CountRequest.newBuilder()
+            // Construct using org.apache.kylin.storage.hbase.coprocessor.example.generated.ExampleProtos.CountRequest.newBuilder()
             private Builder() {
                 maybeForceBuilderInitialization();
             }
@@ -611,7 +611,7 @@ public final class ExampleProtos {
                 return ExampleProtos.internal_static_CountResponse_fieldAccessorTable.ensureFieldAccessorsInitialized(ExampleProtos.CountResponse.class, ExampleProtos.CountResponse.Builder.class);
             }
 
-            // Construct using com.kylinolap.storage.hbase.coprocessor.example.generated.ExampleProtos.CountResponse.newBuilder()
+            // Construct using org.apache.kylin.storage.hbase.coprocessor.example.generated.ExampleProtos.CountResponse.newBuilder()
             private Builder() {
                 maybeForceBuilderInitialization();
             }
@@ -975,7 +975,7 @@ public final class ExampleProtos {
 
     private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
     static {
-        java.lang.String[] descriptorData = { "\n\rexample.proto\"\016\n\014CountRequest\"!\n\rCount" + "Response\022\020\n\005count\030\001 \002(\003:\00102r\n\017RowCountSe" + "rvice\022,\n\013getRowCount\022\r.CountRequest\032\016.Co" + "untResponse\0221\n\020getKeyValueCount\022\r.CountR" + "equest\032\016.CountResponseBR\n9com.kylinolap." + "storage.hbase.coprocessor.example.genera" + "tedB\rExampleProtosH\001\210\001\001\240\001\001" };
+        java.lang.String[] descriptorData = { "\n\rexample.proto\"\016\n\014CountRequest\"!\n\rCount" + "Response\022\020\n\005count\030\001 \002(\003:\00102r\n\017RowCountSe" + "rvice\022,\n\013getRowCount\022\r.CountRequest\032\016.Co" + "untResponse\0221\n\020getKeyValueCount\022\r.CountR" + "equest\032\016.CountResponseBR\n9org.apache.kylin." + "storage.hbase.coprocessor.example.genera" + "tedB\rExampleProtosH\001\210\001\001\240\001\001" };
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
                 descriptor = root;
