@@ -74,12 +74,20 @@ public class CubeControllerTest extends ServiceTestBase {
         newCube.setConfig(cube.getConfig());
         newCube.setRowkey(cube.getRowkey());
 
-        ObjectMapper mapper = new ObjectMapper();
-        StringWriter stringWriter = new StringWriter();
-        mapper.writeValue(stringWriter, newCube);
+        newCube.getModel().setName(newCubeName + "_model_desc" + System.currentTimeMillis());//generate a random model
+        newCube.getModel().setLastModified(0);
+
+        ObjectMapper cubeDescMapper = new ObjectMapper();
+        StringWriter cubeDescWriter = new StringWriter();
+        cubeDescMapper.writeValue(cubeDescWriter, newCube);
+
+        ObjectMapper modelDescMapper = new ObjectMapper();
+        StringWriter modelDescWriter = new StringWriter();
+        modelDescMapper.writeValue(modelDescWriter, newCube.getModel());
 
         CubeRequest cubeRequest = new CubeRequest();
-        cubeRequest.setCubeDescData(stringWriter.toString());
+        cubeRequest.setCubeDescData(cubeDescWriter.toString());
+        cubeRequest.setModelDescData(modelDescWriter.toString());
         cubeRequest = cubeController.saveCubeDesc(cubeRequest);
 
         cubeController.deleteCube(newCubeName);
