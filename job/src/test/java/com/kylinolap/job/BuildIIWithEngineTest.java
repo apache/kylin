@@ -36,7 +36,7 @@ import com.kylinolap.job.impl.threadpool.DefaultScheduler;
 import com.kylinolap.job.invertedindex.IIJob;
 import com.kylinolap.job.invertedindex.IIJobBuilder;
 import com.kylinolap.job.manager.ExecutableManager;
-import com.kylinolap.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 
 /**
  * 

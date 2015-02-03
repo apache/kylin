@@ -29,10 +29,10 @@ import net.hydromatic.optiq.SchemaPlus;
 import org.eigenbase.util14.ConversionUtil;
 
 import org.apache.kylin.common.KylinConfig;
-import com.kylinolap.metadata.model.DatabaseDesc;
-import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.project.ProjectInstance;
-import com.kylinolap.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.model.DatabaseDesc;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
 
 /**
  * @author xjiang

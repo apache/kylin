@@ -36,15 +36,15 @@ import org.apache.kylin.common.util.SplittedBytes;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.AbstractRowKeyEncoder;
 import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.metadata.measure.MeasureCodec;
+import org.apache.kylin.metadata.measure.MeasureCodec;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
-import com.kylinolap.metadata.model.FunctionDesc;
-import com.kylinolap.metadata.model.ParameterDesc;
-import com.kylinolap.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.ParameterDesc;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 
 /**
  * @author George Song (ysong1)

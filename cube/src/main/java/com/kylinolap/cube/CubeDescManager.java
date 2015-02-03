@@ -33,8 +33,8 @@ import org.apache.kylin.common.restclient.Broadcaster;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.validation.CubeMetadataValidator;
 import com.kylinolap.cube.model.validation.ValidateContext;
-import com.kylinolap.metadata.MetadataConstances;
-import com.kylinolap.metadata.MetadataManager;
+import org.apache.kylin.metadata.MetadataConstances;
+import org.apache.kylin.metadata.MetadataManager;
 
 /**
  * Manager class for CubeDesc; extracted from #CubeManager

@@ -7,7 +7,7 @@ import org.junit.Test;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.estimation.CubeSizeEstimationCLI;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.metadata.MetadataManager;
+import org.apache.kylin.metadata.MetadataManager;
 
 /**
  * Created by honma on 9/1/14.

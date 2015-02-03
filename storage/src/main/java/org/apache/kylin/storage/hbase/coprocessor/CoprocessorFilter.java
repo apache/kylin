@@ -26,11 +26,11 @@ import org.apache.kylin.common.util.BytesUtil;
 import com.kylinolap.cube.kv.RowKeyColumnIO;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.ISegment;
-import com.kylinolap.metadata.filter.*;
-import com.kylinolap.metadata.filter.TupleFilter.FilterOperatorEnum;
-import com.kylinolap.metadata.filter.TupleFilterSerializer.Decorator;
-import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.metadata.tuple.ITuple;
+import org.apache.kylin.metadata.filter.*;
+import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
+import org.apache.kylin.metadata.filter.TupleFilterSerializer.Decorator;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.tuple.ITuple;
 
 /**
  * @author yangli9

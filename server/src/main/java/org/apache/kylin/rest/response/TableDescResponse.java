@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.kylinolap.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableDesc;
 
 /**
  * A response class to wrap TableDesc

@@ -23,9 +23,9 @@ import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.invertedindex.IISegment;
 import com.kylinolap.invertedindex.model.IIDesc;
-import com.kylinolap.metadata.measure.fixedlen.FixedLenMeasureCodec;
-import com.kylinolap.metadata.model.ColumnDesc;
-import com.kylinolap.metadata.model.TblColRef;
+import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
+import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * @author yangli9

@@ -27,8 +27,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import org.apache.kylin.common.KylinConfig;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.DataModelDesc;
 
 /**
  * @author jiazhong

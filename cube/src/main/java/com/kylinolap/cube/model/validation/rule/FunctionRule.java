@@ -26,16 +26,16 @@ import org.apache.commons.lang.StringUtils;
 
 import org.apache.kylin.common.KylinConfig;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import com.kylinolap.cube.model.validation.IValidatorRule;
 import com.kylinolap.cube.model.validation.ResultLevel;
 import com.kylinolap.cube.model.validation.ValidateContext;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.ColumnDesc;
-import com.kylinolap.metadata.model.DataType;
-import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.model.FunctionDesc;
-import com.kylinolap.metadata.model.ParameterDesc;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.DataType;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.ParameterDesc;
 
 /**
  * Validate function parameter. Ticket:

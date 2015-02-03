@@ -3,7 +3,7 @@ package org.apache.kylin.rest.service;
 import org.apache.kylin.common.restclient.Broadcaster;
 import com.kylinolap.cube.CubeDescManager;
 import com.kylinolap.invertedindex.IIDescManager;
-import com.kylinolap.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;

@@ -22,7 +22,7 @@ import com.kylinolap.job.exception.ExecuteException;
 import com.kylinolap.job.execution.AbstractExecutable;
 import com.kylinolap.job.execution.ExecutableContext;
 import com.kylinolap.job.execution.ExecuteResult;
-import com.kylinolap.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.TblColRef;
 
 public class MergeDictionaryStep extends AbstractExecutable {
 

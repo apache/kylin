@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import com.kylinolap.metadata.project.ProjectStatusEnum;
+import org.apache.kylin.metadata.project.ProjectStatusEnum;
 
 /**
  * Project is a concept in Kylin similar to schema in DBMS

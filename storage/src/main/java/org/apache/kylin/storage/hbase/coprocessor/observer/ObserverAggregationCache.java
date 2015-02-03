@@ -31,7 +31,7 @@ import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValue.Type;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 
-import com.kylinolap.metadata.measure.MeasureAggregator;
+import org.apache.kylin.metadata.measure.MeasureAggregator;
 
 /**
  * @author yangli9

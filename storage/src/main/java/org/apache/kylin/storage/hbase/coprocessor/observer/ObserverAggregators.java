@@ -31,10 +31,10 @@ import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import com.kylinolap.cube.kv.RowConstants;
 import com.kylinolap.cube.kv.RowValueDecoder;
-import com.kylinolap.metadata.measure.MeasureAggregator;
-import com.kylinolap.metadata.measure.MeasureCodec;
+import org.apache.kylin.metadata.measure.MeasureAggregator;
+import org.apache.kylin.metadata.measure.MeasureCodec;
 import com.kylinolap.cube.model.HBaseColumnDesc;
-import com.kylinolap.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 
 /**
  * @author yangli9

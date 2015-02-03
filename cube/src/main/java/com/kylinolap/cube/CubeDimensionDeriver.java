@@ -1,6 +1,6 @@
 package com.kylinolap.cube;
 
-import com.kylinolap.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.TblColRef;
 
 import java.util.Collection;
 import java.util.HashSet;

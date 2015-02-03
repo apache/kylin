@@ -51,8 +51,8 @@ import org.eigenbase.sql.SqlKind;
 import org.eigenbase.util.ImmutableIntList;
 
 import com.google.common.base.Preconditions;
-import com.kylinolap.metadata.model.JoinDesc;
-import com.kylinolap.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * @author xjiang

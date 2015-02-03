@@ -6,7 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.metadata.MetadataManager;
+import org.apache.kylin.metadata.MetadataManager;
 
 import static org.junit.Assert.*;
 

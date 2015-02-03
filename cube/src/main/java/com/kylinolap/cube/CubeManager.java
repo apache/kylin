@@ -52,16 +52,16 @@ import com.kylinolap.dict.lookup.HiveTable;
 import com.kylinolap.dict.lookup.LookupStringTable;
 import com.kylinolap.dict.lookup.SnapshotManager;
 import com.kylinolap.dict.lookup.SnapshotTable;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.PartitionDesc;
-import com.kylinolap.metadata.model.SegmentStatusEnum;
-import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.metadata.project.ProjectManager;
-import com.kylinolap.metadata.realization.IRealization;
-import com.kylinolap.metadata.realization.IRealizationProvider;
-import com.kylinolap.metadata.realization.RealizationStatusEnum;
-import com.kylinolap.metadata.realization.RealizationType;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.PartitionDesc;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.IRealizationProvider;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.metadata.realization.RealizationType;
 
 /**
  * @author yangli9

@@ -1,6 +1,6 @@
 package com.kylinolap.job.hadoop.hive;
 
-import com.kylinolap.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/30/14.

@@ -20,7 +20,7 @@ import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.invertedindex.IISegment;
 import com.kylinolap.invertedindex.model.IIDesc;
-import com.kylinolap.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.FileSystem;

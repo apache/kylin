@@ -24,10 +24,10 @@ import net.hydromatic.optiq.impl.AbstractSchema;
 
 import org.apache.kylin.common.KylinConfig;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.project.ProjectInstance;
-import com.kylinolap.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
 
 /**
  * @author xjiang

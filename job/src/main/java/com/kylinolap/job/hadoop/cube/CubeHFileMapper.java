@@ -31,11 +31,11 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.mr.KylinMapper;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.metadata.measure.MeasureCodec;
+import org.apache.kylin.metadata.measure.MeasureCodec;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.HBaseColumnDesc;
 import com.kylinolap.cube.model.HBaseColumnFamilyDesc;
-import com.kylinolap.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 

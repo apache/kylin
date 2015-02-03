@@ -25,7 +25,7 @@ import com.kylinolap.cube.common.RowKeySplitter;
 import org.apache.kylin.common.util.SplittedBytes;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * 

@@ -19,7 +19,7 @@ package org.apache.kylin.rest.security;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.job.JobInstance;
-import com.kylinolap.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectInstance;
 
 /**
  * @author xduo

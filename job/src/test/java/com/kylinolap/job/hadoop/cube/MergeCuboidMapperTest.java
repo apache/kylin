@@ -41,9 +41,9 @@ import com.kylinolap.dict.DictionaryInfo;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.dict.TrieDictionary;
 import com.kylinolap.dict.lookup.TableSignature;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.project.ProjectManager;
 
 import static org.junit.Assert.assertTrue;
 

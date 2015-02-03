@@ -17,8 +17,11 @@ package org.apache.kylin.storage.hbase;
 
 import java.util.*;
 
-import com.kylinolap.metadata.model.*;
-import com.kylinolap.metadata.realization.SQLDigest;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
 
 import org.apache.hadoop.hbase.client.HConnection;
@@ -43,12 +46,12 @@ import com.kylinolap.cube.model.HBaseMappingDesc;
 import com.kylinolap.cube.model.CubeDesc.DeriveInfo;
 import com.kylinolap.dict.lookup.LookupStringTable;
 import org.apache.kylin.storage.IStorageEngine;
-import com.kylinolap.metadata.filter.ColumnTupleFilter;
-import com.kylinolap.metadata.filter.CompareTupleFilter;
-import com.kylinolap.metadata.filter.LogicalTupleFilter;
-import com.kylinolap.metadata.filter.TupleFilter;
-import com.kylinolap.metadata.filter.TupleFilter.FilterOperatorEnum;
-import com.kylinolap.metadata.tuple.ITupleIterator;
+import org.apache.kylin.metadata.filter.ColumnTupleFilter;
+import org.apache.kylin.metadata.filter.CompareTupleFilter;
+import org.apache.kylin.metadata.filter.LogicalTupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
+import org.apache.kylin.metadata.tuple.ITupleIterator;
 
 /**
  * @author xjiang, yangli9

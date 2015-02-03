@@ -18,8 +18,8 @@ package com.kylinolap.cube;
 
 import static org.junit.Assert.*;
 
-import com.kylinolap.metadata.project.ProjectManager;
-import com.kylinolap.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,7 +27,7 @@ import org.junit.Test;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.metadata.MetadataManager;
+import org.apache.kylin.metadata.MetadataManager;
 
 /**
  * @author yangli9

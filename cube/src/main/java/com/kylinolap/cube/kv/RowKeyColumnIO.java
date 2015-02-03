@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.kylin.common.util.BytesUtil;
 import com.kylinolap.dict.Dictionary;
-import com.kylinolap.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * Read/Write column values from/into bytes

@@ -26,7 +26,7 @@ import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.DimensionDesc;
-import com.kylinolap.metadata.model.*;
+import org.apache.kylin.metadata.model.*;
 
 /**
  * @author George Song (ysong1)

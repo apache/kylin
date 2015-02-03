@@ -40,9 +40,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.codahale.metrics.annotation.Metered;
-import com.kylinolap.metadata.MetadataConstances;
-import com.kylinolap.metadata.model.ColumnDesc;
-import com.kylinolap.metadata.model.TableDesc;
+import org.apache.kylin.metadata.MetadataConstances;
+import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.request.CardinalityRequest;
 import org.apache.kylin.rest.response.TableDescResponse;
 

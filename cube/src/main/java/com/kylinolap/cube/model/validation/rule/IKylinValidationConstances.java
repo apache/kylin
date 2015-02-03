@@ -16,7 +16,7 @@
 
 package com.kylinolap.cube.model.validation.rule;
 
-import com.kylinolap.metadata.MetadataConstances;
+import org.apache.kylin.metadata.MetadataConstances;
 
 /**
  * @author jianliu

@@ -48,15 +48,15 @@ import com.kylinolap.dict.lookup.HiveTable;
 import com.kylinolap.dict.lookup.LookupBytesTable;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.measure.MeasureCodec;
-import com.kylinolap.metadata.model.FunctionDesc;
-import com.kylinolap.metadata.model.JoinDesc;
-import com.kylinolap.metadata.model.MeasureDesc;
-import com.kylinolap.metadata.model.ParameterDesc;
-import com.kylinolap.metadata.model.SegmentStatusEnum;
-import com.kylinolap.metadata.model.TableDesc;
-import com.kylinolap.metadata.model.TblColRef;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.measure.MeasureCodec;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.ParameterDesc;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * @author George Song (ysong1),honma

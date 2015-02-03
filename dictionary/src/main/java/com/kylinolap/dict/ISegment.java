@@ -1,6 +1,6 @@
 package com.kylinolap.dict;
 
-import com.kylinolap.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/17/14.

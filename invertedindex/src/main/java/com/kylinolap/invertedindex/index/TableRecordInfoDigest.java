@@ -2,8 +2,8 @@ package com.kylinolap.invertedindex.index;
 
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
-import com.kylinolap.metadata.measure.fixedlen.FixedLenMeasureCodec;
-import com.kylinolap.metadata.model.DataType;
+import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
+import org.apache.kylin.metadata.model.DataType;
 import org.apache.hadoop.io.LongWritable;
 
 import java.nio.ByteBuffer;

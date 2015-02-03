@@ -51,7 +51,7 @@ import com.kylinolap.job.exception.JobException;
 import com.kylinolap.job.execution.ExecutableState;
 import com.kylinolap.job.execution.Output;
 import com.kylinolap.job.execution.AbstractExecutable;
-import com.kylinolap.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 
 /**
  * @author ysong1

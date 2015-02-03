@@ -1,7 +1,7 @@
 package org.apache.kylin.storage.hbase.coprocessor;
 
 import com.google.common.collect.Maps;
-import com.kylinolap.metadata.measure.MeasureAggregator;
+import org.apache.kylin.metadata.measure.MeasureAggregator;
 
 import java.util.SortedMap;
 

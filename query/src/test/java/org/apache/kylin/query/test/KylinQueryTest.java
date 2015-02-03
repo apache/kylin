@@ -35,7 +35,7 @@ import org.junit.Test;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
 import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;

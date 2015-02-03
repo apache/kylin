@@ -29,7 +29,7 @@ import java.util.regex.Matcher;
 import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.invertedindex.IISegment;
-import com.kylinolap.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;

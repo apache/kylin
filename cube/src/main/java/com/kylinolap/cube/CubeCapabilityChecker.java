@@ -9,10 +9,10 @@ import org.slf4j.LoggerFactory;
 
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.DimensionDesc;
-import com.kylinolap.metadata.model.FunctionDesc;
-import com.kylinolap.metadata.model.JoinDesc;
-import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.metadata.realization.SQLDigest;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.SQLDigest;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 1/8/15.

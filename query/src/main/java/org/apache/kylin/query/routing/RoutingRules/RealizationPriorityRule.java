@@ -3,8 +3,8 @@ package org.apache.kylin.query.routing.RoutingRules;
 import java.util.*;
 
 import com.google.common.collect.Maps;
-import com.kylinolap.metadata.realization.IRealization;
-import com.kylinolap.metadata.realization.RealizationType;
+import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.RoutingRule;
 

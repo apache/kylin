@@ -49,16 +49,16 @@ import org.eigenbase.util.NlsString;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.metadata.filter.CaseTupleFilter;
-import com.kylinolap.metadata.filter.ColumnTupleFilter;
-import com.kylinolap.metadata.filter.CompareTupleFilter;
-import com.kylinolap.metadata.filter.ConstantTupleFilter;
-import com.kylinolap.metadata.filter.DynamicTupleFilter;
-import com.kylinolap.metadata.filter.ExtractTupleFilter;
-import com.kylinolap.metadata.filter.LogicalTupleFilter;
-import com.kylinolap.metadata.filter.TupleFilter;
-import com.kylinolap.metadata.filter.TupleFilter.FilterOperatorEnum;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.filter.CaseTupleFilter;
+import org.apache.kylin.metadata.filter.ColumnTupleFilter;
+import org.apache.kylin.metadata.filter.CompareTupleFilter;
+import org.apache.kylin.metadata.filter.ConstantTupleFilter;
+import org.apache.kylin.metadata.filter.DynamicTupleFilter;
+import org.apache.kylin.metadata.filter.ExtractTupleFilter;
+import org.apache.kylin.metadata.filter.LogicalTupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 
 /**
  * @author xjiang
