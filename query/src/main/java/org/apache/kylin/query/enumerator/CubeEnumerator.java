@@ -28,8 +28,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.kylin.query.relnode.OLAPContext;
-import com.kylinolap.storage.IStorageEngine;
-import com.kylinolap.storage.StorageEngineFactory;
+import org.apache.kylin.storage.IStorageEngine;
+import org.apache.kylin.storage.StorageEngineFactory;
 import com.kylinolap.metadata.filter.CompareTupleFilter;
 import com.kylinolap.metadata.filter.TupleFilter;
 import com.kylinolap.metadata.tuple.ITuple;

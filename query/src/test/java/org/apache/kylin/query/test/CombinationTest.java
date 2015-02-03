@@ -9,7 +9,7 @@ import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
+import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
 
 /**
  * Created by honma on 7/2/14.

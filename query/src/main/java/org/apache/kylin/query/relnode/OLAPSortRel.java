@@ -35,7 +35,7 @@ import org.eigenbase.rex.RexNode;
 import com.google.common.base.Preconditions;
 import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.metadata.model.TblColRef;
-import com.kylinolap.storage.StorageContext;
+import org.apache.kylin.storage.StorageContext;
 
 /**
  * @author xjiang
