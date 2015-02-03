@@ -59,7 +59,7 @@ public class DictionaryInfoSerializer implements Serializer<DictionaryInfo> {
         if (infoOnly == false) {
             Dictionary<?> dict;
             try {
-                dict = (Dictionary<?>) Class.forName(obj.getDictionaryClass()).newInstance();
+                dict = (Dictionary<?>) Util.classForName(obj.getDictionaryClass()).newInstance();
             } catch (InstantiationException e) {
                 throw new RuntimeException(e);
             } catch (IllegalAccessException e) {

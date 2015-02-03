@@ -98,38 +98,12 @@ public class TrieDictionary<T> extends Dictionary<T> {
 
             String converterName = headIn.readUTF();
             if (converterName.isEmpty() == false)
-                this.bytesConvert = (BytesConverter<T>) Class.forName(converterName).newInstance();
+                this.bytesConvert = (BytesConverter<T>) Util.classForName(converterName).newInstance();
 
             this.nValues = BytesUtil.readUnsigned(trieBytes, headSize + sizeChildOffset, sizeNoValuesBeneath);
-            this.sizeOfId = BytesUtil.sizeForValue(baseId + nValues + 1); // note
-                                                                          // baseId
-                                                                          // could
-                                                                          // raise
-                                                                          // 1
-                                                                          // byte
-                                                                          // in
-                                                                          // ID
-                                                                          // space,
-                                                                          // +1
-                                                                          // to
-                                                                          // reserve
-                                                                          // all
-                                                                          // 0xFF
-                                                                          // for
-                                                                          // NULL
-                                                                          // case
+            this.sizeOfId = BytesUtil.sizeForValue(baseId + nValues + 1); // note baseId could raise 1 byte in ID space, +1 to reserve all 0xFF for NULL case
             this.childOffsetMask = ~((BIT_IS_LAST_CHILD | BIT_IS_END_OF_VALUE) << ((sizeChildOffset - 1) * 8));
-            this.firstByteOffset = sizeChildOffset + sizeNoValuesBeneath + 1; // the
-                                                                              // offset
-                                                                              // from
-                                                                              // begin
-                                                                              // of
-                                                                              // node
-                                                                              // to
-                                                                              // its
-                                                                              // first
-                                                                              // value
-                                                                              // byte
+            this.firstByteOffset = sizeChildOffset + sizeNoValuesBeneath + 1; // the offset from begin of node to its first value byte
         } catch (Exception e) {
             if (e instanceof RuntimeException)
                 throw (RuntimeException) e;
