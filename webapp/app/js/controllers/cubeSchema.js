@@ -1,11 +1,7 @@
 'use strict';
 
 KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter,ModelService ) {
-    //~ Define metadata & class
-    $scope.capacities = ['SMALL', 'MEDIUM', 'LARGE'];
-//    $scope.cubePartitionTypes = ['APPEND', 'UPDATE_INSERT'];
-    //hide UPDATE_INSERT NOW
-    $scope.cubePartitionTypes = ['APPEND'];
+
     $scope.projects = [];
     $scope.newDimension = null;
     $scope.newMeasure = null;
@@ -26,24 +22,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
     $scope.curStep = $scope.wizardSteps[0];
 
-    var Measure = {
-        createNew: function () {
-            var measure = {
-                "id": "",
-                "name": "",
-                "function": {
-                    "expression": "",
-                    "returntype": "",
-                    "parameter": {
-                        "type": "",
-                        "value": ""
-                    }
-                }
-            };
-
-            return measure;
-        }
-    };
 
     // ~ init
     if (!$scope.state) {
@@ -89,7 +67,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     };
 
     $scope.addNewMeasure = function (measure) {
-        $scope.newMeasure = (!!measure)? measure:Measure.createNew();
+        $scope.newMeasure = (!!measure)? measure:CubeDescModel.createMeasure();
     };
 
     $scope.clearNewMeasure = function () {
