@@ -27,7 +27,7 @@
       "TEST_SITES" : "/table_snapshot/TEST_SITES.csv/28130338-fcf4-429e-91b0-cd8dfd397280.snapshot"
     },
     "storage_location_identifier" : "KYLIN-CUBE-TEST_KYLIN_CUBE_WITH_SLR_READY-F24668F6-DCFF-4CB6-A89B-77F1119DF8FA",
-    "date_range_start" : 1384240200000,
+    "date_range_start" : 0,
     "date_range_end" : 1384243200000,
     "size_kb" : 7801,
     "source_records" : 10000,

@@ -5,7 +5,7 @@
     <packaging>jar</packaging>
     <name>Kylin:Cube</name>
     <parent>
-        <groupId>com.kylinolap</groupId>
+        <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
         <version>0.7.1-SNAPSHOT</version>
     </parent>
@@ -13,12 +13,12 @@
     <dependencies>
         <!--Kylin Jar -->
         <dependency>
-            <groupId>com.kylinolap</groupId>
+            <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-metadata</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.kylinolap</groupId>
+            <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-dictionary</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

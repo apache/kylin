@@ -41,7 +41,7 @@
     	<listener-class>com.ryantenney.metrics.spring.servlets.MetricsServletsContextListener</listener-class>
     </listener>
     <listener>
-    	<listener-class>com.kylinolap.rest.metrics.KylinInstrumentedFilterContextListener</listener-class>
+    	<listener-class>org.apache.kylin.rest.metrics.KylinInstrumentedFilterContextListener</listener-class>
     </listener>
 
 	<listener>
