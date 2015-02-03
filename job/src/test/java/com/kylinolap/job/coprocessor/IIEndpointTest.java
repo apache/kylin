@@ -2,7 +2,7 @@ package com.kylinolap.job.coprocessor;
 
 import org.junit.Ignore;
 
-import com.kylinolap.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.common.util.HBaseMetadataTestCase;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 11/14/14.

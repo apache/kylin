@@ -1,6 +1,6 @@
 package com.kylinolap.job.impl.threadpool;
 
-import com.kylinolap.common.KylinConfig;
+import org.apache.kylin.common.KylinConfig;
 import com.kylinolap.job.execution.Executable;
 import com.kylinolap.job.execution.ExecutableContext;
 

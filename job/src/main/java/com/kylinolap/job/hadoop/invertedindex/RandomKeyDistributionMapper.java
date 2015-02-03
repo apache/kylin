@@ -25,8 +25,8 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import com.kylinolap.common.mr.KylinMapper;
-import com.kylinolap.common.util.RandomSampler;
+import org.apache.kylin.common.mr.KylinMapper;
+import org.apache.kylin.common.util.RandomSampler;
 import com.kylinolap.job.constant.BatchConstants;
 
 /**

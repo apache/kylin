@@ -36,8 +36,8 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kylinolap.common.util.HadoopUtil;
-import com.kylinolap.common.util.StringSplitter;
+import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.StringSplitter;
 
 /**
  * Tables are typically CSV or SEQ file.

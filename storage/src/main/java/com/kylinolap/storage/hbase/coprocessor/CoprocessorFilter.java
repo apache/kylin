@@ -22,7 +22,7 @@ import java.util.Set;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import com.google.common.collect.Sets;
-import com.kylinolap.common.util.BytesUtil;
+import org.apache.kylin.common.util.BytesUtil;
 import com.kylinolap.cube.kv.RowKeyColumnIO;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.ISegment;

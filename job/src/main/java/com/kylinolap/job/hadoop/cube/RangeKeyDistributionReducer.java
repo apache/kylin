@@ -26,7 +26,7 @@ import org.apache.hadoop.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kylinolap.common.mr.KylinReducer;
+import org.apache.kylin.common.mr.KylinReducer;
 import com.kylinolap.cube.model.v1.CubeDesc.CubeCapacity;
 import com.kylinolap.job.constant.BatchConstants;
 

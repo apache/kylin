@@ -16,7 +16,7 @@
 
 package com.kylinolap.job.cmd;
 
-import com.kylinolap.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.CliCommandExecutor;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.exception.JobException;
 import org.slf4j.Logger;

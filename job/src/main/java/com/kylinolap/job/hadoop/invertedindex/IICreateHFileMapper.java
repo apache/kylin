@@ -22,7 +22,7 @@ import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValue.Type;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 
-import com.kylinolap.common.mr.KylinMapper;
+import org.apache.kylin.common.mr.KylinMapper;
 import com.kylinolap.invertedindex.model.IIDesc;
 
 /**

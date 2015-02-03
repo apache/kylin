@@ -43,8 +43,8 @@ import org.apache.hadoop.hbase.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kylinolap.common.persistence.StorageException;
-import com.kylinolap.common.util.Array;
+import org.apache.kylin.common.persistence.StorageException;
+import org.apache.kylin.common.util.Array;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;

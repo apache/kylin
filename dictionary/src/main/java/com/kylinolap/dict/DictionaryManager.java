@@ -30,9 +30,9 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.persistence.ResourceStore;
-import com.kylinolap.common.util.HadoopUtil;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.util.HadoopUtil;
 import com.kylinolap.dict.lookup.FileTable;
 import com.kylinolap.dict.lookup.HiveTable;
 import com.kylinolap.dict.lookup.ReadableTable;

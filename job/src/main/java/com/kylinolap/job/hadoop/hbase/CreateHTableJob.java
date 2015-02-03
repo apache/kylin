@@ -15,7 +15,7 @@
  */
 package com.kylinolap.job.hadoop.hbase;
 
-import com.kylinolap.common.KylinConfig;
+import org.apache.kylin.common.KylinConfig;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.model.CubeDesc;

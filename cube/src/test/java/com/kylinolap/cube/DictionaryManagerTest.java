@@ -24,8 +24,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.kylinolap.common.util.JsonUtil;
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryInfo;

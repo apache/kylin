@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
-import com.kylinolap.common.util.BytesUtil;
+import org.apache.kylin.common.util.BytesUtil;
 
 /**
  * http://eli.thegreenplace.net/2011/09/29/an-interesting-tree-serialization-algorithm-from-dwarf

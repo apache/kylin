@@ -31,8 +31,8 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.metadata.model.ColumnDesc;

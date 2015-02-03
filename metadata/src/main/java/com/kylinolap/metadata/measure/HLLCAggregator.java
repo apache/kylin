@@ -17,7 +17,7 @@
 
 package com.kylinolap.metadata.measure;
 
-import com.kylinolap.common.hll.HyperLogLogPlusCounter;
+import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 
 /**
  * @author yangli9

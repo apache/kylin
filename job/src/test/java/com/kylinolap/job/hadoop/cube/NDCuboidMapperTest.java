@@ -30,7 +30,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.job.constant.BatchConstants;
 
 /**

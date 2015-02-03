@@ -28,8 +28,8 @@ import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.mr.KylinMapper;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.mr.KylinMapper;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.cuboid.Cuboid;

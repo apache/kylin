@@ -22,8 +22,8 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.io.LongWritable;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.mr.KylinReducer;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.mr.KylinReducer;
 import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.invertedindex.IISegment;

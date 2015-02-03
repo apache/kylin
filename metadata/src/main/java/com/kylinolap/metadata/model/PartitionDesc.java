@@ -21,8 +21,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.kylinolap.common.util.StringSplitter;
-import com.kylinolap.metadata.model.TblColRef;
+import org.apache.kylin.common.util.StringSplitter;
 
 /**
  * @author xduo

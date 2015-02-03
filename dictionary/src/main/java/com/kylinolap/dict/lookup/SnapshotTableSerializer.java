@@ -4,8 +4,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import com.kylinolap.common.persistence.Serializer;
-import com.kylinolap.common.util.JsonUtil;
+import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.util.JsonUtil;
 
 /*
  * Copyright 2013-2014 eBay Software Foundation

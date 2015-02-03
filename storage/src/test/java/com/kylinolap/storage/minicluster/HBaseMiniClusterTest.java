@@ -14,7 +14,7 @@ import org.apache.hadoop.hive.service.HiveInterface;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 
-import com.kylinolap.common.util.AbstractKylinTestCase;
+import org.apache.kylin.common.util.AbstractKylinTestCase;
 
 public class HBaseMiniClusterTest {
     public static final File HIVE_BASE_DIR = new File("target/hive");

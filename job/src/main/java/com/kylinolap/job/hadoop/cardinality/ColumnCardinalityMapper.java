@@ -30,8 +30,8 @@ import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 
-import com.kylinolap.common.hll.HyperLogLogPlusCounter;
-import com.kylinolap.common.mr.KylinMapper;
+import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import org.apache.kylin.common.mr.KylinMapper;
 import com.kylinolap.cube.kv.RowConstants;
 
 /**

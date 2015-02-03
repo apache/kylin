@@ -1,7 +1,7 @@
 package com.kylinolap.invertedindex.invertedindex;
 
-import com.kylinolap.common.util.JsonUtil;
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.invertedindex.IIDescManager;
 import com.kylinolap.invertedindex.model.IIDesc;
 import com.kylinolap.metadata.model.DataModelDesc;
