@@ -1,6 +1,6 @@
 package com.kylinolap.invertedindex.index;
 
-import com.kylinolap.common.util.BytesUtil;
+import org.apache.kylin.common.util.BytesUtil;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.metadata.measure.fixedlen.FixedLenMeasureCodec;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;

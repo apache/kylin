@@ -1,6 +1,6 @@
 package com.kylinolap.storage.hbase.coprocessor.endpoint;
 
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.invertedindex.index.TableRecordInfo;

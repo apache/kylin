@@ -25,7 +25,7 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import com.kylinolap.common.mr.KylinReducer;
+import org.apache.kylin.common.mr.KylinReducer;
 import com.kylinolap.job.constant.BatchConstants;
 
 /**

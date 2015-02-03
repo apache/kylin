@@ -30,7 +30,7 @@ import org.apache.hadoop.hbase.security.token.TokenUtil;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.security.UserGroupInformation;
 
-import com.kylinolap.common.util.HadoopUtil;
+import org.apache.kylin.common.util.HadoopUtil;
 
 /**
  * @author yangli9

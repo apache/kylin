@@ -25,7 +25,7 @@ import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 
-import com.kylinolap.common.mr.KylinMapper;
+import org.apache.kylin.common.mr.KylinMapper;
 
 /**
  * @author yangli9

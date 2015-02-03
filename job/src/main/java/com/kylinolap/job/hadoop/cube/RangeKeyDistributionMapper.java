@@ -18,7 +18,7 @@ package com.kylinolap.job.hadoop.cube;
 
 import java.io.IOException;
 
-import com.kylinolap.common.mr.KylinMapper;
+import org.apache.kylin.common.mr.KylinMapper;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 

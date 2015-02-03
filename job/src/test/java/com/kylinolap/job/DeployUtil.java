@@ -15,12 +15,12 @@ import org.codehaus.plexus.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.persistence.ResourceStore;
-import com.kylinolap.common.persistence.ResourceTool;
-import com.kylinolap.common.util.AbstractKylinTestCase;
-import com.kylinolap.common.util.CliCommandExecutor;
-import com.kylinolap.common.util.HiveClient;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.ResourceTool;
+import org.apache.kylin.common.util.AbstractKylinTestCase;
+import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.HiveClient;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.job.dataGen.FactTableGenerator;

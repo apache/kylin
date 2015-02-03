@@ -22,10 +22,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.AbstractKylinTestCase;
-import com.kylinolap.common.util.ClasspathUtil;
-import com.kylinolap.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.AbstractKylinTestCase;
+import org.apache.kylin.common.util.ClasspathUtil;
+import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.invertedindex.IISegment;

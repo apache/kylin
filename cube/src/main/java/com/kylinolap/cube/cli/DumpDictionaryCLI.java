@@ -21,7 +21,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Date;
 
-import com.kylinolap.common.util.JsonUtil;
+import org.apache.kylin.common.util.JsonUtil;
 import com.kylinolap.dict.DictionaryInfo;
 import com.kylinolap.dict.DictionaryInfoSerializer;
 

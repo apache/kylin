@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
-import com.kylinolap.common.util.JsonUtil;
+import org.apache.kylin.common.util.JsonUtil;
 import com.kylinolap.dict.lookup.ReadableTable;
 import com.kylinolap.dict.lookup.TableReader;
 import com.kylinolap.metadata.model.DataType;

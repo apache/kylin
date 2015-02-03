@@ -15,7 +15,7 @@
  */
 package com.kylinolap.cube.common;
 
-import com.kylinolap.common.util.SplittedBytes;
+import org.apache.kylin.common.util.SplittedBytes;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import com.kylinolap.cube.CubeSegment;

@@ -2,10 +2,10 @@ package com.kylinolap.cube;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.persistence.JsonSerializer;
-import com.kylinolap.common.persistence.ResourceStore;
-import com.kylinolap.common.persistence.Serializer;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.JsonSerializer;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.Serializer;
 import com.kylinolap.cube.model.HierarchyDesc;
 import com.kylinolap.cube.model.RowKeyColDesc;
 import com.kylinolap.cube.model.RowKeyDesc;

@@ -56,7 +56,7 @@
 	</metrics:register>
 	<!-- Matric Spring -->
 
-	<bean class="com.kylinolap.rest.security.PasswordPlaceholderConfigurer">
+	<bean class="org.apache.kylin.rest.security.PasswordPlaceholderConfigurer">
 		<property name="ignoreResourceNotFound" value="true" />
 	</bean>
 

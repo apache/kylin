@@ -31,9 +31,9 @@ import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
 import org.apache.hadoop.hbase.security.User;
 import org.apache.hadoop.util.ToolRunner;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.BytesUtil;
-import com.kylinolap.common.util.HadoopUtil;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.HadoopUtil;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**

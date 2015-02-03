@@ -19,7 +19,7 @@ package com.kylinolap.job.hadoop.dict;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.util.ToolRunner;
 
-import com.kylinolap.common.KylinConfig;
+import org.apache.kylin.common.KylinConfig;
 import com.kylinolap.cube.cli.DictionaryGeneratorCLI;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 

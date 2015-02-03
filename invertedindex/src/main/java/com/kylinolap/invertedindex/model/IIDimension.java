@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.kylinolap.common.util.StringUtil;
+import org.apache.kylin.common.util.StringUtil;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/26/14.

@@ -3,7 +3,7 @@ package com.kylinolap.metadata.measure.fixedlen;
 import com.kylinolap.metadata.model.DataType;
 import org.apache.hadoop.io.LongWritable;
 
-import com.kylinolap.common.util.BytesUtil;
+import org.apache.kylin.common.util.BytesUtil;
 
 import java.math.BigDecimal;
 

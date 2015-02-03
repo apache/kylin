@@ -15,7 +15,6 @@
  */
 package com.kylinolap.dict;
 
-import static com.kylinolap.common.util.BytesUtil.*;
 import static com.kylinolap.dict.TrieDictionary.*;
 
 import java.io.ByteArrayOutputStream;
@@ -28,7 +27,7 @@ import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.LinkedList;
 
-import com.kylinolap.common.util.BytesUtil;
+import org.apache.kylin.common.util.BytesUtil;
 
 /**
  * Builds a dictionary using Trie structure. All values are taken in byte[] form

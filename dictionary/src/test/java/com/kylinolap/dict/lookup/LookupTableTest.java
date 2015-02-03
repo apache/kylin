@@ -1,7 +1,7 @@
 package com.kylinolap.dict.lookup;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.TableDesc;
 import org.apache.hadoop.hbase.util.Pair;

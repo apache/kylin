@@ -31,7 +31,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 
-import com.kylinolap.common.util.HadoopUtil;
+import org.apache.kylin.common.util.HadoopUtil;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**

@@ -20,7 +20,7 @@ import java.util.ArrayList;
 
 import org.apache.hadoop.hbase.client.HConnection;
 
-import com.kylinolap.common.persistence.HBaseConnection;
+import org.apache.kylin.common.persistence.HBaseConnection;
 import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IISegment;
 import com.kylinolap.metadata.realization.SQLDigest;

@@ -4,7 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.kylinolap.common.KylinConfig;
+import org.apache.kylin.common.KylinConfig;
 import com.kylinolap.job.dao.ExecutableDao;
 import com.kylinolap.job.dao.ExecutableOutputPO;
 import com.kylinolap.job.dao.ExecutablePO;

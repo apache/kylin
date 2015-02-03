@@ -27,8 +27,8 @@ import com.kylinolap.storage.hbase.coprocessor.CoprocessorConstants;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.util.Bytes;
 
-import com.kylinolap.common.util.BytesSerializer;
-import com.kylinolap.common.util.BytesUtil;
+import org.apache.kylin.common.util.BytesSerializer;
+import org.apache.kylin.common.util.BytesUtil;
 import com.kylinolap.cube.kv.RowConstants;
 import com.kylinolap.cube.kv.RowValueDecoder;
 import com.kylinolap.metadata.measure.MeasureAggregator;

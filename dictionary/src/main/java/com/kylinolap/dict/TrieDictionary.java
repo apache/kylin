@@ -25,7 +25,7 @@ import java.lang.ref.SoftReference;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import com.kylinolap.common.util.BytesUtil;
+import org.apache.kylin.common.util.BytesUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

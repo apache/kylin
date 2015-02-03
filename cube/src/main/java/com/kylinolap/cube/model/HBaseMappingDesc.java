@@ -22,7 +22,7 @@ import java.util.LinkedList;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.kylinolap.common.util.StringUtil;
+import org.apache.kylin.common.util.StringUtil;
 import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.metadata.model.FunctionDesc;
 

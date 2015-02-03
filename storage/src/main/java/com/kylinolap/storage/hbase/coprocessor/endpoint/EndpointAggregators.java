@@ -17,8 +17,8 @@
 package com.kylinolap.storage.hbase.coprocessor.endpoint;
 
 import com.google.common.collect.Lists;
-import com.kylinolap.common.util.BytesSerializer;
-import com.kylinolap.common.util.BytesUtil;
+import org.apache.kylin.common.util.BytesSerializer;
+import org.apache.kylin.common.util.BytesUtil;
 import com.kylinolap.metadata.measure.MeasureAggregator;
 import com.kylinolap.metadata.measure.fixedlen.FixedLenMeasureCodec;
 import com.kylinolap.invertedindex.index.TableRecordInfo;
