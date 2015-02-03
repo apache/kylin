@@ -22,13 +22,14 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClasspathUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
-import com.kylinolap.invertedindex.IIInstance;
-import com.kylinolap.invertedindex.IIManager;
-import com.kylinolap.invertedindex.IISegment;
+import org.apache.kylin.invertedindex.IIInstance;
+import org.apache.kylin.invertedindex.IIManager;
+import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.AbstractExecutable;

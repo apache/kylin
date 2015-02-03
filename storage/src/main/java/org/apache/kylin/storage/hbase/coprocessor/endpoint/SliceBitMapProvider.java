@@ -1,9 +1,10 @@
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
-import com.kylinolap.invertedindex.index.Slice;
+import org.apache.kylin.invertedindex.index.Slice;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.filter.BitMapFilterEvaluator;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
+
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 /**

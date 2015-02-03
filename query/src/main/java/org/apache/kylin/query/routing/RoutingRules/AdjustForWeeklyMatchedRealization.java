@@ -6,12 +6,11 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.cube.CubeCapabilityChecker;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.CubeDesc;
-import com.kylinolap.invertedindex.IIInstance;
-import com.kylinolap.invertedindex.model.IIDesc;
+import org.apache.kylin.invertedindex.IIInstance;
+import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;

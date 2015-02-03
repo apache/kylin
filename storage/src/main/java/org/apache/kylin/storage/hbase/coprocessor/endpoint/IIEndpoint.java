@@ -4,18 +4,19 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
-import com.kylinolap.invertedindex.index.Slice;
-import com.kylinolap.invertedindex.index.RawTableRecord;
-import com.kylinolap.invertedindex.index.TableRecordInfoDigest;
-import com.kylinolap.invertedindex.model.IIKeyValueCodec;
+
+import org.apache.kylin.invertedindex.index.RawTableRecord;
+import org.apache.kylin.invertedindex.index.Slice;
+import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
+import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.storage.filter.BitMapFilterEvaluator;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorConstants;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos;
-
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
+
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 import org.apache.commons.io.IOUtils;

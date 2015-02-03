@@ -20,7 +20,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Iterator;
 
-import com.kylinolap.invertedindex.model.IIDesc;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.client.HConnection;
@@ -29,6 +28,7 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Pair;
+import org.apache.kylin.invertedindex.model.IIDesc;
 
 /**
  * @author yangli9

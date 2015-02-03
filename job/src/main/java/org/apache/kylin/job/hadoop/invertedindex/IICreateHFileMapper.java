@@ -21,9 +21,8 @@ import java.io.IOException;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValue.Type;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-
 import org.apache.kylin.common.mr.KylinMapper;
-import com.kylinolap.invertedindex.model.IIDesc;
+import org.apache.kylin.invertedindex.model.IIDesc;
 
 /**
  * @author yangli9
