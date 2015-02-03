@@ -31,7 +31,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 import org.apache.kylin.common.KylinConfig;
-import com.kylinolap.job.hadoop.cube.StorageCleanupJob;
+import org.apache.kylin.job.hadoop.cube.StorageCleanupJob;
 import org.apache.kylin.rest.constant.Constant;
 
 /**
