@@ -1,7 +1,7 @@
 /**
  * Created by jiazhong on 2014/12/30.
  *
- * Define consstant value for CubeDesc
+ * Define constant value for CubeDesc
  *
  */
 KylinApp.constant('cubeConfig', {
