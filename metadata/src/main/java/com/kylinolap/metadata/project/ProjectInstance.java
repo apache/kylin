@@ -22,8 +22,8 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.kylinolap.common.persistence.ResourceStore;
-import com.kylinolap.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
 import com.kylinolap.metadata.realization.RealizationType;
 
 import javax.annotation.Nullable;

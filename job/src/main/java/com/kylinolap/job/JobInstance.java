@@ -26,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
-import com.kylinolap.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
 import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.job.constant.JobStatusEnum;
 import com.kylinolap.job.constant.JobStepCmdTypeEnum;

@@ -21,7 +21,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.kylinolap.common.util.StringUtil;
+import org.apache.kylin.common.util.StringUtil;
 import com.kylinolap.cube.model.HierarchyDesc;
 import com.kylinolap.metadata.model.JoinDesc;
 import com.kylinolap.metadata.model.TableDesc;

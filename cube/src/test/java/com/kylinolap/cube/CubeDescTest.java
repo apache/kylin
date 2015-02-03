@@ -25,8 +25,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
-import com.kylinolap.common.util.JsonUtil;
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.model.CubeDesc;
 
 /**

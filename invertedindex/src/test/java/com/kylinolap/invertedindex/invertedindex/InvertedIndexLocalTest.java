@@ -1,8 +1,8 @@
 package com.kylinolap.invertedindex.invertedindex;
 
 import com.google.common.collect.Lists;
-import com.kylinolap.common.util.BytesUtil;
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IIManager;

@@ -20,16 +20,16 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.kylinolap.common.restclient.CaseInsensitiveStringCache;
+import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.persistence.JsonSerializer;
-import com.kylinolap.common.persistence.ResourceStore;
-import com.kylinolap.common.persistence.Serializer;
-import com.kylinolap.common.restclient.Broadcaster;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.JsonSerializer;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.restclient.Broadcaster;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.validation.CubeMetadataValidator;
 import com.kylinolap.cube.model.validation.ValidateContext;

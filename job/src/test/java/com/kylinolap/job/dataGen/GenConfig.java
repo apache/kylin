@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.kylinolap.common.util.JsonUtil;
+import org.apache.kylin.common.util.JsonUtil;
 
 /**
  * Created by honma on 5/29/14.

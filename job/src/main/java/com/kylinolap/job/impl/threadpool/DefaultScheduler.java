@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
-import com.kylinolap.common.util.HadoopUtil;
+import org.apache.kylin.common.util.HadoopUtil;
 import com.kylinolap.job.Scheduler;
 import com.kylinolap.job.constant.ExecutableConstants;
 import com.kylinolap.job.engine.JobEngineConfig;

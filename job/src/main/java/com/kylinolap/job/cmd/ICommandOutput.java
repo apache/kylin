@@ -16,7 +16,7 @@
 
 package com.kylinolap.job.cmd;
 
-import com.kylinolap.common.util.Logger;
+import org.apache.kylin.common.util.Logger;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 
 /**

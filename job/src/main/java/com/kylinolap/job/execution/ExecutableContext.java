@@ -1,6 +1,6 @@
 package com.kylinolap.job.execution;
 
-import com.kylinolap.common.KylinConfig;
+import org.apache.kylin.common.KylinConfig;
 
 /**
  * Created by qianzhou on 12/15/14.

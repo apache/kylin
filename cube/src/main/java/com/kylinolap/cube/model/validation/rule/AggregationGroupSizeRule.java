@@ -16,7 +16,7 @@
 
 package com.kylinolap.cube.model.validation.rule;
 
-import com.kylinolap.common.KylinConfig;
+import org.apache.kylin.common.KylinConfig;
 import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.cube.model.validation.IValidatorRule;
 import com.kylinolap.cube.model.validation.ResultLevel;

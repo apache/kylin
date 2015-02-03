@@ -23,9 +23,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.kylinolap.common.util.Array;
-import com.kylinolap.common.util.ByteArray;
-import com.kylinolap.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.Array;
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.dict.lookup.FileTable;
 import com.kylinolap.dict.lookup.LookupBytesTable;
 import com.kylinolap.metadata.MetadataManager;

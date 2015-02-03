@@ -20,7 +20,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.hbase.util.Bytes;
 
-import com.kylinolap.common.util.ByteArray;
+import org.apache.kylin.common.util.ByteArray;
 import com.kylinolap.metadata.model.TableDesc;
 
 /**

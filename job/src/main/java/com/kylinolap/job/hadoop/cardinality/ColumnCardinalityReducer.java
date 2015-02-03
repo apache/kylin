@@ -24,8 +24,8 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 
-import com.kylinolap.common.hll.HyperLogLogPlusCounter;
-import com.kylinolap.common.mr.KylinReducer;
+import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import org.apache.kylin.common.mr.KylinReducer;
 import com.kylinolap.cube.kv.RowConstants;
 
 /**
