@@ -27,14 +27,14 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.mr.KylinMapper;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.common.RowKeySplitter;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.common.RowKeySplitter;
 import org.apache.kylin.common.util.SplittedBytes;
-import com.kylinolap.cube.cuboid.Cuboid;
-import com.kylinolap.cube.cuboid.CuboidScheduler;
-import com.kylinolap.cube.model.CubeDesc;
+import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.cuboid.CuboidScheduler;
+import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.job.constant.BatchConstants;
 
 /**

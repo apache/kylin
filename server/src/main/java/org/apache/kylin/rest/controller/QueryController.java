@@ -53,7 +53,7 @@ import org.supercsv.prefs.CsvPreference;
 
 import com.codahale.metrics.annotation.Timed;
 import org.apache.kylin.common.KylinConfig;
-import com.kylinolap.cube.CubeInstance;
+import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.model.Query;
 import org.apache.kylin.rest.model.SelectedColumnMeta;

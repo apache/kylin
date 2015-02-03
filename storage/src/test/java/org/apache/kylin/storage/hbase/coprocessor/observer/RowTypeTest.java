@@ -26,10 +26,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.cuboid.Cuboid;
-import com.kylinolap.cube.model.CubeDesc;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.model.CubeDesc;
 
 /**
  * @author yangli9

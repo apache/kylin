@@ -3,7 +3,7 @@ package com.kylinolap.invertedindex.invertedindex;
 import com.google.common.collect.Lists;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.dict.Dictionary;
+import org.apache.kylin.dict.Dictionary;
 import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.invertedindex.index.*;

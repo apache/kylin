@@ -32,9 +32,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.kv.RowKeyDecoder;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.kv.RowKeyDecoder;
 import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.MeasureDesc;
 

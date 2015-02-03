@@ -20,7 +20,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.kylinolap.cube.kv.RowKeyColumnOrder;
+import org.apache.kylin.cube.kv.RowKeyColumnOrder;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 

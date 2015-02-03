@@ -44,7 +44,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
-import com.kylinolap.cube.kv.RowConstants;
+import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverAggregators.HCol;
 
 /**

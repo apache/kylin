@@ -20,11 +20,11 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.kylin.common.util.Array;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.model.CubeDesc.DeriveInfo;
-import com.kylinolap.dict.DateStrDictionary;
-import com.kylinolap.dict.lookup.LookupStringTable;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
+import org.apache.kylin.dict.DateStrDictionary;
+import org.apache.kylin.dict.lookup.LookupStringTable;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
 

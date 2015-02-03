@@ -30,12 +30,12 @@ import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.mr.KylinMapper;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.cuboid.Cuboid;
-import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.cube.model.RowKeyDesc;
-import com.kylinolap.dict.DictionaryManager;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.RowKeyDesc;
+import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.job.hadoop.hive.CubeJoinedFlatTableDesc;

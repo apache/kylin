@@ -28,10 +28,10 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.apache.kylin.common.KylinConfig;
-import com.kylinolap.cube.CubeDescManager;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.model.CubeDesc;
+import org.apache.kylin.cube.CubeDescManager;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.exception.PersistentException;

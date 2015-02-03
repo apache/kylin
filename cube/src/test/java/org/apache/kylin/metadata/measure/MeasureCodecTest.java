@@ -27,7 +27,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.junit.Test;
 
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
-import com.kylinolap.cube.kv.RowConstants;
+import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 

@@ -26,12 +26,14 @@ import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.JsonUtil;
-import com.kylinolap.cube.CubeDescManager;
-import com.kylinolap.cube.CubeDescUpgrader;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.cube.model.v1.CubeSegmentStatusEnum;
-import com.kylinolap.cube.model.v1.CubeStatusEnum;
+import org.apache.kylin.cube.CubeDescManager;
+import org.apache.kylin.cube.CubeDescUpgrader;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.v1.CubeSegmentStatusEnum;
+import org.apache.kylin.cube.model.v1.CubeStatusEnum;
+import org.apache.kylin.cube.model.v1.CubeInstance;
+import org.apache.kylin.cube.model.v1.CubeSegment;
 import org.apache.kylin.job.common.HadoopShellExecutable;
 import org.apache.kylin.job.common.MapReduceExecutable;
 import org.apache.kylin.job.common.ShellExecutable;
@@ -251,7 +253,7 @@ public class CubeMetadataUpgrade {
         List<String> paths = listResourceStore(ResourceStore.PROJECT_RESOURCE_ROOT);
         for (String path : paths) {
             try {
-                com.kylinolap.cube.model.v1.ProjectInstance oldPrj = store.getResource(path, com.kylinolap.cube.model.v1.ProjectInstance.class, new JsonSerializer<com.kylinolap.cube.model.v1.ProjectInstance>(com.kylinolap.cube.model.v1.ProjectInstance.class));
+                org.apache.kylin.cube.model.v1.ProjectInstance oldPrj = store.getResource(path, org.apache.kylin.cube.model.v1.ProjectInstance.class, new JsonSerializer<org.apache.kylin.cube.model.v1.ProjectInstance>(org.apache.kylin.cube.model.v1.ProjectInstance.class));
 
                 ProjectInstance newPrj = new ProjectInstance();
                 newPrj.setUuid(oldPrj.getUuid());
@@ -292,12 +294,12 @@ public class CubeMetadataUpgrade {
         List<String> paths = listResourceStore(ResourceStore.CUBE_RESOURCE_ROOT);
         for (String path : paths) {
 
-            com.kylinolap.cube.model.v1.CubeInstance cubeInstance = null;
+            CubeInstance cubeInstance = null;
             try {
-                cubeInstance = store.getResource(path, com.kylinolap.cube.model.v1.CubeInstance.class, new JsonSerializer<com.kylinolap.cube.model.v1.CubeInstance>(com.kylinolap.cube.model.v1.CubeInstance.class));
+                cubeInstance = store.getResource(path, CubeInstance.class, new JsonSerializer<CubeInstance>(CubeInstance.class));
                 cubeInstance.setConfig(config);
 
-                com.kylinolap.cube.CubeInstance newInstance = new com.kylinolap.cube.CubeInstance();
+                org.apache.kylin.cube.CubeInstance newInstance = new org.apache.kylin.cube.CubeInstance();
                 newInstance.setName(cubeInstance.getName());
                 newInstance.setDescName(cubeInstance.getDescName());
                 newInstance.setOwner(cubeInstance.getOwner());
@@ -317,10 +319,10 @@ public class CubeMetadataUpgrade {
                     newInstance.setStatus(RealizationStatusEnum.READY);
                 } 
                 
-                List<com.kylinolap.cube.CubeSegment> newSegments = Lists.newArrayList();
+                List<org.apache.kylin.cube.CubeSegment> newSegments = Lists.newArrayList();
                 // segment
-                for (com.kylinolap.cube.model.v1.CubeSegment segment : cubeInstance.getSegments()) {
-                    com.kylinolap.cube.CubeSegment newSeg = new com.kylinolap.cube.CubeSegment();
+                for (CubeSegment segment : cubeInstance.getSegments()) {
+                    org.apache.kylin.cube.CubeSegment newSeg = new org.apache.kylin.cube.CubeSegment();
                     newSegments.add(newSeg);
                     
                     newSeg.setUuid(segment.getUuid());

@@ -2,7 +2,7 @@ package org.apache.kylin.storage.filter;
 
 import java.util.ArrayList;
 
-import com.kylinolap.dict.Dictionary;
+import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.metadata.filter.*;
 import org.junit.Test;
 import static org.junit.Assert.*;

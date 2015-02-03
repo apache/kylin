@@ -29,11 +29,11 @@ import org.apache.hadoop.hbase.util.Bytes;
 
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
-import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.cube.kv.RowValueDecoder;
+import org.apache.kylin.cube.kv.RowConstants;
+import org.apache.kylin.cube.kv.RowValueDecoder;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.measure.MeasureCodec;
-import com.kylinolap.cube.model.HBaseColumnDesc;
+import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 
 /**

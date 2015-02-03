@@ -25,11 +25,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.kylin.common.KylinConfig;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.kv.RowConstants;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.metadata.measure.MeasureAggregators;
 import org.apache.kylin.metadata.measure.MeasureCodec;
-import com.kylinolap.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;

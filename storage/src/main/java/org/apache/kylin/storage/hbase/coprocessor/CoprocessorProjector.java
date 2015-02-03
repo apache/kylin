@@ -25,9 +25,9 @@ import org.apache.hadoop.hbase.Cell;
 
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.cuboid.Cuboid;
-import com.kylinolap.cube.kv.RowKeyEncoder;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.kv.RowKeyEncoder;
 import com.kylinolap.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.metadata.model.TblColRef;
 

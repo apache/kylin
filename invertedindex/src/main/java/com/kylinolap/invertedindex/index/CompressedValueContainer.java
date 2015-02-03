@@ -26,6 +26,7 @@ import org.apache.kylin.common.util.BytesUtil;
 import com.ning.compress.lzf.LZFDecoder;
 import com.ning.compress.lzf.LZFEncoder;
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
+import org.apache.kylin.dict.Dictionary;
 
 /**
  * @author yangli9
@@ -62,7 +63,7 @@ public class CompressedValueContainer implements ColumnValueContainer {
     @Override
     public ConciseSet getBitMap(Integer startId, Integer endId) {
         ConciseSet ret = new ConciseSet();
-        int nullId = com.kylinolap.dict.Dictionary.NULL_ID[valueLen];
+        int nullId = Dictionary.NULL_ID[valueLen];
 
         if (startId == null && endId == null) {
             //entry for getting null values 

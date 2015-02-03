@@ -4,7 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.apache.kylin.common.util.PartialSorter;
-import com.kylinolap.cube.CubeInstance;
+import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.relnode.OLAPContext;

@@ -37,7 +37,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
-import com.kylinolap.cube.kv.RowConstants;
+import org.apache.kylin.cube.kv.RowConstants;
 
 /**
  * @author ysong1

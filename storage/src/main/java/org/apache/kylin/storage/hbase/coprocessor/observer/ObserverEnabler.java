@@ -34,10 +34,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.cuboid.Cuboid;
-import com.kylinolap.cube.kv.RowValueDecoder;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.kv.RowValueDecoder;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.storage.hbase.RegionScannerAdapter;
