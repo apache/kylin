@@ -27,14 +27,14 @@ import org.apache.hadoop.hbase.util.Pair;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.kylin.common.util.BytesUtil;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.cuboid.Cuboid;
-import com.kylinolap.cube.kv.AbstractRowKeyEncoder;
-import com.kylinolap.cube.kv.FuzzyKeyEncoder;
-import com.kylinolap.cube.kv.FuzzyMaskEncoder;
-import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.dict.DateStrDictionary;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.kv.AbstractRowKeyEncoder;
+import org.apache.kylin.cube.kv.FuzzyKeyEncoder;
+import org.apache.kylin.cube.kv.FuzzyMaskEncoder;
+import org.apache.kylin.cube.kv.RowConstants;
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.dict.DateStrDictionary;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**

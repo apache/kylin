@@ -26,10 +26,10 @@ import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
 import org.apache.hadoop.util.ToolRunner;
 
 import org.apache.kylin.common.KylinConfig;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.cube.model.HBaseColumnFamilyDesc;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 
 import org.slf4j.Logger;

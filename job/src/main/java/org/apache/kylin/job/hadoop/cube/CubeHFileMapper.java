@@ -29,14 +29,14 @@ import org.apache.hadoop.io.Text;
 import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.mr.KylinMapper;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.kv.RowConstants;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.metadata.measure.MeasureCodec;
-import com.kylinolap.cube.model.CubeDesc;
-import com.kylinolap.cube.model.HBaseColumnDesc;
-import com.kylinolap.cube.model.HBaseColumnFamilyDesc;
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.HBaseColumnDesc;
+import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 
 /**

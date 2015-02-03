@@ -22,10 +22,10 @@ import java.util.List;
 
 import net.hydromatic.linq4j.Enumerator;
 
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.model.DimensionDesc;
-import com.kylinolap.dict.lookup.LookupStringTable;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.model.DimensionDesc;
+import org.apache.kylin.dict.lookup.LookupStringTable;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.schema.OLAPTable;

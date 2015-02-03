@@ -19,8 +19,8 @@ package com.kylinolap.invertedindex.index;
 import java.io.IOException;
 import java.util.List;
 
-import com.kylinolap.dict.Dictionary;
-import com.kylinolap.dict.DictionaryManager;
+import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.dict.DictionaryManager;
 import com.kylinolap.invertedindex.IISegment;
 import com.kylinolap.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;

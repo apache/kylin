@@ -17,7 +17,7 @@
 package com.kylinolap.invertedindex.index;
 
 import com.google.common.collect.Lists;
-import com.kylinolap.dict.DateStrDictionary;
+import org.apache.kylin.dict.DateStrDictionary;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.LongWritable;

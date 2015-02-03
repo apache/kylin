@@ -2,7 +2,7 @@ package org.apache.kylin.storage.filter;
 
 import java.util.List;
 
-import com.kylinolap.dict.Dictionary;
+import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;

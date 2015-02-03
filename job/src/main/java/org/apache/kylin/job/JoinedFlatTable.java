@@ -32,8 +32,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import org.apache.kylin.common.util.StringUtil;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.model.CubeDesc;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.hadoop.hive.CubeJoinedFlatTableDesc;
 import org.apache.kylin.job.hadoop.hive.IJoinedFlatTableDesc;

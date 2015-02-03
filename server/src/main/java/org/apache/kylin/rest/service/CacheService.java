@@ -1,7 +1,7 @@
 package org.apache.kylin.rest.service;
 
 import org.apache.kylin.common.restclient.Broadcaster;
-import com.kylinolap.cube.CubeDescManager;
+import org.apache.kylin.cube.CubeDescManager;
 import com.kylinolap.invertedindex.IIDescManager;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.springframework.stereotype.Component;

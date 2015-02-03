@@ -32,7 +32,7 @@ import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.mr.KylinMapper;
-import com.kylinolap.cube.kv.RowConstants;
+import org.apache.kylin.cube.kv.RowConstants;
 
 /**
  * @author Jack

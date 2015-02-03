@@ -7,9 +7,9 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kylinolap.cube.CubeCapabilityChecker;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.model.CubeDesc;
+import org.apache.kylin.cube.CubeCapabilityChecker;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.model.CubeDesc;
 import com.kylinolap.invertedindex.IIInstance;
 import com.kylinolap.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;

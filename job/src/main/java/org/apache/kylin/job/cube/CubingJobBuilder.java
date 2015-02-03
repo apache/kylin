@@ -11,7 +11,7 @@ import org.apache.hadoop.hbase.util.Pair;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.kylinolap.cube.CubeSegment;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.AbstractJobBuilder;
 import org.apache.kylin.job.common.HadoopShellExecutable;
 import org.apache.kylin.job.common.MapReduceExecutable;

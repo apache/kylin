@@ -23,9 +23,9 @@ import org.apache.hadoop.hbase.util.Bytes;
 
 import com.google.common.collect.Sets;
 import org.apache.kylin.common.util.BytesUtil;
-import com.kylinolap.cube.kv.RowKeyColumnIO;
-import com.kylinolap.dict.Dictionary;
-import com.kylinolap.dict.ISegment;
+import org.apache.kylin.cube.kv.RowKeyColumnIO;
+import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.dict.ISegment;
 import org.apache.kylin.metadata.filter.*;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer.Decorator;

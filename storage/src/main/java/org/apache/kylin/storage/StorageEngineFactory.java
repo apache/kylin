@@ -15,7 +15,7 @@
  */
 package org.apache.kylin.storage;
 
-import com.kylinolap.cube.CubeInstance;
+import org.apache.kylin.cube.CubeInstance;
 import com.kylinolap.invertedindex.IIInstance;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.metadata.realization.IRealization;

@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.kylin.common.mr.KylinReducer;
-import com.kylinolap.cube.model.v1.CubeDesc.CubeCapacity;
+import org.apache.kylin.cube.model.v1.CubeDesc.CubeCapacity;
 import org.apache.kylin.job.constant.BatchConstants;
 
 /**
