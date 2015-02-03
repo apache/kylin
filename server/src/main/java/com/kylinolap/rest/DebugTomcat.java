@@ -37,6 +37,8 @@ public class DebugTomcat {
         }
 
         ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox").getAbsolutePath());
+        System.setProperty("hdp.version", "2.2.0.0-2041"); // mapred-site.xml ref this
+
         String webBase = new File("../webapp/app").getAbsolutePath();
 //        String apiBase = new File("src/main/webapp").getAbsolutePath();
         if (new File(webBase, "WEB-INF").exists() == false) {
