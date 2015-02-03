@@ -1,8 +1,8 @@
 {
     "bump": {
         "options": {
-            "files": ["package.json", "app/config.json"],
-            "commitFiles": ["package.json", "bower.json", "app/config.json", "CHANGELOG.md"]
+            "files": ["package.json"],
+            "commitFiles": ["package.json", "bower.json",  "CHANGELOG.md"]
         }
     },
     "concat": {
