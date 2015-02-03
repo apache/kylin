@@ -7,18 +7,18 @@
     <description>Kylin REST Service and RPC Server.</description>
 
     <parent>
-        <groupId>com.kylinolap</groupId>
+        <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
         <version>0.7.1-SNAPSHOT</version>
     </parent>
 
     <properties>
-        <start-class>com.kylinolap.odbc.Application</start-class>
+        <start-class>org.apache.kylin.odbc.Application</start-class>
     </properties>
     <dependencies>
 
         <dependency>
-            <groupId>com.kylinolap</groupId>
+            <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-query</artifactId>
             <version>${project.parent.version}</version>
             <exclusions>
@@ -33,7 +33,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.kylinolap</groupId>
+            <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-job</artifactId>
             <version>${project.parent.version}</version>
             <exclusions>

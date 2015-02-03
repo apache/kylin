@@ -6,7 +6,7 @@
     <name>Kylin:AtopCalcite</name>
 
     <parent>
-        <groupId>com.kylinolap</groupId>
+        <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
         <version>0.7.1-SNAPSHOT</version>
     </parent>

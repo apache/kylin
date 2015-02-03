@@ -7,7 +7,7 @@
     <description>kylin query engine based on optiq</description>
 
     <parent>
-        <groupId>com.kylinolap</groupId>
+        <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
         <version>0.7.1-SNAPSHOT</version>
     </parent>
@@ -18,12 +18,12 @@
     <!-- Dependencies. -->
     <dependencies>
         <dependency>
-            <groupId>com.kylinolap</groupId>
+            <groupId>org.apache.kylin</groupId>
             <artifactId>atopcalcite</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.kylinolap</groupId>
+            <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-storage</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
