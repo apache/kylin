@@ -91,8 +91,9 @@ public class RealizationRegistry {
 
     public IRealization getRealization(RealizationType type, String name) {
         IRealizationProvider p = providers.get(type);
-        if (p == null)
-            throw new IllegalStateException("No provider for realization type " + type);
+        if (p == null) {
+            logger.warn("No provider for realization type " + type);
+        }
 
         try {
             return p.getRealization(name);
