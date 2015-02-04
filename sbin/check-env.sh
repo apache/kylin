@@ -44,3 +44,5 @@ then
 else
     echo "hadoop check passed"
 fi
+
+exit 0
