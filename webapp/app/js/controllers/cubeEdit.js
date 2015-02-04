@@ -6,7 +6,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     //add or edit ?
     var absUrl = $location.absUrl();
     $scope.cubeMode = absUrl.indexOf("/cubes/add")!=-1?'addNewCube':absUrl.indexOf("/cubes/edit")!=-1?'editExistCube':'default';
-    $scope.metaModel={};
 
 
     $scope.getColumnsByTable = function (name) {
@@ -49,11 +48,12 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         CubeDescService.get({cube_name: $routeParams.cubeName}, function (detail) {
             if (detail.length > 0) {
                 $scope.cubeMetaFrame = detail[0];
-                $scope.metaModel={};
                 ModelService.get({model_name: $scope.cubeMetaFrame.model_name}, function (model) {
                     if (model) {
-                        $scope.metaModel = model;
+//                        $scope.metaModel = model;
                         MetaModel.setMetaModel(model);
+                        $scope.metaModel = MetaModel;
+
                         //use
                         //convert GMT mills ,to make sure partition date show GMT Date
                         //should run only one time
@@ -100,18 +100,18 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         });
 
 
-        if ($scope.metaModel.partition_desc.partition_date_start) {
-            var dateStart = new Date($scope.metaModel.partition_desc.partition_date_start);
+        if ($scope.metaModel.model.partition_desc.partition_date_start) {
+            var dateStart = new Date($scope.metaModel.model.partition_desc.partition_date_start);
             dateStart = (dateStart.getFullYear() + "-" + (dateStart.getMonth() + 1) + "-" + dateStart.getDate());
             //switch selected time to utc timestamp
-            $scope.metaModel.partition_desc.partition_date_start = new Date(moment.utc(dateStart, "YYYY-MM-DD").format()).getTime();
+            $scope.metaModel.model.partition_desc.partition_date_start = new Date(moment.utc(dateStart, "YYYY-MM-DD").format()).getTime();
         }
 
         $scope.state.project = $scope.cubeMetaFrame.project;
 //        delete $scope.cubeMetaFrame.project;
 
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
-        $scope.state.modelSchema = angular.toJson($scope.metaModel, true);
+        $scope.state.modelSchema = angular.toJson($scope.metaModel.model, true);
     };
 
     $scope.cubeResultTmpl = function (notification) {
@@ -215,9 +215,9 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
 //    reverse the date
     $scope.saveCubeRollBack = function (){
-        if($scope.metaModel&&($scope.metaModel.partition_desc.partition_date_start||$scope.metaModel.partition_desc.partition_date_start==0))
+        if($scope.metaModel.model&&($scope.metaModel.model.partition_desc.partition_date_start||$scope.metaModel.model.partition_desc.partition_date_start==0))
         {
-            $scope.metaModel.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
+            $scope.metaModel.model.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
         }
     }
 
@@ -229,7 +229,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
 
             if(dimension.derived&&dimension.derived.length){
-                var lookup = _.find($scope.metaModel.lookups,function(lookup){return lookup.table==dimension.table});
+                var lookup = _.find($scope.metaModel.model.lookups,function(lookup){return lookup.table==dimension.table});
                 angular.forEach(lookup.join.foreign_key, function (fk, index) {
                     for (var i = 0; i < tmpRowKeyColumns.length; i++) {
                         if(tmpRowKeyColumns[i].column == fk)

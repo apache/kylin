@@ -3,7 +3,7 @@
         <h4 tooltip="merge">CUBE MERGE CONFIRM</h4>
     </div>
     <div class="modal-body" style="background-color: white">
-        <div ng-if="metaModel.partition_desc.partition_date_column" class="row">
+        <div ng-if="metaModel.model.partition_desc.partition_date_column" class="row">
             <div class="col-md-2"></div>
             <div class="col-md-8">
                 <div ng-if="!!!(cube.segments) || cube.segments.length < 2">
@@ -14,7 +14,7 @@
                         <tbody>
                         <tr>
                             <td>PARTITION DATE COLUMN</td>
-                            <td>{{metaModel.partition_desc.partition_date_column}}</td>
+                            <td>{{metaModel.model.partition_desc.partition_date_column}}</td>
                         </tr>
                         <tr>
                             <td>MERGE START SEGMENT</td>
@@ -96,7 +96,7 @@
             <div class="col-md-2"></div>
         </div>
 
-        <div ng-if="!metaModel.partition_desc.partition_date_column" class="row">
+        <div ng-if="!metaModel.model.partition_desc.partition_date_column" class="row">
             <div class="col-md-2"></div>
             <div class="col-md-8">
                 <span>No partition date column defined.</span>
