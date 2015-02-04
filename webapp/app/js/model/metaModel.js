@@ -9,7 +9,7 @@ KylinApp.service('MetaModel',function(){
         "partition_desc" : {
             "partition_date_column" : '',
             "partition_date_start" : 0,
-            "partition_type" : ''
+            "partition_type" : 'APPEND'
         }
     };
 
@@ -23,6 +23,10 @@ KylinApp.service('MetaModel',function(){
         _model.partition_desc = model.partition_desc;
         this.model = _model;
     };
+
+    this.initModel = function(){
+        this.model = this.createNew();
+    }
 
     this.getMetaModel = function(){
         return this.model;
@@ -49,7 +53,7 @@ KylinApp.service('MetaModel',function(){
                 "partition_desc" : {
                     "partition_date_column" : '',
                     "partition_date_start" : 0,
-                    "partition_type" : ''
+                    "partition_type" : 'APPEND'
                 }
             };
 
