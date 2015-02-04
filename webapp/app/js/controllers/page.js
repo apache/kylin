@@ -1,6 +1,6 @@
 'use strict';
 
-KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService,SweetAlert,$cookieStore,$log, kylinConfig,ProjectModel) {
+KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService,SweetAlert,$cookieStore,$log, kylinConfig,ProjectModel,TableModel) {
 
     //init kylinConfig to get kylin.Propeties
     kylinConfig.init().$promise.then(function(data) {
@@ -23,7 +23,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
     $scope.userService = UserService;
     $scope.activeTab = "";
     $scope.projectModel = ProjectModel;
-
+    $scope.tableModel = TableModel;
     //init
     ProjectService.list({}, function (projects) {
         var _projects = [];
