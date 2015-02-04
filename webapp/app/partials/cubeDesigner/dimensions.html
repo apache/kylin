@@ -14,7 +14,7 @@
                     <li><a ng-click="addDim('derived')">Derived</a></li>
                 </ul>
             </div>
-            <button type="button" class="btn btn-default" ng-disabled="!metaModel.fact_table.length"
+            <button type="button" class="btn btn-default" ng-disabled="!metaModel.model.fact_table.length"
                     ng-click="openAutoGenModal()">
                 <i class="fa fa-building-o"></i> Auto Generator
             </button>
@@ -52,7 +52,7 @@
                 </td>
                 <!--Table Name -->
                 <td>
-                    <span tooltip="{{dimension.table == metaModel.fact_table ? 'Fact Table' : 'Lookup Table'}}">{{dimension.table}}</span>
+                    <span tooltip="{{dimension.table == metaModel.model.fact_table ? 'Fact Table' : 'Lookup Table'}}">{{dimension.table}}</span>
                 </td>
                 <!--Type-->
                 <td>
