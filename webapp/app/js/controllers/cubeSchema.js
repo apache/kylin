@@ -1,11 +1,11 @@
 'use strict';
 
-KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter,ModelService ) {
+KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter,ModelService,MetaModel) {
 
     $scope.projects = [];
     $scope.newDimension = null;
     $scope.newMeasure = null;
-    $scope.metaModel={};
+
 
     $scope.wizardSteps = [
         {title: 'Cube Info', src: 'partials/cubeDesigner/info.html', isComplete: false},
@@ -32,18 +32,26 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         if(!newValue){
             return;
         }
-        if (newValue) {
+        if (newValue&&$scope.state.mode==="view") {
             $scope.cubeMetaFrame = newValue;
+
+            // when viw state,each cubeSchema has its own metaModel
+            $scope.metaModel={
+                model:{}
+            }
 
             //init model
             ModelService.get({model_name: $scope.cubeMetaFrame.model_name}, function (model) {
                 if (model) {
-                    $scope.metaModel = model;
+//                    $scope.metaModel = MetaModel;
+
+                    $scope.metaModel.model = model;
+
                     //convert GMT mills ,to make sure partition date show GMT Date
                     //should run only one time
-                    if($scope.metaModel.partition_desc&&$scope.metaModel.partition_desc.partition_date_start)
+                    if($scope.metaModel.model.partition_desc&&$scope.metaModel.model.partition_desc.partition_date_start)
                     {
-                        $scope.metaModel.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
+                        $scope.metaModel.model.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
                     }
                 }
             });
