@@ -16,7 +16,6 @@ import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 /**
  * Created by honma on 11/11/14.
  */
-@SuppressWarnings("static-access")
 public class CleanHtableCLI extends AbstractHadoopJob {
 
     protected static final Logger log = LoggerFactory.getLogger(CleanHtableCLI.class);

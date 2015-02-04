@@ -1,18 +1,17 @@
 'use strict';
 
 
-KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel,ModelService,MetaModel) {
+KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel,ModelService,MetaModel,TableModel) {
     $scope.cubeConfig = cubeConfig;
     //add or edit ?
     var absUrl = $location.absUrl();
     $scope.cubeMode = absUrl.indexOf("/cubes/add")!=-1?'addNewCube':absUrl.indexOf("/cubes/edit")!=-1?'editExistCube':'default';
     $scope.metaModel={};
 
-    $scope.srcTablesInProject = [];
 
     $scope.getColumnsByTable = function (name) {
         var temp = [];
-        angular.forEach($scope.srcTablesInProject, function (table) {
+        angular.forEach(TableModel.selectProjectTables, function (table) {
             if (table.name == name) {
                 temp = table.columns;
             }
@@ -473,7 +472,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         if(!newValue){
             return;
         }
-        $scope.srcTablesInProject=[];
         var param = {
             ext: true,
             project:newValue
@@ -482,7 +480,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
             TableService.list(param, function (tables) {
                 angular.forEach(tables, function (table) {
                     table.name = table.database+"."+table.name;
-                    $scope.srcTablesInProject.push(table);
+                    TableModel.addTable(table);
                 });
             });
         }
