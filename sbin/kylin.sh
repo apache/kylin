@@ -1,6 +1,11 @@
 #!/bin/bash
 
-
+if [ ! -z "$KYLIN_LD_LIBRARY_PATH" ]
+then
+    echo "KYLIN_LD_LIBRARY_PATH is set to $KYLIN_LD_LIBRARY_PATH"
+else
+    exit 1
+fi
 
 #The location of all hadoop/hbase configurations are difficult to get.
 #Plus, some of the system properties are secretly set in hadoop/hbase shell command.
