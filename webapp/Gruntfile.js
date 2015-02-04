@@ -66,14 +66,12 @@ module.exports = function (grunt) {
                     {
                         expand: true,
                         cwd: 'tmp/',
-                        src: ['htaccess.dist', 'config.json'],
+                        src: ['htaccess.dist'],
                         dest: 'dist/',
                         rename: function (dest, src) {
                             console.log(src);
                             if (src == 'htaccess.dist') {
                                 return dest + '.htaccess';
-                            } else {
-                                return dest + 'config.json';
                             }
                         }
                     },
