@@ -73,6 +73,8 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
     } else {
         $scope.cubeMetaFrame = CubeDescModel.createNew();
+        MetaModel.initModel();
+        $scope.metaModel = MetaModel;
         $scope.cubeMetaFrame.project = $scope.projectModel.selectedProject;
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
     }
@@ -100,11 +102,16 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         });
 
 
-        if ($scope.metaModel.model.partition_desc.partition_date_start) {
+        if ($scope.metaModel.model.partition_desc.partition_date_column&&($scope.metaModel.model.partition_desc.partition_date_start|$scope.metaModel.model.partition_desc.partition_date_start==0)) {
             var dateStart = new Date($scope.metaModel.model.partition_desc.partition_date_start);
             dateStart = (dateStart.getFullYear() + "-" + (dateStart.getMonth() + 1) + "-" + dateStart.getDate());
             //switch selected time to utc timestamp
             $scope.metaModel.model.partition_desc.partition_date_start = new Date(moment.utc(dateStart, "YYYY-MM-DD").format()).getTime();
+
+
+            if($scope.metaModel.model.partition_desc.partition_date_column.indexOf(".")==-1){
+                $scope.metaModel.model.partition_desc.partition_date_column=$scope.metaModel.model.fact_table+"."+$scope.metaModel.model.partition_desc.partition_date_column;
+            }
         }
 
         $scope.state.project = $scope.cubeMetaFrame.project;
@@ -477,6 +484,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
             project:newValue
         };
         if(newValue){
+            TableModel.initTables();
             TableService.list(param, function (tables) {
                 angular.forEach(tables, function (table) {
                     table.name = table.database+"."+table.name;

@@ -129,7 +129,8 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
                     origin.name = table + '.' + selectedCols[0];
                 }
 
-                origin.column = selectedCols[0];
+                origin.column = selectedCols;
+                origin.hierarchy = false;
                 break;
 
             case 'derived':
@@ -137,7 +138,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
                     origin.name = table + '_derived';
                 }
 
-                origin.column = '{FK}';
+                origin.column = null;
                 origin.derived = selectedCols;
                 break;
 
@@ -146,7 +147,8 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
                     origin.name = table + '_hierarchy';
                 }
 
-                origin.hierarchy = selectedCols;
+                origin.hierarchy = true;
+                origin.column = selectedCols;
                 break;
         }
 

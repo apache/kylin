@@ -124,7 +124,7 @@
                                         <b>=</b>
                                         <select style="width: 45%" chosen data-placeholder="Fact Table Column"
                                                 ng-model="newLookup.join.foreign_key[$index]"
-                                                ng-options="columns.name as columns.name for columns in getColumnsByTable(metaModel.fact_table)" >
+                                                ng-options="columns.name as columns.name for columns in getColumnsByTable(metaModel.model.fact_table)" >
                                             <option value=""></option>
                                         </select>
                                         <button class="pull-right btn btn-xs btn-danger" style="cursor: pointer" tooltip="Delete Join Condition"
