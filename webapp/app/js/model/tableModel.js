@@ -5,6 +5,11 @@ KylinApp.service('TableModel', function() {
 
     this.selectProjectTables = [];
 
+
+    this.initTables = function(){
+        this.selectProjectTables = [];
+    }
+
     this.addTable = function(table){
         this.selectProjectTables.push(table);
     }
