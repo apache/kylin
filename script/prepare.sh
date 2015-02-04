@@ -1,6 +1,5 @@
 #!/bin/sh
 
-# pack webapp into kylin.war so that we have a all-in-one war
 dir=$(dirname ${0})
 cd ${dir}/..
 
@@ -23,8 +22,3 @@ do
     echo "Adding $f to war"
     jar -uf ../../lib/kylin-server-${version}.war $f
 done
-cd ../..
-
-#package tgz
-echo 'package tgz'
-tar -zcvf kylin-${version}.tgz lib bin conf
