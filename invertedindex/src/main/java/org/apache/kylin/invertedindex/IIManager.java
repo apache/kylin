@@ -115,13 +115,12 @@ public class IIManager implements IRealizationProvider {
 
     public List<IIInstance> getIIsByDesc(String descName) {
 
-        descName = descName.toUpperCase();
         List<IIInstance> list = listAllIIs();
         List<IIInstance> result = new ArrayList<IIInstance>();
         Iterator<IIInstance> it = list.iterator();
         while (it.hasNext()) {
             IIInstance ci = it.next();
-            if (descName.equals(ci.getDescName())) {
+            if (descName.equalsIgnoreCase(ci.getDescName())) {
                 result.add(ci);
             }
         }

@@ -293,20 +293,19 @@ public class CubeController extends BasicController {
     @Metered(name = "saveCube")
     public CubeRequest saveCubeDesc(@RequestBody CubeRequest cubeRequest) {
         //Update Model 
-        MetadataManager metaManager= MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        MetadataManager metaManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
         DataModelDesc modelDesc = deserializeDataModelDesc(cubeRequest);
-        if(modelDesc==null){
-            return cubeRequest; 
+        if (modelDesc == null) {
+            return cubeRequest;
         }
         try {
             metaManager.createDataModelDesc(modelDesc);
         } catch (IOException e) {
             // TODO Auto-generated catch block
-            logger.error("Failed to deal with the request:"+e.getLocalizedMessage(), e);
-            throw new InternalErrorException("Failed to deal with the request: "+e.getLocalizedMessage() + e.getMessage());
-           }
-        
-        
+            logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
+            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage() + e.getMessage());
+        }
+
         CubeDesc desc = deserializeCubeDesc(cubeRequest);
         if (desc == null) {
             return cubeRequest;
@@ -343,22 +342,20 @@ public class CubeController extends BasicController {
     @ResponseBody
     @Metered(name = "updateCube")
     public CubeRequest updateCubeDesc(@RequestBody CubeRequest cubeRequest) throws JsonProcessingException {
-        
+
         //Update Model 
-        MetadataManager metaManager= MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        MetadataManager metaManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
         DataModelDesc modelDesc = deserializeDataModelDesc(cubeRequest);
-        if(modelDesc==null){
-            return cubeRequest; 
+        if (modelDesc == null) {
+            return cubeRequest;
         }
         try {
             metaManager.updateDataModelDesc(modelDesc);
         } catch (IOException e) {
             // TODO Auto-generated catch block
-            logger.error("Failed to deal with the request:"+e.getLocalizedMessage(), e);
-            throw new InternalErrorException("Failed to deal with the request: "+e.getLocalizedMessage() + e.getMessage());
-           }
-        
-        
+            logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
+            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage() + e.getMessage());
+        }
 
         //update cube
         CubeDesc desc = deserializeCubeDesc(cubeRequest);
@@ -382,8 +379,8 @@ public class CubeController extends BasicController {
         } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException("You don't have right to update this cube.");
         } catch (Exception e) {
-            logger.error("Failed to deal with the request:"+e.getLocalizedMessage(), e);
-            throw new InternalErrorException("Failed to deal with the request: "+e.getLocalizedMessage() + e.getMessage());
+            logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
+            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage() + e.getMessage());
         }
 
         if (desc.getError().isEmpty()) {
@@ -453,11 +450,11 @@ public class CubeController extends BasicController {
             updateRequest(cubeRequest, false, e.getMessage());
         } catch (IOException e) {
             logger.error("Failed to deal with the request.", e);
-            throw new InternalErrorException("Failed to deal with the request:"+e.getMessage(), e);
+            throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
         }
         return desc;
     }
-    
+
     private DataModelDesc deserializeDataModelDesc(CubeRequest cubeRequest) {
         DataModelDesc desc = null;
         try {
@@ -471,10 +468,10 @@ public class CubeController extends BasicController {
             updateRequest(cubeRequest, false, e.getMessage());
         } catch (IOException e) {
             logger.error("Failed to deal with the request.", e);
-            throw new InternalErrorException("Failed to deal with the request:"+e.getMessage(), e);
+            throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
         }
         return desc;
-    }    
+    }
 
     /**
      * @return

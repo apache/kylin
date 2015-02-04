@@ -90,6 +90,10 @@ KylinApp
         //convert GMT+0 time to specified Timezone
         return function(item,timezone,format){
 
+            if(!item){
+                return "";
+            }
+
             if(!timezone){
                 timezone = kylinConfig.getTimeZone();
             }

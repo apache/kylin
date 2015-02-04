@@ -1,7 +1,10 @@
 package org.apache.kylin.invertedindex.invertedindex;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.invertedindex.IIDescManager;
+import org.apache.kylin.invertedindex.IIInstance;
+import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.junit.After;
 import org.junit.Assert;
@@ -9,6 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Created by shaoshi on 1/30/15.
@@ -59,6 +63,22 @@ public class IIDescManagerTest extends LocalFileMetadataTestCase {
         Assert.assertNull(mgr.getIIDesc(newDescName));
 
 
+    }
+
+    @Test
+    public void testGetIIsByDesc() throws IOException {
+        IIManager mgr = IIManager.getInstance(getTestConfig());
+
+        List<IIInstance> iiInstances = mgr.getIIsByDesc("test_kylin_ii_desc");
+
+        Assert.assertTrue(iiInstances.size() > 0);
+
+
+        IIInstance instance = iiInstances.get(0);
+
+        Dictionary dict = mgr.getDictionary(instance.getFirstSegment(), instance.getDescriptor().findColumnRef("DEFAULT.TEST_KYLIN_FACT", "LSTG_SITE_ID"));
+
+        Assert.assertNotNull(dict);
     }
 
 }
