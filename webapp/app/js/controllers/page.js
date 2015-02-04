@@ -1,16 +1,16 @@
 'use strict';
 
-KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService,SweetAlert,$cookieStore,$log, kylinConfig,ProjectModel) {
+KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $location, $rootScope, $routeParams, $http, UserService,ProjectService,SweetAlert,$cookieStore,$log, kylinConfig,ProjectModel,TableModel) {
 
     //init kylinConfig to get kylin.Propeties
-    kylinConfig.init();
+    kylinConfig.init().$promise.then(function(data) {
+        $log.debug(data);
+        kylinConfig.initWebConfigInfo();
+    });
+
     $scope.kylinConfig = kylinConfig;
 
     $scope.header = {show: true};
-    $scope.footer = {
-        year: new Date().getFullYear(),
-        version: Config.version
-    };
 
     $scope.$on('$routeChangeSuccess', function ($event, current) {
         $scope.activeTab = current.tab;
@@ -23,7 +23,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
     $scope.userService = UserService;
     $scope.activeTab = "";
     $scope.projectModel = ProjectModel;
-
+    $scope.tableModel = TableModel;
     //init
     ProjectService.list({}, function (projects) {
         var _projects = [];
