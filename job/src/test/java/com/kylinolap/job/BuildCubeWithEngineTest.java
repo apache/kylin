@@ -56,6 +56,7 @@ public class BuildCubeWithEngineTest extends HBaseMetadataTestCase {
     @BeforeClass
     public static void beforeClass() throws Exception {
         ClasspathUtil.addClasspath(new File(SANDBOX_TEST_DATA).getAbsolutePath());
+        System.setProperty("hdp.version", "2.2.0.0-2041"); // mapred-site.xml ref this
     }
 
     @Before
