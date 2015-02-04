@@ -2,9 +2,9 @@
 
 KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelService,MetaModel) {
 
-    if(!$scope.metaModel.name){
-        $scope.metaModel = MetaModel.getMetaModel();
-    }
+//    if($scope.state.mode==="edit") {
+//        $scope.metaModel = MetaModel;
+//    }
     $scope.cubeConfig = cubeConfig;
     var DataModel = function () {
         return {
@@ -34,7 +34,7 @@ KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelSe
 
     $scope.newLookup = Lookup();
 
-    var lookupList = $scope.metaModel.lookups;
+    var lookupList = $scope.metaModel.model.lookups;
 
     $scope.openLookupModal = function () {
         var modalInstance = $modal.open({
