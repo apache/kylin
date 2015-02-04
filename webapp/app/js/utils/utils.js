@@ -16,9 +16,9 @@ KylinApp.factory('VdmUtil', function ($modal, $timeout, $location, $anchorScroll
                 },
                 controller: function ($scope, $modalInstance, scope) {
                     $scope = angular.extend($scope, scope);
-                    $scope.animate = Config.default.modalAnimateIn;
+                    $scope.animate = "fadeInRight";
                     $scope.close = function (data) {
-                        $scope.animate = Config.default.modalAnimateOut;
+                        $scope.animate = "fadeOutRight";
                         $timeout(function () {
                             $modalInstance.close(data);
                         }, 500);

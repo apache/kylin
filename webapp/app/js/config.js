@@ -4,7 +4,19 @@
 // runtime it adds uri based on application location.
 
 // Config variable.
-var Config = {};
+var Config = {
+    name:'kylin',
+    service:{
+        base:'/kylin/',
+        url:'/kylin/api/'
+    },
+    documents:[],
+    reference_links:{
+        hadoop: {name:"hadoop", link: null},
+        diagnostic: {name:"diagnostic", "link": null}
+    },
+    contact_mail:''
+};
 
 // Angular module to load routes.
 KylinApp.config(function ($routeProvider, $httpProvider, $locationProvider, $logProvider) {
@@ -57,10 +69,6 @@ KylinApp.config(function ($routeProvider, $httpProvider, $locationProvider, $log
                         $rootScope.$broadcast('event:forbidden', response.data.exception);
                     }
 
-//                    if (response.status === 500) {
-//                        $rootScope.$broadcast('event:error', response.data.exception);
-//                    }
-
                     return $q.reject(response);
                 }
             );
@@ -94,7 +102,6 @@ window.onload = function () {
 
     // Files to load initially.
     var files = [
-        {property: 'config', file: 'config.json'},
         {property: 'routes', file: 'routes.json'}
     ];
     var loaded = 0;
@@ -107,17 +114,14 @@ window.onload = function () {
 
             loaded++;
 
-            if (item === 'config') {
-                Config = angular.extend(Config, JSON.parse(this.responseText));
-            } else {
+            if(item === 'routes') {
                 Config[item] = JSON.parse(this.responseText);
             }
-
             // We've loaded all dependencies, lets bootstrap the application.
             if (loaded === files.length) {
                 // Declare error if we are missing a name.
                 if (angular.isUndefined(Config.name)) {
-                    console.error('Config.name is undefined, please update config.json to include this property.');
+                    console.error('Config.name is undefined, please update this property.');
                 }
                 // Bootstrap the application.
                 angular.bootstrap(document, [Config.name]);
