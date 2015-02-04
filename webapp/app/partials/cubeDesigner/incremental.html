@@ -22,11 +22,14 @@
             <div class="row">
                 <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Partition Date Column</b></label>
                 <div class="col-xs-12 col-sm-6">
-                    <input type="text" class="form-control"
-                       ng-required="metaModel.model.partition_desc.partition_date_start"
-                       placeholder="e.g. TEST_KYLIN_FACT.CAL_DT"
-                       ng-model="metaModel.model.partition_desc.partition_date_column"
-                       ng-if="state.mode=='edit'">
+
+                    <select style="width: 100%" chosen data-placeholder="e.g. TEST_KYLIN_FACT.CAL_DT"
+                            ng-required="metaModel.model.partition_desc.partition_date_start"
+                            ng-model="metaModel.model.partition_desc.partition_date_column"
+                            ng-if="state.mode=='edit'"
+                            ng-options="columns.name as columns.name for columns in getColumnsByTable(metaModel.model.fact_table)" >
+                        <option value=""></option>
+                    </select>
                     <span ng-if="state.mode=='view'">
                         {{!!(metaModel.model.partition_desc.partition_date_column)?
                         metaModel.model.partition_desc.partition_date_column: 'Undefined'}}</span>
