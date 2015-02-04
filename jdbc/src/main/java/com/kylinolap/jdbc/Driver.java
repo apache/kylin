@@ -91,10 +91,10 @@ public class Driver extends UnregisteredDriver {
         case JDBC_30:
             throw new UnsupportedOperationException();
         case JDBC_40:
-            return "com.kylinolap.kylin.jdbc.KylinJdbc40Factory";
+            return "com.kylinolap.jdbc.KylinJdbc40Factory";
         case JDBC_41:
         default:
-            return "com.kylinolap.kylin.jdbc.KylinJdbc41Factory";
+            return "com.kylinolap.jdbc.KylinJdbc41Factory";
         }
     }
 

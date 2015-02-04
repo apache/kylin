@@ -18,11 +18,23 @@ package com.kylinolap.common.util;
 
 import com.kylinolap.common.KylinConfig;
 
+import java.io.File;
+
 /**
  * @author ysong1
  */
 public class HBaseMetadataTestCase extends AbstractKylinTestCase {
-    
+
+    static {
+
+        try {
+            ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox/").getAbsolutePath());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
     public static void staticCreateTestMetadata() {
 
         KylinConfig.destoryInstance();
@@ -31,7 +43,7 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
             System.setProperty(KylinConfig.KYLIN_CONF, SANDBOX_TEST_DATA);
 
     }
-    
+
     public static void staticCleanupTestMetadata() {
         System.clearProperty(KylinConfig.KYLIN_CONF);
         KylinConfig.destoryInstance();
