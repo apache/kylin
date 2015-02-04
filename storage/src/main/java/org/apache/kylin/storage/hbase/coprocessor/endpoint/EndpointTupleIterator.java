@@ -64,11 +64,11 @@ public class EndpointTupleIterator implements ITupleIterator {
 
     int rowsInAllMetric = 0;
 
-    public EndpointTupleIterator(IISegment cubeSegment, TupleFilter rootFilter, Collection<TblColRef> groupBy, List<FunctionDesc> measures, StorageContext context, HConnection conn) throws Throwable {
+    public EndpointTupleIterator(IISegment segment, TupleFilter rootFilter, Collection<TblColRef> groupBy, List<FunctionDesc> measures, StorageContext context, HConnection conn) throws Throwable {
 
-        String tableName = cubeSegment.getStorageLocationIdentifier();
+        String tableName = segment.getStorageLocationIdentifier();
         table = conn.getTable(tableName);
-        factTableName = cubeSegment.getIIDesc().getFactTableName();
+        factTableName = segment.getIIDesc().getFactTableName();
 
         if (rootFilter == null) {
             rootFilter = ConstantTupleFilter.TRUE;
@@ -81,13 +81,13 @@ public class EndpointTupleIterator implements ITupleIterator {
         if (measures == null) {
             measures = Lists.newArrayList();
         }
-        initMeaureParameters(measures, cubeSegment.getColumns());
+        initMeaureParameters(measures, segment.getColumns());
 
-        this.seg = cubeSegment;
+        this.seg = segment;
         this.context = context;
         this.measures = measures;
 
-        this.columns = cubeSegment.getColumns();
+        this.columns = segment.getColumns();
         this.columnNames = getColumnNames(columns);
 
         this.tupleInfo = buildTupleInfo();

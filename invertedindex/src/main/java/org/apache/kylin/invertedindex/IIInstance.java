@@ -15,8 +15,6 @@
  */
 package org.apache.kylin.invertedindex;
 
-import java.util.*;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -24,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
@@ -33,28 +30,19 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.metadata.realization.SQLDigest;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author honma
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class IIInstance extends RootPersistentEntity implements IRealization {
-
-    public static IIInstance create(String iiName, String projectName, IIDesc iiDesc) {
-        IIInstance iii = new IIInstance();
-
-        iii.setConfig(iiDesc.getConfig());
-        iii.setName(iiName);
-        iii.setDescName(iiDesc.getName());
-        iii.setCreateTimeUTC(System.currentTimeMillis());
-        iii.setStatus(RealizationStatusEnum.DISABLED);
-        iii.updateRandomUuid();
-
-        return iii;
-    }
 
     @JsonIgnore
     private KylinConfig config;
@@ -80,19 +68,7 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
     private long createTimeUTC;
 
     private String projectName;
-    
-    public List<IISegment> getBuildingSegments() {
-        List<IISegment> buildingSegments = new ArrayList<IISegment>();
-        if (null != segments) {
-            for (IISegment segment : segments) {
-                if (SegmentStatusEnum.NEW == segment.getStatus() || SegmentStatusEnum.READY_PENDING == segment.getStatus()) {
-                    buildingSegments.add(segment);
-                }
-            }
-        }
 
-        return buildingSegments;
-    }
 
     public long getAllocatedEndDate() {
         if (null == segments || segments.size() == 0) {
@@ -114,62 +90,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return segments.get(0).getDateRangeStart();
     }
 
-    public List<IISegment> getMergingSegments() {
-        return this.getMergingSegments(null);
-    }
-
-    public List<IISegment> getMergingSegments(IISegment iiSegment) {
-        IISegment buildingSegment;
-        if (iiSegment == null) {
-            List<IISegment> buildingSegments = getBuildingSegments();
-            if (buildingSegments.size() == 0) {
-                return Collections.emptyList();
-            }
-            buildingSegment = buildingSegments.get(0);
-        } else {
-            buildingSegment = iiSegment;
-        }
-
-        List<IISegment> mergingSegments = new ArrayList<IISegment>();
-        if (null != this.segments) {
-            for (IISegment segment : this.segments) {
-                if (segment.getStatus() == SegmentStatusEnum.READY) {
-                    if (buildingSegment.getDateRangeStart() <= segment.getDateRangeStart() && buildingSegment.getDateRangeEnd() >= segment.getDateRangeEnd()) {
-                        mergingSegments.add(segment);
-                    }
-                }
-            }
-        }
-        return mergingSegments;
-
-    }
-
-    public List<IISegment> getRebuildingSegments() {
-        List<IISegment> buildingSegments = getBuildingSegments();
-        if (buildingSegments.size() == 0) {
-            return Collections.emptyList();
-        } else {
-            List<IISegment> rebuildingSegments = new ArrayList<IISegment>();
-            if (null != this.segments) {
-                long startDate = buildingSegments.get(0).getDateRangeStart();
-                long endDate = buildingSegments.get(buildingSegments.size() - 1).getDateRangeEnd();
-                for (IISegment segment : this.segments) {
-                    if (segment.getStatus() == SegmentStatusEnum.READY) {
-                        if (startDate >= segment.getDateRangeStart() && startDate < segment.getDateRangeEnd() && segment.getDateRangeEnd() < endDate) {
-                            rebuildingSegments.add(segment);
-                            continue;
-                        }
-                        if (startDate <= segment.getDateRangeStart() && endDate >= segment.getDateRangeEnd()) {
-                            rebuildingSegments.add(segment);
-                            continue;
-                        }
-                    }
-                }
-            }
-
-            return rebuildingSegments;
-        }
-    }
 
     public IIDesc getDescriptor() {
         return IIDescManager.getInstance(config).getIIDesc(descName);
@@ -366,7 +286,7 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
     public long[] getDateRange() {
         List<IISegment> readySegments = getSegment(SegmentStatusEnum.READY);
         if (readySegments.isEmpty()) {
-            return new long[] { 0L, 0L };
+            return new long[]{0L, 0L};
         }
         long start = Long.MAX_VALUE;
         long end = Long.MIN_VALUE;
@@ -378,7 +298,7 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
                 end = segment.getDateRangeEnd();
             }
         }
-        return new long[] { start, end };
+        return new long[]{start, end};
     }
 
     @Override
