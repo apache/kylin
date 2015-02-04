@@ -1,26 +1,15 @@
 package org.apache.kylin.job;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -30,10 +19,14 @@ import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeDescUpgrader;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.v1.CubeSegmentStatusEnum;
-import org.apache.kylin.cube.model.v1.CubeStatusEnum;
 import org.apache.kylin.cube.model.v1.CubeInstance;
 import org.apache.kylin.cube.model.v1.CubeSegment;
+import org.apache.kylin.cube.model.v1.CubeSegmentStatusEnum;
+import org.apache.kylin.cube.model.v1.CubeStatusEnum;
+import org.apache.kylin.dict.*;
+import org.apache.kylin.dict.lookup.SnapshotManager;
+import org.apache.kylin.dict.lookup.SnapshotTable;
+import org.apache.kylin.dict.lookup.TableReader;
 import org.apache.kylin.job.common.HadoopShellExecutable;
 import org.apache.kylin.job.common.MapReduceExecutable;
 import org.apache.kylin.job.common.ShellExecutable;
@@ -43,12 +36,7 @@ import org.apache.kylin.job.constant.JobStepStatusEnum;
 import org.apache.kylin.job.cube.CubingJob;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.job.hadoop.cube.BaseCuboidJob;
-import org.apache.kylin.job.hadoop.cube.CubeHFileJob;
-import org.apache.kylin.job.hadoop.cube.FactDistinctColumnsJob;
-import org.apache.kylin.job.hadoop.cube.MergeCuboidJob;
-import org.apache.kylin.job.hadoop.cube.NDCuboidJob;
-import org.apache.kylin.job.hadoop.cube.RangeKeyDistributionJob;
+import org.apache.kylin.job.hadoop.cube.*;
 import org.apache.kylin.job.hadoop.dict.CreateDictionaryJob;
 import org.apache.kylin.job.hadoop.hbase.BulkLoadJob;
 import org.apache.kylin.job.hadoop.hbase.CreateHTableJob;
@@ -63,11 +51,17 @@ import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * This is the utility class to migrate the Kylin metadata format from v1 to v2;
- * 
- * @author shaoshi
  *
+ * @author shaoshi
  */
 public class CubeMetadataUpgrade {
 
@@ -84,11 +78,11 @@ public class CubeMetadataUpgrade {
         System.setProperty(KylinConfig.KYLIN_CONF, newMetadataUrl);
         KylinConfig.getInstanceFromEnv().setMetadataUrl(newMetadataUrl);
 
-        
+
         config = KylinConfig.getInstanceFromEnv();
         store = getStore();
     }
-    
+
     public void upgrade() {
 
         upgradeTableDesc();
@@ -96,18 +90,50 @@ public class CubeMetadataUpgrade {
         upgradeCubeDesc();
         upgradeProjectInstance();
         upgradeCubeInstance();
-//        upgradeJobInstance();
-        
+        upgradeJobInstance();
+
         verify();
-        
+
     }
-    
+
     private void verify() {
         MetadataManager.getInstance(config).reload();
         CubeDescManager.clearCache();
         CubeDescManager.getInstance(config);
-        CubeManager.getInstance(config);
+        CubeManager cubeManager = CubeManager.getInstance(config);
         ProjectManager.getInstance(config);
+
+        DictionaryManager dictManager = DictionaryManager.getInstance(config);
+        SnapshotManager snapshotManager = SnapshotManager.getInstance(config);
+        List<org.apache.kylin.cube.CubeInstance> allCubes = cubeManager.listAllCubes();
+        for (org.apache.kylin.cube.CubeInstance cube : allCubes) {
+            for (org.apache.kylin.cube.CubeSegment cubeSegment : cube.getSegments()) {
+                Collection<String> snapshots = cubeSegment.getSnapshots().values();
+                for (String s : snapshots) {
+                    try {
+                        SnapshotTable t = snapshotManager.getSnapshotTable(s);
+                        TableReader reader = t.getReader();
+                        while (reader.next()) {
+                            System.out.println(Arrays.toString(reader.getRow()));
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                Collection<String> dicts = cubeSegment.getDictionaries().values();
+                for (String s : dicts) {
+                    try {
+                        org.apache.kylin.dict.Dictionary<?> dict = dictManager.getDictionary(s);
+
+                        System.out.println(dict.getMaxId());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+        }
     }
 
     private List<String> listResourceStore(String pathRoot) {
@@ -132,7 +158,7 @@ public class CubeMetadataUpgrade {
                 CubeDescUpgrader upgrade = new CubeDescUpgrader(path);
                 CubeDesc ndesc = upgrade.upgrade();
                 ndesc.setSignature(ndesc.calculateSignature());
-                
+
                 getStore().putResource(ndesc.getModel().getResourcePath(), ndesc.getModel(), MetadataManager.MODELDESC_SERIALIZER);
                 getStore().putResource(ndesc.getResourcePath(), ndesc, CubeDescManager.CUBE_DESC_SERIALIZER);
                 updatedResources.add(ndesc.getResourcePath());
@@ -143,7 +169,7 @@ public class CubeMetadataUpgrade {
         }
 
     }
-    
+
     private void upgradeTableDesc() {
         List<String> paths = listResourceStore(ResourceStore.TABLE_RESOURCE_ROOT);
         for (String path : paths) {
@@ -241,11 +267,11 @@ public class CubeMetadataUpgrade {
         if (count > 1) {
             errorMsgs.add("There are more than 1 table named with '" + table + "' in different database; The program couldn't determine, randomly pick '" + result + "'");
         }
-        
-        if (count ==0) {
+
+        if (count == 0) {
             errorMsgs.add("There is no table named with '" + table + "'");
         }
-        
+
         return result;
     }
 
@@ -287,7 +313,7 @@ public class CubeMetadataUpgrade {
         }
 
     }
-    
+
     private void upgradeCubeInstance() {
 
         ResourceStore store = getStore();
@@ -307,38 +333,38 @@ public class CubeMetadataUpgrade {
                 newInstance.setVersion(cubeInstance.getVersion());
                 newInstance.setCreateTimeUTC(RootPersistentEntity.parseTime(cubeInstance.getCreateTime()));
                 newInstance.setLastModified(cubeInstance.getLastModified());
-                
+
                 //status
-                if(cubeInstance.getStatus() == CubeStatusEnum.BUILDING) {
+                if (cubeInstance.getStatus() == CubeStatusEnum.BUILDING) {
                     newInstance.setStatus(RealizationStatusEnum.BUILDING);
-                } else if(cubeInstance.getStatus() == CubeStatusEnum.DESCBROKEN) {
+                } else if (cubeInstance.getStatus() == CubeStatusEnum.DESCBROKEN) {
                     newInstance.setStatus(RealizationStatusEnum.DESCBROKEN);
-                } else if(cubeInstance.getStatus() == CubeStatusEnum.DISABLED) {
+                } else if (cubeInstance.getStatus() == CubeStatusEnum.DISABLED) {
                     newInstance.setStatus(RealizationStatusEnum.DISABLED);
-                } else if(cubeInstance.getStatus() == CubeStatusEnum.READY) {
+                } else if (cubeInstance.getStatus() == CubeStatusEnum.READY) {
                     newInstance.setStatus(RealizationStatusEnum.READY);
-                } 
-                
+                }
+
                 List<org.apache.kylin.cube.CubeSegment> newSegments = Lists.newArrayList();
                 // segment
                 for (CubeSegment segment : cubeInstance.getSegments()) {
                     org.apache.kylin.cube.CubeSegment newSeg = new org.apache.kylin.cube.CubeSegment();
                     newSegments.add(newSeg);
-                    
+
                     newSeg.setUuid(segment.getUuid());
                     newSeg.setName(segment.getName());
                     newSeg.setStorageLocationIdentifier(segment.getStorageLocationIdentifier());
                     newSeg.setDateRangeStart(segment.getDateRangeStart());
                     newSeg.setDateRangeEnd(segment.getDateRangeEnd());
-                    
-                    if(segment.getStatus() == CubeSegmentStatusEnum.NEW) {
+
+                    if (segment.getStatus() == CubeSegmentStatusEnum.NEW) {
                         newSeg.setStatus(SegmentStatusEnum.NEW);
-                    } else if(segment.getStatus() == CubeSegmentStatusEnum.READY) {
+                    } else if (segment.getStatus() == CubeSegmentStatusEnum.READY) {
                         newSeg.setStatus(SegmentStatusEnum.READY);
-                    } else if(segment.getStatus() == CubeSegmentStatusEnum.READY_PENDING) {
+                    } else if (segment.getStatus() == CubeSegmentStatusEnum.READY_PENDING) {
                         newSeg.setStatus(SegmentStatusEnum.READY_PENDING);
-                    } 
-                    
+                    }
+
                     newSeg.setSizeKB(segment.getSizeKB());
                     newSeg.setInputRecords(segment.getSourceRecords());
                     newSeg.setInputRecordsSize(segment.getSourceRecordsSize());
@@ -346,9 +372,9 @@ public class CubeMetadataUpgrade {
                     newSeg.setLastBuildJobID(segment.getLastBuildJobID());
                     newSeg.setCreateTimeUTC(RootPersistentEntity.parseTime(segment.getCreateTime()));
                     newSeg.setBinarySignature(segment.getBinarySignature());
-                    
+
                     ConcurrentHashMap<String, String> newDictionaries = new ConcurrentHashMap<String, String>();
-                    
+
                     for (Map.Entry<String, String> e : segment.getDictionaries().entrySet()) {
                         String key = e.getKey();
                         String[] tableCol = StringUtils.split(key, "/");
@@ -356,10 +382,10 @@ public class CubeMetadataUpgrade {
                         newDictionaries.put(key, e.getValue());
                     }
                     newSeg.setDictionaries(newDictionaries);
-                    
+
                     ConcurrentHashMap<String, String> newSnapshots = new ConcurrentHashMap<String, String>();
-                    
-                    for(Map.Entry<String, String> e: segment.getSnapshots().entrySet()) {
+
+                    for (Map.Entry<String, String> e : segment.getSnapshots().entrySet()) {
                         newSnapshots.put(appendDBName(e.getKey()), e.getValue());
                     }
                     newSeg.setSnapshots(newSnapshots);
@@ -388,7 +414,7 @@ public class CubeMetadataUpgrade {
     private void upgradeJobInstance() {
         try {
             List<String> paths = getStore().collectResourceRecursively(ResourceStore.JOB_PATH_ROOT, "");
-            for (String path: paths) {
+            for (String path : paths) {
                 upgradeJobInstance(path);
             }
         } catch (IOException ex) {
@@ -441,7 +467,7 @@ public class CubeMetadataUpgrade {
         cubingJob.setId(job.getId());
         cubingJob.setName(job.getName());
         cubingJob.setSubmitter(job.getSubmitter());
-        for (JobInstance.JobStep step: job.getSteps()) {
+        for (JobInstance.JobStep step : job.getSteps()) {
             final AbstractExecutable executable = parseToExecutable(step);
             cubingJob.addTask(executable);
         }
@@ -561,7 +587,6 @@ public class CubeMetadataUpgrade {
         result.setName(step.getName());
         return result;
     }
-    
 
 
     public static void main1(String[] args) {
@@ -572,24 +597,24 @@ public class CubeMetadataUpgrade {
         }
 
         String exportFolder = args[0];
-        
+
         File oldMetaFolder = new File(exportFolder);
-        if(!oldMetaFolder.exists()) {
+        if (!oldMetaFolder.exists()) {
             System.out.println("Provided folder doesn't exist: '" + exportFolder + "'");
             return;
         }
-        
-        if(!oldMetaFolder.isDirectory()) {
+
+        if (!oldMetaFolder.isDirectory()) {
             System.out.println("Provided folder is not a directory: '" + exportFolder + "'");
             return;
         }
 
-        
+
         String newMetadataUrl = oldMetaFolder.getAbsolutePath() + "_v2";
         CubeMetadataUpgrade instance = new CubeMetadataUpgrade(newMetadataUrl);
         instance.verify();
     }
-    
+
 
     public static void main(String[] args) {
 
@@ -599,19 +624,19 @@ public class CubeMetadataUpgrade {
         }
 
         String exportFolder = args[0];
-        
+
         File oldMetaFolder = new File(exportFolder);
-        if(!oldMetaFolder.exists()) {
+        if (!oldMetaFolder.exists()) {
             System.out.println("Provided folder doesn't exist: '" + exportFolder + "'");
             return;
         }
-        
-        if(!oldMetaFolder.isDirectory()) {
+
+        if (!oldMetaFolder.isDirectory()) {
             System.out.println("Provided folder is not a directory: '" + exportFolder + "'");
             return;
         }
 
-        
+
         String newMetadataUrl = oldMetaFolder.getAbsolutePath() + "_v2";
         try {
             FileUtils.deleteDirectory(new File(newMetadataUrl));
