@@ -166,7 +166,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         }
                         //end loading
                         loadingRequest.hide();
-                        recoveryCubeStatus();
                     }, function (e) {
                         $scope.saveCubeRollBack();
 
@@ -178,7 +177,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                             MessageService.sendMsg($scope.cubeResultTmpl({'text':'Failed to take action.','schema':$scope.state.cubeSchema}), 'error', {}, true, 'top_center');
                         }
                         loadingRequest.hide();
-                        recoveryCubeStatus();
                     });
                 } else {
                     CubeService.save({}, {cubeDescData: $scope.state.cubeSchema,modelDescData:$scope.state.modelSchema, project: $scope.state.project}, function (request) {
@@ -196,7 +194,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
                         //end loading
                         loadingRequest.hide();
-                        recoveryCubeStatus();
                     }, function (e) {
                         $scope.saveCubeRollBack();
 
@@ -209,7 +206,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         }
                         //end loading
                         loadingRequest.hide();
-                        recoveryCubeStatus();
 
                     });
                 }
@@ -457,22 +453,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
             });
             $scope.cubeMetaFrame.hbase_mapping.column_family.push(dccf);
         }
-    }
-
-
-    function recoveryCubeStatus() {
-        $scope.cubeMetaFrame.project = $scope.state.project;
-        angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
-            dimension.status = {};
-            if (dimension.hierarchy&&dimension.column.length) {
-                dimension.status.useHierarchy = true;
-                dimension.status.joinCount = (!!dimension.join.primary_key) ? dimension.join.primary_key.length : 0;
-                dimension.status.hierarchyCount = (!!dimension.hierarchy) ? dimension.column.length : 0;
-            }
-            if(dimension.join&&dimension.join.type) {
-                dimension.status.useJoin = true;
-            }
-        });
     }
 
     $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
