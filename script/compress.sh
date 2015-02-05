@@ -13,4 +13,6 @@ fi
 
 #package tgz
 echo 'package tgz'
-tar -zcvf kylin-${version}.tgz lib bin conf tomcat
+tar -cvzf kylin-${version}.tgz lib sbin conf tomcat
+
+rm -rf tomcat/webapps/*

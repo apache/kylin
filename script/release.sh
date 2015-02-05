@@ -30,6 +30,6 @@ echo ${dir}
 
 sh ${dir}/package.sh || { exit 1; }
 sh ${dir}/prepare.sh || { exit 1; }
-sh ${dir}/download-tomcat.sh || { exit 1; }
+#sh ${dir}/download-tomcat.sh || { exit 1; }
 sh ${dir}/compress.sh || { exit 1; }
 
