@@ -83,6 +83,7 @@ public class BuildCubeWithEngineTest {
     public static void beforeClass() throws Exception {
         logger.info("Adding to classpath: " + new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         ClasspathUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
+        System.setProperty(KylinConfig.KYLIN_CONF_HOME, "../examples/test_case_data/sandbox");
         System.setProperty("hdp.version", "2.2.0.0-2041"); // mapred-site.xml ref this
     }
 
