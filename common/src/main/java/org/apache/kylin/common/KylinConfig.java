@@ -514,7 +514,7 @@ public class KylinConfig {
 
     public static InputStream getKylinPropertiesAsInputSteam() {
 
-        String kylinHome = System.getProperty(KYLIN_HOME);
+        String kylinHome = System.getenv(KYLIN_HOME);
         if (StringUtils.isEmpty(kylinHome)) {
             logger.error("KYLIN_HOME has not been set");
             throw new RuntimeException("KYLIN_HOME has not been set");
