@@ -60,9 +60,13 @@ public class JobEngineConfig {
             hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + ".xml");
         }
 
-        final File jobConfig = getJobConfig(hadoopJobConfFile);
+        File jobConfig = getJobConfig(hadoopJobConfFile);
         if (jobConfig == null || !jobConfig.exists()) {
-            logger.error("fail to locate " + hadoopJobConfFile);
+            logger.warn("fail to locate " + hadoopJobConfFile);
+        }
+        jobConfig = getJobConfig(HADOOP_JOB_CONF_FILENAME + ".xml");
+        if (jobConfig == null || !jobConfig.exists()) {
+            logger.error("fail to locate " + HADOOP_JOB_CONF_FILENAME + ".xml");
             throw new RuntimeException("fail to locate " + hadoopJobConfFile);
         }
 //        String path = System.getProperty(KylinConfig.KYLIN_CONF_HOME);
