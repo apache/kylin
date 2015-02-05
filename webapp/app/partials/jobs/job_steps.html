@@ -51,7 +51,7 @@
         <!--Start Label-->
         <li class="time-label">
             <span class="bg-blue">
-                <b>Start &nbsp;&nbsp;{{state.selectedJob.steps[0].exec_start_time !=0 ? (state.selectedJob.steps[0].exec_start_time | utcToConfigTimeZone::'HH:mm:ss yyyy-MM-dd') :''}}</b>
+                <b>Start &nbsp;&nbsp;{{state.selectedJob.steps[0].exec_start_time !=0 ? (state.selectedJob.steps[0].exec_start_time | utcToConfigTimeZone) :''}}</b>
             </span>
         </li>
 
