@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 'use strict';
 
 
@@ -6,7 +24,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     //add or edit ?
     var absUrl = $location.absUrl();
     $scope.cubeMode = absUrl.indexOf("/cubes/add")!=-1?'addNewCube':absUrl.indexOf("/cubes/edit")!=-1?'editExistCube':'default';
-    $scope.metaModel={};
 
 
     $scope.getColumnsByTable = function (name) {
@@ -49,11 +66,12 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         CubeDescService.get({cube_name: $routeParams.cubeName}, function (detail) {
             if (detail.length > 0) {
                 $scope.cubeMetaFrame = detail[0];
-                $scope.metaModel={};
                 ModelService.get({model_name: $scope.cubeMetaFrame.model_name}, function (model) {
                     if (model) {
-                        $scope.metaModel = model;
+//                        $scope.metaModel = model;
                         MetaModel.setMetaModel(model);
+                        $scope.metaModel = MetaModel;
+
                         //use
                         //convert GMT mills ,to make sure partition date show GMT Date
                         //should run only one time
@@ -73,6 +91,8 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
     } else {
         $scope.cubeMetaFrame = CubeDescModel.createNew();
+        MetaModel.initModel();
+        $scope.metaModel = MetaModel;
         $scope.cubeMetaFrame.project = $scope.projectModel.selectedProject;
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
     }
@@ -89,29 +109,38 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         generateColumnFamily();
 
         // Clean up objects used in cube creation
-        angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
-            delete dimension.status;
+//        angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
+//            delete dimension.status;
+//
+//            for (var key in dimension) {
+//                if (dimension.hasOwnProperty(key) && !dimension[key]) {
+//                    delete dimension[key];
+//                }
+//            }
+//        });
 
-            for (var key in dimension) {
-                if (dimension.hasOwnProperty(key) && !dimension[key]) {
-                    delete dimension[key];
-                }
-            }
-        });
 
-
-        if ($scope.metaModel.partition_desc.partition_date_start) {
-            var dateStart = new Date($scope.metaModel.partition_desc.partition_date_start);
+        if ($scope.metaModel.model.partition_desc.partition_date_column&&($scope.metaModel.model.partition_desc.partition_date_start|$scope.metaModel.model.partition_desc.partition_date_start==0)) {
+            var dateStart = new Date($scope.metaModel.model.partition_desc.partition_date_start);
             dateStart = (dateStart.getFullYear() + "-" + (dateStart.getMonth() + 1) + "-" + dateStart.getDate());
             //switch selected time to utc timestamp
-            $scope.metaModel.partition_desc.partition_date_start = new Date(moment.utc(dateStart, "YYYY-MM-DD").format()).getTime();
+            $scope.metaModel.model.partition_desc.partition_date_start = new Date(moment.utc(dateStart, "YYYY-MM-DD").format()).getTime();
+
+
+            if($scope.metaModel.model.partition_desc.partition_date_column.indexOf(".")==-1){
+            $scope.metaModel.model.partition_desc.partition_date_column=$scope.metaModel.model.fact_table+"."+$scope.metaModel.model.partition_desc.partition_date_column;
+            }
+
+        }
+        if($scope.cubeMetaFrame.model_name===""||angular.isUndefined($scope.cubeMetaFrame.model_name)){
+            $scope.cubeMetaFrame.model_name = $scope.cubeMetaFrame.name;
         }
 
         $scope.state.project = $scope.cubeMetaFrame.project;
 //        delete $scope.cubeMetaFrame.project;
 
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
-        $scope.state.modelSchema = angular.toJson($scope.metaModel, true);
+        $scope.state.modelSchema = angular.toJson($scope.metaModel.model, true);
     };
 
     $scope.cubeResultTmpl = function (notification) {
@@ -159,7 +188,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         }
                         //end loading
                         loadingRequest.hide();
-                        recoveryCubeStatus();
                     }, function (e) {
                         $scope.saveCubeRollBack();
 
@@ -171,7 +199,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                             MessageService.sendMsg($scope.cubeResultTmpl({'text':'Failed to take action.','schema':$scope.state.cubeSchema}), 'error', {}, true, 'top_center');
                         }
                         loadingRequest.hide();
-                        recoveryCubeStatus();
                     });
                 } else {
                     CubeService.save({}, {cubeDescData: $scope.state.cubeSchema,modelDescData:$scope.state.modelSchema, project: $scope.state.project}, function (request) {
@@ -189,7 +216,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
                         //end loading
                         loadingRequest.hide();
-                        recoveryCubeStatus();
                     }, function (e) {
                         $scope.saveCubeRollBack();
 
@@ -202,7 +228,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         }
                         //end loading
                         loadingRequest.hide();
-                        recoveryCubeStatus();
 
                     });
                 }
@@ -215,9 +240,9 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
 //    reverse the date
     $scope.saveCubeRollBack = function (){
-        if($scope.metaModel&&($scope.metaModel.partition_desc.partition_date_start||$scope.metaModel.partition_desc.partition_date_start==0))
+        if($scope.metaModel.model&&($scope.metaModel.model.partition_desc.partition_date_start||$scope.metaModel.model.partition_desc.partition_date_start==0))
         {
-            $scope.metaModel.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
+            $scope.metaModel.model.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
         }
     }
 
@@ -229,7 +254,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
 
             if(dimension.derived&&dimension.derived.length){
-                var lookup = _.find($scope.metaModel.lookups,function(lookup){return lookup.table==dimension.table});
+                var lookup = _.find($scope.metaModel.model.lookups,function(lookup){return lookup.table==dimension.table});
                 angular.forEach(lookup.join.foreign_key, function (fk, index) {
                     for (var i = 0; i < tmpRowKeyColumns.length; i++) {
                         if(tmpRowKeyColumns[i].column == fk)
@@ -452,22 +477,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         }
     }
 
-
-    function recoveryCubeStatus() {
-        $scope.cubeMetaFrame.project = $scope.state.project;
-        angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
-            dimension.status = {};
-            if (dimension.hierarchy&&dimension.column.length) {
-                dimension.status.useHierarchy = true;
-                dimension.status.joinCount = (!!dimension.join.primary_key) ? dimension.join.primary_key.length : 0;
-                dimension.status.hierarchyCount = (!!dimension.hierarchy) ? dimension.column.length : 0;
-            }
-            if(dimension.join&&dimension.join.type) {
-                dimension.status.useJoin = true;
-            }
-        });
-    }
-
     $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
         if(!newValue){
             return;
@@ -477,6 +486,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
             project:newValue
         };
         if(newValue){
+            TableModel.initTables();
             TableService.list(param, function (tables) {
                 angular.forEach(tables, function (table) {
                     table.name = table.database+"."+table.name;

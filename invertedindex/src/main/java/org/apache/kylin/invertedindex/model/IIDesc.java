@@ -41,7 +41,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.StringUtil;
-import org.apache.kylin.metadata.MetadataConstances;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.*;
 
@@ -51,7 +51,7 @@ import org.apache.kylin.metadata.model.*;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class IIDesc extends RootPersistentEntity {
 
-    public static final String HBASE_FAMILY = "f";
+    public static final String HBASE_FAMILY = "F1";
     public static final String HBASE_QUALIFIER = "c";
     public static final byte[] HBASE_FAMILY_BYTES = Bytes.toBytes(HBASE_FAMILY);
     public static final byte[] HBASE_QUALIFIER_BYTES = Bytes.toBytes(HBASE_QUALIFIER);
@@ -182,7 +182,7 @@ public class IIDesc extends RootPersistentEntity {
     }
 
     public static String getIIDescResourcePath(String descName) {
-        return ResourceStore.II_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstances.FILE_SURFIX;
+        return ResourceStore.II_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstants.FILE_SURFIX;
     }
 
     public List<MeasureDesc> getMeasures() {

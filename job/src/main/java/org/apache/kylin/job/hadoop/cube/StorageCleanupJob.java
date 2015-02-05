@@ -22,6 +22,9 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.invertedindex.IIInstance;
+import org.apache.kylin.invertedindex.IIManager;
+import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -40,6 +43,7 @@ import org.apache.hadoop.hbase.MasterNotRunningException;
 import org.apache.hadoop.hbase.ZooKeeperConnectionException;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,14 +99,15 @@ public class StorageCleanupJob extends AbstractHadoopJob {
 
     private void cleanUnusedHBaseTables(Configuration conf) throws MasterNotRunningException, ZooKeeperConnectionException, IOException {
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
+        IIManager iiManager = IIManager.getInstance(KylinConfig.getInstanceFromEnv());
 
         // get all kylin hbase tables
         HBaseAdmin hbaseAdmin = new HBaseAdmin(conf);
-        String tableNamePrefix = CubeManager.getHBaseStorageLocationPrefix();
+        String tableNamePrefix = IRealizationConstants.SharedHbaseStorageLocationPrefix;
         HTableDescriptor[] tableDescriptors = hbaseAdmin.listTables(tableNamePrefix + ".*");
         List<String> allTablesNeedToBeDropped = new ArrayList<String>();
         for (HTableDescriptor desc : tableDescriptors) {
-            String host = desc.getValue(CubeManager.getHTableMetadataKey());
+            String host = desc.getValue(IRealizationConstants.HTableTag);
             if (KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix().equalsIgnoreCase(host)) {
                 //only take care htables that belongs to self
                 allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
@@ -115,6 +120,15 @@ public class StorageCleanupJob extends AbstractHadoopJob {
                 String tablename = seg.getStorageLocationIdentifier();
                 allTablesNeedToBeDropped.remove(tablename);
                 log.info("Remove table " + tablename + " from drop list, as the table belongs to cube " + cube.getName() + " with status " + cube.getStatus());
+            }
+        }
+
+        // remove every ii segment htable from drop list
+        for (IIInstance ii : iiManager.listAllIIs()) {
+            for (IISegment seg : ii.getSegments()) {
+                String tablename = seg.getStorageLocationIdentifier();
+                allTablesNeedToBeDropped.remove(tablename);
+                log.info("Remove table " + tablename + " from drop list, as the table belongs to ii " + ii.getName() + " with status " + ii.getStatus());
             }
         }
 

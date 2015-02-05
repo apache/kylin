@@ -46,7 +46,6 @@ import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 /**
  * @author yangli9
  */
-@Ignore("ii not ready")
 public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
 
     IIInstance ii;

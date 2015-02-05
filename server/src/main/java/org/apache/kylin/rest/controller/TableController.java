@@ -42,7 +42,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.codahale.metrics.annotation.Metered;
-import org.apache.kylin.metadata.MetadataConstances;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.request.CardinalityRequest;
@@ -169,9 +169,9 @@ public class TableController extends BasicController {
                 // Clone TableDesc
                 TableDescResponse rtableDesc = new TableDescResponse(table);
                 rtableDesc.setDescExd(exd);
-                if (exd.containsKey(MetadataConstances.TABLE_EXD_CARDINALITY)) {
+                if (exd.containsKey(MetadataConstants.TABLE_EXD_CARDINALITY)) {
                     Map<String, Long> cardinality = new HashMap<String, Long>();
-                    String scard = exd.get(MetadataConstances.TABLE_EXD_CARDINALITY);
+                    String scard = exd.get(MetadataConstants.TABLE_EXD_CARDINALITY);
                     if (!StringUtils.isEmpty(scard)) {
                         String[] cards = StringUtils.split(scard, ",");
                         ColumnDesc[] cdescs = rtableDesc.getColumns();
