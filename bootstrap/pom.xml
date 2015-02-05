@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+    <artifactId>kylin</artifactId>
+    <groupId>org.apache.kylin</groupId>
+    <version>0.7.1-SNAPSHOT</version>
+  </parent>
+
+	<groupId>org.apache.kylin</groupId>
+	<artifactId>bootstrap</artifactId>
+	<version>0.7.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<name>bootstrap bootstrap</name>
+	<description>Simple WAR bootstrap for quick &amp; dirty testing in various servlet containers.</description>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+		<glassfish.version>3.1.1</glassfish.version>
+		<jetty.version>8.1.5.v20120716</jetty.version>
+		<tomcat.version>7.0.33</tomcat.version>
+		<slf4j.version>1.7.5</slf4j.version>
+		<javac.version>1.6</javac.version>
+	</properties>
+
+	<dependencies>
+		<!-- SLF4J runtime -->
+		<dependency>
+			<groupId>com.pseudocode</groupId>
+			<artifactId>slf4j-compact</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+
+		<!-- NOTE: GlassFish and Tomcat appear to be conflicting.
+			 order appears to matter and also
+			 must set scope to provided if not used -->
+
+		<!-- Tomcat 7 embedded runtime -->
+		<dependency>
+			<groupId>org.apache.tomcat.embed</groupId>
+			<artifactId>tomcat-embed-core</artifactId>
+			<version>${tomcat.version}</version>
+			<!-- <scope>compile</scope> --><!-- comment this for TC7 -->
+		</dependency>
+
+		<!-- Tomcat 7 logging -->
+		<dependency>
+			<groupId>org.apache.tomcat.embed</groupId>
+			<artifactId>tomcat-embed-logging-juli</artifactId>
+			<version>${tomcat.version}</version>
+			<!-- <scope>compile</scope> --><!-- comment this for TC7 -->
+		</dependency>
+
+		<!-- Tomcat 7 JSP (Uncomment to support Tomcat JSP) -->
+<!--
+		<dependency>
+			<groupId>org.apache.tomcat.embed</groupId>
+			<artifactId>tomcat-embed-jasper</artifactId>
+			<version>${tomcat.version}</version>
+		</dependency>
+ -->
+
+		<!-- Jetty 7/8 embedded runtime -->
+		<dependency>
+			<groupId>org.eclipse.jetty.aggregate</groupId>
+			<artifactId>jetty-all</artifactId>
+			<version>${jetty.version}</version>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+		<plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.5.3</version>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <mainClass>org.apache.kylin.bootstrap.Bootstrap</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id> <!-- this is used for inheritance merges -->
+                        <phase>package</phase> <!-- bind to the packaging phase -->
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+	</build>
+</project>
