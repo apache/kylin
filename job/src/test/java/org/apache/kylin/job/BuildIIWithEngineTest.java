@@ -71,7 +71,7 @@ public class BuildIIWithEngineTest {
 
     private DefaultScheduler scheduler;
     protected ExecutableManager jobService;
-    
+
     protected static final String TEST_II_NAME = "test_kylin_ii";
     private static final Log logger = LogFactory.getLog(BuildCubeWithEngineTest.class);
 
@@ -102,7 +102,7 @@ public class BuildIIWithEngineTest {
         HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
 
         DeployUtil.initCliWorkDir();
-//        DeployUtil.deployMetadata();
+        //        DeployUtil.deployMetadata();
         DeployUtil.overrideJobJarLocations();
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -114,33 +114,31 @@ public class BuildIIWithEngineTest {
         }
         iiManager = IIManager.getInstance(kylinConfig);
         jobEngineConfig = new JobEngineConfig(kylinConfig);
-        for (String jobId: jobService.getAllJobIds()) {
+        for (String jobId : jobService.getAllJobIds()) {
             jobService.deleteJob(jobId);
         }
-        
+
         IIInstance ii = iiManager.getII(TEST_II_NAME);
-        if(ii.getStatus() != RealizationStatusEnum.DISABLED) {
+        if (ii.getStatus() != RealizationStatusEnum.DISABLED) {
             ii.setStatus(RealizationStatusEnum.DISABLED);
             iiManager.updateII(ii);
         }
     }
 
     @After
-    public void after() throws IOException {
+    public void after() throws Exception {
         IIInstance ii = iiManager.getII(TEST_II_NAME);
-        if(ii.getStatus() != RealizationStatusEnum.READY) {
+        if (ii.getStatus() != RealizationStatusEnum.READY) {
             ii.setStatus(RealizationStatusEnum.READY);
             iiManager.updateII(ii);
         }
+        backup();
     }
-
 
     @Test
     public void testBuildII() throws Exception {
 
-        String[] testCase = new String[]{
-                "buildII"
-        };
+        String[] testCase = new String[] { "buildII" };
         ExecutorService executorService = Executors.newFixedThreadPool(testCase.length);
         final CountDownLatch countDownLatch = new CountDownLatch(testCase.length);
         List<Future<List<String>>> tasks = Lists.newArrayListWithExpectedSize(testCase.length);
@@ -151,14 +149,12 @@ public class BuildIIWithEngineTest {
         for (int i = 0; i < tasks.size(); ++i) {
             Future<List<String>> task = tasks.get(i);
             final List<String> jobIds = task.get();
-            for (String jobId: jobIds) {
+            for (String jobId : jobIds) {
                 assertJobSucceed(jobId);
             }
         }
 
-        backup();
     }
-
 
     private void assertJobSucceed(String jobId) {
         assertEquals(ExecutableState.SUCCEED, jobService.getOutput(jobId).getState());
@@ -187,10 +183,8 @@ public class BuildIIWithEngineTest {
         }
     }
 
-
     protected List<String> buildII() throws Exception {
         clearSegment(TEST_II_NAME);
-
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -199,7 +193,6 @@ public class BuildIIWithEngineTest {
         long date1 = 0;
         long date2 = f.parse("2015-01-01").getTime();
 
-
         // this cube doesn't support incremental build, always do full build
 
         List<String> result = Lists.newArrayList();
@@ -207,14 +200,11 @@ public class BuildIIWithEngineTest {
         return result;
     }
 
-
-
-    private void clearSegment(String iiName) throws Exception{
+    private void clearSegment(String iiName) throws Exception {
         IIInstance ii = iiManager.getII(iiName);
         ii.getSegments().clear();
         iiManager.updateII(ii);
     }
-
 
     private String buildSegment(String iiName, long startDate, long endDate) throws Exception {
         IIInstance iiInstance = iiManager.getII(iiName);
@@ -253,7 +243,7 @@ public class BuildIIWithEngineTest {
         BuildIIWithEngineTest.beforeClass();
         instance.before();
         instance.testBuildII();
-        
+
     }
 
 }

@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -44,7 +45,9 @@ import org.apache.kylin.common.persistence.HBaseResourceStore;
  */
 public class HBaseMiniclusterHelper {
 
-    public static final String SHARED_STORAGE_PREFIX = "KYLIN_";
+    public static final String CUBE_STORAGE_PREFIX = "KYLIN_";
+    public static final String II_STORAGE_PREFIX = "KYLIN_II";
+
     private static final String TEST_METADATA_TABLE = "kylin_metadata_qa";
     private static HBaseTestingUtility UTIL = new HBaseTestingUtility();
     private static MiniHBaseCluster hbaseCluster = null;
@@ -87,12 +90,13 @@ public class HBaseMiniclusterHelper {
 
         KylinConfig.getInstanceFromEnv().setMetadataUrl(TEST_METADATA_TABLE + "@" + hbaseconnectionUrl);
         KylinConfig.getInstanceFromEnv().setStorageUrl(hbaseconnectionUrl);
+        HBaseConnection.putConfig(hbaseconnectionUrl, UTIL.getConfiguration());
     }
 
     private static void startupMiniClusterAndImportData() throws Exception {
 
         System.out.println("Going to start mini cluster.");
-        //UTIL.getConfiguration().setStrings(CoprocessorHost.REGION_COPROCESSOR_CONF_KEY, IIEndpoint.class.getName());
+        UTIL.getConfiguration().setStrings(CoprocessorHost.REGION_COPROCESSOR_CONF_KEY, "org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint");
         hbaseCluster = UTIL.startMiniCluster();
 
         config = hbaseCluster.getConf();
@@ -153,11 +157,14 @@ public class HBaseMiniclusterHelper {
 
         for (String table : tableNames) {
 
-            if (!(table.equalsIgnoreCase(TEST_METADATA_TABLE) || table.startsWith(SHARED_STORAGE_PREFIX))) {
+            if (!(table.equalsIgnoreCase(TEST_METADATA_TABLE) || table.startsWith(CUBE_STORAGE_PREFIX))) {
+                //if (!(table.equalsIgnoreCase(TEST_METADATA_TABLE) || table.startsWith("KYLIN_II"))) {
                 continue;
             }
 
-            if (table.startsWith(SHARED_STORAGE_PREFIX)) {
+            if (table.startsWith(II_STORAGE_PREFIX)) {
+                HBaseConnection.createHTableIfNeeded(KylinConfig.getInstanceFromEnv().getStorageUrl(), table, "f");
+            } else if (table.startsWith(CUBE_STORAGE_PREFIX)) {
                 // create the cube table; otherwise the import will fail.
                 HBaseConnection.createHTableIfNeeded(KylinConfig.getInstanceFromEnv().getStorageUrl(), table, "F1", "F2");
             }
@@ -190,6 +197,11 @@ public class HBaseMiniclusterHelper {
     public static void shutdownMiniCluster() {
 
         System.out.println("Going to shutdown mini cluster.");
+
+        if (!StringUtils.isEmpty(hbaseconnectionUrl)) {
+            HBaseConnection.removeConfig(hbaseconnectionUrl);
+        }
+
         try {
             UTIL.shutdownMiniMapReduceCluster();
         } catch (Exception e) {
