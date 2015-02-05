@@ -154,7 +154,7 @@ public class MetadataManager {
     }
 
     /**
-     * Get table extended info. Keys are defined in {@link MetadataConstances}
+     * Get table extended info. Keys are defined in {@link MetadataConstants}
      * 
      * @param tableName
      * @return
@@ -169,9 +169,9 @@ public class MetadataManager {
                 Entry<String, String> entry = it.next();
                 result.put(entry.getKey(), entry.getValue());
             }
-            result.put(MetadataConstances.TABLE_EXD_STATUS_KEY, "true");
+            result.put(MetadataConstants.TABLE_EXD_STATUS_KEY, "true");
         } else {
-            result.put(MetadataConstances.TABLE_EXD_STATUS_KEY, "false");
+            result.put(MetadataConstants.TABLE_EXD_STATUS_KEY, "false");
         }
         return result;
     }
@@ -202,7 +202,7 @@ public class MetadataManager {
 
         srcTableExdMap.clear();
 
-        List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_EXD_RESOURCE_ROOT, MetadataConstances.FILE_SURFIX);
+        List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_EXD_RESOURCE_ROOT, MetadataConstants.FILE_SURFIX);
         for (String path : paths) {
             reloadSourceTableExdAt(path);
         }
@@ -233,7 +233,7 @@ public class MetadataManager {
         if (file.indexOf("/") > -1) {
             file = file.substring(file.lastIndexOf("/") + 1);
         }
-        String tableIdentity = file.substring(0, file.length() - MetadataConstances.FILE_SURFIX.length()).toUpperCase();
+        String tableIdentity = file.substring(0, file.length() - MetadataConstants.FILE_SURFIX.length()).toUpperCase();
 
         srcTableExdMap.putLocal(tableIdentity, attrs);
         return attrs;
@@ -245,7 +245,7 @@ public class MetadataManager {
 
         srcTableMap.clear();
 
-        List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_RESOURCE_ROOT, MetadataConstances.FILE_SURFIX);
+        List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_RESOURCE_ROOT, MetadataConstants.FILE_SURFIX);
         for (String path : paths) {
             reloadSourceTableAt(path);
         }
@@ -291,7 +291,7 @@ public class MetadataManager {
 
         dataModelDescMap.clear();
 
-        List<String> paths = store.collectResourceRecursively(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT, MetadataConstances.FILE_SURFIX);
+        List<String> paths = store.collectResourceRecursively(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT, MetadataConstants.FILE_SURFIX);
         for (String path : paths) {
             reloadDataModelDescAt(path);
         }

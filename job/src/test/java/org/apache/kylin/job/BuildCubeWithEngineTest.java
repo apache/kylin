@@ -19,6 +19,8 @@
 package org.apache.kylin.job;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClasspathUtil;
@@ -31,19 +33,14 @@ import org.apache.kylin.job.cube.CubingJobBuilder;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.job.hadoop.cube.StorageCleanupJob;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.job.manager.ExecutableManager;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.util.ToolRunner;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -93,7 +90,7 @@ public class BuildCubeWithEngineTest {
         DeployUtil.initCliWorkDir();
         DeployUtil.deployMetadata();
         DeployUtil.overrideJobJarLocations();
-        
+
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         jobService = ExecutableManager.getInstance(kylinConfig);
@@ -104,18 +101,14 @@ public class BuildCubeWithEngineTest {
         }
         cubeManager = CubeManager.getInstance(kylinConfig);
         jobEngineConfig = new JobEngineConfig(kylinConfig);
-        for (String jobId: jobService.getAllJobIds()) {
+        for (String jobId : jobService.getAllJobIds()) {
             jobService.deleteJob(jobId);
         }
 
     }
 
-    private void backup() throws Exception {
-        int exitCode = cleanupOldCubes();
-        if (exitCode == 0) {
-            exportHBaseData();
-        }
-
+    @After
+    public void after() {
         HBaseMetadataTestCase.staticCleanupTestMetadata();
     }
 
@@ -123,7 +116,6 @@ public class BuildCubeWithEngineTest {
     public void test() throws Exception {
         testInner();
         testLeft();
-        backup();
     }
 
     private void testInner() throws Exception {
@@ -266,7 +258,7 @@ public class BuildCubeWithEngineTest {
 
     }
 
-    private void clearSegment(String cubeName) throws Exception{
+    private void clearSegment(String cubeName) throws Exception {
         CubeInstance cube = cubeManager.getCube(cubeName);
         cube.getSegments().clear();
         cubeManager.updateCube(cube);
@@ -282,15 +274,4 @@ public class BuildCubeWithEngineTest {
         return job.getId();
     }
 
-    private int cleanupOldCubes() throws Exception {
-        String[] args = { "--delete", "true" };
-
-        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
-        return exitCode;
-    }
-
-    private void exportHBaseData() throws IOException {
-        ExportHBaseData export = new ExportHBaseData();
-        export.exportTables();
-    }
 }
