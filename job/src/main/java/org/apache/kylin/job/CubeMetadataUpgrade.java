@@ -59,7 +59,7 @@ import org.apache.kylin.job.hadoop.dict.CreateDictionaryJob;
 import org.apache.kylin.job.hadoop.hbase.BulkLoadJob;
 import org.apache.kylin.job.hadoop.hbase.CreateHTableJob;
 import org.apache.kylin.job.manager.ExecutableManager;
-import org.apache.kylin.metadata.MetadataConstances;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -157,7 +157,7 @@ public class CubeMetadataUpgrade {
     private List<String> listResourceStore(String pathRoot) {
         List<String> paths = null;
         try {
-            paths = store.collectResourceRecursively(pathRoot, MetadataConstances.FILE_SURFIX);
+            paths = store.collectResourceRecursively(pathRoot, MetadataConstants.FILE_SURFIX);
         } catch (IOException e1) {
             e1.printStackTrace();
             errorMsgs.add("Get IOException when scan resource store at: " + ResourceStore.CUBE_DESC_RESOURCE_ROOT);
@@ -197,7 +197,7 @@ public class CubeMetadataUpgrade {
                 t.init();
 
                 // if it only has 1 "." in the path, delete the old resource if it exists
-                if (path.substring(path.indexOf(".")).length() == MetadataConstances.FILE_SURFIX.length()) {
+                if (path.substring(path.indexOf(".")).length() == MetadataConstants.FILE_SURFIX.length()) {
                     getStore().deleteResource(path);
                     // the new source will be new;
                     t.setLastModified(0);
@@ -242,7 +242,7 @@ public class CubeMetadataUpgrade {
             if (file.indexOf("/") > -1) {
                 file = file.substring(file.lastIndexOf("/") + 1);
             }
-            String tableIdentity = file.substring(0, file.length() - MetadataConstances.FILE_SURFIX.length()).toUpperCase();
+            String tableIdentity = file.substring(0, file.length() - MetadataConstants.FILE_SURFIX.length()).toUpperCase();
 
             // for metadata upgrade, convert resource path to new pattern (<DB>.<TABLE>.json)
             if (tableIdentity.indexOf(".") < 0) {

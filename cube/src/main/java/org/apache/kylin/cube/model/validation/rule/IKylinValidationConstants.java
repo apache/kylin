@@ -18,13 +18,13 @@
 
 package org.apache.kylin.cube.model.validation.rule;
 
-import org.apache.kylin.metadata.MetadataConstances;
+import org.apache.kylin.metadata.MetadataConstants;
 
 /**
  * @author jianliu
  * 
  */
-public interface IKylinValidationConstances extends MetadataConstances {
+public interface IKylinValidationConstants extends MetadataConstants {
 
     public static final int DEFAULT_MAX_AGR_GROUP_SIZE = 20;
     public static final String KEY_MAX_AGR_GROUP_SIZE = "rule_max.arggregation.group.size";

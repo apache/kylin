@@ -24,7 +24,7 @@ package org.apache.kylin.metadata;
  * @author jianliu
  * 
  */
-public interface MetadataConstances {
+public interface MetadataConstants {
 
     public static final String FILE_SURFIX = ".json";
 
