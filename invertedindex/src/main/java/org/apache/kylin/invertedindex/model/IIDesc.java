@@ -41,7 +41,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.StringUtil;
-import org.apache.kylin.metadata.MetadataConstances;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.*;
 
@@ -182,7 +182,7 @@ public class IIDesc extends RootPersistentEntity {
     }
 
     public static String getIIDescResourcePath(String descName) {
-        return ResourceStore.II_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstances.FILE_SURFIX;
+        return ResourceStore.II_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstants.FILE_SURFIX;
     }
 
     public List<MeasureDesc> getMeasures() {

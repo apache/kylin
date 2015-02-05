@@ -26,7 +26,7 @@ import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.HiveClient;
-import org.apache.kylin.metadata.MetadataConstances;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -126,16 +126,16 @@ public class HiveSourceTableLoader {
             if (map == null) {
                 map = Maps.newHashMap();
             }
-            map.put(MetadataConstances.TABLE_EXD_TABLENAME, table.getTableName());
-            map.put(MetadataConstances.TABLE_EXD_LOCATION, table.getSd().getLocation());
-            map.put(MetadataConstances.TABLE_EXD_IF, table.getSd().getInputFormat());
-            map.put(MetadataConstances.TABLE_EXD_OF, table.getSd().getOutputFormat());
-            map.put(MetadataConstances.TABLE_EXD_OWNER, table.getOwner());
-            map.put(MetadataConstances.TABLE_EXD_LAT, String.valueOf(table.getLastAccessTime()));
-            map.put(MetadataConstances.TABLE_EXD_PC, partitionColumnString.toString());
-            map.put(MetadataConstances.TABLE_EXD_TFS, String.valueOf(tableSize));
-            map.put(MetadataConstances.TABLE_EXD_TNF, String.valueOf(tableFileNum));
-            map.put(MetadataConstances.TABLE_EXD_PARTITIONED, Boolean.valueOf(partitionCols != null && partitionCols.size() > 0).toString());
+            map.put(MetadataConstants.TABLE_EXD_TABLENAME, table.getTableName());
+            map.put(MetadataConstants.TABLE_EXD_LOCATION, table.getSd().getLocation());
+            map.put(MetadataConstants.TABLE_EXD_IF, table.getSd().getInputFormat());
+            map.put(MetadataConstants.TABLE_EXD_OF, table.getSd().getOutputFormat());
+            map.put(MetadataConstants.TABLE_EXD_OWNER, table.getOwner());
+            map.put(MetadataConstants.TABLE_EXD_LAT, String.valueOf(table.getLastAccessTime()));
+            map.put(MetadataConstants.TABLE_EXD_PC, partitionColumnString.toString());
+            map.put(MetadataConstants.TABLE_EXD_TFS, String.valueOf(tableSize));
+            map.put(MetadataConstants.TABLE_EXD_TNF, String.valueOf(tableFileNum));
+            map.put(MetadataConstants.TABLE_EXD_PARTITIONED, Boolean.valueOf(partitionCols != null && partitionCols.size()>0).toString());
 
             metaMgr.saveSourceTable(tableDesc);
             metaMgr.saveTableExd(tableDesc.getIdentity(), map);

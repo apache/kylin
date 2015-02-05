@@ -35,7 +35,7 @@ import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.restclient.Broadcaster;
-import org.apache.kylin.metadata.MetadataConstances;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 
 /**
@@ -189,7 +189,7 @@ public class CubeDescManager {
 
         cubeDescMap.clear();
 
-        List<String> paths = store.collectResourceRecursively(ResourceStore.CUBE_DESC_RESOURCE_ROOT, MetadataConstances.FILE_SURFIX);
+        List<String> paths = store.collectResourceRecursively(ResourceStore.CUBE_DESC_RESOURCE_ROOT, MetadataConstants.FILE_SURFIX);
         for (String path : paths) {
             CubeDesc desc;
             try {

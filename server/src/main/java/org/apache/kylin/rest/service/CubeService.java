@@ -59,7 +59,7 @@ import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.hadoop.cardinality.HiveColumnCardinalityJob;
 import org.apache.kylin.job.hadoop.cardinality.HiveColumnCardinalityUpdateJob;
-import org.apache.kylin.metadata.MetadataConstances;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -548,7 +548,7 @@ public class CubeService extends BasicService {
         MetadataManager metaMgr = getMetadataManager();
         for (String table : tables) {
             Map<String, String> exdMap = metaMgr.getTableDescExd(table);
-            if (exdMap == null || !exdMap.containsKey(MetadataConstances.TABLE_EXD_CARDINALITY)) {
+            if (exdMap == null || !exdMap.containsKey(MetadataConstants.TABLE_EXD_CARDINALITY)) {
                 calculateCardinality(table, submitter);
             }
         }

@@ -40,6 +40,7 @@ import org.apache.hadoop.hbase.MasterNotRunningException;
 import org.apache.hadoop.hbase.ZooKeeperConnectionException;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,11 +99,11 @@ public class StorageCleanupJob extends AbstractHadoopJob {
 
         // get all kylin hbase tables
         HBaseAdmin hbaseAdmin = new HBaseAdmin(conf);
-        String tableNamePrefix = CubeManager.getHBaseStorageLocationPrefix();
+        String tableNamePrefix = IRealizationConstants.SharedHbaseStorageLocationPrefix;
         HTableDescriptor[] tableDescriptors = hbaseAdmin.listTables(tableNamePrefix + ".*");
         List<String> allTablesNeedToBeDropped = new ArrayList<String>();
         for (HTableDescriptor desc : tableDescriptors) {
-            String host = desc.getValue(CubeManager.getHTableMetadataKey());
+            String host = desc.getValue(IRealizationConstants.HTableTag);
             if (KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix().equalsIgnoreCase(host)) {
                 //only take care htables that belongs to self
                 allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
