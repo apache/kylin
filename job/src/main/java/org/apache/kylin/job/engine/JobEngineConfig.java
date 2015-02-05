@@ -45,7 +45,7 @@ public class JobEngineConfig {
             return new File(path, fileName);
         }
 
-        path = System.getenv(KylinConfig.KYLIN_HOME);
+        path = KylinConfig.getKylinHome();
         if (StringUtils.isNotEmpty(path)) {
             return new File(path + File.separator + "conf", fileName);
         }
