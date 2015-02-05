@@ -66,8 +66,8 @@ public class JobEngineConfig {
                 InputStream is = JobEngineConfig.class.getClassLoader().getResourceAsStream(hadoopJobConfFile);
                 if (is == null) {
                     logger.debug("Can't get " + hadoopJobConfFile + " from classpath");
-                    logger.debug("No " + hadoopJobConfFile + " file were found");
                 } else {
+                    logger.debug(hadoopJobConfFile + "  is found from classpath");
                     File tmp = File.createTempFile(HADOOP_JOB_CONF_FILENAME, ".xml");
                     inputStreamToFile(is, tmp);
                     path = tmp.getAbsolutePath();

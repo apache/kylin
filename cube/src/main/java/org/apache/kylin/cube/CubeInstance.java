@@ -19,8 +19,19 @@
 package org.apache.kylin.cube;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.metadata.realization.RealizationType;
+import org.apache.kylin.metadata.realization.SQLDigest;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -29,18 +40,6 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.DimensionDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.metadata.realization.RealizationType;
-import org.apache.kylin.metadata.realization.SQLDigest;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeInstance extends RootPersistentEntity implements IRealization {
@@ -98,80 +97,17 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         return buildingSegments;
     }
 
-    public long getAllocatedEndDate() {
-        if (null == segments || segments.size() == 0) {
-            return 0;
-        }
-
-        Collections.sort(segments);
-
-        return segments.get(segments.size() - 1).getDateRangeEnd();
-    }
-
-    public long getAllocatedStartDate() {
-        if (null == segments || segments.size() == 0) {
-            return 0;
-        }
-
-        Collections.sort(segments);
-
-        return segments.get(0).getDateRangeStart();
-    }
-
-    public List<CubeSegment> getMergingSegments() {
-        return this.getMergingSegments(null);
-    }
-
-    public List<CubeSegment> getMergingSegments(CubeSegment cubeSegment) {
-        CubeSegment buildingSegment;
-        if (cubeSegment == null) { // this path goes tests only
-            List<CubeSegment> buildingSegments = getBuildingSegments();
-            if (buildingSegments.size() == 0) {
-                return Collections.emptyList();
-            }
-            buildingSegment = buildingSegments.get(0);
-        } else {
-            buildingSegment = cubeSegment;
-        }
-
+    public List<CubeSegment> getMergingSegments(CubeSegment mergedSegment) {
         List<CubeSegment> mergingSegments = new ArrayList<CubeSegment>();
         if (null != this.segments) {
             for (CubeSegment segment : this.segments) {
-                if (!buildingSegment.equals(segment) //
-                        && buildingSegment.getDateRangeStart() <= segment.getDateRangeStart() && buildingSegment.getDateRangeEnd() >= segment.getDateRangeEnd()) {
+                if (!mergedSegment.equals(segment) //
+                        && mergedSegment.getDateRangeStart() <= segment.getDateRangeStart() && mergedSegment.getDateRangeEnd() >= segment.getDateRangeEnd()) {
                     mergingSegments.add(segment);
                 }
             }
         }
         return mergingSegments;
-
-    }
-
-    public List<CubeSegment> getRebuildingSegments() {
-        List<CubeSegment> buildingSegments = getBuildingSegments();
-        if (buildingSegments.size() == 0) {
-            return Collections.emptyList();
-        } else {
-            List<CubeSegment> rebuildingSegments = new ArrayList<CubeSegment>();
-            if (null != this.segments) {
-                long startDate = buildingSegments.get(0).getDateRangeStart();
-                long endDate = buildingSegments.get(buildingSegments.size() - 1).getDateRangeEnd();
-                for (CubeSegment segment : this.segments) {
-                    if (segment.getStatus() == SegmentStatusEnum.READY) {
-                        if (startDate >= segment.getDateRangeStart() && startDate < segment.getDateRangeEnd() && segment.getDateRangeEnd() < endDate) {
-                            rebuildingSegments.add(segment);
-                            continue;
-                        }
-                        if (startDate <= segment.getDateRangeStart() && endDate >= segment.getDateRangeEnd()) {
-                            rebuildingSegments.add(segment);
-                            continue;
-                        }
-                    }
-                }
-            }
-
-            return rebuildingSegments;
-        }
     }
 
     public CubeDesc getDescriptor() {
@@ -384,24 +320,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         this.createTimeUTC = createTimeUTC;
     }
 
-    public long[] getDateRange() {
-        List<CubeSegment> readySegments = getSegment(SegmentStatusEnum.READY);
-        if (readySegments.isEmpty()) {
-            return new long[] { 0L, 0L };
-        }
-        long start = Long.MAX_VALUE;
-        long end = Long.MIN_VALUE;
-        for (CubeSegment segment : readySegments) {
-            if (segment.getDateRangeStart() < start) {
-                start = segment.getDateRangeStart();
-            }
-            if (segment.getDateRangeEnd() > end) {
-                end = segment.getDateRangeEnd();
-            }
-        }
-        return new long[] { start, end };
-    }
-
     @Override
     public boolean isCapable(SQLDigest digest) {
         return CubeCapabilityChecker.check(this, digest, true);
@@ -420,16 +338,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
     @Override
     public List<TblColRef> getAllColumns() {
         return Lists.newArrayList(getDescriptor().listAllColumns());
-    }
-
-    public List<TblColRef> getDimensions() {
-        List<TblColRef> ret = Lists.newArrayList();
-        for (DimensionDesc dim : getDescriptor().getDimensions()) {
-            for (TblColRef colRef : dim.getColumnRefs()) {
-                ret.add(colRef);
-            }
-        }
-        return ret;
     }
 
     public String getProjectName() {
