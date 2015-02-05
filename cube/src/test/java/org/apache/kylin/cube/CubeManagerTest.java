@@ -20,19 +20,16 @@ package org.apache.kylin.cube;
 
 import static org.junit.Assert.*;
 
-import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metadata.project.ProjectManager;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author yangli9
@@ -42,9 +39,6 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
-        MetadataManager.clearCache();
-        CubeManager.clearCache();
-        ProjectManager.clearCache();
     }
 
     @After

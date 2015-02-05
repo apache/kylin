@@ -34,6 +34,7 @@ import org.apache.hadoop.hbase.util.Pair;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
+import org.apache.kylin.metadata.realization.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,10 +61,7 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
-import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.IRealizationProvider;
-import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.metadata.realization.RealizationType;
+
 
 /**
  * @author yangli9
@@ -256,6 +254,9 @@ public class CubeManager implements IRealizationProvider {
     public Pair<CubeSegment, CubeSegment> appendAndMergeSegments(CubeInstance cube, long endDate) throws IOException {
         checkNoBuildingSegment(cube);
         checkCubeIsPartitioned(cube);
+        
+        if (cube.getSegments().size() == 0)
+            throw new IllegalStateException("expect at least one existing segment");
 
         long appendStart = calculateStartDateForAppendSegment(cube);
         CubeSegment appendSegment = newSegment(cube, appendStart, endDate);
@@ -363,48 +364,6 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
-    public static String getHBaseStorageLocationPrefix() {
-        return "KYLIN_";
-    }
-
-    /**
-     * For each cube htable, we leverage htable's metadata to keep track of
-     * which kylin server(represented by its kylin_metadata prefix) owns this htable
-     */
-    public static String getHTableMetadataKey() {
-        return "KYLIN_HOST";
-    }
-
-    // this method goes tests only
-    public void updateSegmentOnJobSucceed(CubeInstance cubeInstance, CubeBuildTypeEnum buildType, String segmentName, //
-            String jobUuid, long lastBuildTime, long sizeKB, long sourceRecordCount, long sourceRecordsSize) throws IOException {
-
-        List<CubeSegment> segmentsInNewStatus = cubeInstance.getSegments(SegmentStatusEnum.NEW);
-        CubeSegment cubeSegment = cubeInstance.getSegmentById(jobUuid);
-        Preconditions.checkArgument(segmentsInNewStatus.size() == 1, "there are " + segmentsInNewStatus.size() + " new segments");
-
-        switch (buildType) {
-        case BUILD:
-            cubeInstance.getSegments().removeAll(cubeInstance.getMergingSegments());
-            break;
-        case MERGE:
-            cubeInstance.getSegments().removeAll(cubeInstance.getMergingSegments());
-            break;
-        case REFRESH:
-            break;
-        default:
-            throw new RuntimeException("invalid build type:" + buildType);
-        }
-        cubeSegment.setLastBuildJobID(jobUuid);
-        cubeSegment.setLastBuildTime(lastBuildTime);
-        cubeSegment.setSizeKB(sizeKB);
-        cubeSegment.setInputRecords(sourceRecordCount);
-        cubeSegment.setInputRecordsSize(sourceRecordsSize);
-        cubeSegment.setStatus(SegmentStatusEnum.READY);
-        cubeInstance.setStatus(RealizationStatusEnum.READY);
-        this.updateCube(cubeInstance);
-    }
-
     public void updateSegmentOnJobDiscard(CubeInstance cubeInstance, String segmentName) throws IOException {
         for (int i = 0; i < cubeInstance.getSegments().size(); i++) {
             CubeSegment segment = cubeInstance.getSegments().get(i);
@@ -497,7 +456,7 @@ public class CubeManager implements IRealizationProvider {
     }
 
     private String generateStorageLocation() {
-        String namePrefix = getHBaseStorageLocationPrefix();
+        String namePrefix = IRealizationConstants.CubeHbaseStorageLocationPrefix;
         String tableName = "";
         do {
             StringBuffer sb = new StringBuffer();

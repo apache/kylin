@@ -1,9 +1,27 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+
 <script type="text/ng-template" id="jobMerge.html">
     <div class="modal-header">
         <h4 tooltip="merge">CUBE MERGE CONFIRM</h4>
     </div>
     <div class="modal-body" style="background-color: white">
-        <div ng-if="metaModel.partition_desc.partition_date_column" class="row">
+        <div ng-if="metaModel.model.partition_desc.partition_date_column" class="row">
             <div class="col-md-2"></div>
             <div class="col-md-8">
                 <div ng-if="!!!(cube.segments) || cube.segments.length < 2">
@@ -14,7 +32,7 @@
                         <tbody>
                         <tr>
                             <td>PARTITION DATE COLUMN</td>
-                            <td>{{metaModel.partition_desc.partition_date_column}}</td>
+                            <td>{{metaModel.model.partition_desc.partition_date_column}}</td>
                         </tr>
                         <tr>
                             <td>MERGE START SEGMENT</td>
@@ -96,7 +114,7 @@
             <div class="col-md-2"></div>
         </div>
 
-        <div ng-if="!metaModel.partition_desc.partition_date_column" class="row">
+        <div ng-if="!metaModel.model.partition_desc.partition_date_column" class="row">
             <div class="col-md-2"></div>
             <div class="col-md-8">
                 <span>No partition date column defined.</span>

@@ -69,38 +69,6 @@ public class JobEngineConfig {
             logger.error("fail to locate " + HADOOP_JOB_CONF_FILENAME + ".xml");
             throw new RuntimeException("fail to locate " + hadoopJobConfFile);
         }
-//        String path = System.getProperty(KylinConfig.KYLIN_CONF_HOME);
-//
-//        if (path == null) {
-//            path = System.getenv(KylinConfig.KYLIN_CONF);
-//        }
-//
-//        if (path != null) {
-//            path = path + File.separator + hadoopJobConfFile;
-//        }
-//
-//        if (null == path || !new File(path).exists()) {
-//            File defaultFilePath = new File("/etc/kylin/" + hadoopJobConfFile);
-//
-//            if (defaultFilePath.exists()) {
-//                path = defaultFilePath.getAbsolutePath();
-//            } else {
-//                logger.debug("Search conf file " + hadoopJobConfFile + "  from classpath ...");
-//                InputStream is = JobEngineConfig.class.getClassLoader().getResourceAsStream(hadoopJobConfFile);
-//                if (is == null) {
-//                    logger.debug("Can't get " + hadoopJobConfFile + " from classpath");
-//                    logger.debug("No " + hadoopJobConfFile + " file were found");
-//                } else {
-//                    File tmp = File.createTempFile(HADOOP_JOB_CONF_FILENAME, ".xml");
-//                    inputStreamToFile(is, tmp);
-//                    path = tmp.getAbsolutePath();
-//                }
-//            }
-//        }
-//
-//        if (null == path || !new File(path).exists()) {
-//            return "";
-//        }
 
         return OptionsHelper.convertToFileURL(jobConfig.getAbsolutePath());
     }

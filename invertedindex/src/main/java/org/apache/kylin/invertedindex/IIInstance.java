@@ -23,8 +23,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
@@ -46,6 +44,19 @@ import java.util.List;
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class IIInstance extends RootPersistentEntity implements IRealization {
+
+    public static IIInstance create(String iiName, String projectName, IIDesc iiDesc) {
+        IIInstance iii = new IIInstance();
+
+        iii.setConfig(iiDesc.getConfig());
+        iii.setName(iiName);
+        iii.setDescName(iiDesc.getName());
+        iii.setCreateTimeUTC(System.currentTimeMillis());
+        iii.setStatus(RealizationStatusEnum.DISABLED);
+        iii.updateRandomUuid();
+
+        return iii;
+    }
 
     @JsonIgnore
     private KylinConfig config;
@@ -216,19 +227,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         }
     }
 
-    public IISegment getLatestReadySegment() {
-        IISegment latest = null;
-        for (int i = segments.size() - 1; i >= 0; i--) {
-            IISegment seg = segments.get(i);
-            if (seg.getStatus() != SegmentStatusEnum.READY)
-                continue;
-            if (latest == null || latest.getDateRangeEnd() < seg.getDateRangeEnd()) {
-                latest = seg;
-            }
-        }
-        return latest;
-    }
-
     public List<IISegment> getSegments() {
         return segments;
     }
@@ -245,15 +243,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return result;
     }
 
-    public List<IISegment> getSegment(SegmentStatusEnum status) {
-        List<IISegment> result = Lists.newArrayList();
-        for (IISegment segment : segments) {
-            if (segment.getStatus() == status) {
-                result.add(segment);
-            }
-        }
-        return result;
-    }
 
     public IISegment getSegment(String name, SegmentStatusEnum status) {
         for (IISegment segment : segments) {
@@ -269,14 +258,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         this.segments = segments;
     }
 
-    public IISegment getSegmentById(String segmentId) {
-        for (IISegment segment : segments) {
-            if (Objects.equal(segment.getUuid(), segmentId)) {
-                return segment;
-            }
-        }
-        return null;
-    }
 
     public long getCreateTimeUTC() {
         return createTimeUTC;
@@ -286,23 +267,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         this.createTimeUTC = createTimeUTC;
     }
 
-    public long[] getDateRange() {
-        List<IISegment> readySegments = getSegment(SegmentStatusEnum.READY);
-        if (readySegments.isEmpty()) {
-            return new long[]{0L, 0L};
-        }
-        long start = Long.MAX_VALUE;
-        long end = Long.MIN_VALUE;
-        for (IISegment segment : readySegments) {
-            if (segment.getDateRangeStart() < start) {
-                start = segment.getDateRangeStart();
-            }
-            if (segment.getDateRangeEnd() > end) {
-                end = segment.getDateRangeEnd();
-            }
-        }
-        return new long[]{start, end};
-    }
 
     @Override
     public boolean isCapable(SQLDigest digest) {

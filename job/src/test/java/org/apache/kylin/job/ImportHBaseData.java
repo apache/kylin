@@ -33,7 +33,7 @@ import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.common.persistence.HBaseResourceStore;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.CliCommandExecutor;
-import org.apache.kylin.common.util.HBaseMiniclusterMetadataTestCase;
+import org.apache.kylin.common.util.HBaseMiniclusterHelper;
 import org.apache.kylin.common.util.SSHClient;
 import org.apache.kylin.common.util.TarGZUtil;
 
@@ -97,11 +97,11 @@ public class ImportHBaseData {
         for (String tableLocation : tablelocations) {
             String table = tableLocation.substring(tableLocation.lastIndexOf("/") + 1);
             
-            if (!(table.equalsIgnoreCase(tableNameBase) || table.startsWith(HBaseMiniclusterMetadataTestCase.CUBE_STORAGE_PREFIX))) {
+            if (!(table.equalsIgnoreCase(tableNameBase) || table.startsWith(HBaseMiniclusterHelper.SHARED_STORAGE_PREFIX))) {
                 continue;
             }
             
-            if (table.startsWith(HBaseMiniclusterMetadataTestCase.CUBE_STORAGE_PREFIX)) {
+            if (table.startsWith(HBaseMiniclusterHelper.SHARED_STORAGE_PREFIX)) {
                 // create the cube table; otherwise the import will fail.
                 HBaseConnection.createHTableIfNeeded(KylinConfig.getInstanceFromEnv().getStorageUrl(), table, "F1", "F2");
             }

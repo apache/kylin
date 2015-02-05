@@ -16,8 +16,18 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.common.util;
+package org.apache.kylin.cube.model.validation.rule;
 
-public class LongAsFloat {
+import org.apache.kylin.metadata.MetadataConstants;
+
+/**
+ * @author jianliu
+ * 
+ */
+public interface IKylinValidationConstants extends MetadataConstants {
+
+    public static final int DEFAULT_MAX_AGR_GROUP_SIZE = 20;
+    public static final String KEY_MAX_AGR_GROUP_SIZE = "rule_max.arggregation.group.size";
+    public static final String KEY_IGNORE_UNKNOWN_FUNC = "rule_ignore_unknown_func";
 
 }

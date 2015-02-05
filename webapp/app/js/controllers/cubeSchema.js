@@ -1,11 +1,29 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 'use strict';
 
-KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter,ModelService ) {
+KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter,ModelService,MetaModel) {
 
     $scope.projects = [];
     $scope.newDimension = null;
     $scope.newMeasure = null;
-    $scope.metaModel={};
+
 
     $scope.wizardSteps = [
         {title: 'Cube Info', src: 'partials/cubeDesigner/info.html', isComplete: false},
@@ -32,18 +50,26 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         if(!newValue){
             return;
         }
-        if (newValue) {
+        if (newValue&&$scope.state.mode==="view") {
             $scope.cubeMetaFrame = newValue;
+
+            // when viw state,each cubeSchema has its own metaModel
+            $scope.metaModel={
+                model:{}
+            }
 
             //init model
             ModelService.get({model_name: $scope.cubeMetaFrame.model_name}, function (model) {
                 if (model) {
-                    $scope.metaModel = model;
+//                    $scope.metaModel = MetaModel;
+
+                    $scope.metaModel.model = model;
+
                     //convert GMT mills ,to make sure partition date show GMT Date
                     //should run only one time
-                    if($scope.metaModel.partition_desc&&$scope.metaModel.partition_desc.partition_date_start)
+                    if($scope.metaModel.model.partition_desc&&$scope.metaModel.model.partition_desc.partition_date_start)
                     {
-                        $scope.metaModel.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
+                        $scope.metaModel.model.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
                     }
                 }
             });

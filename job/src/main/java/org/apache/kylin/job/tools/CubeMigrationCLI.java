@@ -34,6 +34,8 @@ import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
 
@@ -283,7 +285,7 @@ public class CubeMigrationCLI {
             String tableName = (String) opt.params[0];
             HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
             hbaseAdmin.disableTable(tableName);
-            desc.setValue(CubeManager.getHTableMetadataKey(), dstConfig.getMetadataUrlPrefix());
+            desc.setValue(IRealizationConstants.HTableTag, dstConfig.getMetadataUrlPrefix());
             hbaseAdmin.modifyTable(tableName, desc);
             hbaseAdmin.enableTable(tableName);
             logger.info("CHANGE_HTABLE_HOST is completed");
@@ -400,7 +402,7 @@ public class CubeMigrationCLI {
             String tableName = (String) opt.params[0];
             HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
             hbaseAdmin.disableTable(tableName);
-            desc.setValue(CubeManager.getHTableMetadataKey(), srcConfig.getMetadataUrlPrefix());
+            desc.setValue(IRealizationConstants.HTableTag, srcConfig.getMetadataUrlPrefix());
             hbaseAdmin.modifyTable(tableName, desc);
             hbaseAdmin.enableTable(tableName);
             break;

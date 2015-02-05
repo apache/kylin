@@ -32,7 +32,7 @@ import com.google.common.collect.Sets;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.StringUtil;
-import org.apache.kylin.metadata.MetadataConstances;
+import org.apache.kylin.metadata.MetadataConstants;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class DataModelDesc extends RootPersistentEntity {
@@ -215,7 +215,7 @@ public class DataModelDesc extends RootPersistentEntity {
     }
 
     public static String concatResourcePath(String descName) {
-        return ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstances.FILE_SURFIX;
+        return ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstants.FILE_SURFIX;
     }
 
 }

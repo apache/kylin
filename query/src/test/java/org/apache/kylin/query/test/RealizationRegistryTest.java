@@ -31,7 +31,7 @@ import org.apache.kylin.metadata.realization.RealizationType;
 /**
  * Created by qianzhou on 1/26/15.
  */
-public class RealizationRegistryTest extends KylinQueryTest {
+public class RealizationRegistryTest {
 
     @Test
     public void test() throws Exception {

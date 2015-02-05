@@ -18,17 +18,7 @@
 
 package org.apache.kylin.invertedindex;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -38,14 +28,19 @@ import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
-import org.apache.kylin.dict.lookup.SnapshotManager;
 import org.apache.kylin.invertedindex.model.IIDesc;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.metadata.realization.IRealizationProvider;
 import org.apache.kylin.metadata.realization.RealizationType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author honma
@@ -168,6 +163,15 @@ public class IIManager implements IRealizationProvider {
         return info.getDictionaryObject();
     }
 
+    public IIInstance createII(IIInstance ii) throws IOException {
+
+        if (this.getII(ii.getName()) != null)
+            throw new IllegalArgumentException("The II name '" + ii.getName() + "' already exists.");
+
+        // other logic is the same as update.
+        return updateII(ii);
+    }
+
     public IIInstance updateII(IIInstance ii) throws IOException {
         logger.info("Updating II instance '" + ii.getName());
 
@@ -177,18 +181,6 @@ public class IIManager implements IRealizationProvider {
         logger.info("II with " + ii.getSegments().size() + " segments is saved");
 
         return ii;
-    }
-
-    public static String getHBaseStorageLocationPrefix() {
-        return "KYLIN_II_";
-    }
-
-    /**
-     * For each htable, we leverage htable's metadata to keep track of which
-     * kylin server(represented by its kylin_metadata prefix) owns this htable
-     */
-    public static String getHtableMetadataKey() {
-        return "KYLIN_HOST";
     }
 
     public void loadIICache(String iiName) {
@@ -209,10 +201,10 @@ public class IIManager implements IRealizationProvider {
 
     public void removeIILocalCache(String name) {
         iiMap.removeLocal(name);
-//TODO
-//        for (IISegment segment : ii.getSegments()) {
-//            usedStorageLocation.remove(segment.getName());
-//        }
+        //TODO
+        //        for (IISegment segment : ii.getSegments()) {
+        //            usedStorageLocation.remove(segment.getName());
+        //        }
     }
 
     private void saveResource(IIInstance ii) throws IOException {
@@ -227,10 +219,8 @@ public class IIManager implements IRealizationProvider {
 
     /**
      * @param IIInstance
-     * @param startDate
-     *            (pass 0 if full build)
-     * @param endDate
-     *            (pass 0 if full build)
+     * @param startDate  (pass 0 if full build)
+     * @param endDate    (pass 0 if full build)
      * @return
      */
     public IISegment buildSegment(IIInstance IIInstance, long startDate, long endDate) {
@@ -250,7 +240,7 @@ public class IIManager implements IRealizationProvider {
     }
 
     private String generateStorageLocation() {
-        String namePrefix = getHBaseStorageLocationPrefix();
+        String namePrefix = IRealizationConstants.IIHbaseStorageLocationPrefix;
         String tableName = "";
         do {
             StringBuffer sb = new StringBuffer();
@@ -303,16 +293,8 @@ public class IIManager implements IRealizationProvider {
         }
     }
 
-    private MetadataManager getMetadataManager() {
-        return MetadataManager.getInstance(config);
-    }
-
     private DictionaryManager getDictionaryManager() {
         return DictionaryManager.getInstance(config);
-    }
-
-    private SnapshotManager getSnapshotManager() {
-        return SnapshotManager.getInstance(config);
     }
 
     private ResourceStore getStore() {
