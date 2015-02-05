@@ -34,6 +34,8 @@ import java.util.concurrent.Future;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.util.ToolRunner;
+import org.apache.kylin.job.hadoop.cube.StorageCleanupJob;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -153,6 +155,8 @@ public class BuildIIWithEngineTest {
                 assertJobSucceed(jobId);
             }
         }
+
+        backup();
     }
 
 
@@ -224,9 +228,30 @@ public class BuildIIWithEngineTest {
         return job.getId();
     }
 
+    private int cleanupOldStorage() throws Exception {
+        String[] args = { "--delete", "true" };
+
+        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
+        return exitCode;
+    }
+
+    private void backup() throws Exception {
+        int exitCode = cleanupOldStorage();
+        if (exitCode == 0) {
+            exportHBaseData();
+        }
+
+    }
+
+    private void exportHBaseData() throws IOException {
+        ExportHBaseData export = new ExportHBaseData();
+        export.exportTables();
+    }
+}
+
     public static void main(String[] args) throws Exception {
         BuildIIWithEngineTest instance = new BuildIIWithEngineTest();
-        
+
         BuildIIWithEngineTest.beforeClass();
         instance.before();
         instance.testBuildII();
