@@ -31,7 +31,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.CliCommandExecutor;
-import org.apache.kylin.common.util.HBaseMiniclusterMetadataTestCase;
+import org.apache.kylin.common.util.HBaseMiniclusterHelper;
 import org.apache.kylin.common.util.SSHClient;
 
 public class ExportHBaseData {
@@ -119,7 +119,7 @@ public class ExportHBaseData {
 
         for (HTableDescriptor table : allTables) {
             String tName = table.getNameAsString();
-            if (!tName.equals(tableNameBase) && !tName.startsWith(HBaseMiniclusterMetadataTestCase.CUBE_STORAGE_PREFIX))
+            if (!tName.equals(tableNameBase) && !tName.startsWith(HBaseMiniclusterHelper.SHARED_STORAGE_PREFIX))
                 continue;
 
             cli.execute("hbase org.apache.hadoop.hbase.mapreduce.Export " + tName + " " + exportFolder + tName);
