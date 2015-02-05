@@ -16,11 +16,12 @@
  * limitations under the License.
 */
 
-KylinApp.factory('ProjectService', ['$resource', function ($resource, config) {
-    return $resource(Config.service.url + 'projects/:projecId/:propName/:propValue/:action', {}, {
-        list: {method: 'GET', params: {}, isArray: true},
-        save: {method: 'POST', params: {}, isArray: false},
-        update: {method: 'PUT', params:{}, isArray: false},
-        delete: {method: 'DELETE', params: {}, isArray: false }
-    });
-}]);
+KylinApp.constant('tableConfig', {
+    theaditems : [
+        {attr: 'id', name: 'ID'},
+        {attr: 'name', name: 'Name'},
+        {attr: 'datatype', name: 'Data Type'},
+        {attr: 'cardinality', name: 'Cardinality'}
+    ]
+
+});

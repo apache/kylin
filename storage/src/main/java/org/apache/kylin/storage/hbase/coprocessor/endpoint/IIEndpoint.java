@@ -26,6 +26,7 @@ import com.google.protobuf.Service;
 import org.apache.kylin.invertedindex.index.RawTableRecord;
 import org.apache.kylin.invertedindex.index.Slice;
 import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
+import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.storage.filter.BitMapFilterEvaluator;
@@ -65,7 +66,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
 
     private Scan buildScan() {
         Scan scan = new Scan();
-        scan.addColumn(Bytes.toBytes("f"), Bytes.toBytes("c"));
+        scan.addColumn(Bytes.toBytes(IIDesc.HBASE_FAMILY), Bytes.toBytes(IIDesc.HBASE_QUALIFIER));
 
         return scan;
     }
@@ -106,6 +107,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
                 }
             }
         } catch (IOException ioe) {
+            System.out.println(ioe.toString());
             ResponseConverter.setControllerException(controller, ioe);
         } finally {
             IOUtils.closeQuietly(innerScanner);
