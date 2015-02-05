@@ -1,7 +1,7 @@
 'use strict';
 
 KylinApp
-    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,ProjectModel,ModelService) {
+    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,ProjectModel,ModelService,MetaModel) {
 
         $scope.listParams={
             cubeName: $routeParams.cubeName,
@@ -260,7 +260,8 @@ KylinApp
         $scope.startJobSubmit = function (cube) {
             ModelService.get({model_name: cube.detail.model_name}, function (model) {
                 if (model.name) {
-                    $scope.metaModel= model;
+                        $scope.metaModel = MetaModel;
+                        $scope.metaModel.model= model;
                     if (model.partition_desc.partition_date_column) {
                         $modal.open({
                             templateUrl: 'jobSubmit.html',

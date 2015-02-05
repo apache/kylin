@@ -10,17 +10,17 @@
                     style="height:150px"
                     class="form-control box-default"
                     placeholder="Please input WHERE clause without typing 'WHERE'"
-                    ng-model="metaModel.filter_condition">
+                    ng-model="metaModel.model.filter_condition">
             </textarea>
         </div>
         <!--Cube Detail-->
         <div class="form-group row" ng-if="state.mode=='view'"
              style="font-family:'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro'">
-            <div ng-if="metaModel.filter_condition" class="col-md-11 col-md-offset-1">
+            <div ng-if="metaModel.model.filter_condition" class="col-md-11 col-md-offset-1">
                 <p style="color: #930f80;"><b>WHERE</b></p>
-                <span>{{metaModel.filter_condition}}</span>
+                <span>{{metaModel.model.filter_condition}}</span>
             </div>
-            <div ng-if="!metaModel.filter_condition" no-result text="No Filter."></div>
+            <div ng-if="!metaModel.model.filter_condition" no-result text="No Filter."></div>
         </div>
     </div>
 

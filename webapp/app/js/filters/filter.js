@@ -90,14 +90,14 @@ KylinApp
         //convert GMT+0 time to specified Timezone
         return function(item,timezone,format){
 
-            if(!item){
+            if(angular.isUndefined(item)){
                 return "";
             }
 
-            if(!timezone){
-                timezone = kylinConfig.getTimeZone();
+            if(angular.isUndefined(timezone)||timezone===''){
+                timezone = kylinConfig.getTimeZone()==""?'PST':kylinConfig.getTimeZone();
             }
-            if(!format){
+            if(angular.isUndefined(format)||format===''){
                 format ="yyyy-MM-dd HH:mm:ss";
             }
 
@@ -127,7 +127,7 @@ KylinApp
                 timezone="PST";
                 convertedMillis = item-8*60*60000+localOffset*60000;
             }
-            return $filter('date')(convertedMillis, "yyyy-MM-dd HH:mm:ss")+ " "+timezone;
+            return $filter('date')(convertedMillis, format)+ " "+timezone;
 
         }
     }).filter('reverseToGMT0',function($filter){
