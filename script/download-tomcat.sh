@@ -9,3 +9,7 @@ wget http://mirror.sdunix.com/apache/tomcat/tomcat-7/v7.0.57/bin/apache-tomcat-7
 
 tar -zxvf apache-tomcat-7.0.57.tar.gz
 mv apache-tomcat-7.0.57 tomcat
+
+mv tomcat/conf/server.xml tomcat/conf/server.xml.bak
+cp deploy/server.xml tomcat/conf/server.xml
+echo "server.xml overwritten..."

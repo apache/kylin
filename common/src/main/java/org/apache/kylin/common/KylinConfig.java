@@ -136,6 +136,7 @@ public class KylinConfig {
     public static final String MAIL_SENDER = "mail.sender";
 
     public static final String KYLIN_HOME = "KYLIN_HOME";
+    public static final String KYLIN_CONF_HOME = "KYLIN_CONF_HOME";
 
     private static final Logger logger = LoggerFactory.getLogger(KylinConfig.class);
 
@@ -512,15 +513,24 @@ public class KylinConfig {
 //        return is;
 //    }
 
-    public static InputStream getKylinPropertiesAsInputSteam() {
-
+    private static File getKylinProperties() {
+        String kylinConfHome = System.getProperty(KYLIN_CONF_HOME);
+        if (StringUtils.isEmpty(kylinConfHome)) {
+            logger.warn("KYLIN_CONF_HOME has not been set");
+        } else {
+            return getKylinPropertiesFile(kylinConfHome);
+        }
         String kylinHome = System.getenv(KYLIN_HOME);
         if (StringUtils.isEmpty(kylinHome)) {
-            logger.error("KYLIN_HOME has not been set");
-            throw new RuntimeException("KYLIN_HOME has not been set");
+            logger.warn("KYLIN_HOME has not been set");
         }
         String path = kylinHome + "/conf";
-        File propFile = getKylinPropertiesFile(path);
+        return getKylinPropertiesFile(path);
+
+    }
+
+    public static InputStream getKylinPropertiesAsInputSteam() {
+        File propFile = getKylinProperties();
         if (propFile == null || !propFile.exists()) {
             logger.error("fail to locate kylin.properties");
             throw new RuntimeException("fail to locate kylin.properties");

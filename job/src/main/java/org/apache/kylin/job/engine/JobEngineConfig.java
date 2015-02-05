@@ -39,47 +39,66 @@ public class JobEngineConfig {
     private static final Logger logger = LoggerFactory.getLogger(JobEngineConfig.class);
     public static String HADOOP_JOB_CONF_FILENAME = "kylin_job_conf";
 
+    private static File getJobConfig(String fileName) {
+        String path = System.getProperty(KylinConfig.KYLIN_CONF_HOME);
+        if (StringUtils.isNotEmpty(path)) {
+            return new File(path, fileName);
+        }
+
+        path = System.getenv(KylinConfig.KYLIN_HOME);
+        if (StringUtils.isNotEmpty(path)) {
+            return new File(path + File.separator + "conf", fileName);
+        }
+        return null;
+    }
+
     private String getHadoopJobConfFilePath(RealizationCapacity capaticy, boolean appendSuffix) throws IOException {
         String hadoopJobConfFile;
-        if (appendSuffix)
+        if (appendSuffix) {
             hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + "_" + capaticy.toString().toLowerCase() + ".xml");
-        else
+        } else {
             hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + ".xml");
-
-        String path = System.getProperty(KylinConfig.KYLIN_CONF);
-
-        if (path == null) {
-            path = System.getenv(KylinConfig.KYLIN_CONF);
         }
 
-        if (path != null) {
-            path = path + File.separator + hadoopJobConfFile;
+        final File jobConfig = getJobConfig(hadoopJobConfFile);
+        if (jobConfig == null || !jobConfig.exists()) {
+            logger.error("fail to locate " + hadoopJobConfFile);
+            throw new RuntimeException("fail to locate " + hadoopJobConfFile);
         }
+//        String path = System.getProperty(KylinConfig.KYLIN_CONF_HOME);
+//
+//        if (path == null) {
+//            path = System.getenv(KylinConfig.KYLIN_CONF);
+//        }
+//
+//        if (path != null) {
+//            path = path + File.separator + hadoopJobConfFile;
+//        }
+//
+//        if (null == path || !new File(path).exists()) {
+//            File defaultFilePath = new File("/etc/kylin/" + hadoopJobConfFile);
+//
+//            if (defaultFilePath.exists()) {
+//                path = defaultFilePath.getAbsolutePath();
+//            } else {
+//                logger.debug("Search conf file " + hadoopJobConfFile + "  from classpath ...");
+//                InputStream is = JobEngineConfig.class.getClassLoader().getResourceAsStream(hadoopJobConfFile);
+//                if (is == null) {
+//                    logger.debug("Can't get " + hadoopJobConfFile + " from classpath");
+//                    logger.debug("No " + hadoopJobConfFile + " file were found");
+//                } else {
+//                    File tmp = File.createTempFile(HADOOP_JOB_CONF_FILENAME, ".xml");
+//                    inputStreamToFile(is, tmp);
+//                    path = tmp.getAbsolutePath();
+//                }
+//            }
+//        }
+//
+//        if (null == path || !new File(path).exists()) {
+//            return "";
+//        }
 
-        if (null == path || !new File(path).exists()) {
-            File defaultFilePath = new File("/etc/kylin/" + hadoopJobConfFile);
-
-            if (defaultFilePath.exists()) {
-                path = defaultFilePath.getAbsolutePath();
-            } else {
-                logger.debug("Search conf file " + hadoopJobConfFile + "  from classpath ...");
-                InputStream is = JobEngineConfig.class.getClassLoader().getResourceAsStream(hadoopJobConfFile);
-                if (is == null) {
-                    logger.debug("Can't get " + hadoopJobConfFile + " from classpath");
-                    logger.debug("No " + hadoopJobConfFile + " file were found");
-                } else {
-                    File tmp = File.createTempFile(HADOOP_JOB_CONF_FILENAME, ".xml");
-                    inputStreamToFile(is, tmp);
-                    path = tmp.getAbsolutePath();
-                }
-            }
-        }
-
-        if (null == path || !new File(path).exists()) {
-            return "";
-        }
-
-        return OptionsHelper.convertToFileURL(path);
+        return OptionsHelper.convertToFileURL(jobConfig.getAbsolutePath());
     }
 
     public String getHadoopJobConfFilePath(RealizationCapacity capaticy) throws IOException {

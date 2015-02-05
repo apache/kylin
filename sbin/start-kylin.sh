@@ -5,7 +5,7 @@ dir=$(dirname ${0})
 tomcat_root=${dir}/../tomcat
 export tomcat_root
 
-sh ${dir}/check-env.sh
+sh ${dir}/check-env.sh || { exit 1; }
 
 #if [ ! -z "$KYLIN_LD_LIBRARY_PATH" ]
 #then
