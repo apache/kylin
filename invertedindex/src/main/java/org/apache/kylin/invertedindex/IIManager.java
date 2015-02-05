@@ -32,6 +32,7 @@ import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.metadata.realization.IRealizationProvider;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.slf4j.Logger;
@@ -182,18 +183,6 @@ public class IIManager implements IRealizationProvider {
         return ii;
     }
 
-    public static String getHBaseStorageLocationPrefix() {
-        return "KYLIN_II_";
-    }
-
-    /**
-     * For each htable, we leverage htable's metadata to keep track of which
-     * kylin server(represented by its kylin_metadata prefix) owns this htable
-     */
-    public static String getHtableMetadataKey() {
-        return "KYLIN_HOST";
-    }
-
     public void loadIICache(String iiName) {
         try {
             loadIIInstance(IIInstance.concatResourcePath(iiName));
@@ -212,10 +201,10 @@ public class IIManager implements IRealizationProvider {
 
     public void removeIILocalCache(String name) {
         iiMap.removeLocal(name);
-//TODO
-//        for (IISegment segment : ii.getSegments()) {
-//            usedStorageLocation.remove(segment.getName());
-//        }
+        //TODO
+        //        for (IISegment segment : ii.getSegments()) {
+        //            usedStorageLocation.remove(segment.getName());
+        //        }
     }
 
     private void saveResource(IIInstance ii) throws IOException {
@@ -251,7 +240,7 @@ public class IIManager implements IRealizationProvider {
     }
 
     private String generateStorageLocation() {
-        String namePrefix = getHBaseStorageLocationPrefix();
+        String namePrefix = IRealizationConstants.IIHbaseStorageLocationPrefix;
         String tableName = "";
         do {
             StringBuffer sb = new StringBuffer();
@@ -304,11 +293,9 @@ public class IIManager implements IRealizationProvider {
         }
     }
 
-
     private DictionaryManager getDictionaryManager() {
         return DictionaryManager.getInstance(config);
     }
-
 
     private ResourceStore getStore() {
         return ResourceStore.getStore(this.config);

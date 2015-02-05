@@ -52,7 +52,7 @@ import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.cube.model.HBaseMappingDesc;
 import org.apache.kylin.cube.model.HierarchyDesc;
 import org.apache.kylin.cube.model.RowKeyDesc;
-import org.apache.kylin.metadata.MetadataConstances;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataType;
@@ -304,7 +304,7 @@ public class CubeDesc extends RootPersistentEntity {
     }
 
     public static String getCubeDescResourcePath(String descName) {
-        return ResourceStore.CUBE_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstances.FILE_SURFIX;
+        return ResourceStore.CUBE_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstants.FILE_SURFIX;
     }
 
     // ============================================================================

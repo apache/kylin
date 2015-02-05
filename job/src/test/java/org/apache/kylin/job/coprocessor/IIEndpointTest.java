@@ -25,7 +25,7 @@ import org.apache.kylin.common.util.HBaseMetadataTestCase;
 /**
  * Created by Hongbin Ma(Binmahone) on 11/14/14.
  */
-@Ignore("ii not ready")
+@Ignore("minicluster ii not ready")
 public class IIEndpointTest extends HBaseMetadataTestCase {
 /*
     private static HConnection hconn;

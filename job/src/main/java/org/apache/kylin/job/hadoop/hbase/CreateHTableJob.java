@@ -46,6 +46,7 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,7 +82,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
         // https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/regionserver/ConstantSizeRegionSplitPolicy.html
         tableDesc.setValue(HTableDescriptor.SPLIT_POLICY, ConstantSizeRegionSplitPolicy.class.getName());
-        tableDesc.setValue(CubeManager.getHTableMetadataKey(), config.getMetadataUrlPrefix());
+        tableDesc.setValue(IRealizationConstants.HTableTag, config.getMetadataUrlPrefix());
 
         Configuration conf = HBaseConfiguration.create(getConf());
         HBaseAdmin admin = new HBaseAdmin(conf);
@@ -133,8 +134,6 @@ public class CreateHTableJob extends AbstractHadoopJob {
         }
     }
 
-
-
     @SuppressWarnings("deprecation")
     public byte[][] getSplits(Configuration conf, Path path) throws Exception {
         FileSystem fs = path.getFileSystem(conf);
@@ -158,7 +157,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         } finally {
             IOUtils.closeStream(reader);
         }
-        
+
         logger.info((rowkeyList.size() + 1) + " regions");
         logger.info(rowkeyList.size() + " splits");
         for (byte[] split : rowkeyList) {

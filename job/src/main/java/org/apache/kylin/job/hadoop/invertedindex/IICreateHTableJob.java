@@ -37,6 +37,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
+import org.apache.kylin.metadata.realization.IRealizationConstants;
 
 /**
  * @author George Song (ysong1)
@@ -55,7 +56,9 @@ public class IICreateHTableJob extends AbstractHadoopJob {
             String tableName = getOptionValue(OPTION_HTABLE_NAME);
             String iiName = getOptionValue(OPTION_II_NAME);
 
-            IIInstance ii = IIManager.getInstance(KylinConfig.getInstanceFromEnv()).getII(iiName);
+            KylinConfig config = KylinConfig.getInstanceFromEnv();
+            IIManager iiManager = IIManager.getInstance(config);
+            IIInstance ii = iiManager.getII(iiName);
             int sharding = ii.getDescriptor().getSharding();
 
             HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
@@ -64,6 +67,7 @@ public class IICreateHTableJob extends AbstractHadoopJob {
             //cf.setCompressionType(Algorithm.LZO);
             cf.setDataBlockEncoding(DataBlockEncoding.FAST_DIFF);
             tableDesc.addFamily(cf);
+            tableDesc.setValue(IRealizationConstants.HTableTag, config.getMetadataUrlPrefix());
 
             Configuration conf = HBaseConfiguration.create(getConf());
             if (User.isHBaseSecurityEnabled(conf)) {
