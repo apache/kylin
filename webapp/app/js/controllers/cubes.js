@@ -107,7 +107,7 @@ KylinApp
         $scope.loadDetail = function (cube) {
             if (!cube.detail) {
                 CubeDescService.get({cube_name: cube.name}, {}, function (detail) {
-                    if (detail.length > 0) {
+                    if (detail.length > 0&&detail[0].hasOwnProperty("name")) {
                         cube.detail = detail[0];
                     }else{
                         SweetAlert.swal('Oops...', "No cube detail info loaded.", 'error');
