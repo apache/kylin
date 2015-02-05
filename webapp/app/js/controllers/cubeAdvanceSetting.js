@@ -9,8 +9,6 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
             }
         }
     );
-    console.log($scope.cubeMetaFrame.rowkey.rowkey_columns);
-
     if($scope.state.mode==="edit") {
         $scope.metaModel = MetaModel;
     }
