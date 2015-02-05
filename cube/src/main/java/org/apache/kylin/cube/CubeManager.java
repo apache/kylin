@@ -254,6 +254,9 @@ public class CubeManager implements IRealizationProvider {
     public Pair<CubeSegment, CubeSegment> appendAndMergeSegments(CubeInstance cube, long endDate) throws IOException {
         checkNoBuildingSegment(cube);
         checkCubeIsPartitioned(cube);
+        
+        if (cube.getSegments().size() == 0)
+            throw new IllegalStateException("expect at least one existing segment");
 
         long appendStart = calculateStartDateForAppendSegment(cube);
         CubeSegment appendSegment = newSegment(cube, appendStart, endDate);

@@ -266,7 +266,7 @@ public class CubeSegment implements Comparable<CubeSegment>, ISegment {
     }
 
     public void validate() {
-        if (dateRangeStart >= dateRangeEnd)
+        if (cubeInstance.getDescriptor().getModel().getPartitionDesc().isPartitioned() && dateRangeStart >= dateRangeEnd)
             throw new IllegalStateException("dateRangeStart(" + dateRangeStart + ") must be greater than dateRangeEnd(" + dateRangeEnd + ") in segment " + this);
     }
 
