@@ -37,6 +37,6 @@
   "partition_desc" : {
     "partition_date_column" : "DEFAULT.TEST_KYLIN_FACT.cal_dt",
     "partition_date_start" : 0,
-    "partition_type" : "UPDATE_INSERT"
+    "partition_type" : "APPEND"
   }
 }

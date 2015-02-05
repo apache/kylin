@@ -1,10 +1,24 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 'use strict';
 
 KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
-
-//    if($scope.state.mode==="edit") {
-//        $scope.metaModel = MetaModel;
-//    }
 
     // Available columns list derived from cube data model.
     $scope.availableColumns = {};
@@ -120,7 +134,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
 
     // Init the dimension, dimension name default as the column key. TODO new cube schema change.
     var Dimension = function (table, selectedCols, dimType) {
-        var origin = {name: '', table: table};
+        var origin = {name: '', table: table,hierarchy:false,derived:null,column:null};
 
         switch (dimType) {
             case 'normal':
@@ -130,7 +144,6 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
                 }
 
                 origin.column = selectedCols;
-                origin.hierarchy = false;
                 break;
 
             case 'derived':
@@ -138,7 +151,6 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
                     origin.name = table + '_derived';
                 }
 
-                origin.column = null;
                 origin.derived = selectedCols;
                 break;
 

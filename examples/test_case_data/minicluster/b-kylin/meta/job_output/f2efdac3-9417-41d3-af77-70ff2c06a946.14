@@ -1,6 +1,0 @@
-{
-  "uuid" : null,
-  "name" : "f2efdac3-9417-41d3-af77-70ff2c06a946.14",
-  "output" : "Start to execute command: \n -input /tmp/kylin-f2efdac3-9417-41d3-af77-70ff2c06a946/test_kylin_cube_without_slr_left_join_empty/hfile/ -htablename KYLIN_SQO51ADCMU -cubename test_kylin_cube_without_slr_left_join_empty\nCommand execute return code 0\n",
-  "last_modified" : 1416535575973
-}

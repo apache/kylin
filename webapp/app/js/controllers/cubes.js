@@ -1,29 +1,40 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 'use strict';
 
 KylinApp
-    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,ProjectModel,ModelService,MetaModel) {
+    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,cubeConfig,ProjectModel,ModelService,MetaModel) {
+
+        $scope.cubeConfig = cubeConfig;
 
         $scope.listParams={
             cubeName: $routeParams.cubeName,
             projectName: $routeParams.projectName
         };
         if($routeParams.projectName){
-            $scope.projectModel.selectedProject = $routeParams.projectName;
             $scope.projectModel.setSelectedProject($routeParams.projectName);
         }
         $scope.cubes = [];
         $scope.loading = false;
         $scope.action = {};
 
-        $scope.theaditems = [
-            {attr: 'name', name: 'Name'},
-            {attr: 'status', name: 'Status'},
-            {attr: 'size_kb', name: 'Cube Size'},
-            {attr: 'source_records_count', name: 'Source Records'},
-            {attr: 'last_build_time', name: 'Last Build Time'},
-            {attr: 'owner', name: 'Owner'},
-            {attr: 'create_time', name: 'Create Time'}
-        ];
+
 
         $scope.state = { filterAttr: 'create_time', filterReverse: true, reverseColumn: 'create_time',
             dimensionFilter: '', measureFilter: ''};
@@ -89,8 +100,10 @@ KylinApp
         $scope.loadDetail = function (cube) {
             if (!cube.detail) {
                 CubeDescService.get({cube_name: cube.name}, {}, function (detail) {
-                    if (detail.length > 0) {
+                    if (detail.length > 0&&detail[0].hasOwnProperty("name")) {
                         cube.detail = detail[0];
+                    }else{
+                        SweetAlert.swal('Oops...', "No cube detail info loaded.", 'error');
                     }
                 }, function (e) {
                     if(e.data&& e.data.exception){
