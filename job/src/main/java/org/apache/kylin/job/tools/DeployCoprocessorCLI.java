@@ -299,7 +299,7 @@ public class DeployCoprocessorCLI {
         }
 
         for (IIInstance ii : IIManager.getInstance(config).listAllIIs()) {
-            for (IISegment seg : ii.getSegment(SegmentStatusEnum.READY)) {
+            for (IISegment seg : ii.getSegments(SegmentStatusEnum.READY)) {
                 String tableName = seg.getStorageLocationIdentifier();
                 if (StringUtils.isBlank(tableName) == false) {
                     result.add(tableName);

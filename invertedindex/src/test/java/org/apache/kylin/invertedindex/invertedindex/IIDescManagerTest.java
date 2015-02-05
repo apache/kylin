@@ -31,15 +31,18 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by shaoshi on 1/30/15.
  */
 public class IIDescManagerTest extends LocalFileMetadataTestCase {
 
+    public static final String TEST_II_DESC_NAME = "test_kylin_ii_desc";
+
     @Before
     public void setup() {
-        this.createTestMetadata();
+        createTestMetadata();
     }
 
     @After
@@ -51,7 +54,7 @@ public class IIDescManagerTest extends LocalFileMetadataTestCase {
     public void testCRUD() throws IOException {
         IIDescManager mgr = IIDescManager.getInstance(getTestConfig());
 
-        String newDescName = "Copy of test_kylin_ii_desc";
+        String newDescName = "Copy of " + TEST_II_DESC_NAME;
 
         try {
             IIDesc testRecord = mgr.getIIDesc(newDescName);
@@ -62,7 +65,7 @@ public class IIDescManagerTest extends LocalFileMetadataTestCase {
         }
 
         Assert.assertNull(mgr.getIIDesc(newDescName));
-        IIDesc desc = mgr.getIIDesc("test_kylin_ii_desc");
+        IIDesc desc = mgr.getIIDesc(TEST_II_DESC_NAME);
 
         desc.setName(newDescName);
         desc.setLastModified(0);
@@ -84,19 +87,25 @@ public class IIDescManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGetIIsByDesc() throws IOException {
-        IIManager mgr = IIManager.getInstance(getTestConfig());
+    public void testReload() throws IOException {
+        IIDescManager mgr = IIDescManager.getInstance(getTestConfig());
 
-        List<IIInstance> iiInstances = mgr.getIIsByDesc("test_kylin_ii_desc");
+        IIDesc desc = mgr.getIIDesc(TEST_II_DESC_NAME);
 
-        Assert.assertTrue(iiInstances.size() > 0);
+        // do some modification
+        desc.setUuid(UUID.randomUUID().toString());
 
+        IIDesc newDesc = mgr.getIIDesc(TEST_II_DESC_NAME);
 
-        IIInstance instance = iiInstances.get(0);
+        Assert.assertEquals(desc, newDesc);
 
-        Dictionary dict = mgr.getDictionary(instance.getFirstSegment(), instance.getDescriptor().findColumnRef("DEFAULT.TEST_KYLIN_FACT", "LSTG_SITE_ID"));
+        // reload the cache
+        mgr.reloadIIDesc(TEST_II_DESC_NAME);
 
-        Assert.assertNotNull(dict);
+        newDesc = mgr.getIIDesc(TEST_II_DESC_NAME);
+
+        Assert.assertNotEquals(desc, newDesc);
+
     }
 
 }
