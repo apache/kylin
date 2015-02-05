@@ -240,7 +240,6 @@ public class BuildIIWithEngineTest {
         if (exitCode == 0) {
             exportHBaseData();
         }
-
     }
 
     private void exportHBaseData() throws IOException {

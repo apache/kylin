@@ -28,6 +28,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.MiniHBaseCluster;
+import org.apache.hadoop.hbase.coprocessor.CoprocessorHost;
 import org.apache.hadoop.hbase.mapreduce.Import;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.GenericOptionsParser;
@@ -43,13 +44,13 @@ import org.apache.kylin.common.persistence.HBaseResourceStore;
  */
 public class HBaseMiniclusterHelper {
 
+    public static final String SHARED_STORAGE_PREFIX = "KYLIN_";
+    private static final String TEST_METADATA_TABLE = "kylin_metadata_qa";
     private static HBaseTestingUtility UTIL = new HBaseTestingUtility();
     private static MiniHBaseCluster hbaseCluster = null;
     private static volatile boolean clusterStarted = false;
     private static Configuration config = null;
     private static String hbaseconnectionUrl = "";
-    private static final String TEST_METADATA_TABLE = "kylin_metadata_qa";
-    private static final String SHARED_STORAGE_PREFIX = "KYLIN_";
 
     private static final Log logger = LogFactory.getLog(HBaseMiniclusterHelper.class);
 
@@ -91,6 +92,7 @@ public class HBaseMiniclusterHelper {
     private static void startupMiniClusterAndImportData() throws Exception {
 
         System.out.println("Going to start mini cluster.");
+        //UTIL.getConfiguration().setStrings(CoprocessorHost.REGION_COPROCESSOR_CONF_KEY, IIEndpoint.class.getName());
         hbaseCluster = UTIL.startMiniCluster();
 
         config = hbaseCluster.getConf();
