@@ -47,7 +47,7 @@ public class MetadataUpgradeTest extends LocalFileMetadataTestCase {
 
     @Before
     public void setUp() throws Exception {
-        this.createTestMetadata(LOCALMETA_TEST_DATA_V1);
+        createTestMetadata(LOCALMETA_TEST_DATA_V1);
     }
 
     @After
