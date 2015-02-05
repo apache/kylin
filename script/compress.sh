@@ -13,4 +13,4 @@ fi
 
 #package tgz
 echo 'package tgz'
-tar -zcvf kylin-${version}.tgz lib bin conf
+tar -zcvf kylin-${version}.tgz lib bin conf tomcat
