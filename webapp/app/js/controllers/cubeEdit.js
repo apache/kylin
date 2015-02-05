@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 'use strict';
 
 
@@ -91,15 +109,15 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         generateColumnFamily();
 
         // Clean up objects used in cube creation
-        angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
-            delete dimension.status;
-
-            for (var key in dimension) {
-                if (dimension.hasOwnProperty(key) && !dimension[key]) {
-                    delete dimension[key];
-                }
-            }
-        });
+//        angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
+//            delete dimension.status;
+//
+//            for (var key in dimension) {
+//                if (dimension.hasOwnProperty(key) && !dimension[key]) {
+//                    delete dimension[key];
+//                }
+//            }
+//        });
 
 
         if ($scope.metaModel.model.partition_desc.partition_date_column&&($scope.metaModel.model.partition_desc.partition_date_start|$scope.metaModel.model.partition_desc.partition_date_start==0)) {
@@ -110,8 +128,12 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
 
             if($scope.metaModel.model.partition_desc.partition_date_column.indexOf(".")==-1){
-                $scope.metaModel.model.partition_desc.partition_date_column=$scope.metaModel.model.fact_table+"."+$scope.metaModel.model.partition_desc.partition_date_column;
+            $scope.metaModel.model.partition_desc.partition_date_column=$scope.metaModel.model.fact_table+"."+$scope.metaModel.model.partition_desc.partition_date_column;
             }
+
+        }
+        if($scope.cubeMetaFrame.model_name===""||angular.isUndefined($scope.cubeMetaFrame.model_name)){
+            $scope.cubeMetaFrame.model_name = $scope.cubeMetaFrame.name;
         }
 
         $scope.state.project = $scope.cubeMetaFrame.project;
