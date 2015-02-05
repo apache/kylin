@@ -124,7 +124,7 @@
                             <table class="table table-hover table-striped list">
                                 <thead>
                                 <tr style="cursor: pointer">
-                                    <th ng-repeat="theaditem in theaditems"
+                                    <th ng-repeat="theaditem in tableConfig.theaditems"
                                         ng-click="state.filterAttr= theaditem.attr;state.reverseColumn=theaditem.attr;state.filterReverse=!state.filterReverse;">
                                         {{theaditem.name}}
                                         <i ng-if="state.reverseColumn!= theaditem.attr"

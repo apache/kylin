@@ -28,7 +28,6 @@ KylinApp
             projectName: $routeParams.projectName
         };
         if($routeParams.projectName){
-            $scope.projectModel.selectedProject = $routeParams.projectName;
             $scope.projectModel.setSelectedProject($routeParams.projectName);
         }
         $scope.cubes = [];
