@@ -23,9 +23,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
-
-import org.apache.kylin.dict.ISegment;
 import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.dict.ISegment;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
@@ -73,7 +72,7 @@ public class IISegment implements Comparable<IISegment>, ISegment {
 
     @JsonProperty("create_time_utc")
     private long createTimeUTC;
-    
+
     @JsonProperty("binary_signature")
     private String binarySignature; // a hash of schema and dictionary ID,
     // used for sanity check
@@ -248,40 +247,6 @@ public class IISegment implements Comparable<IISegment>, ISegment {
         }
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((iiInstance == null) ? 0 : iiInstance.hashCode());
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + ((status == null) ? 0 : status.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        IISegment other = (IISegment) obj;
-        if (iiInstance == null) {
-            if (other.iiInstance != null)
-                return false;
-        } else if (!iiInstance.equals(other.iiInstance))
-            return false;
-        if (name == null) {
-            if (other.name != null)
-                return false;
-        } else if (!name.equals(other.name))
-            return false;
-        if (status != other.status)
-            return false;
-        return true;
-    }
-
     private TableRecordInfo getTableRecordInfo() {
         if (tableRecordInfo == null)
             tableRecordInfo = new TableRecordInfo(this);
@@ -318,6 +283,6 @@ public class IISegment implements Comparable<IISegment>, ISegment {
     public void setCreateTimeUTC(long createTimeUTC) {
         this.createTimeUTC = createTimeUTC;
     }
-    
-    
+
+
 }

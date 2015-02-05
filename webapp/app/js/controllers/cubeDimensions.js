@@ -2,9 +2,9 @@
 
 KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
 
-    if(!$scope.metaModel.name){
-        $scope.metaModel = MetaModel.getMetaModel();
-    }
+//    if($scope.state.mode==="edit") {
+//        $scope.metaModel = MetaModel;
+//    }
 
     // Available columns list derived from cube data model.
     $scope.availableColumns = {};
@@ -46,7 +46,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
 
     // Dump available columns plus column table name, whether is from lookup table.
     $scope.initColumns = function () {
-        var factTable = $scope.metaModel.fact_table;
+        var factTable = $scope.metaModel.model.fact_table;
 
         // At first dump the columns of fact table.
         var cols = $scope.getColumnsByTable(factTable);
@@ -70,7 +70,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
         $scope.availableTables.push(factTable);
 
         // Then dump each lookup tables.
-        var lookups = $scope.metaModel.lookups;
+        var lookups = $scope.metaModel.model.lookups;
 
         for (var j = 0; j < lookups.length; j++) {
             var cols2 = $scope.getColumnsByTable(lookups[j].table);
@@ -129,7 +129,8 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
                     origin.name = table + '.' + selectedCols[0];
                 }
 
-                origin.column = selectedCols[0];
+                origin.column = selectedCols;
+                origin.hierarchy = false;
                 break;
 
             case 'derived':
@@ -137,7 +138,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
                     origin.name = table + '_derived';
                 }
 
-                origin.column = '{FK}';
+                origin.column = null;
                 origin.derived = selectedCols;
                 break;
 
@@ -146,7 +147,8 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
                     origin.name = table + '_hierarchy';
                 }
 
-                origin.hierarchy = selectedCols;
+                origin.hierarchy = true;
+                origin.column = selectedCols;
                 break;
         }
 
@@ -313,7 +315,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
         var selectedCols = $scope.getSelectedCols();
 
         angular.forEach(selectedCols, function (cols, table) {
-            if ($scope.metaModel.fact_table == table) {
+            if ($scope.metaModel.model.fact_table == table) {
                 // Fact table: for each selected column, create one normal dimension.
                 for (var i = 0; i < cols.length; i++) {
                     dimList.push(Dimension(table, [cols[i]], 'normal'));

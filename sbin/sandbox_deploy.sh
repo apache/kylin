@@ -113,7 +113,7 @@ echo "retrieving classpath..."
 cd $KYLIN_HOME/job/target
 JOB_JAR_NAME="kylin-job-latest.jar"
 #export hbase configs, most of the configurations are useless now, but KYLIN_HBASE_CONF_PATH is used by SampleCubeSetupTest now
-hbase org.apache.hadoop.util.RunJar $JOB_JAR_NAME org.apache.kylin.job.deployment.HbaseConfigPrinter /tmp/kylin_retrieve.sh
+hbase org.apache.hadoop.util.RunJar $JOB_JAR_NAME org.apache.kylin.job.deployment.HbaseConfigPrinterCLI /tmp/kylin_retrieve.sh
 #load config variables
 source /tmp/kylin_retrieve.sh
 
