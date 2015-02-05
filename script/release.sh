@@ -30,5 +30,6 @@ echo ${dir}
 
 sh ${dir}/package.sh
 sh ${dir}/prepare.sh
+sh ${dir}/download-tomcat.sh
 sh ${dir}/compress.sh
 

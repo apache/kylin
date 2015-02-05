@@ -529,7 +529,6 @@
         <module>server</module>
         <module>jdbc</module>
         <module>invertedindex</module>
-        <module>bootstrap</module>
     </modules>
 
     <profiles>
