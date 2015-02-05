@@ -51,7 +51,7 @@ import org.apache.kylin.metadata.model.*;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class IIDesc extends RootPersistentEntity {
 
-    public static final String HBASE_FAMILY = "F1";
+    public static final String HBASE_FAMILY = "f";
     public static final String HBASE_QUALIFIER = "c";
     public static final byte[] HBASE_FAMILY_BYTES = Bytes.toBytes(HBASE_FAMILY);
     public static final byte[] HBASE_QUALIFIER_BYTES = Bytes.toBytes(HBASE_QUALIFIER);
