@@ -51,11 +51,7 @@ public class BasicTest {
     @Test
     @Ignore("convenient trial tool for dev")
     public void test1() throws IOException, InterruptedException {
-        String leftAlignFormat = "| %-100s | %n";
 
-        System.out.format("+------------------------------------------------------------------------------------------------------+%n");
-        System.out.format(leftAlignFormat, "aaaadfafdsadddaaaadfafdsaddddddddddddddddddaaaadfafdsaddddddddddddddddddaaaadfafdsaddddddddddddddddddaaaadfafdsaddddddddddddddddddaaaadfafdsaddddddddddddddddddaaaadfafdsaddddddddddddddddddddddddddddddddd");
-        System.out.format("+------------------------------------------------------------------------------------------------------+%n");
 
     }
 
