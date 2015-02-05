@@ -20,10 +20,6 @@
 
 KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
 
-//    if($scope.state.mode==="edit") {
-//        $scope.metaModel = MetaModel;
-//    }
-
     // Available columns list derived from cube data model.
     $scope.availableColumns = {};
 
@@ -155,7 +151,6 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
                     origin.name = table + '_derived';
                 }
 
-                origin.column = null;
                 origin.derived = selectedCols;
                 break;
 

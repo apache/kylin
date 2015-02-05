@@ -19,26 +19,13 @@
 'use strict';
 
 KylinApp
-    .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,SweetAlert,loadingRequest,UserService) {
+    .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,SweetAlert,loadingRequest,UserService,jobConfig) {
+        $scope.jobConfig = jobConfig;
         $scope.cubeName = null;
         $scope.jobs = {};
         $scope.projects = [];
         $scope.action = {};
-        $scope.allStatus = [
-            {name: 'NEW', value: 0},
-            {name: 'PENDING', value: 1},
-            {name: 'RUNNING', value: 2},
-            {name: 'FINISHED', value: 4},
-            {name: 'ERROR', value: 8},
-            {name: 'DISCARDED', value: 16}
-        ];
-        $scope.theaditems = [
-            {attr: 'name', name: 'Job Name'},
-            {attr: 'related_cube', name: 'Cube'},
-            {attr: 'progress', name: 'Progress'},
-            {attr: 'last_modified', name: 'Last Modified Time'},
-            {attr: 'duration', name: 'Duration'}
-        ];
+
         $scope.status = [];
         $scope.toggleSelection = function toggleSelection(current) {
             var idx = $scope.status.indexOf(current);

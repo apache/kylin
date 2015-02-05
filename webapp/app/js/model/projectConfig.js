@@ -16,8 +16,12 @@
  * limitations under the License.
 */
 
-'use strict';
-
-KylinApp.controller('CubeFilterCtrl', function ($scope, $modal,cubeConfig,ModelService,MetaModel) {
+KylinApp.constant('projectConfig', {
+    theaditems : [
+        {attr: 'name', name: 'Name'},
+        {attr: 'owner', name: 'Owner'},
+        {attr: 'description', name: 'Description'},
+        {attr: 'create_time', name: 'Create Time'}
+    ]
 
 });
