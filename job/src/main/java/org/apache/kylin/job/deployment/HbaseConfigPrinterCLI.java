@@ -38,7 +38,7 @@ import org.apache.kylin.job.tools.LZOSupportnessChecker;
  * in the shell, so that hbase and hadoop related environment variables will be
  * visible to this class.
  */
-public class HbaseConfigPrinter {
+public class HbaseConfigPrinterCLI {
     public static void main(String[] args) throws IOException {
         if (args.length != 1) {
             System.out.println("Usage: hbase org.apache.hadoop.util.RunJar kylin-job-0.5.7-SNAPSHOT-job.jar org.apache.kylin.job.deployment.HadoopConfigPrinter targetFile");
