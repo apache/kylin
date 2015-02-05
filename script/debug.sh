@@ -28,6 +28,6 @@ dir=$(dirname ${0})
 echo ${pwd}
 echo ${dir}
 
-sh ${dir}/package.sh
-sh ${dir}/prepare.sh
+sh ${dir}/package.sh || { exit 1; }
+sh ${dir}/prepare.sh || { exit 1; }
 
