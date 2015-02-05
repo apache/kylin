@@ -19,19 +19,15 @@
 'use strict';
 
 KylinApp
-    .controller('SourceMetaCtrl', function ($scope,$cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService,$route,loadingRequest,SweetAlert) {
+    .controller('SourceMetaCtrl', function ($scope,$cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService,$route,loadingRequest,SweetAlert,tableConfig) {
         var $httpDefaultCache = $cacheFactory.get('$http');
         $scope.srcTables = {};
         $scope.srcDbs = [];
         $scope.selectedSrcDb = [];
         $scope.selectedSrcTable = {};
         $scope.window = 0.68 * $window.innerHeight;
-        $scope.theaditems = [
-            {attr: 'id', name: 'ID'},
-            {attr: 'name', name: 'Name'},
-            {attr: 'datatype', name: 'Data Type'},
-            {attr: 'cardinality', name: 'Cardinality'}
-        ];
+        $scope.tableConfig = tableConfig;
+
         $scope.hiveTbLoad={
             status:"init"
         }
