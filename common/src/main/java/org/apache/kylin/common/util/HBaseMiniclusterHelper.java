@@ -37,27 +37,21 @@ import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.common.persistence.HBaseResourceStore;
 
 /**
- * A base class for running unit tests with HBase minicluster;
+ * a helper class to start and shutdown hbase mini cluster
  *
  * @author shaoshi
  */
-public class HBaseMiniclusterMetadataTestCase {
+public class HBaseMiniclusterHelper {
 
     private static HBaseTestingUtility UTIL = new HBaseTestingUtility();
-
-    protected static MiniHBaseCluster hbaseCluster = null;
-
+    private static MiniHBaseCluster hbaseCluster = null;
     private static volatile boolean clusterStarted = false;
+    private static Configuration config = null;
+    private static String hbaseconnectionUrl = "";
+    private static final String TEST_METADATA_TABLE = "kylin_metadata_qa";
+    private static final String SHARED_STORAGE_PREFIX = "KYLIN_";
 
-    protected static Configuration config = null;
-
-    protected static String hbaseconnectionUrl = "";
-    
-    public static final String TEST_METADATA_TABLE = "kylin_metadata_qa";
-    
-    public static final String CUBE_STORAGE_PREFIX = "KYLIN_";
-
-    private static final Log logger = LogFactory.getLog(HBaseMiniclusterMetadataTestCase.class);
+    private static final Log logger = LogFactory.getLog(HBaseMiniclusterHelper.class);
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -77,7 +71,7 @@ public class HBaseMiniclusterMetadataTestCase {
         HBaseMetadataTestCase.staticCreateTestMetadata(HBaseMetadataTestCase.MINICLUSTER_TEST_DATA);
 
         if (!clusterStarted) {
-            synchronized (HBaseMiniclusterMetadataTestCase.class) {
+            synchronized (HBaseMiniclusterHelper.class) {
                 if (!clusterStarted) {
                     startupMiniClusterAndImportData();
                     clusterStarted = true;
@@ -114,9 +108,9 @@ public class HBaseMiniclusterMetadataTestCase {
 
         hbaseconnectionUrl = "hbase:" + host + ":" + port + ":" + parent;
         updateKylinConfigWithMinicluster();
-        
+
         UTIL.startMiniMapReduceCluster();
-        
+
         // create the metadata htables;
         @SuppressWarnings("unused")
         HBaseResourceStore store = new HBaseResourceStore(KylinConfig.getInstanceFromEnv());
@@ -133,15 +127,14 @@ public class HBaseMiniclusterMetadataTestCase {
             System.err.println("Skip table import...");
             return;
         }
-        File exportFile = new File("../examples/test_case_data/minicluster/hbase-export.tar.gz");
 
+        File exportFile = new File("../examples/test_case_data/minicluster/hbase-export.tar.gz");
         if (!exportFile.exists()) {
             logger.error("Didn't find the export archieve file on " + exportFile.getAbsolutePath());
             return;
         }
 
         File folder = new File("/tmp/hbase-export/");
-
         if (folder.exists()) {
             FileUtils.deleteDirectory(folder);
         }
@@ -150,34 +143,29 @@ public class HBaseMiniclusterMetadataTestCase {
         folder.deleteOnExit();
 
         TarGZUtil.uncompressTarGZ(exportFile, folder);
-
         String[] child = folder.list();
-
         assert child.length == 1;
-
-        String backupTime = child[0];
-
-        File backupFolder = new File(folder, backupTime);
-
+        String backupFolderName = child[0];
+        File backupFolder = new File(folder, backupFolderName);
         String[] tableNames = backupFolder.list();
 
         for (String table : tableNames) {
 
-            if (!(table.equalsIgnoreCase(TEST_METADATA_TABLE) || table.startsWith(CUBE_STORAGE_PREFIX))) {
+            if (!(table.equalsIgnoreCase(TEST_METADATA_TABLE) || table.startsWith(SHARED_STORAGE_PREFIX))) {
                 continue;
             }
 
-            if (table.startsWith(CUBE_STORAGE_PREFIX)) {
+            if (table.startsWith(SHARED_STORAGE_PREFIX)) {
                 // create the cube table; otherwise the import will fail.
                 HBaseConnection.createHTableIfNeeded(KylinConfig.getInstanceFromEnv().getStorageUrl(), table, "F1", "F2");
             }
+
             // directly import from local fs, no need to copy to hdfs
-            //String importLocation = copyTableBackupToHDFS(backupFolder, table);
             String importLocation = "file://" + backupFolder.getAbsolutePath() + "/" + table;
             String[] args = new String[] { table, importLocation };
-
             boolean result = runImport(args);
             System.out.println("---- import table '" + table + "' result:" + result);
+
             if (!result)
                 break;
         }
@@ -214,14 +202,14 @@ public class HBaseMiniclusterMetadataTestCase {
     }
 
     public static void main(String[] args) {
-        HBaseMiniclusterMetadataTestCase t = new HBaseMiniclusterMetadataTestCase();
+        HBaseMiniclusterHelper t = new HBaseMiniclusterHelper();
         System.out.println(t);
         try {
-            HBaseMiniclusterMetadataTestCase.startupMinicluster();
+            HBaseMiniclusterHelper.startupMinicluster();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            HBaseMiniclusterMetadataTestCase.shutdownMiniCluster();
+            HBaseMiniclusterHelper.shutdownMiniCluster();
         }
     }
 }

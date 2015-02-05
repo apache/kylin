@@ -50,7 +50,7 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
             staticCreateTestMetadata(SANDBOX_TEST_DATA);
         } else {
             staticCreateTestMetadata(MINICLUSTER_TEST_DATA);
-            HBaseMiniclusterMetadataTestCase.startupMinicluster();
+            HBaseMiniclusterHelper.startupMinicluster();
         }
 
     }
