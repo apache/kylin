@@ -140,6 +140,8 @@ public class KylinConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(KylinConfig.class);
 
+    public static final String VERSION = "${project.version}";
+
     // static cached instances
     private static KylinConfig ENV_INSTANCE = null;
 
@@ -298,15 +300,28 @@ public class KylinConfig {
     }
 
     public String getKylinJobJarPath() {
-        return getRequired(KYLIN_JOB_JAR);
+        final String jobJar = getOptional(KYLIN_JOB_JAR);
+        if (StringUtils.isNotEmpty(jobJar)) {
+            return jobJar;
+        }
+        String kylinHome = getKylinHome();
+        return kylinHome + File.separator + "lib" + File.separator + JOB_JAR_NAME.replace("{version}", VERSION);
     }
 
     public void overrideKylinJobJarPath(String path) {
         kylinConfig.setProperty(KYLIN_JOB_JAR, path);
     }
 
+    private static final String COPROCESSOR_JAR_NAME = "kylin-storage-{version}-coprocessor.jar";
+    private static final String JOB_JAR_NAME = "kylin-job-{version}-job.jar";
+
     public String getCoprocessorLocalJar() {
-        return getRequired(COPROCESSOR_LOCAL_JAR);
+        final String coprocessorJar = getOptional(COPROCESSOR_LOCAL_JAR);
+        if (StringUtils.isNotEmpty(coprocessorJar)) {
+            return coprocessorJar;
+        }
+        String kylinHome = getKylinHome();
+        return kylinHome + File.separator + "lib" + File.separator + COPROCESSOR_JAR_NAME.replace("{version}", VERSION);
     }
 
     public void overrideCoprocessorLocalJar(String path) {
@@ -513,6 +528,15 @@ public class KylinConfig {
 //        return is;
 //    }
 
+    public static String getKylinHome() {
+        String kylinHome = System.getenv(KYLIN_HOME);
+        if (StringUtils.isEmpty(kylinHome)) {
+            logger.warn("KYLIN_HOME has not been set");
+            throw new RuntimeException("KYLIN_HOME has not been set");
+        }
+        return kylinHome;
+    }
+
     private static File getKylinProperties() {
         String kylinConfHome = System.getProperty(KYLIN_CONF_HOME);
         if (StringUtils.isEmpty(kylinConfHome)) {
@@ -520,11 +544,8 @@ public class KylinConfig {
         } else {
             return getKylinPropertiesFile(kylinConfHome);
         }
-        String kylinHome = System.getenv(KYLIN_HOME);
-        if (StringUtils.isEmpty(kylinHome)) {
-            logger.warn("KYLIN_HOME has not been set");
-        }
-        String path = kylinHome + "/conf";
+
+        String path = getKylinHome() + File.separator + "conf";
         return getKylinPropertiesFile(path);
 
     }
