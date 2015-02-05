@@ -34,18 +34,15 @@ import org.apache.kylin.common.persistence.HBaseResourceStore;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HBaseMiniclusterHelper;
-import org.apache.kylin.common.util.SSHClient;
 import org.apache.kylin.common.util.TarGZUtil;
 
 public class ImportHBaseData {
 
     KylinConfig kylinConfig;
-    HTableDescriptor[] allTables;
     Configuration config;
     HBaseAdmin hbase;
     CliCommandExecutor cli = null;
     String importFolder = "/tmp/hbase-export/";
-    String backupArchive = null;
     String tableNameBase;
 
     public void setup() throws IOException {
@@ -72,7 +69,6 @@ public class ImportHBaseData {
             throw e;
         }
 
-        uploadTarballToRemote();
     }
 
     public void tearDown() {
@@ -97,7 +93,7 @@ public class ImportHBaseData {
         for (String tableLocation : tablelocations) {
             String table = tableLocation.substring(tableLocation.lastIndexOf("/") + 1);
             
-            if (!(table.equalsIgnoreCase(tableNameBase) || table.startsWith(HBaseMiniclusterHelper.CUBE_STORAGE_PREFIX))) {
+            if (!(table.equalsIgnoreCase(tableNameBase) || table.startsWith(HBaseMiniclusterHelper.SHARED_STORAGE_PREFIX))) {
                 continue;
             }
             
@@ -111,20 +107,6 @@ public class ImportHBaseData {
             cli.execute("hbase org.apache.hadoop.hbase.mapreduce.Import " + table + " file://" + tableLocation);
         }
 
-    }
-
-    public void uploadTarballToRemote() throws IOException {
-
-        cli.execute("mkdir -p /tmp/hbase-export/");
-        @SuppressWarnings("unused")
-        SSHClient ssh = new SSHClient(kylinConfig.getRemoteHadoopCliHostname(), kylinConfig.getRemoteHadoopCliUsername(), kylinConfig.getRemoteHadoopCliPassword());
-        try {
-            // ssh.scpFileToRemote("../examples/test_case_data/minicluster/hbase-export.tar.gz", importFolder);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        cli.execute("tar -xzf /tmp/hbase-export/hbase-export.tar.gz  --directory=" + importFolder);
     }
 
     private List<String> getTablesBackupLocations(String exportBase) throws IOException {

@@ -119,7 +119,7 @@ public class ExportHBaseData {
 
         for (HTableDescriptor table : allTables) {
             String tName = table.getNameAsString();
-            if (!tName.equals(tableNameBase) && !tName.startsWith(HBaseMiniclusterHelper.CUBE_STORAGE_PREFIX))
+            if (!tName.equals(tableNameBase) && !tName.startsWith(HBaseMiniclusterHelper.SHARED_STORAGE_PREFIX))
                 continue;
 
             cli.execute("hbase org.apache.hadoop.hbase.mapreduce.Export " + tName + " " + exportFolder + tName);
