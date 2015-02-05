@@ -243,6 +243,7 @@ public class BuildIIWithEngineTest {
         BuildIIWithEngineTest.beforeClass();
         instance.before();
         instance.testBuildII();
+        instance.after();
 
     }
 

@@ -101,10 +101,13 @@ public class ImportHBaseData {
                 continue;
             }
             
-            if (table.startsWith(HBaseMiniclusterHelper.CUBE_STORAGE_PREFIX)) {
-                // create the cube table; otherwise the import will fail.
+            // create the htable; otherwise the import will fail.
+            if (table.startsWith(HBaseMiniclusterHelper.II_STORAGE_PREFIX)) {
+                HBaseConnection.createHTableIfNeeded(KylinConfig.getInstanceFromEnv().getStorageUrl(), table, "f");
+            } else if (table.startsWith(HBaseMiniclusterHelper.CUBE_STORAGE_PREFIX)) {
                 HBaseConnection.createHTableIfNeeded(KylinConfig.getInstanceFromEnv().getStorageUrl(), table, "F1", "F2");
             }
+
             cli.execute("hbase org.apache.hadoop.hbase.mapreduce.Import " + table + " file://" + tableLocation);
         }
 

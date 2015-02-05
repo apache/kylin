@@ -157,15 +157,15 @@ public class HBaseMiniclusterHelper {
 
         for (String table : tableNames) {
 
-            if (!(table.equalsIgnoreCase(TEST_METADATA_TABLE) || table.startsWith(CUBE_STORAGE_PREFIX))) {
-                //if (!(table.equalsIgnoreCase(TEST_METADATA_TABLE) || table.startsWith("KYLIN_II"))) {
+            //if (!(table.equalsIgnoreCase(TEST_METADATA_TABLE) || table.startsWith(CUBE_STORAGE_PREFIX))) {
+            if (!(table.equalsIgnoreCase(TEST_METADATA_TABLE) || table.startsWith("KYLIN_II"))) {
                 continue;
             }
 
+            // create the htable; otherwise the import will fail.
             if (table.startsWith(II_STORAGE_PREFIX)) {
                 HBaseConnection.createHTableIfNeeded(KylinConfig.getInstanceFromEnv().getStorageUrl(), table, "f");
             } else if (table.startsWith(CUBE_STORAGE_PREFIX)) {
-                // create the cube table; otherwise the import will fail.
                 HBaseConnection.createHTableIfNeeded(KylinConfig.getInstanceFromEnv().getStorageUrl(), table, "F1", "F2");
             }
 
