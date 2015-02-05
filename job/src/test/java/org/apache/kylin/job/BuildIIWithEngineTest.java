@@ -247,7 +247,6 @@ public class BuildIIWithEngineTest {
         ExportHBaseData export = new ExportHBaseData();
         export.exportTables();
     }
-}
 
     public static void main(String[] args) throws Exception {
         BuildIIWithEngineTest instance = new BuildIIWithEngineTest();
