@@ -4,12 +4,12 @@ dir=$(dirname ${0})
 
 sh ${dir}/check-env.sh
 
-if [ ! -z "$KYLIN_LD_LIBRARY_PATH" ]
-then
-    echo "KYLIN_LD_LIBRARY_PATH is set to $KYLIN_LD_LIBRARY_PATH"
-else
-    exit 1
-fi
+#if [ ! -z "$KYLIN_LD_LIBRARY_PATH" ]
+#then
+#    echo "KYLIN_LD_LIBRARY_PATH is set to $KYLIN_LD_LIBRARY_PATH"
+#else
+#    exit 1
+#fi
 
 #The location of all hadoop/hbase configurations are difficult to get.
 #Plus, some of the system properties are secretly set in hadoop/hbase shell command.
@@ -19,9 +19,11 @@ fi
 #To save all these troubles, we use hbase runjar to start tomcat.
 #In this way we no longer need to explicitly configure hadoop/hbase related classpath for tomcat,
 #hbase command will do all the dirty tasks for us:
+
+#-Djava.library.path=${KYLIN_LD_LIBRARY_PATH} \
+
 export HBASE_CLASSPATH_PREFIX=${CATALINA_HOME}/bin/bootstrap.jar:${CATALINA_HOME}/bin/tomcat-juli.jar:${CATALINA_HOME}/lib/*:
 hbase -Djava.util.logging.config.file=${CATALINA_HOME}/conf/logging.properties \
--Djava.library.path=${KYLIN_LD_LIBRARY_PATH} \
 -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
 -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true \
 -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true \
