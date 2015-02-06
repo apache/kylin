@@ -26,7 +26,7 @@ sh ${dir}/check-env.sh || { exit 1; }
 #-Djava.library.path=${KYLIN_LD_LIBRARY_PATH} \
 
 
-rm -rf ${tomcat_root}/webapps/kylin*
+rm -rf ${tomcat_root}/webapps/*
 cp ${dir}/../lib/kylin-server-*.war ${tomcat_root}/webapps/kylin.war
 
 export HBASE_CLASSPATH_PREFIX=${tomcat_root}/bin/bootstrap.jar:${tomcat_root}/bin/tomcat-juli.jar:${tomcat_root}/lib/*:
