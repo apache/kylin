@@ -154,13 +154,6 @@ public class JobEngineConfig {
     }
 
     /**
-     * @return the yarnStatusServiceUrl
-     */
-    public String getYarnStatusServiceUrl() {
-        return config.getYarnStatusServiceUrl();
-    }
-
-    /**
      * @return the maxConcurrentJobLimit
      */
     public int getMaxConcurrentJobLimit() {
@@ -193,13 +186,6 @@ public class JobEngineConfig {
      */
     public int getAsyncJobCheckInterval() {
         return config.getYarnStatusCheckIntervalSeconds();
-    }
-
-    /**
-     * @return the flatTableByHive
-     */
-    public boolean isFlatTableByHive() {
-        return config.getFlatTableByHive();
     }
 
     /*
