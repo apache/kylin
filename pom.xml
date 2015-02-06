@@ -25,6 +25,9 @@
     <packaging>pom</packaging>
     <version>0.7.1-SNAPSHOT</version>
     <name>Kylin:HadoopOLAPEngine</name>
+    <url>http://kylin.incubator.apache.org</url>
+    <inceptionYear>2014</inceptionYear>
+
 
     <properties>
         <!-- General Properties -->
@@ -94,6 +97,48 @@
         <sonar.jacoco.excludes>org/apache/kylin/**/tools/**:**/*CLI.java:net/hydromatic/optiq/**:org/eigenbase/sql2rel/**</sonar.jacoco.excludes>
         
     </properties>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <organization>
+        <name>Apache Software Foundation</name>
+        <url>http://www.apache.org</url>
+    </organization>
+
+    <issueManagement>
+        <system>JIRA</system>
+        <url>https://issues.apache.org/jira/browse/KYLIN</url>
+    </issueManagement>
+
+
+    <mailingLists>
+        <mailingList>
+            <name>kylin-dev</name>
+            <subscribe>dev-subscribe@kylin.incubator.apache.org</subscribe>
+            <unsubscribe>dev-unsubscribe@kylin.incubator.apache.org</unsubscribe>
+            <post>dev@kylin.incubator.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/kylin-dev/</archive>
+        </mailingList>
+        <mailingList>
+            <name>kylin-commits</name>
+            <subscribe>commits-subscribe@kylin.incubator.apache.org</subscribe>
+            <unsubscribe>commits-unsubscribe@kylin.incubator.apache.org</unsubscribe>
+            <post>commits@kylin.incubator.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/kylin-commits/</archive>
+        </mailingList>
+    </mailingLists>
+
+    <scm>
+        <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-kylin.git</connection>
+        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-kylin.git</developerConnection>
+        <url>https://git-wip-us.apache.org/repos/asf/incubator-kylin.git</url>
+        <tag>HEAD</tag>
+    </scm>
 
     <dependencyManagement>
         <dependencies>
@@ -510,13 +555,6 @@
             </plugins>
         </pluginManagement>
     </build>
-
-    <scm>
-        <connection>scm:git:git@github.com:KylinOLAP/Kylin.git</connection>
-        <url>scm:git:git@github.com:KylinOLAP/Kylin.git</url>
-        <developerConnection>scm:git:git@github.com:KylinOLAP/Kylin.git</developerConnection>
-        <tag>HEAD</tag>
-    </scm>
 
     <modules>
         <module>atopcalcite</module>

@@ -18,10 +18,6 @@
 
 package org.apache.kylin.common.util;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -29,12 +25,7 @@ import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.MiniHBaseCluster;
 import org.apache.hadoop.hbase.coprocessor.CoprocessorHost;
-import org.apache.hadoop.hbase.mapreduce.Import;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.util.GenericOptionsParser;
-
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.common.persistence.HBaseResourceStore;
 
 /**
@@ -47,12 +38,13 @@ public class HBaseMiniclusterHelper {
     public static final String SHARED_STORAGE_PREFIX = "KYLIN_";
     public static final String CUBE_STORAGE_PREFIX = "KYLIN_";
     public static final String II_STORAGE_PREFIX = "KYLIN_II";
+    public static final String TEST_METADATA_TABLE = "kylin_metadata_qa";
 
-    private static final String TEST_METADATA_TABLE = "kylin_metadata_qa";
+    private static final String coprocessorClassName = "org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint";
+    private static final String hbaseTarLocation = "../examples/test_case_data/minicluster/hbase-export.tar.gz";
+
     private static HBaseTestingUtility UTIL = new HBaseTestingUtility();
-    private static MiniHBaseCluster hbaseCluster = null;
     private static volatile boolean clusterStarted = false;
-    private static Configuration config = null;
     private static String hbaseconnectionUrl = "";
 
     private static final Log logger = LogFactory.getLog(HBaseMiniclusterHelper.class);
@@ -94,12 +86,18 @@ public class HBaseMiniclusterHelper {
 
     private static void startupMiniClusterAndImportData() throws Exception {
 
-        System.out.println("Going to start mini cluster.");
-        //UTIL.getConfiguration().setStrings(CoprocessorHost.REGION_COPROCESSOR_CONF_KEY, "org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint");
-        UTIL.getConfiguration().setInt("hbase.master.info.port", -1);
-        hbaseCluster = UTIL.startMiniCluster();
+        logger.info("Going to start mini cluster.");
 
-        config = hbaseCluster.getConf();
+        if (existInClassPath(coprocessorClassName)) {
+            UTIL.getConfiguration().setStrings(CoprocessorHost.REGION_COPROCESSOR_CONF_KEY, coprocessorClassName);
+        }
+
+        //https://issues.apache.org/jira/browse/HBASE-11711
+        UTIL.getConfiguration().setInt("hbase.master.info.port", -1);//avoid port clobbering
+
+        MiniHBaseCluster hbaseCluster = UTIL.startMiniCluster();
+
+        Configuration config = hbaseCluster.getConf();
         String host = config.get(HConstants.ZOOKEEPER_QUORUM);
         String port = config.get(HConstants.ZOOKEEPER_CLIENT_PORT);
         String parent = config.get(HConstants.ZOOKEEPER_ZNODE_PARENT);
@@ -122,73 +120,17 @@ public class HBaseMiniclusterHelper {
         HBaseResourceStore store = new HBaseResourceStore(KylinConfig.getInstanceFromEnv());
 
         // import the table content
-        importHBaseData();
+        HbaseImporter.importHBaseData(hbaseTarLocation, UTIL.getConfiguration());
 
     }
 
-    public static void importHBaseData() throws IOException, ClassNotFoundException, InterruptedException {
-
-        if (System.getenv("JAVA_HOME") == null) {
-            System.err.println("Didn't find $JAVA_HOME, this will cause HBase data import failed. Please set $JAVA_HOME.");
-            System.err.println("Skip table import...");
-            return;
+    private static boolean existInClassPath(String className) {
+        try {
+            Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            return false;
         }
-
-        File exportFile = new File("../examples/test_case_data/minicluster/hbase-export.tar.gz");
-        if (!exportFile.exists()) {
-            logger.error("Didn't find the export archieve file on " + exportFile.getAbsolutePath());
-            return;
-        }
-
-        File folder = new File("/tmp/hbase-export/");
-        if (folder.exists()) {
-            FileUtils.deleteDirectory(folder);
-        }
-
-        folder.mkdirs();
-        folder.deleteOnExit();
-
-        TarGZUtil.uncompressTarGZ(exportFile, folder);
-        String[] child = folder.list();
-        assert child.length == 1;
-        String backupFolderName = child[0];
-        File backupFolder = new File(folder, backupFolderName);
-        String[] tableNames = backupFolder.list();
-
-        for (String table : tableNames) {
-
-            if (!(table.equalsIgnoreCase(TEST_METADATA_TABLE) || table.startsWith(SHARED_STORAGE_PREFIX))) {
-                //if (!(table.equalsIgnoreCase(TEST_METADATA_TABLE) || table.startsWith("KYLIN_II"))) {
-                continue;
-            }
-
-            // create the htable; otherwise the import will fail.
-            if (table.startsWith(II_STORAGE_PREFIX)) {
-                HBaseConnection.createHTableIfNeeded(KylinConfig.getInstanceFromEnv().getStorageUrl(), table, "f");
-            } else if (table.startsWith(CUBE_STORAGE_PREFIX)) {
-                HBaseConnection.createHTableIfNeeded(KylinConfig.getInstanceFromEnv().getStorageUrl(), table, "F1", "F2");
-            }
-
-            // directly import from local fs, no need to copy to hdfs
-            String importLocation = "file://" + backupFolder.getAbsolutePath() + "/" + table;
-            String[] args = new String[] { table, importLocation };
-            boolean result = runImport(args);
-            System.out.println("---- import table '" + table + "' result:" + result);
-
-            if (!result)
-                break;
-        }
-
-    }
-
-    private static boolean runImport(String[] args) throws IOException, InterruptedException, ClassNotFoundException {
-        // need to make a copy of the configuration because to make sure different temp dirs are used.
-        GenericOptionsParser opts = new GenericOptionsParser(new Configuration(UTIL.getConfiguration()), args);
-        Configuration conf = opts.getConfiguration();
-        args = opts.getRemainingArgs();
-        Job job = Import.createSubmittableJob(conf, args);
-        job.waitForCompletion(false);
-        return job.isSuccessful();
+        return true;
     }
 
     /**
@@ -196,7 +138,7 @@ public class HBaseMiniclusterHelper {
      */
     public static void shutdownMiniCluster() {
 
-        System.out.println("Going to shutdown mini cluster.");
+        logger.info("Going to shutdown mini cluster.");
 
         try {
             UTIL.shutdownMiniMapReduceCluster();
@@ -213,7 +155,7 @@ public class HBaseMiniclusterHelper {
 
     public static void main(String[] args) {
         HBaseMiniclusterHelper t = new HBaseMiniclusterHelper();
-        System.out.println(t);
+        logger.info(t);
         try {
             HBaseMiniclusterHelper.startupMinicluster();
         } catch (Exception e) {
