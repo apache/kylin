@@ -21,6 +21,7 @@ package org.apache.kylin.invertedindex.index;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Bytes;
 
@@ -140,6 +141,11 @@ public class CompressedValueContainer implements ColumnValueContainer {
 
     public void fromBytes(ImmutableBytesWritable bytes) {
         try {
+            //TODO remove this debugging info
+            byte[] data = bytes.copyBytes();
+            int hashcode = ArrayUtils.hashCode(data);
+            System.out.printf("Hint: hashcode %s, original length %s, offset %s, actual length %s \n", hashcode, bytes.get().length, bytes.getOffset(), bytes.getLength());
+
             uncompressed = LZFDecoder.decode(bytes.get(), bytes.getOffset(), bytes.getLength());
         } catch (IOException e) {
             throw new RuntimeException("LZF decode failure", e);
