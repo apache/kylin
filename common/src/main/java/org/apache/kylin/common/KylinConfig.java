@@ -256,7 +256,7 @@ public class KylinConfig {
     }
 
     private PropertiesConfiguration kylinConfig = new PropertiesConfiguration();
-    
+
     private String metadataUrl;
     private String storageUrl;
 
@@ -475,6 +475,14 @@ public class KylinConfig {
             kylinConfig.save(file);
         } catch (ConfigurationException ex) {
             throw new IOException("Error writing KylinConfig to " + file, ex);
+        }
+    }
+
+    public void printProperties() throws IOException {
+        try {
+            kylinConfig.save(System.out);
+        } catch (ConfigurationException ex) {
+            throw new IOException("Error printing KylinConfig", ex);
         }
     }
 
