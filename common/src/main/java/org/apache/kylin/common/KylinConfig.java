@@ -296,7 +296,7 @@ public class KylinConfig {
         if (StringUtils.isNotEmpty(jobJar)) {
             return jobJar;
         }
-        return getFileName(getKylinHome() + File.separator + "conf", JOB_JAR_NAME_PATTERN);
+        return getFileName(getKylinHome() + File.separator + "lib", JOB_JAR_NAME_PATTERN);
     }
 
     public void overrideKylinJobJarPath(String path) {
@@ -311,7 +311,7 @@ public class KylinConfig {
         if (StringUtils.isNotEmpty(coprocessorJar)) {
             return coprocessorJar;
         }
-        return getFileName(getKylinHome() + File.separator + "conf", COPROCESSOR_JAR_NAME_PATTERN);
+        return getFileName(getKylinHome() + File.separator + "lib", COPROCESSOR_JAR_NAME_PATTERN);
     }
 
     private static String getFileName(String homePath, Pattern pattern) {
