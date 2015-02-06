@@ -465,7 +465,8 @@ public class KylinConfig {
     }
 
     private String getOptional(String prop, String dft) {
-        return kylinConfig.getString(prop, dft);
+        final String property = System.getProperty(prop);
+        return property != null?property:kylinConfig.getString(prop, dft);
     }
 
     private String getRequired(String prop) {
