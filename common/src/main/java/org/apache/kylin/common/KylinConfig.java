@@ -18,22 +18,20 @@
 
 package org.apache.kylin.common;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-
+import com.google.common.collect.Sets;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.restclient.RestClient;
+import org.apache.kylin.common.util.CliCommandExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.common.restclient.RestClient;
-import org.apache.kylin.common.util.CliCommandExecutor;
+import java.io.*;
+import java.util.SortedSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author yangli9
@@ -108,10 +106,6 @@ public class KylinConfig {
     public static final String HIVE_USER = "hive.user";
 
     public static final String HIVE_URL = "hive.url";
-    /**
-     * Key string to point to the kylin conf directory
-     */
-    public static final String KYLIN_CONF = "KYLIN_CONF";
     /**
      * Key string to specify the kylin evn: prod, dev, qa
      */
@@ -304,24 +298,40 @@ public class KylinConfig {
         if (StringUtils.isNotEmpty(jobJar)) {
             return jobJar;
         }
-        String kylinHome = getKylinHome();
-        return kylinHome + File.separator + "lib" + File.separator + JOB_JAR_NAME.replace("{version}", VERSION);
+        return getFileName(getKylinHome(), JOB_JAR_NAME_PATTERN);
     }
 
     public void overrideKylinJobJarPath(String path) {
         kylinConfig.setProperty(KYLIN_JOB_JAR, path);
     }
 
-    private static final String COPROCESSOR_JAR_NAME = "kylin-storage-{version}-coprocessor.jar";
-    private static final String JOB_JAR_NAME = "kylin-job-{version}-job.jar";
+    private static final Pattern COPROCESSOR_JAR_NAME_PATTERN = Pattern.compile("kylin-coprocessor-(.+)\\.jar");
+    private static final Pattern JOB_JAR_NAME_PATTERN = Pattern.compile("kylin-job-(.+)\\.jar");
 
     public String getCoprocessorLocalJar() {
         final String coprocessorJar = getOptional(COPROCESSOR_LOCAL_JAR);
         if (StringUtils.isNotEmpty(coprocessorJar)) {
             return coprocessorJar;
         }
-        String kylinHome = getKylinHome();
-        return kylinHome + File.separator + "lib" + File.separator + COPROCESSOR_JAR_NAME.replace("{version}", VERSION);
+        return getFileName(getKylinHome(), COPROCESSOR_JAR_NAME_PATTERN);
+    }
+
+    private static String getFileName(String kylinHome, Pattern pattern) {
+        File home = new File(kylinHome);
+        SortedSet<String> files = Sets.newTreeSet();
+        if (home.exists() && home.isDirectory()) {
+            for (File file : home.listFiles()) {
+                final Matcher matcher = pattern.matcher(file.getName());
+                if (matcher.matches()) {
+                    files.add(file.getAbsolutePath());
+                }
+            }
+        }
+        if (files.isEmpty()) {
+            throw new RuntimeException("cannot find " + pattern.toString() + " in KYLIN_HOME");
+        } else {
+            return files.last();
+        }
     }
 
     public void overrideCoprocessorLocalJar(String path) {

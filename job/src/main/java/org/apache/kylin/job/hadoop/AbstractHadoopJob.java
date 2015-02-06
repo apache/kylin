@@ -277,7 +277,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
     public static KylinConfig loadKylinPropsAndMetadata(Configuration conf) throws IOException {
         File metaDir = new File("meta");
-        System.setProperty(KylinConfig.KYLIN_CONF, metaDir.getAbsolutePath());
+        System.setProperty(KylinConfig.KYLIN_CONF_HOME, metaDir.getAbsolutePath());
         logger.info("The absolute path for meta dir is " + metaDir.getAbsolutePath());
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         kylinConfig.setMetadataUrl(metaDir.getCanonicalPath());
