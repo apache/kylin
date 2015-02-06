@@ -19,16 +19,11 @@
 'use strict';
 
 KylinApp
-    .controller('ProjectCtrl', function ($scope, $modal, $q, ProjectService, MessageService,SweetAlert,$log,kylinConfig) {
+    .controller('ProjectCtrl', function ($scope, $modal, $q, ProjectService, MessageService,SweetAlert,$log,kylinConfig,projectConfig) {
 
         $scope.projects = [];
         $scope.loading = false;
-        $scope.theaditems = [
-            {attr: 'name', name: 'Name'},
-            {attr: 'owner', name: 'Owner'},
-            {attr: 'description', name: 'Description'},
-            {attr: 'create_time', name: 'Create Time'}
-        ];
+        $scope.projectConfig = projectConfig;
 
         $scope.state = { filterAttr: 'name', filterReverse: true, reverseColumn: 'name'};
 

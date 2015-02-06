@@ -16,8 +16,12 @@
  * limitations under the License.
 */
 
-'use strict';
-
-KylinApp.controller('CubeFilterCtrl', function ($scope, $modal,cubeConfig,ModelService,MetaModel) {
+KylinApp.constant('tableConfig', {
+    theaditems : [
+        {attr: 'id', name: 'ID'},
+        {attr: 'name', name: 'Name'},
+        {attr: 'datatype', name: 'Data Type'},
+        {attr: 'cardinality', name: 'Cardinality'}
+    ]
 
 });

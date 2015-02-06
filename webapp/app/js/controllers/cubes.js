@@ -19,29 +19,22 @@
 'use strict';
 
 KylinApp
-    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,ProjectModel,ModelService,MetaModel) {
+    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,cubeConfig,ProjectModel,ModelService,MetaModel) {
+
+        $scope.cubeConfig = cubeConfig;
 
         $scope.listParams={
             cubeName: $routeParams.cubeName,
             projectName: $routeParams.projectName
         };
         if($routeParams.projectName){
-            $scope.projectModel.selectedProject = $routeParams.projectName;
             $scope.projectModel.setSelectedProject($routeParams.projectName);
         }
         $scope.cubes = [];
         $scope.loading = false;
         $scope.action = {};
 
-        $scope.theaditems = [
-            {attr: 'name', name: 'Name'},
-            {attr: 'status', name: 'Status'},
-            {attr: 'size_kb', name: 'Cube Size'},
-            {attr: 'source_records_count', name: 'Source Records'},
-            {attr: 'last_build_time', name: 'Last Build Time'},
-            {attr: 'owner', name: 'Owner'},
-            {attr: 'create_time', name: 'Create Time'}
-        ];
+
 
         $scope.state = { filterAttr: 'create_time', filterReverse: true, reverseColumn: 'create_time',
             dimensionFilter: '', measureFilter: ''};

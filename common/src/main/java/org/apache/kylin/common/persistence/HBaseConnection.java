@@ -121,4 +121,5 @@ public class HBaseConnection {
             hbase.close();
         }
     }
+
 }

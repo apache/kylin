@@ -20,6 +20,9 @@ package org.apache.kylin.common.util;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.*;
@@ -34,6 +37,7 @@ import org.slf4j.*;
 @SuppressWarnings("unused")
 public class BasicTest {
     protected static final org.slf4j.Logger log = LoggerFactory.getLogger(BasicTest.class);
+
     private void log(ByteBuffer a) {
         Integer x = 4;
         foo(x);
@@ -51,16 +55,17 @@ public class BasicTest {
     @Test
     @Ignore("convenient trial tool for dev")
     public void test1() throws IOException, InterruptedException {
-        String leftAlignFormat = "| %-100s | %n";
-
-        System.out.format("+------------------------------------------------------------------------------------------------------+%n");
-        System.out.format(leftAlignFormat, "aaaadfafdsadddaaaadfafdsaddddddddddddddddddaaaadfafdsaddddddddddddddddddaaaadfafdsaddddddddddddddddddaaaadfafdsaddddddddddddddddddaaaadfafdsaddddddddddddddddddaaaadfafdsaddddddddddddddddddddddddddddddddd");
-        System.out.format("+------------------------------------------------------------------------------------------------------+%n");
 
     }
 
     @Test
     @Ignore("fix it later")
-    public void test2() throws IOException {
+    public void test2() throws IOException, ConfigurationException {
+        PropertiesConfiguration a = new PropertiesConfiguration();
+        a.setProperty("hi","dd");
+
+
+        System.out.println("dfads");
+        a.save(System.out);
     }
 }
