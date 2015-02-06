@@ -257,7 +257,6 @@ var projCtrl = function ($scope,$location, $modalInstance, ProjectService, Messa
                 ProjectModel.addProject(newProj.name);
                 $cookieStore.put("project",newProj.name);
                 location.reload();
-
             }, function(e){
                 if(e.data&& e.data.exception){
                     var message =e.data.exception;
