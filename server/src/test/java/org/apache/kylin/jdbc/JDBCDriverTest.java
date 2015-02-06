@@ -4,10 +4,7 @@ import com.google.common.collect.Lists;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import java.sql.*;
 import java.util.List;
@@ -16,6 +13,7 @@ import java.util.Properties;
 /**
  * Created by shaoshi on 2/5/15.
  */
+@Ignore
 public class JDBCDriverTest extends HBaseMetadataTestCase {
 
     private Server server = null;
