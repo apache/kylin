@@ -556,13 +556,6 @@
         </pluginManagement>
     </build>
 
-    <scm>
-        <connection>scm:git:git@github.com:KylinOLAP/Kylin.git</connection>
-        <url>scm:git:git@github.com:KylinOLAP/Kylin.git</url>
-        <developerConnection>scm:git:git@github.com:KylinOLAP/Kylin.git</developerConnection>
-        <tag>HEAD</tag>
-    </scm>
-
     <modules>
         <module>atopcalcite</module>
         <module>common</module>
