@@ -1,42 +1,85 @@
 package org.apache.kylin.job.tools;
 
-import org.apache.commons.lang.ArrayUtils;
+import java.io.File;
+import java.io.IOException;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.persistence.HBaseConnection;
-import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.BytesUtil;
-
-import java.io.IOException;
+import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 2/6/15.
  */
-public class HBaseRowDigestTest {
+@Ignore
+public class HBaseRowDigestTest extends HBaseMetadataTestCase {
 
+    @Before
+    public void setUp() throws Exception {
+        this.createTestMetadata();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        this.cleanupTestMetadata();
+    }
 
     private static final byte[] CF = "f".getBytes();
     private static final byte[] QN = "c".getBytes();
+    static ImmutableBytesWritable k = new ImmutableBytesWritable();
+    static ImmutableBytesWritable v = new ImmutableBytesWritable();
 
-    public static void main(String[] args) throws IOException {
+    @Test
+    public static void test() throws IOException {
         String hbaseUrl = "hbase"; // use hbase-site.xml on classpath
-        HConnection conn = HBaseConnection.get(hbaseUrl);
-        HTableInterface table = conn.getTable(args[0]);
-        ResultScanner scanner = table.getScanner(CF, QN);
-        StringBuilder sb = new StringBuilder();
-        while (true) {
-            Result r = scanner.next();
-            if (r == null)
-                break;
+        HConnection conn = null;
+        HTableInterface table = null;
+        try {
+            conn = HBaseConnection.get(hbaseUrl);
+            table = conn.getTable("KYLIN_II_YTYWP3CQGJ");
+            ResultScanner scanner = table.getScanner(CF, QN);
+            StringBuffer sb = new StringBuffer();
+            while (true) {
+                Result r = scanner.next();
+                if (r == null)
+                    break;
 
-            byte[] row = r.getRow();
-            byte[] value = r.getValue(CF, QN);
+                Cell[] cells = r.rawCells();
+                Cell c = cells[0];
 
-            sb.append(BytesUtil.toReadableText(row) + "\n");
-            System.out.println(BytesUtil.toReadableText(value));
+                k.set(c.getRowArray(), c.getRowOffset(), c.getRowLength());
+                v.set(c.getValueArray(), c.getValueOffset(), c.getValueLength());
+
+                byte[] row = k.copyBytes();
+                byte[] value = v.copyBytes();
+                //                byte[] row = r.getRow();
+                //                byte[] value = r.getValue(CF, QN);
+                //
+                sb.append("row length: " + row.length + "\r\n");
+                sb.append(BytesUtil.toReadableText(row) + "\r\n");
+                sb.append("value length: " + value.length + "\r\n");
+                sb.append(BytesUtil.toReadableText(value) + "\r\n");
+            }
+            System.out.println(sb.toString());
+            FileUtils.writeStringToFile(new File("/Users/honma/Desktop/a3"), sb.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (table != null)
+                table.close();
+            if (conn != null)
+                conn.close();
         }
+
     }
 }
