@@ -19,10 +19,8 @@
 'use strict';
 
 KylinApp
-    .controller('SourceMetaCtrl', function ($scope,$cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService,$route,loadingRequest,SweetAlert,tableConfig) {
+    .controller('SourceMetaCtrl', function ($scope,$cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService,$route,loadingRequest,SweetAlert,tableConfig,TableModel) {
         var $httpDefaultCache = $cacheFactory.get('$http');
-        $scope.srcTables = {};
-        $scope.srcDbs = [];
         $scope.selectedSrcDb = [];
         $scope.selectedSrcTable = {};
         $scope.window = 0.68 * $window.innerHeight;
@@ -44,7 +42,6 @@ KylinApp
        };
 
         $scope.aceSrcTbLoaded = function (forceLoad) {
-            $scope.srcTables = {};
             $scope.selectedSrcDb = [];
             $scope.treeOptions = {
                 nodeChildren: "columns",
@@ -112,8 +109,7 @@ KylinApp
 
         $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
 //         will load table when enter this page,null or not
-        $scope.aceSrcTbLoaded();
-
+            $scope.aceSrcTbLoaded();
 
         });
         $scope.$watch('hiveTbLoad.status', function (newValue, oldValue) {
@@ -133,8 +129,6 @@ KylinApp
         };
 
         $scope.aceSrcTbChanged = function () {
-            $scope.srcTables = {};
-            $scope.srcDbs = [];
             $scope.selectedSrcDb = [];
             $scope.selectedSrcTable = {};
             $scope.aceSrcTbLoaded(true);
@@ -200,9 +194,8 @@ KylinApp
                     if(result['result.loaded'].length!=0&&result['result.unloaded'].length!=0){
                         SweetAlert.swal('Partial loaded!','The following table(s) have been successfully synchronized: ' + loadTableInfo+"\n\n Failed to synchronize following table(s):"  + unloadedTableInfo, 'warning');
                     }
-
-
                     loadingRequest.hide();
+
                     hiveTbLoad.status="success";
                 },function(e){
                     if(e.data&& e.data.exception){
