@@ -13,7 +13,9 @@ fi
 echo "copy lib file"
 rm -rf lib
 mkdir lib
-cp server/target/kylin-server-${version}.war job/target/kylin-job-${version}-job.jar storage/target/kylin-storage-${version}-coprocessor.jar lib
+cp server/target/kylin-server-${version}.war lib
+cp job/target/kylin-job-${version}-job.jar lib/kylin-job-${version}.jar
+cp storage/target/kylin-storage-${version}-coprocessor.jar lib/kylin-coprocessor-${version}.jar
 
 echo "add js css to war"
 cd webapp/dist

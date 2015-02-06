@@ -50,14 +50,14 @@ public abstract class AbstractKylinTestCase {
 
         KylinConfig.destoryInstance();
 
-        if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null)
-            System.setProperty(KylinConfig.KYLIN_CONF, kylinConfigFolder);
+        if (System.getProperty(KylinConfig.KYLIN_CONF_HOME) == null && System.getenv(KylinConfig.KYLIN_CONF_HOME) == null)
+            System.setProperty(KylinConfig.KYLIN_CONF_HOME, kylinConfigFolder);
 
     }
 
     public static void staticCleanupTestMetadata() {
         cleanupCache();
-        System.clearProperty(KylinConfig.KYLIN_CONF);
+        System.clearProperty(KylinConfig.KYLIN_CONF_HOME);
         KylinConfig.destoryInstance();
 
     }
