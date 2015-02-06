@@ -54,6 +54,7 @@ public class HBaseMiniclusterHelper {
     private static volatile boolean clusterStarted = false;
     private static Configuration config = null;
     private static String hbaseconnectionUrl = "";
+    private static String coprocessorClassName = "org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint";
 
     private static final Log logger = LogFactory.getLog(HBaseMiniclusterHelper.class);
 
@@ -95,8 +96,14 @@ public class HBaseMiniclusterHelper {
     private static void startupMiniClusterAndImportData() throws Exception {
 
         System.out.println("Going to start mini cluster.");
-        //UTIL.getConfiguration().setStrings(CoprocessorHost.REGION_COPROCESSOR_CONF_KEY, "org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint");
-        UTIL.getConfiguration().setInt("hbase.master.info.port", -1);
+
+        if (existInClassPath(coprocessorClassName)) {
+            UTIL.getConfiguration().setStrings(CoprocessorHost.REGION_COPROCESSOR_CONF_KEY, coprocessorClassName);
+        }
+
+        //https://issues.apache.org/jira/browse/HBASE-11711
+        UTIL.getConfiguration().setInt("hbase.master.info.port", -1);//avoid port clobbering
+
         hbaseCluster = UTIL.startMiniCluster();
 
         config = hbaseCluster.getConf();
@@ -124,6 +131,15 @@ public class HBaseMiniclusterHelper {
         // import the table content
         importHBaseData();
 
+    }
+
+    private static boolean existInClassPath(String className) {
+        try {
+            Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+        return true;
     }
 
     public static void importHBaseData() throws IOException, ClassNotFoundException, InterruptedException {
