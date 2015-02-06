@@ -37,7 +37,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class HBaseResourceStoreTest extends HBaseMetadataTestCase { // HBaseMetadataTestCase {
+public class HBaseResourceStoreTest extends HBaseMetadataTestCase {
 
     @Before
     public void setup() throws Exception {

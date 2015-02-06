@@ -104,18 +104,18 @@ public abstract class KylinConnectionImpl extends AvaticaConnection {
 
     public String getConnectUrl() {
         boolean isSsl = Boolean.parseBoolean((this.info.getProperty("ssl", "false")));
-        return (isSsl ? "https://" : "http://") + this.baseUrl + ":" + (isSsl ? 443 : 80) + "/kylin/api/user/authentication";
+        return (isSsl ? "https://" : "http://") + this.baseUrl + "/kylin/api/user/authentication";
     }
 
     public String getMetaProjectUrl(String project) {
         assert project != null;
         boolean isSsl = Boolean.parseBoolean((this.info.getProperty("ssl", "false")));
-        return (isSsl ? "https://" : "http://") + this.baseUrl + ":" + (isSsl ? 443 : 80) + "/kylin/api/tables_and_columns?project=" + project;
+        return (isSsl ? "https://" : "http://") + this.baseUrl + "/kylin/api/tables_and_columns?project=" + project;
     }
 
     public String getQueryUrl() {
         boolean isSsl = Boolean.parseBoolean((this.info.getProperty("ssl", "false")));
-        return (isSsl ? "https://" : "http://") + this.baseUrl + ":" + (isSsl ? 443 : 80) + "/kylin/api/query";
+        return (isSsl ? "https://" : "http://") + this.baseUrl + "/kylin/api/query";
     }
 
     public String getProject() {

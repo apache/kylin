@@ -253,7 +253,7 @@ public class KylinConfig {
     }
 
     private PropertiesConfiguration kylinConfig = new PropertiesConfiguration();
-    
+
     private String metadataUrl;
     private String storageUrl;
 
@@ -507,38 +507,6 @@ public class KylinConfig {
         }
     }
 
-//    public static InputStream getKylinPropertiesAsInputSteam() {
-//        File propFile = null;
-//
-//        // 1st, find conf path from env
-//        String path = System.getProperty(KYLIN_CONF);
-//        if (path == null) {
-//            path = System.getenv(KYLIN_CONF);
-//        }
-//        propFile = getKylinPropertiesFile(path);
-//
-//        // 2nd, find /etc/kylin
-//        if (propFile == null) {
-//            propFile = getKylinPropertiesFile(KYLIN_CONF_DEFAULT);
-//        }
-//        if (propFile != null) {
-//            logger.debug("Loading property file " + propFile.getAbsolutePath());
-//            try {
-//                return new FileInputStream(propFile);
-//            } catch (FileNotFoundException e) {
-//                logger.warn("Failed to read properties " + propFile.getAbsolutePath() + " and skip");
-//            }
-//        }
-//
-//        // 3rd, find classpath
-//        logger.info("Search " + KYLIN_CONF_PROPERTIES_FILE + " from classpath ...");
-//        InputStream is = KylinConfig.class.getClassLoader().getResourceAsStream("kylin.properties");
-//        if (is == null) {
-//            logger.info("Did not find properties file " + KYLIN_CONF_PROPERTIES_FILE + " from classpath");
-//        }
-//        return is;
-//    }
-
     public static String getKylinHome() {
         String kylinHome = System.getenv(KYLIN_HOME);
         if (StringUtils.isEmpty(kylinHome)) {
@@ -546,6 +514,13 @@ public class KylinConfig {
             throw new RuntimeException("KYLIN_HOME has not been set");
         }
         return kylinHome;
+    }
+    public void printProperties() throws IOException {
+        try {
+            kylinConfig.save(System.out);
+        } catch (ConfigurationException ex) {
+            throw new IOException("Error printing KylinConfig", ex);
+        }
     }
 
     private static File getKylinProperties() {

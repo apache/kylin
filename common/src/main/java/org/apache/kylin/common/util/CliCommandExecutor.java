@@ -76,7 +76,7 @@ public class CliCommandExecutor {
     }
 
     public Pair<Integer, String> execute(String command) throws IOException {
-        return execute(command, null);
+        return execute(command, new SoutLogger());
     }
 
     public Pair<Integer, String> execute(String command, Logger logAppender) throws IOException {

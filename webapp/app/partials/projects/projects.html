@@ -32,7 +32,7 @@
     <table class="table table-striped table-bordered table-hover dataTable no-footer">
         <thead>
             <tr style="cursor: pointer">
-                <th ng-repeat="theaditem in theaditems"
+                <th ng-repeat="theaditem in projectConfig.theaditems"
                     ng-click="state.filterAttr= theaditem.attr;state.reverseColumn=theaditem.attr;state.filterReverse=!state.filterReverse;">
                     {{theaditem.name}}
                     <i ng-if="state.reverseColumn!= theaditem.attr"

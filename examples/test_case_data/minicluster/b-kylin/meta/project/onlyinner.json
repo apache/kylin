@@ -1,8 +1,0 @@
-{
-"uuid" : "1eaca32a-a33e-4b69-83dd-0bb8b1f8c92b",
-  "name": "onlyinner",
-  "cubes": [
-    "test_kylin_cube_with_slr_empty",
-    "test_kylin_cube_without_slr_empty"
-  ]
-}
