@@ -44,6 +44,8 @@ KylinApp.service('ProjectModel',function(){
         if(index>-1){
             this.projects.splice(index,1);
         }
+        this.selectedProject = this.projects[0];
+        this.sortProjects();
     }
 
     this.updateProject = function (_new,_old) {
