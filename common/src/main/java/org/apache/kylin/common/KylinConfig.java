@@ -326,7 +326,7 @@ public class KylinConfig {
             }
         }
         if (files.isEmpty()) {
-            throw new RuntimeException("cannot find " + pattern.toString() + " in KYLIN_HOME");
+            throw new RuntimeException("cannot find " + pattern.toString() + " in " + homePath);
         } else {
             return files.last();
         }
