@@ -563,6 +563,10 @@
                                     <name>buildCubeUsingProvidedData</name>
                                     <value>false</value>
                                 </property>
+                                <property>
+                                    <name>spring.profiles.active=sandbox</name>
+                                    <value>sandbox</value>
+                                </property>
                             </systemProperties>
                             <argLine>-Xms1G -Xmx6G -XX:PermSize=1G -XX:MaxPermSize=2G</argLine>
                         </configuration>
@@ -599,6 +603,10 @@
                                 <property>
                                     <name>buildCubeUsingProvidedData</name>
                                     <value>false</value>
+                                </property>
+                                <property>
+                                    <name>spring.profiles.active=sandbox</name>
+                                    <value>sandbox</value>
                                 </property>
                             </systemProperties>
                         </configuration>
