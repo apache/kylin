@@ -23,7 +23,6 @@ import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.hadoop.hbase.util.Pair;
-import org.apache.kylin.common.util.BytesUtil;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -73,16 +72,12 @@ public class HbaseServerKVIterator implements Iterable<Pair<ImmutableBytesWritab
                         throw new RuntimeException(e);
                     }
 
-                    if (results.size() != 1)
-                        throw new IllegalStateException("Hbase row contains not exactly one cell");
+                    if (results.size() < 1)
+                        throw new IllegalStateException("Hbase row contains less than 1 cell");
 
                     Cell c = results.get(0);
                     key.set(c.getRowArray(), c.getRowOffset(), c.getRowLength());
                     value.set(c.getValueArray(), c.getValueOffset(), c.getValueLength());
-
-                    //TODO to delete this heavey log
-                    System.out.println(BytesUtil.toReadableText(key.copyBytes()));
-                    System.out.println(BytesUtil.toReadableText(value.copyBytes()));
 
                     results.clear();
                     return pair;
