@@ -296,7 +296,7 @@ public class KylinConfig {
         if (StringUtils.isNotEmpty(jobJar)) {
             return jobJar;
         }
-        return getFileName(getKylinHome(), JOB_JAR_NAME_PATTERN);
+        return getFileName(getKylinHome() + File.separator + "conf", JOB_JAR_NAME_PATTERN);
     }
 
     public void overrideKylinJobJarPath(String path) {
@@ -311,11 +311,11 @@ public class KylinConfig {
         if (StringUtils.isNotEmpty(coprocessorJar)) {
             return coprocessorJar;
         }
-        return getFileName(getKylinHome(), COPROCESSOR_JAR_NAME_PATTERN);
+        return getFileName(getKylinHome() + File.separator + "conf", COPROCESSOR_JAR_NAME_PATTERN);
     }
 
-    private static String getFileName(String kylinHome, Pattern pattern) {
-        File home = new File(kylinHome);
+    private static String getFileName(String homePath, Pattern pattern) {
+        File home = new File(homePath);
         SortedSet<String> files = Sets.newTreeSet();
         if (home.exists() && home.isDirectory()) {
             for (File file : home.listFiles()) {
@@ -460,7 +460,8 @@ public class KylinConfig {
     }
 
     private String getOptional(String prop) {
-        return kylinConfig.getString(prop);
+        final String property = System.getProperty(prop);
+        return property != null?property:kylinConfig.getString(prop);
     }
 
     private String getOptional(String prop, String dft) {
@@ -468,9 +469,14 @@ public class KylinConfig {
     }
 
     private String getRequired(String prop) {
+        final String property = System.getProperty(prop);
+        if (property != null) {
+            return property;
+        }
         String r = kylinConfig.getString(prop);
-        if (StringUtils.isEmpty(r))
+        if (StringUtils.isEmpty(r)) {
             throw new IllegalArgumentException("missing '" + prop + "' in conf/kylin_instance.properties");
+        }
         return r;
     }
 

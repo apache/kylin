@@ -35,7 +35,7 @@ hbase -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
 -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true \
 -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true \
 -Dspring.profiles.active=sandbox \
--Dkylin.job.yarn.app.rest.check.status.url=http://sandbox:8088/ws/v1/cluster/apps/${job_id}?anonymous=true \
+-Dkylin.job.yarn.app.rest.check.status.url='http://sandbox:8088/ws/v1/cluster/apps/${job_id}?anonymous=true' \
 -Djava.endorsed.dirs=${tomcat_root}/endorsed  \
 -Dcatalina.base=${tomcat_root} \
 -Dcatalina.home=${tomcat_root} \
