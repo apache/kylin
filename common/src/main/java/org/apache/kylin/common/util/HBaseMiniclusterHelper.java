@@ -96,6 +96,7 @@ public class HBaseMiniclusterHelper {
 
         System.out.println("Going to start mini cluster.");
         UTIL.getConfiguration().setStrings(CoprocessorHost.REGION_COPROCESSOR_CONF_KEY, "org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint");
+        UTIL.getConfiguration().setInt("hbase.master.info.port", -1);
         hbaseCluster = UTIL.startMiniCluster();
 
         config = hbaseCluster.getConf();

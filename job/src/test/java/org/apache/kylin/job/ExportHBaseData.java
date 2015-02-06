@@ -79,7 +79,6 @@ public class ExportHBaseData {
             e.printStackTrace();
             throw e;
         }
-
     }
 
     public void tearDown() {
