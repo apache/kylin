@@ -29,7 +29,8 @@ sh ${dir}/check-env.sh || { exit 1; }
 rm -rf ${tomcat_root}/webapps/*
 cp ${dir}/../lib/kylin-server-*.war ${tomcat_root}/webapps/kylin.war
 
-export HBASE_CLASSPATH_PREFIX=${tomcat_root}/bin/bootstrap.jar:${tomcat_root}/bin/tomcat-juli.jar:${tomcat_root}/lib/*:
+export HBASE_CLASSPATH_PREFIX=$HBASE_CLASSPATH_PREFIX:${tomcat_root}/bin/bootstrap.jar:${tomcat_root}/bin/tomcat-juli.jar:${tomcat_root}/lib/*\
+
 hbase -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
 -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
 -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true \
