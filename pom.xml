@@ -69,7 +69,7 @@
         <jsch.version>0.1.51</jsch.version>
         <xerces.version>2.9.1</xerces.version>
         <xalan.version>2.7.1</xalan.version>
-        <compress-lzf.version>0.8.4</compress-lzf.version>
+        <compress-lzf.version>1.0.3</compress-lzf.version>
         <extendedset.version>1.3.4</extendedset.version>
         <jetty.version>9.2.7.v20150116</jetty.version>
 
