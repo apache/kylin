@@ -80,8 +80,6 @@ public class KylinConfig {
      * Toggle to indicate whether to use hive for table flattening. Default
      * true.
      */
-    public static final String KYLIN_JOB_HIVE_FLATTEN = "kylin.job.hive.flatten";
-
     public static final String KYLIN_JOB_RUN_AS_REMOTE_CMD = "kylin.job.run.as.remote.cmd";
 
     public static final String KYLIN_JOB_MAPREDUCE_DEFAULT_REDUCE_COUNT_RATIO = "kylin.job.mapreduce.default.reduce.count.ratio";
@@ -376,10 +374,6 @@ public class KylinConfig {
 
     public String getMapReduceCmdExtraArgs() {
         return getOptional(KYLIN_JOB_CMD_EXTRA_ARGS);
-    }
-
-    public boolean getFlatTableByHive() {
-        return Boolean.parseBoolean(getOptional(KYLIN_JOB_HIVE_FLATTEN, "true"));
     }
 
     public String getOverrideHiveTableLocation(String table) {
