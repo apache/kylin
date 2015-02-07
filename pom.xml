@@ -602,7 +602,7 @@
                                     <value>false</value>
                                 </property>
                                 <property>
-                                    <name>spring.profiles.active=sandbox</name>
+                                    <name>spring.profiles.active</name>
                                     <value>sandbox</value>
                                 </property>
                             </systemProperties>
@@ -643,7 +643,7 @@
                                     <value>false</value>
                                 </property>
                                 <property>
-                                    <name>spring.profiles.active=sandbox</name>
+                                    <name>spring.profiles.active</name>
                                     <value>sandbox</value>
                                 </property>
                             </systemProperties>
