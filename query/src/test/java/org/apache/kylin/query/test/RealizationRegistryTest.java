@@ -18,20 +18,33 @@
 
 package org.apache.kylin.query.test;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.realization.RealizationRegistry;
-import org.apache.kylin.metadata.realization.RealizationType;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.metadata.realization.RealizationRegistry;
+import org.apache.kylin.metadata.realization.RealizationType;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Created by qianzhou on 1/26/15.
  */
-public class RealizationRegistryTest extends KylinQueryTest {
+public class RealizationRegistryTest extends LocalFileMetadataTestCase {
+    @Before
+    public void setup() throws Exception {
+
+        createTestMetadata();
+    }
+
+    @After
+    public void after() throws Exception {
+        cleanupTestMetadata();
+    }
 
     @Test
     public void test() throws Exception {
