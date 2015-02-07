@@ -13,7 +13,6 @@ import java.util.Properties;
 /**
  * Created by shaoshi on 2/5/15.
  */
-@Ignore
 public class JDBCDriverTest extends HBaseMetadataTestCase {
 
     private Server server = null;
