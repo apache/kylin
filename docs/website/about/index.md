@@ -14,7 +14,7 @@ title: About
           <div class="col-sm-12 col-md-12">
             <div >
             <p class="aboutkylin" style="font-size:1.2em">Apache Kylin, which is a distributed and scalable OLAP engine built on Hadoop to support
-extremely large datasets, developed and contributed by <a href="http://www.ebayinc.com/" target="_blank">eBay Inc</a> to open source community on Oct 1, 2015 and has been Apache Incubator Project since Nov 25, 2015. Refer to announcement on eBay Tech Blog for more detail: <a href="http://www.ebaytechblog.com/2014/10/20/announcing-kylin-extreme-olap-engine-for-big-data" target="_blank">Announcing Kylin: Extreme OLAP Engine for Big Data</a> </p>
+extremely large datasets, developed and contributed by <a href="http://www.ebayinc.com/" target="_blank">eBay Inc</a> to open source community on Oct 1, 2014 and has been Apache Incubator Project since Nov 25, 2014. Refer to announcement on eBay Tech Blog for more detail: <a href="http://www.ebaytechblog.com/2014/10/20/announcing-kylin-extreme-olap-engine-for-big-data" target="_blank">Announcing Kylin: Extreme OLAP Engine for Big Data</a> </p>
             
            
           </div>
