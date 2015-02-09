@@ -27,7 +27,7 @@ sh ${dir}/check-env.sh || { exit 1; }
 
 
 rm -rf ${tomcat_root}/webapps/*
-cp ${dir}/../webapp/kylin-server-*.war ${tomcat_root}/webapps/kylin.war
+cp ${dir}/../lib/kylin-server-*.war ${tomcat_root}/webapps/kylin.war
 
 source ${dir}/find-hive-dependency.sh
 
