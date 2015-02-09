@@ -9,15 +9,6 @@ else
     echo "KYLIN_HOME is set to ${KYLIN_HOME}"
 fi
 
-echo "Checking CATALINA_HOME..."
-if [ -z "$CATALINA_HOME" ]
-then
-    echo "Please set CATALINA_HOME so that Kylin knows where to start tomcat"
-    exit 1
-else
-    echo "CATALINA_HOME is set to $CATALINA_HOME"
-fi
-
 echo "Checking hbase..."
 if [ -z "$(command -v hbase version)" ]
 then
@@ -44,3 +35,5 @@ then
 else
     echo "hadoop check passed"
 fi
+
+exit 0

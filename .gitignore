@@ -73,4 +73,12 @@ server/.settings/org.eclipse.wst.jsdt.ui.superType.container
 server/.settings/org.eclipse.wst.jsdt.ui.superType.name
 #web
 webapp/app/WEB-INF/*
+webapp/dist
+webapp/node_modules:
+
+# package file
+tomcat
+lib
+*.tgz
+*.tar.gz
 webapp/app/components/*

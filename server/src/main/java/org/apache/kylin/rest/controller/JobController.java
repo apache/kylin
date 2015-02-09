@@ -84,7 +84,8 @@ public class JobController extends BasicController implements InitializingBean {
                         DefaultScheduler scheduler = DefaultScheduler.getInstance();
                         scheduler.init(new JobEngineConfig(kylinConfig));
                         if (!scheduler.hasStarted()) {
-                            throw new RuntimeException("scheduler has not been started");
+                            logger.error("scheduler has not been started");
+                            System.exit(1);
                         }
                     } catch (Exception e) {
                         throw new RuntimeException(e);

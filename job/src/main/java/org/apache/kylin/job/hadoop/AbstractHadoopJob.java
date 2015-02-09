@@ -113,10 +113,21 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         return optionsHelper.hasOption(option);
     }
 
+    private static final String MAP_REDUCE_CLASSPATH = "mapreduce.application.classpath";
+
     protected int waitForCompletion(Job job) throws IOException, InterruptedException, ClassNotFoundException {
         int retVal = 0;
         long start = System.nanoTime();
-
+        String kylinHiveDependency = System.getProperty("kylin.hive.dependency");
+        logger.info("append kylin.hive.dependency: " + kylinHiveDependency + " to " + MAP_REDUCE_CLASSPATH);
+        if (kylinHiveDependency != null) {
+            final String classpath = job.getConfiguration().get(MAP_REDUCE_CLASSPATH);
+            if (classpath == null) {
+                job.getConfiguration().set(MAP_REDUCE_CLASSPATH, kylinHiveDependency);
+            } else {
+                job.getConfiguration().set(MAP_REDUCE_CLASSPATH, classpath + ":" + kylinHiveDependency);
+            }
+        }
         if (isAsync) {
             job.submit();
         } else {
@@ -277,7 +288,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
     public static KylinConfig loadKylinPropsAndMetadata(Configuration conf) throws IOException {
         File metaDir = new File("meta");
-        System.setProperty(KylinConfig.KYLIN_CONF, metaDir.getAbsolutePath());
+        System.setProperty(KylinConfig.KYLIN_CONF_HOME, metaDir.getAbsolutePath());
         logger.info("The absolute path for meta dir is " + metaDir.getAbsolutePath());
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         kylinConfig.setMetadataUrl(metaDir.getCanonicalPath());
