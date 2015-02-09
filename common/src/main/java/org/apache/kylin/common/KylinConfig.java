@@ -18,22 +18,20 @@
 
 package org.apache.kylin.common;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-
+import com.google.common.collect.Sets;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.restclient.RestClient;
+import org.apache.kylin.common.util.CliCommandExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.common.restclient.RestClient;
-import org.apache.kylin.common.util.CliCommandExecutor;
+import java.io.*;
+import java.util.SortedSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author yangli9
@@ -61,7 +59,7 @@ public class KylinConfig {
 
     public static final String KYLIN_JOB_CONCURRENT_MAX_LIMIT = "kylin.job.concurrent.max.limit";
 
-    public static final String KYLIN_JOB_YARN_APP_REST_CHECK_STATUS_URL = "kylin.job.yarn.app.rest.check.status.url";
+//    public static final String KYLIN_JOB_YARN_APP_REST_CHECK_STATUS_URL = "kylin.job.yarn.app.rest.check.status.url";
 
     public static final String KYLIN_JOB_YARN_APP_REST_CHECK_INTERVAL_SECONDS = "kylin.job.yarn.app.rest.check.interval.seconds";
 
@@ -82,8 +80,6 @@ public class KylinConfig {
      * Toggle to indicate whether to use hive for table flattening. Default
      * true.
      */
-    public static final String KYLIN_JOB_HIVE_FLATTEN = "kylin.job.hive.flatten";
-
     public static final String KYLIN_JOB_RUN_AS_REMOTE_CMD = "kylin.job.run.as.remote.cmd";
 
     public static final String KYLIN_JOB_MAPREDUCE_DEFAULT_REDUCE_COUNT_RATIO = "kylin.job.mapreduce.default.reduce.count.ratio";
@@ -109,10 +105,6 @@ public class KylinConfig {
 
     public static final String HIVE_URL = "hive.url";
     /**
-     * Key string to point to the kylin conf directory
-     */
-    public static final String KYLIN_CONF = "KYLIN_CONF";
-    /**
      * Key string to specify the kylin evn: prod, dev, qa
      */
     public static final String KYLIN_ENV = "KYLIN_ENV";
@@ -135,7 +127,12 @@ public class KylinConfig {
 
     public static final String MAIL_SENDER = "mail.sender";
 
+    public static final String KYLIN_HOME = "KYLIN_HOME";
+    public static final String KYLIN_CONF_HOME = "KYLIN_CONF_HOME";
+
     private static final Logger logger = LoggerFactory.getLogger(KylinConfig.class);
+
+    public static final String VERSION = "${project.version}";
 
     // static cached instances
     private static KylinConfig ENV_INSTANCE = null;
@@ -295,15 +292,44 @@ public class KylinConfig {
     }
 
     public String getKylinJobJarPath() {
-        return getRequired(KYLIN_JOB_JAR);
+        final String jobJar = getOptional(KYLIN_JOB_JAR);
+        if (StringUtils.isNotEmpty(jobJar)) {
+            return jobJar;
+        }
+        return getFileName(getKylinHome() + File.separator + "lib", JOB_JAR_NAME_PATTERN);
     }
 
     public void overrideKylinJobJarPath(String path) {
         kylinConfig.setProperty(KYLIN_JOB_JAR, path);
     }
 
+    private static final Pattern COPROCESSOR_JAR_NAME_PATTERN = Pattern.compile("kylin-coprocessor-(.+)\\.jar");
+    private static final Pattern JOB_JAR_NAME_PATTERN = Pattern.compile("kylin-job-(.+)\\.jar");
+
     public String getCoprocessorLocalJar() {
-        return getRequired(COPROCESSOR_LOCAL_JAR);
+        final String coprocessorJar = getOptional(COPROCESSOR_LOCAL_JAR);
+        if (StringUtils.isNotEmpty(coprocessorJar)) {
+            return coprocessorJar;
+        }
+        return getFileName(getKylinHome() + File.separator + "lib", COPROCESSOR_JAR_NAME_PATTERN);
+    }
+
+    private static String getFileName(String homePath, Pattern pattern) {
+        File home = new File(homePath);
+        SortedSet<String> files = Sets.newTreeSet();
+        if (home.exists() && home.isDirectory()) {
+            for (File file : home.listFiles()) {
+                final Matcher matcher = pattern.matcher(file.getName());
+                if (matcher.matches()) {
+                    files.add(file.getAbsolutePath());
+                }
+            }
+        }
+        if (files.isEmpty()) {
+            throw new RuntimeException("cannot find " + pattern.toString() + " in " + homePath);
+        } else {
+            return files.last();
+        }
     }
 
     public void overrideCoprocessorLocalJar(String path) {
@@ -350,10 +376,6 @@ public class KylinConfig {
         return getOptional(KYLIN_JOB_CMD_EXTRA_ARGS);
     }
 
-    public boolean getFlatTableByHive() {
-        return Boolean.parseBoolean(getOptional(KYLIN_JOB_HIVE_FLATTEN, "true"));
-    }
-
     public String getOverrideHiveTableLocation(String table) {
         return getOptional(HIVE_TABLE_LOCATION_PREFIX + table.toUpperCase());
     }
@@ -362,9 +384,9 @@ public class KylinConfig {
         return getOptional(KYLIN_TMP_HDFS_DIR, "/tmp/kylin");
     }
 
-    public String getYarnStatusServiceUrl() {
-        return getOptional(KYLIN_JOB_YARN_APP_REST_CHECK_STATUS_URL, null);
-    }
+//    public String getYarnStatusServiceUrl() {
+//        return getOptional(KYLIN_JOB_YARN_APP_REST_CHECK_STATUS_URL, null);
+//    }
 
     public int getYarnStatusCheckIntervalSeconds() {
         return Integer.parseInt(getOptional(KYLIN_JOB_YARN_APP_REST_CHECK_INTERVAL_SECONDS, "60"));
@@ -438,17 +460,24 @@ public class KylinConfig {
     }
 
     private String getOptional(String prop) {
-        return kylinConfig.getString(prop);
+        final String property = System.getProperty(prop);
+        return property != null?property:kylinConfig.getString(prop);
     }
 
     private String getOptional(String prop, String dft) {
-        return kylinConfig.getString(prop, dft);
+        final String property = System.getProperty(prop);
+        return property != null?property:kylinConfig.getString(prop, dft);
     }
 
     private String getRequired(String prop) {
+        final String property = System.getProperty(prop);
+        if (property != null) {
+            return property;
+        }
         String r = kylinConfig.getString(prop);
-        if (StringUtils.isEmpty(r))
+        if (StringUtils.isEmpty(r)) {
             throw new IllegalArgumentException("missing '" + prop + "' in conf/kylin_instance.properties");
+        }
         return r;
     }
 
@@ -478,6 +507,14 @@ public class KylinConfig {
         }
     }
 
+    public static String getKylinHome() {
+        String kylinHome = System.getenv(KYLIN_HOME);
+        if (StringUtils.isEmpty(kylinHome)) {
+            logger.warn("KYLIN_HOME has not been set");
+            throw new RuntimeException("KYLIN_HOME has not been set");
+        }
+        return kylinHome;
+    }
     public void printProperties() throws IOException {
         try {
             kylinConfig.save(System.out);
@@ -486,57 +523,46 @@ public class KylinConfig {
         }
     }
 
+    private static File getKylinProperties() {
+        String kylinConfHome = System.getProperty(KYLIN_CONF_HOME);
+        if (StringUtils.isEmpty(kylinConfHome)) {
+            logger.warn("KYLIN_CONF_HOME has not been set");
+        } else {
+            return getKylinPropertiesFile(kylinConfHome);
+        }
+
+        String path = getKylinHome() + File.separator + "conf";
+        return getKylinPropertiesFile(path);
+
+    }
+
     public static InputStream getKylinPropertiesAsInputSteam() {
-        File propFile = null;
-
-        // 1st, find conf path from env
-        String path = System.getProperty(KYLIN_CONF);
-        if (path == null) {
-            path = System.getenv(KYLIN_CONF);
+        File propFile = getKylinProperties();
+        if (propFile == null || !propFile.exists()) {
+            logger.error("fail to locate kylin.properties");
+            throw new RuntimeException("fail to locate kylin.properties");
         }
-        propFile = getKylinPropertiesFile(path);
-
-        // 2nd, find /etc/kylin
-        if (propFile == null) {
-            propFile = getKylinPropertiesFile(KYLIN_CONF_DEFAULT);
-        }
-        if (propFile != null) {
-            logger.debug("Loading property file " + propFile.getAbsolutePath());
-            try {
-                return new FileInputStream(propFile);
-            } catch (FileNotFoundException e) {
-                logger.warn("Failed to read properties " + propFile.getAbsolutePath() + " and skip");
-            }
+        try {
+            return new FileInputStream(propFile);
+        } catch (FileNotFoundException e) {
+            logger.error("this should not happen");
+            throw new RuntimeException(e);
         }
 
-        // 3rd, find classpath
-        logger.info("Search " + KYLIN_CONF_PROPERTIES_FILE + " from classpath ...");
-        InputStream is = KylinConfig.class.getClassLoader().getResourceAsStream("kylin.properties");
-        if (is == null) {
-            logger.info("Did not find properties file " + KYLIN_CONF_PROPERTIES_FILE + " from classpath");
-        }
-        return is;
     }
 
     /**
      * Check if there is kylin.properties exist
      *
      * @param path
-     * @param env
      * @return the properties file
      */
     private static File getKylinPropertiesFile(String path) {
-        if (path == null)
+        if (path == null) {
             return null;
-
-        File propFile = new File(path, KYLIN_CONF_PROPERTIES_FILE);
-        if (propFile.exists()) {
-            logger.info(KYLIN_CONF_PROPERTIES_FILE + " was found at " + propFile.getAbsolutePath());
-            return propFile;
         }
 
-        logger.info(KYLIN_CONF_PROPERTIES_FILE + " was NOT found at " + propFile.getAbsolutePath());
-        return null;
+        return new File(path, KYLIN_CONF_PROPERTIES_FILE);
     }
 
     public String getMetadataUrl() {
