@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import com.kylinolap.jdbc.KylinMetaImpl.MetaProject;
 import com.kylinolap.jdbc.KylinPrepare.PrepareResult;
+import com.kylinolap.jdbc.util.URLEncodedUtils;
 
 /**
  * Kylin connection implementation
@@ -52,12 +53,14 @@ public abstract class KylinConnectionImpl extends AvaticaConnection {
     private MetaProject metaProject;
     public final List<AvaticaStatement> statements;
     static final Trojan TROJAN = createTrojan();
+    private Properties paraInfo = new Properties();
 
     protected KylinConnectionImpl(UnregisteredDriver driver, AvaticaFactory factory, String url, Properties info) {
         super(driver, factory, url, info);
 
-        String odbcUrl = url;
-        odbcUrl = odbcUrl.replace(Driver.CONNECT_STRING_PREFIX + "//", "");
+        paraInfo.putAll(this.info);
+        
+        String odbcUrl = URLEncodedUtils.parse(url, paraInfo);
         String[] temps = odbcUrl.split("/");
 
         assert temps.length == 2;
@@ -139,6 +142,14 @@ public abstract class KylinConnectionImpl extends AvaticaConnection {
 
     public void setMetaProject(MetaProject metaProject) {
         this.metaProject = metaProject;
+    }
+    
+    public Properties getParaInfo() {
+        return paraInfo;
+    }
+
+    public void setParaInfo(Properties paraInfo) {
+        this.paraInfo = paraInfo;
     }
 
     @Override
