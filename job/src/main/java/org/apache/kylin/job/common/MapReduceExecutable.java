@@ -116,8 +116,10 @@ public class MapReduceExecutable extends AbstractExecutable {
             }
             final StringBuilder output = new StringBuilder();
             final HadoopCmdOutput hadoopCmdOutput = new HadoopCmdOutput(job, output);
+            final String rmWebHost = job.getConfiguration().get("yarn.resourcemanager.webapp.address");
+            final String restStatusCheckUrl = rmWebHost + "/ws/v1/cluster/apps/${job_id}?anonymous=true";
             String mrJobId = hadoopCmdOutput.getMrJobId();
-            HadoopStatusChecker statusChecker = new HadoopStatusChecker(context.getConfig().getYarnStatusServiceUrl(), mrJobId, output);
+            HadoopStatusChecker statusChecker = new HadoopStatusChecker(restStatusCheckUrl, mrJobId, output);
             JobStepStatusEnum status = JobStepStatusEnum.NEW;
             while (!isDiscarded()) {
                 JobStepStatusEnum newStatus = statusChecker.checkStatus();
