@@ -300,7 +300,7 @@ public class KylinConfig {
     }
 
     public void overrideKylinJobJarPath(String path) {
-        kylinConfig.setProperty(KYLIN_JOB_JAR, path);
+        System.setProperty(KYLIN_JOB_JAR, path);
     }
 
     private static final Pattern COPROCESSOR_JAR_NAME_PATTERN = Pattern.compile("kylin-coprocessor-(.+)\\.jar");
@@ -333,7 +333,7 @@ public class KylinConfig {
     }
 
     public void overrideCoprocessorLocalJar(String path) {
-        kylinConfig.setProperty(COPROCESSOR_LOCAL_JAR, path);
+        System.setProperty(COPROCESSOR_LOCAL_JAR, path);
     }
 
     public int getCoprocessorScanBitsThreshold() {
