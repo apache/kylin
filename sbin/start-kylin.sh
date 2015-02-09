@@ -42,6 +42,7 @@ hbase -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
 -Dcatalina.base=${tomcat_root} \
 -Dcatalina.home=${tomcat_root} \
 -Djava.io.tmpdir=${tomcat_root}/temp  \
+-Dkylin.hive.dependency=${hive_dependency} \
 org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start > ${tomcat_root}/logs/kylin_sandbox.log 2>&1 &
 echo "A new Kylin instance is started by $USER, stop it using \"kylin.sh stop\""
 echo "Please visit http://<your_sandbox_ip>:7070/kylin to play with the cubes! (Useranme: ADMIN, Password: KYLIN)"

@@ -38,15 +38,12 @@ hbase -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
 -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
 -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true \
 -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true \
-\
--Dspring.profiles.active=sandbox \
--Dkylin.job.yarn.app.rest.check.status.url='http://sandbox:8088/ws/v1/cluster/apps/${job_id}?anonymous=true' \
--Dkylin.hive.dependency=${hive_dependency} \
-\
 -Djava.endorsed.dirs=${tomcat_root}/endorsed  \
 -Dcatalina.base=${tomcat_root} \
 -Dcatalina.home=${tomcat_root} \
 -Djava.io.tmpdir=${tomcat_root}/temp  \
+-Dkylin.hive.dependency=${hive_dependency} \
+-Dspring.profiles.active=sandbox \
 org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start > ${tomcat_root}/logs/kylin_sandbox.log 2>&1 &
 echo "A new Kylin instance is started by $USER, stop it using \"kylin.sh stop\""
 echo "Please visit http://<your_sandbox_ip>:7070/kylin to play with the cubes! (Useranme: ADMIN, Password: KYLIN)"
