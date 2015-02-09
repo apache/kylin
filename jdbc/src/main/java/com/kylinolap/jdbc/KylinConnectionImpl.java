@@ -16,12 +16,15 @@
 
 package com.kylinolap.jdbc;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.StringTokenizer;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -37,7 +40,6 @@ import org.slf4j.LoggerFactory;
 
 import com.kylinolap.jdbc.KylinMetaImpl.MetaProject;
 import com.kylinolap.jdbc.KylinPrepare.PrepareResult;
-import com.kylinolap.jdbc.util.URLEncodedUtils;
 
 /**
  * Kylin connection implementation
@@ -48,20 +50,19 @@ import com.kylinolap.jdbc.util.URLEncodedUtils;
 public abstract class KylinConnectionImpl extends AvaticaConnection {
     private static final Logger logger = LoggerFactory.getLogger(KylinConnectionImpl.class);
 
+    public final static String URLPARAMS_CHARACTER_ENCODING = "characterEncoding";
+
     private final String baseUrl;
     private final String project;
     private MetaProject metaProject;
     public final List<AvaticaStatement> statements;
     static final Trojan TROJAN = createTrojan();
-    private Properties paraInfo = new Properties();
 
     protected KylinConnectionImpl(UnregisteredDriver driver, AvaticaFactory factory, String url, Properties info) {
         super(driver, factory, url, info);
 
-        paraInfo.putAll(this.info);
-        
-        String odbcUrl = URLEncodedUtils.parse(url, paraInfo);
-        String[] temps = odbcUrl.split("/");
+        String jdbcUrl = parse(url, info);
+        String[] temps = jdbcUrl.split("/");
 
         assert temps.length == 2;
 
@@ -71,6 +72,55 @@ public abstract class KylinConnectionImpl extends AvaticaConnection {
         logger.debug("Kylin base url " + this.baseUrl + ", project name " + this.project);
 
         statements = new ArrayList<AvaticaStatement>();
+    }
+
+    /**
+     * parse connectionURL parameters
+     * @param strUrl jdbc:kylin://host/project[?characterEncoding=UTF-8[&..key1=value1]]
+     * 
+     * This could be rewritten using more standard library as suggested by http://stackoverflow.com/questions/2959897/parse-query-string-with-httpclient-to-extract-namevaluepairs
+     * 
+     * @param info 
+     **/
+    private String parse(String strUrl, Properties info) {
+
+        String url = strUrl.replace(Driver.CONNECT_STRING_PREFIX + "//", "");
+
+        int idx = url.indexOf("?");
+        if (idx != -1) {
+
+            String keyValues = url.substring(idx + 1);
+            url = url.substring(0, idx);
+
+            StringTokenizer queryParams = new StringTokenizer(keyValues, "&");
+            while (queryParams.hasMoreTokens()) {
+
+                String parameterValuePair = queryParams.nextToken();
+
+                int indexOfEquals = parameterValuePair.indexOf("=");
+
+                String parameter = null;
+                String value = null;
+
+                if (indexOfEquals != -1) {
+                    parameter = parameterValuePair.substring(0, indexOfEquals);
+
+                    if (indexOfEquals + 1 < parameterValuePair.length()) {
+                        value = parameterValuePair.substring(indexOfEquals + 1);
+                    }
+                }
+
+                if ((value != null && value.length() > 0) && (parameter != null && parameter.length() > 0)) {
+                    try {
+                        info.put(parameter, URLDecoder.decode(value, "UTF-8"));
+                    } catch (UnsupportedEncodingException ex) {
+                        throw new RuntimeException("", ex);
+                    }
+                }
+            }
+        }
+
+        return url;
     }
 
     @Override
@@ -143,13 +193,9 @@ public abstract class KylinConnectionImpl extends AvaticaConnection {
     public void setMetaProject(MetaProject metaProject) {
         this.metaProject = metaProject;
     }
-    
-    public Properties getParaInfo() {
-        return paraInfo;
-    }
 
-    public void setParaInfo(Properties paraInfo) {
-        this.paraInfo = paraInfo;
+    public String getCharacterEncoding() {
+        return info.getProperty(URLPARAMS_CHARACTER_ENCODING, "UTF-8");
     }
 
     @Override
