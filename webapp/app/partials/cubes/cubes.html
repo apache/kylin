@@ -95,13 +95,13 @@
                 </span>
             </td>
             <td><span tooltip-html-unsafe="<div style='text-align:left'>
-                Source Table Size: {{dataSize(cube.source_records_size)}}<br/>
-                Expansion Rate: {{(cube.source_records_size>0? cube.size_kb*1024/cube.source_records_size : 0) * 100 | number:2}}%
+                Source Table Size: {{dataSize(cube.input_records_size)}}<br/>
+                Expansion Rate: {{(cube.input_records_size>0? cube.size_kb*1024/cube.input_records_size : 0) * 100 | number:2}}%
                 </div>">{{dataSize(cube.size_kb*1024)}}</span></td>
             <td><span tooltip-html-unsafe="<div style='text-align:left'>
-                Source Table Size: {{dataSize(cube.source_records_size)}}<br/>
-                Expansion Rate: {{(cube.source_records_size>0? cube.size_kb*1024/cube.source_records_size : 0) * 100 | number:2}}%
-                </div>">{{ cube.source_records_count | number:0}}</span></td>
+                Source Table Size: {{dataSize(cube.input_records_size)}}<br/>
+                Expansion Rate: {{(cube.input_records_size>0? cube.size_kb*1024/cube.input_records_size : 0) * 100 | number:2}}%
+                </div>">{{ cube.input_records_count | number:0}}</span></td>
             <td>{{ (cube.last_build_time | utcToConfigTimeZone) }}</td>
             <td>{{ cube.owner}}</td>
             <td>{{ cube.create_time_utc | utcToConfigTimeZone}}</td>
