@@ -131,6 +131,7 @@ public class CuboidJob extends AbstractHadoopJob {
 
             return waitForCompletion(job);
         } catch (Exception e) {
+            logger.error("error in CuboidJob", e);
             printUsage(options);
             throw e;
         }

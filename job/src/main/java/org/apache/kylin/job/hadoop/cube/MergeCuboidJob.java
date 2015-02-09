@@ -100,6 +100,7 @@ public class MergeCuboidJob extends CuboidJob {
 
             return waitForCompletion(job);
         } catch (Exception e) {
+            logger.error("error in MergeCuboidJob", e);
             printUsage(options);
             throw e;
         }

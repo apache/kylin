@@ -80,6 +80,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             return waitForCompletion(job);
 
         } catch (Exception e) {
+            logger.error("error in FactDistinctColumnsJob", e);
             printUsage(options);
             throw e;
         }
