@@ -15,27 +15,45 @@ import java.util.Properties;
  */
 public class JDBCDriverTest extends HBaseMetadataTestCase {
 
-    private Server server = null;
+    private static Server server = null;
+
+    private static String previousSpringProfile = null;
+
+    private static String SPRING_PROFILE_PROPERTY = "spring.profiles.active";
+
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        previousSpringProfile = System.getProperty(SPRING_PROFILE_PROPERTY);
+        System.setProperty(SPRING_PROFILE_PROPERTY, "testing");
+        startJetty();
+    }
+
+    @AfterClass
+    public static void afterClass() throws Exception {
+        stopJetty();
+        if (previousSpringProfile == null) {
+            System.clearProperty(SPRING_PROFILE_PROPERTY);
+        } else {
+            System.setProperty(SPRING_PROFILE_PROPERTY, previousSpringProfile);
+        }
+    }
 
     @Before
     public void setup() throws Exception {
         this.createTestMetadata();
-        startJetty();
     }
 
     @After
     public void tearDown() throws Exception {
-        stopJetty();
         this.cleanupTestMetadata();
     }
 
-    public void stopJetty() throws Exception {
+    protected static void stopJetty() throws Exception {
         if (server != null)
             server.stop();
     }
 
-    public void startJetty() throws Exception {
-
+    protected static void startJetty() throws Exception {
         String jetty_home = System.getProperty("jetty.home", "..");
 
         server = new Server(7070);
@@ -52,7 +70,7 @@ public class JDBCDriverTest extends HBaseMetadataTestCase {
 
     }
 
-    private Connection getConnection() throws Exception {
+    protected Connection getConnection() throws Exception {
 
         Driver driver = (Driver) Class.forName("org.apache.kylin.jdbc.Driver").newInstance();
         Properties info = new Properties();
@@ -64,14 +82,62 @@ public class JDBCDriverTest extends HBaseMetadataTestCase {
     }
 
     @Test
-    public void test() throws Exception {
-        testMetadata();
-        testSimpleStatement();
-        testResultSet();
-        testPreparedStatement();
+    public void testMetadata1() throws Exception {
+
+        // check the JDBC API here: http://docs.oracle.com/javase/7/docs/api/java/sql/DatabaseMetaData.html
+        Connection conn = getConnection();
+
+        // test getSchemas();
+        List<String> schemaList = Lists.newArrayList();
+        DatabaseMetaData dbMetadata = conn.getMetaData();
+        ResultSet resultSet = dbMetadata.getSchemas();
+        while (resultSet.next()) {
+            String schema = resultSet.getString("TABLE_SCHEM");
+            String catalog = resultSet.getString("TABLE_CATALOG");
+
+            System.out.println("Get schema: schema=" + schema + ", catalog=" + catalog);
+            schemaList.add(schema);
+
+        }
+
+        resultSet.close();
+        Assert.assertTrue(schemaList.contains("DEFAULT"));
+        Assert.assertTrue(schemaList.contains("EDW"));
+
+        // test getCatalogs();
+        resultSet = dbMetadata.getCatalogs();
+
+        List<String> catalogList = Lists.newArrayList();
+        while (resultSet.next()) {
+            String catalog = resultSet.getString("TABLE_CAT");
+
+            System.out.println("Get catalog: catalog=" + catalog);
+            catalogList.add(catalog);
+
+        }
+        Assert.assertTrue(catalogList.size() > 0 && catalogList.contains("defaultCatalog"));
+
+        /** //Disable the test on getTableTypes() as it is not ready
+         resultSet = dbMetadata.getTableTypes();
+
+         List<String> tableTypes = Lists.newArrayList();
+         while (resultSet.next()) {
+         String type = resultSet.getString("TABLE_TYPE");
+
+         System.out.println("Get table type: type=" + type);
+         tableTypes.add(type);
+
+         }
+
+         Assert.assertTrue(tableTypes.size() > 0 && tableTypes.contains("TABLE"));
+         resultSet.close();
+
+         **/
+        conn.close();
     }
 
-    public void testMetadata() throws Exception {
+    @Test
+    public void testMetadata2() throws Exception {
         Connection conn = getConnection();
 
         List<String> tableList = Lists.newArrayList();
@@ -102,9 +168,11 @@ public class JDBCDriverTest extends HBaseMetadataTestCase {
         }
 
         Assert.assertTrue(columns.size() > 0 && columns.contains("CAL_DT"));
+        resultSet.close();
         conn.close();
     }
 
+    @Test
     public void testSimpleStatement() throws Exception {
         Connection conn = getConnection();
         Statement statement = conn.createStatement();
@@ -119,11 +187,13 @@ public class JDBCDriverTest extends HBaseMetadataTestCase {
         Assert.assertTrue(result > 0);
 
         rs.close();
+        statement.close();
         conn.close();
 
     }
 
 
+    @Test
     public void testPreparedStatement() throws Exception {
         Connection conn = getConnection();
 
@@ -141,10 +211,12 @@ public class JDBCDriverTest extends HBaseMetadataTestCase {
         Assert.assertTrue("FP-GTC".equals(format_name));
 
         rs.close();
+        statement.close();
         conn.close();
 
     }
 
+    @Test
     public void testResultSet() throws Exception {
         String sql = "select LSTG_FORMAT_NAME, sum(price) as GMV, count(1) as TRANS_CNT from test_kylin_fact \n" +
                 " group by LSTG_FORMAT_NAME ";
@@ -167,6 +239,7 @@ public class JDBCDriverTest extends HBaseMetadataTestCase {
         }
 
         Assert.assertTrue(count > 0);
+        statement.close();
         rs.close();
         conn.close();
 
