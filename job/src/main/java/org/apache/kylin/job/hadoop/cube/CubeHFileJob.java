@@ -100,6 +100,7 @@ public class CubeHFileJob extends AbstractHadoopJob {
 
             return waitForCompletion(job);
         } catch (Exception e) {
+            logger.error("error in CubeHFileJob", e);
             printUsage(options);
             throw e;
         }
