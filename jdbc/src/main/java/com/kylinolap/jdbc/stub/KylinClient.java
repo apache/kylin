@@ -52,7 +52,6 @@ import com.kylinolap.jdbc.KylinMetaImpl.MetaTable;
 import com.kylinolap.jdbc.stub.TableMetaStub.ColumnMetaStub;
 import com.kylinolap.jdbc.util.DefaultSslProtocolSocketFactory;
 import com.kylinolap.jdbc.util.SQLTypeMap;
-import com.kylinolap.jdbc.util.URLEncodedUtils;
 
 /**
  * @author xduo
@@ -306,7 +305,7 @@ public class KylinClient implements RemoteClient {
     }
 
     private void addPostHeaders(HttpMethodBase method) {
-        method.getParams().setContentCharset(this.conn.getParaInfo().getProperty(URLEncodedUtils.URLPARAMS_CHARACTER_ENCODING, "UTF-8"));
+        method.getParams().setContentCharset(conn.getCharacterEncoding());
         method.addRequestHeader("Accept", "application/json, text/plain, */*");
         method.addRequestHeader("Content-Type", "application/json");
         method.addRequestHeader("Authorization", "Basic " + conn.getBasicAuthHeader());
