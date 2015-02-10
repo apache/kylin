@@ -53,11 +53,15 @@ public class ModelController {
      */
     @RequestMapping(value = "/{model_name}", method = { RequestMethod.GET })
     @ResponseBody
-    public DataModelDesc getCube(@PathVariable String model_name) {
+    public DataModelDesc getModel(@PathVariable String model_name) {
         MetadataManager metaManager= MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
         DataModelDesc modeDesc = metaManager.getDataModelDesc(model_name);
         return modeDesc;
             
+    }
+
+    public void setCubeService(CubeService cubeService) {
+        this.cubeService = cubeService;
     }
 
 }
