@@ -18,6 +18,12 @@ cp job/target/kylin-job-${version}-job.jar lib/kylin-job-${version}.jar
 cp storage/target/kylin-storage-${version}-coprocessor.jar lib/kylin-coprocessor-${version}.jar
 
 echo "add js css to war"
+if [ ! -d "webapp/dist" ]
+then
+    echo "error generate js files"
+    exit 1
+fi
+
 cd webapp/dist
 for f in * .[^.]*
 do
