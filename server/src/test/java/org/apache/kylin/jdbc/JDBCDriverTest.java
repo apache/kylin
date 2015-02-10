@@ -25,27 +25,19 @@ public class JDBCDriverTest extends HBaseMetadataTestCase {
     public static void beforeClass() throws Exception {
         previousSpringProfile = System.getProperty(SPRING_PROFILE_PROPERTY);
         System.setProperty(SPRING_PROFILE_PROPERTY, "testing");
+        staticCreateTestMetadata();
         startJetty();
     }
 
     @AfterClass
     public static void afterClass() throws Exception {
         stopJetty();
+        staticCleanupTestMetadata();
         if (previousSpringProfile == null) {
             System.clearProperty(SPRING_PROFILE_PROPERTY);
         } else {
             System.setProperty(SPRING_PROFILE_PROPERTY, previousSpringProfile);
         }
-    }
-
-    @Before
-    public void setup() throws Exception {
-        this.createTestMetadata();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        this.cleanupTestMetadata();
     }
 
     protected static void stopJetty() throws Exception {
