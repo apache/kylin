@@ -18,18 +18,16 @@
 
 package org.apache.kylin.query.test;
 
-import com.google.common.collect.Maps;
-import org.apache.hadoop.hbase.coprocessor.CoprocessorHost;
-import org.apache.kylin.common.util.HBaseMiniclusterHelper;
+import java.io.File;
+import java.util.Map;
+
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.routing.RoutingRules.RealizationPriorityRule;
-import org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.File;
-import java.util.Map;
+import com.google.common.collect.Maps;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 2/2/15.
@@ -37,7 +35,6 @@ import java.util.Map;
 public class IIQueryTest extends KylinQueryTest {
     @BeforeClass
     public static void setUp() throws Exception {
-        HBaseMiniclusterHelper.UTIL.getConfiguration().setStrings(CoprocessorHost.REGION_COPROCESSOR_CONF_KEY, IIEndpoint.class.getName());
 
         KylinQueryTest.setUp();//invoke super class
         distinctCountSupported = false;
