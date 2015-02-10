@@ -34,7 +34,7 @@ source ${dir}/find-hive-dependency.sh
 export HBASE_CLASSPATH_PREFIX=${tomcat_root}/bin/bootstrap.jar:${tomcat_root}/bin/tomcat-juli.jar:${tomcat_root}/lib/*:$HBASE_CLASSPATH_PREFIX
 export HBASE_CLASSPATH=$hive_dependency:${HBASE_CLASSPATH}
 
-hbase -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
+hbase -XX:PermSize=256M -XX:MaxPermSize=512M -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
 -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
 -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true \
 -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true \
@@ -43,7 +43,7 @@ hbase -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
 -Dcatalina.home=${tomcat_root} \
 -Djava.io.tmpdir=${tomcat_root}/temp  \
 -Dkylin.hive.dependency=${hive_dependency} \
-org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start > ${tomcat_root}/logs/kylin_sandbox.log 2>&1 &
+org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrapstart > ${tomcat_root}/logs/kylin_sandbox.log 2>&1 &
 echo "A new Kylin instance is started by $USER, stop it using \"kylin.sh stop\""
 echo "Please visit http://<your_sandbox_ip>:7070/kylin to play with the cubes! (Useranme: ADMIN, Password: KYLIN)"
 echo "You can check the log at ${tomcat_root}/logs/kylin_sandbox.log"
