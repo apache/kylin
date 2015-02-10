@@ -16,51 +16,54 @@
 
 package com.kylinolap.storage.hbase;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import com.google.protobuf.ByteString;
-import com.kylinolap.cube.invertedindex.*;
-import com.kylinolap.storage.hbase.coprocessor.generated.IIProtos;
+import com.kylinolap.common.util.BytesUtil;
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IIManager;
+import com.kylinolap.invertedindex.IISegment;
+import com.kylinolap.invertedindex.index.Slice;
+import com.kylinolap.invertedindex.index.TableRecord;
+import com.kylinolap.invertedindex.index.RawTableRecord;
+import com.kylinolap.invertedindex.index.TableRecordInfo;
+import com.kylinolap.invertedindex.model.IIDesc;
+import com.kylinolap.invertedindex.model.IIKeyValueCodec;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.*;
-import org.apache.hadoop.hbase.client.coprocessor.Batch;
-import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
-import org.apache.hadoop.hbase.ipc.ServerRpcController;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.common.util.HadoopUtil;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
  * @author yangli9
  */
+@Ignore("ii not ready")
 public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
 
-    CubeInstance cube;
-    CubeSegment seg;
+    IIInstance ii;
+    IISegment seg;
     HConnection hconn;
+
+    TableRecordInfo info;
 
     @Before
     public void setup() throws Exception {
         this.createTestMetadata();
 
-        this.cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_ii");
-        this.seg = cube.getFirstSegment();
+        this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii");
+        this.seg = ii.getFirstSegment();
 
         String hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
         Configuration hconf = HadoopUtil.newHBaseConfiguration(hbaseUrl);
         hconn = HConnectionManager.createConnection(hconf);
+
+        this.info = new TableRecordInfo(seg);
     }
 
     @After
@@ -72,10 +75,10 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
     public void testLoad() throws Exception {
 
         String tableName = seg.getStorageLocationIdentifier();
-        IIKeyValueCodec codec = new IIKeyValueCodec(new TableRecordInfo(seg));
+        IIKeyValueCodec codec = new IIKeyValueCodec(info.getDigest());
 
         List<Slice> slices = Lists.newArrayList();
-        HBaseClientKVIterator kvIterator = new HBaseClientKVIterator(hconn, tableName, InvertedIndexDesc.HBASE_FAMILY_BYTES, InvertedIndexDesc.HBASE_QUALIFIER_BYTES);
+        HBaseClientKVIterator kvIterator = new HBaseClientKVIterator(hconn, tableName, IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES);
         try {
             for (Slice slice : codec.decodeKeyValue(kvIterator)) {
                 slices.add(slice);
@@ -89,47 +92,11 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
         System.out.println(records.size() + " records");
     }
 
-    @Test
-    public void testEndpoint() throws Throwable {
-        String tableName = seg.getStorageLocationIdentifier();
-        HTableInterface table = hconn.getTable(tableName);
-        final TableRecordInfoDigest recordInfo = new TableRecordInfo(seg);
-        final IIProtos.IIRequest request = IIProtos.IIRequest.newBuilder().setTableInfo(
-                ByteString.copyFrom(TableRecordInfoDigest.serialize(recordInfo))).build();
-
-        Map<byte[], List<TableRecord>> results = table.coprocessorService(IIProtos.RowsService.class,
-                null, null,
-                new Batch.Call<IIProtos.RowsService, List<TableRecord>>() {
-                    public List<TableRecord> call(IIProtos.RowsService counter) throws IOException {
-                        ServerRpcController controller = new ServerRpcController();
-                        BlockingRpcCallback<IIProtos.IIResponse> rpcCallback =
-                                new BlockingRpcCallback<IIProtos.IIResponse>();
-                        counter.getRows(controller, request, rpcCallback);
-                        IIProtos.IIResponse response = rpcCallback.get();
-                        if (controller.failedOnException()) {
-                            throw controller.getFailedOn();
-                        }
-
-                        List<TableRecord> records = new ArrayList<TableRecord>();
-                        for (ByteString raw : response.getRowsList()) {
-                            TableRecord record = new TableRecord(recordInfo);
-                            record.setBytes(raw.toByteArray(), 0, raw.size());
-                            records.add(record);
-                        }
-                        return records;
-                    }
-                });
-
-        for (Map.Entry<byte[], List<TableRecord>> entry : results.entrySet()) {
-            System.out.println("result count : " + entry.getValue());
-        }
-    }
-
     private List<TableRecord> iterateRecords(List<Slice> slices) {
         List<TableRecord> records = Lists.newArrayList();
         for (Slice slice : slices) {
-            for (TableRecordBytes rec : slice) {
-                records.add((TableRecord) rec.clone());
+            for (RawTableRecord rec : slice) {
+                records.add(new TableRecord((RawTableRecord) rec.clone(), info));
             }
         }
         return records;
@@ -138,6 +105,11 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
     private void dump(Iterable<TableRecord> records) {
         for (TableRecord rec : records) {
             System.out.println(rec.toString());
+
+            byte[] x = rec.getBytes();
+            String y = BytesUtil.toReadableText(x);
+            System.out.println(y);
+            System.out.println();
         }
     }
 

@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<configuration>
+
+    <property>
+        <name>mapreduce.job.split.metainfo.maxsize</name>
+        <value>-1</value>
+        <description>The maximum permissible size of the split metainfo file.
+            The JobTracker won't attempt to read split metainfo files bigger than
+            the configured value. No limits if set to -1.
+        </description>
+    </property>
+
+    <!-- uncomment the following 5 properties to enable lzo compressing
+
+	<property>
+		<name>mapred.compress.map.output</name>
+		<value>true</value>
+		<description>Compress map outputs</description>
+	</property>
+
+	<property>
+		<name>mapred.map.output.compression.codec</name>
+		<value>com.hadoop.compression.lzo.LzoCodec</value>
+		<description>The compression codec to use for map outputs
+		</description>
+	</property>
+
+	<property>
+		<name>mapred.output.compress</name>
+		<value>true</value>
+		<description>Compress the output of a MapReduce job</description>
+	</property>
+
+	<property>
+		<name>mapred.output.compression.codec</name>
+		<value>com.hadoop.compression.lzo.LzoCodec</value>
+		<description>The compression codec to use for job outputs
+		</description>
+	</property>
+
+	<property>
+		<name>mapred.output.compression.type</name>
+		<value>BLOCK</value>
+		<description>The compression type to use for job outputs</description>
+	</property>
+
+	!-->
+
+    <property>
+        <name>mapreduce.job.max.split.locations</name>
+        <value>2000</value>
+        <description>No description</description>
+    </property>
+
+    <property>
+        <name>dfs.replication</name>
+        <value>2</value>
+        <description>Block replication</description>
+    </property>
+</configuration>

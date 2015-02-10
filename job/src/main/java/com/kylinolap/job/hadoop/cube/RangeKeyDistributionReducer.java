@@ -17,75 +17,89 @@
 package com.kylinolap.job.hadoop.cube;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.kylinolap.common.mr.KylinReducer;
+import com.kylinolap.cube.model.v1.CubeDesc.CubeCapacity;
 import com.kylinolap.job.constant.BatchConstants;
-import com.kylinolap.metadata.model.cube.CubeDesc.CubeCapacity;
 
 /**
  * @author ysong1
  * 
  */
-public class RangeKeyDistributionReducer extends Reducer<Text, LongWritable, Text, LongWritable> {
+public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable, Text, LongWritable> {
 
-    public static final long TEN_GIGA_BYTES = 10L * 1024L * 1024L * 1024L;
-    public static final long TWENTY_GIGA_BYTES = 20L * 1024L * 1024L * 1024L;
-    public static final long HUNDRED_GIGA_BYTES = 100L * 1024L * 1024L * 1024L;
+    public static final long ONE_GIGA_BYTES = 1024L * 1024L * 1024L;
+    public static final int SMALL_CUT = 10;  //  10 GB per region
+    public static final int MEDIUM_CUT = 20; //  20 GB per region
+    public static final int LARGE_CUT = 100; // 100 GB per region
+    
+    public static final int MAX_REGION = 200;
+
+    private static final Logger logger = LoggerFactory.getLogger(RangeKeyDistributionReducer.class);
 
     private LongWritable outputValue = new LongWritable(0);
 
+    private int cut;
     private long bytesRead = 0;
-    private Text lastKey;
-
-    private CubeCapacity cubeCapacity;
-    private long cut;
+    private List<Text> gbPoints = new ArrayList<Text>();
 
     @Override
     protected void setup(Context context) throws IOException {
-        cubeCapacity = CubeCapacity.valueOf(context.getConfiguration().get(BatchConstants.CUBE_CAPACITY));
+        super.publishConfiguration(context.getConfiguration());
+
+        CubeCapacity cubeCapacity = CubeCapacity.valueOf(context.getConfiguration().get(BatchConstants.CUBE_CAPACITY));
         switch (cubeCapacity) {
         case SMALL:
-            cut = TEN_GIGA_BYTES;
+            cut = SMALL_CUT;
             break;
         case MEDIUM:
-            cut = TWENTY_GIGA_BYTES;
+            cut = MEDIUM_CUT;
             break;
         case LARGE:
-            cut = HUNDRED_GIGA_BYTES;
+            cut = LARGE_CUT;
             break;
         }
+
+        logger.info("Chosen cut for htable is " + cut);
     }
 
     @Override
     public void reduce(Text key, Iterable<LongWritable> values, Context context) throws IOException, InterruptedException {
-        lastKey = key;
-        long length = 0;
         for (LongWritable v : values) {
-            length += v.get();
+            bytesRead += v.get();
         }
-
-        bytesRead += length;
-
-        if (bytesRead >= cut) {
-            outputValue.set(bytesRead);
-            context.write(key, outputValue);
-            System.out.println(StringUtils.byteToHexString(key.getBytes()) + "\t" + outputValue.get());
-            // reset bytesRead
-            bytesRead = 0;
+        
+        if (bytesRead >= ONE_GIGA_BYTES) {
+            gbPoints.add(new Text(key));
+            bytesRead = 0; // reset bytesRead
         }
-
     }
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
-        if (lastKey != null) {
-            outputValue.set(bytesRead);
-            context.write(lastKey, outputValue);
-            System.out.println(StringUtils.byteToHexString(lastKey.getBytes()) + "\t" + outputValue.get());
+        int nRegion = Math.round((float) gbPoints.size() / (float) cut);
+        nRegion = Math.max(1,  nRegion);
+        nRegion = Math.min(MAX_REGION, nRegion);
+        
+        int gbPerRegion = gbPoints.size() / nRegion;
+        gbPerRegion = Math.max(1, gbPerRegion);
+        
+        System.out.println(nRegion + " regions");
+        System.out.println(gbPerRegion + " GB per region");
+        
+        for (int i = gbPerRegion; i < gbPoints.size(); i += gbPerRegion) {
+            Text key = gbPoints.get(i);
+            outputValue.set(i);
+            System.out.println(StringUtils.byteToHexString(key.getBytes()) + "\t" + outputValue.get());
+            context.write(key, outputValue);
         }
     }
 }

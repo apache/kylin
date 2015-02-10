@@ -33,26 +33,29 @@ import org.xml.sax.SAXException;
 
 import com.kylinolap.common.util.StringUtil;
 import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.engine.JobEngineConfig;
-import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc;
-import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc.IntermediateColumnDesc;
+import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
+import com.kylinolap.job.hadoop.hive.IJoinedFlatTableDesc;
+import com.kylinolap.job.hadoop.hive.IntermediateColumnDesc;
 import com.kylinolap.job.hadoop.hive.SqlHiveDataTypeMapping;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.DimensionDesc;
-import com.kylinolap.metadata.model.cube.JoinDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.DataModelDesc;
+import com.kylinolap.metadata.model.JoinDesc;
+import com.kylinolap.metadata.model.LookupDesc;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * @author George Song (ysong1)
  * 
  */
+
 public class JoinedFlatTable {
 
-    public static String getTableDir(JoinedFlatTableDesc intermediateTableDesc, String storageDfsDir, String jobUUID) {
+    public static String getTableDir(IJoinedFlatTableDesc intermediateTableDesc, String storageDfsDir, String jobUUID) {
         return storageDfsDir + "/" + intermediateTableDesc.getTableName(jobUUID);
     }
 
-    public static String generateCreateTableStatement(JoinedFlatTableDesc intermediateTableDesc, String storageDfsDir, String jobUUID) {
+    public static String generateCreateTableStatement(IJoinedFlatTableDesc intermediateTableDesc, String storageDfsDir, String jobUUID) {
         StringBuilder ddl = new StringBuilder();
 
         ddl.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + intermediateTableDesc.getTableName(jobUUID) + "\n");
@@ -63,28 +66,28 @@ public class JoinedFlatTable {
             if (i > 0) {
                 ddl.append(",");
             }
-            ddl.append(col.getColumnName() + " " + SqlHiveDataTypeMapping.getHiveDataType(col.getDataType()) + "\n");
+            ddl.append(colName(col.getCanonicalName()) + " " + SqlHiveDataTypeMapping.getHiveDataType(col.getDataType()) + "\n");
         }
         ddl.append(")" + "\n");
 
         ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\177'" + "\n");
         ddl.append("STORED AS SEQUENCEFILE" + "\n");
-        ddl.append("LOCATION '" + storageDfsDir + "/" + intermediateTableDesc.getTableName(jobUUID) + "'" + ";");
+        ddl.append("LOCATION '" + storageDfsDir + "/" + intermediateTableDesc.getTableName(jobUUID) + "';").append("\n");
         // ddl.append("TBLPROPERTIES ('serialization.null.format'='\\\\N')" +
         // ";\n");
         return ddl.toString();
     }
 
-    public static String generateDropTableStatement(JoinedFlatTableDesc intermediateTableDesc, String jobUUID) {
+    public static String generateDropTableStatement(IJoinedFlatTableDesc intermediateTableDesc, String jobUUID) {
         StringBuilder ddl = new StringBuilder();
-        ddl.append("DROP TABLE IF EXISTS " + intermediateTableDesc.getTableName(jobUUID) + ";");
+        ddl.append("DROP TABLE IF EXISTS " + intermediateTableDesc.getTableName(jobUUID) + ";").append("\n");
         return ddl.toString();
     }
 
-    public static String generateInsertDataStatement(JoinedFlatTableDesc intermediateTableDesc, String jobUUID, JobEngineConfig engineConfig) throws IOException {
+    public static String generateInsertDataStatement(IJoinedFlatTableDesc intermediateTableDesc, String jobUUID, JobEngineConfig engineConfig) throws IOException {
         StringBuilder sql = new StringBuilder();
 
-        File hadoopPropertiesFile = new File(engineConfig.getHadoopJobConfFilePath(intermediateTableDesc.getCubeDesc().getCapacity()));
+        File hadoopPropertiesFile = new File(engineConfig.getHadoopJobConfFilePath(intermediateTableDesc.getCapacity()));
 
         if (hadoopPropertiesFile.exists()) {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -98,7 +101,7 @@ public class JoinedFlatTable {
                     String name = doc.getElementsByTagName("name").item(i).getFirstChild().getNodeValue();
                     String value = doc.getElementsByTagName("value").item(i).getFirstChild().getNodeValue();
                     if (name.equals("tmpjars") == false) {
-                        sql.append("SET " + name + "=" + value + ";\n");
+                        sql.append("SET " + name + "=" + value + ";").append("\n");
                     }
                 }
 
@@ -110,56 +113,57 @@ public class JoinedFlatTable {
         }
 
         // hard coded below mr parameters to enable map-side join
-        sql.append("SET hive.exec.compress.output=true;" + "\n");
-        sql.append("SET hive.auto.convert.join.noconditionaltask = true;" + "\n");
-        sql.append("SET hive.auto.convert.join.noconditionaltask.size = 300000000;" + "\n");
-        sql.append("INSERT OVERWRITE TABLE " + intermediateTableDesc.getTableName(jobUUID) + "\n");
+        sql.append("SET hive.exec.compress.output=true;").append("\n");
+        sql.append("SET hive.auto.convert.join.noconditionaltask = true;").append("\n");
+        sql.append("SET hive.auto.convert.join.noconditionaltask.size = 300000000;").append("\n");
+        sql.append("INSERT OVERWRITE TABLE " + intermediateTableDesc.getTableName(jobUUID) + " " + generateSelectDataStatement(intermediateTableDesc) + ";").append("\n");
 
-        sql.append(generateSelectDataStatement(intermediateTableDesc));
-        sql.append(";");
         return sql.toString();
     }
 
-    public static String generateSelectDataStatement(JoinedFlatTableDesc intermediateTableDesc) {
+    public static String generateSelectDataStatement(IJoinedFlatTableDesc intermediateTableDesc) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT" + "\n");
+        String tableAlias;
         for (int i = 0; i < intermediateTableDesc.getColumnList().size(); i++) {
             IntermediateColumnDesc col = intermediateTableDesc.getColumnList().get(i);
             if (i > 0) {
                 sql.append(",");
             }
-            sql.append(col.getTableName() + "." + col.getColumnName() + "\n");
+            tableAlias = intermediateTableDesc.getTableAlias(col.getTableName());
+            sql.append(tableAlias + "." + col.getColumnName() + "\n");
         }
         appendJoinStatement(intermediateTableDesc, sql);
         appendWhereStatement(intermediateTableDesc, sql);
         return sql.toString();
     }
 
-    private static void appendJoinStatement(JoinedFlatTableDesc intermediateTableDesc, StringBuilder sql) {
+    private static void appendJoinStatement(IJoinedFlatTableDesc intermediateTableDesc, StringBuilder sql) {
         Set<String> dimTableCache = new HashSet<String>();
 
-        CubeDesc cubeDesc = intermediateTableDesc.getCubeDesc();
-        String factTableName = cubeDesc.getFactTable();
-        sql.append("FROM " + factTableName + "\n");
+        DataModelDesc dataModelDesc = intermediateTableDesc.getDataModel();
+        String factTableName = dataModelDesc.getFactTable();
+        String factTableAlias = intermediateTableDesc.getTableAlias(factTableName);
+        sql.append("FROM " + factTableName + " as " + factTableAlias + " \n");
 
-        for (DimensionDesc dim : cubeDesc.getDimensions()) {
-            JoinDesc join = dim.getJoin();
+        for (LookupDesc lookupDesc : dataModelDesc.getLookups()) {
+            JoinDesc join = lookupDesc.getJoin();
             if (join != null && join.getType().equals("") == false) {
                 String joinType = join.getType().toUpperCase();
-                String dimTableName = dim.getTable();
+                String dimTableName = lookupDesc.getTable();
                 if (!dimTableCache.contains(dimTableName)) {
                     TblColRef[] pk = join.getPrimaryKeyColumns();
                     TblColRef[] fk = join.getForeignKeyColumns();
                     if (pk.length != fk.length) {
-                        throw new RuntimeException("Invalid join condition of dimension " + dim.getName());
+                        throw new RuntimeException("Invalid join condition of lookup table:" + lookupDesc);
                     }
-                    sql.append(joinType + " JOIN " + dimTableName + "\n");
+                    sql.append(joinType + " JOIN " + dimTableName + " as " + intermediateTableDesc.getTableAlias(dimTableName) + "\n");
                     sql.append("ON ");
                     for (int i = 0; i < pk.length; i++) {
                         if (i > 0) {
                             sql.append(" AND ");
                         }
-                        sql.append(factTableName + "." + fk[i].getName() + " = " + dimTableName + "." + pk[i].getName());
+                        sql.append(factTableAlias + "." + fk[i].getName() + " = " + intermediateTableDesc.getTableAlias(dimTableName) + "." + pk[i].getName());
                     }
                     sql.append("\n");
 
@@ -169,29 +173,40 @@ public class JoinedFlatTable {
         }
     }
 
-    private static void appendWhereStatement(JoinedFlatTableDesc intermediateTableDesc, StringBuilder sql) {
+    private static void appendWhereStatement(IJoinedFlatTableDesc intermediateTableDesc, StringBuilder sql) {
+        if (!(intermediateTableDesc instanceof CubeJoinedFlatTableDesc)) {
+            return;//TODO: for now only cube segments support filter and partition
+        }
+        CubeJoinedFlatTableDesc desc = (CubeJoinedFlatTableDesc) intermediateTableDesc;
+
         boolean hasCondition = false;
         StringBuilder whereBuilder = new StringBuilder();
         whereBuilder.append("WHERE");
 
-        CubeDesc cubeDesc = intermediateTableDesc.getCubeDesc();
+        CubeDesc cubeDesc = desc.getCubeDesc();
 
-        if (cubeDesc.getFilterCondition() != null && cubeDesc.getFilterCondition().equals("") == false) {
-            whereBuilder.append(" (").append(cubeDesc.getFilterCondition()).append(") ");
+        if (cubeDesc.getModel().getFilterCondition() != null && cubeDesc.getModel().getFilterCondition().equals("") == false) {
+            whereBuilder.append(" (").append(cubeDesc.getModel().getFilterCondition()).append(") ");
             hasCondition = true;
         }
 
-        CubeSegment cubeSegment = intermediateTableDesc.getCubeSegment();
+        CubeSegment cubeSegment = desc.getCubeSegment();
 
         if (null != cubeSegment) {
             long dateStart = cubeSegment.getDateRangeStart();
             long dateEnd = cubeSegment.getDateRangeEnd();
 
-            if (cubeSegment.getCubeInstance().needMergeImmediatelyAfterBuild(cubeSegment)) {
-                dateStart = cubeSegment.getCubeInstance().getDateRange()[1];
-            }
-            if (!(dateStart == 0 && dateEnd == 0)) {
-                String partitionColumnName = cubeDesc.getCubePartitionDesc().getPartitionDateColumn();
+            if (!(dateStart == 0 && dateEnd == Long.MAX_VALUE)) {
+                String partitionColumnName = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumn();
+                int indexOfDot = partitionColumnName.lastIndexOf(".");
+
+                // convert to use table alias;
+                if (indexOfDot > 0) {
+                    String partitionTableName = partitionColumnName.substring(0, indexOfDot);
+                    String columeOnly = partitionColumnName.substring(indexOfDot);
+                    String partitionTableAlias = desc.getTableAlias(partitionTableName);
+                    partitionColumnName = partitionTableAlias + columeOnly;
+                }
 
                 whereBuilder.append(hasCondition ? " AND (" : " (");
                 if (dateStart > 0) {
@@ -216,5 +231,9 @@ public class JoinedFlatTable {
         String str = f.format(date);
         // note "2014-10-01" >= "2014-10-01 00:00:00" is FALSE
         return StringUtil.dropSuffix(str, " 00:00:00");
+    }
+    
+    private static String colName(String canonicalColName) {
+        return canonicalColName.replace(".", "_");
     }
 }

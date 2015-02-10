@@ -36,8 +36,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.job.JobInstance;
-import com.kylinolap.job.JobManager;
 import com.kylinolap.job.constant.JobStatusEnum;
+import com.kylinolap.job.engine.JobEngineConfig;
+import com.kylinolap.job.impl.threadpool.DefaultScheduler;
 import com.kylinolap.rest.constant.Constant;
 import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.request.JobListRequest;
@@ -68,7 +69,8 @@ public class JobController extends BasicController implements InitializingBean {
         TimeZone tzone = TimeZone.getTimeZone(timeZone);
         TimeZone.setDefault(tzone);
 
-        String serverMode = KylinConfig.getInstanceFromEnv().getServerMode();
+        final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        String serverMode = kylinConfig.getServerMode();
 
         if (Constant.SERVER_MODE_JOB.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase())) {
             logger.info("Initializing Job Engine ....");
@@ -76,11 +78,12 @@ public class JobController extends BasicController implements InitializingBean {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    JobManager jobManager = null;
                     try {
-                        jobManager = jobService.getJobManager();
-                        jobManager.startJobEngine();
-                        metricsService.registerJobMetrics(jobManager);
+                        DefaultScheduler scheduler = DefaultScheduler.getInstance();
+                        scheduler.init(new JobEngineConfig(kylinConfig));
+                        if (!scheduler.hasStarted()) {
+                            throw new RuntimeException("scheduler has not been started");
+                        }
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -92,8 +95,6 @@ public class JobController extends BasicController implements InitializingBean {
     /**
      * get all cube jobs
      * 
-     * @param cubeName
-     *            Cube ID
      * @return
      * @throws IOException
      */
@@ -122,8 +123,6 @@ public class JobController extends BasicController implements InitializingBean {
     /**
      * Get a cube job
      * 
-     * @param cubeName
-     *            Cube ID
      * @return
      * @throws IOException
      */
@@ -144,62 +143,40 @@ public class JobController extends BasicController implements InitializingBean {
     /**
      * Get a job step output
      * 
-     * @param cubeName
-     *            Cube ID
      * @return
      * @throws IOException
      */
     @RequestMapping(value = "/{jobId}/steps/{stepId}/output", method = { RequestMethod.GET })
     @ResponseBody
-    public Map<String, String> getStepOutput(@PathVariable String jobId, @PathVariable int stepId) {
+    public Map<String, String> getStepOutput(@PathVariable String jobId, @PathVariable String stepId) {
         Map<String, String> result = new HashMap<String, String>();
         result.put("jobId", jobId);
         result.put("stepId", String.valueOf(stepId));
-        long start = System.currentTimeMillis();
-        String output = "";
-
-        try {
-            output = jobService.getJobManager().getJobStepOutput(jobId, stepId);
-        } catch (Exception e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e);
-        }
-
-        result.put("cmd_output", output);
-        long end = System.currentTimeMillis();
-        logger.info("Complete fetching step " + jobId + ":" + stepId + " output in " + (end - start) + " seconds");
+        result.put("cmd_output", jobService.getExecutableManager().getOutput(stepId).getVerboseMsg());
         return result;
     }
 
     /**
      * Resume a cube job
      * 
-     * @param String
-     *            Job ID
      * @return
      * @throws IOException
      */
     @RequestMapping(value = "/{jobId}/resume", method = { RequestMethod.PUT })
     @ResponseBody
     public JobInstance resume(@PathVariable String jobId) {
-        JobInstance jobInstance = null;
         try {
-            jobInstance = jobService.getJobInstance(jobId);
-            jobService.resumeJob(jobInstance);
-            jobInstance = jobService.getJobInstance(jobId);
+            jobService.resumeJob(jobId);
+            return jobService.getJobInstance(jobId);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e);
         }
-
-        return jobInstance;
     }
 
     /**
      * Cancel a job
      * 
-     * @param String
-     *            Job ID
      * @return
      * @throws IOException
      */
@@ -207,16 +184,13 @@ public class JobController extends BasicController implements InitializingBean {
     @ResponseBody
     public JobInstance cancel(@PathVariable String jobId) {
 
-        JobInstance jobInstance = null;
         try {
-            jobInstance = jobService.getJobInstance(jobId);
-            jobService.cancelJob(jobInstance);
+            return jobService.cancelJob(jobId);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e);
         }
 
-        return jobInstance;
     }
 
     public void setJobService(JobService jobService) {

@@ -17,6 +17,7 @@
 package com.kylinolap.rest.service;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -28,11 +29,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.project.ProjectManager;
+import com.kylinolap.dict.DictionaryManager;
+import com.kylinolap.invertedindex.IIManager;
 import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.project.ProjectManager;
 
 /**
  * @author xduo
@@ -40,31 +42,28 @@ import com.kylinolap.metadata.MetadataManager;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:applicationContext.xml", "classpath:kylinSecurity.xml" })
 @ActiveProfiles("testing")
-public class ServiceTestBase extends HBaseMetadataTestCase {
+public class ServiceTestBase extends HBaseMetadataTestCase { //HBaseMetadataTestCase {
 
     @BeforeClass
     public static void setupResource() throws Exception {
-
         staticCreateTestMetadata();
-
         Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", "ROLE_ADMIN");
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
+    @AfterClass
+    public static void tearDownResource() {
+    }
+
     @Before
-    public void setUp() {
-        KylinConfig.destoryInstance();
+    public void setUp() throws Exception {
         this.createTestMetadata();
 
-//        try {
-//            this.installMetadataToHBase();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-
-        MetadataManager.removeInstance(getTestConfig());
-        CubeManager.removeInstance(this.getTestConfig());
-        ProjectManager.removeInstance(this.getTestConfig());
+        MetadataManager.clearCache();
+        DictionaryManager.clearCache();
+        CubeManager.clearCache();
+        IIManager.clearCache();
+        ProjectManager.clearCache();
     }
 
     @After
@@ -77,6 +76,6 @@ public class ServiceTestBase extends HBaseMetadataTestCase {
      * com.kylinolap.rest.service.TestBase.initializationError
      */
     @Test
-    public void test() {
+    public void test() throws Exception {
     }
 }

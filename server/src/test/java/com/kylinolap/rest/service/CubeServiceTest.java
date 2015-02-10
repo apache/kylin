@@ -25,12 +25,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.job.exception.JobException;
+import com.kylinolap.metadata.project.ProjectInstance;
 
 /**
  * @author xduo
- * 
  */
 public class CubeServiceTest extends ServiceTestBase {
 
@@ -39,7 +38,6 @@ public class CubeServiceTest extends ServiceTestBase {
 
     @Test
     public void testBasics() throws JsonProcessingException, JobException, UnknownHostException {
-        Assert.assertNotNull(cubeService.getJobManager());
         Assert.assertNotNull(cubeService.getConfig());
         Assert.assertNotNull(cubeService.getKylinConfig());
         Assert.assertNotNull(cubeService.getMetadataManager());

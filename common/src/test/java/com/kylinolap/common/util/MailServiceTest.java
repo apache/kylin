@@ -14,37 +14,50 @@
  * limitations under the License.
  */
 
-
 package com.kylinolap.common.util;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.kylinolap.common.KylinConfig;
 
-public class MailServiceTest {
+@Ignore("convenient trial tool for dev")
+public class MailServiceTest extends LocalFileMetadataTestCase {
+
+    @Before
+    public void setup() throws Exception {
+        this.createTestMetadata();
+
+    }
+
+    @After
+    public void after() throws Exception {
+        this.cleanupTestMetadata();
+    }
 
     @Test
     public void testSendEmail() throws IOException {
-        
-        @SuppressWarnings("deprecation")
-        KylinConfig config = KylinConfig.getInstanceForTest(AbstractKylinTestCase.SANDBOX_TEST_DATA);
+
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
 
         MailService mailservice = new MailService(config);
         boolean sent = sendTestEmail(mailservice);
         assert sent;
-        
+
         // set mail.enabled=false, and run again, this time should be no mail delviered
         config.setProperty(KylinConfig.MAIL_ENABLED, "false");
         mailservice = new MailService(config);
         sent = sendTestEmail(mailservice);
         assert !sent;
-        
+
     }
-    
+
     private boolean sendTestEmail(MailService mailservice) {
 
         List<String> receivers = new ArrayList<String>(1);

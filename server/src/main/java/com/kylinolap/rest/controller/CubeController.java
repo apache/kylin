@@ -43,15 +43,16 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.kylinolap.common.util.JsonUtil;
-import com.kylinolap.cube.CubeBuildTypeEnum;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.exception.CubeIntegrityException;
-import com.kylinolap.cube.project.ProjectInstance;
+import com.kylinolap.cube.model.CubeBuildTypeEnum;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.JobInstance;
-import com.kylinolap.job.exception.InvalidJobInstanceException;
+import com.kylinolap.job.JoinedFlatTable;
 import com.kylinolap.job.exception.JobException;
-import com.kylinolap.metadata.model.cube.CubeDesc;
+import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
+import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.rest.exception.BadRequestException;
 import com.kylinolap.rest.exception.ForbiddenException;
 import com.kylinolap.rest.exception.InternalErrorException;
@@ -62,7 +63,7 @@ import com.kylinolap.rest.response.GeneralResponse;
 import com.kylinolap.rest.response.HBaseResponse;
 import com.kylinolap.rest.service.CubeService;
 import com.kylinolap.rest.service.JobService;
-import com.kylinolap.storage.hbase.observer.CoprocessorEnabler;
+import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
 
 /**
  * CubeController is defined as Restful API entrance for UI.
@@ -99,16 +100,11 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "/{cubeName}/segs/{segmentName}/sql", method = { RequestMethod.GET })
     @ResponseBody
     public GeneralResponse getSql(@PathVariable String cubeName, @PathVariable String segmentName) {
-        String sql = null;
-        try {
-            sql = cubeService.getJobManager().previewFlatHiveQL(cubeName, segmentName);
-        } catch (JobException e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
-        } catch (UnknownHostException e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
-        }
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        CubeDesc cubeDesc = cube.getDescriptor();
+        CubeSegment cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.READY);
+        CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, cubeSegment);
+        String sql = JoinedFlatTable.generateSelectDataStatement(flatTableDesc);
 
         GeneralResponse repsonse = new GeneralResponse();
         repsonse.setProperty("sql", sql);
@@ -159,8 +155,8 @@ public class CubeController extends BasicController {
     @ResponseBody
     public Map<String, Boolean> updateCubeCoprocessor(@PathVariable String cubeName, @RequestParam(value = "force") String force) {
         try {
-            CoprocessorEnabler.updateCubeOverride(cubeName, force);
-            return CoprocessorEnabler.getCubeOverrides();
+            ObserverEnabler.updateCubeOverride(cubeName, force);
+            return ObserverEnabler.getCubeOverrides();
         } catch (Exception e) {
             String message = "Failed to update cube coprocessor: " + cubeName + " : " + force;
             logger.error(message, e);
@@ -192,31 +188,22 @@ public class CubeController extends BasicController {
      * @return
      * @throws SchedulerException
      * @throws IOException
-     * @throws InvalidJobInstanceException
      */
     @RequestMapping(value = "/{cubeName}/rebuild", method = { RequestMethod.PUT })
     @ResponseBody
     public JobInstance rebuild(@PathVariable String cubeName, @RequestBody JobBuildRequest jobBuildRequest) {
-        JobInstance jobInstance = null;
         try {
-            CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
-            
             String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
-
-            String jobId = jobService.submitJob(cube, jobBuildRequest.getStartTime(), jobBuildRequest.getEndTime(), CubeBuildTypeEnum.valueOf(jobBuildRequest.getBuildType()),submitter);
-            jobInstance = jobService.getJobInstance(jobId);
+            CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
+            return jobService.submitJob(cube, jobBuildRequest.getStartTime(), jobBuildRequest.getEndTime(), //
+                    CubeBuildTypeEnum.valueOf(jobBuildRequest.getBuildType()), submitter);
         } catch (JobException e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage());
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage());
-        } catch (InvalidJobInstanceException e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
         }
-
-        return jobInstance;
     }
 
     @RequestMapping(value = "/{cubeName}/disable", method = { RequestMethod.PUT })
@@ -256,7 +243,6 @@ public class CubeController extends BasicController {
             throw new InternalErrorException(message + " Caused by: " + e.getMessage(), e);
         }
     }
-
 
     @RequestMapping(value = "/{cubeName}/enable", method = { RequestMethod.PUT })
     @ResponseBody
@@ -320,7 +306,7 @@ public class CubeController extends BasicController {
             cubeService.createCubeAndDesc(name, projectName, desc);
         } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);
-            throw new InternalErrorException(e.getLocalizedMessage(),e);
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
 
         cubeRequest.setUuid(desc.getUuid());
@@ -437,7 +423,6 @@ public class CubeController extends BasicController {
     }
 
     /**
-     * @param error
      * @return
      */
     private String omitMessage(List<String> errors) {

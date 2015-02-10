@@ -28,8 +28,8 @@ import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.cuboid.Cuboid;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
 
 /**
  * @author George Song (ysong1)
@@ -40,7 +40,7 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
-        MetadataManager.removeInstance(this.getTestConfig());
+        MetadataManager.clearCache();
     }
 
     @After
@@ -50,7 +50,7 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testEncodeWithoutSlr() throws Exception {
-        CubeInstance cube = CubeManager.getInstance(this.getTestConfig()).getCube("TEST_KYLIN_CUBE_WITHOUT_SLR_READY");
+        CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("TEST_KYLIN_CUBE_WITHOUT_SLR_READY");
         // CubeSegment seg = cube.getTheOnlySegment();
         CubeDesc cubeDesc = cube.getDescriptor();
         // String data =
@@ -79,7 +79,7 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testEncodeWithSlr() throws Exception {
-        CubeInstance cube = CubeManager.getInstance(this.getTestConfig()).getCube("TEST_KYLIN_CUBE_WITH_SLR_READY");
+        CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("TEST_KYLIN_CUBE_WITH_SLR_READY");
         // CubeSegment seg = cube.getTheOnlySegment();
         CubeDesc cubeDesc = cube.getDescriptor();
         // String data =
@@ -111,7 +111,7 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testEncodeWithSlr2() throws Exception {
-        CubeInstance cube = CubeManager.getInstance(this.getTestConfig()).getCube("TEST_KYLIN_CUBE_WITH_SLR_READY");
+        CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("TEST_KYLIN_CUBE_WITH_SLR_READY");
         // CubeSegment seg = cube.getTheOnlySegment();
         CubeDesc cubeDesc = cube.getDescriptor();
         // String data =

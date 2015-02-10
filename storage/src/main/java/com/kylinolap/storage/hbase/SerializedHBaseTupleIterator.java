@@ -29,11 +29,11 @@ import com.google.common.collect.Maps;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.kv.RowValueDecoder;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.StorageContext;
-import com.kylinolap.storage.filter.TupleFilter;
-import com.kylinolap.storage.tuple.ITuple;
-import com.kylinolap.storage.tuple.ITupleIterator;
+import com.kylinolap.metadata.filter.TupleFilter;
+import com.kylinolap.metadata.tuple.ITuple;
+import com.kylinolap.metadata.tuple.ITupleIterator;
 
 /**
  * @author xjiang
@@ -67,7 +67,7 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
         if (this.segmentIteratorIterator.hasNext()) {
             this.segmentIterator = this.segmentIteratorIterator.next();
         } else {
-            this.segmentIterator = CubeSegmentTupleIterator.EMPTY_TUPLE_ITERATOR;
+            this.segmentIterator = ITupleIterator.EMPTY_TUPLE_ITERATOR;
         }
     }
 

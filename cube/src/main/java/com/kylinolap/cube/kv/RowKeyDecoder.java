@@ -22,10 +22,10 @@ import java.util.Map;
 
 import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.common.RowKeySplitter;
-import com.kylinolap.cube.common.SplittedBytes;
+import com.kylinolap.common.util.SplittedBytes;
 import com.kylinolap.cube.cuboid.Cuboid;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * 

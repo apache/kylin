@@ -27,14 +27,14 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import com.kylinolap.common.persistence.RootPersistentEntity;
-import com.kylinolap.cube.CubeBuildTypeEnum;
+import com.kylinolap.cube.model.CubeBuildTypeEnum;
 import com.kylinolap.job.constant.JobStatusEnum;
 import com.kylinolap.job.constant.JobStepCmdTypeEnum;
 import com.kylinolap.job.constant.JobStepStatusEnum;
 import com.kylinolap.job.engine.JobEngineConfig;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class JobInstance extends RootPersistentEntity implements Comparable<JobInstance>{
+public class JobInstance extends RootPersistentEntity implements Comparable<JobInstance> {
 
     public static final String JOB_WORKING_DIR_PREFIX = "kylin-";
 
@@ -66,6 +66,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
 
     @JsonProperty("name")
     private String name;
+
     @JsonProperty("type")
     private CubeBuildTypeEnum type; // java implementation
     @JsonProperty("duration")
@@ -85,7 +86,9 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
     private List<JobStep> steps;
     @JsonProperty("submitter")
     private String submitter;
-    
+    @JsonProperty("job_status")
+    private JobStatusEnum status;
+
     public JobStep getRunningStep() {
         for (JobStep step : this.getSteps()) {
             if (step.getStatus().equals(JobStepStatusEnum.RUNNING) || step.getStatus().equals(JobStepStatusEnum.WAITING)) {
@@ -108,42 +111,56 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         return 100.0 * completedStepCount / steps.size();
     }
 
-    @JsonProperty("job_status")
     public JobStatusEnum getStatus() {
-        // JobStatusEnum finalJobStatus;
-        int compositResult = 0;
-
-        // if steps status are all NEW, then job status is NEW
-        // if steps status are all FINISHED, then job status is FINISHED
-        // if steps status are all PENDING, then job status is PENDING
-        // if steps status are FINISHED and PENDING, the job status is PENDING
-        // if one of steps status is RUNNING, then job status is RUNNING
-        // if one of steps status is ERROR, then job status is ERROR
-        // if one of steps status is KILLED, then job status is KILLED
-        // default status is RUNNING
-
-        for (JobStep step : this.getSteps()) {
-            compositResult = compositResult | step.getStatus().getCode();
-        }
-
-        if (compositResult == JobStatusEnum.FINISHED.getCode()) {
-            return JobStatusEnum.FINISHED;
-        } else if (compositResult == JobStatusEnum.NEW.getCode()) {
-            return JobStatusEnum.NEW;
-        } else if (compositResult == JobStatusEnum.PENDING.getCode()) {
-            return JobStatusEnum.PENDING;
-        } else if (compositResult == (JobStatusEnum.FINISHED.getCode() | JobStatusEnum.PENDING.getCode())) {
-            return JobStatusEnum.PENDING;
-        } else if ((compositResult & JobStatusEnum.ERROR.getCode()) == JobStatusEnum.ERROR.getCode()) {
-            return JobStatusEnum.ERROR;
-        } else if ((compositResult & JobStatusEnum.DISCARDED.getCode()) == JobStatusEnum.DISCARDED.getCode()) {
-            return JobStatusEnum.DISCARDED;
-        } else if ((compositResult & JobStatusEnum.RUNNING.getCode()) == JobStatusEnum.RUNNING.getCode()) {
-            return JobStatusEnum.RUNNING;
-        }
-
-        return JobStatusEnum.RUNNING;
+        return this.status;
     }
+
+    public void setStatus(JobStatusEnum status) {
+        this.status = status;
+    }
+
+//    @JsonProperty("job_status")
+//    public JobStatusEnum getStatus() {
+//
+//        // JobStatusEnum finalJobStatus;
+//        int compositResult = 0;
+//
+//        // if steps status are all NEW, then job status is NEW
+//        // if steps status are all FINISHED, then job status is FINISHED
+//        // if steps status are all PENDING, then job status is PENDING
+//        // if steps status are FINISHED and PENDING, the job status is PENDING
+//        // if one of steps status is RUNNING, then job status is RUNNING
+//        // if one of steps status is ERROR, then job status is ERROR
+//        // if one of steps status is KILLED, then job status is KILLED
+//        // default status is RUNNING
+//
+//        System.out.println(this.getName());
+//
+//        for (JobStep step : this.getSteps()) {
+//            //System.out.println("step: " + step.getSequenceID() + "'s status:" + step.getStatus());
+//            compositResult = compositResult | step.getStatus().getCode();
+//        }
+//
+//        System.out.println();
+//
+//        if (compositResult == JobStatusEnum.FINISHED.getCode()) {
+//            return JobStatusEnum.FINISHED;
+//        } else if (compositResult == JobStatusEnum.NEW.getCode()) {
+//            return JobStatusEnum.NEW;
+//        } else if (compositResult == JobStatusEnum.PENDING.getCode()) {
+//            return JobStatusEnum.PENDING;
+//        } else if (compositResult == (JobStatusEnum.FINISHED.getCode() | JobStatusEnum.PENDING.getCode())) {
+//            return JobStatusEnum.PENDING;
+//        } else if ((compositResult & JobStatusEnum.ERROR.getCode()) == JobStatusEnum.ERROR.getCode()) {
+//            return JobStatusEnum.ERROR;
+//        } else if ((compositResult & JobStatusEnum.DISCARDED.getCode()) == JobStatusEnum.DISCARDED.getCode()) {
+//            return JobStatusEnum.DISCARDED;
+//        } else if ((compositResult & JobStatusEnum.RUNNING.getCode()) == JobStatusEnum.RUNNING.getCode()) {
+//            return JobStatusEnum.RUNNING;
+//        }
+//
+//        return JobStatusEnum.RUNNING;
+//    }
 
     public String getName() {
         return name;
@@ -193,8 +210,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
     }
 
     /**
-     * @param execStartTime
-     *            the execStartTime to set
+     * @param execStartTime the execStartTime to set
      */
     public void setExecStartTime(long execStartTime) {
         this.execStartTime = execStartTime;
@@ -208,8 +224,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
     }
 
     /**
-     * @param execEndTime
-     *            the execEndTime to set
+     * @param execEndTime the execEndTime to set
      */
     public void setExecEndTime(long execEndTime) {
         this.execEndTime = execEndTime;
@@ -272,6 +287,9 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
 
         @JsonBackReference
         private JobInstance jobInstance;
+        
+        @JsonProperty("id")
+        private String id;
 
         @JsonProperty("name")
         private String name;
@@ -299,15 +317,12 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         private JobStepCmdTypeEnum cmdType = JobStepCmdTypeEnum.SHELL_CMD_HADOOP;
 
         @JsonProperty("info")
-        private ConcurrentHashMap<String, String> info;
+        private ConcurrentHashMap<String, String> info = new ConcurrentHashMap<String, String>();
 
         @JsonProperty("run_async")
         private boolean runAsync = false;
 
         private ConcurrentHashMap<String, String> getInfo() {
-            if (info == null) {
-                info = new ConcurrentHashMap<String, String>();
-            }
             return info;
         }
 
@@ -354,6 +369,16 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         public void setStatus(JobStepStatusEnum status) {
             this.status = status;
         }
+        
+        
+
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
 
         /**
          * @return the execStartTime
@@ -363,8 +388,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         }
 
         /**
-         * @param execStartTime
-         *            the execStartTime to set
+         * @param execStartTime the execStartTime to set
          */
         public void setExecStartTime(long execStartTime) {
             this.execStartTime = execStartTime;
@@ -378,8 +402,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         }
 
         /**
-         * @param execEndTime
-         *            the execEndTime to set
+         * @param execEndTime the execEndTime to set
          */
         public void setExecEndTime(long execEndTime) {
             this.execEndTime = execEndTime;
@@ -417,8 +440,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         }
 
         /**
-         * @param runAsync
-         *            the runAsync to set
+         * @param runAsync the runAsync to set
          */
         public void setRunAsync(boolean runAsync) {
             this.runAsync = runAsync;

@@ -55,11 +55,11 @@ import org.eigenbase.sql.validate.SqlUserDefinedAggFunction;
 import org.eigenbase.util.Util;
 
 import com.google.common.base.Preconditions;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.ParameterDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
+import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.ParameterDesc;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.query.sqlfunc.HLLDistinctCountAggFunc;
 
 /**
@@ -235,6 +235,7 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
                 TblColRef column = buildRewriteColumn(aggFunc);
                 this.context.metricsColumns.add(column);
             }
+
             AggregateCall aggCall = this.rewriteAggCalls.get(i);
             if (!aggCall.getArgList().isEmpty()) {
                 int index = aggCall.getArgList().get(0);

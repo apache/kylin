@@ -35,9 +35,9 @@ import org.junit.Test;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.cube.measure.MeasureCodec;
+import com.kylinolap.metadata.measure.MeasureCodec;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.constant.BatchConstants;
-import com.kylinolap.metadata.model.cube.CubeDesc;
 
 /**
  * @author George Song (ysong1)
@@ -56,7 +56,7 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
 
         // hack for distributed cache
         FileUtils.deleteDirectory(new File("../job/meta"));
-        FileUtils.copyDirectory(new File(this.getTestConfig().getMetadataUrl()), new File("../job/meta"));
+        FileUtils.copyDirectory(new File(getTestConfig().getMetadataUrl()), new File("../job/meta"));
 
         CuboidReducer reducer = new CuboidReducer();
         reduceDriver = ReduceDriver.newReduceDriver(reducer);
@@ -73,7 +73,7 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
 
         reduceDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, "test_kylin_cube_with_slr_ready");
 
-        CubeDesc cubeDesc = CubeManager.getInstance(this.getTestConfig()).getCube("test_kylin_cube_with_slr_ready").getDescriptor();
+        CubeDesc cubeDesc = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_ready").getDescriptor();
         MeasureCodec codec = new MeasureCodec(cubeDesc.getMeasures());
 
         Text key1 = new Text("72010ustech");

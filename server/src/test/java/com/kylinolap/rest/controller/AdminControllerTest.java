@@ -29,7 +29,6 @@ import com.kylinolap.rest.service.ServiceTestBase;
 
 /**
  * @author xduo
- * 
  */
 public class AdminControllerTest extends ServiceTestBase {
 
@@ -41,7 +40,7 @@ public class AdminControllerTest extends ServiceTestBase {
     private CubeService cubeService;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         super.setUp();
         adminController = new AdminController();
         adminController.setAdminService(adminService);

@@ -50,8 +50,8 @@ import org.eigenbase.sql.SqlKind;
 import org.eigenbase.util.ImmutableIntList;
 
 import com.google.common.base.Preconditions;
-import com.kylinolap.metadata.model.cube.JoinDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.JoinDesc;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.query.schema.OLAPTable;
 
 /**
@@ -171,7 +171,7 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
         List<TblColRef> pkCols = new ArrayList<TblColRef>();
         List<String> fks = new ArrayList<String>();
         List<TblColRef> fkCols = new ArrayList<TblColRef>();
-        String factTable = context.firstTableScan.getCubeTable();
+        String factTable = context.firstTableScan.getTableName();
         for (Map.Entry<TblColRef, TblColRef> columnPair : joinColumns.entrySet()) {
             TblColRef fromCol = columnPair.getKey();
             TblColRef toCol = columnPair.getValue();
@@ -232,7 +232,7 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
             PhysType physType = PhysTypeImpl.of(implementor.getTypeFactory(), getRowType(), pref.preferArray());
 
             RelOptTable factTable = context.firstTableScan.getTable();
-            result = implementor.result(physType, Blocks.toBlock(Expressions.call(factTable.getExpression(OLAPTable.class), "executeCubeQuery", implementor.getRootExpression(), Expressions.constant(context.id))));
+            result = implementor.result(physType, Blocks.toBlock(Expressions.call(factTable.getExpression(OLAPTable.class), "executeIndexQuery", implementor.getRootExpression(), Expressions.constant(context.id))));
         }
 
         return result;

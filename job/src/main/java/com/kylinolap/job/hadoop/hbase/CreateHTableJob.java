@@ -15,10 +15,14 @@
  */
 package com.kylinolap.job.hadoop.hbase;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.HBaseColumnFamilyDesc;
+import com.kylinolap.job.hadoop.AbstractHadoopJob;
+import com.kylinolap.job.tools.DeployCoprocessorCLI;
+import com.kylinolap.job.tools.LZOSupportnessChecker;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -37,19 +41,13 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
+import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.util.HadoopUtil;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.job.tools.DeployCoprocessorCLI;
-import com.kylinolap.job.tools.LZOSupportnessChecker;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.HBaseColumnFamilyDesc;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author George Song (ysong1)
@@ -57,7 +55,7 @@ import com.kylinolap.metadata.model.cube.HBaseColumnFamilyDesc;
 
 public class CreateHTableJob extends AbstractHadoopJob {
 
-    protected static final Logger log = LoggerFactory.getLogger(CreateHTableJob.class);
+    protected static final Logger logger = LoggerFactory.getLogger(CreateHTableJob.class);
 
     @Override
     public int run(String[] args) throws Exception {
@@ -80,7 +78,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
         // https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/regionserver/ConstantSizeRegionSplitPolicy.html
         tableDesc.setValue(HTableDescriptor.SPLIT_POLICY, ConstantSizeRegionSplitPolicy.class.getName());
-        tableDesc.setValue(CubeManager.getHtableMetadataKey(),config.getMetadataUrlPrefix());
+        tableDesc.setValue(CubeManager.getHTableMetadataKey(), config.getMetadataUrlPrefix());
 
         Configuration conf = HBaseConfiguration.create(getConf());
         HBaseAdmin admin = new HBaseAdmin(conf);
@@ -96,10 +94,10 @@ public class CreateHTableJob extends AbstractHadoopJob {
                 cf.setMaxVersions(1);
 
                 if (LZOSupportnessChecker.getSupportness()) {
-                    log.info("hbase will use lzo to compress data");
+                    logger.info("hbase will use lzo to compress data");
                     cf.setCompressionType(Algorithm.LZO);
                 } else {
-                    log.info("hbase will not use lzo to compress data");
+                    logger.info("hbase will not use lzo to compress data");
                 }
 
                 cf.setDataBlockEncoding(DataBlockEncoding.FAST_DIFF);
@@ -116,53 +114,40 @@ public class CreateHTableJob extends AbstractHadoopJob {
                 throw new RuntimeException("HBase table " + tableName + " exists!");
             }
 
-            try {
-                initHTableCoprocessor(tableDesc);
-                log.info("hbase table " + tableName + " deployed with coprocessor.");
-
-            } catch (Exception ex) {
-                log.error("Error deploying coprocessor on " + tableName, ex);
-                log.error("Will try creating the table without coprocessor.");
-            }
+            DeployCoprocessorCLI.deployCoprocessor(tableDesc);
 
             admin.createTable(tableDesc, splitKeys);
-            log.info("create hbase table " + tableName + " done.");
+            logger.info("create hbase table " + tableName + " done.");
 
             return 0;
         } catch (Exception e) {
             printUsage(options);
             e.printStackTrace(System.err);
-            log.error(e.getLocalizedMessage(), e);
+            logger.error(e.getLocalizedMessage(), e);
             return 2;
         } finally {
             admin.close();
         }
     }
 
-    private void initHTableCoprocessor(HTableDescriptor desc) throws IOException {
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        Configuration hconf = HadoopUtil.getDefaultConfiguration();
-        FileSystem fileSystem = FileSystem.get(hconf);
 
-        String localCoprocessorJar = kylinConfig.getCoprocessorLocalJar();
-        Path hdfsCoprocessorJar = DeployCoprocessorCLI.uploadCoprocessorJar(localCoprocessorJar, fileSystem, null);
-
-        DeployCoprocessorCLI.setCoprocessorOnHTable(desc, hdfsCoprocessorJar);
-    }
 
     @SuppressWarnings("deprecation")
     public byte[][] getSplits(Configuration conf, Path path) throws Exception {
+        FileSystem fs = path.getFileSystem(conf);
+        if (fs.exists(path) == false) {
+            System.err.println("Path " + path + " not found, no region split, HTable will be one region");
+            return null;
+        }
+
         List<byte[]> rowkeyList = new ArrayList<byte[]>();
         SequenceFile.Reader reader = null;
         try {
-            reader = new SequenceFile.Reader(path.getFileSystem(conf), path, conf);
+            reader = new SequenceFile.Reader(fs, path, conf);
             Writable key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
             Writable value = (Writable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
             while (reader.next(key, value)) {
-                byte[] tmp = ((Text) key).copyBytes();
-                if (rowkeyList.contains(tmp) == false) {
-                    rowkeyList.add(tmp);
-                }
+                rowkeyList.add(((Text) key).copyBytes());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -170,13 +155,15 @@ public class CreateHTableJob extends AbstractHadoopJob {
         } finally {
             IOUtils.closeStream(reader);
         }
-
-        byte[][] retValue = rowkeyList.toArray(new byte[rowkeyList.size()][]);
-        if (retValue.length == 0) {
-            throw new IllegalStateException("Split number is 0, no records in cube??");
+        
+        logger.info((rowkeyList.size() + 1) + " regions");
+        logger.info(rowkeyList.size() + " splits");
+        for (byte[] split : rowkeyList) {
+            System.out.println(StringUtils.byteToHexString(split));
         }
 
-        return retValue;
+        byte[][] retValue = rowkeyList.toArray(new byte[rowkeyList.size()][]);
+        return retValue.length == 0 ? null : retValue;
     }
 
     public static void main(String[] args) throws Exception {

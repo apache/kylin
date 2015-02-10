@@ -15,11 +15,9 @@
  */
 package com.kylinolap.query.relnode;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
+import com.google.common.collect.Sets;
 import net.hydromatic.optiq.rules.java.EnumerableConvention;
 import net.hydromatic.optiq.rules.java.EnumerableRel;
 import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
@@ -51,16 +49,16 @@ import org.eigenbase.util.NlsString;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.storage.filter.CaseTupleFilter;
-import com.kylinolap.storage.filter.ColumnTupleFilter;
-import com.kylinolap.storage.filter.CompareTupleFilter;
-import com.kylinolap.storage.filter.ConstantTupleFilter;
-import com.kylinolap.storage.filter.DynamicTupleFilter;
-import com.kylinolap.storage.filter.ExtractTupleFilter;
-import com.kylinolap.storage.filter.LogicalTupleFilter;
-import com.kylinolap.storage.filter.TupleFilter;
-import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
+import com.kylinolap.metadata.model.TblColRef;
+import com.kylinolap.metadata.filter.CaseTupleFilter;
+import com.kylinolap.metadata.filter.ColumnTupleFilter;
+import com.kylinolap.metadata.filter.CompareTupleFilter;
+import com.kylinolap.metadata.filter.ConstantTupleFilter;
+import com.kylinolap.metadata.filter.DynamicTupleFilter;
+import com.kylinolap.metadata.filter.ExtractTupleFilter;
+import com.kylinolap.metadata.filter.LogicalTupleFilter;
+import com.kylinolap.metadata.filter.TupleFilter;
+import com.kylinolap.metadata.filter.TupleFilter.FilterOperatorEnum;
 
 /**
  * @author xjiang
@@ -276,6 +274,22 @@ public class OLAPFilterRel extends FilterRelBase implements OLAPRel, EnumerableR
 
         TupleFilterVisitor visitor = new TupleFilterVisitor(this.columnRowType, context);
         context.filter = this.condition.accept(visitor);
+        context.filterColumns = collectColumns(context.filter);
+    }
+
+    private Set<TblColRef> collectColumns(TupleFilter filter) {
+        Set<TblColRef> ret = Sets.newHashSet();
+        collectColumnsRecursively(filter, ret);
+        return ret;
+    }
+
+    private void collectColumnsRecursively(TupleFilter filter, Set<TblColRef> collector) {
+        if (filter instanceof ColumnTupleFilter) {
+            collector.add(((ColumnTupleFilter) filter).getColumn());
+        }
+        for (TupleFilter child : filter.getChildren()) {
+            collectColumnsRecursively(child, collector);
+        }
     }
 
     @Override

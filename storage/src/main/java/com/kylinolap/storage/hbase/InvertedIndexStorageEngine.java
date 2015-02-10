@@ -16,131 +16,41 @@
 
 package com.kylinolap.storage.hbase;
 
-import static com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc.*;
+import java.util.ArrayList;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
-
-import com.kylinolap.cube.invertedindex.*;
 import org.apache.hadoop.hbase.client.HConnection;
 
-import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.persistence.HBaseConnection;
-import com.kylinolap.common.persistence.StorageException;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IISegment;
+import com.kylinolap.metadata.realization.SQLDigest;
+import com.kylinolap.metadata.tuple.ITupleIterator;
 import com.kylinolap.storage.IStorageEngine;
 import com.kylinolap.storage.StorageContext;
-import com.kylinolap.storage.filter.TupleFilter;
-import com.kylinolap.storage.tuple.ITupleIterator;
-import com.kylinolap.storage.tuple.Tuple;
-import com.kylinolap.storage.tuple.TupleInfo;
+import com.kylinolap.storage.hbase.coprocessor.endpoint.EndpointTupleIterator;
 
 /**
  * @author yangli9
  */
 public class InvertedIndexStorageEngine implements IStorageEngine {
 
-    private String hbaseUrl;
-    private CubeSegment seg;
+    private IISegment seg;
 
-    public InvertedIndexStorageEngine(CubeInstance cube) {
-        this.seg = cube.getFirstSegment();
-        this.hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
+    public InvertedIndexStorageEngine(IIInstance ii) {
+        this.seg = ii.getFirstSegment();
     }
 
     @Override
-    public ITupleIterator search(Collection<TblColRef> dimensions, TupleFilter filter, Collection<TblColRef> groups, Collection<FunctionDesc> metrics, StorageContext context) {
+    public ITupleIterator search(StorageContext context, SQLDigest sqlDigest) {
+        String tableName = seg.getStorageLocationIdentifier();
 
+        //HConnection is cached, so need not be closed
+        HConnection conn = HBaseConnection.get(context.getConnUrl());
         try {
-            return new IISegmentTupleIterator(context);
-        } catch (IOException e) {
-            throw new StorageException(e.getMessage(), e);
+            return new EndpointTupleIterator(seg, sqlDigest.filter, sqlDigest.groupbyColumns, new ArrayList<>(sqlDigest.aggregations), context, conn);
+        } catch (Throwable e) {
+            e.printStackTrace();
+            throw new IllegalStateException("Error when connecting to II htable " + tableName, e);
         }
     }
-
-    private class IISegmentTupleIterator implements ITupleIterator {
-        final StorageContext context;
-        final HBaseClientKVIterator kvIterator;
-        final IIKeyValueCodec codec;
-        final Iterator<Slice> sliceIterator;
-        Iterator<TableRecordBytes> recordIterator;
-        Tuple next;
-
-        TupleInfo tupleInfo;
-        Tuple tuple;
-
-        IISegmentTupleIterator(StorageContext context) throws IOException {
-            this.context = context;
-
-            HConnection hconn = HBaseConnection.get(hbaseUrl);
-            String tableName = seg.getStorageLocationIdentifier();
-            kvIterator = new HBaseClientKVIterator(hconn, tableName, HBASE_FAMILY_BYTES, HBASE_QUALIFIER_BYTES);
-            codec = new IIKeyValueCodec(new TableRecordInfo(seg));
-            sliceIterator = codec.decodeKeyValue(kvIterator).iterator();
-        }
-
-        private TupleInfo buildTupleInfo(TableRecordInfo recInfo) {
-            TupleInfo info = new TupleInfo();
-            ColumnDesc[] columns = recInfo.getColumns();
-            for (int i = 0; i < columns.length; i++) {
-                TblColRef col = new TblColRef(columns[i]);
-                info.setField(context.getFieldName(col), col, col.getType().getName(), i);
-            }
-            return info;
-        }
-
-        private Tuple toTuple(TableRecord rec) {
-            if (tuple == null) {
-                tupleInfo = buildTupleInfo(rec.info());
-                tuple = new Tuple(tupleInfo);
-            }
-
-            List<String> fieldNames = tupleInfo.getAllFields();
-            for (int i = 0, n = tupleInfo.size(); i < n; i++) {
-                tuple.setDimensionValue(fieldNames.get(i), rec.getValueString(i));
-            }
-            return tuple;
-        }
-
-        @Override
-        public boolean hasNext() {
-            while (next == null) {
-                if (recordIterator != null && recordIterator.hasNext()) {
-                    next = toTuple((TableRecord) recordIterator.next());
-                    break;
-                }
-                if (sliceIterator.hasNext()) {
-                    recordIterator = sliceIterator.next().iterator();
-                    continue;
-                }
-                break;
-            }
-
-            return next != null;
-        }
-
-        @Override
-        public Tuple next() {
-            if (next == null)
-                throw new NoSuchElementException();
-
-            Tuple r = next;
-            next = null;
-            return r;
-        }
-
-        @Override
-        public void close() {
-            kvIterator.close();
-        }
-
-    }
-
 }

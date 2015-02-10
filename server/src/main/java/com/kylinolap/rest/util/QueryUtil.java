@@ -167,7 +167,7 @@ public class QueryUtil {
             return errorMsg;
         }
     }
-    
+
     private static boolean isTokenWiseEqual(String[] tokens, HashSet<String> tokenSet) {
         for (String token : tokens) {
             if (!tokenSet.contains(token)) {

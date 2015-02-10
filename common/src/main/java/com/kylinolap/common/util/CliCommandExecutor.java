@@ -16,12 +16,12 @@
 
 package com.kylinolap.common.util;
 
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.util.Pair;
 
 /**
@@ -63,7 +63,7 @@ public class CliCommandExecutor {
     }
 
     private void copyRemote(String localFile, String destDir) throws IOException {
-        SSHClient ssh = new SSHClient(remoteHost, remoteUser, remotePwd, null);
+        SSHClient ssh = new SSHClient(remoteHost, remoteUser, remotePwd);
         try {
             ssh.scpFileToRemote(localFile, destDir);
         } catch (IOException e) {
@@ -73,27 +73,32 @@ public class CliCommandExecutor {
         }
     }
 
-    public String execute(String command) throws IOException {
+    public Pair<Integer, String> execute(String command) throws IOException {
+        return execute(command, null);
+    }
+
+    public Pair<Integer, String> execute(String command, Logger logAppender) throws IOException {
         Pair<Integer, String> r;
-        if (remoteHost == null)
-            r = runNativeCommand(command);
-        else
-            r = runRemoteCommand(command);
+        if (remoteHost == null) {
+            r = runNativeCommand(command, logAppender);
+        } else {
+            r = runRemoteCommand(command, logAppender);
+        }
 
         if (r.getFirst() != 0)
             throw new IOException("OS command error exit with " + r.getFirst() //
                     + (remoteHost == null ? "" : " (remoteHost:" + remoteHost + ")") //
                     + " -- " + command + "\n" + r.getSecond());
 
-        return r.getSecond();
+        return r;
     }
 
-    private Pair<Integer, String> runRemoteCommand(String command) throws IOException {
-        SSHClient ssh = new SSHClient(remoteHost, remoteUser, remotePwd, null);
+    private Pair<Integer, String> runRemoteCommand(String command, Logger logAppender) throws IOException {
+        SSHClient ssh = new SSHClient(remoteHost, remoteUser, remotePwd);
 
         SSHClientOutput sshOutput;
         try {
-            sshOutput = ssh.execCommand(command, remoteTimeoutSeconds);
+            sshOutput = ssh.execCommand(command, remoteTimeoutSeconds, logAppender);
             int exitCode = sshOutput.getExitCode();
             String output = sshOutput.getText();
             return new Pair<Integer, String>(exitCode, output);
@@ -104,7 +109,7 @@ public class CliCommandExecutor {
         }
     }
 
-    private Pair<Integer, String> runNativeCommand(String command) throws IOException {
+    private Pair<Integer, String> runNativeCommand(String command, Logger logAppender) throws IOException {
         String[] cmd = new String[3];
         String osName = System.getProperty("os.name");
         if (osName.startsWith("Windows")) {
@@ -120,13 +125,19 @@ public class CliCommandExecutor {
         builder.redirectErrorStream(true);
         Process proc = builder.start();
 
-        ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        IOUtils.copy(proc.getInputStream(), buf);
-        String output = buf.toString("UTF-8");
+        BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+        String line;
+        StringBuilder result = new StringBuilder();
+        while ((line = reader.readLine()) != null) {
+            result.append("line").append('\n');
+            if (logAppender != null) {
+                logAppender.log(line);
+            }
+        }
 
         try {
             int exitCode = proc.waitFor();
-            return new Pair<Integer, String>(exitCode, output);
+            return new Pair<Integer, String>(exitCode, result.toString());
         } catch (InterruptedException e) {
             throw new IOException(e);
         }

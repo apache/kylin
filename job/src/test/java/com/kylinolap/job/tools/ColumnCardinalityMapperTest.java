@@ -37,12 +37,12 @@ import org.junit.Test;
 
 import com.kylinolap.common.hll.HyperLogLogPlusCounter;
 import com.kylinolap.job.hadoop.cardinality.ColumnCardinalityMapper;
-import com.kylinolap.job.hadoop.cardinality.HiveColumnCardinalityJob;
 
 /**
  * @author ysong1
  * 
  */
+@Ignore("This test is invalid now as the mapper uses HCatalog to fetch the data which need a hive env")
 public class ColumnCardinalityMapperTest {
 
     @SuppressWarnings("rawtypes")
@@ -74,7 +74,6 @@ public class ColumnCardinalityMapperTest {
             s = breader.readLine();
         }
         // breader.close();
-        mapDriver.getConfiguration().set(HiveColumnCardinalityJob.KEY_INPUT_DELIM, "\20");
         List<Pair<IntWritable, BytesWritable>> result = mapDriver.run();
         breader.close();
         assertEquals(9, result.size());

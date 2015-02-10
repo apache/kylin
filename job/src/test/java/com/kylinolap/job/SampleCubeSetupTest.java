@@ -25,13 +25,6 @@ public class SampleCubeSetupTest extends HBaseMetadataTestCase {
     @Before
     public void before() throws Exception {
 
-        try {
-            this.testConnectivity();
-        } catch (Exception e) {
-            System.out.println("Failed to connect to remote CLI with given password");
-            throw e;
-        }
-
         String confPaths = System.getenv("KYLIN_HBASE_CONF_PATH");
         System.out.println("The conf paths is " + confPaths);
         if (confPaths != null) {
@@ -47,11 +40,6 @@ public class SampleCubeSetupTest extends HBaseMetadataTestCase {
                 }
             }
         }
-    }
-
-    private void testConnectivity() throws Exception {
-        KylinConfig cfg = KylinConfig.getInstanceFromEnv();
-        cfg.getCliCommandExecutor().execute("echo hello");
     }
 
     @Test
@@ -72,10 +60,6 @@ public class SampleCubeSetupTest extends HBaseMetadataTestCase {
     }
 
     private void deployJobConfToEtc() throws IOException {
-        String lzoSupportness = System.getenv("KYLIN_LZO_SUPPORTED");
-        boolean enableLzo = "true".equalsIgnoreCase(lzoSupportness);
-        DeployUtil.overrideJobConf(SANDBOX_TEST_DATA, enableLzo);
-        
         File src = new File(SANDBOX_TEST_DATA, JobEngineConfig.HADOOP_JOB_CONF_FILENAME + ".xml");
         File dst = new File("/etc/kylin", src.getName());
         FileUtils.copyFile(src, dst);

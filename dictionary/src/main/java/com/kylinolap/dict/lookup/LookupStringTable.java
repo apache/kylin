@@ -18,7 +18,7 @@ package com.kylinolap.dict.lookup;
 
 import java.io.IOException;
 
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.TableDesc;
 
 /**
  * @author yangli9

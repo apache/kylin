@@ -72,7 +72,7 @@ public class DriverTest {
         }
     }
 
-    @Ignore
+    @Ignore("not maintaining")
     @Test
     public void testWithCubeData() throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         Driver driver = (Driver) Class.forName("com.kylinolap.kylin.jdbc.Driver").newInstance();
@@ -129,7 +129,7 @@ public class DriverTest {
         }
     }
 
-    @Ignore
+    @Ignore("not maintaining")
     @Test
     public void testPreStatementWithCubeData() throws SQLException {
         Driver driver = new Driver();

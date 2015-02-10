@@ -30,11 +30,7 @@
 	<mvc:annotation-driven />
 	<aop:aspectj-autoproxy />
 
-	<context:component-scan base-package="com.kylinolap.rest.controller" />
-	<context:component-scan base-package="com.kylinolap.rest.service" />
-	<context:component-scan base-package="com.kylinolap.rest.result" />
-	<context:component-scan base-package="com.kylinolap.rest.security" />
-	<context:component-scan base-package="com.kylinolap.rest.inject" />
+	<context:component-scan base-package="com.kylinolap.rest" />
 
 	<!-- Matric Spring -->
 	<!-- Registry should be defined in only one context XML file -->
@@ -43,10 +39,10 @@
 	<!-- annotation-driven must be included in all context files -->
 	<metrics:annotation-driven metric-registry="metrics" />
 
-	<!-- (Optional) Registry should be defined in only one context XML file -->
-	<metrics:reporter type="ganglia" metric-registry="metrics"
-		group="${ganglia.group}" port="${ganglia.port}" udp-mode="MULTICAST"
-		ttl="100" period="1m" />
+	<!--&lt;!&ndash; (Optional) Registry should be defined in only one context XML file &ndash;&gt;-->
+	<!--<metrics:reporter type="ganglia" metric-registry="metrics"-->
+		<!--group="${ganglia.group}" port="${ganglia.port}" udp-mode="MULTICAST"-->
+		<!--ttl="100" period="1m" />-->
 
 	<!-- (Optional) The metrics in this example require the metrics-jvm jar -->
 	<metrics:register metric-registry="metrics">

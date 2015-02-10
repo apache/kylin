@@ -23,8 +23,8 @@ import java.util.Set;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.kylinolap.cube.cuboid.Cuboid;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.MeasureDesc;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * @author xjiang
@@ -47,8 +47,6 @@ public class StorageContext {
     private boolean acceptPartialResult;
     private BiMap<TblColRef, String> aliasMap;
 
-    // To hint records shall be returned at most granular level, avoid aggregation (coprocessor) wherever possible.
-    private boolean avoidAggregation;
     private boolean exactAggregation;
     private Set<TblColRef> otherMandatoryColumns;
     private boolean enableLimit;
@@ -68,7 +66,6 @@ public class StorageContext {
         this.sortOrders = new ArrayList<OrderEnum>();
         this.sortMeasures = new ArrayList<MeasureDesc>();
 
-        this.avoidAggregation = false;
         this.exactAggregation = false;
         this.otherMandatoryColumns = new HashSet<TblColRef>();
         this.enableLimit = false;
@@ -177,34 +174,26 @@ public class StorageContext {
         this.partialResultReturned = partialResultReturned;
     }
 
-    public boolean isAvoidAggregation() {
-        return avoidAggregation;
-    }
-
-    public void markAvoidAggregation() {
-        this.avoidAggregation = true;
-    }
-
     public void setExactAggregation(boolean isExactAggregation) {
         this.exactAggregation = isExactAggregation;
     }
-    
+
     public boolean isExactAggregation() {
         return this.exactAggregation;
     }
-    
+
     public void addOtherMandatoryColumns(TblColRef col) {
         this.otherMandatoryColumns.add(col);
     }
-    
+
     public Set<TblColRef> getOtherMandatoryColumns() {
         return this.otherMandatoryColumns;
     }
-    
+
     public void enableCoprocessor() {
         this.enableCoprocessor = true;
     }
-    
+
     public boolean isCoprocessorEnabled() {
         return this.enableCoprocessor;
     }

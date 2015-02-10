@@ -24,9 +24,9 @@ import net.hydromatic.linq4j.Enumerator;
 
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.model.DimensionDesc;
 import com.kylinolap.dict.lookup.LookupStringTable;
-import com.kylinolap.metadata.model.cube.DimensionDesc;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
 import com.kylinolap.query.relnode.OLAPContext;
 import com.kylinolap.query.schema.OLAPTable;
 import com.kylinolap.storage.tuple.Tuple;
@@ -44,12 +44,14 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
 
     public LookupTableEnumerator(OLAPContext olapContext) {
 
-        String lookupTableName = olapContext.firstTableScan.getCubeTable();
-        DimensionDesc dim = olapContext.cubeDesc.findDimensionByTable(lookupTableName);
-        if (dim == null)
-            throw new IllegalStateException("No dimension with derived columns found for lookup table " + lookupTableName + ", cube desc " + olapContext.cubeDesc);
+        //TODO: assuming LookupTableEnumerator is handled by a cube
+        CubeInstance cube = (CubeInstance) olapContext.realization;
 
-        CubeInstance cube = olapContext.cubeInstance;
+        String lookupTableName = olapContext.firstTableScan.getTableName();
+        DimensionDesc dim = cube.getDescriptor().findDimensionByTable(lookupTableName);
+        if (dim == null)
+            throw new IllegalStateException("No dimension with derived columns found for lookup table " + lookupTableName + ", cube desc " + cube.getDescriptor());
+
         CubeManager cubeMgr = CubeManager.getInstance(cube.getConfig());
         LookupStringTable table = cubeMgr.getLookupTable(cube.getLatestReadySegment(), dim);
         this.allRows = table.getAllRows();

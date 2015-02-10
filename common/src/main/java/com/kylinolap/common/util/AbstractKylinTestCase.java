@@ -16,26 +16,63 @@
 
 package com.kylinolap.common.util;
 
+import java.lang.reflect.Method;
+
 import com.kylinolap.common.KylinConfig;
 
 /**
  * @author ysong1
- * 
+ *
  */
 public abstract class AbstractKylinTestCase {
 
     public static final String LOCALMETA_TEST_DATA = "../examples/test_case_data/localmeta";
 
+    public static final String LOCALMETA_TEST_DATA_V1 = "../examples/test_case_data/localmeta_v1";
+
     public static final String MINICLUSTER_TEST_DATA = "../examples/test_case_data/minicluster";
-    
+
     public static final String SANDBOX_TEST_DATA = "../examples/test_case_data/sandbox";
-    
-    public abstract void createTestMetadata();
 
-    public abstract void cleanupTestMetadata();
+    public static final String[] SERVICES_WITH_CACHE = { "com.kylinolap.cube.CubeManager", "com.kylinolap.cube.CubeDescManager", "com.kylinolap.metadata.project.ProjectManager", "com.kylinolap.metadata.MetadataManager", "com.kylinolap.metadata.realization.RealizationRegistry" };
 
-    public KylinConfig getTestConfig() {
+    public abstract void createTestMetadata() throws Exception;
+
+    public abstract void cleanupTestMetadata() throws Exception;
+
+    public static KylinConfig getTestConfig() {
         return KylinConfig.getInstanceFromEnv();
     }
 
+    public static void staticCreateTestMetadata(String kylinConfigFolder) {
+
+        KylinConfig.destoryInstance();
+
+        if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null)
+            System.setProperty(KylinConfig.KYLIN_CONF, kylinConfigFolder);
+
+    }
+
+    public static void staticCleanupTestMetadata() {
+        cleanupCache();
+        System.clearProperty(KylinConfig.KYLIN_CONF);
+        KylinConfig.destoryInstance();
+
+    }
+
+    private static void cleanupCache() {
+
+        for (String serviceClass : SERVICES_WITH_CACHE) {
+            try {
+                Class<?> cls = Class.forName(serviceClass);
+                Method method = cls.getDeclaredMethod("clearCache");
+                method.invoke(null);
+            } catch (ClassNotFoundException e) {
+                // acceptable because lower module test does have CubeManager etc on classpath
+            } catch (Exception e) {
+                System.err.println("Error clean up cache " + serviceClass);
+                e.printStackTrace();
+            }
+        }
+    }
 }

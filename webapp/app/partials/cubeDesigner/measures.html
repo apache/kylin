@@ -92,9 +92,8 @@
                             <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Expression</b></label>
                             <div class="col-xs-12 col-sm-6">
                                 <select class="form-control"
-                                    ng-init="newMeasure.function.expression = (!!newMeasure.function.expression)?newMeasure.function.expression:dftSelections.measureExpression"
-                                    chosen ng-model="newMeasure.function.expression" required
-                                    ng-options="me as me for me in measureExpressions">
+                                    ng-init="newMeasure.function.expression = (!!newMeasure.function.expression)?newMeasure.function.expression:cubeConfig.dftSelections.measureExpression"                                    chosen ng-model="newMeasure.function.expression" required
+                                    ng-options="me as me for me in cubeConfig.measureExpressions">
                                 </select>
                             </div>
                         </div>
@@ -107,7 +106,7 @@
                                 <select class="form-control" ng-if="newMeasure.function.expression != 'COUNT'"
                                     ng-init="newMeasure.function.parameter.type=(!!newMeasure.function.parameter.type)?newMeasure.function.parameter.type: 'column' "
                                     chosen ng-model="newMeasure.function.parameter.type" required
-                                    ng-options="mpt as mpt for mpt in measureParamType">
+                                    ng-options="mpt as mpt for mpt in cubeConfig.measureParamType">
                                 </select>
                                 <span class="font-color-default"
                                        ng-if="newMeasure.function.expression == 'COUNT'"
@@ -140,16 +139,16 @@
                             <div class="col-xs-12 col-sm-6">
                                 <select class="form-control"
                                     ng-if="newMeasure.function.expression != 'COUNT_DISTINCT' && newMeasure.function.expression != 'COUNT' "
-                                    ng-init="newMeasure.function.returntype = (!!newMeasure.function.returntype)?newMeasure.function.returntype:dftSelections.measureDataType.value"
+                                    ng-init="newMeasure.function.returntype = (!!newMeasure.function.returntype)?newMeasure.function.returntype:cubeConfig.dftSelections.measureDataType.value"
                                     chosen ng-model="newMeasure.function.returntype" required
-                                    ng-options="mdt.value as mdt.name for mdt in measureDataTypes">
+                                    ng-options="mdt.value as mdt.name for mdt in cubeConfig.measureDataTypes">
                                     <option value=""></option>
                                 </select>
                                 <select class="form-control"
                                     ng-if="newMeasure.function.expression == 'COUNT_DISTINCT'"
-                                    ng-init="newMeasure.function.returntype = (!!newMeasure.function.returntype)?newMeasure.function.returntype:dftSelections.distinctDataType.value"
+                                    ng-init="newMeasure.function.returntype = (!!newMeasure.function.returntype)?newMeasure.function.returntype:cubeConfig.dftSelections.distinctDataType.value"
                                     chosen ng-model="newMeasure.function.returntype" required
-                                    ng-options="ddt.value as ddt.name for ddt in distinctDataTypes">
+                                    ng-options="ddt.value as ddt.name for ddt in cubeConfig.distinctDataTypes">
                                     <option value=""></option>
                                 </select>
                                 <span class="font-color-default"

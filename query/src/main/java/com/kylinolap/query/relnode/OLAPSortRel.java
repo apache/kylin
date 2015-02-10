@@ -33,8 +33,8 @@ import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
 
 import com.google.common.base.Preconditions;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.MeasureDesc;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.StorageContext;
 
 /**
@@ -105,7 +105,7 @@ public class OLAPSortRel extends SortRel implements EnumerableRel, OLAPRel {
     }
 
     private MeasureDesc findMeasure(TblColRef col) {
-        for (MeasureDesc measure : this.context.cubeDesc.getMeasures()) {
+        for (MeasureDesc measure : this.context.realization.getMeasures()) {
             if (col.getName().equals(measure.getFunction().getRewriteFieldName())) {
                 return measure;
             }

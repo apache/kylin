@@ -5,14 +5,18 @@ import com.kylinolap.common.persistence.JsonSerializer;
 import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.Serializer;
 import com.kylinolap.cube.*;
-import com.kylinolap.cube.project.ProjectInstance;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.dict.DictionaryInfo;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.dict.lookup.SnapshotManager;
 import com.kylinolap.dict.lookup.SnapshotTable;
 import com.kylinolap.job.JobInstance;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
+import com.kylinolap.metadata.model.TableDesc;
+import com.kylinolap.metadata.project.ProjectInstance;
+import com.kylinolap.metadata.realization.RealizationStatusEnum;
+import com.kylinolap.metadata.realization.RealizationType;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -62,13 +66,7 @@ public class CubeMigrationCLI {
 
     private static void usage() {
         System.out.println("Usage: CubeMigrationCLI srcKylinConfigUri dstKylinConfigUri cubeName projectName overwriteIfExists realExecute");
-        System.out.println(
-                " srcKylinConfigUri: The KylinConfig of the cube’s source \n" +
-                        "dstKylinConfigUri: The KylinConfig of the cube’s new home \n" +
-                        "cubeName: the name of cube to be migrated. \n" +
-                        "projectName: The target project in the target environment.(Make sure it exist) \n" +
-                        "overwriteIfExists: overwrite cube if it already exists in the target environment. \n" +
-                        "realExecute: if false, just print the operations to take, if true, do the real migration. \n");
+        System.out.println(" srcKylinConfigUri: The KylinConfig of the cube’s source \n" + "dstKylinConfigUri: The KylinConfig of the cube’s new home \n" + "cubeName: the name of cube to be migrated. \n" + "projectName: The target project in the target environment.(Make sure it exist) \n" + "overwriteIfExists: overwrite cube if it already exists in the target environment. \n" + "realExecute: if false, just print the operations to take, if true, do the real migration. \n");
 
     }
 
@@ -83,11 +81,11 @@ public class CubeMigrationCLI {
         CubeInstance cube = cubeManager.getCube(cubeName);
         logger.info("cube to be moved is : " + cubeName);
 
-        if (cube.getStatus() != CubeStatusEnum.READY)
+        if (cube.getStatus() != RealizationStatusEnum.READY)
             throw new IllegalStateException("Cannot migrate cube that is not in READY state.");
 
         for (CubeSegment segment : cube.getSegments()) {
-            if (segment.getStatus() != CubeSegmentStatusEnum.READY) {
+            if (segment.getStatus() != SegmentStatusEnum.READY) {
                 throw new IllegalStateException("At least one segment is not in READY state");
             }
         }
@@ -154,8 +152,7 @@ public class CubeMigrationCLI {
 
     private static void changeHtableHost(CubeInstance cube) {
         for (CubeSegment segment : cube.getSegments()) {
-            operations.add(new Opt(OptType.CHANGE_HTABLE_HOST,
-                    new Object[] { segment.getStorageLocationIdentifier() }));
+            operations.add(new Opt(OptType.CHANGE_HTABLE_HOST, new Object[] { segment.getStorageLocationIdentifier() }));
         }
     }
 
@@ -266,7 +263,7 @@ public class CubeMigrationCLI {
             String tableName = (String) opt.params[0];
             HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
             hbaseAdmin.disableTable(tableName);
-            desc.setValue(CubeManager.getHtableMetadataKey(), dstConfig.getMetadataUrlPrefix());
+            desc.setValue(CubeManager.getHTableMetadataKey(), dstConfig.getMetadataUrlPrefix());
             hbaseAdmin.modifyTable(tableName, desc);
             hbaseAdmin.enableTable(tableName);
             logger.info("CHANGE_HTABLE_HOST is completed");
@@ -325,7 +322,6 @@ public class CubeMigrationCLI {
                 SnapshotTable snapSaved = dstSnapMgr.trySaveNewSnapshot(snapSrc);
                 snapSrc.setLastModified(ts);
 
-
                 if (snapSaved == snapSrc) {
                     //no dup found, already saved to dest
                     logger.info("Item " + item + " is copied");
@@ -367,8 +363,8 @@ public class CubeMigrationCLI {
             String projectResPath = ProjectInstance.concatResourcePath(projectName);
             Serializer<ProjectInstance> projectSerializer = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
             ProjectInstance project = dstStore.getResource(projectResPath, ProjectInstance.class, projectSerializer);
-            project.removeCube(cubeName);
-            project.addCube(cubeName);
+            project.removeRealization(RealizationType.CUBE, cubeName);
+            project.removeRealization(RealizationType.CUBE, cubeName);
             dstStore.putResource(projectResPath, project, projectSerializer);
             logger.info("Project instance for " + projectName + " is corrected");
             break;
@@ -384,7 +380,7 @@ public class CubeMigrationCLI {
             String tableName = (String) opt.params[0];
             HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
             hbaseAdmin.disableTable(tableName);
-            desc.setValue(CubeManager.getHtableMetadataKey(), srcConfig.getMetadataUrlPrefix());
+            desc.setValue(CubeManager.getHTableMetadataKey(), srcConfig.getMetadataUrlPrefix());
             hbaseAdmin.modifyTable(tableName, desc);
             hbaseAdmin.enableTable(tableName);
             break;

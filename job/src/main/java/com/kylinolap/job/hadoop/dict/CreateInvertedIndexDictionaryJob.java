@@ -16,12 +16,12 @@
 
 package com.kylinolap.job.hadoop.dict;
 
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IIManager;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.util.ToolRunner;
 
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**
@@ -35,26 +35,22 @@ public class CreateInvertedIndexDictionaryJob extends AbstractHadoopJob {
         Options options = new Options();
 
         try {
-            options.addOption(OPTION_CUBE_NAME);
+            options.addOption(OPTION_II_NAME);
             options.addOption(OPTION_INPUT_PATH);
             parseOptions(options, args);
 
-            String cubeName = getOptionValue(OPTION_CUBE_NAME);
+            String iiname = getOptionValue(OPTION_II_NAME);
             String factColumnsInputPath = getOptionValue(OPTION_INPUT_PATH);
             KylinConfig config = KylinConfig.getInstanceFromEnv();
 
-            CubeManager mgr = CubeManager.getInstance(config);
-            CubeInstance cube = mgr.getCube(cubeName);
-            if (cube == null || cube.isInvertedIndex() == false)
-                throw new IllegalArgumentException("No Inverted Index Cube found by name " + cubeName);
+            IIManager mgr = IIManager.getInstance(config);
+            IIInstance ii = mgr.getII(iiname);
 
-            mgr.buildInvertedIndexDictionary(cube.getFirstSegment(), factColumnsInputPath);
+            mgr.buildInvertedIndexDictionary(ii.getFirstSegment(), factColumnsInputPath);
             return 0;
         } catch (Exception e) {
             printUsage(options);
-            e.printStackTrace(System.err);
-            log.error(e.getLocalizedMessage(), e);
-            return 2;
+            throw e;
         }
     }
 

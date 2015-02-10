@@ -34,7 +34,7 @@ KylinApp
 
 
         // projectName from page ctrl
-        $scope.state = {loading: false, refreshing: false, filterAttr: 'last_modified', filterReverse: true, reverseColumn: 'last_modified', projectName:$scope.project.selectedProject};
+        $scope.state = {loading: false, refreshing: false, filterAttr: 'last_modified', filterReverse: true, reverseColumn: 'last_modified', projectName:$scope.projectModel.selectedProject};
 
         ProjectService.list({}, function (projects) {
             angular.forEach(projects, function(project, index){
@@ -43,7 +43,7 @@ KylinApp
         });
 
         $scope.list = function (offset, limit) {
-            if(!$scope.project.projects.length){
+            if(!$scope.projectModel.projects.length){
                 return [];
             }
             offset = (!!offset) ? offset : 0;
@@ -95,7 +95,7 @@ KylinApp
         };
 
 
-        $scope.$watch('project.selectedProject', function (newValue, oldValue) {
+        $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
             if(newValue!=oldValue||newValue==null){
                 $scope.jobs={};
                 $scope.state.projectName = newValue;
@@ -174,11 +174,12 @@ KylinApp
                 if ($scope.state.stepAttrToShow == "output") {
                     $scope.state.selectedStep.loadingOp = true;
                     internalOpenModal();
-                    JobService.stepOutput({jobId: $scope.state.selectedJob.uuid, propValue: $scope.state.selectedStep.sequence_id}, function (result) {
+                    var stepId = $scope.state.selectedStep.sequence_id;
+                    JobService.stepOutput({jobId: $scope.state.selectedJob.uuid, propValue: $scope.state.selectedStep.id}, function (result) {
                         if (angular.isDefined($scope.jobs[result['jobId']])) {
                             var tjob = $scope.jobs[result['jobId']];
-                            tjob.steps[parseInt(result['stepId'])].cmd_output = result['cmd_output'];
-                            tjob.steps[parseInt(result['stepId'])].loadingOp = false;
+                            tjob.steps[stepId].cmd_output = result['cmd_output'];
+                            tjob.steps[stepId].loadingOp = false;
                         }
                     });
                 } else {

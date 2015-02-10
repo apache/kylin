@@ -42,7 +42,6 @@ public class BasicController {
     @Autowired
     protected MetricsService metricsService;
 
-    // ~ general handler ~
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
     @ResponseBody

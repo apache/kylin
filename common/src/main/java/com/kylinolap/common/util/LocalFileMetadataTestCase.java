@@ -28,16 +28,19 @@ import com.kylinolap.common.persistence.ResourceStore;
  * @author ysong1
  */
 public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
-    private String tempTestMetadataUrl = null;
 
     @Override
     public void createTestMetadata() {
+        createTestMetadata(LOCALMETA_TEST_DATA);
+    }
+    
+    public static void createTestMetadata(String testDataFolder) {
         KylinConfig.destoryInstance();
 
-        this.tempTestMetadataUrl = "../examples/test_metadata";
+        String tempTestMetadataUrl = "../examples/test_metadata";
         try {
             FileUtils.deleteDirectory(new File(tempTestMetadataUrl));
-            FileUtils.copyDirectory(new File(LOCALMETA_TEST_DATA), new File(tempTestMetadataUrl));
+            FileUtils.copyDirectory(new File(testDataFolder), new File(tempTestMetadataUrl));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -46,19 +49,21 @@ public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
             System.setProperty(KylinConfig.KYLIN_CONF, tempTestMetadataUrl);
 
         KylinConfig.getInstanceFromEnv().setMetadataUrl(tempTestMetadataUrl);
-
     }
 
-    @Override
-    public void cleanupTestMetadata() {
+    public static void cleanAfterClass() {
+        String tempTestMetadataUrl = "../examples/test_metadata";
         try {
             FileUtils.deleteDirectory(new File(tempTestMetadataUrl));
         } catch (IOException e) {
             throw new IllegalStateException("Can't delete directory " + tempTestMetadataUrl, e);
         }
-        System.clearProperty(KylinConfig.KYLIN_CONF);
-        KylinConfig.destoryInstance();
-        this.tempTestMetadataUrl = null;
+        staticCleanupTestMetadata();
+    }
+
+    @Override
+    public void cleanupTestMetadata() {
+        cleanAfterClass();
     }
 
     protected ResourceStore getStore() {
