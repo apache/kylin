@@ -11,7 +11,7 @@ mvn clean install -DskipTests
 echo 'package front-end'
 cd webapp
 npm install -g bower
-bower install
+bower --allow-root install
 npm install
 npm install -g grunt-cli
 grunt dev --buildEnv=dev
