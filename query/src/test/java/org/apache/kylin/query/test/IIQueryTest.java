@@ -19,8 +19,11 @@
 package org.apache.kylin.query.test;
 
 import com.google.common.collect.Maps;
+import org.apache.hadoop.hbase.coprocessor.CoprocessorHost;
+import org.apache.kylin.common.util.HBaseMiniclusterHelper;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.routing.RoutingRules.RealizationPriorityRule;
+import org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -34,6 +37,8 @@ import java.util.Map;
 public class IIQueryTest extends KylinQueryTest {
     @BeforeClass
     public static void setUp() throws Exception {
+        HBaseMiniclusterHelper.UTIL.getConfiguration().setStrings(CoprocessorHost.REGION_COPROCESSOR_CONF_KEY, IIEndpoint.class.getName());
+
         KylinQueryTest.setUp();//invoke super class
         distinctCountSupported = false;
 
@@ -41,6 +46,7 @@ public class IIQueryTest extends KylinQueryTest {
         priorities.put(RealizationType.INVERTED_INDEX, 0);
         priorities.put(RealizationType.CUBE, 1);
         RealizationPriorityRule.setPriorities(priorities);
+
     }
 
     @AfterClass

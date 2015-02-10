@@ -8,7 +8,10 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HBaseTestingUtility;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.mapreduce.Import;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.GenericOptionsParser;
@@ -22,7 +25,7 @@ public class HbaseImporter {
 
     private static final Log logger = LogFactory.getLog(HbaseImporter.class);
 
-    public static void importHBaseData(String hbaseTarLocation, Configuration conf) throws IOException, ClassNotFoundException, InterruptedException {
+    public static void importHBaseData(String hbaseTarLocation, HBaseTestingUtility UTIL) throws IOException, ClassNotFoundException, InterruptedException {
 
         if (System.getenv("JAVA_HOME") == null) {
             logger.error("Didn't find $JAVA_HOME, this will cause HBase data import failed. Please set $JAVA_HOME.");
@@ -43,7 +46,8 @@ public class HbaseImporter {
         folder.mkdirs();
         folder.deleteOnExit();
 
-        TarGZUtil.uncompressTarGZ(exportFile, folder);
+        //TarGZUtil.uncompressTarGZ(exportFile, folder);
+        FileUtil.unTar(exportFile,folder);
         String[] child = folder.list();
         Preconditions.checkState(child.length == 1);
         String backupFolderName = child[0];
@@ -59,15 +63,17 @@ public class HbaseImporter {
 
             // create the htable; otherwise the import will fail.
             if (table.startsWith(HBaseMiniclusterHelper.II_STORAGE_PREFIX)) {
-                HBaseConnection.createHTableIfNeeded(KylinConfig.getInstanceFromEnv().getStorageUrl(), table, "f");
+                UTIL.createTable(table, "f");
+                //HBaseConnection.createHTableIfNeeded(KylinConfig.getInstanceFromEnv().getStorageUrl(), table, "f");
             } else if (table.startsWith(HBaseMiniclusterHelper.CUBE_STORAGE_PREFIX)) {
-                HBaseConnection.createHTableIfNeeded(KylinConfig.getInstanceFromEnv().getStorageUrl(), table, "F1", "F2");
+                UTIL.createTable(TableName.valueOf(table), new String[] { "F1", "F2" });
+                //HBaseConnection.createHTableIfNeeded(KylinConfig.getInstanceFromEnv().getStorageUrl(), table, "F1", "F2");
             }
 
             // directly import from local fs, no need to copy to hdfs
             String importLocation = "file://" + backupFolder.getAbsolutePath() + "/" + table;
             String[] args = new String[] { table, importLocation };
-            boolean result = runImport(args, conf);
+            boolean result = runImport(args, UTIL.getConfiguration());
             logger.info("importing table '" + table + "' with result:" + result);
 
             if (!result)
@@ -86,17 +92,17 @@ public class HbaseImporter {
         return job.isSuccessful();
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException, ClassNotFoundException {
-        if (args.length != 1) {
-            logger.error("Usage: HbaseImporter hbase_tar_lcoation");
-            System.exit(-1);
-        }
-
-        logger.info("The KylinConfig being used:");
-        logger.info("=================================================");
-        KylinConfig.getInstanceFromEnv().printProperties();
-        logger.info("=================================================");
-
-        importHBaseData(args[0], HBaseConfiguration.create());
-    }
+    //    public static void main(String[] args) throws IOException, InterruptedException, ClassNotFoundException {
+    //        if (args.length != 1) {
+    //            logger.error("Usage: HbaseImporter hbase_tar_lcoation");
+    //            System.exit(-1);
+    //        }
+    //
+    //        logger.info("The KylinConfig being used:");
+    //        logger.info("=================================================");
+    //        KylinConfig.getInstanceFromEnv().printProperties();
+    //        logger.info("=================================================");
+    //
+    //        importHBaseData(args[0], HBaseConfiguration.create());
+    //    }
 }
