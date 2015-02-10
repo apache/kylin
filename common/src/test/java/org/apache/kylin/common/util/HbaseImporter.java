@@ -3,17 +3,19 @@ package org.apache.kylin.common.util;
 import java.io.File;
 import java.io.IOException;
 
-import com.google.common.base.Preconditions;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.mapreduce.Import;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.HBaseConnection;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 2/6/15.
@@ -43,7 +45,8 @@ public class HbaseImporter {
         folder.mkdirs();
         folder.deleteOnExit();
 
-        TarGZUtil.uncompressTarGZ(exportFile, folder);
+        //TarGZUtil.uncompressTarGZ(exportFile, folder);
+        FileUtil.unTar(exportFile, folder);
         String[] child = folder.list();
         Preconditions.checkState(child.length == 1);
         String backupFolderName = child[0];
@@ -53,7 +56,6 @@ public class HbaseImporter {
         for (String table : tableNames) {
 
             if (!(table.equalsIgnoreCase(HBaseMiniclusterHelper.TEST_METADATA_TABLE) || table.startsWith(HBaseMiniclusterHelper.SHARED_STORAGE_PREFIX))) {
-                //if (!(table.equalsIgnoreCase(TEST_METADATA_TABLE) || table.startsWith("KYLIN_II"))) {
                 continue;
             }
 
