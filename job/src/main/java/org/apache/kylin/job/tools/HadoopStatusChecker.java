@@ -34,7 +34,7 @@ import java.util.Date;
  */
 public class HadoopStatusChecker {
 
-    protected static final Logger log = LoggerFactory.getLogger(HadoopStatusChecker.class);
+    protected static final Logger logger = LoggerFactory.getLogger(HadoopStatusChecker.class);
 
     private final String yarnUrl;
     private final String mrJobID;
@@ -54,7 +54,7 @@ public class HadoopStatusChecker {
         JobStepStatusEnum status = null;
         try {
             final Pair<RMAppState, FinalApplicationStatus> result = new HadoopStatusGetter(yarnUrl, mrJobID).get();
-            log.debug("State of Hadoop job: " + mrJobID + ":" + result.getLeft() + "-" + result.getRight());
+            logger.debug("State of Hadoop job: " + mrJobID + ":" + result.getLeft() + "-" + result.getRight());
             output.append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S").format(new Date()) + " - State of Hadoop job: " + mrJobID + ":" + result.getLeft() + " - " + result.getRight() + "\n");
 
             switch (result.getRight()) {
@@ -88,6 +88,7 @@ public class HadoopStatusChecker {
                 break;
             }
         } catch (Exception e) {
+            logger.error("error check status", e);
             output.append("Exception: " + e.getLocalizedMessage() + "\n");
             status = JobStepStatusEnum.ERROR;
         }

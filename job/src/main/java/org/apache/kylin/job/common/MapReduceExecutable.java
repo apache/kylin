@@ -19,6 +19,7 @@
 package org.apache.kylin.job.common;
 
 import com.google.common.base.Preconditions;
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.constant.JobStepStatusEnum;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -116,7 +117,16 @@ public class MapReduceExecutable extends AbstractExecutable {
             }
             final StringBuilder output = new StringBuilder();
             final HadoopCmdOutput hadoopCmdOutput = new HadoopCmdOutput(job, output);
-            final String rmWebHost = job.getConfiguration().get("yarn.resourcemanager.webapp.address");
+            String rmWebHost = job.getConfiguration().get("yarn.resourcemanager.webapp.address");
+            if (StringUtils.isEmpty(rmWebHost)) {
+                return new ExecuteResult(ExecuteResult.State.ERROR, "yarn.resourcemanager.webapp.address is empty");
+            }
+            if (rmWebHost.startsWith("http://") || rmWebHost.startsWith("https://")) {
+                //do nothing
+            } else {
+                rmWebHost = "http://" + rmWebHost;
+            }
+            logger.info("yarn.resourcemanager.webapp.address:" + rmWebHost);
             final String restStatusCheckUrl = rmWebHost + "/ws/v1/cluster/apps/${job_id}?anonymous=true";
             String mrJobId = hadoopCmdOutput.getMrJobId();
             HadoopStatusChecker statusChecker = new HadoopStatusChecker(restStatusCheckUrl, mrJobId, output);

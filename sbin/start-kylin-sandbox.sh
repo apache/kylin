@@ -32,7 +32,7 @@ cp ${dir}/../lib/kylin-server-*.war ${tomcat_root}/webapps/kylin.war
 source ${dir}/find-hive-dependency.sh
 
 export HBASE_CLASSPATH_PREFIX=${tomcat_root}/bin/bootstrap.jar:${tomcat_root}/bin/tomcat-juli.jar:${tomcat_root}/lib/*:$HBASE_CLASSPATH_PREFIX
-export HBASE_CLASSPATH=$hive_dependency
+export HBASE_CLASSPATH=$hive_dependency:${HBASE_CLASSPATH}
 
 hbase -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
 -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
