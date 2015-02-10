@@ -25,7 +25,10 @@
     "angular-underscore": "~0.5.0",
     "angular-ui-sortable": "0.13.1",
     "underscore": "~1.7.0",
-    "fuelux": "~3.5.1"
+    "fuelux": "~3.5.1",
+     "angular-animate": "1.2",
+     "angular-cookies":"1.2"
+
   },
   "devDependencies": {
     "less.js": "~1.4.0",
