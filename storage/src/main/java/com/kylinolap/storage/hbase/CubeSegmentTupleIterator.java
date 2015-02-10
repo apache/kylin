@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
+
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Result;
@@ -49,14 +51,13 @@ import com.kylinolap.cube.CubeSegment;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowKeyDecoder;
 import com.kylinolap.cube.kv.RowValueDecoder;
-import com.kylinolap.metadata.model.cube.CubeDesc.DeriveInfo;
-import com.kylinolap.metadata.model.cube.HBaseColumnDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.cube.model.HBaseColumnDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
+import com.kylinolap.cube.model.CubeDesc.DeriveInfo;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.storage.StorageContext;
-import com.kylinolap.storage.filter.TupleFilter;
-import com.kylinolap.storage.hbase.observer.CoprocessorEnabler;
-import com.kylinolap.storage.tuple.ITupleIterator;
+import com.kylinolap.metadata.filter.TupleFilter;
+import com.kylinolap.metadata.tuple.ITupleIterator;
 import com.kylinolap.storage.tuple.Tuple;
 import com.kylinolap.storage.tuple.Tuple.IDerivedColumnFiller;
 import com.kylinolap.storage.tuple.TupleInfo;
@@ -70,22 +71,6 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
     public static final Logger logger = LoggerFactory.getLogger(CubeSegmentTupleIterator.class);
 
     public static final int SCAN_CACHE = 1024;
-
-    public static final ITupleIterator EMPTY_TUPLE_ITERATOR = new ITupleIterator() {
-        @Override
-        public boolean hasNext() {
-            return false;
-        }
-
-        @Override
-        public Tuple next() {
-            return null;
-        }
-
-        @Override
-        public void close() {
-        }
-    };
 
     private final CubeInstance cube;
     private final CubeSegment cubeSeg;
@@ -213,7 +198,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
             applyFuzzyFilter(scan, keyRange);
             logScan(keyRange);
 
-            scanner = CoprocessorEnabler.scanWithCoprocessorIfBeneficial(cubeSeg, keyRange.getCuboid(), filter, groupBy, rowValueDecoders, context, table, scan);
+            scanner = ObserverEnabler.scanWithCoprocessorIfBeneficial(cubeSeg, keyRange.getCuboid(), filter, groupBy, rowValueDecoders, context, table, scan);
 
             iter = scanner.iterator();
         } catch (Throwable t) {

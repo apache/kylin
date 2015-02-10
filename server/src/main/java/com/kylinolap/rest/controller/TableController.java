@@ -28,6 +28,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -38,8 +39,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.codahale.metrics.annotation.Metered;
 import com.kylinolap.metadata.MetadataConstances;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
 import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.request.CardinalityRequest;
 import com.kylinolap.rest.response.TableDescResponse;
@@ -47,7 +48,6 @@ import com.kylinolap.rest.service.CubeService;
 
 /**
  * @author xduo
- * 
  */
 @Controller
 @RequestMapping(value = "/tables")
@@ -59,19 +59,19 @@ public class TableController extends BasicController {
 
     /**
      * Get available table list of the input database
-     * 
+     *
      * @return Table metadata array
      * @throws IOException
      */
     @RequestMapping(value = "", method = { RequestMethod.GET })
     @ResponseBody
     @Metered(name = "listSourceTables")
-    public List<TableDesc> getHiveTables(@RequestParam(value = "ext", required = false) boolean withExt,@RequestParam(value = "project", required = false) String project ) {
+    public List<TableDesc> getHiveTables(@RequestParam(value = "ext", required = false) boolean withExt, @RequestParam(value = "project", required = false) String project) {
         long start = System.currentTimeMillis();
         List<TableDesc> tables = null;
         try {
-                tables = cubeMgmtService.getProjectManager().listDefinedTablesInProject(project);
-        } catch (IOException e) {
+            tables = cubeMgmtService.getProjectManager().listDefinedTables(project);
+        } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);
             throw new InternalErrorException(e.getLocalizedMessage());
         }
@@ -87,7 +87,7 @@ public class TableController extends BasicController {
 
     /**
      * Get available table list of the input database
-     * 
+     *
      * @return Table metadata array
      * @throws IOException
      */
@@ -99,7 +99,7 @@ public class TableController extends BasicController {
 
     /**
      * Get available table list of the input database
-     * 
+     *
      * @return Table metadata array
      * @throws IOException
      */
@@ -119,51 +119,30 @@ public class TableController extends BasicController {
 
     @RequestMapping(value = "/{tables}/{project}", method = { RequestMethod.POST })
     @ResponseBody
-    public Map<String, String[]> loadHiveTable(@PathVariable String tables,@PathVariable String project){
+    public Map<String, String[]> loadHiveTable(@PathVariable String tables, @PathVariable String project) throws IOException {
+        String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
+        String[] loaded = cubeMgmtService.reloadHiveTable(tables);
+        cubeMgmtService.calculateCardinalityIfNotPresent(loaded, submitter);
+        cubeMgmtService.syncTableToProject(loaded, project);
         Map<String, String[]> result = new HashMap<String, String[]>();
-        try{ 
-            String[] loadedTables = cubeMgmtService.reloadHiveTable(tables);
-
-            String inputTables[] = tables.split(",");
-            ArrayList<String> unloadedTables = new ArrayList<String>();
-            for (String inputTable : inputTables) {
-                boolean tableLoaded = false;
-                for (String loadedTable : loadedTables) {
-                    int cut = loadedTable.indexOf('.');
-                    String tableName = cut >= 0 ? loadedTable.substring(cut + 1).trim() : loadedTable.trim();
-                    if (inputTable.trim().toUpperCase().equals(tableName)||inputTable.trim().toUpperCase().equals(loadedTable)) {
-                        tableLoaded = true;
-                        break;
-                    }
-                }
-                if(!tableLoaded){
-                    unloadedTables.add(inputTable);
-                }
-            }
-           
-            cubeMgmtService.syncTableToProject(loadedTables, project);
-            result.put("result.loaded", loadedTables);
-            result.put("result.unloaded",unloadedTables.toArray(new String[unloadedTables.size()]) );
-            
-       }catch(IOException e){
-           logger.error("Failed to deal with the request.", e);
-           throw new InternalErrorException("Failed to load table,Please check the table name.");
-       }
+        result.put("result.loaded", loaded);
+        result.put("result.unloaded", new String[]{});
         return result;
     }
 
     /**
      * Regenerate table cardinality
-     * 
+     *
      * @return Table metadata array
      * @throws IOException
      */
     @RequestMapping(value = "/{tableNames}/cardinality", method = { RequestMethod.PUT })
     @ResponseBody
     public CardinalityRequest generateCardinality(@PathVariable String tableNames, @RequestBody CardinalityRequest request) {
+        String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
         String[] tables = tableNames.split(",");
         for (String table : tables) {
-            cubeMgmtService.generateCardinality(table.trim(), request.getFormat(), request.getDelimiter());
+            cubeMgmtService.calculateCardinality(table.trim().toUpperCase(), submitter);
         }
         return request;
     }
@@ -181,7 +160,7 @@ public class TableController extends BasicController {
         Iterator<TableDesc> it = tables.iterator();
         while (it.hasNext()) {
             TableDesc table = it.next();
-            Map<String, String> exd = cubeMgmtService.getMetadataManager().getTableDescExd(table.getName());
+            Map<String, String> exd = cubeMgmtService.getMetadataManager().getTableDescExd(table.getIdentity());
             if (exd == null) {
                 descs.add(table);
             } else {

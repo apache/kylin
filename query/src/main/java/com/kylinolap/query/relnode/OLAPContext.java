@@ -24,16 +24,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.kylinolap.metadata.realization.SQLDigest;
 import org.eigenbase.reltype.RelDataType;
 
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.JoinDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.JoinDesc;
+import com.kylinolap.metadata.model.TblColRef;
+import com.kylinolap.metadata.realization.IRealization;
 import com.kylinolap.query.schema.OLAPSchema;
 import com.kylinolap.storage.StorageContext;
-import com.kylinolap.storage.filter.TupleFilter;
+import com.kylinolap.metadata.filter.TupleFilter;
 
 /**
  * @author xjiang
@@ -101,14 +101,15 @@ public class OLAPContext {
     public boolean hasJoin = false;
 
     // cube metadata
-    public CubeInstance cubeInstance;
-    public CubeDesc cubeDesc;
+    public IRealization realization;
+
     public Collection<TblColRef> allColumns = new HashSet<TblColRef>();
-    public Collection<TblColRef> metricsColumns = new HashSet<TblColRef>();
     public Collection<TblColRef> groupByColumns = new ArrayList<TblColRef>();
+    public Collection<TblColRef> metricsColumns = new HashSet<TblColRef>();
     public List<FunctionDesc> aggregations = new ArrayList<FunctionDesc>();
-    public List<JoinDesc> joins = new LinkedList<JoinDesc>();
+    public Collection<TblColRef> filterColumns = new HashSet<TblColRef>();
     public TupleFilter filter;
+    public List<JoinDesc> joins = new LinkedList<JoinDesc>();
 
     // rewrite info
     public Map<String, RelDataType> rewriteFields = new HashMap<String, RelDataType>();
@@ -118,5 +119,13 @@ public class OLAPContext {
 
     public boolean isSimpleQuery() {
         return (joins.size() == 0) && (groupByColumns.size() == 0) && (aggregations.size() == 0);
+    }
+
+    private SQLDigest sqlDigest;
+
+    public SQLDigest getSQLDigest() {
+        if (sqlDigest == null)
+            sqlDigest = new SQLDigest(firstTableScan.getTableName(), filter, joins, allColumns, groupByColumns, filterColumns, metricsColumns, aggregations);
+        return sqlDigest;
     }
 }

@@ -17,15 +17,21 @@ package com.kylinolap.job.hadoop;
 
 /**
  * @author George Song (ysong1)
- * 
+ *
  */
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.persistence.ResourceStore;
+import com.kylinolap.common.util.StringSplitter;
+import com.kylinolap.cube.CubeInstance;
+import com.kylinolap.cube.CubeSegment;
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IISegment;
+import com.kylinolap.job.JobInstance;
+import com.kylinolap.job.exception.JobException;
+import com.kylinolap.job.tools.OptionsHelper;
+import com.kylinolap.metadata.MetadataManager;
+import com.kylinolap.metadata.model.TableDesc;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -47,22 +53,20 @@ import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kylinolap.common.KylinConfig;
-import com.kylinolap.common.persistence.ResourceStore;
-import com.kylinolap.common.util.StringSplitter;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.job.JobInstance;
-import com.kylinolap.job.exception.JobException;
-import com.kylinolap.job.tools.OptionsHelper;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 @SuppressWarnings("static-access")
 public abstract class AbstractHadoopJob extends Configured implements Tool {
-    protected static final Logger log = LoggerFactory.getLogger(AbstractHadoopJob.class);
+    protected static final Logger logger = LoggerFactory.getLogger(AbstractHadoopJob.class);
 
     protected static final Option OPTION_JOB_NAME = OptionBuilder.withArgName("name").hasArg().isRequired(true).withDescription("Job name. For exmaple, Kylin_Cuboid_Builder-clsfd_v2_Step_22-D)").create("jobname");
     protected static final Option OPTION_CUBE_NAME = OptionBuilder.withArgName("name").hasArg().isRequired(true).withDescription("Cube name. For exmaple, flat_item_cube").create("cubename");
+    protected static final Option OPTION_II_NAME = OptionBuilder.withArgName("name").hasArg().isRequired(true).withDescription("II name. For exmaple, some_ii").create("iiname");
     protected static final Option OPTION_SEGMENT_NAME = OptionBuilder.withArgName("name").hasArg().isRequired(true).withDescription("Cube segment name)").create("segmentname");
     protected static final Option OPTION_TABLE_NAME = OptionBuilder.withArgName("name").hasArg().isRequired(true).withDescription("Hive table name.").create("tablename");
     protected static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName("path").hasArg().isRequired(true).withDescription("Input path").create("input");
@@ -115,10 +119,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         } else {
             job.waitForCompletion(true);
             retVal = job.isSuccessful() ? 0 : 1;
+            logger.debug("Job '" + job.getJobName() + "' finished " + (job.isSuccessful() ? "successfully in " : "with failures.  Time taken ") + StringUtils.formatTime((System.nanoTime() - start) / 1000000L));
         }
-
-        log.debug("Job '" + job.getJobName() + "' finished " + (job.isSuccessful() ? "successfully in " : "with failures.  Time taken ") + StringUtils.formatTime((System.nanoTime() - start) / 1000000L));
-
         return retVal;
     }
 
@@ -142,7 +144,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
                 FileStatus[] fileStatuses = fs.listStatus(path);
                 boolean hasDir = false;
                 for (FileStatus stat : fileStatuses) {
-                    if (stat.isDirectory()) {
+                    if (stat.isDirectory() && !stat.getPath().getName().startsWith("_")) {
                         hasDir = true;
                         addInputDirs(stat.getPath().toString(), job);
                     }
@@ -151,7 +153,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
                     addInputDirs(path.toString(), job);
                 }
             } else {
-                System.out.println("Add input " + inp);
+                logger.debug("Add input " + inp);
                 FileInputFormat.addInputPath(job, new Path(inp));
             }
         }
@@ -170,18 +172,50 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         File kylinPropsFile = new File(metaDir, "kylin.properties");
         kylinConfig.writeProperties(kylinPropsFile);
 
-        // write cube / cube_desc / dict / table
+        // write cube / model_desc / cube_desc / dict / table
         ArrayList<String> dumpList = new ArrayList<String>();
         dumpList.add(cube.getResourcePath());
+        dumpList.add(cube.getDescriptor().getModel().getResourcePath());
         dumpList.add(cube.getDescriptor().getResourcePath());
-        if (cube.isInvertedIndex()) {
-            dumpList.add(cube.getInvertedIndexDesc().getResourcePath());
-        }
         for (TableDesc table : cube.getDescriptor().listTables()) {
             dumpList.add(table.getResourcePath());
         }
 
         for (CubeSegment segment : cube.getSegments()) {
+            dumpList.addAll(segment.getDictionaryPaths());
+        }
+
+        dumpResources(kylinConfig, metaDir, dumpList);
+
+        // hadoop distributed cache
+        conf.set("tmpfiles", "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath()));
+    }
+
+    protected void attachKylinPropsAndMetadata(IIInstance ii, Configuration conf) throws IOException {
+        File tmp = File.createTempFile("kylin_job_meta", "");
+        tmp.delete(); // we need a directory, so delete the file first
+
+        File metaDir = new File(tmp, "meta");
+        metaDir.mkdirs();
+        metaDir.getParentFile().deleteOnExit();
+
+        // write kylin.properties
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        File kylinPropsFile = new File(metaDir, "kylin.properties");
+        kylinConfig.writeProperties(kylinPropsFile);
+
+        // write II / model_desc / II_desc / dict / table
+        ArrayList<String> dumpList = new ArrayList<String>();
+        dumpList.add(ii.getResourcePath());
+        dumpList.add(ii.getDescriptor().getModel().getResourcePath());
+        dumpList.add(ii.getDescriptor().getResourcePath());
+
+        for (String tableName : ii.getDescriptor().getModel().getAllTables()) {
+            TableDesc table = MetadataManager.getInstance(kylinConfig).getTableDesc(tableName);
+            dumpList.add(table.getResourcePath());
+        }
+
+        for (IISegment segment : ii.getSegments()) {
             dumpList.addAll(segment.getDictionaryPaths());
         }
 
@@ -241,7 +275,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     public static KylinConfig loadKylinPropsAndMetadata(Configuration conf) throws IOException {
         File metaDir = new File("meta");
         System.setProperty(KylinConfig.KYLIN_CONF, metaDir.getAbsolutePath());
-        System.out.println("The absolute path for meta dir is " + metaDir.getAbsolutePath());
+        logger.info("The absolute path for meta dir is " + metaDir.getAbsolutePath());
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         kylinConfig.setMetadataUrl(metaDir.getCanonicalPath());
         return kylinConfig;
@@ -287,6 +321,10 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
     public void setAsync(boolean isAsync) {
         this.isAsync = isAsync;
+    }
+
+    public Job getJob() {
+        return this.job;
     }
 
 }

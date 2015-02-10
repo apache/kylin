@@ -35,7 +35,6 @@ import com.kylinolap.rest.service.ServiceTestBase;
 
 /**
  * @author xduo
- * 
  */
 public class UserControllerTest extends ServiceTestBase {
 
@@ -50,7 +49,7 @@ public class UserControllerTest extends ServiceTestBase {
     }
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         super.setUp();
 
         userController = new UserController();

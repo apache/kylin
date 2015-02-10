@@ -26,7 +26,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 
 /**
@@ -65,16 +64,4 @@ public class BaseCuboidJobTest extends LocalFileMetadataTestCase {
         assertEquals("Job failed", 0, ToolRunner.run(conf, new BaseCuboidJob(), args));
     }
 
-    @Test
-    public void testJobWithBadParas() throws Exception {
-
-        final String input = "src/test/resources/data/flat_table/";
-        final String output = "target/test-output/base_cuboid/";
-        final String metadata = AbstractKylinTestCase.LOCALMETA_TEST_DATA;
-
-        FileUtil.fullyDelete(new File(output));
-
-        String[] args = { "-input", input, "-output", output, "-metadata", metadata };
-        assertEquals(2, ToolRunner.run(conf, new BaseCuboidJob(), args));
-    }
 }

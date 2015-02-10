@@ -34,6 +34,7 @@ import com.kylinolap.job.hadoop.cardinality.HiveColumnCardinalityJob;
  * @author ysong1
  * 
  */
+@Ignore("This test is invalid now as the mapper uses HCatalog to fetch the data which need a hive env")
 public class ColumnCardinalityJobTest {
 
     private Configuration conf;
@@ -46,7 +47,7 @@ public class ColumnCardinalityJobTest {
     }
 
     @Test
-    @Ignore
+    @Ignore("not maintaining")
     public void testJob() throws Exception {
         final String input = "src/test/resources/data/test_cal_dt/";
         final String output = "target/test-output/column-cardinality/";

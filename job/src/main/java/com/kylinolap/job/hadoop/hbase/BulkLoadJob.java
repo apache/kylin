@@ -28,9 +28,10 @@ import org.apache.hadoop.util.ToolRunner;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.HBaseColumnFamilyDesc;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.HBaseColumnFamilyDesc;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,9 +83,7 @@ public class BulkLoadJob extends AbstractHadoopJob {
             return ret;
         } catch (Exception e) {
             printUsage(options);
-            e.printStackTrace(System.err);
-            log.error(e.getLocalizedMessage(), e);
-            return 2;
+            throw e;
         }
     }
 

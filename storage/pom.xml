@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.kylinolap</groupId>
         <artifactId>kylin</artifactId>
-        <version>0.6.4-SNAPSHOT</version>
+        <version>0.7.1-SNAPSHOT</version>
     </parent>
 
     <dependencies>
@@ -16,6 +16,12 @@
             <artifactId>kylin-cube</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.kylinolap</groupId>
+            <artifactId>kylin-invertedindex</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
 
         <!-- Env & Test -->
 
@@ -41,6 +47,16 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-exec</artifactId>
+            <version>${hive.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-jdbc</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
         <dependency>
             <groupId>junit</groupId>
@@ -63,6 +79,8 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+
     </dependencies>
 
     <build>
@@ -90,6 +108,9 @@
                                     <include>com.kylinolap:kylin-dictionary</include>
                                     <include>com.kylinolap:kylin-cube</include>
                                     <include>com.kylinolap:kylin-storage</include>
+                                    <include>com.kylinolap:kylin-invertedindex</include>
+                                    <include>com.ning:compress-lzf</include>
+                                    <include>com.n3twork.druid:extendedset</include>
                                     <include>net.sf.trove4j:*</include>
                                     <!-- include>com.fasterxml.jackson.core:*</include -->
                                     <!-- include>org.apache.commons:commons-lang3</include -->
@@ -113,5 +134,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

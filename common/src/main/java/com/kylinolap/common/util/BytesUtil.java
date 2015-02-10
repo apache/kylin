@@ -282,7 +282,9 @@ public class BytesUtil {
             return;
         }
         writeVInt(array.length, out);
-        out.asIntBuffer().put(array);
+        for (int i = 0; i < array.length; ++i) {
+            writeVInt(array[i], out);
+        }
     }
 
     public static int[] readIntArray(ByteBuffer in) {
@@ -290,7 +292,10 @@ public class BytesUtil {
         if (len < 0)
             return null;
         int[] array = new int[len];
-        in.asIntBuffer().get(array);
+
+        for (int i = 0; i < len; ++i) {
+            array[i] = readVInt(in);
+        }
         return array;
     }
 
@@ -313,6 +318,39 @@ public class BytesUtil {
         return array;
     }
 
+    public static void writeBooleanArray(boolean[] array, ByteBuffer out) {
+        if (array == null) {
+            writeVInt(-1, out);
+            return;
+        }
+        writeVInt(array.length, out);
+        byte b_true = (byte) 1;
+        byte b_false = (byte) 0;
+        for (int i = 0; i < array.length; i++) {
+            if (array[i])
+                out.put(b_true);
+            else
+                out.put(b_false);
+        }
+    }
+
+    public static boolean[] readBooleanArray(ByteBuffer in) {
+        int len = readVInt(in);
+        if (len < 0)
+            return null;
+
+        boolean[] array = new boolean[len];
+        byte b_true = (byte) 1;
+        for (int i = 0; i < array.length; i++) {
+            byte temp = in.get();
+            if (temp == b_true)
+                array[i] = true;
+            else
+                array[i] = false;
+        }
+        return array;
+    }
+
     public static byte[] toBytes(Writable writable) {
         try {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -324,6 +362,22 @@ public class BytesUtil {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static String toReadableText(byte[] array) {
+        return toHex(array);
+    }
+
+    public static byte[] fromReadableText(String text) {
+        String[] tokens = text.split("\\\\x");
+        byte[] ret = new byte[tokens.length - 1];
+        for (int i = 1; i < tokens.length; ++i) {
+            int x = Bytes.toBinaryFromHex((byte) tokens[i].charAt(0));
+            x = x << 4;
+            int y = Bytes.toBinaryFromHex((byte) tokens[i].charAt(1));
+            ret[i - 1] = (byte) (x + y);
+        }
+        return ret;
     }
 
     public static String toHex(byte[] array) {

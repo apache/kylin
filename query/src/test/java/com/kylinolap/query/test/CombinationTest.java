@@ -9,7 +9,7 @@ import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import com.kylinolap.storage.hbase.observer.CoprocessorEnabler;
+import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
 
 /**
  * Created by honma on 7/2/14.
@@ -45,9 +45,9 @@ public class CombinationTest extends KylinQueryTest {
         KylinQueryTest.preferCubeOf(joinType);
 
         if (coprocessorToggle.equals("on")) {
-            CoprocessorEnabler.forceCoprocessorOn();
+            ObserverEnabler.forceCoprocessorOn();
         } else if (coprocessorToggle.equals("off")) {
-            CoprocessorEnabler.forceCoprocessorOff();
+            ObserverEnabler.forceCoprocessorOff();
         } else if (coprocessorToggle.equals("unset")) {
             // unset
         }

@@ -26,6 +26,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IIManager;
+import com.kylinolap.invertedindex.IISegment;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -48,7 +53,6 @@ import com.kylinolap.common.util.HadoopUtil;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.CubeSegmentStatusEnum;
 
 /**
  * @author yangli9
@@ -57,7 +61,8 @@ public class DeployCoprocessorCLI {
 
     private static final Logger logger = LoggerFactory.getLogger(DeployCoprocessorCLI.class);
 
-    public static final String AGGR_COPROCESSOR_CLS_NAME = "com.kylinolap.storage.hbase.observer.AggregateRegionObserver";
+    public static final String OBSERVER_CLS_NAME = "com.kylinolap.storage.hbase.coprocessor.observer.AggregateRegionObserver";
+    public static final String ENDPOINT_CLS_NAMAE = "com.kylinolap.storage.hbase.coprocessor.endpoint.IIEndpoint";
 
     public static void main(String[] args) throws IOException {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -88,9 +93,32 @@ public class DeployCoprocessorCLI {
         logger.info("Active coprocessor jar: " + hdfsCoprocessorJar);
     }
 
-    public static void setCoprocessorOnHTable(HTableDescriptor desc, Path hdfsCoprocessorJar) throws IOException {
-        logger.info("Set coprocessor on " + desc.getNameAsString());
-        desc.addCoprocessor(AGGR_COPROCESSOR_CLS_NAME, hdfsCoprocessorJar, 1001, null);
+    public static void deployCoprocessor(HTableDescriptor tableDesc) {
+        try {
+            initHTableCoprocessor(tableDesc);
+            logger.info("hbase table " + tableDesc.getName() + " deployed with coprocessor.");
+
+        } catch (Exception ex) {
+            logger.error("Error deploying coprocessor on " + tableDesc.getName(), ex);
+            logger.error("Will try creating the table without coprocessor.");
+        }
+    }
+
+    private static void initHTableCoprocessor(HTableDescriptor desc) throws IOException {
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        Configuration hconf = HadoopUtil.getCurrentConfiguration();
+        FileSystem fileSystem = FileSystem.get(hconf);
+
+        String localCoprocessorJar = kylinConfig.getCoprocessorLocalJar();
+        Path hdfsCoprocessorJar = DeployCoprocessorCLI.uploadCoprocessorJar(localCoprocessorJar, fileSystem, null);
+
+        DeployCoprocessorCLI.addCoprocessorOnHTable(desc, hdfsCoprocessorJar);
+    }
+
+    public static void addCoprocessorOnHTable(HTableDescriptor desc, Path hdfsCoprocessorJar) throws IOException {
+        logger.info("Add coprocessor on " + desc.getNameAsString());
+        desc.addCoprocessor(ENDPOINT_CLS_NAMAE, hdfsCoprocessorJar, 1000, null);
+        desc.addCoprocessor(OBSERVER_CLS_NAME, hdfsCoprocessorJar, 1001, null);
     }
 
     public static void resetCoprocessor(String tableName, HBaseAdmin hbaseAdmin, Path hdfsCoprocessorJar) throws IOException {
@@ -99,11 +127,14 @@ public class DeployCoprocessorCLI {
 
         logger.info("Unset coprocessor on " + tableName);
         HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
-        while (desc.hasCoprocessor(AGGR_COPROCESSOR_CLS_NAME)) {
-            desc.removeCoprocessor(AGGR_COPROCESSOR_CLS_NAME);
+        while (desc.hasCoprocessor(OBSERVER_CLS_NAME)) {
+            desc.removeCoprocessor(OBSERVER_CLS_NAME);
+        }
+        while (desc.hasCoprocessor(ENDPOINT_CLS_NAMAE)) {
+            desc.removeCoprocessor(ENDPOINT_CLS_NAMAE);
         }
 
-        setCoprocessorOnHTable(desc, hdfsCoprocessorJar);
+        addCoprocessorOnHTable(desc, hdfsCoprocessorJar);
         hbaseAdmin.modifyTable(tableName, desc);
 
         logger.info("Enable " + tableName);
@@ -194,7 +225,7 @@ public class DeployCoprocessorCLI {
                 IOUtils.closeQuietly(out);
             }
 
-            fileSystem.setTimes(uploadPath, localCoprocessorFile.lastModified(), System.currentTimeMillis());
+            fileSystem.setTimes(uploadPath, localCoprocessorFile.lastModified(), -1);
 
         }
 
@@ -244,7 +275,7 @@ public class DeployCoprocessorCLI {
                 String jarPath = valueMatcher.group(1).trim();
                 String clsName = valueMatcher.group(2).trim();
 
-                if (AGGR_COPROCESSOR_CLS_NAME.equals(clsName)) {
+                if (OBSERVER_CLS_NAME.equals(clsName)) {
                     result.add(jarPath);
                 }
             }
@@ -258,10 +289,22 @@ public class DeployCoprocessorCLI {
 
         ArrayList<String> result = new ArrayList<String>();
         for (CubeInstance cube : cubeMgr.listAllCubes()) {
-            for (CubeSegment seg : cube.getSegments(CubeSegmentStatusEnum.READY)) {
+            for (CubeSegment seg : cube.getSegments(SegmentStatusEnum.READY)) {
                 String tableName = seg.getStorageLocationIdentifier();
-                if (StringUtils.isBlank(tableName) == false)
+                if (StringUtils.isBlank(tableName) == false) {
                     result.add(tableName);
+                    System.out.println("added new table: " + tableName);
+                }
+            }
+        }
+
+        for (IIInstance ii : IIManager.getInstance(config).listAllIIs()) {
+            for (IISegment seg : ii.getSegment(SegmentStatusEnum.READY)) {
+                String tableName = seg.getStorageLocationIdentifier();
+                if (StringUtils.isBlank(tableName) == false) {
+                    result.add(tableName);
+                    System.out.println("added new table: " + tableName);
+                }
             }
         }
 

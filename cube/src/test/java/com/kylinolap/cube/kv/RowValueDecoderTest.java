@@ -29,12 +29,12 @@ import org.junit.Test;
 
 import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.measure.MeasureCodec;
+import com.kylinolap.metadata.measure.MeasureCodec;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.HBaseColumnDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.HBaseColumnDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
+import com.kylinolap.metadata.model.FunctionDesc;
 
 /**
  * @author George Song (ysong1)
@@ -45,7 +45,7 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
-        MetadataManager.removeInstance(this.getTestConfig());
+        MetadataManager.clearCache();
     }
 
     @After
@@ -55,7 +55,7 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testDecode() throws Exception {
-        CubeDesc cubeDesc = CubeManager.getInstance(this.getTestConfig()).getCube("test_kylin_cube_with_slr_ready").getDescriptor();
+        CubeDesc cubeDesc = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_ready").getDescriptor();
         HBaseColumnDesc hbaseCol = cubeDesc.getHBaseMapping().getColumnFamily()[0].getColumns()[0];
 
         MeasureCodec codec = new MeasureCodec(hbaseCol.getMeasures());

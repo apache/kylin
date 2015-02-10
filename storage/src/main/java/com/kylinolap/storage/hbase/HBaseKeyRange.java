@@ -33,9 +33,9 @@ import com.kylinolap.cube.kv.AbstractRowKeyEncoder;
 import com.kylinolap.cube.kv.FuzzyKeyEncoder;
 import com.kylinolap.cube.kv.FuzzyMaskEncoder;
 import com.kylinolap.cube.kv.RowConstants;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.dict.DateStrDictionary;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * 
@@ -114,17 +114,20 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
             stopValues.put(column, dimRange.getEndValue());
             fuzzyValues.put(column, dimRange.getEqualValues());
 
-            TblColRef partitionDateColumnRef = cubeSeg.getCubeDesc().getCubePartitionDesc().getPartitionDateColumnRef();
+            TblColRef partitionDateColumnRef = cubeSeg.getCubeDesc().getModel().getPartitionDesc().getPartitionDateColumnRef();
             if (column.equals(partitionDateColumnRef)) {
                 initPartitionRange(dimRange);
             }
         }
 
         AbstractRowKeyEncoder encoder = AbstractRowKeyEncoder.createInstance(cubeSeg, cuboid);
+
         encoder.setBlankByte(RowConstants.ROWKEY_LOWER_BYTE);
+
         this.startKey = encoder.encode(startValues);
 
         encoder.setBlankByte(RowConstants.ROWKEY_UPPER_BYTE);
+
         // In order to make stopRow inclusive add a trailing 0 byte. #See
         // Scan.setStopRow(byte [] stopRow)
         this.stopKey = Bytes.add(encoder.encode(stopValues), ZERO_TAIL_BYTES);

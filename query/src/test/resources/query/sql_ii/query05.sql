@@ -1,0 +1,1 @@
+select sum(price) as price_sum, min(price) as price_min , max(price) as price_max , SELLER_ID from test_kylin_fact   where SELLER_ID > 10000149 group by SELLER_ID

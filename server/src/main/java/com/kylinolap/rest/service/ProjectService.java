@@ -27,7 +27,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import com.kylinolap.cube.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectManager;
 import com.kylinolap.rest.constant.Constant;
 import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.request.CreateProjectRequest;
@@ -106,21 +107,12 @@ public class ProjectService extends BasicService {
         accessService.clean(project, true);
     }
 
-    /**
-     * @param name
-     * @throws IOException
-     */
     public void reloadProjectCache(String name) throws IOException {
-        ProjectInstance project = this.getProjectManager().getProject(name);
-        this.getProjectManager().loadProjectCache(project, false);
+        getProjectManager().reloadProject(name);
     }
 
-    /**
-     * @param name
-     */
     public void removeProjectCache(String name) {
-        ProjectInstance project = this.getProjectManager().getProject(name);
-        this.getProjectManager().removeProjectCache(project);
+        ProjectManager.clearCache();
     }
 
 }

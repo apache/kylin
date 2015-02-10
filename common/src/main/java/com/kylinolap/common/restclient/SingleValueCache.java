@@ -21,24 +21,32 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author xjiang
  * 
  */
-public class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
+public abstract class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
 
-    private final Map<K, V> innerCache;
+    private final ConcurrentMap<K, V> innerCache;
 
     public SingleValueCache(Broadcaster.TYPE syncType) {
+        this(syncType, new ConcurrentHashMap<K, V>());
+    }
+
+    public SingleValueCache(Broadcaster.TYPE syncType, ConcurrentMap<K, V> innerCache) {
         super(syncType);
-        innerCache = new ConcurrentHashMap<K, V>();
+        this.innerCache = innerCache;
     }
 
     public void put(K key, V value) {
-        Broadcaster.EVENT eventType = innerCache.containsKey(key) ? Broadcaster.EVENT.UPDATE : Broadcaster.EVENT.CREATE;
-        innerCache.put(key, value);
-        syncRemote(key, eventType);
+        final V result = innerCache.put(key, value);
+        if (result == null) {
+            syncRemote(key, Broadcaster.EVENT.CREATE);
+        } else {
+            syncRemote(key, Broadcaster.EVENT.UPDATE);
+        }
     }
 
     public void putLocal(K key, V value) {

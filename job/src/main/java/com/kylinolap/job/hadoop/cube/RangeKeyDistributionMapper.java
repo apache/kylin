@@ -18,15 +18,15 @@ package com.kylinolap.job.hadoop.cube;
 
 import java.io.IOException;
 
+import com.kylinolap.common.mr.KylinMapper;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
 
 /**
  * @author ysong1
  * 
  */
-public class RangeKeyDistributionMapper extends Mapper<Text, Text, Text, LongWritable> {
+public class RangeKeyDistributionMapper extends KylinMapper<Text, Text, Text, LongWritable> {
 
     private static final long ONE_MEGA_BYTES = 1L * 1024L * 1024L;
 
@@ -35,6 +35,11 @@ public class RangeKeyDistributionMapper extends Mapper<Text, Text, Text, LongWri
     private long bytesRead = 0;
 
     private Text lastKey;
+
+    @Override
+    protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+    }
 
     @Override
     public void map(Text key, Text value, Context context) throws IOException, InterruptedException {

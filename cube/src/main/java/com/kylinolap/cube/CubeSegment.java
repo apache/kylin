@@ -26,11 +26,14 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.dict.Dictionary;
+import com.kylinolap.dict.ISegment;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
+import com.kylinolap.metadata.model.TblColRef;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class CubeSegment implements Comparable<CubeSegment> {
+public class CubeSegment implements Comparable<CubeSegment>, ISegment {
 
     @JsonBackReference
     private CubeInstance cubeInstance;
@@ -45,23 +48,22 @@ public class CubeSegment implements Comparable<CubeSegment> {
     @JsonProperty("date_range_end")
     private long dateRangeEnd;
     @JsonProperty("status")
-    private CubeSegmentStatusEnum status;
+    private SegmentStatusEnum status;
     @JsonProperty("size_kb")
     private long sizeKB;
-    @JsonProperty("source_records")
-    private long sourceRecords;
-    @JsonProperty("source_records_size")
-    private long sourceRecordsSize;
+    @JsonProperty("input_records")
+    private long inputRecords;
+    @JsonProperty("input_records_size")
+    private long inputRecordsSize;
     @JsonProperty("last_build_time")
     private long lastBuildTime;
     @JsonProperty("last_build_job_id")
     private String lastBuildJobID;
-    @JsonProperty("create_time")
-    private String createTime;
+    @JsonProperty("create_time_utc")
+    private long createTimeUTC;
 
     @JsonProperty("binary_signature")
-    private String binarySignature; // a hash of cube schema and dictionary ID,
-                                    // used for sanity check
+    private String binarySignature; // a hash of cube schema and dictionary ID, used for sanity check
 
     @JsonProperty("dictionaries")
     private ConcurrentHashMap<String, String> dictionaries; // table/column ==> dictionary resource path
@@ -76,7 +78,7 @@ public class CubeSegment implements Comparable<CubeSegment> {
      * @param startDate
      * @param endDate
      * @return if(startDate == 0 && endDate == 0), returns "FULL_BUILD", else
-     *         returns "yyyyMMddHHmmss_yyyyMMddHHmmss"
+     * returns "yyyyMMddHHmmss_yyyyMMddHHmmss"
      */
     public static String getSegmentName(long startDate, long endDate) {
         if (startDate == 0 && endDate == 0) {
@@ -90,7 +92,6 @@ public class CubeSegment implements Comparable<CubeSegment> {
     }
 
     // ============================================================================
-
 
     public String getUuid() {
         return uuid;
@@ -124,11 +125,11 @@ public class CubeSegment implements Comparable<CubeSegment> {
         this.dateRangeEnd = dateRangeEnd;
     }
 
-    public CubeSegmentStatusEnum getStatus() {
+    public SegmentStatusEnum getStatus() {
         return status;
     }
 
-    public void setStatus(CubeSegmentStatusEnum status) {
+    public void setStatus(SegmentStatusEnum status) {
         this.status = status;
     }
 
@@ -140,20 +141,20 @@ public class CubeSegment implements Comparable<CubeSegment> {
         this.sizeKB = sizeKB;
     }
 
-    public long getSourceRecords() {
-        return sourceRecords;
+    public long getInputRecords() {
+        return inputRecords;
     }
 
-    public void setSourceRecords(long sourceRecords) {
-        this.sourceRecords = sourceRecords;
+    public void setInputRecords(long inputRecords) {
+        this.inputRecords = inputRecords;
     }
 
-    public long getSourceRecordsSize() {
-        return sourceRecordsSize;
+    public long getInputRecordsSize() {
+        return inputRecordsSize;
     }
 
-    public void setSourceRecordsSize(long sourceRecordsSize) {
-        this.sourceRecordsSize = sourceRecordsSize;
+    public void setInputRecordsSize(long inputRecordsSize) {
+        this.inputRecordsSize = inputRecordsSize;
     }
 
     public long getLastBuildTime() {
@@ -172,12 +173,13 @@ public class CubeSegment implements Comparable<CubeSegment> {
         this.lastBuildJobID = lastBuildJobID;
     }
 
-    public String getCreateTime() {
-        return createTime;
+
+    public long getCreateTimeUTC() {
+        return createTimeUTC;
     }
 
-    public void setCreateTime(String createTime) {
-        this.createTime = createTime;
+    public void setCreateTimeUTC(long createTimeUTC) {
+        this.createTimeUTC = createTimeUTC;
     }
 
     public String getBinarySignature() {
@@ -241,23 +243,41 @@ public class CubeSegment implements Comparable<CubeSegment> {
         return col.getTable() + "/" + col.getName();
     }
 
-    /**
-     * @param storageLocationIdentifier
-     *            the storageLocationIdentifier to set
-     */
     public void setStorageLocationIdentifier(String storageLocationIdentifier) {
         this.storageLocationIdentifier = storageLocationIdentifier;
     }
 
     @Override
-    public int compareTo(CubeSegment other) {
-        if (this.dateRangeEnd < other.dateRangeEnd) {
-            return -1;
-        } else if (this.dateRangeEnd > other.dateRangeEnd) {
-            return 1;
+    public int getColumnLength(TblColRef col) {
+        Dictionary<?> dict = getDictionary(col);
+        if (dict == null) {
+            return this.getCubeDesc().getRowkey().getColumnLength(col);
         } else {
-            return 0;
+            return dict.getSizeOfId();
         }
+    }
+
+    @Override
+    public Dictionary<?> getDictionary(TblColRef col) {
+        return CubeManager.getInstance(this.getCubeInstance().getConfig()).getDictionary(this, col);
+    }
+
+    public void validate() {
+        if (dateRangeStart >= dateRangeEnd)
+            throw new IllegalStateException("dateRangeStart(" + dateRangeStart + ") must be greater than dateRangeEnd(" + dateRangeEnd + ") in segment " + this);
+    }
+
+    @Override
+    public int compareTo(CubeSegment other) {
+        long comp = this.dateRangeStart - other.dateRangeStart;
+        if (comp != 0)
+            return comp < 0 ? -1 : 1;
+
+        comp = this.dateRangeEnd - other.dateRangeEnd;
+        if (comp != 0)
+            return comp < 0 ? -1 : 1;
+        else
+            return 0;
     }
 
     @Override
@@ -284,6 +304,11 @@ public class CubeSegment implements Comparable<CubeSegment> {
                 return false;
         } else if (!cubeInstance.equals(other.cubeInstance))
             return false;
+        if (uuid == null) {
+            if (other.uuid != null)
+                return false;
+        } else if (!uuid.equals(other.uuid))
+            return false;
         if (name == null) {
             if (other.name != null)
                 return false;
@@ -296,12 +321,16 @@ public class CubeSegment implements Comparable<CubeSegment> {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-                .add("uuid", uuid)
-                .add("create_time:", createTime)
-                .add("name", name)
-                .add("last_build_job_id", lastBuildJobID)
-                .add("status", status)
-                .toString();
+        return Objects.toStringHelper(this).add("uuid", uuid).add("create_time_utc:", createTimeUTC).add("name", name).add("last_build_job_id", lastBuildJobID).add("status", status).toString();
     }
+
+
+    public void setDictionaries(ConcurrentHashMap<String, String> dictionaries) {
+        this.dictionaries = dictionaries;
+    }
+
+    public void setSnapshots(ConcurrentHashMap<String, String> snapshots) {
+        this.snapshots = snapshots;
+    }
+    
 }

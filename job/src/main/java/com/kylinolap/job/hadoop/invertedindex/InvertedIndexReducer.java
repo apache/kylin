@@ -21,25 +21,25 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.mapreduce.Reducer;
 
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.CubeSegmentStatusEnum;
-import com.kylinolap.cube.invertedindex.IIKeyValueCodec;
-import com.kylinolap.cube.invertedindex.TableRecord;
-import com.kylinolap.cube.invertedindex.TableRecordInfo;
-import com.kylinolap.cube.invertedindex.Slice;
-import com.kylinolap.cube.invertedindex.SliceBuilder;
+import com.kylinolap.common.mr.KylinReducer;
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IIManager;
+import com.kylinolap.invertedindex.IISegment;
+import com.kylinolap.invertedindex.index.Slice;
+import com.kylinolap.invertedindex.index.SliceBuilder;
+import com.kylinolap.invertedindex.index.TableRecord;
+import com.kylinolap.invertedindex.index.TableRecordInfo;
+import com.kylinolap.invertedindex.model.IIKeyValueCodec;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 
 /**
  * @author yangli9
  */
-public class InvertedIndexReducer extends Reducer<LongWritable, ImmutableBytesWritable, ImmutableBytesWritable, ImmutableBytesWritable> {
+public class InvertedIndexReducer extends KylinReducer<LongWritable, ImmutableBytesWritable, ImmutableBytesWritable, ImmutableBytesWritable> {
 
     private TableRecordInfo info;
     private TableRecord rec;
@@ -48,15 +48,17 @@ public class InvertedIndexReducer extends Reducer<LongWritable, ImmutableBytesWr
 
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+
         Configuration conf = context.getConfiguration();
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
-        CubeManager mgr = CubeManager.getInstance(config);
-        CubeInstance cube = mgr.getCube(conf.get(BatchConstants.CFG_CUBE_NAME));
-        CubeSegment seg = cube.getSegment(conf.get(BatchConstants.CFG_CUBE_SEGMENT_NAME), CubeSegmentStatusEnum.NEW);
+        IIManager mgr = IIManager.getInstance(config);
+        IIInstance ii = mgr.getII(conf.get(BatchConstants.CFG_II_NAME));
+        IISegment seg = ii.getSegment(conf.get(BatchConstants.CFG_II_SEGMENT_NAME), SegmentStatusEnum.NEW);
         info = new TableRecordInfo(seg);
-        rec = new TableRecord(info);
+        rec = info.createTableRecord();
         builder = null;
-        kv = new IIKeyValueCodec(info);
+        kv = new IIKeyValueCodec(info.getDigest());
     }
 
     @Override
@@ -68,6 +70,8 @@ public class InvertedIndexReducer extends Reducer<LongWritable, ImmutableBytesWr
             if (builder == null) {
                 builder = new SliceBuilder(info, rec.getShard());
             }
+
+            //TODO: to delete this log
             System.out.println(rec.getShard() + " - " + rec);
 
             Slice slice = builder.append(rec);

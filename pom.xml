@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.kylinolap</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>0.6.4-SNAPSHOT</version>
+    <version>0.7.1-SNAPSHOT</version>
     <name>Kylin:HadoopOLAPEngine</name>
 
     <properties>
@@ -16,11 +17,12 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- Hadoop versions -->
-        <hadoop2.version>2.4.1</hadoop2.version>
-        <yarn.version>2.4.1</yarn.version>
-        <hbase-hadoop2.version>0.98.0-hadoop2</hbase-hadoop2.version>
-        <zookeeper.version>3.4.5</zookeeper.version>
-        <hive.version>0.13.0</hive.version>
+        <hadoop2.version>2.6.0</hadoop2.version>
+        <yarn.version>2.6.0</yarn.version>
+        <zookeeper.version>3.4.6</zookeeper.version>
+        <hive.version>0.14.0</hive.version>
+        <hive-hcatalog.version>0.14.0</hive-hcatalog.version>
+        <hbase-hadoop2.version>0.98.8-hadoop2</hbase-hadoop2.version>
 
         <!-- Dependency versions -->
         <antlr.version>3.4</antlr.version>
@@ -42,7 +44,7 @@
         <log4j.version>1.2.17</log4j.version>
         <slf4j.version>1.6.4</slf4j.version>
         <jackson.version>2.2.3</jackson.version>
-        <guava.version>12.0.1</guava.version>
+        <guava.version>12.0</guava.version>
         <jsch.version>0.1.51</jsch.version>
         <xerces.version>2.9.1</xerces.version>
         <xalan.version>2.7.1</xalan.version>
@@ -71,6 +73,7 @@
         <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
         <sonar.language>java</sonar.language>
         <sonar.jacoco.excludes>com/kylinolap/**/tools/**:net/hydromatic/optiq/**:org/eigenbase/sql2rel/**</sonar.jacoco.excludes>
+        
     </properties>
 
     <dependencyManagement>
@@ -493,8 +496,8 @@
         <connection>scm:git:git@github.com:KylinOLAP/Kylin.git</connection>
         <url>scm:git:git@github.com:KylinOLAP/Kylin.git</url>
         <developerConnection>scm:git:git@github.com:KylinOLAP/Kylin.git</developerConnection>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
     <modules>
         <module>atopcalcite</module>
@@ -506,8 +509,10 @@
         <module>storage</module>
         <module>query</module>
         <module>server</module>
-		<module>jdbc</module>
+        <module>jdbc</module>
+        <module>invertedindex</module>
     </modules>
+
     <profiles>
         <profile>
             <id>default</id>
@@ -521,22 +526,68 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>2.16</version>
                         <configuration>
+                            <reportsDirectory>${project.basedir}/../target/surefire-reports</reportsDirectory>
                             <excludes>
-                                <exclude>**/com/kylinolap/job/**</exclude>
                                 <exclude>**/BuildCubeWithEngineTest.java</exclude>
+                                <exclude>**/BuildIIWithEngineTest.java</exclude>
                                 <exclude>**/SampleCubeSetupTest.java</exclude>
-                                <exclude>**/InvertedIndexHBaseTest.java</exclude>
-                                <exclude>**/StorageTest.java</exclude>
                                 <exclude>**/KylinQueryTest.java</exclude>
+                                <exclue>**/SnapshotManagerTest.java</exclue>
+                                <exclue>**/SampleCubeSetupTest.java</exclue>
+                                <exclue>**/HiveTableReaderTest.java</exclue>
                             </excludes>
+                            <systemProperties>
+                                <property>
+                                    <name>useSandbox</name>
+                                    <value>false</value>
+                                </property>
+                                <property>
+                                    <name>buildCubeUsingProvidedData</name>
+                                    <value>false</value>
+                                </property>
+                            </systemProperties>
+                            <argLine>-Xms1G -Xmx6G -XX:PermSize=1G -XX:MaxPermSize=2G</argLine>
                         </configuration>
                     </plugin>
+
                 </plugins>
             </build>
         </profile>
 
         <profile>
-            <id>e2e</id>
+            <id>sandbox</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.16</version>
+                        <configuration>
+                            <reportsDirectory>${project.basedir}/../target/surefire-reports</reportsDirectory>
+                            <excludes>
+                                <exclude>**/BuildCubeWithEngineTest.java</exclude>
+                                <exclude>**/BuildIIWithEngineTest.java</exclude>
+                                <exclude>**/SampleCubeSetupTest.java</exclude>
+                                <exclude>**/KylinQueryTest.java</exclude>
+                            </excludes>
+                            <systemProperties>
+                                <property>
+                                    <name>useSandbox</name>
+                                    <value>true</value>
+                                </property>
+                                <property>
+                                    <name>buildCubeUsingProvidedData</name>
+                                    <value>false</value>
+                                </property>
+                            </systemProperties>
+                        </configuration>
+                    </plugin>
+
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>

@@ -9,7 +9,7 @@
                     <select class="form-control"
                         ng-if="state.mode=='edit'"
                         chosen ng-model="cubeMetaFrame.cube_partition_desc.cube_partition_type" required
-                        ng-options="ddt as ddt for ddt in cubePartitionTypes">
+                        ng-options="ddt as ddt for ddt in cubeConfig.cubePartitionTypes">
                     </select>
                     <span ng-if="state.mode=='view'">{{cubeMetaFrame.cube_partition_desc.cube_partition_type}}</span>
                 </div>
@@ -42,8 +42,7 @@
                            ng-model="cubeMetaFrame.cube_partition_desc.partition_date_start" ng-if="state.mode=='edit'"
                            placeholder="Click to choose start date..." is-open="opened" />
                     <span ng-if="state.mode=='view'">{{
-                        (cubeMetaFrame.cube_partition_desc.partition_date_start |
-                        date:'fullDate') }}</span>
+                        (cubeMetaFrame.cube_partition_desc.partition_date_start|reverseToGMT0) }}</span>
                 </div>
             </div>
         </div>

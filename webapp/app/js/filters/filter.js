@@ -84,4 +84,52 @@ KylinApp
             }
             return 1300;
         }
+    }).filter('utcToConfigTimeZone',function($filter,kylinConfig){
+
+        var gmttimezone;
+        //convert GMT+0 time to specified Timezone
+        return function(item,timezone,format){
+
+            if(!timezone){
+                timezone = kylinConfig.getTimeZone();
+            }
+            if(!format){
+                format ="yyyy-MM-dd HH:mm:ss";
+            }
+
+            //convert short name timezone to GMT
+            switch(timezone){
+                //convert PST to GMT
+                case "PST":
+                    gmttimezone= "GMT-8";
+                    break;
+                default:
+                    gmttimezone = timezone;
+            }
+
+
+            var localOffset = new Date().getTimezoneOffset();
+            var convertedMillis = item;
+            if(gmttimezone.indexOf("GMT+")!=-1){
+                var offset = gmttimezone.substr(4,1);
+                convertedMillis= item+offset*60*60000+localOffset*60000;
+            }
+            else if(gmttimezone.indexOf("GMT-")!=-1){
+                var offset = gmttimezone.substr(4,1);
+                convertedMillis= item-offset*60*60000+localOffset*60000;
+            }
+            else{
+                // return PST by default
+                timezone="PST";
+                convertedMillis = item-8*60*60000+localOffset*60000;
+            }
+            return $filter('date')(convertedMillis, "yyyy-MM-dd HH:mm:ss")+ " "+timezone;
+
+        }
+    }).filter('reverseToGMT0',function($filter){
+        //backend store GMT+0 timezone ,by default front will show local,so convert to GMT+0 Date String format
+        return function(item) {
+             item += new Date().getTimezoneOffset() * 60000;
+             return $filter('date')(item, "yyyy-MM-dd HH:mm:ss");
+        }
     });

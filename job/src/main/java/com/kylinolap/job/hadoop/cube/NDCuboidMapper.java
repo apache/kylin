@@ -18,29 +18,30 @@ package com.kylinolap.job.hadoop.cube;
 import java.io.IOException;
 import java.util.Collection;
 
+import com.kylinolap.metadata.model.SegmentStatusEnum;
+
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.mr.KylinMapper;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.CubeSegmentStatusEnum;
 import com.kylinolap.cube.common.RowKeySplitter;
-import com.kylinolap.cube.common.SplittedBytes;
+import com.kylinolap.common.util.SplittedBytes;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.cuboid.CuboidScheduler;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.model.cube.CubeDesc;
 
 /**
  * @author George Song (ysong1)
  * 
  */
-public class NDCuboidMapper extends Mapper<Text, Text, Text, Text> {
+public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
 
     private static final Logger logger = LoggerFactory.getLogger(NDCuboidMapper.class);
 
@@ -58,6 +59,8 @@ public class NDCuboidMapper extends Mapper<Text, Text, Text, Text> {
 
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+
 
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
         segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME).toUpperCase();
@@ -65,7 +68,7 @@ public class NDCuboidMapper extends Mapper<Text, Text, Text, Text> {
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(context.getConfiguration());
 
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
-        CubeSegment cubeSegment = cube.getSegment(segmentName, CubeSegmentStatusEnum.NEW);
+        CubeSegment cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
         cubeDesc = cube.getDescriptor();
 
         // initialize CubiodScheduler

@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.job.tools.OptionsHelper;
-import com.kylinolap.metadata.model.cube.CubeDesc.CubeCapacity;
+import com.kylinolap.metadata.model.DataModelDesc.RealizationCapacity;
 
 /**
  * @author ysong1
@@ -37,7 +37,7 @@ public class JobEngineConfig {
     private static final Logger logger = LoggerFactory.getLogger(JobEngineConfig.class);
     public static String HADOOP_JOB_CONF_FILENAME = "kylin_job_conf";
 
-    private String getHadoopJobConfFilePath(CubeCapacity capaticy, boolean appendSuffix) throws IOException {
+    private String getHadoopJobConfFilePath(RealizationCapacity capaticy, boolean appendSuffix) throws IOException {
         String hadoopJobConfFile;
         if (appendSuffix)
             hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + "_" + capaticy.toString().toLowerCase() + ".xml");
@@ -80,7 +80,7 @@ public class JobEngineConfig {
         return OptionsHelper.convertToFileURL(path);
     }
 
-    public String getHadoopJobConfFilePath(CubeCapacity capaticy) throws IOException {
+    public String getHadoopJobConfFilePath(RealizationCapacity capaticy) throws IOException {
         String path = getHadoopJobConfFilePath(capaticy, true);
         if (!StringUtils.isEmpty(path)) {
             logger.info("Chosen job conf is : " + path);
@@ -136,13 +136,6 @@ public class JobEngineConfig {
     }
 
     /**
-     * @return the zookeeperString
-     */
-    public String getZookeeperString() {
-        return config.getZookeeperString();
-    }
-
-    /**
      * @return the remoteHadoopCliHostname
      */
     public String getRemoteHadoopCliHostname() {
@@ -162,7 +155,7 @@ public class JobEngineConfig {
     public String getRemoteHadoopCliPassword() {
         return config.getRemoteHadoopCliPassword();
     }
-    
+
     public String getMapReduceCmdExtraArgs() {
         return config.getMapReduceCmdExtraArgs();
     }

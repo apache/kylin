@@ -47,7 +47,7 @@ public class NDCuboidMapperTest extends LocalFileMetadataTestCase {
 
         // hack for distributed cache
         FileUtils.deleteDirectory(new File("../job/meta"));
-        FileUtils.copyDirectory(new File(this.getTestConfig().getMetadataUrl()), new File("../job/meta"));
+        FileUtils.copyDirectory(new File(getTestConfig().getMetadataUrl()), new File("../job/meta"));
 
         NDCuboidMapper mapper = new NDCuboidMapper();
         CuboidReducer reducer = new CuboidReducer();

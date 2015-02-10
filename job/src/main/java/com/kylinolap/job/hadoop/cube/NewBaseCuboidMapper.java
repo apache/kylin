@@ -27,41 +27,41 @@ import java.util.List;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.mr.KylinMapper;
 import com.kylinolap.common.util.Array;
 import com.kylinolap.common.util.ByteArray;
+import com.kylinolap.common.util.BytesSplitter;
+import com.kylinolap.common.util.SplittedBytes;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.CubeSegmentStatusEnum;
-import com.kylinolap.cube.common.BytesSplitter;
-import com.kylinolap.cube.common.SplittedBytes;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.AbstractRowKeyEncoder;
 import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.cube.measure.MeasureCodec;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.DimensionDesc;
 import com.kylinolap.dict.lookup.HiveTable;
 import com.kylinolap.dict.lookup.LookupBytesTable;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.DimensionDesc;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.JoinDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
-import com.kylinolap.metadata.model.cube.ParameterDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.measure.MeasureCodec;
+import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.JoinDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
+import com.kylinolap.metadata.model.ParameterDesc;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
+import com.kylinolap.metadata.model.TableDesc;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * @author George Song (ysong1),honma
  */
-public class NewBaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> {
+public class NewBaseCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Text, Text, Text> {
 
     private static final Logger logger = LoggerFactory.getLogger(NewBaseCuboidMapper.class);
 
@@ -117,6 +117,8 @@ public class NewBaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> 
 
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
         segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME);
 
@@ -124,7 +126,7 @@ public class NewBaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> 
 
         metadataManager = MetadataManager.getInstance(config);
         cube = CubeManager.getInstance(config).getCube(cubeName);
-        cubeSegment = cube.getSegment(segmentName, CubeSegmentStatusEnum.NEW);
+        cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
         cubeDesc = cube.getDescriptor();
         factTableDesc = metadataManager.getTableDesc(cubeDesc.getFactTable());
 

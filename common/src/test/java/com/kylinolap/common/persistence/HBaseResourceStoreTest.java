@@ -35,7 +35,7 @@ import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.common.util.HadoopUtil;
 
-public class HBaseResourceStoreTest extends HBaseMetadataTestCase {
+public class HBaseResourceStoreTest extends HBaseMetadataTestCase { // HBaseMetadataTestCase {
 
     @Before
     public void setup() throws Exception {
@@ -72,7 +72,7 @@ public class HBaseResourceStoreTest extends HBaseMetadataTestCase {
             assertEquals(content, t);
 
             Path redirectPath = ((HBaseResourceStore) store).bigCellHDFSPath(path);
-            Configuration hconf = HadoopUtil.getDefaultConfiguration();
+            Configuration hconf = HadoopUtil.getCurrentConfiguration();
             FileSystem fileSystem = FileSystem.get(hconf);
             assertTrue(fileSystem.exists(redirectPath));
 

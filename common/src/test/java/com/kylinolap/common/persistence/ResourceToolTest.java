@@ -13,7 +13,7 @@ import com.kylinolap.common.util.ClasspathUtil;
 /**
  * Created by honma on 9/18/14.
  */
-@Ignore
+@Ignore("convenient trial tool for dev")
 public class ResourceToolTest {
     @Before
     public void setup() throws Exception {

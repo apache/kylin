@@ -34,16 +34,18 @@ import org.junit.Test;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.query.enumerator.OLAPQuery;
 import com.kylinolap.query.relnode.OLAPContext;
 import com.kylinolap.query.schema.OLAPSchemaFactory;
-import com.kylinolap.storage.hbase.observer.CoprocessorEnabler;
+import com.kylinolap.storage.hbase.coprocessor.observer.ObserverEnabler;
 
+@Ignore("KylinQueryTest is contained by CombinationTest")
 public class KylinQueryTest extends KylinTestBase {
 
     @BeforeClass
     public static void setUp() throws Exception {
+
         printInfo("setUp in KylinQueryTest");
 
         joinType = "left";
@@ -51,14 +53,15 @@ public class KylinQueryTest extends KylinTestBase {
         preferCubeOf(joinType);
     }
 
-    protected static void setupAll() throws SQLException {
+    protected static void setupAll() throws Exception {
         setUpEnv();
         setUpCubeConn();
         setUpH2Conn();
     }
 
-    private static void setUpEnv() {
+    private static void setUpEnv() throws Exception {
         HBaseMetadataTestCase.staticCreateTestMetadata();
+
         config = KylinConfig.getInstanceFromEnv();
     }
 
@@ -83,6 +86,7 @@ public class KylinQueryTest extends KylinTestBase {
         printInfo("tearDown");
         printInfo("Closing connection...");
         clean();
+
     }
 
     protected static void clean() {
@@ -91,7 +95,7 @@ public class KylinQueryTest extends KylinTestBase {
         if (h2Connection != null)
             closeConnection(h2Connection);
 
-        CoprocessorEnabler.forceCoprocessorUnset();
+        ObserverEnabler.forceCoprocessorUnset();
         HBaseMetadataTestCase.staticCleanupTestMetadata();
     }
 
@@ -129,7 +133,7 @@ public class KylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = "src/test/resources/query/sql/query02.sql";
+        String queryFileName = "src/test/resources/query/sql/query62.sql";
 
         File sqlFile = new File(queryFileName);
         runSQL(sqlFile, true, true);
@@ -159,6 +163,13 @@ public class KylinQueryTest extends KylinTestBase {
         execAndCompQuery("src/test/resources/query/sql", null, true);
     }
 
+    @Test
+    @Ignore("ii not ready")
+    public void testIIQuery() throws Exception {
+        execAndCompQuery("src/test/resources/query/sql_ii", null, true);
+    }
+
+    @Ignore
     @Test
     public void testSimpleQuery() throws Exception {
         verifyResultRowCount("src/test/resources/query/sql_verifyCount");
@@ -211,7 +222,7 @@ public class KylinQueryTest extends KylinTestBase {
 
     @Test
     public void testH2Query() throws Exception {
-        this.execQueryUsingH2("src/test/resources/query/h2", false);
+        this.execQueryUsingH2("src/test/resources/query/sql_orderby", false);
     }
 
     @Test
@@ -241,6 +252,7 @@ public class KylinQueryTest extends KylinTestBase {
         execAndCompDynamicQuery("src/test/resources/query/sql_dynamic", null, true);
     }
 
+    @Ignore("simple query will be supported by ii")
     @Test
     public void testLimitEnabled() throws Exception {
         runSqlFile("src/test/resources/query/sql_optimize/enable-limit01.sql");

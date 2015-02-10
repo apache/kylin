@@ -51,9 +51,7 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
             DictionaryGeneratorCLI.processSegment(config, cubeName, segmentName, factColumnsInputPath);
         } catch (Exception e) {
             printUsage(options);
-            e.printStackTrace(System.err);
-            log.error(e.getLocalizedMessage(), e);
-            returnCode = 2;
+            throw e;
         }
 
         return returnCode;

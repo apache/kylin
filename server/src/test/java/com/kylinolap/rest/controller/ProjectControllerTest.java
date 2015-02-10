@@ -8,8 +8,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.kylinolap.cube.project.ProjectInstance;
-import com.kylinolap.cube.project.ProjectManager;
+import com.kylinolap.metadata.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectManager;
 import com.kylinolap.rest.exception.InternalErrorException;
 import com.kylinolap.rest.request.CreateProjectRequest;
 import com.kylinolap.rest.request.UpdateProjectRequest;
@@ -27,11 +27,22 @@ public class ProjectControllerTest extends ServiceTestBase {
     ProjectService projectService;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         super.setUp();
 
         projectController = new ProjectController();
         projectController.setProjectService(projectService);
+        try {
+            projectController.deleteProject("new_project");
+        } catch (InternalErrorException e) {
+            //project doesn't exist
+        }
+        try {
+            projectController.deleteProject("new_project_2");
+        } catch (InternalErrorException e) {
+            //project doesn't exist
+        }
+
     }
 
     @Test
@@ -45,17 +56,17 @@ public class ProjectControllerTest extends ServiceTestBase {
         ProjectInstance ret = projectController.saveProject(request);
 
         Assert.assertEquals(ret.getOwner(), "ADMIN");
-        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size(), originalProjectCount + 1);
+        Assert.assertEquals(ProjectManager.getInstance(getTestConfig()).listAllProjects().size(), originalProjectCount + 1);
 
         UpdateProjectRequest updateR = new UpdateProjectRequest();
         updateR.setFormerProjectName("new_project");
         updateR.setNewProjectName("new_project_2");
         projectController.updateProject(updateR);
 
-        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size(), originalProjectCount + 1);
-        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project"), null);
+        Assert.assertEquals(ProjectManager.getInstance(getTestConfig()).listAllProjects().size(), originalProjectCount + 1);
+        Assert.assertEquals(ProjectManager.getInstance(getTestConfig()).getProject("new_project"), null);
 
-        Assert.assertNotEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project_2"), null);
+        Assert.assertNotEquals(ProjectManager.getInstance(getTestConfig()).getProject("new_project_2"), null);
 
         // only update desc:
         updateR = new UpdateProjectRequest();
@@ -64,10 +75,10 @@ public class ProjectControllerTest extends ServiceTestBase {
         updateR.setNewDescription("hello world");
         projectController.updateProject(updateR);
 
-        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).listAllProjects().size(), originalProjectCount + 1);
-        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project"), null);
-        Assert.assertNotEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project_2"), null);
-        Assert.assertEquals(ProjectManager.getInstance(this.getTestConfig()).getProject("new_project_2").getDescription(), "hello world");
+        Assert.assertEquals(ProjectManager.getInstance(getTestConfig()).listAllProjects().size(), originalProjectCount + 1);
+        Assert.assertEquals(ProjectManager.getInstance(getTestConfig()).getProject("new_project"), null);
+        Assert.assertNotEquals(ProjectManager.getInstance(getTestConfig()).getProject("new_project_2"), null);
+        Assert.assertEquals(ProjectManager.getInstance(getTestConfig()).getProject("new_project_2").getDescription(), "hello world");
     }
 
     @Test(expected = InternalErrorException.class)

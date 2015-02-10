@@ -30,13 +30,13 @@ import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
 
 public class H2Database {
     private static final Logger logger = LoggerFactory.getLogger(H2Database.class);
 
-    private static final String[] ALL_TABLES = new String[] { "test_cal_dt", "test_category_groupings", "test_kylin_fact", "test_seller_type_dim", "test_sites" };
+    private static final String[] ALL_TABLES = new String[] { "edw.test_cal_dt", "default.test_category_groupings", "default.test_kylin_fact", "edw.test_seller_type_dim", "edw.test_sites" };
     private static final Map<String, String> javaToH2DataTypeMapping = new HashMap<String, String>();
 
     static {
@@ -71,7 +71,7 @@ public class H2Database {
         try {
             tempFile = File.createTempFile("tmp_h2", ".csv");
             FileOutputStream tempFileStream = new FileOutputStream(tempFile);
-            String normalPath = "/data/" + tableDesc.getName() + ".csv";
+            String normalPath = "/data/" + tableDesc.getIdentity() + ".csv";
 
             // If it's the fact table, there will be a facttable.csv.inner or
             // facttable.csv.left in hbase
@@ -80,7 +80,7 @@ public class H2Database {
             if (csvStream == null) {
                 csvStream = metaMgr.getStore().getResource(normalPath);
             } else {
-                logger.info("H2 decides to load " + (normalPath + fileNameSuffix) + " for table " + tableDesc.getName());
+                logger.info("H2 decides to load " + (normalPath + fileNameSuffix) + " for table " + tableDesc.getIdentity());
             }
 
             org.apache.commons.io.IOUtils.copy(csvStream, tempFileStream);
@@ -94,6 +94,10 @@ public class H2Database {
 
         String cvsFilePath = tempFile.getPath();
         Statement stmt = h2Connection.createStatement();
+
+        String createDBSql = "CREATE SCHEMA IF NOT EXISTS DEFAULT;\nCREATE SCHEMA IF NOT EXISTS EDW;\nSET SCHEMA DEFAULT;\n";
+        stmt.executeUpdate(createDBSql);
+
         String sql = generateCreateH2TableSql(tableDesc, cvsFilePath);
         stmt.executeUpdate(sql);
 
@@ -105,7 +109,7 @@ public class H2Database {
         StringBuilder ddl = new StringBuilder();
         StringBuilder csvColumns = new StringBuilder();
 
-        ddl.append("CREATE TABLE " + tableDesc.getName() + "\n");
+        ddl.append("CREATE TABLE " + tableDesc.getIdentity() + "\n");
         ddl.append("(" + "\n");
 
         for (int i = 0; i < tableDesc.getColumns().length; i++) {

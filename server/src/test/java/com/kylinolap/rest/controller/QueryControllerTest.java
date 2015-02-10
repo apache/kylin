@@ -22,7 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.kylinolap.cube.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.rest.request.MetaRequest;
 import com.kylinolap.rest.request.SQLRequest;
 import com.kylinolap.rest.service.QueryService;
@@ -31,7 +31,6 @@ import com.kylinolap.rest.util.QueryUtil;
 
 /**
  * @author xduo
- * 
  */
 public class QueryControllerTest extends ServiceTestBase {
 
@@ -42,7 +41,7 @@ public class QueryControllerTest extends ServiceTestBase {
     private CacheManager cacheManager;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         super.setUp();
 
         queryController = new QueryController();

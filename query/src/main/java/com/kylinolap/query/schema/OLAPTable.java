@@ -42,11 +42,12 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.type.SqlTypeUtil;
 
-import com.kylinolap.cube.project.ProjectManager;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.google.common.collect.Lists;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
+import com.kylinolap.metadata.model.TableDesc;
+import com.kylinolap.metadata.project.ProjectManager;
 import com.kylinolap.query.enumerator.OLAPQuery;
 import com.kylinolap.query.enumerator.OLAPQuery.EnumeratorTypeEnum;
 import com.kylinolap.query.relnode.OLAPTableScan;
@@ -106,7 +107,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
     }
 
     public String getTableName() {
-        return this.sourceTable.getName();
+        return this.sourceTable.getIdentity();
     }
 
     public List<ColumnDesc> getExposedColumns() {
@@ -161,15 +162,15 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
     }
 
     private List<ColumnDesc> listSourceColumns() {
-        ProjectManager projectMgr = olapSchema.getProjectManager();
-        List<ColumnDesc> exposedColumns = projectMgr.listExposedColumns(olapSchema.getProjectName(), sourceTable.getName());
+        ProjectManager mgr = ProjectManager.getInstance(olapSchema.getConfig());
+        List<ColumnDesc> exposedColumns = Lists.newArrayList(mgr.listExposedColumns(olapSchema.getProjectName(), sourceTable.getIdentity()));
 
-        List<MeasureDesc> countMeasures = projectMgr.listEffectiveRewriteMeasures(olapSchema.getProjectName(), sourceTable.getName());
+        List<MeasureDesc> countMeasures = mgr.listEffectiveRewriteMeasures(olapSchema.getProjectName(), sourceTable.getIdentity());
         HashSet<String> metFields = new HashSet<String>();
         for (MeasureDesc m : countMeasures) {
             FunctionDesc func = m.getFunction();
             String fieldName = func.getRewriteFieldName();
-            if (metFields.contains(fieldName) == false) {
+            if (!metFields.contains(fieldName)) {
                 metFields.add(fieldName);
                 ColumnDesc fakeCountCol = new ColumnDesc();
                 fakeCountCol.setName(fieldName);
@@ -203,7 +204,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         return new AbstractTableQueryable<T>(queryProvider, schema, this, tableName) {
             @SuppressWarnings("unchecked")
             public Enumerator<T> enumerator() {
-                final OLAPQuery query = new OLAPQuery(EnumeratorTypeEnum.CUBE, 0);
+                final OLAPQuery query = new OLAPQuery(EnumeratorTypeEnum.INDEX, 0);
                 return (Enumerator<T>) query.enumerator();
             }
         };
@@ -220,8 +221,8 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         return "OLAPTable {" + getTableName() + "}";
     }
 
-    public Enumerable<Object[]> executeCubeQuery(DataContext optiqContext, int ctxSeq) {
-        return new OLAPQuery(optiqContext, EnumeratorTypeEnum.CUBE, ctxSeq);
+    public Enumerable<Object[]> executeIndexQuery(DataContext optiqContext, int ctxSeq) {
+        return new OLAPQuery(optiqContext, EnumeratorTypeEnum.INDEX, ctxSeq);
     }
 
     public Enumerable<Object[]> executeLookupTableQuery(DataContext optiqContext, int ctxSeq) {

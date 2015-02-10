@@ -25,17 +25,17 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.kylinolap.common.util.Array;
 import com.kylinolap.cube.kv.RowKeyColumnOrder;
+import com.kylinolap.cube.model.CubeDesc.DeriveInfo;
+import com.kylinolap.cube.model.CubeDesc.DeriveType;
 import com.kylinolap.dict.lookup.LookupStringTable;
-import com.kylinolap.metadata.model.cube.CubeDesc.DeriveInfo;
-import com.kylinolap.metadata.model.cube.CubeDesc.DeriveType;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.storage.filter.ColumnTupleFilter;
-import com.kylinolap.storage.filter.CompareTupleFilter;
-import com.kylinolap.storage.filter.ConstantTupleFilter;
-import com.kylinolap.storage.filter.LogicalTupleFilter;
-import com.kylinolap.storage.filter.TupleFilter;
-import com.kylinolap.storage.filter.TupleFilter.FilterOperatorEnum;
-import com.kylinolap.storage.tuple.ITuple;
+import com.kylinolap.metadata.model.TblColRef;
+import com.kylinolap.metadata.filter.ColumnTupleFilter;
+import com.kylinolap.metadata.filter.CompareTupleFilter;
+import com.kylinolap.metadata.filter.ConstantTupleFilter;
+import com.kylinolap.metadata.filter.LogicalTupleFilter;
+import com.kylinolap.metadata.filter.TupleFilter;
+import com.kylinolap.metadata.filter.TupleFilter.FilterOperatorEnum;
+import com.kylinolap.metadata.tuple.ITuple;
 
 /**
  * @author yangli9

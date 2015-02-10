@@ -22,34 +22,34 @@ import java.util.List;
 
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.mr.KylinMapper;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.CubeSegmentStatusEnum;
-import com.kylinolap.cube.common.BytesSplitter;
-import com.kylinolap.cube.common.SplittedBytes;
+import com.kylinolap.common.util.BytesSplitter;
+import com.kylinolap.common.util.SplittedBytes;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.AbstractRowKeyEncoder;
 import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.cube.measure.MeasureCodec;
+import com.kylinolap.metadata.measure.MeasureCodec;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.FunctionDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
-import com.kylinolap.metadata.model.cube.ParameterDesc;
+import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
+import com.kylinolap.metadata.model.FunctionDesc;
+import com.kylinolap.metadata.model.ParameterDesc;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
 
 /**
  * @author George Song (ysong1)
  */
-public class BaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> {
+public class BaseCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Text, Text, Text> {
 
     private static final Logger logger = LoggerFactory.getLogger(BaseCuboidMapper.class);
 
@@ -64,7 +64,7 @@ public class BaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> {
     private CubeSegment cubeSegment;
     private List<byte[]> nullBytes;
 
-    private JoinedFlatTableDesc intermediateTableDesc;
+    private CubeJoinedFlatTableDesc intermediateTableDesc;
     private String intermediateTableRowDelimiter;
     private byte byteRowDelimiter;
 
@@ -82,6 +82,8 @@ public class BaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> {
 
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
         segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME);
         intermediateTableRowDelimiter = context.getConfiguration().get(BatchConstants.CFG_CUBE_INTERMEDIATE_TABLE_ROW_DELIMITER, Character.toString(BatchConstants.INTERMEDIATE_TABLE_ROW_DELIMITER));
@@ -95,12 +97,12 @@ public class BaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> {
 
         cube = CubeManager.getInstance(config).getCube(cubeName);
         cubeDesc = cube.getDescriptor();
-        cubeSegment = cube.getSegment(segmentName, CubeSegmentStatusEnum.NEW);
+        cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
 
         long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
 
-        intermediateTableDesc = new JoinedFlatTableDesc(cube.getDescriptor(), cubeSegment);
+        intermediateTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), cubeSegment);
 
         bytesSplitter = new BytesSplitter(200, 4096);
         rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid);
@@ -206,7 +208,7 @@ public class BaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> {
         try {
             bytesSplitter.split(value.getBytes(), value.getLength(), byteRowDelimiter);
             intermediateTableDesc.sanityCheck(bytesSplitter);
-            
+
             byte[] rowKey = buildKey(bytesSplitter.getSplitBuffers());
             outputKey.set(rowKey, 0, rowKey.length);
 
@@ -220,10 +222,10 @@ public class BaseCuboidMapper<KEYIN> extends Mapper<KEYIN, Text, Text, Text> {
     }
 
     private void handleErrorRecord(BytesSplitter bytesSplitter, Exception ex) throws IOException {
-        
+
         System.err.println("Insane record: " + bytesSplitter);
         ex.printStackTrace(System.err);
-        
+
         errorRecordCounter++;
         if (errorRecordCounter > BatchConstants.ERROR_RECORD_THRESHOLD) {
             if (ex instanceof IOException)

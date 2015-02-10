@@ -16,6 +16,8 @@
 
 package com.kylinolap.dict;
 
+import java.io.File;
+
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.After;
 import org.junit.Before;
@@ -27,7 +29,7 @@ import com.kylinolap.common.util.LocalFileMetadataTestCase;
 import com.kylinolap.dict.lookup.FileTable;
 import com.kylinolap.dict.lookup.LookupBytesTable;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.TableDesc;
 
 /**
  * @author yangli9
@@ -46,18 +48,20 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBasic() throws Exception {
-        TableDesc siteTable = MetadataManager.getInstance(this.getTestConfig()).getTableDesc("TEST_SITES");
-        TableDesc categoryTable = MetadataManager.getInstance(this.getTestConfig()).getTableDesc("test_category_groupings");
+        TableDesc siteTable = MetadataManager.getInstance(getTestConfig()).getTableDesc("EDW.TEST_SITES");
+        TableDesc categoryTable = MetadataManager.getInstance(getTestConfig()).getTableDesc("DEFAULT.test_category_groupings");
         LookupBytesTable lookup;
 
         System.out.println("============================================================================");
 
-        lookup = new LookupBytesTable(siteTable, new String[] { "SITE_ID" }, new FileTable(LOCALMETA_TEST_DATA + "/data/TEST_SITES.csv", 10));
+        File f = new File(LOCALMETA_TEST_DATA + "/data/EDW.TEST_SITES.csv");
+        lookup = new LookupBytesTable(siteTable, new String[] { "SITE_ID" }, new FileTable("file://" + f.getAbsolutePath(), 10));
         lookup.dump();
 
         System.out.println("============================================================================");
 
-        lookup = new LookupBytesTable(categoryTable, new String[] { "leaf_categ_id", "site_id" }, new FileTable(LOCALMETA_TEST_DATA + "/data/TEST_CATEGORY_GROUPINGS.csv", 36));
+        f = new File(LOCALMETA_TEST_DATA + "/data/DEFAULT.TEST_CATEGORY_GROUPINGS.csv");
+        lookup = new LookupBytesTable(categoryTable, new String[] { "leaf_categ_id", "site_id" }, new FileTable("file://" + f.getAbsolutePath(), 36));
         lookup.dump();
 
         System.out.println("============================================================================");

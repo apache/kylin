@@ -19,8 +19,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaFactory;
@@ -29,10 +29,10 @@ import net.hydromatic.optiq.SchemaPlus;
 import org.eigenbase.util14.ConversionUtil;
 
 import com.kylinolap.common.KylinConfig;
-import com.kylinolap.cube.project.ProjectInstance;
-import com.kylinolap.cube.project.ProjectManager;
-import com.kylinolap.metadata.model.schema.DatabaseDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.DatabaseDesc;
+import com.kylinolap.metadata.model.TableDesc;
+import com.kylinolap.metadata.project.ProjectInstance;
+import com.kylinolap.metadata.project.ProjectManager;
 
 /**
  * @author xjiang
@@ -68,13 +68,21 @@ public class OLAPSchemaFactory implements SchemaFactory {
     public static File createTempOLAPJson(String project, KylinConfig config) {
         project = ProjectInstance.getNormalizedProjectName(project);
 
-        List<TableDesc> tables = ProjectManager.getInstance(config).listExposedTables(project);
-        // "database" in TableDesc correspond to our schema
-        HashMap<String, Integer> schemaCounts = DatabaseDesc.extractDatabaseOccurenceCounts(tables);
+        Set<TableDesc> tables = ProjectManager.getInstance(config).listExposedTables(project);
 
+        // "database" in TableDesc correspond to our schema
+        // the logic to decide which schema to be "default" in calcite:
+        // if some schema are named "default", use it.
+        // other wise use the schema with most tables
+        HashMap<String, Integer> schemaCounts = DatabaseDesc.extractDatabaseOccurenceCounts(tables);
         String majoritySchemaName = "";
         int majoritySchemaCount = 0;
         for (Map.Entry<String, Integer> e : schemaCounts.entrySet()) {
+            if (e.getKey().equalsIgnoreCase("default")) {
+                majoritySchemaCount = Integer.MAX_VALUE;
+                majoritySchemaName = e.getKey();
+            }
+
             if (e.getValue() >= majoritySchemaCount) {
                 majoritySchemaCount = e.getValue();
                 majoritySchemaName = e.getKey();

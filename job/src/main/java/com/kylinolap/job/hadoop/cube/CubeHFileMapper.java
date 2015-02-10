@@ -25,25 +25,25 @@ import org.apache.hadoop.hbase.KeyValue.Type;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
 
 import com.google.common.collect.Lists;
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.mr.KylinMapper;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.cube.measure.MeasureCodec;
+import com.kylinolap.metadata.measure.MeasureCodec;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.HBaseColumnDesc;
+import com.kylinolap.cube.model.HBaseColumnFamilyDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.HBaseColumnDesc;
-import com.kylinolap.metadata.model.cube.HBaseColumnFamilyDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
 
 /**
  * @author George Song (ysong1)
  * 
  */
-public class CubeHFileMapper extends Mapper<Text, Text, ImmutableBytesWritable, KeyValue> {
+public class CubeHFileMapper extends KylinMapper<Text, Text, ImmutableBytesWritable, KeyValue> {
 
     ImmutableBytesWritable outputKey = new ImmutableBytesWritable();
 
@@ -56,6 +56,7 @@ public class CubeHFileMapper extends Mapper<Text, Text, ImmutableBytesWritable, 
 
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME);
 
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(context.getConfiguration());

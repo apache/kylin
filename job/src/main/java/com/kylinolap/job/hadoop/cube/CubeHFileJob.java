@@ -40,12 +40,10 @@ import com.kylinolap.job.hadoop.AbstractHadoopJob;
 
 /**
  * @author George Song (ysong1)
- * 
  */
-
 public class CubeHFileJob extends AbstractHadoopJob {
 
-    protected static final Logger log = LoggerFactory.getLogger(CubeHFileJob.class);
+    protected static final Logger logger = LoggerFactory.getLogger(CubeHFileJob.class);
 
     public int run(String[] args) throws Exception {
         Options options = new Options();
@@ -100,8 +98,7 @@ public class CubeHFileJob extends AbstractHadoopJob {
             return waitForCompletion(job);
         } catch (Exception e) {
             printUsage(options);
-            log.error(e.getLocalizedMessage(), e);
-            return 2;
+            throw e;
         }
     }
 

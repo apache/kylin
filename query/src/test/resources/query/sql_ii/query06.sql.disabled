@@ -1,0 +1,1 @@
+select price from test_kylin_fact where price > 50

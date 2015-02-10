@@ -10,7 +10,7 @@
                         <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
                             <div class="form-group">
                                 <span><b>Project: </b></span>
-                                <select chosen ng-model="project.selectedProject" ng-init="newAccess.permission=permissions.READ.value;"
+                                <select chosen ng-model="projectModel.selectedProject" ng-init="newAccess.permission=permissions.READ.value;"
                                         ng-options="project as project for project in project.projects"
                                         style="width: 150px"
                                         class="chosen-select">
@@ -32,7 +32,7 @@
                                     }" ng-model="state.cubeSchema">
                     </div>
                 </section>
-                <button class="btn btn-primary" ng-disabled="cube_form.$invalid" ng-click="state.project = project.selectedProject;saveCube()">
+                <button class="btn btn-primary" ng-disabled="cube_form.$invalid" ng-click="state.project = projectModel.selectedProject;saveCube()">
                     Save
                 </button>
             </form>

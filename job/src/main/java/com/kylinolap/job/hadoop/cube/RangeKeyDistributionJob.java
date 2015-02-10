@@ -35,7 +35,7 @@ import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.model.cube.CubeDesc.CubeCapacity;
+import com.kylinolap.metadata.model.DataModelDesc.RealizationCapacity;
 
 /**
  * @author xjiang, ysong1
@@ -97,14 +97,13 @@ public class RangeKeyDistributionJob extends AbstractHadoopJob {
             String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
             CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cube = cubeMgr.getCube(cubeName);
-            CubeCapacity cubeCapacity = cube.getDescriptor().getCapacity();
-            job.getConfiguration().set(BatchConstants.CUBE_CAPACITY, cubeCapacity.toString());
+            RealizationCapacity realizationCapacity = cube.getDescriptor().getModel().getCapacity();
+            job.getConfiguration().set(BatchConstants.CUBE_CAPACITY, realizationCapacity.toString());
 
             return waitForCompletion(job);
         } catch (Exception e) {
             printUsage(options);
-            log.error(e.getLocalizedMessage(), e);
-            return 2;
+            throw e;
         }
     }
 

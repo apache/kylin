@@ -24,14 +24,13 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.job.exception.JobException;
+import com.kylinolap.metadata.project.ProjectInstance;
 import com.kylinolap.rest.request.SQLRequest;
 import com.kylinolap.rest.response.SQLResponse;
 
 /**
  * @author xduo
- * 
  */
 public class QueryServiceTest extends ServiceTestBase {
 
@@ -40,19 +39,18 @@ public class QueryServiceTest extends ServiceTestBase {
 
     @Test
     public void testBasics() throws JobException, IOException, SQLException {
-        Assert.assertNotNull(queryService.getJobManager());
         Assert.assertNotNull(queryService.getConfig());
         Assert.assertNotNull(queryService.getKylinConfig());
         Assert.assertNotNull(queryService.getMetadataManager());
         Assert.assertNotNull(queryService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
 
-//        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 0);
-//
-//        queryService.saveQuery("test", "test", "select * from test_table", "test");
-//        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 1);
-//
-//        queryService.removeQuery(queryService.getQueries("ADMIN").get(0).getProperty("id"));
-//        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 0);
+        //        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 0);
+        //
+        //        queryService.saveQuery("test", "test", "select * from test_table", "test");
+        //        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 1);
+        //
+        //        queryService.removeQuery(queryService.getQueries("ADMIN").get(0).getProperty("id"));
+        //        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 0);
 
         SQLRequest request = new SQLRequest();
         request.setSql("select * from test_table");

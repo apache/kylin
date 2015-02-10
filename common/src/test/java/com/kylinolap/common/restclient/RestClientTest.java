@@ -1,6 +1,5 @@
 package com.kylinolap.common.restclient;
 
-
 import org.junit.Test;
 
 import java.io.IOException;
@@ -18,7 +17,6 @@ public class RestClientTest {
         //b.wipeCache("metadata", "a", "a");
         //String bb = b.getKylinProperties();
         //System.out.println(bb);
-
 
     }
 

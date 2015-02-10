@@ -20,6 +20,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Iterator;
 
+import com.kylinolap.invertedindex.model.IIDesc;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.client.HConnection;
@@ -28,8 +29,6 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Pair;
-
-import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
  * @author yangli9
@@ -78,7 +77,7 @@ public class HBaseClientKVIterator implements Iterable<Pair<ImmutableBytesWritab
         @Override
         public Pair<ImmutableBytesWritable, ImmutableBytesWritable> next() {
             Result r = iterator.next();
-            Cell c = r.getColumnLatestCell(InvertedIndexDesc.HBASE_FAMILY_BYTES, InvertedIndexDesc.HBASE_QUALIFIER_BYTES);
+            Cell c = r.getColumnLatestCell(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES);
             key.set(c.getRowArray(), c.getRowOffset(), c.getRowLength());
             value.set(c.getValueArray(), c.getValueOffset(), c.getValueLength());
             return pair;

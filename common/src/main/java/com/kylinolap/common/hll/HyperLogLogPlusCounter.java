@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -74,7 +75,7 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
     }
 
     public void add(String value) {
-        add(hashFunc.hashString(value).asLong());
+        add(hashFunc.hashString(value,Charset.defaultCharset()).asLong());
     }
 
     public void add(byte[] value) {

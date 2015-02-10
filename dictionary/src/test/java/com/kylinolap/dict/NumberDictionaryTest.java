@@ -77,8 +77,9 @@ public class NumberDictionaryTest {
         NumberDictionaryBuilder<String> builder = new NumberDictionaryBuilder<String>(new StringBytesConverter());
         for (int i = 0; i < n; i++) {
             String num = randNumber();
-            builder.addValue(num);
-            set.add(new BigDecimal(num));
+            if (set.add(new BigDecimal(num))) {
+                builder.addValue(num);
+            }
         }
 
         List<BigDecimal> sorted = Lists.newArrayList();
@@ -90,6 +91,10 @@ public class NumberDictionaryTest {
         for (int i = 0; i < sorted.size(); i++) {
             String dictNum = dict.getValueFromId(i);
             System.out.println(sorted.get(i) + "\t" + dictNum);
+        }
+        
+        for (int i = 0; i < sorted.size(); i++) {
+            String dictNum = dict.getValueFromId(i);
             assertEquals(sorted.get(i), new BigDecimal(dictNum));
         }
 

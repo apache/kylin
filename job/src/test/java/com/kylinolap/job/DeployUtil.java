@@ -10,23 +10,24 @@ import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.apache.tools.ant.filters.StringInputStream;
 import org.codehaus.plexus.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.persistence.ResourceStore;
 import com.kylinolap.common.persistence.ResourceTool;
 import com.kylinolap.common.util.AbstractKylinTestCase;
 import com.kylinolap.common.util.CliCommandExecutor;
+import com.kylinolap.common.util.HiveClient;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.dataGen.FactTableGenerator;
-import com.kylinolap.job.engine.JobEngineConfig;
+import com.kylinolap.job.dataGen.FactTableGenerator;
 import com.kylinolap.job.hadoop.hive.SqlHiveDataTypeMapping;
-import com.kylinolap.job.tools.LZOSupportnessChecker;
 import com.kylinolap.metadata.MetadataManager;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
-import com.kylinolap.metadata.model.schema.TableDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TableDesc;
 
 public class DeployUtil {
     @SuppressWarnings("unused")
@@ -57,29 +58,29 @@ public class DeployUtil {
         config().overrideKylinJobJarPath(jobJar.getAbsolutePath());
         config().overrideCoprocessorLocalJar(coprocessorJar.getAbsolutePath());
     }
-    
+
     public static void deployJobJars() throws IOException {
         Pair<File, File> files = getJobJarFiles();
-        File jobJar = files.getFirst();
-        File coprocessorJar = files.getSecond();
+        File originalJobJar = files.getFirst();
+        File originalCoprocessorJar = files.getSecond();
 
-        File jobJarRemote = new File(config().getKylinJobJarPath());
-        File jobJarLocal = new File(jobJar.getParentFile(), jobJarRemote.getName());
-        if (jobJar.equals(jobJarLocal) == false) {
-            FileUtils.copyFile(jobJar, jobJarLocal);
+        File targetJobJar = new File(config().getKylinJobJarPath());
+        File jobJarRenamedAsTarget = new File(originalJobJar.getParentFile(), targetJobJar.getName());
+        if (originalJobJar.equals(jobJarRenamedAsTarget) == false) {
+            FileUtils.copyFile(originalJobJar, jobJarRenamedAsTarget);
         }
         
-        File coprocessorJarRemote = new File(config().getCoprocessorLocalJar());
-        File coprocessorJarLocal = new File(coprocessorJar.getParentFile(), coprocessorJarRemote.getName());
-        if (coprocessorJar.equals(coprocessorJarLocal) == false) {
-            FileUtils.copyFile(coprocessorJar, coprocessorJarLocal);
+        File targetCoprocessorJar = new File(config().getCoprocessorLocalJar());
+        File coprocessorJarRenamedAsTarget = new File(originalCoprocessorJar.getParentFile(), targetCoprocessorJar.getName());
+        if (originalCoprocessorJar.equals(coprocessorJarRenamedAsTarget) == false) {
+            FileUtils.copyFile(originalCoprocessorJar, coprocessorJarRenamedAsTarget);
         }
-        
+
         CliCommandExecutor cmdExec = config().getCliCommandExecutor();
-        cmdExec.copyFile(jobJarLocal.getAbsolutePath(), jobJarRemote.getParent());
-        cmdExec.copyFile(coprocessorJar.getAbsolutePath(), coprocessorJarRemote.getParent());
+        cmdExec.copyFile(jobJarRenamedAsTarget.getAbsolutePath(), targetJobJar.getParent());
+        cmdExec.copyFile(coprocessorJarRenamedAsTarget.getAbsolutePath(), targetCoprocessorJar.getParent());
     }
-    
+
     private static Pair<File, File> getJobJarFiles() {
         String version;
         try {
@@ -95,17 +96,6 @@ public class DeployUtil {
         return new Pair<File, File>(jobJar, coprocessorJar);
     }
     
-    public static void overrideJobConf(String confDir) throws IOException {
-        boolean enableLzo = LZOSupportnessChecker.getSupportness();
-        overrideJobConf(confDir, enableLzo);
-    }
-
-    public static void overrideJobConf(String confDir, boolean enableLzo) throws IOException {
-        File src = new File(confDir, JobEngineConfig.HADOOP_JOB_CONF_FILENAME + (enableLzo ? ".lzo_enabled" : ".lzo_disabled") + ".xml");
-        File dst = new File(confDir, JobEngineConfig.HADOOP_JOB_CONF_FILENAME + ".xml");
-        FileUtils.copyFile(src, dst);
-    }
-
     private static void execCliCommand(String cmd) throws IOException {
         config().getCliCommandExecutor().execute(cmd);
     }
@@ -120,25 +110,61 @@ public class DeployUtil {
 
     // ============================================================================
 
-    static final String TABLE_CAL_DT = "test_cal_dt";
-    static final String TABLE_CATEGORY_GROUPINGS = "test_category_groupings";
-    static final String TABLE_KYLIN_FACT = "test_kylin_fact";
-    static final String TABLE_SELLER_TYPE_DIM = "test_seller_type_dim";
-    static final String TABLE_SITES = "test_sites";
+    static final String TABLE_CAL_DT = "edw.test_cal_dt";
+    static final String TABLE_CATEGORY_GROUPINGS = "default.test_category_groupings";
+    static final String TABLE_KYLIN_FACT = "default.test_kylin_fact";
+    static final String TABLE_SELLER_TYPE_DIM = "edw.test_seller_type_dim";
+    static final String TABLE_SITES = "edw.test_sites";
 
     static final String[] TABLE_NAMES = new String[] { TABLE_CAL_DT, TABLE_CATEGORY_GROUPINGS, TABLE_KYLIN_FACT, TABLE_SELLER_TYPE_DIM, TABLE_SITES };
 
     public static void prepareTestData(String joinType, String cubeName) throws Exception {
-        // data is generated according to cube descriptor and saved in resource store
-        if (joinType.equalsIgnoreCase("inner")) {
-            FactTableGenerator.generate(cubeName, "10000", "1", null, "inner");
-        } else if (joinType.equalsIgnoreCase("left")) {
-            FactTableGenerator.generate(cubeName, "10000", "0.6", null, "left");
+
+        String factTableName = TABLE_KYLIN_FACT.toUpperCase();
+        String content = null;
+
+        boolean buildCubeUsingProvidedData = Boolean.parseBoolean(System.getProperty("buildCubeUsingProvidedData"));
+        if (!buildCubeUsingProvidedData) {
+            System.out.println("build cube with random dataset");
+            // data is generated according to cube descriptor and saved in resource store
+            if (joinType.equalsIgnoreCase("inner")) {
+                content = FactTableGenerator.generate(cubeName, "10000", "1", null, "inner");
+            } else if (joinType.equalsIgnoreCase("left")) {
+                content = FactTableGenerator.generate(cubeName, "10000", "0.6", null, "left");
+            } else {
+                throw new IllegalArgumentException("Unsupported join type : " + joinType);
+            }
+
+            assert content != null;
+            overrideFactTableData(content, factTableName);
         } else {
-            throw new IllegalArgumentException("Unsupported join type : " + joinType);
+            System.out.println("build cube with provided dataset");
         }
 
+        duplicateFactTableData(factTableName, joinType);
         deployHiveTables();
+    }
+
+    public static void overrideFactTableData(String factTableContent, String factTableName) throws IOException {
+        // Write to resource store
+        ResourceStore store = ResourceStore.getStore(config());
+
+        InputStream in = new StringInputStream(factTableContent);
+        String factTablePath = "/data/" + factTableName + ".csv";
+        store.deleteResource(factTablePath);
+        store.putResource(factTablePath, in, System.currentTimeMillis());
+        in.close();
+    }
+
+    public static void duplicateFactTableData(String factTableName, String joinType) throws IOException {
+        // duplicate a copy of this fact table, with a naming convention with fact.csv.inner or fact.csv.left
+        // so that later test cases can select different data files
+        ResourceStore store = ResourceStore.getStore(config());
+        InputStream in = store.getResource("/data/" + factTableName + ".csv");
+        String factTablePathWithJoinType = "/data/" + factTableName + ".csv." + joinType.toLowerCase();
+        store.deleteResource(factTablePathWithJoinType);
+        store.putResource(factTablePathWithJoinType, in, System.currentTimeMillis());
+        in.close();
     }
 
     private static void deployHiveTables() throws Exception {
@@ -161,41 +187,40 @@ public class DeployUtil {
             hbaseDataStream.close();
             localFileStream.close();
 
-            config().getCliCommandExecutor().copyFile(localBufferFile.getPath(), config().getCliWorkingDir());
-            localBufferFile.delete();
+            localBufferFile.deleteOnExit();
         }
+        String tableFileDir = temp.getParent();
         temp.delete();
 
+        HiveClient hiveClient = new HiveClient();
+        
         // create hive tables
-        execHiveCommand(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CAL_DT.toUpperCase())));
-        execHiveCommand(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CATEGORY_GROUPINGS.toUpperCase())));
-        execHiveCommand(generateCreateTableHql(metaMgr.getTableDesc(TABLE_KYLIN_FACT.toUpperCase())));
-        execHiveCommand(generateCreateTableHql(metaMgr.getTableDesc(TABLE_SELLER_TYPE_DIM.toUpperCase())));
-        execHiveCommand(generateCreateTableHql(metaMgr.getTableDesc(TABLE_SITES.toUpperCase())));
+        hiveClient.executeHQL("CREATE DATABASE IF NOT EXISTS EDW");
+        hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CAL_DT.toUpperCase())));
+        hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CATEGORY_GROUPINGS.toUpperCase())));
+        hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_KYLIN_FACT.toUpperCase())));
+        hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_SELLER_TYPE_DIM.toUpperCase())));
+        hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_SITES.toUpperCase())));
 
         // load data to hive tables
         // LOAD DATA LOCAL INPATH 'filepath' [OVERWRITE] INTO TABLE tablename
-        execHiveCommand(generateLoadDataHql(TABLE_CAL_DT));
-        execHiveCommand(generateLoadDataHql(TABLE_CATEGORY_GROUPINGS));
-        execHiveCommand(generateLoadDataHql(TABLE_KYLIN_FACT));
-        execHiveCommand(generateLoadDataHql(TABLE_SELLER_TYPE_DIM));
-        execHiveCommand(generateLoadDataHql(TABLE_SITES));
+        hiveClient.executeHQL(generateLoadDataHql(TABLE_CAL_DT, tableFileDir));
+        hiveClient.executeHQL(generateLoadDataHql(TABLE_CATEGORY_GROUPINGS, tableFileDir));
+        hiveClient.executeHQL(generateLoadDataHql(TABLE_KYLIN_FACT, tableFileDir));
+        hiveClient.executeHQL(generateLoadDataHql(TABLE_SELLER_TYPE_DIM, tableFileDir));
+        hiveClient.executeHQL(generateLoadDataHql(TABLE_SITES, tableFileDir));
     }
 
-    private static void execHiveCommand(String hql) throws IOException {
-        String hiveCmd = "hive -e \"" + hql + "\"";
-        config().getCliCommandExecutor().execute(hiveCmd);
+    private static String generateLoadDataHql(String tableName, String tableFileDir) {
+        return "LOAD DATA LOCAL INPATH '" + tableFileDir + "/" + tableName.toUpperCase() + ".csv' OVERWRITE INTO TABLE " + tableName.toUpperCase();
     }
 
-    private static String generateLoadDataHql(String tableName) {
-        return "LOAD DATA LOCAL INPATH '" + config().getCliWorkingDir() + "/" + tableName.toUpperCase() + ".csv' OVERWRITE INTO TABLE " + tableName.toUpperCase();
-    }
-
-    private static String generateCreateTableHql(TableDesc tableDesc) {
+    private static String[] generateCreateTableHql(TableDesc tableDesc) {
+        
+        String dropsql = "DROP TABLE IF EXISTS " + tableDesc.getIdentity();
         StringBuilder ddl = new StringBuilder();
 
-        ddl.append("DROP TABLE IF EXISTS " + tableDesc.getName() + ";\n");
-        ddl.append("CREATE TABLE " + tableDesc.getName() + "\n");
+        ddl.append("CREATE TABLE " + tableDesc.getIdentity() + "\n");
         ddl.append("(" + "\n");
 
         for (int i = 0; i < tableDesc.getColumns().length; i++) {
@@ -208,9 +233,9 @@ public class DeployUtil {
 
         ddl.append(")" + "\n");
         ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY ','" + "\n");
-        ddl.append("STORED AS TEXTFILE;");
+        ddl.append("STORED AS TEXTFILE");
 
-        return ddl.toString();
+        return new String[] {dropsql, ddl.toString()};
     }
 
 }

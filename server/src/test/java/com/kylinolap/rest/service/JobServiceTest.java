@@ -22,12 +22,11 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.kylinolap.cube.project.ProjectInstance;
 import com.kylinolap.job.exception.JobException;
+import com.kylinolap.metadata.project.ProjectInstance;
 
 /**
  * @author xduo
- * 
  */
 public class JobServiceTest extends ServiceTestBase {
 
@@ -36,7 +35,6 @@ public class JobServiceTest extends ServiceTestBase {
 
     @Test
     public void testBasics() throws JobException, IOException {
-        Assert.assertNotNull(jobService.getJobManager());
         Assert.assertNotNull(jobService.getConfig());
         Assert.assertNotNull(jobService.getKylinConfig());
         Assert.assertNotNull(jobService.getMetadataManager());

@@ -15,6 +15,11 @@
  */
 package com.kylinolap.job.hadoop.invertedindex;
 
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IIManager;
+import com.kylinolap.invertedindex.model.IIDesc;
+import com.kylinolap.invertedindex.model.IIKeyValueCodec;
+import com.kylinolap.job.tools.DeployCoprocessorCLI;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -22,7 +27,6 @@ import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
 import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
 import org.apache.hadoop.hbase.security.User;
 import org.apache.hadoop.util.ToolRunner;
@@ -30,11 +34,7 @@ import org.apache.hadoop.util.ToolRunner;
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.common.util.HadoopUtil;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.invertedindex.IIKeyValueCodec;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
  * @author George Song (ysong1)
@@ -46,20 +46,20 @@ public class IICreateHTableJob extends AbstractHadoopJob {
         Options options = new Options();
 
         try {
-            options.addOption(OPTION_CUBE_NAME);
+            options.addOption(OPTION_II_NAME);
             options.addOption(OPTION_HTABLE_NAME);
             parseOptions(options, args);
 
             String tableName = getOptionValue(OPTION_HTABLE_NAME);
-            String cubeName = getOptionValue(OPTION_CUBE_NAME);
+            String iiName = getOptionValue(OPTION_II_NAME);
 
-            CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
-            int sharding = cubeInstance.getInvertedIndexDesc().getSharding();
+            IIInstance ii = IIManager.getInstance(KylinConfig.getInstanceFromEnv()).getII(iiName);
+            int sharding = ii.getDescriptor().getSharding();
 
             HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
-            HColumnDescriptor cf = new HColumnDescriptor(InvertedIndexDesc.HBASE_FAMILY);
+            HColumnDescriptor cf = new HColumnDescriptor(IIDesc.HBASE_FAMILY);
             cf.setMaxVersions(1);
-            cf.setCompressionType(Algorithm.LZO);
+            //cf.setCompressionType(Algorithm.LZO);
             cf.setDataBlockEncoding(DataBlockEncoding.FAST_DIFF);
             tableDesc.addFamily(cf);
 
@@ -68,6 +68,8 @@ public class IICreateHTableJob extends AbstractHadoopJob {
                 // add coprocessor for bulk load
                 tableDesc.addCoprocessor("org.apache.hadoop.hbase.security.access.SecureBulkLoadEndpoint");
             }
+
+            DeployCoprocessorCLI.deployCoprocessor(tableDesc);
 
             // drop the table first
             HBaseAdmin admin = new HBaseAdmin(conf);
@@ -92,9 +94,7 @@ public class IICreateHTableJob extends AbstractHadoopJob {
             return 0;
         } catch (Exception e) {
             printUsage(options);
-            e.printStackTrace(System.err);
-            log.error(e.getLocalizedMessage(), e);
-            return 2;
+            throw e;
         }
     }
 

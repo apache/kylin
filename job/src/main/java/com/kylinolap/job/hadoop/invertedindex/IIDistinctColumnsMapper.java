@@ -17,54 +17,48 @@ package com.kylinolap.job.hadoop.invertedindex;
 
 import java.io.IOException;
 
-import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hive.hcatalog.data.HCatRecord;
+import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
+import org.apache.hive.hcatalog.data.schema.HCatSchema;
+import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 
-import com.kylinolap.cube.common.BytesSplitter;
-import com.kylinolap.cube.common.SplittedBytes;
-import com.kylinolap.job.constant.BatchConstants;
+import com.kylinolap.common.mr.KylinMapper;
 
 /**
  * @author yangli9
  */
-public class IIDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, Text, ShortWritable, Text> {
-
-    private String[] columns;
-    private int delim;
-    private BytesSplitter splitter;
+public class IIDistinctColumnsMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, ShortWritable, Text> {
 
     private ShortWritable outputKey = new ShortWritable();
     private Text outputValue = new Text();
+    private HCatSchema schema = null;
+    private int columnSize = 0;
 
     @Override
     protected void setup(Context context) throws IOException {
-        Configuration conf = context.getConfiguration();
-        this.columns = conf.get(BatchConstants.TABLE_COLUMNS).split(",");
-        String inputDelim = conf.get(BatchConstants.INPUT_DELIM);
-        this.delim = inputDelim == null ? -1 : inputDelim.codePointAt(0);
-        this.splitter = new BytesSplitter(200, 4096);
+        super.publishConfiguration(context.getConfiguration());
+        schema = HCatInputFormat.getTableSchema(context.getConfiguration());
+        columnSize = schema.getFields().size();
     }
 
     @Override
-    public void map(KEYIN key, Text value, Context context) throws IOException, InterruptedException {
-        if (delim == -1) {
-            delim = splitter.detectDelim(value, columns.length);
-        }
+    public void map(KEYIN key, HCatRecord record, Context context) throws IOException, InterruptedException {
 
-        int nParts = splitter.split(value.getBytes(), value.getLength(), (byte) delim);
-        SplittedBytes[] parts = splitter.getSplitBuffers();
-
-        if (nParts != columns.length) {
-            throw new RuntimeException("Got " + parts.length + " from -- " + value.toString() + " -- but only " + columns.length + " expected");
-        }
-
-        for (short i = 0; i < nParts; i++) {
+        HCatFieldSchema fieldSchema = null;
+        for (short i = 0; i < columnSize; i++) {
             outputKey.set(i);
-            outputValue.set(parts[i].value, 0, parts[i].length);
+            fieldSchema = schema.get(i);
+            Object fieldValue = record.get(fieldSchema.getName(), schema);
+            if (fieldValue == null)
+                continue;
+            byte[] bytes = Bytes.toBytes(fieldValue.toString());
+            outputValue.set(bytes, 0, bytes.length);
             context.write(outputKey, outputValue);
         }
+
     }
 
 }

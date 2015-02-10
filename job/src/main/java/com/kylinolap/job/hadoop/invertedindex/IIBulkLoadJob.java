@@ -16,6 +16,12 @@
 
 package com.kylinolap.job.hadoop.invertedindex;
 
+import com.kylinolap.invertedindex.IIInstance;
+import com.kylinolap.invertedindex.IIManager;
+import com.kylinolap.invertedindex.IISegment;
+import com.kylinolap.invertedindex.model.IIDesc;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
+
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -25,12 +31,7 @@ import org.apache.hadoop.util.ToolRunner;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.HadoopUtil;
-import com.kylinolap.cube.CubeInstance;
-import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.CubeSegmentStatusEnum;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.model.invertedindex.InvertedIndexDesc;
 
 /**
  * @author ysong1
@@ -45,32 +46,31 @@ public class IIBulkLoadJob extends AbstractHadoopJob {
         try {
             options.addOption(OPTION_INPUT_PATH);
             options.addOption(OPTION_HTABLE_NAME);
-            options.addOption(OPTION_CUBE_NAME);
+            options.addOption(OPTION_II_NAME);
             parseOptions(options, args);
 
             String tableName = getOptionValue(OPTION_HTABLE_NAME);
             String input = getOptionValue(OPTION_INPUT_PATH);
-            String cubeName = getOptionValue(OPTION_CUBE_NAME);
+            String iiname = getOptionValue(OPTION_II_NAME);
 
             FileSystem fs = FileSystem.get(getConf());
             FsPermission permission = new FsPermission((short) 0777);
-            fs.setPermission(new Path(input, InvertedIndexDesc.HBASE_FAMILY), permission);
+            fs.setPermission(new Path(input, IIDesc.HBASE_FAMILY), permission);
 
             int hbaseExitCode = ToolRunner.run(new LoadIncrementalHFiles(getConf()), new String[] { input, tableName });
 
-            CubeManager mgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-            CubeInstance cube = mgr.getCube(cubeName);
-            CubeSegment seg = cube.getFirstSegment();
+            IIManager mgr = IIManager.getInstance(KylinConfig.getInstanceFromEnv());
+            IIInstance ii = mgr.getII(iiname);
+            IISegment seg = ii.getFirstSegment();
             seg.setStorageLocationIdentifier(tableName);
-            seg.setStatus(CubeSegmentStatusEnum.READY);
-            mgr.updateCube(cube);
+            seg.setStatus(SegmentStatusEnum.READY);
+            mgr.updateII(ii);
 
             return hbaseExitCode;
 
         } catch (Exception e) {
             printUsage(options);
-            e.printStackTrace(System.err);
-            return 2;
+            throw e;
         }
     }
 

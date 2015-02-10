@@ -25,16 +25,16 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.HadoopUtil;
+import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
@@ -52,42 +52,40 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
         try {
             options.addOption(OPTION_JOB_NAME);
             options.addOption(OPTION_CUBE_NAME);
-            options.addOption(OPTION_INPUT_PATH);
-            options.addOption(OPTION_INPUT_FORMAT);
             options.addOption(OPTION_OUTPUT_PATH);
+            options.addOption(OPTION_TABLE_NAME);
             parseOptions(options, args);
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
             String cubeName = getOptionValue(OPTION_CUBE_NAME);
-            Path input = new Path(getOptionValue(OPTION_INPUT_PATH));
-            String inputFormat = getOptionValue(OPTION_INPUT_FORMAT);
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
+            String intermediateTable = getOptionValue(OPTION_TABLE_NAME);
 
             // ----------------------------------------------------------------------------
+            // add metadata to distributed cache
+            CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
+            CubeInstance cubeInstance = cubeMgr.getCube(cubeName);
 
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             System.out.println("Starting: " + job.getJobName());
 
-            setupMapInput(input, inputFormat);
+            setupMapInput(intermediateTable);
             setupReduceOutput(output);
 
-            // add metadata to distributed cache
-            CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             // CubeSegment seg = cubeMgr.getCube(cubeName).getTheOnlySegment();
-            attachKylinPropsAndMetadata(cubeMgr.getCube(cubeName), job.getConfiguration());
+            attachKylinPropsAndMetadata(cubeInstance, job.getConfiguration());
 
             return waitForCompletion(job);
 
         } catch (Exception e) {
             printUsage(options);
-            log.error(e.getLocalizedMessage(), e);
-            return 2;
+            throw e;
         }
 
     }
 
-    private void setupMapInput(Path input, String inputFormat) throws IOException {
-        FileInputFormat.setInputPaths(job, input);
+    private void setupMapInput(String intermediateTable) throws IOException {
+//        FileInputFormat.setInputPaths(job, input);
 
         File JarFile = new File(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
         if (JarFile.exists()) {
@@ -95,12 +93,12 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
         } else {
             job.setJarByClass(this.getClass());
         }
-
-        if ("text".equalsIgnoreCase(inputFormat) || "textinputformat".equalsIgnoreCase(inputFormat)) {
-            job.setInputFormatClass(TextInputFormat.class);
-        } else {
-            job.setInputFormatClass(SequenceFileInputFormat.class);
-        }
+        
+        String[] dbTableNames = HadoopUtil.parseHiveTableName(intermediateTable);
+        HCatInputFormat.setInput(job, dbTableNames[0],
+                dbTableNames[1]);
+        
+        job.setInputFormatClass(HCatInputFormat.class);
         job.setMapperClass(FactDistinctColumnsMapper.class);
         job.setCombinerClass(FactDistinctColumnsCombiner.class);
         job.setMapOutputKeyClass(ShortWritable.class);

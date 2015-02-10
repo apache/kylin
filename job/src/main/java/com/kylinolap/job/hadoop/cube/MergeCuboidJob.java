@@ -25,8 +25,6 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeInstance;
@@ -37,8 +35,6 @@ import com.kylinolap.job.constant.BatchConstants;
  * @author ysong1
  */
 public class MergeCuboidJob extends CuboidJob {
-
-    private static final Logger log = LoggerFactory.getLogger(MergeCuboidJob.class);
 
     @Override
     public int run(String[] args) throws Exception {
@@ -57,7 +53,6 @@ public class MergeCuboidJob extends CuboidJob {
             KylinConfig config = KylinConfig.getInstanceFromEnv();
             CubeManager cubeMgr = CubeManager.getInstance(config);
             CubeInstance cube = cubeMgr.getCube(cubeName);
-            // CubeSegment cubeSeg = cubeMgr.findSegment(cube, segmentName);
 
             // start job
             String jobName = getOptionValue(OPTION_JOB_NAME);
@@ -72,7 +67,7 @@ public class MergeCuboidJob extends CuboidJob {
                 job.setJarByClass(this.getClass());
             }
 
-            // setJobJar(job);
+            // set inputs
             addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
 
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
@@ -104,8 +99,7 @@ public class MergeCuboidJob extends CuboidJob {
             return waitForCompletion(job);
         } catch (Exception e) {
             printUsage(options);
-            log.error(e.getLocalizedMessage(), e);
-            return 2;
+            throw e;
         }
     }
 

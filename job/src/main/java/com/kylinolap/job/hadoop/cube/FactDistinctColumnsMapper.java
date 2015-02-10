@@ -20,55 +20,56 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hive.hcatalog.data.HCatRecord;
+import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
+import org.apache.hive.hcatalog.data.schema.HCatSchema;
+import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.mr.KylinMapper;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.cube.common.BytesSplitter;
-import com.kylinolap.cube.common.SplittedBytes;
 import com.kylinolap.cube.cuboid.Cuboid;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.cube.model.RowKeyDesc;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.job.hadoop.hive.JoinedFlatTableDesc;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.RowKeyDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.job.hadoop.hive.CubeJoinedFlatTableDesc;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * @author yangli9
  */
-public class FactDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, Text, ShortWritable, Text> {
+public class FactDistinctColumnsMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, ShortWritable, Text> {
 
     private String cubeName;
     private CubeInstance cube;
     private CubeDesc cubeDesc;
     private int[] factDictCols;
 
-    private JoinedFlatTableDesc intermediateTableDesc;
-    private String intermediateTableRowDelimiter;
-    private byte byteRowDelimiter;
-    private BytesSplitter bytesSplitter;
+    private CubeJoinedFlatTableDesc intermediateTableDesc;
 
     private ShortWritable outputKey = new ShortWritable();
     private Text outputValue = new Text();
     private int errorRecordCounter;
 
+    private HCatSchema schema = null;
+
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+
         Configuration conf = context.getConfiguration();
-        intermediateTableRowDelimiter = conf.get(BatchConstants.CFG_CUBE_INTERMEDIATE_TABLE_ROW_DELIMITER, Character.toString(BatchConstants.INTERMEDIATE_TABLE_ROW_DELIMITER));
-        byteRowDelimiter = intermediateTableRowDelimiter.getBytes("UTF-8")[0];
-        bytesSplitter = new BytesSplitter(200, 4096);
 
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
         cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
         cube = CubeManager.getInstance(config).getCube(cubeName);
         cubeDesc = cube.getDescriptor();
-        intermediateTableDesc = new JoinedFlatTableDesc(cubeDesc, null);
+        intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
 
         long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
@@ -82,40 +83,44 @@ public class FactDistinctColumnsMapper<KEYIN> extends Mapper<KEYIN, Text, ShortW
             if (rowkey.isUseDictionary(col) == false)
                 continue;
 
-            String scanTable = (String) dictMgr.decideSourceData(cubeDesc, col, null)[0];
-            if (cubeDesc.isFactTable(scanTable)) {
+            String scanTable = (String) dictMgr.decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null)[0];
+            if (cubeDesc.getModel().isFactTable(scanTable)) {
                 factDictCols.add(i);
             }
         }
         this.factDictCols = new int[factDictCols.size()];
         for (int i = 0; i < factDictCols.size(); i++)
             this.factDictCols[i] = factDictCols.get(i);
+
+        schema = HCatInputFormat.getTableSchema(context.getConfiguration());
     }
 
     @Override
-    public void map(KEYIN key, Text value, Context context) throws IOException, InterruptedException {
+    public void map(KEYIN key, HCatRecord record, Context context) throws IOException, InterruptedException {
 
         try {
-            bytesSplitter.split(value.getBytes(), value.getLength(), byteRowDelimiter);
-            intermediateTableDesc.sanityCheck(bytesSplitter);
-            SplittedBytes[] splitBuffers = bytesSplitter.getSplitBuffers();
 
             int[] flatTableIndexes = intermediateTableDesc.getRowKeyColumnIndexes();
+            HCatFieldSchema fieldSchema = null;
             for (int i : factDictCols) {
                 outputKey.set((short) i);
-                SplittedBytes bytes = splitBuffers[flatTableIndexes[i]];
-                outputValue.set(bytes.value, 0, bytes.length);
+                fieldSchema = schema.get(flatTableIndexes[i]);
+                Object fieldValue = record.get(fieldSchema.getName(), schema);
+                if (fieldValue == null)
+                    continue;
+                byte[] bytes = Bytes.toBytes(fieldValue.toString());
+                outputValue.set(bytes, 0, bytes.length);
                 context.write(outputKey, outputValue);
             }
         } catch (Exception ex) {
-            handleErrorRecord(bytesSplitter, ex);
+            handleErrorRecord(record, ex);
         }
 
     }
 
-    private void handleErrorRecord(BytesSplitter bytesSplitter, Exception ex) throws IOException {
+    private void handleErrorRecord(HCatRecord record, Exception ex) throws IOException {
 
-        System.err.println("Insane record: " + bytesSplitter);
+        System.err.println("Insane record: " + record.getAll());
         ex.printStackTrace(System.err);
 
         errorRecordCounter++;

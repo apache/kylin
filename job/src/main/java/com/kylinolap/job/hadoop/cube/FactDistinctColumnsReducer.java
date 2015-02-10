@@ -28,27 +28,29 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Reducer;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.mr.KylinReducer;
 import com.kylinolap.common.util.ByteArray;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.cuboid.Cuboid;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * @author yangli9
  */
-public class FactDistinctColumnsReducer extends Reducer<ShortWritable, Text, NullWritable, Text> {
+public class FactDistinctColumnsReducer extends KylinReducer<ShortWritable, Text, NullWritable, Text> {
 
     private List<TblColRef> columnList = new ArrayList<TblColRef>();
 
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
+
         Configuration conf = context.getConfiguration();
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
         String cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);

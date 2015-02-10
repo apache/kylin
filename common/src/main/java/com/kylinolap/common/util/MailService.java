@@ -29,7 +29,6 @@ import com.kylinolap.common.KylinConfig;
 
 /**
  * @author xduo
- * 
  */
 public class MailService {
 
@@ -46,19 +45,19 @@ public class MailService {
     }
 
     public MailService(KylinConfig config) {
-        enabled = "true".equalsIgnoreCase(config.getProperty(KylinConfig.MAIL_ENABLED, "true"));
+        enabled = "true".equalsIgnoreCase(config.getProperty(KylinConfig.MAIL_ENABLED, "false"));
         host = config.getProperty(KylinConfig.MAIL_HOST, "");
         username = config.getProperty(KylinConfig.MAIL_USERNAME, "");
         password = config.getProperty(KylinConfig.MAIL_PASSWORD, "");
         sender = config.getProperty(KylinConfig.MAIL_SENDER, "");
 
         if (enabled) {
-            assert !host.isEmpty();
+            if (host.isEmpty())
+                throw new RuntimeException("mail service host is empty");
         }
     }
 
     /**
-     * 
      * @param receivers
      * @param subject
      * @param content
@@ -96,7 +95,7 @@ public class MailService {
             logger.error(e.getLocalizedMessage(),e);
             return false;
         }
-        
+
         return true;
     }
 }

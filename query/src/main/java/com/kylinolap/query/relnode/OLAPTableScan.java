@@ -43,8 +43,8 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 
 import com.google.common.base.Preconditions;
-import com.kylinolap.metadata.model.cube.TblColRef;
-import com.kylinolap.metadata.model.schema.ColumnDesc;
+import com.kylinolap.metadata.model.ColumnDesc;
+import com.kylinolap.metadata.model.TblColRef;
 import com.kylinolap.query.optrule.OLAPAggregateRule;
 import com.kylinolap.query.optrule.OLAPFilterRule;
 import com.kylinolap.query.optrule.OLAPJoinRule;
@@ -61,7 +61,7 @@ import com.kylinolap.query.schema.OLAPTable;
 public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, EnumerableRel {
 
     private final OLAPTable olapTable;
-    private final String cubeTable;
+    private final String tableName;
     private final int[] fields;
     private ColumnRowType columnRowType;
     private OLAPContext context;
@@ -70,7 +70,7 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
         super(cluster, cluster.traitSetOf(OLAPRel.CONVENTION), table);
         this.olapTable = olapTable;
         this.fields = fields;
-        this.cubeTable = olapTable.getTableName();
+        this.tableName = olapTable.getTableName();
         this.rowType = getRowType();
     }
 
@@ -78,8 +78,8 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
         return olapTable;
     }
 
-    public String getCubeTable() {
-        return cubeTable;
+    public String getTableName() {
+        return tableName;
     }
 
     public int[] getFields() {
@@ -202,10 +202,10 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
     private String genExecFunc() {
         // if the table to scan is not the fact table of cube, then it's a
         // lookup table
-        if (context.hasJoin == false && cubeTable.equals(context.cubeDesc.getFactTable()) == false) {
+        if (context.hasJoin == false && tableName.equalsIgnoreCase(context.realization.getFactTable()) == false) {
             return "executeLookupTableQuery";
         } else {
-            return "executeCubeQuery";
+            return "executeIndexQuery";
         }
 
     }

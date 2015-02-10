@@ -23,30 +23,31 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.mr.KylinMapper;
 import com.kylinolap.common.util.BytesUtil;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.CubeSegment;
-import com.kylinolap.cube.CubeSegmentStatusEnum;
 import com.kylinolap.cube.common.RowKeySplitter;
-import com.kylinolap.cube.common.SplittedBytes;
+import com.kylinolap.common.util.SplittedBytes;
 import com.kylinolap.cube.cuboid.Cuboid;
 import com.kylinolap.cube.kv.RowConstants;
+import com.kylinolap.cube.model.CubeDesc;
 import com.kylinolap.dict.Dictionary;
 import com.kylinolap.dict.DictionaryManager;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.TblColRef;
+import com.kylinolap.metadata.model.SegmentStatusEnum;
+import com.kylinolap.metadata.model.TblColRef;
 
 /**
  * @author ysong1, honma
  */
-public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
+public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
 
     private KylinConfig config;
     private String cubeName;
@@ -56,7 +57,7 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
     private CubeDesc cubeDesc;
     private CubeSegment mergedCubeSegment;
     private CubeSegment sourceCubeSegment;// Must be unique during a mapper's
-                                          // life cycle
+    // life cycle
 
     private Text outputKey = new Text();
 
@@ -72,7 +73,11 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
         if (ret != null)
             return ret;
         else {
-            ret = cubeDesc.getRowkey().isUseDictionary(col) && cubeDesc.getFactTable().equalsIgnoreCase((String) DictionaryManager.getInstance(config).decideSourceData(cubeDesc, col, null)[0]);
+            ret = cubeDesc.getRowkey().isUseDictionary(col);
+            if (ret) {
+                String dictTable = (String) DictionaryManager.getInstance(config).decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null)[0];
+                ret = cubeDesc.getFactTable().equalsIgnoreCase(dictTable);
+            }
             dictsNeedMerging.put(col, ret);
             return ret;
         }
@@ -90,7 +95,8 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
 
     private CubeSegment findSegmentWithUuid(String jobID, CubeInstance cubeInstance) {
         for (CubeSegment segment : cubeInstance.getSegments()) {
-            if (segment.getUuid().equalsIgnoreCase(jobID)) {
+            String lastBuildJobID = segment.getLastBuildJobID();
+            if (lastBuildJobID != null && lastBuildJobID.equalsIgnoreCase(jobID)) {
                 return segment;
             }
         }
@@ -101,6 +107,8 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
+        super.publishConfiguration(context.getConfiguration());
+
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
         segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME).toUpperCase();
 
@@ -109,16 +117,19 @@ public class MergeCuboidMapper extends Mapper<Text, Text, Text, Text> {
         cubeManager = CubeManager.getInstance(config);
         cube = cubeManager.getCube(cubeName);
         cubeDesc = cube.getDescriptor();
-        mergedCubeSegment = cube.getSegment(segmentName, CubeSegmentStatusEnum.NEW);
+        mergedCubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
 
         // int colCount = cubeDesc.getRowkey().getRowKeyColumns().length;
         newKeyBuf = new byte[256];// size will auto-grow
 
         // decide which source segment
-        org.apache.hadoop.mapreduce.InputSplit inputSplit = context.getInputSplit();
+        InputSplit inputSplit = context.getInputSplit();
         String filePath = ((FileSplit) inputSplit).getPath().toString();
+        System.out.println("filePath:" + filePath);
         String jobID = extractJobIDFromPath(filePath);
+        System.out.println("jobID:" + jobID);
         sourceCubeSegment = findSegmentWithUuid(jobID, cube);
+        System.out.println(sourceCubeSegment);
 
         this.rowKeySplitter = new RowKeySplitter(sourceCubeSegment, 65, 255);
     }

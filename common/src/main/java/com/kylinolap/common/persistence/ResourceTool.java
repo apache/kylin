@@ -42,20 +42,28 @@ public class ResourceTool {
         }
 
         String cmd = args[0];
-        if (cmd.equals("reset"))
-            reset(args.length == 1 ? KylinConfig.getInstanceFromEnv() : KylinConfig.createInstanceFromUri(args[1]));
-        else if (cmd.equals("copy"))
-            copy(args[1], args[2]);
-        else if (cmd.equals("list"))
-            list(args[1], args[2]);
-        else if (cmd.equals("download"))
-            copy(KylinConfig.getInstanceFromEnv(), KylinConfig.createInstanceFromUri(args[1]));
-        else if (cmd.equals("upload"))
-            copy(KylinConfig.createInstanceFromUri(args[1]), KylinConfig.getInstanceFromEnv());
-        else if (cmd.equals("remove"))
-            remove(KylinConfig.getInstanceFromEnv(), args[1]);
-        else
-            System.out.println("Unknown cmd: " + cmd);
+        switch (cmd) {
+            case "reset":
+                reset(args.length == 1 ? KylinConfig.getInstanceFromEnv() : KylinConfig.createInstanceFromUri(args[1]));
+                break;
+            case "copy":
+                copy(args[1], args[2]);
+                break;
+            case "list":
+                list(args[1], args[2]);
+                break;
+            case "download":
+                copy(KylinConfig.getInstanceFromEnv(), KylinConfig.createInstanceFromUri(args[1]));
+                break;
+            case "upload":
+                copy(KylinConfig.createInstanceFromUri(args[1]), KylinConfig.getInstanceFromEnv());
+                break;
+            case "remove":
+                remove(KylinConfig.getInstanceFromEnv(), args[1]);
+                break;
+            default:
+                System.out.println("Unknown cmd: " + cmd);
+        }
     }
 
     public static void list(KylinConfig config, String path) throws IOException {
@@ -133,7 +141,7 @@ public class ResourceTool {
                 resetR(store, child);
         }
     }
-    
+
     private static void remove(KylinConfig config, String path) throws IOException {
         ResourceStore store = ResourceStore.getStore(config);
         resetR(store, path);

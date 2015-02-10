@@ -19,26 +19,26 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
+import com.kylinolap.common.mr.KylinReducer;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Reducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.kv.RowConstants;
-import com.kylinolap.cube.measure.MeasureAggregators;
-import com.kylinolap.cube.measure.MeasureCodec;
+import com.kylinolap.metadata.measure.MeasureAggregators;
+import com.kylinolap.metadata.measure.MeasureCodec;
+import com.kylinolap.cube.model.CubeDesc;
+import com.kylinolap.metadata.model.MeasureDesc;
 import com.kylinolap.job.constant.BatchConstants;
 import com.kylinolap.job.hadoop.AbstractHadoopJob;
-import com.kylinolap.metadata.model.cube.CubeDesc;
-import com.kylinolap.metadata.model.cube.MeasureDesc;
 
 /**
  * @author George Song (ysong1)
  * 
  */
-public class CuboidReducer extends Reducer<Text, Text, Text, Text> {
+public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
 
     private static final Logger logger = LoggerFactory.getLogger(CuboidReducer.class);
 
@@ -58,6 +58,7 @@ public class CuboidReducer extends Reducer<Text, Text, Text, Text> {
 
     @Override
     protected void setup(Context context) throws IOException {
+        super.publishConfiguration(context.getConfiguration());
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
 
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(context.getConfiguration());
