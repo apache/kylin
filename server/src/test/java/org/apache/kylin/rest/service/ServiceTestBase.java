@@ -18,11 +18,13 @@
 
 package org.apache.kylin.rest.service;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.dict.DictionaryManager;
+import org.apache.kylin.invertedindex.IIManager;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.project.ProjectManager;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -30,20 +32,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.apache.kylin.common.util.HBaseMetadataTestCase;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.dict.DictionaryManager;
-import org.apache.kylin.invertedindex.IIManager;
-import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.project.ProjectManager;
 
 /**
  * @author xduo
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = { "classpath:applicationContext.xml", "classpath:kylinSecurity.xml" })
+@ContextConfiguration(locations = {"classpath:applicationContext.xml", "classpath:kylinSecurity.xml"})
 @ActiveProfiles("testing")
-public class ServiceTestBase extends HBaseMetadataTestCase { //HBaseMetadataTestCase {
+public class ServiceTestBase extends HBaseMetadataTestCase {
 
     @BeforeClass
     public static void setupResource() throws Exception {
