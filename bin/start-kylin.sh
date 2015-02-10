@@ -28,7 +28,7 @@ sh ${dir}/check-env.sh || { exit 1; }
 
 useSandbox=`cat ${KYLIN_HOME}/conf/kylin.properties | grep 'kylin.sandbox' | awk -F '=' '{print $2}'`
 spring_profile="default"
-if [ "$useSandbox" -eq true ]
+if [ "$useSandbox" = "true" ]
     then spring_profile="sandbox"
 fi
 rm -rf ${tomcat_root}/webapps/kylin*
@@ -51,7 +51,7 @@ hbase -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
 -Dspring.profiles.active=${spring_profile} \
 org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start > ${tomcat_root}/logs/kylin_sandbox.log 2>&1 &
 echo "A new Kylin instance is started by $USER, stop it using \"stop-kylin.sh\""
-if [ "$useSandbox" -eq true ]
+if [ "$useSandbox" = "true" ]
     then echo "Please visit http://<your_sandbox_ip>:7070/kylin to play with the cubes! (Useranme: ADMIN, Password: KYLIN)"
 else
     echo "Please visit http://<ip>:7070/kylin"
