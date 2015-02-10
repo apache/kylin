@@ -59,8 +59,6 @@ public class KylinConfig {
 
     public static final String KYLIN_JOB_CONCURRENT_MAX_LIMIT = "kylin.job.concurrent.max.limit";
 
-//    public static final String KYLIN_JOB_YARN_APP_REST_CHECK_STATUS_URL = "kylin.job.yarn.app.rest.check.status.url";
-
     public static final String KYLIN_JOB_YARN_APP_REST_CHECK_INTERVAL_SECONDS = "kylin.job.yarn.app.rest.check.interval.seconds";
 
     public static final String KYLIN_TMP_HDFS_DIR = "kylin.tmp.hdfs.dir";

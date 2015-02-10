@@ -1,17 +1,33 @@
-#!/bin/sh
+#!/bin/bash
 
-echo "package back-end"
+echo "Checking maven..."
+
+if [ -z "$(command -v mvn)" ]
+then
+    echo "Please install maven first so that Kylin-Deploy can proceed"
+    exit 1
+else
+    echo "maven check passed"
+fi
+
+echo "Checking npm..."
+
+if [ -z "$(command -v npm)" ]
+then
+    echo "Please install npm first so that Kylin-Deploy can proceed"
+    exit 1
+else
+    echo "npm check passed"
+fi
 
 dir=$(dirname ${0})
 cd ${dir}/..
+version=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\['`
+echo "kylin version: ${version}"
+export version
 
-mvn clean install -DskipTests
+sh script/build.sh || { exit 1; }
+sh script/prepare.sh || { exit 1; }
+sh script/download-tomcat.sh || { exit 1; }
+sh scirpt/compress.sh || { exit 1; }
 
-#package webapp
-echo 'package front-end'
-cd webapp
-npm install -g bower
-bower install
-npm install
-npm install -g grunt-cli
-grunt dev --buildEnv=dev
