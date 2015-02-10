@@ -18,6 +18,7 @@
 
 package org.apache.kylin.common.util;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -26,6 +27,7 @@ import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.MiniHBaseCluster;
 import org.apache.hadoop.hbase.coprocessor.CoprocessorHost;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.common.persistence.HBaseResourceStore;
 
 /**
@@ -40,10 +42,10 @@ public class HBaseMiniclusterHelper {
     public static final String II_STORAGE_PREFIX = "KYLIN_II";
     public static final String TEST_METADATA_TABLE = "kylin_metadata_qa";
 
-    private static final String coprocessorClassName = "org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint";
     private static final String hbaseTarLocation = "../examples/test_case_data/minicluster/hbase-export.tar.gz";
+    private static final String iiEndpointClassName = "org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint";
 
-    private static HBaseTestingUtility UTIL = new HBaseTestingUtility();
+    public static HBaseTestingUtility UTIL = new HBaseTestingUtility();
     private static volatile boolean clusterStarted = false;
     private static String hbaseconnectionUrl = "";
 
@@ -88,8 +90,8 @@ public class HBaseMiniclusterHelper {
 
         logger.info("Going to start mini cluster.");
 
-        if (existInClassPath(coprocessorClassName)) {
-            UTIL.getConfiguration().setStrings(CoprocessorHost.REGION_COPROCESSOR_CONF_KEY, coprocessorClassName);
+        if (existInClassPath(iiEndpointClassName)) {
+            HBaseMiniclusterHelper.UTIL.getConfiguration().setStrings(CoprocessorHost.REGION_COPROCESSOR_CONF_KEY, iiEndpointClassName);
         }
 
         //https://issues.apache.org/jira/browse/HBASE-11711

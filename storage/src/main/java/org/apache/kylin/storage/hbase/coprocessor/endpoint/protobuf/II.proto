@@ -1,6 +1,6 @@
 
 // usage:
-// protoc  --java_out=./storage/src/main/java  ./storage/src/main/java/com/kylinolap/storage/hbase/coprocessor/endpoint/protobuf/II.proto
+// protoc  --java_out=./storage/src/main/java  ./storage/src/main/java/org/apache/kylin/storage/hbase/coprocessor/endpoint/protobuf/II.proto
 
 option java_package = "org.apache.kylin.storage.hbase.coprocessor.endpoint.generated";
 option java_outer_classname = "IIProtos";

@@ -23,9 +23,16 @@ import java.nio.ByteBuffer;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.*;
+import org.slf4j.Logger;
 
 /**
 * Created by honma on 10/17/14.
@@ -54,16 +61,14 @@ public class BasicTest {
 
     @Test
     @Ignore("convenient trial tool for dev")
-    public void test1() throws IOException, InterruptedException {
-
+    public void test1() throws Exception {
     }
 
     @Test
     @Ignore("fix it later")
     public void test2() throws IOException, ConfigurationException {
         PropertiesConfiguration a = new PropertiesConfiguration();
-        a.setProperty("hi","dd");
-
+        a.setProperty("hi", "dd");
 
         System.out.println("dfads");
         a.save(System.out);

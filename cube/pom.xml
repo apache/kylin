@@ -23,6 +23,7 @@
     <artifactId>kylin-cube</artifactId>
     <packaging>jar</packaging>
     <name>Kylin:Cube</name>
+
     <parent>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
@@ -30,6 +31,15 @@
     </parent>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-common</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+            <version>${project.parent.version}</version>
+        </dependency>
+
         <!--Kylin Jar -->
         <dependency>
             <groupId>org.apache.kylin</groupId>
