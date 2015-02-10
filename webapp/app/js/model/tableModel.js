@@ -18,8 +18,8 @@
 
 KylinApp.service('TableModel', function() {
 
-    this.selectProjectTables = [];
 
+    this.selectProjectTables = [];
 
     this.initTables = function(){
         this.selectProjectTables = [];
@@ -32,6 +32,11 @@ KylinApp.service('TableModel', function() {
     this.setSelectedProjectTables = function(tables) {
         this.selectProjectTables = tables;
     }
+
+
+    this.selectedSrcDb = [];
+
+    this.selectedSrcTable = {};
 
 
 });

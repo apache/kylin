@@ -19,7 +19,7 @@
 'use strict';
 
 KylinApp
-    .controller('ProjectCtrl', function ($scope, $modal, $q, ProjectService, MessageService,SweetAlert,$log,kylinConfig,projectConfig) {
+    .controller('ProjectCtrl', function ($scope, $modal, $q, ProjectService, MessageService,SweetAlert,$log,kylinConfig,projectConfig,ProjectModel) {
 
         $scope.projects = [];
         $scope.loading = false;
@@ -77,6 +77,7 @@ KylinApp
                     if (pIndex > -1) {
                         $scope.projects.splice(pIndex, 1);
                     }
+                    ProjectModel.removeProject(project.name);
                 SweetAlert.swal('Success!',"Project [" + project.name + "] has been deleted successfully!", 'success');
                 },function(e){
                     if(e.data&& e.data.exception){
