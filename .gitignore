@@ -75,6 +75,7 @@ server/.settings/org.eclipse.wst.jsdt.ui.superType.name
 webapp/app/WEB-INF/*
 webapp/dist
 webapp/node_modules:
+webapp/CHANGELOG.md
 
 # package file
 tomcat
