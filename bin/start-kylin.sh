@@ -26,7 +26,12 @@ sh ${dir}/check-env.sh || { exit 1; }
 #-Djava.library.path=${KYLIN_LD_LIBRARY_PATH} \
 
 
-rm -rf ${tomcat_root}/webapps/*
+useSandbox=`cat ${KYLIN_HOME}/conf/kylin.properties | grep 'kylin.sandbox' | awk -F '=' '{print $2}'`
+spring_profile="default"
+if [ "$useSandbox" = "true" ]
+    then spring_profile="sandbox"
+fi
+rm -rf ${tomcat_root}/webapps/kylin*
 cp ${dir}/../lib/kylin-server-*.war ${tomcat_root}/webapps/kylin.war
 
 source ${dir}/find-hive-dependency.sh
@@ -43,8 +48,12 @@ hbase -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
 -Dcatalina.home=${tomcat_root} \
 -Djava.io.tmpdir=${tomcat_root}/temp  \
 -Dkylin.hive.dependency=${hive_dependency} \
--Dspring.profiles.active=sandbox \
+-Dspring.profiles.active=${spring_profile} \
 org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start > ${tomcat_root}/logs/kylin_sandbox.log 2>&1 &
-echo "A new Kylin instance is started by $USER, stop it using \"kylin.sh stop\""
-echo "Please visit http://<your_sandbox_ip>:7070/kylin to play with the cubes! (Useranme: ADMIN, Password: KYLIN)"
+echo "A new Kylin instance is started by $USER, stop it using \"stop-kylin.sh\""
+if [ "$useSandbox" = "true" ]
+    then echo "Please visit http://<your_sandbox_ip>:7070/kylin to play with the cubes! (Useranme: ADMIN, Password: KYLIN)"
+else
+    echo "Please visit http://<ip>:7070/kylin"
+fi
 echo "You can check the log at ${tomcat_root}/logs/kylin_sandbox.log"

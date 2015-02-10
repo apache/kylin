@@ -16,4 +16,5 @@ done
 hdp_home=`echo $hive_exec_path | awk -F '/hive/lib/' '{print $1}'`
 
 hive_dependency=/usr/hdp/current/hive-client/conf/:${hdp_home}/hive/lib/*:${hdp_home}/hive-hcatalog/share/hcatalog/*
+echo "hive dependency: $hive_dependency"
 export hive_dependency
