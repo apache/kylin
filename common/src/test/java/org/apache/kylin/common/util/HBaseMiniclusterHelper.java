@@ -43,6 +43,7 @@ public class HBaseMiniclusterHelper {
     public static final String TEST_METADATA_TABLE = "kylin_metadata_qa";
 
     private static final String hbaseTarLocation = "../examples/test_case_data/minicluster/hbase-export.tar.gz";
+    private static final String iiEndpointClassName = "org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint";
 
     public static HBaseTestingUtility UTIL = new HBaseTestingUtility();
     private static volatile boolean clusterStarted = false;
@@ -83,13 +84,15 @@ public class HBaseMiniclusterHelper {
 
         KylinConfig.getInstanceFromEnv().setMetadataUrl(TEST_METADATA_TABLE + "@" + hbaseconnectionUrl);
         KylinConfig.getInstanceFromEnv().setStorageUrl(hbaseconnectionUrl);
-
-        HBaseConnection.putConfig(hbaseconnectionUrl, UTIL.getConfiguration());
     }
 
     private static void startupMiniClusterAndImportData() throws Exception {
 
         logger.info("Going to start mini cluster.");
+
+        if (existInClassPath(iiEndpointClassName)) {
+            HBaseMiniclusterHelper.UTIL.getConfiguration().setStrings(CoprocessorHost.REGION_COPROCESSOR_CONF_KEY, iiEndpointClassName);
+        }
 
         //https://issues.apache.org/jira/browse/HBASE-11711
         UTIL.getConfiguration().setInt("hbase.master.info.port", -1);//avoid port clobbering
@@ -119,7 +122,7 @@ public class HBaseMiniclusterHelper {
         HBaseResourceStore store = new HBaseResourceStore(KylinConfig.getInstanceFromEnv());
 
         // import the table content
-        HbaseImporter.importHBaseData(hbaseTarLocation, UTIL);
+        HbaseImporter.importHBaseData(hbaseTarLocation, UTIL.getConfiguration());
 
     }
 
@@ -139,9 +142,6 @@ public class HBaseMiniclusterHelper {
 
         logger.info("Going to shutdown mini cluster.");
 
-        if (!StringUtils.isEmpty(hbaseconnectionUrl)) {
-            HBaseConnection.removeConfig(hbaseconnectionUrl);
-        }
         try {
             UTIL.shutdownMiniMapReduceCluster();
         } catch (Exception e) {
