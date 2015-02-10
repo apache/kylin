@@ -18,20 +18,23 @@
 
 package org.apache.kylin.rest.controller;
 
-import java.io.IOException;
-import java.io.StringWriter;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.rest.request.CubeRequest;
+import org.apache.kylin.rest.service.CubeService;
+import org.apache.kylin.rest.service.JobService;
+import org.apache.kylin.rest.service.ServiceTestBase;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.rest.request.CubeRequest;
-import org.apache.kylin.rest.service.CubeService;
-import org.apache.kylin.rest.service.JobService;
-import org.apache.kylin.rest.service.ServiceTestBase;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.List;
 
 /**
  * @author xduo
@@ -40,6 +43,7 @@ public class CubeControllerTest extends ServiceTestBase {
 
     private CubeController cubeController;
     private CubeDescController cubeDescController;
+    private ModelController modelController;
 
     @Autowired
     CubeService cubeService;
@@ -55,6 +59,9 @@ public class CubeControllerTest extends ServiceTestBase {
         cubeController.setJobService(jobService);
         cubeDescController = new CubeDescController();
         cubeDescController.setCubeService(cubeService);
+
+        modelController = new ModelController();
+        modelController.setCubeService(cubeService);
     }
 
     @Test
@@ -67,6 +74,13 @@ public class CubeControllerTest extends ServiceTestBase {
         CubeDesc cube = cubes[0];
         CubeDesc newCube = new CubeDesc();
         String newCubeName = cube.getName() + "_test_save";
+
+        try {
+            cubeController.deleteCube(newCubeName);
+        } catch (Exception e) {
+            // it may not exist, ignore the exception
+        }
+
         newCube.setName(newCubeName);
         newCube.setModelName(cube.getModelName());
         newCube.setModel(cube.getModel());
@@ -76,7 +90,8 @@ public class CubeControllerTest extends ServiceTestBase {
         newCube.setConfig(cube.getConfig());
         newCube.setRowkey(cube.getRowkey());
 
-        newCube.getModel().setName(newCubeName + "_model_desc" + System.currentTimeMillis());//generate a random model
+        String newModelName = newCubeName + "_model_desc";
+        newCube.getModel().setName(newModelName);//generate a random model
         newCube.getModel().setLastModified(0);
 
         ObjectMapper cubeDescMapper = new ObjectMapper();
@@ -92,6 +107,20 @@ public class CubeControllerTest extends ServiceTestBase {
         cubeRequest.setModelDescData(modelDescWriter.toString());
         cubeRequest = cubeController.saveCubeDesc(cubeRequest);
 
+
+        DataModelDesc model = modelController.getModel(newModelName);
+        Assert.assertNotNull(model);
+
+        List<String> notifyList = Lists.newArrayList();
+        notifyList.add("john@example.com");
+        cubeController.updateNotifyList(newCubeName, notifyList);
+        cubeController.updateCubeCost(newCubeName, 80);
+
+        List<CubeInstance> cubeInstances = cubeController.getCubes(newCubeName, "default", 1, 0);
+
+        CubeInstance cubeInstance = cubeInstances.get(0);
+        Assert.assertTrue(cubeInstance.getDescriptor().getNotifyList().contains("john@example.com"));
+        Assert.assertTrue(cubeInstance.getCost() == 80);
         cubeController.deleteCube(newCubeName);
     }
 
