@@ -155,6 +155,13 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
         // Clean up objects used in cube creation
         angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
+            // adpt join
+            angular.forEach($scope.cubeMetaFrame.model.lookups, function (lookup, index) {
+                if(lookup.table==dimension.table){
+                    dimension.join = lookup.join;
+                }
+            });
+
             delete dimension.status;
 
             for (var key in dimension) {
@@ -222,7 +229,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         }
                         //end loading
                         loadingRequest.hide();
-                        recoveryCubeStatus();
                     }, function (e) {
                         if(e.data&& e.data.exception){
                             var message =e.data.exception;
@@ -232,7 +238,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                             MessageService.sendMsg($scope.cubeResultTmpl({'text':'Failed to take action.','schema':$scope.state.cubeSchema}), 'error', {}, true, 'top_center');
                         }
                         loadingRequest.hide();
-                        recoveryCubeStatus();
                     });
                 } else {
                     CubeService.save({}, {cubeDescData: $scope.state.cubeSchema, project: $scope.state.project}, function (request) {
@@ -249,7 +254,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
                         //end loading
                         loadingRequest.hide();
-                        recoveryCubeStatus();
                     }, function (e) {
                         if (e.data && e.data.exception) {
                             var message =e.data.exception;
@@ -260,7 +264,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         }
                         //end loading
                         loadingRequest.hide();
-                        recoveryCubeStatus();
                     });
                 }
             }
@@ -497,21 +500,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         }
     }
 
-
-    function recoveryCubeStatus() {
-        $scope.cubeMetaFrame.project = $scope.state.project;
-        angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
-            dimension.status = {};
-            if (dimension.hierarchy&&dimension.hierarchy.length) {
-                dimension.status.useHierarchy = true;
-                dimension.status.joinCount = (!!dimension.join.primary_key) ? dimension.join.primary_key.length : 0;
-                dimension.status.hierarchyCount = (!!dimension.hierarchy) ? dimension.hierarchy.length : 0;
-            }
-            if(dimension.join&&dimension.join.type) {
-                dimension.status.useJoin = true;
-            }
-        });
-    }
 
     $scope.$watch('project.selectedProject', function (newValue, oldValue) {
         if(!newValue){
