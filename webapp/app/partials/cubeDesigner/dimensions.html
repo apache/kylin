@@ -161,11 +161,13 @@
                         <div class="col-xs-12 col-sm-6" ng-if="dimType.indexOf('derived') >= 0">
                             <select class="form-control" required="true" chosen data-placeholder="Select a lookup table"
                                     ng-model="newDimension.table" ng-options="table for table in availableTables.slice(1)">
+                                <option value=""></option>
                             </select>
                         </div>
                         <div class="col-xs-12 col-sm-6" ng-if="dimType.indexOf('derived') == -1">
                             <select class="form-control" required="true" chosen data-placeholder="Select a table"
                                     ng-model="newDimension.table" ng-options="table for table in availableTables">
+                                <option value=""></option>
                             </select>
                         </div>
                         <div class="col-xs-12 col-sm-3">
@@ -183,6 +185,7 @@
                         <div class="col-xs-12 col-sm-6">
                             <select class="form-control" required="true" chosen data-placeholder="Select a column"
                                     ng-model="newDimension.column[0]" ng-options="column.name as column.name for column in getColumnsByTable(newDimension.table)">
+                                <option value=""></option>
                             </select>
                         </div>
                     </div>
