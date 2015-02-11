@@ -1,10 +1,6 @@
 package com.kylinolap.job;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.util.Pair;
@@ -21,9 +17,7 @@ import com.kylinolap.common.util.CliCommandExecutor;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
 import com.kylinolap.cube.dataGen.FactTableGenerator;
-import com.kylinolap.job.engine.JobEngineConfig;
 import com.kylinolap.job.hadoop.hive.SqlHiveDataTypeMapping;
-import com.kylinolap.job.tools.LZOSupportnessChecker;
 import com.kylinolap.metadata.MetadataManager;
 import com.kylinolap.metadata.model.schema.ColumnDesc;
 import com.kylinolap.metadata.model.schema.TableDesc;

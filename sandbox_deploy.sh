@@ -138,7 +138,7 @@ cat examples/test_case_data/sandbox/kylin.properties | \
     sed -e "s/${DEFAULT_CHECK_URL}/${NEW_CHECK_URL_PREFIX}${HOSTNAME}/g"  | \
     sed -e "s/${DEFAULT_SERVER_LIST}/${NEW_SERVER_LIST_PREFIX}${HOSTNAME}/g"   >  /etc/kylin/kylin.properties
 
-
+cat examples/test_case_data/sandbox/kylin_job_conf.xml > /etc/kylin/kylin_job_conf.xml
 
 # 1. generate synthetic fact table(test_kylin_fact) data and dump it into hive
 # 2. create empty cubes on these data, ready to be built
