@@ -31,9 +31,6 @@ spring_profile="default"
 if [ "$useSandbox" = "true" ]
     then spring_profile="sandbox"
 fi
-rm -rf ${tomcat_root}/webapps/kylin*
-cp ${dir}/../lib/kylin-server-*.war ${tomcat_root}/webapps/kylin.war
-
 source ${dir}/find-hive-dependency.sh
 
 export HBASE_CLASSPATH_PREFIX=${tomcat_root}/bin/bootstrap.jar:${tomcat_root}/bin/tomcat-juli.jar:${tomcat_root}/lib/*:$HBASE_CLASSPATH_PREFIX

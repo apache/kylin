@@ -13,7 +13,7 @@ fi
 echo "copy lib file"
 rm -rf lib
 mkdir lib
-cp server/target/kylin-server-${version}.war lib
+cp server/target/kylin-server-${version}.war tomcat/webapps/kylin.war
 cp job/target/kylin-job-${version}-job.jar lib/kylin-job-${version}.jar
 cp storage/target/kylin-storage-${version}-coprocessor.jar lib/kylin-coprocessor-${version}.jar
 
@@ -28,5 +28,5 @@ cd webapp/dist
 for f in * .[^.]*
 do
     echo "Adding $f to war"
-    jar -uf ../../lib/kylin-server-${version}.war $f
+    jar -uf ../../tomcat/webapps/kylin.war $f
 done
