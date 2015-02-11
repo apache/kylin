@@ -64,13 +64,9 @@ public class BasicTest {
     public void test1() throws Exception {
     }
 
+
     @Test
     @Ignore("fix it later")
     public void test2() throws IOException, ConfigurationException {
-        PropertiesConfiguration a = new PropertiesConfiguration();
-        a.setProperty("hi", "dd");
-
-        System.out.println("dfads");
-        a.save(System.out);
     }
 }

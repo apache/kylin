@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.measure.fixedlen;
 
 import org.apache.kylin.metadata.model.DataType;
 
+
 abstract public class FixedLenMeasureCodec<T> {
 
     public static FixedLenMeasureCodec<?> get(DataType type) {

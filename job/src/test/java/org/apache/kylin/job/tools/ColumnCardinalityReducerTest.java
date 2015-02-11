@@ -67,7 +67,7 @@ public class ColumnCardinalityReducerTest {
         }
         ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
         buf.clear();
-        hllc.writeRegisters(buf);
+        hllc.writeCompactRegisters(buf);
         buf.flip();
         return buf.array();
     }

@@ -20,6 +20,7 @@ package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
 import com.google.common.collect.Lists;
 
+import com.yammer.metrics.core.Metric;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
@@ -28,6 +29,7 @@ import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorConstants;
 import org.apache.hadoop.io.LongWritable;
 
@@ -40,10 +42,28 @@ import java.util.List;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class EndpointAggregators {
 
+    private enum MetricType {
+        Count, DimensionAsMetric, DistinctCount, Normal
+    }
+
+    private static class MetricInfo {
+        private MetricType type;
+        private int refIndex = -1;
+
+        public MetricInfo(MetricType type, int refIndex) {
+            this.type = type;
+            this.refIndex = refIndex;
+        }
+
+        public MetricInfo(MetricType type) {
+            this.type = type;
+        }
+    }
+
     public static EndpointAggregators fromFunctions(TableRecordInfo tableInfo, List<FunctionDesc> metrics) {
         String[] funcNames = new String[metrics.size()];
         String[] dataTypes = new String[metrics.size()];
-        int[] refColIndex = new int[metrics.size()];
+        MetricInfo[] metricInfos = new MetricInfo[metrics.size()];
 
         for (int i = 0; i < metrics.size(); i++) {
             FunctionDesc functionDesc = metrics.get(i);
@@ -53,34 +73,40 @@ public class EndpointAggregators {
             dataTypes[i] = functionDesc.getReturnType();
 
             if (functionDesc.isCount()) {
-                refColIndex[i] = -1;//-1 for count, -2 for metricOnDimension
+                metricInfos[i] = new MetricInfo(MetricType.Count);
             } else if (functionDesc.isAppliedOnDimension()) {
-                refColIndex[i] = -2;
+                metricInfos[i] = new MetricInfo(MetricType.DimensionAsMetric);
             } else {
-                refColIndex[i] = tableInfo.findMetric(functionDesc.getParameter().getValue());
-                if (refColIndex[i] < 0) {
+                int index = tableInfo.findMetric(functionDesc.getParameter().getValue());
+                if (index < 0) {
                     throw new IllegalStateException("Column " + functionDesc.getParameter().getColRefs().get(0) + " is not found in II");
+                }
+
+                if (functionDesc.isCountDistinct()) {
+                    metricInfos[i] = new MetricInfo(MetricType.DistinctCount, index);
+                } else {
+                    metricInfos[i] = new MetricInfo(MetricType.Normal, index);
                 }
             }
         }
 
-        return new EndpointAggregators(funcNames, dataTypes, refColIndex, tableInfo.getDigest());
+        return new EndpointAggregators(funcNames, dataTypes, metricInfos, tableInfo.getDigest());
     }
 
     final String[] funcNames;
     final String[] dataTypes;
-    final int[] refColIndex;
+    final MetricInfo[] metricInfos;
     final TableRecordInfoDigest tableRecordInfo;
 
     final transient FixedLenMeasureCodec[] measureSerializers;
     final transient Object[] metricValues;
 
-    final LongWritable one = new LongWritable(1);
+    final LongWritable ONE = new LongWritable(1);
 
-    public EndpointAggregators(String[] funcNames, String[] dataTypes, int[] refColIndex, TableRecordInfoDigest tableInfo) {
+    public EndpointAggregators(String[] funcNames, String[] dataTypes, MetricInfo[] metricInfos, TableRecordInfoDigest tableInfo) {
         this.funcNames = funcNames;
         this.dataTypes = dataTypes;
-        this.refColIndex = refColIndex;
+        this.metricInfos = metricInfos;
         this.tableRecordInfo = tableInfo;
 
         this.metricValues = new Object[funcNames.length];
@@ -111,12 +137,19 @@ public class EndpointAggregators {
         int rawIndex = 0;
         int columnCount = tableRecordInfo.getColumnCount();
 
-        //normal column values to aggregate
         for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex) {
-            if (tableRecordInfo.isMetrics(columnIndex)) {
-                for (int metricIndex = 0; metricIndex < refColIndex.length; ++metricIndex) {
-                    if (refColIndex[metricIndex] == columnIndex) {
+            for (int metricIndex = 0; metricIndex < metricInfos.length; ++metricIndex) {
+                if (metricInfos[metricIndex].refIndex == columnIndex) {
+                    if (metricInfos[metricIndex].type == MetricType.Normal) {
+                        //normal column values to aggregate
                         measureAggrs[metricIndex].aggregate(measureSerializers[metricIndex].read(row, rawIndex));
+                    } else if (metricInfos[metricIndex].type == MetricType.DistinctCount) {
+                        if (tableRecordInfo.isMetrics(columnCount)) {
+                            measureAggrs[metricIndex].aggregate(measureSerializers[metricIndex].read(row, rawIndex));
+                        } else {
+                            //TODO: for unified dictionary, this is okay. but if different data blocks uses different dictionary, we'll have to aggregate original data
+                            measureAggrs[metricIndex].aggregate(tableRecordInfo.);
+                        }
                     }
                 }
             }
@@ -124,9 +157,11 @@ public class EndpointAggregators {
         }
 
         //aggregate for "count"
-        for (int i = 0; i < refColIndex.length; ++i) {
-            if (refColIndex[i] == -1) {
-                measureAggrs[i].aggregate(one);
+        for (int i = 0; i < metricInfos.length; ++i) {
+            if (metricInfos[i].type == MetricType.Count) {
+                measureAggrs[i].aggregate(ONE);
+            } else if (metricInfos[i].type == MetricType.DistinctCount) {
+
             }
         }
     }
@@ -180,7 +215,7 @@ public class EndpointAggregators {
         public void serialize(EndpointAggregators value, ByteBuffer out) {
             BytesUtil.writeAsciiStringArray(value.funcNames, out);
             BytesUtil.writeAsciiStringArray(value.dataTypes, out);
-            BytesUtil.writeIntArray(value.refColIndex, out);
+            BytesUtil.writeIntArray(value.metricInfos, out);
             BytesUtil.writeByteArray(TableRecordInfoDigest.serialize(value.tableRecordInfo), out);
         }
 

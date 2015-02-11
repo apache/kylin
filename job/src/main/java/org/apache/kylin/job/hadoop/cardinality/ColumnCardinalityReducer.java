@@ -50,7 +50,7 @@ public class ColumnCardinalityReducer extends KylinReducer<IntWritable, BytesWri
         for (BytesWritable v : values) {
             ByteBuffer buffer = ByteBuffer.wrap(v.getBytes());
             HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter();
-            hll.readRegisters(buffer);
+            hll.readCompactRegisters(buffer);
             getHllc(skey).merge(hll);
             hll.clear();
         }
@@ -77,7 +77,7 @@ public class ColumnCardinalityReducer extends KylinReducer<IntWritable, BytesWri
             HyperLogLogPlusCounter hllc = hllcMap.get(key);
             ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
             buf.clear();
-            hllc.writeRegisters(buf);
+            hllc.writeCompactRegisters(buf);
             buf.flip();
             context.write(new IntWritable(key), new LongWritable(hllc.getCountEstimate()));
             // context.write(new Text("ErrorRate_" + key), new
