@@ -112,7 +112,7 @@ source ./package.sh
 echo "retrieving classpath..."
 cd $KYLIN_HOME/job/target
 JOB_JAR_NAME="kylin-job-latest.jar"
-#export hbase configs, most of the configurations are useless now, but KYLIN_HBASE_CONF_PATH is used by SampleCubeSetupTest now
+#export hbase configs, most of the configurations are useless now, but KYLIN_HBASE_CONF_PATH is used by SampleCubeSetupAsTest now
 hbase org.apache.hadoop.util.RunJar $JOB_JAR_NAME com.kylinolap.job.deployment.HbaseConfigPrinter /tmp/kylin_retrieve.sh
 #load config variables
 source /tmp/kylin_retrieve.sh
@@ -138,12 +138,12 @@ cat examples/test_case_data/sandbox/kylin.properties | \
     sed -e "s/${DEFAULT_CHECK_URL}/${NEW_CHECK_URL_PREFIX}${HOSTNAME}/g"  | \
     sed -e "s/${DEFAULT_SERVER_LIST}/${NEW_SERVER_LIST_PREFIX}${HOSTNAME}/g"   >  /etc/kylin/kylin.properties
 
-
+cat examples/test_case_data/sandbox/kylin_job_conf.xml > /etc/kylin/kylin_job_conf.xml
 
 # 1. generate synthetic fact table(test_kylin_fact) data and dump it into hive
 # 2. create empty cubes on these data, ready to be built
 cd $KYLIN_HOME
-mvn test -Dtest=com.kylinolap.job.SampleCubeSetupTest -DfailIfNoTests=false
+mvn test -Dtest=com.kylinolap.job.SampleCubeSetupAsTest -DfailIfNoTests=false
 
 #overwrite server.xml
 mv ${CATALINA_HOME}/conf/server.xml ${CATALINA_HOME}/conf/server.xml.bak
