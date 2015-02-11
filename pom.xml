@@ -524,7 +524,7 @@
                             <excludes>
                                 <exclude>**/com/kylinolap/job/**</exclude>
                                 <exclude>**/BuildCubeWithEngineTest.java</exclude>
-                                <exclude>**/SampleCubeSetupTest.java</exclude>
+                                <exclude>**/SampleCubeSetupAsTest.java</exclude>
                                 <exclude>**/InvertedIndexHBaseTest.java</exclude>
                                 <exclude>**/StorageTest.java</exclude>
                                 <exclude>**/KylinQueryTest.java</exclude>
