@@ -66,7 +66,7 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
     /** The larger p is, the more storage (2^p bytes), the better accuracy */
     private HyperLogLogPlusCounter(int p, HashFunction hashFunc) {
         this.p = p;
-        this.m = (int) Math.pow(2, p);
+        this.m = 1 << p;//(int) Math.pow(2, p);
         this.hashFunc = hashFunc;
         this.registers = new byte[m];
     }
@@ -77,7 +77,7 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
     }
 
     public void add(String value) {
-        add(hashFunc.hashString(value,Charset.defaultCharset()).asLong());
+        add(hashFunc.hashString(value, Charset.defaultCharset()).asLong());
     }
 
     public void add(byte[] value) {
@@ -223,7 +223,7 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
                                                                          // the
                                                                          // moment
 
-    public void writeRegisters(final ByteBuffer out) throws IOException {
+    public void writeCompactRegisters(final ByteBuffer out) throws IOException {
         int startPos = out.position();
 
         final int indexLen = getRegisterIndexSize();
@@ -264,7 +264,7 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
         out.put(compressed);
     }
 
-    public void readRegisters(ByteBuffer in) throws IOException {
+    public void readCompactRegisters(ByteBuffer in) throws IOException {
         byte scheme = in.get();
         if ((scheme & COMPRESSION_FLAG) > 0) {
             scheme ^= COMPRESSION_FLAG;
@@ -286,10 +286,24 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
                 registers[key] = in.get();
             }
         } else { // array scheme
-            for (int i = 0; i < m; i++) {
-                registers[i] = in.get();
-            }
+            in.get(registers);
         }
+    }
+
+    /**
+     * For compressed output use writeCompactRegisters
+     * @param out
+     */
+    public void writeRegisters(final ByteBuffer out) {
+        out.put(this.registers);
+    }
+
+    /**
+     * For compressed input use readCompactRegisters
+     * @param in
+     */
+    public void readRegisters(ByteBuffer in) {
+        in.get(registers, 0, m);
     }
 
     private int getRegisterIndexSize() {

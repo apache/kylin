@@ -118,12 +118,12 @@ public class HLLDistinctCountAggFunc {
         }
 
         @Override
-        public void writeRegisters(ByteBuffer out) throws IOException {
+        public void writeCompactRegisters(ByteBuffer out) throws IOException {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void readRegisters(ByteBuffer in) throws IOException {
+        public void readCompactRegisters(ByteBuffer in) throws IOException {
             throw new UnsupportedOperationException();
         }
 

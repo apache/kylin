@@ -94,7 +94,7 @@ public class ColumnCardinalityMapper<T> extends KylinMapper<T, HCatRecord, IntWr
             HyperLogLogPlusCounter hllc = hllcMap.get(key);
             ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
             buf.clear();
-            hllc.writeRegisters(buf);
+            hllc.writeCompactRegisters(buf);
             buf.flip();
             context.write(new IntWritable(key), new BytesWritable(buf.array(), buf.limit()));
         }
