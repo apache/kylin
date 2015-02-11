@@ -1,32 +1,27 @@
 package com.kylinolap.job;
 
 import java.io.File;
-import java.io.IOException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.plexus.util.FileUtils;
-import org.junit.Before;
-import org.junit.Test;
 
 import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.ClasspathUtil;
-import com.kylinolap.common.util.HBaseMetadataTestCase;
 import com.kylinolap.cube.CubeInstance;
 import com.kylinolap.cube.CubeManager;
-import com.kylinolap.job.engine.JobEngineConfig;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Created by honma on 9/24/14.
  * <p/>
  * This class is only used for building a sample cube in the one-line deployment tool.
  */
-public class SampleCubeSetupTest extends HBaseMetadataTestCase {
+public class SampleCubeSetupAsTest {
 
     @Before
-    public void before() throws Exception {
-
+    public void init() throws Exception {
         try {
-            this.testConnectivity();
+            testConnectivity();
         } catch (Exception e) {
             System.out.println("Failed to connect to remote CLI with given password");
             throw e;
@@ -55,11 +50,10 @@ public class SampleCubeSetupTest extends HBaseMetadataTestCase {
     }
 
     @Test
-    public void testCubes() throws Exception {
+    public void prepareCubesAsTest() throws Exception {
         DeployUtil.initCliWorkDir();
         DeployUtil.deployMetadata();
         DeployUtil.deployJobJars();
-        deployJobConfToEtc();
         DeployUtil.prepareTestData("inner", "test_kylin_cube_with_slr_empty");
 
         // remove all other cubes to keep it clean
@@ -68,13 +62,6 @@ public class SampleCubeSetupTest extends HBaseMetadataTestCase {
             if (!cubeInstance.getName().equalsIgnoreCase("test_kylin_cube_without_slr_empty") && !cubeInstance.getName().equalsIgnoreCase("test_kylin_cube_with_slr_empty"))
                 cubeManager.dropCube(cubeInstance.getName(), false);
         }
-
-    }
-
-    private void deployJobConfToEtc() throws IOException {
-        File src = new File(SANDBOX_TEST_DATA, JobEngineConfig.HADOOP_JOB_CONF_FILENAME + ".xml");
-        File dst = new File("/etc/kylin", src.getName());
-        FileUtils.copyFile(src, dst);
     }
 
 }
