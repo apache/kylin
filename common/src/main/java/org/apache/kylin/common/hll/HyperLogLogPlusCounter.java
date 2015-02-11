@@ -31,8 +31,8 @@ import com.google.common.hash.Hashing;
 /**
  * About compression, test on HLLC data shows
  * 
- * - LZF compression ratio is around 65%-80%, fast - GZIP compression ratio is
- * around 41%-46%, very slow
+ * - LZF compression ratio is around 65%-80%, fast
+ * - GZIP compression ratio is around 41%-46%, very slow
  * 
  * @author yangli9
  */
