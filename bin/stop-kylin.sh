@@ -1,4 +1,12 @@
 #!/bin/sh
 
-ps -fu $USER | grep tomcat | grep -v "grep" | awk '{print $2}' | xargs kill
-echo "all tomcats started by $USER are killed"
+pid=`cat ${KYLIN_HOME}/pid || echo "no pid found";exit 1`
+if [ ! "$pid" = "" ]
+then
+    echo "no pid found"
+    exit 1
+else
+    echo "stopping pid:$pid"
+    kill $pid
+fi
+rm ${KYLIN_HOME}/pid
