@@ -31,9 +31,6 @@ spring_profile="default"
 if [ "$useSandbox" = "true" ]
     then spring_profile="sandbox"
 fi
-rm -rf ${tomcat_root}/webapps/kylin*
-cp ${dir}/../lib/kylin-server-*.war ${tomcat_root}/webapps/kylin.war
-
 source ${dir}/find-hive-dependency.sh
 
 export HBASE_CLASSPATH_PREFIX=${tomcat_root}/bin/bootstrap.jar:${tomcat_root}/bin/tomcat-juli.jar:${tomcat_root}/lib/*:$HBASE_CLASSPATH_PREFIX
@@ -49,7 +46,7 @@ hbase -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
 -Djava.io.tmpdir=${tomcat_root}/temp  \
 -Dkylin.hive.dependency=${hive_dependency} \
 -Dspring.profiles.active=${spring_profile} \
-org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start > ${tomcat_root}/logs/kylin.log 2>&1 &
+org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start > ${tomcat_root}/logs/kylin.log 2>&1 & echo $! > ${KYLIN_HOME}/pid &
 echo "A new Kylin instance is started by $USER, stop it using \"stop-kylin.sh\""
 if [ "$useSandbox" = "true" ]
     then echo "Please visit http://<your_sandbox_ip>:7070/kylin to play with the cubes! (Useranme: ADMIN, Password: KYLIN)"
