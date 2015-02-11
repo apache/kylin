@@ -22,11 +22,6 @@
 	<artifactId>kylin-jdbc</artifactId>
 	<packaging>jar</packaging>
 
-	<!-- More project information. -->
-	<name>Kylin:Jdbc</name>
-	<description>kylin jdbc on optiq avatica</description>
-	<url>https://github.scm.corp.ebay.com/BIPlatform/Kylin</url>
-
 	<parent>
 		<groupId>org.apache.kylin</groupId>
 		<artifactId>kylin</artifactId>
