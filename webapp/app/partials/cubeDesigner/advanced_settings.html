@@ -33,6 +33,7 @@
                                 <select class="form-control" ng-if="state.mode=='edit'" style="width: 360px;"
                                         chosen ng-model="metaModel.model.capacity" required
                                         ng-options="cc as cc for cc in cubeConfig.cubeCapacities">
+                                    <option value=""></option>
                                 </select>
                                 <span ng-if="state.mode=='view'">{{metaModel.model.capacity}}</span>
                             </div>
@@ -65,6 +66,7 @@
                             ng-model="aggregation_groups" required chosen multiple
                             ng-change="refreshAggregationGroup(cubeMetaFrame.rowkey.aggregation_groups, $index, aggregation_groups)"
                             ng-options="rowkey_column.column as rowkey_column.column for rowkey_column in cubeMetaFrame.rowkey.rowkey_columns">
+                        <option value=""></option>
                     </select>
                     <p ng-if="state.mode=='view'" style="word-wrap: break-word; word-break: normal;max-width: 1000px ">{{aggregation_groups}}</p>
                 </td>
@@ -126,6 +128,7 @@
                         <select ng-if="state.mode=='edit'" style="width:80px;"
                                 chosen ng-model="rowkey_column.dictionary"
                                 ng-options="dt as dt for dt in cubeConfig.dictionaries">
+                            <option value=""></option>
                         </select>
                         <span ng-if="state.mode=='view'">{{rowkey_column.dictionary}}</span>
                     </div>
