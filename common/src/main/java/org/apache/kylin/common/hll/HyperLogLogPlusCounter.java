@@ -77,7 +77,7 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
     }
 
     public void add(String value) {
-        add(hashFunc.hashString(value,Charset.defaultCharset()).asLong());
+        add(hashFunc.hashString(value, Charset.defaultCharset()).asLong());
     }
 
     public void add(byte[] value) {
@@ -209,19 +209,9 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
         }
     };
 
-    public static final int COMPRESSION_THRESHOLD = Integer.MAX_VALUE; // bytes,
-                                                                       // disable
-                                                                       // due to
-                                                                       // slowness
+    public static final int COMPRESSION_THRESHOLD = Integer.MAX_VALUE; // bytes, disable due to slowness
     public static final byte COMPRESSION_FLAG = (byte) 0x02;
-    public static final Compressor DEFAULT_COMPRESSOR = GZIP_COMPRESSOR; // LZF
-                                                                         // lib
-                                                                         // has
-                                                                         // a
-                                                                         // bug
-                                                                         // at
-                                                                         // the
-                                                                         // moment
+    public static final Compressor DEFAULT_COMPRESSOR = GZIP_COMPRESSOR; // LZF lib has a bug at the moment
 
     public void writeRegisters(final ByteBuffer out) throws IOException {
         int startPos = out.position();
