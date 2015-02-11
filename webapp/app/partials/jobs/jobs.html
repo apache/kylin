@@ -39,10 +39,10 @@
     </div>
     <!--Cube Name: -->
     <div class="col-xs-3">
-        <form ng-submit="jobs={};reload()" style="display: inline" >
+        <form ng-submit="jobList.removeAll();reload()" style="display: inline" >
             <span class="input-icon input-icon-right nav-search"><b>Cube Name:</b>
                 <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="cubeName" />
-                <i class="ace-icon fa fa-search blue" ng-click="jobs={};reload()"></i>
+                <i class="ace-icon fa fa-search blue" ng-click="jobList.removeAll();reload()"></i>
             </span>
         </form>
     </div>
@@ -65,12 +65,12 @@
                                 ng-click="toggleSelection(s);" />{{s.name}}
                       </label>
                       <!--Refresh Jobs-->
-                      <button class="btn btn-success btn-xs" style="margin-left: 10px" ng-click="jobs={};reload();"><i class="fa fa-refresh"></i></button>
+                      <button class="btn btn-success btn-xs" style="margin-left: 10px" ng-click="jobList.removeAll();reload();"><i class="fa fa-refresh"></i></button>
                     </div>
                 </div>
             </div>
             <!--No Job-->
-            <div ng-if="!state.loading && getLength(jobs)==0">
+            <div ng-if="!state.loading && getLength(jobList.jobs)==0">
               <div no-result text="No Job."></div>
             </div>
             <!--Loading Jobs-->
@@ -78,7 +78,7 @@
               <loading text="Loading Jobs ..."></loading>
             </div>
             <!--Jobs Table Content-->
-            <table ng-if="getLength(jobs)>0" class="table table-striped table-bordered table-hover dataTable no-footer">
+            <table ng-if="getLength(jobList.jobs)>0" class="table table-striped table-bordered table-hover dataTable no-footer">
                 <thead>
                     <tr style="cursor: pointer">
                         <th ng-repeat="theaditem in jobConfig.theaditems"
@@ -97,7 +97,7 @@
                 </thead>
                 <tbody  class="odd table table-striped table-bordered table-hover dataTable no-footer">
                 <tr
-                    ng-repeat="(uuid,job) in jobs | orderObjectBy:state.filterAttr:state.filterReverse"
+                    ng-repeat="(uuid,job) in jobList.jobs | orderObjectBy:state.filterAttr:state.filterReverse"
                     ng-class="{accordion:true}" ng-click="state.selectedJob = job"
                     ng-dblclick="state.showSteps= !state.showSteps; state.selectedJob = job"
                     style="cursor: pointer"
@@ -163,7 +163,7 @@
             </table>
         </div>
 
-        <kylin-pagination data="jobs" load-func="list" action="action"/>
+        <kylin-pagination data="jobList.jobs" load-func="list" action="action"/>
     </div>
     <div class="col-xs-4" ng-if="state.showSteps">
         <div ng-include src="'partials/jobs/job_steps.html'"></div>

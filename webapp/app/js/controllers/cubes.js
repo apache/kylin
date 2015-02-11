@@ -19,9 +19,10 @@
 'use strict';
 
 KylinApp
-    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,cubeConfig,ProjectModel,ModelService,MetaModel) {
+    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,cubeConfig,ProjectModel,ModelService,MetaModel,CubeList) {
 
         $scope.cubeConfig = cubeConfig;
+        $scope.cubeList = CubeList;
 
         $scope.listParams={
             cubeName: $routeParams.cubeName,
@@ -30,7 +31,7 @@ KylinApp
         if($routeParams.projectName){
             $scope.projectModel.setSelectedProject($routeParams.projectName);
         }
-        $scope.cubes = [];
+        CubeList.removeAll();
         $scope.loading = false;
         $scope.action = {};
 
@@ -45,7 +46,6 @@ KylinApp
             }
             offset = (!!offset) ? offset : 0;
             limit = (!!limit) ? limit : 20;
-            var defer = $q.defer();
 
             var queryParam = {offset: offset, limit: limit};
             if ($scope.listParams.cubeName) {
@@ -54,40 +54,18 @@ KylinApp
                queryParam.projectName = $scope.projectModel.selectedProject;
 
             $scope.loading = true;
-            CubeService.list(queryParam, function (cubes) {
-                angular.forEach(cubes, function (cube, index) {
-                    if(cube.name){
-                        $scope.listAccess(cube, 'CubeInstance');
-                        if (cube.segments && cube.segments.length > 0) {
-                            for(var i= cube.segments.length-1;i>=0;i--){
-                                if(cube.segments[i].status==="READY"){
-                                    cube.last_build_time = cube.segments[i].last_build_time;
-                                    break;
-                                }else if(i===0){
-                                    cube.last_build_time = cube.create_time_utc;
-                                }
-                            }
-                        } else {
-                            cube.last_build_time = cube.create_time_utc;
-                        }
-                        if($routeParams.showDetail == 'true'){
-                            cube.showDetail = true;
-                            $scope.loadDetail(cube);
-                        }
-                    }
-                });
-                cubes = _.filter(cubes,function(cube){return cube.name!=undefined});
-                $scope.cubes = $scope.cubes.concat(cubes);
-                $scope.loading = false;
-                defer.resolve(cubes.length);
-            });
 
-            return defer.promise;
+            var defer = $q.defer();
+            return CubeList.list(queryParam).then(function(resp){
+                $scope.loading = false;
+                defer.resolve(resp);
+                defer.promise;
+            });
         };
 
         $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
             if(newValue!=oldValue||newValue==null){
-                $scope.cubes=[];
+                CubeList.removeAll();
                 $scope.reload();
             }
 
@@ -179,7 +157,7 @@ KylinApp
                 CubeService.purge({cubeId: cube.name}, {}, function (result) {
 
                     loadingRequest.hide();
-                    $scope.cubes=[];
+                    CubeList.removeAll();
                     $scope.reload();
                     SweetAlert.swal('Success!', 'Purge job was submitted successfully', 'success');
                 },function(e){
@@ -248,10 +226,11 @@ KylinApp
                     CubeService.drop({cubeId: cube.name}, {}, function (result) {
 
                     loadingRequest.hide();
-                    var cubeIndex = $scope.cubes.indexOf(cube);
-                    if (cubeIndex > -1) {
-                        $scope.cubes.splice(cubeIndex, 1);
-                    }
+//                    var cubeIndex = CubeList.cubes.indexOf(cube);
+//                    if (cubeIndex > -1) {
+//                        $scope.cubes.splice(cubeIndex, 1);
+//                    }
+                     CubeList.removeCube(cube);
                     SweetAlert.swal('Success!', 'Cube drop is done successfully', 'success');
 
                 },function(e){
