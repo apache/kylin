@@ -38,7 +38,7 @@ public class HLLCSerializer extends MeasureSerializer<HyperLogLogPlusCounter> {
     @Override
     public void serialize(HyperLogLogPlusCounter value, ByteBuffer out) {
         try {
-            value.writeCompactRegisters(out);
+            value.writeRegisters(out);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -47,7 +47,7 @@ public class HLLCSerializer extends MeasureSerializer<HyperLogLogPlusCounter> {
     @Override
     public HyperLogLogPlusCounter deserialize(ByteBuffer in) {
         try {
-            current.readCompactRegisters(in);
+            current.readRegisters(in);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -84,7 +84,7 @@ public class ColumnCardinalityMapperTest {
         BytesWritable value1 = result.get(0).getSecond();
         byte[] bytes = value1.getBytes();
         HyperLogLogPlusCounter hllc = new HyperLogLogPlusCounter();
-        hllc.readCompactRegisters(ByteBuffer.wrap(bytes));
+        hllc.readRegisters(ByteBuffer.wrap(bytes));
         assertTrue(key1 > 0);
         assertEquals(8, hllc.getCountEstimate());
     }
@@ -117,7 +117,7 @@ public class ColumnCardinalityMapperTest {
         BytesWritable value1 = result.get(0).getSecond();
         byte[] bytes = value1.getBytes();
         HyperLogLogPlusCounter hllc = new HyperLogLogPlusCounter();
-        hllc.readCompactRegisters(ByteBuffer.wrap(bytes));
+        hllc.readRegisters(ByteBuffer.wrap(bytes));
         System.out.println("ab\177ab".length());
         assertTrue(key1 > 0);
         assertEquals(1, hllc.getCountEstimate());

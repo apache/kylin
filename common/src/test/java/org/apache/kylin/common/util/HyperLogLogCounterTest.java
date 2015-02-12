@@ -108,9 +108,9 @@ public class HyperLogLogCounterTest {
     private void checkSerialize(HyperLogLogPlusCounter hllc) throws IOException {
         long estimate = hllc.getCountEstimate();
         buf.clear();
-        hllc.writeCompactRegisters(buf);
+        hllc.writeRegisters(buf);
         buf.flip();
-        hllc.readCompactRegisters(buf);
+        hllc.readRegisters(buf);
         Assert.assertEquals(estimate, hllc.getCountEstimate());
     }
 
