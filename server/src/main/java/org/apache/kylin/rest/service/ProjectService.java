@@ -87,7 +87,7 @@ public class ProjectService extends BasicService {
     public List<ProjectInstance> listAllProjects(final Integer limit, final Integer offset) {
         List<ProjectInstance> projects = getProjectManager().listAllProjects();
 
-        int climit = (null == limit) ? 30 : limit;
+        int climit = (null == limit) ? Integer.MAX_VALUE : limit;
         int coffset = (null == offset) ? 0 : offset;
 
         if (projects.size() <= coffset) {
