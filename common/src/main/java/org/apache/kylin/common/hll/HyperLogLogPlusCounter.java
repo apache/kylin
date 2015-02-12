@@ -28,10 +28,10 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.compress.utils.IOUtils;
+import org.apache.kylin.common.util.BytesUtil;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import org.apache.kylin.common.util.BytesUtil;
 import com.ning.compress.lzf.LZFDecoder;
 import com.ning.compress.lzf.LZFEncoder;
 
@@ -72,8 +72,12 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
     }
 
     public void clear() {
-        for (int i = 0; i < m; i++)
-            registers[i] = 0;
+        byte zero = (byte) 0;
+        Arrays.fill(registers, zero);
+    }
+
+    public void add(int value) {
+        add(hashFunc.hashInt(value).asLong());
     }
 
     public void add(String value) {
@@ -82,6 +86,10 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
 
     public void add(byte[] value) {
         add(hashFunc.hashBytes(value).asLong());
+    }
+
+    public void add(byte[] value, int offset, int length) {
+        add(hashFunc.hashBytes(value, offset, length).asLong());
     }
 
     protected void add(long hash) {

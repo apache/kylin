@@ -85,7 +85,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         aggregators = EndpointAggregators.deserialize(request.getAggregator().toByteArray());
         filter = CoprocessorFilter.deserialize(request.getFilter().toByteArray());
 
-        TableRecordInfoDigest tableRecordInfoDigest = aggregators.getTableRecordInfo();
+        TableRecordInfoDigest tableRecordInfoDigest = aggregators.getTableRecordInfoDigest();
 
         IIProtos.IIResponse response = null;
         RegionScanner innerScanner = null;

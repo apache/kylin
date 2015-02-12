@@ -204,6 +204,18 @@ public class HyperLogLogCounterTest {
         System.out.println("Perf test result: " + duration / 1000 + " seconds");
     }
 
+    @Test
+    public void testEquivalence() {
+        byte[] a = new byte[] { 0, 3, 4, 42, 2, 2 };
+        byte[] b = new byte[] { 3, 4, 42 };
+        HyperLogLogPlusCounter ha = new HyperLogLogPlusCounter();
+        HyperLogLogPlusCounter hb = new HyperLogLogPlusCounter();
+        ha.add(a, 1, 3);
+        hb.add(b);
+
+        Assert.assertTrue(ha.getCountEstimate()==hb.getCountEstimate());
+    }
+
     private HyperLogLogPlusCounter newHLLC() {
         return new HyperLogLogPlusCounter(16);
     }
