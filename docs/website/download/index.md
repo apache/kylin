@@ -14,7 +14,7 @@ title: Community
             <div class="col-sm-4 col-md-4">
 
               <p class="big_text">Binary Package</p>
-              <p><a href="http://strataconf.com/big-data-conference-uk-2015/public/schedule/detail/40029" target="_blank">v0.7.1-SNAPSHOT</a> 
+              <p><a href="http://kylin.incubator.apache.org/download/kylin-0.7.1-SNAPSHOT.tgz" target="_blank">v0.7.1-SNAPSHOT</a> 
               <br/>date - Feb 12, 2015 <br/></p>
             </div>
 
