@@ -24,8 +24,8 @@ package org.apache.kylin.common.util;
  */
 public class SplittedBytes {
     public SplittedBytes(int length) {
-        value = new byte[length];
-        length = 0;
+        this.value = new byte[length];
+        this.length = 0;
     }
 
     public byte[] value;
