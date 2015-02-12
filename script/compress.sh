@@ -18,3 +18,5 @@ mkdir kylin-${version}
 cp -r lib bin conf tomcat kylin-${version}
 tar -cvzf kylin-${version}.tgz kylin-${version}
 rm -rf kylin-${version}
+
+echo "Package ready kylin-${version}.tgz"
