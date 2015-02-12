@@ -37,7 +37,7 @@ public class IIQueryTest extends KylinQueryTest {
     public static void setUp() throws Exception {
 
         KylinQueryTest.setUp();//invoke super class
-        distinctCountSupported = false;
+        distinctCountSupported = true;
 
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
         priorities.put(RealizationType.INVERTED_INDEX, 0);
@@ -64,10 +64,15 @@ public class IIQueryTest extends KylinQueryTest {
 
     @Test
     public void testSingleRunQuery() throws Exception {
-        String queryFileName = "src/test/resources/query/sql_ii/query04.sql";
+        String queryFileName = "src/test/resources/query/sql_distinct/query00.sql";
 
         File sqlFile = new File(queryFileName);
         runSQL(sqlFile, true, true);
         runSQL(sqlFile, true, false);
+    }
+
+    @Test
+    public void testDistinctCountQuery() throws Exception {
+        super.testDistinctCountQuery();
     }
 }
