@@ -49,42 +49,44 @@ public class RawTableRecord implements Cloneable {
         Arrays.fill(buf, Dictionary.NULL);
     }
 
-    protected boolean isMetric(int col) {
+    public boolean isMetric(int col) {
         return digest.isMetrics(col);
     }
 
-    protected FixedLenMeasureCodec<LongWritable> codec(int col) {
+    public FixedLenMeasureCodec<LongWritable> codec(int col) {
         return digest.codec(col);
     }
 
-    protected int length(int col) {
+    public int length(int col) {
         return digest.length(col);
     }
 
-    protected int getColumnCount() {
+    public int getColumnCount() {
         return digest.getColumnCount();
     }
 
-    protected void setValueID(int col, int id) {
+    public void setValueID(int col, int id) {
         BytesUtil.writeUnsigned(id, buf, digest.offset(col), digest.length(col));
     }
 
-    protected int getValueID(int col) {
+    public int getValueID(int col) {
         return BytesUtil.readUnsigned(buf, digest.offset(col), digest.length(col));
     }
 
-    protected void setValueMetrics(int col, LongWritable value) {
+    public void setValueMetrics(int col, LongWritable value) {
         digest.codec(col).write(value, buf, digest.offset(col));
     }
 
-    protected LongWritable getValueMetrics(int col) {
-        return digest.codec(col).read(buf, digest.offset(col));
+    public String getValueMetric(int col) {
+        digest.codec(col).read(buf, digest.offset(col));
+        return (String) digest.codec(col).getValue();
     }
 
     public byte[] getBytes() {
         return buf;
     }
 
+    //TODO is it possible to avoid copying?
     public void setBytes(byte[] bytes, int offset, int length) {
         assert buf.length == length;
         System.arraycopy(bytes, offset, buf, 0, length);

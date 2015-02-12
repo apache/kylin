@@ -31,171 +31,169 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
  */
 public class Slice implements Iterable<RawTableRecord>, Comparable<Slice> {
 
-	TableRecordInfoDigest info;
-	int nColumns;
+    TableRecordInfoDigest info;
+    int nColumns;
 
-	short shard;
-	long timestamp;
-	int nRecords;
-	ColumnValueContainer[] containers;
+    short shard;
+    long timestamp;
+    int nRecords;
+    ColumnValueContainer[] containers;
 
-	public Slice(TableRecordInfoDigest digest, short shard, long timestamp,
-			ColumnValueContainer[] containers) {
-		this.info = digest;
-		this.nColumns = digest.getColumnCount();
+    public Slice(TableRecordInfoDigest digest, short shard, long timestamp, ColumnValueContainer[] containers) {
+        this.info = digest;
+        this.nColumns = digest.getColumnCount();
 
-		this.shard = shard;
-		this.timestamp = timestamp;
-		this.nRecords = containers[0].getSize();
-		this.containers = containers;
+        this.shard = shard;
+        this.timestamp = timestamp;
+        this.nRecords = containers[0].getSize();
+        this.containers = containers;
 
-		assert nColumns == containers.length;
-		for (int i = 0; i < nColumns; i++) {
-			assert nRecords == containers[i].getSize();
-		}
-	}
+        assert nColumns == containers.length;
+        for (int i = 0; i < nColumns; i++) {
+            assert nRecords == containers[i].getSize();
+        }
+    }
 
-	public int getRecordCount() {
-		return this.nRecords;
-	}
+    public int getRecordCount() {
+        return this.nRecords;
+    }
 
-	public short getShard() {
-		return shard;
-	}
+    public short getShard() {
+        return shard;
+    }
 
-	public long getTimestamp() {
-		return timestamp;
-	}
+    public long getTimestamp() {
+        return timestamp;
+    }
 
-	public ColumnValueContainer[] getColumnValueContainers() {
-		return containers;
-	}
+    public ColumnValueContainer[] getColumnValueContainers() {
+        return containers;
+    }
 
-	public ColumnValueContainer getColumnValueContainer(int col) {
-		return containers[col];
-	}
+    public ColumnValueContainer getColumnValueContainer(int col) {
+        return containers[col];
+    }
 
-	public Iterator<RawTableRecord> iterateWithBitmap(
-			final ConciseSet resultBitMap) {
-		if (resultBitMap == null) {
-			return this.iterator();
-		} else {
-			return new Iterator<RawTableRecord>() {
-				int i = 0;
-				int iteratedCount = 0;
-				int resultSize = resultBitMap.size();
+    public Iterator<RawTableRecord> iterateWithBitmap(final ConciseSet resultBitMap) {
+        if (resultBitMap == null) {
+            return this.iterator();
+        } else {
+            final RawTableRecord rec = info.createTableRecordBytes();
+            final ImmutableBytesWritable temp = new ImmutableBytesWritable();
 
-				RawTableRecord rec = info.createTableRecordBytes();
-				ImmutableBytesWritable temp = new ImmutableBytesWritable();
+            return new Iterator<RawTableRecord>() {
+                int i = 0;
+                int iteratedCount = 0;
+                int resultSize = resultBitMap.size();
 
-				@Override
-				public boolean hasNext() {
-					return iteratedCount < resultSize;
-				}
+                @Override
+                public boolean hasNext() {
+                    return iteratedCount < resultSize;
+                }
 
-				@Override
-				public RawTableRecord next() {
-					while (!resultBitMap.contains(i)) {
-						i++;
-					}
-					for (int col = 0; col < nColumns; col++) {
-						containers[col].getValueAt(i, temp);
-						rec.setValueBytes(col, temp);
-					}
-					iteratedCount++;
-					i++;
+                @Override
+                public RawTableRecord next() {
+                    while (!resultBitMap.contains(i)) {
+                        i++;
+                    }
+                    for (int col = 0; col < nColumns; col++) {
+                        containers[col].getValueAt(i, temp);
+                        rec.setValueBytes(col, temp);
+                    }
+                    iteratedCount++;
+                    i++;
 
-					return rec;
-				}
+                    return rec;
+                }
 
-				@Override
-				public void remove() {
-					throw new UnsupportedOperationException();
-				}
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
 
-			};
-		}
-	}
+            };
+        }
+    }
 
-	@Override
-	public Iterator<RawTableRecord> iterator() {
-		return new Iterator<RawTableRecord>() {
-			int i = 0;
-			RawTableRecord rec = info.createTableRecordBytes();
-			ImmutableBytesWritable temp = new ImmutableBytesWritable();
+    @Override
+    public Iterator<RawTableRecord> iterator() {
+        return new Iterator<RawTableRecord>() {
+            int i = 0;
+            RawTableRecord rec = info.createTableRecordBytes();
+            ImmutableBytesWritable temp = new ImmutableBytesWritable();
 
-			@Override
-			public boolean hasNext() {
-				return i < nRecords;
-			}
+            @Override
+            public boolean hasNext() {
+                return i < nRecords;
+            }
 
-			@Override
-			public RawTableRecord next() {
-				for (int col = 0; col < nColumns; col++) {
-					containers[col].getValueAt(i, temp);
-					rec.setValueBytes(col, temp);
-				}
-				i++;
-				return rec;
-			}
+            @Override
+            public RawTableRecord next() {
+                for (int col = 0; col < nColumns; col++) {
+                    containers[col].getValueAt(i, temp);
+                    rec.setValueBytes(col, temp);
+                }
+                i++;
+                return rec;
+            }
 
-			@Override
-			public void remove() {
-				throw new UnsupportedOperationException();
-			}
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
 
-		};
-	}
+        };
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#hashCode()
-	 */
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((info == null) ? 0 : info.hashCode());
-		result = prime * result + shard;
-		result = prime * result + (int) (timestamp ^ (timestamp >>> 32));
-		return result;
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((info == null) ? 0 : info.hashCode());
+        result = prime * result + shard;
+        result = prime * result + (int) (timestamp ^ (timestamp >>> 32));
+        return result;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Slice other = (Slice) obj;
-		if (info == null) {
-			if (other.info != null)
-				return false;
-		} else if (!info.equals(other.info))
-			return false;
-		if (shard != other.shard)
-			return false;
-		if (timestamp != other.timestamp)
-			return false;
-		return true;
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Slice other = (Slice) obj;
+        if (info == null) {
+            if (other.info != null)
+                return false;
+        } else if (!info.equals(other.info))
+            return false;
+        if (shard != other.shard)
+            return false;
+        if (timestamp != other.timestamp)
+            return false;
+        return true;
+    }
 
-	@Override
-	public int compareTo(Slice o) {
-		int comp = this.shard - o.shard;
-		if (comp != 0)
-			return comp;
+    @Override
+    public int compareTo(Slice o) {
+        int comp = this.shard - o.shard;
+        if (comp != 0)
+            return comp;
 
-		comp = (int) (this.timestamp - o.timestamp);
-		return comp;
-	}
+        comp = (int) (this.timestamp - o.timestamp);
+        return comp;
+    }
 
 }
