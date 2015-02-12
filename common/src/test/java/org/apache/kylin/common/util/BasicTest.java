@@ -22,17 +22,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.slf4j.*;
-import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
 * Created by honma on 10/17/14.
@@ -59,11 +51,18 @@ public class BasicTest {
         System.out.printf("b");
     }
 
+    private enum MetricType {
+        Count, DimensionAsMetric, DistinctCount, Normal
+    }
+
     @Test
     @Ignore("convenient trial tool for dev")
     public void test1() throws Exception {
+        String x =  MetricType.DimensionAsMetric.toString();
+        System.out.println(x);
+        MetricType y = MetricType.valueOf(x);
+        System.out.println(y == MetricType.DimensionAsMetric);
     }
-
 
     @Test
     @Ignore("fix it later")

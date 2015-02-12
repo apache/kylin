@@ -1,10 +1,9 @@
 package org.apache.kylin.metadata.measure.fixedlen;
 
-import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
-import org.apache.kylin.metadata.measure.HLLCSerializer;
-import org.apache.kylin.metadata.model.DataType;
+import java.nio.ByteBuffer;
 
-import java.util.Map;
+import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import org.apache.kylin.metadata.model.DataType;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 2/10/15.
@@ -42,17 +41,18 @@ public class FixedHLLCodec extends FixedLenMeasureCodec<HyperLogLogPlusCounter> 
     }
 
     @Override
-    public String toString(HyperLogLogPlusCounter value) {
-        return String.valueOf(value.getCountEstimate());
+    public Object getValue() {
+        return current;
     }
 
     @Override
     public HyperLogLogPlusCounter read(byte[] buf, int offset) {
-        return serializer.deserialize();
+        current.readRegisters(ByteBuffer.wrap(buf, offset, buf.length - offset));
+        return current;
     }
 
     @Override
     public void write(HyperLogLogPlusCounter v, byte[] buf, int offset) {
-
+        current.writeRegisters(ByteBuffer.wrap(buf, offset, buf.length - offset));
     }
 }

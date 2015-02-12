@@ -73,7 +73,7 @@ public class TableRecord implements Cloneable {
         return rawRecord.length(col);
     }
 
-    public List<String> getValueList() {
+    public List<String> getOriginTableColumnValues() {
         List<String> ret = Lists.newArrayList();
         for (int i = 0; i < info.nColumns; ++i) {
             ret.add(getValueString(i));
@@ -91,9 +91,13 @@ public class TableRecord implements Cloneable {
         }
     }
 
+    /**
+     * get value of columns which belongs to the original table columns.
+     * i.e. columns like min_xx, max_yy will never appear
+     */
     public String getValueString(int col) {
         if (rawRecord.isMetric(col))
-            return rawRecord.codec(col).toString(getValueMetrics(col));
+            return getValueMetric(col);
         else
             return info.dict(col).getValueFromId(rawRecord.getValueID(col));
     }
@@ -106,8 +110,8 @@ public class TableRecord implements Cloneable {
         rawRecord.setValueMetrics(col, value);
     }
 
-    private LongWritable getValueMetrics(int col) {
-        return rawRecord.getValueMetrics(col);
+    private String getValueMetric(int col) {
+        return rawRecord.getValueMetric(col);
     }
 
     public short getShard() {

@@ -78,18 +78,17 @@ public class Tuple implements ITuple {
         return values[index];
     }
 
+    public String getDataType(String fieldName) {
+        return info.getDataType(fieldName);
+    }
+
     private void setFieldObjectValue(String fieldName, Object fieldValue) {
         int index = info.getFieldIndex(fieldName);
         values[index] = fieldValue;
     }
 
-    public void setValue(String fieldName, String fieldValue) {
-        this.setDimensionValue(fieldName, fieldValue);
-    }
-
     public void setDimensionValue(String fieldName, String fieldValue) {
-        String dataType = info.getDataType(fieldName);
-        Object objectValue = convertOptiqCellValue(fieldValue, dataType);
+        Object objectValue = convertOptiqCellValue(fieldValue, getDataType(fieldName));
         setFieldObjectValue(fieldName, objectValue);
     }
 
@@ -120,6 +119,7 @@ public class Tuple implements ITuple {
         }
         return sb.toString();
     }
+
 
     public static Object convertOptiqCellValue(String strValue, String dataType) {
         if (strValue == null)
