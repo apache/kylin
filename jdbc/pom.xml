@@ -23,6 +23,10 @@
 	<packaging>jar</packaging>
 	<name>Kylin:JDBC</name>
 
+	<!-- More project information. -->
+	<name>Kylin:Jdbc</name>
+	<description>kylin jdbc on optiq avatica</description>
+
 	<parent>
 		<groupId>org.apache.kylin</groupId>
 		<artifactId>kylin</artifactId>
