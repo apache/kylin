@@ -20,11 +20,14 @@ package org.apache.kylin.metadata.measure.fixedlen;
 
 import org.apache.kylin.metadata.model.DataType;
 
-
 abstract public class FixedLenMeasureCodec<T> {
 
     public static FixedLenMeasureCodec<?> get(DataType type) {
-        return new FixedPointLongCodec(type);
+        if (type.isHLLC()) {
+            return new FixedHLLCodec(type);
+        } else {
+            return new FixedPointLongCodec(type);
+        }
     }
 
     abstract public int getLength();
@@ -32,7 +35,6 @@ abstract public class FixedLenMeasureCodec<T> {
     abstract public DataType getDataType();
 
     abstract public T valueOf(String value);
-
 
     abstract public Object getValue();
 

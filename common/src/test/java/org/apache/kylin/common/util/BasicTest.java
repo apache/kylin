@@ -67,5 +67,7 @@ public class BasicTest {
     @Test
     @Ignore("fix it later")
     public void test2() throws IOException, ConfigurationException {
+        int m = 1 << 15;
+        System.out.println(m);
     }
 }
