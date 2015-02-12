@@ -18,35 +18,24 @@
 
 package org.apache.kylin.rest.controller;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
+import com.codahale.metrics.annotation.Metered;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.request.CardinalityRequest;
+import org.apache.kylin.rest.response.TableDescResponse;
 import org.apache.kylin.rest.service.CubeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
-import com.codahale.metrics.annotation.Metered;
-import org.apache.kylin.metadata.MetadataConstants;
-import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.rest.request.CardinalityRequest;
-import org.apache.kylin.rest.response.TableDescResponse;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * @author xduo
@@ -65,7 +54,7 @@ public class TableController extends BasicController {
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "", method = { RequestMethod.GET })
+    @RequestMapping(value = "", method = {RequestMethod.GET})
     @ResponseBody
     @Metered(name = "listSourceTables")
     public List<TableDesc> getHiveTables(@RequestParam(value = "ext", required = false) boolean withExt, @RequestParam(value = "project", required = false) String project) {
@@ -93,7 +82,7 @@ public class TableController extends BasicController {
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "/{tableName}", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{tableName}", method = {RequestMethod.GET})
     @ResponseBody
     public TableDesc getHiveTable(@PathVariable String tableName) {
         return cubeMgmtService.getMetadataManager().getTableDesc(tableName);
@@ -105,21 +94,21 @@ public class TableController extends BasicController {
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "/{tableName}/exd-map", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{tableName}/exd-map", method = {RequestMethod.GET})
     @ResponseBody
     public Map<String, String> getHiveTableExd(@PathVariable String tableName) {
         Map<String, String> tableExd = cubeMgmtService.getMetadataManager().getTableDescExd(tableName);
         return tableExd;
     }
 
-    @RequestMapping(value = "/reload", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/reload", method = {RequestMethod.PUT})
     @ResponseBody
     public String reloadSourceTable() {
         cubeMgmtService.getMetadataManager().reload();
         return "ok";
     }
 
-    @RequestMapping(value = "/{tables}/{project}", method = { RequestMethod.POST })
+    @RequestMapping(value = "/{tables}/{project}", method = {RequestMethod.POST})
     @ResponseBody
     public Map<String, String[]> loadHiveTable(@PathVariable String tables, @PathVariable String project) throws IOException {
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -138,7 +127,7 @@ public class TableController extends BasicController {
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "/{tableNames}/cardinality", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{tableNames}/cardinality", method = {RequestMethod.PUT})
     @ResponseBody
     public CardinalityRequest generateCardinality(@PathVariable String tableNames, @RequestBody CardinalityRequest request) {
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -192,4 +181,9 @@ public class TableController extends BasicController {
         }
         return descs;
     }
+
+    public void setCubeService(CubeService cubeService) {
+        this.cubeMgmtService = cubeService;
+    }
+
 }

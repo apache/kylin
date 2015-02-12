@@ -18,28 +18,21 @@
 
 package org.apache.kylin.common.hll;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
-import org.apache.commons.compress.utils.IOUtils;
 import org.apache.kylin.common.util.BytesUtil;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import com.ning.compress.lzf.LZFDecoder;
-import com.ning.compress.lzf.LZFEncoder;
 
 /**
  * About compression, test on HLLC data shows
  * 
- * - LZF compression ratio is around 65%-80%, fast - GZIP compression ratio is
- * around 41%-46%, very slow
+ * - LZF compression ratio is around 65%-80%, fast
+ * - GZIP compression ratio is around 41%-46%, very slow
  * 
  * @author yangli9
  */
@@ -258,30 +251,10 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
                 out.put(registers[i]);
             }
         }
-
-        // do compression if needed
-        int len = out.position() - startPos;
-        if (len < COMPRESSION_THRESHOLD)
-            return;
-
-        scheme |= COMPRESSION_FLAG;
-        byte[] compressed = DEFAULT_COMPRESSOR.compress(out, startPos + 1, len - 1);
-        out.position(startPos);
-        out.put(scheme);
-        BytesUtil.writeVInt(compressed.length, out);
-        out.put(compressed);
     }
 
     public void readCompactRegisters(ByteBuffer in) throws IOException {
         byte scheme = in.get();
-        if ((scheme & COMPRESSION_FLAG) > 0) {
-            scheme ^= COMPRESSION_FLAG;
-            int compressedLen = BytesUtil.readVInt(in);
-            int end = in.position() + compressedLen;
-            byte[] decompressed = DEFAULT_COMPRESSOR.decompress(in, in.position(), compressedLen);
-            in.position(end);
-            in = ByteBuffer.wrap(decompressed);
-        }
 
         if (scheme == 0) { // map scheme
             clear();

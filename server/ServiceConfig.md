@@ -20,8 +20,6 @@
 ##### kylin.query.cache.enabled
 
 ### Job
-##### kylin.job.jar 
-##### kylin.job.log.dir
 ##### kylin.job.hdfs.working.dir
 ##### kylin.job.mapreduce.default.reduce.input.mb
 ##### kylin.job.mapreduce.default.reduce.count.ratio
@@ -33,10 +31,8 @@
 ##### kylin.job.remote.cli.password
 ##### kylin.job.remote.cli.working.dir
 ##### kylin.job.concurrent.max.limit
-##### kylin.job.yarn.app.rest.check.status.url
 ##### kylin.job.command.exe.type
 ##### kylin.job.admin.dls
-##### kylin.job.step.timeout
-##### kylin.job.yarn.app.rest.check.status.url
+##### kylin.job.step.timeoutww
 ##### kylin.job.yarn.app.rest.check.interval.seconds
 ##### kylin.job.concurrent.max.limit

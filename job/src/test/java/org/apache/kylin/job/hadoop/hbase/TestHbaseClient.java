@@ -87,7 +87,7 @@ public class TestHbaseClient {
         foo(3, 0);
 
         Configuration conf = HBaseConfiguration.create();
-        conf.set("hbase.zookeeper.quorum", "yadesk00.corp.ebay.com");
+        conf.set("hbase.zookeeper.quorum", "hbase_host");
         conf.set("zookeeper.znode.parent", "/hbase-unsecure");
 
         HTable table = new HTable(conf, "test1");
