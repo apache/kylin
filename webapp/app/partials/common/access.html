@@ -43,12 +43,16 @@
                     <input ng-model="newAccess.sid" ng-if="newAccess.principal==true" placeholder=" User NT Account..." style="width: 80%" />
 
                     <select chosen ng-model="newAccess.sid" ng-if="newAccess.principal==false" style="width: 80%"
-                            ng-options="authority as authority for authority in authorities"></select>
+                            ng-options="authority as authority for authority in authorities">
+                            <option value=""></option>
+                            </select>
                 </td>
                 <td >
                     <label><b>Permission&nbsp;</b> </label>
                     <select ng-model="newAccess.permission" ng-init="newAccess.permission=permissions.READ.value"
-                            ng-options="permission.value as permission.name for (name, permission) in permissions"></select>
+                            ng-options="permission.value as permission.name for (name, permission) in permissions">
+                            <option value=""></option>
+                            </select>
                 </td>
                 <td>
                     <button class="btn btn-default btn-xs" ng-click="grant(type, entity, newAccess)"

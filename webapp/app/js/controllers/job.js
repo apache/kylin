@@ -19,10 +19,11 @@
 'use strict';
 
 KylinApp
-    .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,SweetAlert,loadingRequest,UserService,jobConfig) {
+    .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,SweetAlert,loadingRequest,UserService,jobConfig,JobList) {
+
+        $scope.jobList = JobList;
         $scope.jobConfig = jobConfig;
         $scope.cubeName = null;
-        $scope.jobs = {};
         $scope.projects = [];
         $scope.action = {};
 
@@ -71,27 +72,13 @@ KylinApp
                 limit: limit
             };
             $scope.state.loading = true;
-            JobService.list(jobRequest, function (jobs) {
-                angular.forEach(jobs, function (job) {
-                    var id = job.uuid;
-                    if (angular.isDefined($scope.jobs[id])) {
-                        if (job.last_modified != $scope.jobs[id].last_modified) {
-                            $scope.jobs[id] = job;
-                        } else {
-                        }
-                    } else {
-                        $scope.jobs[id] = job;
-                    }
-                });
 
+            var defer = $q.defer();
+            return JobList.list(jobRequest).then(function(resp){
                 $scope.state.loading = false;
-                if (angular.isDefined($scope.state.selectedJob)) {
-                    $scope.state.selectedJob = $scope.jobs[selectedJob.uuid];
-                }
-                defer.resolve(jobs.length);
+                defer.resolve(resp);
+                defer.promise;
             });
-
-            return defer.promise;
         }
 
         $scope.reload = function () {
@@ -102,7 +89,7 @@ KylinApp
 
         $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
             if(newValue!=oldValue||newValue==null){
-                $scope.jobs={};
+                JobList.removeAll();
                 $scope.state.projectName = newValue;
                 $scope.reload();
             }
@@ -121,9 +108,9 @@ KylinApp
                 loadingRequest.show();
                 JobService.resume({jobId: job.uuid}, {}, function (job) {
                     loadingRequest.hide();
-                    $scope.jobs[job.uuid] = job;
+                    JobList.jobs[job.uuid] = job;
                     if (angular.isDefined($scope.state.selectedJob)) {
-                        $scope.state.selectedJob = $scope.jobs[ $scope.state.selectedJob.uuid];
+                        $scope.state.selectedJob = JobList.jobs[ $scope.state.selectedJob.uuid];
                     }
                     SweetAlert.swal('Success!', 'Job has been resumed successfully!', 'success');
                 },function(e){
@@ -154,9 +141,9 @@ KylinApp
                 JobService.cancel({jobId: job.uuid}, {}, function (job) {
                     loadingRequest.hide();
                     $scope.safeApply(function() {
-                        $scope.jobs[job.uuid] = job;
+                        JobList.jobs[job.uuid] = job;
                         if (angular.isDefined($scope.state.selectedJob)) {
-                            $scope.state.selectedJob = $scope.jobs[ $scope.state.selectedJob.uuid];
+                            $scope.state.selectedJob = JobList.jobs[ $scope.state.selectedJob.uuid];
                         }
 
                     });
@@ -181,8 +168,8 @@ KylinApp
                     internalOpenModal();
                     var stepId = $scope.state.selectedStep.sequence_id;
                     JobService.stepOutput({jobId: $scope.state.selectedJob.uuid, propValue: $scope.state.selectedStep.id}, function (result) {
-                        if (angular.isDefined($scope.jobs[result['jobId']])) {
-                            var tjob = $scope.jobs[result['jobId']];
+                        if (angular.isDefined(JobList.jobs[result['jobId']])) {
+                            var tjob = JobList.jobs[result['jobId']];
                             tjob.steps[stepId].cmd_output = result['cmd_output'];
                             tjob.steps[stepId].loadingOp = false;
                         }

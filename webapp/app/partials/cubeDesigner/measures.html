@@ -112,6 +112,7 @@
                                 <select class="form-control"
                                     ng-init="newMeasure.function.expression = (!!newMeasure.function.expression)?newMeasure.function.expression:cubeConfig.dftSelections.measureExpression"                                    chosen ng-model="newMeasure.function.expression" required
                                     ng-options="me as me for me in cubeConfig.measureExpressions">
+                                    <option value=""></option>
                                 </select>
                             </div>
                         </div>
@@ -125,6 +126,7 @@
                                     ng-init="newMeasure.function.parameter.type=(!!newMeasure.function.parameter.type)?newMeasure.function.parameter.type: 'column' "
                                     chosen ng-model="newMeasure.function.parameter.type" required
                                     ng-options="mpt as mpt for mpt in cubeConfig.measureParamType">
+                                    <option value=""></option>
                                 </select>
                                 <span class="font-color-default"
                                        ng-if="newMeasure.function.expression == 'COUNT'"
