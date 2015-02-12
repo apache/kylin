@@ -157,6 +157,14 @@ public class EndpointAggregators {
         rawTableRecord.setBytes(row, 0, row.length);
 
         for (int metricIndex = 0; metricIndex < metricInfos.length; ++metricIndex) {
+            if (metricInfos[metricIndex].type == MetricType.Count) {
+                measureAggrs[metricIndex].aggregate(ONE);
+                continue;
+            }
+
+            if (metricInfos[metricIndex].type == MetricType.DimensionAsMetric) {
+                continue;
+            }
 
             MetricInfo metricInfo = metricInfos[metricIndex];
             MeasureAggregator aggregator = measureAggrs[metricIndex];
@@ -176,13 +184,6 @@ public class EndpointAggregators {
                 hllc.clear();
                 hllc.add(byteBuffer.get(), byteBuffer.getOffset(), byteBuffer.getLength());
                 aggregator.aggregate(hllc);
-            }
-        }
-
-        //aggregate for "count"
-        for (int i = 0; i < metricInfos.length; ++i) {
-            if (metricInfos[i].type == MetricType.Count) {
-                measureAggrs[i].aggregate(ONE);
             }
         }
     }
