@@ -169,63 +169,7 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
 
     // ============================================================================
 
-    public static interface Compressor {
-
-        byte[] compress(ByteBuffer buf, int offset, int length) throws IOException;
-
-        byte[] decompress(ByteBuffer buf, int offset, int length) throws IOException;
-    }
-
-    static final Compressor GZIP_COMPRESSOR = new Compressor() {
-        @Override
-        public byte[] compress(ByteBuffer buf, int offset, int length) throws IOException {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            GZIPOutputStream gzout = new GZIPOutputStream(bout);
-            gzout.write(buf.array(), offset, length);
-            gzout.close();
-            return bout.toByteArray();
-        }
-
-        @Override
-        public byte[] decompress(ByteBuffer buf, int offset, int length) throws IOException {
-            ByteArrayInputStream bin = new ByteArrayInputStream(buf.array(), offset, length);
-            GZIPInputStream gzin = new GZIPInputStream(bin);
-            ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            IOUtils.copy(gzin, bout);
-            gzin.close();
-            bout.close();
-            return bout.toByteArray();
-        }
-    };
-
-    static final Compressor LZF_COMPRESSOR = new Compressor() {
-        @Override
-        public byte[] compress(ByteBuffer buf, int offset, int length) throws IOException {
-            return LZFEncoder.encode(buf.array(), offset, length);
-        }
-
-        @Override
-        public byte[] decompress(ByteBuffer buf, int offset, int length) throws IOException {
-            return LZFDecoder.decode(buf.array(), offset, length);
-        }
-    };
-
-    public static final int COMPRESSION_THRESHOLD = Integer.MAX_VALUE; // bytes,
-                                                                       // disable
-                                                                       // due to
-                                                                       // slowness
-    public static final byte COMPRESSION_FLAG = (byte) 0x02;
-    public static final Compressor DEFAULT_COMPRESSOR = GZIP_COMPRESSOR; // LZF
-                                                                         // lib
-                                                                         // has
-                                                                         // a
-                                                                         // bug
-                                                                         // at
-                                                                         // the
-                                                                         // moment
-
-    public void writeCompactRegisters(final ByteBuffer out) throws IOException {
-        int startPos = out.position();
+    public void writeRegisters(final ByteBuffer out) throws IOException {
 
         final int indexLen = getRegisterIndexSize();
         int size = size();
@@ -253,7 +197,7 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
         }
     }
 
-    public void readCompactRegisters(ByteBuffer in) throws IOException {
+    public void readRegisters(ByteBuffer in) throws IOException {
         byte scheme = in.get();
 
         if (scheme == 0) { // map scheme
@@ -271,19 +215,11 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
         }
     }
 
-    /**
-     * For compressed output use writeCompactRegisters
-     * @param out
-     */
-    public void writeRegisters(final ByteBuffer out) {
+    public void writeRegistersArray(final ByteBuffer out) {
         out.put(this.registers);
     }
 
-    /**
-     * For compressed input use readCompactRegisters
-     * @param in
-     */
-    public void readRegisters(ByteBuffer in) {
+    public void readRegistersArray(ByteBuffer in) {
         in.get(registers, 0, m);
     }
 

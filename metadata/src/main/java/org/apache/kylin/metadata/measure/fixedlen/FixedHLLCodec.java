@@ -47,12 +47,12 @@ public class FixedHLLCodec extends FixedLenMeasureCodec<HyperLogLogPlusCounter> 
 
     @Override
     public HyperLogLogPlusCounter read(byte[] buf, int offset) {
-        current.readRegisters(ByteBuffer.wrap(buf, offset, buf.length - offset));
+        current.readRegistersArray(ByteBuffer.wrap(buf, offset, buf.length - offset));
         return current;
     }
 
     @Override
     public void write(HyperLogLogPlusCounter v, byte[] buf, int offset) {
-        current.writeRegisters(ByteBuffer.wrap(buf, offset, buf.length - offset));
+        current.writeRegistersArray(ByteBuffer.wrap(buf, offset, buf.length - offset));
     }
 }
