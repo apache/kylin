@@ -61,11 +61,11 @@ public class FixedPointLongCodec extends FixedLenMeasureCodec<LongWritable> {
     }
 
     @Override
-    public String toString(LongWritable value) {
+    public String getValue() {
         if (scale == 0)
-            return value.toString();
+            return current.toString();
         else
-            return "" + (new BigDecimal(value.get()).divide(scalePower));
+            return "" + (new BigDecimal(current.get()).divide(scalePower));
     }
 
     @Override

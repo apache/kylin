@@ -31,7 +31,7 @@ public class HLLCSerializer extends MeasureSerializer<HyperLogLogPlusCounter> {
 
     HyperLogLogPlusCounter current;
 
-    HLLCSerializer(int p) {
+    public HLLCSerializer(int p) {
         current = new HyperLogLogPlusCounter(p);
     }
 
