@@ -59,14 +59,18 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
     /** The larger p is, the more storage (2^p bytes), the better accuracy */
     private HyperLogLogPlusCounter(int p, HashFunction hashFunc) {
         this.p = p;
-        this.m = (int) Math.pow(2, p);
+        this.m = 1 << p;//(int) Math.pow(2, p);
         this.hashFunc = hashFunc;
         this.registers = new byte[m];
     }
 
     public void clear() {
-        for (int i = 0; i < m; i++)
-            registers[i] = 0;
+        byte zero = (byte) 0;
+        Arrays.fill(registers, zero);
+    }
+
+    public void add(int value) {
+        add(hashFunc.hashInt(value).asLong());
     }
 
     public void add(String value) {
@@ -75,6 +79,10 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
 
     public void add(byte[] value) {
         add(hashFunc.hashBytes(value).asLong());
+    }
+
+    public void add(byte[] value, int offset, int length) {
+        add(hashFunc.hashBytes(value, offset, length).asLong());
     }
 
     protected void add(long hash) {
@@ -162,6 +170,7 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
     // ============================================================================
 
     public void writeRegisters(final ByteBuffer out) throws IOException {
+
         final int indexLen = getRegisterIndexSize();
         int size = size();
 
@@ -202,10 +211,16 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
                 registers[key] = in.get();
             }
         } else { // array scheme
-            for (int i = 0; i < m; i++) {
-                registers[i] = in.get();
-            }
+            in.get(registers);
         }
+    }
+
+    public void writeRegistersArray(final ByteBuffer out) {
+        out.put(this.registers);
+    }
+
+    public void readRegistersArray(ByteBuffer in) {
+        in.get(registers, 0, m);
     }
 
     private int getRegisterIndexSize() {

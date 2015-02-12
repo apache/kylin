@@ -266,7 +266,7 @@ public class EndpointTupleIterator implements ITupleIterator {
 
         //not thread safe!
         private TableRecord tableRecord;
-        private List<String> measureValues;
+        private List<Object> measureValues;
         private Tuple tuple;
 
         public SingleRegionTupleIterator(List<IIProtos.IIResponse.IIRow> rows) {
@@ -305,26 +305,32 @@ public class EndpointTupleIterator implements ITupleIterator {
 
         }
 
-        private ITuple makeTuple(TableRecord tableRecord, List<String> measureValues) {
+        private ITuple makeTuple(TableRecord tableRecord, List<Object> measureValues) {
             // groups
-            List<String> columnValues = tableRecord.getValueList();
+            List<String> columnValues = tableRecord.getOriginTableColumnValues();
             for (int i = 0; i < columnNames.size(); i++) {
                 TblColRef column = columns.get(i);
                 if (!tuple.hasColumn(column)) {
                     continue;
                 }
-                tuple.setValue(columnNames.get(i), columnValues.get(i));
+                tuple.setDimensionValue(columnNames.get(i), columnValues.get(i));
             }
 
             if (measureValues != null) {
                 for (int i = 0; i < measures.size(); ++i) {
                     if (!measures.get(i).isAppliedOnDimension()) {
-                        tuple.setValue(measures.get(i).getRewriteFieldName(), measureValues.get(i));
+                        String fieldName = measures.get(i).getRewriteFieldName();
+                        Object value = measureValues.get(i);
+                        String dataType = tuple.getDataType(fieldName);
+                        //TODO: currently in II all metrics except HLLC is returned as String
+                        if (dataType.toLowerCase().equalsIgnoreCase("hllc")) {
+                            value = Tuple.convertOptiqCellValue((String) value, dataType);
+                        }
+                        tuple.setMeasureValue(fieldName, value);
                     }
                 }
             }
             return tuple;
         }
-
     }
 }

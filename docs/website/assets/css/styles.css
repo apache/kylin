@@ -118,7 +118,7 @@ a:hover, a:focus {
 	background: #f4f4f4 url(../images/data.png) top center;
 	background-size: cover;
 	color: #7C7C7C;
-	height: 400px
+	height: 200px;	
 }
 #head .title {
 	font-family: 'Open sans';
@@ -136,8 +136,8 @@ a:hover, a:focus {
 }
 #head img.img-circle {
 	display: block;
-	width: 140px;
-	height: 140px;
+	width: 100px;
+	height: 100px;
 	overflow: hidden;
 	border: 9px solid rgba(0, 0, 0, 0.05);
 	margin: 0 auto;
@@ -161,10 +161,11 @@ a:hover, a:focus {
 	color: #5E5E5E;
 }
 #logo {
-	padding-top: 50px;
+	padding-top: 0px;
+	padding-left: 10px;
 }
 .home #head .title {
-	font-size: 36px;
+	font-size: 18px;
 	color: #fb8d08;/*color:#146df3;*/
 	
 }
@@ -203,7 +204,13 @@ a:hover, a:focus {
 
 **********************************************************************/
 .navbar {
-	border-width: 1px 0;
+	/*
+	background: #f4f4f4 url(../images/data.png) top center;
+	background-size: cover;
+	color: #7C7C7C;
+	height: 100px;
+*/
+	 border-width: 1px 0;
 	-webkit-border-radius: 0;
 	-webkit-background-clip: padding-box;
 	-moz-border-radius: 0;
@@ -211,6 +218,7 @@ a:hover, a:focus {
 	border-radius: 0;
 	background-clip: padding-box;
 	width: 100%;
+
 }
 .navbar.stick {
 	position: fixed;
@@ -227,19 +235,19 @@ a:hover, a:focus {
 	background-clip: padding-box;
 	font-family: 'Open sans';
 	font-weight: 400;
-	text-transform: uppercase;
+	/* text-transform: uppercase;*/
 }
 .navbar-nav {
 	float: none;
 	margin: 0 auto;
-	text-align: center;
+	text-align: right;
 }
 .navbar-nav > li {
 	float: none;
 	display: inline-block;
 }
 .navbar-nav > li > a {
-	padding: 20px 30px;
+	padding: 10px 12px;
 }
 .navbar-default {
 	background-color: #ffffff;
@@ -553,9 +561,9 @@ ol.style1 {
 	margin: 0 0 20px;
 }
 #underfooter {
-	background: #191919;
+	background: #696969;
 	padding: 15px 0;
-	color: #777;
+	color: #EEEEEE;
 	font-size: 12px;
 }
 #underfooter a {
@@ -580,7 +588,7 @@ ol.style1 {
 	background-clip: padding-box;
 	font-family: 'Open sans';
 	font-weight: 400;
-	text-transform: uppercase;
+	/* text-transform: uppercase;*/
 	max-height: 340px;
 	padding-right: 15px;
 	padding-left: 15px;
