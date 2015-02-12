@@ -18,6 +18,7 @@
 
 package org.apache.kylin.common.util;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -58,10 +59,6 @@ public class BasicTest {
     @Test
     @Ignore("convenient trial tool for dev")
     public void test1() throws Exception {
-        String x =  MetricType.DimensionAsMetric.toString();
-        System.out.println(x);
-        MetricType y = MetricType.valueOf(x);
-        System.out.println(y == MetricType.DimensionAsMetric);
     }
 
     @Test
