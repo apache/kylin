@@ -89,9 +89,8 @@ public class KylinConfig {
     public static final String KYLIN_JOB_JAR = "kylin.job.jar";
 
     public static final String COPROCESSOR_LOCAL_JAR = "kylin.coprocessor.local.jar";
-    public static final String COPROCESSOR_SCAN_BITS_THRESHOLD = "kylin.coprocessor.scan.bits.threshold";
 
-    public static final String KYLIN_JOB_JAR_LOCAL = "kylin.job.jar.local";
+    public static final String COPROCESSOR_SCAN_BITS_THRESHOLD = "kylin.coprocessor.scan.bits.threshold";
 
     public static final String KYLIN_JOB_LOG_DIR = "kylin.job.log.dir";
 
