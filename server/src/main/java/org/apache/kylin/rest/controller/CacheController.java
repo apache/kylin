@@ -36,7 +36,6 @@ import java.io.IOException;
  * CubeController is defined as Restful API entrance for UI.
  *
  * @author jianliu
- *
  */
 @Controller
 @RequestMapping(value = "/cache")
@@ -49,15 +48,13 @@ public class CacheController extends BasicController {
     /**
      * Wipe system cache
      *
-     * @param type
-     *            {@link Broadcaster.TYPE}
-     * @param event
-     *            {@link Broadcaster.EVENT}
+     * @param type  {@link Broadcaster.TYPE}
+     * @param event {@link Broadcaster.EVENT}
      * @param name
      * @return if the action success
      * @throws IOException
      */
-    @RequestMapping(value = "/{type}/{name}/{event}", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{type}/{name}/{event}", method = {RequestMethod.PUT})
     @ResponseBody
     public void wipeCache(@PathVariable String type, @PathVariable String event, @PathVariable String name) throws IOException {
         Broadcaster.TYPE wipeType = Broadcaster.TYPE.getType(type);
@@ -75,5 +72,9 @@ public class CacheController extends BasicController {
             default:
                 throw new RuntimeException("invalid type:" + wipeEvent);
         }
+    }
+
+    public void setCacheService(CacheService cacheService) {
+        this.cacheService = cacheService;
     }
 }

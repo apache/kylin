@@ -18,32 +18,8 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.IOException;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.kylin.rest.controller.QueryController;
-import org.apache.kylin.rest.exception.InternalErrorException;
-import org.apache.kylin.rest.response.MetricsResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Caching;
-import org.springframework.security.access.prepost.PostFilter;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseRegionSizeCalculator;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -70,9 +46,25 @@ import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.metadata.tool.HiveSourceTableLoader;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.controller.QueryController;
+import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.MetricsRequest;
 import org.apache.kylin.rest.response.HBaseResponse;
+import org.apache.kylin.rest.response.MetricsResponse;
 import org.apache.kylin.rest.security.AclPermission;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.security.access.prepost.PostFilter;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.*;
 
 /**
  * Stateless & lightweight service facade of cube management functions.
@@ -156,10 +148,19 @@ public class CubeService extends BasicService {
         CubeDesc createdDesc = null;
         CubeInstance createdCube = null;
 
-        createdDesc = getCubeDescManager().createCubeDesc(desc);
+        boolean isNew = false;
+        if (getCubeDescManager().getCubeDesc(desc.getName()) == null) {
+            createdDesc = getCubeDescManager().createCubeDesc(desc);
+            isNew = true;
+        } else {
+            createdDesc = getCubeDescManager().updateCubeDesc(desc);
+        }
+
 
         if (!createdDesc.getError().isEmpty()) {
-            getCubeDescManager().removeCubeDesc(createdDesc);
+            if (isNew) {
+                getCubeDescManager().removeCubeDesc(createdDesc);
+            }
             throw new InternalErrorException(createdDesc.getError().get(0));
         }
 
@@ -305,7 +306,7 @@ public class CubeService extends BasicService {
      * @throws JobException
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
-    @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
+    @Caching(evict = {@CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true)})
     public CubeInstance purgeCube(CubeInstance cube) throws IOException, JobException {
         String cubeName = cube.getName();
 
@@ -332,7 +333,7 @@ public class CubeService extends BasicService {
      * @throws JobException
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
-    @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
+    @Caching(evict = {@CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true)})
     public CubeInstance disableCube(CubeInstance cube) throws IOException, JobException {
         String cubeName = cube.getName();
 
@@ -471,27 +472,27 @@ public class CubeService extends BasicService {
             logger.error("Cannot find table descirptor " + tableName, e);
             throw e;
         }
-        
+
         DefaultChainedExecutable job = new DefaultChainedExecutable();
         job.setName("Hive Column Cardinality calculation for table '" + tableName + "'");
         job.setSubmitter(submitter);
 
         String outPath = HiveColumnCardinalityJob.OUTPUT_PATH + "/" + tableName;
         String param = "-table " + tableName + " -output " + outPath;
-        
+
         HadoopShellExecutable step1 = new HadoopShellExecutable();
-        
+
         step1.setJobClass(HiveColumnCardinalityJob.class);
         step1.setJobParams(param);
-        
+
         job.addTask(step1);
-        
+
         HadoopShellExecutable step2 = new HadoopShellExecutable();
-        
+
         step2.setJobClass(HiveColumnCardinalityUpdateJob.class);
         step2.setJobParams(param);
         job.addTask(step2);
-        
+
         getExecutableManager().addJob(job);
     }
 
@@ -531,7 +532,7 @@ public class CubeService extends BasicService {
         CubeManager.getInstance(getConfig()).updateCube(cube);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER)
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)
     public String[] reloadHiveTable(String tables) throws IOException {
         Set<String> loaded = HiveSourceTableLoader.reloadHiveTables(tables.split(","), getConfig());
         return (String[]) loaded.toArray(new String[loaded.size()]);
@@ -541,9 +542,9 @@ public class CubeService extends BasicService {
     public void syncTableToProject(String[] tables, String project) throws IOException {
         getProjectManager().addTableDescToProject(tables, project);
     }
-    
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER)
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)
     public void calculateCardinalityIfNotPresent(String[] tables, String submitter) throws IOException {
         MetadataManager metaMgr = getMetadataManager();
         for (String table : tables) {
@@ -554,5 +555,5 @@ public class CubeService extends BasicService {
         }
     }
 
-    
+
 }

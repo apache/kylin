@@ -39,10 +39,10 @@
     </div>
     <!--Cube Name-->
     <div class="col-xs-3">
-        <form ng-submit="cubes=[];list()" style="display: inline" >
+        <form ng-submit="cubeList.removeAll();list()" style="display: inline" >
             <span class="input-icon input-icon-right nav-search"><b>Cube Name:</b>
                 <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="listParams.cubeName" />
-                <i class="ace-icon fa fa-search blue" ng-click="cubes=[];list()"></i>
+                <i class="ace-icon fa fa-search blue" ng-click="cubeList.removeAll();list()"></i>
             </span>
         </form>
     </div>
@@ -52,13 +52,13 @@
     </div>
 </div>
 
-<div ng-if="!loading && cubes.length == 0">
+<div ng-if="!loading && cubeList.cubes.length == 0">
     <div no-result text="No Cube."></div>
 </div>
 <loading ng-if="loading" text="Loading Cubes..."></loading>
 
 <!--Table-->
-<div ng-if="cubes.length > 0" class="dataTables_wrapper no-footer">
+<div ng-if="cubeList.cubes.length > 0" class="dataTables_wrapper no-footer">
     <div class="row">
         <div class="col-xs-12"><label class="table-header-text">Cubes</label></div>
     </div>
@@ -81,7 +81,7 @@
         </tr>
         </thead>
         <!--Body-->
-        <tbody ng-repeat="cube in cubes | orderObjectBy:state.filterAttr:state.filterReverse">
+        <tbody ng-repeat="cube in cubeList.cubes | orderObjectBy:state.filterAttr:state.filterReverse">
         <tr ng-class="{accordion:true}" style="cursor: pointer"  ng-click="cube.showDetail=!cube.showDetail;loadDetail(cube)">
             <td>
                 <i ng-show="!cube.showDetail" class="fa fa-chevron-circle-right blue"></i>
@@ -151,11 +151,11 @@
 
 <div class="row">
     <div class="col-xs-12">
-        <kylin-pagination data="cubes" load-func="list" action="action"/>
+        <kylin-pagination data="cubeList.cubes" load-func="list" action="action"/>
     </div>
 </div>
 <div class="pull-left font-color-default" style="font-size: 15px" >
-    <strong>Storage: {{getTotalSize(cubes)}}</strong>
+    <strong>Storage: {{getTotalSize(cubeList.cubes)}}</strong>
 </div>
 
 <div ng-include="'partials/jobs/job_submit.html'"></div>
