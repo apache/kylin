@@ -18,7 +18,6 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.cli.Options;
@@ -31,15 +30,14 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author yangli9
@@ -71,6 +69,8 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             System.out.println("Starting: " + job.getJobName());
 
+            setJobClasspath(job);
+            
             setupMapper(intermediateTable);
             setupReducer(output);
 
@@ -90,13 +90,6 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
     private void setupMapper(String intermediateTable) throws IOException {
 //        FileInputFormat.setInputPaths(job, input);
 
-        File JarFile = new File(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
-        if (JarFile.exists()) {
-            job.setJar(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
-        } else {
-            job.setJarByClass(this.getClass());
-        }
-        
         String[] dbTableNames = HadoopUtil.parseHiveTableName(intermediateTable);
         HCatInputFormat.setInput(job, dbTableNames[0],
                 dbTableNames[1]);

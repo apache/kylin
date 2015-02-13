@@ -49,18 +49,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
 
     public static final String OUTPUT_PATH = "/tmp/cardinality";
 
-    /**
-     * This is the jar path
-     */
-    private String jarPath;
-
-    private String table;
-
     public HiveColumnCardinalityJob() {
-    }
-
-    public HiveColumnCardinalityJob(String path, String tokenPath) {
-        this.jarPath = path;
     }
 
     @Override
@@ -80,19 +69,14 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
             Configuration conf = getConf();
             job = Job.getInstance(conf, jobName);
 
-            // set job configuration - basic
-            if (jarPath == null || !new File(jarPath).exists()) {
-                job.setJarByClass(getClass());
-            } else {
-                job.setJar(jarPath);
-            }
-
+            setJobClasspath(job);
+            
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
             FileOutputFormat.setOutputPath(job, output);
             job.getConfiguration().set("dfs.block.size", "67108864");
 
             // Mapper
-            this.table = getOptionValue(OPTION_TABLE);
+            String table = getOptionValue(OPTION_TABLE);
             String[] dbTableNames = HadoopUtil.parseHiveTableName(table);
             HCatInputFormat.setInput(job, dbTableNames[0], dbTableNames[1]);
 

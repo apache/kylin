@@ -33,7 +33,6 @@ import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.hadoop.hive.ql.stats.StatsUtils;
 
 /**
  * Hive meta API client for Kylin
@@ -94,7 +93,7 @@ public class HiveClient {
         CommandProcessorResponse response = getDriver().run(hql);
         int retCode = response.getResponseCode();
         if (retCode != 0) {
-            String err  = response.getErrorMessage();
+            String err = response.getErrorMessage();
             throw new IOException("Failed to execute hql [" + hql + "], error message is: " + err);
         }
     }
@@ -125,11 +124,35 @@ public class HiveClient {
     }
 
     public long getFileSizeForTable(Table table) {
-        return StatsUtils.getTotalSize(new org.apache.hadoop.hive.ql.metadata.Table(table));
+        return getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.TOTAL_SIZE);
     }
 
     public long getFileNumberForTable(Table table) {
-        return StatsUtils.getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.NUM_FILES);
+        return getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.NUM_FILES);
+    }
+
+    /**
+     * COPIED FROM org.apache.hadoop.hive.ql.stats.StatsUtil for backward compatibility
+     * 
+     * Get basic stats of table
+     * @param table
+     *          - table
+     * @param statType
+     *          - type of stats
+     * @return value of stats
+     */
+    public static long getBasicStatForTable(org.apache.hadoop.hive.ql.metadata.Table table, String statType) {
+        Map<String, String> params = table.getParameters();
+        long result = 0;
+
+        if (params != null) {
+            try {
+                result = Long.parseLong(params.get(statType));
+            } catch (NumberFormatException e) {
+                result = 0;
+            }
+        }
+        return result;
     }
 
 }

@@ -18,8 +18,6 @@
 
 package org.apache.kylin.job.hadoop.invertedindex;
 
-import java.io.File;
-
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -31,12 +29,11 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author yangli9
@@ -61,12 +58,7 @@ public class IICreateHFileJob extends AbstractHadoopJob {
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
 
-            File JarFile = new File(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
-            if (JarFile.exists()) {
-                job.setJar(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
-            } else {
-                job.setJarByClass(this.getClass());
-            }
+            setJobClasspath(job);
 
             addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
             FileOutputFormat.setOutputPath(job, output);
