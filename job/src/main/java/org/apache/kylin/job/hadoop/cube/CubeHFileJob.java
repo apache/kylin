@@ -67,12 +67,7 @@ public class CubeHFileJob extends AbstractHadoopJob {
             CubeInstance cube = cubeMgr.getCube(cubeName);
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
 
-            File JarFile = new File(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
-            if (JarFile.exists()) {
-                job.setJar(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
-            } else {
-                job.setJarByClass(this.getClass());
-            }
+            setJobClasspath(job);
 
             addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
             FileOutputFormat.setOutputPath(job, output);
