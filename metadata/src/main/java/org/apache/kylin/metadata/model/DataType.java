@@ -89,6 +89,7 @@ public class DataType {
 
     private static final ConcurrentMap<DataType, DataType> CACHE = new ConcurrentHashMap<DataType, DataType>();
 
+
     public static DataType getInstance(String type) {
         if (type == null)
             return null;

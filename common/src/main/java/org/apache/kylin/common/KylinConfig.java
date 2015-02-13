@@ -293,7 +293,11 @@ public class KylinConfig {
         if (StringUtils.isNotEmpty(jobJar)) {
             return jobJar;
         }
-        return getFileName(getKylinHome() + File.separator + "lib", JOB_JAR_NAME_PATTERN);
+        String kylinHome = getKylinHome();
+        if (StringUtils.isEmpty(kylinHome)) {
+            return "";
+        }
+        return getFileName(kylinHome + File.separator + "lib", JOB_JAR_NAME_PATTERN);
     }
 
     public void overrideKylinJobJarPath(String path) {
@@ -308,7 +312,11 @@ public class KylinConfig {
         if (StringUtils.isNotEmpty(coprocessorJar)) {
             return coprocessorJar;
         }
-        return getFileName(getKylinHome() + File.separator + "lib", COPROCESSOR_JAR_NAME_PATTERN);
+        String kylinHome = getKylinHome();
+        if (StringUtils.isEmpty(kylinHome)) {
+            throw new RuntimeException("getCoprocessorLocalJar needs KYLIN_HOME");
+        }
+        return getFileName(kylinHome + File.separator + "lib", COPROCESSOR_JAR_NAME_PATTERN);
     }
 
     private static String getFileName(String homePath, Pattern pattern) {
@@ -381,9 +389,9 @@ public class KylinConfig {
         return getOptional(KYLIN_TMP_HDFS_DIR, "/tmp/kylin");
     }
 
-//    public String getYarnStatusServiceUrl() {
-//        return getOptional(KYLIN_JOB_YARN_APP_REST_CHECK_STATUS_URL, null);
-//    }
+    //    public String getYarnStatusServiceUrl() {
+    //        return getOptional(KYLIN_JOB_YARN_APP_REST_CHECK_STATUS_URL, null);
+    //    }
 
     public int getYarnStatusCheckIntervalSeconds() {
         return Integer.parseInt(getOptional(KYLIN_JOB_YARN_APP_REST_CHECK_INTERVAL_SECONDS, "60"));
@@ -458,12 +466,12 @@ public class KylinConfig {
 
     private String getOptional(String prop) {
         final String property = System.getProperty(prop);
-        return property != null?property:kylinConfig.getString(prop);
+        return property != null ? property : kylinConfig.getString(prop);
     }
 
     private String getOptional(String prop, String dft) {
         final String property = System.getProperty(prop);
-        return property != null?property:kylinConfig.getString(prop, dft);
+        return property != null ? property : kylinConfig.getString(prop, dft);
     }
 
     private String getRequired(String prop) {
@@ -508,10 +516,11 @@ public class KylinConfig {
         String kylinHome = System.getenv(KYLIN_HOME);
         if (StringUtils.isEmpty(kylinHome)) {
             logger.warn("KYLIN_HOME has not been set");
-            throw new RuntimeException("KYLIN_HOME has not been set");
+            return kylinHome;
         }
         return kylinHome;
     }
+
     public void printProperties() throws IOException {
         try {
             kylinConfig.save(System.out);
@@ -528,7 +537,11 @@ public class KylinConfig {
             return getKylinPropertiesFile(kylinConfHome);
         }
 
-        String path = getKylinHome() + File.separator + "conf";
+        String kylinHome = getKylinHome();
+        if (StringUtils.isEmpty(kylinHome))
+            throw new RuntimeException("getKylinProperties needs KYLIN_HOME");
+
+        String path = kylinHome + File.separator + "conf";
         return getKylinPropertiesFile(path);
 
     }

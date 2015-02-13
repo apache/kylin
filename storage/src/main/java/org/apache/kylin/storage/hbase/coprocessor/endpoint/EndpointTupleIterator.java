@@ -54,6 +54,8 @@ import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 
+import javax.xml.datatype.DatatypeConfigurationException;
+
 /**
  * Created by Hongbin Ma(Binmahone) on 12/2/14.
  */
@@ -99,7 +101,9 @@ public class EndpointTupleIterator implements ITupleIterator {
         if (measures == null) {
             measures = Lists.newArrayList();
         }
-        initMeaureParameters(measures, segment.getColumns());
+
+        //this method will change measures
+        rewriteMeasureParameters(measures, segment.getColumns());
 
         this.seg = segment;
         this.context = context;
@@ -137,7 +141,7 @@ public class EndpointTupleIterator implements ITupleIterator {
      * @param measures
      * @param columns
      */
-    private void initMeaureParameters(List<FunctionDesc> measures, List<TblColRef> columns) {
+    private void rewriteMeasureParameters(List<FunctionDesc> measures, List<TblColRef> columns) {
         for (FunctionDesc functionDesc : measures) {
             if (functionDesc.isCount()) {
                 functionDesc.setReturnType("bigint");
@@ -146,8 +150,15 @@ public class EndpointTupleIterator implements ITupleIterator {
                 boolean updated = false;
                 for (TblColRef column : columns) {
                     if (column.isSameAs(factTableName, functionDesc.getParameter().getValue())) {
-                        functionDesc.setReturnType(column.getColumn().getType().toString());
-                        functionDesc.setReturnDataType(DataType.getInstance(functionDesc.getReturnType()));
+                        if (functionDesc.isCountDistinct()) {
+                            //TODO: default precision might need be configurable
+                            String iiDefaultHLLC = "hllc10";
+                            functionDesc.setReturnType(iiDefaultHLLC);
+                            functionDesc.setReturnDataType(DataType.getInstance(iiDefaultHLLC));
+                        } else {
+                            functionDesc.setReturnType(column.getColumn().getType().toString());
+                            functionDesc.setReturnDataType(DataType.getInstance(functionDesc.getReturnType()));
+                        }
                         functionDesc.getParameter().setColRefs(ImmutableList.of(column));
                         updated = true;
                         break;
@@ -292,6 +303,7 @@ public class EndpointTupleIterator implements ITupleIterator {
             this.tableRecord.setBytes(columnsBytes, 0, columnsBytes.length);
             if (currentRow.hasMeasures()) {
                 byte[] measuresBytes = currentRow.getMeasures().toByteArray();
+
                 this.measureValues = pushedDownAggregators.deserializeMetricValues(measuresBytes, 0);
             }
 
@@ -318,7 +330,7 @@ public class EndpointTupleIterator implements ITupleIterator {
 
             if (measureValues != null) {
                 for (int i = 0; i < measures.size(); ++i) {
-                    if (!measures.get(i).isAppliedOnDimension()) {
+                    if (!measures.get(i).isDimensionAsMetric()) {
                         String fieldName = measures.get(i).getRewriteFieldName();
                         Object value = measureValues.get(i);
                         String dataType = tuple.getDataType(fieldName);

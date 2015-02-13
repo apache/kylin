@@ -48,7 +48,7 @@ public class FunctionDesc {
     private String returnType;
 
     private DataType returnDataType;
-    private boolean isAppliedOnDimension = false;
+    private boolean isDimensionAsMetric = false;
 
     public String getRewriteFieldName() {
         if (isSum()) {
@@ -62,7 +62,7 @@ public class FunctionDesc {
     }
 
     public boolean needRewrite() {
-        return !isSum() && !isHolisticCountDistinct() && !isAppliedOnDimension();
+        return !isSum() && !isHolisticCountDistinct() && !isDimensionAsMetric();
     }
 
     public boolean isMin() {
@@ -106,12 +106,12 @@ public class FunctionDesc {
         return sb.toString();
     }
 
-    public boolean isAppliedOnDimension() {
-        return isAppliedOnDimension;
+    public boolean isDimensionAsMetric() {
+        return isDimensionAsMetric;
     }
 
-    public void setAppliedOnDimension(boolean isAppliedOnDimension) {
-        this.isAppliedOnDimension = isAppliedOnDimension;
+    public void setDimensionAsMetric(boolean isDimensionAsMetric) {
+        this.isDimensionAsMetric = isDimensionAsMetric;
     }
 
     public String getExpression() {

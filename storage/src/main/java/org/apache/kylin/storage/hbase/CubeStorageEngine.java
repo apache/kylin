@@ -136,7 +136,7 @@ public class CubeStorageEngine implements IStorageEngine {
     private void buildDimensionsAndMetrics(Collection<TblColRef> dimensions, Collection<FunctionDesc> metrics, SQLDigest sqlDigest) {
 
         for (FunctionDesc func : sqlDigest.aggregations) {
-            if (!func.isAppliedOnDimension()) {
+            if (!func.isDimensionAsMetric()) {
                 metrics.add(func);
             }
         }
