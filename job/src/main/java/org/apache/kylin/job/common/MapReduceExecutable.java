@@ -20,6 +20,7 @@ package org.apache.kylin.job.common;
 
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.constant.JobStepStatusEnum;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -117,17 +118,12 @@ public class MapReduceExecutable extends AbstractExecutable {
             }
             final StringBuilder output = new StringBuilder();
             final HadoopCmdOutput hadoopCmdOutput = new HadoopCmdOutput(job, output);
-            String rmWebHost = job.getConfiguration().get("yarn.resourcemanager.webapp.address");
-            if (StringUtils.isEmpty(rmWebHost)) {
-                return new ExecuteResult(ExecuteResult.State.ERROR, "yarn.resourcemanager.webapp.address is empty");
+
+            final String restStatusCheckUrl = getRestStatusCheckUrl(job, context.getConfig());
+            if (restStatusCheckUrl == null) {
+                logger.error("restStatusCheckUrl is null");
+                return new ExecuteResult(ExecuteResult.State.ERROR, "restStatusCheckUrl is null");
             }
-            if (rmWebHost.startsWith("http://") || rmWebHost.startsWith("https://")) {
-                //do nothing
-            } else {
-                rmWebHost = "http://" + rmWebHost;
-            }
-            logger.info("yarn.resourcemanager.webapp.address:" + rmWebHost);
-            final String restStatusCheckUrl = rmWebHost + "/ws/v1/cluster/apps/${job_id}?anonymous=true";
             String mrJobId = hadoopCmdOutput.getMrJobId();
             HadoopStatusChecker statusChecker = new HadoopStatusChecker(restStatusCheckUrl, mrJobId, output);
             JobStepStatusEnum status = JobStepStatusEnum.NEW;
@@ -166,6 +162,26 @@ public class MapReduceExecutable extends AbstractExecutable {
             logger.error("error execute " + this.toString(), e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         }
+    }
+
+    private String getRestStatusCheckUrl(Job job, KylinConfig config) {
+        final String yarnStatusCheckUrl = config.getYarnStatusCheckUrl();
+        if (yarnStatusCheckUrl != null) {
+            return yarnStatusCheckUrl;
+        } else {
+            logger.info(KylinConfig.KYLIN_JOB_YARN_APP_REST_CHECK_URL + " is not set, read from job configuration");
+        }
+        String rmWebHost = job.getConfiguration().get("yarn.resourcemanager.webapp.address");
+        if (StringUtils.isEmpty(rmWebHost)) {
+            return null;
+        }
+        if (rmWebHost.startsWith("http://") || rmWebHost.startsWith("https://")) {
+            //do nothing
+        } else {
+            rmWebHost = "http://" + rmWebHost;
+        }
+        logger.info("yarn.resourcemanager.webapp.address:" + rmWebHost);
+        return rmWebHost + "/ws/v1/cluster/apps/${job_id}?anonymous=true";
     }
 
     public long getMapReduceWaitTime() {
