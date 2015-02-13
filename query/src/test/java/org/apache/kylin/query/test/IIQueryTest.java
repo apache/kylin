@@ -18,7 +18,6 @@
 
 package org.apache.kylin.query.test;
 
-import java.io.File;
 import java.util.Map;
 
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -37,7 +36,6 @@ public class IIQueryTest extends KylinQueryTest {
     public static void setUp() throws Exception {
 
         KylinQueryTest.setUp();//invoke super class
-        distinctCountSupported = false;
 
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
         priorities.put(RealizationType.INVERTED_INDEX, 0);
@@ -49,7 +47,6 @@ public class IIQueryTest extends KylinQueryTest {
     @AfterClass
     public static void tearDown() throws Exception {
         KylinQueryTest.tearDown();//invoke super class
-        distinctCountSupported = true;
 
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
         priorities.put(RealizationType.INVERTED_INDEX, 1);
@@ -62,12 +59,4 @@ public class IIQueryTest extends KylinQueryTest {
         execAndCompQuery("src/test/resources/query/sql_ii", null, true);
     }
 
-    @Test
-    public void testSingleRunQuery() throws Exception {
-        String queryFileName = "src/test/resources/query/sql_ii/query04.sql";
-
-        File sqlFile = new File(queryFileName);
-        runSQL(sqlFile, true, true);
-        runSQL(sqlFile, true, false);
-    }
 }
