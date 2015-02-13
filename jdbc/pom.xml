@@ -21,6 +21,8 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>kylin-jdbc</artifactId>
 	<packaging>jar</packaging>
+	<name>Kylin:JDBC</name>
+	<description>Kylin JDBC Driver on optiq avatica</description>
 
 	<parent>
 		<groupId>org.apache.kylin</groupId>

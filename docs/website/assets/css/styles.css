@@ -118,13 +118,14 @@ a:hover, a:focus {
 	background: #f4f4f4 url(../images/data.png) top center;
 	background-size: cover;
 	color: #7C7C7C;
-	height: 200px;	
+	height: 330px;	
 }
 #head .title {
 	font-family: 'Open sans';
 	font-weight: 400;
-	font-size: 49px;
-	font-size: 3.0625rem;/*	background-image: -webkit-gradient( linear, left bottom, right bottom, color-stop(0, #C6419E), color-stop(1, #6382FF) );
+	font-size: 2.2rem;
+	font-size: 36px;
+	color: #fb8d08;/*	background-image: -webkit-gradient( linear, left bottom, right bottom, color-stop(0, #C6419E), color-stop(1, #6382FF) );
 	background-image: -o-linear-gradient(right, #C6419E 0%, #6382FF 100%);
 	background-image: -moz-linear-gradient(right, #C6419E 0%, #6382FF 100%);
 	background-image: -webkit-linear-gradient(right, #C6419E 0%, #6382FF 100%);
@@ -136,12 +137,13 @@ a:hover, a:focus {
 }
 #head img.img-circle {
 	display: block;
-	width: 100px;
-	height: 100px;
+	width: 140px;
+	height: 140px;
 	overflow: hidden;
 	border: 9px solid rgba(0, 0, 0, 0.05);
 	margin: 0 auto;
 }
+
 #head .title a {
 	text-decoration: none;
 	color: #333333;
@@ -161,8 +163,7 @@ a:hover, a:focus {
 	color: #5E5E5E;
 }
 #logo {
-	padding-top: 0px;
-	padding-left: 10px;
+	padding-top: 50px;
 }
 .home #head .title {
 	font-size: 18px;
@@ -240,14 +241,14 @@ a:hover, a:focus {
 .navbar-nav {
 	float: none;
 	margin: 0 auto;
-	text-align: right;
+	text-align: center;
 }
 .navbar-nav > li {
 	float: none;
 	display: inline-block;
 }
 .navbar-nav > li > a {
-	padding: 10px 12px;
+	padding: 2px 12px 16px 12px;
 }
 .navbar-default {
 	background-color: #ffffff;

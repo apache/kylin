@@ -21,9 +21,6 @@ package org.apache.kylin.job;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -41,7 +38,7 @@ import org.apache.kylin.cube.model.v1.CubeInstance;
 import org.apache.kylin.cube.model.v1.CubeSegment;
 import org.apache.kylin.cube.model.v1.CubeSegmentStatusEnum;
 import org.apache.kylin.cube.model.v1.CubeStatusEnum;
-import org.apache.kylin.dict.*;
+import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.dict.lookup.SnapshotManager;
 import org.apache.kylin.dict.lookup.SnapshotTable;
 import org.apache.kylin.dict.lookup.TableReader;
@@ -72,7 +69,6 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -108,7 +104,7 @@ public class CubeMetadataUpgrade {
         upgradeCubeDesc();
         upgradeProjectInstance();
         upgradeCubeInstance();
-        upgradeJobInstance();
+      //  upgradeJobInstance();
 
         verify();
 
@@ -121,6 +117,7 @@ public class CubeMetadataUpgrade {
         CubeManager cubeManager = CubeManager.getInstance(config);
         ProjectManager.getInstance(config);
 
+        /*
         DictionaryManager dictManager = DictionaryManager.getInstance(config);
         SnapshotManager snapshotManager = SnapshotManager.getInstance(config);
         List<org.apache.kylin.cube.CubeInstance> allCubes = cubeManager.listAllCubes();
@@ -152,6 +149,7 @@ public class CubeMetadataUpgrade {
             }
 
         }
+        */
     }
 
     private List<String> listResourceStore(String pathRoot) {
@@ -499,18 +497,13 @@ public class CubeMetadataUpgrade {
         for (int i = 0, size = job.getSteps().size(); i < size; ++i) {
             final JobInstance.JobStep jobStep = job.getSteps().get(i);
             final InputStream inputStream = getStore().getResource(ResourceStore.JOB_OUTPUT_PATH_ROOT + "/" + job.getId() + "." + i);
+
             String output = null;
             if (inputStream != null) {
-                JsonElement json = new JsonParser().parse(new InputStreamReader(inputStream));
-                if (json instanceof JsonObject) {
-                    final JsonElement element = ((JsonObject) json).get("output");
-                    if (element != null) {
-                        output = element.getAsString();
-                    } else {
-                        output = json.getAsString();
-                    }
-                } else {
-                    output = json.getAsString();
+                HashMap<String, String> job_output = JsonUtil.readValue(inputStream, HashMap.class);
+
+                if (job_output != null) {
+                    output = job_output.get("output");
                 }
             }
             updateJobStepOutput(jobStep, output, cubingJob.getTasks().get(i));

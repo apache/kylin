@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.net.util.Base64;
+import org.apache.hadoop.hbase.protobuf.generated.ClientProtos;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -109,14 +110,18 @@ public class IIDesc extends RootPersistentEntity {
         IIDimension.capicalizeStrings(valueDimensions);
         StringUtil.toUpperCaseArray(metricNames, metricNames);
 
-        // retrieve all columns and all tables
+        // retrieve all columns and all tables, and make available measure to ii
         HashSet<String> allTableNames = Sets.newHashSet();
+        measureDescs = Lists.newArrayList();
+        measureDescs.add(makeCountMeasure());
         for (IIDimension iiDimension : Iterables.concat(bitmapDimensions, valueDimensions)) {
             TableDesc tableDesc = this.getTableDesc(iiDimension.getTable());
             for (String column : iiDimension.getColumns()) {
                 ColumnDesc columnDesc = tableDesc.findColumnByName(column);
                 allColumns.add(new TblColRef(columnDesc));
+                measureDescs.add(makeHLLMeasure(columnDesc, null));
             }
+
             if (!allTableNames.contains(tableDesc.getIdentity())) {
                 allTableNames.add(tableDesc.getIdentity());
                 allTables.add(tableDesc);
@@ -126,6 +131,9 @@ public class IIDesc extends RootPersistentEntity {
             TableDesc tableDesc = this.getTableDesc(this.getFactTableName());
             ColumnDesc columnDesc = tableDesc.findColumnByName(column);
             allColumns.add(new TblColRef(columnDesc));
+            measureDescs.add(makeNormalMeasure("SUM", columnDesc));
+            measureDescs.add(makeNormalMeasure("MIN", columnDesc));
+            measureDescs.add(makeNormalMeasure("MAX", columnDesc));
             if (!allTableNames.contains(tableDesc.getIdentity())) {
                 allTableNames.add(tableDesc.getIdentity());
                 allTables.add(tableDesc);
@@ -136,9 +144,7 @@ public class IIDesc extends RootPersistentEntity {
         bitmapCols = new int[IIDimension.getColumnCount(bitmapDimensions)];
         valueCols = new int[IIDimension.getColumnCount(valueDimensions)];
         metricsCols = new int[metricNames.length];
-
         metricsColSet = new BitSet(this.getTableDesc(this.getFactTableName()).getColumnCount());
-        measureDescs = Lists.newArrayList();
 
         int totalIndex = 0;
         for (int i = 0; i < bitmapCols.length; ++i, ++totalIndex) {
@@ -150,14 +156,7 @@ public class IIDesc extends RootPersistentEntity {
         for (int i = 0; i < metricsCols.length; ++i, ++totalIndex) {
             metricsCols[i] = totalIndex;
             metricsColSet.set(totalIndex);
-
-            ColumnDesc col = this.getTableDesc(this.getFactTableName()).findColumnByName(metricNames[i]);
-            measureDescs.add(makeMeasureDescs("SUM", col));
-            measureDescs.add(makeMeasureDescs("MIN", col));
-            measureDescs.add(makeMeasureDescs("MAX", col));
-            // TODO support for HLL
         }
-        measureDescs.add(makeCountMeasure());
 
         // partitioning column
         tsCol = -1;
@@ -197,7 +196,7 @@ public class IIDesc extends RootPersistentEntity {
         return functions;
     }
 
-    private MeasureDesc makeMeasureDescs(String func, ColumnDesc columnDesc) {
+    private MeasureDesc makeNormalMeasure(String func, ColumnDesc columnDesc) {
         String columnName = columnDesc.getName();
         String returnType = columnDesc.getTypeName();
         MeasureDesc measureDesc = new MeasureDesc();
@@ -209,6 +208,25 @@ public class IIDesc extends RootPersistentEntity {
         p1.setColRefs(ImmutableList.of(new TblColRef(columnDesc)));
         f1.setParameter(p1);
         f1.setReturnType(returnType);
+        measureDesc.setFunction(f1);
+        return measureDesc;
+    }
+
+    /**
+     * 
+     * @param hllType represents the presision
+     */
+    private MeasureDesc makeHLLMeasure(ColumnDesc columnDesc, String hllType) {
+        String columnName = columnDesc.getName();
+        MeasureDesc measureDesc = new MeasureDesc();
+        FunctionDesc f1 = new FunctionDesc();
+        f1.setExpression("COUNT_DISTINCT");
+        ParameterDesc p1 = new ParameterDesc();
+        p1.setType("column");
+        p1.setValue(columnName);
+        p1.setColRefs(ImmutableList.of(new TblColRef(columnDesc)));
+        f1.setParameter(p1);
+        f1.setReturnType(hllType);
         measureDesc.setFunction(f1);
         return measureDesc;
     }

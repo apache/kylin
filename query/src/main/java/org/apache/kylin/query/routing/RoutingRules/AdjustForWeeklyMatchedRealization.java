@@ -61,7 +61,7 @@ public class AdjustForWeeklyMatchedRealization extends RoutingRule {
     private static void adjustOLAPContextIfNecessary(IIInstance ii, OLAPContext olapContext) {
         IIDesc iiDesc = ii.getDescriptor();
         Collection<FunctionDesc> iiFuncs = iiDesc.listAllFunctions();
-        convertAggreationToDimension(olapContext, iiFuncs, iiDesc.getFactTableName());
+        convertAggregationToDimension(olapContext, iiFuncs, iiDesc.getFactTableName());
     }
 
     private static void adjustOLAPContextIfNecessary(CubeInstance cube, OLAPContext olapContext) {
@@ -70,17 +70,17 @@ public class AdjustForWeeklyMatchedRealization extends RoutingRule {
 
         CubeDesc cubeDesc = cube.getDescriptor();
         Collection<FunctionDesc> cubeFuncs = cubeDesc.listAllFunctions();
-        convertAggreationToDimension(olapContext, cubeFuncs, cubeDesc.getFactTable());
+        convertAggregationToDimension(olapContext, cubeFuncs, cubeDesc.getFactTable());
     }
 
-    private static void convertAggreationToDimension(OLAPContext olapContext, Collection<FunctionDesc> availableAggregations, String factTableName) {
+    private static void convertAggregationToDimension(OLAPContext olapContext, Collection<FunctionDesc> availableAggregations, String factTableName) {
         Iterator<FunctionDesc> it = olapContext.aggregations.iterator();
         while (it.hasNext()) {
             FunctionDesc functionDesc = it.next();
             if (!availableAggregations.contains(functionDesc)) {
                 // try to convert the metric to dimension to see if it works
                 TblColRef col = functionDesc.selectTblColRef(olapContext.metricsColumns, factTableName);
-                functionDesc.setAppliedOnDimension(true);
+                functionDesc.setDimensionAsMetric(true);
                 olapContext.rewriteFields.remove(functionDesc.getRewriteFieldName());
                 if (col != null) {
                     olapContext.metricsColumns.remove(col);
