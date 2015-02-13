@@ -61,13 +61,7 @@ public class MergeCuboidJob extends CuboidJob {
             System.out.println("Starting: " + jobName);
             job = Job.getInstance(getConf(), jobName);
 
-            // set job configuration - basic
-            File JarFile = new File(config.getKylinJobJarPath());
-            if (JarFile.exists()) {
-                job.setJar(config.getKylinJobJarPath());
-            } else {
-                job.setJarByClass(this.getClass());
-            }
+            setJobClasspath(job);
 
             // set inputs
             addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);

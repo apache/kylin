@@ -26,8 +26,8 @@ version=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpress
 echo "kylin version: ${version}"
 export version
 
-sh ${dir}/download-tomcat.sh || { exit 1; }
-sh ${dir}/build.sh || { exit 1; }
-sh ${dir}/prepare.sh || { exit 1; }
-sh ${dir}/compress.sh || { exit 1; }
+sh script/download-tomcat.sh || { exit 1; }
+sh script/build.sh || { exit 1; }
+sh script/prepare.sh || { exit 1; }
+sh script/compress.sh || { exit 1; }
 

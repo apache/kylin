@@ -98,8 +98,6 @@ public class HybridManager implements IRealizationProvider {
                 throw new IllegalStateException("HybridInstance must have both historyRealization and realTimeRealization set, at " + path);
             }
 
-            hybridInstance.init();
-
             final String name = hybridInstance.getName();
             hybridMap.putLocal(name, hybridInstance);
 
