@@ -59,7 +59,7 @@ public class RowKeyDistributionCheckerJob extends AbstractHadoopJob {
             String jobName = getOptionValue(OPTION_JOB_NAME);
             job = Job.getInstance(getConf(), jobName);
 
-            job.setJarByClass(this.getClass());
+            setJobClasspath(job);
 
             addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
 
