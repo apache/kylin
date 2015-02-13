@@ -1,5 +1,8 @@
 #!/bin/sh
 
+dir=$(dirname ${0})
+source ${dir}/check-env.sh
+
 if [ ! -f "${KYLIN_HOME}/pid" ]
 then
     echo "no pid found"
