@@ -121,11 +121,14 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         String kylinHiveDependency = System.getProperty("kylin.hive.dependency");
         logger.info("append kylin.hive.dependency: " + kylinHiveDependency + " to " + MAP_REDUCE_CLASSPATH);
         if (kylinHiveDependency != null) {
-            final String classpath = job.getConfiguration().get(MAP_REDUCE_CLASSPATH);
+            // yarn classpath is comma separated
+            kylinHiveDependency = kylinHiveDependency.replace(":", ",");
+            Configuration jobConf = job.getConfiguration();
+            final String classpath = jobConf.get(MAP_REDUCE_CLASSPATH);
             if (classpath == null) {
-                job.getConfiguration().set(MAP_REDUCE_CLASSPATH, kylinHiveDependency);
+                jobConf.set(MAP_REDUCE_CLASSPATH, kylinHiveDependency);
             } else {
-                job.getConfiguration().set(MAP_REDUCE_CLASSPATH, classpath + ":" + kylinHiveDependency);
+                jobConf.set(MAP_REDUCE_CLASSPATH, classpath + "," + kylinHiveDependency);
             }
         }
         if (isAsync) {
