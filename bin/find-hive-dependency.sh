@@ -7,7 +7,7 @@ arr=(`echo $hive_classpath | cut -d ":"  --output-delimiter=" " -f 1-`)
 hive_exec_path=
 for data in ${arr[@]}
 do
-    result=`echo $data | grep -e 'hive-exec-[0-9\.-]*jar'`
+    result=`echo $data | grep -e 'hive-exec[0-9\.-]*jar'`
     if [ $result ]
     then
         hive_exec_path=$data
@@ -15,20 +15,11 @@ do
 done
 hdp_home=`echo $hive_exec_path | awk -F '/hive/lib/' '{print $1}'`
 
-hive_dependency=/usr/hdp/current/hive-client/conf/:${hdp_home}/hive/lib/*
+hive_dependency=${hdp_home}/hive/conf:${hdp_home}/hive/lib/*
 
-hcatalog=""
-if [ -d "${hdp_home}/hive-hcatalog/share/hcatalog/" ]
-then
-    hcatalog="${hdp_home}/hive-hcatalog/share/hcatalog/*"
-else
-    if [ -d "${hdp_home}/hcatalog/share/hcatalog/" ]
-    then
-        hcatalog="${hdp_home}/hcatalog/share/hcatalog/*"
-    fi
-fi
+hcatalog=`find $hdp_home -name "hive-hcatalog-core[0-9\.-]*jar" 2>&1 | grep -m 1 -v 'Permission denied'`
 
-if [ hcatalog = "" ]
+if [ -z "$hcatalog" ]
 then
     echo "hcatalog lib not found"
     exit 1
