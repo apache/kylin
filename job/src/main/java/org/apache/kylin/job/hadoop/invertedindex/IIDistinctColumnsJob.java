@@ -18,7 +18,6 @@
 
 package org.apache.kylin.job.hadoop.invertedindex;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.cli.Options;
@@ -31,16 +30,16 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.job.hadoop.hive.IIJoinedFlatTableDesc;
 import org.apache.kylin.job.hadoop.hive.IntermediateColumnDesc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -74,6 +73,8 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
             job.getConfiguration().set(BatchConstants.TABLE_NAME, tableName);
             job.getConfiguration().set(BatchConstants.TABLE_COLUMNS, getColumns(ii));
 
+            setJobClasspath(job);
+            
             setupMapper();
             setupReducer(output);
 
@@ -98,13 +99,6 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
     }
 
     private void setupMapper() throws IOException {
-
-        File JarFile = new File(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
-        if (JarFile.exists()) {
-            job.setJar(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
-        } else {
-            job.setJarByClass(this.getClass());
-        }
 
         String tableName = job.getConfiguration().get(BatchConstants.TABLE_NAME);
         String[] dbTableNames = HadoopUtil.parseHiveTableName(tableName);

@@ -89,7 +89,7 @@ package org.apache.kylin.job.hadoop.cube;
 //            Job job = Job.getInstanceFromEnv(getConf(), jobName);
 //
 //            // set job configuration - basic 
-//            job.setJarByClass(getClass());
+//            setJobClasspath(job);
 //            addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
 //
 //            Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));

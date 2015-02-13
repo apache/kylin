@@ -18,19 +18,14 @@
 
 package org.apache.kylin.job.engine;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.tools.OptionsHelper;
+import org.apache.kylin.metadata.model.DataModelDesc.RealizationCapacity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.model.DataModelDesc.RealizationCapacity;
+import java.io.*;
 
 /**
  * @author ysong1
@@ -62,14 +57,13 @@ public class JobEngineConfig {
 
         File jobConfig = getJobConfig(hadoopJobConfFile);
         if (jobConfig == null || !jobConfig.exists()) {
-            logger.warn("fail to locate " + hadoopJobConfFile);
+            logger.warn("fail to locate " + hadoopJobConfFile + ", trying to locate " + HADOOP_JOB_CONF_FILENAME + ".xml");
+            jobConfig = getJobConfig(HADOOP_JOB_CONF_FILENAME + ".xml");
+            if (jobConfig == null || !jobConfig.exists()) {
+                logger.error("fail to locate " + HADOOP_JOB_CONF_FILENAME + ".xml");
+                throw new RuntimeException("fail to locate " + HADOOP_JOB_CONF_FILENAME + ".xml");
+            }
         }
-        jobConfig = getJobConfig(HADOOP_JOB_CONF_FILENAME + ".xml");
-        if (jobConfig == null || !jobConfig.exists()) {
-            logger.error("fail to locate " + HADOOP_JOB_CONF_FILENAME + ".xml");
-            throw new RuntimeException("fail to locate " + hadoopJobConfFile);
-        }
-
         return OptionsHelper.convertToFileURL(jobConfig.getAbsolutePath());
     }
 

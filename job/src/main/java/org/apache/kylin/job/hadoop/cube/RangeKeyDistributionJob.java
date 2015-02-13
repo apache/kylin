@@ -68,12 +68,7 @@ public class RangeKeyDistributionJob extends AbstractHadoopJob {
             String jobName = getOptionValue(OPTION_JOB_NAME);
             job = Job.getInstance(getConf(), jobName);
 
-            File JarFile = new File(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
-            if (JarFile.exists()) {
-                job.setJar(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
-            } else {
-                job.setJarByClass(this.getClass());
-            }
+            setJobClasspath(job);
 
             addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
 

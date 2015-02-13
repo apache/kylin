@@ -18,7 +18,6 @@
 
 package org.apache.kylin.job.hadoop.invertedindex;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.cli.Options;
@@ -31,15 +30,15 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
+import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.job.constant.BatchConstants;
 
 /**
  * @author yangli9
@@ -69,6 +68,8 @@ public class InvertedIndexJob extends AbstractHadoopJob {
 
             IIInstance ii = getII(iiname);
             short sharding = ii.getDescriptor().getSharding();
+            
+            setJobClasspath(job);
 
             setupMapper(intermediateTable);
             setupReducer(output, sharding);
@@ -102,13 +103,6 @@ public class InvertedIndexJob extends AbstractHadoopJob {
     }
 
     private void setupMapper(String intermediateTable) throws IOException {
-
-        File JarFile = new File(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
-        if (JarFile.exists()) {
-            job.setJar(KylinConfig.getInstanceFromEnv().getKylinJobJarPath());
-        } else {
-            job.setJarByClass(this.getClass());
-        }
 
         String[] dbTableNames = HadoopUtil.parseHiveTableName(intermediateTable);
         HCatInputFormat.setInput(job, dbTableNames[0],
