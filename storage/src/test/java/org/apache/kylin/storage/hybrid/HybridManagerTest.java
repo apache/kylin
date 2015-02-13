@@ -38,7 +38,7 @@ public class HybridManagerTest extends LocalFileMetadataTestCase {
     @Test
     public void testBasics() throws Exception {
         HybridInstance cube = getHybridManager().getHybridInstance("test_kylin_hybrid");
-
+        cube.init();
         System.out.println(JsonUtil.writeValueAsIndentString(cube));
 
         IRealization history = cube.getHistoryRealizationInstance();

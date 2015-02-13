@@ -16,6 +16,9 @@ echo 'package tgz'
 rm -rf kylin-${version}
 mkdir kylin-${version}
 cp -r lib bin conf tomcat kylin-${version}
+find kylin-${version} -type d -exec chmod 755 {} \;
+find kylin-${version} -type f -exec chmod 644 {} \;
+find kylin-${version} -type f -name "*.sh" -exec chmod 755 {} \;
 tar -cvzf kylin-${version}.tgz kylin-${version}
 rm -rf kylin-${version}
 

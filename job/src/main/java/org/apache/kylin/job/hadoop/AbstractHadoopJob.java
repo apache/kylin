@@ -113,21 +113,9 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         return optionsHelper.hasOption(option);
     }
 
-    private static final String MAP_REDUCE_CLASSPATH = "mapreduce.application.classpath";
-
     protected int waitForCompletion(Job job) throws IOException, InterruptedException, ClassNotFoundException {
         int retVal = 0;
         long start = System.nanoTime();
-        String kylinHiveDependency = System.getProperty("kylin.hive.dependency");
-        logger.info("append kylin.hive.dependency: " + kylinHiveDependency + " to " + MAP_REDUCE_CLASSPATH);
-        if (kylinHiveDependency != null) {
-            final String classpath = job.getConfiguration().get(MAP_REDUCE_CLASSPATH);
-            if (classpath == null) {
-                job.getConfiguration().set(MAP_REDUCE_CLASSPATH, kylinHiveDependency);
-            } else {
-                job.getConfiguration().set(MAP_REDUCE_CLASSPATH, classpath + ":" + kylinHiveDependency);
-            }
-        }
         if (isAsync) {
             job.submit();
         } else {
@@ -145,6 +133,33 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         } catch (Exception e) {
             e.printStackTrace(System.err);
             System.exit(5);
+        }
+    }
+    
+    private static final String MAP_REDUCE_CLASSPATH = "mapreduce.application.classpath";
+
+    protected void setJobClasspath(Job job) {
+        String jarPath = KylinConfig.getInstanceFromEnv().getKylinJobJarPath();
+        File jarFile = new File(jarPath);
+        if (jarFile.exists()) {
+            job.setJar(jarPath);
+            logger.info("append job jar: " + jarPath);
+        } else {
+            job.setJarByClass(this.getClass());
+        }
+
+        String kylinHiveDependency = System.getProperty("kylin.hive.dependency");
+        logger.info("append kylin.hive.dependency: " + kylinHiveDependency + " to " + MAP_REDUCE_CLASSPATH);
+        if (kylinHiveDependency != null) {
+            // yarn classpath is comma separated
+            kylinHiveDependency = kylinHiveDependency.replace(":", ",");
+            Configuration jobConf = job.getConfiguration();
+            final String classpath = jobConf.get(MAP_REDUCE_CLASSPATH);
+            if (classpath == null) {
+                jobConf.set(MAP_REDUCE_CLASSPATH, kylinHiveDependency);
+            } else {
+                jobConf.set(MAP_REDUCE_CLASSPATH, classpath + "," + kylinHiveDependency);
+            }
         }
     }
 

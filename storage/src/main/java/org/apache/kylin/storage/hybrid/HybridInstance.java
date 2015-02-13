@@ -14,7 +14,6 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.metadata.realization.SQLDigest;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Created by shaoshi on 2/13/15.
@@ -42,7 +41,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
     public void init() {
         RealizationRegistry registry = RealizationRegistry.getInstance(config);
         historyRealizationInstance = registry.getRealization(historyRealization.getType(), historyRealization.getRealization());
-        realTimeRealizationInstance = registry.getRealization(realTimeRealizationInstance.getType(), historyRealization.getRealization());
+        realTimeRealizationInstance = registry.getRealization(realTimeRealization.getType(), realTimeRealization.getRealization());
 
     }
 
@@ -130,5 +129,15 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
 
     public IRealization getRealTimeRealizationInstance() {
         return realTimeRealizationInstance;
+    }
+
+    @Override
+    public long getDateRangeStart() {
+        return historyRealizationInstance.getDateRangeStart();
+    }
+
+    @Override
+    public long getDateRangeEnd() {
+        return realTimeRealizationInstance.getDateRangeEnd();
     }
 }

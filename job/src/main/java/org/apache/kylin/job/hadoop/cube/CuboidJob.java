@@ -83,12 +83,7 @@ public class CuboidJob extends AbstractHadoopJob {
             logger.info("Starting: " + job.getJobName());
             FileInputFormat.setInputPaths(job, input);
 
-            File jarFile = new File(config.getKylinJobJarPath());
-            if (jarFile.exists()) {
-                job.setJar(config.getKylinJobJarPath());
-            } else {
-                job.setJarByClass(this.getClass());
-            }
+            setJobClasspath(job);
 
             // Mapper
             if (this.mapperClass == null) {
