@@ -515,7 +515,7 @@ public class KylinConfig {
     public static String getKylinHome() {
         String kylinHome = System.getenv(KYLIN_HOME);
         if (StringUtils.isEmpty(kylinHome)) {
-            logger.warn("KYLIN_HOME has not been set");
+            logger.warn("KYLIN_HOME was not set");
             return kylinHome;
         }
         return kylinHome;
@@ -531,15 +531,16 @@ public class KylinConfig {
 
     private static File getKylinProperties() {
         String kylinConfHome = System.getProperty(KYLIN_CONF_HOME);
-        if (StringUtils.isEmpty(kylinConfHome)) {
-            logger.warn("KYLIN_CONF_HOME has not been set");
-        } else {
+        if (!StringUtils.isEmpty(kylinConfHome)) {
+            logger.info("Use KYLIN_CONF_HOME=" + kylinConfHome);
             return getKylinPropertiesFile(kylinConfHome);
         }
 
+        logger.warn("KYLIN_CONF_HOME property was not set, will seek KYLIN_HOME env variable");
+
         String kylinHome = getKylinHome();
         if (StringUtils.isEmpty(kylinHome))
-            throw new RuntimeException("getKylinProperties needs KYLIN_HOME");
+            throw new RuntimeException("Didn't find KYLIN_CONF_HOME or KYLIN_HOME, please set one of them");
 
         String path = kylinHome + File.separator + "conf";
         return getKylinPropertiesFile(path);
