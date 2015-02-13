@@ -114,44 +114,6 @@ public class JobEngineConfig {
         return config.getHdfsWorkingDirectory();
     }
 
-    /**
-     * @return the kylinJobJarPath
-     */
-    public String getKylinJobJarPath() {
-        return config.getKylinJobJarPath();
-    }
-
-    /**
-     * @return the runAsRemoteCommand
-     */
-    public boolean isRunAsRemoteCommand() {
-        return config.getRunAsRemoteCommand();
-    }
-
-    /**
-     * @return the remoteHadoopCliHostname
-     */
-    public String getRemoteHadoopCliHostname() {
-        return config.getRemoteHadoopCliHostname();
-    }
-
-    /**
-     * @return the remoteHadoopCliUsername
-     */
-    public String getRemoteHadoopCliUsername() {
-        return config.getRemoteHadoopCliUsername();
-    }
-
-    /**
-     * @return the remoteHadoopCliPassword
-     */
-    public String getRemoteHadoopCliPassword() {
-        return config.getRemoteHadoopCliPassword();
-    }
-
-    public String getMapReduceCmdExtraArgs() {
-        return config.getMapReduceCmdExtraArgs();
-    }
 
     /**
      * @return the maxConcurrentJobLimit

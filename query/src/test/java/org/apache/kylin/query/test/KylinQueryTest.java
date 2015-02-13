@@ -192,11 +192,7 @@ public class KylinQueryTest extends KylinTestBase {
 
     @Test
     public void testDistinctCountQuery() throws Exception {
-        if (distinctCountSupported) {
-            batchExecuteQuery("src/test/resources/query/sql_distinct");
-        } else {
-            System.out.println("distinct count query omiited");
-        }
+        batchExecuteQuery("src/test/resources/query/sql_distinct");
     }
 
     @Test
@@ -246,6 +242,7 @@ public class KylinQueryTest extends KylinTestBase {
             throw new IllegalStateException(queryName + " should be error!");
         }
     }
+
 
     @Test
     public void testDynamicQuery() throws Exception {

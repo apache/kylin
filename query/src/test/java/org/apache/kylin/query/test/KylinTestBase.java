@@ -79,7 +79,6 @@ public class KylinTestBase {
 
     protected static final String resultTableName = "query result of ";
     protected static KylinConfig config = null;
-    protected static boolean distinctCountSupported = true;
     protected static Connection cubeConnection = null;
     protected static Connection h2Connection = null;
     protected static String joinType = "default";

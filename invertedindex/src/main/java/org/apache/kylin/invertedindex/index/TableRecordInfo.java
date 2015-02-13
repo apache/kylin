@@ -129,13 +129,12 @@ public class TableRecordInfo {
         return desc.findColumn(col);
     }
 
-    public int findMetric(String metricColumnName) {
-        if (metricColumnName == null)
+    public int findFactTableColumn(String columnName) {
+        if (columnName == null)
             return -1;
         for (int i = 0; i < allColumns.size(); ++i) {
             TblColRef tblColRef = allColumns.get(i);
-            if (measureSerializers[i] != null // has measureSerializers means it is a metric
-                    && tblColRef.isSameAs(desc.getFactTableName(), metricColumnName)) {
+            if (tblColRef.isSameAs(desc.getFactTableName(), columnName)) {
                 return i;
             }
         }

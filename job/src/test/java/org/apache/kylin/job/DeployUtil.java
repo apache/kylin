@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.kylin.job.dataGen.FactTableGenerator;
 import org.apache.maven.model.Model;
@@ -82,12 +83,17 @@ public class DeployUtil {
         File originalJobJar = files.getFirst();
         File originalCoprocessorJar = files.getSecond();
 
-        File targetJobJar = new File(config().getKylinJobJarPath());
+        String jobJarPath = config().getKylinJobJarPath();
+        if (StringUtils.isEmpty(jobJarPath)) {
+            throw new RuntimeException("deployJobJars cannot find job jar");
+        }
+
+        File targetJobJar = new File(jobJarPath);
         File jobJarRenamedAsTarget = new File(originalJobJar.getParentFile(), targetJobJar.getName());
         if (originalJobJar.equals(jobJarRenamedAsTarget) == false) {
             FileUtils.copyFile(originalJobJar, jobJarRenamedAsTarget);
         }
-        
+
         File targetCoprocessorJar = new File(config().getCoprocessorLocalJar());
         File coprocessorJarRenamedAsTarget = new File(originalCoprocessorJar.getParentFile(), targetCoprocessorJar.getName());
         if (originalCoprocessorJar.equals(coprocessorJarRenamedAsTarget) == false) {
@@ -113,7 +119,7 @@ public class DeployUtil {
         File coprocessorJar = new File("../storage/target", "kylin-storage-" + version + "-coprocessor.jar");
         return new Pair<File, File>(jobJar, coprocessorJar);
     }
-    
+
     private static void execCliCommand(String cmd) throws IOException {
         config().getCliCommandExecutor().execute(cmd);
     }
@@ -211,7 +217,7 @@ public class DeployUtil {
         temp.delete();
 
         HiveClient hiveClient = new HiveClient();
-        
+
         // create hive tables
         hiveClient.executeHQL("CREATE DATABASE IF NOT EXISTS EDW");
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CAL_DT.toUpperCase())));
@@ -234,7 +240,7 @@ public class DeployUtil {
     }
 
     private static String[] generateCreateTableHql(TableDesc tableDesc) {
-        
+
         String dropsql = "DROP TABLE IF EXISTS " + tableDesc.getIdentity();
         StringBuilder ddl = new StringBuilder();
 
@@ -253,7 +259,7 @@ public class DeployUtil {
         ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY ','" + "\n");
         ddl.append("STORED AS TEXTFILE");
 
-        return new String[] {dropsql, ddl.toString()};
+        return new String[] { dropsql, ddl.toString() };
     }
 
 }

@@ -50,12 +50,12 @@ public class EndpointAggregators {
     private static class MetricInfo {
         private MetricType type;
         private int refIndex = -1;
-        private int presision = -1;
+        private int precision = -1;
 
         public MetricInfo(MetricType type, int refIndex, int presision) {
             this.type = type;
             this.refIndex = refIndex;
-            this.presision = presision;
+            this.precision = presision;
         }
 
         public MetricInfo(MetricType type, int refIndex) {
@@ -83,12 +83,12 @@ public class EndpointAggregators {
 
             if (functionDesc.isCount()) {
                 metricInfos[i] = new MetricInfo(MetricType.Count);
-            } else if (functionDesc.isAppliedOnDimension()) {
+            } else if (functionDesc.isDimensionAsMetric()) {
                 metricInfos[i] = new MetricInfo(MetricType.DimensionAsMetric);
             } else {
-                int index = tableInfo.findMetric(functionDesc.getParameter().getValue());
+                int index = tableInfo.findFactTableColumn(functionDesc.getParameter().getValue());
                 if (index < 0) {
-                    throw new IllegalStateException("Column " + functionDesc.getParameter().getColRefs().get(0) + " is not found in II");
+                    throw new IllegalStateException("Column " + functionDesc.getParameter().getValue() + " is not found in II");
                 }
 
                 if (functionDesc.isCountDistinct()) {
@@ -141,9 +141,13 @@ public class EndpointAggregators {
 
     public MeasureAggregator[] createBuffer() {
         MeasureAggregator[] aggrs = new MeasureAggregator[funcNames.length];
-        for (int j = 0; j < aggrs.length; j++) {
-            //all fixed length measures can be aggregated as long
-            aggrs[j] = MeasureAggregator.create(funcNames[j], "long");
+        for (int i = 0; i < aggrs.length; i++) {
+            if (metricInfos[i].type == MetricType.DistinctCount) {
+                aggrs[i] = MeasureAggregator.create(funcNames[i], dataTypes[i]);
+            } else {
+                //all other fixed length measures can be aggregated as long
+                aggrs[i] = MeasureAggregator.create(funcNames[i], "long");
+            }
         }
         return aggrs;
     }
@@ -179,7 +183,8 @@ public class EndpointAggregators {
                 //TODO: for unified dictionary, this is okay. but if different data blocks uses different dictionary, we'll have to aggregate original data
                 HyperLogLogPlusCounter hllc = hllcs[metricIndex];
                 if (hllc == null) {
-                    hllc = new HyperLogLogPlusCounter(metricInfo.presision);
+                    int precision = metricInfo.precision;
+                    hllc = new HyperLogLogPlusCounter(precision);
                 }
                 hllc.clear();
                 hllc.add(byteBuffer.get(), byteBuffer.getOffset(), byteBuffer.getLength());
@@ -244,7 +249,7 @@ public class EndpointAggregators {
                 MetricInfo metricInfo = value.metricInfos[i];
                 BytesUtil.writeAsciiString(metricInfo.type.toString(), out);
                 BytesUtil.writeVInt(metricInfo.refIndex, out);
-                BytesUtil.writeVInt(metricInfo.presision, out);
+                BytesUtil.writeVInt(metricInfo.precision, out);
             }
 
             BytesUtil.writeByteArray(TableRecordInfoDigest.serialize(value.tableRecordInfoDigest), out);
