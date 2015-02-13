@@ -413,7 +413,7 @@ public class KylinConfig {
 
     public String[] getRestServers() {
         String nodes = getOptional(KYLIN_REST_SERVERS);
-        if (nodes == null)
+        if (StringUtils.isBlank(nodes))
             return null;
         return nodes.split("\\s*,\\s*");
     }
