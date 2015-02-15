@@ -19,7 +19,7 @@
 package org.apache.kylin.job.impl.threadpool;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -34,7 +34,7 @@ import java.lang.reflect.Modifier;
 /**
  * Created by qianzhou on 12/26/14.
  */
-public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
+public abstract class BaseSchedulerTest extends HBaseMetadataTestCase {
 
     private DefaultScheduler scheduler;
 
