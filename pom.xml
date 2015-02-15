@@ -576,6 +576,7 @@
                                 <exclude>**/KylinQueryTest.java</exclude>
                                 <exclue>**/SnapshotManagerTest.java</exclue>
                                 <exclue>**/HiveTableReaderTest.java</exclue>
+                                <exclude>**/TableControllerTest.java</exclude>
                             </excludes>
                             <systemProperties>
                                 <property>
