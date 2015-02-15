@@ -1,11 +1,13 @@
 package org.apache.kylin.jdbc;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.*;
 
+import java.io.File;
 import java.sql.*;
 import java.util.List;
 import java.util.Properties;
@@ -43,6 +45,11 @@ public class JDBCDriverTest extends HBaseMetadataTestCase {
     protected static void stopJetty() throws Exception {
         if (server != null)
             server.stop();
+
+        File workFolder = new File("work");
+        if(workFolder.isDirectory() && workFolder.exists()) {
+            FileUtils.deleteDirectory(workFolder);
+        }
     }
 
     protected static void startJetty() throws Exception {
