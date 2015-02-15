@@ -576,6 +576,7 @@
                                 <exclude>**/KylinQueryTest.java</exclude>
                                 <exclue>**/SnapshotManagerTest.java</exclue>
                                 <exclue>**/HiveTableReaderTest.java</exclue>
+                                <exclude>**/TableControllerTest.java</exclude>
                             </excludes>
                             <systemProperties>
                                 <property>
@@ -587,7 +588,7 @@
                                     <value>false</value>
                                 </property>
                             </systemProperties>
-                            <argLine>-Xms1G -Xmx6G -XX:PermSize=1G -XX:MaxPermSize=2G</argLine>
+                            <argLine>-Xms1G -Xmx2G -XX:PermSize=128M -XX:MaxPermSize=256M</argLine>
                         </configuration>
                     </plugin>
 
