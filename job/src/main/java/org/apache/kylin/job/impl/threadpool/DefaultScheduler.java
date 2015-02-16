@@ -160,7 +160,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
     private String getZKConnectString(JobEngineConfig context) {
         Configuration conf = HadoopUtil.newHBaseConfiguration(context.getConfig().getStorageUrl());
-        return conf.get(HConstants.ZOOKEEPER_QUORUM);
+        return conf.get(HConstants.ZOOKEEPER_QUORUM) + ":" + conf.get(HConstants.ZOOKEEPER_CLIENT_PORT);
     }
 
     public static DefaultScheduler getInstance() {
