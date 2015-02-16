@@ -341,6 +341,7 @@ public class DictionaryManager {
     DictionaryInfo load(String resourcePath, boolean loadDictObj) throws IOException {
         ResourceStore store = MetadataManager.getInstance(config).getStore();
 
+        logger.debug("Going to load DictionaryInfo from " + resourcePath);
         DictionaryInfo info = store.getResource(resourcePath, DictionaryInfo.class, loadDictObj ? DictionaryInfoSerializer.FULL_SERIALIZER : DictionaryInfoSerializer.INFO_SERIALIZER);
 
         if (loadDictObj)
