@@ -65,7 +65,7 @@
                            ng-model="metaModel.model.partition_desc.partition_date_start" ng-if="state.mode=='edit'"
                            placeholder="Click to choose start date..." is-open="opened" />
                     <span ng-if="state.mode=='view'">{{
-                        (metaModel.model.partition_desc.partition_date_start|reverseToGMT0) }}</span>
+                        (metaModel.model.partition_desc.partition_date_start)|date:'yyyy-MM-dd HH:mm:ss' }}</span>
                 </div>
             </div>
         </div>
