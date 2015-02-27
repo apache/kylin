@@ -108,7 +108,8 @@ KylinApp
         //convert GMT+0 time to specified Timezone
         return function(item,timezone,format){
 
-            if(angular.isUndefined(item)){
+            // undefined and 0 is not necessary to show
+            if(angular.isUndefined(item)||item===0){
                 return "";
             }
 
@@ -128,7 +129,6 @@ KylinApp
                 default:
                     gmttimezone = timezone;
             }
-
 
             var localOffset = new Date().getTimezoneOffset();
             var convertedMillis = item;
