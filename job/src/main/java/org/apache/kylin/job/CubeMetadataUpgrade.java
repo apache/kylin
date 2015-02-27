@@ -89,7 +89,7 @@ public class CubeMetadataUpgrade {
 
     public CubeMetadataUpgrade(String newMetadataUrl) {
         KylinConfig.destoryInstance();
-        System.setProperty(KylinConfig.KYLIN_CONF_HOME, newMetadataUrl);
+        System.setProperty(KylinConfig.KYLIN_CONF, newMetadataUrl);
         KylinConfig.getInstanceFromEnv().setMetadataUrl(newMetadataUrl);
 
 

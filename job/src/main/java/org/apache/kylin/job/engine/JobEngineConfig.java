@@ -35,7 +35,7 @@ public class JobEngineConfig {
     public static String HADOOP_JOB_CONF_FILENAME = "kylin_job_conf";
 
     private static File getJobConfig(String fileName) {
-        String path = System.getProperty(KylinConfig.KYLIN_CONF_HOME);
+        String path = System.getProperty(KylinConfig.KYLIN_CONF);
         if (StringUtils.isNotEmpty(path)) {
             return new File(path, fileName);
         }

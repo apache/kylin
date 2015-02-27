@@ -23,6 +23,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.JsonUtil;
 
 /**
@@ -61,7 +62,7 @@ public class DictionaryInfoSerializer implements Serializer<DictionaryInfo> {
         if (infoOnly == false) {
             Dictionary<?> dict;
             try {
-                dict = (Dictionary<?>) Util.classForName(obj.getDictionaryClass()).newInstance();
+                dict = (Dictionary<?>) ClassUtil.forName(obj.getDictionaryClass(), Dictionary.class).newInstance();
             } catch (InstantiationException e) {
                 throw new RuntimeException(e);
             } catch (IllegalAccessException e) {

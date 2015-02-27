@@ -42,7 +42,7 @@ public class DebugTomcat {
         
         // test_case_data/sandbox/ contains HDP 2.2 site xmls which is dev sandbox
         ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox").getAbsolutePath());
-        System.setProperty(KylinConfig.KYLIN_CONF_HOME, "../examples/test_case_data/sandbox");
+        System.setProperty(KylinConfig.KYLIN_CONF, "../examples/test_case_data/sandbox");
         System.setProperty("hdp.version", "2.2.0.0-2041"); // mapred-site.xml ref this
 
         // workaround for job submission from win to linux -- https://issues.apache.org/jira/browse/MAPREDUCE-4052

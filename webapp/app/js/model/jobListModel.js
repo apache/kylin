@@ -17,8 +17,8 @@
 */
 
 KylinApp.service('JobList',function(JobService,$q){
-    var jobs=[];
     var _this = this;
+    this.jobs=[];
 
     this.list = function(jobRequest){
 

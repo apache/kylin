@@ -41,7 +41,7 @@ public class BasicHadoopTest {
 
     @BeforeClass
     public static void setup() throws Exception {
-        ClasspathUtil.addClasspath(new File("../examples/test_case_data/hadoop-site").getAbsolutePath());
+        ClassUtil.addClasspath(new File("../examples/test_case_data/hadoop-site").getAbsolutePath());
     }
 
     @Test
