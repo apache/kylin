@@ -38,11 +38,14 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
     $scope.getColumnType = function (_column,table){
         var columns = $scope.getColumnsByTable(table);
+        var type;
         angular.forEach(columns,function(column){
-            if(_column===column.name){
-                return column.type;
+            if(_column === column.name){
+                type = column.datatype;
+                return;
             }
         });
+        return type;
     };
 
     var ColFamily = function () {

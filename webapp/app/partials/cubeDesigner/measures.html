@@ -111,6 +111,7 @@
                             <div class="col-xs-12 col-sm-6">
                                 <select class="form-control"
                                     ng-init="newMeasure.function.expression = (!!newMeasure.function.expression)?newMeasure.function.expression:cubeConfig.dftSelections.measureExpression" chosen ng-model="newMeasure.function.expression" required
+                                    ng-change="measureReturnTypeUpdate();"
                                     ng-options="me as me for me in cubeConfig.measureExpressions">
                                     <option value=""></option>
                                 </select>
@@ -146,7 +147,7 @@
                                 <select class="form-control" chosen
                                     ng-if="newMeasure.function.parameter.type == 'column'"
                                     ng-model="newMeasure.function.parameter.value"
-                                    ng-change="measureParamValueUpdate();"
+                                    ng-change="measureReturnTypeUpdate();"
                                     ng-options="columns.name as columns.name for columns in getColumnsByTable(metaModel.model.fact_table)" >
                                     <option value="">-- Select a Fact Table Column --</option>
                                 </select>
@@ -166,12 +167,8 @@
                                     <option value=""></option>
                                 </select>
                                 <span class="font-color-default"
-                                    ng-if="newMeasure.function.expression == 'COUNT'"
-                                    ng-init="newMeasure.function.returntype= 'bigint' "><b>&nbsp;&nbsp;BIGINT</b>
-                                </span>
-                                <span class="font-color-default"
-                                      ng-if="newMeasure.function.expression != 'COUNT_DISTINCT' && newMeasure.function.expression != 'COUNT' "
-                                     ><b>&nbsp;&nbsp;{{newMeasure.function.returntype}}</b>
+                                      ng-if="newMeasure.function.expression != 'COUNT_DISTINCT'"
+                                     ><b>&nbsp;&nbsp;{{newMeasure.function.returntype | uppercase}}</b>
                                 </span>
                             </div>
                         </div>
