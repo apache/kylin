@@ -95,9 +95,9 @@
             <tr>
                 <th>ID</th>
                 <th>Column</th>
-                <th>Length</th>
-                <th>Dictionary</th>
                 <th>Mandatory</th>
+                <th>Dictionary</th>
+                <th>Length</th>
                 <th ng-if="state.mode=='edit'"></th>
             </tr>
 
@@ -115,13 +115,17 @@
                     <span ng-if="state.mode=='view'">{{rowkey_column.column}}</span>
                 </td>
                 <td>
-                    <!--Column Length -->
-                    <input type="text" class="form-control" placeholder="Column Length.." ng-if="state.mode=='edit'"
-                           tooltip="rowkey column length.." tooltip-trigger="focus"
-                           ng-model="rowkey_column.length" class="form-control">
+                    <!-- Mandatory -->
+                    <button type="button " ng-if="state.mode=='edit'"
+                            class="btn btn-xs btn-default {{rowkey_column.mandatory? 'active':''}}"
+                            ng-model="rowkey_column.mandatory"
+                            btn-checkbox btn-checkbox-true="true" btn-checkbox-false="false">
+                        {{rowkey_column.mandatory? 'Y':'N'}}
+                    </button>
 
-                    <span ng-if="state.mode=='view'">{{rowkey_column.length}}</span>
+                    <span ng-if="state.mode=='view'">{{rowkey_column.mandatory? 'Y':'N'}}</span>
                 </td>
+
                 <td>
                     <!--Use Dictionary-->
                     <div>
@@ -133,17 +137,17 @@
                         <span ng-if="state.mode=='view'">{{rowkey_column.dictionary}}</span>
                     </div>
                 </td>
-                <td>
-                    <!-- Mandatory -->
-                    <button type="button " ng-if="state.mode=='edit'"
-                            class="btn btn-xs btn-default {{rowkey_column.mandatory? 'active':''}}"
-                            ng-model="rowkey_column.mandatory"
-                            btn-checkbox btn-checkbox-true="true" btn-checkbox-false="false">
-                        {{rowkey_column.mandatory? 'Y':'N'}}
-                    </button>
 
-                    <span ng-if="state.mode=='view'">{{rowkey_column.mandatory? 'Y':'N'}}</span>
+                <td>
+                    <!--Column Length -->
+                    <input type="text" class="form-control" placeholder="Column Length.." ng-if="state.mode=='edit'"
+                           tooltip="rowkey column length.." tooltip-trigger="focus"
+                           ng-model="rowkey_column.length" class="form-control">
+
+                    <span ng-if="state.mode=='view'">{{rowkey_column.length}}</span>
                 </td>
+
+
                 <td ng-if="state.mode=='edit'">
                     <button class="btn btn-xs btn-info"
                             ng-click="removeElement(cubeMetaFrame.rowkey.rowkey_columns, rowkey_column)"><i
