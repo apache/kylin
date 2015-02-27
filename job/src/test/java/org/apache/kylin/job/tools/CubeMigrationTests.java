@@ -28,7 +28,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import org.apache.kylin.common.util.AbstractKylinTestCase;
-import org.apache.kylin.common.util.ClasspathUtil;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 
 /**
@@ -39,7 +39,7 @@ public class CubeMigrationTests extends LocalFileMetadataTestCase {
     @Before
     public void setup() throws Exception {
         super.createTestMetadata();
-        ClasspathUtil.addClasspath(new File(AbstractKylinTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
+        ClassUtil.addClasspath(new File(AbstractKylinTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
     }
 
     @After

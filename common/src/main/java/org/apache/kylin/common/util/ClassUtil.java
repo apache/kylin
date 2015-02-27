@@ -27,7 +27,7 @@ import java.net.URLClassLoader;
  * @author xduo
  * 
  */
-public class ClasspathUtil {
+public class ClassUtil {
 
     public static void addClasspath(String path) throws Exception {
         System.out.println("Adding path " + path + " to class path");
@@ -40,6 +40,14 @@ public class ClasspathUtil {
             method.setAccessible(true);
             method.invoke(urlClassLoader, new Object[] { file.toURI().toURL() });
         }
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static <T> Class<? extends T> forName(String name, Class<T> clz) throws ClassNotFoundException {
+        if (name.startsWith("com.kylinolap")) {
+            name = "org.apache.kylin" + name.substring("com.kylinolap".length());
+        }
+        return (Class<? extends T>) Class.forName(name);
     }
 
 }
