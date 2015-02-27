@@ -18,10 +18,14 @@
 
 package org.apache.kylin.rest.controller;
 
-import com.codahale.metrics.annotation.Metered;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
@@ -55,11 +59,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.io.IOException;
-import java.net.UnknownHostException;
-import java.util.*;
+import com.codahale.metrics.annotation.Metered;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 /**
  * CubeController is defined as Restful API entrance for UI.
@@ -348,7 +358,17 @@ public class CubeController extends BasicController {
             return cubeRequest;
         }
         try {
-            metaManager.updateDataModelDesc(modelDesc);
+
+            DataModelDesc existingModel = metaManager.getDataModelDesc(modelDesc.getName());
+            if (existingModel == null) {
+                metaManager.createDataModelDesc(modelDesc);
+            } else {
+
+                //ignore overwriting conflict checking before splict MODEL & CUBE
+                modelDesc.setLastModified(existingModel.getLastModified());
+                metaManager.updateDataModelDesc(modelDesc);
+            }
+
         } catch (IOException e) {
             // TODO Auto-generated catch block
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
