@@ -28,7 +28,7 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
     static {
         if (useSandbox()) {
             try {
-                ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox/").getAbsolutePath());
+                ClassUtil.addClasspath(new File("../examples/test_case_data/sandbox/").getAbsolutePath());
             } catch (Exception e) {
                 e.printStackTrace();
             }

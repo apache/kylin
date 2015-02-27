@@ -18,29 +18,32 @@
 
 package org.apache.kylin.job.manager;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.lang.reflect.Constructor;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.annotation.Nullable;
+
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.exception.IllegalStateTranferException;
 import org.apache.kylin.job.exception.PersistentException;
+import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.DefaultOutput;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
-import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.lang.reflect.Constructor;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * Created by qianzhou on 12/16/14.
@@ -49,6 +52,7 @@ public class ExecutableManager {
 
     private static final Logger logger = LoggerFactory.getLogger(ExecutableManager.class);
     private static final ConcurrentHashMap<KylinConfig, ExecutableManager> CACHE = new ConcurrentHashMap<KylinConfig, ExecutableManager>();
+    @SuppressWarnings("unused")
     private final KylinConfig config;
 
     private ExecutableDao executableDao;
@@ -280,7 +284,7 @@ public class ExecutableManager {
         }
         String type = executablePO.getType();
         try {
-            Class<? extends AbstractExecutable> clazz = (Class<? extends AbstractExecutable>) Class.forName(type);
+            Class<? extends AbstractExecutable> clazz = ClassUtil.forName(type, AbstractExecutable.class);
             Constructor<? extends AbstractExecutable> constructor = clazz.getConstructor();
             AbstractExecutable result = constructor.newInstance();
             result.setId(executablePO.getUuid());

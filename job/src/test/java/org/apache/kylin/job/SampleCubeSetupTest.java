@@ -27,7 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.ClasspathUtil;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -50,7 +50,7 @@ public class SampleCubeSetupTest extends HBaseMetadataTestCase {
             for (String path : paths) {
                 if (!StringUtils.isEmpty(path)) {
                     try {
-                        ClasspathUtil.addClasspath(new File(path).getAbsolutePath());
+                        ClassUtil.addClasspath(new File(path).getAbsolutePath());
                     } catch (Exception e) {
                         System.out.println(e.getLocalizedMessage());
                         System.out.println(e.getStackTrace());

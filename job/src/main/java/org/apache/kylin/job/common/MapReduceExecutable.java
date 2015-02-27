@@ -18,27 +18,33 @@
 
 package org.apache.kylin.job.common;
 
-import com.google.common.base.Preconditions;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.lang.reflect.Constructor;
+import java.util.Map;
+
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.job.constant.ExecutableConstants;
-import org.apache.kylin.job.constant.JobStepStatusEnum;
-import org.apache.kylin.job.exception.ExecuteException;
-import org.apache.kylin.job.execution.*;
-import org.apache.kylin.job.hadoop.AbstractHadoopJob;
-import org.apache.kylin.job.tools.HadoopStatusChecker;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Cluster;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.JobStatus;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.job.constant.ExecutableConstants;
+import org.apache.kylin.job.constant.JobStepStatusEnum;
+import org.apache.kylin.job.exception.ExecuteException;
+import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.ExecutableContext;
+import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.job.execution.Output;
+import org.apache.kylin.job.hadoop.AbstractHadoopJob;
+import org.apache.kylin.job.tools.HadoopStatusChecker;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.lang.reflect.Constructor;
-import java.util.Map;
+import com.google.common.base.Preconditions;
 
 /**
  * Created by qianzhou on 12/25/14.
@@ -82,7 +88,6 @@ public class MapReduceExecutable extends AbstractExecutable {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         final String mapReduceJobClass = getMapReduceJobClass();
@@ -96,7 +101,7 @@ public class MapReduceExecutable extends AbstractExecutable {
                 job = new Cluster(new Configuration()).getJob(JobID.forName(extra.get(ExecutableConstants.MR_JOB_ID)));
                 logger.info("mr_job_id:" + extra.get(ExecutableConstants.MR_JOB_ID + " resumed"));
             } else {
-                final Constructor<? extends AbstractHadoopJob> constructor = (Constructor<? extends AbstractHadoopJob>) Class.forName(mapReduceJobClass).getConstructor();
+                final Constructor<? extends AbstractHadoopJob> constructor = ClassUtil.forName(mapReduceJobClass, AbstractHadoopJob.class).getConstructor();
                 final AbstractHadoopJob hadoopJob = constructor.newInstance();
                 hadoopJob.setAsync(true); // so the ToolRunner.run() returns right away
                 logger.info("parameters of the MapReduceExecutable:");
