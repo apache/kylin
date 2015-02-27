@@ -51,7 +51,7 @@ public class ImportHBaseData {
     public void setup() throws IOException {
 
         KylinConfig.destoryInstance();
-        System.setProperty(KylinConfig.KYLIN_CONF_HOME, AbstractKylinTestCase.SANDBOX_TEST_DATA);
+        System.setProperty(KylinConfig.KYLIN_CONF, AbstractKylinTestCase.SANDBOX_TEST_DATA);
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
         cli = kylinConfig.getCliCommandExecutor();

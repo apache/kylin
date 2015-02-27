@@ -25,6 +25,8 @@ import java.lang.reflect.Constructor;
 import org.apache.hadoop.util.ToolRunner;
 
 import com.google.common.base.Preconditions;
+
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
@@ -43,7 +45,6 @@ public class HadoopShellExecutable extends AbstractExecutable {
         super();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         final String mapReduceJobClass = getJobClass();
@@ -51,7 +52,7 @@ public class HadoopShellExecutable extends AbstractExecutable {
         Preconditions.checkNotNull(mapReduceJobClass);
         Preconditions.checkNotNull(params);
         try {
-            final Constructor<? extends AbstractHadoopJob> constructor = (Constructor<? extends AbstractHadoopJob>) Class.forName(mapReduceJobClass).getConstructor();
+            final Constructor<? extends AbstractHadoopJob> constructor = ClassUtil.forName(mapReduceJobClass, AbstractHadoopJob.class).getConstructor();
             final AbstractHadoopJob job = constructor.newInstance();
             String[] args = params.trim().split("\\s+");
             logger.info("parameters of the HadoopShellExecutable:");

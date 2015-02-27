@@ -59,7 +59,7 @@ public class ExportHBaseData {
         backupArchive = "/tmp/kylin_" + currentTIME + ".tar.gz";
 
         KylinConfig.destoryInstance();
-        System.setProperty(KylinConfig.KYLIN_CONF_HOME, AbstractKylinTestCase.SANDBOX_TEST_DATA);
+        System.setProperty(KylinConfig.KYLIN_CONF, AbstractKylinTestCase.SANDBOX_TEST_DATA);
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
         cli = kylinConfig.getCliCommandExecutor();
