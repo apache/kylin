@@ -107,6 +107,36 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         $scope.newMeasure = null;
     };
 
+    //map right return type for param
+    $scope.measureReturnTypeUpdate = function(){
+        if($scope.newMeasure.function.expression!=="COUNT_DISTINCT"){
+
+            var column = $scope.newMeasure.function.parameter.value;
+            var colType = $scope.getColumnType(column, $scope.metaModel.model.fact_table); // $scope.getColumnType defined in cubeEdit.js
+
+
+            switch($scope.newMeasure.function.expression){
+                case "SUM":
+                    if(colType==="smallint"||colType==="int"||colType==="bigint"){
+                        $scope.newMeasure.function.returntype= 'bigint';
+                    }else{
+                        $scope.newMeasure.function.returntype= 'decimal';
+                    }
+                    break;
+                case "MIN":
+                case "MAX":
+                    $scope.newMeasure.function.returntype = colType;
+                    break;
+                case "COUNT":
+                    $scope.newMeasure.function.returntype = "bigint";
+                    break;
+                default:
+                    $scope.newMeasure.function.returntype = "";
+                    break;
+            }
+        }
+    }
+
     $scope.addNewRowkeyColumn = function () {
         $scope.cubeMetaFrame.rowkey.rowkey_columns.push({
             "column": "",
