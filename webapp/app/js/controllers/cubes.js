@@ -360,9 +360,9 @@ KylinApp
         }
     });
 
-var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube,metaModel, buildType,SweetAlert,loadingRequest) {
+var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube,MetaModel, buildType,SweetAlert,loadingRequest) {
     $scope.cube = cube;
-    $scope.metaModel = metaModel;
+    $scope.metaModel = MetaModel;
     $scope.jobBuildRequest = {
         buildType: buildType,
         startTime: 0,
