@@ -26,14 +26,21 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     $scope.cubeMode = absUrl.indexOf("/cubes/add")!=-1?'addNewCube':absUrl.indexOf("/cubes/edit")!=-1?'editExistCube':'default';
 
 
-    $scope.getColumnsByTable = function (name) {
+    $scope.getColumnsByTable = function (tableName) {
         var temp = [];
         angular.forEach(TableModel.selectProjectTables, function (table) {
-            if (table.name == name) {
+            if (table.name == tableName) {
                 temp = table.columns;
             }
         });
         return temp;
+    };
+
+    $scope.getPartitonColumns = function(tableName){
+        var columns = _.filter($scope.getColumnsByTable(tableName),function(column){
+            return column.datatype==="date";
+        });
+        return columns;
     };
 
     $scope.getColumnType = function (_column,table){
