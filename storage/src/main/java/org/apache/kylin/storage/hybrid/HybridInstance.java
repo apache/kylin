@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.RealizationEntry;
@@ -43,6 +45,18 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
         historyRealizationInstance = registry.getRealization(historyRealization.getType(), historyRealization.getRealization());
         realTimeRealizationInstance = registry.getRealization(realTimeRealization.getType(), realTimeRealization.getRealization());
 
+        if (historyRealizationInstance == null) {
+            throw new IllegalArgumentException("Didn't find realization '" + historyRealization.getType() + "'" + " with name '" + historyRealization.getRealization() + "' in '" + name + "'");
+        }
+
+        if (realTimeRealizationInstance == null) {
+            throw new IllegalArgumentException("Didn't find realization '" + realTimeRealization.getType() + "'" + " with name '" + realTimeRealization.getRealization() + "' in '" + name + "'");
+        }
+
+
+        if (realTimeRealizationInstance.getDateRangeEnd() < historyRealizationInstance.getDateRangeEnd()) {
+            throw new IllegalStateException("The real time realization's dateRangeEnd should be greater than history realization's dateRangeEnd.");
+        }
     }
 
     @Override
@@ -139,5 +153,13 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
     @Override
     public long getDateRangeEnd() {
         return realTimeRealizationInstance.getDateRangeEnd();
+    }
+
+    public String getModelName() {
+        if(historyRealizationInstance instanceof CubeInstance) {
+            return ((CubeInstance)historyRealizationInstance).getDescriptor().getModelName();
+        }
+
+        return ((IIInstance)historyRealizationInstance).getDescriptor().getModelName();
     }
 }
