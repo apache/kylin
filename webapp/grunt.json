@@ -10,10 +10,10 @@
             "src": [
                 "app/components/jquery/dist/jquery.min.js",
                 "app/components/bootstrap/dist/js/bootstrap.min.js",
-                "app/components/angular/angular.min.js",
+                "app/components/angular/angular.js",
                 "app/components/angular-animate/angular-animate.min.js",
                 "app/components/angular-route/angular-route.min.js",
-                "app/components/angular-resource/angular-resource.min.js",
+                "app/components/angular-resource/angular-resource.js",
                 "app/components/angular-bootstrap/ui-bootstrap-tpls.min.js",
                 "app/components/angular-cookies/angular-cookies.js",
                 "app/components/angularLocalStorage/src/angularLocalStorage.js",
