@@ -47,8 +47,8 @@ public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
             e.printStackTrace();
         }
 
-        if (System.getProperty(KylinConfig.KYLIN_CONF_HOME) == null && System.getenv(KylinConfig.KYLIN_CONF_HOME) == null)
-            System.setProperty(KylinConfig.KYLIN_CONF_HOME, tempTestMetadataUrl);
+        if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null)
+            System.setProperty(KylinConfig.KYLIN_CONF, tempTestMetadataUrl);
 
         KylinConfig.getInstanceFromEnv().setMetadataUrl(tempTestMetadataUrl);
     }

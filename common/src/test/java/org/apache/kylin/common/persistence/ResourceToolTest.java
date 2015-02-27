@@ -26,7 +26,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import org.apache.kylin.common.util.ClasspathUtil;
+import org.apache.kylin.common.util.ClassUtil;
 
 /**
  * Created by honma on 9/18/14.
@@ -35,7 +35,7 @@ import org.apache.kylin.common.util.ClasspathUtil;
 public class ResourceToolTest {
     @Before
     public void setup() throws Exception {
-        ClasspathUtil.addClasspath(new File("../examples/test_case_data/hadoop-site").getAbsolutePath());
+        ClassUtil.addClasspath(new File("../examples/test_case_data/hadoop-site").getAbsolutePath());
     }
 
     @Test
