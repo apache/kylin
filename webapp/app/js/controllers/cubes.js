@@ -77,7 +77,9 @@ KylinApp
 
         $scope.loadDetail = function (cube) {
             var defer = $q.defer();
-            if (!cube.detail) {
+            if(cube.detail){
+                defer.resolve(cube.detail);
+            } else {
                 CubeDescService.get({cube_name: cube.name}, {}, function (detail) {
                     if (detail.length > 0&&detail[0].hasOwnProperty("name")) {
                         cube.detail = detail[0];
@@ -95,6 +97,7 @@ KylinApp
                     }
                 });
             }
+
             return defer.promise;
         };
 
