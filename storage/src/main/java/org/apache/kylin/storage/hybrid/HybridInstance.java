@@ -53,15 +53,11 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
             throw new IllegalArgumentException("Didn't find realization '" + realTimeRealization.getType() + "'" + " with name '" + realTimeRealization.getRealization() + "' in '" + name + "'");
         }
 
-
-        if (realTimeRealizationInstance.getDateRangeEnd() < historyRealizationInstance.getDateRangeEnd()) {
-            throw new IllegalStateException("The real time realization's dateRangeEnd should be greater than history realization's dateRangeEnd.");
-        }
     }
 
     @Override
     public boolean isCapable(SQLDigest digest) {
-        return historyRealizationInstance.isCapable(digest) || realTimeRealizationInstance.isCapable(digest);
+        return getHistoryRealizationInstance().isCapable(digest) || getRealTimeRealizationInstance().isCapable(digest);
     }
 
     @Override
@@ -78,17 +74,17 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
 
     @Override
     public String getFactTable() {
-        return null;
+        return getHistoryRealizationInstance().getFactTable();
     }
 
     @Override
     public List<TblColRef> getAllColumns() {
-        return null;
+        return getHistoryRealizationInstance().getAllColumns();
     }
 
     @Override
     public List<MeasureDesc> getMeasures() {
-        return null;
+        return getHistoryRealizationInstance().getMeasures();
     }
 
     @Override
@@ -138,28 +134,34 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
     }
 
     public IRealization getHistoryRealizationInstance() {
+        if (historyRealizationInstance == null) {
+            this.init();
+        }
         return historyRealizationInstance;
     }
 
     public IRealization getRealTimeRealizationInstance() {
+        if (realTimeRealizationInstance == null) {
+            this.init();
+        }
         return realTimeRealizationInstance;
     }
 
     @Override
     public long getDateRangeStart() {
-        return historyRealizationInstance.getDateRangeStart();
+        return Math.min(getHistoryRealizationInstance().getDateRangeStart(), getRealTimeRealizationInstance().getDateRangeStart());
     }
 
     @Override
     public long getDateRangeEnd() {
-        return realTimeRealizationInstance.getDateRangeEnd();
+        return Math.max(getHistoryRealizationInstance().getDateRangeEnd(), getRealTimeRealizationInstance().getDateRangeEnd());
     }
 
     public String getModelName() {
-        if(historyRealizationInstance instanceof CubeInstance) {
-            return ((CubeInstance)historyRealizationInstance).getDescriptor().getModelName();
+        if (getHistoryRealizationInstance() instanceof CubeInstance) {
+            return ((CubeInstance) historyRealizationInstance).getDescriptor().getModelName();
         }
 
-        return ((IIInstance)historyRealizationInstance).getDescriptor().getModelName();
+        return ((IIInstance) historyRealizationInstance).getDescriptor().getModelName();
     }
 }
