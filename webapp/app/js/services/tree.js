@@ -69,62 +69,68 @@ KylinApp.service('CubeGraphService', function () {
             };
           }
 
-          //if (dimension.join && dimension.join.primary_key)
-          //{
-          //    angular.forEach(dimension.join.primary_key, function(pk, index){
-          //        for (var i = 0; i < dimensionNode._children.length; i++) {
-          //            if(dimensionNode._children[i].name == pk)
-          //                break;
-          //        }
-          //        if(i == dimensionNode._children.length) {
-          //            dimensionNode._children.push({
-          //                "type": "column",
-          //                "name": pk
-          //            });
-          //        }
-          //
-          //    });
-          //}
-          //
-          //if (dimension.derived)
-          //{
-          //    angular.forEach(dimension.derived, function(derived, index){
-          //        for (var i = 0; i < dimensionNode._children.length; i++) {
-          //            if(dimensionNode._children[i].name == derived)
-          //                break;
-          //        }
-          //        if(i == dimensionNode._children.length) {
-          //            dimensionNode._children.push({
-          //                "type": "column",
-          //                "name": derived + "(DERIVED)"
-          //            });
-          //        }
-          //    });
-          //}
-          //
-          //if (dimension.hierarchy)
-          //{
-          //    angular.forEach(dimension.hierarchy, function(hierarchy, index){
-          //        for (var i = 0; i < dimensionNode._children.length; i++) {
-          //            if(dimensionNode._children[i].name == hierarchy)
-          //                break;
-          //        }
-          //        if(i == dimensionNode._children.length) {
-          //            dimensionNode._children.push({
-          //                "type": "column",
-          //                "name": hierarchy.column + "(HIERARCHY)"
-          //            });
-          //        }
-          //    });
-          //}
-
           if(j == graphData.children.length) {
             graphData.children.push(dimensionNode);
           }
 
         }
       });
-      cube.graph.columnsCount = 0;
+
+      angular.forEach(cube.detail.dimensions, function (dimension, index) {
+        // for dimension on lookup table
+        if(cube.model.fact_table!==dimension.table){
+            var lookup = _.find(graphData.children,function(item){
+              return item.name === dimension.table;
+            });
+
+          angular.forEach(lookup.join.primary_key, function(pk, index){
+                  for (var i = 0; i < lookup._children.length; i++) {
+                      if(lookup._children[i].name == pk)
+                          break;
+                  }
+                  if(i == lookup._children.length) {
+                    lookup._children.push({
+                          "type": "column",
+                          "name": pk
+                      });
+                  }
+          });
+
+          if (dimension.derived&&dimension.derived.length)
+          {
+              angular.forEach(dimension.derived, function(derived, index){
+                  for (var i = 0; i < lookup._children.length; i++) {
+                      if(lookup._children[i].name == derived)
+                          break;
+                  }
+                  if(i == lookup._children.length) {
+                    lookup._children.push({
+                          "type": "column",
+                          "name": derived + "(DERIVED)"
+                      });
+                  }
+              });
+          }
+
+          if (dimension.hierarchy)
+          {
+              angular.forEach(dimension.column, function(hierarchy, index){
+                  for (var i = 0; i < lookup._children.length; i++) {
+                      if(lookup._children[i].name == hierarchy)
+                          break;
+                  }
+                  if(i == lookup._children.length) {
+                    lookup._children.push({
+                          "type": "column",
+                          "name": hierarchy + "(HIERARCHY)"
+                      });
+                  }
+              });
+          }
+
+        };
+      });
+        cube.graph.columnsCount = 0;
         cube.graph.tree = tree;
         cube.graph.root = graphData;
         cube.graph.svg = svg;
