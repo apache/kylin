@@ -45,7 +45,7 @@
     </div>
     <!--Tab-->
     <div class="col-xs-9">
-        <h3 class="text-info">Table Schema:{{ selectedSrcTable.name}}</h3>
+        <h3 class="text-info">Table Schema:{{ tableModel.selectedSrcTable.name}}</h3>
         <div class="tabbable nav-tabs-custom">
             <ul class="nav nav-tabs">
                 <li class="active">
@@ -58,52 +58,52 @@
             <div class="tab-content">
                 <!--Schema-->
                 <div id="schema" class="tab-pane">
-                    <div ng-if="selectedSrcTable.uuid" class="table-responsive">
+                    <div ng-if="tableModel.selectedSrcTable.uuid" class="table-responsive">
                         <table class="table">
                             <tbody>
                                 <tr>
                                     <th style="width:20%">NAME</th>
-                                    <td>{{ selectedSrcTable.name}}</td>
+                                    <td>{{ tableModel.selectedSrcTable.name}}</td>
                                 </tr>
                                 <tr>
                                     <th>Hive DATABASE</th>
-                                    <td>{{selectedSrcTable.database}}</td>
+                                    <td>{{tableModel.selectedSrcTable.database}}</td>
                                 </tr>
                                 <tr>
                                     <th>SNAPSHOT TIME</th>
-                                    <td>{{selectedSrcTable.exd.lastUpdateTime | utcToConfigTimeZone}}</td>
+                                    <td>{{tableModel.selectedSrcTable.exd.lastUpdateTime | utcToConfigTimeZone}}</td>
                                 </tr>
                                 <tr>
                                     <th>LOCATION</th>
-                                    <td>{{selectedSrcTable.exd.location}}</td>
+                                    <td>{{tableModel.selectedSrcTable.exd.location}}</td>
                                 </tr>
                                 <tr>
                                     <th>INPUT FORMAT</th>
-                                    <td>{{selectedSrcTable.exd.inputformat}}</td>
+                                    <td>{{tableModel.selectedSrcTable.exd.inputformat}}</td>
                                 </tr>
                                 <tr>
                                     <th>OUTPUT FORMAT</th>
-                                    <td>{{selectedSrcTable.exd.outputformat}}</td>
+                                    <td>{{tableModel.selectedSrcTable.exd.outputformat}}</td>
                                 </tr>
                                 <tr>
                                     <th>OWNER</th>
-                                    <td><a href="mailto:{{selectedSrcTable.exd.owner}}">{{selectedSrcTable.exd.owner}}</a></td>
+                                    <td><a href="mailto:{{tableModel.selectedSrcTable.exd.owner}}">{{tableModel.selectedSrcTable.exd.owner}}</a></td>
                                 </tr>
                                 <tr>
                                     <th>TOTAL FILE NUMBER</th>
-                                    <td>{{selectedSrcTable.exd.totalNumberFiles}}</td>
+                                    <td>{{tableModel.selectedSrcTable.exd.totalNumberFiles}}</td>
                                 </tr>
                                 <tr>
                                     <th>TOTAL FILE SIZE</th>
-                                    <td>{{selectedSrcTable.exd.totalFileSize}}</td>
+                                    <td>{{tableModel.selectedSrcTable.exd.totalFileSize}}</td>
                                 </tr>
                                 <tr>
                                     <th>PARTITIONED</th>
-                                    <td>{{selectedSrcTable.exd.partitioned}}</td>
+                                    <td>{{tableModel.selectedSrcTable.exd.partitioned}}</td>
                                 </tr>
                                 <tr>
                                     <th>PARTITION COLUMNS</th>
-                                    <td>{{selectedSrcTable.exd.partitionColumns}}</td>
+                                    <td>{{tableModel.selectedSrcTable.exd.partitionColumns}}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -120,7 +120,7 @@
                             </span>
                         </div>
                         <div class="space-6"></div>
-                        <div ng-if="(selectedSrcTable.columns | filter: columnName).length>0">
+                        <div ng-if="(tableModel.selectedSrcTable.columns | filter: columnName).length>0">
                             <table class="table table-hover table-striped list">
                                 <thead>
                                 <tr style="cursor: pointer">
@@ -137,26 +137,26 @@
                                 </tr>
                                 </thead>
 
-                                <tr ng-repeat="column in selectedSrcTable.columns | filter: columnName | orderObjectBy:state.filterAttr:state.filterReverse">
-                                    <td style="{{(selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
+                                <tr ng-repeat="column in tableModel.selectedSrcTable.columns | filter: columnName | orderObjectBy:state.filterAttr:state.filterReverse">
+                                    <td style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
                                         {{ column.id}}
                                     </td>
-                                    <td style="{{(selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
+                                    <td style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
                                         {{ column.name}}
                                     </td>
-                                    <td style="{{(selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
+                                    <td style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
                                         {{ column.datatype}}
                                     </td>
-                                    <td style="{{(selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
-                                        <!--{{ selectedSrcTable.cardinality[column.name]}}-->
+                                    <td style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
+                                        <!--{{ tableModel.selectedSrcTable.cardinality[column.name]}}-->
                                         {{column.cardinality}}
                                     </td>
                                 </tr>
                             </table>
                         </div>
-                        <div ng-if="(selectedSrcTable.columns | filter: columnName).length == 0" no-result
+                        <div ng-if="(tableModel.selectedSrcTable.columns | filter: columnName).length == 0" no-result
                              text="No Matched Table Column."></div>
-                        <div ng-if="!!!selectedSrcTable.uuid">
+                        <div ng-if="!!!tableModel.selectedSrcTable.uuid">
                             <div no-result text="No Table Selected."></div>
                         </div>
                     </div>

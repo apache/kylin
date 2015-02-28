@@ -19,6 +19,7 @@
 KylinApp.service('TableModel', function() {
 
 
+   //for tables in cubeDesigner
     this.selectProjectTables = [];
 
     this.initTables = function(){
@@ -34,9 +35,14 @@ KylinApp.service('TableModel', function() {
     }
 
 
+  // for load table page
     this.selectedSrcDb = [];
-
     this.selectedSrcTable = {};
+
+    this.init = function(){
+      this.selectedSrcDb = [];
+      this.selectedSrcTable = {};
+    }
 
 
 });
