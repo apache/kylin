@@ -19,12 +19,19 @@ public class HybridTupleIterator implements ITupleIterator {
 
     @Override
     public boolean hasNext() {
-        return iterators[currentIndex].hasNext() || (currentIndex + 1 < iterators.length && iterators[currentIndex + 1].hasNext());
+        if (iterators[currentIndex].hasNext())
+            return true;
+
+        while (!iterators[currentIndex].hasNext() && currentIndex + 1 < iterators.length) {
+            currentIndex++;
+        }
+
+        return iterators[currentIndex].hasNext();
     }
 
     @Override
     public ITuple next() {
-        if (!iterators[currentIndex].hasNext() && currentIndex + 1 < iterators.length) {
+        while (!iterators[currentIndex].hasNext() && currentIndex + 1 < iterators.length) {
             currentIndex++;
         }
 
@@ -33,6 +40,8 @@ public class HybridTupleIterator implements ITupleIterator {
 
     @Override
     public void close() {
-
+        for (ITupleIterator i : iterators) {
+            i.close();
+        }
     }
 }
