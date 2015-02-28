@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel) {
+KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList) {
 
     $scope.projects = [];
     $scope.newDimension = null;
@@ -65,6 +65,12 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
                     $scope.metaModel.model = model;
 
+                    // add model ref for cube
+                    angular.forEach(CubeList.cubes,function(cube){
+                        if(cube.name===$scope.cubeMetaFrame.name||cube.descriptor===$scope.cubeMetaFrame.name){
+                          cube.model = model;
+                        }
+                    });
                     //convert GMT mills ,to make sure partition date show GMT Date
                     //should run only one time
                     if($scope.metaModel.model.partition_desc&&$scope.metaModel.model.partition_desc.partition_date_start)
