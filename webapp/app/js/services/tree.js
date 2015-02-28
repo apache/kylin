@@ -38,92 +38,93 @@ KylinApp.service('CubeGraphService', function () {
 
         var graphData = {
             "type": "fact",
-            "name": cube.detail.fact_table,
+            "name": cube.model.fact_table,
             "children": []
         };
 
-        angular.forEach(cube.detail.dimensions, function (dimension, index) {
-            if (dimension.join && dimension.join.primary_key.length > 0) {
-
-                var dimensionNode;
-
-                /* Loop through the graphData.children array to find out: If the LKP table is already existed */
-                for(var j = 0; j < graphData.children.length; j++ ) {
-                    if(graphData.children[j].name == dimension.table){
-                        dimensionNode = graphData.children[j];
-                        break;
-                    }
-                }
-
-                /* If not existed, create dimensionNode and push it */
-                if(j == graphData.children.length) {
-                    dimensionNode = {
-                        "type": "dimension",
-                        "name": dimension.table,
-                        "join": dimension.join,
-                        "children": [],
-                        "_children": []
-                    };
-                }
-
-                if (dimension.join && dimension.join.primary_key)
-                {
-                    angular.forEach(dimension.join.primary_key, function(pk, index){
-                        for (var i = 0; i < dimensionNode._children.length; i++) {
-                            if(dimensionNode._children[i].name == pk)
-                                break;
-                        }
-                        if(i == dimensionNode._children.length) {
-                            dimensionNode._children.push({
-                                "type": "column",
-                                "name": pk
-                            });
-                        }
-
-                    });
-                }
-
-                if (dimension.derived)
-                {
-                    angular.forEach(dimension.derived, function(derived, index){
-                        for (var i = 0; i < dimensionNode._children.length; i++) {
-                            if(dimensionNode._children[i].name == derived)
-                                break;
-                        }
-                        if(i == dimensionNode._children.length) {
-                            dimensionNode._children.push({
-                                "type": "column",
-                                "name": derived + "(DERIVED)"
-                            });
-                        }
-                    });
-                }
-
-                if (dimension.hierarchy)
-                {
-                    angular.forEach(dimension.hierarchy, function(hierarchy, index){
-                        for (var i = 0; i < dimensionNode._children.length; i++) {
-                            if(dimensionNode._children[i].name == hierarchy)
-                                break;
-                        }
-                        if(i == dimensionNode._children.length) {
-                            dimensionNode._children.push({
-                                "type": "column",
-                                "name": hierarchy.column + "(HIERARCHY)"
-                            });
-                        }
-                    });
-                }
-
-                if(j == graphData.children.length) {
-                    graphData.children.push(dimensionNode);
-                }
-
-            }
-        });
-
         cube.graph = (!!cube.graph) ? cube.graph : {};
-        cube.graph.columnsCount = 0;
+
+      //angular.forEach(cube.detail.dimensions, function (dimension, index) {
+      angular.forEach(cube.model.lookups, function (lookup, index) {
+        if (lookup.join && lookup.join.primary_key.length > 0) {
+
+          var dimensionNode;
+
+          /* Loop through the graphData.children array to find out: If the LKP table is already existed */
+          for(var j = 0; j < graphData.children.length; j++ ) {
+            if(graphData.children[j].name == lookup.table){
+              dimensionNode = graphData.children[j];
+              break;
+            }
+          }
+
+          /* If not existed, create dimensionNode and push it */
+          if(j == graphData.children.length) {
+            dimensionNode = {
+              "type": "dimension",
+              "name": lookup.table,
+              "join": lookup.join,
+              "children": [],
+              "_children": []
+            };
+          }
+
+          //if (dimension.join && dimension.join.primary_key)
+          //{
+          //    angular.forEach(dimension.join.primary_key, function(pk, index){
+          //        for (var i = 0; i < dimensionNode._children.length; i++) {
+          //            if(dimensionNode._children[i].name == pk)
+          //                break;
+          //        }
+          //        if(i == dimensionNode._children.length) {
+          //            dimensionNode._children.push({
+          //                "type": "column",
+          //                "name": pk
+          //            });
+          //        }
+          //
+          //    });
+          //}
+          //
+          //if (dimension.derived)
+          //{
+          //    angular.forEach(dimension.derived, function(derived, index){
+          //        for (var i = 0; i < dimensionNode._children.length; i++) {
+          //            if(dimensionNode._children[i].name == derived)
+          //                break;
+          //        }
+          //        if(i == dimensionNode._children.length) {
+          //            dimensionNode._children.push({
+          //                "type": "column",
+          //                "name": derived + "(DERIVED)"
+          //            });
+          //        }
+          //    });
+          //}
+          //
+          //if (dimension.hierarchy)
+          //{
+          //    angular.forEach(dimension.hierarchy, function(hierarchy, index){
+          //        for (var i = 0; i < dimensionNode._children.length; i++) {
+          //            if(dimensionNode._children[i].name == hierarchy)
+          //                break;
+          //        }
+          //        if(i == dimensionNode._children.length) {
+          //            dimensionNode._children.push({
+          //                "type": "column",
+          //                "name": hierarchy.column + "(HIERARCHY)"
+          //            });
+          //        }
+          //    });
+          //}
+
+          if(j == graphData.children.length) {
+            graphData.children.push(dimensionNode);
+          }
+
+        }
+      });
+      cube.graph.columnsCount = 0;
         cube.graph.tree = tree;
         cube.graph.root = graphData;
         cube.graph.svg = svg;
