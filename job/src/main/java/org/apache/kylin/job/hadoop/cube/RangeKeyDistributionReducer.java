@@ -43,7 +43,7 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
     public static final int MEDIUM_CUT = 20; //  20 GB per region
     public static final int LARGE_CUT = 100; // 100 GB per region
     
-    public static final int MAX_REGION = 200;
+    public static final int MAX_REGION = 500;
 
     private static final Logger logger = LoggerFactory.getLogger(RangeKeyDistributionReducer.class);
 
