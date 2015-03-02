@@ -1,5 +1,5 @@
-define('ace/snippets/php', ['require', 'exports', 'module' ], function(require, exports, module) {
-
+define("ace/snippets/php",["require","exports","module"], function(require, exports, module) {
+"use strict";
 
 exports.snippetText = "snippet <?\n\
 	<?php\n\
@@ -43,13 +43,6 @@ snippet m\n\
 	}\n\
 # setter method\n\
 snippet sm \n\
-	/**\n\
-	 * Sets the value of ${1:foo}\n\
-	 *\n\
-	 * @param ${2:$1} $$1 ${3:description}\n\
-	 *\n\
-	 * @return ${4:$FILENAME}\n\
-	 */\n\
 	${5:public} function set${6:$2}(${7:$2 }$$1)\n\
 	{\n\
 		$this->${8:$1} = $$1;\n\
@@ -57,11 +50,6 @@ snippet sm \n\
 	}${9}\n\
 # getter method\n\
 snippet gm\n\
-	/**\n\
-	 * Gets the value of ${1:foo}\n\
-	 *\n\
-	 * @return ${2:$1}\n\
-	 */\n\
 	${3:public} function get${4:$2}()\n\
 	{\n\
 		return $this->${5:$1};\n\
@@ -107,119 +95,48 @@ snippet req1\n\
 	require_once '${1:file}';${2}\n\
 # Start Docblock\n\
 snippet /*\n\
-	/**\n\
-	 * ${1}\n\
-	 */\n\
 # Class - post doc\n\
-snippet doc_cp\n\
-	/**\n\
-	 * ${1:undocumented class}\n\
-	 *\n\
-	 * @package ${2:default}\n\
-	 * @subpackage ${3:default}\n\
-	 * @author ${4:`g:snips_author`}\n\
-	 */${5}\n\
+snippet doc_cp${5}\n\
 # Class Variable - post doc\n\
-snippet doc_vp\n\
-	/**\n\
-	 * ${1:undocumented class variable}\n\
-	 *\n\
-	 * @var ${2:string}\n\
-	 */${3}\n\
+snippet doc_vp${3}\n\
 # Class Variable\n\
 snippet doc_v\n\
-	/**\n\
-	 * ${3:undocumented class variable}\n\
-	 *\n\
-	 * @var ${4:string}\n\
-	 */\n\
 	${1:var} $${2};${5}\n\
 # Class\n\
 snippet doc_c\n\
-	/**\n\
-	 * ${3:undocumented class}\n\
-	 *\n\
-	 * @package ${4:default}\n\
-	 * @subpackage ${5:default}\n\
-	 * @author ${6:`g:snips_author`}\n\
-	 */\n\
 	${1:}class ${2:}\n\
 	{\n\
 		${7}\n\
 	} // END $1class $2\n\
 # Constant Definition - post doc\n\
-snippet doc_dp\n\
-	/**\n\
-	 * ${1:undocumented constant}\n\
-	 */${2}\n\
+snippet doc_dp${2}\n\
 # Constant Definition\n\
 snippet doc_d\n\
-	/**\n\
-	 * ${3:undocumented constant}\n\
-	 */\n\
 	define(${1}, ${2});${4}\n\
 # Function - post doc\n\
-snippet doc_fp\n\
-	/**\n\
-	 * ${1:undocumented function}\n\
-	 *\n\
-	 * @return ${2:void}\n\
-	 * @author ${3:`g:snips_author`}\n\
-	 */${4}\n\
+snippet doc_fp${4}\n\
 # Function signature\n\
 snippet doc_s\n\
-	/**\n\
-	 * ${4:undocumented function}\n\
-	 *\n\
-	 * @return ${5:void}\n\
-	 * @author ${6:`g:snips_author`}\n\
-	 */\n\
 	${1}function ${2}(${3});${7}\n\
 # Function\n\
 snippet doc_f\n\
-	/**\n\
-	 * ${4:undocumented function}\n\
-	 *\n\
-	 * @return ${5:void}\n\
-	 * @author ${6:`g:snips_author`}\n\
-	 */\n\
 	${1}function ${2}(${3})\n\
 	{${7}\n\
 	}\n\
 # Header\n\
 snippet doc_h\n\
-	/**\n\
-	 * ${1}\n\
-	 *\n\
-	 * @author ${2:`g:snips_author`}\n\
-	 * @version ${3:$Id$}\n\
-	 * @copyright ${4:$2}, `strftime('%d %B, %Y')`\n\
-	 * @package ${5:default}\n\
-	 */\n\
 	\n\
 # Interface\n\
 snippet interface\n\
-	/**\n\
-	 * ${2:undocumented class}\n\
-	 *\n\
-	 * @package ${3:default}\n\
-	 * @author ${4:`g:snips_author`}\n\
-	 */\n\
 	interface ${1:$FILENAME}\n\
 	{\n\
 		${5}\n\
 	}\n\
 # class ...\n\
 snippet class\n\
-	/**\n\
-	 * ${1}\n\
-	 */\n\
 	class ${2:$FILENAME}\n\
 	{\n\
 		${3}\n\
-		/**\n\
-		 * ${4}\n\
-		 */\n\
 		${5:public} function ${6:__construct}(${7:argument})\n\
 		{\n\
 			${8:// code...}\n\
@@ -333,23 +250,10 @@ snippet http_redirect\n\
 	exit();\n\
 # Getters & Setters\n\
 snippet gs\n\
-	/**\n\
-	 * Gets the value of ${1:foo}\n\
-	 *\n\
-	 * @return ${2:$1}\n\
-	 */\n\
 	public function get${3:$2}()\n\
 	{\n\
 		return $this->${4:$1};\n\
 	}\n\
-\n\
-	/**\n\
-	 * Sets the value of $1\n\
-	 *\n\
-	 * @param $2 $$1 ${5:description}\n\
-	 *\n\
-	 * @return ${6:$FILENAME}\n\
-	 */\n\
 	public function set$3(${7:$2 }$$1)\n\
 	{\n\
 		$this->$4 = $$1;\n\
@@ -357,11 +261,6 @@ snippet gs\n\
 	}${8}\n\
 # anotation, get, and set, useful for doctrine\n\
 snippet ags\n\
-	/**\n\
-	 * ${1:description}\n\
-	 * \n\
-	 * @${7}\n\
-	 */\n\
 	${2:protected} $${3:foo};\n\
 \n\
 	public function get${4:$3}()\n\

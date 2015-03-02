@@ -1,4 +1,5 @@
-define('ace/ext/statusbar', ['require', 'exports', 'module' , 'ace/lib/dom', 'ace/lib/lang'], function(require, exports, module) {
+define("ace/ext/statusbar",["require","exports","module","ace/lib/dom","ace/lib/lang"], function(require, exports, module) {
+"use strict";
 var dom = require("ace/lib/dom");
 var lang = require("ace/lib/lang");
 
@@ -26,9 +27,8 @@ var StatusBar = function(editor, parentNode) {
             str && status.push(str, separator || "|");
         }
 
-        if (editor.$vimModeHandler)
-            add(editor.$vimModeHandler.getStatusText());
-        else if (editor.commands.recording)
+        add(editor.keyBinding.getStatusText(editor));
+        if (editor.commands.recording)
             add("REC");
 
         var c = editor.selection.lead;
@@ -44,7 +44,7 @@ var StatusBar = function(editor, parentNode) {
 
 exports.StatusBar = StatusBar;
 
-});;
+});
                 (function() {
                     window.require(["ace/ext/statusbar"], function() {});
                 })();

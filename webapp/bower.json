@@ -1,37 +1,37 @@
 {
-  "name": "base",
-  "version": "0.0.1",
-  "dependencies": {
-    "angular-bootstrap": "0.10.0",
-    "angular": "1.2.15",
-    "angular-resource": "1.2.15",
-    "angular-route": "1.2.15",
-    "ng-grid": "2.0.11",
-    "angular-chosen-localytics": "1.0.6",
-    "animate.css": "3.0.0",
-    "bootstrap": "3.0.0",
-    "font-awesome": "4.0.3",
-    "angular-ui-ace": "0.1.0",
-    "angular-base64": "2.0.1",
-    "angular-tree-control": "0.1.4",
-    "angularLocalStorage": "0.1.7",
-    "messenger": "1.4.1",
-    "moment": "2.5.1",
-    "d3": "3.4.4",
-    "nvd3": "1.1.15-beta",
-    "angularjs-nvd3-directives": "0.0.5-beta",
-    "angular-sweetalert": "~1.0.3",
-    "bootstrap-sweetalert": "~0.4.3",
-    "angular-underscore": "~0.5.0",
-    "angular-ui-sortable": "0.13.1"
-  },
-  "devDependencies": {
-    "less.js": "~1.4.0",
-    "angular-mocks-unstable": "~1.1.5"
-  },
-  "resolutions": {
-    "angular": "1.2.15",
-    "nvd3": "1.1.15-beta",
-    "d3": "3.4.4"
-  }
+    "name": "base",
+    "version": "0.0.1",
+    "dependencies": {
+        "angular-bootstrap": "0.10.0",
+        "angular": "1.2.15",
+        "angular-resource": "1.2.15",
+        "angular-route": "1.2.15",
+        "ng-grid": "2.0.11",
+        "angular-chosen-localytics": "1.0.6",
+        "animate.css": "3.0.0",
+        "bootstrap": "3.0.0",
+        "font-awesome": "4.0.3",
+        "angular-ui-ace": "0.1.0",
+        "angular-base64": "2.0.1",
+        "angular-tree-control": "0.1.4",
+        "angularLocalStorage": "0.1.7",
+        "messenger": "1.4.1",
+        "moment": "2.5.1",
+        "d3": "3.4.4",
+        "nvd3": "1.1.15-beta",
+        "angularjs-nvd3-directives": "0.0.5-beta",
+        "angular-sweetalert": "~1.0.3",
+        "bootstrap-sweetalert": "~0.4.3",
+        "angular-underscore": "~0.5.0",
+        "angular-ui-sortable": "0.13.1"
+    },
+    "devDependencies": {
+        "less.js": "~1.4.0",
+        "angular-mocks-unstable": "~1.1.5"
+    },
+    "resolutions": {
+        "angular": "1.2.15",
+        "nvd3": "1.1.15-beta",
+        "d3": "3.4.4"
+    }
 }
