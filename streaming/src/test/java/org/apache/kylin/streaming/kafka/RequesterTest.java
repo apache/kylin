@@ -35,7 +35,6 @@
 package org.apache.kylin.streaming.kafka;
 
 import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -47,21 +46,9 @@ import static org.junit.Assert.*;
  */
 public class RequesterTest extends KafkaBaseTest {
 
-    private static TopicConfig topicConfig;
-    private static ConsumerConfig consumerConfig;
+    private static final String NON_EXISTED_TOPIC = "non_existent_topic";
 
-    private static final String UNEXISTED_TOPIC = "unexist_topic";
 
-    @BeforeClass
-    public static void beforeClass() {
-        topicConfig = new TopicConfig();
-        topicConfig.setTopic(TestConstants.TOPIC);
-        topicConfig.setBrokers(Collections.singletonList(TestConstants.BROKER));
-        consumerConfig = new ConsumerConfig();
-        consumerConfig.setBufferSize(64 * 1024);
-        consumerConfig.setMaxReadCount(1000);
-        consumerConfig.setTimeout(60 * 1000);
-    }
 
     @AfterClass
     public static void afterClass() {
@@ -69,16 +56,15 @@ public class RequesterTest extends KafkaBaseTest {
 
     @Test
     public void testTopicMeta() throws Exception {
-        TopicMeta kafkaTopicMeta = Requester.getKafkaTopicMeta(topicConfig, consumerConfig);
+        TopicMeta kafkaTopicMeta = Requester.getKafkaTopicMeta(kafkaConfig);
         assertNotNull(kafkaTopicMeta);
         assertEquals(2, kafkaTopicMeta.getPartitionIds().size());
-        assertEquals(topicConfig.getTopic(), kafkaTopicMeta.getName());
+        assertEquals(kafkaConfig.getTopic(), kafkaTopicMeta.getName());
 
-        TopicConfig anotherTopicConfig = new TopicConfig();
-        anotherTopicConfig.setBrokers(Collections.singletonList(TestConstants.BROKER));
-        anotherTopicConfig.setTopic(UNEXISTED_TOPIC);
+        KafkaConfig anotherTopicConfig = KafkaConfig.load(kafkaConfig);
+        anotherTopicConfig.setTopic(NON_EXISTED_TOPIC);
 
-        kafkaTopicMeta = Requester.getKafkaTopicMeta(anotherTopicConfig, consumerConfig);
+        kafkaTopicMeta = Requester.getKafkaTopicMeta(anotherTopicConfig);
         assertTrue(kafkaTopicMeta == null);
     }
 }
