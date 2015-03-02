@@ -34,8 +34,8 @@ public class RealizationPriorityRule extends RoutingRule {
 
     static {
         priorities.put(RealizationType.HYBRID, 0);
-        priorities.put(RealizationType.CUBE, 1);
-        priorities.put(RealizationType.INVERTED_INDEX, 2);
+        priorities.put(RealizationType.CUBE, 0);
+        priorities.put(RealizationType.INVERTED_INDEX, 1);
     }
 
     public static void setPriorities(Map<RealizationType, Integer> priorities) {
