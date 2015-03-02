@@ -65,6 +65,9 @@ public class HbaseStreamingInput {
     }
 
     public static void addData(String tableName) throws IOException {
+
+        createTable(tableName);
+
         final Semaphore semaphore = new Semaphore(0);
         new Thread(new Runnable() {
             @Override
@@ -156,8 +159,9 @@ public class HbaseStreamingInput {
                 for (Result result : scanner) {
                     Cell cell = result.getColumnLatestCell(CF, QN);
                     byte[] value = cell.getValueArray();
-                    if (cell.getValueLength() != CELL_SIZE)
+                    if (cell.getValueLength() != CELL_SIZE) {
                         logger.error("value size invalid!!!!!");
+                    }
 
                     hash += Arrays.hashCode(Arrays.copyOfRange(value, cell.getValueOffset(), cell.getValueLength() + cell.getValueOffset()));
                     rowCount++;
