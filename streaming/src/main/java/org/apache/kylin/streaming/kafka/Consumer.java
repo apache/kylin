@@ -34,6 +34,7 @@
 
 package org.apache.kylin.streaming.kafka;
 
+import kafka.api.OffsetRequest;
 import kafka.cluster.Broker;
 import kafka.javaapi.FetchResponse;
 import kafka.javaapi.PartitionMetadata;
@@ -93,6 +94,8 @@ public class Consumer implements Runnable {
                 logger.warn("cannot find lead broker");
                 continue;
             }
+            final long lastOffset = Requester.getLastOffset(topic, partitionId, OffsetRequest.EarliestTime(), leadBroker, consumerConfig);
+            offset.set(lastOffset);
             final FetchResponse fetchResponse = Requester.fetchResponse(topic, partitionId, offset.get(), leadBroker, consumerConfig);
             if (fetchResponse.errorCode(topic, partitionId) != 0) {
                 logger.warn("fetch response offset:" + offset.get() + " errorCode:" + fetchResponse.errorCode(topic, partitionId));

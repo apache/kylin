@@ -37,7 +37,9 @@ package org.apache.kylin.streaming.kafka;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import kafka.api.FetchRequestBuilder;
+import kafka.api.PartitionOffsetRequestInfo;
 import kafka.cluster.Broker;
+import kafka.common.TopicAndPartition;
 import kafka.javaapi.*;
 import kafka.javaapi.consumer.SimpleConsumer;
 import org.slf4j.Logger;
@@ -45,7 +47,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by qianzhou on 2/15/15.
@@ -114,8 +118,29 @@ public final class Requester {
         SimpleConsumer consumer = new SimpleConsumer(broker.host(), broker.port(), consumerConfig.getTimeout(), consumerConfig.getBufferSize(), clientName);
         kafka.api.FetchRequest req = new FetchRequestBuilder()
                 .clientId(clientName)
-                .addFetch(topic, partitionId, offset, consumerConfig.getTimeout()) // Note: this fetchSize of 100000 might need to be increased if large batches are written to Kafka
+                .addFetch(topic, partitionId, offset, consumerConfig.getMaxReadCount()) // Note: this fetchSize of 100000 might need to be increased if large batches are written to Kafka
                 .build();
         return consumer.fetch(req);
     }
+
+    public static long getLastOffset(String topic, int partitionId,
+                                     long whichTime, Broker broker, ConsumerConfig consumerConfig) {
+        String clientName = "client_" + topic + "_" + partitionId;
+        SimpleConsumer consumer = new SimpleConsumer(broker.host(), broker.port(), consumerConfig.getTimeout(), consumerConfig.getBufferSize(), clientName);
+        TopicAndPartition topicAndPartition = new TopicAndPartition(topic, partitionId);
+        Map<TopicAndPartition, PartitionOffsetRequestInfo> requestInfo = new HashMap<TopicAndPartition, PartitionOffsetRequestInfo>();
+        requestInfo.put(topicAndPartition, new PartitionOffsetRequestInfo(whichTime, 1));
+        kafka.javaapi.OffsetRequest request = new kafka.javaapi.OffsetRequest(
+                requestInfo, kafka.api.OffsetRequest.CurrentVersion(), clientName);
+        OffsetResponse response = consumer.getOffsetsBefore(request);
+
+        if (response.hasError()) {
+            System.out.println("Error fetching data Offset Data the Broker. Reason: " + response.errorCode(topic, partitionId));
+            return 0;
+        }
+        long[] offsets = response.offsets(topic, partitionId);
+        return offsets[0];
+    }
+
+
 }
