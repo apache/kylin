@@ -18,15 +18,13 @@
 
 package org.apache.kylin.query.routing.RoutingRules;
 
-import java.util.Comparator;
-import java.util.List;
-
-import org.apache.kylin.common.util.PartialSorter;
-import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.RoutingRule;
+
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 1/5/15.
@@ -34,17 +32,14 @@ import org.apache.kylin.query.routing.RoutingRule;
 public class SimpleQueryMoreColumnsCubeFirstRule extends RoutingRule {
     @Override
     public void apply(List<IRealization> realizations, OLAPContext olapContext) {
-        List<Integer> itemIndexes = super.findRealizationsOf(realizations, RealizationType.CUBE);
-
         if (olapContext.isSimpleQuery()) {
-            PartialSorter.partialSort(realizations, itemIndexes, new Comparator<IRealization>() {
+            Collections.sort(realizations, new Comparator<IRealization>() {
                 @Override
                 public int compare(IRealization o1, IRealization o2) {
-                    CubeInstance c1 = (CubeInstance) o1;
-                    CubeInstance c2 = (CubeInstance) o2;
-                    return c1.getDescriptor().listDimensionColumnsIncludingDerived().size() - c2.getDescriptor().listDimensionColumnsIncludingDerived().size();
+                    return o1.getAllDimensions().size() - o2.getAllDimensions().size();
                 }
             });
+
         }
     }
 }

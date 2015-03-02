@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
@@ -335,6 +336,11 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         }
 
         return endTime;
+    }
+
+    @Override
+    public List<TblColRef> getAllDimensions() {
+        return getDescriptor().listAllDimensions();
     }
 
 }

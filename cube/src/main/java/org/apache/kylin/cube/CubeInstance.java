@@ -327,7 +327,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
 
     @Override
     public int getCost(SQLDigest digest) {
-        return 0;
+        return cost;
     }
 
     @Override
@@ -375,5 +375,8 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         return endTime;
     }
 
-
+    @Override
+    public List<TblColRef> getAllDimensions() {
+        return Lists.newArrayList(getDescriptor().listDimensionColumnsIncludingDerived());
+    }
 }
