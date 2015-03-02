@@ -40,12 +40,18 @@ import org.apache.kylin.job.tools.LZOSupportnessChecker;
  */
 public class HbaseConfigPrinterCLI {
     public static void main(String[] args) throws IOException {
-        if (args.length != 1) {
-            System.out.println("Usage: hbase org.apache.hadoop.util.RunJar kylin-job-0.5.7-SNAPSHOT-job.jar org.apache.kylin.job.deployment.HadoopConfigPrinter targetFile");
-            System.exit(1);
-        }
 
-        printConfigs(args[0]);
+        if (args[0].equalsIgnoreCase("printconfig"))
+            printConfigs(args[1]);
+
+        if (args[0].equalsIgnoreCase("printenv"))
+            printAllEnv();
+
+        if (args[0].equalsIgnoreCase("printprop"))
+            printAllProperties();
+
+        if (args[0].equalsIgnoreCase("printhbaseconf"))
+            printHbaseConf();
     }
 
     private static void printConfigs(String targetFile) throws IOException {
@@ -68,7 +74,23 @@ public class HbaseConfigPrinterCLI {
         FileUtils.writeStringToFile(output, sb.toString());
     }
 
-    @SuppressWarnings("unused")
+    private static void printHbaseConf() {
+        Configuration conf = HBaseConfiguration.create();
+        for (Map.Entry<String, String> entry : conf) {
+            System.out.println("Key: " + entry.getKey());
+            System.out.println("Value: " + entry.getValue());
+            System.out.println();
+        }
+    }
+
+    private static void printAllProperties() {
+        for (Map.Entry<Object, Object> entry : System.getProperties().entrySet()) {
+            System.out.println("Key: " + entry.getKey());
+            System.out.println("Value: " + entry.getValue());
+            System.out.println();
+        }
+    }
+
     private static void printAllEnv() {
         for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
             System.out.println("Key: " + entry.getKey());
