@@ -34,12 +34,19 @@
 
 package org.apache.kylin.streaming.kafka;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
+import kafka.cluster.Broker;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.Properties;
 
 /**
@@ -49,7 +56,7 @@ public class TestProducer {
 
     private volatile boolean stopped = false;
 
-    private static final Logger logger = LoggerFactory.getLogger(TestConstants.class);
+    private static final Logger logger = LoggerFactory.getLogger(TestProducer.class);
 
     private final int sendCount;
 
@@ -57,9 +64,19 @@ public class TestProducer {
         this.sendCount = sendCount;
     }
 
-    public void start() {
+    public void start() throws IOException {
+        final Properties properties = new Properties();
+        properties.load(ClassLoader.getSystemResourceAsStream("kafka_streaming_test/kafka.properties"));
+        final KafkaConfig kafkaConfig = KafkaConfig.load(properties);
+
         Properties props = new Properties();
-        props.put("metadata.broker.list", TestConstants.BROKER.getConnectionString());
+        props.put("metadata.broker.list", StringUtils.join(Iterators.transform(kafkaConfig.getBrokers().iterator(), new Function<Broker, String>() {
+            @Nullable
+            @Override
+            public String apply(@Nullable Broker broker) {
+                return broker.getConnectionString();
+            }
+        }), ","));
         props.put("serializer.class", "kafka.serializer.StringEncoder");
         props.put("request.required.acks", "1");
         ProducerConfig config = new ProducerConfig(props);
@@ -70,7 +87,7 @@ public class TestProducer {
             public void run() {
                 int count = 0;
                 while (!stopped && count < sendCount) {
-                    final KeyedMessage<String, String> message = new KeyedMessage<>(TestConstants.TOPIC, "current time is:" + System.currentTimeMillis());
+                    final KeyedMessage<String, String> message = new KeyedMessage<>(kafkaConfig.getTopic(), "current time is:" + System.currentTimeMillis());
                     producer.send(message);
                     count++;
                     try {

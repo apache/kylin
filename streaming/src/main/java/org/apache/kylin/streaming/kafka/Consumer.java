@@ -56,20 +56,20 @@ public class Consumer implements Runnable {
     private String topic;
     private int partitionId;
 
-    private ConsumerConfig consumerConfig;
+    private KafkaConfig kafkaConfig;
     private List<Broker> replicaBrokers;
     private AtomicLong offset = new AtomicLong();
     private BlockingQueue<Stream> streamQueue;
 
     private Logger logger;
 
-    public Consumer(String topic, int partitionId, List<Broker> initialBrokers, ConsumerConfig consumerConfig) {
+    public Consumer(String topic, int partitionId, List<Broker> initialBrokers, KafkaConfig kafkaConfig) {
         this.topic = topic;
         this.partitionId = partitionId;
-        this.consumerConfig = consumerConfig;
+        this.kafkaConfig = kafkaConfig;
         this.replicaBrokers = initialBrokers;
         logger = LoggerFactory.getLogger("KafkaConsumer_" + topic + "_" + partitionId);
-        streamQueue = new ArrayBlockingQueue<Stream>(consumerConfig.getMaxReadCount());
+        streamQueue = new ArrayBlockingQueue<Stream>(kafkaConfig.getMaxReadCount());
     }
 
     public BlockingQueue<Stream> getStreamQueue() {
@@ -77,7 +77,7 @@ public class Consumer implements Runnable {
     }
 
     private Broker getLeadBroker() {
-        final PartitionMetadata partitionMetadata = Requester.getPartitionMetadata(topic, partitionId, replicaBrokers, consumerConfig);
+        final PartitionMetadata partitionMetadata = Requester.getPartitionMetadata(topic, partitionId, replicaBrokers, kafkaConfig);
         if (partitionMetadata != null && partitionMetadata.errorCode() == 0) {
             replicaBrokers = partitionMetadata.replicas();
             return partitionMetadata.leader();
@@ -94,9 +94,9 @@ public class Consumer implements Runnable {
                 logger.warn("cannot find lead broker");
                 continue;
             }
-            final long lastOffset = Requester.getLastOffset(topic, partitionId, OffsetRequest.EarliestTime(), leadBroker, consumerConfig);
+            final long lastOffset = Requester.getLastOffset(topic, partitionId, OffsetRequest.EarliestTime(), leadBroker, kafkaConfig);
             offset.set(lastOffset);
-            final FetchResponse fetchResponse = Requester.fetchResponse(topic, partitionId, offset.get(), leadBroker, consumerConfig);
+            final FetchResponse fetchResponse = Requester.fetchResponse(topic, partitionId, offset.get(), leadBroker, kafkaConfig);
             if (fetchResponse.errorCode(topic, partitionId) != 0) {
                 logger.warn("fetch response offset:" + offset.get() + " errorCode:" + fetchResponse.errorCode(topic, partitionId));
                 continue;

@@ -34,44 +34,31 @@
 
 package org.apache.kylin.streaming.kafka;
 
-import kafka.admin.AdminUtils;
-import kafka.common.TopicExistsException;
-import org.I0Itec.zkclient.ZkClient;
-import org.junit.BeforeClass;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Properties;
 
+import static org.junit.Assert.assertEquals;
+
 /**
- * Created by qianzhou on 2/16/15.
+ * Created by qianzhou on 3/2/15.
  */
-public abstract class KafkaBaseTest {
+public class KafkaConfigTest {
 
-    protected static final Logger logger = LoggerFactory.getLogger("kafka test");
-
-    protected static ZkClient zkClient;
-
-    protected static KafkaConfig kafkaConfig;
-
-    @BeforeClass
-    public static void beforeClass() throws IOException {
+    @Test
+    public void test() throws IOException {
         final Properties properties = new Properties();
         properties.load(ClassLoader.getSystemResourceAsStream("kafka_streaming_test/kafka.properties"));
-        kafkaConfig = KafkaConfig.load(properties);
+        KafkaConfig config = KafkaConfig.load(properties);
+        assertEquals(1000, config.getMaxReadCount());
+        assertEquals(65536, config.getBufferSize());
+        assertEquals(60000, config.getTimeout());
+        assertEquals("sandbox.hortonworks.com:2181", config.getZookeeper());
+        assertEquals("kafka_stream_test", config.getTopic());
+        assertEquals(0, config.getPartitionId());
+        assertEquals(1, config.getBrokers().size());
+        assertEquals("sandbox.hortonworks.com:6667", config.getBrokers().get(0).getConnectionString());
 
-        zkClient = new ZkClient(kafkaConfig.getZookeeper());
     }
-
-
-    public static void createTopic(String topic, int partition, int replica) {
-        try {
-            AdminUtils.createTopic(zkClient, topic, partition, replica, new Properties());
-        } catch (TopicExistsException e) {
-            logger.info(e.getMessage());
-        }
-    }
-
-
 }
