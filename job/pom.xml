@@ -136,6 +136,11 @@
                 hbase utils like Bytes, ImmutableBytesWritable etc. -->
         </dependency>
 
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+        </dependency>
+
         <!-- Env & Test -->
 
         <dependency>
