@@ -1,64 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Distributed under the BSD license:
- *
- * Copyright (c) 2012, Ajax.org B.V.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of Ajax.org B.V. nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL AJAX.ORG B.V. BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- *
- * Contributor(s):
- *
- *
- *
- * ***** END LICENSE BLOCK ***** */
-
-ace.define('ace/mode/rust', ['require', 'exports', 'module' , 'ace/lib/oop', 'ace/mode/text', 'ace/tokenizer', 'ace/mode/rust_highlight_rules', 'ace/mode/folding/cstyle'], function(require, exports, module) {
-
-
-var oop = require("../lib/oop");
-var TextMode = require("./text").Mode;
-var Tokenizer = require("../tokenizer").Tokenizer;
-var RustHighlightRules = require("./rust_highlight_rules").RustHighlightRules;
-var FoldMode = require("./folding/cstyle").FoldMode;
-
-var Mode = function() {
-    this.HighlightRules = RustHighlightRules;
-    this.foldingRules = new FoldMode();
-};
-oop.inherits(Mode, TextMode);
-
-(function() {
-    this.lineCommentStart = "/\\*";
-    this.blockComment = {start: "/*", end: "*/"};
-    this.$id = "ace/mode/rust";
-}).call(Mode.prototype);
-
-exports.Mode = Mode;
-});
-
-ace.define('ace/mode/rust_highlight_rules', ['require', 'exports', 'module' , 'ace/lib/oop', 'ace/mode/text_highlight_rules'], function(require, exports, module) {
-
+ace.define("ace/mode/rust_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/text_highlight_rules"], function(require, exports, module) {
+"use strict";
 
 var oop = require("../lib/oop");
 var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
@@ -76,6 +17,35 @@ var RustHighlightRules = function() {
                 next: 'pop' },
               { include: '#rust_escaped_character' },
               { defaultToken: 'string.quoted.single.source.rust' } ] },
+         {
+            stateName: "bracketedComment",
+            onMatch : function(value, currentState, stack){
+                stack.unshift(this.next, value.length - 1, currentState);
+                return "string.quoted.raw.source.rust";
+            },
+            regex : /r#*"/,
+            next  : [
+                {
+                    onMatch : function(value, currentState, stack) {
+                        var token = "string.quoted.raw.source.rust";
+                        if (value.length >= stack[1]) {
+                            if (value.length > stack[1])
+                                token = "invalid";
+                            stack.shift();
+                            stack.shift();
+                            this.next = stack.shift();
+                        } else {
+                            this.next = "";
+                        }
+                        return token;
+                    },
+                    regex : /"#*/,
+                    next  : "start"
+                }, {
+                    defaultToken : "string.quoted.raw.source.rust"
+                }
+            ]
+         },
          { token: 'string.quoted.double.source.rust',
            regex: '"',
            push: 
@@ -123,10 +93,14 @@ var RustHighlightRules = function() {
                 regex: '$',
                 next: 'pop' },
               { defaultToken: 'comment.line.double-dash.source.rust' } ] },
-         { token: 'comment.block.source.rust',
+         { token: 'comment.start.block.source.rust',
            regex: '/\\*',
+           stateName: 'comment',
            push: 
-            [ { token: 'comment.block.source.rust',
+            [ { token: 'comment.start.block.source.rust',
+                regex: '/\\*',
+                push: 'comment' },
+              { token: 'comment.end.block.source.rust',
                 regex: '\\*/',
                 next: 'pop' },
               { defaultToken: 'comment.block.source.rust' } ] } ],
@@ -149,8 +123,8 @@ oop.inherits(RustHighlightRules, TextHighlightRules);
 exports.RustHighlightRules = RustHighlightRules;
 });
 
-ace.define('ace/mode/folding/cstyle', ['require', 'exports', 'module' , 'ace/lib/oop', 'ace/range', 'ace/mode/folding/fold_mode'], function(require, exports, module) {
-
+ace.define("ace/mode/folding/cstyle",["require","exports","module","ace/lib/oop","ace/range","ace/mode/folding/fold_mode"], function(require, exports, module) {
+"use strict";
 
 var oop = require("../../lib/oop");
 var Range = require("../../range").Range;
@@ -242,4 +216,27 @@ oop.inherits(FoldMode, BaseFoldMode);
 
 }).call(FoldMode.prototype);
 
+});
+
+ace.define("ace/mode/rust",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/rust_highlight_rules","ace/mode/folding/cstyle"], function(require, exports, module) {
+"use strict";
+
+var oop = require("../lib/oop");
+var TextMode = require("./text").Mode;
+var RustHighlightRules = require("./rust_highlight_rules").RustHighlightRules;
+var FoldMode = require("./folding/cstyle").FoldMode;
+
+var Mode = function() {
+    this.HighlightRules = RustHighlightRules;
+    this.foldingRules = new FoldMode();
+};
+oop.inherits(Mode, TextMode);
+
+(function() {
+    this.lineCommentStart = "//";
+    this.blockComment = {start: "/*", end: "*/"};
+    this.$id = "ace/mode/rust";
+}).call(Mode.prototype);
+
+exports.Mode = Mode;
 });

@@ -1,127 +1,15 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Distributed under the BSD license:
- *
- * Copyright (c) 2010, Ajax.org B.V.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of Ajax.org B.V. nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL AJAX.ORG B.V. BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * ***** END LICENSE BLOCK ***** */
-
-define('ace/ext/old_ie', ['require', 'exports', 'module' , 'ace/lib/useragent', 'ace/tokenizer', 'ace/ext/searchbox'], function(require, exports, module) {
-
-var MAX_TOKEN_COUNT = 1000;
-var useragent = require("../lib/useragent");
-var TokenizerModule = require("../tokenizer");
-
-function patch(obj, name, regexp, replacement) {
-    eval("obj['" + name + "']=" + obj[name].toString().replace(
-        regexp, replacement
-    ));
-}
-
-if (useragent.isIE && useragent.isIE < 10 && window.top.document.compatMode === "BackCompat")
-    useragent.isOldIE = true;
-
-if (typeof document != "undefined" && !document.documentElement.querySelector) {    
-    useragent.isOldIE = true;
-    var qs = function(el, selector) {
-        if (selector.charAt(0) == ".") {
-            var classNeme = selector.slice(1);
-        } else {
-            var m = selector.match(/(\w+)=(\w+)/);
-            var attr = m && m[1];
-            var attrVal = m && m[2];
-        }
-        for (var i = 0; i < el.all.length; i++) {
-            var ch = el.all[i];
-            if (classNeme) {
-                if (ch.className.indexOf(classNeme) != -1)
-                    return ch;
-            } else if (attr) {
-                if (ch.getAttribute(attr) == attrVal)
-                    return ch;
-            }
-        }
-    };
-    var sb = require("./searchbox").SearchBox.prototype;
-    patch(
-        sb, "$initElements",
-        /([^\s=]*).querySelector\((".*?")\)/g, 
-        "qs($1, $2)"
-    );
-}
-    
-var compliantExecNpcg = /()??/.exec("")[1] === undefined;
-if (compliantExecNpcg)
-    return;
-var proto = TokenizerModule.Tokenizer.prototype;
-TokenizerModule.Tokenizer_orig = TokenizerModule.Tokenizer;
-proto.getLineTokens_orig = proto.getLineTokens;
-
-patch(
-    TokenizerModule, "Tokenizer",
-    "ruleRegExps.push(adjustedregex);\n", 
-    function(m) {
-        return m + '\
-        if (state[i].next && RegExp(adjustedregex).test(""))\n\
-            rule._qre = RegExp(adjustedregex, "g");\n\
-        ';
-    }
-);
-TokenizerModule.Tokenizer.prototype = proto;
-patch(
-    proto, "getLineTokens",
-    /if \(match\[i \+ 1\] === undefined\)\s*continue;/, 
-    "if (!match[i + 1]) {\n\
-        if (value)continue;\n\
-        var qre = state[mapping[i]]._qre;\n\
-        if (!qre) continue;\n\
-        qre.lastIndex = lastIndex;\n\
-        if (!qre.exec(line) || qre.lastIndex != lastIndex)\n\
-            continue;\n\
-    }"
-);
-
-useragent.isOldIE = true;
-
-});
-
-define('ace/ext/searchbox', ['require', 'exports', 'module' , 'ace/lib/dom', 'ace/lib/lang', 'ace/lib/event', 'ace/keyboard/hash_handler', 'ace/lib/keys'], function(require, exports, module) {
-
+define("ace/ext/searchbox",["require","exports","module","ace/lib/dom","ace/lib/lang","ace/lib/event","ace/keyboard/hash_handler","ace/lib/keys"], function(require, exports, module) {
+"use strict";
 
 var dom = require("../lib/dom");
 var lang = require("../lib/lang");
 var event = require("../lib/event");
 var searchboxCss = "\
-/* ------------------------------------------------------------------------------------------\
-* Editor Search Form\
-* --------------------------------------------------------------------------------------- */\
 .ace_search {\
 background-color: #ddd;\
 border: 1px solid #cbcbcb;\
 border-top: 0 none;\
-max-width: 297px;\
+max-width: 325px;\
 overflow: hidden;\
 margin: 0;\
 padding: 4px;\
@@ -159,7 +47,6 @@ border: 0 none;\
 -webkit-box-sizing: border-box;\
 -moz-box-sizing: border-box;\
 box-sizing: border-box;\
-display: block;\
 float: left;\
 height: 22px;\
 outline: 0;\
@@ -173,7 +60,6 @@ background: #fff;\
 border: 0 none;\
 border-left: 1px solid #dcdcdc;\
 cursor: pointer;\
-display: block;\
 float: left;\
 height: 22px;\
 margin: 0;\
@@ -206,12 +92,9 @@ border-radius: 50%;\
 border: 0 none;\
 color: #656565;\
 cursor: pointer;\
-display: block;\
 float: right;\
-font-family: Arial;\
-font-size: 16px;\
+font: 16px/16px Arial;\
 height: 14px;\
-line-height: 16px;\
 margin: 5px 1px 9px 5px;\
 padding: 0;\
 text-align: center;\
@@ -275,6 +158,7 @@ var html = '<div class="ace_search right">\
         <input class="ace_search_field" placeholder="Search for" spellcheck="false"></input>\
         <button type="button" action="findNext" class="ace_searchbtn next"></button>\
         <button type="button" action="findPrev" class="ace_searchbtn prev"></button>\
+        <button type="button" action="findAll" class="ace_searchbtn" title="Alt-Enter">All</button>\
     </div>\
     <div class="ace_replace_form">\
         <input class="ace_search_field" placeholder="Replace with" spellcheck="false"></input>\
@@ -395,6 +279,11 @@ var SearchBox = function(editor, range, showReplaceForm) {
                 sb.replace();
             sb.findPrev();
         },
+        "Alt-Return": function(sb) {
+            if (sb.activeInput == sb.replaceInput)
+                sb.replaceAll();
+            sb.findAll();
+        },
         "Tab": function(sb) {
             (sb.activeInput == sb.replaceInput ? sb.searchInput : sb.replaceInput).focus();
         }
@@ -454,6 +343,18 @@ var SearchBox = function(editor, range, showReplaceForm) {
     this.findPrev = function() {
         this.find(true, true);
     };
+    this.findAll = function(){
+        var range = this.editor.findAll(this.searchInput.value, {            
+            regExp: this.regExpOption.checked,
+            caseSensitive: this.caseSensitiveOption.checked,
+            wholeWord: this.wholeWordOption.checked
+        });
+        var noMatch = !range && this.searchInput.value;
+        dom.setCssClass(this.searchBox, "ace_nomatch", noMatch);
+        this.editor._emit("findSearchBox", { match: !noMatch });
+        this.highlight();
+        this.hide();
+    };
     this.replace = function() {
         if (!this.editor.getReadOnly())
             this.editor.replace(this.replaceInput.value);
@@ -488,6 +389,10 @@ var SearchBox = function(editor, range, showReplaceForm) {
         this.editor.keyBinding.addKeyboardHandler(this.$closeSearchBarKb);
     };
 
+    this.isFocused = function() {
+        var el = document.activeElement;
+        return el == this.searchInput || el == this.replaceInput;
+    }
 }).call(SearchBox.prototype);
 
 exports.SearchBox = SearchBox;
@@ -498,7 +403,91 @@ exports.Search = function(editor, isReplace) {
 };
 
 });
-;
+
+define("ace/ext/old_ie",["require","exports","module","ace/lib/useragent","ace/tokenizer","ace/ext/searchbox","ace/mode/text"], function(require, exports, module) {
+"use strict";
+var MAX_TOKEN_COUNT = 1000;
+var useragent = require("../lib/useragent");
+var TokenizerModule = require("../tokenizer");
+
+function patch(obj, name, regexp, replacement) {
+    eval("obj['" + name + "']=" + obj[name].toString().replace(
+        regexp, replacement
+    ));
+}
+
+if (useragent.isIE && useragent.isIE < 10 && window.top.document.compatMode === "BackCompat")
+    useragent.isOldIE = true;
+
+if (typeof document != "undefined" && !document.documentElement.querySelector) {    
+    useragent.isOldIE = true;
+    var qs = function(el, selector) {
+        if (selector.charAt(0) == ".") {
+            var classNeme = selector.slice(1);
+        } else {
+            var m = selector.match(/(\w+)=(\w+)/);
+            var attr = m && m[1];
+            var attrVal = m && m[2];
+        }
+        for (var i = 0; i < el.all.length; i++) {
+            var ch = el.all[i];
+            if (classNeme) {
+                if (ch.className.indexOf(classNeme) != -1)
+                    return ch;
+            } else if (attr) {
+                if (ch.getAttribute(attr) == attrVal)
+                    return ch;
+            }
+        }
+    };
+    var sb = require("./searchbox").SearchBox.prototype;
+    patch(
+        sb, "$initElements",
+        /([^\s=]*).querySelector\((".*?")\)/g, 
+        "qs($1, $2)"
+    );
+}
+    
+var compliantExecNpcg = /()??/.exec("")[1] === undefined;
+if (compliantExecNpcg)
+    return;
+var proto = TokenizerModule.Tokenizer.prototype;
+TokenizerModule.Tokenizer_orig = TokenizerModule.Tokenizer;
+proto.getLineTokens_orig = proto.getLineTokens;
+
+patch(
+    TokenizerModule, "Tokenizer",
+    "ruleRegExps.push(adjustedregex);\n", 
+    function(m) {
+        return m + '\
+        if (state[i].next && RegExp(adjustedregex).test(""))\n\
+            rule._qre = RegExp(adjustedregex, "g");\n\
+        ';
+    }
+);
+TokenizerModule.Tokenizer.prototype = proto;
+patch(
+    proto, "getLineTokens",
+    /if \(match\[i \+ 1\] === undefined\)\s*continue;/, 
+    "if (!match[i + 1]) {\n\
+        if (value)continue;\n\
+        var qre = state[mapping[i]]._qre;\n\
+        if (!qre) continue;\n\
+        qre.lastIndex = lastIndex;\n\
+        if (!qre.exec(line) || qre.lastIndex != lastIndex)\n\
+            continue;\n\
+    }"
+);
+
+patch(
+    require("../mode/text").Mode.prototype, "getTokenizer",
+    /Tokenizer/,
+    "TokenizerModule.Tokenizer"
+);
+
+useragent.isOldIE = true;
+
+});
                 (function() {
                     window.require(["ace/ext/old_ie"], function() {});
                 })();

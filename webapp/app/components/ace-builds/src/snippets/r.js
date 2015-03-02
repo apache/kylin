@@ -1,5 +1,5 @@
-define('ace/snippets/r', ['require', 'exports', 'module' ], function(require, exports, module) {
-
+define("ace/snippets/r",["require","exports","module"], function(require, exports, module) {
+"use strict";
 
 exports.snippetText = "snippet #!\n\
 	#!/usr/bin/env Rscript\n\

@@ -1,4 +1,4 @@
-define('ace/ext/chromevox', ['require', 'exports', 'module' , 'ace/editor', 'ace/config'], function(require, exports, module) {
+define("ace/ext/chromevox",["require","exports","module","ace/editor","ace/config"], function(require, exports, module) {
 var cvoxAce = {};
 cvoxAce.SpeechProperty;
 cvoxAce.Cursor;
@@ -535,7 +535,6 @@ require('../config').defineOptions(Editor.prototype, 'editor', {
 });
 
 });
-;
                 (function() {
                     window.require(["ace/ext/chromevox"], function() {});
                 })();
