@@ -21,14 +21,13 @@
 KylinApp
     .controller('SourceMetaCtrl', function ($scope,$cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService,$route,loadingRequest,SweetAlert,tableConfig,TableModel) {
         var $httpDefaultCache = $cacheFactory.get('$http');
-        $scope.selectedSrcDb = [];
-        $scope.selectedSrcTable = {};
+       $scope.tableModel = TableModel;
+        $scope.tableModel.selectedSrcDb = [];
+        $scope.tableModel.selectedSrcTable = {};
         $scope.window = 0.68 * $window.innerHeight;
         $scope.tableConfig = tableConfig;
 
-        $scope.hiveTbLoad={
-            status:"init"
-        }
+
        $scope.state = { filterAttr: 'id', filterReverse:false, reverseColumn: 'id',
             dimensionFilter: '', measureFilter: ''};
 
@@ -42,7 +41,7 @@ KylinApp
        };
 
         $scope.aceSrcTbLoaded = function (forceLoad) {
-            $scope.selectedSrcDb = [];
+            $scope.tableModel.selectedSrcDb = [];
             $scope.treeOptions = {
                 nodeChildren: "columns",
                 injectClasses: {
@@ -57,7 +56,7 @@ KylinApp
                 }
             };
 
-            $scope.selectedSrcTable = {};
+            $scope.tableModel.selectedSrcTable = {};
             var defer = $q.defer();
 
             $scope.loading = true;
@@ -93,9 +92,10 @@ KylinApp
                     obj.sort(innerSort);
                 }
 
+              $scope.tableModel.selectedSrcDb = [];
                 for (var key in  tableMap) {
                     var tables = tableMap[key];
-                    $scope.selectedSrcDb.push({
+                    $scope.tableModel.selectedSrcDb.push({
                         "name": key,
                         "columns": tables
                     });
@@ -112,25 +112,20 @@ KylinApp
             $scope.aceSrcTbLoaded();
 
         });
-        $scope.$watch('hiveTbLoad.status', function (newValue, oldValue) {
-            if(newValue=="success"){
-                $scope.aceSrcTbLoaded(true);
-            }
 
-        });
 
         $scope.showSelected = function (obj) {
             if (obj.uuid) {
-                $scope.selectedSrcTable = obj;
+                $scope.tableModel.selectedSrcTable = obj;
             }
             else if(obj.datatype) {
-                $scope.selectedSrcTable.selectedSrcColumn = obj;
+                $scope.tableModel.selectedSrcTable.selectedSrcColumn = obj;
             }
         };
 
         $scope.aceSrcTbChanged = function () {
-            $scope.selectedSrcDb = [];
-            $scope.selectedSrcTable = {};
+            $scope.tableModel.selectedSrcDb = [];
+            $scope.tableModel.selectedSrcTable = {};
             $scope.aceSrcTbLoaded(true);
         };
 
@@ -146,9 +141,6 @@ KylinApp
                     projectName:function(){
                       return  $scope.projectModel.selectedProject;
                     },
-                    hiveTbLoad:function(){
-                      return $scope.hiveTbLoad;
-                    },
                     scope: function () {
                         return $scope;
                     }
@@ -156,7 +148,7 @@ KylinApp
             });
         };
 
-        var ModalInstanceCtrl = function ($scope,$location, $modalInstance, tableNames, MessageService,projectName,hiveTbLoad) {
+        var ModalInstanceCtrl = function ($scope,$location, $modalInstance, tableNames, MessageService,projectName,scope) {
             $scope.tableNames = "";
             $scope.projectName = projectName;
             $scope.cancel = function () {
@@ -195,8 +187,8 @@ KylinApp
                         SweetAlert.swal('Partial loaded!','The following table(s) have been successfully synchronized: ' + loadTableInfo+"\n\n Failed to synchronize following table(s):"  + unloadedTableInfo, 'warning');
                     }
                     loadingRequest.hide();
+                    scope.aceSrcTbLoaded(true);
 
-                    hiveTbLoad.status="success";
                 },function(e){
                     if(e.data&& e.data.exception){
                         var message =e.data.exception;
@@ -206,7 +198,6 @@ KylinApp
                         SweetAlert.swal('Oops...', "Failed to take action.", 'error');
                     }
                     loadingRequest.hide();
-                    hiveTbLoad.status="init";
                 })
             }
         };
