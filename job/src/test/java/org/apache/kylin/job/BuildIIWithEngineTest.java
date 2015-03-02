@@ -115,7 +115,9 @@ public class BuildIIWithEngineTest {
         iiManager = IIManager.getInstance(kylinConfig);
         jobEngineConfig = new JobEngineConfig(kylinConfig);
         for (String jobId : jobService.getAllJobIds()) {
-            jobService.deleteJob(jobId);
+            if(jobService.getJob(jobId) instanceof IIJob){
+                jobService.deleteJob(jobId);
+            }
         }
 
         IIInstance ii = iiManager.getII(TEST_II_NAME);
