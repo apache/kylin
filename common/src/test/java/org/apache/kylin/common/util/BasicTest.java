@@ -26,10 +26,8 @@ import java.util.Calendar;
 import java.util.concurrent.Semaphore;
 
 import org.apache.commons.configuration.ConfigurationException;
-import org.joda.time.DateTime;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -71,39 +69,6 @@ public class BasicTest {
     @Test
     @Ignore("fix it later")
     public void test2() throws IOException, ConfigurationException {
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-                semaphore.release();
-                semaphore.release();
-                semaphore.release();
-                try {
-                    System.out.println("sleeping");
-                    Thread.sleep(10000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                semaphore.release();
-            }
-        }).start();
-
-        try {
-            try {
-                System.out.println("sleeping");
-                Thread.sleep(5000);
-                int x = semaphore.drainPermits();
-                System.out.println("drained " +x);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            semaphore.acquire();
-            System.out.println("left " + semaphore.availablePermits());
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
     }
 
