@@ -117,7 +117,7 @@ public class KafkaConsumer implements Runnable {
                     payload.get(bytes);
                     logger.debug("get message offset:" + messageAndOffset.offset());
                     try {
-                        streamQueue.put(new Stream(System.currentTimeMillis(), bytes));
+                        streamQueue.put(new Stream(messageAndOffset.offset(), bytes));
                     } catch (InterruptedException e) {
                         logger.error("error put streamQueue", e);
                         break;
