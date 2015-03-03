@@ -77,6 +77,7 @@ public class HBaseConnection {
                 ConnPool.put(url, connection);
             }
         } catch (Throwable t) {
+            logger.error("Error when open connection " + url, t);
             throw new StorageException("Error when open connection " + url, t);
         }
 
