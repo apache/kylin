@@ -48,7 +48,6 @@ public class BasicTest {
 
     private void foo(Long a) {
         System.out.printf("a");
-
     }
 
     private void foo(Integer b) {
@@ -64,12 +63,11 @@ public class BasicTest {
     public void test1() throws Exception {
     }
 
-    final private Semaphore semaphore = new Semaphore(0);
-
     @Test
     @Ignore("fix it later")
     public void test2() throws IOException, ConfigurationException {
 
+        System.out.println(512<<20);
     }
 
     private static String time(long t) {

@@ -41,6 +41,7 @@ public class HbaseStreamingInput {
             logger.info("Creating HTable '" + tableName + "'");
             HTableDescriptor desc = new HTableDescriptor(TableName.valueOf(tableName));
             desc.setValue(HTableDescriptor.SPLIT_POLICY, DisabledRegionSplitPolicy.class.getName());//disable region split
+            desc.setMemStoreFlushSize(512 << 20);//512M
 
             HColumnDescriptor fd = new HColumnDescriptor(CF);
             fd.setBlocksize(CELL_SIZE);
@@ -144,7 +145,7 @@ public class HbaseStreamingInput {
             long leftBound = getFirstKeyTime(table);
             long rightBound = System.currentTimeMillis();
 
-            for (int t = 0; t < 10; ++t) {
+            for (int t = 0; t < 5; ++t) {
                 long start = (long) (leftBound + r.nextDouble() * (rightBound - leftBound));
                 long end = start + 600000;//a period of 10 minutes
                 logger.info("A scan from " + formatTime(start) + " to " + formatTime(end));
