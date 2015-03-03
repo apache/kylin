@@ -32,7 +32,7 @@
  * /
  */
 
-package org.apache.kylin.streaming.kafka;
+package org.apache.kylin.streaming;
 
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
@@ -46,49 +46,50 @@ import java.util.concurrent.BlockingQueue;
  */
 public abstract class StreamBuilder implements Runnable {
 
-    private List<BlockingQueue<Stream>> streamQueues;
     private static final Logger logger = LoggerFactory.getLogger(StreamBuilder.class);
-    private final int batchBuildCount;
 
-    public StreamBuilder(List<BlockingQueue<Stream>> streamQueues, int batchBuildCount) {
-        this.streamQueues = streamQueues;
-        this.batchBuildCount = batchBuildCount;
-    }
+    private static final int BATCH_BUILD_BYTES_THRESHOLD = 64 * 1024;
+    private static final int BATCH_BUILD_INTERVAL_THRESHOLD = 5 * 60 * 1000;
 
+    private BlockingQueue<Stream> streamQueue;
+    private long lastBuildTime = System.currentTimeMillis();
+    private int bytesTotal = 0;
 
-    private int getEarliestStreamIndex(Stream[] streamHead) {
-        long ts = Long.MAX_VALUE;
-        int idx = 0;
-        for (int i = 0; i < streamHead.length; i++) {
-            if (streamHead[i].getTimestamp() < ts) {
-                ts = streamHead[i].getTimestamp();
-                idx = i;
-            }
-        }
-        return idx;
+    public StreamBuilder(BlockingQueue<Stream> streamQueue) {
+        this.streamQueue = streamQueue;
     }
 
     protected abstract void build(List<Stream> streamsToBuild);
 
+    private void buildStream(List<Stream> streams) {
+        build(streams);
+        clearCounter();
+    }
+
+    private void clearCounter() {
+        lastBuildTime = System.currentTimeMillis();
+        bytesTotal = 0;
+    }
+
     @Override
     public void run() {
         try {
-            Stream[] streamHead = new Stream[streamQueues.size()];
-            for (int i = 0; i < streamQueues.size(); i++) {
-                streamHead[i] = streamQueues.get(i).take();
-            }
-            List<Stream> streamToBuild = Lists.newArrayListWithCapacity(batchBuildCount);
+            List<Stream> streamToBuild = Lists.newArrayList();
+            clearCounter();
             while (true) {
-                if (streamToBuild.size() >= batchBuildCount) {
-                    build(streamToBuild);
-                    streamToBuild.clear();
+                final Stream stream = streamQueue.take();
+                streamToBuild.add(stream);
+                bytesTotal += stream.getRawData().length;
+                if (bytesTotal >= BATCH_BUILD_BYTES_THRESHOLD) {
+                    buildStream(streamToBuild);
+                } else if ((System.currentTimeMillis() - lastBuildTime) > BATCH_BUILD_INTERVAL_THRESHOLD) {
+                    buildStream(streamToBuild);
+                } else {
+                    continue;
                 }
-                int idx = getEarliestStreamIndex(streamHead);
-                streamToBuild.add(streamHead[idx]);
-                streamHead[idx] = streamQueues.get(idx).take();
             }
         } catch (InterruptedException e) {
-            logger.error("", e);
+            logger.error("StreamBuilder has been interrupted", e);
         }
     }
 }

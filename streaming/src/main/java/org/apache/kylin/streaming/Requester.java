@@ -32,7 +32,7 @@
  * /
  */
 
-package org.apache.kylin.streaming.kafka;
+package org.apache.kylin.streaming;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;

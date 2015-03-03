@@ -32,8 +32,9 @@
  * /
  */
 
-package org.apache.kylin.streaming.kafka;
+package org.apache.kylin.streaming;
 
+import org.apache.kylin.streaming.KafkaConfig;
 import org.junit.Test;
 
 import java.io.IOException;
