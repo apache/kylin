@@ -32,7 +32,7 @@
  * /
  */
 
-package org.apache.kylin.streaming.kafka;
+package org.apache.kylin.streaming;
 
 /**
  * Created by qianzhou on 2/15/15.

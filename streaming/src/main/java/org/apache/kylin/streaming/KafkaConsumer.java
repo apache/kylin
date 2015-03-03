@@ -32,7 +32,7 @@
  * /
  */
 
-package org.apache.kylin.streaming.kafka;
+package org.apache.kylin.streaming;
 
 import kafka.api.OffsetRequest;
 import kafka.cluster.Broker;
@@ -51,7 +51,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Created by qianzhou on 2/15/15.
  */
-public class Consumer implements Runnable {
+public class KafkaConsumer implements Runnable {
 
     private String topic;
     private int partitionId;
@@ -63,7 +63,7 @@ public class Consumer implements Runnable {
 
     private Logger logger;
 
-    public Consumer(String topic, int partitionId, List<Broker> initialBrokers, KafkaConfig kafkaConfig) {
+    public KafkaConsumer(String topic, int partitionId, List<Broker> initialBrokers, KafkaConfig kafkaConfig) {
         this.topic = topic;
         this.partitionId = partitionId;
         this.kafkaConfig = kafkaConfig;
@@ -88,32 +88,45 @@ public class Consumer implements Runnable {
 
     @Override
     public void run() {
-        while (true) {
-            final Broker leadBroker = getLeadBroker();
+        try {
+            Broker leadBroker = getLeadBroker();
             if (leadBroker == null) {
                 logger.warn("cannot find lead broker");
-                continue;
+            } else {
+                final long lastOffset = Requester.getLastOffset(topic, partitionId, OffsetRequest.EarliestTime(), leadBroker, kafkaConfig);
+                offset.set(lastOffset);
             }
-            final long lastOffset = Requester.getLastOffset(topic, partitionId, OffsetRequest.EarliestTime(), leadBroker, kafkaConfig);
-            offset.set(lastOffset);
-            final FetchResponse fetchResponse = Requester.fetchResponse(topic, partitionId, offset.get(), leadBroker, kafkaConfig);
-            if (fetchResponse.errorCode(topic, partitionId) != 0) {
-                logger.warn("fetch response offset:" + offset.get() + " errorCode:" + fetchResponse.errorCode(topic, partitionId));
-                continue;
-            }
-            for (MessageAndOffset messageAndOffset: fetchResponse.messageSet(topic, partitionId)) {
-                final ByteBuffer payload = messageAndOffset.message().payload();
-                //TODO use ByteBuffer maybe
-                byte[] bytes = new byte[payload.limit()];
-                payload.get(bytes);
-                logger.debug("get message offset:" + messageAndOffset.offset());
-                try {
-                    streamQueue.put(new Stream(System.currentTimeMillis(), bytes));
-                } catch (InterruptedException e) {
-                    logger.error("error put streamQueue", e);
+            while (true) {
+                if (leadBroker == null) {
+                    leadBroker = getLeadBroker();
                 }
-                offset.incrementAndGet();
+                if (leadBroker == null) {
+                    logger.warn("cannot find lead broker");
+                    continue;
+                }
+
+                final FetchResponse fetchResponse = Requester.fetchResponse(topic, partitionId, offset.get(), leadBroker, kafkaConfig);
+                if (fetchResponse.errorCode(topic, partitionId) != 0) {
+                    logger.warn("fetch response offset:" + offset.get() + " errorCode:" + fetchResponse.errorCode(topic, partitionId));
+                    continue;
+                }
+                for (MessageAndOffset messageAndOffset : fetchResponse.messageSet(topic, partitionId)) {
+                    final ByteBuffer payload = messageAndOffset.message().payload();
+                    //TODO use ByteBuffer maybe
+                    byte[] bytes = new byte[payload.limit()];
+                    payload.get(bytes);
+                    logger.debug("get message offset:" + messageAndOffset.offset());
+                    try {
+                        streamQueue.put(new Stream(System.currentTimeMillis(), bytes));
+                    } catch (InterruptedException e) {
+                        logger.error("error put streamQueue", e);
+                        break;
+                    }
+                    offset.incrementAndGet();
+                }
             }
+        } catch (Exception e) {
+            logger.error("consumer has encountered an error", e);
         }
     }
 
