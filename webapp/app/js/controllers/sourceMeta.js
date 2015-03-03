@@ -41,70 +41,14 @@ KylinApp
        };
 
         $scope.aceSrcTbLoaded = function (forceLoad) {
-            $scope.tableModel.selectedSrcDb = [];
-            $scope.treeOptions = {
-                nodeChildren: "columns",
-                injectClasses: {
-                    ul: "a1",
-                    li: "a2",
-                    liSelected: "a7",
-                    iExpanded: "a3",
-                    iCollapsed: "a4",
-                    iLeaf: "a5",
-                    label: "a6",
-                    labelSelected: "a8"
-                }
-            };
-
-            $scope.tableModel.selectedSrcTable = {};
-            var defer = $q.defer();
-
-            $scope.loading = true;
-            var param = {
-                ext: true,
-                project:$scope.projectModel.selectedProject
-            };
-            if (forceLoad)
+             if (forceLoad)
             {
-//                param.timestamp = new Date().getTime();
                 $httpDefaultCache.removeAll();
             }
-            TableService.list(param, function (tables) {
-                var tableMap = [];
-                angular.forEach(tables, function (table) {
-                    if (!tableMap[table.database]) {
-                        tableMap[table.database] = [];
-                    }
-                    angular.forEach(table.columns, function (column) {
-                        if(table.cardinality[column.name]) {
-                            column.cardinality = table.cardinality[column.name];
-                        }else{
-                            column.cardinality = null;
-                        }
-                        column.id = parseInt(column.id);
-                    });
-                    tableMap[table.database].push(table);
-                });
-
-//                Sort Table
-                for (var key in  tableMap) {
-                    var obj = tableMap[key];
-                    obj.sort(innerSort);
-                }
-
-              $scope.tableModel.selectedSrcDb = [];
-                for (var key in  tableMap) {
-                    var tables = tableMap[key];
-                    $scope.tableModel.selectedSrcDb.push({
-                        "name": key,
-                        "columns": tables
-                    });
-                }
+            $scope.loading = true;
+            TableModel.aceSrcTbLoaded(forceLoad).then(function(){
                 $scope.loading = false;
-                defer.resolve();
             });
-
-            return defer.promise;
         };
 
         $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
