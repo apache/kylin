@@ -106,7 +106,7 @@
             <td>{{ cube.owner}}</td>
             <td>{{ cube.create_time_utc | utcToConfigTimeZone}}</td>
             <td>
-                <div class="btn-group" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
+                <div ng-click="$event.stopPropagation();" class="btn-group" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
                     <button type="button" class="btn btn-default btn-xs dropdown-toggle"
                             data-toggle="dropdown" ng-click="listAccess(cube, 'CubeInstance')">
                         Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
@@ -130,7 +130,7 @@
                 </span>
             </td>
             <td ng-if="userService.hasRole('ROLE_ADMIN')">
-                <div class="btn-group">
+                <div ng-click="$event.stopPropagation();" class="btn-group">
                     <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" ng-click="listAccess(cube, 'CubeInstance')">
                         Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
                     </button>
