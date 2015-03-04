@@ -23,11 +23,11 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.invertedindex.model.IIDesc;
+import org.apache.kylin.metadata.model.LookupDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -84,6 +84,8 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
 
     private String projectName;
 
+    private static final int COST_WEIGHT_LOOKUP_TABLE = 1;
+    private static final int COST_WEIGHT_INNER_JOIN = 2;
 
     public long getAllocatedEndDate() {
         if (null == segments || segments.size() == 0) {
@@ -271,16 +273,25 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
 
     @Override
     public boolean isCapable(SQLDigest digest) {
-        //TODO: currently II is nearly omnipotent
         if (!digest.factTable.equalsIgnoreCase(this.getFactTable()))
             return false;
 
-        return true;
+        return IICapabilityChecker.check(this, digest);
     }
 
     @Override
     public int getCost(SQLDigest digest) {
-        return 0;
+
+        int calculatedCost = cost;
+        for (LookupDesc lookupDesc : this.getDescriptor().getModel().getLookups()) {
+            // more tables, more cost
+            calculatedCost += COST_WEIGHT_LOOKUP_TABLE;
+            if ("inner".equals(lookupDesc.getJoin().getType())) {
+                // inner join cost is bigger than left join, as it will filter some records
+                calculatedCost += COST_WEIGHT_INNER_JOIN;
+            }
+        }
+        return calculatedCost;
     }
 
     @Override
@@ -343,4 +354,7 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return getDescriptor().listAllDimensions();
     }
 
+    public void setCost(int cost) {
+        this.cost = cost;
+    }
 }

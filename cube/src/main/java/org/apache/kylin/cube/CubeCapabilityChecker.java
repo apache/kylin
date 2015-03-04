@@ -38,7 +38,7 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 public class CubeCapabilityChecker {
     private static final Logger logger = LoggerFactory.getLogger(CubeCapabilityChecker.class);
 
-    public static boolean check(CubeInstance cube, SQLDigest digest, boolean allowWeekMatch) {
+    public static boolean check(CubeInstance cube, SQLDigest digest, boolean allowWeakMatch) {
 
         // retrieve members from olapContext
         Collection<TblColRef> dimensionColumns = CubeDimensionDeriver.getDimensionColumns(digest.groupbyColumns, digest.filterColumns);
@@ -55,7 +55,7 @@ public class CubeCapabilityChecker {
         boolean matchJoin = isMatchedWithJoins(joins, cube);
 
         // Some cubes are not "perfectly" match, but still save them in case of usage
-        if (allowWeekMatch && isOnline && matchDimensions && !matchAggregation && matchJoin) {
+        if (allowWeakMatch && isOnline && matchDimensions && !matchAggregation && matchJoin) {
             // sometimes metrics are indeed dimensions
             // e.g. select min(cal_dt) from ..., where cal_dt is actually a dimension
             if (isWeaklyMatchedWithAggregations(functions, metricsColumns, cube)) {

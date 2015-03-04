@@ -176,7 +176,7 @@
   },
   "signature" : "7qJiv2MEGoGf1AAgksQmZw==",
   "last_modified" : 1422435345362,
-  "model_name" : "test_kylin_without_slr_model_desc",
+  "model_name" : "test_kylin_inner_join_model_desc",
   "null_string" : null,
   "hbase_mapping" : {
     "column_family" : [ {

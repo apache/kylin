@@ -153,7 +153,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
 
     @Override
     public long getDateRangeEnd() {
-        return Math.max(getHistoryRealizationInstance().getDateRangeEnd(), getRealTimeRealizationInstance().getDateRangeEnd());
+        return Math.max(getHistoryRealizationInstance().getDateRangeEnd(), getRealTimeRealizationInstance().getDateRangeEnd()) +1;
     }
 
     public String getModelName() {

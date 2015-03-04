@@ -18,49 +18,57 @@
 
 package org.apache.kylin.query.routing.RoutingRules;
 
-import java.util.Comparator;
-import java.util.List;
-
-import org.apache.kylin.common.util.PartialSorter;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.RoutingRule;
+
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 1/5/15.
  */
-public class CubesSortRule extends RoutingRule {
+public class RealizationSortRule extends RoutingRule {
     @Override
-    public void apply(List<IRealization> realizations, OLAPContext olapContext) {
+    public void apply(List<IRealization> realizations, final OLAPContext olapContext) {
 
-        // sort cube candidates, 0) the cost indicator, 1) the lesser header
-        // columns the better, 2) the lesser body columns the better
-        List<Integer> items = super.findRealizationsOf(realizations, RealizationType.CUBE);
-        PartialSorter.partialSort(realizations, items, new Comparator<IRealization>() {
+        // sort cube candidates, 0) the priority 1) the cost indicator, 2) the lesser header
+        // columns the better, 3) the lesser body columns the better 4) the larger date range the better
+
+        Collections.sort(realizations, new Comparator<IRealization>() {
             @Override
             public int compare(IRealization o1, IRealization o2) {
-                CubeInstance c1 = (CubeInstance) o1;
-                CubeInstance c2 = (CubeInstance) o2;
-                int comp = 0;
-                comp = c1.getCost() - c2.getCost();
+                int i1 = RealizationPriorityRule.priorities.get(o1.getType());
+                int i2 = RealizationPriorityRule.priorities.get(o2.getType());
+                int comp = i1 - i2;
                 if (comp != 0) {
                     return comp;
                 }
 
-                CubeDesc schema1 = c1.getDescriptor();
-                CubeDesc schema2 = c2.getDescriptor();
+                comp = o1.getCost(olapContext.getSQLDigest()) - o2.getCost(olapContext.getSQLDigest());
+                if (comp != 0) {
+                    return comp;
+                }
 
-                comp = schema1.listDimensionColumnsIncludingDerived().size() - schema2.listDimensionColumnsIncludingDerived().size();
+                comp = o1.getAllDimensions().size() - o2.getAllDimensions().size();
                 if (comp != 0)
                     return comp;
 
-                comp = schema1.getMeasures().size() - schema2.getMeasures().size();
+                comp = o1.getMeasures().size() - o2.getMeasures().size();
+
+                if (comp != 0)
+                    return comp;
+
+                long duration1 = o1.getDateRangeEnd() - o1.getDateRangeStart();
+                long duration2 = o2.getDateRangeEnd() - o2.getDateRangeStart();
+
+                comp = (int)(duration2 - duration1);
+
                 return comp;
             }
         });
+
 
     }
 

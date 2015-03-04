@@ -41,10 +41,9 @@ public abstract class RoutingRule {
     //1. simple query use II prior to cube
     //2. exact match prior to week match
     static {
-        //rules.add(new RealizationPriorityRule());
         rules.add(new RemoveUncapableRealizationsRule());
        // rules.add(new SimpleQueryMoreColumnsCubeFirstRule());
-        rules.add(new CubesSortRule());
+        rules.add(new RealizationSortRule());
         rules.add(new AdjustForWeaklyMatchedRealization());//this rule might modify olapcontext content, better put it at last
     }
 
