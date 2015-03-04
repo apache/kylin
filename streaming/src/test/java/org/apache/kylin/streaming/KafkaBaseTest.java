@@ -32,15 +32,17 @@
  * /
  */
 
-package org.apache.kylin.streaming.kafka;
+package org.apache.kylin.streaming;
 
 import kafka.admin.AdminUtils;
 import kafka.common.TopicExistsException;
 import org.I0Itec.zkclient.ZkClient;
+import org.apache.kylin.streaming.KafkaConfig;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Properties;
 
 /**
@@ -52,9 +54,15 @@ public abstract class KafkaBaseTest {
 
     protected static ZkClient zkClient;
 
+    protected static KafkaConfig kafkaConfig;
+
     @BeforeClass
-    public static void beforeClass() {
-        zkClient = new ZkClient(TestConstants.ZOOKEEPER);
+    public static void beforeClass() throws IOException {
+        final Properties properties = new Properties();
+        properties.load(ClassLoader.getSystemResourceAsStream("kafka_streaming_test/kafka.properties"));
+        kafkaConfig = KafkaConfig.load(properties);
+
+        zkClient = new ZkClient(kafkaConfig.getZookeeper());
     }
 
 
