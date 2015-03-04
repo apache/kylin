@@ -83,6 +83,9 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
     private long createTimeUTC;
 
     private String projectName;
+
+    private static final int COST_WEIGHT_DIMENSION = 1;
+    private static final int COST_WEIGHT_MEASURE = 1;
     
     public List<CubeSegment> getBuildingSegments() {
         List<CubeSegment> buildingSegments = new ArrayList<CubeSegment>();
@@ -327,7 +330,11 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
 
     @Override
     public int getCost(SQLDigest digest) {
-        return cost;
+        int calculatedCost = cost;
+
+        calculatedCost += getAllDimensions().size()* COST_WEIGHT_DIMENSION + getMeasures().size() * COST_WEIGHT_MEASURE;
+
+        return calculatedCost;
     }
 
     @Override
