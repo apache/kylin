@@ -32,15 +32,14 @@
  * /
  */
 
-package org.apache.kylin.streaming.kafka;
+package org.apache.kylin.streaming;
 
 import com.google.common.collect.Lists;
-import kafka.cluster.Broker;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Collections;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -58,7 +57,7 @@ public class KafkaConsumerTest extends KafkaBaseTest {
     private static final int TOTAL_SEND_COUNT = 100;
 
     @Before
-    public void before() {
+    public void before() throws IOException {
         producer = new TestProducer(TOTAL_SEND_COUNT);
         producer.start();
     }
@@ -80,18 +79,11 @@ public class KafkaConsumerTest extends KafkaBaseTest {
 
     @Test
     public void test() throws InterruptedException {
-        TopicConfig topicConfig = new TopicConfig();
-        topicConfig.setTopic(TestConstants.TOPIC);
-        topicConfig.setBrokers(Collections.singletonList(TestConstants.BROKER));
-        ConsumerConfig consumerConfig = new ConsumerConfig();
-        consumerConfig.setBufferSize(64 * 1024);
-        consumerConfig.setMaxReadCount(1000);
-        consumerConfig.setTimeout(60 * 1000);
-        final TopicMeta kafkaTopicMeta = Requester.getKafkaTopicMeta(topicConfig, consumerConfig);
+        final TopicMeta kafkaTopicMeta = Requester.getKafkaTopicMeta(kafkaConfig);
         final ExecutorService executorService = Executors.newFixedThreadPool(kafkaTopicMeta.getPartitionIds().size());
         List<BlockingQueue<Stream>> queues = Lists.newArrayList();
         for (Integer partitionId : kafkaTopicMeta.getPartitionIds()) {
-            Consumer consumer = new Consumer(kafkaTopicMeta.getName(), partitionId, Lists.asList(TestConstants.BROKER, new Broker[0]), consumerConfig);
+            KafkaConsumer consumer = new KafkaConsumer(kafkaTopicMeta.getName(), partitionId, kafkaConfig.getBrokers(), kafkaConfig);
             queues.add(consumer.getStreamQueue());
             executorService.execute(consumer);
         }

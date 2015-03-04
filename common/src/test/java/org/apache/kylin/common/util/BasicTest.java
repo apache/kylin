@@ -18,9 +18,12 @@
 
 package org.apache.kylin.common.util;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.concurrent.Semaphore;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.junit.Ignore;
@@ -45,7 +48,6 @@ public class BasicTest {
 
     private void foo(Long a) {
         System.out.printf("a");
-
     }
 
     private void foo(Integer b) {
@@ -64,7 +66,14 @@ public class BasicTest {
     @Test
     @Ignore("fix it later")
     public void test2() throws IOException, ConfigurationException {
-        int m = 1 << 15;
-        System.out.println(m);
+
+        System.out.println(512<<20);
+    }
+
+    private static String time(long t) {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(t);
+        return dateFormat.format(cal.getTime());
     }
 }

@@ -32,18 +32,18 @@
  * /
  */
 
-package org.apache.kylin.streaming.kafka;
+package org.apache.kylin.streaming;
 
 /**
  * Created by qianzhou on 2/15/15.
  */
 public class Stream {
 
-    private long timestamp;
+    private long offset;
     private byte[] rawData;
 
-    public Stream(long timestamp, byte[] rawData) {
-        this.timestamp = timestamp;
+    public Stream(long offset, byte[] rawData) {
+        this.offset = offset;
         this.rawData = rawData;
     }
 
@@ -51,7 +51,7 @@ public class Stream {
         return rawData;
     }
 
-    public long getTimestamp() {
-        return timestamp;
+    public long getOffset() {
+        return offset;
     }
 }
