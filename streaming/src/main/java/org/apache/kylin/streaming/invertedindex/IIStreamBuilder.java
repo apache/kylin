@@ -49,6 +49,9 @@ import java.util.concurrent.BlockingQueue;
  */
 public class IIStreamBuilder extends StreamBuilder {
 
+    private String iiName;
+    private String factTableName;
+
     public IIStreamBuilder(BlockingQueue<Stream> streamQueue) {
         super(streamQueue);
     }
