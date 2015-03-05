@@ -31,12 +31,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.dict.ISegment;
+import org.apache.kylin.dict.IDictionaryAware;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class CubeSegment implements Comparable<CubeSegment>, ISegment {
+public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware {
 
     @JsonBackReference
     private CubeInstance cubeInstance;

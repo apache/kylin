@@ -210,17 +210,17 @@ public abstract class TupleFilter {
         return true;
     }
 
-    public static void collectColumns(TupleFilter filter, Set<TblColRef> columns) {
+    public static void collectColumns(TupleFilter filter, Set<TblColRef> container) {
         if (filter == null)
             return;
 
         if (filter instanceof ColumnTupleFilter) {
             ColumnTupleFilter columnTupleFilter = (ColumnTupleFilter) filter;
-            columns.add(columnTupleFilter.getColumn());
+            container.add(columnTupleFilter.getColumn());
         }
 
         for (TupleFilter child : filter.getChildren()) {
-            collectColumns(child, columns);
+            collectColumns(child, container);
         }
     }
 

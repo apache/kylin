@@ -52,10 +52,10 @@ public class EndpointAggregators {
         private int refIndex = -1;
         private int precision = -1;
 
-        public MetricInfo(MetricType type, int refIndex, int presision) {
+        public MetricInfo(MetricType type, int refIndex, int precision) {
             this.type = type;
             this.refIndex = refIndex;
-            this.precision = presision;
+            this.precision = precision;
         }
 
         public MetricInfo(MetricType type, int refIndex) {

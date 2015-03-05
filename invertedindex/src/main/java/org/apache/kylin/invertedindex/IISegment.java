@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.dict.ISegment;
+import org.apache.kylin.dict.IDictionaryAware;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
@@ -43,7 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 // TODO: remove segment concept for II, append old hbase table
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class IISegment implements Comparable<IISegment>, ISegment {
+public class IISegment implements Comparable<IISegment>, IDictionaryAware {
 
     @JsonBackReference
     private IIInstance iiInstance;
@@ -253,6 +253,10 @@ public class IISegment implements Comparable<IISegment>, ISegment {
         return tableRecordInfo;
     }
 
+    public void updateDictionary(List<Dictionary<?>> dicts) {
+        getTableRecordInfo().updateDictionary( dicts);
+    }
+
     public List<TblColRef> getColumns() {
         return this.getTableRecordInfo().getColumns();
     }
@@ -283,6 +287,5 @@ public class IISegment implements Comparable<IISegment>, ISegment {
     public void setCreateTimeUTC(long createTimeUTC) {
         this.createTimeUTC = createTimeUTC;
     }
-
 
 }

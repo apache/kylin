@@ -35,6 +35,7 @@ import org.apache.kylin.metadata.model.*;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.kylin.storage.hbase.coprocessor.FilterDecorator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -77,7 +78,7 @@ public class EndpointAggregationTest extends LocalFileMetadataTestCase {
         CompareTupleFilter rawFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
         rawFilter.addChild(new ColumnTupleFilter(siteId));
         rawFilter.addChild(new ConstantTupleFilter("0"));
-        filter = CoprocessorFilter.fromFilter(this.ii.getFirstSegment(), rawFilter);
+        filter = CoprocessorFilter.fromFilter(this.ii.getFirstSegment(), rawFilter, FilterDecorator.FilterConstantsTreatment.AS_IT_IS);
 
         aggCache = new EndpointAggregationCache(aggregators);
         tableData = mockTable();

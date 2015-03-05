@@ -32,6 +32,7 @@ import org.apache.hadoop.hbase.ipc.ServerRpcController;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
+import org.apache.kylin.storage.hbase.coprocessor.FilterDecorator;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos;
 import org.apache.kylin.storage.tuple.Tuple;
 import org.apache.kylin.storage.tuple.TupleInfo;
@@ -54,7 +55,6 @@ import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 
-import javax.xml.datatype.DatatypeConfigurationException;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/2/14.
@@ -116,7 +116,7 @@ public class EndpointTupleIterator implements ITupleIterator {
         this.tableRecordInfo = new TableRecordInfo(this.seg);
 
         this.pushedDownRowType = CoprocessorRowType.fromTableRecordInfo(tableRecordInfo, this.columns);
-        this.pushedDownFilter = CoprocessorFilter.fromFilter(this.seg, rootFilter);
+        this.pushedDownFilter = CoprocessorFilter.fromFilter(this.seg, rootFilter, FilterDecorator.FilterConstantsTreatment.AS_IT_IS);
 
         for (TblColRef column : this.pushedDownFilter.getUnstrictlyFilteredColumns()) {
             groupBy.add(column);

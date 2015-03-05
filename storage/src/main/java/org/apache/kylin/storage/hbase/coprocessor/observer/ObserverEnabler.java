@@ -31,6 +31,7 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.kylin.storage.StorageContext;
+import org.apache.kylin.storage.hbase.coprocessor.FilterDecorator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +65,7 @@ public class ObserverEnabler {
         }
 
         CoprocessorRowType type = CoprocessorRowType.fromCuboid(segment, cuboid);
-        CoprocessorFilter filter = CoprocessorFilter.fromFilter(segment, tupleFiler);
+        CoprocessorFilter filter = CoprocessorFilter.fromFilter(segment, tupleFiler, FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_GLOBAL_DICT);
         CoprocessorProjector projector = CoprocessorProjector.makeForObserver(segment, cuboid, groupBy);
         ObserverAggregators aggrs = ObserverAggregators.fromValueDecoders(rowValueDecoders);
 

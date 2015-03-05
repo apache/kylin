@@ -19,9 +19,11 @@
 package org.apache.kylin.invertedindex.index;
 
 import java.util.Iterator;
+import java.util.List;
 
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.kylin.dict.Dictionary;
 
 /**
  * Within a partition (per timestampGranularity), records are further sliced
@@ -52,6 +54,11 @@ public class Slice implements Iterable<RawTableRecord>, Comparable<Slice> {
         for (int i = 0; i < nColumns; i++) {
             assert nRecords == containers[i].getSize();
         }
+    }
+
+    public List<Dictionary<?>> getLocalDictionaries() {
+        // TODO localdict
+        return null;
     }
 
     public int getRecordCount() {
