@@ -87,7 +87,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                 $scope.cubeMetaFrame = detail[0];
                 ModelService.get({model_name: $scope.cubeMetaFrame.model_name}, function (model) {
                     if (model) {
-//                        $scope.metaModel = model;
                         MetaModel.setMetaModel(model);
                         $scope.metaModel = MetaModel;
 
@@ -104,9 +103,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                 $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
             }
         });
-
-        //
-        //            $scope.metaModel = null;
 
     } else {
         $scope.cubeMetaFrame = CubeDescModel.createNew();
