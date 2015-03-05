@@ -38,7 +38,7 @@ import java.util.UUID;
  */
 public class IIDescManagerTest extends LocalFileMetadataTestCase {
 
-    public static final String TEST_II_DESC_NAME = "test_kylin_ii_desc";
+    public static final String TEST_II_DESC_NAME = "test_kylin_ii_left_join_desc";
 
     @Before
     public void setup() {
