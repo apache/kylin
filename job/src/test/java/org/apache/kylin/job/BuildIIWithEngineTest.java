@@ -133,7 +133,7 @@ public class BuildIIWithEngineTest {
                 iiManager.updateII(ii);
             }
         }
-        //backup();
+        backup();
     }
 
     @Test
