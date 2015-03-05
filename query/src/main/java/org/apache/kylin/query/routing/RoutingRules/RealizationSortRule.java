@@ -63,9 +63,10 @@ public class RealizationSortRule extends RoutingRule {
                 long duration1 = o1.getDateRangeEnd() - o1.getDateRangeStart();
                 long duration2 = o2.getDateRangeEnd() - o2.getDateRangeStart();
 
-                comp = (int)(duration2 - duration1);
+                long diff = duration2 - duration1;
 
-                return comp;
+
+                return diff == 0 ? 0 : (diff > 0) ? 1 : -1;
             }
         });
 
