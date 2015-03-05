@@ -30,4 +30,12 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     if($scope.state.mode==="edit") {
         $scope.metaModel = MetaModel;
     }
+
+
+    $scope.dictionaryUpdated = function(rowkey_column){
+        if(rowkey_column.dictionary==="true"){
+            rowkey_column.length=0;
+        }
+
+    }
 });
