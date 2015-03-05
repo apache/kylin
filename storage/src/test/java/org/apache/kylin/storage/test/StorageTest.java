@@ -221,7 +221,7 @@ public class StorageTest extends HBaseMetadataTestCase {
         CompareTupleFilter compareFilter = new CompareTupleFilter(FilterOperatorEnum.EQ);
         ColumnTupleFilter columnFilter1 = new ColumnTupleFilter(column);
         compareFilter.addChild(columnFilter1);
-        ConstantTupleFilter constantFilter1 = new ConstantTupleFilter("2013-03-10");
+        ConstantTupleFilter constantFilter1 = new ConstantTupleFilter("2011-03-10");
         compareFilter.addChild(constantFilter1);
         return compareFilter;
     }
