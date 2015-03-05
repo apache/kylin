@@ -1,37 +1,37 @@
 {
-  "uuid" : "9a4207bd-3bf9-48dd-b334-cf27fa55d629",
-  "name" : "test_kylin_without_slr_left_join_model_desc",
+  "uuid" : "ff527b94-f860-44c3-8452-93b17774c647",
+  "name" : "test_kylin_inner_join_model_desc",
   "lookups" : [ {
     "table" : "EDW.TEST_CAL_DT",
     "join" : {
-      "type" : "left",
+      "type" : "inner",
       "primary_key" : [ "CAL_DT" ],
       "foreign_key" : [ "CAL_DT" ]
     }
   }, {
     "table" : "DEFAULT.TEST_CATEGORY_GROUPINGS",
     "join" : {
-      "type" : "left",
+      "type" : "inner",
       "primary_key" : [ "LEAF_CATEG_ID", "SITE_ID" ],
       "foreign_key" : [ "LEAF_CATEG_ID", "LSTG_SITE_ID" ]
     }
   }, {
     "table" : "EDW.TEST_SITES",
     "join" : {
-      "type" : "left",
+      "type" : "inner",
       "primary_key" : [ "SITE_ID" ],
       "foreign_key" : [ "LSTG_SITE_ID" ]
     }
   }, {
     "table" : "EDW.TEST_SELLER_TYPE_DIM",
     "join" : {
-      "type" : "left",
+      "type" : "inner",
       "primary_key" : [ "SELLER_TYPE_CD" ],
       "foreign_key" : [ "SLR_SEGMENT_CD" ]
     }
   } ],
   "capacity" : "MEDIUM",
-  "last_modified" : 1422435345372,
+  "last_modified" : 1422435345352,
   "fact_table" : "DEFAULT.TEST_KYLIN_FACT",
   "filter_condition" : null,
   "partition_desc" : {

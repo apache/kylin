@@ -82,6 +82,7 @@ public class IIDesc extends RootPersistentEntity {
     // computed
     private List<TableDesc> allTables = Lists.newArrayList();
     private List<TblColRef> allColumns = Lists.newArrayList();
+    private List<TblColRef> allDimensions = Lists.newArrayList();
     private int tsCol;
     private int[] bitmapCols;
     private int[] valueCols;
@@ -118,7 +119,9 @@ public class IIDesc extends RootPersistentEntity {
             TableDesc tableDesc = this.getTableDesc(iiDimension.getTable());
             for (String column : iiDimension.getColumns()) {
                 ColumnDesc columnDesc = tableDesc.findColumnByName(column);
-                allColumns.add(new TblColRef(columnDesc));
+                TblColRef tcr = new TblColRef(columnDesc);
+                allColumns.add(tcr);
+                allDimensions.add(tcr);
                 measureDescs.add(makeHLLMeasure(columnDesc, null));
             }
 
@@ -255,6 +258,10 @@ public class IIDesc extends RootPersistentEntity {
 
     public List<TblColRef> listAllColumns() {
         return allColumns;
+    }
+
+    public List<TblColRef> listAllDimensions() {
+        return allDimensions;
     }
 
     public TblColRef findColumnRef(String table, String column) {

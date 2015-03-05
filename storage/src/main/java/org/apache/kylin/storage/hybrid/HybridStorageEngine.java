@@ -1,5 +1,6 @@
 package org.apache.kylin.storage.hybrid;
 
+import org.apache.commons.lang.SerializationUtils;
 import org.apache.commons.lang.time.FastDateFormat;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.MetadataManager;
@@ -38,6 +39,10 @@ public class HybridStorageEngine implements IStorageEngine {
     @Override
     public ITupleIterator search(StorageContext context, SQLDigest sqlDigest) {
 
+        // search the historic realization
+
+        ITupleIterator iterator1 = searchRealization(hybridInstance.getHistoryRealizationInstance(), context, sqlDigest);
+
         long boundary = hybridInstance.getHistoryRealizationInstance().getDateRangeEnd();
         FastDateFormat format = FastDateFormat.getInstance("yyyy-MM-dd");
         String boundaryDate = format.format(boundary);
@@ -50,6 +55,9 @@ public class HybridStorageEngine implements IStorageEngine {
 
         DataModelDesc modelDesc = metaMgr.getDataModelDesc(modelName);
 
+        if (modelDesc.getPartitionDesc() == null || modelDesc.getPartitionDesc().getPartitionDateColumnRef() == null)
+            return iterator1;
+
         String partitionColFull = modelDesc.getPartitionDesc().getPartitionDateColumn();
 
         String partitionTable = partitionColFull.substring(0, partitionColFull.lastIndexOf("."));
@@ -60,39 +68,52 @@ public class HybridStorageEngine implements IStorageEngine {
         ColumnDesc columnDesc = factTbl.findColumnByName(partitionCol);
         TblColRef partitionColRef = new TblColRef(columnDesc);
 
-        // search the historic realization
-
-        ITupleIterator iterator1 = searchRealization(hybridInstance.getHistoryRealizationInstance(), context, sqlDigest);
-
 
         // now search the realtime realization, need add the boundary condition
 
-        CompareTupleFilter compareTupleFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.GTE);
 
+        CompareTupleFilter compareTupleFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.GTE);
         ColumnTupleFilter columnTupleFilter = new ColumnTupleFilter(partitionColRef);
         ConstantTupleFilter constantTupleFilter = new ConstantTupleFilter(boundaryDate);
         compareTupleFilter.addChild(columnTupleFilter);
         compareTupleFilter.addChild(constantTupleFilter);
 
-        LogicalTupleFilter logicalTupleFilter = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
+        if (sqlDigest.filter == null) {
+            sqlDigest.filter = compareTupleFilter;
+        } else {
+            LogicalTupleFilter logicalTupleFilter = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
 
-        logicalTupleFilter.addChild(sqlDigest.filter);
-        logicalTupleFilter.addChild(compareTupleFilter);
+            logicalTupleFilter.addChild(sqlDigest.filter);
+            logicalTupleFilter.addChild(compareTupleFilter);
 
-        sqlDigest.filter = logicalTupleFilter;
+            sqlDigest.filter = logicalTupleFilter;
+        }
+
+        boolean addFilterColumn = false, addAllColumn = false;
 
         if (!sqlDigest.filterColumns.contains(partitionColRef)) {
             sqlDigest.filterColumns.add(partitionColRef);
+            addFilterColumn = true;
         }
 
         if (!sqlDigest.allColumns.contains(partitionColRef)) {
             sqlDigest.allColumns.add(partitionColRef);
+            addAllColumn = true;
         }
 
         ITupleIterator iterator2 = searchRealization(hybridInstance.getRealTimeRealizationInstance(), context, sqlDigest);
 
+        // restore the sqlDigest
+        sqlDigest.filter = sqlDigest.filter.getChildren().get(0);
+
+        if(addFilterColumn)
+            sqlDigest.filterColumns.remove(partitionColRef);
+
+        if(addAllColumn)
+            sqlDigest.allColumns.remove(partitionColRef);
 
         return new HybridTupleIterator(new ITupleIterator[]{iterator1, iterator2});
+//        return new HybridTupleIterator(new ITupleIterator[]{iterator1, ITupleIterator.EMPTY_TUPLE_ITERATOR});
     }
 
     private ITupleIterator searchRealization(IRealization realization, StorageContext context, SQLDigest sqlDigest) {

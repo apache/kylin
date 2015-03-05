@@ -57,14 +57,13 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
 
     @Override
     public boolean isCapable(SQLDigest digest) {
-        return getHistoryRealizationInstance().isCapable(digest) || getRealTimeRealizationInstance().isCapable(digest);
+        return getHistoryRealizationInstance().isCapable(digest) && getRealTimeRealizationInstance().isCapable(digest);
     }
 
     @Override
     public int getCost(SQLDigest digest) {
-        int cost = Math.min(historyRealizationInstance.getCost(digest), realTimeRealizationInstance.getCost(digest)) - 1;
-
-        return cost < 0 ? 0 : cost;
+        return historyRealizationInstance.getCost(digest);
+        //return Math.min(historyRealizationInstance.getCost(digest), realTimeRealizationInstance.getCost(digest));
     }
 
     @Override
@@ -154,7 +153,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
 
     @Override
     public long getDateRangeEnd() {
-        return Math.max(getHistoryRealizationInstance().getDateRangeEnd(), getRealTimeRealizationInstance().getDateRangeEnd());
+        return Math.max(getHistoryRealizationInstance().getDateRangeEnd(), getRealTimeRealizationInstance().getDateRangeEnd()) +1;
     }
 
     public String getModelName() {
@@ -164,4 +163,11 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
 
         return ((IIInstance) historyRealizationInstance).getDescriptor().getModelName();
     }
+
+    @Override
+    public List<TblColRef> getAllDimensions(){
+
+        return this.getHistoryRealizationInstance().getAllDimensions();
+    }
+
 }

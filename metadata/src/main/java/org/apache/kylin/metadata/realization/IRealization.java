@@ -51,6 +51,8 @@ public interface IRealization {
 
     public List<TblColRef> getAllColumns();
 
+    public List<TblColRef> getAllDimensions();
+
     public List<MeasureDesc> getMeasures();
 
     public boolean isReady();
@@ -66,5 +68,6 @@ public interface IRealization {
     public long getDateRangeStart();
 
     public long getDateRangeEnd();
+
 
 }
