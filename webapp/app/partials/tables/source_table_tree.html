@@ -37,7 +37,7 @@
         <treecontrol ng-if="tableModel.selectedSrcDb.length > 0" class="tree-light"
                      dirSelection="true"
                      tree-model="tableModel.selectedSrcDb"
-                     options="treeOptions"
+                     options="tableModel.treeOptions"
                      on-selection="showSelected(node)"
                      selected-node="tableModel.selectedSrcTable">
             {{node.name}} {{!!(node.datatype)?'(' + trimType(node.datatype) + ')' : ''}}
