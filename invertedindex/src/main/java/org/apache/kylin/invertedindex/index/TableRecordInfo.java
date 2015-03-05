@@ -19,7 +19,9 @@
 package org.apache.kylin.invertedindex.index;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryManager;
@@ -39,8 +41,6 @@ public class TableRecordInfo {
 
     final IISegment seg;
     final IIDesc desc;
-    final int nColumns;
-    final List<TblColRef> allColumns;
 
     final FixedLenMeasureCodec<?>[] measureSerializers;
     final Dictionary<?>[] dictionaries;
@@ -51,10 +51,8 @@ public class TableRecordInfo {
 
         seg = iiSegment;
         desc = seg.getIIInstance().getDescriptor();
-        allColumns = desc.listAllColumns();
-        nColumns = allColumns.size();
-        dictionaries = new Dictionary<?>[nColumns];
-        measureSerializers = new FixedLenMeasureCodec<?>[nColumns];
+        dictionaries = new Dictionary<?>[desc.listAllColumns().size()];
+        measureSerializers = new FixedLenMeasureCodec<?>[desc.listAllColumns().size()];
 
         DictionaryManager dictMgr = DictionaryManager.getInstance(desc.getConfig());
         int index = 0;
@@ -76,9 +74,33 @@ public class TableRecordInfo {
         digest = createDigest();
     }
 
+    public TableRecordInfo(IIDesc desc, Map<TblColRef, Dictionary<?>> dictionaryMap) {
+        this.seg = null;
+        this.desc = desc;
+
+        dictionaries = new Dictionary<?>[desc.listAllColumns().size()];
+        measureSerializers = new FixedLenMeasureCodec<?>[desc.listAllColumns().size()];
+
+        int index = 0;
+        for (TblColRef tblColRef : desc.listAllColumns()) {
+            if (desc.isMetricsCol(index)) {
+                measureSerializers[index] = FixedLenMeasureCodec.get(tblColRef.getColumn().getType());
+            } else {
+                String dictPath = seg.getDictResPath(tblColRef);
+                dictionaries[index] = dictionaryMap.get(tblColRef);
+                if (dictionaries[index] == null) {
+                    throw new RuntimeException("dictionary " + dictPath + " does not exist ");
+                }
+            }
+            index++;
+        }
+
+        digest = createDigest();
+    }
+
     private List<Integer> getLocalDictColumnList() {
         //TODO localdict
-        return null;
+        return Collections.emptyList();
     }
 
     public void updateDictionary(List<Dictionary<?>> dicts) {
@@ -99,6 +121,7 @@ public class TableRecordInfo {
 
     private TableRecordInfoDigest createDigest() {
         // isMetric
+        int nColumns = getColumns().size();
         boolean[] isMetric = new boolean[nColumns];
         for (int i = 0; i < nColumns; ++i) {
             isMetric[i] = desc.isMetricsCol(i);
@@ -134,12 +157,12 @@ public class TableRecordInfo {
         return new TableRecord(digest.createTableRecordBytes(), this);
     }
 
-    public IIDesc getDescriptor() {
+    public final IIDesc getDescriptor() {
         return desc;
     }
 
-    public List<TblColRef> getColumns() {
-        return allColumns;
+    public final List<TblColRef> getColumns() {
+        return desc.listAllColumns();
     }
 
     public int findColumn(TblColRef col) {
@@ -149,8 +172,8 @@ public class TableRecordInfo {
     public int findFactTableColumn(String columnName) {
         if (columnName == null)
             return -1;
-        for (int i = 0; i < allColumns.size(); ++i) {
-            TblColRef tblColRef = allColumns.get(i);
+        for (int i = 0; i < getColumns().size(); ++i) {
+            TblColRef tblColRef = getColumns().get(i);
             if (tblColRef.isSameAs(desc.getFactTableName(), columnName)) {
                 return i;
             }
