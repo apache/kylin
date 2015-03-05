@@ -30,11 +30,8 @@ import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.storage.filter.BitMapFilterEvaluator;
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorConstants;
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
+import org.apache.kylin.storage.hbase.coprocessor.*;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos;
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
 
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
@@ -101,9 +98,9 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
                 Iterable<Slice> slices = codec.decodeKeyValue(new HbaseServerKVIterator(innerScanner));
 
                 if (aggregators.isEmpty()) {
-                    response = getNonAggregatedResponse(slices, filter, type);
+                    response = getNonAggregatedResponse(slices, tableRecordInfoDigest, filter, type);
                 } else {
-                    response = getAggregatedResponse(slices, filter, type, projector, aggregators);
+                    response = getAggregatedResponse(slices, tableRecordInfoDigest, filter, type, projector, aggregators);
                 }
             }
         } catch (IOException ioe) {
@@ -125,13 +122,20 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
     }
 
     //TODO check current memory checking is good enough
-    private IIProtos.IIResponse getAggregatedResponse(Iterable<Slice> slices, CoprocessorFilter filter, CoprocessorRowType type, CoprocessorProjector projector, EndpointAggregators aggregators) {
+    private IIProtos.IIResponse getAggregatedResponse(Iterable<Slice> slices, TableRecordInfoDigest recordInfo, CoprocessorFilter filter, CoprocessorRowType type, CoprocessorProjector projector, EndpointAggregators aggregators) {
         EndpointAggregationCache aggCache = new EndpointAggregationCache(aggregators);
         IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
         for (Slice slice : slices) {
+
+            //TODO localdict
+            //dictionaries for fact table columns can not be determined while streaming.
+            //a piece of dict coincide with each Slice, we call it "local dict"
+            LocalDictionary localDictionary = new LocalDictionary(slice.getLocalDictionaries(), type, recordInfo);
+            CoprocessorFilter newFilter = CoprocessorFilter.fromFilter(localDictionary, filter.getFilter(), FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_LOCAL_DICT);
+
             ConciseSet result = null;
             if (filter != null) {
-                result = new BitMapFilterEvaluator(new SliceBitMapProvider(slice, type)).evaluate(filter.getFilter());
+                result = new BitMapFilterEvaluator(new SliceBitMapProvider(slice, type)).evaluate(newFilter.getFilter());
             }
 
             Iterator<RawTableRecord> iterator = slice.iterateWithBitmap(result);
@@ -156,7 +160,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         return responseBuilder.build();
     }
 
-    private IIProtos.IIResponse getNonAggregatedResponse(Iterable<Slice> slices, CoprocessorFilter filter, CoprocessorRowType type) {
+    private IIProtos.IIResponse getNonAggregatedResponse(Iterable<Slice> slices, TableRecordInfoDigest recordInfo, CoprocessorFilter filter, CoprocessorRowType type) {
         IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
         for (Slice slice : slices) {
             ConciseSet result = null;

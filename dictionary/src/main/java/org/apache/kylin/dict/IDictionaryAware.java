@@ -22,14 +22,13 @@ import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/17/14.
+ * 
+ * Class that implement this interface has the ability to help dictionary encoding and decoding
  */
-public interface ISegment {
+public interface IDictionaryAware {
 
     public abstract int getColumnLength(TblColRef col);
 
     public abstract Dictionary<?> getDictionary(TblColRef col);
-    
-    public String getName();
-    
-    public String getUuid();
+
 }

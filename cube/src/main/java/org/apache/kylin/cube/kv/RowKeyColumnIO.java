@@ -20,7 +20,7 @@ package org.apache.kylin.cube.kv;
 
 import java.util.Arrays;
 
-import org.apache.kylin.dict.ISegment;
+import org.apache.kylin.dict.IDictionaryAware;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,19 +39,19 @@ public class RowKeyColumnIO {
 
     private static final Logger logger = LoggerFactory.getLogger(RowKeyColumnIO.class);
 
-    private ISegment ISegment;
+    private IDictionaryAware IDictionaryAwareness;
 
-    public RowKeyColumnIO(ISegment ISegment) {
-        this.ISegment = ISegment;
+    public RowKeyColumnIO(IDictionaryAware IDictionaryAwareness) {
+        this.IDictionaryAwareness = IDictionaryAwareness;
     }
 
     public int getColumnLength(TblColRef col) {
-        return ISegment.getColumnLength(col);
+        return IDictionaryAwareness.getColumnLength(col);
     }
 
     //TODO is type cast really necessary here?
     public Dictionary<String> getDictionary(TblColRef col) {
-        return (Dictionary<String>) ISegment.getDictionary(col);
+        return (Dictionary<String>) IDictionaryAwareness.getDictionary(col);
     }
 
     public void writeColumn(TblColRef column, byte[] value, int valueLen, byte dft, byte[] output, int outputOffset) {
