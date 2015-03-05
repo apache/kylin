@@ -25,6 +25,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.metadata.model.LookupDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -86,6 +87,8 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
 
     private static final int COST_WEIGHT_DIMENSION = 1;
     private static final int COST_WEIGHT_MEASURE = 1;
+    private static final int COST_WEIGHT_LOOKUP_TABLE = 1;
+    private static final int COST_WEIGHT_INNER_JOIN = 2;
     
     public List<CubeSegment> getBuildingSegments() {
         List<CubeSegment> buildingSegments = new ArrayList<CubeSegment>();
@@ -334,6 +337,14 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
 
         calculatedCost += getAllDimensions().size()* COST_WEIGHT_DIMENSION + getMeasures().size() * COST_WEIGHT_MEASURE;
 
+        for (LookupDesc lookupDesc : this.getDescriptor().getModel().getLookups()) {
+            // more tables, more cost
+            calculatedCost += COST_WEIGHT_LOOKUP_TABLE;
+            if ("inner".equals(lookupDesc.getJoin().getType())) {
+                // inner join cost is bigger than left join, as it will filter some records
+                calculatedCost += COST_WEIGHT_INNER_JOIN;
+            }
+        }
         return calculatedCost;
     }
 

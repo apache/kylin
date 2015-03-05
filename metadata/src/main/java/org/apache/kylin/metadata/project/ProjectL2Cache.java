@@ -191,6 +191,9 @@ class ProjectL2Cache {
 
     // check all columns reported by realization does exists
     private boolean sanityCheck(ProjectCache prjCache, IRealization realization) {
+        if(realization == null)
+            return false;
+
         MetadataManager metaMgr = mgr.getMetadataManager();
 
         List<TblColRef> allColumns = realization.getAllColumns();

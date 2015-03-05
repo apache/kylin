@@ -18,6 +18,7 @@
 
 package org.apache.kylin.query.enumerator;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -50,6 +51,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
     private final Object[] current;
     private ITupleIterator cursor;
     private int[] fieldIndexes;
+    private int tupleFieldsHash;
 
     public CubeEnumerator(OLAPContext olapContext, DataContext optiqContext) {
         this.olapContext = olapContext;
@@ -57,6 +59,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
         this.current = new Object[olapContext.olapRowType.getFieldCount()];
         this.cursor = null;
         this.fieldIndexes = null;
+        this.tupleFieldsHash = -1;
     }
 
     @Override
@@ -97,8 +100,11 @@ public class CubeEnumerator implements Enumerator<Object[]> {
 
     private Object[] convertCurrentRow(ITuple tuple) {
 
-        // build field index map
-        if (this.fieldIndexes == null) {
+        int hashCode = tuple.getAllFields().hashCode();
+
+
+        // build field index map, if the map doesn't exit or the tuple fields structure changed
+       if (this.fieldIndexes == null || tupleFieldsHash != hashCode) {
             List<String> fields = tuple.getAllFields();
             int size = fields.size();
             this.fieldIndexes = new int[size];
@@ -111,7 +117,9 @@ public class CubeEnumerator implements Enumerator<Object[]> {
                     fieldIndexes[i] = -1;
                 }
             }
-        }
+
+           tupleFieldsHash = hashCode;
+       }
 
         // set field value
         Object[] values = tuple.getAllValues();
@@ -145,6 +153,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
         }
 
         this.fieldIndexes = null;
+        this.tupleFieldsHash = -1;
         return iterator;
     }
 

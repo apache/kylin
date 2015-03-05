@@ -58,7 +58,7 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
     public void setup() throws Exception {
         this.createTestMetadata();
 
-        this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii");
+        this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii_left_join");
         this.seg = ii.getFirstSegment();
 
         String hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();

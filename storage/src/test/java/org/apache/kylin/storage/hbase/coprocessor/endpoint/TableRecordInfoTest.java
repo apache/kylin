@@ -41,7 +41,7 @@ public class TableRecordInfoTest extends LocalFileMetadataTestCase {
     @Before
     public void setup() throws IOException {
         this.createTestMetadata();
-        this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii");
+        this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii_left_join");
         this.tableRecordInfo = new TableRecordInfo(ii.getFirstSegment());
     }
 

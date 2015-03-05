@@ -18,25 +18,28 @@
 
 package org.apache.kylin.query.test;
 
-import java.util.Map;
-
+import com.google.common.collect.Maps;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.routing.RoutingRules.RealizationPriorityRule;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-import com.google.common.collect.Maps;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 2/2/15.
  */
+@RunWith(Parameterized.class)
 public class IIQueryTest extends KylinQueryTest {
     @BeforeClass
     public static void setUp() throws Exception {
 
-        KylinQueryTest.setUp();//invoke super class
-
+        // give II higher priority than other realizations
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
         priorities.put(RealizationType.INVERTED_INDEX, 0);
         priorities.put(RealizationType.CUBE, 1);
@@ -52,7 +55,22 @@ public class IIQueryTest extends KylinQueryTest {
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
         priorities.put(RealizationType.INVERTED_INDEX, 1);
         priorities.put(RealizationType.CUBE, 0);
+        priorities.put(RealizationType.HYBRID, 0);
         RealizationPriorityRule.setPriorities(priorities);
+    }
+
+    @Parameterized.Parameters
+    public static Collection<Object[]> configs() {
+        return Arrays.asList(new Object[][]{{"inner"}, {"left"}});
+    }
+
+    public IIQueryTest(String joinType) throws Exception {
+
+        KylinQueryTest.clean();
+
+        KylinQueryTest.joinType = joinType;
+        KylinQueryTest.setupAll();
+
     }
 
     @Test
