@@ -50,7 +50,7 @@ public class IIDescTest extends LocalFileMetadataTestCase {
     @Test
     public void testGetIIDesc() {
 
-        IIDesc iiDesc = IIDescManager.getInstance(getTestConfig()).getIIDesc("test_kylin_ii_desc");
+        IIDesc iiDesc = IIDescManager.getInstance(getTestConfig()).getIIDesc("test_kylin_ii_left_join_desc");
         DataModelDesc model = iiDesc.getModel();
         Assert.assertNotNull(iiDesc);
         Assert.assertNotNull(model);
@@ -59,7 +59,7 @@ public class IIDescTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testSerialization() throws IOException {
-        IIDesc iiDesc = IIDescManager.getInstance(getTestConfig()).getIIDesc("test_kylin_ii_desc");
+        IIDesc iiDesc = IIDescManager.getInstance(getTestConfig()).getIIDesc("test_kylin_ii_left_join_desc");
         String str = JsonUtil.writeValueAsIndentString(iiDesc);
         System.out.println(str);
         @SuppressWarnings("unused")

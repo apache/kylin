@@ -18,16 +18,16 @@
 
 package org.apache.kylin.query.test;
 
-import static org.junit.Assert.*;
-
-import java.io.File;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Properties;
-
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.invertedindex.IIManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.enumerator.OLAPQuery;
+import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.schema.OLAPSchemaFactory;
+import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
 import org.junit.AfterClass;
@@ -35,13 +35,13 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.HBaseMetadataTestCase;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.schema.OLAPSchemaFactory;
-import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
+import java.io.File;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Properties;
+
+import static org.junit.Assert.assertTrue;
 
 @Ignore("KylinQueryTest is contained by CombinationTest")
 public class KylinQueryTest extends KylinTestBase {
@@ -53,7 +53,6 @@ public class KylinQueryTest extends KylinTestBase {
 
         joinType = "left";
         setupAll();
-        preferCubeOf(joinType);
     }
 
     @AfterClass
@@ -100,30 +99,6 @@ public class KylinQueryTest extends KylinTestBase {
 
         ObserverEnabler.forceCoprocessorUnset();
         HBaseMetadataTestCase.staticCleanupTestMetadata();
-    }
-
-    protected static void preferCubeOf(String joinType) {
-
-        CubeManager cubeManager = CubeManager.getInstance(config);
-
-        boolean cubesBuiltInBatch = cubeManager.getCube("test_kylin_cube_with_slr_empty") != null && cubeManager.getCube("test_kylin_cube_without_slr_empty") != null && cubeManager.getCube("test_kylin_cube_with_slr_left_join_empty") != null && cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty") != null;
-
-        if (!cubesBuiltInBatch) {
-            printInfo("Four empty cubes built in BuildCubeWithEngineTest is not complete, preferCubeOf being ignored");
-            return;
-        }
-
-        if (joinType.equals("inner")) {
-            cubeManager.getCube("test_kylin_cube_with_slr_empty").setCost(20);
-            cubeManager.getCube("test_kylin_cube_without_slr_empty").setCost(10);
-            cubeManager.getCube("test_kylin_cube_with_slr_left_join_empty").setCost(100);
-            cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty").setCost(90);
-        } else if (joinType.equals("left") || joinType.equals("default")) {
-            cubeManager.getCube("test_kylin_cube_with_slr_empty").setCost(100);
-            cubeManager.getCube("test_kylin_cube_without_slr_empty").setCost(90);
-            cubeManager.getCube("test_kylin_cube_with_slr_left_join_empty").setCost(20);
-            cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty").setCost(10);
-        }
     }
 
     @Ignore("this is only for debug")

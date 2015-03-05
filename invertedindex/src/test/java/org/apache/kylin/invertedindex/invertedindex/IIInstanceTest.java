@@ -33,7 +33,7 @@ public class IIInstanceTest extends LocalFileMetadataTestCase {
     public void testGetIIsByDesc() throws IOException {
         IIManager mgr = IIManager.getInstance(getTestConfig());
 
-        List<IIInstance> iiInstances = mgr.getIIsByDesc("test_kylin_ii_desc");
+        List<IIInstance> iiInstances = mgr.getIIsByDesc("test_kylin_ii_left_join_desc");
 
         Assert.assertTrue(iiInstances.size() > 0);
 
@@ -50,7 +50,7 @@ public class IIInstanceTest extends LocalFileMetadataTestCase {
     public void testCreateIIInstance() throws IOException {
 
 
-        IIDesc iiDesc = IIDescManager.getInstance(getTestConfig()).getIIDesc("test_kylin_ii_desc");
+        IIDesc iiDesc = IIDescManager.getInstance(getTestConfig()).getIIDesc("test_kylin_ii_left_join_desc");
 
         IIInstance ii = IIInstance.create("new ii", "default", iiDesc);
 

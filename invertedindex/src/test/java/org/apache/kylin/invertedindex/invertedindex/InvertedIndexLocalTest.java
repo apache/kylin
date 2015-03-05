@@ -52,7 +52,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
 	@Before
 	public void setUp() throws Exception {
 		this.createTestMetadata();
-		this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii");
+		this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii_left_join");
 		this.info = new TableRecordInfo(ii.getFirstSegment());
 	}
 
