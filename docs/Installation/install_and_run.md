@@ -53,6 +53,13 @@ If you are running Kylin in a cluster or you have multiple Kylin instances, plea
 In order to generate binary package, **maven** and **npm** are pre-requisites.
 
 
+###Notes
+If you are migrating from 0.6.x to 0.7.x
+
+1. the data model is NOT compatible between these two versions.
+2. make sure there is only one kylin instance.
+
+
 
 
 
