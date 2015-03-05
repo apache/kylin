@@ -62,10 +62,10 @@ public class RowKeyAttrRule implements IValidatorRule<CubeDesc> {
 
         for (int i = 0; i < rcd.length; i++) {
             RowKeyColDesc rd = rcd[i];
-            if (rd.getLength() != 0 && !StringUtils.isEmpty(rd.getDictionary())) {
+            if (rd.getLength() != 0 && (!StringUtils.isEmpty(rd.getDictionary())&&!rd.getDictionary().equals("false"))) {
                 context.addResult(ResultLevel.ERROR, "Rowkey column " + rd.getColumn() + " must not have both 'length' and 'dictionary' attribute");
             }
-            if (rd.getLength() == 0 && StringUtils.isEmpty(rd.getDictionary())) {
+            if (rd.getLength() == 0 && (StringUtils.isEmpty(rd.getDictionary())||rd.getDictionary().equals("false"))) {
                 context.addResult(ResultLevel.ERROR, "Rowkey column " + rd.getColumn() + " must not have both 'length' and 'dictionary' empty");
             }
         }

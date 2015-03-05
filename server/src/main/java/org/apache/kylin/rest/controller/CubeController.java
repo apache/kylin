@@ -311,7 +311,7 @@ public class CubeController extends BasicController {
         } catch (IOException e) {
             // TODO Auto-generated catch block
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
-            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage() + e.getMessage());
+            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
         }
 
         CubeDesc desc = deserializeCubeDesc(cubeRequest);
@@ -372,7 +372,7 @@ public class CubeController extends BasicController {
         } catch (IOException e) {
             // TODO Auto-generated catch block
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
-            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage() + e.getMessage());
+            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
         }
 
         //update cube
@@ -398,7 +398,7 @@ public class CubeController extends BasicController {
             throw new ForbiddenException("You don't have right to update this cube.");
         } catch (Exception e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
-            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage() + e.getMessage());
+            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
         }
 
         if (desc.getError().isEmpty()) {
@@ -476,7 +476,7 @@ public class CubeController extends BasicController {
     private DataModelDesc deserializeDataModelDesc(CubeRequest cubeRequest) {
         DataModelDesc desc = null;
         try {
-            logger.debug("Saving cube " + cubeRequest.getModelDescData());
+            logger.debug("Saving MODEL " + cubeRequest.getModelDescData());
             desc = JsonUtil.readValue(cubeRequest.getModelDescData(), DataModelDesc.class);
         } catch (JsonParseException e) {
             logger.error("The data model definition is not valid.", e);

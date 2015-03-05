@@ -131,6 +131,7 @@
                     <div>
                         <select ng-if="state.mode=='edit'" style="width:80px;"
                                 chosen ng-model="rowkey_column.dictionary"
+                                ng-change="dictionaryUpdated(rowkey_column);"
                                 ng-options="dt as dt for dt in cubeConfig.dictionaries">
                             <option value=""></option>
                         </select>
@@ -142,7 +143,8 @@
                     <!--Column Length -->
                     <input type="text" class="form-control" placeholder="Column Length.." ng-if="state.mode=='edit'"
                            tooltip="rowkey column length.." tooltip-trigger="focus"
-                           ng-model="rowkey_column.length" class="form-control">
+                           ng-disabled="rowkey_column.dictionary=='true'"
+                           ng-model="rowkey_column.length"  class="form-control">
 
                     <span ng-if="state.mode=='view'">{{rowkey_column.length}}</span>
                 </td>
