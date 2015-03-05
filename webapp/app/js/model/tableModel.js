@@ -16,9 +16,10 @@
  * limitations under the License.
 */
 
-KylinApp.service('TableModel', function() {
+KylinApp.service('TableModel', function(ProjectModel,$q,TableService) {
 
 
+    var _this = this;
    //for tables in cubeDesigner
     this.selectProjectTables = [];
 
@@ -44,6 +45,81 @@ KylinApp.service('TableModel', function() {
       this.selectedSrcTable = {};
     }
 
+
+    this.treeOptions = {
+        nodeChildren: "columns",
+        injectClasses: {
+            ul: "a1",
+            li: "a2",
+            liSelected: "a7",
+            iExpanded: "a3",
+            iCollapsed: "a4",
+            iLeaf: "a5",
+            label: "a6",
+            labelSelected: "a8"
+        }
+    };
+
+    this.aceSrcTbLoaded = function (forceLoad) {
+        _this.selectedSrcDb = [];
+
+        _this.selectedSrcTable = {};
+        var defer = $q.defer();
+
+        var param = {
+            ext: true,
+            project:ProjectModel.selectedProject
+        };
+
+        if(!ProjectModel.selectedProject){
+            defer.resolve();
+            return defer.promise;
+        }
+
+        TableService.list(param, function (tables) {
+            var tableMap = [];
+            angular.forEach(tables, function (table) {
+                if (!tableMap[table.database]) {
+                    tableMap[table.database] = [];
+                }
+                angular.forEach(table.columns, function (column) {
+                    if(table.cardinality[column.name]) {
+                        column.cardinality = table.cardinality[column.name];
+                    }else{
+                        column.cardinality = null;
+                    }
+                    column.id = parseInt(column.id);
+                });
+                tableMap[table.database].push(table);
+            });
+
+//                Sort Table
+            for (var key in  tableMap) {
+                var obj = tableMap[key];
+                obj.sort(_this.innerSort);
+            }
+
+            _this.selectedSrcDb = [];
+            for (var key in  tableMap) {
+                var tables = tableMap[key];
+                _this.selectedSrcDb.push({
+                    "name": key,
+                    "columns": tables
+                });
+            }
+            defer.resolve();
+        });
+
+        return defer.promise;
+    };
+    this.innerSort =function(a, b) {
+        var nameA = a.name.toLowerCase(), nameB = b.name.toLowerCase();
+        if (nameA < nameB) //sort string ascending
+            return -1;
+        if (nameA > nameB)
+            return 1;
+        return 0; //default return value (no sorting)
+    };
 
 });
 

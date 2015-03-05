@@ -32,41 +32,32 @@
  * /
  */
 
-package org.apache.kylin.streaming.kafka;
+package org.apache.kylin.streaming;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
+ * The topic metadata should be invariant, otherwise will cause re-initialization of the Consumer
+ *
  * Created by qianzhou on 2/15/15.
  */
-public class ConsumerConfig {
+public class TopicMeta {
 
-    private int timeout;
+    private final String name;
 
-    private int maxReadCount;
+    private final List<Integer> partitionIds;
 
-    private int bufferSize;
-
-    public int getTimeout() {
-        return timeout;
+    public TopicMeta(String name, List<Integer> partitionIds) {
+        this.name = name;
+        this.partitionIds = Collections.unmodifiableList(partitionIds);
     }
 
-    public void setTimeout(int timeout) {
-        this.timeout = timeout;
+    public String getName() {
+        return name;
     }
 
-    public int getMaxReadCount() {
-        return maxReadCount;
+    public List<Integer> getPartitionIds() {
+        return partitionIds;
     }
-
-    public void setMaxReadCount(int maxReadCount) {
-        this.maxReadCount = maxReadCount;
-    }
-
-    public int getBufferSize() {
-        return bufferSize;
-    }
-
-    public void setBufferSize(int bufferSize) {
-        this.bufferSize = bufferSize;
-    }
-
 }
