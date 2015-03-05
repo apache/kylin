@@ -27,6 +27,9 @@ KylinApp.service('ProjectModel',function(){
             this.selectedProject = project;
         }
     };
+    this.getSelectedProject = function(project) {
+         return this.selectedProject;
+    };
 
     this.setProjects = function(projects){
         if(projects.length){
