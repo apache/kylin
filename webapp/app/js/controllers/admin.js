@@ -173,7 +173,6 @@ KylinApp.controller('AdminCtrl', function ($scope,AdminService, CacheService, Ta
                 SweetAlert.swal('Success!', 'Cardinality job was calculated successfully. . Click Refresh button ...', 'success');
             },function(e){
                 loadingRequest.hide();
-                console.log(e);
                 if(e.data&& e.data.exception){
                     var message =e.data.exception;
                     var msg = !!(message) ? message : 'Failed to take action.';
