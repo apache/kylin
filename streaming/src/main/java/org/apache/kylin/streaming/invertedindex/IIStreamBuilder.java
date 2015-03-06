@@ -74,9 +74,9 @@ public class IIStreamBuilder extends StreamBuilder {
 
     private static Logger logger = LoggerFactory.getLogger(IIStreamBuilder.class);
 
-    private IIDesc desc;
-    private KafkaConfig kafkaConfig;
-    private HTableInterface hTable;
+    private IIDesc desc = null;
+    private KafkaConfig kafkaConfig = null;
+    private HTableInterface hTable = null;
 
     public IIStreamBuilder(BlockingQueue<Stream> streamQueue) {
         super(streamQueue);
