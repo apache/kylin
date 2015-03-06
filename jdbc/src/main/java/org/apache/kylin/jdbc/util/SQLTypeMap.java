@@ -160,10 +160,12 @@ public class SQLTypeMap {
         case Types.INTEGER:
             return Integer.parseInt(value);
         case Types.BIGINT:
-        case Types.REAL:
-        case Types.FLOAT:
-        case Types.DOUBLE:
             return Long.parseLong(value);
+        case Types.FLOAT:
+            return Float.parseFloat(value);
+        case Types.REAL:
+        case Types.DOUBLE:
+            return Double.parseDouble(value);
         case Types.BINARY:
         case Types.VARBINARY:
         case Types.LONGVARBINARY:
