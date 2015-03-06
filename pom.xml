@@ -579,7 +579,7 @@
                                 <exclue>**/HiveTableReaderTest.java</exclue>
                                 <exclude>**/TableControllerTest.java</exclude>
                                 <exclude>**/Kafka*Test.java</exclude>
-				<exclude>org.apache.kylin.streaming.RequesterTest.java</exclude>
+				                <exclude>**/RequesterTest.java</exclude>
                             </excludes>
                             <systemProperties>
                                 <property>
@@ -618,6 +618,7 @@
                                 <exclude>**/SampleCubeSetupTest.java</exclude>
                                 <exclude>**/KylinQueryTest.java</exclude>
                                 <exclude>**/Kafka*Test.java</exclude>
+                                <exclude>**/RequesterTest.java</exclude>
                             </excludes>
                             <systemProperties>
                                 <property>

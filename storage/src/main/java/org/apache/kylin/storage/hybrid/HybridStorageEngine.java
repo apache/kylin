@@ -1,13 +1,10 @@
 package org.apache.kylin.storage.hybrid;
 
-import org.apache.commons.lang.SerializationUtils;
 import org.apache.commons.lang.time.FastDateFormat;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.filter.*;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
@@ -17,8 +14,6 @@ import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.StorageEngineFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collection;
 
 /**
  * Created by shaoshi on 2/13/15.
@@ -40,54 +35,22 @@ public class HybridStorageEngine implements IStorageEngine {
     public ITupleIterator search(StorageContext context, SQLDigest sqlDigest) {
 
         // search the historic realization
-
         ITupleIterator iterator1 = searchRealization(hybridInstance.getHistoryRealizationInstance(), context, sqlDigest);
 
-        long boundary = hybridInstance.getHistoryRealizationInstance().getDateRangeEnd();
-        FastDateFormat format = FastDateFormat.getInstance("yyyy-MM-dd");
-        String boundaryDate = format.format(boundary);
-
-        Collection<TblColRef> filterCols = sqlDigest.filterColumns;
-
         String modelName = hybridInstance.getModelName();
-
         MetadataManager metaMgr = getMetadataManager();
-
         DataModelDesc modelDesc = metaMgr.getDataModelDesc(modelName);
 
+        // if the model isn't partitioned, only query the history
         if (modelDesc.getPartitionDesc() == null || modelDesc.getPartitionDesc().getPartitionDateColumnRef() == null)
             return iterator1;
 
-        String partitionColFull = modelDesc.getPartitionDesc().getPartitionDateColumn();
+        TblColRef partitionColRef = modelDesc.getPartitionDesc().getPartitionDateColumnRef();
 
-        String partitionTable = partitionColFull.substring(0, partitionColFull.lastIndexOf("."));
-        String partitionCol = partitionColFull.substring(partitionColFull.lastIndexOf(".") + 1);
+        // add the boundary condition to query real-time
 
-
-        TableDesc factTbl = metaMgr.getTableDesc(partitionTable);
-        ColumnDesc columnDesc = factTbl.findColumnByName(partitionCol);
-        TblColRef partitionColRef = new TblColRef(columnDesc);
-
-
-        // now search the realtime realization, need add the boundary condition
-
-
-        CompareTupleFilter compareTupleFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.GTE);
-        ColumnTupleFilter columnTupleFilter = new ColumnTupleFilter(partitionColRef);
-        ConstantTupleFilter constantTupleFilter = new ConstantTupleFilter(boundaryDate);
-        compareTupleFilter.addChild(columnTupleFilter);
-        compareTupleFilter.addChild(constantTupleFilter);
-
-        if (sqlDigest.filter == null) {
-            sqlDigest.filter = compareTupleFilter;
-        } else {
-            LogicalTupleFilter logicalTupleFilter = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
-
-            logicalTupleFilter.addChild(sqlDigest.filter);
-            logicalTupleFilter.addChild(compareTupleFilter);
-
-            sqlDigest.filter = logicalTupleFilter;
-        }
+        TupleFilter originalFilter = sqlDigest.filter;
+        sqlDigest.filter = createFilterForRealtime(originalFilter, partitionColRef, hybridInstance.getHistoryRealizationInstance().getDateRangeEnd());
 
         boolean addFilterColumn = false, addAllColumn = false;
 
@@ -101,19 +64,43 @@ public class HybridStorageEngine implements IStorageEngine {
             addAllColumn = true;
         }
 
+        // query real-time
         ITupleIterator iterator2 = searchRealization(hybridInstance.getRealTimeRealizationInstance(), context, sqlDigest);
 
         // restore the sqlDigest
-        sqlDigest.filter = sqlDigest.filter.getChildren().get(0);
+        sqlDigest.filter = originalFilter;
 
-        if(addFilterColumn)
+        if (addFilterColumn)
             sqlDigest.filterColumns.remove(partitionColRef);
 
-        if(addAllColumn)
+        if (addAllColumn)
             sqlDigest.allColumns.remove(partitionColRef);
 
+        // combine history and real-time tuple iterator
         return new HybridTupleIterator(new ITupleIterator[]{iterator1, iterator2});
-//        return new HybridTupleIterator(new ITupleIterator[]{iterator1, ITupleIterator.EMPTY_TUPLE_ITERATOR});
+    }
+
+
+    private TupleFilter createFilterForRealtime(TupleFilter originFilter, TblColRef partitionColRef, long startDate) {
+
+        FastDateFormat format = FastDateFormat.getInstance("yyyy-MM-dd");
+        String boundaryDate = format.format(startDate);
+
+        CompareTupleFilter compareTupleFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.GTE);
+        ColumnTupleFilter columnTupleFilter = new ColumnTupleFilter(partitionColRef);
+        ConstantTupleFilter constantTupleFilter = new ConstantTupleFilter(boundaryDate);
+        compareTupleFilter.addChild(columnTupleFilter);
+        compareTupleFilter.addChild(constantTupleFilter);
+
+        if (originFilter == null)
+            return compareTupleFilter;
+
+        LogicalTupleFilter logicalTupleFilter = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
+
+        logicalTupleFilter.addChild(originFilter);
+        logicalTupleFilter.addChild(compareTupleFilter);
+
+        return logicalTupleFilter;
     }
 
     private ITupleIterator searchRealization(IRealization realization, StorageContext context, SQLDigest sqlDigest) {
