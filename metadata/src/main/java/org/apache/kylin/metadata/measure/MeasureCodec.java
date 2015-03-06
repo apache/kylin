@@ -33,7 +33,7 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 public class MeasureCodec {
 
     int nMeasures;
-    MeasureSerializer[] serializers;
+    DataTypeSerializer[] serializers;
 
     public MeasureCodec(Collection<MeasureDesc> measureDescs) {
         this((MeasureDesc[]) measureDescs.toArray(new MeasureDesc[measureDescs.size()]));
@@ -53,14 +53,14 @@ public class MeasureCodec {
 
     private void init(String[] dataTypes) {
         nMeasures = dataTypes.length;
-        serializers = new MeasureSerializer[nMeasures];
+        serializers = new DataTypeSerializer[nMeasures];
 
         for (int i = 0; i < nMeasures; i++) {
-            serializers[i] = MeasureSerializer.create(dataTypes[i]);
+            serializers[i] = DataTypeSerializer.create(dataTypes[i]);
         }
     }
 
-    public MeasureSerializer getSerializer(int idx) {
+    public DataTypeSerializer getSerializer(int idx) {
         return serializers[idx];
     }
 
