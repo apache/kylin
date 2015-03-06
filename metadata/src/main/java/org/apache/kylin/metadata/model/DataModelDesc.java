@@ -18,10 +18,7 @@
 
 package org.apache.kylin.metadata.model;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.lang.ArrayUtils;
 
@@ -49,6 +46,12 @@ public class DataModelDesc extends RootPersistentEntity {
 
     @JsonProperty("lookups")
     private LookupDesc[] lookups;
+
+    @JsonProperty("dimensions")
+    private List<DimensionDesc> dimensions;
+
+    @JsonProperty("metrics")
+    private String[] metrics;
 
     @JsonProperty("filter_condition")
     private String filterCondition;
@@ -143,6 +146,8 @@ public class DataModelDesc extends RootPersistentEntity {
 
     public void init(Map<String, TableDesc> tables) {
         initJoinColumns(tables);
+
+        DimensionDesc.capicalizeStrings(dimensions);
     }
 
     private void initJoinColumns(Map<String, TableDesc> tables) {
@@ -218,4 +223,11 @@ public class DataModelDesc extends RootPersistentEntity {
         return ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstants.FILE_SURFIX;
     }
 
+    public List<DimensionDesc> getDimensions() {
+        return dimensions;
+    }
+
+    public String[] getMetrics() {
+        return metrics;
+    }
 }
