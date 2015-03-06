@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.net.util.Base64;
-import org.apache.hadoop.hbase.protobuf.generated.ClientProtos;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -67,9 +66,9 @@ public class IIDesc extends RootPersistentEntity {
     @JsonProperty("timestamp_dimension")
     private String timestampDimension;
     @JsonProperty("bitmap_dimensions")
-    private List<IIDimension> bitmapDimensions;
+    private List<DimensionDesc> bitmapDimensions;
     @JsonProperty("value_dimensions")
-    private List<IIDimension> valueDimensions;
+    private List<DimensionDesc> valueDimensions;
     @JsonProperty("metrics")
     private String[] metricNames;
     @JsonProperty("sharding")
@@ -107,17 +106,17 @@ public class IIDesc extends RootPersistentEntity {
         timestampDimension = timestampDimension.toUpperCase();
 
         // capitalize
-        IIDimension.capicalizeStrings(bitmapDimensions);
-        IIDimension.capicalizeStrings(valueDimensions);
+        DimensionDesc.capicalizeStrings(bitmapDimensions);
+        DimensionDesc.capicalizeStrings(valueDimensions);
         StringUtil.toUpperCaseArray(metricNames, metricNames);
 
         // retrieve all columns and all tables, and make available measure to ii
         HashSet<String> allTableNames = Sets.newHashSet();
         measureDescs = Lists.newArrayList();
         measureDescs.add(makeCountMeasure());
-        for (IIDimension iiDimension : Iterables.concat(bitmapDimensions, valueDimensions)) {
-            TableDesc tableDesc = this.getTableDesc(iiDimension.getTable());
-            for (String column : iiDimension.getColumns()) {
+        for (DimensionDesc dimensionDesc : Iterables.concat(bitmapDimensions, valueDimensions)) {
+            TableDesc tableDesc = this.getTableDesc(dimensionDesc.getTable());
+            for (String column : dimensionDesc.getColumns()) {
                 ColumnDesc columnDesc = tableDesc.findColumnByName(column);
                 TblColRef tcr = new TblColRef(columnDesc);
                 allColumns.add(tcr);
@@ -144,8 +143,8 @@ public class IIDesc extends RootPersistentEntity {
         }
 
         // indexing for each type of columns
-        bitmapCols = new int[IIDimension.getColumnCount(bitmapDimensions)];
-        valueCols = new int[IIDimension.getColumnCount(valueDimensions)];
+        bitmapCols = new int[DimensionDesc.getColumnCount(bitmapDimensions)];
+        valueCols = new int[DimensionDesc.getColumnCount(valueDimensions)];
         metricsCols = new int[metricNames.length];
         metricsColSet = new BitSet(this.getTableDesc(this.getFactTableName()).getColumnCount());
 

@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.invertedindex.model;
+package org.apache.kylin.metadata.model;
 
 import java.util.List;
 
@@ -28,7 +28,7 @@ import org.apache.kylin.common.util.StringUtil;
  * Created by Hongbin Ma(Binmahone) on 12/26/14.
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-public class IIDimension {
+public class DimensionDesc {
     @JsonProperty("table")
     private String table;
     @JsonProperty("columns")
@@ -51,17 +51,17 @@ public class IIDimension {
     }
 
 
-    public static void capicalizeStrings(List<IIDimension> dimensions) {
-        for (IIDimension iiDimension : dimensions) {
-            iiDimension.setTable(iiDimension.getTable().toUpperCase());
-            StringUtil.toUpperCaseArray(iiDimension.getColumns(), iiDimension.getColumns());
+    public static void capicalizeStrings(List<DimensionDesc> dimensions) {
+        for (DimensionDesc dimensionDesc : dimensions) {
+            dimensionDesc.setTable(dimensionDesc.getTable().toUpperCase());
+            StringUtil.toUpperCaseArray(dimensionDesc.getColumns(), dimensionDesc.getColumns());
         }
     }
 
-    public static int getColumnCount(List<IIDimension> iiDimensions) {
+    public static int getColumnCount(List<DimensionDesc> dimensionDescs) {
         int count = 0;
-        for (IIDimension iiDimension : iiDimensions) {
-            count += iiDimension.getColumns().length;
+        for (DimensionDesc dimensionDesc : dimensionDescs) {
+            count += dimensionDesc.getColumns().length;
         }
         return count;
     }
