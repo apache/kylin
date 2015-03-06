@@ -62,13 +62,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
             ModelService.get({model_name: $scope.cubeMetaFrame.model_name}, function (model) {
                 if (model) {
                     $scope.metaModel.model = model;
-
-                    //convert GMT mills ,to make sure partition date show GMT Date
-                    //should run only one time
-                    //if($scope.metaModel.model.partition_desc&&$scope.metaModel.model.partition_desc.partition_date_start)
-                    //{
-                    //    $scope.metaModel.model.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
-                    //}
                 }
             });
 
