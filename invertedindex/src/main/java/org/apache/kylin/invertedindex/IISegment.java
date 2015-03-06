@@ -253,9 +253,9 @@ public class IISegment implements Comparable<IISegment>, IDictionaryAware {
         return tableRecordInfo;
     }
 
-    public void updateDictionary(List<Dictionary<?>> dicts) {
-        getTableRecordInfo().updateDictionary( dicts);
-    }
+//    public void updateDictionary(List<Dictionary<?>> dicts) {
+//        getTableRecordInfo().updateDictionary( dicts);
+//    }
 
     public List<TblColRef> getColumns() {
         return this.getTableRecordInfo().getColumns();

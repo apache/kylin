@@ -75,7 +75,7 @@ public class TableRecord implements Cloneable {
 
     public List<String> getOriginTableColumnValues() {
         List<String> ret = Lists.newArrayList();
-        for (int i = 0; i < info.nColumns; ++i) {
+        for (int i = 0; i < info.getColumns().size(); ++i) {
             ret.add(getValueString(i));
         }
         return ret;
