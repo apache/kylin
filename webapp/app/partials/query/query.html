@@ -96,7 +96,7 @@
                         <td>
                             <div>
                                 <label>SQL Name:</label>&nbsp;&nbsp;&nbsp;<b style="font-size: 14px">{{query.name}}</b>
-                                <span style="color: #808080;line-height: 25px" class="pull-right">Saved At: {{query.createdDate}}</span>
+                                <!--<span style="color: #808080;line-height: 25px" class="pull-right">Saved At: {{query.createdDate}}</span>-->
                             </div>
                             <div ng-if="query.project">
                                 <label>Project: </label>
@@ -153,7 +153,7 @@
                     <tr ng-repeat="query in cachedQueries | reverse track by $index"
                         ng-if="$index >= (cachedQueries.curPage-1)*cachedQueries.perPage && $index < cachedQueries.curPage*cachedQueries.perPage">
                         <td>
-                            <span style="color: #808080;line-height: 25px">Queried At: {{query.savedAt | utcToConfigTimeZone}} <span ng-if="query.project">in Project: {{query.project}}</span></span>
+                            <span style="color: #808080;line-height: 25px">Queried At: {{query.savedAt}} </span><span ng-if="query.project">in Project: {{query.project}}</span>
 
                             <div class="pull-right">
                                 <button class="btn btn-default btn-xs" ng-click="submitQuery(query.sql, query.project)"><i class="fa fa-refresh"></i>

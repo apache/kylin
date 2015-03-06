@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList) {
+KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel) {
 
     $scope.projects = [];
     $scope.newDimension = null;
@@ -61,22 +61,14 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
             //init model
             ModelService.get({model_name: $scope.cubeMetaFrame.model_name}, function (model) {
                 if (model) {
-//                    $scope.metaModel = MetaModel;
-
                     $scope.metaModel.model = model;
 
-                    // add model ref for cube
-                    angular.forEach(CubeList.cubes,function(cube){
-                        if(cube.name===$scope.cubeMetaFrame.name||cube.descriptor===$scope.cubeMetaFrame.name){
-                          cube.model = model;
-                        }
-                    });
                     //convert GMT mills ,to make sure partition date show GMT Date
                     //should run only one time
-                    if($scope.metaModel.model.partition_desc&&$scope.metaModel.model.partition_desc.partition_date_start)
-                    {
-                        $scope.metaModel.model.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
-                    }
+                    //if($scope.metaModel.model.partition_desc&&$scope.metaModel.model.partition_desc.partition_date_start)
+                    //{
+                    //    $scope.metaModel.model.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
+                    //}
                 }
             });
 
@@ -186,6 +178,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
     $scope.nextView = function () {
         var stepIndex = $scope.wizardSteps.indexOf($scope.curStep);
+
         if (stepIndex < ($scope.wizardSteps.length - 1)) {
             $scope.curStep.isComplete = true;
             $scope.curStep = $scope.wizardSteps[stepIndex + 1];
@@ -196,6 +189,23 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         }
     };
 
+    $scope.goToStep = function(stepIndex){
+        for(var i=0;i<$scope.wizardSteps.length;i++){
+            if(i<=stepIndex){
+                $scope.wizardSteps[i].isComplete = true;
+            }else{
+                $scope.wizardSteps[i].isComplete = false;
+            }
+        }
+        if (stepIndex < ($scope.wizardSteps.length)) {
+            $scope.curStep = $scope.wizardSteps[stepIndex];
+
+            AuthenticationService.ping(function (data) {
+                UserService.setCurUser(data);
+            });
+        }
+    }
+
     // ~ private methods
     function initProject() {
         ProjectService.list({}, function (projects) {
@@ -204,13 +214,22 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
             var cubeName = (!!$scope.routeParams.cubeName)? $scope.routeParams.cubeName:$scope.state.cubeName;
             if (cubeName) {
                 var projName = null;
-                angular.forEach($scope.projects, function (project, index) {
-                    angular.forEach(project.realizations, function (unit, index) {
-                        if (!projName && unit.type=="CUBE"&&unit.realization === cubeName) {
-                            projName = project.name;
-                        }
+                if(ProjectModel.getSelectedProject()){
+                    projName=ProjectModel.getSelectedProject();
+                }else{
+                    angular.forEach($scope.projects, function (project, index) {
+                        angular.forEach(project.realizations, function (unit, index) {
+                            if (!projName && unit.type=="CUBE"&&unit.realization === cubeName) {
+                                projName = project.name;
+                            }
+                        });
                     });
-                });
+                }
+
+                if(!ProjectModel.getSelectedProject()){
+                    ProjectModel.setSelectedProject(projName);
+                    TableModel.aceSrcTbLoaded();
+                }
 
                 $scope.cubeMetaFrame.project = projName;
             }

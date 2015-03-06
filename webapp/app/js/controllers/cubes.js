@@ -83,7 +83,11 @@ KylinApp
                 CubeDescService.get({cube_name: cube.name}, {}, function (detail) {
                     if (detail.length > 0&&detail[0].hasOwnProperty("name")) {
                         cube.detail = detail[0];
-                        defer.resolve(cube.detail);
+                        ModelService.get({model_name: cube.detail.model_name}, function (model) {
+                          cube.model = model
+                          defer.resolve(cube.detail);
+                       });
+
                     }else{
                         SweetAlert.swal('Oops...', "No cube detail info loaded.", 'error');
                     }
@@ -326,43 +330,46 @@ KylinApp
         };
 
         $scope.startRefresh = function (cube) {
-            $scope.loadDetail(cube);
-
-            $modal.open({
-                templateUrl: 'jobRefresh.html',
-                controller: jobSubmitCtrl,
-                resolve: {
-                    cube: function () {
-                        return cube;
-                    },
-                    buildType: function () {
-                        return 'BUILD';
-                    }
-                }
+            $scope.loadDetail(cube).then(function(){
+              $modal.open({
+                  templateUrl: 'jobRefresh.html',
+                  controller: jobSubmitCtrl,
+                  resolve: {
+                      cube: function () {
+                          return cube;
+                      },
+                      buildType: function () {
+                          return 'BUILD';
+                      }
+                  }
+              });
             });
+
         };
 
         $scope.startMerge = function (cube) {
-            $scope.loadDetail(cube);
-
-            $modal.open({
+            $scope.loadDetail(cube).then(function(){
+              $modal.open({
                 templateUrl: 'jobMerge.html',
                 controller: jobSubmitCtrl,
                 resolve: {
-                    cube: function () {
-                        return cube;
-                    },
-                    buildType: function () {
-                        return 'MERGE';
-                    }
+                  cube: function () {
+                    return cube;
+                  },
+                  buildType: function () {
+                    return 'MERGE';
+                  }
                 }
+              });
             });
         }
     });
 
 var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube,MetaModel, buildType,SweetAlert,loadingRequest) {
     $scope.cube = cube;
-    $scope.metaModel = MetaModel;
+    $scope.metaModel={
+      model:cube.model
+    }
     $scope.jobBuildRequest = {
         buildType: buildType,
         startTime: 0,
