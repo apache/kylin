@@ -31,7 +31,8 @@ import java.nio.ByteBuffer;
  */
 public class TableRecordInfoDigest {
 
-	private int nColumns;
+    private String[] metricDataTypes;
+    private int nColumns;
 	private int byteFormLen;
 
 	private int[] offsets;// column offset in byte form row
@@ -39,21 +40,19 @@ public class TableRecordInfoDigest {
 	private int[] lengths;// length of each encoded dict
 	private boolean[] isMetric;// whether it's metric or dict
 
-	protected FixedLenMeasureCodec<?>[] measureSerializers;
-
-	public TableRecordInfoDigest(int nColumns, int byteFormLen, int[] offsets,
+    public TableRecordInfoDigest(int nColumns, int byteFormLen, int[] offsets,
 			int[] dictMaxIds, int[] lengths, boolean[] isMetric,
-			FixedLenMeasureCodec<?>[] measureSerializers) {
+			String[] metricDataTypes) {
 		this.nColumns = nColumns;
 		this.byteFormLen = byteFormLen;
 		this.offsets = offsets;
 		this.dictMaxIds = dictMaxIds;
 		this.lengths = lengths;
 		this.isMetric = isMetric;
-		this.measureSerializers = measureSerializers;
+        this.metricDataTypes = metricDataTypes;
 	}
 
-	public TableRecordInfoDigest() {
+	private TableRecordInfoDigest() {
 	}
 
 	public int getByteFormLen() {
@@ -98,7 +97,7 @@ public class TableRecordInfoDigest {
 	@SuppressWarnings("unchecked")
 	public FixedLenMeasureCodec<LongWritable> codec(int col) {
 		// yes, all metrics are long currently
-		return (FixedLenMeasureCodec<LongWritable>) measureSerializers[col];
+		return (FixedLenMeasureCodec<LongWritable>) FixedLenMeasureCodec.get(DataType.getInstance(metricDataTypes[col]));
 	}
 
 	public static byte[] serialize(TableRecordInfoDigest o) {
@@ -130,15 +129,7 @@ public class TableRecordInfoDigest {
 			BytesUtil.writeIntArray(value.dictMaxIds, out);
 			BytesUtil.writeIntArray(value.lengths, out);
 			BytesUtil.writeBooleanArray(value.isMetric, out);
-
-			for (int i = 0; i < value.measureSerializers.length; ++i) {
-				if (value.isMetrics(i)) {
-					BytesUtil.writeAsciiString(value.measureSerializers[i]
-							.getDataType().toString(), out);
-				} else {
-					BytesUtil.writeAsciiString(null, out);
-				}
-			}
+            BytesUtil.writeAsciiStringArray(value.metricDataTypes, out);
 		}
 
 		@Override
@@ -150,18 +141,7 @@ public class TableRecordInfoDigest {
 			result.dictMaxIds = BytesUtil.readIntArray(in);
 			result.lengths = BytesUtil.readIntArray(in);
 			result.isMetric = BytesUtil.readBooleanArray(in);
-
-			result.measureSerializers = new FixedLenMeasureCodec<?>[result.nColumns];
-			for (int i = 0; i < result.nColumns; ++i) {
-				String typeStr = BytesUtil.readAsciiString(in);
-				if (typeStr == null) {
-					result.measureSerializers[i] = null;
-				} else {
-					result.measureSerializers[i] = FixedLenMeasureCodec
-							.get(DataType.getInstance(typeStr));
-				}
-			}
-
+            result.metricDataTypes = BytesUtil.readAsciiStringArray(in);
 			return result;
 		}
 
