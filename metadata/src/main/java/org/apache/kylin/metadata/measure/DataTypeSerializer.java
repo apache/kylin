@@ -18,6 +18,8 @@
 
 package org.apache.kylin.metadata.measure;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 
 import org.apache.kylin.common.util.BytesSerializer;
@@ -27,7 +29,7 @@ import org.apache.kylin.metadata.model.DataType;
  * @author yangli9
  * 
  */
-abstract public class MeasureSerializer<T> implements BytesSerializer<T> {
+abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
 
     final static HashMap<String, Class<?>> implementations = new HashMap<String, Class<?>>();
     static {
@@ -40,7 +42,7 @@ abstract public class MeasureSerializer<T> implements BytesSerializer<T> {
         implementations.put("int", LongSerializer.class);
     }
 
-    public static MeasureSerializer<?> create(String dataType) {
+    public static DataTypeSerializer<?> create(String dataType) {
         DataType type = DataType.getInstance(dataType);
         if (type.isHLLC()) {
             return new HLLCSerializer(type.getPrecision());
@@ -51,14 +53,27 @@ abstract public class MeasureSerializer<T> implements BytesSerializer<T> {
             throw new RuntimeException("No MeasureSerializer for type " + dataType);
 
         try {
-            return (MeasureSerializer<?>) clz.newInstance();
+            return (DataTypeSerializer<?>) clz.newInstance();
         } catch (Exception e) {
             throw new RuntimeException(e); // never happen
         }
     }
-
+    
+    /** peek into buffer and return the length of serialization */
+    abstract public int peekLength(ByteBuffer in);
+    
+    /** convert from String to obj */
     abstract public T valueOf(byte[] value);
+    
+    public T valueOf(String value) {
+        try {
+            return valueOf(value.getBytes("UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e); // never happen
+        }
+    }
 
+    /** convert from obj to string */
     public String toString(T value) {
         if (value == null)
             return "NULL";
