@@ -42,7 +42,6 @@ public abstract class RoutingRule {
     //2. exact match prior to week match
     static {
         rules.add(new RemoveUncapableRealizationsRule());
-       // rules.add(new SimpleQueryMoreColumnsCubeFirstRule());
         rules.add(new RealizationSortRule());
         rules.add(new AdjustForWeaklyMatchedRealization());//this rule might modify olapcontext content, better put it at last
     }

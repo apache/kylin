@@ -21,6 +21,7 @@ package org.apache.kylin.query.routing.RoutingRules;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.RoutingRule;
+import org.apache.kylin.storage.hybrid.HybridInstance;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -51,22 +52,12 @@ public class RealizationSortRule extends RoutingRule {
                     return comp;
                 }
 
-                comp = o1.getAllDimensions().size() - o2.getAllDimensions().size();
-                if (comp != 0)
-                    return comp;
+                if (o1 instanceof HybridInstance)
+                    return -1;
+                else if (o2 instanceof HybridInstance)
+                    return 1;
 
-                comp = o1.getMeasures().size() - o2.getMeasures().size();
-
-                if (comp != 0)
-                    return comp;
-
-                long duration1 = o1.getDateRangeEnd() - o1.getDateRangeStart();
-                long duration2 = o2.getDateRangeEnd() - o2.getDateRangeStart();
-
-                long diff = duration2 - duration1;
-
-
-                return diff == 0 ? 0 : (diff > 0) ? 1 : -1;
+                return 0;
             }
         });
 
