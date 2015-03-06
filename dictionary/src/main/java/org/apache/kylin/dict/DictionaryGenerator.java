@@ -21,10 +21,7 @@ package org.apache.kylin.dict;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.kylin.dict.lookup.TableReader;
@@ -48,7 +45,7 @@ public class DictionaryGenerator {
 
     private static final String[] DATE_PATTERNS = new String[] { "yyyy-MM-dd" };
 
-    public static Dictionary<?> buildDictionaryFromValueList(DictionaryInfo info, List<byte[]> values) {
+    public static Dictionary<?> buildDictionaryFromValueList(DictionaryInfo info, Collection<byte[]> values) {
         info.setCardinality(values.size());
 
         Dictionary dict = null;
@@ -78,6 +75,39 @@ public class DictionaryGenerator {
         if (values.size() > DICT_MAX_CARDINALITY)
             throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary -- " + info.getSourceTable() + "." + info.getSourceColumn() + " cardinality: " + values.size());
 
+        return dict;
+    }
+
+    public static Dictionary<?> buildDictionaryFromValueList(Collection<byte[]> values, DataType dataType) {
+        if (values.size() > DICT_MAX_CARDINALITY) {
+            throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary -- cardinality: " + values.size());
+        }
+        Dictionary dict = null;
+        int baseId = 0; // always 0 for now
+        int nSamples = 5;
+        ArrayList samples = new ArrayList();
+
+        // build dict, case by data type
+        if (dataType.isDateTimeFamily()) {
+            dict = buildDateStrDict(values, baseId, nSamples, samples);
+        }
+        else if (dataType.isNumberFamily()) {
+            dict = buildNumberDict(values, baseId, nSamples, samples);
+        }
+        else {
+            dict = buildStringDict(values, baseId, nSamples, samples);
+        }
+
+        // log a few samples
+        StringBuilder buf = new StringBuilder();
+        for (Object s : samples) {
+            if (buf.length() > 0) {
+                buf.append(", ");
+            }
+            buf.append(s.toString()).append("=>").append(dict.getIdFromValue(s));
+        }
+        logger.info("Dictionary value samples: " + buf.toString());
+        logger.info("Dictionary cardinality " + values.size());
         return dict;
     }
 
@@ -114,7 +144,7 @@ public class DictionaryGenerator {
         return buildDictionaryFromValueList(info, values);
     }
 
-    private static Dictionary buildDateStrDict(List<byte[]> values, int baseId, int nSamples, ArrayList samples) {
+    private static Dictionary buildDateStrDict(Collection<byte[]> values, int baseId, int nSamples, ArrayList samples) {
         final int BAD_THRESHOLD = 2;
         String matchPattern = null;
 
@@ -146,7 +176,7 @@ public class DictionaryGenerator {
         throw new IllegalStateException("Unrecognized datetime value");
     }
 
-    private static Dictionary buildStringDict(List<byte[]> values, int baseId, int nSamples, ArrayList samples) {
+    private static Dictionary buildStringDict(Collection<byte[]> values, int baseId, int nSamples, ArrayList samples) {
         TrieDictionaryBuilder builder = new TrieDictionaryBuilder(new StringBytesConverter());
         for (byte[] value : values) {
             String v = Bytes.toString(value);
@@ -157,7 +187,7 @@ public class DictionaryGenerator {
         return builder.build(baseId);
     }
 
-    private static Dictionary buildNumberDict(List<byte[]> values, int baseId, int nSamples, ArrayList samples) {
+    private static Dictionary buildNumberDict(Collection<byte[]> values, int baseId, int nSamples, ArrayList samples) {
         NumberDictionaryBuilder builder = new NumberDictionaryBuilder(new StringBytesConverter());
         for (byte[] value : values) {
             String v = Bytes.toString(value);
