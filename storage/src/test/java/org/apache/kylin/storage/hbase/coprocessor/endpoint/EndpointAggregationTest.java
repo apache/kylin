@@ -63,7 +63,7 @@ public class EndpointAggregationTest extends LocalFileMetadataTestCase {
     @Before
     public void setup() throws IOException {
         this.createTestMetadata();
-        this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii");
+        this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii_left_join");
         this.tableRecordInfo = new TableRecordInfo(ii.getFirstSegment());
         factTableDesc = MetadataManager.getInstance(getTestConfig()).getTableDesc("DEFAULT.TEST_KYLIN_FACT");
         TblColRef formatName = this.ii.getDescriptor().findColumnRef("DEFAULT.TEST_KYLIN_FACT", "LSTG_FORMAT_NAME");

@@ -100,6 +100,10 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
         this.name = name;
     }
 
+    @Override
+    public String toString() {
+        return getCanonicalName();
+    }
 
     @Override
     public String getCanonicalName() {

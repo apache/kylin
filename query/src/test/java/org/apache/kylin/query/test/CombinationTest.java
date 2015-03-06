@@ -18,16 +18,15 @@
 
 package org.apache.kylin.query.test;
 
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Collection;
-
+import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collection;
 
 /**
  * Created by honma on 7/2/14.
@@ -52,7 +51,8 @@ public class CombinationTest extends KylinQueryTest {
      */
     @Parameterized.Parameters
     public static Collection<Object[]> configs() {
-        return Arrays.asList(new Object[][] { { "inner", "unset" }, { "left", "unset" }, { "inner", "off" }, { "left", "off" }, { "inner", "on" }, { "left", "on" }, });
+//       return Arrays.asList(new Object[][] { { "inner", "unset" }, { "left", "unset" }, { "inner", "off" }, { "left", "off" }, { "inner", "on" }, { "left", "on" }, });
+        return Arrays.asList(new Object[][]{{"inner", "on"}, {"left", "on"}});
     }
 
     public CombinationTest(String joinType, String coprocessorToggle) throws Exception {
@@ -61,7 +61,6 @@ public class CombinationTest extends KylinQueryTest {
 
         KylinQueryTest.joinType = joinType;
         KylinQueryTest.setupAll();
-        KylinQueryTest.preferCubeOf(joinType);
 
         if (coprocessorToggle.equals("on")) {
             ObserverEnabler.forceCoprocessorOn();

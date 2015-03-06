@@ -41,7 +41,7 @@ public class HiveTableReaderTest extends HBaseMetadataTestCase {
         while (reader.next()) {
             String[] row = reader.getRow();
             Assert.assertEquals(9, row.length);
-            System.out.println(ArrayUtils.toString(row));
+            //System.out.println(ArrayUtils.toString(row));
             rowNumber++;
         }
 
