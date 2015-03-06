@@ -34,9 +34,6 @@
 
 package org.apache.kylin.streaming;
 
-import org.apache.kylin.streaming.KafkaConfig;
-import org.apache.kylin.streaming.Requester;
-import org.apache.kylin.streaming.TopicMeta;
 import org.junit.AfterClass;
 import org.junit.Test;
 
@@ -45,7 +42,7 @@ import static org.junit.Assert.*;
 /**
  * Created by qianzhou on 2/16/15.
  */
-public class RequesterTest extends KafkaBaseTest {
+public class KafkaRequesterTest extends KafkaBaseTest {
 
     private static final String NON_EXISTED_TOPIC = "non_existent_topic";
 
@@ -57,7 +54,7 @@ public class RequesterTest extends KafkaBaseTest {
 
     @Test
     public void testTopicMeta() throws Exception {
-        TopicMeta kafkaTopicMeta = Requester.getKafkaTopicMeta(kafkaConfig);
+        TopicMeta kafkaTopicMeta = KafkaRequester.getKafkaTopicMeta(kafkaConfig);
         assertNotNull(kafkaTopicMeta);
         assertEquals(2, kafkaTopicMeta.getPartitionIds().size());
         assertEquals(kafkaConfig.getTopic(), kafkaTopicMeta.getName());
@@ -65,7 +62,7 @@ public class RequesterTest extends KafkaBaseTest {
         KafkaConfig anotherTopicConfig = KafkaConfig.load(kafkaConfig);
         anotherTopicConfig.setTopic(NON_EXISTED_TOPIC);
 
-        kafkaTopicMeta = Requester.getKafkaTopicMeta(anotherTopicConfig);
+        kafkaTopicMeta = KafkaRequester.getKafkaTopicMeta(anotherTopicConfig);
         assertTrue(kafkaTopicMeta == null);
     }
 }

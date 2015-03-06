@@ -79,7 +79,7 @@ public class KafkaConsumerTest extends KafkaBaseTest {
 
     @Test
     public void test() throws InterruptedException {
-        final TopicMeta kafkaTopicMeta = Requester.getKafkaTopicMeta(kafkaConfig);
+        final TopicMeta kafkaTopicMeta = KafkaRequester.getKafkaTopicMeta(kafkaConfig);
         final ExecutorService executorService = Executors.newFixedThreadPool(kafkaTopicMeta.getPartitionIds().size());
         List<BlockingQueue<Stream>> queues = Lists.newArrayList();
         for (Integer partitionId : kafkaTopicMeta.getPartitionIds()) {

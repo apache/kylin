@@ -54,9 +54,9 @@ import java.util.Map;
 /**
  * Created by qianzhou on 2/15/15.
  */
-public final class Requester {
+public final class KafkaRequester {
 
-    private static final Logger logger = LoggerFactory.getLogger(Requester.class);
+    private static final Logger logger = LoggerFactory.getLogger(KafkaRequester.class);
 
     public static TopicMeta getKafkaTopicMeta(KafkaConfig kafkaConfig) {
         SimpleConsumer consumer;

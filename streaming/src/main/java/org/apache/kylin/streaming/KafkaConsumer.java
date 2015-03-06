@@ -77,7 +77,7 @@ public class KafkaConsumer implements Runnable {
     }
 
     private Broker getLeadBroker() {
-        final PartitionMetadata partitionMetadata = Requester.getPartitionMetadata(topic, partitionId, replicaBrokers, kafkaConfig);
+        final PartitionMetadata partitionMetadata = KafkaRequester.getPartitionMetadata(topic, partitionId, replicaBrokers, kafkaConfig);
         if (partitionMetadata != null && partitionMetadata.errorCode() == 0) {
             replicaBrokers = partitionMetadata.replicas();
             return partitionMetadata.leader();
@@ -93,7 +93,7 @@ public class KafkaConsumer implements Runnable {
             if (leadBroker == null) {
                 logger.warn("cannot find lead broker");
             } else {
-                final long lastOffset = Requester.getLastOffset(topic, partitionId, OffsetRequest.EarliestTime(), leadBroker, kafkaConfig);
+                final long lastOffset = KafkaRequester.getLastOffset(topic, partitionId, OffsetRequest.EarliestTime(), leadBroker, kafkaConfig);
                 offset.set(lastOffset);
             }
             while (true) {
@@ -105,7 +105,7 @@ public class KafkaConsumer implements Runnable {
                     continue;
                 }
 
-                final FetchResponse fetchResponse = Requester.fetchResponse(topic, partitionId, offset.get(), leadBroker, kafkaConfig);
+                final FetchResponse fetchResponse = KafkaRequester.fetchResponse(topic, partitionId, offset.get(), leadBroker, kafkaConfig);
                 if (fetchResponse.errorCode(topic, partitionId) != 0) {
                     logger.warn("fetch response offset:" + offset.get() + " errorCode:" + fetchResponse.errorCode(topic, partitionId));
                     continue;
