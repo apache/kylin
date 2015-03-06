@@ -34,14 +34,37 @@
 
 package org.apache.kylin.streaming.invertedindex;
 
+import com.google.common.base.Function;
+import com.google.common.collect.*;
+import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.util.Pair;
 import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.dict.DictionaryGenerator;
+import org.apache.kylin.dict.DictionaryInfo;
+import org.apache.kylin.dict.DictionaryManager;
+import org.apache.kylin.dict.lookup.ReadableTable;
 import org.apache.kylin.invertedindex.index.Slice;
+import org.apache.kylin.invertedindex.index.SliceBuilder;
 import org.apache.kylin.invertedindex.index.TableRecord;
+import org.apache.kylin.invertedindex.index.TableRecordInfo;
+import org.apache.kylin.invertedindex.model.IIDesc;
+import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
+import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
+import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.streaming.KafkaConfig;
 import org.apache.kylin.streaming.Stream;
 import org.apache.kylin.streaming.StreamBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 /**
@@ -49,8 +72,11 @@ import java.util.concurrent.BlockingQueue;
  */
 public class IIStreamBuilder extends StreamBuilder {
 
-    private String iiName;
-    private String factTableName;
+    private static Logger logger = LoggerFactory.getLogger(IIStreamBuilder.class);
+
+    private IIDesc desc;
+    private KafkaConfig kafkaConfig;
+    private HTableInterface hTable;
 
     public IIStreamBuilder(BlockingQueue<Stream> streamQueue) {
         super(streamQueue);
@@ -58,27 +84,90 @@ public class IIStreamBuilder extends StreamBuilder {
 
     @Override
     protected void build(List<Stream> streamsToBuild) {
-
+        List<List<String>> table = Lists.transform(streamsToBuild, new Function<Stream, List<String>>() {
+            @Nullable
+            @Override
+            public List<String> apply(@Nullable Stream input) {
+                return parseStream(input, desc);
+            }
+        });
+        final Map<TblColRef, Dictionary<?>> dictionaryMap = buildDictionary(table, desc);
+        Map<TblColRef, FixedLenMeasureCodec<?>> measureCodecMap = Maps.newHashMap();
+        int index = 0;
+        for (TblColRef tblColRef : desc.listAllColumns()) {
+            ColumnDesc col = tblColRef.getColumn();
+            if (desc.isMetricsCol(index++)) {
+                measureCodecMap.put(tblColRef, FixedLenMeasureCodec.get(col.getType()));
+            }
+        }
+        TableRecordInfo tableRecordInfo = new TableRecordInfo(desc, dictionaryMap, measureCodecMap);
+        SliceBuilder sliceBuilder = new SliceBuilder(tableRecordInfo, (short) kafkaConfig.getPartitionId());
+        final Slice slice = buildSlice(table, sliceBuilder, tableRecordInfo);
+        try {
+            loadToHBase(hTable, slice, new IIKeyValueCodec(tableRecordInfo.getDigest()));
+            submitOffset();
+        } catch (IOException e) {
+            logger.error("error load to hbase, build failed", e);
+        }
     }
 
-    private void calculateDistinctColumn() {
-
+    private Map<TblColRef, Dictionary<?>> buildDictionary(List<List<String>> table, IIDesc desc) {
+        SetMultimap<TblColRef, String> valueMap = HashMultimap.create();
+        Set<TblColRef> dimensionColumns = Sets.newHashSet();
+        for (int i = 0; i < desc.listAllColumns().size(); i++) {
+            if (!desc.isMetricsCol(i)) {
+                dimensionColumns.add(desc.listAllColumns().get(i));
+            }
+        }
+        for (List<String> row : table) {
+            for (int i = 0; i < row.size(); i++) {
+                String cell = row.get(i);
+                valueMap.put(desc.listAllColumns().get(i), cell);
+            }
+        }
+        Map<TblColRef, Dictionary<?>> result = Maps.newHashMap();
+        for (TblColRef tblColRef : valueMap.keys()) {
+            result.put(tblColRef, DictionaryGenerator.buildDictionaryFromValueList(Collections2.transform(valueMap.get(tblColRef), new Function<String, byte[]>() {
+                @Nullable
+                @Override
+                public byte[] apply(String input) {
+                    return input.getBytes();
+                }
+            }), tblColRef.getType()));
+        }
+        return result;
     }
 
-    private Map<Integer, Dictionary<?>> buildDictionary() {
-        return null;
+    private List<String> parseStream(Stream stream, IIDesc desc) {
+        List<String> result = Lists.newArrayList();
+        return result;
     }
 
-    private TableRecord parse(Stream stream) {
-        return null;
+    private Slice buildSlice(List<List<String>> table, SliceBuilder sliceBuilder, TableRecordInfo tableRecordInfo) {
+        for (List<String> row : table) {
+            TableRecord tableRecord = tableRecordInfo.createTableRecord();
+            for (int i = 0; i < row.size(); i++) {
+                tableRecord.setValueString(i, row.get(i));
+            }
+            sliceBuilder.append(tableRecord);
+        }
+        return sliceBuilder.close();
     }
 
-    private Slice buildSlice() {
-        return null;
-    }
-
-    private void loadToHBase() {
-
+    private void loadToHBase(HTableInterface hTable, Slice slice, IIKeyValueCodec codec) throws IOException {
+        try {
+            List<Put> data = Lists.newArrayList();
+            for (Pair<ImmutableBytesWritable, ImmutableBytesWritable> pair : codec.encodeKeyValue(slice)) {
+                final byte[] key = pair.getFirst().get();
+                final byte[] value = pair.getSecond().get();
+                Put put = new Put(key);
+                put.add("cf".getBytes(), "qn".getBytes(), value);
+                data.add(put);
+            }
+            hTable.put(data);
+        } finally {
+            hTable.close();
+        }
     }
 
 
