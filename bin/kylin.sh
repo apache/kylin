@@ -54,6 +54,7 @@ then
         echo "Please visit http://<ip>:7070/kylin"
     fi
     echo "You can check the log at ${tomcat_root}/logs/kylin.log"
+    exit 0
 elif [ $1 == "stop" ]
 then
     if [ ! -f "${KYLIN_HOME}/pid" ]
@@ -71,6 +72,8 @@ then
         kill $pid
     fi
     rm ${KYLIN_HOME}/pid
+    exit 0
 else
     echo "usage: kylin.sh start or kylin.sh stop"
+    exit 1
 fi
