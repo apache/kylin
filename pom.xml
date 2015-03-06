@@ -578,6 +578,8 @@
                                 <exclue>**/SnapshotManagerTest.java</exclue>
                                 <exclue>**/HiveTableReaderTest.java</exclue>
                                 <exclude>**/TableControllerTest.java</exclude>
+                                <exclude>**/Kafka*Test.java</exclude>
+				                <exclude>**/RequesterTest.java</exclude>
                             </excludes>
                             <systemProperties>
                                 <property>
@@ -615,6 +617,8 @@
                                 <exclude>**/BuildIIWithEngineTest.java</exclude>
                                 <exclude>**/SampleCubeSetupTest.java</exclude>
                                 <exclude>**/KylinQueryTest.java</exclude>
+                                <exclude>**/Kafka*Test.java</exclude>
+                                <exclude>**/RequesterTest.java</exclude>
                             </excludes>
                             <systemProperties>
                                 <property>

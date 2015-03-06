@@ -20,6 +20,7 @@ package org.apache.kylin.metadata;
 
 import java.util.List;
 
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.junit.After;
 import org.junit.Assert;
@@ -27,6 +28,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+
+import static org.apache.kylin.metadata.MetadataManager.*;
 
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 9/24/13 Time: 2:38 PM To
@@ -46,14 +49,14 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testListAllTables() throws Exception {
-        List<TableDesc> tables = MetadataManager.getInstance(getTestConfig()).listAllTables();
+        List<TableDesc> tables = getInstance(getTestConfig()).listAllTables();
         Assert.assertNotNull(tables);
         Assert.assertTrue(tables.size() > 0);
     }
 
     @Test
     public void testFindTableByName() throws Exception {
-        TableDesc table = MetadataManager.getInstance(getTestConfig()).getTableDesc("EDW.TEST_CAL_DT");
+        TableDesc table = getInstance(getTestConfig()).getTableDesc("EDW.TEST_CAL_DT");
         Assert.assertNotNull(table);
         Assert.assertEquals("EDW.TEST_CAL_DT", table.getIdentity());
     }
@@ -61,9 +64,15 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
     @Test
     public void testGetInstance() throws Exception {
 
-        Assert.assertNotNull(MetadataManager.getInstance(getTestConfig()));
-        Assert.assertNotNull(MetadataManager.getInstance(getTestConfig()).listAllTables());
-        Assert.assertTrue(MetadataManager.getInstance(getTestConfig()).listAllTables().size() > 0);
+        Assert.assertNotNull(getInstance(getTestConfig()));
+        Assert.assertNotNull(getInstance(getTestConfig()).listAllTables());
+        Assert.assertTrue(getInstance(getTestConfig()).listAllTables().size() > 0);
     }
 
+    @Test
+    public void testDataModel() throws Exception {
+        DataModelDesc modelDesc = getInstance(getTestConfig()).getDataModelDesc("test_kylin_left_join_model_desc");
+
+        Assert.assertTrue(modelDesc.getDimensions().size()>0);
+    }
 }

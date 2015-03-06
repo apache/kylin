@@ -42,10 +42,6 @@ public class CuboidTest extends LocalFileMetadataTestCase {
         return CubeDescManager.getInstance(getTestConfig());
     }
 
-    private CubeDesc getTestKylinCubeII() {
-        return getCubeDescManager().getCubeDesc("test_kylin_ii");
-    }
-
     private CubeDesc getTestKylinCubeWithoutSeller() {
         return getCubeDescManager().getCubeDesc("test_kylin_cube_without_slr_desc");
     }
@@ -173,13 +169,4 @@ public class CuboidTest extends LocalFileMetadataTestCase {
         assertEquals(toLong("111111111"), cuboid.getId());
     }
 
-    //@Test
-    public void testII() {
-        CubeDesc cube = getTestKylinCubeII();
-        assertEquals(toLong("111111111"), Cuboid.getBaseCuboidId(cube));
-        assertEquals(true, Cuboid.isValid(cube, toLong("111111111")));
-        assertEquals(false, Cuboid.isValid(cube, toLong("111111011")));
-        assertEquals(false, Cuboid.isValid(cube, toLong("101011011")));
-        assertEquals(false, Cuboid.isValid(cube, toLong("000000000")));
-    }
 }

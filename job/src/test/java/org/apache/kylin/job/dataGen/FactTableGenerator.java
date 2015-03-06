@@ -607,8 +607,6 @@ public class FactTableGenerator {
      */
     public static String generate(String cubeName, String rowCount, String linkableRatio, String randomSeed, String joinType) throws Exception {
 
-        if (cubeName == null)
-            cubeName = "test_kylin_cube_with_slr_ready";
         if (rowCount == null)
             rowCount = "10000";
         if (linkableRatio == null)

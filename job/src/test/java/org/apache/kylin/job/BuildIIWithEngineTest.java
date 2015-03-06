@@ -18,31 +18,10 @@
 
 package org.apache.kylin.job;
 
-import static org.junit.Assert.*;
-
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.TimeZone;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
+import com.google.common.collect.Lists;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.kylin.job.hadoop.cube.StorageCleanupJob;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import com.google.common.collect.Lists;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
@@ -51,18 +30,31 @@ import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.hadoop.cube.StorageCleanupJob;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.job.invertedindex.IIJob;
 import org.apache.kylin.job.invertedindex.IIJobBuilder;
 import org.apache.kylin.job.manager.ExecutableManager;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.TimeZone;
+import java.util.concurrent.*;
+
+import static org.junit.Assert.assertEquals;
 
 /**
- * 
  * @author shaoshi
- *
  */
 public class BuildIIWithEngineTest {
 
@@ -72,8 +64,9 @@ public class BuildIIWithEngineTest {
     private DefaultScheduler scheduler;
     protected ExecutableManager jobService;
 
-    protected static final String TEST_II_NAME = "test_kylin_ii";
-    private static final Log logger = LogFactory.getLog(BuildCubeWithEngineTest.class);
+    protected static final String[] TEST_II_INSTANCES = new String[]{ "test_kylin_ii_inner_join", "test_kylin_ii_left_join"};
+
+    private static final Log logger = LogFactory.getLog(BuildIIWithEngineTest.class);
 
     protected void waitForJob(String jobId) {
         while (true) {
@@ -101,7 +94,7 @@ public class BuildIIWithEngineTest {
     public void before() throws Exception {
         HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
 
-        DeployUtil.initCliWorkDir();
+        //DeployUtil.initCliWorkDir();
         //        DeployUtil.deployMetadata();
         DeployUtil.overrideJobJarLocations();
 
@@ -120,19 +113,25 @@ public class BuildIIWithEngineTest {
             }
         }
 
-        IIInstance ii = iiManager.getII(TEST_II_NAME);
-        if (ii.getStatus() != RealizationStatusEnum.DISABLED) {
-            ii.setStatus(RealizationStatusEnum.DISABLED);
-            iiManager.updateII(ii);
+        for (String iiInstance : TEST_II_INSTANCES) {
+
+            IIInstance ii = iiManager.getII(iiInstance);
+            if (ii.getStatus() != RealizationStatusEnum.DISABLED) {
+                ii.setStatus(RealizationStatusEnum.DISABLED);
+                iiManager.updateII(ii);
+            }
         }
     }
 
     @After
     public void after() throws Exception {
-        IIInstance ii = iiManager.getII(TEST_II_NAME);
-        if (ii.getStatus() != RealizationStatusEnum.READY) {
-            ii.setStatus(RealizationStatusEnum.READY);
-            iiManager.updateII(ii);
+
+        for (String iiInstance : TEST_II_INSTANCES) {
+            IIInstance ii = iiManager.getII(iiInstance);
+            if (ii.getStatus() != RealizationStatusEnum.READY) {
+                ii.setStatus(RealizationStatusEnum.READY);
+                iiManager.updateII(ii);
+            }
         }
         backup();
     }
@@ -140,7 +139,7 @@ public class BuildIIWithEngineTest {
     @Test
     public void testBuildII() throws Exception {
 
-        String[] testCase = new String[] { "buildII" };
+        String[] testCase = new String[]{"buildIIInnerJoin", "buildIILeftJoin"};
         ExecutorService executorService = Executors.newFixedThreadPool(testCase.length);
         final CountDownLatch countDownLatch = new CountDownLatch(testCase.length);
         List<Future<List<String>>> tasks = Lists.newArrayListWithExpectedSize(testCase.length);
@@ -185,20 +184,26 @@ public class BuildIIWithEngineTest {
         }
     }
 
-    protected List<String> buildII() throws Exception {
-        clearSegment(TEST_II_NAME);
+    protected List<String> buildIIInnerJoin() throws Exception {
+       return buildII(TEST_II_INSTANCES[0]);
+    }
+
+
+    protected List<String> buildIILeftJoin() throws Exception {
+        return buildII(TEST_II_INSTANCES[1]);
+    }
+
+    protected List<String> buildII(String iiName) throws Exception {
+        clearSegment(iiName);
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
 
-        // this cube's start date is 0, end date is 2015-1-1
         long date1 = 0;
         long date2 = f.parse("2015-01-01").getTime();
 
-        // this cube doesn't support incremental build, always do full build
-
         List<String> result = Lists.newArrayList();
-        result.add(buildSegment(TEST_II_NAME, date1, date2));
+        result.add(buildSegment(iiName, date1, date2));
         return result;
     }
 
@@ -221,7 +226,7 @@ public class BuildIIWithEngineTest {
     }
 
     private int cleanupOldStorage() throws Exception {
-        String[] args = { "--delete", "true" };
+        String[] args = {"--delete", "true"};
 
         int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
         return exitCode;

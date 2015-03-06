@@ -189,6 +189,8 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         //create cube
 
         final String cubeName = "a_whole_new_cube";
+        final MetadataManager metaMgr = getMetadataManager(configA);
+        final MetadataManager metaMgrB = getMetadataManager(configB);
         final CubeManager cubeManager = getCubeManager(configA);
         final CubeManager cubeManagerB = getCubeManager(configB);
         final ProjectManager projectManager = getProjectManager(configA);
@@ -297,7 +299,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
 
 
         final String dataModelName = "test_data_model";
-        DataModelDesc dataModelDesc = metadataManager.getDataModelDesc("test_kylin_ii_model_desc");
+        DataModelDesc dataModelDesc = metadataManager.getDataModelDesc("test_kylin_left_join_model_desc");
         dataModelDesc.setName(dataModelName);
         dataModelDesc.setLastModified(0);
         assertTrue(metadataManager.getDataModelDesc(dataModelName) == null);
@@ -312,7 +314,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
 
         final LookupDesc[] lookups = dataModelDesc.getLookups();
         assertTrue(lookups.length > 0);
-        dataModelDesc.setLookups(new LookupDesc[]{lookups[0]});
+        dataModelDesc.setLookups(lookups);
         metadataManager.updateDataModelDesc(dataModelDesc);
         //only one for data model update
         assertEquals(1, broadcaster.getCounterAndClear());
