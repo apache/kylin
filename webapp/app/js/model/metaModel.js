@@ -70,7 +70,7 @@ KylinApp.service('MetaModel',function(){
                 fact_table: '',
                 lookups: [],
                 filter_condition:'',
-                capacity:'',
+                capacity:'MEDIUM',
                 "partition_desc" : {
                     "partition_date_column" : '',
                     "partition_date_start" : 0,
