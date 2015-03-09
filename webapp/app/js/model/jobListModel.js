@@ -36,23 +36,12 @@ KylinApp.service('JobList',function(JobService,$q){
                 }
             });
 
-//            $scope.state.loading = false;
-//            if (angular.isDefined($scope.state.selectedJob)) {
-//                $scope.state.selectedJob = $scope.jobs[selectedJob.uuid];
-//            }
             defer.resolve(jobs.length);
         });
 
         return defer.promise;
 
     };
-
-//    this.removeCube = function(cube){
-//        var cubeIndex = _this.cubes.indexOf(cube);
-//        if (cubeIndex > -1) {
-//            _this.cubes.splice(cubeIndex, 1);
-//        }
-//    }
 
     this.removeAll = function(){
         _this.jobs=[];

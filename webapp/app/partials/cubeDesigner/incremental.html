@@ -46,9 +46,11 @@
                             ng-required="metaModel.model.partition_desc.partition_date_start"
                             ng-model="metaModel.model.partition_desc.partition_date_column"
                             ng-if="state.mode=='edit'"
+                            data-placement=""
                             ng-options="metaModel.model.fact_table+'.'+columns.name as metaModel.model.fact_table+'.'+columns.name for columns in getPartitonColumns(metaModel.model.fact_table)" >
-                        <option value=""></option>
+                        <option value="">--Select Partition Column--</option>
                     </select>
+                    <p class="text-red"  ng-if="state.mode=='edit'">(data format in column should be 'YYYY-MM-DD')</p>
                     <span ng-if="state.mode=='view'">
                         {{!!(metaModel.model.partition_desc.partition_date_column)?metaModel.model.partition_desc.partition_date_column: ''}}</span>
                 </div>
@@ -60,9 +62,11 @@
             <div class="row">
                 <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Start Date</b></label>
                 <div class="col-xs-12 col-sm-6">
+                  <!--edit model will convert in MetaModel.converDateToGMT-->
                     <input type="text" class="form-control" datepicker-popup="yyyy-MM-dd"
                            ng-model="metaModel.model.partition_desc.partition_date_start" ng-if="state.mode=='edit'"
                            placeholder="Click to choose start date..." is-open="opened" />
+                  <!--vier model will convert use filter-->
                     <span ng-if="state.mode=='view'&&metaModel.model.partition_desc.partition_date_column">{{(metaModel.model.partition_desc.partition_date_start)|reverseToGMT0 }}</span>
                 </div>
             </div>
@@ -78,9 +82,9 @@
                 <div class="row">
                     <div class="col-xs-12">
                         <ol class="text-info">
-                            <li>Leave as default if this cube always need full build</li>
-                            <li>Please indicate partition column of Fact Table in Hive</li>
-                            <li>Please indicate start date to just pull certain data from source</li>
+                            <li>Not required,leave as default if this cube always need full build</li>
+                            <li>Partition column will select 'date' or 'string' type column from fact table</li>
+                            <li>If column selected,please indicate start date to just pull certain data from source</li>
                         </ol>
                     </div>
                 </div>
