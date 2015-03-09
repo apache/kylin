@@ -7,6 +7,7 @@ class GTRowBlock {
     private static final int PRIMARY_KEY_CAPACITY = 2048;
     private static final int CELL_BLOCK_CAPACITY = 128 * 1024;
     
+    int seqId; // 0, 1, 2...
     int nRows;
     ByteBuffer primaryKey; // the primary key of the first row
     ByteBuffer[] cellBlocks; // cells for each column block

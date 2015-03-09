@@ -1,5 +1,7 @@
 package org.apache.kylin.storage.gridtable;
 
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -11,14 +13,23 @@ public interface GTStore {
     
     public String getStorageDescription();
     
-    public GTBlockWriter rebuild(int shard);
+    // ============================================================================
     
-    public GTBlockScanner scan(ByteBuffer pkStart, ByteBuffer pkEndExclusive, int[] colBlocks);
+    public GTWriter rebuild(int shard);
     
-    public interface GTBlockWriter extends Closeable {
+    public GTScanner scan(ByteBuffer pkStart, ByteBuffer pkEndExclusive, ConciseSet selectedRowBlcoks, int[] selectedColBlocks);
+    
+    public interface GTWriter extends Closeable {
         void write(GTRowBlock block) throws IOException;
     }
     
-    public interface GTBlockScanner extends Iterator<GTRowBlock>, Closeable {
+    public interface GTScanner extends Iterator<GTRowBlock>, Closeable {
     }
+    
+    // ============================================================================
+    
+    public void saveRowBlockIndex(int col, GTRowBlockIndex index);
+    
+    public GTRowBlockIndex loadRowBlockIndex(int col);
+    
 }

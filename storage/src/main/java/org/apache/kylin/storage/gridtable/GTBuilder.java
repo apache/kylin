@@ -5,12 +5,12 @@ import java.io.Flushable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.kylin.storage.gridtable.GTStore.GTBlockWriter;
+import org.apache.kylin.storage.gridtable.GTStore.GTWriter;
 
 public class GTBuilder implements Closeable, Flushable {
 
     final private GTInfo info;
-    final private GTBlockWriter writer;
+    final private GTWriter writer;
     
     private GTRowBlock block;
 
