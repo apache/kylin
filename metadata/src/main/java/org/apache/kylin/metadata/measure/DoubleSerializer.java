@@ -27,7 +27,7 @@ import org.apache.hadoop.io.DoubleWritable;
  * @author yangli9
  * 
  */
-public class DoubleSerializer extends MeasureSerializer<DoubleWritable> {
+public class DoubleSerializer extends DataTypeSerializer<DoubleWritable> {
 
     // avoid mass object creation
     DoubleWritable current = new DoubleWritable();
@@ -41,6 +41,11 @@ public class DoubleSerializer extends MeasureSerializer<DoubleWritable> {
     public DoubleWritable deserialize(ByteBuffer in) {
         current.set(in.getDouble());
         return current;
+    }
+
+    @Override
+    public int peekLength(ByteBuffer in) {
+        return 8;
     }
 
     @Override

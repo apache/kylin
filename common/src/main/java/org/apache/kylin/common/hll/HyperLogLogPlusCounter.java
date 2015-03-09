@@ -214,6 +214,24 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
             in.get(registers);
         }
     }
+    
+    public int peekLength(ByteBuffer in) {
+        int mark = in.position();
+        int len;
+        
+        byte scheme = in.get();
+        if (scheme == 0) { // map scheme
+            int size = BytesUtil.readVInt(in);
+            int indexLen = getRegisterIndexSize();
+            len = in.position() - mark + (indexLen + 1) * size;
+        } else {
+            len = in.position() - mark + m;
+        }
+        
+        in.position(mark);
+        return len;
+
+    }
 
     public void writeRegistersArray(final ByteBuffer out) {
         out.put(this.registers);
