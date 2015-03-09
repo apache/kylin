@@ -449,10 +449,6 @@ public class CubeDesc extends RootPersistentEntity {
 
         initMeasureReferenceToColumnFamily();
 
-        if (null != this.model.getPartitionDesc()) {
-            this.model.getPartitionDesc().init(columnMap);
-        }
-
         // check all dimension columns are presented on rowkey
         List<TblColRef> dimCols = listDimensionColumnsExcludingDerived();
         if (rowkey.getRowKeyColumns().length != dimCols.size()) {
