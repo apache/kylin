@@ -38,7 +38,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
     $scope.getPartitonColumns = function(tableName){
         var columns = _.filter($scope.getColumnsByTable(tableName),function(column){
-            return column.datatype==="date";
+            return column.datatype==="date"||column.datatype==="string";
         });
         return columns;
     };

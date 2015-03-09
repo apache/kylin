@@ -50,7 +50,7 @@
                             ng-options="metaModel.model.fact_table+'.'+columns.name as metaModel.model.fact_table+'.'+columns.name for columns in getPartitonColumns(metaModel.model.fact_table)" >
                         <option value="">--Select Partition Column--</option>
                     </select>
-                    <p class="text-red"  ng-if="state.mode=='edit'">(Partition column will select 'date' type column from fact table)</p>
+                    <p class="text-red"  ng-if="state.mode=='edit'">(data format in column should be 'YYYY-MM-DD')</p>
                     <span ng-if="state.mode=='view'">
                         {{!!(metaModel.model.partition_desc.partition_date_column)?metaModel.model.partition_desc.partition_date_column: ''}}</span>
                 </div>
@@ -83,6 +83,7 @@
                     <div class="col-xs-12">
                         <ol class="text-info">
                             <li>Not required,leave as default if this cube always need full build</li>
+                            <li>Partition column will select 'date' or 'string' type column from fact table</li>
                             <li>If column selected,please indicate start date to just pull certain data from source</li>
                         </ol>
                     </div>
