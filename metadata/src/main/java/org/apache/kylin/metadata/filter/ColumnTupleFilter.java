@@ -38,12 +38,12 @@ public class ColumnTupleFilter extends TupleFilter {
 
     private TblColRef columnRef;
     private Object tupleValue;
-    private List<String> values;
+    private List<Object> values;
 
     public ColumnTupleFilter(TblColRef column) {
         super(Collections.<TupleFilter> emptyList(), FilterOperatorEnum.COLUMN);
         this.columnRef = column;
-        this.values = new ArrayList<String>(1);
+        this.values = new ArrayList<Object>(1);
         this.values.add(null);
     }
 
@@ -66,7 +66,7 @@ public class ColumnTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(IEvaluatableTuple tuple) {
+    public boolean evaluate(IEvaluatableTuple tuple, ICodeSystem cs) {
         this.tupleValue = tuple.getValue(columnRef);
         return true;
     }
@@ -77,16 +77,19 @@ public class ColumnTupleFilter extends TupleFilter {
     }
 
     @Override
-    public Collection<String> getValues() {
+    public Collection<?> getValues() {
         this.values.set(0, (String) this.tupleValue);
         return this.values;
     }
 
     @Override
-    public byte[] serialize() {
+    public byte[] serialize(ICodeSystem cs) {
         ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
         String table = columnRef.getTable();
         BytesUtil.writeUTFString(table, buffer);
+
+        String columnId = columnRef.getColumn().getId();
+        BytesUtil.writeUTFString(columnId, buffer);
 
         String columnName = columnRef.getName();
         BytesUtil.writeUTFString(columnName, buffer);
@@ -100,18 +103,21 @@ public class ColumnTupleFilter extends TupleFilter {
     }
 
     @Override
-    public void deserialize(byte[] bytes) {
+    public void deserialize(byte[] bytes, ICodeSystem cs) {
+        TableDesc table = null;
         ColumnDesc column = new ColumnDesc();
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
+
         String tableName = BytesUtil.readUTFString(buffer);
         if (tableName != null) {
-            TableDesc table = new TableDesc();
+            table = new TableDesc();
             table.setName(tableName);
-            column.setTable(table);
         }
-
+        
+        column.setId(BytesUtil.readUTFString(buffer));
         column.setName(BytesUtil.readUTFString(buffer));
         column.setDatatype(BytesUtil.readUTFString(buffer));
+        column.init(table);
 
         this.columnRef = new TblColRef(column);
     }

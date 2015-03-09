@@ -31,12 +31,12 @@ import java.util.List;
 public class ExtractTupleFilter extends TupleFilter {
 
     private int date;
-    private List<String> values;
+    private List<Object> values;
 
     public ExtractTupleFilter(FilterOperatorEnum op) {
         super(new ArrayList<TupleFilter>(3), op);
         assert (op == FilterOperatorEnum.EXTRACT);
-        this.values = new ArrayList<String>(1);
+        this.values = new ArrayList<Object>(1);
         this.values.add(null);
         this.date = 0;
     }
@@ -52,16 +52,16 @@ public class ExtractTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(IEvaluatableTuple tuple) {
+    public boolean evaluate(IEvaluatableTuple tuple, ICodeSystem cs) {
         // extract tuple value
         String extractType = null;
         String tupleValue = null;
         for (TupleFilter filter : this.children) {
-            filter.evaluate(tuple);
+            filter.evaluate(tuple, cs);
             if (filter instanceof ConstantTupleFilter) {
-                tupleValue = filter.getValues().iterator().next();
+                tupleValue = filter.getValues().iterator().next().toString();
             } else if (filter instanceof CompareTupleFilter) {
-                extractType = filter.getValues().iterator().next();
+                extractType = filter.getValues().iterator().next().toString();
             }
         }
 
@@ -106,18 +106,18 @@ public class ExtractTupleFilter extends TupleFilter {
     }
 
     @Override
-    public Collection<String> getValues() {
+    public Collection<?> getValues() {
         this.values.set(0, String.valueOf(this.date));
         return this.values;
     }
 
     @Override
-    public byte[] serialize() {
+    public byte[] serialize(ICodeSystem cs) {
         return new byte[0];
     }
 
     @Override
-    public void deserialize(byte[] bytes) {
+    public void deserialize(byte[] bytes, ICodeSystem cs) {
     }
 
 }

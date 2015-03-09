@@ -188,13 +188,13 @@ public abstract class TupleFilter {
 
     public abstract boolean isEvaluable();
 
-    public abstract boolean evaluate(IEvaluatableTuple tuple);
+    public abstract boolean evaluate(IEvaluatableTuple tuple, ICodeSystem cs);
 
-    public abstract Collection<String> getValues();
+    public abstract Collection<?> getValues();
 
-    public abstract byte[] serialize();
+    abstract byte[] serialize(ICodeSystem cs);
 
-    public abstract void deserialize(byte[] bytes);
+    abstract void deserialize(byte[] bytes, ICodeSystem cs);
 
     public static boolean isEvaluableRecursively(TupleFilter filter) {
         if (filter == null)

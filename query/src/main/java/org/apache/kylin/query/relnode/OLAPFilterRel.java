@@ -156,7 +156,7 @@ public class OLAPFilterRel extends FilterRelBase implements OLAPRel, EnumerableR
         private CompareTupleFilter mergeToInClause(TupleFilter filter) {
             List<? extends TupleFilter> children = filter.getChildren();
             TblColRef inColumn = null;
-            List<String> inValues = new LinkedList<String>();
+            List<Object> inValues = new LinkedList<Object>();
             for (TupleFilter child : children) {
                 if (child.getOperator() == FilterOperatorEnum.EQ) {
                     CompareTupleFilter compFilter = (CompareTupleFilter) child;

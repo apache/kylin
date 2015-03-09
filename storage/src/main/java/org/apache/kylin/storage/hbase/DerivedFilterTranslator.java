@@ -32,6 +32,7 @@ import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.IEvaluatableTuple;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
+import org.apache.kylin.metadata.filter.StringCodeSystem;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -75,7 +76,7 @@ public class DerivedFilterTranslator {
         SingleColumnTuple tuple = new SingleColumnTuple(derivedCol);
         for (String[] row : lookup.getAllRows()) {
             tuple.value = row[di];
-            if (compf.evaluate(tuple)) {
+            if (compf.evaluate(tuple, StringCodeSystem.INSTANCE)) {
                 collect(row, pi, satisfyingHostRecords);
             }
         }
