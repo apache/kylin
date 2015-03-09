@@ -143,8 +143,13 @@ public class DataModelDesc extends RootPersistentEntity {
 
     public void init(Map<String, TableDesc> tables) {
         initJoinColumns(tables);
+        initPartitionDesc(tables);
     }
 
+    private void initPartitionDesc(Map<String, TableDesc> tables) {
+        if(this.partitionDesc != null)
+            this.partitionDesc.init(tables);
+    }
     private void initJoinColumns(Map<String, TableDesc> tables) {
         // join columns may or may not present in cube;
         // here we don't modify 'allColumns' and 'dimensionColumns';
