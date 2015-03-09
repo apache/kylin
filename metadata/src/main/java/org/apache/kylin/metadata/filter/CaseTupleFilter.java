@@ -18,8 +18,6 @@
 
 package org.apache.kylin.metadata.filter;
 
-import org.apache.kylin.metadata.tuple.ITuple;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -64,7 +62,7 @@ public class CaseTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(ITuple tuple) {
+    public boolean evaluate(IEvaluatableTuple tuple) {
         if (whenFilters.size() != thenFilters.size()) {
             elseFilter = whenFilters.remove(whenFilters.size() - 1);
         }

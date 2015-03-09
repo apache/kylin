@@ -18,8 +18,6 @@
 
 package org.apache.kylin.metadata.filter;
 
-import org.apache.kylin.metadata.tuple.ITuple;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -71,7 +69,7 @@ public class LogicalTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(ITuple tuple) {
+    public boolean evaluate(IEvaluatableTuple tuple) {
         switch (this.operator) {
         case AND:
             return evalAnd(tuple);
@@ -84,7 +82,7 @@ public class LogicalTupleFilter extends TupleFilter {
         }
     }
 
-    private boolean evalAnd(ITuple tuple) {
+    private boolean evalAnd(IEvaluatableTuple tuple) {
         for (TupleFilter filter : this.children) {
             if (!filter.evaluate(tuple)) {
                 return false;
@@ -93,7 +91,7 @@ public class LogicalTupleFilter extends TupleFilter {
         return true;
     }
 
-    private boolean evalOr(ITuple tuple) {
+    private boolean evalOr(IEvaluatableTuple tuple) {
         for (TupleFilter filter : this.children) {
             if (filter.evaluate(tuple)) {
                 return true;
@@ -102,7 +100,7 @@ public class LogicalTupleFilter extends TupleFilter {
         return false;
     }
 
-    private boolean evalNot(ITuple tuple) {
+    private boolean evalNot(IEvaluatableTuple tuple) {
         return !this.children.get(0).evaluate(tuple);
     }
 
