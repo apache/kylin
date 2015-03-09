@@ -22,14 +22,13 @@ import java.nio.ByteBuffer;
 
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
-
 import org.apache.kylin.common.util.BytesUtil;
 
 /**
  * @author yangli9
  * 
  */
-public class LongSerializer extends MeasureSerializer<LongWritable> {
+public class LongSerializer extends DataTypeSerializer<LongWritable> {
 
     // avoid mass object creation
     LongWritable current = new LongWritable();
@@ -43,6 +42,17 @@ public class LongSerializer extends MeasureSerializer<LongWritable> {
     public LongWritable deserialize(ByteBuffer in) {
         current.set(BytesUtil.readVLong(in));
         return current;
+    }
+
+    @Override
+    public int peekLength(ByteBuffer in) {
+        int mark = in.position();
+        
+        BytesUtil.readVLong(in);
+        int len = in.position() - mark;
+        
+        in.position(mark);
+        return len;
     }
 
     @Override

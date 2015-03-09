@@ -27,7 +27,7 @@ import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
  * @author yangli9
  * 
  */
-public class HLLCSerializer extends MeasureSerializer<HyperLogLogPlusCounter> {
+public class HLLCSerializer extends DataTypeSerializer<HyperLogLogPlusCounter> {
 
     HyperLogLogPlusCounter current;
 
@@ -52,6 +52,11 @@ public class HLLCSerializer extends MeasureSerializer<HyperLogLogPlusCounter> {
             throw new RuntimeException(e);
         }
         return current;
+    }
+
+    @Override
+    public int peekLength(ByteBuffer in) {
+        return current.peekLength(in);
     }
 
     @Override
