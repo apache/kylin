@@ -57,7 +57,7 @@ public class DataModelDesc extends RootPersistentEntity {
     private String filterCondition;
     @JsonProperty("partition_desc")
     PartitionDesc partitionDesc;
-    
+
     @JsonProperty("capacity")
     private RealizationCapacity capacity = RealizationCapacity.MEDIUM;
 
@@ -96,7 +96,6 @@ public class DataModelDesc extends RootPersistentEntity {
     public boolean isFactTable(String factTable) {
         return this.factTable.equalsIgnoreCase(factTable);
     }
-    
 
     public String getFilterCondition() {
         return filterCondition;
@@ -146,8 +145,13 @@ public class DataModelDesc extends RootPersistentEntity {
 
     public void init(Map<String, TableDesc> tables) {
         initJoinColumns(tables);
-
         DimensionDesc.capicalizeStrings(dimensions);
+        initPartitionDesc(tables);
+    }
+
+    private void initPartitionDesc(Map<String, TableDesc> tables) {
+        if (this.partitionDesc != null)
+            this.partitionDesc.init(tables);
     }
 
     private void initJoinColumns(Map<String, TableDesc> tables) {

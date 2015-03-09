@@ -42,8 +42,8 @@ public class FilterSerializeTest extends FilterBaseTest {
         List<TblColRef> groups = buildGroups();
         TupleFilter filter = buildCompareFilter(groups, 0);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         compareFilter(filter, newFilter);
     }
@@ -53,8 +53,8 @@ public class FilterSerializeTest extends FilterBaseTest {
         List<TblColRef> groups = buildGroups();
         TupleFilter filter = buildCompareFilter(groups, 1);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         compareFilter(filter, newFilter);
     }
@@ -64,8 +64,8 @@ public class FilterSerializeTest extends FilterBaseTest {
         List<TblColRef> groups = buildGroups();
         TupleFilter filter = buildAndFilter(groups);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         compareFilter(filter, newFilter);
     }
@@ -75,8 +75,8 @@ public class FilterSerializeTest extends FilterBaseTest {
         List<TblColRef> groups = buildGroups();
         TupleFilter filter = buildOrFilter(groups);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         compareFilter(filter, newFilter);
     }
@@ -90,8 +90,8 @@ public class FilterSerializeTest extends FilterBaseTest {
         groups.add(colRef);
         TupleFilter filter = buildCompareFilter(groups, 0);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         compareFilter(filter, newFilter);
     }
@@ -105,8 +105,8 @@ public class FilterSerializeTest extends FilterBaseTest {
         groups.add(colRef);
         TupleFilter filter = buildCompareFilter(groups, 0);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         compareFilter(filter, newFilter);
     }
@@ -124,8 +124,8 @@ public class FilterSerializeTest extends FilterBaseTest {
         groups.add(colRef);
         TupleFilter filter = buildCompareFilter(groups, 0);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         compareFilter(filter, newFilter);
     }
@@ -142,8 +142,8 @@ public class FilterSerializeTest extends FilterBaseTest {
         groups.add(colRef);
         TupleFilter filter = buildCompareFilter(groups, 0);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         compareFilter(filter, newFilter);
     }
@@ -158,8 +158,8 @@ public class FilterSerializeTest extends FilterBaseTest {
         logicFilter.addChild(orFilter);
         logicFilter.addChild(andFilter);
 
-        byte[] bytes = TupleFilterSerializer.serialize(logicFilter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(logicFilter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         compareFilter(logicFilter, newFilter);
     }
@@ -174,8 +174,8 @@ public class FilterSerializeTest extends FilterBaseTest {
         logicFilter.addChild(orFilter);
         logicFilter.addChild(andFilter);
 
-        byte[] bytes = TupleFilterSerializer.serialize(logicFilter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(logicFilter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         compareFilter(logicFilter, newFilter);
     }
@@ -185,8 +185,8 @@ public class FilterSerializeTest extends FilterBaseTest {
         List<TblColRef> groups = buildGroups();
         TupleFilter filter = buildCaseFilter(groups);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         compareFilter(filter, newFilter);
     }
@@ -196,8 +196,8 @@ public class FilterSerializeTest extends FilterBaseTest {
         List<TblColRef> groups = buildGroups();
         TupleFilter filter = buildCompareCaseFilter(groups, "0");
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         compareFilter(filter, newFilter);
     }

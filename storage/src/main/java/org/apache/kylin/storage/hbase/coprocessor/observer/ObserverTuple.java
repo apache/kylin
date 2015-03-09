@@ -18,14 +18,11 @@
 
 package org.apache.kylin.storage.hbase.coprocessor.observer;
 
-import java.util.List;
-
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-
 import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.metadata.filter.IEvaluatableTuple;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.tuple.ITuple;
+import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
 
 /**
  * A special kind of tuple that exposes column value (dictionary ID) directly on
@@ -33,7 +30,7 @@ import org.apache.kylin.metadata.tuple.ITuple;
  *
  * @author yangli9
  */
-public class ObserverTuple implements ITuple {
+public class ObserverTuple implements IEvaluatableTuple {
 
     final CoprocessorRowType type;
 
@@ -53,20 +50,6 @@ public class ObserverTuple implements ITuple {
         }
     }
 
-    @Override
-    public List<TblColRef> getAllColumns() {
-        return type.columnsAsList;
-    }
-
-    @Override
-    public Object[] getAllValues() {
-        int n = type.getColumnCount();
-        for (int i = 0; i < n; i++) {
-            getValueAt(i);
-        }
-        return values;
-    }
-
     private String getValueAt(int i) {
         int n = type.getColumnCount();
         if (i < 0 || i >= n)
@@ -83,16 +66,6 @@ public class ObserverTuple implements ITuple {
     public Object getValue(TblColRef col) {
         int i = type.getColIndexByTblColRef(col);
         return getValueAt(i);
-    }
-
-    @Override
-    public List<String> getAllFields() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Object getValue(String field) {
-        throw new UnsupportedOperationException();
     }
 
 }

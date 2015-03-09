@@ -1,6 +1,7 @@
 package org.apache.kylin.storage.hbase.coprocessor;
 
 import com.google.common.collect.Sets;
+
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.dict.Dictionary;
@@ -14,6 +15,7 @@ import java.util.Set;
 /**
  * Created by Hongbin Ma(Binmahone) on 3/3/15.
  */
+@SuppressWarnings("unchecked")
 public class FilterDecorator implements TupleFilterSerializer.Decorator {
     public enum FilterConstantsTreatment {
         AS_IT_IS, REPLACE_WITH_GLOBAL_DICT, REPLACE_WITH_LOCAL_DICT
@@ -40,8 +42,8 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
     }
 
     private TupleFilter replaceConstantsWithGlobalDict(CompareTupleFilter oldCompareFilter, CompareTupleFilter newCompareFilter) {
-        String firstValue = oldCompareFilter.getValues().iterator().next();
-        String nullString = newCompareFilter.getNullString();
+        Collection<String> constValues = (Collection<String>) oldCompareFilter.getValues();
+        String firstValue = constValues.iterator().next();
         TblColRef col = newCompareFilter.getColumn();
 
         TupleFilter result;
@@ -52,9 +54,9 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
         case EQ:
         case IN:
             Set<String> newValues = Sets.newHashSet();
-            for (String value : oldCompareFilter.getValues()) {
+            for (String value : constValues) {
                 v = translate(col, value, 0);
-                if (!nullString.equals(v))
+                if (!isDictNull(v))
                     newValues.add(v);
             }
             if (newValues.isEmpty()) {
@@ -66,7 +68,7 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
             break;
         case NEQ:
             v = translate(col, firstValue, 0);
-            if (nullString.equals(v)) {
+            if (isDictNull(v)) {
                 result = ConstantTupleFilter.TRUE;
             } else {
                 newCompareFilter.addChild(new ConstantTupleFilter(v));
@@ -75,7 +77,7 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
             break;
         case LT:
             v = translate(col, firstValue, 1);
-            if (nullString.equals(v)) {
+            if (isDictNull(v)) {
                 result = ConstantTupleFilter.TRUE;
             } else {
                 newCompareFilter.addChild(new ConstantTupleFilter(v));
@@ -84,7 +86,7 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
             break;
         case LTE:
             v = translate(col, firstValue, -1);
-            if (nullString.equals(v)) {
+            if (isDictNull(v)) {
                 result = ConstantTupleFilter.FALSE;
             } else {
                 newCompareFilter.addChild(new ConstantTupleFilter(v));
@@ -93,7 +95,7 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
             break;
         case GT:
             v = translate(col, firstValue, -1);
-            if (nullString.equals(v)) {
+            if (isDictNull(v)) {
                 result = ConstantTupleFilter.TRUE;
             } else {
                 newCompareFilter.addChild(new ConstantTupleFilter(v));
@@ -102,7 +104,7 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
             break;
         case GTE:
             v = translate(col, firstValue, 1);
-            if (nullString.equals(v)) {
+            if (isDictNull(v)) {
                 result = ConstantTupleFilter.FALSE;
             } else {
                 newCompareFilter.addChild(new ConstantTupleFilter(v));
@@ -113,6 +115,10 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
             throw new IllegalStateException("Cannot handle operator " + newCompareFilter.getOperator());
         }
         return result;
+    }
+
+    private boolean isDictNull(String v) {
+        return DictCodeSystem.INSTANCE.isNull(v);
     }
 
     @Override
@@ -148,15 +154,12 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
                 return filter;
             }
 
-            String nullString = nullString(col);
-            Collection<String> constValues = compareFilter.getValues();
+            Collection<String> constValues = (Collection<String>) compareFilter.getValues();
             if (constValues == null || constValues.isEmpty()) {
-                compareFilter.setNullString(nullString); // maybe ISNULL
                 return filter;
             }
 
             CompareTupleFilter newCompareFilter = new CompareTupleFilter(compareFilter.getOperator());
-            newCompareFilter.setNullString(nullString);
             newCompareFilter.addChild(new ColumnTupleFilter(col));
 
             if (filterConstantsTreatment == FilterConstantsTreatment.REPLACE_WITH_GLOBAL_DICT) {
@@ -167,14 +170,6 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
                 throw new RuntimeException("should not reach here");
             }
         }
-    }
-
-    private String nullString(TblColRef column) {
-        byte[] id = new byte[columnIO.getColumnLength(column)];
-        for (int i = 0; i < id.length; i++) {
-            id[i] = Dictionary.NULL;
-        }
-        return Dictionary.dictIdToString(id, 0, id.length);
     }
 
     private String translate(TblColRef column, String v, int roundingFlag) {

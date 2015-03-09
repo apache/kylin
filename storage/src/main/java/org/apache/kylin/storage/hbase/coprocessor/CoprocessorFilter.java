@@ -22,10 +22,10 @@ import java.util.Set;
 
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.dict.IDictionaryAware;
+import org.apache.kylin.metadata.filter.IEvaluatableTuple;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.tuple.ITuple;
 
 /**
  * @author yangli9
@@ -35,17 +35,19 @@ public class CoprocessorFilter {
     public static CoprocessorFilter fromFilter(final IDictionaryAware dictionaryAware, TupleFilter rootFilter, FilterDecorator.FilterConstantsTreatment filterConstantsTreatment) {
         // translate constants into dictionary IDs via a serialize copy
         FilterDecorator filterDecorator = new FilterDecorator(dictionaryAware, filterConstantsTreatment);
-        byte[] bytes = TupleFilterSerializer.serialize(rootFilter, filterDecorator);
-        TupleFilter copy = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(rootFilter, filterDecorator, DictCodeSystem.INSTANCE);
+        TupleFilter copy = TupleFilterSerializer.deserialize(bytes, DictCodeSystem.INSTANCE);
+
         return new CoprocessorFilter(copy, filterDecorator.getUnstrictlyFilteredColumns());
     }
 
     public static byte[] serialize(CoprocessorFilter o) {
-        return (o.filter == null) ? BytesUtil.EMPTY_BYTE_ARRAY : TupleFilterSerializer.serialize(o.filter);
+        return (o.filter == null) ? BytesUtil.EMPTY_BYTE_ARRAY : TupleFilterSerializer.serialize(o.filter, DictCodeSystem.INSTANCE);
     }
 
     public static CoprocessorFilter deserialize(byte[] filterBytes) {
-        TupleFilter filter = (filterBytes == null || filterBytes.length == 0) ? null : TupleFilterSerializer.deserialize(filterBytes);
+        TupleFilter filter = (filterBytes == null || filterBytes.length == 0) ? null //
+                : TupleFilterSerializer.deserialize(filterBytes, DictCodeSystem.INSTANCE);
         return new CoprocessorFilter(filter, null);
     }
 
@@ -67,11 +69,11 @@ public class CoprocessorFilter {
         return unstrictlyFilteredColumns;
     }
 
-    public boolean evaluate(ITuple tuple) {
+    public boolean evaluate(IEvaluatableTuple tuple) {
         if (filter == null)
             return true;
         else
-            return filter.evaluate(tuple);
+            return filter.evaluate(tuple, DictCodeSystem.INSTANCE);
     }
 
 }

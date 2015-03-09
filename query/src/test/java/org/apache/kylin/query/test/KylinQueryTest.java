@@ -18,11 +18,17 @@
 
 package org.apache.kylin.query.test;
 
+import static org.junit.Assert.*;
+
+import java.io.File;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Properties;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.relnode.OLAPContext;
@@ -34,14 +40,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.io.File;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Properties;
-
-import static org.junit.Assert.assertTrue;
 
 @Ignore("KylinQueryTest is contained by CombinationTest")
 public class KylinQueryTest extends KylinTestBase {

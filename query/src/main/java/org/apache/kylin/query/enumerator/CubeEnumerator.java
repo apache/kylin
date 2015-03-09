@@ -18,7 +18,6 @@
 
 package org.apache.kylin.query.enumerator;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -27,17 +26,16 @@ import net.hydromatic.linq4j.Enumerator;
 import net.hydromatic.optiq.DataContext;
 import net.hydromatic.optiq.jdbc.OptiqConnection;
 
-import org.eigenbase.reltype.RelDataTypeField;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.storage.IStorageEngine;
-import org.apache.kylin.storage.StorageEngineFactory;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
+import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.storage.IStorageEngine;
+import org.apache.kylin.storage.StorageEngineFactory;
+import org.eigenbase.reltype.RelDataTypeField;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author xjiang
@@ -169,7 +167,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
 
         if (filter instanceof CompareTupleFilter && optiqContext != null) {
             CompareTupleFilter compFilter = (CompareTupleFilter) filter;
-            for (Map.Entry<String, String> entry : compFilter.getVariables().entrySet()) {
+            for (Map.Entry<String, Object> entry : compFilter.getVariables().entrySet()) {
                 String variable = entry.getKey();
                 Object value = optiqContext.get(variable);
                 if (value != null) {

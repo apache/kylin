@@ -46,19 +46,19 @@ public class TupleFilterSerializer {
         }
     }
 
-    public static byte[] serialize(TupleFilter rootFilter) {
-        return serialize(rootFilter, null);
+    public static byte[] serialize(TupleFilter rootFilter, ICodeSystem cs) {
+        return serialize(rootFilter, null, cs);
     }
 
-    public static byte[] serialize(TupleFilter rootFilter, Decorator decorator) {
+    public static byte[] serialize(TupleFilter rootFilter, Decorator decorator, ICodeSystem cs) {
         ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
-        internalSerialize(rootFilter, decorator, buffer);
+        internalSerialize(rootFilter, decorator, buffer, cs);
         byte[] result = new byte[buffer.position()];
         System.arraycopy(buffer.array(), 0, result, 0, buffer.position());
         return result;
     }
 
-    private static void internalSerialize(TupleFilter filter, Decorator decorator, ByteBuffer buffer) {
+    private static void internalSerialize(TupleFilter filter, Decorator decorator, ByteBuffer buffer, ICodeSystem cs) {
         if (decorator != null) { // give decorator a chance to manipulate the
                                  // output filter
             filter = decorator.onSerialize(filter);
@@ -70,24 +70,24 @@ public class TupleFilterSerializer {
 
         if (filter.hasChildren()) {
             // serialize filter+true
-            serializeFilter(1, filter, decorator, buffer);
+            serializeFilter(1, filter, decorator, buffer, cs);
             // serialize children
             for (TupleFilter child : filter.getChildren()) {
-                internalSerialize(child, decorator, buffer);
+                internalSerialize(child, decorator, buffer, cs);
             }
             // serialize none
-            serializeFilter(-1, filter, decorator, buffer);
+            serializeFilter(-1, filter, decorator, buffer, cs);
         } else {
             // serialize filter+false
-            serializeFilter(0, filter, decorator, buffer);
+            serializeFilter(0, filter, decorator, buffer, cs);
         }
     }
 
-    private static void serializeFilter(int flag, TupleFilter filter, Decorator decorator, ByteBuffer buffer) {
+    private static void serializeFilter(int flag, TupleFilter filter, Decorator decorator, ByteBuffer buffer, ICodeSystem cs) {
         if (flag < 0) {
             BytesUtil.writeVInt(-1, buffer);
         } else {
-            byte[] bytes = filter.serialize();
+            byte[] bytes = filter.serialize(cs);
             int opVal = filter.getOperator().getValue();
             BytesUtil.writeVInt(opVal, buffer);
             BytesUtil.writeByteArray(bytes, buffer);
@@ -95,7 +95,7 @@ public class TupleFilterSerializer {
         }
     }
 
-    public static TupleFilter deserialize(byte[] bytes) {
+    public static TupleFilter deserialize(byte[] bytes, ICodeSystem cs) {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         TupleFilter rootFilter = null;
         Stack<TupleFilter> parentStack = new Stack<TupleFilter>();
@@ -109,7 +109,7 @@ public class TupleFilterSerializer {
             // deserialize filter
             TupleFilter filter = createTupleFilter(opVal);
             byte[] filetrBytes = BytesUtil.readByteArray(buffer);
-            filter.deserialize(filetrBytes);
+            filter.deserialize(filetrBytes, cs);
 
             if (rootFilter == null) {
                 // push root to stack
