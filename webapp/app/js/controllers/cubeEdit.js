@@ -38,7 +38,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
     $scope.getPartitonColumns = function(tableName){
         var columns = _.filter($scope.getColumnsByTable(tableName),function(column){
-            return column.datatype==="date";
+            return column.datatype==="date"||column.datatype==="string";
         });
         return columns;
     };
@@ -87,7 +87,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                 $scope.cubeMetaFrame = detail[0];
                 ModelService.get({model_name: $scope.cubeMetaFrame.model_name}, function (model) {
                     if (model) {
-//                        $scope.metaModel = model;
                         MetaModel.setMetaModel(model);
                         $scope.metaModel = MetaModel;
 
@@ -96,7 +95,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         //should run only one time
                         if(model.partition_desc&&model.partition_desc.partition_date_start)
                         {
-                            //$scope.metaModel.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
                             MetaModel.converDateToGMT();
                         }
                     }
@@ -104,9 +102,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                 $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
             }
         });
-
-        //
-        //            $scope.metaModel = null;
 
     } else {
         $scope.cubeMetaFrame = CubeDescModel.createNew();
@@ -260,13 +255,25 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         }
     }
 
+    $scope.updateMandatory = function(rowkey_column){
+        if(!rowkey_column.mandatory){
+            angular.forEach($scope.cubeMetaFrame.rowkey.aggregation_groups, function (group, index) {
+                   var index = group.indexOf(rowkey_column.column);
+                   if(index>-1){
+                       group.splice(index,1);
+                   }
+            });
+        }
+    }
+
     function reGenerateRowKey(){
         $log.log("reGen rowkey & agg group");
         var tmpRowKeyColumns = [];
-        var tmpAggregationItems = [];
-        var hierarchyItems = [];
+        var tmpAggregationItems = [];//put all aggregation item
+        var hierarchyItemArray = [];//put all hierarchy items
         angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
 
+           //derived column
             if(dimension.derived&&dimension.derived.length){
                 var lookup = _.find($scope.metaModel.model.lookups,function(lookup){return lookup.table==dimension.table});
                 angular.forEach(lookup.join.foreign_key, function (fk, index) {
@@ -288,7 +295,8 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                 })
 
             }
-            else if (dimension.column&&dimension.column.length==1) {
+            //normal column
+            else if (dimension.column&&!dimension.hierarchy&&dimension.column.length==1) {
                 for (var i = 0; i < tmpRowKeyColumns.length; i++) {
                     if(tmpRowKeyColumns[i].column == dimension.column[0])
                         break;
@@ -303,7 +311,9 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                     tmpAggregationItems.push(dimension.column[0]);
                 }
             }
+            // hierarchy
             if(dimension.hierarchy && dimension.column.length){
+                var hierarchyUnit = [];
                 angular.forEach(dimension.column, function (hier_column, index) {
                     for (var i = 0; i < tmpRowKeyColumns.length; i++) {
                         if(tmpRowKeyColumns[i].column == hier_column)
@@ -318,12 +328,25 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         });
                         tmpAggregationItems.push(hier_column);
                     }
-                    if(hierarchyItems.indexOf(hier_column)==-1){
-                        hierarchyItems.push(hier_column);
+                    if(hierarchyUnit.indexOf(hier_column)==-1){
+                      hierarchyUnit.push(hier_column);
                     }
                 });
+              if(hierarchyUnit.length){
+                hierarchyItemArray.push(hierarchyUnit);
+              }
             }
 
+        });
+
+
+        //rm mandatory column from aggregation item
+        angular.forEach($scope.cubeMetaFrame.rowkey.rowkey_columns,function(value,index){
+                if(value.mandatory){
+                    tmpAggregationItems = _.filter(tmpAggregationItems,function(item){
+                           return item!=value.column;
+                    });
+                }
         });
 
         var rowkeyColumns = $scope.cubeMetaFrame.rowkey.rowkey_columns;
@@ -366,6 +389,11 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
         if($scope.cubeMode==="addNewCube"){
 
+          if(!tmpAggregationItems.length) {
+              $scope.cubeMetaFrame.rowkey.aggregation_groups=[];
+              return;
+          }
+
             var newUniqAggregationItem = [];
             angular.forEach(tmpAggregationItems, function (item, index) {
                 if(newUniqAggregationItem.indexOf(item)==-1){
@@ -373,13 +401,58 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                 }
             });
 
-            var unHierarchyItems = increasedData(hierarchyItems,newUniqAggregationItem);
-//            hierarchyItems
-            var increasedDataGroups = sliceGroupItemToGroups(unHierarchyItems);
-            if(hierarchyItems.length){
-                increasedDataGroups.push(hierarchyItems);
-            }
+          var hierarchyItems = hierarchyItemArray.join().split(",");
+          var unHierarchyItems = increasedData(hierarchyItems,newUniqAggregationItem);
+          //hierarchyItems
+          var increasedDataGroups = sliceGroupItemToGroups(unHierarchyItems);
+          if(!hierarchyItemArray.length){
+              $scope.cubeMetaFrame.rowkey.aggregation_groups = increasedDataGroups;
+              return;
+          };
 
+          var lastAggregationGroup = increasedDataGroups.length===0?[]:increasedDataGroups[increasedDataGroups.length-1];
+
+          if(lastAggregationGroup.length<10){
+            if(lastAggregationGroup.length+hierarchyItemArray.length<=10){
+              lastAggregationGroup = lastAggregationGroup.concat(hierarchyItems);
+              if(increasedDataGroups.length==0){
+                //case only hierarchy
+                increasedDataGroups[0]=lastAggregationGroup;
+              }else{
+                increasedDataGroups[increasedDataGroups.length-1]=lastAggregationGroup;
+              }
+            }
+            else{
+                var cutIndex = 10-lastAggregationGroup.length;
+                var partialHierarchy =hierarchyItemArray.slice(0,cutIndex).join().split(",");
+                //add hierarchy to last group and make sure length less than 10
+                lastAggregationGroup = lastAggregationGroup.concat(partialHierarchy);
+                increasedDataGroups[increasedDataGroups.length-1]=lastAggregationGroup;
+                var leftHierarchy = hierarchyItemArray.slice(cutIndex);
+
+                var leftHierarchyLength = leftHierarchy.length;
+                var grpLength = parseInt(leftHierarchyLength/10);
+                if(leftHierarchyLength%10==0&&leftHierarchyLength!=0){
+                    grpLength--;
+                }
+                for(var i=0;i<=grpLength;i++){
+                    var hierAggGroupUnit = leftHierarchy.slice(i*10,(i+1)*10).join().split(",");
+                    increasedDataGroups.push(hierAggGroupUnit);
+                }
+            }
+          }
+          //lastAggregationGroup length >=10
+          else{
+              var hierrachyArrayLength = hierarchyItemArray.length;
+              var grpLength = parseInt(hierrachyArrayLength/10);
+              if(hierrachyArrayLength%10==0&&hierrachyArrayLength!=0){
+                  grpLength--;
+              }
+              for(var i=0;i<=grpLength;i++){
+                   var hierAggGroupUnit = hierarchyItemArray.slice(i*10,(i+1)*10).join().split(",");
+                   increasedDataGroups.push(hierAggGroupUnit);
+              }
+          }
             //! here get the latest aggregation groups,only effect when add newCube
             $scope.cubeMetaFrame.rowkey.aggregation_groups = increasedDataGroups;
         }

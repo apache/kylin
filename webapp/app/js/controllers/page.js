@@ -180,7 +180,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
 
     $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
         if(newValue!=oldValue){
-            $log.log("project updated in page controller,from:"+oldValue+" To:"+newValue);
+            //$log.log("project updated in page controller,from:"+oldValue+" To:"+newValue);
             $cookieStore.put("project",$scope.projectModel.selectedProject);
         }
 
