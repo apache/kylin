@@ -41,8 +41,8 @@ public class FilterEvaluateTest extends FilterBaseTest {
         List<TblColRef> groups = buildGroups();
         TupleFilter filter = buildCompareFilter(groups, 0);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         int number = 10000;
         int[] matcheCounts = new int[] { 0, 0, 0 };
@@ -57,8 +57,8 @@ public class FilterEvaluateTest extends FilterBaseTest {
         List<TblColRef> groups = buildGroups();
         TupleFilter filter = buildCompareFilter(groups, 1);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         int number = 10000;
         int[] matcheCounts = new int[] { 0, 0, 0 };
@@ -73,8 +73,8 @@ public class FilterEvaluateTest extends FilterBaseTest {
         List<TblColRef> groups = buildGroups();
         TupleFilter filter = buildOrFilter(groups);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         int number = 10000;
         int[] matcheCounts = new int[] { 0, 0, 0 };
@@ -89,8 +89,8 @@ public class FilterEvaluateTest extends FilterBaseTest {
         List<TblColRef> groups = buildGroups();
         TupleFilter filter = buildAndFilter(groups);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         int number = 10000;
         int[] matcheCounts = new int[] { 0, 0, 0 };
@@ -105,8 +105,8 @@ public class FilterEvaluateTest extends FilterBaseTest {
         List<TblColRef> groups = buildGroups();
         TupleFilter filter = buildCompareCaseFilter(groups, "0");
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         int number = 10000;
         int[] matcheCounts = new int[] { 0, 0, 0 };
@@ -121,8 +121,8 @@ public class FilterEvaluateTest extends FilterBaseTest {
         List<TblColRef> groups = buildGroups();
         TupleFilter filter = buildCompareCaseFilter(groups, "1");
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         int number = 10000;
         int[] matcheCounts = new int[] { 0, 0, 0 };
@@ -137,8 +137,8 @@ public class FilterEvaluateTest extends FilterBaseTest {
         List<TblColRef> groups = buildGroups();
         TupleFilter filter = buildCompareCaseFilter(groups, "2");
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         int number = 1;
         int[] matcheCounts = new int[] { 0, 0, 0 };
@@ -153,8 +153,8 @@ public class FilterEvaluateTest extends FilterBaseTest {
         List<TblColRef> groups = buildGroups();
         TupleFilter filter = buildCompareCaseFilter(groups, "3");
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         int number = 10000;
         int[] matcheCounts = new int[] { 0, 0, 0 };
@@ -169,8 +169,8 @@ public class FilterEvaluateTest extends FilterBaseTest {
         List<TblColRef> groups = buildGroups();
         TupleFilter filter = buildCompareCaseFilter(groups, "4");
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         int number = 10000;
         int[] matcheCounts = new int[] { 0, 0, 0 };

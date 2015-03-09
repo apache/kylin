@@ -35,19 +35,19 @@ public class ConstantTupleFilter extends TupleFilter {
     public static final ConstantTupleFilter FALSE = new ConstantTupleFilter();
     public static final ConstantTupleFilter TRUE = new ConstantTupleFilter("TRUE");
 
-    private Collection<String> constantValues;
+    private Collection<Object> constantValues;
 
     public ConstantTupleFilter() {
         super(Collections.<TupleFilter> emptyList(), FilterOperatorEnum.CONSTANT);
-        this.constantValues = new HashSet<String>();
+        this.constantValues = new HashSet<Object>();
     }
 
-    public ConstantTupleFilter(String value) {
+    public ConstantTupleFilter(Object value) {
         this();
         this.constantValues.add(value);
     }
 
-    public ConstantTupleFilter(Collection<String> values) {
+    public ConstantTupleFilter(Collection<?> values) {
         this();
         this.constantValues.addAll(values);
     }
@@ -63,7 +63,7 @@ public class ConstantTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(IEvaluatableTuple tuple) {
+    public boolean evaluate(IEvaluatableTuple tuple, ICodeSystem cs) {
         return constantValues.size() > 0;
     }
 
@@ -73,17 +73,17 @@ public class ConstantTupleFilter extends TupleFilter {
     }
 
     @Override
-    public Collection<String> getValues() {
+    public Collection<?> getValues() {
         return this.constantValues;
     }
 
     @Override
-    public byte[] serialize() {
+    public byte[] serialize(ICodeSystem cs) {
         ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
         int size = this.constantValues.size();
         BytesUtil.writeVInt(size, buffer);
-        for (String val : this.constantValues) {
-            BytesUtil.writeUTFString(val, buffer);
+        for (Object val : this.constantValues) {
+            cs.serialize(val, buffer);
         }
         byte[] result = new byte[buffer.position()];
         System.arraycopy(buffer.array(), 0, result, 0, buffer.position());
@@ -91,12 +91,12 @@ public class ConstantTupleFilter extends TupleFilter {
     }
 
     @Override
-    public void deserialize(byte[] bytes) {
+    public void deserialize(byte[] bytes, ICodeSystem cs) {
         this.constantValues.clear();
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         int size = BytesUtil.readVInt(buffer);
         for (int i = 0; i < size; i++) {
-            this.constantValues.add(BytesUtil.readUTFString(buffer));
+            this.constantValues.add(cs.deserialize(buffer));
         }
     }
 

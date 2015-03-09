@@ -58,11 +58,12 @@ public class CoprocessorFilter {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public TupleFilter onSerialize(TupleFilter filter) {
             if (filter == null)
                 return null;
 
-            // In case of NOT(unEvaluatableFilter), we should immediatedly replace it as TRUE,
+            // In case of NOT(unEvaluatableFilter), we should immediately replace it as TRUE,
             // Otherwise, unEvaluatableFilter will later be replace with TRUE and NOT(unEvaluatableFilter) will
             // always return FALSE
             if (filter.getOperator() == FilterOperatorEnum.NOT && !TupleFilter.isEvaluableRecursively(filter)) {
@@ -86,29 +87,25 @@ public class CoprocessorFilter {
                 return filter;
             }
 
-            String nullString = nullString(col);
-            Collection<String> constValues = compf.getValues();
+            Collection<String> constValues = (Collection<String>) compf.getValues();
             if (constValues == null || constValues.isEmpty()) {
-                compf.setNullString(nullString); // maybe ISNULL
                 return filter;
             }
 
             TupleFilter result;
             CompareTupleFilter newComp = new CompareTupleFilter(compf.getOperator());
-            newComp.setNullString(nullString);
             newComp.addChild(new ColumnTupleFilter(col));
             String v;
-            //TODO: seems not working when CompareTupleFilter has multiple values, like IN
-            String firstValue = constValues.iterator().next();
 
             // translate constant into rowkey ID
+            String firstValue = constValues.iterator().next();
             switch (newComp.getOperator()) {
             case EQ:
             case IN:
                 Set<String> newValues = Sets.newHashSet();
                 for (String value : constValues) {
                     v = translate(col, value, 0);
-                    if (!nullString.equals(v))
+                    if (!isDictNull(v))
                         newValues.add(v);
                 }
                 if (newValues.isEmpty()) {
@@ -120,7 +117,7 @@ public class CoprocessorFilter {
                 break;
             case NEQ:
                 v = translate(col, firstValue, 0);
-                if (nullString.equals(v)) {
+                if (isDictNull(v)) {
                     result = ConstantTupleFilter.TRUE;
                 } else {
                     newComp.addChild(new ConstantTupleFilter(v));
@@ -129,7 +126,7 @@ public class CoprocessorFilter {
                 break;
             case LT:
                 v = translate(col, firstValue, 1);
-                if (nullString.equals(v)) {
+                if (isDictNull(v)) {
                     result = ConstantTupleFilter.TRUE;
                 } else {
                     newComp.addChild(new ConstantTupleFilter(v));
@@ -138,7 +135,7 @@ public class CoprocessorFilter {
                 break;
             case LTE:
                 v = translate(col, firstValue, -1);
-                if (nullString.equals(v)) {
+                if (isDictNull(v)) {
                     result = ConstantTupleFilter.FALSE;
                 } else {
                     newComp.addChild(new ConstantTupleFilter(v));
@@ -147,7 +144,7 @@ public class CoprocessorFilter {
                 break;
             case GT:
                 v = translate(col, firstValue, -1);
-                if (nullString.equals(v)) {
+                if (isDictNull(v)) {
                     result = ConstantTupleFilter.TRUE;
                 } else {
                     newComp.addChild(new ConstantTupleFilter(v));
@@ -156,7 +153,7 @@ public class CoprocessorFilter {
                 break;
             case GTE:
                 v = translate(col, firstValue, 1);
-                if (nullString.equals(v)) {
+                if (isDictNull(v)) {
                     result = ConstantTupleFilter.FALSE;
                 } else {
                     newComp.addChild(new ConstantTupleFilter(v));
@@ -169,12 +166,8 @@ public class CoprocessorFilter {
             return result;
         }
 
-        private String nullString(TblColRef column) {
-            byte[] id = new byte[columnIO.getColumnLength(column)];
-            for (int i = 0; i < id.length; i++) {
-                id[i] = Dictionary.NULL;
-            }
-            return Dictionary.dictIdToString(id, 0, id.length);
+        private boolean isDictNull(String v) {
+            return DictCodeSystem.INSTANCE.isNull(v);
         }
 
         private String translate(TblColRef column, String v, int roundingFlag) {
@@ -188,17 +181,18 @@ public class CoprocessorFilter {
     public static CoprocessorFilter fromFilter(final ISegment seg, TupleFilter rootFilter) {
         // translate constants into dictionary IDs via a serialize copy
         FilterDecorator filterDecorator = new FilterDecorator(seg);
-        byte[] bytes = TupleFilterSerializer.serialize(rootFilter, filterDecorator);
-        TupleFilter copy = TupleFilterSerializer.deserialize(bytes);
+        byte[] bytes = TupleFilterSerializer.serialize(rootFilter, filterDecorator, DictCodeSystem.INSTANCE);
+        TupleFilter copy = TupleFilterSerializer.deserialize(bytes, DictCodeSystem.INSTANCE);
         return new CoprocessorFilter(copy, filterDecorator.getUnstrictlyFilteredColumns());
     }
 
     public static byte[] serialize(CoprocessorFilter o) {
-        return (o.filter == null) ? BytesUtil.EMPTY_BYTE_ARRAY : TupleFilterSerializer.serialize(o.filter);
+        return (o.filter == null) ? BytesUtil.EMPTY_BYTE_ARRAY : TupleFilterSerializer.serialize(o.filter, DictCodeSystem.INSTANCE);
     }
 
     public static CoprocessorFilter deserialize(byte[] filterBytes) {
-        TupleFilter filter = (filterBytes == null || filterBytes.length == 0) ? null : TupleFilterSerializer.deserialize(filterBytes);
+        TupleFilter filter = (filterBytes == null || filterBytes.length == 0) ? null //
+                : TupleFilterSerializer.deserialize(filterBytes, DictCodeSystem.INSTANCE);
         return new CoprocessorFilter(filter, null);
     }
 
@@ -224,7 +218,7 @@ public class CoprocessorFilter {
         if (filter == null)
             return true;
         else
-            return filter.evaluate(tuple);
+            return filter.evaluate(tuple, DictCodeSystem.INSTANCE);
     }
 
 }

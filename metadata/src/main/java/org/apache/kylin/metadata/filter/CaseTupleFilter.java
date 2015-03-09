@@ -33,7 +33,7 @@ public class CaseTupleFilter extends TupleFilter {
     private List<TupleFilter> whenFilters;
     private List<TupleFilter> thenFilters;
     private TupleFilter elseFilter;
-    private Collection<String> values;
+    private Collection<?> values;
     private int filterIndex;
 
     public CaseTupleFilter() {
@@ -62,16 +62,16 @@ public class CaseTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(IEvaluatableTuple tuple) {
+    public boolean evaluate(IEvaluatableTuple tuple, ICodeSystem cs) {
         if (whenFilters.size() != thenFilters.size()) {
             elseFilter = whenFilters.remove(whenFilters.size() - 1);
         }
         boolean matched = false;
         for (int i = 0; i < whenFilters.size(); i++) {
             TupleFilter whenFilter = whenFilters.get(i);
-            if (whenFilter.evaluate(tuple)) {
+            if (whenFilter.evaluate(tuple, cs)) {
                 TupleFilter thenFilter = thenFilters.get(i);
-                thenFilter.evaluate(tuple);
+                thenFilter.evaluate(tuple, cs);
                 values = thenFilter.getValues();
                 matched = true;
                 break;
@@ -79,7 +79,7 @@ public class CaseTupleFilter extends TupleFilter {
         }
         if (!matched) {
             if (elseFilter != null) {
-                elseFilter.evaluate(tuple);
+                elseFilter.evaluate(tuple, cs);
                 values = elseFilter.getValues();
             } else {
                 values = Collections.emptyList();
@@ -95,17 +95,17 @@ public class CaseTupleFilter extends TupleFilter {
     }
 
     @Override
-    public Collection<String> getValues() {
+    public Collection<?> getValues() {
         return this.values;
     }
 
     @Override
-    public byte[] serialize() {
+    public byte[] serialize(ICodeSystem cs) {
         return new byte[0];
     }
 
     @Override
-    public void deserialize(byte[] bytes) {
+    public void deserialize(byte[] bytes, ICodeSystem cs) {
     }
 
 }

@@ -53,7 +53,7 @@ public class DynamicTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(IEvaluatableTuple tuple) {
+    public boolean evaluate(IEvaluatableTuple tuple, ICodeSystem cs) {
         return true;
     }
 
@@ -63,12 +63,12 @@ public class DynamicTupleFilter extends TupleFilter {
     }
 
     @Override
-    public Collection<String> getValues() {
+    public Collection<?> getValues() {
         return Collections.emptyList();
     }
 
     @Override
-    public byte[] serialize() {
+    public byte[] serialize(ICodeSystem cs) {
         ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
         BytesUtil.writeUTFString(variableName, buffer);
         byte[] result = new byte[buffer.position()];
@@ -77,7 +77,7 @@ public class DynamicTupleFilter extends TupleFilter {
     }
 
     @Override
-    public void deserialize(byte[] bytes) {
+    public void deserialize(byte[] bytes, ICodeSystem cs) {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         this.variableName = BytesUtil.readUTFString(buffer);
     }
