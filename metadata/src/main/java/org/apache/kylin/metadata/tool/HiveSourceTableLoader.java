@@ -81,13 +81,19 @@ public class HiveSourceTableLoader {
         for (String tableName : tables) {
             Table table = null;
             HiveClient hiveClient = new HiveClient();
+            List<FieldSchema> partitionFields = null;
             List<FieldSchema> fields = null;
             try {
                 table = hiveClient.getHiveTable(database, tableName);
+                partitionFields = table.getPartitionKeys();
                 fields = hiveClient.getHiveTableFields(database, tableName);
             } catch (Exception e) {
                 e.printStackTrace();
                 throw new IOException(e);
+            }
+
+            if (fields != null && partitionFields != null && partitionFields.size() > 0) {
+                fields.addAll(partitionFields);
             }
 
             long tableSize = hiveClient.getFileSizeForTable(table);
@@ -113,12 +119,11 @@ public class HiveSourceTableLoader {
             }
             tableDesc.setColumns(columns.toArray(new ColumnDesc[columnNumber]));
 
-            List<FieldSchema> partitionCols = table.getPartitionKeys();
             StringBuffer partitionColumnString = new StringBuffer();
-            for (int i = 0, n = partitionCols.size(); i < n; i++) {
+            for (int i = 0, n = partitionFields.size(); i < n; i++) {
                 if (i > 0)
                     partitionColumnString.append(", ");
-                partitionColumnString.append(partitionCols.get(i).getName().toUpperCase());
+                partitionColumnString.append(partitionFields.get(i).getName().toUpperCase());
             }
 
             Map<String, String> map = metaMgr.getTableDescExd(tableDesc.getIdentity());
@@ -135,7 +140,7 @@ public class HiveSourceTableLoader {
             map.put(MetadataConstants.TABLE_EXD_PC, partitionColumnString.toString());
             map.put(MetadataConstants.TABLE_EXD_TFS, String.valueOf(tableSize));
             map.put(MetadataConstants.TABLE_EXD_TNF, String.valueOf(tableFileNum));
-            map.put(MetadataConstants.TABLE_EXD_PARTITIONED, Boolean.valueOf(partitionCols != null && partitionCols.size()>0).toString());
+            map.put(MetadataConstants.TABLE_EXD_PARTITIONED, Boolean.valueOf(partitionFields != null && partitionFields.size() > 0).toString());
 
             metaMgr.saveSourceTable(tableDesc);
             metaMgr.saveTableExd(tableDesc.getIdentity(), map);
