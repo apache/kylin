@@ -27,7 +27,6 @@ import java.util.Map;
 
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.tuple.ITuple;
 
 /**
  * @author xjiang
@@ -142,7 +141,7 @@ public class CompareTupleFilter extends TupleFilter {
 
     // TODO requires generalize, currently only evaluates COLUMN {op} CONST
     @Override
-    public boolean evaluate(ITuple tuple) {
+    public boolean evaluate(IEvaluatableTuple tuple) {
         // extract tuple value
         String tupleValue = null;
         for (TupleFilter filter : this.children) {

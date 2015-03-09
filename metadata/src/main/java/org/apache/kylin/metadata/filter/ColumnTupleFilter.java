@@ -28,7 +28,6 @@ import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.tuple.ITuple;
 
 /**
  * 
@@ -67,7 +66,7 @@ public class ColumnTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(ITuple tuple) {
+    public boolean evaluate(IEvaluatableTuple tuple) {
         this.tupleValue = tuple.getValue(columnRef);
         return true;
     }

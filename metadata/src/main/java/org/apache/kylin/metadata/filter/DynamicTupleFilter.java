@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.metadata.tuple.ITuple;
 
 /**
  * 
@@ -54,7 +53,7 @@ public class DynamicTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(ITuple tuple) {
+    public boolean evaluate(IEvaluatableTuple tuple) {
         return true;
     }
 

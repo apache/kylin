@@ -24,9 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Maps;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.tuple.ITuple;
+
+import com.google.common.collect.Maps;
 
 /**
  * 
@@ -188,7 +188,7 @@ public abstract class TupleFilter {
 
     public abstract boolean isEvaluable();
 
-    public abstract boolean evaluate(ITuple tuple);
+    public abstract boolean evaluate(IEvaluatableTuple tuple);
 
     public abstract Collection<String> getValues();
 

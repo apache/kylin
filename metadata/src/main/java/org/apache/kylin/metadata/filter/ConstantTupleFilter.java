@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.HashSet;
 
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.metadata.tuple.ITuple;
 
 /**
  * 
@@ -64,7 +63,7 @@ public class ConstantTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(ITuple tuple) {
+    public boolean evaluate(IEvaluatableTuple tuple) {
         return constantValues.size() > 0;
     }
 

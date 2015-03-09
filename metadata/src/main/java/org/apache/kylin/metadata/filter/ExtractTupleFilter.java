@@ -18,8 +18,6 @@
 
 package org.apache.kylin.metadata.filter;
 
-import org.apache.kylin.metadata.tuple.ITuple;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -54,7 +52,7 @@ public class ExtractTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(ITuple tuple) {
+    public boolean evaluate(IEvaluatableTuple tuple) {
         // extract tuple value
         String extractType = null;
         String tupleValue = null;
