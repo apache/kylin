@@ -18,11 +18,8 @@
 
 'use strict';
 
-KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelService,MetaModel) {
+KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelService,MetaModel,SweetAlert) {
 
-//    if($scope.state.mode==="edit") {
-//        $scope.metaModel = MetaModel;
-//    }
     $scope.cubeConfig = cubeConfig;
     var DataModel = function () {
         return {
@@ -113,9 +110,33 @@ KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelSe
         $scope.resetParams();
     };
 
-    $scope.removeLookup = function (lookup) {
-        lookupList.splice(lookupList.indexOf(lookup), 1);
-    };
+        $scope.removeLookup = function (lookup) {
+            var dimExist = _.some($scope.cubeMetaFrame.dimensions,function(item,index){
+                return item.table===lookup.table;
+            });
+            if(dimExist) {
+                SweetAlert.swal({
+                    title: '',
+                    text: "Once it's removed, all relative dimensions will be removed. Are you sure to remove the lookup table?",
+                    type: '',
+                    showCancelButton: true,
+                    confirmButtonColor: '#DD6B55',
+                    confirmButtonText: "Yes",
+                    closeOnConfirm: true
+                }, function (isConfirm) {
+                    if (isConfirm) {
+                        for (var i = $scope.cubeMetaFrame.dimensions.length - 1; i >= 0; i--) {
+                            if ($scope.cubeMetaFrame.dimensions[i].table === lookup.table) {
+                                $scope.cubeMetaFrame.dimensions.splice(i, 1);
+                            }
+                        }
+                        lookupList.splice(lookupList.indexOf(lookup), 1);
+                    }
+                });
+            }else{
+                lookupList.splice(lookupList.indexOf(lookup), 1);
+            }
+        };
 
     $scope.resetParams = function () {
         $scope.lookupState.editing = false;
