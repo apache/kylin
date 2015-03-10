@@ -83,6 +83,7 @@ KylinApp
     // Convert bytes into human readable format.
     .filter('bytes', function() {
         return function(bytes, precision) {
+            if (bytes === 0) { return '0 bytes' };
             if (isNaN(parseFloat(bytes)) || !isFinite(bytes)) {
                 return '-';
             }

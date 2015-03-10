@@ -36,15 +36,14 @@ package org.apache.kylin.streaming.invertedindex;
 
 import com.google.common.base.Function;
 import com.google.common.collect.*;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
-import org.apache.kylin.dict.DictionaryInfo;
-import org.apache.kylin.dict.DictionaryManager;
-import org.apache.kylin.dict.lookup.ReadableTable;
 import org.apache.kylin.invertedindex.index.Slice;
 import org.apache.kylin.invertedindex.index.SliceBuilder;
 import org.apache.kylin.invertedindex.index.TableRecord;
@@ -54,7 +53,6 @@ import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.streaming.KafkaConfig;
 import org.apache.kylin.streaming.Stream;
 import org.apache.kylin.streaming.StreamBuilder;
 import org.slf4j.Logger;
@@ -65,7 +63,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * Created by qianzhou on 3/3/15.
@@ -75,15 +73,23 @@ public class IIStreamBuilder extends StreamBuilder {
     private static Logger logger = LoggerFactory.getLogger(IIStreamBuilder.class);
 
     private IIDesc desc = null;
-    private KafkaConfig kafkaConfig = null;
     private HTableInterface hTable = null;
+    private int partitionId = -1;
 
-    public IIStreamBuilder(BlockingQueue<Stream> streamQueue) {
-        super(streamQueue);
+    public IIStreamBuilder(LinkedBlockingDeque<Stream> queue, String hTableName, IIDesc desc, int partitionId) {
+        super(queue, desc.getSliceSize());
+        this.desc = desc;
+        this.partitionId = partitionId;
+        try {
+            this.hTable = HConnectionManager.createConnection(HBaseConfiguration.create()).getTable(hTableName);
+        } catch (IOException e) {
+            logger.error("cannot open htable name:" + hTableName, e);
+            throw new RuntimeException("cannot open htable name:" + hTableName, e);
+        }
     }
 
     @Override
-    protected void build(List<Stream> streamsToBuild) {
+    protected boolean build(List<Stream> streamsToBuild) {
         List<List<String>> table = Lists.transform(streamsToBuild, new Function<Stream, List<String>>() {
             @Nullable
             @Override
@@ -101,14 +107,16 @@ public class IIStreamBuilder extends StreamBuilder {
             }
         }
         TableRecordInfo tableRecordInfo = new TableRecordInfo(desc, dictionaryMap, measureCodecMap);
-        SliceBuilder sliceBuilder = new SliceBuilder(tableRecordInfo, (short) kafkaConfig.getPartitionId());
+        SliceBuilder sliceBuilder = new SliceBuilder(tableRecordInfo, (short) partitionId);
         final Slice slice = buildSlice(table, sliceBuilder, tableRecordInfo);
-        try {
-            loadToHBase(hTable, slice, new IIKeyValueCodec(tableRecordInfo.getDigest()));
-            submitOffset();
-        } catch (IOException e) {
-            logger.error("error load to hbase, build failed", e);
-        }
+//        try {
+//            loadToHBase(hTable, slice, new IIKeyValueCodec(tableRecordInfo.getDigest()));
+//            submitOffset();
+//        } catch (IOException e) {
+//            logger.error("error load to hbase, build failed", e);
+//            return false;
+//        }
+        return true;
     }
 
     private Map<TblColRef, Dictionary<?>> buildDictionary(List<List<String>> table, IIDesc desc) {
@@ -139,8 +147,7 @@ public class IIStreamBuilder extends StreamBuilder {
     }
 
     private List<String> parseStream(Stream stream, IIDesc desc) {
-        List<String> result = Lists.newArrayList();
-        return result;
+        return Lists.newArrayList(new String(stream.getRawData()).split(","));
     }
 
     private Slice buildSlice(List<List<String>> table, SliceBuilder sliceBuilder, TableRecordInfo tableRecordInfo) {
