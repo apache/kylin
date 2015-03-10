@@ -72,7 +72,7 @@ public abstract class StreamBuilder implements Runnable {
             List<Stream> streamToBuild = Lists.newArrayList();
             clearCounter();
             while (true) {
-                final Stream stream = streamQueue.poll(200, TimeUnit.MILLISECONDS);
+                final Stream stream = streamQueue.poll(50, TimeUnit.MILLISECONDS);
                 if (stream == null) {
                     continue;
                 } else {

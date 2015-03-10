@@ -18,11 +18,8 @@
 
 package org.apache.kylin.job.hadoop.invertedindex;
 
-import java.io.IOException;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.mr.KylinReducer;
@@ -34,9 +31,12 @@ import org.apache.kylin.invertedindex.index.SliceBuilder;
 import org.apache.kylin.invertedindex.index.TableRecord;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
+import org.apache.kylin.invertedindex.model.KeyValuePair;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+
+import java.io.IOException;
 
 /**
  * @author yangli9
@@ -92,8 +92,8 @@ public class InvertedIndexReducer extends KylinReducer<LongWritable, ImmutableBy
     }
 
     private void output(Slice slice, Context context) throws IOException, InterruptedException {
-        for (Pair<ImmutableBytesWritable, ImmutableBytesWritable> pair : kv.encodeKeyValue(slice)) {
-            context.write(pair.getFirst(), pair.getSecond());
+        for (KeyValuePair pair : kv.encodeKeyValue(slice)) {
+            context.write(pair.getKey(), pair.getValue());
         }
     }
 
