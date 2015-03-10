@@ -23,6 +23,7 @@ import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.hadoop.hbase.util.Pair;
+import org.apache.kylin.invertedindex.model.KeyValuePair;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -33,28 +34,28 @@ import java.util.List;
 /**
  * Created by honma on 11/10/14.
  */
-public class HbaseServerKVIterator implements Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>>, Closeable {
+public class HbaseServerKVIterator implements Iterable<KeyValuePair>, Closeable {
 
-    private RegionScanner innerScaner;
+    private RegionScanner innerScanner;
 
     List<Cell> results = new ArrayList<Cell>();
 
-    public HbaseServerKVIterator(RegionScanner innerScaner) {
-        this.innerScaner = innerScaner;
+    public HbaseServerKVIterator(RegionScanner innerScanner) {
+        this.innerScanner = innerScanner;
     }
 
     @Override
     public void close() throws IOException {
-        IOUtils.closeQuietly(this.innerScaner);
+        IOUtils.closeQuietly(this.innerScanner);
     }
 
     @Override
-    public Iterator<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> iterator() {
-        return new Iterator<Pair<ImmutableBytesWritable, ImmutableBytesWritable>>() {
+    public Iterator<KeyValuePair> iterator() {
+        return new Iterator<KeyValuePair>() {
 
             ImmutableBytesWritable key = new ImmutableBytesWritable();
             ImmutableBytesWritable value = new ImmutableBytesWritable();
-            Pair<ImmutableBytesWritable, ImmutableBytesWritable> pair = new Pair<>(key, value);
+            KeyValuePair pair = new KeyValuePair(key, value);
 
             private boolean hasMore = true;
 
@@ -64,10 +65,10 @@ public class HbaseServerKVIterator implements Iterable<Pair<ImmutableBytesWritab
             }
 
             @Override
-            public Pair<ImmutableBytesWritable, ImmutableBytesWritable> next() {
+            public KeyValuePair next() {
                 if (hasNext()) {
                     try {
-                        hasMore = innerScaner.nextRaw(results);
+                        hasMore = innerScanner.nextRaw(results);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }

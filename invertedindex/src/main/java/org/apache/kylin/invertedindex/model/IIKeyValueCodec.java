@@ -69,7 +69,7 @@ public class IIKeyValueCodec {
 		ImmutableBytesWritable key = encodeKey(slice.getShard(),
 				slice.getTimestamp(), col, -1);
 		ImmutableBytesWritable value = container.toBytes();
-        return new KeyValuePair(col, key, value);
+        return new KeyValuePair(key, value);
 	}
 
 	private List<KeyValuePair> collectKeyValues(Slice slice,
@@ -80,7 +80,7 @@ public class IIKeyValueCodec {
 		for (int v = 0; v < values.size(); v++) {
 			ImmutableBytesWritable key = encodeKey(slice.getShard(),
 					slice.getTimestamp(), col, v);
-            list.add(new KeyValuePair(col, key, values.get(v)));
+            list.add(new KeyValuePair(key, values.get(v)));
 		}
         return list;
 	}
@@ -114,14 +114,14 @@ public class IIKeyValueCodec {
 	}
 
 	public Iterable<Slice> decodeKeyValue(
-			Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> kvs) {
+			Iterable<KeyValuePair> kvs) {
 		return new Decoder(infoDigest, kvs);
 	}
 
 	private static class Decoder implements Iterable<Slice> {
 
 		TableRecordInfoDigest info;
-		Iterator<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> iterator;
+		Iterator<KeyValuePair> iterator;
 
 		Slice next = null;
 		short curShard = Short.MIN_VALUE;
@@ -135,7 +135,7 @@ public class IIKeyValueCodec {
 		List<ImmutableBytesWritable> bitMapValues = Lists.newArrayList();
 
 		Decoder(TableRecordInfoDigest info,
-				Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> kvs) {
+				Iterable<KeyValuePair> kvs) {
 			this.info = info;
 			this.iterator = kvs.iterator();
 		}
@@ -147,10 +147,9 @@ public class IIKeyValueCodec {
 
 			// NOTE the input keys are ordered
 			while (next == null && iterator.hasNext()) {
-				Pair<ImmutableBytesWritable, ImmutableBytesWritable> kv = iterator
-						.next();
-				ImmutableBytesWritable k = kv.getFirst();
-				ImmutableBytesWritable v = kv.getSecond();
+                KeyValuePair kv = iterator.next();
+				ImmutableBytesWritable k = kv.getKey();
+				ImmutableBytesWritable v = kv.getValue();
 				decodeKey(k);
 
 				if (curShard != lastShard

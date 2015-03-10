@@ -30,6 +30,7 @@ import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Pair;
+import org.apache.kylin.invertedindex.model.KeyValuePair;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -136,8 +137,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
 		System.out.println(slices.size() + " slices");
 
 		IIKeyValueCodec codec = new IIKeyValueCodec(info.getDigest());
-		List<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> kvs = encodeKVs(
-				codec, slices);
+		List<KeyValuePair> kvs = encodeKVs(codec, slices);
 		System.out.println(kvs.size() + " KV pairs");
 
 		List<Slice> slicesCopy = decodeKVs(codec, kvs);
@@ -198,10 +198,10 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
 		return slices;
 	}
 
-	private List<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> encodeKVs(
+	private List<KeyValuePair> encodeKVs(
 			IIKeyValueCodec codec, List<Slice> slices) {
 
-		List<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> kvs = Lists
+		List<KeyValuePair> kvs = Lists
 				.newArrayList();
 		for (Slice slice : slices) {
 			kvs.addAll(codec.encodeKeyValue(slice));
@@ -210,7 +210,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
 	}
 
 	private List<Slice> decodeKVs(IIKeyValueCodec codec,
-			List<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> kvs) {
+			List<KeyValuePair> kvs) {
 		List<Slice> slices = Lists.newArrayList();
 		for (Slice slice : codec.decodeKeyValue(kvs)) {
 			slices.add(slice);

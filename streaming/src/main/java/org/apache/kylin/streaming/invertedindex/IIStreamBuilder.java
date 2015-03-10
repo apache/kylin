@@ -50,6 +50,7 @@ import org.apache.kylin.invertedindex.index.TableRecord;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
+import org.apache.kylin.invertedindex.model.KeyValuePair;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -164,9 +165,9 @@ public class IIStreamBuilder extends StreamBuilder {
     private void loadToHBase(HTableInterface hTable, Slice slice, IIKeyValueCodec codec) throws IOException {
         try {
             List<Put> data = Lists.newArrayList();
-            for (Pair<ImmutableBytesWritable, ImmutableBytesWritable> pair : codec.encodeKeyValue(slice)) {
-                final byte[] key = pair.getFirst().get();
-                final byte[] value = pair.getSecond().get();
+            for (KeyValuePair pair : codec.encodeKeyValue(slice)) {
+                final byte[] key = pair.getKey().get();
+                final byte[] value = pair.getValue().get();
                 Put put = new Put(key);
                 put.add(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES, value);
                 //dictionary

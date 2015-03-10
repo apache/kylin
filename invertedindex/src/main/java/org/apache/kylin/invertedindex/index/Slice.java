@@ -18,8 +18,10 @@
 
 package org.apache.kylin.invertedindex.index;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
@@ -56,9 +58,9 @@ public class Slice implements Iterable<RawTableRecord>, Comparable<Slice> {
         }
     }
 
-    public List<Dictionary<?>> getLocalDictionaries() {
+    public Map<Integer, Dictionary<?>> getLocalDictionaries() {
         // TODO localdict
-        return null;
+        return Collections.emptyMap();
     }
 
     public int getRecordCount() {
