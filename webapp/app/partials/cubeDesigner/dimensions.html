@@ -58,7 +58,7 @@
                 <th ng-if="state.mode=='edit'">Actions</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody class="cube-dimension">
             <tr ng-repeat="dimension in cubeMetaFrame.dimensions | filter:dimState.filter track by $index">
                 <!--ID -->
                 <td>
