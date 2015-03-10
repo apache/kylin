@@ -39,11 +39,11 @@ import org.apache.kylin.job.constant.BatchConstants;
 public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable, Text, LongWritable> {
 
     public static final long ONE_GIGA_BYTES = 1024L * 1024L * 1024L;
-    public static final int SMALL_CUT = 10;  //  10 GB per region
-    public static final int MEDIUM_CUT = 20; //  20 GB per region
-    public static final int LARGE_CUT = 100; // 100 GB per region
+    public static final int SMALL_CUT = 5;  //  5 GB per region
+    public static final int MEDIUM_CUT = 10; //  10 GB per region
+    public static final int LARGE_CUT = 50; // 50 GB per region
     
-    public static final int MAX_REGION = 500;
+    public static final int MAX_REGION = 1000;
 
     private static final Logger logger = LoggerFactory.getLogger(RangeKeyDistributionReducer.class);
 
