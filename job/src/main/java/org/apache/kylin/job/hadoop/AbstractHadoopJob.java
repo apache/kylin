@@ -161,6 +161,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
                 jobConf.set(MAP_REDUCE_CLASSPATH, classpath + "," + kylinHiveDependency);
             }
         }
+        logger.info("Hadoop job classpath is: " + job.getConfiguration().get(MAP_REDUCE_CLASSPATH));
     }
 
     public void addInputDirs(String input, Job job) throws IOException {
