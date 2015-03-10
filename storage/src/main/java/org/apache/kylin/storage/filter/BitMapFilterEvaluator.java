@@ -99,22 +99,22 @@ public class BitMapFilterEvaluator {
     }
 
     private ConciseSet evalCompareLT(CompareTupleFilter filter) {
-        int id = Dictionary.stringToDictId(filter.getFirstValue());
+        int id = Dictionary.stringToDictId((String) filter.getFirstValue());
         return collectRange(filter.getColumn(), null, id - 1);
     }
 
     private ConciseSet evalCompareLTE(CompareTupleFilter filter) {
-        int id = Dictionary.stringToDictId(filter.getFirstValue());
+        int id = Dictionary.stringToDictId((String) filter.getFirstValue());
         return collectRange(filter.getColumn(), null, id);
     }
 
     private ConciseSet evalCompareGT(CompareTupleFilter filter) {
-        int id = Dictionary.stringToDictId(filter.getFirstValue());
+        int id = Dictionary.stringToDictId((String) filter.getFirstValue());
         return collectRange(filter.getColumn(), id + 1, null);
     }
 
     private ConciseSet evalCompareGTE(CompareTupleFilter filter) {
-        int id = Dictionary.stringToDictId(filter.getFirstValue());
+        int id = Dictionary.stringToDictId((String) filter.getFirstValue());
         return collectRange(filter.getColumn(), id, null);
     }
 
@@ -123,7 +123,7 @@ public class BitMapFilterEvaluator {
     }
 
     private ConciseSet evalCompareEqual(CompareTupleFilter filter) {
-        int id = Dictionary.stringToDictId(filter.getFirstValue());
+        int id = Dictionary.stringToDictId((String) filter.getFirstValue());
         ConciseSet bitMap = provider.getBitMap(filter.getColumn(), id, id);
         if (bitMap == null)
             return null;
@@ -139,8 +139,8 @@ public class BitMapFilterEvaluator {
 
     private ConciseSet evalCompareIn(CompareTupleFilter filter) {
         ConciseSet set = new ConciseSet();
-        for (String value : filter.getValues()) {
-            int id = Dictionary.stringToDictId(value);
+        for (Object value : filter.getValues()) {
+            int id = Dictionary.stringToDictId((String) value);
             ConciseSet bitMap = provider.getBitMap(filter.getColumn(), id, id);
             if (bitMap == null)
                 return null;

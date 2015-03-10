@@ -36,6 +36,8 @@ import org.apache.kylin.storage.tuple.TupleInfo;
  * 
  */
 public class FilterBaseTest {
+    
+    static final ICodeSystem CS = StringCodeSystem.INSTANCE;
 
     protected List<TblColRef> buildGroups() {
         List<TblColRef> groups = new ArrayList<TblColRef>();
@@ -200,7 +202,7 @@ public class FilterBaseTest {
     protected int evaluateTuples(Collection<Tuple> tuples, TupleFilter filter) {
         int match = 0;
         for (Tuple t : tuples) {
-            if (filter.evaluate(t)) {
+            if (filter.evaluate(t, CS)) {
                 match++;
             }
         }

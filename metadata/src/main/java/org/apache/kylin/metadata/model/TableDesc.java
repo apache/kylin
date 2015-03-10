@@ -41,7 +41,7 @@ public class TableDesc extends RootPersistentEntity {
     @JsonProperty("columns")
     private ColumnDesc[] columns;
 
-    private DatabaseDesc database;
+    private DatabaseDesc database = new DatabaseDesc();
 
     public ColumnDesc findColumnByName(String name) {
         //ignore the db name and table name if exists
@@ -111,7 +111,6 @@ public class TableDesc extends RootPersistentEntity {
 
     @JsonProperty("database")
     public void setDatabase(String database) {
-        this.database = new DatabaseDesc();
         this.database.setName(database);
     }
 
