@@ -107,6 +107,7 @@ public class TableRecordInfo {
         for (int i = 0; i < nColumns; ++i) {
             final TblColRef tblColRef = getColumns().get(i);
             isMetric[i] = desc.isMetricsCol(i);
+            dataTypes[i] = tblColRef.getDatatype();
             if (isMetric[i]) {
                 lengths[i] = measureCodecMap.get(tblColRef).getLength();
             } else {
