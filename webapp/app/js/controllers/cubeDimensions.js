@@ -395,7 +395,6 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
     if ($scope.state.mode == 'edit') {
         $scope.$on('$destroy', function () {
            // $scope.dimensionsAdapter();
-
             // Emit dimensions edit event in order to re-generate row key.
             $scope.$emit('DimensionsEdited');
         });
