@@ -53,8 +53,10 @@ public class IIDesc extends RootPersistentEntity {
 
     public static final String HBASE_FAMILY = "f";
     public static final String HBASE_QUALIFIER = "c";
+    public static final String HBASE_DICTIONARY = "d";
     public static final byte[] HBASE_FAMILY_BYTES = Bytes.toBytes(HBASE_FAMILY);
     public static final byte[] HBASE_QUALIFIER_BYTES = Bytes.toBytes(HBASE_QUALIFIER);
+    public static final byte[] HBASE_DICTIONARY_BYTES = Bytes.toBytes(HBASE_DICTIONARY);
 
     private KylinConfig config;
     private DataModelDesc model;

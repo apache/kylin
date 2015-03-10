@@ -33,6 +33,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -81,7 +83,13 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected void onExecuteError(Throwable exception, ExecutableContext executableContext) {
         if (!isDiscarded()) {
             executableManager.addJobInfo(getId(), END_TIME, Long.toString(System.currentTimeMillis()));
-            executableManager.updateJobOutput(getId(), ExecutableState.ERROR, null, exception.getLocalizedMessage());
+            String output = null;
+            if (exception != null) {
+                final StringWriter out = new StringWriter();
+                exception.printStackTrace(new PrintWriter(out));
+                output = out.toString();
+            }
+            executableManager.updateJobOutput(getId(), ExecutableState.ERROR, null, output);
         } else {
         }
     }
