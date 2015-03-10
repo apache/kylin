@@ -168,7 +168,9 @@ public class IIStreamBuilder extends StreamBuilder {
                 final byte[] key = pair.getFirst().get();
                 final byte[] value = pair.getSecond().get();
                 Put put = new Put(key);
-                put.add("cf".getBytes(), "qn".getBytes(), value);
+                put.add(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES, value);
+                //dictionary
+//                put.add(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES, value);
                 data.add(put);
             }
             hTable.put(data);

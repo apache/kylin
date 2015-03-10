@@ -46,48 +46,43 @@ public class IIKeyValueCodec {
 		this.infoDigest = digest;
 	}
 
-	public Collection<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> encodeKeyValue(
-			Slice slice) {
-		ArrayList<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> result = Lists
+	public Collection<KeyValuePair> encodeKeyValue(Slice slice) {
+		ArrayList<KeyValuePair> result = Lists
 				.newArrayList();
 		ColumnValueContainer[] containers = slice.getColumnValueContainers();
 		for (int col = 0; col < containers.length; col++) {
 			if (containers[col] instanceof BitMapContainer) {
-				collectKeyValues(slice, col, (BitMapContainer) containers[col],
-						result);
+				result.addAll(collectKeyValues(slice, col, (BitMapContainer) containers[col]));
 			} else if (containers[col] instanceof CompressedValueContainer) {
-				collectKeyValues(slice, col,
-						(CompressedValueContainer) containers[col], result);
+				result.add(collectKeyValues(slice, col, (CompressedValueContainer) containers[col]));
 			} else {
-				throw new IllegalArgumentException("Unkown container class "
+				throw new IllegalArgumentException("Unknown container class "
 						+ containers[col].getClass());
 			}
 		}
 		return result;
 	}
 
-	private void collectKeyValues(Slice slice,
+	private KeyValuePair collectKeyValues(Slice slice,
 			int col,
-			CompressedValueContainer container, //
-			ArrayList<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> result) {
+			CompressedValueContainer container) {
 		ImmutableBytesWritable key = encodeKey(slice.getShard(),
 				slice.getTimestamp(), col, -1);
 		ImmutableBytesWritable value = container.toBytes();
-		result.add(new Pair<ImmutableBytesWritable, ImmutableBytesWritable>(
-				key, value));
+        return new KeyValuePair(col, key, value);
 	}
 
-	private void collectKeyValues(Slice slice,
+	private List<KeyValuePair> collectKeyValues(Slice slice,
 			int col,
-			BitMapContainer container, //
-			ArrayList<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> result) {
+			BitMapContainer container) {
 		List<ImmutableBytesWritable> values = container.toBytes();
+        ArrayList<KeyValuePair> list = Lists.newArrayListWithExpectedSize(values.size());
 		for (int v = 0; v < values.size(); v++) {
 			ImmutableBytesWritable key = encodeKey(slice.getShard(),
 					slice.getTimestamp(), col, v);
-			result.add(new Pair<ImmutableBytesWritable, ImmutableBytesWritable>(
-					key, values.get(v)));
+            list.add(new KeyValuePair(col, key, values.get(v)));
 		}
+        return list;
 	}
 
 	ImmutableBytesWritable encodeKey(short shard, long timestamp, int col,
