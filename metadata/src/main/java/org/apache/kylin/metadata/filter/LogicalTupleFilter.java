@@ -18,8 +18,6 @@
 
 package org.apache.kylin.metadata.filter;
 
-import org.apache.kylin.metadata.tuple.ITuple;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -71,43 +69,43 @@ public class LogicalTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(ITuple tuple) {
+    public boolean evaluate(IEvaluatableTuple tuple, ICodeSystem cs) {
         switch (this.operator) {
         case AND:
-            return evalAnd(tuple);
+            return evalAnd(tuple, cs);
         case OR:
-            return evalOr(tuple);
+            return evalOr(tuple, cs);
         case NOT:
-            return evalNot(tuple);
+            return evalNot(tuple, cs);
         default:
             return false;
         }
     }
 
-    private boolean evalAnd(ITuple tuple) {
+    private boolean evalAnd(IEvaluatableTuple tuple, ICodeSystem cs) {
         for (TupleFilter filter : this.children) {
-            if (!filter.evaluate(tuple)) {
+            if (!filter.evaluate(tuple, cs)) {
                 return false;
             }
         }
         return true;
     }
 
-    private boolean evalOr(ITuple tuple) {
+    private boolean evalOr(IEvaluatableTuple tuple, ICodeSystem cs) {
         for (TupleFilter filter : this.children) {
-            if (filter.evaluate(tuple)) {
+            if (filter.evaluate(tuple, cs)) {
                 return true;
             }
         }
         return false;
     }
 
-    private boolean evalNot(ITuple tuple) {
-        return !this.children.get(0).evaluate(tuple);
+    private boolean evalNot(IEvaluatableTuple tuple, ICodeSystem cs) {
+        return !this.children.get(0).evaluate(tuple, cs);
     }
 
     @Override
-    public Collection<String> getValues() {
+    public Collection<?> getValues() {
         return Collections.emptyList();
     }
 
@@ -117,12 +115,12 @@ public class LogicalTupleFilter extends TupleFilter {
     }
 
     @Override
-    public byte[] serialize() {
+    public byte[] serialize(ICodeSystem cs) {
         return new byte[0];
     }
 
     @Override
-    public void deserialize(byte[] bytes) {
+    public void deserialize(byte[] bytes, ICodeSystem cs) {
     }
 
 }

@@ -47,7 +47,7 @@ public class PartitionDesc {
 
     private TblColRef partitionDateColumnRef;
 
-    public void init(Map<String, Map<String, TblColRef>> columnMap) {
+    public void init(Map<String, TableDesc> tables) {
         if (StringUtils.isNotEmpty(partitionDateColumn)) {
             partitionDateColumn = partitionDateColumn.toUpperCase();
 
@@ -55,11 +55,13 @@ public class PartitionDesc {
 
             if (null != columns && columns.length == 3) {
                 String tableName = columns[0].toUpperCase() + "." + columns[1].toUpperCase();
-                Map<String, TblColRef> cols = columnMap.get(tableName);
-                if (cols != null) {
-                    partitionDateColumnRef = cols.get(columns[2].toUpperCase());
+
+                TableDesc table = tables.get(tableName);
+                ColumnDesc col = table.findColumnByName(columns[2]);
+                if (col != null) {
+                    partitionDateColumnRef = new TblColRef(col);
                 } else {
-                    throw new IllegalStateException("The table '" + tableName + "' provided in 'partition_date_column' doesn't exist.");
+                    throw new IllegalStateException("The column '" + partitionDateColumn + "' provided in 'partition_date_column' doesn't exist.");
                 }
             } else {
                 throw new IllegalStateException("The 'partition_date_column' format is invalid: " + partitionDateColumn + ", it should be {db}.{table}.{column}.");

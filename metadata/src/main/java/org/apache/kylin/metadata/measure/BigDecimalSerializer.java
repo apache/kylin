@@ -23,14 +23,13 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
 import org.apache.hadoop.hbase.util.Bytes;
-
 import org.apache.kylin.common.util.BytesUtil;
 
 /**
  * @author yangli9
  * 
  */
-public class BigDecimalSerializer extends MeasureSerializer<BigDecimal> {
+public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
 
     @Override
     public void serialize(BigDecimal value, ByteBuffer out) {
@@ -52,6 +51,20 @@ public class BigDecimalSerializer extends MeasureSerializer<BigDecimal> {
         return new BigDecimal(new BigInteger(bytes), scale);
     }
 
+
+    @Override
+    public int peekLength(ByteBuffer in) {
+        int mark = in.position();
+        
+        @SuppressWarnings("unused")
+        int scale = BytesUtil.readVInt(in);
+        int n = BytesUtil.readVInt(in);
+        int len = in.position() - mark + n;
+        
+        in.position(mark);
+        return len;
+    }
+
     @Override
     public BigDecimal valueOf(byte[] value) {
         if (value == null)
@@ -59,5 +72,4 @@ public class BigDecimalSerializer extends MeasureSerializer<BigDecimal> {
         else
             return new BigDecimal(Bytes.toString(value));
     }
-
 }

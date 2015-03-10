@@ -22,22 +22,23 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.hadoop.hbase.util.Pair;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.cube.kv.RowKeyColumnOrder;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.cube.model.CubeDesc.DeriveType;
 import org.apache.kylin.dict.lookup.LookupStringTable;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
+import org.apache.kylin.metadata.filter.IEvaluatableTuple;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
+import org.apache.kylin.metadata.filter.StringCodeSystem;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
-import org.apache.kylin.metadata.tuple.ITuple;
+import org.apache.kylin.metadata.model.TblColRef;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * @author yangli9
@@ -75,7 +76,7 @@ public class DerivedFilterTranslator {
         SingleColumnTuple tuple = new SingleColumnTuple(derivedCol);
         for (String[] row : lookup.getAllRows()) {
             tuple.value = row[di];
-            if (compf.evaluate(tuple)) {
+            if (compf.evaluate(tuple, StringCodeSystem.INSTANCE)) {
                 collect(row, pi, satisfyingHostRecords);
             }
         }
@@ -172,7 +173,7 @@ public class DerivedFilterTranslator {
         }
     }
 
-    private static class SingleColumnTuple implements ITuple {
+    private static class SingleColumnTuple implements IEvaluatableTuple {
 
         private TblColRef col;
         private String value;
@@ -182,31 +183,11 @@ public class DerivedFilterTranslator {
         }
 
         @Override
-        public List<String> getAllFields() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public List<TblColRef> getAllColumns() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Object[] getAllValues() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
         public Object getValue(TblColRef col) {
             if (this.col.equals(col))
                 return value;
             else
                 throw new IllegalArgumentException("unexpected column " + col);
-        }
-
-        @Override
-        public Object getValue(String field) {
-            throw new UnsupportedOperationException();
         }
 
     }

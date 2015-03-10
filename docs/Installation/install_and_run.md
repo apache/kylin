@@ -5,8 +5,8 @@
 1. Download the release version(according to the hadoop distribution)
 2. Setup a KYLIN_HOME pointing to the corresponding directory where you extract the release tar
 3. Make sure the user has the privilege to run hadoop, hive and hbase cmd in shell. If you are not so sure, you can just run **bin/check-env.sh**, it will print out the detail information if you have some environment issues.
-4. To start Kylin, simply run **bin/start-kylin.sh**
-5. To stop Kylin, simply run **bin/stop-kylin.sh**
+4. To start Kylin, simply run **bin/kylin.sh start**
+5. To stop Kylin, simply run **bin/kylin.sh stop**
 
 
 If you are running Kylin in a cluster or you have multiple Kylin instances, please make sure you have the following property correctly configured.
@@ -27,8 +27,7 @@ If you are running Kylin in a cluster or you have multiple Kylin instances, plea
 >     │   ├── check-env.sh
 >     │   ├── find-hive-dependency.sh
 >     │   ├── health-check.sh
->     │   ├── start-kylin.sh
->     │   └── stop-kylin.sh
+>     │   └── kylin.sh
 >     │
 >     ├── conf
 >     │   ├── kylin_job_conf.xml

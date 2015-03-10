@@ -27,7 +27,6 @@ import java.util.Map;
 
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.tuple.ITuple;
 
 /**
  * @author xjiang
@@ -35,15 +34,14 @@ import org.apache.kylin.metadata.tuple.ITuple;
 public class CompareTupleFilter extends TupleFilter {
 
     private TblColRef column;
-    private Collection<String> conditionValues;
-    private String firstCondValue;
-    private Map<String, String> dynamicVariables;
-    private String nullString;
+    private Collection<Object> conditionValues;
+    private Object firstCondValue;
+    private Map<String, Object> dynamicVariables;
 
     public CompareTupleFilter(FilterOperatorEnum op) {
         super(new ArrayList<TupleFilter>(2), op);
-        this.conditionValues = new HashSet<String>();
-        this.dynamicVariables = new HashMap<String, String>();
+        this.conditionValues = new HashSet<Object>();
+        this.dynamicVariables = new HashMap<String, Object>();
         boolean opGood = (op == FilterOperatorEnum.EQ || op == FilterOperatorEnum.NEQ //
                 || op == FilterOperatorEnum.LT || op == FilterOperatorEnum.LTE //
                 || op == FilterOperatorEnum.GT || op == FilterOperatorEnum.GTE //
@@ -56,9 +54,9 @@ public class CompareTupleFilter extends TupleFilter {
     private CompareTupleFilter(CompareTupleFilter another) {
         super(new ArrayList<TupleFilter>(another.children), another.operator);
         this.column = another.column;
-        this.conditionValues = new HashSet<String>();
+        this.conditionValues = new HashSet<Object>();
         this.conditionValues.addAll(another.conditionValues);
-        this.dynamicVariables = new HashMap<String, String>();
+        this.dynamicVariables = new HashMap<String, Object>();
         this.dynamicVariables.putAll(another.dynamicVariables);
     }
 
@@ -82,10 +80,6 @@ public class CompareTupleFilter extends TupleFilter {
             DynamicTupleFilter dynamicFilter = (DynamicTupleFilter) child;
             this.dynamicVariables.put(dynamicFilter.getVariableName(), null);
         }
-        //TODO
-        //        else if (child instanceof ExtractTupleFilter) {
-        //        } else if (child instanceof CaseTupleFilter) {
-        //        }
     }
 
     private boolean needSwapOperator() {
@@ -93,11 +87,11 @@ public class CompareTupleFilter extends TupleFilter {
     }
 
     @Override
-    public Collection<String> getValues() {
+    public Collection<?> getValues() {
         return conditionValues;
     }
 
-    public String getFirstValue() {
+    public Object getFirstValue() {
         return firstCondValue;
     }
 
@@ -105,22 +99,14 @@ public class CompareTupleFilter extends TupleFilter {
         return column;
     }
 
-    public Map<String, String> getVariables() {
+    public Map<String, Object> getVariables() {
         return dynamicVariables;
     }
 
-    public void bindVariable(String variable, String value) {
+    public void bindVariable(String variable, Object value) {
         this.dynamicVariables.put(variable, value);
         this.conditionValues.add(value);
         this.firstCondValue = this.conditionValues.iterator().next();
-    }
-
-    public String getNullString() {
-        return nullString;
-    }
-
-    public void setNullString(String nullString) {
-        this.nullString = nullString;
     }
 
     @Override
@@ -142,34 +128,30 @@ public class CompareTupleFilter extends TupleFilter {
 
     // TODO requires generalize, currently only evaluates COLUMN {op} CONST
     @Override
-    public boolean evaluate(ITuple tuple) {
+    public boolean evaluate(IEvaluatableTuple tuple, ICodeSystem cs) {
         // extract tuple value
-        String tupleValue = null;
+        Object tupleValue = null;
         for (TupleFilter filter : this.children) {
             if (isConstant(filter) == false) {
-                filter.evaluate(tuple);
+                filter.evaluate(tuple, cs);
                 tupleValue = filter.getValues().iterator().next();
             }
         }
 
-        // consider null string
-        if (nullString != null && nullString.equals(tupleValue)) {
-            tupleValue = null;
-        }
-        if (tupleValue == null) {
+        // consider null case
+        if (cs.isNull(tupleValue)) {
             if (operator == FilterOperatorEnum.ISNULL)
                 return true;
             else
                 return false;
         }
-
-        // always false if compare to null
-        if (firstCondValue.equals(nullString))
+        if (cs.isNull(firstCondValue)) {
             return false;
+        }
 
         // tricky here -- order is ensured by string compare (even for number columns)
         // because it's row key ID (not real value) being compared
-        int comp = tupleValue.compareTo(firstCondValue);
+        int comp = cs.compare(tupleValue, firstCondValue);
 
         boolean result;
         switch (operator) {
@@ -213,31 +195,29 @@ public class CompareTupleFilter extends TupleFilter {
     }
 
     @Override
-    public byte[] serialize() {
+    public byte[] serialize(ICodeSystem cs) {
         ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
         int size = this.dynamicVariables.size();
         BytesUtil.writeVInt(size, buffer);
-        for (Map.Entry<String, String> entry : this.dynamicVariables.entrySet()) {
+        for (Map.Entry<String, Object> entry : this.dynamicVariables.entrySet()) {
             BytesUtil.writeUTFString(entry.getKey(), buffer);
-            BytesUtil.writeUTFString(entry.getValue(), buffer);
+            cs.serialize(entry.getValue(), buffer);
         }
-        BytesUtil.writeAsciiString(nullString, buffer);
         byte[] result = new byte[buffer.position()];
         System.arraycopy(buffer.array(), 0, result, 0, buffer.position());
         return result;
     }
 
     @Override
-    public void deserialize(byte[] bytes) {
+    public void deserialize(byte[] bytes, ICodeSystem cs) {
         this.dynamicVariables.clear();
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         int size = BytesUtil.readVInt(buffer);
         for (int i = 0; i < size; i++) {
-            String nameString = BytesUtil.readUTFString(buffer);
-            String valueString = BytesUtil.readUTFString(buffer);
-            bindVariable(nameString, valueString);
+            String name = BytesUtil.readUTFString(buffer);
+            Object value = cs.deserialize(buffer);
+            bindVariable(name, value);
         }
-        this.nullString = BytesUtil.readAsciiString(buffer);
     }
 
 }

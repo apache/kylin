@@ -196,7 +196,6 @@ public class BitMapFilterEvaluatorTest {
 
     public static CompareTupleFilter compare(TblColRef col, TupleFilter.FilterOperatorEnum op, int... ids) {
         CompareTupleFilter filter = new CompareTupleFilter(op);
-        filter.setNullString(idToStr(Dictionary.NULL_ID[1]));
         filter.addChild(columnFilter(col));
         for (int i : ids) {
             filter.addChild(constFilter(i));
