@@ -78,7 +78,7 @@
                 <!-- Join Condition -->
                 <td>
                     <ul class="list-unstyled">
-                        <li ng-repeat="pk in lookup.join.primary_key">
+                        <li ng-repeat="pk in lookup.join.primary_key track by $index">
                             <code>{{lookup.table + '.' + pk}} = {{metaModel.model.fact_table + '.' + lookup.join.foreign_key[$index]}}</code>
                         </li>
                     </ul>
@@ -146,11 +146,9 @@
                                                 ng-options="columns.name as columns.name for columns in getColumnsByTable(metaModel.model.fact_table)" >
                                             <option value=""></option>
                                         </select>
-                                        <button class="pull-right btn btn-xs btn-danger" style="cursor: pointer" tooltip="Delete Join Condition"
-                                                ng-click="newLookup.join.primary_key.length=newLookup.join.primary_key.length-1;
-                                                                removeElement(newLookup.join.primary_key, newLookup.join.primary_key[$index]);
-                                                                removeElement(newLookup.join.foreign_key, newLookup.join.foreign_key[$index]);">
-                                            <i class="fa fa-trash-o"></i>
+                                        <button class="pull-right btn btn-xs btn-danger" style="cursor: pointer" tooltip="Delete"
+                                                ng-click="removeJoin($index);">
+                                            <i class="fa fa-trash-o pointer"></i>
                                         </button>
                                     </div>
                                     <div class="space-4"></div>
@@ -163,7 +161,7 @@
                             <div class="col-sm-3">
                                 <button class="btn btn-xs btn-info"
                                         ng-if="newLookup.join.type"
-                                        ng-click="newLookup.join.primary_key.length=newLookup.join.primary_key.length+1; ">
+                                        ng-click="addNewJoin();">
                                     <i class="fa fa-plus"></i> New Join Condition</button>
                             </div>
                         </div>
