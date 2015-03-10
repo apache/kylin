@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by qianzhou on 2/17/15.
@@ -48,27 +49,21 @@ public abstract class StreamBuilder implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(StreamBuilder.class);
 
-    private static final int BATCH_BUILD_BYTES_THRESHOLD = 64 * 1024;
     private static final int BATCH_BUILD_INTERVAL_THRESHOLD = 5 * 60 * 1000;
+    private final int sliceSize;
 
     private BlockingQueue<Stream> streamQueue;
     private long lastBuildTime = System.currentTimeMillis();
-    private int bytesTotal = 0;
 
-    public StreamBuilder(BlockingQueue<Stream> streamQueue) {
+    public StreamBuilder(BlockingQueue<Stream> streamQueue, int sliceSize) {
         this.streamQueue = streamQueue;
+        this.sliceSize = sliceSize;
     }
 
-    protected abstract void build(List<Stream> streamsToBuild);
-
-    private void buildStream(List<Stream> streams) {
-        build(streams);
-        clearCounter();
-    }
+    protected abstract boolean build(List<Stream> streamsToBuild);
 
     private void clearCounter() {
         lastBuildTime = System.currentTimeMillis();
-        bytesTotal = 0;
     }
 
     @Override
@@ -77,13 +72,29 @@ public abstract class StreamBuilder implements Runnable {
             List<Stream> streamToBuild = Lists.newArrayList();
             clearCounter();
             while (true) {
-                final Stream stream = streamQueue.take();
+                final Stream stream = streamQueue.poll(200, TimeUnit.MILLISECONDS);
+                if (stream == null) {
+                    continue;
+                } else {
+                    if (stream.getOffset() < 0) {
+                        if (!streamToBuild.isEmpty()) {
+                            build(streamToBuild);
+                        }
+                        logger.warn("streaming encountered EOF, stop building");
+                        break;
+                    }
+                }
                 streamToBuild.add(stream);
-                bytesTotal += stream.getRawData().length;
-                if (bytesTotal >= BATCH_BUILD_BYTES_THRESHOLD) {
-                    buildStream(streamToBuild);
+                if (streamToBuild.size() >= this.sliceSize) {
+                    if (build(streamToBuild)) {
+                        clearCounter();
+                        streamToBuild.clear();
+                    }
                 } else if ((System.currentTimeMillis() - lastBuildTime) > BATCH_BUILD_INTERVAL_THRESHOLD) {
-                    buildStream(streamToBuild);
+                    if (build(streamToBuild)) {
+                        clearCounter();
+                        streamToBuild.clear();
+                    }
                 } else {
                     continue;
                 }
