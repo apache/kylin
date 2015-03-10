@@ -6,7 +6,7 @@ import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
 
-import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 3/3/15.
@@ -14,11 +14,11 @@ import java.util.List;
 public class LocalDictionary implements IDictionaryAware {
 
     private CoprocessorRowType type;
-    private List<Dictionary<?>> dicts;
+    private Map<Integer, Dictionary<?>> colDictMap;
     private TableRecordInfoDigest recordInfo;
 
-    public LocalDictionary(List<Dictionary<?>> dicts, CoprocessorRowType type, TableRecordInfoDigest recordInfo) {
-        this.dicts = dicts;
+    public LocalDictionary(Map<Integer, Dictionary<?>> colDictMap, CoprocessorRowType type, TableRecordInfoDigest recordInfo) {
+        this.colDictMap = colDictMap;
         this.type = type;
         this.recordInfo = recordInfo;
     }
@@ -30,6 +30,6 @@ public class LocalDictionary implements IDictionaryAware {
 
     @Override
     public Dictionary<?> getDictionary(TblColRef col) {
-        return this.dicts.get(type.getColIndexByTblColRef(col));
+        return this.colDictMap.get(type.getColIndexByTblColRef(col));
     }
 }

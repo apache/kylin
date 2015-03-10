@@ -18,14 +18,10 @@
 
 package org.apache.kylin.invertedindex.tools;
 
-import java.io.IOException;
-import java.util.Iterator;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.Reader;
 import org.apache.kylin.common.KylinConfig;
@@ -37,6 +33,10 @@ import org.apache.kylin.invertedindex.index.Slice;
 import org.apache.kylin.invertedindex.index.TableRecord;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
+import org.apache.kylin.invertedindex.model.KeyValuePair;
+
+import java.io.IOException;
+import java.util.Iterator;
 
 /**
  * @author yangli9
@@ -65,18 +65,17 @@ public class IICLI {
 		System.out.println("Total " + count + " records");
 	}
 
-	public static Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> readSequenceKVs(
+	public static Iterable<KeyValuePair> readSequenceKVs(
 			Configuration hconf, String path) throws IOException {
 		final Reader reader = new Reader(hconf,
 				SequenceFile.Reader.file(new Path(path)));
-		return new Iterable<Pair<ImmutableBytesWritable, ImmutableBytesWritable>>() {
+		return new Iterable<KeyValuePair>() {
 			@Override
-			public Iterator<Pair<ImmutableBytesWritable, ImmutableBytesWritable>> iterator() {
-				return new Iterator<Pair<ImmutableBytesWritable, ImmutableBytesWritable>>() {
+			public Iterator<KeyValuePair> iterator() {
+				return new Iterator<KeyValuePair>() {
 					ImmutableBytesWritable k = new ImmutableBytesWritable();
 					ImmutableBytesWritable v = new ImmutableBytesWritable();
-					Pair<ImmutableBytesWritable, ImmutableBytesWritable> pair = new Pair<ImmutableBytesWritable, ImmutableBytesWritable>(
-							k, v);
+                    KeyValuePair pair = new KeyValuePair(k, v);
 
 					@Override
 					public boolean hasNext() {
@@ -94,7 +93,7 @@ public class IICLI {
 					}
 
 					@Override
-					public Pair<ImmutableBytesWritable, ImmutableBytesWritable> next() {
+					public KeyValuePair next() {
 						return pair;
 					}
 

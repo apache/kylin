@@ -41,18 +41,22 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
  */
 public final class KeyValuePair {
 
-    private int columnIndex;
     private ImmutableBytesWritable key;
     private ImmutableBytesWritable value;
+    private ImmutableBytesWritable dictionary;
 
-    public KeyValuePair(int columnIndex, ImmutableBytesWritable key, ImmutableBytesWritable value) {
-        this.columnIndex = columnIndex;
-        this.key = key;
-        this.value = value;
+    public KeyValuePair(ImmutableBytesWritable key, ImmutableBytesWritable value) {
+        this(key, value, null);
     }
 
-    public int getColumnIndex() {
-        return columnIndex;
+    public KeyValuePair(ImmutableBytesWritable key, ImmutableBytesWritable value, ImmutableBytesWritable dictionary) {
+        this.key = key;
+        this.value = value;
+        this.dictionary = dictionary;
+    }
+
+    public ImmutableBytesWritable getDictionary() {
+        return dictionary;
     }
 
     public ImmutableBytesWritable getKey() {
