@@ -23,18 +23,6 @@ package org.apache.kylin.job.hadoop;
  *
  */
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.util.StringSplitter;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.invertedindex.IIInstance;
-import org.apache.kylin.invertedindex.IISegment;
-import org.apache.kylin.job.JobInstance;
-import org.apache.kylin.job.exception.JobException;
-import org.apache.kylin.job.tools.OptionsHelper;
-import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -50,9 +38,22 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.StringSplitter;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.invertedindex.IIInstance;
+import org.apache.kylin.invertedindex.IISegment;
+import org.apache.kylin.job.JobInstance;
+import org.apache.kylin.job.cmd.ShellCmdOutput;
+import org.apache.kylin.job.exception.JobException;
+import org.apache.kylin.job.tools.OptionsHelper;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +63,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.apache.hadoop.util.StringUtils.formatTime;
 
 @SuppressWarnings("static-access")
 public abstract class AbstractHadoopJob extends Configured implements Tool {
@@ -121,7 +124,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         } else {
             job.waitForCompletion(true);
             retVal = job.isSuccessful() ? 0 : 1;
-            logger.debug("Job '" + job.getJobName() + "' finished " + (job.isSuccessful() ? "successfully in " : "with failures.  Time taken ") + StringUtils.formatTime((System.nanoTime() - start) / 1000000L));
+            logger.debug("Job '" + job.getJobName() + "' finished " + (job.isSuccessful() ? "successfully in " : "with failures.  Time taken ") + formatTime((System.nanoTime() - start) / 1000000L));
         }
         return retVal;
     }
@@ -135,7 +138,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             System.exit(5);
         }
     }
-    
+
     private static final String MAP_REDUCE_CLASSPATH = "mapreduce.application.classpath";
 
     protected void setJobClasspath(Job job) {
@@ -154,14 +157,36 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             // yarn classpath is comma separated
             kylinHiveDependency = kylinHiveDependency.replace(":", ",");
             Configuration jobConf = job.getConfiguration();
-            final String classpath = jobConf.get(MAP_REDUCE_CLASSPATH);
-            if (classpath == null) {
-                jobConf.set(MAP_REDUCE_CLASSPATH, kylinHiveDependency);
-            } else {
-                jobConf.set(MAP_REDUCE_CLASSPATH, classpath + "," + kylinHiveDependency);
+            String classpath = jobConf.get(MAP_REDUCE_CLASSPATH);
+            if (classpath == null || classpath.length() == 0) {
+                logger.info("Didn't find " + MAP_REDUCE_CLASSPATH + " in job configuration, will run 'mapred classpath' to get the default value.");
+                classpath = getDefaultMapRedClasspath();
+                logger.info("The default mapred classpath is: " + classpath);
             }
+
+            jobConf.set(MAP_REDUCE_CLASSPATH, classpath + "," + kylinHiveDependency);
+
         }
+        logger.info("Hadoop job classpath is: " + job.getConfiguration().get(MAP_REDUCE_CLASSPATH));
     }
+
+
+    private String getDefaultMapRedClasspath() {
+
+        String classpath = "";
+        try {
+            CliCommandExecutor executor = KylinConfig.getInstanceFromEnv().getCliCommandExecutor();
+            ShellCmdOutput output = new ShellCmdOutput();
+            executor.execute("mapred classpath", output);
+
+            classpath = output.getOutput();
+        } catch (IOException e) {
+            logger.error("Failed to run: 'mapred classpath'.", e);
+        }
+
+        return classpath;
+    }
+
 
     public void addInputDirs(String input, Job job) throws IOException {
         for (String inp : StringSplitter.split(input, ",")) {
