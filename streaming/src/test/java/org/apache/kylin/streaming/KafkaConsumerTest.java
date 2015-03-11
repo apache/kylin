@@ -92,6 +92,8 @@ public class KafkaConsumerTest extends KafkaBaseTest {
         for (BlockingQueue<Stream> queue : queues) {
             count += queue.size();
         }
+
+        logger.info("count of messages are " + count);
         //since there will be historical data
         assertTrue(count >= TOTAL_SEND_COUNT);
     }
