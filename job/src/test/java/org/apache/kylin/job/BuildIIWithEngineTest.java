@@ -38,10 +38,7 @@ import org.apache.kylin.job.invertedindex.IIJob;
 import org.apache.kylin.job.invertedindex.IIJobBuilder;
 import org.apache.kylin.job.manager.ExecutableManager;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -64,8 +61,7 @@ public class BuildIIWithEngineTest {
     private DefaultScheduler scheduler;
     protected ExecutableManager jobService;
 
-//    protected static final String[] TEST_II_INSTANCES = new String[]{ "test_kylin_ii_inner_join", "test_kylin_ii_left_join"};
-    protected static final String[] TEST_II_INSTANCES = new String[]{};
+    protected static final String[] TEST_II_INSTANCES = new String[]{ "test_kylin_ii_inner_join", "test_kylin_ii_left_join"};
 
     private static final Log logger = LogFactory.getLog(BuildIIWithEngineTest.class);
 
@@ -138,6 +134,7 @@ public class BuildIIWithEngineTest {
     }
 
     @Test
+    @Ignore
     public void testBuildII() throws Exception {
 
         String[] testCase = new String[]{"buildIIInnerJoin", "buildIILeftJoin"};
