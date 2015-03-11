@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.tuple.ICodeSystem;
+import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
 import com.google.common.collect.Maps;
 
@@ -188,13 +190,13 @@ public abstract class TupleFilter {
 
     public abstract boolean isEvaluable();
 
-    public abstract boolean evaluate(IEvaluatableTuple tuple, ICodeSystem cs);
+    public abstract boolean evaluate(IEvaluatableTuple tuple, ICodeSystem<?> cs);
 
     public abstract Collection<?> getValues();
 
-    abstract byte[] serialize(ICodeSystem cs);
+    abstract byte[] serialize(ICodeSystem<?> cs);
 
-    abstract void deserialize(byte[] bytes, ICodeSystem cs);
+    abstract void deserialize(byte[] bytes, ICodeSystem<?> cs);
 
     public static boolean isEvaluableRecursively(TupleFilter filter) {
         if (filter == null)

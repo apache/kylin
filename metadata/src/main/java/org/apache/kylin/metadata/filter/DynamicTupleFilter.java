@@ -23,6 +23,8 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.metadata.tuple.ICodeSystem;
+import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
 /**
  * 
@@ -53,7 +55,7 @@ public class DynamicTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(IEvaluatableTuple tuple, ICodeSystem cs) {
+    public boolean evaluate(IEvaluatableTuple tuple, ICodeSystem<?> cs) {
         return true;
     }
 
@@ -68,7 +70,7 @@ public class DynamicTupleFilter extends TupleFilter {
     }
 
     @Override
-    public byte[] serialize(ICodeSystem cs) {
+    public byte[] serialize(ICodeSystem<?> cs) {
         ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
         BytesUtil.writeUTFString(variableName, buffer);
         byte[] result = new byte[buffer.position()];
@@ -77,7 +79,7 @@ public class DynamicTupleFilter extends TupleFilter {
     }
 
     @Override
-    public void deserialize(byte[] bytes, ICodeSystem cs) {
+    public void deserialize(byte[] bytes, ICodeSystem<?> cs) {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         this.variableName = BytesUtil.readUTFString(buffer);
     }
