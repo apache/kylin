@@ -60,7 +60,7 @@ public abstract class StreamBuilder implements Runnable {
         this.sliceSize = sliceSize;
     }
 
-    protected abstract boolean build(List<Stream> streamsToBuild);
+    protected abstract void build(List<Stream> streamsToBuild) throws Exception;
 
     private void clearCounter() {
         lastBuildTime = System.currentTimeMillis();
@@ -72,7 +72,13 @@ public abstract class StreamBuilder implements Runnable {
             List<Stream> streamToBuild = Lists.newArrayList();
             clearCounter();
             while (true) {
-                final Stream stream = streamQueue.poll(50, TimeUnit.MILLISECONDS);
+                Stream stream;
+                try {
+                    stream = streamQueue.poll(50, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    logger.warn("stream queue interrupted", e);
+                    continue;
+                }
                 if (stream == null) {
                     continue;
                 } else {
@@ -86,21 +92,19 @@ public abstract class StreamBuilder implements Runnable {
                 }
                 streamToBuild.add(stream);
                 if (streamToBuild.size() >= this.sliceSize) {
-                    if (build(streamToBuild)) {
-                        clearCounter();
-                        streamToBuild.clear();
-                    }
+                    build(streamToBuild);
+                    clearCounter();
+                    streamToBuild.clear();
                 } else if ((System.currentTimeMillis() - lastBuildTime) > BATCH_BUILD_INTERVAL_THRESHOLD) {
-                    if (build(streamToBuild)) {
-                        clearCounter();
-                        streamToBuild.clear();
-                    }
+                    build(streamToBuild);
+                    clearCounter();
+                    streamToBuild.clear();
                 } else {
                     continue;
                 }
             }
-        } catch (InterruptedException e) {
-            logger.error("StreamBuilder has been interrupted", e);
+        }  catch (Exception e) {
+            logger.error("build stream error, stop building", e);
         }
     }
 }

@@ -42,6 +42,7 @@ public class Slice implements Iterable<RawTableRecord>, Comparable<Slice> {
     long timestamp;
     int nRecords;
     ColumnValueContainer[] containers;
+    private Map<Integer, Dictionary<?>> localDictionaries;
 
     public Slice(TableRecordInfoDigest digest, short shard, long timestamp, ColumnValueContainer[] containers) {
         this.info = digest;
@@ -59,8 +60,11 @@ public class Slice implements Iterable<RawTableRecord>, Comparable<Slice> {
     }
 
     public Map<Integer, Dictionary<?>> getLocalDictionaries() {
-        // TODO localdict
-        return Collections.emptyMap();
+        return localDictionaries;
+    }
+
+    public void setLocalDictionaries(Map<Integer, Dictionary<?>> localDictionaries) {
+        this.localDictionaries = localDictionaries;
     }
 
     public int getRecordCount() {

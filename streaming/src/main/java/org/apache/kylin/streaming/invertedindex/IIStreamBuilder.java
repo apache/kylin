@@ -60,6 +60,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -90,7 +92,7 @@ public class IIStreamBuilder extends StreamBuilder {
     }
 
     @Override
-    protected boolean build(List<Stream> streamsToBuild) {
+    protected void build(List<Stream> streamsToBuild) throws IOException {
         List<List<String>> table = Lists.transform(streamsToBuild, new Function<Stream, List<String>>() {
             @Nullable
             @Override
@@ -110,14 +112,8 @@ public class IIStreamBuilder extends StreamBuilder {
         TableRecordInfo tableRecordInfo = new TableRecordInfo(desc, dictionaryMap, measureCodecMap);
         SliceBuilder sliceBuilder = new SliceBuilder(tableRecordInfo, (short) partitionId);
         final Slice slice = buildSlice(table, sliceBuilder, tableRecordInfo);
-//        try {
-//            loadToHBase(hTable, slice, new IIKeyValueCodec(tableRecordInfo.getDigest()));
-//            submitOffset();
-//        } catch (IOException e) {
-//            logger.error("error load to hbase, build failed", e);
-//            return false;
-//        }
-        return true;
+        loadToHBase(hTable, slice, new IIKeyValueCodec(tableRecordInfo.getDigest()), desc.listAllColumns(), dictionaryMap);
+        submitOffset();
     }
 
     private Map<TblColRef, Dictionary<?>> buildDictionary(List<List<String>> table, IIDesc desc) {
@@ -162,7 +158,7 @@ public class IIStreamBuilder extends StreamBuilder {
         return sliceBuilder.close();
     }
 
-    private void loadToHBase(HTableInterface hTable, Slice slice, IIKeyValueCodec codec) throws IOException {
+    private void loadToHBase(HTableInterface hTable, Slice slice, IIKeyValueCodec codec, List<TblColRef> allColumns, Map<TblColRef, Dictionary<?>> localDictionaries) throws IOException {
         try {
             List<Put> data = Lists.newArrayList();
             for (KeyValuePair pair : codec.encodeKeyValue(slice)) {
@@ -170,9 +166,20 @@ public class IIStreamBuilder extends StreamBuilder {
                 final byte[] value = pair.getValue().get();
                 Put put = new Put(key);
                 put.add(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES, value);
+
                 //dictionary
-//                put.add(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES, value);
-                data.add(put);
+                final int id = pair.getId();
+                if (id >= 0 && id < allColumns.size()) {
+                    final Dictionary<?> dictionary = localDictionaries.get(allColumns.get(id));
+                    if (dictionary != null) {
+                        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        DataOutputStream out = new DataOutputStream(baos);
+                        out.writeUTF(dictionary.getClass().getName());
+                        dictionary.write(out);
+                        put.add(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_DICTIONARY_BYTES, baos.toByteArray());
+                    }
+                    data.add(put);
+                }
             }
             hTable.put(data);
         } finally {

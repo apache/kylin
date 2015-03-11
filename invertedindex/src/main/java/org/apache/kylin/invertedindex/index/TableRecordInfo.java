@@ -77,23 +77,6 @@ public class TableRecordInfo {
         this.digest = createDigest(dictionaryMap, measureCodecMap);
     }
 
-    private List<Integer> getLocalDictColumnList() {
-        //TODO localdict
-        return Collections.emptyList();
-    }
-
-//    public void updateDictionary(List<Dictionary<?>> dicts) {
-//        List<Integer> columns = getLocalDictColumnList();
-//
-//        if (columns.size() != dicts.size()) {
-//            throw new RuntimeException("columns size not equal to dicts size");
-//        }
-//
-//        for (Integer index : columns) {
-//            this.dictionaries[index] = dicts.get(index);
-//        }
-//    }
-
     public TableRecordInfoDigest getDigest() {
         return digest;
     }
