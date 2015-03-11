@@ -28,6 +28,8 @@ import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.tuple.ICodeSystem;
+import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
 /**
  * 
@@ -66,7 +68,7 @@ public class ColumnTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(IEvaluatableTuple tuple, ICodeSystem cs) {
+    public boolean evaluate(IEvaluatableTuple tuple, ICodeSystem<?> cs) {
         this.tupleValue = tuple.getValue(columnRef);
         return true;
     }
@@ -83,7 +85,7 @@ public class ColumnTupleFilter extends TupleFilter {
     }
 
     @Override
-    public byte[] serialize(ICodeSystem cs) {
+    public byte[] serialize(ICodeSystem<?> cs) {
         ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
         String table = columnRef.getTable();
         BytesUtil.writeUTFString(table, buffer);
@@ -103,7 +105,7 @@ public class ColumnTupleFilter extends TupleFilter {
     }
 
     @Override
-    public void deserialize(byte[] bytes, ICodeSystem cs) {
+    public void deserialize(byte[] bytes, ICodeSystem<?> cs) {
         TableDesc table = null;
         ColumnDesc column = new ColumnDesc();
         ByteBuffer buffer = ByteBuffer.wrap(bytes);

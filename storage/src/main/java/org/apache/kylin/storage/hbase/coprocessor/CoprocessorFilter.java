@@ -22,10 +22,10 @@ import java.util.Set;
 
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.dict.IDictionaryAware;
-import org.apache.kylin.metadata.filter.IEvaluatableTuple;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
 /**
  * @author yangli9

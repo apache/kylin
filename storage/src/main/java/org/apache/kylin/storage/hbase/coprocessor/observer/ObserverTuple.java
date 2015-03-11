@@ -20,8 +20,8 @@ package org.apache.kylin.storage.hbase.coprocessor.observer;
 
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.metadata.filter.IEvaluatableTuple;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
 
 /**
