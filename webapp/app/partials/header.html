@@ -31,20 +31,26 @@
 
             <div class="navbar-collapse collapse" collapse="isCollapsed">
                 <ul class="nav navbar-nav">
+                    <li class="project-cntnr"  style="padding:7px 15px;background-color:#2e8965;" ng-if="userService.isAuthorized()">
+                        <select chosen ng-model="projectModel.selectedProject" ng-init="newAccess.permission=permissions.READ.value;"
+                                ng-options="project as project for project in projectModel.projects"
+                                style="width: 150px"
+                                data-placeholder="select a project"
+                                class="chosen-select">
+                            <option ng-if="userService.hasRole('ROLE_ADMIN')" ng-selected="projectModel.selectedProject==null"  value=""> -- Choose Project -- </option>
+                        </select>
+                    </li>
                     <li class="{{activeTab=='query'?'purple':'green'}}" ng-if="userService.isAuthorized()">
-                        <a href="query">Query</a>
+                        <a href="query">Insight</a>
                     </li>
                     <li class="{{activeTab=='cubes'?'purple':'green'}}" ng-if="userService.isAuthorized()">
-                        <a href="cubes">Cubes</a>
+                        <a href="cubes">Model</a>
                     </li>
                     <li class="{{activeTab=='jobs'?'purple':'green'}}" ng-if="userService.isAuthorized()">
-                        <a href="jobs">Jobs</a>
+                        <a href="jobs">Monitor</a>
                     </li>
                     <li class="{{activeTab=='sourceMeta'?'purple':'green'}}" ng-if="userService.isAuthorized()">
-                        <a href="sourceMeta">Tables</a>
-                    </li>
-                    <li class="{{activeTab=='admin'?'purple':'green'}}" ng-if="userService.hasRole('ROLE_ADMIN')">
-                        <a href="admin">Admin</a>
+                        <a href="sourceMeta">System</a>
                     </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
