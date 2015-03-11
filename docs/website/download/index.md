@@ -15,7 +15,7 @@ title: Community
 
               <p class="big_text">Binary Package (v0.7.x)</p>
               <p><a href="http://kylin.incubator.apache.org/download/kylin-0.7.1-SNAPSHOT.tgz" target="_blank">v0.7.1-SNAPSHOT</a> 
-              <br/>Updated Date - March 2, 2015 <br/>							
+              <br/>Updated Date - March 9, 2015 <br/>							
 							</p>
             </div>
 
