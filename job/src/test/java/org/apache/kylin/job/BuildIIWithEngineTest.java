@@ -65,7 +65,7 @@ public class BuildIIWithEngineTest {
     protected ExecutableManager jobService;
 
 //    protected static final String[] TEST_II_INSTANCES = new String[]{ "test_kylin_ii_inner_join", "test_kylin_ii_left_join"};
-    protected static final String[] TEST_II_INSTANCES = new String[]{"test_kylin_ii_left_join"};
+    protected static final String[] TEST_II_INSTANCES = new String[]{};
 
     private static final Log logger = LogFactory.getLog(BuildIIWithEngineTest.class);
 
@@ -106,7 +106,6 @@ public class BuildIIWithEngineTest {
         if (!scheduler.hasStarted()) {
             throw new RuntimeException("scheduler has not been started");
         }
-        iiManager = IIManager.getInstance(kylinConfig);
         jobEngineConfig = new JobEngineConfig(kylinConfig);
         for (String jobId : jobService.getAllJobIds()) {
             if(jobService.getJob(jobId) instanceof IIJob){
@@ -114,6 +113,7 @@ public class BuildIIWithEngineTest {
             }
         }
 
+        iiManager = IIManager.getInstance(kylinConfig);
         for (String iiInstance : TEST_II_INSTANCES) {
 
             IIInstance ii = iiManager.getII(iiInstance);
