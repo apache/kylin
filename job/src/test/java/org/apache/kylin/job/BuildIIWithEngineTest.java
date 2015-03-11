@@ -64,7 +64,8 @@ public class BuildIIWithEngineTest {
     private DefaultScheduler scheduler;
     protected ExecutableManager jobService;
 
-    protected static final String[] TEST_II_INSTANCES = new String[]{ "test_kylin_ii_inner_join", "test_kylin_ii_left_join"};
+//    protected static final String[] TEST_II_INSTANCES = new String[]{ "test_kylin_ii_inner_join", "test_kylin_ii_left_join"};
+    protected static final String[] TEST_II_INSTANCES = new String[]{"test_kylin_ii_left_join"};
 
     private static final Log logger = LogFactory.getLog(BuildIIWithEngineTest.class);
 
