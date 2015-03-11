@@ -38,6 +38,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.util.ToolRunner;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.kylin.common.KylinConfig;
@@ -45,12 +46,15 @@ import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.dict.lookup.HiveTableReader;
+import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
+import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.hadoop.hive.IIJoinedFlatTableDesc;
+import org.apache.kylin.job.hadoop.invertedindex.IICreateHTableJob;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.streaming.Stream;
 import org.apache.kylin.streaming.invertedindex.IIStreamBuilder;
@@ -60,7 +64,9 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -119,11 +125,35 @@ public class BuildIIWithStreamTest {
         return intermediateTableDesc.getTableName(uuid);
     }
 
+    private void clearSegment(String iiName) throws Exception {
+        IIInstance ii = iiManager.getII(iiName);
+        ii.getSegments().clear();
+        iiManager.updateII(ii);
+    }
+
+    private IISegment createSegment(String iiName) throws Exception {
+        clearSegment(iiName);
+        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
+        f.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+        long date1 = 0;
+        long date2 = f.parse("2015-01-01").getTime();
+        return buildSegment(iiName, date1, date2);
+    }
+
+    private IISegment buildSegment(String iiName, long startDate, long endDate) throws Exception {
+        IIInstance iiInstance = iiManager.getII(iiName);
+        IISegment segment = iiManager.buildSegment(iiInstance, startDate, endDate);
+        iiInstance.getSegments().add(segment);
+        iiManager.updateII(iiInstance);
+        return segment;
+    }
+
     @Test
-    public void test() throws IOException, InterruptedException {
+    public void test() throws Exception {
         final IIDesc desc = iiManager.getII(II_NAME).getDescriptor();
-//        final String tableName = createIntermediateTable(desc, kylinConfig);
-        final String tableName = "kylin_intermediate_ii_test_kylin_ii_inner_join_desc_f24b8e1f_1c1f_4835_8d78_8f21ce79a536";
+        final String tableName = createIntermediateTable(desc, kylinConfig);
+//        final String tableName = "kylin_intermediate_ii_test_kylin_ii_inner_join_desc_f24b8e1f_1c1f_4835_8d78_8f21ce79a536";
         final Configuration conf = new Configuration();
         HCatInputFormat.setInput(conf, "default", tableName);
         final HCatSchema tableSchema = HCatInputFormat.getTableSchema(conf);
@@ -138,7 +168,12 @@ public class BuildIIWithStreamTest {
             }
         }
         LinkedBlockingDeque<Stream> queue = new LinkedBlockingDeque<Stream>();
-        final IIStreamBuilder streamBuilder = new IIStreamBuilder(queue, "test_htable", desc, 0);
+        final IISegment segment = createSegment(II_NAME);
+        String[] args = new String[]{"-iiname", II_NAME, "-htablename", segment.getStorageLocationIdentifier()};
+        ToolRunner.run(new IICreateHTableJob(), args);
+
+
+        final IIStreamBuilder streamBuilder = new IIStreamBuilder(queue, segment.getStorageLocationIdentifier(), desc, 0);
         final Thread thread = new Thread(streamBuilder);
         thread.start();
         while (reader.next()) {
@@ -146,6 +181,8 @@ public class BuildIIWithStreamTest {
         }
         queue.put(new Stream(-1, null));
         thread.join();
+
+        logger.info("stream build finished, htable name:" + segment.getStorageLocationIdentifier());
 
     }
 

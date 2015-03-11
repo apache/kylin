@@ -615,6 +615,7 @@
                             <excludes>
                                 <exclude>**/BuildCubeWithEngineTest.java</exclude>
                                 <exclude>**/BuildIIWithEngineTest.java</exclude>
+                                <exclude>**/BuildIIWithStreamTest.java</exclude>
                                 <exclude>**/SampleCubeSetupTest.java</exclude>
                                 <exclude>**/KylinQueryTest.java</exclude>
                                 <exclude>**/Kafka*Test.java</exclude>
