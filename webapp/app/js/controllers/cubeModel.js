@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelService,MetaModel,SweetAlert) {
+KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelService,MetaModel,SweetAlert,$log) {
 
     $scope.cubeConfig = cubeConfig;
     var DataModel = function () {
@@ -138,17 +138,20 @@ KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelSe
             }
         };
 
+
+    $scope.addNewJoin = function(){
+        $scope.newLookup.join.primary_key.push("null");
+        $scope.newLookup.join.foreign_key.push("null");
+    };
+
+    $scope.removeJoin = function($index){
+        $scope.newLookup.join.primary_key.splice($index,1);
+        $scope.newLookup.join.foreign_key.splice($index,1);
+    };
+
     $scope.resetParams = function () {
         $scope.lookupState.editing = false;
         $scope.lookupState.editingIndex = -1;
-
         $scope.newLookup = Lookup();
     };
-
-    // This is for legacy compatibility, assign 'fact_table' property. TODO new cube schema change.
-//    $scope.$on('$destroy', function () {
-//        if (!$scope.cubeMetaFrame.fact_table) {
-//            $scope.cubeMetaFrame.fact_table = $scope.cubeMetaFrame.model.fact_table;
-//        }
-//    });
 });
