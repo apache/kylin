@@ -53,11 +53,14 @@ import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
+import org.apache.kylin.job.hadoop.cube.StorageCleanupJob;
 import org.apache.kylin.job.hadoop.hive.IIJoinedFlatTableDesc;
 import org.apache.kylin.job.hadoop.invertedindex.IICreateHTableJob;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.streaming.Stream;
 import org.apache.kylin.streaming.invertedindex.IIStreamBuilder;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -77,7 +80,7 @@ public class BuildIIWithStreamTest {
 
     private static final Log logger = LogFactory.getLog(BuildIIWithStreamTest.class);
 
-    private static final String II_NAME = "test_kylin_ii_inner_join";
+    private static final String[] II_NAME = new String[]{"test_kylin_ii_inner_join", "test_kylin_ii_left_join"};
     private IIManager iiManager;
     private KylinConfig kylinConfig;
 
@@ -94,6 +97,46 @@ public class BuildIIWithStreamTest {
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
         iiManager = IIManager.getInstance(kylinConfig);
+        iiManager = IIManager.getInstance(kylinConfig);
+        for (String iiInstance : II_NAME) {
+
+            IIInstance ii = iiManager.getII(iiInstance);
+            if (ii.getStatus() != RealizationStatusEnum.DISABLED) {
+                ii.setStatus(RealizationStatusEnum.DISABLED);
+                iiManager.updateII(ii);
+            }
+        }
+    }
+
+    @After
+    public void after() throws Exception {
+        for (String iiInstance : II_NAME) {
+            IIInstance ii = iiManager.getII(iiInstance);
+            if (ii.getStatus() != RealizationStatusEnum.READY) {
+                ii.setStatus(RealizationStatusEnum.READY);
+                iiManager.updateII(ii);
+            }
+        }
+        backup();
+    }
+
+    private int cleanupOldStorage() throws Exception {
+        String[] args = {"--delete", "true"};
+
+        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
+        return exitCode;
+    }
+
+    private void backup() throws Exception {
+        int exitCode = cleanupOldStorage();
+        if (exitCode == 0) {
+            exportHBaseData();
+        }
+    }
+
+    private void exportHBaseData() throws IOException {
+        ExportHBaseData export = new ExportHBaseData();
+        export.exportTables();
     }
 
     private String createIntermediateTable(IIDesc desc, KylinConfig kylinConfig) throws IOException {
@@ -149,11 +192,9 @@ public class BuildIIWithStreamTest {
         return segment;
     }
 
-    @Test
-    public void test() throws Exception {
-        final IIDesc desc = iiManager.getII(II_NAME).getDescriptor();
+    private void buildII(String iiName) throws Exception {
+        final IIDesc desc = iiManager.getII(iiName).getDescriptor();
         final String tableName = createIntermediateTable(desc, kylinConfig);
-//        final String tableName = "kylin_intermediate_ii_test_kylin_ii_inner_join_desc_f24b8e1f_1c1f_4835_8d78_8f21ce79a536";
         final Configuration conf = new Configuration();
         HCatInputFormat.setInput(conf, "default", tableName);
         final HCatSchema tableSchema = HCatInputFormat.getTableSchema(conf);
@@ -168,8 +209,8 @@ public class BuildIIWithStreamTest {
             }
         }
         LinkedBlockingDeque<Stream> queue = new LinkedBlockingDeque<Stream>();
-        final IISegment segment = createSegment(II_NAME);
-        String[] args = new String[]{"-iiname", II_NAME, "-htablename", segment.getStorageLocationIdentifier()};
+        final IISegment segment = createSegment(iiName);
+        String[] args = new String[]{"-iiname", iiName, "-htablename", segment.getStorageLocationIdentifier()};
         ToolRunner.run(new IICreateHTableJob(), args);
 
 
@@ -183,7 +224,13 @@ public class BuildIIWithStreamTest {
         thread.join();
 
         logger.info("stream build finished, htable name:" + segment.getStorageLocationIdentifier());
+    }
 
+    @Test
+    public void test() throws Exception {
+        for (String iiName : II_NAME) {
+            buildII(iiName);
+        }
     }
 
     private Stream parse(String[] row) {
