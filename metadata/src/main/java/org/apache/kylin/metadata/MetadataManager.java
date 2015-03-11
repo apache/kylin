@@ -257,6 +257,7 @@ public class MetadataManager {
         ResourceStore store = getStore();
         TableDesc t = store.getResource(path, TableDesc.class, TABLE_SERIALIZER);
         if (t == null) {
+            logger.error("Didn't load table at " + path);
             return null;
         }
         t.init();
