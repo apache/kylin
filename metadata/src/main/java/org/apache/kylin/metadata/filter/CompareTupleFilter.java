@@ -27,6 +27,8 @@ import java.util.Map;
 
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.tuple.ICodeSystem;
+import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
 /**
  * @author xjiang
@@ -128,6 +130,7 @@ public class CompareTupleFilter extends TupleFilter {
 
     // TODO requires generalize, currently only evaluates COLUMN {op} CONST
     @Override
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public boolean evaluate(IEvaluatableTuple tuple, ICodeSystem cs) {
         // extract tuple value
         Object tupleValue = null;
@@ -194,6 +197,7 @@ public class CompareTupleFilter extends TupleFilter {
         return column != null && !conditionValues.isEmpty();
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public byte[] serialize(ICodeSystem cs) {
         ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
@@ -209,7 +213,7 @@ public class CompareTupleFilter extends TupleFilter {
     }
 
     @Override
-    public void deserialize(byte[] bytes, ICodeSystem cs) {
+    public void deserialize(byte[] bytes, ICodeSystem<?> cs) {
         this.dynamicVariables.clear();
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         int size = BytesUtil.readVInt(buffer);

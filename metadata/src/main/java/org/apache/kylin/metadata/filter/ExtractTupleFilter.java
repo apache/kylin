@@ -22,6 +22,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.kylin.metadata.tuple.ICodeSystem;
+import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
+
 
 /**
  * 
@@ -52,7 +55,7 @@ public class ExtractTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(IEvaluatableTuple tuple, ICodeSystem cs) {
+    public boolean evaluate(IEvaluatableTuple tuple, ICodeSystem<?> cs) {
         // extract tuple value
         String extractType = null;
         String tupleValue = null;
@@ -112,12 +115,12 @@ public class ExtractTupleFilter extends TupleFilter {
     }
 
     @Override
-    public byte[] serialize(ICodeSystem cs) {
+    public byte[] serialize(ICodeSystem<?> cs) {
         return new byte[0];
     }
 
     @Override
-    public void deserialize(byte[] bytes, ICodeSystem cs) {
+    public void deserialize(byte[] bytes, ICodeSystem<?> cs) {
     }
 
 }

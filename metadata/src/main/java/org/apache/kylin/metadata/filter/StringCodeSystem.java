@@ -3,13 +3,14 @@ package org.apache.kylin.metadata.filter;
 import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.metadata.tuple.ICodeSystem;
 
 /**
  * A simple code system where all values are strings and conform to string comparison system.
  * 
  * @author yangli9
  */
-public class StringCodeSystem implements ICodeSystem {
+public class StringCodeSystem implements ICodeSystem<String> {
     
     public static final StringCodeSystem INSTANCE = new StringCodeSystem();
     
@@ -18,22 +19,32 @@ public class StringCodeSystem implements ICodeSystem {
     }
 
     @Override
-    public boolean isNull(Object value) {
+    public String encode(Object value) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object decode(String code) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isNull(String value) {
         return value == null;
     }
 
     @Override
-    public int compare(Object tupleValue, Object constValue) {
-        return ((String) tupleValue).compareTo((String) constValue);
+    public int compare(String tupleValue, String constValue) {
+        return tupleValue.compareTo(constValue);
     }
 
     @Override
-    public void serialize(Object value, ByteBuffer buffer) {
-        BytesUtil.writeUTFString((String) value, buffer);
+    public void serialize(String value, ByteBuffer buffer) {
+        BytesUtil.writeUTFString( value, buffer);
     }
 
     @Override
-    public Object deserialize(ByteBuffer buffer) {
+    public String deserialize(ByteBuffer buffer) {
         return BytesUtil.readUTFString(buffer);
     }
 

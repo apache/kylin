@@ -20,7 +20,6 @@ package org.apache.kylin.metadata.tuple;
 
 import java.util.List;
 
-import org.apache.kylin.metadata.filter.IEvaluatableTuple;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**
@@ -37,7 +36,7 @@ public interface ITuple extends IEvaluatableTuple {
 
     public Object[] getAllValues();
 
-    // declared in IEvaluatableTuple:  public Object getValue(TblColRef col);
+    // declared from IEvaluatableTuple:  public Object getValue(TblColRef col);
 
     public Object getValue(String field);
 
