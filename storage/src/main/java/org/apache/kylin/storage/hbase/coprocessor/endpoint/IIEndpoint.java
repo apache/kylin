@@ -63,7 +63,8 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
 
     private Scan buildScan() {
         Scan scan = new Scan();
-        scan.addColumn(Bytes.toBytes(IIDesc.HBASE_FAMILY), Bytes.toBytes(IIDesc.HBASE_QUALIFIER));
+        scan.addColumn(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES);
+        scan.addColumn(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_DICTIONARY_BYTES);
 
         return scan;
     }

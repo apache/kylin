@@ -18,17 +18,16 @@
 
 package org.apache.kylin.invertedindex.model;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
+import com.google.common.collect.Maps;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Pair;
 
 import com.google.common.collect.Lists;
 
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.invertedindex.index.*;
 
 /**
@@ -69,7 +68,7 @@ public class IIKeyValueCodec {
 		ImmutableBytesWritable key = encodeKey(slice.getShard(),
 				slice.getTimestamp(), col, -1);
 		ImmutableBytesWritable value = container.toBytes();
-        return new KeyValuePair(key, value);
+        return new KeyValuePair(col, key, value);
 	}
 
 	private List<KeyValuePair> collectKeyValues(Slice slice,
@@ -80,7 +79,7 @@ public class IIKeyValueCodec {
 		for (int v = 0; v < values.size(); v++) {
 			ImmutableBytesWritable key = encodeKey(slice.getShard(),
 					slice.getTimestamp(), col, v);
-            list.add(new KeyValuePair(key, values.get(v)));
+            list.add(new KeyValuePair(col, key, values.get(v)));
 		}
         return list;
 	}
@@ -133,6 +132,7 @@ public class IIKeyValueCodec {
 		int lastCol = -1;
 		ColumnValueContainer[] containers = null;
 		List<ImmutableBytesWritable> bitMapValues = Lists.newArrayList();
+        Map<Integer, Dictionary<?>> localDictionaries = Maps.newHashMap();
 
 		Decoder(TableRecordInfoDigest info,
 				Iterable<KeyValuePair> kvs) {
@@ -151,6 +151,7 @@ public class IIKeyValueCodec {
 				ImmutableBytesWritable k = kv.getKey();
 				ImmutableBytesWritable v = kv.getValue();
 				decodeKey(k);
+                localDictionaries.put(curCol, kv.getDictionary());
 
 				if (curShard != lastShard
 						|| curSliceTimestamp != lastSliceTimestamp) {
@@ -216,11 +217,13 @@ public class IIKeyValueCodec {
 			if (containers != null) {
 				next = new Slice(info, lastShard, lastSliceTimestamp,
 						containers);
+                next.setLocalDictionaries(Maps.newHashMap(localDictionaries));
 			}
 			lastSliceTimestamp = Long.MIN_VALUE;
 			lastCol = -1;
 			containers = null;
 			bitMapValues.clear();
+            localDictionaries.clear();
 		}
 
 		private void addBitMapContainer(int col) {
