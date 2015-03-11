@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Stack;
 
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.metadata.tuple.ICodeSystem;
 
 /**
  * http://eli.thegreenplace.net/2011/09/29/an-interesting-tree-serialization-algorithm-from-dwarf
@@ -46,11 +47,11 @@ public class TupleFilterSerializer {
         }
     }
 
-    public static byte[] serialize(TupleFilter rootFilter, ICodeSystem cs) {
+    public static byte[] serialize(TupleFilter rootFilter, ICodeSystem<?> cs) {
         return serialize(rootFilter, null, cs);
     }
 
-    public static byte[] serialize(TupleFilter rootFilter, Decorator decorator, ICodeSystem cs) {
+    public static byte[] serialize(TupleFilter rootFilter, Decorator decorator, ICodeSystem<?> cs) {
         ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
         internalSerialize(rootFilter, decorator, buffer, cs);
         byte[] result = new byte[buffer.position()];
@@ -58,7 +59,7 @@ public class TupleFilterSerializer {
         return result;
     }
 
-    private static void internalSerialize(TupleFilter filter, Decorator decorator, ByteBuffer buffer, ICodeSystem cs) {
+    private static void internalSerialize(TupleFilter filter, Decorator decorator, ByteBuffer buffer, ICodeSystem<?> cs) {
         if (decorator != null) { // give decorator a chance to manipulate the
                                  // output filter
             filter = decorator.onSerialize(filter);
@@ -83,7 +84,7 @@ public class TupleFilterSerializer {
         }
     }
 
-    private static void serializeFilter(int flag, TupleFilter filter, Decorator decorator, ByteBuffer buffer, ICodeSystem cs) {
+    private static void serializeFilter(int flag, TupleFilter filter, Decorator decorator, ByteBuffer buffer, ICodeSystem<?> cs) {
         if (flag < 0) {
             BytesUtil.writeVInt(-1, buffer);
         } else {
@@ -95,7 +96,7 @@ public class TupleFilterSerializer {
         }
     }
 
-    public static TupleFilter deserialize(byte[] bytes, ICodeSystem cs) {
+    public static TupleFilter deserialize(byte[] bytes, ICodeSystem<?> cs) {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         TupleFilter rootFilter = null;
         Stack<TupleFilter> parentStack = new Stack<TupleFilter>();

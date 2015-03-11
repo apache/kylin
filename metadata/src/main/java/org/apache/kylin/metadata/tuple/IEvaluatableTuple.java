@@ -1,4 +1,4 @@
-package org.apache.kylin.metadata.filter;
+package org.apache.kylin.metadata.tuple;
 
 import org.apache.kylin.metadata.model.TblColRef;
 
