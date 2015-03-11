@@ -27,6 +27,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
             }
         }
     );
+    //edit model
     if($scope.state.mode==="edit") {
         $scope.metaModel = MetaModel;
     }

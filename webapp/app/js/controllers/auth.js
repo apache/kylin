@@ -43,7 +43,5 @@ KylinApp.controller('LoginCtrl', function ($scope, $rootScope, $location, $base6
             $scope.loading = false;
             $scope.error = "Unable to login, please check your username/password.";
         });
-
-        console.debug("Login event requested.");
     };
 });
