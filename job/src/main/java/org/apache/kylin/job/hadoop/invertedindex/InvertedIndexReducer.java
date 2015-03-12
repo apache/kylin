@@ -31,7 +31,7 @@ import org.apache.kylin.invertedindex.index.SliceBuilder;
 import org.apache.kylin.invertedindex.index.TableRecord;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
-import org.apache.kylin.invertedindex.model.KeyValuePair;
+import org.apache.kylin.invertedindex.model.IIRow;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
@@ -60,7 +60,7 @@ public class InvertedIndexReducer extends KylinReducer<LongWritable, ImmutableBy
         info = new TableRecordInfo(seg);
         rec = info.createTableRecord();
         builder = null;
-        kv = new IIKeyValueCodec(info.getDigest());
+        kv = new IIKeyValueCodec();
     }
 
     @Override
@@ -92,7 +92,7 @@ public class InvertedIndexReducer extends KylinReducer<LongWritable, ImmutableBy
     }
 
     private void output(Slice slice, Context context) throws IOException, InterruptedException {
-        for (KeyValuePair pair : kv.encodeKeyValue(slice)) {
+        for (IIRow pair : kv.encodeKeyValue(slice)) {
             context.write(pair.getKey(), pair.getValue());
         }
     }

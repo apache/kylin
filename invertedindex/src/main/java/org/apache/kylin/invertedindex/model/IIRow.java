@@ -35,37 +35,23 @@
 package org.apache.kylin.invertedindex.model;
 
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.kylin.dict.Dictionary;
 
 /**
  * Created by qianzhou on 3/10/15.
  */
-public final class KeyValuePair {
+public final class IIRow {
 
     private final ImmutableBytesWritable key;
     private final ImmutableBytesWritable value;
-    private final int id;
-    private Dictionary<?> dictionary;
+    private final ImmutableBytesWritable dictionary;
 
-    public KeyValuePair(ImmutableBytesWritable key, ImmutableBytesWritable value) {
-        this(-1, key, value);
-    }
-    public KeyValuePair(int id, ImmutableBytesWritable key, ImmutableBytesWritable value) {
-        this.id = id;
+    public IIRow(ImmutableBytesWritable key, ImmutableBytesWritable value, ImmutableBytesWritable dictionary) {
         this.key = key;
         this.value = value;
-    }
-
-    public void setDictionary(Dictionary<?> dictionary) {
         this.dictionary = dictionary;
     }
-
-    public int getId() {
-        return this.id;
-    }
-
-    public Dictionary<?> getDictionary() {
-        return dictionary;
+    public IIRow() {
+        this(new ImmutableBytesWritable(), new ImmutableBytesWritable(), new ImmutableBytesWritable());
     }
 
     public ImmutableBytesWritable getKey() {
@@ -74,5 +60,8 @@ public final class KeyValuePair {
 
     public ImmutableBytesWritable getValue() {
         return value;
+    }
+    public ImmutableBytesWritable getDictionary() {
+        return dictionary;
     }
 }

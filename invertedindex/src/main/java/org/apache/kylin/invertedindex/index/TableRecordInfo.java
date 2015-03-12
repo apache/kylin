@@ -43,7 +43,7 @@ public class TableRecordInfo {
     final IIDesc desc;
 
     final TableRecordInfoDigest digest;
-    final Map<TblColRef, Dictionary<?>> dictionaryMap;
+    final Map<Integer, Dictionary<?>> dictionaryMap;
 
     public TableRecordInfo(IISegment iiSegment) {
 
@@ -59,10 +59,12 @@ public class TableRecordInfo {
                 measureCodecMap.put(tblColRef, FixedLenMeasureCodec.get(col.getType()));
             } else {
                 String dictPath = iiSegment.getDictResPath(tblColRef);
-                try {
-                    dictionaryMap.put(tblColRef, dictMgr.getDictionary(dictPath));
-                } catch (IOException e) {
-                    throw new RuntimeException("dictionary " + dictPath + " does not exist ", e);
+                if (dictPath != null) {
+                    try {
+                        dictionaryMap.put(index, dictMgr.getDictionary(dictPath));
+                    } catch (IOException e) {
+                        throw new RuntimeException("dictionary " + dictPath + " does not exist ", e);
+                    }
                 }
             }
             index++;
@@ -71,7 +73,7 @@ public class TableRecordInfo {
         digest = createDigest(dictionaryMap, measureCodecMap);
     }
 
-    public TableRecordInfo(IIDesc desc, Map<TblColRef, Dictionary<?>> dictionaryMap, Map<TblColRef, FixedLenMeasureCodec<?>> measureCodecMap) {
+    public TableRecordInfo(IIDesc desc, Map<Integer, Dictionary<?>> dictionaryMap, Map<TblColRef, FixedLenMeasureCodec<?>> measureCodecMap) {
         this.desc = desc;
         this.dictionaryMap = dictionaryMap;
         this.digest = createDigest(dictionaryMap, measureCodecMap);
@@ -81,7 +83,7 @@ public class TableRecordInfo {
         return digest;
     }
 
-    private TableRecordInfoDigest createDigest(Map<TblColRef, Dictionary<?>> dictionaryMap, Map<TblColRef, FixedLenMeasureCodec<?>> measureCodecMap) {
+    private TableRecordInfoDigest createDigest(Map<Integer, Dictionary<?>> dictionaryMap, Map<TblColRef, FixedLenMeasureCodec<?>> measureCodecMap) {
         int nColumns = getColumns().size();
         boolean[] isMetric = new boolean[nColumns];
         int[] lengths = new int[nColumns];
@@ -97,10 +99,10 @@ public class TableRecordInfo {
                     lengths[i] = fixedLenMeasureCodec.getLength();
                 }
             } else {
-                final Dictionary<?> dictionary = dictionaryMap.get(tblColRef);
+                final Dictionary<?> dictionary = dictionaryMap.get(i);
                 if (dictionary != null) {
                     lengths[i] = dictionary.getSizeOfId();
-                    dictMaxIds[i] = dictionaryMap.get(tblColRef).getMaxId();
+                    dictMaxIds[i] = dictionary.getMaxId();
                 }
             }
         }
@@ -149,7 +151,7 @@ public class TableRecordInfo {
     @SuppressWarnings("unchecked")
     public Dictionary<String> dict(int col) {
         // yes, all dictionaries are string based
-        return (Dictionary<String>) dictionaryMap.get(desc.listAllColumns().get(col));
+        return (Dictionary<String>) dictionaryMap.get(col);
     }
 
     public int getTimestampColumn() {

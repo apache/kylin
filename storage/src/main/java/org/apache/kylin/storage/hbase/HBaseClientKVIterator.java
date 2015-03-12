@@ -29,15 +29,14 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.util.Pair;
 import org.apache.kylin.invertedindex.model.IIDesc;
-import org.apache.kylin.invertedindex.model.KeyValuePair;
+import org.apache.kylin.invertedindex.model.IIRow;
 
 /**
  * @author yangli9
  * 
  */
-public class HBaseClientKVIterator implements Iterable<KeyValuePair>, Closeable {
+public class HBaseClientKVIterator implements Iterable<IIRow>, Closeable {
 
     byte[] family;
 
@@ -60,15 +59,15 @@ public class HBaseClientKVIterator implements Iterable<KeyValuePair>, Closeable 
     }
 
     @Override
-    public Iterator<KeyValuePair> iterator() {
+    public Iterator<IIRow> iterator() {
         return new MyIterator();
     }
 
-    private class MyIterator implements Iterator<KeyValuePair> {
+    private class MyIterator implements Iterator<IIRow> {
 
         ImmutableBytesWritable key = new ImmutableBytesWritable();
         ImmutableBytesWritable value = new ImmutableBytesWritable();
-        KeyValuePair pair = new KeyValuePair(key, value);
+        IIRow pair = new IIRow(key, value);
 
         @Override
         public boolean hasNext() {
@@ -76,7 +75,7 @@ public class HBaseClientKVIterator implements Iterable<KeyValuePair>, Closeable 
         }
 
         @Override
-        public KeyValuePair next() {
+        public IIRow next() {
             Result r = iterator.next();
             Cell c = r.getColumnLatestCell(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES);
             key.set(c.getRowArray(), c.getRowOffset(), c.getRowLength());

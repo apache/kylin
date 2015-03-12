@@ -18,41 +18,37 @@
 
 package org.apache.kylin.invertedindex.model;
 
-import java.util.*;
-
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.util.Pair;
-
-import com.google.common.collect.Lists;
-
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.invertedindex.index.*;
+import org.apache.kylin.invertedindex.index.ColumnValueContainer;
+import org.apache.kylin.invertedindex.index.CompressedValueContainer;
+import org.apache.kylin.invertedindex.index.Slice;
+import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
+
+import java.util.*;
 
 /**
  * @author yangli9
  */
-public class IIKeyValueCodec {
+public class IIKeyValueCodec implements KeyValueCodec {
 
 	public static final int SHARD_LEN = 2;
 	public static final int TIMEPART_LEN = 8;
 	public static final int COLNO_LEN = 2;
 
-	private TableRecordInfoDigest infoDigest;
-
-	public IIKeyValueCodec(TableRecordInfoDigest digest) {
-		this.infoDigest = digest;
+	public IIKeyValueCodec() {
 	}
 
-	public Collection<KeyValuePair> encodeKeyValue(Slice slice) {
-		ArrayList<KeyValuePair> result = Lists
+    @Override
+	public Collection<IIRow> encodeKeyValue(Slice slice) {
+		ArrayList<IIRow> result = Lists
 				.newArrayList();
 		ColumnValueContainer[] containers = slice.getColumnValueContainers();
 		for (int col = 0; col < containers.length; col++) {
-			if (containers[col] instanceof BitMapContainer) {
-				result.addAll(collectKeyValues(slice, col, (BitMapContainer) containers[col]));
-			} else if (containers[col] instanceof CompressedValueContainer) {
+			if (containers[col] instanceof CompressedValueContainer) {
 				result.add(collectKeyValues(slice, col, (CompressedValueContainer) containers[col]));
 			} else {
 				throw new IllegalArgumentException("Unknown container class "
@@ -62,37 +58,21 @@ public class IIKeyValueCodec {
 		return result;
 	}
 
-	private KeyValuePair collectKeyValues(Slice slice,
+	private IIRow collectKeyValues(Slice slice,
 			int col,
 			CompressedValueContainer container) {
-		ImmutableBytesWritable key = encodeKey(slice.getShard(),
-				slice.getTimestamp(), col, -1);
+		ImmutableBytesWritable key = encodeKey(slice.getShard(), slice.getTimestamp(), col);
 		ImmutableBytesWritable value = container.toBytes();
-        return new KeyValuePair(col, key, value);
+        return new IIRow(key, value, null);
 	}
 
-	private List<KeyValuePair> collectKeyValues(Slice slice,
-			int col,
-			BitMapContainer container) {
-		List<ImmutableBytesWritable> values = container.toBytes();
-        ArrayList<KeyValuePair> list = Lists.newArrayListWithExpectedSize(values.size());
-		for (int v = 0; v < values.size(); v++) {
-			ImmutableBytesWritable key = encodeKey(slice.getShard(),
-					slice.getTimestamp(), col, v);
-            list.add(new KeyValuePair(col, key, values.get(v)));
-		}
-        return list;
-	}
-
-	ImmutableBytesWritable encodeKey(short shard, long timestamp, int col,
-			int colValue) {
+	ImmutableBytesWritable encodeKey(short shard, long timestamp, int col) {
 		byte[] bytes = new byte[20];
-		int len = encodeKey(shard, timestamp, col, colValue, bytes, 0);
+		int len = encodeKey(shard, timestamp, col, bytes, 0);
 		return new ImmutableBytesWritable(bytes, 0, len);
 	}
 
-	int encodeKey(short shard, long timestamp, int col, int colValue,
-			byte[] buf, int offset) {
+	int encodeKey(short shard, long timestamp, int col, byte[] buf, int offset) {
 		int i = offset;
 
 		BytesUtil.writeUnsigned(shard, buf, i, SHARD_LEN);
@@ -103,55 +83,72 @@ public class IIKeyValueCodec {
 		BytesUtil.writeUnsigned(col, buf, i, COLNO_LEN);
 		i += COLNO_LEN;
 
-		if (colValue >= 0) {
-			int colLen = infoDigest.length(col);
-			BytesUtil.writeUnsigned(colValue, buf, i, colLen);
-			i += colLen;
-		}
-
 		return i - offset;
 	}
 
-	public Iterable<Slice> decodeKeyValue(
-			Iterable<KeyValuePair> kvs) {
-		return new Decoder(infoDigest, kvs);
+    @Override
+	public Iterable<Slice> decodeKeyValue(Iterable<IIRow> kvs) {
+		return new Decoder(kvs);
 	}
+
+    private static class SliceIterator implements Iterator<Slice> {
+
+        private final Iterator<IIRow> rowIterator;
+
+        public SliceIterator(Iterator<IIRow> rowIterator) {
+            this.rowIterator = rowIterator;
+        }
+
+        @Override
+        public boolean hasNext() {
+            if (!rowIterator.hasNext()) {
+                return false;
+            }
+            return false;
+        }
+
+        @Override
+        public Slice next() {
+            return null;
+        }
+
+        @Override
+        public void remove() {
+
+        }
+    }
 
 	private static class Decoder implements Iterable<Slice> {
 
 		TableRecordInfoDigest info;
-		Iterator<KeyValuePair> iterator;
+		Iterator<IIRow> iterator;
 
-		Slice next = null;
+		Slice slice = null;
 		short curShard = Short.MIN_VALUE;
 		long curSliceTimestamp = Long.MIN_VALUE;
 		int curCol = -1;
-		int curColValue = -1;
 		short lastShard = Short.MIN_VALUE;
 		long lastSliceTimestamp = Long.MIN_VALUE;
 		int lastCol = -1;
 		ColumnValueContainer[] containers = null;
-		List<ImmutableBytesWritable> bitMapValues = Lists.newArrayList();
         Map<Integer, Dictionary<?>> localDictionaries = Maps.newHashMap();
 
-		Decoder(TableRecordInfoDigest info,
-				Iterable<KeyValuePair> kvs) {
-			this.info = info;
+		Decoder(Iterable<IIRow> kvs) {
 			this.iterator = kvs.iterator();
 		}
 
 		private void goToNext() {
-			if (next != null) { // was not fetched
+			if (slice != null) { // was not fetched
 				return;
 			}
 
 			// NOTE the input keys are ordered
-			while (next == null && iterator.hasNext()) {
-                KeyValuePair kv = iterator.next();
+			while (slice == null && iterator.hasNext()) {
+                IIRow kv = iterator.next();
 				ImmutableBytesWritable k = kv.getKey();
 				ImmutableBytesWritable v = kv.getValue();
 				decodeKey(k);
-                localDictionaries.put(curCol, kv.getDictionary());
+//                localDictionaries.put(curCol, kv.getDictionary());
 
 				if (curShard != lastShard
 						|| curSliceTimestamp != lastSliceTimestamp) {
@@ -159,7 +156,7 @@ public class IIKeyValueCodec {
 				}
 				consumeCurrent(v);
 			}
-			if (next == null) {
+			if (slice == null) {
 				makeNext();
 			}
 		}
@@ -176,61 +173,24 @@ public class IIKeyValueCodec {
 			curCol = BytesUtil.readUnsigned(buf, i, COLNO_LEN);
 			i += COLNO_LEN;
 
-			if (i - k.getOffset() < k.getLength()) {
-				// bitmap
-				int colLen = info.length(curCol);
-				curColValue = BytesUtil.readUnsigned(buf, i, colLen);
-				i += colLen;
-			} else {
-				// value list
-				curColValue = -1;
-			}
 		}
 
 		private void consumeCurrent(ImmutableBytesWritable v) {
-			if (curCol != lastCol && bitMapValues.size() > 0) { // end of a
-																// bitmap
-																// container
-				addBitMapContainer(lastCol);
-			}
-			if (curColValue < 0) {
-				CompressedValueContainer c = new CompressedValueContainer(info,
-						curCol, 0);
-				c.fromBytes(v);
-				addContainer(curCol, c);
-			} else {
-				assert curColValue == bitMapValues.size();
-				// make a copy, the value object from caller is typically reused
-				// through iteration
-				bitMapValues.add(new ImmutableBytesWritable(v));
-			}
-
 			lastShard = curShard;
 			lastSliceTimestamp = curSliceTimestamp;
 			lastCol = curCol;
 		}
 
 		private void makeNext() {
-			if (bitMapValues.isEmpty() == false) {
-				addBitMapContainer(lastCol);
-			}
 			if (containers != null) {
-				next = new Slice(info, lastShard, lastSliceTimestamp,
+				slice = new Slice(info, lastShard, lastSliceTimestamp,
 						containers);
-                next.setLocalDictionaries(Maps.newHashMap(localDictionaries));
+                slice.setLocalDictionaries(Maps.newHashMap(localDictionaries));
 			}
 			lastSliceTimestamp = Long.MIN_VALUE;
 			lastCol = -1;
 			containers = null;
-			bitMapValues.clear();
             localDictionaries.clear();
-		}
-
-		private void addBitMapContainer(int col) {
-			BitMapContainer c = new BitMapContainer(info, col);
-			c.fromBytes(bitMapValues);
-			addContainer(col, c);
-			bitMapValues.clear();
 		}
 
 		private void addContainer(int col, ColumnValueContainer c) {
@@ -246,13 +206,13 @@ public class IIKeyValueCodec {
 				@Override
 				public boolean hasNext() {
 					goToNext();
-					return next != null;
+					return slice != null;
 				}
 
 				@Override
 				public Slice next() {
-					Slice result = next;
-					next = null;
+					Slice result = slice;
+					slice = null;
 					return result;
 				}
 
