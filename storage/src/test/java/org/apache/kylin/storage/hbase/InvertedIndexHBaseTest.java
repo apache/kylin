@@ -69,7 +69,7 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
         Configuration hconf = HadoopUtil.newHBaseConfiguration(hbaseUrl);
         hconn = HConnectionManager.createConnection(hconf);
 
-        this.info = new TableRecordInfo(seg.getIIDesc(), Collections.<TblColRef, Dictionary<?>>emptyMap(), Collections.<TblColRef, FixedLenMeasureCodec<?>>emptyMap());
+        this.info = new TableRecordInfo(seg.getIIDesc(), Collections.<Integer, Dictionary<?>>emptyMap(), Collections.<TblColRef, FixedLenMeasureCodec<?>>emptyMap());
     }
 
     @After
@@ -81,7 +81,7 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
     public void testLoad() throws Exception {
 
         String tableName = seg.getStorageLocationIdentifier();
-        IIKeyValueCodec codec = new IIKeyValueCodec(info.getDigest());
+        IIKeyValueCodec codec = new IIKeyValueCodec();
 
         List<Slice> slices = Lists.newArrayList();
         HBaseClientKVIterator kvIterator = new HBaseClientKVIterator(hconn, tableName, IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES);

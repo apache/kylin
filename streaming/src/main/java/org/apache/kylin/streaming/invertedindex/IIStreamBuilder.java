@@ -165,14 +165,6 @@ public class IIStreamBuilder extends StreamBuilder {
         return slice;
     }
 
-    private byte[] getDictBytes(Dictionary<?> dict) throws IOException {
-        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream out = new DataOutputStream(baos);
-        out.writeUTF(dict.getClass().getName());
-        dict.write(out);
-        return baos.toByteArray();
-    }
-
     private void loadToHBase(HTableInterface hTable, Slice slice, IIKeyValueCodec codec) throws IOException {
         try {
             List<Put> data = Lists.newArrayList();
