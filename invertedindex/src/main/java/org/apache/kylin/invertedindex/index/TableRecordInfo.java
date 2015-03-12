@@ -92,10 +92,16 @@ public class TableRecordInfo {
             isMetric[i] = desc.isMetricsCol(i);
             dataTypes[i] = tblColRef.getDatatype();
             if (isMetric[i]) {
-                lengths[i] = measureCodecMap.get(tblColRef).getLength();
+                final FixedLenMeasureCodec<?> fixedLenMeasureCodec = measureCodecMap.get(tblColRef);
+                if (fixedLenMeasureCodec != null) {
+                    lengths[i] = fixedLenMeasureCodec.getLength();
+                }
             } else {
-                lengths[i] = dictionaryMap.get(tblColRef).getSizeOfId();
-                dictMaxIds[i] = dictionaryMap.get(tblColRef).getMaxId();
+                final Dictionary<?> dictionary = dictionaryMap.get(tblColRef);
+                if (dictionary != null) {
+                    lengths[i] = dictionary.getSizeOfId();
+                    dictMaxIds[i] = dictionaryMap.get(tblColRef).getMaxId();
+                }
             }
         }
         // offsets
