@@ -29,12 +29,14 @@
         </form>
     </div>
     <!--Cube Name: -->
-        <form class="pull-right" ng-submit="jobList.removeAll();reload()" style="display: inline" >
-            <span class="input-icon input-icon-right nav-search"><b>Job Name:</b>
+    <div class="col-xs-3">
+        <form class="" ng-submit="jobList.removeAll();reload()" style="display: inline" >
+            <span class="input-icon input-icon-right nav-search" style="font-size:14px;"><b>Cube Name:</b>
                 <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="cubeName" />
                 <i class="ace-icon fa fa-search blue" ng-click="jobList.removeAll();reload()"></i>
             </span>
         </form>
+    </div>
 </div>
 
 <!--Jobs Table-->
