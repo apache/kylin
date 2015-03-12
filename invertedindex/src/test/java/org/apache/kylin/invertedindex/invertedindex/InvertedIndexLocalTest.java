@@ -18,29 +18,31 @@
 
 package org.apache.kylin.invertedindex.invertedindex;
 
-import com.google.common.collect.Lists;
+import com.google.common.base.Function;
+import com.google.common.collect.*;
 
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.index.*;
+import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.invertedindex.model.IIRow;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 
@@ -48,12 +50,28 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
 
 	IIInstance ii;
 	TableRecordInfo info;
+    List<String> lines;
+    private Map<Integer, Dictionary<?>> dictionaryMap;
 
-	@Before
+    @Before
 	public void setUp() throws Exception {
 		this.createTestMetadata();
 		this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii_left_join");
-		this.info = new TableRecordInfo(ii.getFirstSegment());
+
+        File file = new File(LOCALMETA_TEST_DATA,
+                "data/flatten_data_for_ii.csv");
+        FileInputStream in = new FileInputStream(file);
+        this.lines = IOUtils.readLines(in, "UTF-8");
+        in.close();
+
+        dictionaryMap = buildDictionary(Lists.transform(lines, new Function<String, List<String>>() {
+            @Nullable
+            @Override
+            public List<String> apply(@Nullable String input) {
+                return Lists.newArrayList(input.split(","));
+            }
+        }), ii.getDescriptor());
+        this.info = new TableRecordInfo(ii.getDescriptor(), dictionaryMap);
 	}
 
 	@After
@@ -108,7 +126,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
 		List<Slice> slices = buildTimeSlices(records);
 		System.out.println(slices.size() + " slices");
 
-		IIKeyValueCodec codec = new IIKeyValueCodec();
+		IIKeyValueCodec codec = new IIKeyValueCodec(info.getDigest());
 		List<IIRow> kvs = encodeKVs(codec, slices);
 		System.out.println(kvs.size() + " KV pairs");
 
@@ -121,13 +139,34 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
 		dump(recordsCopy);
 	}
 
-	private List<TableRecord> loadRecordsSorted() throws IOException {
-		File file = new File(LOCALMETA_TEST_DATA,
-				"data/flatten_data_for_ii.csv");
-		FileInputStream in = new FileInputStream(file);
-		List<String> lines = IOUtils.readLines(in, "UTF-8");
-		in.close();
+    private Map<Integer, Dictionary<?>> buildDictionary(List<List<String>> table, IIDesc desc) {
+        SetMultimap<TblColRef, String> valueMap = HashMultimap.create();
+        Set<TblColRef> dimensionColumns = Sets.newHashSet();
+        for (int i = 0; i < desc.listAllColumns().size(); i++) {
+            if (!desc.isMetricsCol(i)) {
+                dimensionColumns.add(desc.listAllColumns().get(i));
+            }
+        }
+        for (List<String> row : table) {
+            for (int i = 0; i < row.size(); i++) {
+                String cell = row.get(i);
+                valueMap.put(desc.listAllColumns().get(i), cell);
+            }
+        }
+        Map<Integer, Dictionary<?>> result = Maps.newHashMap();
+        for (TblColRef tblColRef : valueMap.keys()) {
+            result.put(desc.findColumn(tblColRef), DictionaryGenerator.buildDictionaryFromValueList(Collections2.transform(valueMap.get(tblColRef), new Function<String, byte[]>() {
+                @Nullable
+                @Override
+                public byte[] apply(String input) {
+                    return input.getBytes();
+                }
+            }), tblColRef.getType()));
+        }
+        return result;
+    }
 
+	private List<TableRecord> loadRecordsSorted() throws IOException {
 		List<TableRecord> records = Lists.newArrayList();
 		for (String line : lines) {
 			String[] fields = line.split(",");
@@ -159,12 +198,18 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
 		ShardingSliceBuilder builder = new ShardingSliceBuilder(info);
 		List<Slice> slices = Lists.newArrayList();
 		for (TableRecord rec : records) {
+            //here assume there less records than slice size for each shard
 			Slice slice = builder.append(rec);
-			if (slice != null)
-				slices.add(slice);
+			if (slice != null) {
+                slice.setLocalDictionaries(dictionaryMap);
+                slices.add(slice);
+            }
 		}
 		List<Slice> finals = builder.close();
-		slices.addAll(finals);
+        for (Slice slice : finals) {
+            slice.setLocalDictionaries(dictionaryMap);
+        }
+        slices.addAll(finals);
 
 		Collections.sort(slices);
 		return slices;

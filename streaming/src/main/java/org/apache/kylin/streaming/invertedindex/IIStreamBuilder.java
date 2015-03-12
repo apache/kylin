@@ -104,18 +104,10 @@ public class IIStreamBuilder extends StreamBuilder {
             }
         });
         final Map<Integer, Dictionary<?>> dictionaryMap = buildDictionary(table, desc);
-        Map<TblColRef, FixedLenMeasureCodec<?>> measureCodecMap = Maps.newHashMap();
-        int index = 0;
-        for (TblColRef tblColRef : desc.listAllColumns()) {
-            ColumnDesc col = tblColRef.getColumn();
-            if (desc.isMetricsCol(index++)) {
-                measureCodecMap.put(tblColRef, FixedLenMeasureCodec.get(col.getType()));
-            }
-        }
-        TableRecordInfo tableRecordInfo = new TableRecordInfo(desc, dictionaryMap, measureCodecMap);
+        TableRecordInfo tableRecordInfo = new TableRecordInfo(desc, dictionaryMap);
         SliceBuilder sliceBuilder = new SliceBuilder(tableRecordInfo, (short) partitionId);
         final Slice slice = buildSlice(table, sliceBuilder, tableRecordInfo, dictionaryMap);
-        loadToHBase(hTable, slice, new IIKeyValueCodec());
+        loadToHBase(hTable, slice, new IIKeyValueCodec(tableRecordInfo.getDigest()));
         submitOffset();
         stopwatch.stop();
         logger.info("stream build finished, size:" + streamsToBuild.size() + " elapsed time:" + stopwatch.elapsedTime(TimeUnit.MILLISECONDS) + TimeUnit.MILLISECONDS);

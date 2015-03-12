@@ -73,9 +73,17 @@ public class TableRecordInfo {
         digest = createDigest(dictionaryMap, measureCodecMap);
     }
 
-    public TableRecordInfo(IIDesc desc, Map<Integer, Dictionary<?>> dictionaryMap, Map<TblColRef, FixedLenMeasureCodec<?>> measureCodecMap) {
+    public TableRecordInfo(IIDesc desc, Map<Integer, Dictionary<?>> dictionaryMap) {
         this.desc = desc;
         this.dictionaryMap = dictionaryMap;
+        Map<TblColRef, FixedLenMeasureCodec<?>> measureCodecMap = Maps.newHashMap();
+        int index = 0;
+        for (TblColRef tblColRef : desc.listAllColumns()) {
+            ColumnDesc col = tblColRef.getColumn();
+            if (desc.isMetricsCol(index++)) {
+                measureCodecMap.put(tblColRef, FixedLenMeasureCodec.get(col.getType()));
+            }
+        }
         this.digest = createDigest(dictionaryMap, measureCodecMap);
     }
 

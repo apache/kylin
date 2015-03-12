@@ -60,7 +60,7 @@ public class InvertedIndexReducer extends KylinReducer<LongWritable, ImmutableBy
         info = new TableRecordInfo(seg);
         rec = info.createTableRecord();
         builder = null;
-        kv = new IIKeyValueCodec();
+        kv = new IIKeyValueCodec(info.getDigest());
     }
 
     @Override

@@ -90,7 +90,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             region.startRegionOperation();
 
             synchronized (innerScanner) {
-                IIKeyValueCodec codec = new IIKeyValueCodec();
+                IIKeyValueCodec codec = new IIKeyValueCodec(tableRecordInfoDigest);
                 //TODO pass projector to codec to skip loading columns
                 Iterable<Slice> slices = codec.decodeKeyValue(new HbaseServerKVIterator(innerScanner));
 
