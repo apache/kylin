@@ -35,6 +35,7 @@
 package org.apache.kylin.streaming.invertedindex;
 
 import com.google.common.base.Function;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.*;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.HConnectionManager;
@@ -67,6 +68,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by qianzhou on 3/3/15.
@@ -93,6 +95,8 @@ public class IIStreamBuilder extends StreamBuilder {
 
     @Override
     protected void build(List<Stream> streamsToBuild) throws IOException {
+        logger.info("stream build start, size:" + streamsToBuild.size());
+        Stopwatch stopwatch = new Stopwatch().start();
         List<List<String>> table = Lists.transform(streamsToBuild, new Function<Stream, List<String>>() {
             @Nullable
             @Override
@@ -114,6 +118,8 @@ public class IIStreamBuilder extends StreamBuilder {
         final Slice slice = buildSlice(table, sliceBuilder, tableRecordInfo);
         loadToHBase(hTable, slice, new IIKeyValueCodec(tableRecordInfo.getDigest()), desc.listAllColumns(), dictionaryMap);
         submitOffset();
+        stopwatch.stop();
+        logger.info("stream build finished, size:" + streamsToBuild.size() + " elapsed time:" + stopwatch.elapsedTime(TimeUnit.MILLISECONDS) + TimeUnit.MILLISECONDS);
     }
 
     private Map<TblColRef, Dictionary<?>> buildDictionary(List<List<String>> table, IIDesc desc) {

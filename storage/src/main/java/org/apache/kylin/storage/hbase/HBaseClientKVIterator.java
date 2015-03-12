@@ -40,7 +40,6 @@ import org.apache.kylin.invertedindex.model.KeyValuePair;
 public class HBaseClientKVIterator implements Iterable<KeyValuePair>, Closeable {
 
     byte[] family;
-    byte[] qualifier;
 
     HTableInterface table;
     ResultScanner scanner;
@@ -48,10 +47,9 @@ public class HBaseClientKVIterator implements Iterable<KeyValuePair>, Closeable 
 
     public HBaseClientKVIterator(HConnection hconn, String tableName, byte[] family, byte[] qualifier) throws IOException {
         this.family = family;
-        this.qualifier = qualifier;
 
         this.table = hconn.getTable(tableName);
-        this.scanner = table.getScanner(family, qualifier);
+        this.scanner = table.getScanner(family);
         this.iterator = scanner.iterator();
     }
 

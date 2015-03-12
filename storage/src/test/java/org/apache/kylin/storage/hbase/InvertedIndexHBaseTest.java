@@ -18,11 +18,15 @@
 
 package org.apache.kylin.storage.hbase;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.*;
+import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -65,7 +69,7 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
         Configuration hconf = HadoopUtil.newHBaseConfiguration(hbaseUrl);
         hconn = HConnectionManager.createConnection(hconf);
 
-        this.info = new TableRecordInfo(seg);
+        this.info = new TableRecordInfo(seg.getIIDesc(), Collections.<TblColRef, Dictionary<?>>emptyMap(), Collections.<TblColRef, FixedLenMeasureCodec<?>>emptyMap());
     }
 
     @After
