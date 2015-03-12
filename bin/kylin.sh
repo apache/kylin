@@ -1,9 +1,11 @@
 #!/bin/sh
 
+dir=$(dirname ${0})
+source ${dir}/check-env.sh
+
 if [ $1 == "start" ]
 then
-    dir=$(dirname ${0})
-    source ${dir}/check-env.sh
+
     tomcat_root=${dir}/../tomcat
     export tomcat_root
 
