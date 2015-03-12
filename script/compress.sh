@@ -15,7 +15,7 @@ fi
 echo 'package tgz'
 rm -rf kylin-${version}
 mkdir kylin-${version}
-cp -r lib bin conf tomcat kylin-${version}
+cp -r lib bin conf tomcat examples/sample_cube kylin-${version}
 find kylin-${version} -type d -exec chmod 755 {} \;
 find kylin-${version} -type f -exec chmod 644 {} \;
 find kylin-${version} -type f -name "*.sh" -exec chmod 755 {} \;
