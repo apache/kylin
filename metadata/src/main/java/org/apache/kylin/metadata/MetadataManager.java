@@ -22,11 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -285,6 +281,11 @@ public class MetadataManager {
     public DataModelDesc getDataModelDesc(String name) {
         return dataModelDescMap.get(name);
     }
+
+    public List<DataModelDesc> getModels() {
+        return new ArrayList<DataModelDesc>(dataModelDescMap.values());
+    }
+
 
     private void reloadAllDataModel() throws IOException {
         ResourceStore store = getStore();

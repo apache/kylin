@@ -18,11 +18,11 @@
 
 package org.apache.kylin.rest.request;
 
-public class CubeRequest {
+public class ModelRequest {
 
     private String uuid;
-    private String cubeName;
-    private String cubeDescData;
+    private String modelName;
+    private String modelDescData;
     private boolean successful;
     private String message;
     private String project;
@@ -65,36 +65,37 @@ public class CubeRequest {
         this.successful = status;
     }
 
-    public CubeRequest() {
+    public ModelRequest() {
     }
 
-    public CubeRequest( String cubeName, String cubeDescData) {
-        this.cubeName = cubeName;
-        this.cubeDescData = cubeDescData;
+    public ModelRequest(String modelName, String modelDescData) {
+        this.modelName = modelName;
+        this.modelDescData = modelDescData;
     }
 
-    public String getCubeDescData() {
-        return cubeDescData;
+    
+    
+    public String getModelDescData() {
+        return modelDescData;
     }
 
-    public void setCubeDescData(String cubeDescData) {
-        this.cubeDescData = cubeDescData;
-    }
-
-
-    /**
-     * @return the cubeDescName
-     */
-    public String getCubeName() {
-        return cubeName;
+    public void setModelDescData(String modelDescData) {
+        this.modelDescData = modelDescData;
     }
 
     /**
-     * @param cubeName
-     *            the cubeDescName to set
+     * @return the modelName
      */
-    public void setCubeName(String cubeName) {
-        this.cubeName = cubeName;
+    public String getModelName() {
+        return modelName;
+    }
+
+    /**
+     * @param modelName
+     *            the cubeName to set
+     */
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
     }
 
     public String getProject() {

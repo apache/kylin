@@ -43,7 +43,6 @@ public class CubeControllerTest extends ServiceTestBase {
 
     private CubeController cubeController;
     private CubeDescController cubeDescController;
-    private ModelController modelController;
 
     @Autowired
     CubeService cubeService;
@@ -60,8 +59,6 @@ public class CubeControllerTest extends ServiceTestBase {
         cubeDescController = new CubeDescController();
         cubeDescController.setCubeService(cubeService);
 
-        modelController = new ModelController();
-        modelController.setCubeService(cubeService);
     }
 
     @Test
@@ -104,12 +101,8 @@ public class CubeControllerTest extends ServiceTestBase {
 
         CubeRequest cubeRequest = new CubeRequest();
         cubeRequest.setCubeDescData(cubeDescWriter.toString());
-        cubeRequest.setModelDescData(modelDescWriter.toString());
         cubeRequest = cubeController.saveCubeDesc(cubeRequest);
 
-
-        DataModelDesc model = modelController.getModel(newModelName);
-        Assert.assertNotNull(model);
 
         List<String> notifyList = Lists.newArrayList();
         notifyList.add("john@example.com");
