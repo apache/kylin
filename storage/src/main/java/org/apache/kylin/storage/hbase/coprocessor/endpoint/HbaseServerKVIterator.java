@@ -18,21 +18,17 @@
 
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.invertedindex.model.IIDesc;
-import org.apache.kylin.invertedindex.model.KeyValuePair;
+import org.apache.kylin.invertedindex.model.IIRow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
 import java.io.Closeable;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -41,12 +37,10 @@ import java.util.List;
 /**
  * Created by honma on 11/10/14.
  */
-public class HbaseServerKVIterator implements Iterable<KeyValuePair>, Closeable {
+public class HbaseServerKVIterator implements Iterable<IIRow>, Closeable {
 
     private RegionScanner innerScanner;
     private Logger logger = LoggerFactory.getLogger(HbaseServerKVIterator.class);
-
-    List<Cell> results = new ArrayList<Cell>();
 
     public HbaseServerKVIterator(RegionScanner innerScanner) {
         this.innerScanner = innerScanner;
@@ -57,69 +51,55 @@ public class HbaseServerKVIterator implements Iterable<KeyValuePair>, Closeable 
         IOUtils.closeQuietly(this.innerScanner);
     }
 
-    @Override
-    public Iterator<KeyValuePair> iterator() {
-        return new Iterator<KeyValuePair>() {
+    private static class IIRowIterator implements Iterator<IIRow> {
 
-            ImmutableBytesWritable key = new ImmutableBytesWritable();
-            ImmutableBytesWritable value = new ImmutableBytesWritable();
-            ImmutableBytesWritable dict = new ImmutableBytesWritable();
-            KeyValuePair pair = new KeyValuePair(key, value);
+        private final RegionScanner regionScanner;
+        private final IIRow row = new IIRow();
+        private boolean hasMore = true;
+        List<Cell> results = Lists.newArrayList();
 
-            private boolean hasMore = true;
+        IIRowIterator(RegionScanner innerScanner) {
+            this.regionScanner = innerScanner;
+        }
 
-            @Override
-            public boolean hasNext() {
-                return hasMore;
+
+        @Override
+        public boolean hasNext() {
+            return hasMore;
+        }
+
+        @Override
+        public IIRow next() {
+            results.clear();
+            try {
+                hasMore = regionScanner.next(results);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-
-            @Override
-            public KeyValuePair next() {
-                if (hasNext()) {
-                    try {
-                        hasMore = innerScanner.nextRaw(results);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-
-                    if (results.size() < 1)
-                        throw new IllegalStateException("Hbase row contains less than 1 cell");
-
-                    Dictionary<?> dictionary = null;
-                    boolean hasDictData = false;
-                    for (Cell c : results) {
-                        if (BytesUtil.compareBytes(IIDesc.HBASE_QUALIFIER_BYTES, 0, c.getQualifierArray(), c.getQualifierOffset(), IIDesc.HBASE_QUALIFIER_BYTES.length) == 0) {
-                            key.set(c.getRowArray(), c.getRowOffset(), c.getRowLength());
-                            value.set(c.getValueArray(), c.getValueOffset(), c.getValueLength());
-                        } else if (BytesUtil.compareBytes(IIDesc.HBASE_DICTIONARY_BYTES, 0, c.getQualifierArray(), c.getQualifierOffset(), IIDesc.HBASE_DICTIONARY_BYTES.length) == 0) {
-                            dict.set(c.getValueArray(), c.getValueOffset(), c.getValueLength());
-                            hasDictData = true;
-                        }
-                    }
-                    if (hasDictData) {
-                        try {
-                            final DataInputStream in = new DataInputStream(new ByteArrayInputStream(dict.get(), dict.getOffset(), dict.getLength()));
-                            String type = in.readUTF();
-                            dictionary = (Dictionary<?>) ClassUtil.forName(type, Dictionary.class).newInstance();
-                            dictionary.readFields(in);
-                        } catch (Exception e) {
-                            logger.error("error create dictionary", e);
-                        }
-                    }
-                    pair.setDictionary(dictionary);
-
-                    results.clear();
-                    return pair;
-                } else {
-                    return null;
+            if (results.size() < 1) {
+                throw new IllegalStateException("Hbase row contains less than 1 cell");
+            }
+            for (Cell c : results) {
+                if (BytesUtil.compareBytes(IIDesc.HBASE_QUALIFIER_BYTES, 0, c.getQualifierArray(), c.getQualifierOffset(), IIDesc.HBASE_QUALIFIER_BYTES.length) == 0) {
+                    row.getKey().set(c.getRowArray(), c.getRowOffset(), c.getRowLength());
+                    row.getValue().set(c.getValueArray(), c.getValueOffset(), c.getValueLength());
+                } else if (BytesUtil.compareBytes(IIDesc.HBASE_DICTIONARY_BYTES, 0, c.getQualifierArray(), c.getQualifierOffset(), IIDesc.HBASE_DICTIONARY_BYTES.length) == 0) {
+                    row.getDictionary().set(c.getValueArray(), c.getValueOffset(), c.getValueLength());
                 }
             }
+            return row;
+        }
 
-            @Override
-            public void remove() {
-                throw new UnsupportedOperationException();
-            }
-        };
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+
+    @Override
+    public Iterator<IIRow> iterator() {
+        return new IIRowIterator(innerScanner);
     }
 
 }

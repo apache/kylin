@@ -42,7 +42,6 @@ import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.util.Pair;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.invertedindex.index.Slice;
@@ -51,7 +50,7 @@ import org.apache.kylin.invertedindex.index.TableRecord;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
-import org.apache.kylin.invertedindex.model.KeyValuePair;
+import org.apache.kylin.invertedindex.model.IIRow;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -104,7 +103,7 @@ public class IIStreamBuilder extends StreamBuilder {
                 return parseStream(input, desc);
             }
         });
-        final Map<TblColRef, Dictionary<?>> dictionaryMap = buildDictionary(table, desc);
+        final Map<Integer, Dictionary<?>> dictionaryMap = buildDictionary(table, desc);
         Map<TblColRef, FixedLenMeasureCodec<?>> measureCodecMap = Maps.newHashMap();
         int index = 0;
         for (TblColRef tblColRef : desc.listAllColumns()) {
@@ -115,14 +114,14 @@ public class IIStreamBuilder extends StreamBuilder {
         }
         TableRecordInfo tableRecordInfo = new TableRecordInfo(desc, dictionaryMap, measureCodecMap);
         SliceBuilder sliceBuilder = new SliceBuilder(tableRecordInfo, (short) partitionId);
-        final Slice slice = buildSlice(table, sliceBuilder, tableRecordInfo);
-        loadToHBase(hTable, slice, new IIKeyValueCodec(tableRecordInfo.getDigest()), desc.listAllColumns(), dictionaryMap);
+        final Slice slice = buildSlice(table, sliceBuilder, tableRecordInfo, dictionaryMap);
+        loadToHBase(hTable, slice, new IIKeyValueCodec());
         submitOffset();
         stopwatch.stop();
         logger.info("stream build finished, size:" + streamsToBuild.size() + " elapsed time:" + stopwatch.elapsedTime(TimeUnit.MILLISECONDS) + TimeUnit.MILLISECONDS);
     }
 
-    private Map<TblColRef, Dictionary<?>> buildDictionary(List<List<String>> table, IIDesc desc) {
+    private Map<Integer, Dictionary<?>> buildDictionary(List<List<String>> table, IIDesc desc) {
         SetMultimap<TblColRef, String> valueMap = HashMultimap.create();
         Set<TblColRef> dimensionColumns = Sets.newHashSet();
         for (int i = 0; i < desc.listAllColumns().size(); i++) {
@@ -136,9 +135,9 @@ public class IIStreamBuilder extends StreamBuilder {
                 valueMap.put(desc.listAllColumns().get(i), cell);
             }
         }
-        Map<TblColRef, Dictionary<?>> result = Maps.newHashMap();
+        Map<Integer, Dictionary<?>> result = Maps.newHashMap();
         for (TblColRef tblColRef : valueMap.keys()) {
-            result.put(tblColRef, DictionaryGenerator.buildDictionaryFromValueList(Collections2.transform(valueMap.get(tblColRef), new Function<String, byte[]>() {
+            result.put(desc.findColumn(tblColRef), DictionaryGenerator.buildDictionaryFromValueList(Collections2.transform(valueMap.get(tblColRef), new Function<String, byte[]>() {
                 @Nullable
                 @Override
                 public byte[] apply(String input) {
@@ -153,7 +152,7 @@ public class IIStreamBuilder extends StreamBuilder {
         return Lists.newArrayList(new String(stream.getRawData()).split(","));
     }
 
-    private Slice buildSlice(List<List<String>> table, SliceBuilder sliceBuilder, TableRecordInfo tableRecordInfo) {
+    private Slice buildSlice(List<List<String>> table, SliceBuilder sliceBuilder, TableRecordInfo tableRecordInfo, Map<Integer, Dictionary<?>> localDictionary) {
         for (List<String> row : table) {
             TableRecord tableRecord = tableRecordInfo.createTableRecord();
             for (int i = 0; i < row.size(); i++) {
@@ -161,31 +160,35 @@ public class IIStreamBuilder extends StreamBuilder {
             }
             sliceBuilder.append(tableRecord);
         }
-        return sliceBuilder.close();
+        final Slice slice = sliceBuilder.close();
+        slice.setLocalDictionaries(localDictionary);
+        return slice;
     }
 
-    private void loadToHBase(HTableInterface hTable, Slice slice, IIKeyValueCodec codec, List<TblColRef> allColumns, Map<TblColRef, Dictionary<?>> localDictionaries) throws IOException {
+    private byte[] getDictBytes(Dictionary<?> dict) throws IOException {
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream out = new DataOutputStream(baos);
+        out.writeUTF(dict.getClass().getName());
+        dict.write(out);
+        return baos.toByteArray();
+    }
+
+    private void loadToHBase(HTableInterface hTable, Slice slice, IIKeyValueCodec codec) throws IOException {
         try {
             List<Put> data = Lists.newArrayList();
-            for (KeyValuePair pair : codec.encodeKeyValue(slice)) {
-                final byte[] key = pair.getKey().get();
-                final byte[] value = pair.getValue().get();
+            for (IIRow row : codec.encodeKeyValue(slice)) {
+                final byte[] key = row.getKey().get();
+                final byte[] value = row.getValue().get();
                 Put put = new Put(key);
                 put.add(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES, value);
-
-                //dictionary
-                final int id = pair.getId();
-                if (id >= 0 && id < allColumns.size()) {
-                    final Dictionary<?> dictionary = localDictionaries.get(allColumns.get(id));
-                    if (dictionary != null) {
-                        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        DataOutputStream out = new DataOutputStream(baos);
-                        out.writeUTF(dictionary.getClass().getName());
-                        dictionary.write(out);
-                        put.add(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_DICTIONARY_BYTES, baos.toByteArray());
-                    }
-                    data.add(put);
+                final ImmutableBytesWritable dictionary = row.getDictionary();
+                final byte[] dictBytes = dictionary.get();
+                if (dictionary.getOffset() == 0 && dictionary.getLength() == dictBytes.length) {
+                    put.add(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_DICTIONARY_BYTES, dictBytes);
+                } else {
+                    throw new RuntimeException("dict offset should be 0, and dict length should be " + dictBytes.length + " but they are" + dictionary.getOffset() + " " + dictionary.getLength());
                 }
+                data.add(put);
             }
             hTable.put(data);
         } finally {

@@ -33,7 +33,7 @@ import org.apache.kylin.invertedindex.index.Slice;
 import org.apache.kylin.invertedindex.index.TableRecord;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
-import org.apache.kylin.invertedindex.model.KeyValuePair;
+import org.apache.kylin.invertedindex.model.IIRow;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -54,7 +54,7 @@ public class IICLI {
 		System.out.println("Reading from " + path + " ...");
 
 		TableRecordInfo info = new TableRecordInfo(ii.getFirstSegment());
-		IIKeyValueCodec codec = new IIKeyValueCodec(info.getDigest());
+		IIKeyValueCodec codec = new IIKeyValueCodec();
 		int count = 0;
 		for (Slice slice : codec.decodeKeyValue(readSequenceKVs(hconf, path))) {
 			for (RawTableRecord rec : slice) {
@@ -65,17 +65,17 @@ public class IICLI {
 		System.out.println("Total " + count + " records");
 	}
 
-	public static Iterable<KeyValuePair> readSequenceKVs(
+	public static Iterable<IIRow> readSequenceKVs(
 			Configuration hconf, String path) throws IOException {
 		final Reader reader = new Reader(hconf,
 				SequenceFile.Reader.file(new Path(path)));
-		return new Iterable<KeyValuePair>() {
+		return new Iterable<IIRow>() {
 			@Override
-			public Iterator<KeyValuePair> iterator() {
-				return new Iterator<KeyValuePair>() {
+			public Iterator<IIRow> iterator() {
+				return new Iterator<IIRow>() {
 					ImmutableBytesWritable k = new ImmutableBytesWritable();
 					ImmutableBytesWritable v = new ImmutableBytesWritable();
-                    KeyValuePair pair = new KeyValuePair(k, v);
+                    IIRow pair = new IIRow(k, v, null);
 
 					@Override
 					public boolean hasNext() {
@@ -93,7 +93,7 @@ public class IICLI {
 					}
 
 					@Override
-					public KeyValuePair next() {
+					public IIRow next() {
 						return pair;
 					}
 
