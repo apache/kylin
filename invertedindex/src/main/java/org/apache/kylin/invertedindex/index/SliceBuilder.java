@@ -61,6 +61,10 @@ public class SliceBuilder {
 		// reset for next slice
 		nRecords = 0;
 		containers = new ColumnValueContainer[nColumns];
+        for (int i : info.getDescriptor().getBitmapColumns()) {
+            containers[i] = new CompressedValueContainer(info.getDigest(), i,
+                    nRecordsCap);
+        }
 		for (int i : info.getDescriptor().getValueColumns()) {
 			containers[i] = new CompressedValueContainer(info.getDigest(), i,
 					nRecordsCap);

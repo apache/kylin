@@ -24,10 +24,7 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.invertedindex.index.ColumnValueContainer;
-import org.apache.kylin.invertedindex.index.CompressedValueContainer;
-import org.apache.kylin.invertedindex.index.Slice;
-import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
+import org.apache.kylin.invertedindex.index.*;
 
 import java.io.*;
 import java.util.*;
@@ -40,8 +37,10 @@ public class IIKeyValueCodec implements KeyValueCodec {
 	public static final int SHARD_LEN = 2;
 	public static final int TIMEPART_LEN = 8;
 	public static final int COLNO_LEN = 2;
+    private final TableRecordInfoDigest digest;
 
-	public IIKeyValueCodec() {
+    public IIKeyValueCodec(TableRecordInfoDigest digest) {
+        this.digest = digest;
 	}
 
     @Override
@@ -114,40 +113,13 @@ public class IIKeyValueCodec implements KeyValueCodec {
 
     @Override
 	public Iterable<Slice> decodeKeyValue(Iterable<IIRow> kvs) {
-		return new Decoder(kvs);
+		return new Decoder(kvs, digest);
 	}
-
-    private static class SliceIterator implements Iterator<Slice> {
-
-        private final Iterator<IIRow> rowIterator;
-
-        public SliceIterator(Iterator<IIRow> rowIterator) {
-            this.rowIterator = rowIterator;
-        }
-
-        @Override
-        public boolean hasNext() {
-            if (!rowIterator.hasNext()) {
-                return false;
-            }
-            return false;
-        }
-
-        @Override
-        public Slice next() {
-            return null;
-        }
-
-        @Override
-        public void remove() {
-
-        }
-    }
 
 	private static class Decoder implements Iterable<Slice> {
 
-		TableRecordInfoDigest info;
-		Iterator<IIRow> iterator;
+        private final TableRecordInfoDigest digest;
+        Iterator<IIRow> iterator;
 
 		Slice slice = null;
 		short curShard = Short.MIN_VALUE;
@@ -159,7 +131,8 @@ public class IIKeyValueCodec implements KeyValueCodec {
 		ColumnValueContainer[] containers = null;
         Map<Integer, Dictionary<?>> localDictionaries = Maps.newHashMap();
 
-		Decoder(Iterable<IIRow> kvs) {
+		Decoder(Iterable<IIRow> kvs, TableRecordInfoDigest digest) {
+            this.digest = digest;
 			this.iterator = kvs.iterator();
 		}
 
@@ -184,6 +157,9 @@ public class IIKeyValueCodec implements KeyValueCodec {
                     containers[curCol].append(buffer);
                 }
                 localDictionaries.put(curCol, dictionary);
+                if (localDictionaries.size() < digest.getColumnCount()) {
+                    continue;
+                }
 
 				if (curShard != lastShard
 						|| curSliceTimestamp != lastSliceTimestamp) {
@@ -218,7 +194,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
 
 		private void makeNext() {
 			if (containers != null) {
-				slice = new Slice(info, lastShard, lastSliceTimestamp,
+				slice = new Slice(digest, lastShard, lastSliceTimestamp,
 						containers);
                 slice.setLocalDictionaries(Maps.newHashMap(localDictionaries));
 			}
@@ -230,7 +206,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
 
 		private void addContainer(int col, ColumnValueContainer c) {
 			if (containers == null) {
-				containers = new ColumnValueContainer[info.getColumnCount()];
+				containers = new ColumnValueContainer[digest.getColumnCount()];
 			}
 			containers[col] = c;
 		}

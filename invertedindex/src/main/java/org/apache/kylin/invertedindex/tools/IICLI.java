@@ -54,7 +54,7 @@ public class IICLI {
 		System.out.println("Reading from " + path + " ...");
 
 		TableRecordInfo info = new TableRecordInfo(ii.getFirstSegment());
-		IIKeyValueCodec codec = new IIKeyValueCodec();
+		IIKeyValueCodec codec = new IIKeyValueCodec(info.getDigest());
 		int count = 0;
 		for (Slice slice : codec.decodeKeyValue(readSequenceKVs(hconf, path))) {
 			for (RawTableRecord rec : slice) {

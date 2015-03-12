@@ -23,6 +23,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIRow;
 import org.slf4j.Logger;
@@ -39,11 +40,17 @@ import java.util.List;
  */
 public class HbaseServerKVIterator implements Iterable<IIRow>, Closeable {
 
+    private TableRecordInfoDigest digest;
     private RegionScanner innerScanner;
     private Logger logger = LoggerFactory.getLogger(HbaseServerKVIterator.class);
 
     public HbaseServerKVIterator(RegionScanner innerScanner) {
         this.innerScanner = innerScanner;
+    }
+
+    public HbaseServerKVIterator(RegionScanner innerScanner, TableRecordInfoDigest digest) {
+        this.innerScanner = innerScanner;
+        this.digest = digest;
     }
 
     @Override
