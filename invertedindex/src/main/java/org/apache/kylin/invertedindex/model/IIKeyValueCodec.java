@@ -51,22 +51,46 @@ public class IIKeyValueCodec implements KeyValueCodec {
 		ColumnValueContainer[] containers = slice.getColumnValueContainers();
 		for (int col = 0; col < containers.length; col++) {
 			if (containers[col] instanceof CompressedValueContainer) {
-				result.add(collectKeyValues(slice, col, (CompressedValueContainer) containers[col]));
-			} else {
-				throw new IllegalArgumentException("Unknown container class "
+                final IIRow row = collectKeyValues(slice, col, (CompressedValueContainer) containers[col]);
+                result.add(row);
+            } else {
+                throw new IllegalArgumentException("Unknown container class "
 						+ containers[col].getClass());
-			}
-		}
+            }
+        }
 		return result;
 	}
 
-	private IIRow collectKeyValues(Slice slice,
-			int col,
-			CompressedValueContainer container) {
+	private IIRow collectKeyValues(Slice slice, int col, CompressedValueContainer container) {
 		ImmutableBytesWritable key = encodeKey(slice.getShard(), slice.getTimestamp(), col);
 		ImmutableBytesWritable value = container.toBytes();
-        return new IIRow(key, value, null);
+        final Dictionary<?> dictionary = slice.getLocalDictionaries().get(col);
+        return new IIRow(key, value, serialize(dictionary));
 	}
+
+    private static Dictionary<?> deserialize(ImmutableBytesWritable dictBytes) {
+        try {
+            final DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(dictBytes.get(), dictBytes.getOffset(), dictBytes.getLength()));
+            final String type = dataInputStream.readUTF();
+            final Dictionary dictionary = ClassUtil.forName(type, Dictionary.class).newInstance();
+            dictionary.readFields(dataInputStream);
+            return dictionary;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static ImmutableBytesWritable serialize(Dictionary<?> dict) {
+        try {
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            DataOutputStream out = new DataOutputStream(baos);
+            out.writeUTF(dict.getClass().getName());
+            dict.write(out);
+            return new ImmutableBytesWritable(baos.toByteArray());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 	ImmutableBytesWritable encodeKey(short shard, long timestamp, int col) {
 		byte[] bytes = new byte[20];
@@ -139,18 +163,6 @@ public class IIKeyValueCodec implements KeyValueCodec {
 			this.iterator = kvs.iterator();
 		}
 
-        private Dictionary<?> deserialize(ImmutableBytesWritable dictBytes) {
-            try {
-                final DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(dictBytes.get(), dictBytes.getOffset(), dictBytes.getLength()));
-                final String type = dataInputStream.readUTF();
-                final Dictionary dictionary = ClassUtil.forName(type, Dictionary.class).newInstance();
-                dictionary.readFields(dataInputStream);
-                return dictionary;
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
 		private void goToNext() {
 			if (slice != null) { // was not fetched
 				return;
@@ -164,6 +176,13 @@ public class IIKeyValueCodec implements KeyValueCodec {
 				decodeKey(k);
                 final Dictionary<?> dictionary = deserialize(kv.getDictionary());
                 addContainer(curCol, new CompressedValueContainer(dictionary.getSizeOfId(), (dictionary.getMaxId() - dictionary.getMinId() + 1), (dictionary.getMaxId() - dictionary.getMinId() + 1)));
+                byte[] bytes = new byte[dictionary.getSizeOfValue()];
+                ImmutableBytesWritable buffer = new ImmutableBytesWritable(bytes);
+                for (int i = dictionary.getMinId(); i <= dictionary.getMaxId(); ++i) {
+                    final int length = dictionary.getValueBytesFromId(i, bytes, 0);
+                    buffer.set(bytes, 0, length);
+                    containers[curCol].append(buffer);
+                }
                 localDictionaries.put(curCol, dictionary);
 
 				if (curShard != lastShard
