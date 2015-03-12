@@ -22,12 +22,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.invertedindex.index.ColumnValueContainer;
 import org.apache.kylin.invertedindex.index.CompressedValueContainer;
 import org.apache.kylin.invertedindex.index.Slice;
 import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 
+import java.io.*;
 import java.util.*;
 
 /**
@@ -137,6 +139,18 @@ public class IIKeyValueCodec implements KeyValueCodec {
 			this.iterator = kvs.iterator();
 		}
 
+        private Dictionary<?> deserialize(ImmutableBytesWritable dictBytes) {
+            try {
+                final DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(dictBytes.get(), dictBytes.getOffset(), dictBytes.getLength()));
+                final String type = dataInputStream.readUTF();
+                final Dictionary dictionary = ClassUtil.forName(type, Dictionary.class).newInstance();
+                dictionary.readFields(dataInputStream);
+                return dictionary;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
 		private void goToNext() {
 			if (slice != null) { // was not fetched
 				return;
@@ -148,7 +162,9 @@ public class IIKeyValueCodec implements KeyValueCodec {
 				ImmutableBytesWritable k = kv.getKey();
 				ImmutableBytesWritable v = kv.getValue();
 				decodeKey(k);
-//                localDictionaries.put(curCol, kv.getDictionary());
+                final Dictionary<?> dictionary = deserialize(kv.getDictionary());
+                addContainer(curCol, new CompressedValueContainer(dictionary.getSizeOfId(), (dictionary.getMaxId() - dictionary.getMinId() + 1), (dictionary.getMaxId() - dictionary.getMinId() + 1)));
+                localDictionaries.put(curCol, dictionary);
 
 				if (curShard != lastShard
 						|| curSliceTimestamp != lastSliceTimestamp) {
