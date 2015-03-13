@@ -112,10 +112,12 @@ public class KafkaConsumer implements Runnable {
                 }
                 for (MessageAndOffset messageAndOffset : fetchResponse.messageSet(topic, partitionId)) {
                     final ByteBuffer payload = messageAndOffset.message().payload();
+
                     //TODO use ByteBuffer maybe
                     byte[] bytes = new byte[payload.limit()];
                     payload.get(bytes);
-                    logger.debug("get message offset:" + messageAndOffset.offset());
+                    logger.info("get message offset:" + messageAndOffset.offset());
+                    logger.info(new String(bytes));
                     try {
                         streamQueue.put(new Stream(messageAndOffset.offset(), bytes));
                     } catch (InterruptedException e) {
