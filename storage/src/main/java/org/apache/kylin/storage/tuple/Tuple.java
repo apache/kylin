@@ -100,7 +100,10 @@ public class Tuple implements ITuple {
             fieldValue = ((BigDecimal) fieldValue).doubleValue();
         } else if ("integer".equals(dataType) && !(fieldValue instanceof Integer)) {
             fieldValue = ((Number) fieldValue).intValue();
+        } else if ("float".equals(dataType) && fieldValue instanceof BigDecimal) {
+            fieldValue = ((BigDecimal) fieldValue).floatValue();
         }
+
         setFieldObjectValue(fieldName, fieldValue);
     }
 
@@ -119,7 +122,6 @@ public class Tuple implements ITuple {
         }
         return sb.toString();
     }
-
 
     public static Object convertOptiqCellValue(String strValue, String dataType) {
         if (strValue == null)
