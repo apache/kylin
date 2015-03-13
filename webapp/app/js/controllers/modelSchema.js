@@ -28,6 +28,7 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
 
 
     $scope.wizardSteps = [
+        {title: 'Model Info', src: 'partials/modelDesigner/model_info.html', isComplete: false},
         {title: 'Data Model', src: 'partials/modelDesigner/data_model.html', isComplete: false},
         {title: 'Dimensions', src: 'partials/modelDesigner/model_dimensions.html', isComplete: false},
         {title: 'Measures', src: 'partials/modelDesigner/model_measures.html', isComplete: false},
@@ -42,11 +43,11 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
         $scope.state = {mode: "view"};
     }
 
-    $scope.$watch('cubeMetaFrame', function (newValue, oldValue) {
+    $scope.$watch('model', function (newValue, oldValue) {
         if(!newValue){
             return;
         }
-        if ($scope.cubeMode=="editExistCube"&&newValue && !newValue.project) {
+        if ($scope.modelMode=="editExistModel"&&newValue && !newValue.project) {
             initProject();
         }
 

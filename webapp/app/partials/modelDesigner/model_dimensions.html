@@ -77,7 +77,7 @@
                     <span class="label label-primary" ng-repeat="t in getDimType(dimension)">{{t}}</span>
                 </td>
                 <!--Columns-->
-                <td>
+                <td  style="word-wrap:break-word;word-break:break-all;">
                     <div ng-repeat="t in getDimType(dimension)">
                         <div ng-switch="t">
                             <dl class="dl-horizontal" ng-switch-when="hierarchy">
@@ -90,7 +90,7 @@
                             </dl>
                             <dl class="dl-horizontal" ng-switch-when="normal">
                                 <dt>Column</dt>
-                                <dd>{{dimension.column}}</dd>
+                                <dd>{{dimension.columns}}</dd>
                             </dl>
                         </div>
                     </div>

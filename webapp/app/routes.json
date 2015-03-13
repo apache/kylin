@@ -111,5 +111,13 @@
             "tab": "models",
             "controller": "ModelsCtrl"
         }
+    },
+    {
+        "url": "/models/edit/:modelName",
+        "params": {
+            "templateUrl": "partials/models/model_edit.html",
+            "tab": "models",
+            "controller": "ModelEditCtrl"
+        }
     }
 ]
