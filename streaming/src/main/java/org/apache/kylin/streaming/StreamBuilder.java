@@ -103,8 +103,9 @@ public abstract class StreamBuilder implements Runnable {
                     continue;
                 }
             }
-        }  catch (Exception e) {
+        } catch (Exception e) {
             logger.error("build stream error, stop building", e);
+            throw new RuntimeException("build stream error, stop building", e);
         }
     }
 }

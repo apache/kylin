@@ -40,17 +40,11 @@ import java.util.List;
  */
 public class HbaseServerKVIterator implements Iterable<IIRow>, Closeable {
 
-    private TableRecordInfoDigest digest;
     private RegionScanner innerScanner;
     private Logger logger = LoggerFactory.getLogger(HbaseServerKVIterator.class);
 
     public HbaseServerKVIterator(RegionScanner innerScanner) {
         this.innerScanner = innerScanner;
-    }
-
-    public HbaseServerKVIterator(RegionScanner innerScanner, TableRecordInfoDigest digest) {
-        this.innerScanner = innerScanner;
-        this.digest = digest;
     }
 
     @Override
