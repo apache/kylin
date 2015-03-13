@@ -155,8 +155,8 @@
     } ],
     "aggregation_groups" : [ [ "cal_dt", "lstg_site_id", "leaf_categ_id", "meta_categ_name", "categ_lvl3_name", "categ_lvl2_name", "lstg_format_name" ] ]
   },
-  "signature" : "7qJiv2MEGoGf1AAgksQmZw==",
-  "last_modified" : 1422435345362,
+  "signature" : "ZJWTQ2jIPXjBfuwYeizpxg==",
+  "last_modified" : 1426255280419,
   "model_name" : "kylin_sales_model",
   "null_string" : null,
   "hbase_mapping" : {
