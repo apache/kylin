@@ -357,7 +357,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         //! here get the latest rowkey_columns
         $scope.cubeMetaFrame.rowkey.rowkey_columns = newRowKeyColumns;
 
-        if($scope.cubeMode==="editExistCube") {
+        if($scope.modelMode==="editExistCube") {
             var aggregationGroups = $scope.cubeMetaFrame.rowkey.aggregation_groups;
             // rm unused item from group,will only rm when [edit] dimension
             angular.forEach(aggregationGroups, function (group, index) {
@@ -387,7 +387,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
             });
         }
 
-        if($scope.cubeMode==="addNewCube"){
+        if($scope.modelMode==="addNewCube"){
 
           if(!tmpAggregationItems.length) {
               $scope.cubeMetaFrame.rowkey.aggregation_groups=[];

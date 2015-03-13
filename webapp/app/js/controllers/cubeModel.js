@@ -20,25 +20,11 @@
 
 KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelService,MetaModel,SweetAlert,CubeGraphService,$log) {
 
+    //copy model for show Json in model tab list
+    $scope.modelJson = angular.copy($scope.model);
 
-    $scope.buildGraph = function (cube) {
-        CubeGraphService.buildTree(cube);
-    };
-    $scope.cleanStatus = function(model){
-
-        if (!model)
-        {
-            return;
-        }
-        var newModel = jQuery.extend(true, {}, model);
-        delete newModel.visiblePage;
-        delete newModel.showDetail;
-
-        angular.forEach(newModel.dimensions, function(dimension, index){
-            delete dimension.status;
-        });
-
-        return newModel;
+    $scope.buildGraph = function (model) {
+        CubeGraphService.buildTree(model);
     };
 
     $scope.cubeConfig = cubeConfig;
@@ -132,7 +118,7 @@ KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelSe
     };
 
         $scope.removeLookup = function (lookup) {
-            var dimExist = _.some($scope.cubeMetaFrame.dimensions,function(item,index){
+            var dimExist = _.some($scope.model.dimensions,function(item,index){
                 return item.table===lookup.table;
             });
             if(dimExist) {
@@ -146,9 +132,9 @@ KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelSe
                     closeOnConfirm: true
                 }, function (isConfirm) {
                     if (isConfirm) {
-                        for (var i = $scope.cubeMetaFrame.dimensions.length - 1; i >= 0; i--) {
-                            if ($scope.cubeMetaFrame.dimensions[i].table === lookup.table) {
-                                $scope.cubeMetaFrame.dimensions.splice(i, 1);
+                        for (var i = $scope.model.dimensions.length - 1; i >= 0; i--) {
+                            if ($scope.model.dimensions[i].table === lookup.table) {
+                                $scope.model.dimensions.splice(i, 1);
                             }
                         }
                         lookupList.splice(lookupList.indexOf(lookup), 1);

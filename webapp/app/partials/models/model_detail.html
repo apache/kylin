@@ -22,7 +22,7 @@
             <a href="" ng-click="model.visiblePage='metadata'">Grid</a>
         </li>
         <li class="{{model.visiblePage=='graph'? 'active':''}}">
-            <a href="" ng-click="model.visiblePage='graph';buildGraph(model);">Visualization</a>
+            <a href="" ng-click="model.visiblePage='graph';buildGraph(model);$event.stopPropagation();">Visualization</a>
         </li>
         <li class="{{model.visiblePage=='json_model'? 'active':''}}"
             ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(model, 16) && !newAccess">
@@ -32,12 +32,13 @@
 
     <div class="model-detail" ng-if="!model.visiblePage || model.visiblePage=='metadata'">
         <div ng-include="'partials/models/model_schema.html'" ng-controller="ModelSchemaCtrl"
-             ng-init="state={mode:'view', modelName:model.name}"></div>
+             ng-init="state={mode:'view', modelName:model.name}">
+        </div>
+    </div>
+    <div ng-show="model.visiblePage=='graph'" id="model_graph_{{model.name}}" class="model-detail model_graph">
     </div>
     <div ng-show="model.visiblePage=='json_model'" class="model-detail">
-          <pre
-               style="background-color: white;border: 0px">{{angular.toJson(cleanStatus(model), true)}}</pre>
-    </div>
-    <div ng-show="model.visiblePage=='graph'" id="model_graph_{{model.name}}" class="cube-detail cube_graph">
+          <pre ng-if="!state.jsonEdit"
+               style="background-color: white;border: 0px">{{angular.toJson(modelJson, true)}}</pre>
     </div>
 </div>
