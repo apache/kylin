@@ -115,16 +115,16 @@ public class IIKeyValueCodec implements KeyValueCodec {
     @Override
 	public Iterable<Slice> decodeKeyValue(Iterable<IIRow> kvs) {
         return new IIRowDecoder(digest, kvs.iterator());
-//		return new Decoder(kvs, digest);
+//		return new Decoder(kvs, incompleteDigest);
 	}
 
     private static class IIRowDecoder implements Iterable<Slice> {
 
-        private final TableRecordInfoDigest digest;
+        private final TableRecordInfoDigest incompleteDigest;
         private final Iterator<IIRow> iterator;
 
         private IIRowDecoder(TableRecordInfoDigest digest, Iterator<IIRow> iterator) {
-            this.digest = digest;
+            this.incompleteDigest = digest;
             this.iterator = iterator;
         }
 
@@ -139,14 +139,15 @@ public class IIKeyValueCodec implements KeyValueCodec {
                 @Override
                 public Slice next() {
                     int columns = 0;
-                    ColumnValueContainer[] valueContainers = new ColumnValueContainer[digest.getColumnCount()];
+                    ColumnValueContainer[] valueContainers = new ColumnValueContainer[incompleteDigest.getColumnCount()];
                     Map<Integer, Dictionary<?>> localDictionaries = Maps.newHashMap();
                     boolean firstTime = true;
                     short curShard = 0;
                     long curTimestamp = 0;
                     short lastShard = 0;
                     long lastTimestamp = 0;
-                    while (iterator().hasNext() && columns < digest.getColumnCount()) {
+
+                    while (iterator().hasNext() && columns < incompleteDigest.getColumnCount()) {
                         final IIRow row = iterator.next();
                         final ImmutableBytesWritable key = row.getKey();
                         int i = key.getOffset();
@@ -161,16 +162,25 @@ public class IIKeyValueCodec implements KeyValueCodec {
                         }
 
                         int curCol = BytesUtil.readUnsigned(key.get(), i, COLNO_LEN);
-                        CompressedValueContainer c = new CompressedValueContainer(digest, curCol, 0);
-                        c.fromBytes(row.getValue());
-                        valueContainers[curCol] = c;
-                        localDictionaries.put(curCol, deserialize(row.getDictionary()));
+                        final Dictionary<?> dictionary = deserialize(row.getDictionary());
+                        if (incompleteDigest.isMetrics(curCol)) {
+                            CompressedValueContainer c = new CompressedValueContainer(incompleteDigest, curCol, 0);
+                            c.fromBytes(row.getValue());
+                            valueContainers[curCol] = c;
+                        } else {
+                            CompressedValueContainer c = new CompressedValueContainer(dictionary.getSizeOfId(), dictionary.getMaxId() - dictionary.getMinId() + 1, 0);
+                            c.fromBytes(row.getValue());
+                            valueContainers[curCol] = c;
+                        }
+                        localDictionaries.put(curCol, dictionary);
                         columns++;
                         lastShard = curShard;
                         lastTimestamp = curTimestamp;
                         firstTime = false;
                     }
-                    Preconditions.checkArgument(columns == digest.getColumnCount(), "column count is " + columns + " should be equals to digest.getColumnCount() " + digest.getColumnCount());
+                    Preconditions.checkArgument(columns == incompleteDigest.getColumnCount(), "column count is " + columns + " should be equals to incompleteDigest.getColumnCount() " + incompleteDigest.getColumnCount());
+
+                    TableRecordInfoDigest digest = TableRecordInfo.createDigest(columns, incompleteDigest.getIsMetric(), incompleteDigest.getMetricDataTypes(), localDictionaries);
                     Slice slice = new Slice(digest, curShard, curTimestamp, valueContainers);
                     slice.setLocalDictionaries(localDictionaries);
                     return slice;

@@ -89,7 +89,19 @@ public class TableRecordInfoDigest {
 		return ret;
 	}
 
-	public RawTableRecord createTableRecordBytes() {
+    public boolean[] getIsMetric() {
+        return isMetric;
+    }
+
+    public int[] getLengths() {
+        return lengths;
+    }
+
+    public String[] getMetricDataTypes() {
+        return metricDataTypes;
+    }
+
+    public RawTableRecord createTableRecordBytes() {
 		return new RawTableRecord(this);
 	}
 

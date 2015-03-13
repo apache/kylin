@@ -18,19 +18,18 @@
 
 package org.apache.kylin.invertedindex.index;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.collect.Maps;
 import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author yangli9
@@ -46,31 +45,7 @@ public class TableRecordInfo {
     final Map<Integer, Dictionary<?>> dictionaryMap;
 
     public TableRecordInfo(IISegment iiSegment) {
-
-        this.desc = iiSegment.getIIInstance().getDescriptor();
-        this.dictionaryMap = Maps.newHashMap();
-        Map<TblColRef, FixedLenMeasureCodec<?>> measureCodecMap = Maps.newHashMap();
-
-        DictionaryManager dictMgr = DictionaryManager.getInstance(desc.getConfig());
-        int index = 0;
-        for (TblColRef tblColRef : desc.listAllColumns()) {
-            ColumnDesc col = tblColRef.getColumn();
-            if (desc.isMetricsCol(index)) {
-                measureCodecMap.put(tblColRef, FixedLenMeasureCodec.get(col.getType()));
-            } else {
-                String dictPath = iiSegment.getDictResPath(tblColRef);
-                if (dictPath != null) {
-                    try {
-                        dictionaryMap.put(index, dictMgr.getDictionary(dictPath));
-                    } catch (IOException e) {
-                        throw new RuntimeException("dictionary " + dictPath + " does not exist ", e);
-                    }
-                }
-            }
-            index++;
-        }
-
-        digest = createDigest(dictionaryMap, measureCodecMap);
+        this(iiSegment.getIIDesc(), Collections.<Integer, Dictionary<?>>emptyMap());
     }
 
     public TableRecordInfo(IIDesc desc, Map<Integer, Dictionary<?>> dictionaryMap) {
@@ -106,6 +81,34 @@ public class TableRecordInfo {
                 if (fixedLenMeasureCodec != null) {
                     lengths[i] = fixedLenMeasureCodec.getLength();
                 }
+            } else {
+                final Dictionary<?> dictionary = dictionaryMap.get(i);
+                if (dictionary != null) {
+                    lengths[i] = dictionary.getSizeOfId();
+                    dictMaxIds[i] = dictionary.getMaxId();
+                }
+            }
+        }
+        // offsets
+        int pos = 0;
+        int[] offsets = new int[nColumns];
+        for (int i = 0; i < nColumns; i++) {
+            offsets[i] = pos;
+            pos += lengths[i];
+        }
+
+        int byteFormLen = pos;
+
+        return new TableRecordInfoDigest(nColumns, byteFormLen, offsets, dictMaxIds, lengths, isMetric, dataTypes);
+    }
+
+    public static TableRecordInfoDigest createDigest(int nColumns, boolean[] isMetric, String[] dataTypes, Map<Integer, Dictionary<?>> dictionaryMap) {
+        int[] dictMaxIds = new int[nColumns];
+        int[] lengths = new int[nColumns];
+        for (int i = 0; i < nColumns; ++i) {
+            if (isMetric[i]) {
+                final FixedLenMeasureCodec<?> fixedLenMeasureCodec = FixedLenMeasureCodec.get(DataType.getInstance(dataTypes[i]));
+                lengths[i] = fixedLenMeasureCodec.getLength();
             } else {
                 final Dictionary<?> dictionary = dictionaryMap.get(i);
                 if (dictionary != null) {
