@@ -1,6 +1,6 @@
 {
   "uuid" : "e286e39e-40d7-44c2-8fa2-41b365522771",
-  "name" : "TEST_KYLIN_FACT",
+  "name" : "KYLIN_SALES",
   "columns" : [ {
     "id" : "1",
     "name" : "TRANS_ID",
