@@ -23,10 +23,13 @@ import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.realization.RealizationType;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Created by qianzhou on 1/19/15.
@@ -40,6 +43,7 @@ public class CacheService extends BasicService {
             switch (cacheType) {
                 case CUBE:
                     getCubeManager().loadCubeCache(cacheKey);
+                    cleanProjectCacheByRealization(RealizationType.CUBE, cacheKey);
                     break;
                 case CUBE_DESC:
                     getCubeDescManager().reloadCubeDesc(cacheKey);
@@ -49,6 +53,7 @@ public class CacheService extends BasicService {
                     break;
                 case INVERTED_INDEX:
                     getIIManager().loadIICache(cacheKey);
+                    cleanProjectCacheByRealization(RealizationType.INVERTED_INDEX, cacheKey);
                     break;
                 case INVERTED_INDEX_DESC:
                     getIIDescManager().reloadIIDesc(cacheKey);
@@ -70,6 +75,7 @@ public class CacheService extends BasicService {
                     IIDescManager.clearCache();
                     IIManager.clearCache();
                     ProjectManager.clearCache();
+                    BasicService.resetOLAPDataSources();
                     break;
                 default:
                     throw new RuntimeException("invalid cacheType:" + cacheType);
@@ -78,6 +84,14 @@ public class CacheService extends BasicService {
             throw new RuntimeException("error " + log, e);
         }
 
+    }
+
+    private void cleanProjectCacheByRealization(RealizationType type, String realizationName) throws IOException {
+        List<ProjectInstance> projectInstances = getProjectManager().findProjects(type, realizationName);
+        for (ProjectInstance pi : projectInstances) {
+            getProjectManager().reloadProject(pi.getName());
+            removeOLAPDataSource(pi.getName());
+        }
     }
 
     public void removeCache(Broadcaster.TYPE cacheType, String cacheKey) {
