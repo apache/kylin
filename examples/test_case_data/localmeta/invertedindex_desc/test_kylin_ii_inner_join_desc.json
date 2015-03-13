@@ -4,7 +4,7 @@
   "name": "test_kylin_ii_inner_join_desc",
   "model_name": "test_kylin_inner_join_model_desc",
   "timestamp_dimension": "cal_dt",
-  "bitmap_dimensions": [
+  "value_dimensions": [
     {
       "table": "default.test_kylin_fact",
       "columns": [
@@ -41,9 +41,7 @@
         "seller_type_cd",
         "seller_type_desc"
       ]
-    }
-  ],
-  "value_dimensions": [
+    },
     {
       "table": "edw.test_cal_dt",
       "columns": [
