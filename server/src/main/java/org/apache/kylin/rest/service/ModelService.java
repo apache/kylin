@@ -58,6 +58,7 @@ public class ModelService extends BasicService {
         } else {
             //TO-DO
 //            models = listAllModels(projectName);
+            models=Collections.emptyList();
         }
 
         List<DataModelDesc> filterModels = new ArrayList();

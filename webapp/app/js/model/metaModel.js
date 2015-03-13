@@ -16,6 +16,9 @@
  * limitations under the License.
 */
 
+/**
+ *MetaModel will manage model info of cube
+ */
 KylinApp.service('MetaModel',function(){
 
     //data model when edit model

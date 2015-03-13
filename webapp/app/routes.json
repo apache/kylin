@@ -103,5 +103,13 @@
             "controller": "LoginCtrl",
             "reloadOnSearch": false
         }
+    },
+    {
+        "url": "/models",
+        "params": {
+            "templateUrl": "partials/models/models.html",
+            "tab": "models",
+            "controller": "ModelsCtrl"
+        }
     }
 ]

@@ -18,7 +18,28 @@
 
 'use strict';
 
-KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelService,MetaModel,SweetAlert,$log) {
+KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelService,MetaModel,SweetAlert,CubeGraphService,$log) {
+
+
+    $scope.buildGraph = function (cube) {
+        CubeGraphService.buildTree(cube);
+    };
+    $scope.cleanStatus = function(model){
+
+        if (!model)
+        {
+            return;
+        }
+        var newModel = jQuery.extend(true, {}, model);
+        delete newModel.visiblePage;
+        delete newModel.showDetail;
+
+        angular.forEach(newModel.dimensions, function(dimension, index){
+            delete dimension.status;
+        });
+
+        return newModel;
+    };
 
     $scope.cubeConfig = cubeConfig;
     var DataModel = function () {
@@ -49,7 +70,7 @@ KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelSe
 
     $scope.newLookup = Lookup();
 
-    var lookupList = $scope.metaModel.model.lookups;
+    var lookupList = $scope.model.lookups;
 
     $scope.openLookupModal = function () {
         var modalInstance = $modal.open({
