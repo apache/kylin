@@ -18,23 +18,12 @@
 
 package org.apache.kylin.storage.hbase;
 
-import java.util.Collections;
-import java.util.List;
-
-import org.apache.kylin.common.util.BytesUtil;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.client.*;
-import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import com.google.common.collect.Lists;
-
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.invertedindex.IIInstance;
@@ -46,6 +35,11 @@ import org.apache.kylin.invertedindex.index.TableRecord;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.List;
 
 /**
  * @author yangli9
@@ -69,7 +63,7 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
         Configuration hconf = HadoopUtil.newHBaseConfiguration(hbaseUrl);
         hconn = HConnectionManager.createConnection(hconf);
 
-        this.info = new TableRecordInfo(seg.getIIDesc(), null);
+        this.info = new TableRecordInfo(seg);
     }
 
     @After
