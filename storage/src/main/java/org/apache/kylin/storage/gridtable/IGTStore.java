@@ -4,10 +4,12 @@ import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.util.BitSet;
 import java.util.Iterator;
 
-public interface GTStore {
+import org.apache.kylin.common.util.ByteArray;
+
+public interface IGTStore {
     
     public GTInfo getInfo();
     
@@ -15,15 +17,15 @@ public interface GTStore {
     
     // ============================================================================
     
-    public GTWriter rebuild(int shard);
+    public IGTStoreWriter rebuild(int shard);
     
-    public GTScanner scan(ByteBuffer pkStart, ByteBuffer pkEndExclusive, ConciseSet selectedRowBlcoks, int[] selectedColBlocks);
+    public IGTStoreScanner scan(ByteArray pkStart, ByteArray pkEndExclusive, ConciseSet selectedRowBlocks, BitSet selectedColBlocks);
     
-    public interface GTWriter extends Closeable {
+    public interface IGTStoreWriter extends Closeable {
         void write(GTRowBlock block) throws IOException;
     }
     
-    public interface GTScanner extends Iterator<GTRowBlock>, Closeable {
+    public interface IGTStoreScanner extends Iterator<GTRowBlock>, Closeable {
     }
     
     // ============================================================================

@@ -82,7 +82,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<ShortWritable, Text
 
         try {
             for (ByteArray value : set) {
-                out.write(value.data);
+                out.write(value.array(), value.offset(), value.length());
                 out.write('\n');
             }
         } finally {

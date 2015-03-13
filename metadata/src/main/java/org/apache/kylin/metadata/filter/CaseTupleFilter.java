@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.kylin.metadata.tuple.ICodeSystem;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
 
@@ -65,7 +64,7 @@ public class CaseTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(IEvaluatableTuple tuple, ICodeSystem<?> cs) {
+    public boolean evaluate(IEvaluatableTuple tuple, IFilterCodeSystem<?> cs) {
         if (whenFilters.size() != thenFilters.size()) {
             elseFilter = whenFilters.remove(whenFilters.size() - 1);
         }
@@ -103,12 +102,12 @@ public class CaseTupleFilter extends TupleFilter {
     }
 
     @Override
-    public byte[] serialize(ICodeSystem<?> cs) {
+    public byte[] serialize(IFilterCodeSystem<?> cs) {
         return new byte[0];
     }
 
     @Override
-    public void deserialize(byte[] bytes, ICodeSystem<?> cs) {
+    public void deserialize(byte[] bytes, IFilterCodeSystem<?> cs) {
     }
 
 }

@@ -16,44 +16,51 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.metadata.measure;
+package org.apache.kylin.metadata.serializer;
 
 import java.nio.ByteBuffer;
 
 import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.kylin.common.util.BytesUtil;
 
 /**
  * @author yangli9
  * 
  */
-public class DoubleSerializer extends DataTypeSerializer<DoubleWritable> {
+public class LongSerializer extends DataTypeSerializer<LongWritable> {
 
     // avoid mass object creation
-    DoubleWritable current = new DoubleWritable();
+    LongWritable current = new LongWritable();
 
     @Override
-    public void serialize(DoubleWritable value, ByteBuffer out) {
-        out.putDouble(value.get());
+    public void serialize(LongWritable value, ByteBuffer out) {
+        BytesUtil.writeVLong(value.get(), out);
     }
 
     @Override
-    public DoubleWritable deserialize(ByteBuffer in) {
-        current.set(in.getDouble());
+    public LongWritable deserialize(ByteBuffer in) {
+        current.set(BytesUtil.readVLong(in));
         return current;
     }
 
     @Override
     public int peekLength(ByteBuffer in) {
-        return 8;
+        int mark = in.position();
+        
+        BytesUtil.readVLong(in);
+        int len = in.position() - mark;
+        
+        in.position(mark);
+        return len;
     }
 
     @Override
-    public DoubleWritable valueOf(byte[] value) {
+    public LongWritable valueOf(byte[] value) {
         if (value == null)
-            current.set(0d);
+            current.set(0L);
         else
-            current.set(Double.parseDouble(Bytes.toString(value)));
+            current.set(Long.parseLong(Bytes.toString(value)));
         return current;
     }
 
