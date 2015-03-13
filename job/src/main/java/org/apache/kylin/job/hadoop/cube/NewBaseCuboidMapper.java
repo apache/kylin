@@ -256,7 +256,7 @@ public class NewBaseCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Text, Text, T
                 }
             } else {
                 for (Pair<Integer, Integer> relation : tableJoin.dimTblColAsRowKey) {
-                    keyBytesBuf[relation.getSecond()] = dimRow[relation.getFirst()].data;
+                    keyBytesBuf[relation.getSecond()] = dimRow[relation.getFirst()].array();
                     filledDimension++;
                 }
             }

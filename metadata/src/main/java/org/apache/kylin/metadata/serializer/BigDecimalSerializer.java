@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.metadata.measure;
+package org.apache.kylin.metadata.serializer;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

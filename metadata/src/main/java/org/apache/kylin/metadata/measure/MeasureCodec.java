@@ -22,8 +22,8 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 
 import org.apache.hadoop.io.Text;
-
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.serializer.DataTypeSerializer;
 
 /**
  * @author yangli9

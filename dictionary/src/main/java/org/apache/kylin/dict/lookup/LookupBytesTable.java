@@ -46,7 +46,7 @@ public class LookupBytesTable extends LookupTable<ByteArray> {
 
     @Override
     protected String toString(ByteArray cell) {
-        return Bytes.toString(cell.data);
+        return cell.toString();
     }
 
 }

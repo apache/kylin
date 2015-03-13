@@ -4,24 +4,19 @@ import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.metadata.tuple.ICodeSystem;
+import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 
-public class DictCodeSystem implements ICodeSystem<String> {
+/**
+ * A simple code system where all values are dictionary IDs (fixed length bytes) encoded as ISO-8859-1 strings.
+ * 
+ * @author yangli9
+ */
+public class DictCodeSystem implements IFilterCodeSystem<String> {
 
     public static final DictCodeSystem INSTANCE = new DictCodeSystem();
     
     private DictCodeSystem() {
         // singleton
-    }
-
-    @Override
-    public String encode(Object value) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Object decode(String code) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
