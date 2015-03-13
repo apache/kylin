@@ -20,7 +20,9 @@ package org.apache.kylin.rest.service;
 
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.cube.CubeDescManager;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.invertedindex.IIDescManager;
+import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.springframework.stereotype.Component;
 
@@ -60,6 +62,14 @@ public class CacheService extends BasicService {
                     getMetadataManager().reloadDataModelDesc(cacheKey);
                     IIDescManager.clearCache();
                     CubeDescManager.clearCache();
+                    break;
+                case ALL:
+                    getMetadataManager().reload();
+                    CubeDescManager.clearCache();
+                    CubeManager.clearCache();
+                    IIDescManager.clearCache();
+                    IIManager.clearCache();
+                    ProjectManager.clearCache();
                     break;
                 default:
                     throw new RuntimeException("invalid cacheType:" + cacheType);
