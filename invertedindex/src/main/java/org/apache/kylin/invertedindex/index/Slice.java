@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Objects;
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.dict.Dictionary;
@@ -35,12 +36,12 @@ import org.apache.kylin.dict.Dictionary;
  */
 public class Slice implements Iterable<RawTableRecord>, Comparable<Slice> {
 
-    TableRecordInfoDigest info;
-    int nColumns;
+    final TableRecordInfoDigest info;
+    final int nColumns;
 
-    short shard;
-    long timestamp;
-    int nRecords;
+    final short shard;
+    final long timestamp;
+    final int nRecords;
     ColumnValueContainer[] containers;
     private Map<Integer, Dictionary<?>> localDictionaries;
 
@@ -180,22 +181,25 @@ public class Slice implements Iterable<RawTableRecord>, Comparable<Slice> {
      */
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         Slice other = (Slice) obj;
-        if (info == null) {
-            if (other.info != null)
-                return false;
-        } else if (!info.equals(other.info))
+        if (shard != other.shard) {
             return false;
-        if (shard != other.shard)
+        }
+        if (timestamp != other.timestamp) {
             return false;
-        if (timestamp != other.timestamp)
+        }
+        if (!Objects.equal(info, other.info)) {
             return false;
+        }
         return true;
     }
 

@@ -131,7 +131,10 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
 		System.out.println(kvs.size() + " KV pairs");
 
 		List<Slice> slicesCopy = decodeKVs(codec, kvs);
-		assertEquals(slices, slicesCopy);
+        assertEquals(slices.size(), slicesCopy.size());
+        for (int i = 0; i < slices.size(); i++) {
+            assertEquals(slices.get(i), slicesCopy.get(i));
+        }
 
 		List<TableRecord> recordsCopy = iterateRecords(slicesCopy);
 		assertEquals(new HashSet<TableRecord>(records),
