@@ -20,10 +20,7 @@ package org.apache.kylin.invertedindex.model;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 import org.apache.commons.net.util.Base64;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -68,7 +65,7 @@ public class IIDesc extends RootPersistentEntity {
     @JsonProperty("timestamp_dimension")
     private String timestampDimension;
     @JsonProperty("bitmap_dimensions")
-    private List<DimensionDesc> bitmapDimensions;
+    private List<DimensionDesc> bitmapDimensions = Collections.emptyList();
     @JsonProperty("value_dimensions")
     private List<DimensionDesc> valueDimensions;
     @JsonProperty("metrics")
