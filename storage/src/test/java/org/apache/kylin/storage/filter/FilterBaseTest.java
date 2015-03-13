@@ -27,7 +27,6 @@ import org.apache.kylin.metadata.filter.*;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.tuple.ICodeSystem;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.storage.tuple.Tuple;
 import org.apache.kylin.storage.tuple.TupleInfo;
@@ -38,7 +37,7 @@ import org.apache.kylin.storage.tuple.TupleInfo;
  */
 public class FilterBaseTest {
     
-    static final ICodeSystem CS = StringCodeSystem.INSTANCE;
+    static final IFilterCodeSystem CS = StringCodeSystem.INSTANCE;
 
     protected List<TblColRef> buildGroups() {
         List<TblColRef> groups = new ArrayList<TblColRef>();

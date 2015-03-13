@@ -3,21 +3,21 @@ package org.apache.kylin.storage.gridtable;
 import java.io.Closeable;
 import java.io.Flushable;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
-import org.apache.kylin.storage.gridtable.GTStore.GTWriter;
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.storage.gridtable.IGTStore.IGTStoreWriter;
 
 public class GTBuilder implements Closeable, Flushable {
 
     final private GTInfo info;
-    final private GTWriter writer;
+    final private IGTStoreWriter writer;
     
     private GTRowBlock block;
 
-    public GTBuilder(GTInfo info, int shard, GTStore store) {
+    GTBuilder(GTInfo info, int shard, IGTStore store) {
         this.info = info;
         this.writer = store.rebuild(shard);
-        this.block = new GTRowBlock(info);
+        this.block = GTRowBlock.allocate(info);
     }
 
     public void write(GTRecord r) throws IOException {
@@ -25,11 +25,8 @@ public class GTBuilder implements Closeable, Flushable {
         if (block.isEmpty()) {
             makePrimaryKey(r, block.primaryKey);
         }
-        for (int c = 0; c < info.nColBlocks; c++) {
-            ByteBuffer cellBuf = block.cellBlocks[c];
-            for (int i = info.colBlockCuts[c], end = info.colBlockCuts[c + 1]; i < end; i++) {
-                append(cellBuf, r.cols[i]);
-            }
+        for (int i = 0; i < info.colBlocks.length; i++) {
+            r.exportColumnBlock(i, block.cellBlockBuffers[i]);
         }
         
         block.nRows++;
@@ -38,24 +35,15 @@ public class GTBuilder implements Closeable, Flushable {
         }
     }
     
-    private void makePrimaryKey(GTRecord r, ByteBuffer buf) {
-        buf.clear();
-        
-        for (int i : info.primaryKey) {
-            append(buf, r.cols[i]);
-        }
-        
-        buf.flip();
-    }
-
-    private void append(ByteBuffer buf, ByteBuffer data) {
-        buf.put(data.array(), data.arrayOffset(), data.limit());
+    private void makePrimaryKey(GTRecord r, ByteArray buf) {
+        r.exportColumns(info.primaryKey, buf);
     }
 
     @Override
     public void flush() throws IOException {
         writer.write(block);
         block.clear();
+        block.seqId++;
     }
 
     @Override

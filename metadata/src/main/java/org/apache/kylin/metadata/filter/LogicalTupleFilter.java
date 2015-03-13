@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.kylin.metadata.tuple.ICodeSystem;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
 
@@ -72,7 +71,7 @@ public class LogicalTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(IEvaluatableTuple tuple, ICodeSystem<?> cs) {
+    public boolean evaluate(IEvaluatableTuple tuple, IFilterCodeSystem<?> cs) {
         switch (this.operator) {
         case AND:
             return evalAnd(tuple, cs);
@@ -85,7 +84,7 @@ public class LogicalTupleFilter extends TupleFilter {
         }
     }
 
-    private boolean evalAnd(IEvaluatableTuple tuple, ICodeSystem<?> cs) {
+    private boolean evalAnd(IEvaluatableTuple tuple, IFilterCodeSystem<?> cs) {
         for (TupleFilter filter : this.children) {
             if (!filter.evaluate(tuple, cs)) {
                 return false;
@@ -94,7 +93,7 @@ public class LogicalTupleFilter extends TupleFilter {
         return true;
     }
 
-    private boolean evalOr(IEvaluatableTuple tuple, ICodeSystem<?> cs) {
+    private boolean evalOr(IEvaluatableTuple tuple, IFilterCodeSystem<?> cs) {
         for (TupleFilter filter : this.children) {
             if (filter.evaluate(tuple, cs)) {
                 return true;
@@ -103,7 +102,7 @@ public class LogicalTupleFilter extends TupleFilter {
         return false;
     }
 
-    private boolean evalNot(IEvaluatableTuple tuple, ICodeSystem<?> cs) {
+    private boolean evalNot(IEvaluatableTuple tuple, IFilterCodeSystem<?> cs) {
         return !this.children.get(0).evaluate(tuple, cs);
     }
 
@@ -118,12 +117,12 @@ public class LogicalTupleFilter extends TupleFilter {
     }
 
     @Override
-    public byte[] serialize(ICodeSystem<?> cs) {
+    public byte[] serialize(IFilterCodeSystem<?> cs) {
         return new byte[0];
     }
 
     @Override
-    public void deserialize(byte[] bytes, ICodeSystem<?> cs) {
+    public void deserialize(byte[] bytes, IFilterCodeSystem<?> cs) {
     }
 
 }

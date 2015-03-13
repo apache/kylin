@@ -18,7 +18,7 @@
 
 package org.apache.kylin.common.util;
 
-import java.util.Arrays;
+import java.nio.ByteBuffer;
 
 import org.apache.hadoop.hbase.util.Bytes;
 
@@ -27,15 +27,65 @@ import org.apache.hadoop.hbase.util.Bytes;
  */
 public class ByteArray implements Comparable<ByteArray> {
 
-    public byte[] data;
+    public static ByteArray allocate(int length) {
+        return new ByteArray(new byte[length]);
+    }
+    
+    // ============================================================================
+
+    private byte[] data;
+    private int offset;
+    private int length;
+
+    public ByteArray() {
+        set(null, 0, 0);
+    }
 
     public ByteArray(byte[] data) {
-        this.data = data;
+        set(data, 0, data.length);
+    }
+
+    public ByteArray(byte[] data, int offset, int length) {
+        set(data, offset, length);
+    }
+
+    public byte[] array() {
+        return data;
+    }
+
+    public int offset() {
+        return offset;
+    }
+
+    public int length() {
+        return length;
+    }
+
+    public void set(byte[] array) {
+        set(array, 0, array.length);
+    }
+
+    public void set(byte[] array, int offset, int length) {
+        this.data = array;
+        this.offset = offset;
+        this.length = length;
+    }
+
+    public void set(ByteArray o) {
+        set(o.data, o.offset, o.length);
+    }
+
+    public void setLength(int length) {
+        this.length = length;
+    }
+
+    public ByteBuffer wrapAsBuffer() {
+        return ByteBuffer.wrap(data, offset, length);
     }
 
     @Override
     public int hashCode() {
-        return Bytes.hashCode(data);
+        return Bytes.hashCode(data, offset, length);
     }
 
     @Override
@@ -46,14 +96,18 @@ public class ByteArray implements Comparable<ByteArray> {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        ByteArray other = (ByteArray) obj;
-        if (!Arrays.equals(data, other.data))
-            return false;
-        return true;
+        ByteArray o = (ByteArray) obj;
+        return Bytes.equals(this.data, this.offset, this.length, o.data, o.offset, o.length);
     }
 
     @Override
     public int compareTo(ByteArray o) {
-        return Bytes.compareTo(this.data, o.data);
+        return Bytes.compareTo(this.data, this.offset, this.length, o.data, o.offset, o.length);
     }
+
+    @Override
+    public String toString() {
+        return Bytes.toString(data, offset, length);
+    }
+
 }

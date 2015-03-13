@@ -16,56 +16,44 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.metadata.measure;
+package org.apache.kylin.metadata.serializer;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.io.DoubleWritable;
 
 /**
  * @author yangli9
  * 
  */
-public class HLLCSerializer extends DataTypeSerializer<HyperLogLogPlusCounter> {
+public class DoubleSerializer extends DataTypeSerializer<DoubleWritable> {
 
-    HyperLogLogPlusCounter current;
+    // avoid mass object creation
+    DoubleWritable current = new DoubleWritable();
 
-    public HLLCSerializer(int p) {
-        current = new HyperLogLogPlusCounter(p);
+    @Override
+    public void serialize(DoubleWritable value, ByteBuffer out) {
+        out.putDouble(value.get());
     }
 
     @Override
-    public void serialize(HyperLogLogPlusCounter value, ByteBuffer out) {
-        try {
-            value.writeRegisters(out);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public HyperLogLogPlusCounter deserialize(ByteBuffer in) {
-        try {
-            current.readRegisters(in);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public DoubleWritable deserialize(ByteBuffer in) {
+        current.set(in.getDouble());
         return current;
     }
 
     @Override
     public int peekLength(ByteBuffer in) {
-        return current.peekLength(in);
+        return 8;
     }
 
     @Override
-    public HyperLogLogPlusCounter valueOf(byte[] value) {
-        current.clear();
+    public DoubleWritable valueOf(byte[] value) {
         if (value == null)
-            current.add("__nUlL__");
+            current.set(0d);
         else
-            current.add(value);
+            current.set(Double.parseDouble(Bytes.toString(value)));
         return current;
     }
 
