@@ -44,7 +44,7 @@ public class HBaseClientKVIterator implements Iterable<IIRow>, Closeable {
     ResultScanner scanner;
     Iterator<Result> iterator;
 
-    public HBaseClientKVIterator(HConnection hconn, String tableName, byte[] family, byte[] qualifier) throws IOException {
+    public HBaseClientKVIterator(HConnection hconn, String tableName, byte[] family) throws IOException {
         this.family = family;
 
         this.table = hconn.getTable(tableName);

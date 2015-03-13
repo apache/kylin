@@ -84,7 +84,7 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
         IIKeyValueCodec codec = new IIKeyValueCodec(info.getDigest());
 
         List<Slice> slices = Lists.newArrayList();
-        HBaseClientKVIterator kvIterator = new HBaseClientKVIterator(hconn, tableName, IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES);
+        HBaseClientKVIterator kvIterator = new HBaseClientKVIterator(hconn, tableName, IIDesc.HBASE_FAMILY_BYTES);
         try {
             for (Slice slice : codec.decodeKeyValue(kvIterator)) {
                 slices.add(slice);
