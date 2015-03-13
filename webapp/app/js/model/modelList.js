@@ -16,39 +16,37 @@
  * limitations under the License.
 */
 
-/*
- *jobListModel will manage data in list job page
- */
-
-KylinApp.service('JobList',function(JobService,$q){
+KylinApp.service('ModelList',function(ModelService,$q){
+    var models=[];
     var _this = this;
-    this.jobs=[];
 
-    this.list = function(jobRequest){
+    this.list = function(queryParam){
 
         var defer = $q.defer();
-        JobService.list(jobRequest, function (jobs) {
-            angular.forEach(jobs, function (job) {
-                var id = job.uuid;
-                if (angular.isDefined(_this.jobs[id])) {
-                    if (job.last_modified != _this.jobs[id].last_modified) {
-                        _this.jobs[id] = job;
-                    } else {
-                    }
-                } else {
-                    _this.jobs[id] = job;
+        ModelService.list(queryParam, function (_models) {
+            angular.forEach(_models, function (models, index) {
+                if(models.name){
+//                    $scope.listAccess(models, 'modelsInstance');
                 }
             });
-
-            defer.resolve(jobs.length);
+            _models = _.filter(_models,function(models){return models.name!=undefined});
+            _this.models = _this.models.concat(_models);
+            defer.resolve(_this.models.length);
+        },function(){
+            defer.reject("Failed to load models");
         });
-
         return defer.promise;
 
     };
 
-    this.removeAll = function(){
-        _this.jobs=[];
-    };
+    this.removemodels = function(models){
+        var modelsIndex = _this.models.indexOf(models);
+        if (modelsIndex > -1) {
+            _this.models.splice(modelsIndex, 1);
+        }
+    }
 
+    this.removeAll = function(){
+        _this.models=[];
+    };
 });
