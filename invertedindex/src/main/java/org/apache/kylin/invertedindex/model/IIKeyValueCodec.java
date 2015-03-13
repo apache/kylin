@@ -18,6 +18,7 @@
 
 package org.apache.kylin.invertedindex.model;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
@@ -113,8 +114,78 @@ public class IIKeyValueCodec implements KeyValueCodec {
 
     @Override
 	public Iterable<Slice> decodeKeyValue(Iterable<IIRow> kvs) {
-		return new Decoder(kvs, digest);
+        return new IIRowDecoder(digest, kvs.iterator());
+//		return new Decoder(kvs, digest);
 	}
+
+    private static class IIRowDecoder implements Iterable<Slice> {
+
+        private final TableRecordInfoDigest digest;
+        private final Iterator<IIRow> iterator;
+
+        private IIRowDecoder(TableRecordInfoDigest digest, Iterator<IIRow> iterator) {
+            this.digest = digest;
+            this.iterator = iterator;
+        }
+
+        @Override
+        public Iterator<Slice> iterator() {
+            return new Iterator<Slice>() {
+                @Override
+                public boolean hasNext() {
+                    return iterator.hasNext();
+                }
+
+                @Override
+                public Slice next() {
+                    int columns = 0;
+                    ColumnValueContainer[] valueContainers = new ColumnValueContainer[digest.getColumnCount()];
+                    Map<Integer, Dictionary<?>> localDictionaries = Maps.newHashMap();
+                    boolean firstTime = true;
+                    short curShard = 0;
+                    long curTimestamp = 0;
+                    short lastShard = 0;
+                    long lastTimestamp = 0;
+                    while (iterator().hasNext() && columns < digest.getColumnCount()) {
+                        final IIRow row = iterator.next();
+                        final ImmutableBytesWritable key = row.getKey();
+                        int i = key.getOffset();
+                        curShard = (short) BytesUtil.readUnsigned(key.get(), i, SHARD_LEN);
+                        i += SHARD_LEN;
+                        curTimestamp = BytesUtil.readLong(key.get(), i, TIMEPART_LEN);
+                        i += TIMEPART_LEN;
+
+                        if (!firstTime) {
+                            Preconditions.checkArgument(curShard == lastShard, "shard should be equals in one slice, curShard is" + curShard + " lastShard is " + lastShard);
+                            Preconditions.checkArgument(curTimestamp == lastTimestamp, "timestamp should be equals in one slice, curTimestamp is" + curTimestamp + " lastTimestamp is " + lastTimestamp);
+                        }
+
+                        int curCol = BytesUtil.readUnsigned(key.get(), i, COLNO_LEN);
+                        CompressedValueContainer c = new CompressedValueContainer(digest, curCol, 0);
+                        c.fromBytes(row.getValue());
+                        valueContainers[curCol] = c;
+                        localDictionaries.put(curCol, deserialize(row.getDictionary()));
+                        columns++;
+                        lastShard = curShard;
+                        lastTimestamp = curTimestamp;
+                        firstTime = false;
+                    }
+                    Preconditions.checkArgument(columns == digest.getColumnCount(), "column count is " + columns + " should be equals to digest.getColumnCount() " + digest.getColumnCount());
+                    Slice slice = new Slice(digest, curShard, curTimestamp, valueContainers);
+                    slice.setLocalDictionaries(localDictionaries);
+                    return slice;
+                }
+
+
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+            };
+        }
+
+    }
+
 
 	private static class Decoder implements Iterable<Slice> {
 
@@ -148,7 +219,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
 				ImmutableBytesWritable v = kv.getValue();
 				decodeKey(k);
                 final Dictionary<?> dictionary = deserialize(kv.getDictionary());
-                final CompressedValueContainer c = new CompressedValueContainer(dictionary.getSizeOfId(), (dictionary.getMaxId() - dictionary.getMinId() + 1), 0);
+                final CompressedValueContainer c = new CompressedValueContainer(digest, curCol, 0);
                 c.fromBytes(kv.getValue());
                 addContainer(curCol, c);
                 localDictionaries.put(curCol, dictionary);
