@@ -197,10 +197,7 @@ public class Slice implements Iterable<RawTableRecord>, Comparable<Slice> {
         if (timestamp != other.timestamp) {
             return false;
         }
-        if (!Objects.equal(info, other.info)) {
-            return false;
-        }
-        return true;
+        return Objects.equal(info, other.info);
     }
 
     @Override
