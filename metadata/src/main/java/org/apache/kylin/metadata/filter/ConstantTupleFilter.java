@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.HashSet;
 
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.metadata.tuple.ICodeSystem;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
 /**
@@ -65,7 +64,7 @@ public class ConstantTupleFilter extends TupleFilter {
     }
 
     @Override
-    public boolean evaluate(IEvaluatableTuple tuple, ICodeSystem<?> cs) {
+    public boolean evaluate(IEvaluatableTuple tuple, IFilterCodeSystem<?> cs) {
         return constantValues.size() > 0;
     }
 
@@ -81,7 +80,7 @@ public class ConstantTupleFilter extends TupleFilter {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public byte[] serialize(ICodeSystem cs) {
+    public byte[] serialize(IFilterCodeSystem cs) {
         ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
         int size = this.constantValues.size();
         BytesUtil.writeVInt(size, buffer);
@@ -94,7 +93,7 @@ public class ConstantTupleFilter extends TupleFilter {
     }
 
     @Override
-    public void deserialize(byte[] bytes, ICodeSystem<?> cs) {
+    public void deserialize(byte[] bytes, IFilterCodeSystem<?> cs) {
         this.constantValues.clear();
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         int size = BytesUtil.readVInt(buffer);

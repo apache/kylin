@@ -51,7 +51,7 @@ public class IIDistinctColumnsCombiner extends KylinReducer<ShortWritable, Text,
         }
 
         for (ByteArray value : set) {
-            outputValue.set(value.data);
+            outputValue.set(value.array(), value.offset(), value.length());
             context.write(key, outputValue);
         }
     }

@@ -16,51 +16,56 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.metadata.measure;
+package org.apache.kylin.metadata.serializer;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 
 /**
  * @author yangli9
  * 
  */
-public class LongSerializer extends DataTypeSerializer<LongWritable> {
+public class HLLCSerializer extends DataTypeSerializer<HyperLogLogPlusCounter> {
 
-    // avoid mass object creation
-    LongWritable current = new LongWritable();
+    HyperLogLogPlusCounter current;
 
-    @Override
-    public void serialize(LongWritable value, ByteBuffer out) {
-        BytesUtil.writeVLong(value.get(), out);
+    public HLLCSerializer(int p) {
+        current = new HyperLogLogPlusCounter(p);
     }
 
     @Override
-    public LongWritable deserialize(ByteBuffer in) {
-        current.set(BytesUtil.readVLong(in));
+    public void serialize(HyperLogLogPlusCounter value, ByteBuffer out) {
+        try {
+            value.writeRegisters(out);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public HyperLogLogPlusCounter deserialize(ByteBuffer in) {
+        try {
+            current.readRegisters(in);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         return current;
     }
 
     @Override
     public int peekLength(ByteBuffer in) {
-        int mark = in.position();
-        
-        BytesUtil.readVLong(in);
-        int len = in.position() - mark;
-        
-        in.position(mark);
-        return len;
+        return current.peekLength(in);
     }
 
     @Override
-    public LongWritable valueOf(byte[] value) {
+    public HyperLogLogPlusCounter valueOf(byte[] value) {
+        current.clear();
         if (value == null)
-            current.set(0L);
+            current.add("__nUlL__");
         else
-            current.set(Long.parseLong(Bytes.toString(value)));
+            current.add(value);
         return current;
     }
 

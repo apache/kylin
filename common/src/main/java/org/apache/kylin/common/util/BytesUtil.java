@@ -311,6 +311,15 @@ public class BytesUtil {
         out.put(array);
     }
 
+    public static void writeByteArray(byte[] array, int offset, int length, ByteBuffer out) {
+        if (array == null) {
+            writeVInt(-1, out);
+            return;
+        }
+        writeVInt(array.length, out);
+        out.put(array, offset, length);
+    }
+
     public static byte[] readByteArray(ByteBuffer in) {
         int len = readVInt(in);
         if (len < 0)
@@ -319,6 +328,18 @@ public class BytesUtil {
         byte[] array = new byte[len];
         in.get(array);
         return array;
+    }
+    
+    public static int peekByteArrayLength(ByteBuffer in) {
+        int start = in.position();
+        int arrayLen = readVInt(in);
+        int sizeLen = in.position() - start;
+        in.position(start);
+        
+        if (arrayLen < 0)
+            return sizeLen;
+        else
+            return sizeLen + arrayLen;
     }
 
     public static void writeBooleanArray(boolean[] array, ByteBuffer out) {

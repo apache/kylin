@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.metadata.measure;
+package org.apache.kylin.metadata.serializer;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
@@ -33,6 +33,7 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
 
     final static HashMap<String, Class<?>> implementations = new HashMap<String, Class<?>>();
     static {
+        implementations.put("string", StringSerializer.class);
         implementations.put("decimal", BigDecimalSerializer.class);
         implementations.put("double", DoubleSerializer.class);
         implementations.put("float", DoubleSerializer.class);
@@ -43,14 +44,17 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
     }
 
     public static DataTypeSerializer<?> create(String dataType) {
-        DataType type = DataType.getInstance(dataType);
+        return create(DataType.getInstance(dataType));
+    }
+    
+    public static DataTypeSerializer<?> create(DataType type) {
         if (type.isHLLC()) {
             return new HLLCSerializer(type.getPrecision());
         }
 
         Class<?> clz = implementations.get(type.getName());
         if (clz == null)
-            throw new RuntimeException("No MeasureSerializer for type " + dataType);
+            throw new RuntimeException("No MeasureSerializer for type " + type);
 
         try {
             return (DataTypeSerializer<?>) clz.newInstance();
