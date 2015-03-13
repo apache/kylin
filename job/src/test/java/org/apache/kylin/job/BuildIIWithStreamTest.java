@@ -94,6 +94,7 @@ public class BuildIIWithStreamTest {
     @Before
     public void before() throws Exception {
         HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
+        DeployUtil.overrideJobJarLocations();
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
         iiManager = IIManager.getInstance(kylinConfig);
