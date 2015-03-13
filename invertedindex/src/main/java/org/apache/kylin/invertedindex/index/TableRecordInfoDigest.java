@@ -18,13 +18,15 @@
 
 package org.apache.kylin.invertedindex.index;
 
+import com.google.common.base.Objects;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
 import org.apache.kylin.metadata.model.DataType;
-import org.apache.hadoop.io.LongWritable;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 /**
  * Created by honma on 11/10/14.
@@ -105,7 +107,30 @@ public class TableRecordInfoDigest {
 		return new RawTableRecord(this);
 	}
 
-	// metrics go with fixed-len codec
+    @Override
+    public int hashCode() {
+        return com.google.common.base.Objects.hashCode(nColumns, offsets, dictMaxIds, lengths, isMetric, metricDataTypes);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof TableRecordInfoDigest) {
+            TableRecordInfoDigest other = (TableRecordInfoDigest) obj;
+            return Objects.equal(this.nColumns, other.nColumns) &&
+                    Arrays.equals(this.offsets, other.offsets) &&
+                    Arrays.equals(this.dictMaxIds, other.dictMaxIds) &&
+                    Arrays.equals(this.lengths, other.lengths) &&
+                    Arrays.equals(this.isMetric, other.isMetric) &&
+                    Arrays.equals(this.metricDataTypes, other.metricDataTypes);
+        } else {
+            return false;
+        }
+    }
+
+    // metrics go with fixed-len codec
 	@SuppressWarnings("unchecked")
 	public FixedLenMeasureCodec<LongWritable> codec(int col) {
 		// yes, all metrics are long currently
