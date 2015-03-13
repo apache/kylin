@@ -71,7 +71,12 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
+
+import static org.junit.Assert.fail;
 
 /**
  * Created by qianzhou on 3/9/15.
@@ -196,6 +201,7 @@ public class BuildIIWithStreamTest {
     private void buildII(String iiName) throws Exception {
         final IIDesc desc = iiManager.getII(iiName).getDescriptor();
         final String tableName = createIntermediateTable(desc, kylinConfig);
+        logger.info("intermediate table name:" + tableName);
         final Configuration conf = new Configuration();
         HCatInputFormat.setInput(conf, "default", tableName);
         final HCatSchema tableSchema = HCatInputFormat.getTableSchema(conf);
@@ -215,14 +221,19 @@ public class BuildIIWithStreamTest {
         ToolRunner.run(new IICreateHTableJob(), args);
 
 
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
         final IIStreamBuilder streamBuilder = new IIStreamBuilder(queue, segment.getStorageLocationIdentifier(), desc, 0);
-        final Thread thread = new Thread(streamBuilder);
-        thread.start();
         while (reader.next()) {
             queue.put(parse(reader.getRow()));
         }
         queue.put(new Stream(-1, null));
-        thread.join();
+        final Future<?> future = executorService.submit(streamBuilder);
+        try {
+            future.get();
+        } catch (Exception e) {
+            logger.error("stream build failed", e);
+            fail("stream build failed");
+        }
 
         logger.info("stream build finished, htable name:" + segment.getStorageLocationIdentifier());
     }
