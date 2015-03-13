@@ -148,14 +148,9 @@ public class IIKeyValueCodec implements KeyValueCodec {
 				ImmutableBytesWritable v = kv.getValue();
 				decodeKey(k);
                 final Dictionary<?> dictionary = deserialize(kv.getDictionary());
-                addContainer(curCol, new CompressedValueContainer(dictionary.getSizeOfId(), (dictionary.getMaxId() - dictionary.getMinId() + 1), (dictionary.getMaxId() - dictionary.getMinId() + 1)));
-                byte[] bytes = new byte[dictionary.getSizeOfValue()];
-                ImmutableBytesWritable buffer = new ImmutableBytesWritable(bytes);
-                for (int i = dictionary.getMinId(); i <= dictionary.getMaxId(); ++i) {
-                    final int length = dictionary.getValueBytesFromId(i, bytes, 0);
-                    buffer.set(bytes, 0, length);
-                    containers[curCol].append(buffer);
-                }
+                final CompressedValueContainer c = new CompressedValueContainer(dictionary.getSizeOfId(), (dictionary.getMaxId() - dictionary.getMinId() + 1), 0);
+                c.fromBytes(kv.getValue());
+                addContainer(curCol, c);
                 localDictionaries.put(curCol, dictionary);
                 if (localDictionaries.size() < digest.getColumnCount()) {
                     continue;
@@ -235,5 +230,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
 		}
 
 	}
+
+
 
 }
