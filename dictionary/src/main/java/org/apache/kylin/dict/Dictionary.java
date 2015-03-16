@@ -51,15 +51,17 @@ abstract public class Dictionary<T> implements Writable {
 
     abstract public int getMaxId();
 
+    public int getSize() {
+        return getMaxId() - getMinId() + 1;
+    }
+
     /**
-     * @return the size of an ID in bytes, determined by the cardinality of
-     *         column
+     * @return the size of an ID in bytes, determined by the cardinality of column
      */
     abstract public int getSizeOfId();
 
     /**
-     * @return the (maximum) size of value in bytes, determined by the longest
-     *         value of column
+     * @return the (maximum) size of value in bytes, determined by the longest value
      */
     abstract public int getSizeOfValue();
 
@@ -189,4 +191,5 @@ abstract public class Dictionary<T> implements Writable {
             return 0;
         }
     }
+
 }

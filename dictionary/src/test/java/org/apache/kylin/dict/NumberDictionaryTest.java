@@ -21,12 +21,15 @@ package org.apache.kylin.dict;
 import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.metadata.model.DataType;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -41,6 +44,21 @@ public class NumberDictionaryTest {
     NumberDictionary.NumberBytesCodec codec = new NumberDictionary.NumberBytesCodec();
     Random rand = new Random();
 
+
+    @Test
+    public void testEmptyInput() {
+        String[] ints = new String[] { "", "0", "5", "100", "13" };
+        Collection<byte[]> intBytes = new ArrayList<byte[]>();
+        for (String s : ints) {
+            intBytes.add((s == null) ? null : Bytes.toBytes(s));
+        }
+        
+        // check "" is treated as NULL, not a code of dictionary
+        Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueList(DataType.getInstance("integer"), intBytes);
+        assertEquals(4, dict.getSize());
+    }
+
+    
     @Test
     public void testNumberEncode() {
         checkCodec("12345", "00000000000012345");

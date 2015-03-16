@@ -47,15 +47,12 @@ public class DictionaryGenerator {
     private static final String[] DATE_PATTERNS = new String[]{"yyyy-MM-dd"};
 
     public static Dictionary<?> buildDictionaryFromValueList(DictionaryInfo info, Collection<byte[]> values) {
-        info.setCardinality(values.size());
         Dictionary<?> dict = buildDictionaryFromValueList(DataType.getInstance(info.getDataType()), values);
+        info.setCardinality(dict.getSize());
         return dict;
     }
 
     public static Dictionary<?> buildDictionaryFromValueList(DataType dataType, Collection<byte[]> values) {
-        if (values.size() > DICT_MAX_CARDINALITY) {
-            throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary -- cardinality: " + values.size());
-        }
         Preconditions.checkNotNull(dataType, "dataType cannot be null");
         Dictionary dict;
         int baseId = 0; // always 0 for now
@@ -80,7 +77,10 @@ public class DictionaryGenerator {
             buf.append(s.toString()).append("=>").append(dict.getIdFromValue(s));
         }
         logger.info("Dictionary value samples: " + buf.toString());
-        logger.info("Dictionary cardinality " + values.size());
+        logger.info("Dictionary cardinality " + dict.getSize());
+        if (dict.getSize() > DICT_MAX_CARDINALITY) {
+            throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary -- cardinality: " + values.size());
+        }
         return dict;
     }
 
