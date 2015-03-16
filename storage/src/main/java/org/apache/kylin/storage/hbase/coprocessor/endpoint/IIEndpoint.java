@@ -136,11 +136,12 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             }
 
             Iterator<RawTableRecord> iterator = slice.iterateWithBitmap(result);
+            final EndpointAggregators endpointAggregators = new EndpointAggregators(aggregators, slice.getInfo());
             while (iterator.hasNext()) {
                 byte[] data = iterator.next().getBytes();
                 CoprocessorProjector.AggrKey aggKey = projector.getAggrKey(data);
                 MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
-                aggregators.aggregate(bufs, data);
+                endpointAggregators.aggregate(bufs, data);
                 aggCache.checkMemoryUsage();
             }
         }

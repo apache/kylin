@@ -131,6 +131,10 @@ public class EndpointAggregators {
         }
     }
 
+    public EndpointAggregators(EndpointAggregators endpointAggregators, TableRecordInfoDigest digest) {
+        this(endpointAggregators.funcNames, endpointAggregators.dataTypes, endpointAggregators.metricInfos, digest);
+    }
+
     public TableRecordInfoDigest getTableRecordInfoDigest() {
         return tableRecordInfoDigest;
     }
