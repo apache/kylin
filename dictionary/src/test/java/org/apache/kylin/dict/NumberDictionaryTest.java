@@ -55,7 +55,7 @@ public class NumberDictionaryTest {
         
         // check "" is treated as NULL, not a code of dictionary
         Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueList(DataType.getInstance("integer"), intBytes);
-        assertEquals(4, dict.getSize());
+        assertEquals(5, dict.getSize());
     }
 
     
