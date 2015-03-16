@@ -33,7 +33,7 @@ import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.hadoop.dict.CreateInvertedIndexDictionaryJob;
-import org.apache.kylin.job.hadoop.hive.IIJoinedFlatTableDesc;
+import org.apache.kylin.invertedindex.model.IIJoinedFlatTableDesc;
 import org.apache.kylin.job.hadoop.invertedindex.IIBulkLoadJob;
 import org.apache.kylin.job.hadoop.invertedindex.IICreateHFileJob;
 import org.apache.kylin.job.hadoop.invertedindex.IICreateHTableJob;

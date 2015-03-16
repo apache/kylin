@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.hadoop.hive;
+package org.apache.kylin.metadata.model;
 
 import java.util.List;
 
