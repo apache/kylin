@@ -50,7 +50,7 @@ then
     -Dkylin.hive.dependency=${hive_dependency} \
     -Dspring.profiles.active=${spring_profile} \
     org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start > ${tomcat_root}/logs/kylin.log 2>&1 & echo $! > ${KYLIN_HOME}/pid &
-    echo "A new Kylin instance is started by $USER, stop it using \"stop-kylin.sh\""
+    echo "A new Kylin instance is started by $USER, stop it using \"kylin.sh stop\""
     if [ "$useSandbox" = "true" ]
         then echo "Please visit http://<your_sandbox_ip>:7070/kylin to play with the cubes! (Useranme: ADMIN, Password: KYLIN)"
     else

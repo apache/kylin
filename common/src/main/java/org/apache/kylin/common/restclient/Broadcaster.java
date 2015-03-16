@@ -57,7 +57,7 @@ public class Broadcaster {
             public void run() {
                 final String[] nodes = KylinConfig.getInstanceFromEnv().getRestServers();
                 if (nodes == null || nodes.length < 1) {//TODO if the node count is greater than 1, it means it is a cluster
-                    logger.warn("there are no available rest servers, please check the KYLIN_REST_SERVERS config");
+                    logger.info("There is no available rest server; check the 'kylin.rest.servers' config");
                     return;
                 }
                 final List<RestClient> restClients = Lists.newArrayList();
@@ -137,7 +137,7 @@ public class Broadcaster {
     }
 
     public static enum TYPE {
-        CUBE("cube"), CUBE_DESC("cube_desc"), PROJECT("project"), INVERTED_INDEX("inverted_index"), INVERTED_INDEX_DESC("ii_desc"), TABLE("table"), DATA_MODEL("data_model"), HYBRID("hybrid");
+        ALL("all"), CUBE("cube"), CUBE_DESC("cube_desc"), PROJECT("project"), INVERTED_INDEX("inverted_index"), INVERTED_INDEX_DESC("ii_desc"), TABLE("table"), DATA_MODEL("data_model"), HYBRID("hybrid");
         private String text;
 
         private TYPE(String text) {
