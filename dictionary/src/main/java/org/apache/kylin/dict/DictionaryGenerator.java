@@ -153,7 +153,7 @@ public class DictionaryGenerator {
             int badCount = 0;
             SimpleDateFormat sdf = new SimpleDateFormat(ptn);
             for (byte[] value : values) {
-                if (value.length == 0)
+                if (value == null || value.length == 0)
                     continue;
 
                 String str = Bytes.toString(value);
@@ -179,6 +179,8 @@ public class DictionaryGenerator {
     private static Dictionary buildStringDict(Collection<byte[]> values, int baseId, int nSamples, ArrayList samples) {
         TrieDictionaryBuilder builder = new TrieDictionaryBuilder(new StringBytesConverter());
         for (byte[] value : values) {
+            if (value == null)
+                continue;
             String v = Bytes.toString(value);
             builder.addValue(v);
             if (samples.size() < nSamples && samples.contains(v) == false)
@@ -190,6 +192,8 @@ public class DictionaryGenerator {
     private static Dictionary buildNumberDict(Collection<byte[]> values, int baseId, int nSamples, ArrayList samples) {
         NumberDictionaryBuilder builder = new NumberDictionaryBuilder(new StringBytesConverter());
         for (byte[] value : values) {
+            if (value == null || value.length == 0) // "" is null for numbers
+                continue;
             String v = Bytes.toString(value);
             builder.addValue(v);
             if (samples.size() < nSamples && samples.contains(v) == false)
