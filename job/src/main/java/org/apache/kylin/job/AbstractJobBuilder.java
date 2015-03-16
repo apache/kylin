@@ -23,7 +23,7 @@ import java.io.IOException;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.hadoop.hive.IJoinedFlatTableDesc;
+import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.job.execution.AbstractExecutable;
 
 public abstract class AbstractJobBuilder {
