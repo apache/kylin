@@ -27,11 +27,16 @@ If you are running Kylin in a cluster or you have multiple Kylin instances, plea
 >     │   ├── check-env.sh
 >     │   ├── find-hive-dependency.sh
 >     │   ├── health-check.sh
->     │   └── kylin.sh
+>     │   ├── kylin.sh
+>     │   └── sample.sh
 >     │
 >     ├── conf
 >     │   ├── kylin_job_conf.xml
 >     │   └── kylin.properties
+>     │
+>     ├── sample_cube
+>     │   ├── data
+>     │   └── metadata
 >     │
 >     ├── tomcat
 >     │   ├── webapps
@@ -40,9 +45,19 @@ If you are running Kylin in a cluster or you have multiple Kylin instances, plea
 >     │ 
 >     └── lib
 >         ├── kylin-coprocessor-${version}.jar
->         └── kylin-job-${version}.jar 
+>         ├── kylin-job-${version}.jar
+>         └── kylin-jdbc-${version}.jar
 
+###Create sample cube
+Kylin provides a script for you to create a sample Cube; the script will also create three sample hive tables:
 
+1. Run ${KYLIN_HOME}/bin/sample.sh
+2. Logon Kylin web, select project "learn_kylin";
+3. Select the sample cube "kylin_sales_cube", click "Actions" -> "Build", pick up a date later than 2014-01-01 (to cover all 10000 sample records);
+4. Check the build progress in "Jobs" tab, until 100%;
+5. Execute SQLs in the "Query" tab, for example:
+	select cal_dt, sum(price) as total_selled, count(distinct seller_id) as sellers from kylin_sales group by cal_dt order by cal_dt
+6. You can verify the query result and compare the response time with hive;
 
 ###Build from source
 >     git clone https://github.com/KylinOLAP/Kylin.git   

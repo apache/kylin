@@ -3,10 +3,11 @@
 
 if [ -z "$KYLIN_HOME" ]
 then
-	bin=$(dirname ${0})
-	export KYLIN_HOME=$(dirname $bin)
+    echo 'please make sure KYLIN_HOME has been set'
+    exit 1
+else
+    echo "KYLIN_HOME is set to ${KYLIN_HOME}"
 fi
-echo "KYLIN_HOME is set to ${KYLIN_HOME}"
 
 if [ -z "$(command -v hbase version)" ]
 then
