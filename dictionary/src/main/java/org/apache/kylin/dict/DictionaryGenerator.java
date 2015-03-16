@@ -23,6 +23,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import com.google.common.base.Preconditions;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.kylin.dict.lookup.TableReader;
 import org.slf4j.Logger;
@@ -36,53 +37,27 @@ import org.apache.kylin.metadata.model.DataType;
 /**
  * @author yangli9
  */
-@SuppressWarnings({ "rawtypes", "unchecked" })
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class DictionaryGenerator {
 
     private static final int DICT_MAX_CARDINALITY = 2000000; // 2 million
 
     private static final Logger logger = LoggerFactory.getLogger(DictionaryGenerator.class);
 
-    private static final String[] DATE_PATTERNS = new String[] { "yyyy-MM-dd" };
+    private static final String[] DATE_PATTERNS = new String[]{"yyyy-MM-dd"};
 
     public static Dictionary<?> buildDictionaryFromValueList(DictionaryInfo info, Collection<byte[]> values) {
         info.setCardinality(values.size());
-
-        Dictionary dict = null;
-        int baseId = 0; // always 0 for now
-        int nSamples = 5;
-        ArrayList samples = new ArrayList();
-
-        // build dict, case by data type
-        DataType dataType = DataType.getInstance(info.getDataType());
-        if (dataType.isDateTimeFamily())
-            dict = buildDateStrDict(values, baseId, nSamples, samples);
-        else if (dataType.isNumberFamily())
-            dict = buildNumberDict(values, baseId, nSamples, samples);
-        else
-            dict = buildStringDict(values, baseId, nSamples, samples);
-
-        // log a few samples
-        StringBuilder buf = new StringBuilder();
-        for (Object s : samples) {
-            if (buf.length() > 0)
-                buf.append(", ");
-            buf.append(s.toString()).append("=>").append(dict.getIdFromValue(s));
-        }
-        logger.info("Dictionary value samples: " + buf.toString());
-        logger.info("Dictionary cardinality " + info.getCardinality());
-
-        if (values.size() > DICT_MAX_CARDINALITY)
-            throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary -- " + info.getSourceTable() + "." + info.getSourceColumn() + " cardinality: " + values.size());
-
+        Dictionary<?> dict = buildDictionaryFromValueList(DataType.getInstance(info.getDataType()), values);
         return dict;
     }
 
-    public static Dictionary<?> buildDictionaryFromValueList(Collection<byte[]> values, DataType dataType) {
+    public static Dictionary<?> buildDictionaryFromValueList(DataType dataType, Collection<byte[]> values) {
         if (values.size() > DICT_MAX_CARDINALITY) {
             throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary -- cardinality: " + values.size());
         }
-        Dictionary dict = null;
+        Preconditions.checkNotNull(dataType, "dataType cannot be null");
+        Dictionary dict;
         int baseId = 0; // always 0 for now
         int nSamples = 5;
         ArrayList samples = new ArrayList();
@@ -90,11 +65,9 @@ public class DictionaryGenerator {
         // build dict, case by data type
         if (dataType.isDateTimeFamily()) {
             dict = buildDateStrDict(values, baseId, nSamples, samples);
-        }
-        else if (dataType.isNumberFamily()) {
+        } else if (dataType.isNumberFamily()) {
             dict = buildNumberDict(values, baseId, nSamples, samples);
-        }
-        else {
+        } else {
             dict = buildStringDict(values, baseId, nSamples, samples);
         }
 
