@@ -51,8 +51,6 @@ import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.invertedindex.model.IIRow;
-import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.streaming.Stream;
 import org.apache.kylin.streaming.StreamBuilder;
@@ -60,8 +58,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -114,7 +110,7 @@ public class IIStreamBuilder extends StreamBuilder {
     }
 
     private Map<Integer, Dictionary<?>> buildDictionary(List<List<String>> table, IIDesc desc) {
-        SetMultimap<TblColRef, String> valueMap = HashMultimap.create();
+        HashMultimap<TblColRef, String> valueMap = HashMultimap.create();
         Set<TblColRef> dimensionColumns = Sets.newHashSet();
         for (int i = 0; i < desc.listAllColumns().size(); i++) {
             if (!desc.isMetricsCol(i)) {
@@ -128,7 +124,7 @@ public class IIStreamBuilder extends StreamBuilder {
             }
         }
         Map<Integer, Dictionary<?>> result = Maps.newHashMap();
-        for (TblColRef tblColRef : valueMap.keys()) {
+        for (TblColRef tblColRef : valueMap.keySet()) {
             result.put(desc.findColumn(tblColRef), DictionaryGenerator.buildDictionaryFromValueList(tblColRef.getType(), Collections2.transform(valueMap.get(tblColRef), new Function<String, byte[]>() {
                 @Nullable
                 @Override
