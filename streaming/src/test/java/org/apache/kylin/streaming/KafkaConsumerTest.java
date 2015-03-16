@@ -88,6 +88,9 @@ public class KafkaConsumerTest extends KafkaBaseTest {
             executorService.execute(consumer);
         }
         waitForProducerToStop(producer);
+
+        //wait some time to ensure consumer has fetched all data
+        Thread.sleep(5000);
         int count = 0;
         for (BlockingQueue<Stream> queue : queues) {
             count += queue.size();
@@ -95,6 +98,6 @@ public class KafkaConsumerTest extends KafkaBaseTest {
 
         logger.info("count of messages are " + count);
         //since there will be historical data
-        assertTrue(count >= TOTAL_SEND_COUNT);
+        assertTrue(count >= TOTAL_SEND_COUNT && (count % TOTAL_SEND_COUNT == 0));
     }
 }

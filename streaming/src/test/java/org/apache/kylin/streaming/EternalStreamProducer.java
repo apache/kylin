@@ -28,6 +28,7 @@ public class EternalStreamProducer {
     private static final Logger logger = LoggerFactory.getLogger(EternalStreamProducer.class);
 
     private int frequency;
+    ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
 
     /**
      * @param frequency records added per second, 100 for recommendation
@@ -64,7 +65,6 @@ public class EternalStreamProducer {
         ProducerConfig config = new ProducerConfig(props);
         final Producer<String, String> producer = new Producer<String, String>(config);
 
-        ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
         scheduledExecutorService.scheduleAtFixedRate(new Thread(new Runnable() {
             @Override
             public void run() {
@@ -78,9 +78,10 @@ public class EternalStreamProducer {
             }
         }), 0, 1000 / frequency, TimeUnit.MILLISECONDS);
 
-        while (true) {
-            Thread.sleep(1000);
-        }
+    }
+
+    public void stop() {
+        scheduledExecutorService.shutdown();
     }
 
     protected String getOneMessage() {
