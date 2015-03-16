@@ -275,7 +275,7 @@ public class ProjectManager {
         clearL2Cache();
     }
 
-    private List<ProjectInstance> findProjects(RealizationType type, String realizationName) {
+    public List<ProjectInstance> findProjects(RealizationType type, String realizationName) {
         List<ProjectInstance> result = Lists.newArrayList();
         for (ProjectInstance prj : projectMap.values()) {
             for (RealizationEntry entry : prj.getRealizationEntries()) {
