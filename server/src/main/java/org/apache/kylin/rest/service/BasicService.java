@@ -88,7 +88,7 @@ public abstract class BasicService {
     public static void resetOLAPDataSources() {
         // brutal, yet simplest way
         logger.info("resetOLAPDataSources is called.");
-        olapDataSources = new ConcurrentHashMap<String, DataSource>();
+        olapDataSources.clear();
     }
 
     public DataSource getOLAPDataSource(String project) {
