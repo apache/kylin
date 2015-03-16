@@ -23,7 +23,7 @@ import java.nio.ByteBuffer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.*;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.junit.Ignore;
@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 @Ignore("convenient trial tool for dev")
 @SuppressWarnings("unused")
 public class BasicTest {
-    protected static final org.slf4j.Logger log = LoggerFactory.getLogger(BasicTest.class);
+    protected static final org.slf4j.Logger logger = LoggerFactory.getLogger(BasicTest.class);
 
     private void log(ByteBuffer a) {
         Integer x = 4;
@@ -61,13 +61,30 @@ public class BasicTest {
     @Test
     @Ignore("convenient trial tool for dev")
     public void test1() throws Exception {
+        long current = System.currentTimeMillis();
+        System.out.println(time(current));
+
+        Calendar a = Calendar.getInstance();
+        Calendar b = Calendar.getInstance();
+        Calendar c = Calendar.getInstance();
+        b.clear();
+        c.clear();
+
+        System.out.println(time(b.getTimeInMillis()));
+        System.out.println(time(c.getTimeInMillis()));
+
+        a.setTimeInMillis(current);
+        b.set(a.get(Calendar.YEAR), a.get(Calendar.MONTH), a.get(Calendar.DAY_OF_MONTH), a.get(Calendar.HOUR_OF_DAY), a.get(Calendar.MINUTE));
+        c.set(a.get(Calendar.YEAR), a.get(Calendar.MONTH), a.get(Calendar.DAY_OF_MONTH), a.get(Calendar.HOUR_OF_DAY),0);
+
+        System.out.println(time(b.getTimeInMillis()));
+        System.out.println(time(c.getTimeInMillis()));
+
     }
 
     @Test
     @Ignore("fix it later")
     public void test2() throws IOException, ConfigurationException {
-
-        System.out.println(512<<20);
     }
 
     private static String time(long t) {
