@@ -52,13 +52,13 @@ import static org.junit.Assert.assertTrue;
  */
 public class KafkaConsumerTest extends KafkaBaseTest {
 
-    private TestProducer producer;
+    private OneOffStreamProducer producer;
 
     private static final int TOTAL_SEND_COUNT = 100;
 
     @Before
     public void before() throws IOException {
-        producer = new TestProducer(TOTAL_SEND_COUNT);
+        producer = new OneOffStreamProducer(TOTAL_SEND_COUNT);
         producer.start();
     }
 
@@ -67,7 +67,7 @@ public class KafkaConsumerTest extends KafkaBaseTest {
         producer.stop();
     }
 
-    private void waitForProducerToStop(TestProducer producer) {
+    private void waitForProducerToStop(OneOffStreamProducer producer) {
         while (!producer.isStopped()) {
             try {
                 Thread.sleep(100);
