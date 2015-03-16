@@ -72,16 +72,24 @@ public class HadoopUtil {
      */
     public static Configuration newHBaseConfiguration(String url) {
         Configuration conf = HBaseConfiguration.create();
-        if (StringUtils.isEmpty(url))
+        // reduce rpc retry
+        conf.set(HConstants.HBASE_CLIENT_PAUSE, "3000");
+        conf.set(HConstants.HBASE_CLIENT_RETRIES_NUMBER, "5");
+        conf.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
+        // conf.set(ScannerCallable.LOG_SCANNER_ACTIVITY, "true");
+        if (StringUtils.isEmpty(url)) {
             return conf;
+        }
 
         // chop off "hbase"
-        if (url.startsWith("hbase") == false)
+        if (url.startsWith("hbase") == false) {
             throw new IllegalArgumentException("hbase url must start with 'hbase' -- " + url);
+        }
 
         url = StringUtils.substringAfter(url, "hbase");
-        if (StringUtils.isEmpty(url))
+        if (StringUtils.isEmpty(url)) {
             return conf;
+        }
 
         // case of "hbase:domain.com:2181:/hbase-unsecure"
         Pattern urlPattern = Pattern.compile("[:]((?:[\\w\\-.]+)(?:\\,[\\w\\-.]+)*)[:](\\d+)(?:[:](.+))");
@@ -110,11 +118,7 @@ public class HadoopUtil {
         String znodePath = m.group(3);
         conf.set(HConstants.ZOOKEEPER_ZNODE_PARENT, znodePath);
 
-        // reduce rpc retry
-        conf.set(HConstants.HBASE_CLIENT_PAUSE, "3000");
-        conf.set(HConstants.HBASE_CLIENT_RETRIES_NUMBER, "5");
-        conf.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
-        // conf.set(ScannerCallable.LOG_SCANNER_ACTIVITY, "true");
+
 
         return conf;
     }
