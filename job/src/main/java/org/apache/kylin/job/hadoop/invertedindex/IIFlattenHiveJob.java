@@ -29,12 +29,12 @@ import org.apache.kylin.job.cmd.ICommandOutput;
 import org.apache.kylin.job.cmd.ShellCmd;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
-import org.apache.kylin.job.hadoop.hive.IJoinedFlatTableDesc;
+import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.JobInstance;
-import org.apache.kylin.job.hadoop.hive.IIJoinedFlatTableDesc;
+import org.apache.kylin.invertedindex.model.IIJoinedFlatTableDesc;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/30/14.
