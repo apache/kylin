@@ -18,21 +18,20 @@
 
 package org.apache.kylin.dict;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.dict.lookup.ReadableTable;
+import org.apache.kylin.dict.lookup.TableReader;
+import org.apache.kylin.metadata.model.DataType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-
-import com.google.common.base.Preconditions;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.kylin.dict.lookup.TableReader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
-import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.dict.lookup.ReadableTable;
-import org.apache.kylin.metadata.model.DataType;
 
 /**
  * @author yangli9
@@ -78,7 +77,7 @@ public class DictionaryGenerator {
         }
         logger.info("Dictionary value samples: " + buf.toString());
         logger.info("Dictionary cardinality " + dict.getSize());
-        if (dict.getSize() > DICT_MAX_CARDINALITY) {
+        if (dict instanceof TrieDictionary &&  dict.getSize() > DICT_MAX_CARDINALITY) {
             throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary -- cardinality: " + values.size());
         }
         return dict;
