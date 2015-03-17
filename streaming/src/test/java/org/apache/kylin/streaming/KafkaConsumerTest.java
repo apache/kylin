@@ -52,13 +52,13 @@ import static org.junit.Assert.assertTrue;
  */
 public class KafkaConsumerTest extends KafkaBaseTest {
 
-    private TestProducer producer;
+    private OneOffStreamProducer producer;
 
     private static final int TOTAL_SEND_COUNT = 100;
 
     @Before
     public void before() throws IOException {
-        producer = new TestProducer(TOTAL_SEND_COUNT);
+        producer = new OneOffStreamProducer(TOTAL_SEND_COUNT);
         producer.start();
     }
 
@@ -67,7 +67,7 @@ public class KafkaConsumerTest extends KafkaBaseTest {
         producer.stop();
     }
 
-    private void waitForProducerToStop(TestProducer producer) {
+    private void waitForProducerToStop(OneOffStreamProducer producer) {
         while (!producer.isStopped()) {
             try {
                 Thread.sleep(100);
@@ -88,6 +88,9 @@ public class KafkaConsumerTest extends KafkaBaseTest {
             executorService.execute(consumer);
         }
         waitForProducerToStop(producer);
+
+        //wait some time to ensure consumer has fetched all data
+        Thread.sleep(5000);
         int count = 0;
         for (BlockingQueue<Stream> queue : queues) {
             count += queue.size();
@@ -95,6 +98,6 @@ public class KafkaConsumerTest extends KafkaBaseTest {
 
         logger.info("count of messages are " + count);
         //since there will be historical data
-        assertTrue(count >= TOTAL_SEND_COUNT);
+        assertTrue(count >= TOTAL_SEND_COUNT && (count % TOTAL_SEND_COUNT == 0));
     }
 }

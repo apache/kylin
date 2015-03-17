@@ -104,8 +104,6 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
 
     private void dump(Iterable<TableRecord> records) {
         for (TableRecord rec : records) {
-            System.out.println(rec.toString());
-
             byte[] x = rec.getBytes();
             String y = BytesUtil.toReadableText(x);
             System.out.println(y);

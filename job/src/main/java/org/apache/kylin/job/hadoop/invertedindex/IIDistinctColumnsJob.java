@@ -36,8 +36,8 @@ import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
-import org.apache.kylin.job.hadoop.hive.IIJoinedFlatTableDesc;
-import org.apache.kylin.job.hadoop.hive.IntermediateColumnDesc;
+import org.apache.kylin.invertedindex.model.IIJoinedFlatTableDesc;
+import org.apache.kylin.metadata.model.IntermediateColumnDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

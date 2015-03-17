@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.hadoop.hive;
+package org.apache.kylin.invertedindex.model;
 
 import java.util.List;
 import java.util.Map;
@@ -25,10 +25,7 @@ import java.util.TreeMap;
 import com.google.common.collect.Lists;
 
 import org.apache.kylin.invertedindex.model.IIDesc;
-import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.LookupDesc;
-import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.*;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/30/14.

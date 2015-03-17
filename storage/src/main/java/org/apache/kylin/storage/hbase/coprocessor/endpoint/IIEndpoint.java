@@ -127,7 +127,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             //TODO localdict
             //dictionaries for fact table columns can not be determined while streaming.
             //a piece of dict coincide with each Slice, we call it "local dict"
-            LocalDictionary localDictionary = new LocalDictionary(slice.getLocalDictionaries(), type, recordInfo);
+            LocalDictionary localDictionary = new LocalDictionary(slice.getLocalDictionaries(), type, slice.getInfo());
             CoprocessorFilter newFilter = CoprocessorFilter.fromFilter(localDictionary, filter.getFilter(), FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_LOCAL_DICT);
 
             ConciseSet result = null;
@@ -136,11 +136,12 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             }
 
             Iterator<RawTableRecord> iterator = slice.iterateWithBitmap(result);
+            final EndpointAggregators endpointAggregators = new EndpointAggregators(aggregators, slice.getInfo());
             while (iterator.hasNext()) {
                 byte[] data = iterator.next().getBytes();
                 CoprocessorProjector.AggrKey aggKey = projector.getAggrKey(data);
                 MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
-                aggregators.aggregate(bufs, data);
+                endpointAggregators.aggregate(bufs, data);
                 aggCache.checkMemoryUsage();
             }
         }

@@ -173,6 +173,11 @@ public class NumberDictionary<T> extends TrieDictionary<T> {
     }
 
     @Override
+    protected boolean isNullObjectForm(T value) {
+        return value == null || value.equals("");
+    }
+
+    @Override
     protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) {
         NumberBytesCodec codec = getCodec();
         codec.bufOffset = 0;
