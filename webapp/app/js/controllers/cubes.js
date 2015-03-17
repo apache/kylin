@@ -339,7 +339,7 @@ KylinApp
                           return cube;
                       },
                       buildType: function () {
-                          return 'BUILD';
+                          return 'REFRESH';
                       }
                   }
               });

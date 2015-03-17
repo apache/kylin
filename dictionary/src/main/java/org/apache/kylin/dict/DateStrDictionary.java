@@ -35,8 +35,8 @@ import org.apache.commons.lang.StringUtils;
 /**
  * A dictionary for date string (date only, no time).
  * 
- * Dates are numbered from 1970-1-1 -- 0 for 1970-1-1, 1 for 1-2, 2 for 1-3 and
- * so on. With 2 bytes, 65536 states, can express dates up to the year of 2149.
+ * Dates are numbered from 0000-1-1 -- 0 for "0000-1-1", 1 for "0000-1-2", 2 for "0000-1-3" and
+ * up to 3652426 for "9999-12-31".
  * 
  * Note the implementation is not thread-safe.
  * 
@@ -47,6 +47,8 @@ public class DateStrDictionary extends Dictionary<String> {
     static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd";
     static final String DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS = "yyyy-MM-dd HH:mm:ss";
     static final String DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS = "yyyy-MM-dd HH:mm:ss.SSS";
+
+    static final int ID_9999_12_31 = 3652426; // assume 0 based
 
     static final private Map<String, ThreadLocal<SimpleDateFormat>> threadLocalMap = new ConcurrentHashMap<String, ThreadLocal<SimpleDateFormat>>();
 
@@ -102,6 +104,7 @@ public class DateStrDictionary extends Dictionary<String> {
 
     private String pattern;
     private int baseId;
+    private int maxId;
 
     public DateStrDictionary() {
         init(DEFAULT_DATE_PATTERN, 0);
@@ -114,6 +117,7 @@ public class DateStrDictionary extends Dictionary<String> {
     private void init(String datePattern, int baseId) {
         this.pattern = datePattern;
         this.baseId = baseId;
+        this.maxId = baseId + ID_9999_12_31;
     }
 
     @Override
@@ -123,7 +127,7 @@ public class DateStrDictionary extends Dictionary<String> {
 
     @Override
     public int getMaxId() {
-        return Integer.MAX_VALUE;
+        return maxId;
     }
 
     @Override
@@ -145,16 +149,16 @@ public class DateStrDictionary extends Dictionary<String> {
     final protected int getIdFromValueImpl(String value, int roundFlag) {
         Date date = stringToDate(value, pattern);
         int id = calcIdFromSeqNo(getNumOfDaysSince0000(date));
-        if (id < 0 || id >= 16777216)
-            throw new IllegalArgumentException("'" + value + "' encodes to '" + id + "' which is out of range of 3 bytes");
+        if (id < baseId || id > maxId)
+            throw new IllegalArgumentException("'" + value + "' encodes to '" + id + "' which is out of range [" + baseId + "," + maxId + "]");
 
         return id;
     }
 
     @Override
     final protected String getValueFromIdImpl(int id) {
-        if (id < baseId)
-            throw new IllegalArgumentException("ID '" + id + "' must not be less than base ID " + baseId);
+        if (id < baseId || id > maxId)
+            throw new IllegalArgumentException("ID '" + id + "' is out of range [" + baseId + "," + maxId + "]");
         Date d = getDateFromNumOfDaysSince0000(calcSeqNoFromId(id));
         return dateToString(d, pattern);
     }
