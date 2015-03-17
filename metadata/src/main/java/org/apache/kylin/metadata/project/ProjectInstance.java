@@ -68,6 +68,9 @@ public class ProjectInstance extends RootPersistentEntity {
     @JsonProperty("realizations")
     private List<RealizationEntry> realizationEntries;
 
+    @JsonProperty("models")
+    private List<String> models;
+
     public String getResourcePath() {
         return concatResourcePath(name);
     }
@@ -83,7 +86,7 @@ public class ProjectInstance extends RootPersistentEntity {
         return project.toUpperCase();
     }
 
-    public static ProjectInstance create(String name, String owner, String description, List<RealizationEntry> realizationEntries) {
+    public static ProjectInstance create(String name, String owner, String description, List<RealizationEntry> realizationEntries,List<String> models) {
         ProjectInstance projectInstance = new ProjectInstance();
 
         projectInstance.updateRandomUuid();
@@ -96,7 +99,10 @@ public class ProjectInstance extends RootPersistentEntity {
             projectInstance.setRealizationEntries(realizationEntries);
         else
             projectInstance.setRealizationEntries(Lists.<RealizationEntry> newArrayList());
-
+        if (models != null)
+            projectInstance.setModels(models);
+        else
+            projectInstance.setModels(new ArrayList<String>());
         return projectInstance;
     }
 
@@ -229,6 +235,32 @@ public class ProjectInstance extends RootPersistentEntity {
 
     public void setRealizationEntries(List<RealizationEntry> entries) {
         this.realizationEntries = entries;
+    }
+
+    public List<String> getModels() {
+        return models;
+    }
+
+    public boolean containsModel(String modelName) {
+        modelName = modelName.toUpperCase();
+        return models!=null&&models.contains(modelName);
+    }
+
+    public void setModels(List<String> models) { this.models = models; }
+
+    public void addModel(String modelName) {
+        modelName = modelName.toUpperCase();
+        if(this.getModels()==null){
+            this.setModels(new ArrayList<String>());
+        }
+        this.getModels().add(modelName);
+    }
+
+    public void removeModel(String modelName){
+        modelName = modelName.toUpperCase();
+        if(this.getModels()!=null) {
+            this.getModels().remove(modelName);
+        }
     }
 
     public void init() {

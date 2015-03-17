@@ -19,8 +19,7 @@
 'use strict';
 
 
-KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel,ModelDescService,MetaModel,TableModel) {
-    $scope.cubeConfig = cubeConfig;
+KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, ModelService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel,ModelDescService,MetaModel,TableModel,ProjectService,ProjectModel) {
     //add or edit ?
     var absUrl = $location.absUrl();
     $scope.modelMode = absUrl.indexOf("/models/add")!=-1?'addNewModel':absUrl.indexOf("/models/edit")!=-1?'editExistModel':'default';
@@ -57,12 +56,16 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
 
     // ~ Define data
     $scope.state = {
-        "modelSchema": ""
+        "modelSchema": "",
+        mode:'edit',
+        modelName: $scope.routeParams.modelName,
+        project:$scope.projectModel.selectedProject
     };
 
     // ~ init
     if ($scope.isEdit = !!$routeParams.modelName) {
-        ModelDescService.get({model_name: $routeParams.modelName}, function (model) {
+        var modelName = $routeParams.modelName;
+        ModelDescService.get({model_name: modelName}, function (model) {
                     if (model) {
                         $scope.model = model;
                         //use
@@ -74,19 +77,43 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
                         }
                     }
                 });
+        //init project
+            ProjectService.list({}, function (projects) {
+                $scope.projects = projects;
+                if (modelName) {
+                    var projName = null;
+                    if(ProjectModel.getSelectedProject()){
+                        projName=ProjectModel.getSelectedProject();
+                    }else{
+                        angular.forEach($scope.projects, function (project, index) {
+                            angular.forEach(project.models, function (unit, index) {
+                                if (!projName && unit === modelName) {
+                                    projName = project.name;
+                                }
+                            });
+                        });
+                    }
+
+                    if(!ProjectModel.getSelectedProject()){
+                        ProjectModel.setSelectedProject(projName);
+                        TableModel.aceSrcTbLoaded();
+                    }
+
+                    $scope.state.project = projName;
+                }
+
+                angular.forEach($scope.projects, function (project, index) {
+                    $scope.listAccess(project, 'ProjectInstance');
+                });
+            });
+
 
     } else {
-        $scope.model = MetaModel.createNew();;
+        MetaModel.initModel();
+        $scope.model = MetaModel.getMetaModel();
     }
 
-    // ~ public methods
-    $scope.aceChanged = function () {
-    };
-
-    $scope.aceLoaded = function(){
-    };
-
-    $scope.prepareCube = function () {
+    $scope.prepareModel = function () {
         // generate column family
 
         if ($scope.model.partition_desc.partition_date_column&&($scope.model.partition_desc.partition_date_start|$scope.model.partition_desc.partition_date_start==0)) {
@@ -102,22 +129,22 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
 
         }
         $scope.state.modelSchema = angular.toJson($scope.model, true);
-        $scope.state.project = $scope.projectModel.selectedProject;
+//        $scope.state.project = $scope.projectModel.selectedProject;
 
     };
 
-    $scope.cubeResultTmpl = function (notification) {
+    $scope.modelResultTmpl = function (notification) {
         // Get the static notification template.
-        var tmpl = notification.type == 'success' ? 'cubeResultSuccess.html' : 'cubeResultError.html';
+        var tmpl = notification.type == 'success' ? 'modelResultSuccess.html' : 'modelResultError.html';
         return $interpolate($templateCache.get(tmpl))(notification);
     };
 
     $scope.saveModel = function (design_form) {
 
         try {
-            angular.fromJson($scope.state.cubeSchema);
+            angular.fromJson($scope.state.modelSchema);
         } catch (e) {
-            SweetAlert.swal('Oops...', 'Invalid cube json format..', 'error');
+            SweetAlert.swal('Oops...', 'Invalid model json format..', 'error');
             return;
         }
 
@@ -134,10 +161,10 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
                 loadingRequest.show();
 
                 if ($scope.isEdit) {
-                    CubeService.update({}, {modelDescData:$scope.state.modelSchema, modelName: $routeParams.modelName, project: $scope.state.project}, function (request) {
+                    ModelService.update({}, {modelDescData:$scope.state.modelSchema, modelName: $routeParams.modelName, project: $scope.state.project}, function (request) {
                         if (request.successful) {
                             $scope.state.modelSchema = request.modelSchema;
-                            MessageService.sendMsg($scope.cubeResultTmpl({'text':'Updated the cube successfully.',type:'success'}), 'success', {}, true, 'top_center');
+                            MessageService.sendMsg($scope.modelResultTmpl({'text':'Updated the model successfully.',type:'success'}), 'success', {}, true, 'top_center');
 
                             if (design_form) {
                                 design_form.$invalid = true;
@@ -146,7 +173,7 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
                             $scope.saveModelRollBack();
                                 var message =request.message;
                                 var msg = !!(message) ? message : 'Failed to take action.';
-                                MessageService.sendMsg($scope.cubeResultTmpl({'text':msg,'schema':$scope.state.modelSchema}), 'error', {}, true, 'top_center');
+                                MessageService.sendMsg($scope.modelResultTmpl({'text':msg,'schema':$scope.state.modelSchema}), 'error', {}, true, 'top_center');
                         }
                         //end loading
                         loadingRequest.hide();
@@ -156,23 +183,23 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
                         if(e.data&& e.data.exception){
                             var message =e.data.exception;
                             var msg = !!(message) ? message : 'Failed to take action.';
-                            MessageService.sendMsg($scope.cubeResultTmpl({'text':msg,'schema':$scope.state.modelSchema}), 'error', {}, true, 'top_center');
+                            MessageService.sendMsg($scope.modelResultTmpl({'text':msg,'schema':$scope.state.modelSchema}), 'error', {}, true, 'top_center');
                         } else {
-                            MessageService.sendMsg($scope.cubeResultTmpl({'text':'Failed to take action.','schema':$scope.state.modelSchema}), 'error', {}, true, 'top_center');
+                            MessageService.sendMsg($scope.modelResultTmpl({'text':'Failed to take action.','schema':$scope.state.modelSchema}), 'error', {}, true, 'top_center');
                         }
                         loadingRequest.hide();
                     });
                 } else {
-                    CubeService.save({}, {cubeDescData: $scope.state.cubeSchema,modelDescData:$scope.state.modelSchema, project: $scope.state.project}, function (request) {
+                    ModelService.save({}, {modelDescData:$scope.state.modelSchema, project: $scope.state.project}, function (request) {
                         if(request.successful) {
                             $scope.state.modelSchema = request.modelSchema;
 
-                            MessageService.sendMsg($scope.cubeResultTmpl({'text':'Created the cube successfully.',type:'success'}), 'success', {}, true, 'top_center');
+                            MessageService.sendMsg($scope.modelResultTmpl({'text':'Created the model successfully.',type:'success'}), 'success', {}, true, 'top_center');
                         } else {
                             $scope.saveModelRollBack();
                             var message =request.message;
                             var msg = !!(message) ? message : 'Failed to take action.';
-                            MessageService.sendMsg($scope.cubeResultTmpl({'text':msg,'schema':$scope.state.modelSchema}), 'error', {}, true, 'top_center');
+                            MessageService.sendMsg($scope.modelResultTmpl({'text':msg,'schema':$scope.state.modelSchema}), 'error', {}, true, 'top_center');
                         }
 
                         //end loading
@@ -183,9 +210,9 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
                         if (e.data && e.data.exception) {
                             var message =e.data.exception;
                             var msg = !!(message) ? message : 'Failed to take action.';
-                            MessageService.sendMsg($scope.cubeResultTmpl({'text':msg,'schema':$scope.state.modelSchema}), 'error', {}, true, 'top_center');
+                            MessageService.sendMsg($scope.modelResultTmpl({'text':msg,'schema':$scope.state.modelSchema}), 'error', {}, true, 'top_center');
                         } else {
-                            MessageService.sendMsg($scope.cubeResultTmpl({'text':"Failed to take action.",'schema':$scope.state.modelSchema}), 'error', {}, true, 'top_center');
+                            MessageService.sendMsg($scope.modelResultTmpl({'text':"Failed to take action.",'schema':$scope.state.modelSchema}), 'error', {}, true, 'top_center');
                         }
                         //end loading
                         loadingRequest.hide();
@@ -206,6 +233,10 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
             $scope.model.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
         }
     };
+
+    $scope.removeTableDimensions = function(tableIndex){
+        $scope.model.dimensions.splice(tableIndex,1);
+    }
 
     $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
         if(!newValue){

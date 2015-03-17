@@ -27,6 +27,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -253,7 +255,6 @@ public class MetadataManager {
         ResourceStore store = getStore();
         TableDesc t = store.getResource(path, TableDesc.class, TABLE_SERIALIZER);
         if (t == null) {
-            logger.error("Didn't load table at " + path);
             return null;
         }
         t.init();
@@ -283,7 +284,24 @@ public class MetadataManager {
     }
 
     public List<DataModelDesc> getModels() {
-        return new ArrayList<DataModelDesc>(dataModelDescMap.values());
+        return new ArrayList<>(dataModelDescMap.values());
+    }
+
+    public List<DataModelDesc> getModels(String projectName){
+        ProjectInstance projectInstance =  ProjectManager.getInstance(config).getProject(projectName);
+        HashSet<DataModelDesc> ret = new HashSet<>();
+        if (projectInstance != null) {
+            for (String modelName : projectInstance.getModels()) {
+                DataModelDesc model = getDataModelDesc(modelName);
+                if (null != model) {
+                    ret.add(model);
+                } else {
+                    logger.error("Failed to load model" + modelName);
+                }
+            }
+        }
+
+        return new ArrayList<>(ret);
     }
 
 
@@ -322,12 +340,12 @@ public class MetadataManager {
         }
     }
 
-    public DataModelDesc createDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
-        String name = dataModelDesc.getName();
+    public DataModelDesc createDataModelDesc(DataModelDesc desc,String projectName,String owner) throws IOException {
+        String name = desc.getName();
         if (dataModelDescMap.containsKey(name))
             throw new IllegalArgumentException("DataModelDesc '" + name + "' already exists");
-
-        return saveDataModelDesc(dataModelDesc);
+        ProjectManager.getInstance(config).updateModelToProject(name,projectName,owner);
+        return saveDataModelDesc(desc);
     }
 
     public DataModelDesc updateDataModelDesc(DataModelDesc desc) throws IOException {

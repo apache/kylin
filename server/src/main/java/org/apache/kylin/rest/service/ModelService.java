@@ -19,7 +19,6 @@
 package org.apache.kylin.rest.service;
 
 
-import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
@@ -29,10 +28,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -56,9 +55,8 @@ public class ModelService extends BasicService {
         if (null == project) {
             models = getMetadataManager().getModels();
         } else {
-            //TO-DO
-//            models = listAllModels(projectName);
-            models=Collections.emptyList();
+            models = getMetadataManager().getModels(projectName);
+            project.getModels();
         }
 
         List<DataModelDesc> filterModels = new ArrayList();
@@ -97,9 +95,10 @@ public class ModelService extends BasicService {
             throw new InternalErrorException("The model named " + desc.getName() + " already exists");
         }
         DataModelDesc createdDesc = null;
-        createdDesc = getMetadataManager().createDataModelDesc(desc);
-//        ProjectInstance project = getProjectManager().getProject(projectName);
-//        accessService.inherit(createdDesc, project);
+        String owner = SecurityContextHolder.getContext().getAuthentication().getName();
+        createdDesc = getMetadataManager().createDataModelDesc(desc,projectName,owner);
+        ProjectInstance project = getProjectManager().getProject(projectName);
+        accessService.inherit(desc, project);
         return createdDesc;
     }
 
@@ -108,7 +107,8 @@ public class ModelService extends BasicService {
     public DataModelDesc updateModelAndDesc(DataModelDesc desc, String newProjectName) throws IOException {
         DataModelDesc existingModel = getMetadataManager().getDataModelDesc(desc.getName());
         if (existingModel == null) {
-            getMetadataManager().createDataModelDesc(desc);
+            String owner = SecurityContextHolder.getContext().getAuthentication().getName();
+            getMetadataManager().createDataModelDesc(desc,newProjectName,owner);
         } else {
             getMetadataManager().updateDataModelDesc(desc);
         }
