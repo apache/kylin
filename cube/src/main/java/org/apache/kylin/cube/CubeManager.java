@@ -18,36 +18,19 @@
 
 package org.apache.kylin.cube;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.hbase.util.Pair;
-import org.apache.kylin.cube.model.CubeBuildTypeEnum;
-import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.DimensionDesc;
-import org.apache.kylin.metadata.realization.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.hbase.util.Pair;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
@@ -61,6 +44,13 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.realization.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -254,7 +244,7 @@ public class CubeManager implements IRealizationProvider {
     public Pair<CubeSegment, CubeSegment> appendAndMergeSegments(CubeInstance cube, long endDate) throws IOException {
         checkNoBuildingSegment(cube);
         checkCubeIsPartitioned(cube);
-        
+
         if (cube.getSegments().size() == 0)
             throw new IllegalStateException("expect at least one existing segment");
 
@@ -285,6 +275,18 @@ public class CubeManager implements IRealizationProvider {
         }
 
         validateNewSegments(cube, newSegment);
+        cube.getSegments().add(newSegment);
+        Collections.sort(cube.getSegments());
+        updateCube(cube);
+
+        return newSegment;
+    }
+
+
+    public CubeSegment refreshSegment(CubeInstance cube, long startDate, long endDate) throws IOException {
+        checkNoBuildingSegment(cube);
+
+        CubeSegment newSegment = newSegment(cube, startDate, endDate);
         cube.getSegments().add(newSegment);
         Collections.sort(cube.getSegments());
         updateCube(cube);
@@ -509,7 +511,7 @@ public class CubeManager implements IRealizationProvider {
 
     /**
      * Smartly figure out the TOBE segments once all new segments are built.
-     * - Ensures no gap, no overlap 
+     * - Ensures no gap, no overlap
      * - Favors new segments over the old
      * - Favors big segments over the small
      */
@@ -533,7 +535,7 @@ public class CubeManager implements IRealizationProvider {
         }
         firstSeg.validate();
 
-        for (int i = 0, j = 1; j < tobe.size();) {
+        for (int i = 0, j = 1; j < tobe.size(); ) {
             CubeSegment is = tobe.get(i);
             CubeSegment js = tobe.get(j);
             js.validate();
