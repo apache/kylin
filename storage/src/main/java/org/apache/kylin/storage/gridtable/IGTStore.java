@@ -1,13 +1,12 @@
 package org.apache.kylin.storage.gridtable;
 
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.BitSet;
 import java.util.Iterator;
 
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.metadata.filter.TupleFilter;
 
 public interface IGTStore {
     
@@ -15,11 +14,11 @@ public interface IGTStore {
     
     public String getStorageDescription();
     
-    // ============================================================================
-    
     public IGTStoreWriter rebuild(int shard);
     
-    public IGTStoreScanner scan(ByteArray pkStart, ByteArray pkEndExclusive, ConciseSet selectedRowBlocks, BitSet selectedColBlocks);
+    public IGTStoreWriter append(int shard, GTRowBlock fillLast);
+    
+    public IGTStoreScanner scan(ByteArray pkStart, ByteArray pkEndExclusive, BitSet selectedColBlocks, TupleFilter filterPushDown);
     
     public interface IGTStoreWriter extends Closeable {
         void write(GTRowBlock block) throws IOException;
@@ -27,11 +26,5 @@ public interface IGTStore {
     
     public interface IGTStoreScanner extends Iterator<GTRowBlock>, Closeable {
     }
-    
-    // ============================================================================
-    
-    public void saveRowBlockIndex(int col, GTRowBlockIndex index);
-    
-    public GTRowBlockIndex loadRowBlockIndex(int col);
     
 }

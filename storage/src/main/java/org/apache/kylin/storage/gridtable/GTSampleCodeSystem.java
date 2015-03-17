@@ -9,13 +9,25 @@ import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.serializer.DataTypeSerializer;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class GTCodeSystem implements IGTCodeSystem {
+/**
+ * This is just for example and is INCORRECT when numbers are encoded to bytes and compared in filter.
+ * 
+ * A correct implementation must ensure dimension values preserve order after encoded, e.g. by using an
+ * order preserving dictionary.
+ * 
+ * @author yangli9
+ */
+public class GTSampleCodeSystem implements IGTCodeSystem {
 
-    final private GTInfo info;
-    final private DataTypeSerializer[] serializers;
-    final private IFilterCodeSystem<ByteArray> filterCS;
+    private GTInfo info;
+    private DataTypeSerializer[] serializers;
+    private IFilterCodeSystem<ByteArray> filterCS;
 
-    public GTCodeSystem(GTInfo info) {
+    public GTSampleCodeSystem() {
+    }
+    
+    @Override
+    public void init(GTInfo info) {
         this.info = info;
 
         this.serializers = new DataTypeSerializer[info.nColumns];
@@ -59,8 +71,8 @@ public class GTCodeSystem implements IGTCodeSystem {
     // ============================================================================
 
     @Override
-    public MeasureAggregator<?> newMetricsAggregator(int col) {
-        return MeasureAggregator.create(info.colMetricsAggrFunc[col], info.colTypes[col].getName());
+    public MeasureAggregator<?> newMetricsAggregator(String aggrFunction, int col) {
+        return MeasureAggregator.create(aggrFunction, info.colTypes[col].getName());
     }
 
     @Override

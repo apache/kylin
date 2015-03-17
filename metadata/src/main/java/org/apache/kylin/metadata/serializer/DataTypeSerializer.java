@@ -33,7 +33,7 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
 
     final static HashMap<String, Class<?>> implementations = new HashMap<String, Class<?>>();
     static {
-        implementations.put("string", StringSerializer.class);
+        implementations.put("varchar", StringSerializer.class);
         implementations.put("decimal", BigDecimalSerializer.class);
         implementations.put("double", DoubleSerializer.class);
         implementations.put("float", DoubleSerializer.class);
