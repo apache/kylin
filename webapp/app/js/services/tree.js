@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-KylinApp.service('CubeGraphService', function () {
+KylinApp.service('GraphService', function () {
 
     var margin = {top: 20, right: 100, bottom: 20, left: 100},
         width = 1100 - margin.right - margin.left,
