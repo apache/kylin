@@ -1,6 +1,7 @@
 package org.apache.kylin.metadata.filter;
 
 import java.nio.ByteBuffer;
+import java.util.Comparator;
 
 /**
  * Decides how constant values are coded and compared.
@@ -13,13 +14,13 @@ import java.nio.ByteBuffer;
  * 
  * @author yangli9
  */
-public interface IFilterCodeSystem<T> {
+public interface IFilterCodeSystem<T> extends Comparator<T> {
     
     /** if given code represents the NULL value */
     boolean isNull(T code);
 
     /** compare two values by their codes */
-    int compare(T code1, T code2);
+    // int compare(T code1, T code2);
 
     /** write code to buffer */
     void serialize(T code, ByteBuffer buf);

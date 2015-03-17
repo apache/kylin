@@ -42,10 +42,10 @@ public class GTSimpleMemStore implements IGTStore {
     }
 
     @Override
-    public IGTStoreWriter append(int shard, GTRowBlock fillLast) {
+    public IGTStoreWriter append(int shard, GTRowBlock.Writer fillLast) {
         if (rowBlockList.size() > 0) {
             GTRowBlock last = rowBlockList.get(rowBlockList.size() - 1);
-            fillLast.copyAndReadyAppend(last);
+            fillLast.copyFrom(last);
         }
         return new Writer();
     }
@@ -81,9 +81,7 @@ public class GTSimpleMemStore implements IGTStore {
 
             @Override
             public GTRowBlock next() {
-                GTRowBlock block = it.next();
-                block.rewindBuffers();
-                return block;
+                return it.next();
             }
 
             @Override

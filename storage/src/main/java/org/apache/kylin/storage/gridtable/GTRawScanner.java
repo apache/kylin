@@ -19,8 +19,7 @@ class GTRawScanner implements IGTScanner {
     final TupleFilter filter;
     final BitSet selectedColBlocks;
 
-    private GTRowBlock currentBlock;
-    private int currentRow;
+    private GTRowBlock.Reader curBlockReader;
     private GTRecord next;
     final private GTRecord oneRecord; // avoid instance creation
     final private TupleAdapter oneTuple; // avoid instance creation
@@ -95,52 +94,23 @@ class GTRawScanner implements IGTScanner {
             }
 
             private boolean fetchNext() {
-                if (info.isRowBlockEnabled()) {
-                    return fetchNextRowBlockEnabled();
-                } else {
-                    return fetchNextRowBlockDisabled();
-                }
-            }
-
-            private boolean fetchNextRowBlockDisabled() {
-                // row block disabled, every block is one row
-                if (storeScanner.hasNext() == false)
-                    return false;
-
-                // when row block disabled, PK is persisted in block primary key (not in cell block)
-                currentBlock = storeScanner.next();
-                oneRecord.loadPrimaryKey(currentBlock.primaryKeyBuffer);
-                for (int c = selectedColBlocks.nextSetBit(0); c >= 0; c = selectedColBlocks.nextSetBit(c + 1)) {
-                    oneRecord.loadCellBlock(c, currentBlock.cellBlockBuffers[c]);
-                }
-                
-                scannedRowCount++;
-                scannedRowBlockCount++;
-                return true;
-            }
-
-            private boolean fetchNextRowBlockEnabled() {
                 while (true) {
                     // get a block
-                    if (currentBlock == null) {
+                    if (curBlockReader == null) {
                         if (storeScanner.hasNext()) {
-                            currentBlock = storeScanner.next();
-                            currentRow = 0;
+                            curBlockReader = storeScanner.next().getReader(selectedColBlocks);
                             scannedRowBlockCount++;
                         } else {
                             return false;
                         }
                     }
                     // if block exhausted, try next block
-                    if (currentRow >= currentBlock.nRows) {
-                        currentBlock = null;
+                    if (curBlockReader.hasNext() == false) {
+                        curBlockReader = null;
                         continue;
                     }
                     // fetch a row
-                    for (int c = selectedColBlocks.nextSetBit(0); c >= 0; c = selectedColBlocks.nextSetBit(c + 1)) {
-                        oneRecord.loadCellBlock(c, currentBlock.cellBlockBuffers[c]);
-                    }
-                    currentRow++;
+                    curBlockReader.fetchNext(oneRecord);
                     scannedRowCount++;
                     return true;
                 }
