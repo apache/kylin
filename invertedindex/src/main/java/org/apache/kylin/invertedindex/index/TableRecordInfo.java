@@ -45,28 +45,24 @@ public class TableRecordInfo {
     final Map<Integer, Dictionary<?>> dictionaryMap;
 
     public TableRecordInfo(IISegment iiSegment) {
-        this(iiSegment.getIIDesc(), Collections.<Integer, Dictionary<?>>emptyMap());
+        this(iiSegment.getIIDesc());
+    }
+
+    public TableRecordInfo(IIDesc desc) {
+        this(desc, Collections.<Integer, Dictionary<?>>emptyMap());
     }
 
     public TableRecordInfo(IIDesc desc, Map<Integer, Dictionary<?>> dictionaryMap) {
         this.desc = desc;
         this.dictionaryMap = dictionaryMap;
-        Map<TblColRef, FixedLenMeasureCodec<?>> measureCodecMap = Maps.newHashMap();
-        int index = 0;
-        for (TblColRef tblColRef : desc.listAllColumns()) {
-            ColumnDesc col = tblColRef.getColumn();
-            if (desc.isMetricsCol(index++)) {
-                measureCodecMap.put(tblColRef, FixedLenMeasureCodec.get(col.getType()));
-            }
-        }
-        this.digest = createDigest(dictionaryMap, measureCodecMap);
+        this.digest = createDigest(desc, dictionaryMap);
     }
 
     public TableRecordInfoDigest getDigest() {
         return digest;
     }
 
-    private TableRecordInfoDigest createDigest(Map<Integer, Dictionary<?>> dictionaryMap, Map<TblColRef, FixedLenMeasureCodec<?>> measureCodecMap) {
+    private TableRecordInfoDigest createDigest(IIDesc desc, Map<Integer, Dictionary<?>> dictionaryMap) {
         int nColumns = getColumns().size();
         boolean[] isMetric = new boolean[nColumns];
         int[] lengths = new int[nColumns];
@@ -77,13 +73,13 @@ public class TableRecordInfo {
             isMetric[i] = desc.isMetricsCol(i);
             dataTypes[i] = tblColRef.getDatatype();
             if (isMetric[i]) {
-                final FixedLenMeasureCodec<?> fixedLenMeasureCodec = measureCodecMap.get(tblColRef);
-                if (fixedLenMeasureCodec != null) {
-                    lengths[i] = fixedLenMeasureCodec.getLength();
-                }
+                lengths[i] = FixedLenMeasureCodec.get(DataType.getInstance(tblColRef.getColumn().getDatatype())).getLength();
             } else {
-                final Dictionary<?> dictionary = dictionaryMap.get(i);
-                if (dictionary != null) {
+                if (dictionaryMap.isEmpty()) {
+                    lengths[i] = desc.listAllColumns().get(i).getColumn().getTypePrecision();
+                    dictMaxIds[i] = Integer.MAX_VALUE;
+                } else {
+                    final Dictionary<?> dictionary = dictionaryMap.get(i);
                     lengths[i] = dictionary.getSizeOfId();
                     dictMaxIds[i] = dictionary.getMaxId();
                 }

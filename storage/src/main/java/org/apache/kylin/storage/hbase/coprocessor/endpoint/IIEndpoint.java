@@ -33,12 +33,15 @@ import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
+import org.apache.kylin.cube.kv.RowKeyColumnIO;
+import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.invertedindex.index.RawTableRecord;
 import org.apache.kylin.invertedindex.index.Slice;
 import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.filter.BitMapFilterEvaluator;
 import org.apache.kylin.storage.hbase.coprocessor.*;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos;
@@ -122,13 +125,16 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
     private IIProtos.IIResponse getAggregatedResponse(Iterable<Slice> slices, TableRecordInfoDigest recordInfo, CoprocessorFilter filter, CoprocessorRowType type, CoprocessorProjector projector, EndpointAggregators aggregators) {
         EndpointAggregationCache aggCache = new EndpointAggregationCache(aggregators);
         IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
+        final byte[] buffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
+        ClearTextDictionary clearTextDictionary = new ClearTextDictionary(recordInfo, type);
+        RowKeyColumnIO rowKeyColumnIO = new RowKeyColumnIO(clearTextDictionary);
         for (Slice slice : slices) {
 
             //TODO localdict
             //dictionaries for fact table columns can not be determined while streaming.
             //a piece of dict coincide with each Slice, we call it "local dict"
-            LocalDictionary localDictionary = new LocalDictionary(slice.getLocalDictionaries(), type, slice.getInfo());
-            CoprocessorFilter newFilter = CoprocessorFilter.fromFilter(localDictionary, filter.getFilter(), FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_LOCAL_DICT);
+            final Map<Integer, Dictionary<?>> localDictionaries = slice.getLocalDictionaries();
+            CoprocessorFilter newFilter = CoprocessorFilter.fromFilter(new LocalDictionary(localDictionaries, type, slice.getInfo()), filter.getFilter(), FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_LOCAL_DICT);
 
             ConciseSet result = null;
             if (filter != null) {
@@ -136,30 +142,44 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             }
 
             Iterator<RawTableRecord> iterator = slice.iterateWithBitmap(result);
-            final EndpointAggregators endpointAggregators = new EndpointAggregators(aggregators, slice.getInfo());
             while (iterator.hasNext()) {
-                byte[] data = iterator.next().getBytes();
+                final RawTableRecord rawTableRecord = iterator.next();
+                byte[] data = decodeWithDictionary(rawTableRecord, localDictionaries, recordInfo, buffer, rowKeyColumnIO, type);
                 CoprocessorProjector.AggrKey aggKey = projector.getAggrKey(data);
                 MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
-                endpointAggregators.aggregate(bufs, data);
+                aggregators.aggregate(bufs, data);
                 aggCache.checkMemoryUsage();
             }
         }
 
-        byte[] metricBuffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
+
         for (Map.Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
             CoprocessorProjector.AggrKey aggrKey = entry.getKey();
             IIProtos.IIResponse.IIRow.Builder rowBuilder = IIProtos.IIResponse.IIRow.newBuilder().setColumns(ByteString.copyFrom(aggrKey.get(), aggrKey.offset(), aggrKey.length()));
-            int length = aggregators.serializeMetricValues(entry.getValue(), metricBuffer);
-            rowBuilder.setMeasures(ByteString.copyFrom(metricBuffer, 0, length));
+            int length = aggregators.serializeMetricValues(entry.getValue(), buffer);
+            rowBuilder.setMeasures(ByteString.copyFrom(buffer, 0, length));
             responseBuilder.addRows(rowBuilder.build());
         }
 
         return responseBuilder.build();
     }
 
+    private byte[] decodeWithDictionary(RawTableRecord encodedRecord, Map<Integer, Dictionary<?>> localDictionaries, TableRecordInfoDigest digest, byte[] buffer, RowKeyColumnIO rowKeyColumnIO, CoprocessorRowType coprocessorRowType) {
+        byte[] result = new byte[digest.getByteFormLen()];
+        for (int i = 0; i < coprocessorRowType.getColumnCount(); i++) {
+            final TblColRef column = coprocessorRowType.columns[i];
+            final int length = localDictionaries.get(i).getValueBytesFromId(encodedRecord.getValueID(i), buffer, 0);
+            rowKeyColumnIO.writeColumn(column, buffer, length, Dictionary.NULL, result, digest.offset(i));
+        }
+        return result;
+    }
+
+
     private IIProtos.IIResponse getNonAggregatedResponse(Iterable<Slice> slices, TableRecordInfoDigest recordInfo, CoprocessorFilter filter, CoprocessorRowType type) {
         IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
+        final byte[] buffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
+        ClearTextDictionary clearTextDictionary = new ClearTextDictionary(recordInfo, type);
+        RowKeyColumnIO rowKeyColumnIO = new RowKeyColumnIO(clearTextDictionary);
         for (Slice slice : slices) {
             ConciseSet result = null;
             if (filter != null) {
@@ -168,7 +188,8 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
 
             Iterator<RawTableRecord> iterator = slice.iterateWithBitmap(result);
             while (iterator.hasNext()) {
-                byte[] data = iterator.next().getBytes();
+                final RawTableRecord rawTableRecord = iterator.next();
+                byte[] data = decodeWithDictionary(rawTableRecord, slice.getLocalDictionaries(), recordInfo, buffer, rowKeyColumnIO, type);
                 IIProtos.IIResponse.IIRow.Builder rowBuilder = IIProtos.IIResponse.IIRow.newBuilder().setColumns(ByteString.copyFrom(data));
                 responseBuilder.addRows(rowBuilder.build());
             }
