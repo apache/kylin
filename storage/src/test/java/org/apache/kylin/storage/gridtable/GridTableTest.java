@@ -49,7 +49,7 @@ public class GridTableTest {
         assertEquals(builder.getWrittenRowBlockCount(), scanner.getScannedRowBlockCount());
         assertEquals(builder.getWrittenRowCount(), scanner.getScannedRowCount());
     }
-    
+
     @Test
     public void testAppend() throws IOException {
         GTInfo info = advancedInfo();
@@ -65,6 +65,11 @@ public class GridTableTest {
     private IGTScanner scan(GridTable table) throws IOException {
         IGTScanner scanner = table.scan(null, null, null, null);
         for (GTRecord r : scanner) {
+            Object[] v = r.getValues();
+            assertTrue(((String) v[0]).startsWith("2015-"));
+            assertTrue(((String) v[2]).equals("Food"));
+            assertTrue(((LongWritable) v[3]).get() == 10);
+            assertTrue(((BigDecimal) v[4]).doubleValue() == 10.5);
             System.out.println(r);
         }
         scanner.close();
@@ -75,7 +80,30 @@ public class GridTableTest {
 
     private IGTScanner scanAndAggregate(GridTable table) throws IOException {
         IGTScanner scanner = table.scanAndAggregate(null, null, setOf(0, 2), setOf(3, 4), new String[] { "count", "sum" }, null);
+        int i = 0;
         for (GTRecord r : scanner) {
+            Object[] v = r.getValues();
+            switch (i) {
+            case 0:
+                assertTrue(((LongWritable) v[3]).get() == 20);
+                assertTrue(((BigDecimal) v[4]).doubleValue() == 21.0);
+                break;
+            case 1:
+                assertTrue(((LongWritable) v[3]).get() == 30);
+                assertTrue(((BigDecimal) v[4]).doubleValue() == 31.5);
+                break;
+            case 2:
+                assertTrue(((LongWritable) v[3]).get() == 40);
+                assertTrue(((BigDecimal) v[4]).doubleValue() == 42.0);
+                break;
+            case 3:
+                assertTrue(((LongWritable) v[3]).get() == 10);
+                assertTrue(((BigDecimal) v[4]).doubleValue() == 10.5);
+                break;
+            default:
+                fail();
+            }
+            i++;
             System.out.println(r);
         }
         scanner.close();
@@ -83,7 +111,7 @@ public class GridTableTest {
         System.out.println("Scanned Row Count: " + scanner.getScannedRowCount());
         return scanner;
     }
-    
+
     private GTBuilder rebuild(GridTable table) throws IOException {
         GTRecord r = new GTRecord(table.getInfo());
         GTBuilder builder = table.rebuild();
@@ -104,11 +132,11 @@ public class GridTableTest {
         System.out.println("Written Row Count: " + builder.getWrittenRowCount());
         return builder;
     }
-    
+
     private void rebuildViaAppend(GridTable table) throws IOException {
         GTRecord r = new GTRecord(table.getInfo());
         GTBuilder builder;
-        
+
         builder = table.append();
         builder.write(r.setValues("2015-01-14", "Yang", "Food", new LongWritable(10), new BigDecimal("10.5")));
         builder.write(r.setValues("2015-01-14", "Luke", "Food", new LongWritable(10), new BigDecimal("10.5")));
@@ -117,7 +145,7 @@ public class GridTableTest {
         builder.close();
         System.out.println("Written Row Block Count: " + builder.getWrittenRowBlockCount());
         System.out.println("Written Row Count: " + builder.getWrittenRowCount());
-        
+
         builder = table.append();
         builder.write(r.setValues("2015-01-15", "Jason", "Food", new LongWritable(10), new BigDecimal("10.5")));
         builder.write(r.setValues("2015-01-16", "Mahone", "Food", new LongWritable(10), new BigDecimal("10.5")));
@@ -132,7 +160,7 @@ public class GridTableTest {
         builder.close();
         System.out.println("Written Row Block Count: " + builder.getWrittenRowBlockCount());
         System.out.println("Written Row Count: " + builder.getWrittenRowCount());
-        
+
         builder = table.append();
         builder.write(r.setValues("2015-01-17", "Kejia", "Food", new LongWritable(10), new BigDecimal("10.5")));
         builder.close();
