@@ -184,11 +184,11 @@
 <!--template-->
 <!-- static template for cube save/update result notification -->
 <script type="text/ng-template" id="cubeResultError.html">
-    <div class="callout callout-danger">
+    <div class="callout">
         <h4>Error Message</h4>
         <p>{{text}}</p>
     </div>
-    <div class="callout callout-info">
+    <div class="callout callout-danger">
         <h4>Cube Schema</h4>
         <pre>{{schema}}</pre>
     </div>
@@ -200,6 +200,24 @@
     </div>
 </script>
 
+<!--template-->
+<!-- static template for cube save/update result notification -->
+<script type="text/ng-template" id=" modelResultError.html">
+    <div class="callout callout-info">
+        <h4>Error Message</h4>
+        <p>{{text}}</p>
+    </div>
+    <div class="callout callout-danger">
+        <h4>Model Schema</h4>
+        <pre>{{schema}}</pre>
+    </div>
+</script>
+
+<script type="text/ng-template" id="modelResultSuccess.html">
+    <div class="callout callout-info">
+        <p>{{text}}</p>
+    </div>
+</script>
 
 </body>
 </html>
