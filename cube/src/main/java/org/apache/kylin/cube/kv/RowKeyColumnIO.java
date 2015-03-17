@@ -54,18 +54,20 @@ public class RowKeyColumnIO {
         return (Dictionary<String>) IDictionaryAwareness.getDictionary(col);
     }
 
+
+
     public void writeColumn(TblColRef column, byte[] value, int valueLen, byte dft, byte[] output, int outputOffset) {
         writeColumn(column, value, valueLen, 0, dft, output, outputOffset);
     }
 
     public void writeColumn(TblColRef column, byte[] value, int valueLen, int roundingFlag, byte dft, byte[] output, int outputOffset) {
 
-        Dictionary<String> dict = getDictionary(column);
-        int columnLen = getColumnLength(column);
+        final Dictionary<String> dict = getDictionary(column);
+        final int columnLen = getColumnLength(column);
 
         // non-dict value
         if (dict == null) {
-            byte[] valueBytes = padFixLen(columnLen, value);
+            byte[] valueBytes = padFixLen(columnLen, value, valueLen);
             System.arraycopy(valueBytes, 0, output, outputOffset, columnLen);
             return;
         }
@@ -75,14 +77,14 @@ public class RowKeyColumnIO {
             int id = dict.getIdFromValueBytes(value, 0, valueLen, roundingFlag);
             BytesUtil.writeUnsigned(id, output, outputOffset, dict.getSizeOfId());
         } catch (IllegalArgumentException ex) {
-            for (int i = outputOffset; i < outputOffset + columnLen; i++)
+            for (int i = outputOffset; i < outputOffset + columnLen; i++) {
                 output[i] = dft;
+            }
             logger.error("Can't translate value " + Bytes.toString(value, 0, valueLen) + " to dictionary ID, roundingFlag " + roundingFlag + ". Using default value " + String.format("\\x%02X", dft));
         }
     }
 
-    private byte[] padFixLen(int length, byte[] valueBytes) {
-        int valLen = valueBytes.length;
+    private byte[] padFixLen(int length, byte[] valueBytes, int valLen) {
         if (valLen == length) {
             return valueBytes;
         } else if (valLen < length) {
