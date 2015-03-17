@@ -78,9 +78,7 @@ KylinApp
 
 
         $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
-            if(newValue){
                 $scope.projectMetaLoad();
-            }
         });
 
         $scope.trimType = function(typeName){

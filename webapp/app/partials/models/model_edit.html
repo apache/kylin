@@ -24,8 +24,7 @@
         <form role="form" name="cube_form" novalidate>
             <!-- This margin in order to align with table tree in left part -->
             <div style="margin-top: 20px;">
-                <div ng-include="'partials/models/model_schema.html'" ng-controller="ModelSchemaCtrl"
-                     ng-init="state={mode:'edit', modelName: routeParams.modelName}">
+                <div ng-include="'partials/models/model_schema.html'" ng-controller="ModelSchemaCtrl">
                 </div>
             </div>
         </form>

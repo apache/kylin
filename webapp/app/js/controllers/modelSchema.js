@@ -32,7 +32,7 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
         {title: 'Data Model', src: 'partials/modelDesigner/data_model.html', isComplete: false},
         {title: 'Dimensions', src: 'partials/modelDesigner/model_dimensions.html', isComplete: false},
         {title: 'Measures', src: 'partials/modelDesigner/model_measures.html', isComplete: false},
-        {title: 'Refresh Setting', src: 'partials/modelDesigner/incremental.html', isComplete: false}
+        {title: 'Settings', src: 'partials/modelDesigner/conditions_settings.html', isComplete: false}
     ];
 
     $scope.curStep = $scope.wizardSteps[0];
@@ -56,70 +56,6 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
     // ~ public methods
     $scope.filterProj = function(project){
         return $scope.userService.hasRole('ROLE_ADMIN') || $scope.hasPermission(project,$scope.permissions.ADMINISTRATION.mask);
-    };
-
-    $scope.addNewMeasure = function (measure) {
-        $scope.newMeasure = (!!measure)? measure:CubeDescModel.createMeasure();
-    };
-
-    $scope.clearNewMeasure = function () {
-        $scope.newMeasure = null;
-    };
-
-    $scope.saveNewMeasure = function () {
-        if ($scope.cubeMetaFrame.measures.indexOf($scope.newMeasure) === -1) {
-            $scope.cubeMetaFrame.measures.push($scope.newMeasure);
-        }
-        $scope.newMeasure = null;
-    };
-
-    //map right return type for param
-    $scope.measureReturnTypeUpdate = function(){
-        if($scope.newMeasure.function.expression!=="COUNT_DISTINCT"){
-
-            var column = $scope.newMeasure.function.parameter.value;
-            var colType = $scope.getColumnType(column, $scope.metaModel.model.fact_table); // $scope.getColumnType defined in cubeEdit.js
-
-
-            switch($scope.newMeasure.function.expression){
-                case "SUM":
-                    if(colType==="smallint"||colType==="int"||colType==="bigint"){
-                        $scope.newMeasure.function.returntype= 'bigint';
-                    }else{
-                        $scope.newMeasure.function.returntype= 'decimal';
-                    }
-                    break;
-                case "MIN":
-                case "MAX":
-                    $scope.newMeasure.function.returntype = colType;
-                    break;
-                case "COUNT":
-                    $scope.newMeasure.function.returntype = "bigint";
-                    break;
-                default:
-                    $scope.newMeasure.function.returntype = "";
-                    break;
-            }
-        }
-    }
-
-    $scope.addNewRowkeyColumn = function () {
-        $scope.cubeMetaFrame.rowkey.rowkey_columns.push({
-            "column": "",
-            "length": 0,
-            "dictionary": "true",
-            "mandatory": false
-        });
-    };
-
-    $scope.addNewAggregationGroup = function () {
-        $scope.cubeMetaFrame.rowkey.aggregation_groups.push([]);
-    };
-
-    $scope.refreshAggregationGroup = function (list, index, aggregation_groups) {
-        if (aggregation_groups) {
-            list[index] = aggregation_groups;
-        }
     };
 
     $scope.removeElement = function (arr, element) {

@@ -164,7 +164,7 @@ public class ProjectManager {
 
         ProjectInstance currentProject = getProject(projectName);
         if (currentProject == null) {
-            currentProject = ProjectInstance.create(projectName, owner, description, null);
+            currentProject = ProjectInstance.create(projectName, owner, description, null,null);
         } else {
             throw new IllegalStateException("The project named " + projectName + "already exists");
         }
@@ -218,6 +218,36 @@ public class ProjectManager {
 
             return project;
         }
+    }
+
+    public boolean isModelInProject(String projectName, String modelName) {
+        return this.getProject(projectName).containsModel(modelName);
+    }
+
+    public ProjectInstance updateModelToProject(String modelName, String newProjectName, String owner) throws IOException {
+        removeModelFromProjects(modelName);
+
+        return addModelToProject(modelName, newProjectName, owner);
+    }
+
+    public void removeModelFromProjects(String modelName) throws IOException {
+        for (ProjectInstance projectInstance : findProjects(modelName)) {
+            projectInstance.removeModel(modelName);
+
+            saveResource(projectInstance);
+        }
+    }
+
+    private ProjectInstance addModelToProject(String modelName, String project, String user) throws IOException {
+        String newProjectName = ProjectInstance.getNormalizedProjectName(project);
+        ProjectInstance newProject = getProject(newProjectName);
+        if (newProject == null) {
+            newProject = this.createProject(newProjectName, user, "This is a project automatically added when adding model " + modelName);
+        }
+        newProject.addModel(modelName);
+        saveResource(newProject);
+
+        return newProject;
     }
 
     public ProjectInstance moveRealizationToProject(RealizationType type, String realizationName, String newProjectName, String owner) throws IOException {
@@ -286,6 +316,17 @@ public class ProjectManager {
             }
         }
         return result;
+    }
+
+    private List<ProjectInstance> findProjects(String modelName) {
+        List<ProjectInstance> projects = new ArrayList<ProjectInstance>();
+        for (ProjectInstance projectInstance : projectMap.values()) {
+            if (projectInstance.containsModel(modelName)) {
+                projects.add(projectInstance);
+            }
+        }
+
+        return projects;
     }
 
     public List<TableDesc> listDefinedTables(String project) throws IOException {

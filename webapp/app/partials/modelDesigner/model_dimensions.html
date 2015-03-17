@@ -20,24 +20,8 @@
 
 <!-- Dimensions Summary -->
 <div class="dataTables_wrapper form-inline no-footer">
-    <div class="row">
-        <div class="col-xs-6" ng-if="state.mode=='edit'">
-            <div class="btn-group">
-                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-                    <i class="fa fa-plus"></i> Add Dimension <span class="ace-icon fa fa-caret-down icon-on-right"></span>
-                </button>
-                <ul class="dropdown-menu" role="menu">
-                    <li><a ng-click="addDim('normal')">Normal</a></li>
-                    <li><a ng-click="addDim('hierarchy')">Hierarchy</a></li>
-                    <li><a ng-click="addDim('derived')">Derived</a></li>
-                </ul>
-            </div>
-            <button type="button" class="btn btn-default" ng-disabled="!model.fact_table.length"
-                    ng-click="openAutoGenModal()">
-                <i class="fa fa-building-o"></i> Auto Generator
-            </button>
-        </div>
-        <div class="col-xs-6" ng-if="state.mode!='edit'">
+    <div class="row"  ng-if="state.mode=='view'">
+        <div class="col-xs-6">
             <b>Dimensions</b>
         </div>
         <div class="col-xs-6">
@@ -47,15 +31,14 @@
             </span>
         </div>
     </div>
-    <table class="table table-striped table-hover" ng-if="model.dimensions.length > 0">
+
+     <!-- VIEW MODE -->
+    <table class="table table-striped table-hover" ng-if="state.mode=='view'&&model.dimensions.length > 0">
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Name</th>
                 <th>Table Name</th>
-                <th>Type</th>
-                <th></th>
-                <th ng-if="state.mode=='edit'">Actions</th>
+                <th>Columns</th>
             </tr>
         </thead>
         <tbody class="cube-dimension">
@@ -66,289 +49,55 @@
                 </td>
                 <!--Name -->
                 <td>
-                    <span>{{dimension.name}}</span>
+                    <span>{{dimension.table}}</span>
                 </td>
                 <!--Table Name -->
                 <td>
-                    <span tooltip="{{dimension.table == model.fact_table ? 'Fact Table' : 'Lookup Table'}}">{{dimension.table}}</span>
-                </td>
-                <!--Type-->
-                <td>
-                    <span class="label label-primary" ng-repeat="t in getDimType(dimension)">{{t}}</span>
-                </td>
-                <!--Columns-->
-                <td  style="word-wrap:break-word;word-break:break-all;">
-                    <div ng-repeat="t in getDimType(dimension)">
-                        <div ng-switch="t">
-                            <dl class="dl-horizontal" ng-switch-when="hierarchy">
-                                <dt>Hierarchy</dt>
-                                <dd>{{dimension.column}}</dd>
-                            </dl>
-                            <dl class="dl-horizontal" ng-switch-when="derived">
-                                <dt>Derived</dt>
-                                <dd>{{dimension.derived}}</dd>
-                            </dl>
-                            <dl class="dl-horizontal" ng-switch-when="normal">
-                                <dt>Column</dt>
-                                <dd>{{dimension.columns}}</dd>
-                            </dl>
-                        </div>
-                    </div>
-                </td>
-                <td ng-if="state.mode=='edit'">
-                    <!--edit button-->
-                    <button class="btn btn-xs btn-info"
-                            ng-click="editDim(dimension)"><i class="fa fa-pencil"></i>
-                    </button>
-                    <!-- remove button-->
-                    <button class="btn btn-xs btn-danger"
-                            ng-click="removeDim(dimension)"><i class="fa fa-trash-o"></i>
-                    </button>
+                    <span>{{dimension.columns}}</span>
                 </td>
             </tr>
         </tbody>
     </table>
+
+    <div  ng-if="state.mode=='edit'" class="form-group model-dimension-edit" style="width: 100%">
+        <h4 style="margin-left:42px">Dimensions</h4>
+        <table style="margin-left:42px; width:92%"
+               ng-if="model.dimensions.length > 0"
+               class="table table-hover list">
+            <tr class="row">
+                <th class="col-xs-1">ID</th>
+                <th class="col-xs-1">Table Name</th>
+                <th class="col-xs-9">Columns</th>
+                <th class="col-xs-1"></th>
+            </tr>
+
+            <tr ng-repeat="dimension in model.dimensions" class="row">
+                <td class="col-xs-1">
+                    <!-- ID -->
+                    <b>{{($index + 1)}}</b>
+                </td>
+                <td class="col-xs-1">
+                        {{dimension.table}}
+                </td>
+                <td class="col-xs-9">
+                    <!-- Dimensions -->
+                    <select ng-if="state.mode=='edit'" style="width: 100%"
+                            ng-model="model.dimensions[$index].columns" required chosen multiple
+                            ng-change=""
+                            ng-options="column.name as column.name for column in getColumnsByTable(dimension.table)">
+                        <option value=""></option>
+                    </select>
+                </td>
+                <td class="col-xs-1">
+                    <button class="btn btn-xs btn-info"
+                            ng-click="removeTableDimensions($index)"><i
+                            class="fa fa-minus"></i>
+                    </button>
+                </td>
+            </tr>
+        </table>
+
+
 </div>
-
-<div class="space-16"></div>
-<div class="callout callout-warning dimensions-conflict-area" ng-if="dimConflicts.length">
-    <h4>There are following columns defined in multiple dimensions. <small>This is not recommended!</small></h4>
-    <div class="row" ng-repeat="c in dimConflicts">
-        <div class="col-xs-3">
-            <code>{{c.table}}.{{c.column}}</code>
-        </div>
-        <div class="col-xs-3">
-            <ul class="list-unstyled">
-                <li ng-repeat="d in c.dims">{{d.id}} - {{d.name}}</li>
-            </ul>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Dimension Form -->
-<script type="text/ng-template" id="addEditDimension.html">
-    <div class="modal-header">
-        <h4 class="box-title lighter">{{dimState.editing ? 'Edit' : 'Add'}} Dimension
-            <span class="label label-primary" ng-repeat="t in dimType">{{t}}</span>
-        </h4>
-    </div>
-    <div class="modal-body">
-        <ng-form name="edit_dim_form">
-        <div class="row">
-            <div class="col-xs-8">
-                <!--Name-->
-                <div class="form-group">
-                    <div class="row">
-                        <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Name</b></label>
-                        <div class="col-xs-12 col-sm-6">
-                            <input type="text" placeholder="Name.." class="form-control" name="dim_name"
-                                   tooltip="dimension name.." tooltip-trigger="focus"
-                                   ng-model="newDimension.name" required />
-                        </div>
-                        <div class="col-xs-12 col-sm-3">
-                            <div class="text-warning" ng-if="edit_dim_form.dim_name.$error.required  && edit_dim_form.dim_name.$dirty">
-                                The Dimension Name is required.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!--Table Name: derived dimension only allows lookup tables-->
-                <div class="form-group">
-                    <div class="row">
-                        <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Table Name</b></label>
-                        <div class="col-xs-12 col-sm-6" ng-if="dimType.indexOf('derived') >= 0">
-                            <select class="form-control" required="true" chosen data-placeholder="Select a lookup table"
-                                    ng-model="newDimension.table" ng-options="table for table in availableTables.slice(1)">
-                                <option value=""></option>
-                            </select>
-                        </div>
-                        <div class="col-xs-12 col-sm-6" ng-if="dimType.indexOf('derived') == -1">
-                            <select class="form-control" required="true" chosen data-placeholder="Select a table"
-                                    ng-model="newDimension.table" ng-options="table for table in availableTables">
-                                <option value=""></option>
-                            </select>
-                        </div>
-                        <div class="col-xs-12 col-sm-3">
-                            <div class="text-info" ng-if="dimType.indexOf('derived') >= 0">
-                                Derived dimension only comes from lookup table.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!--Normal Dimension: choose one column-->
-                <div class="form-group" ng-if="dimType.indexOf('normal') >= 0">
-                    <div class="row">
-                        <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Column Name</b></label>
-                        <div class="col-xs-12 col-sm-6">
-                            <select class="form-control" required="true" chosen data-placeholder="Select a column"
-                                    ng-model="newDimension.column[0]" ng-options="column.name as column.name for column in getColumnsByTable(newDimension.table)">
-                                <option value=""></option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <!--Hierarchy Dimension-->
-                <div class="form-group" ng-if="dimType.indexOf('hierarchy') >= 0">
-                    <div class="row">
-                        <div class="col-sm-6 col-sm-offset-3">
-                            <div ui-sortable="{containment: 'parent', placeholder: 'hierarchy-item-placeholder', forcePlaceholderSize: true, opacity: 0.8}"
-                                 ng-model="newDimension.column" class="hierarchy-container">
-                                <div ng-repeat="hierarchyIndex in [] | range: newDimension.column.length" class="hierarchy-item">
-                                    <div class="row">
-                                        <div class="col-xs-2">
-                                            <span class="badge">{{$index + 1}}</span>
-                                        </div>
-                                        <div class="col-xs-8">
-                                            <select chosen style="width: 100%"
-                                                    data-placeholder="Dimension Hierarchy Column"
-                                                    ng-model="newDimension.column[$index]"
-                                                    ng-options="columns.name as columns.name for columns in getColumnsByTable(newDimension.table)" >
-                                                <option value="">-- Select Column --</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-xs-2">
-                                            <button type="button" class="pull-right btn btn-xs btn-danger" style="cursor: pointer " tooltip="Delete"
-                                                    ng-click="newDimension.column.splice($index, 1);">
-                                                <i class="fa fa-trash-o"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="space-8"></div>
-
-                            <div class="row">
-                                <div class="col-xs-4">
-                                    <button class="btn btn-xs btn-info"
-                                            ng-click="newDimension.column.push('');">
-                                        <i class="fa fa-plus"></i> New Hierarchy</button>
-                                </div>
-                                <div class="col-xs-8">
-                                    <p class="help-block">Drag level into the order you prefer.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!--Derived Dimension-->
-                <div ng-if="dimType.indexOf('derived') >= 0">
-                    <div class="form-group">
-                        <div class="row">
-                            <div class="col-sm-6 col-sm-offset-3">
-                                <div ng-repeat="derived in newDimension.derived track by $index">
-                                    <div>
-                                        <select chosen style="width: 80%;" data-placeholder="Derived Columns.."
-                                                ng-model="newDimension.derived[$index]"
-                                                ng-options="columns.name as columns.name for columns in getColumnsByTable(newDimension.table)" >
-                                            <option value=""></option>
-                                        </select>
-                                        <button class="pull-right btn btn-xs btn-danger" style="cursor: pointer " tooltip="Delete"
-                                                ng-click="newDimension.derived.splice($index, 1);">
-                                            <i class="fa fa-trash-o"></i>
-                                        </button>
-                                        <div class="space-4"></div>
-                                    </div>
-                                </div>
-                                <button class="btn btn-xs btn-info" ng-click="newDimension.derived.push('');">
-                                    <i class="fa fa-plus"></i> New Derived</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!--Tips-->
-            <div class="col-xs-4">
-                <div class="box box-solid">
-                    <div class="box-header">
-                        <h4 class="box-title">Tips</h4>
-                    </div>
-                    <div class="box-body">
-                        <div class="row">
-                            <div class="col-xs-12">
-                                <ol class="text-info">
-                                    <li>Type in any input box for auto suggestion</li>
-                                    <li>Pick up Fact Table from Star Schema Tables first</li>
-                                    <li>Data Type should match with Hive Table's Data Type</li>
-                                    <li>Join Type have to be same as will be used in query</li>
-                                    <li>Using Hierarchy to inherit one dimension another</li>
-                                    <li>Using Derived for One-One relationship between columns, like ID and Name</li>
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        </ng-form>
-    </div>
-    <div class="modal-footer">
-        <button class="btn btn-primary" ng-disabled="edit_dim_form.$invalid" ng-click="ok()">OK</button>
-        <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
-    </div>
-</script>
-
-
-<script type="text/ng-template" id="autoGenDimension.html">
-    <div class="modal-header">
-        <h4 class="box-title lighter">Auto Generate Dimensions <small>This is a helper for you to batch generate dimensions.</small></h4>
-    </div>
-    <div class="modal-body">
-        <div class="row">
-            <div class="col-xs-8">
-                <div class="box box-solid">
-                    <div class="box-header"><h4>Columns</h4></div>
-                    <div class="box-body">
-                        <ul class="list-unstyled columns-region">
-                            <li ng-repeat="table in availableTables track by $index">
-                                <h5 class="table-name-underline">
-                                    <b>{{table}}</b>{{$index == 0 ? ' [Fact Table]' : ' [Lookup Table]'}}
-                                </h5>
-                                <ul class="list-unstyled">
-                                    <li ng-repeat="col in availableColumns[table] track by col.table + '.' + col.name">
-                                        <label>
-                                            <input type="checkbox" ng-model="selectedColumns[table][col.name].selected"
-                                                   ng-disabled="selectedColumns[table][col.name].disabled">
-                                            {{col.name}}
-                                        </label>
-                                    </li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!--Tips-->
-            <div class="col-xs-4">
-                <div class="box box-solid">
-                    <div class="box-header">
-                        <h4 class="box-title">Auto Generate Rules</h4>
-                    </div>
-                    <div class="box-body">
-                        <div class="row">
-                            <div class="col-xs-12">
-                                <ol class="text-info">
-                                    <li>Column is disabled once there is already a dimension referred this column.</li>
-                                    <li>In fact table: one normal dimension will be auto generated per column.</li>
-                                    <li>In lookup table: one derived dimension will be auto generated for all the selected columns.</li>
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal-footer">
-        <button class="btn btn-primary" ng-disabled="" ng-click="ok()">OK</button>
-        <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
-    </div>
-</script>
 
 </div>

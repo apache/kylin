@@ -16,10 +16,11 @@
 * limitations under the License.
 -->
 
-<div ng-controller="ModelRefreshCtrl">
+<div ng-controller="CubeRefreshCtrl">
 <div class="row">
     <div class="col-xs-8">
 
+        <!--Cube Partition Type-->
         <div class="form-group" ng-hide="true">
             <div class="row">
                 <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Partition Type</b></label>
@@ -70,6 +71,38 @@
                 </div>
             </div>
         </div>
+
+        <!--Filter Condition-->
+        <div class="form-group">
+            <div class="row">
+                <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Filter</b></label>
+                <div class="col-xs-12 col-sm-6">
+
+                    <!--edit mode-->
+                    <div class="form-group" ng-if="state.mode=='edit'"
+                         style="font-family:'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro'">
+                        <label for="filter_condition"
+                               style="color: #930f80;"><b>WHERE</b></label>
+                        <textarea id="filter_condition" type="text"
+                                  style="height:150px"
+                                  class="form-control box-default"
+                                  placeholder="Please input WHERE clause without typing 'WHERE'"
+                                  ng-model="model.filter_condition">
+                        </textarea>
+                    </div>
+
+                    <!--view mode-->
+                    <div class="form-group row" ng-if="state.mode=='view'"
+                         style="font-family:'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro'">
+                        <div ng-if="model.filter_condition" class="col-md-11 col-md-offset-1">
+                            <p style="color: #930f80;"><b>WHERE</b></p>
+                            <span>{{model.filter_condition}}</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="col-xs-4">
@@ -81,7 +114,7 @@
                 <div class="row">
                     <div class="col-xs-12">
                         <ol class="text-info">
-                            <li>Not required,leave as default if cube always need full build</li>
+                            <li>Not required,leave as default if this cube always need full build</li>
                             <li>Partition column will select 'date' or 'string' type column from fact table</li>
                             <li>If column selected,please indicate start date to just pull certain data from source</li>
                         </ol>
