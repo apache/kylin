@@ -27,10 +27,6 @@ import org.apache.kylin.metadata.model.DataModelDesc;
  */
 public interface IJoinedFlatTableDesc {
 
-    public static final String FACT_TABLE_ALIAS = "FACT_TABLE";
-
-    public static final String LOOKUP_TABLE_ALAIS_PREFIX = "LOOKUP_";
-
     public String getTableName(String jobUUID);
 
     public List<IntermediateColumnDesc> getColumnList();
@@ -39,5 +35,4 @@ public interface IJoinedFlatTableDesc {
 
     public DataModelDesc.RealizationCapacity getCapacity();
 
-    public String getTableAlias(String tableName);
 }
