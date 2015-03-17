@@ -81,22 +81,8 @@ public class TableRecordInfoDigest {
 		return dictMaxIds[col];
 	}
 
-	public int getMetricCount() {
-		int ret = 0;
-		for (int i = 0; i < nColumns; ++i) {
-			if (isMetrics(i)) {
-				ret++;
-			}
-		}
-		return ret;
-	}
-
     public boolean[] getIsMetric() {
         return isMetric;
-    }
-
-    public int[] getLengths() {
-        return lengths;
     }
 
     public String[] getMetricDataTypes() {

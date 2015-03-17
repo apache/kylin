@@ -210,8 +210,8 @@ public class CubeMigrationCLI {
         metaResource.add(cube.getResourcePath());
         metaResource.add(cubeDesc.getResourcePath());
 
-        for (TableDesc tableDesc : cubeDesc.listTables()) {
-            metaResource.add(tableDesc.getResourcePath());
+        for (String table : cubeDesc.getModel().getAllTables()) {
+            metaResource.add(TableDesc.concatResourcePath(table.toUpperCase()));
         }
 
         for (CubeSegment segment : cube.getSegments()) {

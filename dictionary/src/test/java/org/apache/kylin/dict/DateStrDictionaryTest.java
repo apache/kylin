@@ -33,6 +33,33 @@ public class DateStrDictionaryTest {
     }
 
     @Test
+    public void testMinMaxId() {
+        assertEquals(0, dict.getIdFromValue("0000-01-01"));
+        assertEquals(DateStrDictionary.ID_9999_12_31, dict.getIdFromValue("9999-12-31"));
+
+        try {
+            dict.getValueFromId(-2); // -1 is id for NULL
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            // good
+        }
+        
+        try {
+            dict.getValueFromId(DateStrDictionary.ID_9999_12_31 + 1);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            // good
+        }
+        
+        try {
+            dict.getIdFromValue("10000-1-1");
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            // good
+        }
+    }
+
+    @Test
     public void testNull() {
         int nullId = dict.getIdFromValue(null);
         assertNull(dict.getValueFromId(nullId));

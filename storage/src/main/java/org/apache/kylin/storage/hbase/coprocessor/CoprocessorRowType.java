@@ -117,7 +117,6 @@ public class CoprocessorRowType {
     public TblColRef[] columns;
     public int[] columnSizes;
     public int[] columnOffsets;
-    public List<TblColRef> columnsAsList;
     public HashMap<TblColRef, Integer> columnIdxMap;
 
     public CoprocessorRowType(TblColRef[] columns, int[] columnSizes) {
@@ -138,8 +137,6 @@ public class CoprocessorRowType {
             o += columnSizes[i];
         }
         this.columnOffsets = offsets;
-
-        this.columnsAsList = Arrays.asList(columns);
 
         HashMap<TblColRef, Integer> map = Maps.newHashMap();
         for (int i = 0; i < columns.length; i++) {
