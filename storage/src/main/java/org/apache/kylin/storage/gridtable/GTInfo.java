@@ -24,6 +24,7 @@ public class GTInfo {
     // grid info
     BitSet primaryKey; // columns sorted and unique
     BitSet[] colBlocks; // at least one column block
+    BitSet colBlocksAll;
     int rowBlockSize; // 0: disable row block
 
     // sharding & rowkey
@@ -57,6 +58,8 @@ public class GTInfo {
     private void validateColumnBlocks() {
         colAll = new BitSet();
         colAll.flip(0, nColumns);
+        colBlocksAll = new BitSet();
+        colBlocksAll.flip(0, colBlocks.length);
         
         // column blocks must not overlap
         for (int i = 0; i < colBlocks.length; i++) {
