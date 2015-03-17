@@ -18,12 +18,10 @@
 
 package org.apache.kylin.invertedindex.index;
 
-import com.google.common.collect.Maps;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -63,20 +61,21 @@ public class TableRecordInfo {
     }
 
     private TableRecordInfoDigest createDigest(IIDesc desc, Map<Integer, Dictionary<?>> dictionaryMap) {
-        int nColumns = getColumns().size();
+        final List<TblColRef> tblColRefs = desc.listAllColumns();
+        final int nColumns = tblColRefs.size();
         boolean[] isMetric = new boolean[nColumns];
         int[] lengths = new int[nColumns];
         int[] dictMaxIds = new int[nColumns];
         String[] dataTypes = new String[nColumns];
         for (int i = 0; i < nColumns; ++i) {
-            final TblColRef tblColRef = getColumns().get(i);
+            final TblColRef tblColRef = tblColRefs.get(i);
             isMetric[i] = desc.isMetricsCol(i);
             dataTypes[i] = tblColRef.getDatatype();
             if (isMetric[i]) {
                 lengths[i] = FixedLenMeasureCodec.get(DataType.getInstance(tblColRef.getColumn().getDatatype())).getLength();
             } else {
                 if (dictionaryMap.isEmpty()) {
-                    lengths[i] = desc.listAllColumns().get(i).getColumn().getTypePrecision();
+                    lengths[i] = FixedLenMeasureCodec.get(tblColRef.getColumn().getType()).getLength();
                     dictMaxIds[i] = Integer.MAX_VALUE;
                 } else {
                     final Dictionary<?> dictionary = dictionaryMap.get(i);
