@@ -1,6 +1,7 @@
 package org.apache.kylin.storage.gridtable;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.BitSet;
 
 import org.apache.kylin.common.util.ByteArray;
@@ -9,9 +10,9 @@ public class GTRecord implements Comparable<GTRecord> {
 
     final GTInfo info;
     final ByteArray[] cols;
-    
+
     BitSet maskForEqualHashComp;
-    
+
     public GTRecord(GTInfo info) {
         this.info = info;
         this.cols = new ByteArray[info.nColumns];
@@ -19,19 +20,58 @@ public class GTRecord implements Comparable<GTRecord> {
             this.cols[i] = new ByteArray();
         this.maskForEqualHashComp = info.colAll;
     }
-    
+
+    /** set record to the codes of specified values, new space allocated to hold the codes */
+    public GTRecord setValues(Object... values) {
+        setValues(new ByteArray(info.maxRecordLength), values);
+        return this;
+    }
+
+    /** set record to the codes of specified values, reuse given space to hold the codes */
+    public GTRecord setValues(ByteArray space, Object... values) {
+        ByteBuffer buf = space.asBuffer();
+        int pos = buf.position();
+        for (int i = 0; i < info.nColumns; i++) {
+            if (values[i] == null) {
+                cols[i].set(null, 0, 0);
+                continue;
+            }
+            info.codeSystem.encodeColumnValue(i, values[i], buf);
+            int newPos = buf.position();
+            cols[i].set(buf.array(), buf.arrayOffset() + pos, newPos - pos);
+            pos = newPos;
+        }
+        return this;
+    }
+
+    /** decode and return the values of this record */
+    public Object[] getValues() {
+        return getValues(new Object[info.nColumns]);
+    }
+
+    /** decode and return the values of this record */
+    public Object[] getValues(Object[] result) {
+        for (int i = 0; i < info.nColumns; i++) {
+            if (cols[i].array() == null)
+                result[i] = null;
+            else
+                result[i] = info.codeSystem.decodeColumnValue(i, cols[i].asBuffer());
+        }
+        return result;
+    }
+
     public GTRecord copy() {
         return copy(info.colAll);
     }
-    
+
     public GTRecord copy(BitSet selectedCols) {
         int len = 0;
         for (int i = selectedCols.nextSetBit(0); i >= 0; i = selectedCols.nextSetBit(i + 1)) {
             len += cols[i].length();
         }
-        
+
         byte[] space = new byte[len];
-        
+
         GTRecord copy = new GTRecord(info);
         copy.maskForEqualHashComp = this.maskForEqualHashComp;
         int pos = 0;
@@ -40,10 +80,10 @@ public class GTRecord implements Comparable<GTRecord> {
             copy.cols[i].set(space, pos, cols[i].length());
             pos += cols[i].length();
         }
-        
+
         return copy;
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -52,7 +92,7 @@ public class GTRecord implements Comparable<GTRecord> {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        
+
         GTRecord o = (GTRecord) obj;
         if (this.info != o.info)
             return false;
@@ -64,7 +104,7 @@ public class GTRecord implements Comparable<GTRecord> {
         }
         return true;
     }
-    
+
     @Override
     public int hashCode() {
         int hash = 1;
@@ -73,7 +113,7 @@ public class GTRecord implements Comparable<GTRecord> {
         }
         return hash;
     }
-    
+
     @Override
     public int compareTo(GTRecord o) {
         int comp = 0;
@@ -84,7 +124,11 @@ public class GTRecord implements Comparable<GTRecord> {
         }
         return comp;
     }
-
+    
+    @Override
+    public String toString() {
+        return Arrays.toString(getValues());
+    }
 
     // ============================================================================
 
@@ -93,7 +137,7 @@ public class GTRecord implements Comparable<GTRecord> {
         for (int i = selectedCols.nextSetBit(0); i >= 0; i = selectedCols.nextSetBit(i + 1)) {
             len += cols[i].length();
         }
-        
+
         ByteArray buf = ByteArray.allocate(len);
         exportColumns(info.primaryKey, buf);
         return buf;
@@ -108,7 +152,7 @@ public class GTRecord implements Comparable<GTRecord> {
         }
         buf.setLength(pos);
     }
-    
+
     /** write data to given buffer, like serialize */
     void exportColumnBlock(int c, ByteBuffer buf) {
         BitSet setselectedCols = info.colBlocks[c];
@@ -116,24 +160,25 @@ public class GTRecord implements Comparable<GTRecord> {
             buf.put(cols[i].array(), cols[i].offset(), cols[i].length());
         }
     }
-    
+
     /** change pointers to point to data in given buffer, UNLIKE deserialize */
     void loadPrimaryKey(ByteBuffer buf) {
         loadColumns(info.primaryKey, buf);
     }
-    
+
     /** change pointers to point to data in given buffer, UNLIKE deserialize */
     void loadCellBlock(int c, ByteBuffer buf) {
         loadColumns(info.colBlocks[c], buf);
     }
-    
+
     /** change pointers to point to data in given buffer, UNLIKE deserialize */
     void loadColumns(BitSet selectedCols, ByteBuffer buf) {
         int pos = buf.position();
         for (int i = selectedCols.nextSetBit(0); i >= 0; i = selectedCols.nextSetBit(i + 1)) {
             int len = info.codeSystem.codeLength(i, buf);
             cols[i].set(buf.array(), buf.arrayOffset() + pos, len);
-            buf.position(pos + len);
+            pos += len;
+            buf.position(pos);
         }
     }
 
