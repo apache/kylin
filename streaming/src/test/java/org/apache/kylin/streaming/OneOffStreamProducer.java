@@ -51,15 +51,15 @@ import java.util.Properties;
 /**
  * Created by qianzhou on 2/16/15.
  */
-public class TestProducer {
+public class OneOffStreamProducer {
 
     private volatile boolean stopped = false;
 
-    private static final Logger logger = LoggerFactory.getLogger(TestProducer.class);
+    private static final Logger logger = LoggerFactory.getLogger(OneOffStreamProducer.class);
 
     private final int sendCount;
 
-    public TestProducer(int sendCount) {
+    public OneOffStreamProducer(int sendCount) {
         this.sendCount = sendCount;
     }
 

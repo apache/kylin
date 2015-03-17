@@ -210,4 +210,7 @@ public class Slice implements Iterable<RawTableRecord>, Comparable<Slice> {
         return comp;
     }
 
+    public TableRecordInfoDigest getInfo() {
+        return info;
+    }
 }

@@ -165,7 +165,7 @@ public class DictionaryGenerator {
     private static Dictionary buildNumberDict(Collection<byte[]> values, int baseId, int nSamples, ArrayList samples) {
         NumberDictionaryBuilder builder = new NumberDictionaryBuilder(new StringBytesConverter());
         for (byte[] value : values) {
-            if (value == null || value.length == 0) // "" is null for numbers
+            if (value == null) // "" is null for numbers
                 continue;
             String v = Bytes.toString(value);
             builder.addValue(v);
