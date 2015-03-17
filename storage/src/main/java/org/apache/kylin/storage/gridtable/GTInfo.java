@@ -4,11 +4,14 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Map;
 
 import org.apache.kylin.metadata.model.DataType;
 
 public class GTInfo {
+    
+    public static Builder builder() {
+        return new Builder();
+    }
 
     IGTCodeSystem codeSystem;
     int maxRecordLength = 1024; // column length can vary
@@ -16,16 +19,12 @@ public class GTInfo {
     // column schema
     int nColumns;
     DataType[] colTypes;
-    BitSet colIsDimension;
-    BitSet colIsMetrics;
     BitSet colAll;
-    String[] colMetricsAggrFunc;
 
     // grid info
     BitSet primaryKey; // columns sorted and unique
     BitSet[] colBlocks; // at least one column block
     int rowBlockSize; // 0: disable row block
-    boolean rowBlockIndexEnabled;
 
     // sharding & rowkey
     int nShards; // 0: no sharding
@@ -42,10 +41,6 @@ public class GTInfo {
         return rowBlockSize > 0;
     }
 
-    public boolean isRowBlockIndexEnabled() {
-        return rowBlockIndexEnabled && isRowBlockEnabled();
-    }
-
     void validate() {
 
         if (codeSystem == null)
@@ -54,23 +49,15 @@ public class GTInfo {
         if (primaryKey.cardinality() == 0)
             throw new IllegalStateException();
 
-        validateColumns();
+        codeSystem.init(this);
+        
         validateColumnBlocks();
     }
 
-    private void validateColumns() {
+    private void validateColumnBlocks() {
         colAll = new BitSet();
         colAll.flip(0, nColumns);
-
-        // dimension and metrics must over all columns
-        if (colIsDimension.intersects(colIsMetrics))
-            throw new IllegalStateException();
-        BitSet all = (BitSet) colAll.clone();
-        all.andNot(colIsDimension);
-        all.andNot(colIsMetrics);
-        if (all.isEmpty() == false)
-            throw new IllegalStateException();
-
+        
         // column blocks must not overlap
         for (int i = 0; i < colBlocks.length; i++) {
             for (int j = i + 1; j < colBlocks.length; j++) {
@@ -78,9 +65,7 @@ public class GTInfo {
                     throw new IllegalStateException();
             }
         }
-    }
-
-    private void validateColumnBlocks() {
+        
         // column block must cover all columns
         BitSet merge = new BitSet();
         for (int i = 0; i < colBlocks.length; i++) {
@@ -108,18 +93,10 @@ public class GTInfo {
         colBlocks = (BitSet[]) tmp.toArray(new BitSet[tmp.size()]);
     }
 
-    public boolean isDimension(int i) {
-        return colIsMetrics.get(i) == false;
-    }
-
-    public boolean isMetrics(int i) {
-        return colIsMetrics.get(i);
-    }
-
     public static class Builder {
         final GTInfo info;
 
-        public Builder() {
+        private Builder() {
             this.info = new GTInfo();
         }
 
@@ -130,7 +107,7 @@ public class GTInfo {
         }
 
         /** required */
-        public Builder setColumns(DataType[] colTypes, BitSet metrics) {
+        public Builder setColumns(DataType... colTypes) {
             info.nColumns = colTypes.length;
             info.colTypes = colTypes;
             if (info.colBlocks == null) {
@@ -141,21 +118,6 @@ public class GTInfo {
             return this;
         }
         
-        public Builder setMetrics(Map<Integer, String> metricsAggrFunc) {
-            info.colIsDimension = new BitSet();
-            info.colIsMetrics = new BitSet();
-            info.colMetricsAggrFunc = new String[info.nColumns];
-            for (int i = 0; i < info.nColumns; i++) {
-                if (metricsAggrFunc.containsKey(i)) {
-                    info.colIsMetrics.set(i);
-                    info.colMetricsAggrFunc[i] = metricsAggrFunc.get(i);
-                } else {
-                    info.colIsDimension.set(i);
-                }
-            }
-            return this;
-        }
-
         /** required */
         public Builder setPrimaryKey(BitSet primaryKey) {
             info.primaryKey = primaryKey;
@@ -175,9 +137,8 @@ public class GTInfo {
         }
         
         /** optional */
-        public Builder enableRowBlock(int rowBlockSize, boolean enableIndex) {
+        public Builder enableRowBlock(int rowBlockSize) {
             info.rowBlockSize = rowBlockSize;
-            info.rowBlockIndexEnabled = enableIndex;
             return this;
         }
         
@@ -185,6 +146,11 @@ public class GTInfo {
         public Builder enableSharding(int nShards) {
             info.nShards = nShards;
             return this;
+        }
+        
+        public GTInfo build() {
+            info.validate();
+            return info;
         }
     }
 }

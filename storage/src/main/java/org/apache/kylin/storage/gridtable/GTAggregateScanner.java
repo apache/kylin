@@ -17,18 +17,34 @@ public class GTAggregateScanner implements IGTScanner {
     final GTInfo info;
     final BitSet dimensions;
     final BitSet metrics;
-    final TupleFilter filter;
+    final String[] metricsAggrFuncs;
     final GTRawScanner rawScanner;
 
-    GTAggregateScanner(GTInfo info, IGTStore store, GTRecord pkStart, GTRecord pkEndExclusive, BitSet dimensions, BitSet metrics, TupleFilter filter) {
-        if (dimensions.intersects(info.colIsMetrics) || metrics.intersects(info.colIsDimension))
+    GTAggregateScanner(GTInfo info, IGTStore store, GTRecord pkStart, GTRecord pkEndExclusive, BitSet dimensions, BitSet metrics, String[] metricsAggrFuncs, TupleFilter filterPushDown) {
+        if (dimensions.intersects(metrics))
+            throw new IllegalStateException();
+        if (metrics.cardinality() != metricsAggrFuncs.length)
             throw new IllegalStateException();
 
         this.info = info;
         this.dimensions = dimensions;
         this.metrics = metrics;
-        this.filter = filter;
-        this.rawScanner = new GTRawScanner(info, store, pkStart, pkEndExclusive, dimensions, metrics, filter);
+        this.metricsAggrFuncs = metricsAggrFuncs;
+        
+        BitSet columns = new BitSet();
+        columns.or(dimensions);
+        columns.or(metrics);
+        this.rawScanner = new GTRawScanner(info, store, pkStart, pkEndExclusive, columns, filterPushDown);
+    }
+
+    @Override
+    public int getScannedRowCount() {
+        return rawScanner.getScannedRowCount();
+    }
+
+    @Override
+    public int getScannedRowBlockCount() {
+        return rawScanner.getScannedRowBlockCount();
     }
 
     @Override
@@ -57,17 +73,17 @@ public class GTAggregateScanner implements IGTScanner {
             r.maskForEqualHashComp = dimensions;
             MeasureAggregator[] aggrs = aggBufMap.get(r);
             if (aggrs == null) {
-                aggrs = new MeasureAggregator[metrics.cardinality()];
+                aggrs = new MeasureAggregator[metricsAggrFuncs.length];
                 for (int i = 0, col = -1; i < aggrs.length; i++) {
                     col = metrics.nextSetBit(col + 1);
-                    aggrs[i] = info.codeSystem.newMetricsAggregator(col);
+                    aggrs[i] = info.codeSystem.newMetricsAggregator(metricsAggrFuncs[i], col);
                 }
                 aggBufMap.put(r.copy(dimensions), aggrs);
             }
 
             for (int i = 0, col = -1; i < aggrs.length; i++) {
                 col = metrics.nextSetBit(col + 1);
-                Object metrics = info.codeSystem.decodeColumnValue(col, r.cols[col].wrapAsBuffer());
+                Object metrics = info.codeSystem.decodeColumnValue(col, r.cols[col].asBuffer());
                 aggrs[i].aggregate(metrics);
             }
         }

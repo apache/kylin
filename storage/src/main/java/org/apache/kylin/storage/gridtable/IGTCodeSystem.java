@@ -7,6 +7,8 @@ import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 
 public interface IGTCodeSystem {
+    
+    void init(GTInfo info);
 
     IFilterCodeSystem<ByteArray> getFilterCodeSystem();
     
@@ -20,6 +22,6 @@ public interface IGTCodeSystem {
     Object decodeColumnValue(int col, ByteBuffer buf);
     
     /** return an aggregator for metrics */
-    MeasureAggregator<?> newMetricsAggregator(int col);
+    MeasureAggregator<?> newMetricsAggregator(String aggrFunction, int col);
     
 }
