@@ -1,7 +1,5 @@
 package org.apache.kylin.storage.gridtable;
 
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
-
 import java.io.IOException;
 import java.util.BitSet;
 import java.util.Iterator;
@@ -26,36 +24,48 @@ class GTRawScanner implements IGTScanner {
     private GTRecord next;
     final private GTRecord oneRecord; // avoid instance creation
     final private TupleAdapter oneTuple; // avoid instance creation
+    
+    private int scannedRowCount = 0;
+    private int scannedRowBlockCount = 0;
 
-    GTRawScanner(GTInfo info, IGTStore store, GTRecord pkStart, GTRecord pkEndExclusive, BitSet dimensions, BitSet metrics, TupleFilter filter) {
+    GTRawScanner(GTInfo info, IGTStore store, GTRecord pkStart, GTRecord pkEndExclusive, BitSet columns, TupleFilter filterPushDown) {
         this.info = info;
-        this.filter = filter;
+        this.filter = filterPushDown;
 
-        ByteArray start = pkStart.exportColumns(info.primaryKey);
-        ByteArray endEx = pkEndExclusive.exportColumns(info.primaryKey);
+        if (TupleFilter.isEvaluableRecursively(filter) == false)
+            throw new IllegalArgumentException();
 
-        ConciseSet selectedRowBlocks = computeHitRowBlocks(start, endEx, filter);
-        this.selectedColBlocks = computeHitColumnBlocks(dimensions, metrics);
+        ByteArray start = pkStart == null ? null : pkStart.exportColumns(info.primaryKey);
+        ByteArray endEx = pkEndExclusive == null ? null : pkEndExclusive.exportColumns(info.primaryKey);
+        this.selectedColBlocks = computeHitColumnBlocks(columns);
 
-        this.storeScanner = store.scan(start, endEx, selectedRowBlocks, selectedColBlocks);
+        this.storeScanner = store.scan(start, endEx, selectedColBlocks, filterPushDown);
         this.oneRecord = new GTRecord(info);
         this.oneTuple = new TupleAdapter(oneRecord);
     }
 
-    private BitSet computeHitColumnBlocks(BitSet dimensions, BitSet metrics) {
+    private BitSet computeHitColumnBlocks(BitSet columns) {
+        if (columns == null)
+            columns = info.colAll;
+        
         BitSet result = new BitSet();
         for (int i = 0; i < info.colBlocks.length; i++) {
             BitSet cb = info.colBlocks[i];
-            if (cb.intersects(dimensions) || cb.intersects(metrics)) {
+            if (cb.intersects(columns)) {
                 result.set(i);
             }
         }
         return result;
     }
 
-    private ConciseSet computeHitRowBlocks(ByteArray start, ByteArray endEx, TupleFilter filter) {
-        // TODO block level index
-        return null;
+    @Override
+    public int getScannedRowCount() {
+        return scannedRowCount;
+    }
+
+    @Override
+    public int getScannedRowBlockCount() {
+        return scannedRowBlockCount;
     }
 
     @Override
@@ -103,6 +113,9 @@ class GTRawScanner implements IGTScanner {
                 for (int c = selectedColBlocks.nextSetBit(0); c >= 0; c = selectedColBlocks.nextSetBit(c + 1)) {
                     oneRecord.loadCellBlock(c, currentBlock.cellBlockBuffers[c]);
                 }
+                
+                scannedRowCount++;
+                scannedRowBlockCount++;
                 return true;
             }
 
@@ -113,6 +126,7 @@ class GTRawScanner implements IGTScanner {
                         if (storeScanner.hasNext()) {
                             currentBlock = storeScanner.next();
                             currentRow = 0;
+                            scannedRowBlockCount++;
                         } else {
                             return false;
                         }
@@ -126,6 +140,8 @@ class GTRawScanner implements IGTScanner {
                     for (int c = selectedColBlocks.nextSetBit(0); c >= 0; c = selectedColBlocks.nextSetBit(c + 1)) {
                         oneRecord.loadCellBlock(c, currentBlock.cellBlockBuffers[c]);
                     }
+                    currentRow++;
+                    scannedRowCount++;
                     return true;
                 }
             }
@@ -166,4 +182,5 @@ class GTRawScanner implements IGTScanner {
         }
 
     }
+
 }

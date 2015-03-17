@@ -41,6 +41,10 @@ public class ByteArray implements Comparable<ByteArray> {
         set(null, 0, 0);
     }
 
+    public ByteArray(int capacity) {
+        set(new byte[capacity], 0, capacity);
+    }
+    
     public ByteArray(byte[] data) {
         set(data, 0, data.length);
     }
@@ -79,8 +83,8 @@ public class ByteArray implements Comparable<ByteArray> {
         this.length = length;
     }
 
-    public ByteBuffer wrapAsBuffer() {
-        return ByteBuffer.wrap(data, offset, length);
+    public ByteBuffer asBuffer() {
+        return ByteBuffer.wrap(data, offset, length).slice();
     }
 
     @Override
