@@ -1,6 +1,7 @@
 package org.apache.kylin.storage.gridtable;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.BitSet;
 
 import org.apache.kylin.common.util.ByteArray;
@@ -126,16 +127,7 @@ public class GTRecord implements Comparable<GTRecord> {
     
     @Override
     public String toString() {
-        StringBuilder buf = new StringBuilder();
-        buf.append("[");
-        Object[] values = getValues();
-        for (int i = 0; i < values.length; i++) {
-            if (i > 0)
-                buf.append(", ");
-            buf.append(values[i]);
-        }
-        buf.append("]");
-        return buf.toString();
+        return Arrays.toString(getValues());
     }
 
     // ============================================================================
