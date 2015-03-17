@@ -35,8 +35,6 @@
 package org.apache.kylin.job;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
@@ -50,11 +48,11 @@ import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.model.IIDesc;
+import org.apache.kylin.invertedindex.model.IIJoinedFlatTableDesc;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.hadoop.cube.StorageCleanupJob;
-import org.apache.kylin.invertedindex.model.IIJoinedFlatTableDesc;
 import org.apache.kylin.job.hadoop.invertedindex.IICreateHTableJob;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
@@ -64,6 +62,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -83,7 +83,7 @@ import static org.junit.Assert.fail;
  */
 public class BuildIIWithStreamTest {
 
-    private static final Log logger = LogFactory.getLog(BuildIIWithStreamTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(BuildIIWithStreamTest.class);
 
     private static final String[] II_NAME = new String[]{"test_kylin_ii_inner_join", "test_kylin_ii_left_join"};
     private IIManager iiManager;
