@@ -23,6 +23,7 @@ import org.apache.kylin.dict.DateStrDictionary;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.kylin.dict.Dictionary;
 
 import java.util.List;
 
@@ -73,14 +74,6 @@ public class TableRecord implements Cloneable {
         return rawRecord.length(col);
     }
 
-    public List<String> getOriginTableColumnValues() {
-        List<String> ret = Lists.newArrayList();
-        for (int i = 0; i < info.getColumns().size(); ++i) {
-            ret.add(getValueString(i));
-        }
-        return ret;
-    }
-
     public void setValueString(int col, String value) {
         if (rawRecord.isMetric(col)) {
             LongWritable v = rawRecord.codec(col).valueOf(value);
@@ -96,10 +89,16 @@ public class TableRecord implements Cloneable {
      * i.e. columns like min_xx, max_yy will never appear
      */
     public String getValueString(int col) {
-        if (rawRecord.isMetric(col))
+        if (rawRecord.isMetric(col)) {
             return getValueMetric(col);
-        else
-            return info.dict(col).getValueFromId(rawRecord.getValueID(col));
+        } else {
+            final Dictionary<String> dict = info.dict(col);
+            if (dict != null) {
+                return dict.getValueFromId(rawRecord.getValueID(col));
+            } else {
+                throw new UnsupportedOperationException("cannot get value when there is no dictionary");
+            }
+        }
     }
 
     public void getValueBytes(int col, ImmutableBytesWritable bytes) {

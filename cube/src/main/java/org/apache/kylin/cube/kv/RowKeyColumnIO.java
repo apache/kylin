@@ -54,18 +54,20 @@ public class RowKeyColumnIO {
         return (Dictionary<String>) IDictionaryAwareness.getDictionary(col);
     }
 
-    public void writeColumn(TblColRef column, byte[] value, int valueLen, byte dft, byte[] output, int outputOffset) {
-        writeColumn(column, value, valueLen, 0, dft, output, outputOffset);
+
+
+    public void writeColumn(TblColRef column, byte[] value, int valueLen, byte defaultValue, byte[] output, int outputOffset) {
+        writeColumn(column, value, valueLen, 0, defaultValue, output, outputOffset);
     }
 
-    public void writeColumn(TblColRef column, byte[] value, int valueLen, int roundingFlag, byte dft, byte[] output, int outputOffset) {
+    public void writeColumn(TblColRef column, byte[] value, int valueLen, int roundingFlag, byte defaultValue, byte[] output, int outputOffset) {
 
-        Dictionary<String> dict = getDictionary(column);
-        int columnLen = getColumnLength(column);
+        final Dictionary<String> dict = getDictionary(column);
+        final int columnLen = getColumnLength(column);
 
         // non-dict value
         if (dict == null) {
-            byte[] valueBytes = padFixLen(columnLen, value);
+            byte[] valueBytes = padFixLen(columnLen, value, valueLen);
             System.arraycopy(valueBytes, 0, output, outputOffset, columnLen);
             return;
         }
@@ -75,14 +77,14 @@ public class RowKeyColumnIO {
             int id = dict.getIdFromValueBytes(value, 0, valueLen, roundingFlag);
             BytesUtil.writeUnsigned(id, output, outputOffset, dict.getSizeOfId());
         } catch (IllegalArgumentException ex) {
-            for (int i = outputOffset; i < outputOffset + columnLen; i++)
-                output[i] = dft;
-            logger.error("Can't translate value " + Bytes.toString(value, 0, valueLen) + " to dictionary ID, roundingFlag " + roundingFlag + ". Using default value " + String.format("\\x%02X", dft));
+            for (int i = outputOffset; i < outputOffset + columnLen; i++) {
+                output[i] = defaultValue;
+            }
+            logger.error("Can't translate value " + Bytes.toString(value, 0, valueLen) + " to dictionary ID, roundingFlag " + roundingFlag + ". Using default value " + String.format("\\x%02X", defaultValue));
         }
     }
 
-    private byte[] padFixLen(int length, byte[] valueBytes) {
-        int valLen = valueBytes.length;
+    private byte[] padFixLen(int length, byte[] valueBytes, int valLen) {
         if (valLen == length) {
             return valueBytes;
         } else if (valLen < length) {
@@ -95,17 +97,16 @@ public class RowKeyColumnIO {
         }
     }
 
-    public String readColumnString(TblColRef col, byte[] bytes, int bytesLen) {
+    public String readColumnString(TblColRef col, byte[] bytes, int offset, int length) {
         Dictionary<String> dict = getDictionary(col);
         if (dict == null) {
-            bytes = Bytes.head(bytes, bytesLen);
-            if (isNull(bytes)) {
+            if (isNull(bytes, offset, length)) {
                 return null;
             }
-            bytes = removeFixLenPad(bytes, 0);
+            bytes = removeFixLenPad(bytes, offset, length);
             return Bytes.toString(bytes);
         } else {
-            int id = BytesUtil.readUnsigned(bytes, 0, bytesLen);
+            int id = BytesUtil.readUnsigned(bytes, offset, length);
             try {
                 String value = dict.getValueFromId(id);
                 return value;
@@ -116,31 +117,40 @@ public class RowKeyColumnIO {
         }
     }
 
+    public String readColumnString(TblColRef col, byte[] bytes, int bytesLen) {
+        return readColumnString(col, bytes, 0, bytesLen);
+    }
+
     private boolean isNull(byte[] bytes) {
+        return isNull(bytes, 0, bytes.length);
+    }
+
+    private boolean isNull(byte[] bytes, int offset, int length) {
         // all 0xFF is NULL
-        if (bytes.length == 0)
+        if (length == 0) {
             return false;
+        }
         for (int i = 0; i < bytes.length; i++) {
-            if (bytes[i] != AbstractRowKeyEncoder.DEFAULT_BLANK_BYTE)
+            if (bytes[i + offset] != AbstractRowKeyEncoder.DEFAULT_BLANK_BYTE) {
                 return false;
+            }
         }
         return true;
     }
 
-    private byte[] removeFixLenPad(byte[] bytes, int offset) {
+    private byte[] removeFixLenPad(byte[] bytes, int offset, int length) {
         int padCount = 0;
-        for (int i = offset; i < bytes.length; i++) {
-            byte vb = bytes[i];
-            if (vb == RowConstants.ROWKEY_PLACE_HOLDER_BYTE) {
+        for (int i = 0; i < length; i++) {
+            if (bytes[i + offset] == RowConstants.ROWKEY_PLACE_HOLDER_BYTE) {
                 padCount++;
             }
         }
 
-        int size = bytes.length - offset - padCount;
+        int size = length - padCount;
         byte[] stripBytes = new byte[size];
         int index = 0;
-        for (int i = offset; i < bytes.length; i++) {
-            byte vb = bytes[i];
+        for (int i = 0; i < length; i++) {
+            byte vb = bytes[i + offset];
             if (vb != RowConstants.ROWKEY_PLACE_HOLDER_BYTE) {
                 stripBytes[index++] = vb;
             }

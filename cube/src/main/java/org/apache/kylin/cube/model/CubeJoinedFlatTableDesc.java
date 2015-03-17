@@ -1,35 +1,14 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
 package org.apache.kylin.cube.model;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.kylin.common.util.BytesSplitter;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.metadata.model.*;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author George Song (ysong1)
@@ -44,13 +23,7 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     private int[] rowKeyColumnIndexes; // the column index on flat table
     private int[][] measureColumnIndexes; // [i] is the i.th measure related column index on flat table
 
-    // Map for table alias:
-    // key -> table name; 
-    // value -> alias;
-    private Map<String, String> tableAliasMap;
     private List<IntermediateColumnDesc> columnList = Lists.newArrayList();
-
-
 
     public CubeJoinedFlatTableDesc(CubeDesc cubeDesc, CubeSegment cubeSegment) {
         this.cubeDesc = cubeDesc;
@@ -120,24 +93,6 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         }
 
         columnCount = columnIndex;
-        
-        buildTableAliasMap();
-    }
-
-    private void buildTableAliasMap() {
-        tableAliasMap = new HashMap<String, String>();
-
-        tableAliasMap.put(cubeDesc.getFactTable().toUpperCase(), FACT_TABLE_ALIAS);
-
-        int i = 1;
-        for (DimensionDesc dim : cubeDesc.getDimensions()) {
-            JoinDesc join = dim.getJoin();
-            if (join != null) {
-                tableAliasMap.put(dim.getTable().toUpperCase(), LOOKUP_TABLE_ALAIS_PREFIX + i);
-                i++;
-            }
-
-        }
     }
 
     private int contains(List<IntermediateColumnDesc> columnList, TblColRef c) {
@@ -189,11 +144,6 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     @Override
     public DataModelDesc.RealizationCapacity getCapacity() {
         return cubeDesc.getModel().getCapacity();
-    }
-
-    @Override
-    public String getTableAlias(String tableName) {
-        return tableAliasMap.get(tableName.toUpperCase());
     }
 
     private static String colName(String canonicalColName) {

@@ -27,8 +27,10 @@ import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
+import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
@@ -279,12 +281,14 @@ public class EndpointTupleIterator implements ITupleIterator {
         private TableRecord tableRecord;
         private List<Object> measureValues;
         private Tuple tuple;
+        private RowKeyColumnIO rowKeyColumnIO;
 
         public SingleRegionTupleIterator(List<IIProtos.IIResponse.IIRow> rows) {
             this.rows = rows;
             this.index = 0;
             this.tableRecord = tableRecordInfo.createTableRecord();
             this.tuple = new Tuple(tupleInfo);
+            rowKeyColumnIO = new RowKeyColumnIO(new ClearTextDictionary(tableRecordInfo));
         }
 
         @Override
@@ -319,7 +323,11 @@ public class EndpointTupleIterator implements ITupleIterator {
 
         private ITuple makeTuple(TableRecord tableRecord, List<Object> measureValues) {
             // groups
-            List<String> columnValues = tableRecord.getOriginTableColumnValues();
+            List<String> columnValues = Lists.newArrayList();
+            for (int i = 0; i < columns.size(); ++i) {
+                final TblColRef tblColRef = columns.get(i);
+                columnValues.add(rowKeyColumnIO.readColumnString(tblColRef, tableRecord.getBytes(), tableRecordInfo.getDigest().offset(i), tableRecordInfo.getDigest().length(i)));
+            }
             for (int i = 0; i < columnNames.size(); i++) {
                 TblColRef column = columns.get(i);
                 if (!tuple.hasColumn(column)) {
