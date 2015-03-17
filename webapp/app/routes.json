@@ -113,6 +113,14 @@
         }
     },
     {
+        "url": "/models/add",
+        "params": {
+            "templateUrl": "partials/models/model_edit.html",
+            "tab": "models",
+            "controller": "ModelEditCtrl"
+        }
+    },
+    {
         "url": "/models/edit/:modelName",
         "params": {
             "templateUrl": "partials/models/model_edit.html",
