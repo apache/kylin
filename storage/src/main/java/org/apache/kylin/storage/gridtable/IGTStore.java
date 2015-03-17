@@ -16,7 +16,7 @@ public interface IGTStore {
     
     public IGTStoreWriter rebuild(int shard);
     
-    public IGTStoreWriter append(int shard, GTRowBlock fillLast);
+    public IGTStoreWriter append(int shard, GTRowBlock.Writer fillLast);
     
     public IGTStoreScanner scan(ByteArray pkStart, ByteArray pkEndExclusive, BitSet selectedColBlocks, TupleFilter filterPushDown);
     
