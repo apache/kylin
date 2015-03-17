@@ -29,11 +29,15 @@ import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.storage.IStorageEngine;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.EndpointTupleIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author yangli9
  */
 public class InvertedIndexStorageEngine implements IStorageEngine {
+
+    private static Logger logger = LoggerFactory.getLogger(InvertedIndexStorageEngine.class);
 
     private IISegment seg;
 
@@ -50,7 +54,7 @@ public class InvertedIndexStorageEngine implements IStorageEngine {
         try {
             return new EndpointTupleIterator(seg, sqlDigest.filter, sqlDigest.groupbyColumns, new ArrayList<>(sqlDigest.aggregations), context, conn);
         } catch (Throwable e) {
-            e.printStackTrace();
+            logger.error("Error when connecting to II htable " + tableName, e);
             throw new IllegalStateException("Error when connecting to II htable " + tableName, e);
         }
     }
