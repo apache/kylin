@@ -11,10 +11,10 @@ public class GTBuilder implements Closeable, Flushable {
     @SuppressWarnings("unused")
     final private GTInfo info;
     final private IGTStoreWriter storeWriter;
-    
+
     final private GTRowBlock block;
     final private GTRowBlock.Writer blockWriter;
-    
+
     private int writtenRowCount;
     private int writtenRowBlockCount;
 
@@ -24,37 +24,39 @@ public class GTBuilder implements Closeable, Flushable {
 
     GTBuilder(GTInfo info, int shard, IGTStore store, boolean append) {
         this.info = info;
-        
+
         block = GTRowBlock.allocate(info);
         blockWriter = block.getWriter();
         if (append) {
             storeWriter = store.append(shard, blockWriter);
-            if (block.isFull())
+            if (block.isFull()) {
                 blockWriter.clearForNext();
-        }
-        else {
+            }
+        } else {
             storeWriter = store.rebuild(shard);
         }
     }
-    
+
     public void write(GTRecord r) throws IOException {
         blockWriter.append(r);
         writtenRowCount++;
-        
+
         if (block.isFull()) {
             flush();
         }
     }
-    
+
     @Override
     public void flush() throws IOException {
         blockWriter.readyForFlush();
         storeWriter.write(block);
         writtenRowBlockCount++;
-        
-        blockWriter.clearForNext();
+
+        if (block.isFull()) {
+            blockWriter.clearForNext();
+        }
     }
-    
+
     @Override
     public void close() throws IOException {
         if (block.isEmpty() == false) {
@@ -62,7 +64,7 @@ public class GTBuilder implements Closeable, Flushable {
         }
         storeWriter.close();
     }
-    
+
     public int getWrittenRowCount() {
         return writtenRowCount;
     }

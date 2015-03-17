@@ -126,8 +126,8 @@ public class GridTableTest {
         builder.write(r.setValues("2015-01-16", "Qianhao", "Food", new LongWritable(10), new BigDecimal("10.5")));
         builder.write(r.setValues("2015-01-16", "George", "Food", new LongWritable(10), new BigDecimal("10.5")));
         builder.write(r.setValues("2015-01-17", "Kejia", "Food", new LongWritable(10), new BigDecimal("10.5")));
-
         builder.close();
+        
         System.out.println("Written Row Block Count: " + builder.getWrittenRowBlockCount());
         System.out.println("Written Row Count: " + builder.getWrittenRowCount());
         return builder;
