@@ -92,7 +92,8 @@ public class ProjectController extends BasicController {
 
         ProjectInstance updatedProj = null;
         try {
-            updatedProj = projectService.updateProject(projectRequest);
+            ProjectInstance currentProject = projectService.getProjectManager().getProject(projectRequest.getFormerProjectName());
+            updatedProj = projectService.updateProject(projectRequest,currentProject);
         } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);
             throw new InternalErrorException(e.getLocalizedMessage());
@@ -106,7 +107,9 @@ public class ProjectController extends BasicController {
     @Metered(name = "deleteProject")
     public void deleteProject(@PathVariable String projectName) {
         try {
-            projectService.deleteProject(projectName);
+
+            ProjectInstance project = projectService.getProjectManager().getProject(projectName);
+            projectService.deleteProject(projectName,project);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to delete project. " + " Caused by: " + e.getMessage(), e);

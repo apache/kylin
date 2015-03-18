@@ -85,12 +85,12 @@
             <td>
                 <div ng-click="$event.stopPropagation();" class="btn-group" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
                     <button type="button" class="btn btn-default btn-xs dropdown-toggle"
-                            data-toggle="dropdown" ng-click="listAccess(model, 'ModelInstance')">
+                            data-toggle="dropdown">
                         Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
                     </button>
                     <ul class="dropdown-menu" role="menu">
                         <li><a href="models/edit/{{model.name}}">Edit</a></li>
-                        <li ng-if="userService.hasRole('ROLE_ADMIN')">
+                        <li ng-show="false" ng-if="userService.hasRole('ROLE_ADMIN')">
                             <a ng-click="dropModel(model)" tooltip="Drop the model, related cubes and data permanently.">Drop</a></li>
 
                     </ul>

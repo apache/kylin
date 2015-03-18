@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-KylinApp.service('ModelList',function(ModelService,$q){
+KylinApp.service('ModelList',function(ModelService,$q,AccessService){
     var models=[];
     var _this = this;
 
@@ -24,10 +24,10 @@ KylinApp.service('ModelList',function(ModelService,$q){
 
         var defer = $q.defer();
         ModelService.list(queryParam, function (_models) {
-            angular.forEach(_models, function (models, index) {
-                if(models.name){
-//                    $scope.listAccess(models, 'modelsInstance');
-                }
+            angular.forEach(_models, function (model, index) {
+                AccessService.list({type: "DataModelDesc", uuid: model.uuid}, function (accessEntities) {
+                    model.accessEntities = accessEntities;
+                });
             });
             _models = _.filter(_models,function(models){return models.name!=undefined});
             _this.models = _this.models.concat(_models);
