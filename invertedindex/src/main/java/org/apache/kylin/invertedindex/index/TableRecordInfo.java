@@ -108,33 +108,7 @@ public class TableRecordInfo {
         return new TableRecordInfoDigest(nColumns, byteFormLen, offsets, dictMaxIds, lengths, isMetric, dataTypes);
     }
 
-    public static TableRecordInfoDigest createDigest(int nColumns, boolean[] isMetric, String[] dataTypes, Map<Integer, Dictionary<?>> dictionaryMap) {
-        int[] dictMaxIds = new int[nColumns];
-        int[] lengths = new int[nColumns];
-        for (int i = 0; i < nColumns; ++i) {
-            if (isMetric[i]) {
-                final FixedLenMeasureCodec<?> fixedLenMeasureCodec = FixedLenMeasureCodec.get(DataType.getInstance(dataTypes[i]));
-                lengths[i] = fixedLenMeasureCodec.getLength();
-            } else {
-                final Dictionary<?> dictionary = dictionaryMap.get(i);
-                if (dictionary != null) {
-                    lengths[i] = dictionary.getSizeOfId();
-                    dictMaxIds[i] = dictionary.getMaxId();
-                }
-            }
-        }
-        // offsets
-        int pos = 0;
-        int[] offsets = new int[nColumns];
-        for (int i = 0; i < nColumns; i++) {
-            offsets[i] = pos;
-            pos += lengths[i];
-        }
 
-        int byteFormLen = pos;
-
-        return new TableRecordInfoDigest(nColumns, byteFormLen, offsets, dictMaxIds, lengths, isMetric, dataTypes);
-    }
 
     public TableRecord createTableRecord() {
         return new TableRecord(digest.createTableRecordBytes(), this);

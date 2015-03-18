@@ -26,6 +26,8 @@ import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.invertedindex.index.*;
+import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
+import org.apache.kylin.metadata.model.DataType;
 
 import java.io.*;
 import java.util.*;
@@ -122,6 +124,34 @@ public class IIKeyValueCodec implements KeyValueCodec {
 //		return new Decoder(kvs, incompleteDigest);
 	}
 
+    private static TableRecordInfoDigest createDigest(int nColumns, boolean[] isMetric, String[] dataTypes, Map<Integer, Dictionary<?>> dictionaryMap) {
+        int[] dictMaxIds = new int[nColumns];
+        int[] lengths = new int[nColumns];
+        for (int i = 0; i < nColumns; ++i) {
+            if (isMetric[i]) {
+                final FixedLenMeasureCodec<?> fixedLenMeasureCodec = FixedLenMeasureCodec.get(DataType.getInstance(dataTypes[i]));
+                lengths[i] = fixedLenMeasureCodec.getLength();
+            } else {
+                final Dictionary<?> dictionary = dictionaryMap.get(i);
+                if (dictionary != null) {
+                    lengths[i] = dictionary.getSizeOfId();
+                    dictMaxIds[i] = dictionary.getMaxId();
+                }
+            }
+        }
+        // offsets
+        int pos = 0;
+        int[] offsets = new int[nColumns];
+        for (int i = 0; i < nColumns; i++) {
+            offsets[i] = pos;
+            pos += lengths[i];
+        }
+
+        int byteFormLen = pos;
+
+        return new TableRecordInfoDigest(nColumns, byteFormLen, offsets, dictMaxIds, lengths, isMetric, dataTypes);
+    }
+
     private static class IIRowDecoder implements Iterable<Slice> {
 
         private final TableRecordInfoDigest incompleteDigest;
@@ -184,7 +214,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
                     }
                     Preconditions.checkArgument(columns == incompleteDigest.getColumnCount(), "column count is " + columns + " should be equals to incompleteDigest.getColumnCount() " + incompleteDigest.getColumnCount());
 
-                    TableRecordInfoDigest digest = TableRecordInfo.createDigest(columns, incompleteDigest.getIsMetric(), incompleteDigest.getMetricDataTypes(), localDictionaries);
+                    TableRecordInfoDigest digest = createDigest(columns, incompleteDigest.getIsMetric(), incompleteDigest.getMetricDataTypes(), localDictionaries);
                     Slice slice = new Slice(digest, curShard, curTimestamp, valueContainers);
                     slice.setLocalDictionaries(localDictionaries);
                     return slice;
