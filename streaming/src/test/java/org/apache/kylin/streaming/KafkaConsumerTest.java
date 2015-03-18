@@ -40,6 +40,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -83,7 +84,16 @@ public class KafkaConsumerTest extends KafkaBaseTest {
         final ExecutorService executorService = Executors.newFixedThreadPool(kafkaTopicMeta.getPartitionIds().size());
         List<BlockingQueue<Stream>> queues = Lists.newArrayList();
         for (Integer partitionId : kafkaTopicMeta.getPartitionIds()) {
-            KafkaConsumer consumer = new KafkaConsumer(kafkaTopicMeta.getName(), partitionId, kafkaConfig.getBrokers(), kafkaConfig);
+            KafkaConsumer consumer = new KafkaConsumer(kafkaTopicMeta.getName(), partitionId, kafkaConfig.getBrokers(), kafkaConfig) {
+                @Override
+                protected void consume(long offset, ByteBuffer payload) throws Exception {
+                    //TODO use ByteBuffer maybe
+                    byte[] bytes = new byte[payload.limit()];
+                    payload.get(bytes);
+                    logger.info("get message offset:" + offset);
+                    getStreamQueue().put(new Stream(offset, bytes));
+                }
+            };
             queues.add(consumer.getStreamQueue());
             executorService.execute(consumer);
         }

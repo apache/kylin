@@ -51,7 +51,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Created by qianzhou on 2/15/15.
  */
-public class KafkaConsumer implements Runnable {
+public abstract class KafkaConsumer implements Runnable {
 
     private String topic;
     private int partitionId;
@@ -111,16 +111,9 @@ public class KafkaConsumer implements Runnable {
                     continue;
                 }
                 for (MessageAndOffset messageAndOffset : fetchResponse.messageSet(topic, partitionId)) {
-                    final ByteBuffer payload = messageAndOffset.message().payload();
-
-                    //TODO use ByteBuffer maybe
-                    byte[] bytes = new byte[payload.limit()];
-                    payload.get(bytes);
-                    logger.info("get message offset:" + messageAndOffset.offset());
-                    logger.info(new String(bytes));
                     try {
-                        streamQueue.put(new Stream(messageAndOffset.offset(), bytes));
-                    } catch (InterruptedException e) {
+                        consume(messageAndOffset.offset(), messageAndOffset.message().payload());
+                    } catch (Exception e) {
                         logger.error("error put streamQueue", e);
                         break;
                     }
@@ -131,5 +124,7 @@ public class KafkaConsumer implements Runnable {
             logger.error("consumer has encountered an error", e);
         }
     }
+
+    protected abstract void consume(long offset, ByteBuffer payload) throws Exception;
 
 }
