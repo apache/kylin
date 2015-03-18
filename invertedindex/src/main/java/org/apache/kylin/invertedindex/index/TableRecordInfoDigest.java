@@ -41,6 +41,7 @@ public class TableRecordInfoDigest {
 	private int[] dictMaxIds;// max id for each of the dict
 	private int[] lengths;// length of each encoded dict
 	private boolean[] isMetric;// whether it's metric or dict
+    private FixedLenMeasureCodec[] measureCodecs;
 
     public TableRecordInfoDigest(int nColumns, int byteFormLen, int[] offsets,
 			int[] dictMaxIds, int[] lengths, boolean[] isMetric,
@@ -52,7 +53,13 @@ public class TableRecordInfoDigest {
 		this.lengths = lengths;
 		this.isMetric = isMetric;
         this.metricDataTypes = metricDataTypes;
-	}
+        this.measureCodecs = new FixedLenMeasureCodec[nColumns];
+        for (int i = 0; i < isMetric.length; i++) {
+            if (isMetric[i]) {
+                measureCodecs[i] = FixedLenMeasureCodec.get(DataType.getInstance(metricDataTypes[i]));
+            }
+        }
+    }
 
 	private TableRecordInfoDigest() {
 	}
@@ -120,7 +127,7 @@ public class TableRecordInfoDigest {
 	@SuppressWarnings("unchecked")
 	public FixedLenMeasureCodec<LongWritable> codec(int col) {
 		// yes, all metrics are long currently
-		return (FixedLenMeasureCodec<LongWritable>) FixedLenMeasureCodec.get(DataType.getInstance(metricDataTypes[col]));
+        return measureCodecs[col];
 	}
 
 	public static byte[] serialize(TableRecordInfoDigest o) {

@@ -111,16 +111,13 @@ public class IIStreamBuilder extends StreamBuilder {
 
     private Map<Integer, Dictionary<?>> buildDictionary(List<List<String>> table, IIDesc desc) {
         HashMultimap<TblColRef, String> valueMap = HashMultimap.create();
-        Set<TblColRef> dimensionColumns = Sets.newHashSet();
-        for (int i = 0; i < desc.listAllColumns().size(); i++) {
-            if (!desc.isMetricsCol(i)) {
-                dimensionColumns.add(desc.listAllColumns().get(i));
-            }
-        }
+        final List<TblColRef> allColumns = desc.listAllColumns();
         for (List<String> row : table) {
             for (int i = 0; i < row.size(); i++) {
                 String cell = row.get(i);
-                valueMap.put(desc.listAllColumns().get(i), cell);
+                if (!desc.isMetricsCol(i)) {
+                    valueMap.put(allColumns.get(i), cell);
+                }
             }
         }
         Map<Integer, Dictionary<?>> result = Maps.newHashMap();
