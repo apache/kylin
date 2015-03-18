@@ -36,25 +36,11 @@ class GTRawScanner implements IGTScanner {
 
         ByteArray start = pkStart == null ? null : pkStart.exportColumns(info.primaryKey);
         ByteArray endEx = pkEndExclusive == null ? null : pkEndExclusive.exportColumns(info.primaryKey);
-        this.selectedColBlocks = computeHitColumnBlocks(columns);
+        this.selectedColBlocks = info.selectColumnBlocks(columns);
 
         this.storeScanner = store.scan(start, endEx, selectedColBlocks, filterPushDown);
         this.oneRecord = new GTRecord(info);
         this.oneTuple = new TupleAdapter(oneRecord);
-    }
-
-    private BitSet computeHitColumnBlocks(BitSet columns) {
-        if (columns == null)
-            columns = info.colAll;
-        
-        BitSet result = new BitSet();
-        for (int i = 0; i < info.colBlocks.length; i++) {
-            BitSet cb = info.colBlocks[i];
-            if (cb.intersects(columns)) {
-                result.set(i);
-            }
-        }
-        return result;
     }
 
     @Override
