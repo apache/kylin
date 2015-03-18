@@ -20,6 +20,14 @@ public class GTRecord implements Comparable<GTRecord> {
             this.cols[i] = new ByteArray();
         this.maskForEqualHashComp = info.colAll;
     }
+    
+    public ByteArray get(int i) {
+        return cols[i];
+    }
+
+    public void set(int i, ByteArray data) {
+        cols[i].set(data.array(), data.offset(), data.length());
+    }
 
     /** set record to the codes of specified values, new space allocated to hold the codes */
     public GTRecord setValues(Object... values) {
@@ -32,10 +40,6 @@ public class GTRecord implements Comparable<GTRecord> {
         ByteBuffer buf = space.asBuffer();
         int pos = buf.position();
         for (int i = 0; i < info.nColumns; i++) {
-            if (values[i] == null) {
-                cols[i].set(null, 0, 0);
-                continue;
-            }
             info.codeSystem.encodeColumnValue(i, values[i], buf);
             int newPos = buf.position();
             cols[i].set(buf.array(), buf.arrayOffset() + pos, newPos - pos);
