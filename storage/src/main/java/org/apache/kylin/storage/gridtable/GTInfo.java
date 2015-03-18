@@ -6,9 +6,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.apache.kylin.metadata.model.DataType;
+import org.apache.kylin.metadata.model.TblColRef;
 
 public class GTInfo {
-    
+
     public static Builder builder() {
         return new Builder();
     }
@@ -20,6 +21,8 @@ public class GTInfo {
     int nColumns;
     DataType[] colTypes;
     BitSet colAll;
+    BitSet colPreferIndex;
+    transient TblColRef[] colRefs;
 
     // grid info
     BitSet primaryKey; // columns sorted and unique
@@ -42,6 +45,34 @@ public class GTInfo {
         return rowBlockSize > 0;
     }
 
+    public int getRowBlockSize() {
+        return rowBlockSize;
+    }
+
+    public BitSet selectColumnBlocks(BitSet columns) {
+        if (columns == null)
+            columns = colAll;
+
+        BitSet result = new BitSet();
+        for (int i = 0; i < colBlocks.length; i++) {
+            BitSet cb = colBlocks[i];
+            if (cb.intersects(columns)) {
+                result.set(i);
+            }
+        }
+        return result;
+    }
+
+    public TblColRef colRef(int i) {
+        if (colRefs == null) {
+            colRefs = new TblColRef[nColumns];
+        }
+        if (colRefs[i] == null) {
+            colRefs[i] = GTUtil.tblColRef(i, colTypes[i].toString());
+        }
+        return colRefs[i];
+    }
+
     void validate() {
 
         if (codeSystem == null)
@@ -51,7 +82,7 @@ public class GTInfo {
             throw new IllegalStateException();
 
         codeSystem.init(this);
-        
+
         validateColumnBlocks();
     }
 
@@ -60,7 +91,10 @@ public class GTInfo {
         colAll.flip(0, nColumns);
         colBlocksAll = new BitSet();
         colBlocksAll.flip(0, colBlocks.length);
-        
+
+        if (colPreferIndex == null)
+            colPreferIndex = new BitSet();
+
         // column blocks must not overlap
         for (int i = 0; i < colBlocks.length; i++) {
             for (int j = i + 1; j < colBlocks.length; j++) {
@@ -68,7 +102,7 @@ public class GTInfo {
                     throw new IllegalStateException();
             }
         }
-        
+
         // column block must cover all columns
         BitSet merge = new BitSet();
         for (int i = 0; i < colBlocks.length; i++) {
@@ -120,7 +154,7 @@ public class GTInfo {
             }
             return this;
         }
-        
+
         /** required */
         public Builder setPrimaryKey(BitSet primaryKey) {
             info.primaryKey = primaryKey;
@@ -138,22 +172,29 @@ public class GTInfo {
             info.colBlocks = columnBlocks;
             return this;
         }
-        
+
         /** optional */
         public Builder enableRowBlock(int rowBlockSize) {
             info.rowBlockSize = rowBlockSize;
             return this;
         }
-        
+
         /** optional */
         public Builder enableSharding(int nShards) {
             info.nShards = nShards;
             return this;
         }
-        
+
+        /** optional */
+        public Builder setColumnPreferIndex(BitSet colPreferIndex) {
+            info.colPreferIndex = colPreferIndex;
+            return this;
+        }
+
         public GTInfo build() {
             info.validate();
             return info;
         }
     }
+
 }

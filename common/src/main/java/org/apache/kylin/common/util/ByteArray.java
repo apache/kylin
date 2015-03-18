@@ -82,6 +82,12 @@ public class ByteArray implements Comparable<ByteArray> {
     public void setLength(int length) {
         this.length = length;
     }
+    
+    public ByteArray copy() {
+        ByteArray copy = new ByteArray(length);
+        copy.copyFrom(this);
+        return copy;
+    }
 
     public void copyFrom(ByteArray other) {
         System.arraycopy(other.array(), other.offset, data, offset, other.length);

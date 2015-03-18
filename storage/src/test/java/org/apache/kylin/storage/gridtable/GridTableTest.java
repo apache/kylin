@@ -168,13 +168,13 @@ public class GridTableTest {
         System.out.println("Written Row Count: " + builder.getWrittenRowCount());
     }
 
-    private GTInfo basicInfo() {
+    public static GTInfo basicInfo() {
         Builder builder = infoBuilder();
         GTInfo info = builder.build();
         return info;
     }
 
-    private GTInfo advancedInfo() {
+    public static GTInfo advancedInfo() {
         Builder builder = infoBuilder();
         builder.enableColumnBlock(new BitSet[] { setOf(0, 1, 2), setOf(3, 4) });
         builder.enableRowBlock(4);
@@ -182,7 +182,7 @@ public class GridTableTest {
         return info;
     }
 
-    private Builder infoBuilder() {
+    private static Builder infoBuilder() {
         Builder builder = GTInfo.builder();
         builder.setCodeSystem(new GTSampleCodeSystem());
         builder.setColumns( //
@@ -193,10 +193,11 @@ public class GridTableTest {
                 DataType.getInstance("decimal") //
         );
         builder.setPrimaryKey(setOf(0));
+        builder.setColumnPreferIndex(setOf(0));
         return builder;
     }
 
-    private BitSet setOf(int... values) {
+    private static BitSet setOf(int... values) {
         BitSet set = new BitSet();
         for (int i : values)
             set.set(i);

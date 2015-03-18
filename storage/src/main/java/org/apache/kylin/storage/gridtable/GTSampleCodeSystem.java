@@ -38,7 +38,13 @@ public class GTSampleCodeSystem implements IGTCodeSystem {
         this.filterCS = new IFilterCodeSystem<ByteArray>() {
             @Override
             public boolean isNull(ByteArray code) {
-                return (code == null || code.length() == 0);
+                // all 0xff is null
+                byte[] array = code.array();
+                for (int i = 0, j = code.offset(), n = code.length(); i < n; i++, j++) {
+                    if (array[j] != (byte) 0xff)
+                        return false;
+                }
+                return true;
             }
 
             @Override
