@@ -85,7 +85,7 @@ public class BuildIIWithStreamTest {
 
     private static final Logger logger = LoggerFactory.getLogger(BuildIIWithStreamTest.class);
 
-    private static final String[] II_NAME = new String[]{"test_kylin_ii_inner_join", "test_kylin_ii_left_join"};
+    private static final String[] II_NAME = new String[]{"test_kylin_ii_left_join", "test_kylin_ii_inner_join"};
     private IIManager iiManager;
     private KylinConfig kylinConfig;
 
@@ -116,13 +116,6 @@ public class BuildIIWithStreamTest {
 
     @After
     public void after() throws Exception {
-        for (String iiInstance : II_NAME) {
-            IIInstance ii = iiManager.getII(iiInstance);
-            if (ii.getStatus() != RealizationStatusEnum.READY) {
-                ii.setStatus(RealizationStatusEnum.READY);
-                iiManager.updateII(ii);
-            }
-        }
         backup();
     }
 
@@ -242,6 +235,11 @@ public class BuildIIWithStreamTest {
     public void test() throws Exception {
         for (String iiName : II_NAME) {
             buildII(iiName);
+            IIInstance ii = iiManager.getII(iiName);
+            if (ii.getStatus() != RealizationStatusEnum.READY) {
+                ii.setStatus(RealizationStatusEnum.READY);
+                iiManager.updateII(ii);
+            }
         }
     }
 

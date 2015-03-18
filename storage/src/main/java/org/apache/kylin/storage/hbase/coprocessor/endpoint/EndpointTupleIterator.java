@@ -336,7 +336,6 @@ public class EndpointTupleIterator implements ITupleIterator {
                 }
                 final String columnName = columnNames.get(i);
                 if (tableRecordInfo.getDigest().isMetrics(i)) {
-                    logger.info("column name:" + columnName + " column value:" + tableRecord.getValueString(i));
                     tuple.setMeasureValue(columnName, tableRecord.getValueString(i));
                 } else {
                     tuple.setDimensionValue(columnName, columnValues.get(i));
