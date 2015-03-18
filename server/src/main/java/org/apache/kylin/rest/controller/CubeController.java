@@ -89,8 +89,8 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "", method = {RequestMethod.GET})
     @ResponseBody
     @Metered(name = "listCubes")
-    public List<CubeInstance> getCubes(@RequestParam(value = "cubeName", required = false) String cubeName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam("limit") Integer limit, @RequestParam("offset") Integer offset) {
-        return cubeService.getCubes(cubeName, projectName, (null == limit) ? 20 : limit, offset);
+    public List<CubeInstance> getCubes(@RequestParam(value = "cubeName", required = false) String cubeName,@RequestParam(value = "modelName", required = false) String modelName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam("limit") Integer limit, @RequestParam("offset") Integer offset) {
+        return cubeService.getCubes(cubeName, projectName, modelName,(null == limit) ? 20 : limit, offset);
     }
 
     /**

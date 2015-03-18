@@ -66,7 +66,7 @@ public class CubeControllerTest extends ServiceTestBase {
         CubeDesc[] cubes = (CubeDesc[]) cubeDescController.getCube("test_kylin_cube_with_slr_ready");
         Assert.assertNotNull(cubes);
         Assert.assertNotNull(cubeController.getSql("test_kylin_cube_with_slr_ready", "20130331080000_20131212080000"));
-        Assert.assertNotNull(cubeController.getCubes(null, null, 0, 5));
+        Assert.assertNotNull(cubeController.getCubes(null, null, null,0, 5));
 
         CubeDesc cube = cubes[0];
         CubeDesc newCube = new CubeDesc();
@@ -109,7 +109,7 @@ public class CubeControllerTest extends ServiceTestBase {
         cubeController.updateNotifyList(newCubeName, notifyList);
         cubeController.updateCubeCost(newCubeName, 80);
 
-        List<CubeInstance> cubeInstances = cubeController.getCubes(newCubeName, "default", 1, 0);
+        List<CubeInstance> cubeInstances = cubeController.getCubes(newCubeName, "default",null, 1, 0);
 
         CubeInstance cubeInstance = cubeInstances.get(0);
         Assert.assertTrue(cubeInstance.getDescriptor().getNotifyList().contains("john@example.com"));
