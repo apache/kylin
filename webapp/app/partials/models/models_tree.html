@@ -1,0 +1,47 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+
+<div class="tree-border">
+    <div class="row">
+        <div class="col-xs-7">
+            <h3 class="text-info">Models</h3>
+        </div>
+
+        <!--button-->
+        <div class="col-xs-5" style="padding-left: 0px;margin-top: 20px;">
+            <div class="pull-right">
+                <a class="btn btn-xs btn-primary" href='models/add' tooltip="Create Model"  ng-if="userService.hasRole('ROLE_ADMIN')"><i class="fa fa-plus"></i></a>
+            </div>
+        </div>
+
+    </div>
+    </div>
+    <div class="space-4 box-header with-border"></div>
+    <!--tree-->
+    <div style="width:100%; height:{{window}}px; overflow:auto;">
+        <abn-tree
+                tree-data         = "models_treedata"
+                tree-control      = "my_tree"
+                icon-leaf         = "fa fa-cube"
+                icon-expand       = "fa fa-plus"
+                icon-collapse     = "fa fa-minus"
+                expand-level      = "2"
+                initial-selection = "Vegetable">
+            ></abn-tree>
+    </div>
+</div>

@@ -48,13 +48,13 @@ public class CubeServiceTest extends ServiceTestBase {
         Assert.assertTrue(CubeService.getCubeDescNameFromCube("testCube").equals("testCube_desc"));
         Assert.assertTrue(CubeService.getCubeNameFromDesc("testCube_desc").equals("testCube"));
 
-        List<CubeInstance> cubes = cubeService.getCubes(null, null, null, null);
+        List<CubeInstance> cubes = cubeService.getCubes(null, null, null, null,null);
         Assert.assertNotNull(cubes);
         CubeInstance cube = cubes.get(0);
         cubeService.isCubeDescEditable(cube.getDescriptor());
         cubeService.isCubeEditable(cube);
 
-        cubes = cubeService.getCubes(null, null, 1, 0);
+        cubes = cubeService.getCubes(null, null,null, 1, 0);
         Assert.assertTrue(cubes.size() == 1);
     }
 }

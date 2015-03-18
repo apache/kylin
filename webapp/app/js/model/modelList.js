@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-KylinApp.service('ModelList',function(ModelService,$q,AccessService){
+KylinApp.service('ModelList',function(ModelService,CubeService,$q,AccessService){
     var models=[];
     var _this = this;
 
@@ -28,16 +28,21 @@ KylinApp.service('ModelList',function(ModelService,$q,AccessService){
                 AccessService.list({type: "DataModelDesc", uuid: model.uuid}, function (accessEntities) {
                     model.accessEntities = accessEntities;
                 });
+//                add cube info to model
+                CubeService.list({offset: 0, limit: 70,modelName:model.name}, function (_cubes) {
+                    model.cubes=_cubes;
+                });
             });
             _models = _.filter(_models,function(models){return models.name!=undefined});
             _this.models = _this.models.concat(_models);
-            defer.resolve(_this.models.length);
+            defer.resolve(_this.models);
         },function(){
             defer.reject("Failed to load models");
         });
         return defer.promise;
 
     };
+
 
     this.removemodels = function(models){
         var modelsIndex = _this.models.indexOf(models);

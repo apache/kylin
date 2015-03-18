@@ -123,7 +123,7 @@ public class ModelController extends BasicController {
 
         String descData = JsonUtil.writeValueAsIndentString(modelDesc);
         modelRequest.setModelDescData(descData);
-        modelRequest.setSuccessful(true);
+
         return modelRequest;
     }
 

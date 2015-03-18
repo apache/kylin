@@ -19,24 +19,30 @@
 'use strict';
 
 KylinApp
-    .controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,modelConfig,ProjectModel,ModelService,MetaModel,ModelList) {
+    .controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window,$modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,modelConfig,ProjectModel,ModelService,MetaModel,ModelList) {
         $scope.modelList = ModelList;
         $scope.modelConfig = modelConfig;
         ModelList.removeAll();
         $scope.loading = false;
         $scope.action = {};
-
+        $scope.window = 0.68 * $window.innerHeight;
         $scope.listParams={
             cubeName: $routeParams.cubeName,
             projectName: $routeParams.projectName
         };
 
+
+        //tree data
+        $scope.models_treedata=[];
+
+
+        //  TODO offset&limit
         $scope.list = function (offset, limit) {
             if(!$scope.projectModel.projects.length){
                 return [];
             }
             offset = (!!offset) ? offset : 0;
-            limit = (!!limit) ? limit : 20;
+            limit = (!!limit) ? limit : 70;
 
             var queryParam = {offset: offset, limit: limit};
             if ($scope.listParams.modelName) {
@@ -47,27 +53,40 @@ KylinApp
             $scope.loading = true;
 
             var defer = $q.defer();
-            return ModelList.list(queryParam).then(function(resp){
+             ModelList.list(queryParam).then(function(resp){
                 $scope.loading = false;
                 defer.resolve(resp);
-                defer.promise;
             },function(resp){
                 $scope.loading = false;
                 defer.resolve([]);
-                defer.promise;
+            });
+
+            return  defer.promise;
+        };
+
+        $scope.init = function(){
+            $scope.list().then(function(resp){
+                $scope.models_treedata = [];
+                angular.forEach(ModelList.models,function(model){
+                    var _model = {label:model.name,noLeaf:true}
+                    var _children = []
+                    angular.forEach(model.cubes,function(cube){
+                        _children.push(cube.name);
+                    });
+                    if(_children.length){
+                         _model.children = _children;
+                    }
+//                    _model.children=[''];
+                    $scope.models_treedata.push(_model);
+                });
+
             });
         };
 
-
-        $scope.loadDetail = function (model) {
-            $log.info(model);
-        };
-
-
         $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
-            if(newValue!=oldValue||newValue==null){
+            if(newValue||newValue==null){
                 ModelList.removeAll();
-                $scope.reload();
+                $scope.init();
             }
 
         });
