@@ -18,10 +18,12 @@
 
 package org.apache.kylin.invertedindex.index;
 
+import com.google.common.collect.Maps;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -72,19 +74,19 @@ public class TableRecordInfo {
             isMetric[i] = desc.isMetricsCol(i);
             dataTypes[i] = tblColRef.getDatatype();
             if (isMetric[i]) {
-                final DataType dataType = DataType.getInstance(tblColRef.getColumn().getDatatype());
-                if (dataType.isNumberFamily()) {
-                    lengths[i] = 16;
-                } else if (dataType.isStringFamily()){
-                    lengths[i] = 256;
-                } else if (dataType.isDateTimeFamily()) {
-                    lengths[i] = 10;
-                } else {
-                    throw new RuntimeException("invalid data type:" + dataType);
-                }
+                lengths[i] = FixedLenMeasureCodec.get(DataType.getInstance(tblColRef.getColumn().getDatatype())).getLength();
             } else {
                 if (dictionaryMap.isEmpty()) {
-                    lengths[i] = FixedLenMeasureCodec.get(tblColRef.getColumn().getType()).getLength();
+                    final DataType dataType = DataType.getInstance(tblColRef.getColumn().getDatatype());
+                    if (dataType.isNumberFamily()) {
+                        lengths[i] = 16;
+                    } else if (dataType.isStringFamily()){
+                        lengths[i] = 256;
+                    } else if (dataType.isDateTimeFamily()) {
+                        lengths[i] = 10;
+                    } else {
+                        throw new RuntimeException("invalid data type:" + dataType);
+                    }
                     dictMaxIds[i] = Integer.MAX_VALUE;
                 } else {
                     final Dictionary<?> dictionary = dictionaryMap.get(i);
