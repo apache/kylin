@@ -42,7 +42,7 @@ public class Slice implements Iterable<RawTableRecord>, Comparable<Slice> {
     final short shard;
     final long timestamp;
     final int nRecords;
-    ColumnValueContainer[] containers;
+    final ColumnValueContainer[] containers;
     private Map<Integer, Dictionary<?>> localDictionaries;
 
     public Slice(TableRecordInfoDigest digest, short shard, long timestamp, ColumnValueContainer[] containers) {

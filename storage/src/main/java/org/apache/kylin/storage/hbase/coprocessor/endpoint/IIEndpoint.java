@@ -30,6 +30,7 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.coprocessor.CoprocessorException;
 import org.apache.hadoop.hbase.coprocessor.CoprocessorService;
 import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
@@ -168,8 +169,15 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         byte[] result = new byte[digest.getByteFormLen()];
         for (int i = 0; i < coprocessorRowType.getColumnCount(); i++) {
             final TblColRef column = coprocessorRowType.columns[i];
-            final int length = localDictionaries.get(i).getValueBytesFromId(encodedRecord.getValueID(i), buffer, 0);
-            rowKeyColumnIO.writeColumn(column, buffer, length, Dictionary.NULL, result, digest.offset(i));
+            if (digest.isMetrics(i)) {
+                final ImmutableBytesWritable bytes = new ImmutableBytesWritable();
+                encodedRecord.getValueBytes(i, bytes);
+                System.arraycopy(bytes.get(), bytes.getOffset(), buffer, 0, bytes.getLength());
+                rowKeyColumnIO.writeColumn(column, buffer, bytes.getLength(), Dictionary.NULL, result, digest.offset(i));
+            } else {
+                final int length = localDictionaries.get(i).getValueBytesFromId(encodedRecord.getValueID(i), buffer, 0);
+                rowKeyColumnIO.writeColumn(column, buffer, length, Dictionary.NULL, result, digest.offset(i));
+            }
         }
         return result;
     }

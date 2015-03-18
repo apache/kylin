@@ -65,7 +65,11 @@ public class IIKeyValueCodec implements KeyValueCodec {
 		ImmutableBytesWritable key = encodeKey(slice.getShard(), slice.getTimestamp(), col);
 		ImmutableBytesWritable value = container.toBytes();
         final Dictionary<?> dictionary = slice.getLocalDictionaries().get(col);
-        return new IIRow(key, value, serialize(dictionary));
+        if (dictionary == null) {
+            return new IIRow(key, value, new ImmutableBytesWritable(BytesUtil.EMPTY_BYTE_ARRAY));
+        } else {
+            return new IIRow(key, value, serialize(dictionary));
+        }
 	}
 
     private static Dictionary<?> deserialize(ImmutableBytesWritable dictBytes) {
@@ -162,17 +166,17 @@ public class IIKeyValueCodec implements KeyValueCodec {
                         }
 
                         int curCol = BytesUtil.readUnsigned(key.get(), i, COLNO_LEN);
-                        final Dictionary<?> dictionary = deserialize(row.getDictionary());
                         if (incompleteDigest.isMetrics(curCol)) {
                             CompressedValueContainer c = new CompressedValueContainer(incompleteDigest, curCol, 0);
                             c.fromBytes(row.getValue());
                             valueContainers[curCol] = c;
                         } else {
+                            final Dictionary<?> dictionary = deserialize(row.getDictionary());
                             CompressedValueContainer c = new CompressedValueContainer(dictionary.getSizeOfId(), dictionary.getMaxId() - dictionary.getMinId() + 1, 0);
                             c.fromBytes(row.getValue());
                             valueContainers[curCol] = c;
+                            localDictionaries.put(curCol, dictionary);
                         }
-                        localDictionaries.put(curCol, dictionary);
                         columns++;
                         lastShard = curShard;
                         lastTimestamp = curTimestamp;
@@ -195,123 +199,5 @@ public class IIKeyValueCodec implements KeyValueCodec {
         }
 
     }
-
-
-	private static class Decoder implements Iterable<Slice> {
-
-        private final TableRecordInfoDigest digest;
-        Iterator<IIRow> iterator;
-
-		Slice slice = null;
-		short curShard = Short.MIN_VALUE;
-		long curSliceTimestamp = Long.MIN_VALUE;
-		int curCol = -1;
-		short lastShard = Short.MIN_VALUE;
-		long lastSliceTimestamp = Long.MIN_VALUE;
-		int lastCol = -1;
-		ColumnValueContainer[] containers = null;
-        Map<Integer, Dictionary<?>> localDictionaries = Maps.newHashMap();
-
-		Decoder(Iterable<IIRow> kvs, TableRecordInfoDigest digest) {
-            this.digest = digest;
-			this.iterator = kvs.iterator();
-		}
-
-		private void goToNext() {
-			if (slice != null) { // was not fetched
-				return;
-			}
-
-			// NOTE the input keys are ordered
-			while (slice == null && iterator.hasNext()) {
-                IIRow kv = iterator.next();
-				ImmutableBytesWritable k = kv.getKey();
-				ImmutableBytesWritable v = kv.getValue();
-				decodeKey(k);
-                final Dictionary<?> dictionary = deserialize(kv.getDictionary());
-                final CompressedValueContainer c = new CompressedValueContainer(digest, curCol, 0);
-                c.fromBytes(kv.getValue());
-                addContainer(curCol, c);
-                localDictionaries.put(curCol, dictionary);
-                if (localDictionaries.size() < digest.getColumnCount()) {
-                    continue;
-                }
-
-				if (curShard != lastShard
-						|| curSliceTimestamp != lastSliceTimestamp) {
-					makeNext();
-				}
-				consumeCurrent(v);
-			}
-			if (slice == null) {
-				makeNext();
-			}
-		}
-
-		private void decodeKey(ImmutableBytesWritable k) {
-			byte[] buf = k.get();
-			int i = k.getOffset();
-
-			curShard = (short) BytesUtil.readUnsigned(buf, i, SHARD_LEN);
-			i += SHARD_LEN;
-			curSliceTimestamp = BytesUtil.readLong(buf, i, TIMEPART_LEN);
-			i += TIMEPART_LEN;
-
-			curCol = BytesUtil.readUnsigned(buf, i, COLNO_LEN);
-			i += COLNO_LEN;
-
-		}
-
-		private void consumeCurrent(ImmutableBytesWritable v) {
-			lastShard = curShard;
-			lastSliceTimestamp = curSliceTimestamp;
-			lastCol = curCol;
-		}
-
-		private void makeNext() {
-			if (containers != null) {
-				slice = new Slice(digest, lastShard, lastSliceTimestamp,
-						containers);
-                slice.setLocalDictionaries(Maps.newHashMap(localDictionaries));
-			}
-			lastSliceTimestamp = Long.MIN_VALUE;
-			lastCol = -1;
-			containers = null;
-            localDictionaries.clear();
-		}
-
-		private void addContainer(int col, ColumnValueContainer c) {
-			if (containers == null) {
-				containers = new ColumnValueContainer[digest.getColumnCount()];
-			}
-			containers[col] = c;
-		}
-
-		@Override
-		public Iterator<Slice> iterator() {
-			return new Iterator<Slice>() {
-				@Override
-				public boolean hasNext() {
-					goToNext();
-					return slice != null;
-				}
-
-				@Override
-				public Slice next() {
-					Slice result = slice;
-					slice = null;
-					return result;
-				}
-
-				@Override
-				public void remove() {
-					throw new UnsupportedOperationException();
-				}
-			};
-		}
-
-	}
-
-
 
 }
