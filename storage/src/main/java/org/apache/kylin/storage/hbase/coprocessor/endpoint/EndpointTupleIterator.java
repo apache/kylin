@@ -31,6 +31,7 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
+import org.apache.kylin.metadata.measure.fixedlen.FixedPointLongCodec;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
@@ -333,7 +334,13 @@ public class EndpointTupleIterator implements ITupleIterator {
                 if (!tuple.hasColumn(column)) {
                     continue;
                 }
-                tuple.setDimensionValue(columnNames.get(i), columnValues.get(i));
+                final String columnName = columnNames.get(i);
+                if (tableRecordInfo.getDigest().isMetrics(i)) {
+                    logger.info("column name:" + columnName + " column value:" + tableRecord.getValueString(i));
+                    tuple.setMeasureValue(columnName, tableRecord.getValueString(i));
+                } else {
+                    tuple.setDimensionValue(columnName, columnValues.get(i));
+                }
             }
 
             if (measureValues != null) {
