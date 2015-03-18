@@ -63,20 +63,30 @@ public class TableRecordInfo {
     }
 
     private TableRecordInfoDigest createDigest(IIDesc desc, Map<Integer, Dictionary<?>> dictionaryMap) {
-        int nColumns = getColumns().size();
+        final List<TblColRef> tblColRefs = desc.listAllColumns();
+        final int nColumns = tblColRefs.size();
         boolean[] isMetric = new boolean[nColumns];
         int[] lengths = new int[nColumns];
         int[] dictMaxIds = new int[nColumns];
         String[] dataTypes = new String[nColumns];
         for (int i = 0; i < nColumns; ++i) {
-            final TblColRef tblColRef = getColumns().get(i);
+            final TblColRef tblColRef = tblColRefs.get(i);
             isMetric[i] = desc.isMetricsCol(i);
             dataTypes[i] = tblColRef.getDatatype();
             if (isMetric[i]) {
                 lengths[i] = FixedLenMeasureCodec.get(DataType.getInstance(tblColRef.getColumn().getDatatype())).getLength();
             } else {
                 if (dictionaryMap.isEmpty()) {
-                    lengths[i] = desc.listAllColumns().get(i).getColumn().getTypePrecision();
+                    final DataType dataType = DataType.getInstance(tblColRef.getColumn().getDatatype());
+                    if (dataType.isNumberFamily()) {
+                        lengths[i] = 16;
+                    } else if (dataType.isStringFamily()){
+                        lengths[i] = 256;
+                    } else if (dataType.isDateTimeFamily()) {
+                        lengths[i] = 10;
+                    } else {
+                        throw new RuntimeException("invalid data type:" + dataType);
+                    }
                     dictMaxIds[i] = Integer.MAX_VALUE;
                 } else {
                     final Dictionary<?> dictionary = dictionaryMap.get(i);
@@ -98,33 +108,7 @@ public class TableRecordInfo {
         return new TableRecordInfoDigest(nColumns, byteFormLen, offsets, dictMaxIds, lengths, isMetric, dataTypes);
     }
 
-    public static TableRecordInfoDigest createDigest(int nColumns, boolean[] isMetric, String[] dataTypes, Map<Integer, Dictionary<?>> dictionaryMap) {
-        int[] dictMaxIds = new int[nColumns];
-        int[] lengths = new int[nColumns];
-        for (int i = 0; i < nColumns; ++i) {
-            if (isMetric[i]) {
-                final FixedLenMeasureCodec<?> fixedLenMeasureCodec = FixedLenMeasureCodec.get(DataType.getInstance(dataTypes[i]));
-                lengths[i] = fixedLenMeasureCodec.getLength();
-            } else {
-                final Dictionary<?> dictionary = dictionaryMap.get(i);
-                if (dictionary != null) {
-                    lengths[i] = dictionary.getSizeOfId();
-                    dictMaxIds[i] = dictionary.getMaxId();
-                }
-            }
-        }
-        // offsets
-        int pos = 0;
-        int[] offsets = new int[nColumns];
-        for (int i = 0; i < nColumns; i++) {
-            offsets[i] = pos;
-            pos += lengths[i];
-        }
 
-        int byteFormLen = pos;
-
-        return new TableRecordInfoDigest(nColumns, byteFormLen, offsets, dictMaxIds, lengths, isMetric, dataTypes);
-    }
 
     public TableRecord createTableRecord() {
         return new TableRecord(digest.createTableRecordBytes(), this);
