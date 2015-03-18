@@ -284,13 +284,13 @@ public class MetadataManager {
     }
 
     public List<DataModelDesc> getModels() {
-        return new ArrayList<>(dataModelDescMap.values());
+        return new ArrayList<DataModelDesc>(dataModelDescMap.values());
     }
 
     public List<DataModelDesc> getModels(String projectName){
         ProjectInstance projectInstance =  ProjectManager.getInstance(config).getProject(projectName);
         HashSet<DataModelDesc> ret = new HashSet<>();
-        if (projectInstance != null) {
+        if (projectInstance != null&&projectInstance.getModels()!=null) {
             for (String modelName : projectInstance.getModels()) {
                 DataModelDesc model = getDataModelDesc(modelName);
                 if (null != model) {

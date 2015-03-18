@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-KylinApp.service('CubeList',function(CubeService,$q){
+KylinApp.service('CubeList',function(CubeService,$q,AccessService){
     var cubes=[];
     var _this = this;
 
@@ -25,8 +25,11 @@ KylinApp.service('CubeList',function(CubeService,$q){
         var defer = $q.defer();
         CubeService.list(queryParam, function (_cubes) {
             angular.forEach(_cubes, function (cube, index) {
+                AccessService.list({type: "CubeInstance", uuid: cube.uuid}, function (accessEntities) {
+                    cube.accessEntities = accessEntities;
+                });
+
                 if(cube.name){
-//                    $scope.listAccess(cube, 'CubeInstance');
                     if (cube.segments && cube.segments.length > 0) {
                         for(var i= cube.segments.length-1;i>=0;i--){
                             if(cube.segments[i].status==="READY"){

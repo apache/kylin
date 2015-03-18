@@ -23,6 +23,7 @@ import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.security.AclPermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,13 +98,15 @@ public class ModelService extends BasicService {
         DataModelDesc createdDesc = null;
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
         createdDesc = getMetadataManager().createDataModelDesc(desc,projectName,owner);
+
+        accessService.init(createdDesc, AclPermission.ADMINISTRATION);
         ProjectInstance project = getProjectManager().getProject(projectName);
-        accessService.inherit(desc, project);
+        accessService.inherit(createdDesc, project);
         return createdDesc;
     }
 
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#model, 'ADMINISTRATION') or hasPermission(#model, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public DataModelDesc updateModelAndDesc(DataModelDesc desc, String newProjectName) throws IOException {
         DataModelDesc existingModel = getMetadataManager().getDataModelDesc(desc.getName());
         if (existingModel == null) {

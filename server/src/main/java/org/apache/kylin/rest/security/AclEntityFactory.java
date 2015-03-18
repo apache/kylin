@@ -21,6 +21,7 @@ package org.apache.kylin.rest.security;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.job.JobInstance;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 
 /**
@@ -35,6 +36,13 @@ public class AclEntityFactory {
             cubeInstance.setUuid(uuid);
 
             return cubeInstance;
+        }
+
+        if ("DataModelDesc".equals(entityType)) {
+            DataModelDesc modelInstance = new DataModelDesc();
+            modelInstance.setUuid(uuid);
+
+            return modelInstance;
         }
 
         if ("JobInstance".equals(entityType)) {
