@@ -1,4 +1,4 @@
-package org.apache.kylin.streaming.Nous;
+package org.apache.kylin.streaming.nous;
 
 import java.io.IOException;
 
