@@ -242,14 +242,12 @@ public class ProjectInstance extends RootPersistentEntity {
     }
 
     public boolean containsModel(String modelName) {
-        modelName = modelName.toUpperCase();
         return models!=null&&models.contains(modelName);
     }
 
     public void setModels(List<String> models) { this.models = models; }
 
     public void addModel(String modelName) {
-        modelName = modelName.toUpperCase();
         if(this.getModels()==null){
             this.setModels(new ArrayList<String>());
         }
@@ -257,7 +255,6 @@ public class ProjectInstance extends RootPersistentEntity {
     }
 
     public void removeModel(String modelName){
-        modelName = modelName.toUpperCase();
         if(this.getModels()!=null) {
             this.getModels().remove(modelName);
         }

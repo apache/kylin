@@ -94,39 +94,6 @@ KylinApp.service('GraphService', function () {
                       });
                   }
           });
-
-          if (dimension.derived&&dimension.derived.length)
-          {
-              angular.forEach(dimension.derived, function(derived, index){
-                  for (var i = 0; i < lookup._children.length; i++) {
-                      if(lookup._children[i].name == derived)
-                          break;
-                  }
-                  if(i == lookup._children.length) {
-                    lookup._children.push({
-                          "type": "column",
-                          "name": derived + "(DERIVED)"
-                      });
-                  }
-              });
-          }
-
-          if (dimension.hierarchy)
-          {
-              angular.forEach(dimension.column, function(hierarchy, index){
-                  for (var i = 0; i < lookup._children.length; i++) {
-                      if(lookup._children[i].name == hierarchy)
-                          break;
-                  }
-                  if(i == lookup._children.length) {
-                    lookup._children.push({
-                          "type": "column",
-                          "name": hierarchy + "(HIERARCHY)"
-                      });
-                  }
-              });
-          }
-
         };
       });
         model.graph.columnsCount = 0;

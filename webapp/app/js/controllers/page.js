@@ -46,9 +46,10 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService,$modal, $loc
     ProjectService.list({}, function (projects) {
         var _projects = [];
         angular.forEach(projects, function(project, index){
-            _projects.push(project.name);
+            $scope.listAccess(project, 'ProjectInstance');
+            _projects.push(project);
         });
-        _projects = _.sortBy(_projects, function (i) { return i.toLowerCase(); });
+        _projects = _.sortBy(_projects, function (i) { return i.name.toLowerCase(); });
 
         ProjectModel.setProjects(_projects);
 
@@ -251,10 +252,10 @@ var projCtrl = function ($scope,$location, $modalInstance, ProjectService, Messa
             ProjectService.save({}, $scope.proj, function (newProj) {
                 SweetAlert.swal('Success!', 'New project created successfully!', 'success');
                 $modalInstance.dismiss('cancel');
-                if(projects) {
-                    projects.push(newProj);
-                }
-                ProjectModel.addProject(newProj.name);
+//                if(projects) {
+//                    projects.push(newProj);
+//                }
+//                ProjectModel.addProject(newProj);
                 $cookieStore.put("project",newProj.name);
                 location.reload();
             }, function(e){

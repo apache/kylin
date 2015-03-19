@@ -358,12 +358,12 @@ public class CubeController extends BasicController {
         if (desc.getError().isEmpty()) {
             cubeRequest.setSuccessful(true);
         } else {
-            logger.warn("Cube " + desc.getName() + " fail to create because " + desc.getError());
+            logger.warn("Cube " + desc.getName() + " fail to update because " + desc.getError());
             updateRequest(cubeRequest, false, omitMessage(desc.getError()));
         }
         String descData = JsonUtil.writeValueAsIndentString(desc);
         cubeRequest.setCubeDescData(descData);
-
+        cubeRequest.setSuccessful(true);
         return cubeRequest;
     }
 

@@ -112,35 +112,6 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
 
     // ~ private methods
     function initProject() {
-        ProjectService.list({}, function (projects) {
-            $scope.projects = projects;
 
-            var cubeName = (!!$scope.routeParams.cubeName)? $scope.routeParams.cubeName:$scope.state.cubeName;
-            if (cubeName) {
-                var projName = null;
-                if(ProjectModel.getSelectedProject()){
-                    projName=ProjectModel.getSelectedProject();
-                }else{
-                    angular.forEach($scope.projects, function (project, index) {
-                        angular.forEach(project.realizations, function (unit, index) {
-                            if (!projName && unit.type=="CUBE"&&unit.realization === cubeName) {
-                                projName = project.name;
-                            }
-                        });
-                    });
-                }
-
-                if(!ProjectModel.getSelectedProject()){
-                    ProjectModel.setSelectedProject(projName);
-                    TableModel.aceSrcTbLoaded();
-                }
-
-                $scope.cubeMetaFrame.project = projName;
-            }
-
-            angular.forEach($scope.projects, function (project, index) {
-                $scope.listAccess(project, 'ProjectInstance');
-            });
-        });
     }
 });
