@@ -18,9 +18,19 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-invertedindex</artifactId>
-            <version>0.7.1-SNAPSHOT</version>
+            <version>${project.parent.version}</version>
         </dependency>
-        
+
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-cube</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-storage</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
