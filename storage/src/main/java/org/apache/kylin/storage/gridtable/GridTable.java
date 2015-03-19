@@ -24,12 +24,12 @@ public class GridTable {
         assert shard < info.nShards;
         return new GTBuilder(info, shard, store);
     }
-    
+
     public GTBuilder append() {
         assert info.isShardingEnabled() == false;
         return append(-1);
     }
-    
+
     public GTBuilder append(int shard) {
         return new GTBuilder(info, shard, store, true);
     }
@@ -40,13 +40,17 @@ public class GridTable {
 
     public IGTScanner scanAndAggregate(GTRecord pkStart, GTRecord pkEndExclusive, BitSet dimensions, //
             BitSet metrics, String[] metricsAggrFuncs, TupleFilter filterPushDown) throws IOException {
-        return new GTAggregateScanner(info, store, pkStart, pkEndExclusive, dimensions, metrics, metricsAggrFuncs, filterPushDown);
+        BitSet columns = new BitSet();
+        columns.or(dimensions);
+        columns.or(metrics);
+        IGTScanner rawScanner = scan(pkStart, pkEndExclusive, columns, filterPushDown);
+        return new GTAggregateScanner(rawScanner, dimensions, metrics, metricsAggrFuncs);
     }
 
     public GTInfo getInfo() {
         return info;
     }
-    
+
     public IGTStore getStore() {
         return store;
     }
