@@ -7,7 +7,6 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 
-import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 
 import com.google.common.collect.Maps;
@@ -18,25 +17,26 @@ public class GTAggregateScanner implements IGTScanner {
     final BitSet dimensions;
     final BitSet metrics;
     final String[] metricsAggrFuncs;
-    final GTRawScanner rawScanner;
+    final IGTScanner rawScanner;
 
-    GTAggregateScanner(GTInfo info, IGTStore store, GTRecord pkStart, GTRecord pkEndExclusive, BitSet dimensions, BitSet metrics, String[] metricsAggrFuncs, TupleFilter filterPushDown) {
+    GTAggregateScanner(IGTScanner rawScanner, BitSet dimensions, BitSet metrics, String[] metricsAggrFuncs) {
         if (dimensions.intersects(metrics))
             throw new IllegalStateException();
         if (metrics.cardinality() != metricsAggrFuncs.length)
             throw new IllegalStateException();
 
-        this.info = info;
+        this.info = rawScanner.getInfo();
         this.dimensions = dimensions;
         this.metrics = metrics;
         this.metricsAggrFuncs = metricsAggrFuncs;
-        
-        BitSet columns = new BitSet();
-        columns.or(dimensions);
-        columns.or(metrics);
-        this.rawScanner = new GTRawScanner(info, store, pkStart, pkEndExclusive, columns, filterPushDown);
+        this.rawScanner = rawScanner;
     }
 
+    @Override
+    public GTInfo getInfo() {
+        return info;
+    }
+    
     @Override
     public int getScannedRowCount() {
         return rawScanner.getScannedRowCount();

@@ -44,6 +44,11 @@ class GTRawScanner implements IGTScanner {
     }
 
     @Override
+    public GTInfo getInfo() {
+        return info;
+    }
+    
+    @Override
     public int getScannedRowCount() {
         return scannedRowCount;
     }

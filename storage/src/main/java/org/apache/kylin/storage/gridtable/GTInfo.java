@@ -25,7 +25,7 @@ public class GTInfo {
     transient TblColRef[] colRefs;
 
     // grid info
-    BitSet primaryKey; // columns sorted and unique
+    BitSet primaryKey; // order by, uniqueness is not required
     BitSet[] colBlocks; // at least one column block
     BitSet colBlocksAll;
     int rowBlockSize; // 0: disable row block
