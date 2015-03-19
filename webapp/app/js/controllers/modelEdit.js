@@ -64,10 +64,20 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
 
     // ~ init
     if ($scope.isEdit = !!$routeParams.modelName) {
+
+
+
         var modelName = $routeParams.modelName;
         ModelDescService.get({model_name: modelName}, function (model) {
                     if (model) {
                         $scope.model = model;
+                        $scope.model.project = ProjectModel.getProjectByCubeModel(modelName);
+
+                        if(!ProjectModel.getSelectedProject()){
+                            ProjectModel.setSelectedProject($scope.model.project);
+                            TableModel.aceSrcTbLoaded();
+                        }
+
                         //use
                         //convert GMT mills ,to make sure partition date show GMT Date
                         //should run only one time
@@ -78,39 +88,11 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
                     }
                 });
         //init project
-            ProjectService.list({}, function (projects) {
-                $scope.projects = projects;
-                if (modelName) {
-                    var projName = null;
-                    if(ProjectModel.getSelectedProject()){
-                        projName=ProjectModel.getSelectedProject();
-                    }else{
-                        angular.forEach($scope.projects, function (project, index) {
-                            angular.forEach(project.models, function (unit, index) {
-                                if (!projName && unit === modelName) {
-                                    projName = project.name;
-                                }
-                            });
-                        });
-                    }
-
-                    if(!ProjectModel.getSelectedProject()){
-                        ProjectModel.setSelectedProject(projName);
-                        TableModel.aceSrcTbLoaded();
-                    }
-
-                    $scope.state.project = projName;
-                }
-
-                angular.forEach($scope.projects, function (project, index) {
-                    $scope.listAccess(project, 'ProjectInstance');
-                });
-            });
-
 
     } else {
         MetaModel.initModel();
         $scope.model = MetaModel.getMetaModel();
+        $scope.model.project = ProjectModel.getSelectedProject();
     }
 
     $scope.prepareModel = function () {
@@ -128,8 +110,9 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
             }
 
         }
+        $scope.state.project = $scope.model.project;
+        delete $scope.model.project;
         $scope.state.modelSchema = angular.toJson($scope.model, true);
-//        $scope.state.project = $scope.projectModel.selectedProject;
 
     };
 

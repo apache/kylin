@@ -33,7 +33,7 @@
                 <ul class="nav navbar-nav">
                     <li class="project-cntnr"  style="padding:7px 15px;background-color:#2e8965;" ng-if="userService.isAuthorized()">
                         <select chosen ng-model="projectModel.selectedProject" ng-init="newAccess.permission=permissions.READ.value;"
-                                ng-options="project as project for project in projectModel.projects"
+                                ng-options="project.name as project.name for project in projectModel.projects"
                                 style="width: 150px"
                                 data-placeholder="select a project"
                                 class="chosen-select">

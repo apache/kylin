@@ -17,11 +17,19 @@
 -->
 <div class="row">
     <!--table_tree-->
-    <div class="col-xs-3 overwriteLTE">
-        <div ng-include src="'partials/models/models_tree.html'"></div>
+    <div class="col-xs-3">
+        <tabset>
+            <tab heading="Models" select="toggleTab(true);">
+                <div ng-include src="'partials/models/models_tree.html'"></div>
+            </tab>
+            <tab heading="Data source"  select="toggleTab(false);">
+                <div ng-include src="'partials/tables/source_table_tree.html'"></div>
+            </tab>
+        </tabset>
     </div>
 
-    <div class="col-xs-9">
-        <h3>Model Info</h3>
+    <div class="col-xs-9" style="padding-top:39px;">
+        <div ng-show="showModels" ng-include src="'partials/models/model_detail.html'"></div>
+        <div ng-show="!showModels" ng-include src="'partials/tables/table_detail.html'"></div>
     </div>
 </div>

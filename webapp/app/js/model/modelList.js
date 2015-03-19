@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-KylinApp.service('ModelList',function(ModelService,CubeService,$q,AccessService){
+KylinApp.service('ModelList',function(ModelService,CubeService,$q,AccessService,ProjectModel){
     var models=[];
     var _this = this;
 
@@ -32,6 +32,8 @@ KylinApp.service('ModelList',function(ModelService,CubeService,$q,AccessService)
                 CubeService.list({offset: 0, limit: 70,modelName:model.name}, function (_cubes) {
                     model.cubes=_cubes;
                 });
+
+                model.project =ProjectModel.getProjectByCubeModel(model.name);
             });
             _models = _.filter(_models,function(models){return models.name!=undefined});
             _this.models = _this.models.concat(_models);
@@ -54,4 +56,5 @@ KylinApp.service('ModelList',function(ModelService,CubeService,$q,AccessService)
     this.removeAll = function(){
         _this.models=[];
     };
+
 });

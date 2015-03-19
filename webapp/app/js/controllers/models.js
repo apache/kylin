@@ -18,8 +18,19 @@
 
 'use strict';
 
-KylinApp
-    .controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window,$modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,modelConfig,ProjectModel,ModelService,MetaModel,ModelList) {
+KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window,$modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,modelConfig,ProjectModel,ModelService,MetaModel,ModelList) {
+        //selected model
+        $scope.model = {};
+        //tree data
+        $scope.models_treedata=[];
+
+        $scope.showModels=true;
+
+        $scope.toggleTab = function(showModel){
+            $scope.showModels = showModel;
+//            console.log($scope.showModels);
+        }
+
         $scope.modelList = ModelList;
         $scope.modelConfig = modelConfig;
         ModelList.removeAll();
@@ -30,10 +41,6 @@ KylinApp
             cubeName: $routeParams.cubeName,
             projectName: $routeParams.projectName
         };
-
-
-        //tree data
-        $scope.models_treedata=[];
 
 
         //  TODO offset&limit
@@ -68,31 +75,34 @@ KylinApp
             $scope.list().then(function(resp){
                 $scope.models_treedata = [];
                 angular.forEach(ModelList.models,function(model){
-                    var _model = {label:model.name,noLeaf:true}
-                    var _children = []
+                    var _model = {
+                        label:model.name,
+                        noLeaf:true,
+                        data:model,
+                        onSelect:function(branch){
+                         // set selecte model
+                            $scope.model=branch.data;
+                        }
+                    };
+                    var _children = [];
                     angular.forEach(model.cubes,function(cube){
                         _children.push(cube.name);
                     });
                     if(_children.length){
                          _model.children = _children;
                     }
-//                    _model.children=[''];
                     $scope.models_treedata.push(_model);
                 });
+                $scope.models_treedata = _.sortBy($scope.models_treedata, function (i) { return i.label.toLowerCase(); });
 
             });
         };
 
         $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
-            if(newValue||newValue==null){
                 ModelList.removeAll();
+                //init selected model
+                $scope.model = {};
                 $scope.init();
-            }
-
         });
-        $scope.reload = function () {
-            // trigger reload action in pagination directive
-            $scope.action.reload = !$scope.action.reload;
-        };
 
     });

@@ -29,7 +29,7 @@
                 </label>
                 <div class="col-xs-12 col-sm-6">
                     <input ng-if="state.mode=='edit'" name="project_name" type="text" class="form-control"
-                           ng-model="state.project"/>
+                           ng-model="model.project"/>
                     <span ng-if="state.mode=='view'">
                         {{model.project}}
                     </span>
@@ -43,6 +43,7 @@
                 <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
                     <b>Model Name</b>
                 </label>
+
                 <div class="col-xs-12 col-sm-6">
                     <input ng-if="state.mode=='edit'" name="model_name" type="text" class="form-control"
                            ng-model="model.name" required

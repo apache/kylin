@@ -61,6 +61,13 @@ public class DataModelDesc extends RootPersistentEntity {
     @JsonProperty("capacity")
     private RealizationCapacity capacity = RealizationCapacity.MEDIUM;
 
+
+    /**
+     * Error messages during resolving json metadata
+     */
+    private List<String> errors = new ArrayList<String>();
+
+
     public String getName() {
         return name;
     }
@@ -212,6 +219,33 @@ public class DataModelDesc extends RootPersistentEntity {
             }
 
         }
+    }
+
+    /**
+     * Add error info and thrown exception out
+     *
+     * @param message
+     */
+    public void addError(String message) {
+        addError(message, false);
+    }
+
+    /**
+     * @param message
+     *            error message
+     * @param silent
+     *            if throw exception
+     */
+    public void addError(String message, boolean silent) {
+        if (!silent) {
+            throw new IllegalStateException(message);
+        } else {
+            this.errors.add(message);
+        }
+    }
+
+    public List<String> getError() {
+        return this.errors;
     }
 
     @Override

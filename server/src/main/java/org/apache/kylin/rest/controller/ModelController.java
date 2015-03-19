@@ -17,7 +17,7 @@
 */
 
 package org.apache.kylin.rest.controller;
-
+import java.util.Iterator;
 import com.codahale.metrics.annotation.Metered;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -27,12 +27,14 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.exception.BadRequestException;
+import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.service.ModelService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -106,24 +108,27 @@ public class ModelController extends BasicController {
     @ResponseBody
     @Metered(name = "updateModel")
     public ModelRequest updateModelDesc(@RequestBody ModelRequest modelRequest) throws JsonProcessingException {
-
-        //Update Model
         DataModelDesc modelDesc = deserializeDataModelDesc(modelRequest);
         if (modelDesc == null) {
             return modelRequest;
         }
-
         try {
-            modelService.updateModelAndDesc(modelDesc,modelRequest.getProject());
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
+            modelDesc =  modelService.updateModelAndDesc(modelDesc,modelRequest.getProject());
+        } catch (AccessDeniedException accessDeniedException) {
+            throw new ForbiddenException("You don't have right to update this cube.");
+        }  catch (Exception e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
         }
 
+        if (modelDesc.getError().isEmpty()) {
+            modelRequest.setSuccessful(true);
+        } else {
+            logger.warn("Model " + modelDesc.getName() + " fail to update because " + modelDesc.getError());
+            updateRequest(modelRequest, false, omitMessage(modelDesc.getError()));
+        }
         String descData = JsonUtil.writeValueAsIndentString(modelDesc);
         modelRequest.setModelDescData(descData);
-
         return modelRequest;
     }
 
@@ -156,5 +161,17 @@ public class ModelController extends BasicController {
         this.modelService = modelService;
     }
 
-
+    /**
+     * @param errors
+     * @return
+     */
+    private String omitMessage(List<String> errors) {
+        StringBuffer buffer = new StringBuffer();
+        for (Iterator<String> iterator = errors.iterator(); iterator.hasNext();) {
+            String string = (String) iterator.next();
+            buffer.append(string);
+            buffer.append("\n");
+        }
+        return buffer.toString();
+    }
 }
