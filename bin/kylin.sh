@@ -35,8 +35,9 @@ then
 
     export HBASE_CLASSPATH_PREFIX=${tomcat_root}/bin/bootstrap.jar:${tomcat_root}/bin/tomcat-juli.jar:${tomcat_root}/lib/*:$HBASE_CLASSPATH_PREFIX
     export HBASE_CLASSPATH=$hive_dependency:${HBASE_CLASSPATH}
+    export  JAVA_OPTS="-Xms2048M -Xmx2048M"
 
-    hbase -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
+    hbase ${JAVA_OPTS}  -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
     -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
     -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true \
     -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true \
