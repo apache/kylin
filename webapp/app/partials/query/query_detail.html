@@ -88,7 +88,7 @@
             <span ng-if="curQuery.graph.show"><i class="fa fa-list-ul"></i> Grid</span>
         </button>
         <a class="btn btn-default btn-xs"
-           href="{{config.service.url}}query/format/csv?sql={{sanitate(curQuery.sql)}}&project={{state.selectedProject}}" target="_blank"><i
+           href="{{config.service.url}}query/format/csv?sql={{sanitate(curQuery.sql)}}&project={{curQuery.project}}" target="_blank"><i
                 class="fa fa-cloud-download"></i> Export</a>
         <a class="btn btn-default btn-xs"
            ng-click="refreshUi();"><i
