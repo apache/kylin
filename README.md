@@ -19,7 +19,18 @@ Please follow this installation tutorial to start with Kylin: [Installation Tuto
 
 Advance Topics
 -------
+####Connectivity
+1.[How to use kylin remote jdbc driver](docs/Tutorial/How to use kylin remote jdbc driver.md)
+
+2.[Kylin ODBC Driver Tutorial](docs/Tutorial/Kylin ODBC Driver Tutorial.md) 
+
 ####REST
+
+1.[Kylin Restful API List](docs/REST/Kylin Restful API List.md)
+
+2.[Build Cube with Restful API](docs/REST/Build Cube with Restful API.md)
+
+3.[How to consume Kylin REST API in javascript](docs/REST/How to consume Kylin REST API in javascript.md)
 
 ####Operations
 1.[Kylin Metadata Store](docs/Operations/Kylin Metadata Store.md)
@@ -30,8 +41,12 @@ Advance Topics
 
 ####Test
 
+1.[Run Kylin test case with HBase Mini Cluster](docs/Test/Run Kylin test case with HBase Mini Cluster.md)
+
+
 ####Technial Details
 
+1.[New meta data model structure](docs/TechInside/New meta data model structure.md)
 
 Get Help
 ------------
