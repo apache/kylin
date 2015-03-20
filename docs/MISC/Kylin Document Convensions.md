@@ -1,4 +1,4 @@
-Kylin Document Convernsions
+Kylin Document Convensions
 -----
 
 1. Keep documentation in markdown files
