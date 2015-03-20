@@ -21,6 +21,7 @@ package org.apache.kylin.storage.filter;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer;
@@ -200,6 +201,21 @@ public class FilterSerializeTest extends FilterBaseTest {
         TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         compareFilter(filter, newFilter);
+    }
+
+    @Test
+    public void testDynamic() {
+        final CompareTupleFilter compareDynamicFilter = buildCompareDynamicFilter(buildGroups());
+
+        byte[] bytes = TupleFilterSerializer.serialize(compareDynamicFilter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
+
+        bytes = TupleFilterSerializer.serialize(newFilter, CS);
+        TupleFilter newFilter2 = TupleFilterSerializer.deserialize(bytes, CS);
+
+        compareFilter(compareDynamicFilter, newFilter);
+        compareFilter(compareDynamicFilter, newFilter2);
+
     }
 
 }
