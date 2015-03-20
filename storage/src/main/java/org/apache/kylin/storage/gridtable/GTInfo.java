@@ -157,7 +157,7 @@ public class GTInfo {
 
         /** required */
         public Builder setPrimaryKey(BitSet primaryKey) {
-            info.primaryKey = primaryKey;
+            info.primaryKey = (BitSet)primaryKey.clone();
             return this;
         }
 
