@@ -109,7 +109,7 @@ public class CubeStorageEngine implements IStorageEngine {
         context.setExactAggregation(isExactAggregation);
 
         // translate filter for scan range and compose returning groups for coprocessor, note:
-        // - columns on evaluate-able filter have to return
+        // - columns on non-evaluatable filter have to return
         // - columns on loosened filter (due to derived translation) have to return
         Set<TblColRef> groupsCopD = Sets.newHashSet(groupsD);
         groupsCopD.addAll(context.getOtherMandatoryColumns()); // TODO: this is tricky, to generalize
@@ -539,8 +539,10 @@ public class CubeStorageEngine implements IStorageEngine {
             List<Pair<byte[], byte[]>> newFuzzyKeys = new ArrayList<Pair<byte[], byte[]>>(mergeSize);
             List<Collection<ColumnValueRange>> newFlatOrAndFilter = Lists.newLinkedList();
 
+            boolean hasNonFuzzyRange = false;
             for (int k = from; k <= to; k++) {
                 HBaseKeyRange nextRange = keyRanges.get(k);
+                hasNonFuzzyRange = hasNonFuzzyRange || nextRange.getFuzzyKeys().isEmpty();
                 newFuzzyKeys.addAll(nextRange.getFuzzyKeys());
                 newFlatOrAndFilter.addAll(nextRange.getFlatOrAndFilter());
                 if (Bytes.compareTo(stopKey, nextRange.getStopKey()) < 0) {
@@ -554,11 +556,14 @@ public class CubeStorageEngine implements IStorageEngine {
                 }
             }
 
+            // if any range is non-fuzzy, then all fuzzy keys must be cleared
+            if (hasNonFuzzyRange) {
+                newFuzzyKeys.clear();
+            }
+
             partitionColumnStartDate = (partitionColumnStartDate == Long.MAX_VALUE) ? 0 : partitionColumnStartDate;
             partitionColumnEndDate = (partitionColumnEndDate == 0) ? Long.MAX_VALUE : partitionColumnEndDate;
-            keyRange =
-
-            new HBaseKeyRange(cubeSegment, cuboid, startKey, stopKey, newFuzzyKeys, newFlatOrAndFilter, partitionColumnStartDate, partitionColumnEndDate);
+            keyRange = new HBaseKeyRange(cubeSegment, cuboid, startKey, stopKey, newFuzzyKeys, newFlatOrAndFilter, partitionColumnStartDate, partitionColumnEndDate);
         }
         return keyRange;
     }
@@ -606,7 +611,7 @@ public class CubeStorageEngine implements IStorageEngine {
     }
 
     private void setLimit(TupleFilter filter, StorageContext context) {
-        boolean goodAggr = context.isExactAggregation() ;
+        boolean goodAggr = context.isExactAggregation();
         boolean goodFilter = filter == null || (TupleFilter.isEvaluableRecursively(filter) && context.isCoprocessorEnabled());
         boolean goodSort = context.hasSort() == false;
         if (goodAggr && goodFilter && goodSort) {

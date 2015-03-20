@@ -627,6 +627,10 @@
                                     <value>true</value>
                                 </property>
                                 <property>
+                                    <name>hdp.version</name>
+                                    <value>2.2.0.0-2041</value>
+                                </property>
+                                <property>
                                     <name>buildCubeUsingProvidedData</name>
                                     <value>false</value>
                                 </property>
