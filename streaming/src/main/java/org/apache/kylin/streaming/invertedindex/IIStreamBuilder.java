@@ -36,7 +36,10 @@ package org.apache.kylin.streaming.invertedindex;
 
 import com.google.common.base.Function;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.*;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.hadoop.hbase.client.HTableInterface;
@@ -44,8 +47,8 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
+import org.apache.kylin.invertedindex.index.BatchSliceBuilder;
 import org.apache.kylin.invertedindex.index.Slice;
-import org.apache.kylin.invertedindex.index.SliceBuilder;
 import org.apache.kylin.invertedindex.index.TableRecord;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIDesc;
@@ -61,7 +64,6 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
@@ -72,20 +74,20 @@ public class IIStreamBuilder extends StreamBuilder {
 
     private static Logger logger = LoggerFactory.getLogger(IIStreamBuilder.class);
 
-    private IIDesc desc = null;
-    private HTableInterface hTable = null;
-    private int partitionId = -1;
+    private final IIDesc desc;
+    private final HTableInterface hTable;
+    private final BatchSliceBuilder sliceBuilder;
 
     public IIStreamBuilder(LinkedBlockingDeque<Stream> queue, String hTableName, IIDesc desc, int partitionId) {
         super(queue, desc.getSliceSize());
         this.desc = desc;
-        this.partitionId = partitionId;
         try {
             this.hTable = HConnectionManager.createConnection(HBaseConfiguration.create()).getTable(hTableName);
         } catch (IOException e) {
             logger.error("cannot open htable name:" + hTableName, e);
             throw new RuntimeException("cannot open htable name:" + hTableName, e);
         }
+        sliceBuilder = new BatchSliceBuilder(desc, (short) partitionId);
     }
 
     @Override
@@ -101,8 +103,8 @@ public class IIStreamBuilder extends StreamBuilder {
         });
         final Map<Integer, Dictionary<?>> dictionaryMap = buildDictionary(table, desc);
         TableRecordInfo tableRecordInfo = new TableRecordInfo(desc, dictionaryMap);
-        SliceBuilder sliceBuilder = new SliceBuilder(tableRecordInfo, (short) partitionId);
         final Slice slice = buildSlice(table, sliceBuilder, tableRecordInfo, dictionaryMap);
+        logger.info("slice info, shard:" + slice.getShard() + " timestamp:" + slice.getTimestamp() + " record count:" + slice.getRecordCount());
         loadToHBase(hTable, slice, new IIKeyValueCodec(tableRecordInfo.getDigest()));
         submitOffset();
         stopwatch.stop();
@@ -137,15 +139,18 @@ public class IIStreamBuilder extends StreamBuilder {
         return Lists.newArrayList(new String(stream.getRawData()).split(","));
     }
 
-    private Slice buildSlice(List<List<String>> table, SliceBuilder sliceBuilder, TableRecordInfo tableRecordInfo, Map<Integer, Dictionary<?>> localDictionary) {
-        for (List<String> row : table) {
-            TableRecord tableRecord = tableRecordInfo.createTableRecord();
-            for (int i = 0; i < row.size(); i++) {
-                tableRecord.setValueString(i, row.get(i));
+    private Slice buildSlice(List<List<String>> table, BatchSliceBuilder sliceBuilder, final TableRecordInfo tableRecordInfo, Map<Integer, Dictionary<?>> localDictionary) {
+        final Slice slice = sliceBuilder.build(tableRecordInfo.getDigest(), Lists.transform(table, new Function<List<String>, TableRecord>() {
+            @Nullable
+            @Override
+            public TableRecord apply(@Nullable List<String> input) {
+                TableRecord result = tableRecordInfo.createTableRecord();
+                for (int i = 0; i < input.size(); i++) {
+                    result.setValueString(i, input.get(i));
+                }
+                return result;
             }
-            sliceBuilder.append(tableRecord);
-        }
-        final Slice slice = sliceBuilder.close();
+        }));
         slice.setLocalDictionaries(localDictionary);
         return slice;
     }
