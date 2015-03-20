@@ -10,9 +10,11 @@ Kylin provides a script for you to create a sample Cube; the script will also cr
 	select cal_dt, sum(price) as total_selled, count(distinct seller_id) as sellers from kylin_sales group by cal_dt order by cal_dt
 6. You can verify the query result and compare the response time with hive;
 
+   
 #### What's next
 
-After cube being created, you might need to:
+After cube being built, you might need to:
 
-1. [Build the cube so that it can be queried](Kylin Cube Build and Job Monitoring Tutorial.md)
-2. [Grant permission to cubes](Kylin Cube Permission Grant Tutorial.md)
+1. [Query the cube via web interface](Kylin Web Tutorial.md)
+2. [Query the cube via ODBC](Kylin ODBC Driver Tutorial.md)
+3. [Grant permission to cubes](Kylin Cube Permission Grant Tutorial.md)
