@@ -17,15 +17,18 @@ Tutorial
 Please follow this installation tutorial to start with Kylin: [Installation Tutorial](docs/Installation/Installation.md)
 
 
+Get Help
+------------
+
+The fastest way to get response from our developers is to send email to our mail list <dev@kylin.incubator.apache.org>, and remember to subscribe our mail list via <dev-subscribe@kylin.incubator.apache.org>
+
 
 Resources
 ------------
 
 * Web Site: <http://kylin.io>
 
-* Google Group:  [Kylin OLAP Group](https://groups.google.com/forum/#!forum/kylin-olap)
-
-* Developer Mail: <kylin-olap@googlegroups.com>
+* Developer Mail: <dev@kylin.incubator.apache.org>
 
 * How To Contribute: See [wiki](https://github.com/KylinOLAP/Kylin/wiki/How-to-Contribute)
 
