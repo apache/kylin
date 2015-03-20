@@ -34,6 +34,7 @@
 
 package org.apache.kylin.job;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ToolRunner;
@@ -68,9 +69,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.TimeZone;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -216,9 +215,24 @@ public class BuildIIWithStreamTest {
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         final IIStreamBuilder streamBuilder = new IIStreamBuilder(queue, segment.getStorageLocationIdentifier(), desc, 0);
+        int count = 0;
+        List<String[]> rawData = Lists.newArrayList();
         while (reader.next()) {
-            queue.put(parse(reader.getRow()));
+            desc.getTimestampColumn();
+            rawData.add(reader.getRow());
+            count++;
         }
+        final int timestampColumn = desc.getTimestampColumn();
+        Collections.sort(rawData, new Comparator<String[]>() {
+            @Override
+            public int compare(String[] o1, String[] o2) {
+                return o1[timestampColumn].compareTo(o2[timestampColumn]);
+            }
+        });
+        for (String[] row : rawData) {
+            queue.put(parse(row));
+        }
+        logger.info("total record count:" + count + " htable:" + segment.getStorageLocationIdentifier());
         queue.put(new Stream(-1, null));
         final Future<?> future = executorService.submit(streamBuilder);
         try {
