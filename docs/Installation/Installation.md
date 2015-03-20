@@ -32,7 +32,7 @@ Features:
 - Cluster support - Supports multi node installation. 
 - Fully Automated - No manual steps. One command does it all 
 
-For a hands-on tutorial please visit [Kylin Docker installation](https://github.com/KylinOLAP/Kylin/wiki/On-Hadoop-Kylin-installation-using-Docker). 
+For a hands-on tutorial please visit [Kylin Docker installation](On Hadoop Kylin installation using Docker.md). 
 
 
 
