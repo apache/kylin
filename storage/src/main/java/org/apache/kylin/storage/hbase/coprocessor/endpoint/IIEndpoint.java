@@ -189,9 +189,10 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         ClearTextDictionary clearTextDictionary = new ClearTextDictionary(recordInfo, type);
         RowKeyColumnIO rowKeyColumnIO = new RowKeyColumnIO(clearTextDictionary);
         for (Slice slice : slices) {
+            CoprocessorFilter newFilter = CoprocessorFilter.fromFilter(new LocalDictionary(slice.getLocalDictionaries(), type, slice.getInfo()), filter.getFilter(), FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_LOCAL_DICT);
             ConciseSet result = null;
             if (filter != null) {
-                result = new BitMapFilterEvaluator(new SliceBitMapProvider(slice, type)).evaluate(filter.getFilter());
+                result = new BitMapFilterEvaluator(new SliceBitMapProvider(slice, type)).evaluate(newFilter.getFilter());
             }
 
             Iterator<RawTableRecord> iterator = slice.iterateWithBitmap(result);
