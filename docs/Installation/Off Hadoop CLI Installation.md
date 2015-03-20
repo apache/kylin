@@ -63,5 +63,5 @@ Run other tests, the end-to-end cube building test is exclueded
 
 In your Eclipse IDE, launch `org.apache.kylin.rest.DebugTomcat` with specifying VM arguments "-Dspring.profiles.active=sandbox". (By default Kylin server will listen on 7070 port; If you want to use another port, please specify it as a parameter when run `DebugTomcat)
 
-Check Kylin Web available at http://localhost:7070 (user:ADMIN,password:KYLIN)
+Check Kylin Web available at http://localhost:7070/kylin (user:ADMIN,password:KYLIN)
 
