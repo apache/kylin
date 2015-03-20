@@ -32,6 +32,5 @@ Kylin ODBC Driver Tutorial
 2. [Kylin and Excel Tutorial](Kylin and Excel Tutorial.md)
 
 
-
 ## Bug Report
 Open github issue here
