@@ -69,6 +69,6 @@ Resources
 
 * Apache Proposal: [Apache Kylin](https://wiki.apache.org/incubator/KylinProposal)
 
-* [Kylin Document Convensions](docs/MISC/Kylin Document Convensions.md)
+* [Kylin Document Conventions](docs/MISC/Kylin Document Conventions.md)
 
 
