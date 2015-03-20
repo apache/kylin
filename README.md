@@ -17,7 +17,7 @@ Tutorial
 Please follow this installation tutorial to start with Kylin: [Installation Tutorial](docs/Installation/Installation.md)
 
 
-Advance Topics
+Advanced Topics
 -------
 ####Connectivity
 1.[How to use kylin remote jdbc driver](docs/Tutorial/How to use kylin remote jdbc driver.md)
@@ -67,5 +67,8 @@ Resources
 
 * How To Contribute: See [this](docs/MISC/How to Contribute.md)
 
-*  Apache Proposal: [Apache Kylin](https://wiki.apache.org/incubator/KylinProposal)
+* Apache Proposal: [Apache Kylin](https://wiki.apache.org/incubator/KylinProposal)
+
+* [Kylin Document Convensions](docs/MISC/Kylin Document Convensions.md)
+
 
