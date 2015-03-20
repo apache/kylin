@@ -17,8 +17,20 @@ Tutorial
 Please follow this installation tutorial to start with Kylin: [Installation Tutorial](docs/Installation/Installation.md)
 
 
-Advance Usage
+Advance Topics
 -------
+####REST
+
+####Operations
+1.[Kylin Metadata Store](docs/Operations/Kylin Metadata Store.md)
+
+2.[Export Kylin HBase data](docs/Operations/Export Kylin HBase data.md)
+
+3.[Advanced settings of Kylin environment](docs/Operations/Advanced settings of Kylin environment.md)
+
+####Test
+
+####Technial Details
 
 
 Get Help
