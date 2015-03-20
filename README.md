@@ -17,6 +17,10 @@ Tutorial
 Please follow this installation tutorial to start with Kylin: [Installation Tutorial](docs/Installation/Installation.md)
 
 
+Advance Usage
+-------
+
+
 Get Help
 ------------
 
@@ -26,13 +30,13 @@ The fastest way to get response from our developers is to send email to our mail
 Resources
 ------------
 
-* Web Site: <http://kylin.io>
+* [FAQ](docs/MISC/FAQ on Kylin Installation and Usage.md)
+
+* Web Site: <http://kylin.incubator.apache.org/>
 
 * Developer Mail: <dev@kylin.incubator.apache.org>
 
-* How To Contribute: See [wiki](https://github.com/KylinOLAP/Kylin/wiki/How-to-Contribute)
-
-* Presentation: [Kylin Hadoop OLAP Engine v1.0](https://github.com/KylinOLAP/Kylin/blob/master/docs/Kylin_Hadoop_OLAP_Engine_v1.0.pdf?raw=true)
+* How To Contribute: See [this](docs/MISC/How to Contribute.md)
 
 *  Apache Proposal: [Apache Kylin](https://wiki.apache.org/incubator/KylinProposal)
 
