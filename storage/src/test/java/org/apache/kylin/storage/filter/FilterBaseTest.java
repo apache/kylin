@@ -136,6 +136,14 @@ public class FilterBaseTest {
         return compareFilter;
     }
 
+    protected CompareTupleFilter buildCompareDynamicFilter(List<TblColRef> groups) {
+        CompareTupleFilter compareFilter = new CompareTupleFilter(FilterOperatorEnum.EQ);
+        compareFilter.addChild(new ColumnTupleFilter(groups.get(0)));
+        compareFilter.addChild(new DynamicTupleFilter("?0"));
+        compareFilter.bindVariable("?0", "abc");
+        return compareFilter;
+    }
+
     protected void compareFilter(TupleFilter f1, TupleFilter f2) {
         if (f1 == null && f2 == null) {
             return;
