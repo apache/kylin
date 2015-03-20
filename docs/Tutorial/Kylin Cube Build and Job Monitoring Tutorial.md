@@ -58,3 +58,11 @@ Click the icon button show in each step to see the details: `Parameters`, `Log`,
    ![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/cube_build_job_monitor/9%20mrjob.png)
 
    ![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/cube_build_job_monitor/9%20mrjob-d.png)
+   
+#### What's next
+
+After cube being built, you might need to:
+
+1. [Query the cube via web interface](Kylin Web Tutorial.md)
+2. [Query the cube via ODBC](Kylin ODBC Driver Tutorial.md)
+3. [Grant permission to cubes](Kylin Cube Permission Grant Tutorial.md)
