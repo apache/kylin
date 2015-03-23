@@ -87,6 +87,12 @@ public class GTSampleCodeSystem implements IGTCodeSystem {
     }
 
     @Override
+    public void encodeColumnValue(int col, Object value, int roundingFlag, ByteBuffer buf) {
+        // ignore rounding
+        encodeColumnValue(col, value, buf);
+    }
+
+    @Override
     public Object decodeColumnValue(int col, ByteBuffer buf) {
         return serializers[col].deserialize(buf);
     }
