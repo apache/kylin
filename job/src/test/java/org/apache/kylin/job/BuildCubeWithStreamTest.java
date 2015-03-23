@@ -105,8 +105,8 @@ public class BuildCubeWithStreamTest {
 
 
 //        final String tableName = createIntermediateTable(desc, kylinConfig, null);
-        String tableName = "kylin_intermediate_test_kylin_cube_without_slr_desc_19700101000000_20130112000000_a24dec89_efbd_425f_9a5f_8b78dd1412af";
-        tableName = "kylin_intermediate_test_kylin_cube_without_slr_desc_19700101000000_20130112000000_a5e1eb5d_da6b_475d_9807_be0b61f03215";
+        String tableName = "kylin_intermediate_test_kylin_cube_without_slr_desc_19700101000000_20130112000000_a24dec89_efbd_425f_9a5f_8b78dd1412af"; // has 3089 records;
+        tableName = "kylin_intermediate_test_kylin_cube_without_slr_desc_19700101000000_20130112000000_a5e1eb5d_da6b_475d_9807_be0b61f03215"; // only 20 rows;
         logger.info("intermediate table name:" + tableName);
         final Configuration conf = new Configuration();
         HCatInputFormat.setInput(conf, "default", tableName);
@@ -117,7 +117,7 @@ public class BuildCubeWithStreamTest {
         LinkedBlockingDeque<Stream> queue = new LinkedBlockingDeque<Stream>();
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
-        final CubeStreamBuilder streamBuilder = new CubeStreamBuilder(queue, "", desc, 0);
+        final CubeStreamBuilder streamBuilder = new CubeStreamBuilder(queue, "", cube, 0);
         while (reader.next()) {
             queue.put(parse(reader.getRow()));
         }
