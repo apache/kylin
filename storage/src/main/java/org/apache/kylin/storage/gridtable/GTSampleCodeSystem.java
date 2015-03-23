@@ -78,7 +78,7 @@ public class GTSampleCodeSystem implements IGTCodeSystem {
 
     @Override
     public MeasureAggregator<?> newMetricsAggregator(String aggrFunction, int col) {
-        return MeasureAggregator.create(aggrFunction, info.colTypes[col].getName());
+        return MeasureAggregator.create(aggrFunction, info.colTypes[col].toString());
     }
 
     @Override

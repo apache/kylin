@@ -37,7 +37,10 @@ import com.google.common.base.Function;
 import com.google.common.collect.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -48,11 +51,14 @@ import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
+import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.measure.MeasureAggregators;
 import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.DataType;
+import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.serializer.DataTypeSerializer;
 import org.apache.kylin.storage.gridtable.*;
 import org.apache.kylin.storage.gridtable.memstore.GTSimpleMemStore;
 import org.apache.kylin.streaming.Stream;
@@ -82,13 +88,13 @@ public class CubeStreamBuilder extends StreamBuilder {
     private CubeSegment cubeSegment = null;
     private CubeJoinedFlatTableDesc intermediateTableDesc;
     private MeasureCodec measureCodec;
-    private MeasureAggregators aggs = null;
     private int measureNumber;
-
     private String[] metricsAggrFuncs = null;
+    private List<Pair<Integer, Integer>> holisticCountIndexs = null;
+    public static final LongWritable ONE = new LongWritable(1l);
 
     public CubeStreamBuilder(LinkedBlockingDeque<Stream> queue, String hTableName, CubeDesc desc, int partitionId) {
-        super(queue, 2000);
+        super(queue, 10000);
         this.desc = desc;
         this.partitionId = partitionId;
         this.cuboidScheduler = new CuboidScheduler(desc);
@@ -98,28 +104,36 @@ public class CubeStreamBuilder extends StreamBuilder {
         cube = cubes.get(0);
 
         measureCodec = new MeasureCodec(desc.getMeasures());
-        aggs = new MeasureAggregators(desc.getMeasures());
         measureNumber = desc.getMeasures().size();
 
+        holisticCountIndexs = Lists.newArrayList();
+
+        Map<String, Integer> measureIndexMap = new HashMap<String, Integer>();
         List<String> metricsAggrFuncsList = Lists.newArrayList();
         for (int i = 0, n = desc.getMeasures().size(); i < n; i++) {
             MeasureDesc measureDesc = desc.getMeasures().get(i);
             metricsAggrFuncsList.add(measureDesc.getFunction().getExpression());
+
+            measureIndexMap.put(desc.getMeasures().get(i).getName(), i);
         }
         metricsAggrFuncs = metricsAggrFuncsList.toArray(new String[metricsAggrFuncsList.size()]);
+
+        for (int i = 0; i < measureNumber; i++) {
+            String depMsrRef = desc.getMeasures().get(i).getDependentMeasureRef();
+            if (depMsrRef != null) {
+                int index = measureIndexMap.get(depMsrRef);
+                holisticCountIndexs.add(new Pair(i, index));
+            }
+        }
     }
 
     @Override
     protected void build(List<Stream> streamsToBuild) {
+        long startTime = System.currentTimeMillis();
 
         CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-        try {
-            cubeSegment = cubeManager.appendSegments(cube, System.currentTimeMillis());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
-        intermediateTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), cubeSegment);
+        intermediateTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), null);
 
         table = Lists.transform(streamsToBuild, new Function<Stream, List<String>>() {
             @Nullable
@@ -141,6 +155,7 @@ public class CubeStreamBuilder extends StreamBuilder {
         }
 
         assert result.size() > 0;
+        logger.info("Totally " + result.size() + " cuboids be calculated, takes " + (System.currentTimeMillis() - startTime)/1000.0 + " seconds");
     }
 
 
@@ -161,17 +176,34 @@ public class CubeStreamBuilder extends StreamBuilder {
         }
 
         result.add(thisCuboid);
+        logger.info("Cuboid " + cuboidId + " is built.");
+        outputGT(thisCuboid);
     }
 
+    private void outputGT(GridTable gridTable) throws IOException {
+        IGTScanner scanner = gridTable.scan(null, null, null, null);
+        for (GTRecord record : scanner) {
+           logger.debug(record.toString());
+        }
+    }
 
     private GridTable calculateBaseCuboid(List<List<String>> table, long baseCuboidId) throws IOException {
+
+        logger.info("Calculating base cuboid " + baseCuboidId + ", source records number " + table.size() );
+        Cuboid baseCuboid = Cuboid.findById(this.desc, baseCuboidId);
+        DataTypeSerializer[] serializers = new DataTypeSerializer[baseCuboid.getColumns().size()];
+
+        for (int i = 0; i < baseCuboid.getColumns().size(); i++) {
+            serializers[i] = DataTypeSerializer.create(baseCuboid.getColumns().get(i).getType());
+        }
+
 
         GridTable gridTable = newGridTableByCuboidID(baseCuboidId);
         GTRecord r = new GTRecord(gridTable.getInfo());
         GTBuilder builder = gridTable.rebuild();
 
         for (List<String> row : table) {
-            String[] dimensions = buildKey(row);
+            Object[] dimensions = buildKey(row, serializers);
             Object[] metricsValues = buildValue(row);
             Object[] recordValues = new Object[dimensions.length + metricsValues.length];
             System.arraycopy(dimensions, 0, recordValues, 0, dimensions.length);
@@ -182,7 +214,6 @@ public class CubeStreamBuilder extends StreamBuilder {
         Pair<BitSet, BitSet> dimensionMetricsBitSet = getDimensionAndMetricColumBitSet(baseCuboidId);
 
         IGTScanner scanner = gridTable.scanAndAggregate(null, null, dimensionMetricsBitSet.getFirst(), dimensionMetricsBitSet.getSecond(), metricsAggrFuncs, null);
-
 
         GridTable baseCuboidGridTable = newGridTableByCuboidID(baseCuboidId);
         builder = baseCuboidGridTable.rebuild();
@@ -198,15 +229,17 @@ public class CubeStreamBuilder extends StreamBuilder {
         GTInfo info = newGTInfo(cuboidID);
         GTSimpleMemStore store = new GTSimpleMemStore(info);
         GridTable gridTable = new GridTable(info, store);
-
         return gridTable;
     }
 
 
     private GridTable aggregateCuboid(GridTable parentCuboid, long parentCuboidId, long cuboidId) throws IOException {
+        //logger.info("Calculating cuboid " + cuboidId + " from parent " + parentCuboidId);
         Pair<BitSet, BitSet> columnBitSets = getDimensionAndMetricColumBitSet(parentCuboidId);
+        BitSet parentDimensions = columnBitSets.getFirst();
+        BitSet measureColumns = columnBitSets.getSecond();
+        BitSet childDimensions = (BitSet) parentDimensions.clone();
 
-        BitSet dimensionBitSet = columnBitSets.getFirst();
         long mask = Long.highestOneBit(parentCuboidId);
         long childCuboidId = cuboidId;
         long parentCuboidIdActualLength = Long.SIZE - Long.numberOfLeadingZeros(parentCuboidId);
@@ -215,24 +248,44 @@ public class CubeStreamBuilder extends StreamBuilder {
             if ((mask & parentCuboidId) > 0) {
                 if ((mask & childCuboidId) == 0) {
                     // this dim will be aggregated
-                    dimensionBitSet.set(index, false);
+                    childDimensions.set(index, false);
                 }
                 index++;
             }
             mask = mask >> 1;
         }
 
-
-        IGTScanner scanner = parentCuboid.scanAndAggregate(null, null, dimensionBitSet, columnBitSets.getSecond(), metricsAggrFuncs, null);
+        IGTScanner scanner = parentCuboid.scanAndAggregate(null, null, childDimensions, measureColumns, metricsAggrFuncs, null);
         GridTable cuboidGridTable = newGridTableByCuboidID(cuboidId);
         GTBuilder builder = cuboidGridTable.rebuild();
+        GTRecord r = new GTRecord(cuboidGridTable.getInfo());
+
+        BitSet allNeededColumns = new BitSet();
+        allNeededColumns.or(childDimensions);
+        allNeededColumns.or(measureColumns);
         for (GTRecord record : scanner) {
-            builder.write(record);
+            updateMeasureRef(record, r, allNeededColumns);
+            builder.write(r);
         }
         builder.close();
 
 
         return cuboidGridTable;
+    }
+
+    private void updateMeasureRef(GTRecord record, GTRecord newRecord, BitSet dimensions) {
+        for (int i = dimensions.nextSetBit(0), index = 0; i >= 0; i = dimensions.nextSetBit(i + 1), index++) {
+            newRecord.set(index, record.get(i));
+
+        }
+        for(Pair<Integer, Integer> holisticCount: holisticCountIndexs) {
+            ByteArray byteArray = new ByteArray(8);
+            Object hllValue = newRecord.getValues()[(dimensions.cardinality() - measureNumber + holisticCount.getSecond())];
+            assert hllValue instanceof HyperLogLogPlusCounter;
+            measureCodec.getSerializer(holisticCount.getFirst()).serialize(new LongWritable(((HyperLogLogPlusCounter)hllValue).getCountEstimate()), byteArray.asBuffer());
+            newRecord.set(dimensions.cardinality() - measureNumber + holisticCount.getFirst(), byteArray);
+        }
+
     }
 
     private Pair<BitSet, BitSet> getDimensionAndMetricColumBitSet(long cuboidId) {
@@ -246,20 +299,12 @@ public class CubeStreamBuilder extends StreamBuilder {
         );
     }
 
-    private void aggregate(Object[] existing, Object[] newRow) {
-        aggs.reset();
-        aggs.aggregate(existing);
-        aggs.aggregate(newRow);
-
-        aggs.collectStates(existing);
-    }
-
-    private String[] buildKey(List<String> row) {
+    private Object[] buildKey(List<String> row, DataTypeSerializer[] serializers) {
         int keySize = intermediateTableDesc.getRowKeyColumnIndexes().length;
-        String[] key = new String[keySize];
+        Object[] key = new Object[keySize];
 
         for (int i = 0; i < keySize; i++) {
-            key[i] = row.get(intermediateTableDesc.getRowKeyColumnIndexes()[i]);
+            key[i] = serializers[i].valueOf(row.get(intermediateTableDesc.getRowKeyColumnIndexes()[i]));
         }
 
         return key;
@@ -274,18 +319,26 @@ public class CubeStreamBuilder extends StreamBuilder {
             measureDesc = desc.getMeasures().get(i);
             Object value = null;
             int[] flatTableIdx = intermediateTableDesc.getMeasureColumnIndexes()[i];
-            if (flatTableIdx == null) {
+            FunctionDesc function = desc.getMeasures().get(i).getFunction();
+            if (function.isCount() || function.isHolisticCountDistinct()) {
+                // note for holistic count distinct, this value will be ignored
+                value = ONE;
+            } else if (flatTableIdx == null) {
                 value = measureCodec.getSerializer(i).valueOf(measureDesc.getFunction().getParameter().getValue());
             } else if (flatTableIdx.length == 1) {
                 value = measureCodec.getSerializer(i).valueOf(Bytes.toBytes(row.get(flatTableIdx[0])));
             } else {
                 for (int x : flatTableIdx) {
-                    value = value + row.get(x);
+                    if (value == null)
+                        value = row.get(x);
+                    else
+                        value = value + "," + row.get(x);
                 }
+
+                value = measureCodec.getSerializer(i).valueOf(Bytes.toBytes((String) value));
             }
             values[i] = value;
         }
-
         return values;
     }
 
@@ -352,9 +405,5 @@ public class CubeStreamBuilder extends StreamBuilder {
         return Lists.newArrayList(new String(stream.getRawData()).split(","));
     }
 
-
-    private void submitOffset() {
-
-    }
 
 }

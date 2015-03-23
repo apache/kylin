@@ -181,7 +181,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
                     short lastShard = 0;
                     long lastTimestamp = 0;
 
-                    while (iterator().hasNext() && columns < incompleteDigest.getColumnCount()) {
+                    while (iterator.hasNext() && columns < incompleteDigest.getColumnCount()) {
                         final IIRow row = iterator.next();
                         final ImmutableBytesWritable key = row.getKey();
                         int i = key.getOffset();
