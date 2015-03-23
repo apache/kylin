@@ -1,9 +1,9 @@
 Kylin organizes all of its metadata(including cube descriptions and instances, projects, inverted index description and instances, jobs, tables and dictionaries) as a hierarchy file system. However, Kylin uses hbase to store it, rather than normal file system. If you check your kylin configuration file(kylin.properties) you will find such a line:
 
 `# The metadata store in hbase`
-`kylin.metadata.url=kylin_metadata_qa@hbase:sandbox.hortonworks.com:2181:/hbase-unsecure`
+`kylin.metadata.url=kylin_metadata@hbase:sandbox.hortonworks.com:2181:/hbase-unsecure`
 
-This indicates that the metadata will be saved as a htable called `kylin_metadata_qa`. You can scan the htable in hbase shell to check it out.
+This indicates that the metadata will be saved as a htable called `kylin_metadata`. You can scan the htable in hbase shell to check it out.
 
 # Backup Metadata Store
 
