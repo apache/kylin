@@ -106,6 +106,7 @@ public class BuildCubeWithStreamTest {
 
 //        final String tableName = createIntermediateTable(desc, kylinConfig, null);
         String tableName = "kylin_intermediate_test_kylin_cube_without_slr_desc_19700101000000_20130112000000_a24dec89_efbd_425f_9a5f_8b78dd1412af";
+        tableName = "kylin_intermediate_test_kylin_cube_without_slr_desc_19700101000000_20130112000000_a5e1eb5d_da6b_475d_9807_be0b61f03215";
         logger.info("intermediate table name:" + tableName);
         final Configuration conf = new Configuration();
         HCatInputFormat.setInput(conf, "default", tableName);
