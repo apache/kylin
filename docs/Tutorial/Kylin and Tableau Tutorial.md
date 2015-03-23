@@ -25,7 +25,7 @@ Enter your Sever location and credentials: server host, port, username and passw
 
 ![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/2%20serverhost.jpg)
 
-Click "Connect" to get the list of projects that you have permission to access. See details about permission in [Kylin Cube Permission Grant Tutorial](https://github.com/KylinOLAP/Kylin/wiki/Kylin-Cube-Permission-Grant-Tutorial). Then choose the project you want to connect in the drop down list. 
+Click "Connect" to get the list of projects that you have permission to access. See details about permission in [Kylin Cube Permission Grant Tutorial](Kylin Cube Permission Grant Tutorial.md). Then choose the project you want to connect in the drop down list. 
 
 ![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/3%20project.jpg)
 
