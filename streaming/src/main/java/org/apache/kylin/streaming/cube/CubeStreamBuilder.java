@@ -79,9 +79,9 @@ public class CubeStreamBuilder extends StreamBuilder {
 
     private CubeDesc desc = null;
     private int partitionId = -1;
-    CuboidScheduler cuboidScheduler = null;
-    List<List<String>> table = null;
-    Map<TblColRef, Dictionary<?>> dictionaryMap = null;
+    private CuboidScheduler cuboidScheduler = null;
+    private List<List<String>> table = null;
+    private Map<TblColRef, Dictionary<?>> dictionaryMap = null;
     private Cuboid baseCuboid = null;
     private CubeInstance cube;
     private CubeSegment cubeSegment = null;
@@ -92,15 +92,12 @@ public class CubeStreamBuilder extends StreamBuilder {
     private Map<Integer, Integer> dependentMeasures = null; // key: index of Measure which depends on another measure; value: index of Measure which is depended on;
     public static final LongWritable ONE = new LongWritable(1l);
 
-    public CubeStreamBuilder(LinkedBlockingDeque<Stream> queue, String hTableName, CubeDesc desc, int partitionId) {
+    public CubeStreamBuilder(LinkedBlockingDeque<Stream> queue, String hTableName, CubeInstance cube, int partitionId) {
         super(queue, 10000);
-        this.desc = desc;
+        this.cube = cube;
+        this.desc  = cube.getDescriptor();
         this.partitionId = partitionId;
         this.cuboidScheduler = new CuboidScheduler(desc);
-
-        CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-        List<CubeInstance> cubes = cubeManager.getCubesByDesc(this.desc.getName());
-        cube = cubes.get(0);
 
         measureCodec = new MeasureCodec(desc.getMeasures());
         measureNumber = desc.getMeasures().size();
@@ -129,9 +126,6 @@ public class CubeStreamBuilder extends StreamBuilder {
     @Override
     protected void build(List<Stream> streamsToBuild) {
         long startTime = System.currentTimeMillis();
-
-        CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-
         intermediateTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), null);
 
         table = Lists.transform(streamsToBuild, new Function<Stream, List<String>>() {
@@ -168,15 +162,14 @@ public class CubeStreamBuilder extends StreamBuilder {
         }
 
         ArrayList<Long> children = (ArrayList<Long>) cuboidScheduler.getSpanningCuboid(cuboidId);
-        // making sure the children are sorted in ascending order
-        Collections.sort(children);
+        Collections.sort(children); // sort cuboids
         for (Long childId : children) {
             calculateCuboid(thisCuboid, cuboidId, childId, result);
         }
 
         result.add(thisCuboid);
         logger.info("Cuboid " + cuboidId + " is built.");
-        //outputGT(thisCuboid);
+        outputGT(thisCuboid);
     }
 
     private void outputGT(GridTable gridTable) throws IOException {
@@ -195,7 +188,6 @@ public class CubeStreamBuilder extends StreamBuilder {
         for (int i = 0; i < baseCuboid.getColumns().size(); i++) {
             serializers[i] = DataTypeSerializer.create(baseCuboid.getColumns().get(i).getType());
         }
-
 
         GridTable gridTable = newGridTableByCuboidID(baseCuboidId);
         GTRecord r = new GTRecord(gridTable.getInfo());
