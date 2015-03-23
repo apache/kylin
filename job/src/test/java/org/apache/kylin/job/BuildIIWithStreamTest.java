@@ -59,10 +59,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.streaming.Stream;
 import org.apache.kylin.streaming.invertedindex.IIStreamBuilder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,26 +110,26 @@ public class BuildIIWithStreamTest {
         }
     }
 
-    @After
-    public void after() throws Exception {
+    @AfterClass
+    public static void after() throws Exception {
         backup();
     }
 
-    private int cleanupOldStorage() throws Exception {
+    private static int cleanupOldStorage() throws Exception {
         String[] args = {"--delete", "true"};
 
         int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
         return exitCode;
     }
 
-    private void backup() throws Exception {
+    private static void backup() throws Exception {
         int exitCode = cleanupOldStorage();
         if (exitCode == 0) {
             exportHBaseData();
         }
     }
 
-    private void exportHBaseData() throws IOException {
+    private static void exportHBaseData() throws IOException {
         ExportHBaseData export = new ExportHBaseData();
         export.exportTables();
     }
