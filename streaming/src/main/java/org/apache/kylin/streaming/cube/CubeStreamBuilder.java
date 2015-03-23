@@ -39,6 +39,8 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -49,6 +51,7 @@ import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
+import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.measure.MeasureAggregators;
 import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.DataType;
@@ -85,10 +88,10 @@ public class CubeStreamBuilder extends StreamBuilder {
     private CubeSegment cubeSegment = null;
     private CubeJoinedFlatTableDesc intermediateTableDesc;
     private MeasureCodec measureCodec;
-    private MeasureAggregators aggs = null;
     private int measureNumber;
-    public static final LongWritable ONE = new LongWritable(1l);
     private String[] metricsAggrFuncs = null;
+    private List<Pair<Integer, Integer>> holisticCountIndexs = null;
+    public static final LongWritable ONE = new LongWritable(1l);
 
     public CubeStreamBuilder(LinkedBlockingDeque<Stream> queue, String hTableName, CubeDesc desc, int partitionId) {
         super(queue, 10000);
@@ -101,17 +104,27 @@ public class CubeStreamBuilder extends StreamBuilder {
         cube = cubes.get(0);
 
         measureCodec = new MeasureCodec(desc.getMeasures());
-        aggs = new MeasureAggregators(desc.getMeasures());
         measureNumber = desc.getMeasures().size();
 
+        holisticCountIndexs = Lists.newArrayList();
+
+        Map<String, Integer> measureIndexMap = new HashMap<String, Integer>();
         List<String> metricsAggrFuncsList = Lists.newArrayList();
         for (int i = 0, n = desc.getMeasures().size(); i < n; i++) {
             MeasureDesc measureDesc = desc.getMeasures().get(i);
             metricsAggrFuncsList.add(measureDesc.getFunction().getExpression());
+
+            measureIndexMap.put(desc.getMeasures().get(i).getName(), i);
         }
         metricsAggrFuncs = metricsAggrFuncsList.toArray(new String[metricsAggrFuncsList.size()]);
 
-
+        for (int i = 0; i < measureNumber; i++) {
+            String depMsrRef = desc.getMeasures().get(i).getDependentMeasureRef();
+            if (depMsrRef != null) {
+                int index = measureIndexMap.get(depMsrRef);
+                holisticCountIndexs.add(new Pair(i, index));
+            }
+        }
     }
 
     @Override
@@ -164,7 +177,7 @@ public class CubeStreamBuilder extends StreamBuilder {
 
         result.add(thisCuboid);
         logger.info("Cuboid " + cuboidId + " is built.");
-      //  outputGT(thisCuboid);
+        outputGT(thisCuboid);
     }
 
     private void outputGT(GridTable gridTable) throws IOException {
@@ -251,7 +264,7 @@ public class CubeStreamBuilder extends StreamBuilder {
         allNeededColumns.or(childDimensions);
         allNeededColumns.or(measureColumns);
         for (GTRecord record : scanner) {
-            buildNewGTRecord(record, r, allNeededColumns);
+            updateMeasureRef(record, r, allNeededColumns);
             builder.write(r);
         }
         builder.close();
@@ -260,10 +273,19 @@ public class CubeStreamBuilder extends StreamBuilder {
         return cuboidGridTable;
     }
 
-    private void buildNewGTRecord(GTRecord record, GTRecord newRecord, BitSet dimensions) {
+    private void updateMeasureRef(GTRecord record, GTRecord newRecord, BitSet dimensions) {
         for (int i = dimensions.nextSetBit(0), index = 0; i >= 0; i = dimensions.nextSetBit(i + 1), index++) {
             newRecord.set(index, record.get(i));
+
         }
+        for(Pair<Integer, Integer> holisticCount: holisticCountIndexs) {
+            ByteArray byteArray = new ByteArray(8);
+            Object hllValue = newRecord.getValues()[(dimensions.cardinality() - measureNumber + holisticCount.getSecond())];
+            assert hllValue instanceof HyperLogLogPlusCounter;
+            measureCodec.getSerializer(holisticCount.getFirst()).serialize(new LongWritable(((HyperLogLogPlusCounter)hllValue).getCountEstimate()), byteArray.asBuffer());
+            newRecord.set(dimensions.cardinality() - measureNumber + holisticCount.getFirst(), byteArray);
+        }
+
     }
 
     private Pair<BitSet, BitSet> getDimensionAndMetricColumBitSet(long cuboidId) {
