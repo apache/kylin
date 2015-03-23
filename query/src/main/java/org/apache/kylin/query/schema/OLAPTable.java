@@ -207,7 +207,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         return new AbstractTableQueryable<T>(queryProvider, schema, this, tableName) {
             @SuppressWarnings("unchecked")
             public Enumerator<T> enumerator() {
-                final OLAPQuery query = new OLAPQuery(EnumeratorTypeEnum.INDEX, 0);
+                final OLAPQuery query = new OLAPQuery(EnumeratorTypeEnum.OLAP, 0);
                 return (Enumerator<T>) query.enumerator();
             }
         };
@@ -225,7 +225,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
     }
 
     public Enumerable<Object[]> executeIndexQuery(DataContext optiqContext, int ctxSeq) {
-        return new OLAPQuery(optiqContext, EnumeratorTypeEnum.INDEX, ctxSeq);
+        return new OLAPQuery(optiqContext, EnumeratorTypeEnum.OLAP, ctxSeq);
     }
 
     public Enumerable<Object[]> executeLookupTableQuery(DataContext optiqContext, int ctxSeq) {
