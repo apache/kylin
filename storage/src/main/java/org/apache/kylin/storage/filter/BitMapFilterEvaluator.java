@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
+import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -67,6 +68,12 @@ public class BitMapFilterEvaluator {
 
         if (filter instanceof CompareTupleFilter)
             return evalCompare((CompareTupleFilter) filter);
+
+        if (filter instanceof ConstantTupleFilter) {
+            if (!filter.evaluate(null, null)) {
+                return new ConciseSet();
+            }
+        }
 
         return null; // unable to evaluate
     }
