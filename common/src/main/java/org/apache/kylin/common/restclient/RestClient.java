@@ -89,11 +89,11 @@ public class RestClient {
 
     public void wipeCache(String type, String action, String name) throws IOException {
         String url = baseUrl + "/cache/" + type + "/" + name + "/" + action;
-        HttpMethod get = new PutMethod(url);
+        HttpMethod request = new PutMethod(url);
 
         try {
-            int code = client.executeMethod(get);
-            String msg = Bytes.toString(get.getResponseBody());
+            int code = client.executeMethod(request);
+            String msg = Bytes.toString(request.getResponseBody());
 
             if (code != 200)
                 throw new IOException("Invalid response " + code + " with cache wipe url " + url + "\n" + msg);
@@ -101,16 +101,16 @@ public class RestClient {
         } catch (HttpException ex) {
             throw new IOException(ex);
         } finally {
-            get.releaseConnection();
+            request.releaseConnection();
         }
     }
 
     public String getKylinProperties() throws IOException {
         String url = baseUrl + "/admin/config";
-        HttpMethod get = new GetMethod(url);
+        HttpMethod request = new GetMethod(url);
         try {
-            int code = client.executeMethod(get);
-            String msg = Bytes.toString(get.getResponseBody());
+            int code = client.executeMethod(request);
+            String msg = Bytes.toString(request.getResponseBody());
             JSONObject obj = new JSONObject(msg);
             msg = obj.getString("config");
 
@@ -122,7 +122,7 @@ public class RestClient {
         } catch (JSONException e) {
             throw new IOException("Error when parsing json response from REST");
         } finally {
-            get.releaseConnection();
+            request.releaseConnection();
         }
     }
 

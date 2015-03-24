@@ -122,12 +122,9 @@ public class ProjectManager {
 
         projectInstance.init();
 
-        if (StringUtils.isBlank(projectInstance.getName()))
-            throw new IllegalStateException("Project name must not be blank");
-
         projectMap.putLocal(projectInstance.getName(), projectInstance);
-
         clearL2Cache();
+
         return projectInstance;
     }
 
