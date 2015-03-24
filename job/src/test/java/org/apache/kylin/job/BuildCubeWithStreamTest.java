@@ -34,6 +34,7 @@
 
 package org.apache.kylin.job;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
@@ -45,7 +46,11 @@ import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.lookup.HiveTableReader;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.storage.gridtable.GridTable;
 import org.apache.kylin.streaming.Stream;
 import org.apache.kylin.streaming.cube.CubeStreamBuilder;
 import org.junit.*;
@@ -53,6 +58,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -114,7 +120,9 @@ public class BuildCubeWithStreamTest {
         LinkedBlockingDeque<Stream> queue = new LinkedBlockingDeque<Stream>();
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
-        final CubeStreamBuilder streamBuilder = new CubeStreamBuilder(queue, "", cube, 0);
+        Map<TblColRef, DictionaryInfo> dictionaryMap = Maps.newHashMap();
+        Map<Long, GridTable> cuboidsMap = Maps.newHashMap();
+        final CubeStreamBuilder streamBuilder = new CubeStreamBuilder(queue, 10000, cube, dictionaryMap, cuboidsMap);
         while (reader.next()) {
             queue.put(parse(reader.getRow()));
         }
@@ -127,7 +135,7 @@ public class BuildCubeWithStreamTest {
             fail("stream build failed");
         }
 
-        logger.info("stream build finished, htable name:");
+        logger.info("stream build finished");
     }
 
 

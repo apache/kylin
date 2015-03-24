@@ -104,7 +104,11 @@ public class HiveTableReader implements TableReader {
 
     @Override
     public String[] getRow() {
-        List<Object> allFields = currentHCatRecord.getAll();
+        return getRowAsStringArray(currentHCatRecord);
+    }
+
+    public static String[] getRowAsStringArray(HCatRecord record) {
+        List<Object> allFields = record.getAll();
         List<String> rowValues = new ArrayList<String>(allFields.size());
         for (Object o : allFields) {
             rowValues.add(o != null ? o.toString() : "");
