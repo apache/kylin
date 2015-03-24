@@ -21,9 +21,9 @@
         <li class="{{(!cube.visiblePage || cube.visiblePage=='metadata')? 'active':''}}">
             <a href="" ng-click="cube.visiblePage='metadata'">Grid</a>
         </li>
-        <li class="{{cube.visiblePage=='graph'? 'active':''}}">
-            <a href="" ng-click="cube.visiblePage='graph';buildGraph(cube);">Visualization</a>
-        </li>
+        <!--<li class="{{cube.visiblePage=='graph'? 'active':''}}">-->
+            <!--<a href="" ng-click="cube.visiblePage='graph';buildGraph(cube);">Visualization</a>-->
+        <!--</li>-->
         <li class="{{cube.visiblePage=='sql'? 'active':''}}">
             <a href="" ng-click="cube.visiblePage='sql';getCubeSql(cube)">SQL</a>
         </li>
@@ -31,10 +31,10 @@
             ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, 16) && !newAccess">
             <a href="" ng-click="cube.visiblePage='json';">JSON(Cube)</a>
         </li>
-      <li class="{{cube.visiblePage=='json_model'? 'active':''}}"
-          ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, 16) && !newAccess">
-        <a href="" ng-click="cube.visiblePage='json_model';">JSON(Model)</a>
-      </li>
+      <!--<li class="{{cube.visiblePage=='json_model'? 'active':''}}"-->
+          <!--ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, 16) && !newAccess">-->
+        <!--<a href="" ng-click="cube.visiblePage='json_model';">JSON(Model)</a>-->
+      <!--</li>-->
         <li class="{{cube.visiblePage=='access'? 'active':''}}">
             <a href="" ng-click="cube.visiblePage='access';listAccess(cube, 'CubeInstance');">Access</a>
         </li>
@@ -46,6 +46,24 @@
             ng-if="userService.hasRole('ROLE_ADMIN')">
             <a href="" ng-click="cube.visiblePage='hbase';getHbaseInfo(cube)">HBase</a>
         </li>
+        <li class="dropdown open">
+            <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="true">
+                Action <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+                <li ng-if="cube.status=='DISABLED' && userService.hasRole('ROLE_ADMIN') ">
+                    <a ng-click="dropCube(cube)" tooltip="Drop the cube, related jobs and data permanently.">Drop</a></li>
+                <li ng-if="cube.status=='DISABLED' && (userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))">
+                    <a href="cubes/edit/{{cube.name}}">Edit</a></li>
+                <li><a ng-click="startJobSubmit(cube);">Build</a></li>
+                <li><a ng-click="startRefresh(cube)">Refresh</a></li>
+                <li><a ng-click="startMerge(cube)">Merge</a></li>
+                <li ng-if="cube.status!='DISABLED'"><a ng-click="disable(cube)">Disable</a></li>
+                <li ng-if="cube.status=='DISABLED'"><a ng-click="enable(cube)">Enable</a></li>
+                <li ng-if="cube.status=='DISABLED'"><a ng-click="purge(cube)">Purge</a></li>
+            </ul>
+        </li>
+
     </ul>
 
     <div class="cube-detail" ng-if="!cube.visiblePage || cube.visiblePage=='metadata'">
@@ -68,12 +86,12 @@
              style="background-color: white;border: 0px">{{angular.toJson(cleanStatus(cube.detail), true)}}</pre>
     </div>
 
-    <div ng-show="cube.visiblePage=='json_model'" class="cube-detail">
-          <pre ng-if="!state.jsonEdit"
-               style="background-color: white;border: 0px">{{angular.toJson(cleanStatus(cube.model), true)}}</pre>
-    </div>
-    <div ng-show="cube.visiblePage=='graph'" id="cube_graph_{{cube.name}}" class="cube-detail cube_graph">
-    </div>
+    <!--<div ng-show="cube.visiblePage=='json_model'" class="cube-detail">-->
+          <!--<pre ng-if="!state.jsonEdit"-->
+               <!--style="background-color: white;border: 0px">{{angular.toJson(cleanStatus(model), true)}}</pre>-->
+    <!--</div>-->
+    <!--<div ng-show="cube.visiblePage=='graph'" id="cube_graph_{{cube.name}}" class="cube-detail cube_graph">-->
+    <!--</div>-->
 
     <div class="cube-detail" ng-if="cube.visiblePage=='access'">
         <div class="row">
