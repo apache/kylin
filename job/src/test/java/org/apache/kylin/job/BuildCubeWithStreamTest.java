@@ -48,15 +48,11 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dict.lookup.HiveTableReader;
 import org.apache.kylin.streaming.Stream;
 import org.apache.kylin.streaming.cube.CubeStreamBuilder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -67,6 +63,7 @@ import static org.junit.Assert.fail;
 /**
  * Created by qianzhou on 3/9/15.
  */
+@Ignore("For dev testing")
 public class BuildCubeWithStreamTest {
 
     private static final Logger logger = LoggerFactory.getLogger(BuildCubeWithStreamTest.class);

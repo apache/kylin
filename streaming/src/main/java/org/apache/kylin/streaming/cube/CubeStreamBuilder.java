@@ -38,13 +38,10 @@ import com.google.common.collect.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -84,7 +81,6 @@ public class CubeStreamBuilder extends StreamBuilder {
     private Map<TblColRef, Dictionary<?>> dictionaryMap = null;
     private Cuboid baseCuboid = null;
     private CubeInstance cube;
-    private CubeSegment cubeSegment = null;
     private CubeJoinedFlatTableDesc intermediateTableDesc;
     private MeasureCodec measureCodec;
     private int measureNumber;
@@ -95,7 +91,7 @@ public class CubeStreamBuilder extends StreamBuilder {
     public CubeStreamBuilder(LinkedBlockingDeque<Stream> queue, String hTableName, CubeInstance cube, int partitionId) {
         super(queue, 10000);
         this.cube = cube;
-        this.desc  = cube.getDescriptor();
+        this.desc = cube.getDescriptor();
         this.partitionId = partitionId;
         this.cuboidScheduler = new CuboidScheduler(desc);
 
