@@ -183,7 +183,7 @@
                         <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Column Name</b></label>
                         <div class="col-xs-12 col-sm-6">
                             <select class="form-control" required="true" chosen data-placeholder="Select a column"
-                                    ng-model="newDimension.column[0]" ng-options="column.name as column.name for column in getColumnsByTable(newDimension.table)">
+                                    ng-model="newDimension.column[0]" ng-options="column.name as column.name for column in getDimColumnsByTable(newDimension.table)">
                                 <option value=""></option>
                             </select>
                         </div>
@@ -205,7 +205,7 @@
                                             <select chosen style="width: 100%"
                                                     data-placeholder="Dimension Hierarchy Column"
                                                     ng-model="newDimension.column[$index]"
-                                                    ng-options="columns.name as columns.name for columns in getColumnsByTable(newDimension.table)" >
+                                                    ng-options="columns.name as columns.name for columns in getDimColumnsByTable(newDimension.table)" >
                                                 <option value="">-- Select Column --</option>
                                             </select>
                                         </div>
@@ -244,7 +244,7 @@
                                     <div>
                                         <select chosen style="width: 80%;" data-placeholder="Derived Columns.."
                                                 ng-model="newDimension.derived[$index]"
-                                                ng-options="columns.name as columns.name for columns in getColumnsByTable(newDimension.table)" >
+                                                ng-options="columns.name as columns.name for columns in getDimColumnsByTable(newDimension.table)" >
                                             <option value=""></option>
                                         </select>
                                         <button class="pull-right btn btn-xs btn-danger" style="cursor: pointer " tooltip="Delete"

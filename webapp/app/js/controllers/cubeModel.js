@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelService,MetaModel,SweetAlert,GraphService,$log) {
+KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,MetaModel,SweetAlert,GraphService,$log) {
 
     //copy model for show Json in model tab list
     $scope.modelJson = angular.copy($scope.model);

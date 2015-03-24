@@ -23,21 +23,29 @@ KylinApp.service('ModelList',function(ModelService,CubeService,$q,AccessService,
     this.list = function(queryParam){
 
         var defer = $q.defer();
+        var cubeDetail = [];
         ModelService.list(queryParam, function (_models) {
+
             angular.forEach(_models, function (model, index) {
                 AccessService.list({type: "DataModelDesc", uuid: model.uuid}, function (accessEntities) {
                     model.accessEntities = accessEntities;
                 });
 //                add cube info to model
-                CubeService.list({offset: 0, limit: 70,modelName:model.name}, function (_cubes) {
-                    model.cubes=_cubes;
-                });
+                cubeDetail.push(
+                    CubeService.list({offset: 0, limit: 70,modelName:model.name}, function (_cubes) {
+                    model.cubes = _cubes;
+                    }).$promise
+                );
 
-                model.project =ProjectModel.getProjectByCubeModel(model.name);
+                model.project = ProjectModel.getProjectByCubeModel(model.name);
             });
-            _models = _.filter(_models,function(models){return models.name!=undefined});
-            _this.models = _this.models.concat(_models);
-            defer.resolve(_this.models);
+            $q.all(cubeDetail).then(
+                function(result){
+                    _models = _.filter(_models,function(models){return models.name!=undefined});
+                    _this.models = _this.models.concat(_models);
+                    defer.resolve(_this.models);
+                }
+            );
         },function(){
             defer.reject("Failed to load models");
         });
@@ -54,7 +62,7 @@ KylinApp.service('ModelList',function(ModelService,CubeService,$q,AccessService,
     }
 
     this.removeAll = function(){
-        _this.models=[];
+        _this.models = [];
     };
 
 });

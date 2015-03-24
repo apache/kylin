@@ -28,10 +28,8 @@
                 <a class="btn btn-xs btn-primary" href='models/add' tooltip="Create Model"  ng-if="userService.hasRole('ROLE_ADMIN')"><i class="fa fa-plus"></i></a>
             </div>
         </div>
-
     </div>
-    </div>
-    <div class="space-4 box-header with-border"></div>
+    <!--<div class="space-4 box-header with-border"></div>-->
     <!--tree-->
     <div style="width:100%; height:{{window}}px; overflow:auto;">
         <abn-tree
@@ -41,7 +39,7 @@
                 icon-expand       = "fa fa-plus"
                 icon-collapse     = "fa fa-minus"
                 expand-level      = "2"
-                initial-selection = "Vegetable">
+                initial-selection = "">
             ></abn-tree>
     </div>
 </div>
