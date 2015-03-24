@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel) {
+KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,ModelDescService) {
 
     $scope.projects = [];
     $scope.newDimension = null;
@@ -27,11 +27,8 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
     $scope.wizardSteps = [
         {title: 'Cube Info', src: 'partials/cubeDesigner/info.html', isComplete: false},
-        {title: 'Data Model', src: 'partials/cubeDesigner/data_model.html', isComplete: false},
         {title: 'Dimensions', src: 'partials/cubeDesigner/dimensions.html', isComplete: false},
         {title: 'Measures', src: 'partials/cubeDesigner/measures.html', isComplete: false},
-        {title: 'Filter', src: 'partials/cubeDesigner/filter.html', isComplete: false},
-        {title: 'Refresh Setting', src: 'partials/cubeDesigner/incremental.html', isComplete: false}
     ];
     if (UserService.hasRole("ROLE_ADMIN")) {
             $scope.wizardSteps.push({title: 'Advanced Setting', src: 'partials/cubeDesigner/advanced_settings.html', isComplete: false});
@@ -59,7 +56,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
             }
 
             //init model
-            ModelService.get({model_name: $scope.cubeMetaFrame.model_name}, function (model) {
+            ModelDescService.get({model_name: $scope.cubeMetaFrame.model_name}, function (model) {
                 if (model) {
                     $scope.metaModel.model = model;
                 }

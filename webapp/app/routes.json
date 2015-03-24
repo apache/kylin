@@ -10,7 +10,7 @@
         "url": "/cubes",
         "params": {
             "templateUrl": "partials/cubes/cubes.html",
-            "tab": "cubes",
+            "tab": "models",
             "controller": "CubesCtrl"
         }
     },
@@ -31,10 +31,10 @@
         }
     },
     {
-        "url": "/cubes/add",
+        "url": "/cubes/add/:modelName",
         "params": {
             "templateUrl": "partials/cubes/cube_edit.html",
-            "tab": "cubes",
+            "tab": "models",
             "controller": "CubeEditCtrl"
         }
     },
@@ -42,7 +42,7 @@
         "url": "/cubes/add/json",
         "params": {
             "templateUrl": "partials/cubes/cube_json_edit.html",
-            "tab": "cubes",
+            "tab": "models",
             "controller": "CubeEditCtrl"
         }
     },
@@ -50,7 +50,7 @@
         "url": "/cubes/edit/:cubeName/json",
         "params": {
             "templateUrl": "partials/cubes/cube_json_edit.html",
-            "tab": "cubes",
+            "tab": "models",
             "controller": "CubeEditCtrl"
         }
     },
@@ -58,7 +58,7 @@
         "url": "/cubes/edit/:cubeName",
         "params": {
             "templateUrl": "partials/cubes/cube_edit.html",
-            "tab": "cubes",
+            "tab": "models",
             "controller": "CubeEditCtrl"
         }
     },
@@ -66,7 +66,7 @@
         "url": "/cubes/:projectName/:cubeName",
         "params": {
             "templateUrl": "partials/cubes/cubes.html",
-            "tab": "cubes",
+            "tab": "models",
             "controller": "CubesCtrl"
         }
     },

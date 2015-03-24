@@ -19,7 +19,7 @@
 'use strict';
 
 KylinApp
-    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,cubeConfig,ProjectModel,ModelService,MetaModel,CubeList) {
+    .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,cubeConfig,ProjectModel,ModelService,MetaModel,CubeList,ModelDescService) {
 
         $scope.cubeConfig = cubeConfig;
         $scope.cubeList = CubeList;
@@ -84,8 +84,9 @@ KylinApp
                 CubeDescService.get({cube_name: cube.name}, {}, function (detail) {
                     if (detail.length > 0&&detail[0].hasOwnProperty("name")) {
                         cube.detail = detail[0];
-                        ModelService.get({model_name: cube.detail.model_name}, function (model) {
-                          cube.model = model
+                        ModelDescService.get({model_name: cube.detail.model_name}, function (model) {
+                          cube.model = model;
+                          $scope.metaModel.model= model;
                           defer.resolve(cube.detail);
                        });
 

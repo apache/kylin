@@ -23,12 +23,13 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
         $scope.model = {};
         //tree data
         $scope.models_treedata=[];
+        $scope.selectedCubes = [];
 
         $scope.showModels=true;
 
         $scope.toggleTab = function(showModel){
             $scope.showModels = showModel;
-//            console.log($scope.showModels);
+            console.log($scope.showModels);
         }
 
         $scope.modelList = ModelList;
@@ -82,11 +83,21 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
                         onSelect:function(branch){
                          // set selecte model
                             $scope.model=branch.data;
+                            $scope.selectedCubes = branch.data.cubes;
                         }
                     };
                     var _children = [];
                     angular.forEach(model.cubes,function(cube){
-                        _children.push(cube.name);
+                        _children.push(
+                            {
+                                label:cube.name,
+                                data:cube,
+                                onSelect:function(branch){
+                                    console.log("cube selected:"+branch.data);
+                                    // set selecte model
+                                }
+                            }
+                        );
                     });
                     if(_children.length){
                          _model.children = _children;
@@ -104,5 +115,20 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
                 $scope.model = {};
                 $scope.init();
         });
+
+    $scope.status = {
+        isopen: true
+    };
+
+    $scope.toggled = function(open) {
+        $log.log('Dropdown is now: ', open);
+    };
+
+    $scope.toggleDropdown = function($event) {
+        $event.preventDefault();
+        $event.stopPropagation();
+        $scope.status.isopen = !$scope.status.isopen;
+    };
+
 
     });

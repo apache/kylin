@@ -22,16 +22,13 @@
         <div class="form-group">
             <div class="row">
                 <label class="col-xs-12 col-sm-3 control-label no-padding-right">
-                    <a ng-if="state.mode=='edit'" href="projects">
-                        <b>Project</b>
-                    </a>
-                    <b ng-if="state.mode=='view'" class="font-color-default">Project</b>
+                    <b>Model Name</b>
                 </label>
                 <div class="col-xs-12 col-sm-6">
                     <input ng-if="state.mode=='edit'" name="project_name" type="text" class="form-control"
-                           ng-model="cubeMetaFrame.project" disabled/>
+                           ng-model="cubeMetaFrame.model_name"/>
                     <span ng-if="state.mode=='view'">
-                        {{cubeMetaFrame.project}}
+                        {{cubeMetaFrame.model_name}}
                     </span>
                 </div>
             </div>

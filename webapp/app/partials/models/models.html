@@ -15,21 +15,43 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 -->
-<div class="row">
+<div class="row models-main"  style="padding-top:10px;">
     <!--table_tree-->
-    <div class="col-xs-3">
-        <tabset>
+
+    <div class="col-xs-2">
+        <tabset class="nav-tabs-custom">
             <tab heading="Models" select="toggleTab(true);">
                 <div ng-include src="'partials/models/models_tree.html'"></div>
             </tab>
-            <tab heading="Data source"  select="toggleTab(false);">
+            <tab heading="Data Source"  select="toggleTab(false);">
                 <div ng-include src="'partials/tables/source_table_tree.html'"></div>
             </tab>
         </tabset>
     </div>
 
-    <div class="col-xs-9" style="padding-top:39px;">
-        <div ng-show="showModels" ng-include src="'partials/models/model_detail.html'"></div>
-        <div ng-show="!showModels" ng-include src="'partials/tables/table_detail.html'"></div>
+    <div ng-show="showModels" class="col-xs-2">
+        <div class="box box-primary">
+            <div class="box-header">
+                Cubes
+            </div>
+            <div class="box-body table-responsive no-padding">
+                <ul class="nav nav-list nav-pills nav-stacked">
+                    <li ng-repeat="cube in selectedCubes">
+                         <a>
+                             <span>{{cube.name}}</span>
+                         </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </div>
+    <div  ng-show="showModels"  class="col-xs-8 models-main">
+        <div ng-include src="'partials/models/model_detail.html'"></div>
+    </div>
+
+    <div ng-show="!showModels" class="col-xs-10 models-main">
+        <div ng-include src="'partials/tables/table_detail.html'"></div>
+    </div>
+
+
 </div>

@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfig,ModelService,MetaModel) {
+KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfig,MetaModel) {
 
     //convert some undefined or null value
     angular.forEach($scope.cubeMetaFrame.rowkey.rowkey_columns,function(rowkey){
