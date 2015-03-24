@@ -1,3 +1,7 @@
+### Get JDBC jar
+
+Kylin JDBC jar file is under lib/ of binary package, named `kylin-jdbc-verion.jar`.
+
 ### Authentication
 Build on kylin authentication restful service. Supported parameters:
 * user : username 
