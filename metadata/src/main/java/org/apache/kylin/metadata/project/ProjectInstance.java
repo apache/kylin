@@ -25,6 +25,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -241,6 +242,9 @@ public class ProjectInstance extends RootPersistentEntity {
 
         if (tables == null)
             tables = new TreeSet<String>();
+
+        if (StringUtils.isBlank(this.name))
+            throw new IllegalStateException("Project name must not be blank");
     }
 
     @Override

@@ -43,7 +43,7 @@ public class Broadcaster {
 
     private static final Logger logger = LoggerFactory.getLogger(Broadcaster.class);
 
-    private BlockingDeque<BroadcastEvent> broadcaseEvents = new LinkedBlockingDeque<>();
+    private BlockingDeque<BroadcastEvent> broadcastEvents = new LinkedBlockingDeque<>();
 
     private AtomicLong counter = new AtomicLong();
 
@@ -57,7 +57,7 @@ public class Broadcaster {
             public void run() {
                 final String[] nodes = KylinConfig.getInstanceFromEnv().getRestServers();
                 if (nodes == null || nodes.length < 1) {//TODO if the node count is greater than 1, it means it is a cluster
-                    logger.info("There is no available rest server; check the 'kylin.rest.servers' config");
+                    logger.warn("There is no available rest server; check the 'kylin.rest.servers' config");
                     return;
                 }
                 final List<RestClient> restClients = Lists.newArrayList();
@@ -67,7 +67,7 @@ public class Broadcaster {
                 final ExecutorService wipingCachePool = Executors.newFixedThreadPool(restClients.size());
                 while (true) {
                     try {
-                        final BroadcastEvent broadcastEvent = broadcaseEvents.takeFirst();
+                        final BroadcastEvent broadcastEvent = broadcastEvents.takeFirst();
                         logger.info("new broadcast event:" + broadcastEvent);
                         for (final RestClient restClient : restClients) {
                             wipingCachePool.execute(new Runnable() {
@@ -102,7 +102,7 @@ public class Broadcaster {
     public void queue(String type, String action, String key) {
         try {
             counter.incrementAndGet();
-            broadcaseEvents.putFirst(new BroadcastEvent(type, action, key));
+            broadcastEvents.putFirst(new BroadcastEvent(type, action, key));
         } catch (Exception e) {
             counter.decrementAndGet();
             logger.error("error putting BroadcastEvent", e);

@@ -21,7 +21,12 @@ package org.apache.kylin.common.util;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.commons.configuration.ConfigurationException;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -59,6 +64,20 @@ public class BasicTest {
     @Test
     @Ignore("convenient trial tool for dev")
     public void test1() throws Exception {
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        ListenableFuture futureTask = MoreExecutors.listeningDecorator(executorService).submit(new Runnable() {
+            @Override
+            public void run() {
+                
+            }
+        });
+        futureTask.addListener(new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        }, executorService);
+
     }
 
     @Test

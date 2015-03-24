@@ -18,9 +18,11 @@
 
 package org.apache.kylin.metadata.project;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.*;
 import org.apache.kylin.metadata.realization.IRealization;
@@ -28,10 +30,9 @@ import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * This is a second level cache that is built on top of first level cached objects,
@@ -88,6 +89,7 @@ class ProjectL2Cache {
         TableCache tableCache = getCache(project).tables.get(table);
         if (tableCache == null)
             return false;
+
 
         for (ColumnDesc colDesc : tableCache.exposedColumns) {
             if (colDesc.getName().equals(col))

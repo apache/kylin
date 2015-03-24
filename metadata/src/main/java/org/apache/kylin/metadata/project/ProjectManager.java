@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -124,12 +123,9 @@ public class ProjectManager {
 
         projectInstance.init();
 
-        if (StringUtils.isBlank(projectInstance.getName()))
-            throw new IllegalStateException("Project name must not be blank");
-
         projectMap.putLocal(projectInstance.getName(), projectInstance);
-
         clearL2Cache();
+
         return projectInstance;
     }
 

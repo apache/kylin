@@ -609,7 +609,7 @@ public class CubeManager implements IRealizationProvider {
     private synchronized CubeInstance loadCubeInstance(String path) throws IOException {
         ResourceStore store = getStore();
 
-        CubeInstance cubeInstance = null;
+        CubeInstance cubeInstance;
         try {
             cubeInstance = store.getResource(path, CubeInstance.class, CUBE_SERIALIZER);
             cubeInstance.setConfig(config);
