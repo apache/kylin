@@ -54,23 +54,25 @@ public class CacheController extends BasicController {
      * @return if the action success
      * @throws IOException
      */
-    @RequestMapping(value = "/{type}/{name}/{event}", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{type}/{name}/{event}", method = { RequestMethod.PUT })
     @ResponseBody
     public void wipeCache(@PathVariable String type, @PathVariable String event, @PathVariable String name) throws IOException {
+
         Broadcaster.TYPE wipeType = Broadcaster.TYPE.getType(type);
         EVENT wipeEvent = Broadcaster.EVENT.getEvent(event);
-        final String log = "wipe cache type: " + wipeType + " event:" + wipeEvent + " name:" + name;
-        logger.info(log);
+
+        logger.info("wipe cache type: " + wipeType + " event:" + wipeEvent + " name:" + name);
+
         switch (wipeEvent) {
-            case CREATE:
-            case UPDATE:
-                cacheService.rebuildCache(wipeType, name);
-                break;
-            case DROP:
-                cacheService.removeCache(wipeType, name);
-                break;
-            default:
-                throw new RuntimeException("invalid type:" + wipeEvent);
+        case CREATE:
+        case UPDATE:
+            cacheService.rebuildCache(wipeType, name);
+            break;
+        case DROP:
+            cacheService.removeCache(wipeType, name);
+            break;
+        default:
+            throw new RuntimeException("invalid type:" + wipeEvent);
         }
     }
 

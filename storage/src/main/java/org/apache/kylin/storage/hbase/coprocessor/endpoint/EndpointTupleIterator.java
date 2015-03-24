@@ -54,7 +54,6 @@ import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 
-import javax.xml.datatype.DatatypeConfigurationException;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/2/14.
