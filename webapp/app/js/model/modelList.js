@@ -61,6 +61,20 @@ KylinApp.service('ModelList',function(ModelService,CubeService,$q,AccessService,
         }
     }
 
+    this.getModel = function(modelName){
+      return  _.find(_this.models,function(unit){
+            return unit.name == modelName;
+        })
+    }
+
+    this.getModelByCube = function(cubeName){
+        return  _.find(_this.models,function(model){
+            return _.some(model.cubes,function(_cube){
+                return _cube.name == cubeName;
+            });
+        })
+    }
+
     this.removeAll = function(){
         _this.models = [];
     };

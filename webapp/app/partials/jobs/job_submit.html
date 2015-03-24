@@ -19,6 +19,7 @@
 <script type="text/ng-template" id="jobSubmit.html">
     <div class="modal-header">
         <h4 tooltip="submit">CUBE BUILD CONFIRM</h4>
+        <span>{{metaModel.model.partition_desc.partition_date_column}}</span>
     </div>
     <div class="modal-body" style="background-color: white">
         <div ng-if="metaModel.model.partition_desc.partition_date_column" class="row">

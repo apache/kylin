@@ -24,6 +24,8 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
         //tree data
         $scope.models_treedata=[];
         $scope.selectedCubes = [];
+        $scope.cubeSelected = false;
+        $scope.cube = {};
 
         $scope.showModels=true;
 
@@ -83,6 +85,7 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
                         onSelect:function(branch){
                          // set selecte model
                             $scope.model=branch.data;
+                            $scope.cubeSelected = false;
                             $scope.selectedCubes = branch.data.cubes;
                         }
                     };
@@ -94,6 +97,36 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
                                 data:cube,
                                 onSelect:function(branch){
                                     console.log("cube selected:"+branch.data);
+                                    $scope.cubeSelected = true;
+//                                    $scope.cubeMetaFrame = branch.data;
+                                    $scope.cube = branch.data;
+
+                                    CubeDescService.get({cube_name: cube.name}, {}, function (detail) {
+                                        if (detail.length > 0&&detail[0].hasOwnProperty("name")) {
+                                            $scope.cubeMetaFrame = detail[0];
+                                            $scope.cube.detail = detail[0];
+                                            $scope.metaModel ={
+                                                model : $scope.model
+                                            }
+//                                            ModelDescService.get({model_name: cube.detail.model_name}, function (model) {
+//                                                cube.model = model;
+//                                                $scope.metaModel.model= $scope.model;
+////                                                defer.resolve(cube.detail);
+//                                            });
+
+                                        }else{
+                                            SweetAlert.swal('Oops...', "No cube detail info loaded.", 'error');
+                                        }
+                                    }, function (e) {
+                                        if(e.data&& e.data.exception){
+                                            var message =e.data.exception;
+                                            var msg = !!(message) ? message : 'Failed to take action.';
+                                            SweetAlert.swal('Oops...', msg, 'error');
+                                        }else{
+                                            SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                                        }
+                                    });
+
                                     // set selecte model
                                 }
                             }
@@ -113,6 +146,7 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
                 ModelList.removeAll();
                 //init selected model
                 $scope.model = {};
+                $scope.selectedCubes=[];
                 $scope.init();
         });
 

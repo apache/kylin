@@ -19,10 +19,10 @@
 'use strict';
 
 
-KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel,MetaModel,TableModel,ModelDescService) {
+KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel,MetaModel,TableModel,ModelDescService,ModelList) {
     $scope.cubeConfig = cubeConfig;
 
-    $log.info("model name:"+$routeParams.modelName);
+    // when add cube will transfer model Name
     var modelName = $routeParams.modelName;
 
     //add or edit ?
@@ -114,6 +114,9 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         CubeDescService.get({cube_name: $routeParams.cubeName}, function (detail) {
             if (detail.length > 0) {
                 $scope.cubeMetaFrame = detail[0];
+                $scope.metaModel ={
+                    model : ModelList.getModel($scope.cubeMetaFrame.model_name)
+                }
                 $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
             }
         });
@@ -122,23 +125,12 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         $scope.cubeMetaFrame = CubeDescModel.createNew();
 //        MetaModel.initModel();
 //        $scope.metaModel = MetaModel;
+        $scope.metaModel ={
+            model : ModelList.getModel(modelName)
+        }
         $scope.cubeMetaFrame.model_name = modelName;
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
     }
-
-    ModelDescService.get({model_name: $scope.cubeMetaFrame.model_name}, function (model) {
-        if (model) {
-            MetaModel.setMetaModel(model);
-            $scope.metaModel = MetaModel;
-            //use
-            //convert GMT mills ,to make sure partition date show GMT Date
-            //should run only one time
-            if(model.partition_desc&&model.partition_desc.partition_date_start)
-            {
-                MetaModel.converDateToGMT();
-            }
-        }
-    });
 
     // ~ public methods
     $scope.aceChanged = function () {
