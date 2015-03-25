@@ -94,6 +94,11 @@ public class GTDictionaryCodeSystem implements IGTCodeSystem {
     }
 
     @Override
+    public void encodeColumnValue(int col, Object value, int roundingFlag, ByteBuffer buf) {
+
+    }
+
+    @Override
     public Object decodeColumnValue(int col, ByteBuffer buf) {
         if (useDictionary(col)) {
             int id = BytesUtil.readUnsigned(buf, dictionaryMaps.get(col).getSizeOfId());
