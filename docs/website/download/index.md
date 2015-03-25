@@ -15,8 +15,8 @@ title: Community
 
               <p class="big_text">Binary Package (v0.7.x)</p>
               <p><a href="http://kylin.incubator.apache.org/download/kylin-0.7.1-SNAPSHOT.tgz" target="_blank">v0.7.1-SNAPSHOT (Dev Build)</a> 
-              <br/>Updated Date - March 16, 2015 <br/>	
-              <br/>Git Commit: <a href="https://github.com/KylinOLAP/Kylin/tree/4f6869e1f1f6b2ed22e6d3b638a4048905d27e49" target="_blank">4f6869e</a>						
+              <br/>Updated Date - March 24, 2015 <br/>	
+              <br/>Git Commit: <a href="https://github.com/KylinOLAP/Kylin/tree/6f1d30fcab48fd02e18f91386b41c12bfd188178" target="_blank">6f1d30f</a>						
 							</p>
             </div>
 
