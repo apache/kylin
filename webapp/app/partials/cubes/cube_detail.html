@@ -46,7 +46,7 @@
             ng-if="userService.hasRole('ROLE_ADMIN')">
             <a href="" ng-click="cube.visiblePage='hbase';getHbaseInfo(cube)">HBase</a>
         </li>
-        <li class="dropdown open">
+        <li class="dropdown" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
             <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="true">
                 Action <span class="caret"></span>
             </a>

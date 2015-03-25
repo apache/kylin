@@ -109,6 +109,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         "cubeSchema": ""
     };
 
+    //fetch cube info and model info in edit model
     // ~ init
     if ($scope.isEdit = !!$routeParams.cubeName) {
         CubeDescService.get({cube_name: $routeParams.cubeName}, function (detail) {
@@ -123,8 +124,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
     } else {
         $scope.cubeMetaFrame = CubeDescModel.createNew();
-//        MetaModel.initModel();
-//        $scope.metaModel = MetaModel;
         $scope.metaModel ={
             model : ModelList.getModel(modelName)
         }
@@ -132,16 +131,12 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
     }
 
-    // ~ public methods
-    $scope.aceChanged = function () {
-    };
-
-    $scope.aceLoaded = function(){
-    };
 
     $scope.prepareCube = function () {
         // generate column family
         generateColumnFamily();
+        //generate rowkey TODO remove after refactor
+        reGenerateRowKey();
 
 
         if ($scope.metaModel.model.partition_desc.partition_date_column&&($scope.metaModel.model.partition_desc.partition_date_start|$scope.metaModel.model.partition_desc.partition_date_start==0)) {

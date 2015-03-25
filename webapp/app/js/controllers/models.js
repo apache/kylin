@@ -23,7 +23,7 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
         $scope.model = {};
         //tree data
         $scope.models_treedata=[];
-        $scope.selectedCubes = [];
+
         $scope.cubeSelected = false;
         $scope.cube = {};
 
@@ -83,10 +83,9 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
                         noLeaf:true,
                         data:model,
                         onSelect:function(branch){
-                         // set selecte model
+                         // set selected model
                             $scope.model=branch.data;
                             $scope.cubeSelected = false;
-                            $scope.selectedCubes = branch.data.cubes;
                         }
                     };
                     var _children = [];
@@ -96,24 +95,22 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
                                 label:cube.name,
                                 data:cube,
                                 onSelect:function(branch){
-                                    console.log("cube selected:"+branch.data);
+                                    $log.info("cube selected:"+branch.data.name);
                                     $scope.cubeSelected = true;
 //                                    $scope.cubeMetaFrame = branch.data;
                                     $scope.cube = branch.data;
+                                    $scope.listAccess(cube, 'CubeInstance');
 
                                     CubeDescService.get({cube_name: cube.name}, {}, function (detail) {
                                         if (detail.length > 0&&detail[0].hasOwnProperty("name")) {
+                                            //cubeMetaFrame for cube view and edit
                                             $scope.cubeMetaFrame = detail[0];
+                                            //for show detail info
                                             $scope.cube.detail = detail[0];
+                                            //add model info
                                             $scope.metaModel ={
                                                 model : $scope.model
                                             }
-//                                            ModelDescService.get({model_name: cube.detail.model_name}, function (model) {
-//                                                cube.model = model;
-//                                                $scope.metaModel.model= $scope.model;
-////                                                defer.resolve(cube.detail);
-//                                            });
-
                                         }else{
                                             SweetAlert.swal('Oops...', "No cube detail info loaded.", 'error');
                                         }
@@ -146,7 +143,6 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
                 ModelList.removeAll();
                 //init selected model
                 $scope.model = {};
-                $scope.selectedCubes=[];
                 $scope.init();
         });
 

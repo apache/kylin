@@ -43,28 +43,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         $scope.state = {mode: "view"};
     }
 
-    $scope.$watch('cube.detail', function (newValue, oldValue) {
-        if(!newValue){
-            return;
-        }
-        if (newValue&&$scope.state.mode==="view") {
-            $scope.cubeMetaFrame = newValue;
-
-            // when viw state,each cubeSchema has its own metaModel
-            $scope.metaModel={
-                model:{}
-            }
-
-            //init model
-            ModelDescService.get({model_name: $scope.cubeMetaFrame.model_name}, function (model) {
-                if (model) {
-                    $scope.metaModel.model = model;
-                }
-            });
-
-        }
-    });
-
     $scope.$watch('cubeMetaFrame', function (newValue, oldValue) {
         if(!newValue){
             return;
