@@ -120,3 +120,10 @@ Choose partition type, partition column and start date.
 You can overview your cube and go back to previous step to modify it. Click the `Save` button to complete the cube creation.
 
 ![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tutorial/13%20overview.png)
+
+### IV. What's next
+
+After cube being created, you might need to:
+
+1. [Build the cube so that it can be queried](Kylin Cube Build and Job Monitoring Tutorial.md)
+2. [Grant permission to cubes](Kylin Cube Permission Grant Tutorial.md)
