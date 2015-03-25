@@ -59,7 +59,7 @@ public class KafkaRequesterTest extends KafkaBaseTest {
         assertEquals(2, kafkaTopicMeta.getPartitionIds().size());
         assertEquals(kafkaConfig.getTopic(), kafkaTopicMeta.getName());
 
-        KafkaConfig anotherTopicConfig = KafkaConfig.load(kafkaConfig);
+        KafkaConfig anotherTopicConfig = kafkaConfig.clone();
         anotherTopicConfig.setTopic(NON_EXISTED_TOPIC);
 
         kafkaTopicMeta = KafkaRequester.getKafkaTopicMeta(anotherTopicConfig);

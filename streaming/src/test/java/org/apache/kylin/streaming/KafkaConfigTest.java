@@ -47,19 +47,4 @@ import static org.junit.Assert.assertEquals;
  */
 public class KafkaConfigTest {
 
-    @Test
-    public void test() throws IOException {
-        final Properties properties = new Properties();
-        properties.load(ClassLoader.getSystemResourceAsStream("kafka_streaming_test/kafka.properties"));
-        KafkaConfig config = KafkaConfig.load(properties);
-        assertEquals(1000, config.getMaxReadCount());
-        assertEquals(65536, config.getBufferSize());
-        assertEquals(60000, config.getTimeout());
-        assertEquals("sandbox.hortonworks.com:2181", config.getZookeeper());
-        assertEquals("kafka_stream_test", config.getTopic());
-        assertEquals(0, config.getPartitionId());
-        assertEquals(1, config.getBrokers().size());
-        assertEquals("sandbox.hortonworks.com:6667", config.getBrokers().get(0).getConnectionString());
-
-    }
 }
