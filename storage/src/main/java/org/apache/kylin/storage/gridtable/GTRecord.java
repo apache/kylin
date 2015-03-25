@@ -11,7 +11,7 @@ public class GTRecord implements Comparable<GTRecord> {
     final GTInfo info;
     final ByteArray[] cols;
 
-    BitSet maskForEqualHashComp;
+    private BitSet maskForEqualHashComp;
 
     public GTRecord(GTInfo info) {
         this.info = info;
@@ -88,6 +88,14 @@ public class GTRecord implements Comparable<GTRecord> {
         return copy;
     }
 
+    public BitSet maskForEqualHashComp() {
+        return maskForEqualHashComp;
+    }
+    
+    public void maskForEqualHashComp(BitSet set) {
+        this.maskForEqualHashComp = set;
+    }
+    
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -120,6 +128,8 @@ public class GTRecord implements Comparable<GTRecord> {
 
     @Override
     public int compareTo(GTRecord o) {
+        assert this.maskForEqualHashComp == o.maskForEqualHashComp; // reference equal for performance
+        
         int comp = 0;
         for (int i = maskForEqualHashComp.nextSetBit(0); i >= 0; i = maskForEqualHashComp.nextSetBit(i + 1)) {
             comp = this.cols[i].compareTo(o.cols[i]);

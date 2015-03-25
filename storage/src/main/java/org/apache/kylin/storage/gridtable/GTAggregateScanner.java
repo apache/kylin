@@ -14,21 +14,19 @@ import com.google.common.collect.Maps;
 public class GTAggregateScanner implements IGTScanner {
 
     final GTInfo info;
-    final BitSet dimensions;
+    final BitSet dimensions; // dimensions to return, can be more than group by
+    final BitSet groupBy;
     final BitSet metrics;
     final String[] metricsAggrFuncs;
     final IGTScanner rawScanner;
 
-    GTAggregateScanner(IGTScanner rawScanner, BitSet dimensions, BitSet metrics, String[] metricsAggrFuncs) {
-        if (dimensions.intersects(metrics))
-            throw new IllegalStateException();
-        if (metrics.cardinality() != metricsAggrFuncs.length)
-            throw new IllegalStateException();
-
+    GTAggregateScanner(IGTScanner rawScanner, GTScanRequest req) {
         this.info = rawScanner.getInfo();
-        this.dimensions = dimensions;
-        this.metrics = metrics;
-        this.metricsAggrFuncs = metricsAggrFuncs;
+        this.dimensions = (BitSet) req.getColumns().clone();
+        this.dimensions.andNot(req.getAggrMetrics());
+        this.groupBy = req.getAggrGroupBy();
+        this.metrics = req.getAggrMetrics();
+        this.metricsAggrFuncs = req.getAggrMetricsFuncs();
         this.rawScanner = rawScanner;
     }
 
@@ -70,7 +68,7 @@ public class GTAggregateScanner implements IGTScanner {
         }
 
         void aggregate(GTRecord r) {
-            r.maskForEqualHashComp = dimensions;
+            r.maskForEqualHashComp(groupBy);
             MeasureAggregator[] aggrs = aggBufMap.get(r);
             if (aggrs == null) {
                 aggrs = new MeasureAggregator[metricsAggrFuncs.length];

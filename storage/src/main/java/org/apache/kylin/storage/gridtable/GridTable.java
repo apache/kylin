@@ -1,9 +1,6 @@
 package org.apache.kylin.storage.gridtable;
 
 import java.io.IOException;
-import java.util.BitSet;
-
-import org.apache.kylin.metadata.filter.TupleFilter;
 
 public class GridTable {
 
@@ -34,17 +31,12 @@ public class GridTable {
         return new GTBuilder(info, shard, store, true);
     }
 
-    public IGTScanner scan(GTRecord pkStart, GTRecord pkEndExclusive, BitSet columns, TupleFilter filterPushDown) throws IOException {
-        return new GTRawScanner(info, store, pkStart, pkEndExclusive, columns, filterPushDown);
-    }
-
-    public IGTScanner scanAndAggregate(GTRecord pkStart, GTRecord pkEndExclusive, BitSet dimensions, //
-            BitSet metrics, String[] metricsAggrFuncs, TupleFilter filterPushDown) throws IOException {
-        BitSet columns = new BitSet();
-        columns.or(dimensions);
-        columns.or(metrics);
-        IGTScanner rawScanner = scan(pkStart, pkEndExclusive, columns, filterPushDown);
-        return new GTAggregateScanner(rawScanner, dimensions, metrics, metricsAggrFuncs);
+    public IGTScanner scan(GTScanRequest req) throws IOException {
+        IGTScanner result = new GTFilterScanner(info, store, req);
+        if (req.hasAggregation()) {
+            result = new GTAggregateScanner(result, req);
+        }
+        return result;
     }
 
     public GTInfo getInfo() {
