@@ -53,22 +53,6 @@ public class IIJoinedFlatTableDesc implements IJoinedFlatTableDesc {
             columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), col));
             columnIndex++;
         }
-        buildTableAliasMap();
-    }
-
-    private void buildTableAliasMap() {
-        tableAliasMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-
-        tableAliasMap.put(iiDesc.getFactTableName(), FACT_TABLE_ALIAS);
-
-        int i = 1;
-        for (LookupDesc lookupDesc : iiDesc.getModel().getLookups()) {
-            JoinDesc join = lookupDesc.getJoin();
-            if (join != null) {
-                tableAliasMap.put(lookupDesc.getTable(), LOOKUP_TABLE_ALAIS_PREFIX + i);
-                i++;
-            }
-        }
     }
 
     @Override
@@ -90,8 +74,4 @@ public class IIJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         return DataModelDesc.RealizationCapacity.SMALL;
     }
 
-    @Override
-    public String getTableAlias(String tableName) {
-        return tableAliasMap.get(tableName);
-    }
 }
