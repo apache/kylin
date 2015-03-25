@@ -43,14 +43,20 @@ public class FactDistinctColumnsCombiner extends KylinReducer<ShortWritable, Tex
     @Override
     public void reduce(ShortWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
-        HashSet<ByteArray> set = new HashSet<ByteArray>();
-        for (Text textValue : values) {
-            ByteArray value = new ByteArray(Bytes.copy(textValue.getBytes(), 0, textValue.getLength()));
-            set.add(value);
-        }
+        if(key.get() >= 0) {
+            HashSet<ByteArray> set = new HashSet<ByteArray>();
+            for (Text textValue : values) {
+                ByteArray value = new ByteArray(Bytes.copy(textValue.getBytes(), 0, textValue.getLength()));
+                set.add(value);
+            }
 
-        for (ByteArray value : set) {
-            outputValue.set(value.array(), value.offset(), value.length());
+            for (ByteArray value : set) {
+                outputValue.set(value.array(), value.offset(), value.length());
+                context.write(key, outputValue);
+            }
+        } else {
+            // for hll, one reducer will only emit one record;
+            outputValue.set(values.iterator().next().getBytes());
             context.write(key, outputValue);
         }
     }
