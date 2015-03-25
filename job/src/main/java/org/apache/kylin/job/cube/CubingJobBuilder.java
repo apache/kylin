@@ -54,7 +54,7 @@ import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
  */
 public final class CubingJobBuilder extends AbstractJobBuilder {
 
-    private boolean useImMemCubing = true;
+    private boolean useImMemCubing = false;
 
     public CubingJobBuilder(JobEngineConfig engineConfig) {
         super(engineConfig);
