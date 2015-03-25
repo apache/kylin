@@ -17,7 +17,42 @@
 -->
 
 <div ng-controller="CubeModelCtrl" class="nav-tabs-custom">
-    <div ng-include="'partials/models/model_schema.html'" ng-controller="ModelSchemaCtrl"
-         ng-init="state={mode:'view', modelName:model.name}">
+    <ul ng-show="model.name" class="nav nav-tabs">
+        <li class="{{(!model.visiblePage || model.visiblePage=='metadata')? 'active':''}}">
+            <a href="" ng-click="model.visiblePage='metadata'">Grid</a>
+        </li>
+        <li class="{{model.visiblePage=='graph'? 'active':''}}">
+            <a href="" ng-click="model.visiblePage='graph';buildGraph(model);$event.stopPropagation();">Visualization</a>
+        </li>
+        <li class="{{model.visiblePage=='json_model'? 'active':''}}"
+            ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(model, 16) && !newAccess">
+            <a href="" ng-click="model.visiblePage='json_model';">JSON</a>
+        </li>
+        <li class="dropdown" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
+            <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="true">
+                <i class="fa fa-star"> Action </i> <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+                <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
+                    <a href="models/edit/{{model.name}}" data-widget="collapse">Edit Model</a>
+                </li>
+                <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
+                    <a href="cubes/add/{{model.name}}" data-widget="collapse">Create Cube</a>
+                </li>
+            </ul>
+        </li>
+    </ul>
+
+    <div class="model-detail" ng-if="!model.visiblePage || model.visiblePage=='metadata'">
+        <div ng-include="'partials/models/model_schema.html'" ng-controller="ModelSchemaCtrl"
+             ng-init="state={mode:'view', modelName:model.name}">
+        </div>
     </div>
+    <div ng-show="model.visiblePage=='graph'" id="model_graph_{{model.name}}" class="model-detail model_graph">
+    </div>
+    <div ng-show="model.visiblePage=='json_model'" class="model-detail">
+          <pre ng-if="!state.jsonEdit"
+               style="background-color: white;border: 0px">{{angular.toJson(cleanStatus(model), true)}}</pre>
+    </div>
+
 </div>

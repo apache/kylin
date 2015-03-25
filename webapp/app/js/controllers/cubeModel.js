@@ -20,11 +20,26 @@
 
 KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,MetaModel,SweetAlert,GraphService,$log) {
 
-    //copy model for show Json in model tab list
-    $scope.modelJson = angular.copy($scope.model);
 
     $scope.buildGraph = function (model) {
-        GraphService.buildTree(model);
+//        var newModel = jQuery.extend(true, {}, model);
+        var newModel = angular.copy(model);
+        GraphService.buildTree(newModel);
+    };
+
+    $scope.cleanStatus = function(model){
+
+        if (!model)
+        {
+            return;
+        }
+        var newModel = jQuery.extend(true, {}, model);
+        delete newModel.project;
+        delete  newModel.accessEntities;
+        delete  newModel.visiblePage;
+        delete  newModel.cubes;
+
+        return newModel;
     };
 
     $scope.cubeConfig = cubeConfig;

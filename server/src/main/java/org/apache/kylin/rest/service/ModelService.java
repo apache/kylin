@@ -73,21 +73,23 @@ public class ModelService extends BasicService {
     }
 
     public List<DataModelDesc> getModels(final String modelName, final String projectName, final Integer limit, final Integer offset) {
-        int climit = (null == limit) ? 30 : limit;
-        int coffset = (null == offset) ? 0 : offset;
 
         List<DataModelDesc> modelDescs;
         modelDescs = listAllModels(modelName, projectName);
 
-        if (modelDescs.size() <= coffset) {
-            return Collections.emptyList();
+        if(limit==null || offset == null){
+            return modelDescs;
         }
 
-        if ((modelDescs.size() - coffset) < climit) {
-            return modelDescs.subList(coffset, modelDescs.size());
+//        if (modelDescs.size() <= limit) {
+//            return Collections.emptyList();
+//        }
+
+        if ((modelDescs.size() - offset) < limit) {
+            return modelDescs.subList(offset, modelDescs.size());
         }
 
-        return modelDescs.subList(coffset, coffset + climit);
+        return modelDescs.subList(offset, offset + limit);
     }
 
 

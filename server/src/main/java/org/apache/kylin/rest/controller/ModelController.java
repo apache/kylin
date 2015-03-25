@@ -58,8 +58,8 @@ public class ModelController extends BasicController {
     @RequestMapping(value = "", method = {RequestMethod.GET})
     @ResponseBody
     @Metered(name = "listModels")
-    public List<DataModelDesc> getModels(@RequestParam(value = "modelName", required = false) String modelName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam("limit") Integer limit, @RequestParam("offset") Integer offset) {
-        return modelService.getModels(modelName, projectName, (null == limit) ? 20 : limit, offset);
+    public List<DataModelDesc> getModels(@RequestParam(value = "modelName", required = false) String modelName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value="limit",required=false) Integer limit, @RequestParam(value="offset",required=false) Integer offset) {
+        return modelService.getModels(modelName, projectName, limit, offset);
     }
 
     @RequestMapping(value = "/{modelName}", method = {RequestMethod.DELETE})
