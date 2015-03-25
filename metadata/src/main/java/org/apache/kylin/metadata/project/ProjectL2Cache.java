@@ -18,30 +18,25 @@
 
 package org.apache.kylin.metadata.project;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.*;
+import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.RealizationRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.RealizationRegistry;
-
 /**
  * This is a second level cache that is built on top of first level cached objects,
  * including Realization, TableDesc, ColumnDesc etc, to speed up query time metadata lookup.
- * 
+ * <p/>
  * On any object update, the L2 cache simply gets wiped out because it's cheap to rebuild.
  */
 class ProjectL2Cache {
@@ -158,6 +153,10 @@ class ProjectL2Cache {
         ProjectCache result = new ProjectCache(project);
 
         ProjectInstance pi = mgr.getProject(project);
+
+        if (pi == null)
+            throw new IllegalArgumentException("Project '" + project + "' does not exist;");
+
         MetadataManager metaMgr = mgr.getMetadataManager();
 
         for (String tableName : pi.getTables()) {

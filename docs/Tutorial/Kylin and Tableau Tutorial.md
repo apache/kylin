@@ -10,10 +10,12 @@ Kylin and Tableau Tutorial
 > More detail information or any issue, please contact Kylin Team: `kylinolap@gmail.com`
 
 ### Step 1. Install ODBC Driver
-Refer to wiki page [Kylin ODBC Driver Tutorial](https://github.com/KylinOLAP/Kylin/wiki/Kylin-ODBC-Driver-Tutorial).
+Refer to wiki page [Kylin ODBC Driver Tutorial](Kylin ODBC Driver Tutorial.md).
 
 ### Step 2. Connect to Kylin Server
 > We recommended to use Connect Using Driver instead of Using DSN since Tableau team will not manage your DSN on Tableau Servers.
+
+**The snapshots are a little bit outdated because at that time Kylin ues port 9080 as default port, for new comers please use the new default port 7070**
 
 Connect Using Driver: Select "Other Database(ODBC)" in the left panel and choose KylinODBCDriver in the pop-up window. 
 
@@ -23,7 +25,7 @@ Enter your Sever location and credentials: server host, port, username and passw
 
 ![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/2%20serverhost.jpg)
 
-Click "Connect" to get the list of projects that you have permission to access. See details about permission in [Kylin Cube Permission Grant Tutorial](https://github.com/KylinOLAP/Kylin/wiki/Kylin-Cube-Permission-Grant-Tutorial). Then choose the project you want to connect in the drop down list. 
+Click "Connect" to get the list of projects that you have permission to access. See details about permission in [Kylin Cube Permission Grant Tutorial](Kylin Cube Permission Grant Tutorial.md). Then choose the project you want to connect in the drop down list. 
 
 ![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/tableau_tutorial/3%20project.jpg)
 

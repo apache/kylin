@@ -18,25 +18,12 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.hadoop.hbase.util.Pair;
-import org.apache.kylin.rest.constant.Constant;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Component;
-
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import org.apache.hadoop.hbase.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
@@ -50,10 +37,18 @@ import org.apache.kylin.job.cube.CubingJob;
 import org.apache.kylin.job.cube.CubingJobBuilder;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.JobException;
+import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
-import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.rest.constant.Constant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.util.*;
 
 /**
  * @author ysong1
@@ -105,20 +100,20 @@ public class JobService extends BasicService {
 
     private ExecutableState parseToExecutableState(JobStatusEnum status) {
         switch (status) {
-        case DISCARDED:
-            return ExecutableState.DISCARDED;
-        case ERROR:
-            return ExecutableState.ERROR;
-        case FINISHED:
-            return ExecutableState.SUCCEED;
-        case NEW:
-            return ExecutableState.READY;
-        case PENDING:
-            return ExecutableState.READY;
-        case RUNNING:
-            return ExecutableState.RUNNING;
-        default:
-            throw new RuntimeException("illegal status:" + status);
+            case DISCARDED:
+                return ExecutableState.DISCARDED;
+            case ERROR:
+                return ExecutableState.ERROR;
+            case FINISHED:
+                return ExecutableState.SUCCEED;
+            case NEW:
+                return ExecutableState.READY;
+            case PENDING:
+                return ExecutableState.READY;
+            case RUNNING:
+                return ExecutableState.RUNNING;
+            default:
+                throw new RuntimeException("illegal status:" + status);
         }
     }
 
@@ -135,7 +130,7 @@ public class JobService extends BasicService {
         CubingJob job;
         CubingJobBuilder builder = new CubingJobBuilder(new JobEngineConfig(getConfig()));
         builder.setSubmitter(submitter);
-        
+
         if (buildType == CubeBuildTypeEnum.BUILD) {
             if (cube.getDescriptor().hasHolisticCountDistinctMeasures() && cube.getSegments().size() > 0) {
                 Pair<CubeSegment, CubeSegment> segs = getCubeManager().appendAndMergeSegments(cube, endDate);
@@ -147,6 +142,9 @@ public class JobService extends BasicService {
         } else if (buildType == CubeBuildTypeEnum.MERGE) {
             CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate);
             job = builder.mergeJob(newSeg);
+        } else if (buildType == CubeBuildTypeEnum.REFRESH) {
+            CubeSegment refreshSeg = getCubeManager().refreshSegment(cube, startDate, endDate);
+            job = builder.buildJob(refreshSeg);
         } else {
             throw new JobException("invalid build type:" + buildType);
         }
@@ -215,37 +213,37 @@ public class JobService extends BasicService {
 
     private JobStatusEnum parseToJobStatus(ExecutableState state) {
         switch (state) {
-        case READY:
-            return JobStatusEnum.PENDING;
-        case RUNNING:
-            return JobStatusEnum.RUNNING;
-        case ERROR:
-            return JobStatusEnum.ERROR;
-        case DISCARDED:
-            return JobStatusEnum.DISCARDED;
-        case SUCCEED:
-            return JobStatusEnum.FINISHED;
-        case STOPPED:
-        default:
-            throw new RuntimeException("invalid state:" + state);
+            case READY:
+                return JobStatusEnum.PENDING;
+            case RUNNING:
+                return JobStatusEnum.RUNNING;
+            case ERROR:
+                return JobStatusEnum.ERROR;
+            case DISCARDED:
+                return JobStatusEnum.DISCARDED;
+            case SUCCEED:
+                return JobStatusEnum.FINISHED;
+            case STOPPED:
+            default:
+                throw new RuntimeException("invalid state:" + state);
         }
     }
 
     private JobStepStatusEnum parseToJobStepStatus(ExecutableState state) {
         switch (state) {
-        case READY:
-            return JobStepStatusEnum.PENDING;
-        case RUNNING:
-            return JobStepStatusEnum.RUNNING;
-        case ERROR:
-            return JobStepStatusEnum.ERROR;
-        case DISCARDED:
-            return JobStepStatusEnum.DISCARDED;
-        case SUCCEED:
-            return JobStepStatusEnum.FINISHED;
-        case STOPPED:
-        default:
-            throw new RuntimeException("invalid state:" + state);
+            case READY:
+                return JobStepStatusEnum.PENDING;
+            case RUNNING:
+                return JobStepStatusEnum.RUNNING;
+            case ERROR:
+                return JobStepStatusEnum.ERROR;
+            case DISCARDED:
+                return JobStepStatusEnum.DISCARDED;
+            case SUCCEED:
+                return JobStepStatusEnum.FINISHED;
+            case STOPPED:
+            default:
+                throw new RuntimeException("invalid state:" + state);
         }
     }
 
