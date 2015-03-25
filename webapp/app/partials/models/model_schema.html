@@ -16,6 +16,7 @@
 * limitations under the License.
 -->
 
+<!--hide when view model and no model selected-->
 <div class="box box-primary model-design box-2px" ng-hide="state.mode=='view'&&!model.name">
     <div class="box-header widget-header-blue widget-header-flat">
         <h4 class="box-title text-info">Model Designer</h4>
@@ -67,13 +68,30 @@
     </div>
 </div>
 
-<div ng-show="state.mode=='view'&&!model.name">
+<!--show create model tip when no models list-->
+<div ng-show="state.mode=='view'&&!models_treedata.length" style="margin-top:40px;">
+    <div class="box box-primary">
+        <div class="box-header with-border">
+            <h3 class="box-title">No model</h3>
+        </div>
+        <div class="box-body">
+            <p>
+                <a href="models/add" ng-if="userService.hasRole('ROLE_MODELER')">Click here to create your model</a>
+            </p>
+        </div><!-- /.box-body -->
+    </div>
+</div>
+
+<!--show select model tip when models not empty and no model selected-->
+<div ng-show="state.mode=='view'&&!!models_treedata.length&&!model.name" style="margin-top:40px;">
     <div class="box box-primary">
         <div class="box-header with-border">
             <h3 class="box-title">No model selected</h3>
         </div>
         <div class="box-body">
-            Plese choose your model
+            <p>
+               Select your model
+            </p>
         </div><!-- /.box-body -->
     </div>
 </div>
