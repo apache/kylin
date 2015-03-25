@@ -231,7 +231,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         dumpList.add(cube.getResourcePath());
         dumpList.add(cube.getDescriptor().getModel().getResourcePath());
         dumpList.add(cube.getDescriptor().getResourcePath());
-        for (TableDesc table : cube.getDescriptor().listTables()) {
+        for (String tableName : cube.getDescriptor().getModel().getAllTables()) {
+            TableDesc table = MetadataManager.getInstance(kylinConfig).getTableDesc(tableName);
             dumpList.add(table.getResourcePath());
         }
 

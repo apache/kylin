@@ -26,5 +26,11 @@ Kylin ODBC Driver Tutorial
 
 3. Both drivers already be installed on Tableau Server, you properly should be able to publish to there without issues
 
+## Use ODBC compatible applications
+
+1. [Kylin and Tableau Tutorial](Kylin and Tableau Tutorial.md)
+2. [Kylin and Excel Tutorial](Kylin and Excel Tutorial.md)
+
+
 ## Bug Report
 Open github issue here
