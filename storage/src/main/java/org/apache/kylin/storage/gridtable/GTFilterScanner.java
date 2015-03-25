@@ -12,7 +12,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 import org.apache.kylin.storage.gridtable.IGTStore.IGTStoreScanner;
 
-class GTRawScanner implements IGTScanner {
+class GTFilterScanner implements IGTScanner {
 
     final GTInfo info;
     final IGTStoreScanner storeScanner;
@@ -27,18 +27,18 @@ class GTRawScanner implements IGTScanner {
     private int scannedRowCount = 0;
     private int scannedRowBlockCount = 0;
 
-    GTRawScanner(GTInfo info, IGTStore store, GTRecord pkStart, GTRecord pkEndExclusive, BitSet columns, TupleFilter filterPushDown) {
+    GTFilterScanner(GTInfo info, IGTStore store, GTScanRequest req) {
         this.info = info;
-        this.filter = filterPushDown;
+        this.filter = req.getFilterPushDown();
 
         if (TupleFilter.isEvaluableRecursively(filter) == false)
             throw new IllegalArgumentException();
 
-        ByteArray start = pkStart == null ? null : pkStart.exportColumns(info.primaryKey);
-        ByteArray endEx = pkEndExclusive == null ? null : pkEndExclusive.exportColumns(info.primaryKey);
-        this.selectedColBlocks = info.selectColumnBlocks(columns);
+        ByteArray start = req.getPkStart() == null ? null : req.getPkStart().exportColumns(info.primaryKey);
+        ByteArray endEx = req.getPkEnd() == null ? null : req.getPkEnd().exportColumns(info.primaryKey);
+        this.selectedColBlocks = info.selectColumnBlocks(req.getColumns());
 
-        this.storeScanner = store.scan(start, endEx, selectedColBlocks, filterPushDown);
+        this.storeScanner = store.scan(start, endEx, selectedColBlocks, filter);
         this.oneRecord = new GTRecord(info);
         this.oneTuple = new TupleAdapter(oneRecord);
     }
@@ -139,7 +139,7 @@ class GTRawScanner implements IGTScanner {
 
         @Override
         public Object getValue(TblColRef col) {
-            return r.cols[col.getColumn().getZeroBasedIndex()];
+            return r.get(col.getColumn().getZeroBasedIndex());
         }
 
     }

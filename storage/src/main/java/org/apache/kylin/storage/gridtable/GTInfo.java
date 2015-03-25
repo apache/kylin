@@ -72,6 +72,12 @@ public class GTInfo {
         }
         return colRefs[i];
     }
+    
+    public void validateColRef(TblColRef ref) {
+        TblColRef expected = colRef(ref.getColumn().getZeroBasedIndex());
+        if (expected != ref)
+            throw new IllegalArgumentException();
+    }
 
     void validate() {
 

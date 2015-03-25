@@ -18,6 +18,9 @@ public interface IGTCodeSystem {
     /** encode a value into code */
     void encodeColumnValue(int col, Object value, ByteBuffer buf);
     
+    /** encode a value into code, with option to floor rounding -1, no rounding 0,  or ceiling rounding 1 */
+    void encodeColumnValue(int col, Object value, int roundingFlag, ByteBuffer buf);
+    
     /** decode a code into value */
     Object decodeColumnValue(int col, ByteBuffer buf);
     
