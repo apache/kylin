@@ -34,22 +34,31 @@
 
 package org.apache.kylin.streaming;
 
-import org.junit.BeforeClass;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import org.apache.kylin.metadata.model.TblColRef;
 
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
- * Created by qianzhou on 2/16/15.
+ * Created by qianzhou on 3/25/15.
  */
-public abstract class KafkaBaseTest {
+public final class JsonStreamParser implements StreamParser {
 
-    protected static final Logger logger = LoggerFactory.getLogger("kafka test");
+    public static final JsonStreamParser instance = new JsonStreamParser();
 
-    @BeforeClass
-    public static void beforeClass() throws IOException {
+    private JsonStreamParser(){}
+
+    @Override
+    public List<String> parse(Stream stream, Collection<TblColRef> allColumns) {
+        final JsonObject root = new JsonParser().parse(new String(stream.getRawData())).getAsJsonObject();
+        ArrayList<String> result = Lists.newArrayList();
+        for (TblColRef column : allColumns) {
+            result.add(root.get(column.getName()).getAsString());
+        }
+        return result;
     }
-
-
 }

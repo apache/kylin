@@ -136,7 +136,7 @@ public class IIStreamBuilder extends StreamBuilder {
     }
 
     private List<String> parseStream(Stream stream, IIDesc desc) {
-        return Lists.newArrayList(new String(stream.getRawData()).split(","));
+        return getStreamParser().parse(stream, desc.listAllColumns());
     }
 
     private Slice buildSlice(List<List<String>> table, BatchSliceBuilder sliceBuilder, final TableRecordInfo tableRecordInfo, Map<Integer, Dictionary<?>> localDictionary) {

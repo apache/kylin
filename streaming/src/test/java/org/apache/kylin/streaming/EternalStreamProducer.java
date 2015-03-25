@@ -49,8 +49,7 @@ public class EternalStreamProducer {
     }
 
     public void start() throws IOException, InterruptedException {
-        final Properties properties = new Properties();
-        final KafkaConfig kafkaConfig = StreamManager.getInstance(KylinConfig.getInstanceFromEnv()).getKafkaConfig("kafka");
+        final KafkaConfig kafkaConfig = StreamManager.getInstance(KylinConfig.getInstanceFromEnv()).getKafkaConfig("kafka_test");
 
         Properties props = new Properties();
         props.put("metadata.broker.list", StringUtils.join(Iterators.transform(kafkaConfig.getBrokers().iterator(), new Function<Broker, String>() {
