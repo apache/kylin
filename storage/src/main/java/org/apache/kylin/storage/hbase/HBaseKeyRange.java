@@ -52,17 +52,7 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
 
     private final CubeSegment cubeSeg;
     private final Cuboid cuboid;
-    private final List<Collection<ColumnValueRange>> flatOrAndFilter; // OR-AND
-                                                                      // filter,
-                                                                      // (A
-                                                                      // AND B
-                                                                      // AND
-                                                                      // ..)
-                                                                      // OR (C
-                                                                      // AND D
-                                                                      // AND
-                                                                      // ..)
-                                                                      // OR ..
+    private final List<Collection<ColumnValueRange>> flatOrAndFilter; // OR-AND filter, (A AND B AND ..) OR (C AND D AND ..) OR ..
 
     private byte[] startKey;
     private byte[] stopKey;
