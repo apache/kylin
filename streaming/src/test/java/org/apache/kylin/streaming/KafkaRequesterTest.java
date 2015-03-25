@@ -34,7 +34,10 @@
 
 package org.apache.kylin.streaming;
 
+import org.apache.kylin.common.KylinConfig;
 import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -45,14 +48,20 @@ import static org.junit.Assert.*;
 public class KafkaRequesterTest extends KafkaBaseTest {
 
     private static final String NON_EXISTED_TOPIC = "non_existent_topic";
+    private KafkaConfig kafkaConfig;
 
 
+    @Before
+    public void before() {
+        kafkaConfig = StreamManager.getInstance(KylinConfig.getInstanceFromEnv()).getKafkaConfig("kafka_test");
+    }
 
     @AfterClass
     public static void afterClass() {
     }
 
     @Test
+    @Ignore("since ci does not enable kafka")
     public void testTopicMeta() throws Exception {
         TopicMeta kafkaTopicMeta = KafkaRequester.getKafkaTopicMeta(kafkaConfig);
         assertNotNull(kafkaTopicMeta);
