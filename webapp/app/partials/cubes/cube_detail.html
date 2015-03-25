@@ -48,7 +48,7 @@
         </li>
         <li class="dropdown" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
             <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="true">
-                Action <span class="caret"></span>
+                <i class="fa fa-cubes"> Action </i> <span class="caret"></span>
             </a>
             <ul class="dropdown-menu">
                 <li ng-if="cube.status=='DISABLED' && userService.hasRole('ROLE_ADMIN') ">

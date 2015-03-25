@@ -36,7 +36,8 @@ KylinApp.service('ModelList',function(ModelService,CubeService,$q,AccessService,
                 )
                 $log.info("Add cube info to model ,not detail info");
                 cubeDetail.push(
-                    CubeService.list({offset: 0, limit: 70,modelName:model.name}, function (_cubes) {
+//                    CubeService.list({offset: 0, limit: 70,modelName:model.name}, function (_cubes) {
+                    CubeService.list({modelName:model.name}, function (_cubes) {
                     model.cubes = _cubes;
                     }).$promise
                 );

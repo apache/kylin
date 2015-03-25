@@ -111,8 +111,9 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
 
         }
         $scope.state.project = $scope.model.project;
-        delete $scope.model.project;
-        $scope.state.modelSchema = angular.toJson($scope.model, true);
+        var _model = angular.copy($scope.model);
+        delete _model.project;
+        $scope.state.modelSchema = angular.toJson(_model, true);
 
     };
 

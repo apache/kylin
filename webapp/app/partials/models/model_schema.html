@@ -16,13 +16,9 @@
 * limitations under the License.
 -->
 
-<div class="box box-primary model-design" ng-hide="state.mode=='view'&&!model.name">
+<div class="box box-primary model-design box-2px" ng-hide="state.mode=='view'&&!model.name">
     <div class="box-header widget-header-blue widget-header-flat">
         <h4 class="box-title text-info">Model Designer</h4>
-        <div ng-if="state.mode=='view'" class="box-tools pull-right">
-            <a ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)" class="btn btn-box-tool" tooltip="Edit Model" href="models/edit/{{model.name}}" data-widget="collapse"><i class="fa fa-edit"></i></a>
-            <a ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)" class="btn btn-box-tool"  tooltip="Add Cube" href="cubes/add/{{model.name}}" data-widget="collapse"><i class="fa fa-cube"></i></a>
-        </div>
     </div>
     <div class="box-body">
         <ng-form name="design_form" ng-submit="">

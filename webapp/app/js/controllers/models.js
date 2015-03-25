@@ -47,14 +47,14 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
 
 
         //  TODO offset&limit
-        $scope.list = function (offset, limit) {
+        $scope.list = function () {
             if(!$scope.projectModel.projects.length){
                 return [];
             }
-            offset = (!!offset) ? offset : 0;
-            limit = (!!limit) ? limit : 70;
+//            offset = (!!offset) ? offset : null;
+//            limit = (!!limit) ? limit : null;
 
-            var queryParam = {offset: offset, limit: limit};
+            var queryParam = {};
             if ($scope.listParams.modelName) {
                 queryParam.modelName = $scope.listParams.modelName;
             }
