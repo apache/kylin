@@ -39,6 +39,7 @@ public interface BatchConstants {
     public static final String TABLE_NAME = "table.name";
     public static final String TABLE_COLUMNS = "table.columns";
 
+
     public static final String CFG_CUBE_INTERMEDIATE_TABLE_ROW_DELIMITER = "cube.intermediate.table.row.delimiter";
 
     public static final String MAPREDUCE_COUTNER_GROUP_NAME = "Cube Builder";
@@ -46,6 +47,10 @@ public interface BatchConstants {
     public static final String MAPPER_SAMPLE_NUMBER = "mapper.sample.number";
     public static final String REGION_NUMBER = "region.number";
     public static final String CUBE_CAPACITY = "cube.capacity";
+
+    public static final String CFG_STATISTICS_ENABLED = "statistics.enabled";
+    public static final String CFG_STATISTICS_OUTPUT = "statistics.ouput";
+    public static final String CFG_STATISTICS_CUBE_ESTIMATION = "cube.estimation";
 
     public static final int COUNTER_MAX = 100000;
     public static final int ERROR_RECORD_THRESHOLD = 100;
