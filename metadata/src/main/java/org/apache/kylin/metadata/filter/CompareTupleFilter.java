@@ -20,10 +20,10 @@ package org.apache.kylin.metadata.filter;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -35,7 +35,7 @@ import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 public class CompareTupleFilter extends TupleFilter {
 
     private TblColRef column;
-    private Collection<Object> conditionValues;
+    private Set<Object> conditionValues;
     private Object firstCondValue;
     private Map<String, Object> dynamicVariables;
 
@@ -90,7 +90,7 @@ public class CompareTupleFilter extends TupleFilter {
     }
 
     @Override
-    public Collection<?> getValues() {
+    public Set<?> getValues() {
         return conditionValues;
     }
 

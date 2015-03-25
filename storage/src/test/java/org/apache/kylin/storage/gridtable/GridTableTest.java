@@ -63,7 +63,8 @@ public class GridTableTest {
     }
 
     private IGTScanner scan(GridTable table) throws IOException {
-        IGTScanner scanner = table.scan(null, null, null, null);
+        GTScanRequest req = new GTScanRequest(table.getInfo());
+        IGTScanner scanner = table.scan(req);
         for (GTRecord r : scanner) {
             Object[] v = r.getValues();
             assertTrue(((String) v[0]).startsWith("2015-"));
@@ -79,7 +80,8 @@ public class GridTableTest {
     }
 
     private IGTScanner scanAndAggregate(GridTable table) throws IOException {
-        IGTScanner scanner = table.scanAndAggregate(null, null, setOf(0, 2), setOf(3, 4), new String[] { "count", "sum" }, null);
+        GTScanRequest req = new GTScanRequest(table.getInfo(), null, null, setOf(0, 2), setOf(3, 4), new String[] { "count", "sum" }, null);
+        IGTScanner scanner = table.scan(req);
         int i = 0;
         for (GTRecord r : scanner) {
             Object[] v = r.getValues();
@@ -127,7 +129,7 @@ public class GridTableTest {
         builder.write(r.setValues("2015-01-16", "George", "Food", new LongWritable(10), new BigDecimal("10.5")));
         builder.write(r.setValues("2015-01-17", "Kejia", "Food", new LongWritable(10), new BigDecimal("10.5")));
         builder.close();
-        
+
         System.out.println("Written Row Block Count: " + builder.getWrittenRowBlockCount());
         System.out.println("Written Row Count: " + builder.getWrittenRowCount());
         return builder;

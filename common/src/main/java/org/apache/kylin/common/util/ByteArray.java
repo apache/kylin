@@ -30,6 +30,12 @@ public class ByteArray implements Comparable<ByteArray> {
     public static ByteArray allocate(int length) {
         return new ByteArray(new byte[length]);
     }
+    
+    public static ByteArray copyOf(byte[] array, int offset, int length) {
+        byte[] space = new byte[length];
+        System.arraycopy(array, offset, space, 0, length);
+        return new ByteArray(space, 0, length);
+    }
 
     // ============================================================================
 
