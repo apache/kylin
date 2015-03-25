@@ -2,93 +2,73 @@ Kylin OLAP
 ===========
 
 
-Overview
+What is Kylin
 ------------
 > Extreme OLAP Engine for Big Data
 
 An open source distributed Analytical Engine from eBay to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop to support TB to PB size analysis.
 
-
-Getting Started 
----------------
-
-### Prerequisites ###
-
-#### Hadoop ####
-- Hadoop: 2.2.0.2.0.6.0-61 or above
-- Hive: 0.12.0.2.0.6.0-61 or above
-- HBase: 0.96.0.2.0.6.0-61-hadoop2
+This [slice](docs/Apache Kylin 2014 Dec.pdf) might help you better understand what kylin is and how it works.
 
 
-_Tested with Hortonworks HDP 2.1.3 and Cloudera Quickstart VM 5.1._
-
-#### Misc ####
-- Command hadoop, hive, hbase is workable on your hadoop cluster
-- JDK Runtime: JDK7 (OpenJDK or Oracle JDK)
-- Maven
-- Git
-- Tomcat (CATALINA_HOME being set)
-- Npm
-
-#### Before Install ####
-- For the quick tutorial, we assume that your hadoop has priviledges disabled which means any user could run hadoop and hive command
-
-
-Installation 
+Tutorial 
 ------------
-It is very easy to install Kylin for exploration/development. There are 3 supported options:
+
+Please follow this installation tutorial to start with Kylin: [Installation Tutorial](docs/Installation/Installation.md)
 
 
-1. Sandbox         (HDP or CDH sandbox)
-2. Dev Environment (IDE + Sandbox)
-3. Docker container     (Docker)
+Advanced Topics
+-------
+####Connectivity
+1.[How to use kylin remote jdbc driver](docs/Tutorial/How to use kylin remote jdbc driver.md)
 
-#### Sandbox (On-Hadoop-CLI installation) ####
+2.[Kylin ODBC Driver Tutorial](docs/Tutorial/Kylin ODBC Driver Tutorial.md) 
 
-If you are free to install Kylin on your hadoop CLI machine or Hadoop sandbox, this is the most convenient scenario, for it puts everything in a single machine.
+####REST
 
+1.[Kylin Restful API List](docs/REST/Kylin Restful API List.md)
 
+2.[Build Cube with Restful API](docs/REST/Build Cube with Restful API.md)
 
-![On-Hadoop-CLI-installation](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/installation/Picture1.png)
+3.[How to consume Kylin REST API in javascript](docs/REST/How to consume Kylin REST API in javascript.md)
 
-For normal users, the application in the above picture means `Kylin Web`, which contains a web interface for cube building, querying and all sorts of management. Kylin Web launches a query engine for querying and a cube build engine for building cubes. These two engines interact with the components in Hadoop CLI, like hive and hbase.
+####Operations
+1.[Kylin Metadata Store](docs/Operations/Kylin Metadata Store.md)
 
-For a hands-on tutorial please visit [On-Hadoop-CLI installation](https://github.com/KylinOLAP/Kylin/wiki/On-Hadoop-CLI-installation).
+2.[Export Kylin HBase data](docs/Operations/Export Kylin HBase data.md)
 
-#### Dev Environment (Off-Hadoop-CLI Installation) ####
+3.[Advanced settings of Kylin environment](docs/Operations/Advanced settings of Kylin environment.md)
 
-This is typically for development environment setup.
+####Test
 
-Applications does not necessarily mean Kylin Web, it can also be any test cases or java applications running at your local IDE(query engine and cube build engine can be launched programmatically in your code). In this case, it is no longer reasonable to assume that all the Kylin components reside in the same machine as your Hadoop CLI.  Fortunately, Kylin still works under such condition with proper settings on your CLI machine.
-
-![Off-CLI Installation](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/installation/Picture2.png)
-
-For a hands-on tutorial please visit [Off-Hadoop-CLI installation](https://github.com/KylinOLAP/Kylin/wiki/Off-Hadoop-CLI-Installation-(Dev-Env-Setup))
-
-#### Docker Container ####
-With help from [SequenceIQ](http://sequenceiq.com/), there's docker container for Kylin (along with Hadoop, HBase and Hive) available now:[sequenceiq/docker-kylin](https://github.com/sequenceiq/docker-kylin).  The only thing you will need to do is to pull the container from the official Docker repository to be up and running in few minutes. 
-
-Features:
-
-- Size            - Light weight compared to downloading and setting up HDP or CDH sandbox.
-- Cluster support - Supports multi node installation. 
-- Fully Automated - No manual steps. One command does it all 
-
-For a hands-on tutorial please visit [Kylin Docker installation](https://github.com/KylinOLAP/Kylin/wiki/On-Hadoop-Kylin-installation-using-Docker). 
+1.[Run Kylin test case with HBase Mini Cluster](docs/Test/Run Kylin test case with HBase Mini Cluster.md)
 
 
+####Technial Details
 
-### Resources ###
+1.[New meta data model structure](docs/TechInside/New meta data model structure.md)
 
-* Web Site: <http://kylin.io>
+2.[Job Engine Design](docs/JobEngine/Design.md)
 
-* Google Group:  [Kylin OLAP Group](https://groups.google.com/forum/#!forum/kylin-olap)
+Get Help
+------------
 
-* Developer Mail: <kylin-olap@googlegroups.com>
+The fastest way to get response from our developers is to send email to our mail list <dev@kylin.incubator.apache.org>, and remember to subscribe our mail list via <dev-subscribe@kylin.incubator.apache.org>
 
-* How To Contribute: See [wiki](https://github.com/KylinOLAP/Kylin/wiki/How-to-Contribute)
 
-* Presentation: [Kylin Hadoop OLAP Engine v1.0](https://github.com/KylinOLAP/Kylin/blob/master/docs/Kylin_Hadoop_OLAP_Engine_v1.0.pdf?raw=true)
+Resources
+------------
 
-*  Apache Proposal: [Apache Kylin](https://wiki.apache.org/incubator/KylinProposal)
+* [FAQ](docs/MISC/FAQ on Kylin Installation and Usage.md)
+
+* Web Site: <http://kylin.incubator.apache.org/>
+
+* Developer Mail: <dev@kylin.incubator.apache.org>
+
+* How To Contribute: See [this](docs/MISC/How to Contribute.md)
+
+* Apache Proposal: [Apache Kylin](https://wiki.apache.org/incubator/KylinProposal)
+
+* [Kylin Document Conventions](docs/MISC/Kylin Document Conventions.md)
+
 

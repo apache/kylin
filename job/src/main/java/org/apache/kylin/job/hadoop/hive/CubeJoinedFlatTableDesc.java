@@ -44,13 +44,7 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     private int[] rowKeyColumnIndexes; // the column index on flat table
     private int[][] measureColumnIndexes; // [i] is the i.th measure related column index on flat table
 
-    // Map for table alias:
-    // key -> table name; 
-    // value -> alias;
-    private Map<String, String> tableAliasMap;
     private List<IntermediateColumnDesc> columnList = Lists.newArrayList();
-
-
 
     public CubeJoinedFlatTableDesc(CubeDesc cubeDesc, CubeSegment cubeSegment) {
         this.cubeDesc = cubeDesc;
@@ -120,24 +114,6 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         }
 
         columnCount = columnIndex;
-        
-        buildTableAliasMap();
-    }
-
-    private void buildTableAliasMap() {
-        tableAliasMap = new HashMap<String, String>();
-
-        tableAliasMap.put(cubeDesc.getFactTable().toUpperCase(), FACT_TABLE_ALIAS);
-
-        int i = 1;
-        for (DimensionDesc dim : cubeDesc.getDimensions()) {
-            JoinDesc join = dim.getJoin();
-            if (join != null) {
-                tableAliasMap.put(dim.getTable().toUpperCase(), LOOKUP_TABLE_ALAIS_PREFIX + i);
-                i++;
-            }
-
-        }
     }
 
     private int contains(List<IntermediateColumnDesc> columnList, TblColRef c) {
@@ -189,11 +165,6 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     @Override
     public DataModelDesc.RealizationCapacity getCapacity() {
         return cubeDesc.getModel().getCapacity();
-    }
-
-    @Override
-    public String getTableAlias(String tableName) {
-        return tableAliasMap.get(tableName.toUpperCase());
     }
 
     private static String colName(String canonicalColName) {
