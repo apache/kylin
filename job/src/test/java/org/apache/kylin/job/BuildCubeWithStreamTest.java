@@ -34,6 +34,7 @@
 
 package org.apache.kylin.job;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
@@ -45,18 +46,19 @@ import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.lookup.HiveTableReader;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.storage.gridtable.GridTable;
 import org.apache.kylin.streaming.Stream;
 import org.apache.kylin.streaming.cube.CubeStreamBuilder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -67,6 +69,7 @@ import static org.junit.Assert.fail;
 /**
  * Created by qianzhou on 3/9/15.
  */
+@Ignore("For dev testing")
 public class BuildCubeWithStreamTest {
 
     private static final Logger logger = LoggerFactory.getLogger(BuildCubeWithStreamTest.class);
@@ -105,8 +108,8 @@ public class BuildCubeWithStreamTest {
 
 
 //        final String tableName = createIntermediateTable(desc, kylinConfig, null);
-        String tableName = "kylin_intermediate_test_kylin_cube_without_slr_desc_19700101000000_20130112000000_a24dec89_efbd_425f_9a5f_8b78dd1412af";
-        tableName = "kylin_intermediate_test_kylin_cube_without_slr_desc_19700101000000_20130112000000_a5e1eb5d_da6b_475d_9807_be0b61f03215";
+        String tableName = "kylin_intermediate_test_kylin_cube_without_slr_desc_19700101000000_20130112000000_a24dec89_efbd_425f_9a5f_8b78dd1412af"; // has 3089 records;
+        tableName = "kylin_intermediate_test_kylin_cube_without_slr_desc_19700101000000_20130112000000_a5e1eb5d_da6b_475d_9807_be0b61f03215"; // only 20 rows;
         logger.info("intermediate table name:" + tableName);
         final Configuration conf = new Configuration();
         HCatInputFormat.setInput(conf, "default", tableName);
@@ -117,7 +120,9 @@ public class BuildCubeWithStreamTest {
         LinkedBlockingDeque<Stream> queue = new LinkedBlockingDeque<Stream>();
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
-        final CubeStreamBuilder streamBuilder = new CubeStreamBuilder(queue, "", desc, 0);
+        Map<TblColRef, DictionaryInfo> dictionaryMap = Maps.newHashMap();
+        Map<Long, GridTable> cuboidsMap = Maps.newHashMap();
+        final CubeStreamBuilder streamBuilder = new CubeStreamBuilder(queue, 10000, cube, dictionaryMap, cuboidsMap);
         while (reader.next()) {
             queue.put(parse(reader.getRow()));
         }
@@ -130,7 +135,7 @@ public class BuildCubeWithStreamTest {
             fail("stream build failed");
         }
 
-        logger.info("stream build finished, htable name:");
+        logger.info("stream build finished");
     }
 
 
