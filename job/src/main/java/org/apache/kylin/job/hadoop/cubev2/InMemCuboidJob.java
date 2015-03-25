@@ -99,7 +99,7 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             job.setMapperClass(InMemCuboidMapper.class);
             job.setMapOutputKeyClass(Text.class);
             job.setMapOutputValueClass(Text.class);
-            job.setCombinerClass(CuboidReducer.class); // for base cuboid shuffle skew, some rowkey aggregates far more records than others
+            //job.setCombinerClass(CuboidReducer.class); // for base cuboid shuffle skew, some rowkey aggregates far more records than others
 
             // Reducer
             job.setReducerClass(CuboidReducer.class);
