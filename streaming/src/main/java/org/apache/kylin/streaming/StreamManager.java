@@ -35,10 +35,16 @@
 package org.apache.kylin.streaming;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.cube.CubeInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -47,6 +53,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class StreamManager {
 
     private static final Logger logger = LoggerFactory.getLogger(StreamManager.class);
+
+    public static final Serializer<KafkaConfig> KAFKA_CONFIG_SERIALIZER = new JsonSerializer<KafkaConfig>(KafkaConfig.class);
 
     // static cached instances
     private static final ConcurrentHashMap<KylinConfig, StreamManager> CACHE = new ConcurrentHashMap<KylinConfig, StreamManager>();
@@ -82,8 +90,39 @@ public class StreamManager {
         }
     }
 
+    private boolean checkExistence(String name) {
+        return true;
+    }
+
+    private String formatResPath(String name) {
+        return ResourceStore.STREAM_RESOURCE_ROOT + "/" + name + ".json";
+    }
+
+
+    public boolean createOrUpdateKafkaConfig(String name, KafkaConfig config) {
+        try {
+            getStore().putResource(formatResPath(name), config, KAFKA_CONFIG_SERIALIZER);
+            return true;
+        } catch (IOException e) {
+            logger.error("error save resource name:" + name, e);
+            return false;
+        }
+    }
 
     public KafkaConfig getKafkaConfig(String name) {
-        return null;
+        try {
+            return getStore().getResource(formatResPath(name), KafkaConfig.class, KAFKA_CONFIG_SERIALIZER);
+        } catch (IOException e) {
+            logger.error("error get resource name:" + name, e);
+            return null;
+        }
     }
+
+    public static void main(String[] args) throws IOException {
+        final KafkaConfig kafkaConfig = new KafkaConfig();
+        final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        KAFKA_CONFIG_SERIALIZER.serialize(kafkaConfig, new DataOutputStream(byteArrayOutputStream));
+        System.out.println(new String(byteArrayOutputStream.toByteArray()));
+    }
+
 }

@@ -37,6 +37,7 @@ package org.apache.kylin.streaming;
 import kafka.admin.AdminUtils;
 import kafka.common.TopicExistsException;
 import org.I0Itec.zkclient.ZkClient;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.streaming.KafkaConfig;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
@@ -58,9 +59,7 @@ public abstract class KafkaBaseTest {
 
     @BeforeClass
     public static void beforeClass() throws IOException {
-        final Properties properties = new Properties();
-        properties.load(ClassLoader.getSystemResourceAsStream("kafka_streaming_test/kafka.properties"));
-        kafkaConfig = KafkaConfig.load(properties);
+        kafkaConfig = StreamManager.getInstance(KylinConfig.getInstanceFromEnv()).getKafkaConfig("kafka");
 
         zkClient = new ZkClient(kafkaConfig.getZookeeper());
     }

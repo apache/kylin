@@ -37,21 +37,26 @@ package org.apache.kylin.streaming;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import kafka.cluster.Broker;
+import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.streaming.invertedindex.BrokerConfig;
+import org.apache.kylin.common.persistence.Serializer;
 
 import javax.annotation.Nullable;
+import java.io.*;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * Created by qianzhou on 3/2/15.
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class KafkaConfig extends RootPersistentEntity {
+
+    public static Serializer<KafkaConfig> SERIALIZER = new JsonSerializer<KafkaConfig>(KafkaConfig.class);
+
+    @JsonProperty("name")
+    private String name;
 
     @JsonProperty("brokers")
     private List<BrokerConfig> brokerConfigs;
@@ -135,36 +140,22 @@ public class KafkaConfig extends RootPersistentEntity {
         });
     }
 
-    //    public static KafkaConfig load(KafkaConfig config) {
-//        KafkaConfig result = new KafkaConfig();
-//        result.setBufferSize(config.getBufferSize());
-//        result.setMaxReadCount(config.getMaxReadCount());
-//        result.setTimeout(config.getTimeout());
-//        result.setTopic(config.getTopic());
-//        result.setZookeeper(config.getZookeeper());
-//        result.setPartitionId(config.getPartitionId());
-//        result.setBrokers(config.getBrokers());
-//        return result;
-//    }
-//
-//    public static KafkaConfig load(Properties properties) {
-//        Preconditions.checkNotNull(properties);
-//        KafkaConfig result = new KafkaConfig();
-//        result.setBufferSize(Integer.parseInt(properties.getProperty("consumer.bufferSize")));
-//        result.setMaxReadCount(Integer.parseInt(properties.getProperty("consumer.maxReadCount")));
-//        result.setTimeout(Integer.parseInt(properties.getProperty("consumer.timeout")));
-//        result.setTopic(properties.getProperty("topic"));
-//        result.setZookeeper(properties.getProperty("zookeeper"));
-//        result.setPartitionId(Integer.parseInt(properties.getProperty("partitionId")));
-//
-//        int id = 0;
-//        List<Broker> brokers = Lists.newArrayList();
-//        for (String str: properties.getProperty("brokers").split(",")) {
-//            final String[] split = str.split(":");
-//            final Broker broker = new Broker(id++, split[0], Integer.parseInt(split[1]));
-//            brokers.add(broker);
-//        }
-//        result.setBrokers(brokers);
-//        return result;
-//    }
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public KafkaConfig clone() {
+        try {
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            SERIALIZER.serialize(this, new DataOutputStream(baos));
+            return SERIALIZER.deserialize(new DataInputStream(new ByteArrayInputStream(baos.toByteArray())));
+        } catch (IOException e) {
+            return null;//in mem, should not happen
+        }
+    }
 }
