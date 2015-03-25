@@ -38,3 +38,6 @@ Kylin uses dictionary to encode the values in each column, this greatly reduce t
 
 #### Why Kylin calculate the HIVE table cardinality?
 The cardinality of dimensions is an important measure of cube complexity. The higher the cardinality, the bigger the cube, and thus the longer to build and the slower to query. Cardinality > 1,000 is worth attention and > 1,000,000 should be avoided at best effort. For optimal cube performance, try reduce high cardinality by categorize values or derive features.
+
+#### What is the difference between Kylin and Druid
+take a look at http://mail-archives.apache.org/mod_mbox/incubator-kylin-dev/201503.mbox/%3Ctencent_0DAD681A15F3B2F2379CADC9%40qq.com%3E

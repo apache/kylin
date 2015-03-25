@@ -40,9 +40,9 @@ import org.slf4j.LoggerFactory;
 /**
  * @author xjiang
  */
-public class CubeEnumerator implements Enumerator<Object[]> {
+public class OLAPEnumerator implements Enumerator<Object[]> {
 
-    private final static Logger logger = LoggerFactory.getLogger(CubeEnumerator.class);
+    private final static Logger logger = LoggerFactory.getLogger(OLAPEnumerator.class);
 
     private final OLAPContext olapContext;
     private final DataContext optiqContext;
@@ -51,7 +51,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
     private int[] fieldIndexes;
     private int tupleFieldsHash;
 
-    public CubeEnumerator(OLAPContext olapContext, DataContext optiqContext) {
+    public OLAPEnumerator(OLAPContext olapContext, DataContext optiqContext) {
         this.olapContext = olapContext;
         this.optiqContext = optiqContext;
         this.current = new Object[olapContext.olapRowType.getFieldCount()];

@@ -159,8 +159,18 @@ public class RowKeyDesc {
         return desc;
     }
 
+
+    public boolean isUseDictionary(int index) {
+        String useDictionary = rowkeyColumns[index].getDictionary();
+        return useDictionary(useDictionary);
+    }
+
     public boolean isUseDictionary(TblColRef col) {
         String useDictionary = getDictionary(col);
+        return useDictionary(useDictionary);
+    }
+
+    private boolean useDictionary(String useDictionary) {
         return !StringUtils.isBlank(useDictionary) && !"false".equals(useDictionary);
     }
 
