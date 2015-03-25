@@ -49,7 +49,6 @@ import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
-import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -78,7 +77,7 @@ public class CubeStreamBuilder extends StreamBuilder {
     private CubeDesc desc = null;
     private CuboidScheduler cuboidScheduler = null;
     private List<List<String>> table = null;
-    private Map<TblColRef, DictionaryInfo> dictionaryMap = null;
+    private Map<TblColRef, Dictionary> dictionaryMap = null;
     private Cuboid baseCuboid = null;
     private CubeInstance cube;
     private CubeJoinedFlatTableDesc intermediateTableDesc;
@@ -87,16 +86,18 @@ public class CubeStreamBuilder extends StreamBuilder {
     private String[] metricsAggrFuncs = null;
     private Map<Integer, Integer> dependentMeasures = null; // key: index of Measure which depends on another measure; value: index of Measure which is depended on;
     public static final LongWritable ONE = new LongWritable(1l);
+    private boolean needBuildDictionary;
 
     private Map<Long, GridTable> generatedCuboids; // key: cuboid id; value: grid table of the cuboid
 
-    public CubeStreamBuilder(LinkedBlockingDeque<Stream> queue, int sliceSize, CubeInstance cube, Map<TblColRef, DictionaryInfo> dictionaryMap, Map<Long, GridTable> generatedCuboids) {
+    public CubeStreamBuilder(LinkedBlockingDeque<Stream> queue, int sliceSize, CubeInstance cube, boolean needBuildDictionary, Map<TblColRef, Dictionary> dictionaryMap, Map<Long, GridTable> generatedCuboids) {
         super(queue, sliceSize);
         this.cube = cube;
         this.desc = cube.getDescriptor();
         this.cuboidScheduler = new CuboidScheduler(desc);
         this.dictionaryMap = dictionaryMap;
         this.generatedCuboids = generatedCuboids;
+        this.needBuildDictionary = needBuildDictionary;
 
         measureCodec = new MeasureCodec(desc.getMeasures());
         measureNumber = desc.getMeasures().size();
@@ -120,6 +121,9 @@ public class CubeStreamBuilder extends StreamBuilder {
                 dependentMeasures.put(i, index);
             }
         }
+
+        if (!needBuildDictionary && (dictionaryMap == null || dictionaryMap.isEmpty()))
+            throw new IllegalArgumentException();
     }
 
     @Override
@@ -136,14 +140,16 @@ public class CubeStreamBuilder extends StreamBuilder {
             }
         });
 
-        buildDictionary(table, desc, dictionaryMap);
+        if (needBuildDictionary) {
+            buildDictionary(table, desc, dictionaryMap);
+        }
 
         long baseCuboidId = Cuboid.getBaseCuboidId(desc);
 
         try {
             calculateCuboid(null, -1l, baseCuboidId, generatedCuboids);
         } catch (IOException e) {
-           logger.error("failed to calculate cuboid ", e);
+            logger.error("failed to calculate cuboid ", e);
         }
 
         assert generatedCuboids.size() > 0;
@@ -172,7 +178,8 @@ public class CubeStreamBuilder extends StreamBuilder {
     }
 
     private void outputGT(GridTable gridTable) throws IOException {
-        IGTScanner scanner = gridTable.scan(null, null, null, null);
+        GTScanRequest req = new GTScanRequest(gridTable.getInfo(), null, null, null, null);
+        IGTScanner scanner = gridTable.scan(req);
         for (GTRecord record : scanner) {
             logger.debug(record.toString());
         }
@@ -241,8 +248,8 @@ public class CubeStreamBuilder extends StreamBuilder {
     }
 
     private GridTable scanAndAggregateGridTable(GridTable gridTable, long cuboidId, BitSet aggregationColumns, BitSet measureColumns) throws IOException {
-
-        IGTScanner scanner = gridTable.scanAndAggregate(null, null, aggregationColumns, measureColumns, metricsAggrFuncs, null);
+        GTScanRequest req = new GTScanRequest(gridTable.getInfo(), null, null, aggregationColumns, measureColumns, metricsAggrFuncs, null);
+        IGTScanner scanner = gridTable.scan(req);
         GridTable newGridTable = newGridTableByCuboidID(cuboidId);
         GTBuilder builder = newGridTable.rebuild();
 
@@ -352,7 +359,7 @@ public class CubeStreamBuilder extends StreamBuilder {
         for (TblColRef col : cuboid.getColumns()) {
             dataTypes.add(col.getType());
             if (this.desc.getRowkey().isUseDictionary(col)) {
-                dictionaryOfThisCuboid.put(colIndex, dictionaryMap.get(col).getDictionaryObject());
+                dictionaryOfThisCuboid.put(colIndex, dictionaryMap.get(col));
             }
             colIndex++;
         }
@@ -368,7 +375,7 @@ public class CubeStreamBuilder extends StreamBuilder {
     }
 
 
-    private void buildDictionary(List<List<String>> table, CubeDesc desc, Map<TblColRef, DictionaryInfo> dictionaryMap) {
+    private void buildDictionary(List<List<String>> table, CubeDesc desc, Map<TblColRef, Dictionary> dictionaryMap) {
         SetMultimap<TblColRef, String> valueMap = HashMultimap.create();
 
         List<TblColRef> dimColumns = desc.listDimensionColumnsExcludingDerived();
@@ -392,10 +399,10 @@ public class CubeStreamBuilder extends StreamBuilder {
                     }));
 
                     logger.info("Building dictionary for " + col);
-                    DictionaryInfo dictInfo =  new DictionaryInfo(col.getTable(), col.getName(), 0, col.getDatatype(), null, "");
-                    dictInfo.setDictionaryObject(dict);
-                    dictInfo.setDictionaryClass(dict.getClass().getName());
-                    dictionaryMap.put(col, dictInfo);
+//                    DictionaryInfo dictInfo = new DictionaryInfo(col.getTable(), col.getName(), 0, col.getDatatype(), null, "");
+//                    dictInfo.setDictionaryObject(dict);
+//                    dictInfo.setDictionaryClass(dict.getClass().getName());
+                    dictionaryMap.put(col, dict);
                 }
             }
         }
