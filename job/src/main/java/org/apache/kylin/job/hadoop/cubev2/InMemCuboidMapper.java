@@ -17,6 +17,7 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowConstants;
+import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.Dictionary;
@@ -69,9 +70,10 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Tex
     private Cuboid baseCuboid;
     private int mapperTaskId;
     private int counter;
-    private byte[] keyBuf = new byte[4096];
+
     private ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
     private Object[] measures;
+    private MeasureCodec measureCodec;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -113,6 +115,7 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Tex
         mapperTaskId = context.getTaskAttemptID().getTaskID().getId();
 
         measures = new Object[cubeDesc.getMeasures().size()];
+        measureCodec = new MeasureCodec(cubeDesc.getMeasures());
     }
 
     @Override
@@ -143,29 +146,49 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Tex
         allCuboids.addAll(cuboidsMap.keySet());
         Collections.sort(allCuboids);
 
-        for (Long cuboid : allCuboids) {
-            // output cuboids;
-            logger.info("Output cuboid " + cuboid + " to reducer...");
-            long cuboidRowCount = 0;
-            int dimensions = BitSet.valueOf(new long[]{cuboid}).cardinality();
-            int offSet = 0;
-            System.arraycopy(Bytes.toBytes(cuboid), 0, keyBuf, 0, Bytes.toBytes(cuboid).length);
-            offSet += Bytes.toBytes(cuboid).length;
 
-            GridTable gt = cuboidsMap.get(cuboid);
+        for (Long cuboidId : allCuboids) {
+            int bytesLength = RowConstants.ROWKEY_CUBOIDID_LEN;
+            Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidId);
+            RowKeyColumnIO colIO = new RowKeyColumnIO(this.cubeSegment);
+            for (TblColRef column : cuboid.getColumns()) {
+                bytesLength += colIO.getColumnLength(column);
+            }
+
+            logger.info("The keyBuf length is " + bytesLength);
+            byte[] keyBuf = new byte[bytesLength];
+            // output cuboids;
+            int dimensions = BitSet.valueOf(new long[]{cuboidId}).cardinality();
+            logger.info("Output cuboid " + cuboidId + " to reducer, dimension number is " + dimensions);
+            long cuboidRowCount = 0;
+            System.arraycopy(Bytes.toBytes(cuboidId), 0, keyBuf, 0, Bytes.toBytes(cuboidId).length);
+
+            GridTable gt = cuboidsMap.get(cuboidId);
             GTScanRequest req = new GTScanRequest(gt.getInfo(), null, null, null, null);
             IGTScanner scanner = gt.scan(req);
+            int offSet = 0;
             for (GTRecord record : scanner) {
                 cuboidRowCount++;
+                offSet = RowConstants.ROWKEY_CUBOIDID_LEN;
                 for (int x = 0; x < dimensions; x++) {
-                    System.arraycopy(record.get(x).array(), 0, keyBuf, offSet, record.get(x).array().length);
-                    offSet += record.get(x).array().length;
+                    logger.info("Copy key with offSet: " + offSet + ", length " + record.get(x).length());
+                    System.arraycopy(record.get(x).array(), record.get(x).offset(), keyBuf, offSet, record.get(x).length());
+                    offSet += record.get(x).length();
                 }
 
-                valueBuf.clear();
+                /*
                 for (int i = 0; i < measures.length; i++) {
                     valueBuf.put(record.get(dimensions + i).array());
                 }
+
+                */
+                Object[] values = record.getValues();
+                for (int i = 0; i < measures.length; i++) {
+                    measures[i] = values[dimensions + i];
+                }
+
+                valueBuf.clear();
+                measureCodec.encode(measures, valueBuf);
 
                 outputKey.set(keyBuf, 0, offSet); // key is cuboid-id + rowkey bytes
                 outputValue.set(valueBuf.array(), 0, valueBuf.position());
