@@ -32,7 +32,7 @@
  * /
  */
 
-package org.apache.kylin.streaming.invertedindex;
+package org.apache.kylin.streaming;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
