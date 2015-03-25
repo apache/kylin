@@ -8,7 +8,7 @@ Kylin Web Tutorial
 > Mac: Google Chrome, FireFox, Safari
 
 ## 1. Access & Login
-Host to access: http://your_sandbox_ip:9080
+Host to access: http://your_sandbox_ip:7070/kylin
 Login with username/password: ADMIN/KYLIN
 
 ![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/web%20tutorial/1%20login.png)
@@ -19,6 +19,9 @@ Although Kylin will using SQL as query interface and leverage Hive metadata, kyl
 ![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/web%20tutorial/2%20tables.png)
 
 ## 3. Kylin OLAP Cube
+
+> To make cubes availabe you'll have to create them first [Kylin Cube Creation Tutorial](Kylin Cube Creation Tutorial.md)
+
 Kylin's OLAP Cubes are pre-calculation datasets from Star Schema Hive tables, Here's the web management interface for user to explorer, manage all cubes.Go to `Cubes` Menu, it will list all cubes available in system:
 
 ![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/web%20tutorial/3%20cubes.png)
@@ -42,6 +45,9 @@ To explore more detail about the Cube
    ![](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/web%20tutorial/7%20access.png)
 
 ## 4. Write and Execute SQL on web
+
+>> To make queries availabe you'll have to create are build cubes first [Kylin Cube Creation Tutorial](Kylin Cube Creation Tutorial.md) and [Kylin Cube Build and Job Monitoring Tutorial](Kylin Cube Build and Job Monitoring Tutorial.md)
+
 Kylin's web offer a simple query tool for user to run SQL to explorer existing cube, verify result and explorer the result set using #5's Pivot analysis and visualization
 
 > **Query Limit**

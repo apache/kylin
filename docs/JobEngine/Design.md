@@ -4,7 +4,7 @@
 
 ### Executable
 
-![Class Diagram](https://raw.githubusercontent.com/KylinOLAP/Kylin/inverted-index/docs/JobEngine/Class_Diagram.png)
+![Class Diagram](Class_Diagram.png)
 
 **Executable** is a top-level interface for all kinds of jobs or tasks.
 

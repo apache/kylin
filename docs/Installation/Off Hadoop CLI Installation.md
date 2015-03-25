@@ -2,27 +2,18 @@ Off Hadoop CLI Installation (Dev Env Setup)
 ===
 Off-Hadoop-CLI installation is usually for **development use**.
 
-Developers want to run kylin test cases or applications at their development machine. The scenario is depicted at https://github.com/KylinOLAP/Kylin#off-hadoop-cli-installation.
+Developers want to run kylin test cases or applications at their development machine. The scenario is depicted as:
 
+![Off-Hadoop-CLI-installation](off_cli_install_scene.png)
 
-By following this tutorial, you will be able to build kylin test cubes by running a specific test case, and you can further run other test cases against the cubes having been built.
+The "Applications" here can be any unit cases running on your dev machine's IDE. By following this tutorial, you will be able to build kylin test cubes by running a specific test case, and you can further run other test cases against the cubes having been built.
 
 
 ## Environment on the Hadoop CLI
 
-Off-Hadoop-CLI installation requires you having a hadoop CLI machine (or a hadoop sandbox) as well as your local develop machine. To make things easier we strongly recommend you starting with running Kylin on a hadoop sandbox, like <http://hortonworks.com/products/hortonworks-sandbox/>. In the following tutorial we'll go with **Hortonworks Sandbox 2.1**. 
+### Environment
 
-### Start Hadoop
-
-In Hortonworks sandbox, ambari helps to launch hadoop:
-
-	ambari-agent start
-	ambari-server start
-	
-With both command successfully run you can go to ambari home page at <http://yoursandboxip:8080> (user:admin,password:admin) to check everything's status. By default ambari disables Hbase, you'll need manually start the `Hbase` service.
-
-For other hadoop distribution, basically start the hadoop cluster, make sure HDFS, YARN, Hive, HBase are running.
-
+Kylin Rquires a properly setup hadoop environment to run. Please take a look [this](Hadoop Environment.md).
 
 ## Environment on the dev machine
 
@@ -72,5 +63,5 @@ Run other tests, the end-to-end cube building test is exclueded
 
 In your Eclipse IDE, launch `org.apache.kylin.rest.DebugTomcat` with specifying VM arguments "-Dspring.profiles.active=sandbox". (By default Kylin server will listen on 7070 port; If you want to use another port, please specify it as a parameter when run `DebugTomcat)
 
-Check Kylin Web available at http://localhost:7070 (user:ADMIN,password:KYLIN)
+Check Kylin Web available at http://localhost:7070/kylin (user:ADMIN,password:KYLIN)
 
