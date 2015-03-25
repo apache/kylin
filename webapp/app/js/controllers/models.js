@@ -48,8 +48,10 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
 
         //  TODO offset&limit
         $scope.list = function () {
+            var defer = $q.defer();
             if(!$scope.projectModel.projects.length){
-                return [];
+                defer.resolve([]);
+                return defer.promise;
             }
 //            offset = (!!offset) ? offset : null;
 //            limit = (!!limit) ? limit : null;
@@ -62,7 +64,6 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
 
             $scope.loading = true;
 
-            var defer = $q.defer();
              ModelList.list(queryParam).then(function(resp){
                 $scope.loading = false;
                 defer.resolve(resp);

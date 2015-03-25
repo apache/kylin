@@ -16,7 +16,8 @@
 * limitations under the License.
 -->
 
-<div ng-controller="CubeModelCtrl" class="nav-tabs-custom">
+<!--show detail when exist models-->
+<div ng-controller="CubeModelCtrl" class="nav-tabs-custom" style="margin-top:40px;">
     <ul ng-show="model.name" class="nav nav-tabs">
         <li class="{{(!model.visiblePage || model.visiblePage=='metadata')? 'active':''}}">
             <a href="" ng-click="model.visiblePage='metadata'">Grid</a>
