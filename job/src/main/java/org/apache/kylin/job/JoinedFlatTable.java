@@ -21,15 +21,13 @@ package org.apache.kylin.job;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.kylin.cube.model.DimensionDesc;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -53,6 +51,10 @@ import org.apache.kylin.metadata.model.TblColRef;
  */
 
 public class JoinedFlatTable {
+
+    public static final String FACT_TABLE_ALIAS = "FACT_TABLE";
+
+    public static final String LOOKUP_TABLE_ALAIS_PREFIX = "LOOKUP_";
 
     public static String getTableDir(IJoinedFlatTableDesc intermediateTableDesc, String storageDfsDir, String jobUUID) {
         return storageDfsDir + "/" + intermediateTableDesc.getTableName(jobUUID);
@@ -128,25 +130,43 @@ public class JoinedFlatTable {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT" + "\n");
         String tableAlias;
+        Map<String, String> tableAliasMap = buildTableAliasMap(intermediateTableDesc.getDataModel());
         for (int i = 0; i < intermediateTableDesc.getColumnList().size(); i++) {
             IntermediateColumnDesc col = intermediateTableDesc.getColumnList().get(i);
             if (i > 0) {
                 sql.append(",");
             }
-            tableAlias = intermediateTableDesc.getTableAlias(col.getTableName());
+            tableAlias = tableAliasMap.get(col.getTableName());
             sql.append(tableAlias + "." + col.getColumnName() + "\n");
         }
-        appendJoinStatement(intermediateTableDesc, sql);
-        appendWhereStatement(intermediateTableDesc, sql);
+        appendJoinStatement(intermediateTableDesc, sql, tableAliasMap);
+        appendWhereStatement(intermediateTableDesc, sql, tableAliasMap);
         return sql.toString();
     }
 
-    private static void appendJoinStatement(IJoinedFlatTableDesc intermediateTableDesc, StringBuilder sql) {
+    private static Map buildTableAliasMap(DataModelDesc dataModelDesc) {
+        Map<String, String> tableAliasMap = new HashMap<String, String>();
+
+        tableAliasMap.put(dataModelDesc.getFactTable().toUpperCase(), FACT_TABLE_ALIAS);
+
+        int i = 1;
+        for (LookupDesc lookupDesc: dataModelDesc.getLookups()) {
+            JoinDesc join = lookupDesc.getJoin();
+            if (join != null) {
+                tableAliasMap.put(lookupDesc.getTable().toUpperCase(), LOOKUP_TABLE_ALAIS_PREFIX + i);
+                i++;
+            }
+
+        }
+        return tableAliasMap;
+    }
+
+    private static void appendJoinStatement(IJoinedFlatTableDesc intermediateTableDesc, StringBuilder sql, Map<String, String> tableAliasMap) {
         Set<String> dimTableCache = new HashSet<String>();
 
         DataModelDesc dataModelDesc = intermediateTableDesc.getDataModel();
         String factTableName = dataModelDesc.getFactTable();
-        String factTableAlias = intermediateTableDesc.getTableAlias(factTableName);
+        String factTableAlias = tableAliasMap.get(factTableName);
         sql.append("FROM " + factTableName + " as " + factTableAlias + " \n");
 
         for (LookupDesc lookupDesc : dataModelDesc.getLookups()) {
@@ -160,13 +180,13 @@ public class JoinedFlatTable {
                     if (pk.length != fk.length) {
                         throw new RuntimeException("Invalid join condition of lookup table:" + lookupDesc);
                     }
-                    sql.append(joinType + " JOIN " + dimTableName + " as " + intermediateTableDesc.getTableAlias(dimTableName) + "\n");
+                    sql.append(joinType + " JOIN " + dimTableName + " as " + tableAliasMap.get(dimTableName) + "\n");
                     sql.append("ON ");
                     for (int i = 0; i < pk.length; i++) {
                         if (i > 0) {
                             sql.append(" AND ");
                         }
-                        sql.append(factTableAlias + "." + fk[i].getName() + " = " + intermediateTableDesc.getTableAlias(dimTableName) + "." + pk[i].getName());
+                        sql.append(factTableAlias + "." + fk[i].getName() + " = " + tableAliasMap.get(dimTableName) + "." + pk[i].getName());
                     }
                     sql.append("\n");
 
@@ -176,7 +196,7 @@ public class JoinedFlatTable {
         }
     }
 
-    private static void appendWhereStatement(IJoinedFlatTableDesc intermediateTableDesc, StringBuilder sql) {
+    private static void appendWhereStatement(IJoinedFlatTableDesc intermediateTableDesc, StringBuilder sql, Map<String, String> tableAliasMap) {
         if (!(intermediateTableDesc instanceof CubeJoinedFlatTableDesc)) {
             return;//TODO: for now only cube segments support filter and partition
         }
@@ -207,7 +227,7 @@ public class JoinedFlatTable {
                 if (indexOfDot > 0) {
                     String partitionTableName = partitionColumnName.substring(0, indexOfDot);
                     String columeOnly = partitionColumnName.substring(indexOfDot);
-                    String partitionTableAlias = desc.getTableAlias(partitionTableName);
+                    String partitionTableAlias = tableAliasMap.get(partitionTableName);
                     partitionColumnName = partitionTableAlias + columeOnly;
                 }
 

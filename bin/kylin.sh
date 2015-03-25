@@ -7,12 +7,6 @@ then
     tomcat_root=${dir}/../tomcat
     export tomcat_root
 
-    #if [ ! -z "$KYLIN_LD_LIBRARY_PATH" ]
-    #then
-    #    echo "KYLIN_LD_LIBRARY_PATH is set to $KYLIN_LD_LIBRARY_PATH"
-    #else
-    #    exit 1
-    #fi
 
     #The location of all hadoop/hbase configurations are difficult to get.
     #Plus, some of the system properties are secretly set in hadoop/hbase shell command.
@@ -23,7 +17,6 @@ then
     #In this way we no longer need to explicitly configure hadoop/hbase related classpath for tomcat,
     #hbase command will do all the dirty tasks for us:
 
-    #-Djava.library.path=${KYLIN_LD_LIBRARY_PATH} \
 
 
     useSandbox=`cat ${KYLIN_HOME}/conf/kylin.properties | grep 'kylin.sandbox' | awk -F '=' '{print $2}'`
@@ -31,12 +24,19 @@ then
     if [ "$useSandbox" = "true" ]
         then spring_profile="sandbox"
     fi
+
+    #retrive $hive_dependency
     source ${dir}/find-hive-dependency.sh
+    #retrive $KYLIN_EXTRA_START_OPTS
+    if [ -f "${dir}/setenv.sh" ]
+        then source ${dir}/setenv.sh
+    fi
 
     export HBASE_CLASSPATH_PREFIX=${tomcat_root}/bin/bootstrap.jar:${tomcat_root}/bin/tomcat-juli.jar:${tomcat_root}/lib/*:$HBASE_CLASSPATH_PREFIX
     export HBASE_CLASSPATH=$hive_dependency:${HBASE_CLASSPATH}
 
-    hbase -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
+    hbase ${KYLIN_EXTRA_START_OPTS} \
+    -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
     -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
     -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true \
     -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true \

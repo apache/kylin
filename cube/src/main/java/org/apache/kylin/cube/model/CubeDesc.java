@@ -212,6 +212,10 @@ public class CubeDesc extends RootPersistentEntity {
         return functions;
     }
 
+    /**
+     * @deprecated use getModel().getAllTables() instead
+     * @return
+     */
     public List<TableDesc> listTables() {
         MetadataManager metaMgr = MetadataManager.getInstance(config);
         HashSet<String> tableNames = new HashSet<String>();

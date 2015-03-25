@@ -80,9 +80,9 @@ public class KylinClient implements RemoteClient {
             httpClient.executeMethod(post);
 
             if (post.getStatusCode() != 200 && post.getStatusCode() != 201) {
-                logger.error("Authentication Failed with error code " + post.getStatusCode() + " and message:\n" + post.getResponseBodyAsString());
+                logger.error("Connect failed with error code " + post.getStatusCode() + " and message:\n" + post.getResponseBodyAsString());
 
-                throw new ConnectionException("Authentication Failed.");
+                throw new ConnectionException("Connect failed, error code " + post.getStatusCode() + " and message: " + post.getResponseBodyAsString());
             }
         } catch (HttpException e) {
             logger.error(e.getLocalizedMessage(), e);
@@ -108,9 +108,9 @@ public class KylinClient implements RemoteClient {
             httpClient.executeMethod(get);
 
             if (get.getStatusCode() != 200 && get.getStatusCode() != 201) {
-                logger.error("Authentication Failed with error code " + get.getStatusCode() + " and message:\n" + get.getResponseBodyAsString());
+                logger.error("Connect failed with error code " + get.getStatusCode() + " and message:\n" + get.getResponseBodyAsString());
 
-                throw new ConnectionException("Authentication Failed.");
+                throw new ConnectionException("Connect failed, error code " + get.getStatusCode() + " and message: " + get.getResponseBodyAsString());
             }
 
             tableMetaStubs = new ObjectMapper().readValue(get.getResponseBodyAsString(), new TypeReference<List<TableMetaStub>>() {
