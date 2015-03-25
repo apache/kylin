@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-KylinApp.service('ModelList',function(ModelService,CubeService,$q,AccessService,ProjectModel){
+KylinApp.service('ModelList',function(ModelService,CubeService,$q,AccessService,ProjectModel,$log){
     var models=[];
     var _this = this;
 
@@ -24,13 +24,17 @@ KylinApp.service('ModelList',function(ModelService,CubeService,$q,AccessService,
 
         var defer = $q.defer();
         var cubeDetail = [];
+        var modelPermission = [];
         ModelService.list(queryParam, function (_models) {
 
             angular.forEach(_models, function (model, index) {
+                $log.info("Add model permission info");
+                modelPermission.push(
                 AccessService.list({type: "DataModelDesc", uuid: model.uuid}, function (accessEntities) {
                     model.accessEntities = accessEntities;
-                });
-//                add cube info to model
+                }).$promise
+                )
+                $log.info("Add cube info to model ,not detail info");
                 cubeDetail.push(
                     CubeService.list({offset: 0, limit: 70,modelName:model.name}, function (_cubes) {
                     model.cubes = _cubes;
@@ -39,7 +43,7 @@ KylinApp.service('ModelList',function(ModelService,CubeService,$q,AccessService,
 
                 model.project = ProjectModel.getProjectByCubeModel(model.name);
             });
-            $q.all(cubeDetail).then(
+            $q.all(cubeDetail,modelPermission).then(
                 function(result){
                     _models = _.filter(_models,function(models){return models.name!=undefined});
                     _this.models = _this.models.concat(_models);
