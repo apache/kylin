@@ -34,33 +34,36 @@
 
 package org.apache.kylin.streaming;
 
-import com.google.common.collect.Lists;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import static junit.framework.TestCase.assertNotNull;
 
 /**
  * Created by qianzhou on 3/25/15.
  */
-public final class JsonStreamParser implements StreamParser {
+public class StreamManagerTest extends LocalFileMetadataTestCase {
 
-    public static final JsonStreamParser instance = new JsonStreamParser();
+    private KylinConfig kylinConfig;
+    private StreamManager streamManager;
 
-    private final JsonParser jsonParser = new JsonParser();
+    @Before
+    public void before() {
+        this.createTestMetadata();
+        kylinConfig = KylinConfig.getInstanceFromEnv();
+        streamManager = StreamManager.getInstance(kylinConfig);
+    }
 
-    private JsonStreamParser(){}
+    @After
+    public void after() {
+        this.cleanupTestMetadata();
+    }
 
-    @Override
-    public List<String> parse(Stream stream, Collection<TblColRef> allColumns) {
-        final JsonObject root = jsonParser.parse(new String(stream.getRawData())).getAsJsonObject();
-        ArrayList<String> result = Lists.newArrayList();
-        for (TblColRef column : allColumns) {
-            result.add(root.get(column.getName()).getAsString());
-        }
-        return result;
+    @Test
+    public void test() {
+        assertNotNull(streamManager.getKafkaConfig("kafka_test"));
     }
 }

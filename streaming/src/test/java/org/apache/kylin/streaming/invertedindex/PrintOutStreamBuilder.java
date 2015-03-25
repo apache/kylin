@@ -32,35 +32,36 @@
  * /
  */
 
-package org.apache.kylin.streaming;
+package org.apache.kylin.streaming.invertedindex;
 
-import com.google.common.collect.Lists;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.streaming.JsonStreamParser;
+import org.apache.kylin.streaming.Stream;
+import org.apache.kylin.streaming.StreamBuilder;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * Created by qianzhou on 3/25/15.
  */
-public final class JsonStreamParser implements StreamParser {
+public class PrintOutStreamBuilder extends StreamBuilder {
 
-    public static final JsonStreamParser instance = new JsonStreamParser();
+    private final Collection<TblColRef> allColumns;
 
-    private final JsonParser jsonParser = new JsonParser();
-
-    private JsonStreamParser(){}
+    public PrintOutStreamBuilder(BlockingQueue<Stream> streamQueue, int sliceSize, Collection<TblColRef> allColumns) {
+        super(streamQueue, sliceSize);
+        setStreamParser(JsonStreamParser.instance);
+        this.allColumns = allColumns;
+    }
 
     @Override
-    public List<String> parse(Stream stream, Collection<TblColRef> allColumns) {
-        final JsonObject root = jsonParser.parse(new String(stream.getRawData())).getAsJsonObject();
-        ArrayList<String> result = Lists.newArrayList();
-        for (TblColRef column : allColumns) {
-            result.add(root.get(column.getName()).getAsString());
+    protected void build(List<Stream> streamsToBuild) throws Exception {
+        for (Stream stream : streamsToBuild) {
+            final List<String> row = getStreamParser().parse(stream, allColumns);
+            System.out.println(StringUtils.join(row, ","));
         }
-        return result;
     }
 }
