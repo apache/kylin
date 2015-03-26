@@ -24,14 +24,15 @@
     </div>
     <div class="space-4"></div>
     <div style="width:310px; height:800px; overflow:auto">
-        <treecontrol ng-if="selectedSrcDb.length > 0" class="tree-light"
-                     dirSelection="true"
-                     tree-model="selectedSrcDb"
-                     options="treeOptions"
-                     on-selection="showSelected(node)"
-                     selected-node="selectedSrcTable">
-            {{node.name}} {{!!(node.type_NAME)?'(' + trimType(node.type_NAME) + ')' : ''}}
-        </treecontrol>
+        <abn-tree ng-if="selectedSrcDb.length > 0"
+                tree-data         = "selectedSrcDb"
+                tree-control      = "my_tree"
+                icon-leaf         = "fa fa-columns"
+                icon-expand       = "fa fa-database"
+                icon-collapse     = "fa fa-database"
+                expand-level      = "3">
+        </abn-tree>
+
         <div no-result ng-if="selectedSrcDb.length == 0"></div>
     </div>
 </div>

@@ -89,8 +89,8 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log) {
 
             _this.selectedSrcDb = [];
             for (var key in  tableMap) {
-                var tables = tableMap[key];
 
+                var tables = tableMap[key];
                 var _db_node = {
                     label:key,
                     data:tables,
@@ -99,14 +99,13 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log) {
                     }
                 }
 
-
                 angular.forEach(tables,function(_table){
                         var _table_node_list = [];
 
                         var _table_node = {
                             label:_table.name,
-//                            noLeaf:true,
                             data:_table,
+                            icon:"fa fa-table",
                             onSelect:function(branch){
                                 // set selected model
                                 _this.selectedSrcTable = branch.data;
@@ -116,8 +115,7 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log) {
                         var _column_node_list = [];
                         angular.forEach(_table.columns,function(_column){
                             _column_node_list.push({
-                                    label:_column.name,
-                                    noLeaf:true,
+                                    label:_column.name+"("+_column.datatype+")",
                                     data:_column,
                                     onSelect:function(branch){
                                         // set selected model

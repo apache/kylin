@@ -1,5 +1,5 @@
 <div  ng-controller="SourceMetaCtrl" class="nav-tabs-custom">
-    <div class="col-xs-12" ng-show="models_treedata.length&&tableModel.selectedSrcTable.name">
+    <div class="col-xs-12" ng-show="tableModel.selectedSrcDb&&tableModel.selectedSrcTable.name">
         <h3 class="text-info">Table Schema:{{ tableModel.selectedSrcTable.name}}</h3>
         <div class="tabbable nav-tabs-custom">
             <ul class="nav nav-tabs">
@@ -122,8 +122,10 @@
 
 
     <!--show load hive table tip when no models list-->
-    <div ng-show="!models_treedata.length" style="margin-top:40px;">
-        <div class="box box-primary">
+    <div ng-show="!tableModel.selectedSrcDb.length" style="margin-top:40px;">
+
+        <!--project selected tip-->
+        <div ng-if="projectModel.getSelectedProject();" class="box box-primary">
             <div class="box-header with-border">
                 <i class="fa fa-bullhorn"></i>
                 <h3 class="box-title">No tables</h3>
@@ -134,10 +136,24 @@
                 </div>
             </div><!-- /.box-body -->
         </div>
+        <!--roject not selected tip-->
+        <div ng-if="!projectModel.getSelectedProject();" class="box box-primary">
+            <div class="box-header with-border">
+                <i class="icon fa fa-warning"></i>
+                <h3 class="box-title">No project selected</h3>
+            </div>
+            <div class="box-body">
+                <div class="callout callout-danger">
+                    <p  class="text-danger">
+                       Please select your project first
+                    </p>
+                </div>
+            </div><!-- /.box-body -->
+        </div>
     </div>
 
     <!--show load hive table tip when no models list-->
-    <div ng-show="models_treedata.length&&!tableModel.selectedSrcTable.name" style="margin-top:40px;">
+    <div ng-show="tableModel.selectedSrcDb.length&&!tableModel.selectedSrcTable.name" style="margin-top:40px;">
         <div class="box box-primary">
             <div class="box-header with-border">
                 <i class="fa fa-bullhorn"></i>
