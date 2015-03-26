@@ -19,13 +19,14 @@
 package org.apache.kylin.job.hadoop.cube;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.kylin.common.KylinConfig;
@@ -44,17 +45,20 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author yangli9
  */
-public class FactDistinctColumnsReducer extends KylinReducer<ShortWritable, Text, NullWritable, Text> {
+public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text, NullWritable, Text> {
 
     private List<TblColRef> columnList = new ArrayList<TblColRef>();
     private boolean collectStatistics = false;
     private String statisticsOutput = null;
     private List<Long> rowKeyCountInMappers;
-    private HyperLogLogPlusCounter totalHll;
+    private Map<Long, Long> rowKeyCountInCuboids;
+    protected Map<Long, HyperLogLogPlusCounter> cuboidHLLMap = null;
+    protected long baseCuboidId;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -66,23 +70,24 @@ public class FactDistinctColumnsReducer extends KylinReducer<ShortWritable, Text
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
         CubeDesc cubeDesc = cube.getDescriptor();
 
-        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
+        baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
         columnList = baseCuboid.getColumns();
         collectStatistics = Boolean.parseBoolean(conf.get(BatchConstants.CFG_STATISTICS_ENABLED));
         statisticsOutput = conf.get(BatchConstants.CFG_STATISTICS_OUTPUT);
 
         if (collectStatistics) {
-            totalHll = new HyperLogLogPlusCounter(16);
             rowKeyCountInMappers = Lists.newArrayList();
+            rowKeyCountInCuboids = Maps.newHashMap();
+            cuboidHLLMap = Maps.newHashMap();
         }
     }
 
     @Override
-    public void reduce(ShortWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+    public void reduce(LongWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
         if (key.get() >= 0) {
-            TblColRef col = columnList.get(key.get());
+            TblColRef col = columnList.get((int) key.get());
 
             HashSet<ByteArray> set = new HashSet<ByteArray>();
             for (Text textValue : values) {
@@ -105,26 +110,38 @@ public class FactDistinctColumnsReducer extends KylinReducer<ShortWritable, Text
             }
         } else {
             // for hll
+            long cuboidId = 0 - key.get();
+
             for (Text value : values) {
                 HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(16);
                 ByteArray byteArray = new ByteArray(value.getBytes());
                 hll.readRegisters(byteArray.asBuffer());
 
-                rowKeyCountInMappers.add(hll.getCountEstimate());
-                // merge the hll with total hll
-                totalHll.merge(hll);
+                if (cuboidId > baseCuboidId) {
+                    // if this is the summary info from a mapper, record the number before merge
+                    rowKeyCountInMappers.add(hll.getCountEstimate());
+                }
+
+                if (cuboidHLLMap.get(cuboidId) != null) {
+                    hll.merge(cuboidHLLMap.get(cuboidId));
+                }
+                cuboidHLLMap.put(cuboidId, hll);
             }
         }
 
     }
 
     protected void cleanup(Reducer.Context context) throws IOException, InterruptedException {
+
+        for (Long cuboidId : cuboidHLLMap.keySet()) {
+            rowKeyCountInCuboids.put(cuboidId, cuboidHLLMap.get(cuboidId).getCountEstimate());
+        }
+
         //output the hll info;
         if (collectStatistics) {
             Configuration conf = context.getConfiguration();
             FileSystem fs = FileSystem.get(conf);
-            String outputPath = conf.get(BatchConstants.CFG_STATISTICS_OUTPUT);
-            FSDataOutputStream out = fs.create(new Path(outputPath, BatchConstants.CFG_STATISTICS_CUBE_ESTIMATION));
+            FSDataOutputStream out = fs.create(new Path(statisticsOutput, BatchConstants.CFG_STATISTICS_CUBE_ESTIMATION));
 
             try {
                 long totalSum = 0;
@@ -141,13 +158,21 @@ public class FactDistinctColumnsReducer extends KylinReducer<ShortWritable, Text
                 out.write('\n');
 
 
-                msg = "The merged cube segment has " + totalHll.getCountEstimate() + " rows.";
+                long grantTotal = rowKeyCountInCuboids.get(baseCuboidId + 1);
+                msg = "The merged cube has " + grantTotal + " rows.";
                 out.write(msg.getBytes());
                 out.write('\n');
 
-                msg = "The compaction rate is " + (totalHll.getCountEstimate()) + "/" + totalSum + " = " + (totalHll.getCountEstimate() * 100.0) / totalSum + "%.";
+                msg = "The compaction rate is " + (grantTotal) + "/" + totalSum + " = " + (grantTotal * 100.0) / totalSum + "%.";
                 out.write(msg.getBytes());
                 out.write('\n');
+                out.write('\n');
+                
+                for (long i = 0; i < baseCuboidId; i++) {
+                    msg = "Cuboid " + i + " has " + rowKeyCountInCuboids.get(i) + " rows.";
+                    out.write(msg.getBytes());
+                    out.write('\n');
+                }
 
             } finally {
                 out.close();
