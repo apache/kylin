@@ -15,6 +15,19 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 -->
+
+<div class="page-header" style="height: 50px;">
+    <!--Project-->
+    <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
+        <div class="form-group">
+            <a class="btn btn-xs btn-info" href="projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
+            <a class="btn btn-xs btn-primary" ng-if="userService.hasRole('ROLE_ADMIN')||userService.hasRole('ROLE_MODELER')&&kylinConfig.getDeployEnv()!=='PROD'" style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
+                <i class="fa fa-plus"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
 <div class="row models-main"  style="padding-top:10px;">
     <!--table_tree-->
 
@@ -28,14 +41,14 @@
             </tab>
         </tabset>
     </div>
-    <div  ng-show="showModels&&!cubeSelected"  class="col-xs-9 models-main">
+    <div  ng-if="showModels&&!cubeSelected"  class="col-xs-9 models-main">
         <div ng-include src="'partials/models/model_detail.html'"></div>
     </div>
-    <div  ng-show="showModels&&cubeSelected"  class="col-xs-9 models-main">
+    <div  ng-if="showModels&&cubeSelected"  class="col-xs-9 models-main">
         <div ng-include src="'partials/cubes/cube_detail.html'"></div>
     </div>
 
-    <div ng-show="!showModels" class="col-xs-9 models-main">
+    <div ng-if="!showModels" class="col-xs-9 models-main">
         <div ng-include src="'partials/tables/table_detail.html'"></div>
     </div>
 

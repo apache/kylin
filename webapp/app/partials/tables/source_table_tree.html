@@ -34,13 +34,13 @@
     <div class="space-4"></div>
     <!--tree-->
     <div style="width:100%; height:{{window}}px; overflow:auto;">
-        <treecontrol ng-if="tableModel.selectedSrcDb.length > 0" class="tree-light"
-                     dirSelection="true"
-                     tree-model="tableModel.selectedSrcDb"
-                     options="tableModel.treeOptions"
-                     on-selection="showSelected(node)"
-                     selected-node="tableModel.selectedSrcTable">
-            {{node.name}} {{!!(node.datatype)?'(' + trimType(node.datatype) + ')' : ''}}
-        </treecontrol>
+        <abn-tree
+                tree-data         = "tableModel.selectedSrcDb"
+                tree-control      = "my_tree"
+                icon-leaf         = "fa fa-table"
+                icon-expand       = "fa fa-database"
+                icon-collapse     = "fa fa-database"
+                expand-level      = "3">
+        </abn-tree>
     </div>
 </div>

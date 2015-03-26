@@ -157,6 +157,23 @@
         </div>
     </div>
 
+
+    <!--show load hive table tip when no models list-->
+    <div ng-show="!models_treedata.length" style="margin-top:40px;">
+        <div class="box box-primary">
+            <div class="box-header with-border">
+                <h3 class="box-title">No tables</h3>
+            </div>
+            <div class="box-body">
+                <p>
+                    <a href="models/add" ng-if="userService.hasRole('ROLE_MODELER')">Click here to load your hive table</a>
+                </p>
+            </div><!-- /.box-body -->
+        </div>
+    </div>
+
+
+
     <script type="text/ng-template" id="addHiveTable.html">
         <div class="modal-header">
             <h4>Load Hive Table Metadata</h4>
