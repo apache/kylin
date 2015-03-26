@@ -19,13 +19,13 @@
 package org.apache.kylin.invertedindex.model;
 
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
+import org.apache.kylin.metadata.model.IntermediateColumnDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.Lists;
-
-import org.apache.kylin.invertedindex.model.IIDesc;
-import org.apache.kylin.metadata.model.*;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/30/14.
@@ -35,7 +35,6 @@ public class IIJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     private IIDesc iiDesc;
     private String tableName;
     private List<IntermediateColumnDesc> columnList = Lists.newArrayList();
-    private Map<String, String> tableAliasMap;
 
     public IIJoinedFlatTableDesc(IIDesc iiDesc) {
         this.iiDesc = iiDesc;
@@ -57,6 +56,7 @@ public class IIJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         return tableName + "_" + jobUUID.replace("-", "_");
     }
 
+    @Override
     public List<IntermediateColumnDesc> getColumnList() {
         return columnList;
     }

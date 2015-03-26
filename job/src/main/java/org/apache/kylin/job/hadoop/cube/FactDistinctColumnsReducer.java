@@ -61,7 +61,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<ShortWritable, Text
         super.publishConfiguration(context.getConfiguration());
 
         Configuration conf = context.getConfiguration();
-        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
+        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
         String cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
         CubeDesc cubeDesc = cube.getDescriptor();
