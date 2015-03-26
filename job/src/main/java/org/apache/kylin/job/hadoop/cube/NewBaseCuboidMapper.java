@@ -125,7 +125,7 @@ public class NewBaseCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Text, Text, T
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
         segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME);
 
-        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(context.getConfiguration());
+        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
 
         metadataManager = MetadataManager.getInstance(config);
         cube = CubeManager.getInstance(config).getCube(cubeName);

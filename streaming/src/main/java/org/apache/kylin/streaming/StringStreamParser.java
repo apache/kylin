@@ -34,17 +34,22 @@
 
 package org.apache.kylin.streaming;
 
-import org.apache.kylin.streaming.KafkaConfig;
-import org.junit.Test;
+import com.google.common.collect.Lists;
+import org.apache.kylin.metadata.model.TblColRef;
 
-import java.io.IOException;
-import java.util.Properties;
-
-import static org.junit.Assert.assertEquals;
+import java.util.Collection;
+import java.util.List;
 
 /**
- * Created by qianzhou on 3/2/15.
+ * Created by qianzhou on 3/25/15.
  */
-public class KafkaConfigTest {
+public final class StringStreamParser implements StreamParser {
 
+    public static final StringStreamParser instance = new StringStreamParser();
+
+    private StringStreamParser(){}
+    @Override
+    public List<String> parse(Stream stream, List<TblColRef> allColumns) {
+        return Lists.newArrayList(new String(stream.getRawData()).split(","));
+    }
 }

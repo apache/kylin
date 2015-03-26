@@ -58,15 +58,16 @@ public abstract class KafkaConsumer implements Runnable {
 
     private KafkaConfig kafkaConfig;
     private List<Broker> replicaBrokers;
-    private AtomicLong offset = new AtomicLong();
+    private long offset;
     private BlockingQueue<Stream> streamQueue;
 
     private Logger logger;
 
-    public KafkaConsumer(String topic, int partitionId, List<Broker> initialBrokers, KafkaConfig kafkaConfig) {
+    public KafkaConsumer(String topic, int partitionId, long startOffset, List<Broker> initialBrokers, KafkaConfig kafkaConfig) {
         this.topic = topic;
         this.partitionId = partitionId;
         this.kafkaConfig = kafkaConfig;
+        offset = startOffset;
         this.replicaBrokers = initialBrokers;
         logger = LoggerFactory.getLogger("KafkaConsumer_" + topic + "_" + partitionId);
         streamQueue = new ArrayBlockingQueue<Stream>(kafkaConfig.getMaxReadCount());
@@ -90,12 +91,6 @@ public abstract class KafkaConsumer implements Runnable {
     public void run() {
         try {
             Broker leadBroker = getLeadBroker();
-            if (leadBroker == null) {
-                logger.warn("cannot find lead broker");
-            } else {
-                final long lastOffset = KafkaRequester.getLastOffset(topic, partitionId, OffsetRequest.EarliestTime(), leadBroker, kafkaConfig);
-                offset.set(lastOffset);
-            }
             while (true) {
                 if (leadBroker == null) {
                     leadBroker = getLeadBroker();
@@ -105,9 +100,9 @@ public abstract class KafkaConsumer implements Runnable {
                     continue;
                 }
 
-                final FetchResponse fetchResponse = KafkaRequester.fetchResponse(topic, partitionId, offset.get(), leadBroker, kafkaConfig);
+                final FetchResponse fetchResponse = KafkaRequester.fetchResponse(topic, partitionId, offset, leadBroker, kafkaConfig);
                 if (fetchResponse.errorCode(topic, partitionId) != 0) {
-                    logger.warn("fetch response offset:" + offset.get() + " errorCode:" + fetchResponse.errorCode(topic, partitionId));
+                    logger.warn("fetch response offset:" + offset + " errorCode:" + fetchResponse.errorCode(topic, partitionId));
                     continue;
                 }
                 for (MessageAndOffset messageAndOffset : fetchResponse.messageSet(topic, partitionId)) {
@@ -117,7 +112,7 @@ public abstract class KafkaConsumer implements Runnable {
                         logger.error("error put streamQueue", e);
                         break;
                     }
-                    offset.incrementAndGet();
+                    offset++;
                 }
             }
         } catch (Exception e) {

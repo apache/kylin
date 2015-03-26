@@ -34,22 +34,37 @@
 
 package org.apache.kylin.streaming;
 
-import org.junit.BeforeClass;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 /**
- * Created by qianzhou on 2/16/15.
+ * Created by qianzhou on 3/26/15.
  */
-public abstract class KafkaBaseTest {
+public class StreamingCLI {
 
-    protected static final Logger logger = LoggerFactory.getLogger("kafka test");
+    private static final Logger logger = LoggerFactory.getLogger(StreamingCLI.class);
 
-    @BeforeClass
-    public static void beforeClass() throws IOException {
+    public static void main(String[] args) {
+        try {
+            if (args.length < 2) {
+                printArgsError(args);
+                return;
+            }
+            if (args[0].equals("start")) {
+                String kafkaConfName = args[1];
+                StreamingBootstrap.startStreaming(kafkaConfName, 0);
+            } else if (args.equals("stop")) {
+
+            } else {
+                printArgsError(args);
+            }
+        } catch (Exception e) {
+        }
     }
 
+    private static void printArgsError(String[] args) {
+        logger.warn("invalid args:" + StringUtils.join(args, " "));
+    }
 
 }
