@@ -76,6 +76,9 @@ public class KafkaConfig extends RootPersistentEntity {
     @JsonProperty("bufferSize")
     private int bufferSize;
 
+    @JsonProperty("iiDesc")
+    private String iiDesc;
+
     private int partitionId;
 
     public int getTimeout() {

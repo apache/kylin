@@ -49,9 +49,9 @@ import java.util.concurrent.BlockingQueue;
  */
 public class PrintOutStreamBuilder extends StreamBuilder {
 
-    private final Collection<TblColRef> allColumns;
+    private final List<TblColRef> allColumns;
 
-    public PrintOutStreamBuilder(BlockingQueue<Stream> streamQueue, int sliceSize, Collection<TblColRef> allColumns) {
+    public PrintOutStreamBuilder(BlockingQueue<Stream> streamQueue, int sliceSize, List<TblColRef> allColumns) {
         super(streamQueue, sliceSize);
         setStreamParser(JsonStreamParser.instance);
         this.allColumns = allColumns;
@@ -61,7 +61,7 @@ public class PrintOutStreamBuilder extends StreamBuilder {
     protected void build(List<Stream> streamsToBuild) throws Exception {
         for (Stream stream : streamsToBuild) {
             final List<String> row = getStreamParser().parse(stream, allColumns);
-            System.out.println(StringUtils.join(row, ","));
+            System.out.println("offset:" + stream.getOffset() + " " + StringUtils.join(row, ","));
         }
     }
 }
