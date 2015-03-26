@@ -10,7 +10,7 @@ then
     echo "not binary file found"
     wget http://mirror.sdunix.com/apache/tomcat/tomcat-7/v7.0.59/bin/apache-tomcat-7.0.59.tar.gz || echo "download tomcat failed"
 else
-    if [ ! `md5sum apache-tomcat-7.0.59.tar.gz | awk '{print $1}'` -eq "ec570258976edf9a833cd88fd9220909" ]
+    if [ `md5sum apache-tomcat-7.0.59.tar.gz | awk '{print $1}'` != "ec570258976edf9a833cd88fd9220909" ]
     then
         echo "md5 check failed"
         rm apache-tomcat-7.0.59.tar.gz
