@@ -22,6 +22,7 @@ import junit.framework.TestCase;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 /**
  * by honma
@@ -51,6 +52,25 @@ public class BytesUtilTest extends TestCase {
         boolean[] y = BytesUtil.readBooleanArray(buffer);
         assertEquals(y[2], true);
         assertEquals(y[1], false);
+    }
+
+    @Test
+    public void testWriteReadUnsignedInt() {
+
+        int testInt = 735033;
+        ByteArray ba = new ByteArray(new byte[3]);
+        BytesUtil.writeUnsigned(testInt, 3, ba.asBuffer());
+
+        byte[] newBytes = new byte[3];
+        System.arraycopy(ba.array(), 0, newBytes, 0, 3);
+        int value = BytesUtil.readUnsigned(new ByteArray(newBytes).asBuffer(), 3);
+
+        assertEquals(value, testInt);
+
+        byte[] anOtherNewBytes = new byte[3];
+        BytesUtil.writeUnsigned(testInt, anOtherNewBytes, 0, 3);
+
+        assertTrue(Arrays.equals(anOtherNewBytes, ba.array()));
     }
 
 }
