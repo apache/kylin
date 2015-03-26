@@ -184,21 +184,21 @@ public class BytesUtil {
     }
 
     public static void writeUnsigned(int num, int size, ByteBuffer out) {
-        for (int i = 0; i < size; i++) {
-            out.put((byte) num);
-            num >>>= 8;
+        int mask = 0xff << ((size - 1) * 8);
+        for (int i = size; i > 0; i--) {
+            int v = (num & mask) >> (i - 1) * 8;
+            out.put((byte) v);
+            mask = mask >> 8;
         }
     }
 
     public static int readUnsigned(ByteBuffer in, int size) {
         int integer = 0;
-        int mask = 0xff;
-        int shift = 0;
         for (int i = 0; i < size; i++) {
-            integer |= (in.get() << shift) & mask;
-            mask = mask << 8;
-            shift += 8;
+            integer = integer << 8;
+            integer += in.get();
         }
+
         return integer;
     }
 
