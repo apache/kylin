@@ -42,10 +42,7 @@ import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author yangli9
@@ -167,8 +164,13 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
                 out.write(msg.getBytes());
                 out.write('\n');
                 out.write('\n');
-                
-                for (long i = 0; i < baseCuboidId; i++) {
+
+                List<Long> allCuboids = new ArrayList<Long>();
+                allCuboids.addAll(rowKeyCountInCuboids.keySet());
+                Collections.sort(allCuboids);
+                for (long i : allCuboids) {
+                    if (i > baseCuboidId)
+                        continue;
                     msg = "Cuboid " + i + " has " + rowKeyCountInCuboids.get(i) + " rows.";
                     out.write(msg.getBytes());
                     out.write('\n');
