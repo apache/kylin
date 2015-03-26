@@ -49,7 +49,7 @@ public final class StringStreamParser implements StreamParser {
 
     private StringStreamParser(){}
     @Override
-    public List<String> parse(Stream stream, Collection<TblColRef> allColumns) {
+    public List<String> parse(Stream stream, List<TblColRef> allColumns) {
         return Lists.newArrayList(new String(stream.getRawData()).split(","));
     }
 }

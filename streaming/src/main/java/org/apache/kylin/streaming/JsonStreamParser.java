@@ -35,6 +35,7 @@
 package org.apache.kylin.streaming;
 
 import com.google.common.collect.Lists;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -42,6 +43,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by qianzhou on 3/25/15.
@@ -55,11 +57,16 @@ public final class JsonStreamParser implements StreamParser {
     private JsonStreamParser(){}
 
     @Override
-    public List<String> parse(Stream stream, Collection<TblColRef> allColumns) {
+    public List<String> parse(Stream stream, List<TblColRef> allColumns) {
         final JsonObject root = jsonParser.parse(new String(stream.getRawData())).getAsJsonObject();
         ArrayList<String> result = Lists.newArrayList();
+
         for (TblColRef column : allColumns) {
-            result.add(root.get(column.getName()).getAsString());
+            for (Map.Entry<String, JsonElement> entry : root.entrySet()) {
+                if (entry.getKey().equalsIgnoreCase(column.getName())) {
+                    result.add(entry.getValue().getAsString());
+                }
+            }
         }
         return result;
     }
