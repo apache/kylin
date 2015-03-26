@@ -40,7 +40,7 @@ public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
     protected void setup(Context context) throws IOException {
         Configuration conf = context.getConfiguration();
         publishConfiguration(conf);
-        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
+        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
 
         cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
         cube = CubeManager.getInstance(config).getCube(cubeName);

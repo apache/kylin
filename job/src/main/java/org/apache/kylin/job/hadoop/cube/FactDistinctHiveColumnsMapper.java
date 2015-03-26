@@ -40,7 +40,7 @@ import com.google.common.collect.Lists;
 /**
  * @author yangli9
  */
-public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperBase<KEYIN, HCatRecord> {
+public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMapperBase<KEYIN, HCatRecord> {
 
     private HCatSchema schema = null;
     private CubeJoinedFlatTableDesc intermediateTableDesc;

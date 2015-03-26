@@ -114,7 +114,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
         segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME).toUpperCase();
 
-        config = AbstractHadoopJob.loadKylinPropsAndMetadata(context.getConfiguration());
+        config = AbstractHadoopJob.loadKylinPropsAndMetadata();
 
         cubeManager = CubeManager.getInstance(config);
         cube = cubeManager.getCube(cubeName);
