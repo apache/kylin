@@ -36,6 +36,10 @@ public class IntermediateColumnDesc {
         return id;
     }
 
+    public TblColRef getColRef() {
+        return this.colRef;
+    }
+
     public String getColumnName() {
         return colRef.getName();
     }

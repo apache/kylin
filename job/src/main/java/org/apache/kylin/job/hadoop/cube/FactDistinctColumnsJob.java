@@ -101,7 +101,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
                 dbTableNames[1]);
         
         job.setInputFormatClass(HCatInputFormat.class);
-        job.setMapperClass(FactDistinctColumnsMapper.class);
+        job.setMapperClass(FactDistinctHiveColumnsMapper.class);
         job.setCombinerClass(FactDistinctColumnsCombiner.class);
         job.setMapOutputKeyClass(ShortWritable.class);
         job.setMapOutputValueClass(Text.class);

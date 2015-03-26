@@ -54,7 +54,7 @@ public class InvertedIndexPartitioner extends Partitioner<LongWritable, Immutabl
     public void setConf(Configuration conf) {
         this.conf = conf;
         try {
-            KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
+            KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
             IIManager mgr = IIManager.getInstance(config);
             IIInstance ii = mgr.getII(conf.get(BatchConstants.CFG_II_NAME));
             IISegment seg = ii.getSegment(conf.get(BatchConstants.CFG_II_SEGMENT_NAME), SegmentStatusEnum.NEW);
