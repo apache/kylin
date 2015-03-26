@@ -64,7 +64,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -78,7 +78,7 @@ public class IIStreamBuilder extends StreamBuilder {
     private final HTableInterface hTable;
     private final BatchSliceBuilder sliceBuilder;
 
-    public IIStreamBuilder(LinkedBlockingDeque<Stream> queue, String hTableName, IIDesc desc, int partitionId) {
+    public IIStreamBuilder(BlockingQueue<Stream> queue, String hTableName, IIDesc desc, int partitionId) {
         super(queue, desc.getSliceSize());
         this.desc = desc;
         try {

@@ -39,24 +39,33 @@ import kafka.api.OffsetRequest;
 import kafka.cluster.Broker;
 import kafka.javaapi.PartitionMetadata;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.model.IIDesc;
+import org.apache.kylin.streaming.invertedindex.IIStreamBuilder;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Created by qianzhou on 3/26/15.
  */
 public class StreamingBootstrap {
 
-    private static KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-    private static StreamManager streamManager = StreamManager.getInstance(kylinConfig);
-    private static IIManager iiManager = IIManager.getInstance(kylinConfig);
-    private static IIDescManager iiDescManager = IIDescManager.getInstance(kylinConfig);
+    private KylinConfig kylinConfig;
+    private StreamManager streamManager;
+    private IIManager iiManager;
 
+    public static StreamingBootstrap getInstance(KylinConfig kylinConfig) {
+        return new StreamingBootstrap(kylinConfig);
+    }
+
+    private StreamingBootstrap(KylinConfig kylinConfig) {
+        this.kylinConfig = kylinConfig;
+        this.streamManager = StreamManager.getInstance(kylinConfig);
+        this.iiManager = IIManager.getInstance(kylinConfig);
+    }
 
     private static Broker getLeadBroker(KafkaConfig kafkaConfig, int partitionId) {
         final PartitionMetadata partitionMetadata = KafkaRequester.getPartitionMetadata(kafkaConfig.getTopic(), partitionId, kafkaConfig.getBrokers(), kafkaConfig);
@@ -67,7 +76,7 @@ public class StreamingBootstrap {
         }
     }
 
-    public static void startStreaming(String streamingConf, int partitionId) throws Exception {
+    public void startStreaming(String streamingConf, int partitionId) throws Exception {
         final KafkaConfig kafkaConfig = streamManager.getKafkaConfig(streamingConf);
         Preconditions.checkArgument(kafkaConfig != null, "cannot find kafka config:" + streamingConf);
         final IIInstance ii = iiManager.getII(kafkaConfig.getIiName());
@@ -91,12 +100,10 @@ public class StreamingBootstrap {
             }
         };
         final IIDesc desc = ii.getDescriptor();
-        Executors.newSingleThreadExecutor().execute(consumer);
-        while (true) {
-            final Stream stream = consumer.getStreamQueue().poll();
-            if (stream != null) {
-                System.out.println("offset:" + stream.getOffset() + " content:" + new String(stream.getRawData()));
-            }
-        }
+        Executors.newSingleThreadExecutor().submit(consumer);
+        final IIStreamBuilder task = new IIStreamBuilder(consumer.getStreamQueue(), ii.getSegments().get(0).getStorageLocationIdentifier(), desc, partitionId);
+        task.setStreamParser(JsonStreamParser.instance);
+        final Future<?> future = Executors.newSingleThreadExecutor().submit(task);
+        future.get();
     }
 }
