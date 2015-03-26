@@ -21,9 +21,9 @@ package org.apache.kylin.job.hadoop.cube;
 import java.io.IOException;
 import java.util.HashSet;
 
+import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.mr.KylinReducer;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
 
 import org.apache.kylin.common.util.ByteArray;
@@ -31,7 +31,7 @@ import org.apache.kylin.common.util.ByteArray;
 /**
  * @author yangli9
  */
-public class FactDistinctColumnsCombiner extends KylinReducer<ShortWritable, Text, ShortWritable, Text> {
+public class FactDistinctColumnsCombiner extends KylinReducer<LongWritable, Text, LongWritable, Text> {
 
     private Text outputValue = new Text();
 
@@ -41,7 +41,7 @@ public class FactDistinctColumnsCombiner extends KylinReducer<ShortWritable, Tex
     }
 
     @Override
-    public void reduce(ShortWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+    public void reduce(LongWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
         if(key.get() >= 0) {
             HashSet<ByteArray> set = new HashSet<ByteArray>();
