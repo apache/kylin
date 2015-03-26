@@ -35,6 +35,7 @@
 package org.apache.kylin.streaming;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +54,7 @@ public class StreamingCLI {
             }
             if (args[0].equals("start")) {
                 String kafkaConfName = args[1];
-                StreamingBootstrap.startStreaming(kafkaConfName, 0);
+                StreamingBootstrap.getInstance(KylinConfig.getInstanceFromEnv()).startStreaming(kafkaConfName, 0);
             } else if (args.equals("stop")) {
 
             } else {
