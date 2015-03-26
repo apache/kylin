@@ -19,22 +19,9 @@
 'use strict';
 
 KylinApp
-    .controller('ProjectMetaCtrl', function ($scope, $q, ProjectService, QueryService) {
+    .controller('ProjectMetaCtrl', function ($scope, $q, ProjectService, QueryService,$log) {
         $scope.selectedSrcDb = [];
         $scope.selectedSrcTable = {};
-        $scope.treeOptions = {
-            nodeChildren: "columns",
-            injectClasses: {
-                ul: "a1",
-                li: "a2",
-                liSelected: "a7",
-                iExpanded: "a3",
-                iCollapsed: "a4",
-                iLeaf: "a5",
-                label: "a6",
-                labelSelected: "a8"
-            }
-        };
 
         $scope.showSelected = function (table) {
             if (table.uuid) {
@@ -63,11 +50,48 @@ KylinApp
                 });
 
                 for (var key in  tableMap) {
+
                     var tables = tableMap[key];
-                    $scope.selectedSrcDb.push({
-                        "name": key,
-                        "columns": tables
-                    });
+                    var _db_node = {
+                        label:key,
+                        data:tables,
+                        onSelect:function(branch){
+                            $log.info("db "+key +"selected");
+                        }
+                    }
+
+                    angular.forEach(tables,function(_table){
+                            var _table_node_list = [];
+
+                            var _table_node = {
+                                label:_table.name,
+                                data:_table,
+                                icon:"fa fa-table",
+                                onSelect:function(branch){
+                                    // set selected model
+                                    $scope.selectedSrcTable = branch.data;
+                                }
+                            }
+
+                            var _column_node_list = [];
+                            angular.forEach(_table.columns,function(_column){
+                                _column_node_list.push({
+                                    label:_column.name+$scope.columnTypeFormat(_column.type_NAME),
+                                    data:_column,
+                                    onSelect:function(branch){
+                                        // set selected model
+                                        $log.info("selected column info:"+_column.name);
+                                    }
+                                });
+                            });
+                            _table_node.children =_column_node_list;
+                            _table_node_list.push(_table_node);
+
+                            _db_node.children = _table_node_list;
+                        }
+                    );
+
+                    $scope.selectedSrcDb.push(_db_node);
                 }
 
                 $scope.loading = false;
@@ -81,6 +105,13 @@ KylinApp
                 $scope.projectMetaLoad();
         });
 
+        $scope.columnTypeFormat = function(typeName){
+            if(typeName){
+                return "("+$scope.trimType(typeName)+")";
+            }else{
+                return "";
+            }
+        }
         $scope.trimType = function(typeName){
             if (typeName.match(/VARCHAR/i))
             {

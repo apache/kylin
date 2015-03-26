@@ -17,7 +17,6 @@
           treeControl: '='
         },
         link: function(scope, element, attrs) {
-            console.log(attrs.iconLeaf);
           var error, expand_all_parents, expand_level, for_all_ancestors, for_each_branch, get_parent, n, on_treeData_change, select_branch, selected_branch, tree;
           error = function(s) {
             console.log('ERROR:' + s);
@@ -194,14 +193,17 @@
               }
               if (!branch.noLeaf && (!branch.children || branch.children.length === 0)) {
                 tree_icon = attrs.iconLeaf;
-
                 if (__indexOf.call(branch.classes, "leaf") < 0) {
                   branch.classes.push("leaf");
                 }
               } else {
-                if (branch.expanded) {
+                if(branch.icon){
+                  tree_icon = branch.icon;
+                }
+                else if (branch.expanded) {
                   tree_icon = attrs.iconCollapse;
-                } else {
+                }
+                else {
                   tree_icon = attrs.iconExpand;
                 }
               }
