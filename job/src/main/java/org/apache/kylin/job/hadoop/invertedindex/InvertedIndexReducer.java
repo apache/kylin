@@ -53,7 +53,7 @@ public class InvertedIndexReducer extends KylinReducer<LongWritable, ImmutableBy
         super.publishConfiguration(context.getConfiguration());
 
         Configuration conf = context.getConfiguration();
-        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
+        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
         IIManager mgr = IIManager.getInstance(config);
         IIInstance ii = mgr.getII(conf.get(BatchConstants.CFG_II_NAME));
         IISegment seg = ii.getSegment(conf.get(BatchConstants.CFG_II_SEGMENT_NAME), SegmentStatusEnum.NEW);

@@ -44,7 +44,7 @@ public class InMemCuboidReducer extends KylinReducer<Text, Text, Text, Text> {
         super.publishConfiguration(context.getConfiguration());
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
 
-        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(context.getConfiguration());
+        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
 
         cubeDesc = CubeManager.getInstance(config).getCube(cubeName).getDescriptor();
         measuresDescs = cubeDesc.getMeasures();

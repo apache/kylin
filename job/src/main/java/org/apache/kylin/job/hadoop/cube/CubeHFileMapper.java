@@ -62,7 +62,7 @@ public class CubeHFileMapper extends KylinMapper<Text, Text, ImmutableBytesWrita
         super.publishConfiguration(context.getConfiguration());
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME);
 
-        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(context.getConfiguration());
+        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
 
         CubeManager cubeMgr = CubeManager.getInstance(config);
         cubeDesc = cubeMgr.getCube(cubeName).getDescriptor();
