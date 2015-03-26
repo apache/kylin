@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-KylinApp.service('TableModel', function(ProjectModel,$q,TableService) {
+KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log) {
 
 
     var _this = this;
@@ -43,21 +43,6 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService) {
     this.init = function(){
       this.selectedSrcDb = [];
       this.selectedSrcTable = {};
-    }
-
-
-    this.treeOptions = {
-        nodeChildren: "columns",
-        injectClasses: {
-            ul: "a1",
-            li: "a2",
-            liSelected: "a7",
-            iExpanded: "a3",
-            iCollapsed: "a4",
-            iLeaf: "a5",
-            label: "a6",
-            labelSelected: "a8"
-        }
     };
 
     this.aceSrcTbLoaded = function (forceLoad) {
@@ -79,6 +64,9 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService) {
         TableService.list(param, function (tables) {
             var tableMap = [];
             angular.forEach(tables, function (table) {
+
+                var tableData = [];
+
                 if (!tableMap[table.database]) {
                     tableMap[table.database] = [];
                 }
@@ -102,10 +90,50 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService) {
             _this.selectedSrcDb = [];
             for (var key in  tableMap) {
                 var tables = tableMap[key];
-                _this.selectedSrcDb.push({
-                    "name": key,
-                    "columns": tables
-                });
+
+                var _db_node = {
+                    label:key,
+                    data:tables,
+                    onSelect:function(branch){
+                        $log.info("db "+key +"selected");
+                    }
+                }
+
+
+                angular.forEach(tables,function(_table){
+                        var _table_node_list = [];
+
+                        var _table_node = {
+                            label:_table.name,
+//                            noLeaf:true,
+                            data:_table,
+                            onSelect:function(branch){
+                                // set selected model
+                                _this.selectedSrcTable = branch.data;
+                            }
+                        }
+
+                        var _column_node_list = [];
+                        angular.forEach(_table.columns,function(_column){
+                            _column_node_list.push({
+                                    label:_column.name,
+                                    noLeaf:true,
+                                    data:_column,
+                                    onSelect:function(branch){
+                                        // set selected model
+//                                        _this.selectedSrcTable = branch.data;
+                                        $log.info("selected column info:"+_column.name);
+                                    }
+                                });
+                        });
+                         _table_node.children =_column_node_list;
+                        _table_node_list.push(_table_node);
+
+                        _db_node.children = _table_node_list;
+                    }
+                );
+
+                _this.selectedSrcDb.push(_db_node);
             }
             defer.resolve();
         });
