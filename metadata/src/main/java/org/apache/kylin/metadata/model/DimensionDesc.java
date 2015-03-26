@@ -18,11 +18,11 @@
 
 package org.apache.kylin.metadata.model;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.common.util.StringUtil;
+
+import java.util.List;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/26/14.
@@ -54,14 +54,18 @@ public class DimensionDesc {
     public static void capicalizeStrings(List<DimensionDesc> dimensions) {
         for (DimensionDesc dimensionDesc : dimensions) {
             dimensionDesc.setTable(dimensionDesc.getTable().toUpperCase());
-            StringUtil.toUpperCaseArray(dimensionDesc.getColumns(), dimensionDesc.getColumns());
+            if (dimensionDesc.getColumns() != null) {
+                StringUtil.toUpperCaseArray(dimensionDesc.getColumns(), dimensionDesc.getColumns());
+            }
         }
     }
 
     public static int getColumnCount(List<DimensionDesc> dimensionDescs) {
         int count = 0;
         for (DimensionDesc dimensionDesc : dimensionDescs) {
-            count += dimensionDesc.getColumns().length;
+            if (dimensionDesc.getColumns() != null) {
+                count += dimensionDesc.getColumns().length;
+            }
         }
         return count;
     }
