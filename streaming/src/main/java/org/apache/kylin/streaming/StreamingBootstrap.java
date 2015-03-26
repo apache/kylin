@@ -43,9 +43,11 @@ import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.model.IIDesc;
+import org.apache.kylin.streaming.invertedindex.IIStreamBuilder;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Created by qianzhou on 3/26/15.
@@ -91,12 +93,8 @@ public class StreamingBootstrap {
             }
         };
         final IIDesc desc = ii.getDescriptor();
-        Executors.newSingleThreadExecutor().execute(consumer);
-        while (true) {
-            final Stream stream = consumer.getStreamQueue().poll();
-            if (stream != null) {
-                System.out.println("offset:" + stream.getOffset() + " content:" + new String(stream.getRawData()));
-            }
-        }
+        Executors.newSingleThreadExecutor().submit(consumer);
+        final Future<?> future = Executors.newSingleThreadExecutor().submit(new IIStreamBuilder(consumer.getStreamQueue(), ii.getSegments().get(0).getStorageLocationIdentifier(), desc, partitionId));
+        future.get();
     }
 }

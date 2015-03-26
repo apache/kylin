@@ -46,6 +46,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -59,7 +60,7 @@ public abstract class KafkaConsumer implements Runnable {
     private KafkaConfig kafkaConfig;
     private List<Broker> replicaBrokers;
     private long offset;
-    private BlockingQueue<Stream> streamQueue;
+    private LinkedBlockingQueue<Stream> streamQueue;
 
     private Logger logger;
 
@@ -70,7 +71,7 @@ public abstract class KafkaConsumer implements Runnable {
         offset = startOffset;
         this.replicaBrokers = initialBrokers;
         logger = LoggerFactory.getLogger("KafkaConsumer_" + topic + "_" + partitionId);
-        streamQueue = new ArrayBlockingQueue<Stream>(kafkaConfig.getMaxReadCount());
+        streamQueue = new LinkedBlockingQueue<Stream>(kafkaConfig.getMaxReadCount());
     }
 
     public BlockingQueue<Stream> getStreamQueue() {
