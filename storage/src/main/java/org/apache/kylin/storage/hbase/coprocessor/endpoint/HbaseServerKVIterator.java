@@ -63,7 +63,6 @@ public class HbaseServerKVIterator implements Iterable<IIRow>, Closeable {
             this.regionScanner = innerScanner;
         }
 
-
         @Override
         public boolean hasNext() {
             return hasMore;
@@ -81,12 +80,7 @@ public class HbaseServerKVIterator implements Iterable<IIRow>, Closeable {
                 throw new IllegalStateException("Hbase row contains less than 1 cell");
             }
             for (Cell c : results) {
-                if (BytesUtil.compareBytes(IIDesc.HBASE_QUALIFIER_BYTES, 0, c.getQualifierArray(), c.getQualifierOffset(), IIDesc.HBASE_QUALIFIER_BYTES.length) == 0) {
-                    row.getKey().set(c.getRowArray(), c.getRowOffset(), c.getRowLength());
-                    row.getValue().set(c.getValueArray(), c.getValueOffset(), c.getValueLength());
-                } else if (BytesUtil.compareBytes(IIDesc.HBASE_DICTIONARY_BYTES, 0, c.getQualifierArray(), c.getQualifierOffset(), IIDesc.HBASE_DICTIONARY_BYTES.length) == 0) {
-                    row.getDictionary().set(c.getValueArray(), c.getValueOffset(), c.getValueLength());
-                }
+                row.updateWith(c);
             }
             return row;
         }
@@ -96,7 +90,6 @@ public class HbaseServerKVIterator implements Iterable<IIRow>, Closeable {
             throw new UnsupportedOperationException();
         }
     }
-
 
     @Override
     public Iterator<IIRow> iterator() {

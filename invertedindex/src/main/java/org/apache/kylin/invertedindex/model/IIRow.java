@@ -34,7 +34,9 @@
 
 package org.apache.kylin.invertedindex.model;
 
+import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.kylin.common.util.BytesUtil;
 
 /**
  * Created by qianzhou on 3/10/15.
@@ -50,6 +52,7 @@ public final class IIRow {
         this.value = value;
         this.dictionary = dictionary;
     }
+
     public IIRow() {
         this(new ImmutableBytesWritable(), new ImmutableBytesWritable(), new ImmutableBytesWritable());
     }
@@ -61,7 +64,17 @@ public final class IIRow {
     public ImmutableBytesWritable getValue() {
         return value;
     }
+
     public ImmutableBytesWritable getDictionary() {
         return dictionary;
+    }
+
+    public void updateWith(Cell c) {
+        if (BytesUtil.compareBytes(IIDesc.HBASE_QUALIFIER_BYTES, 0, c.getQualifierArray(), c.getQualifierOffset(), IIDesc.HBASE_QUALIFIER_BYTES.length) == 0) {
+            this.getKey().set(c.getRowArray(), c.getRowOffset(), c.getRowLength());
+            this.getValue().set(c.getValueArray(), c.getValueOffset(), c.getValueLength());
+        } else if (BytesUtil.compareBytes(IIDesc.HBASE_DICTIONARY_BYTES, 0, c.getQualifierArray(), c.getQualifierOffset(), IIDesc.HBASE_DICTIONARY_BYTES.length) == 0) {
+            this.getDictionary().set(c.getValueArray(), c.getValueOffset(), c.getValueLength());
+        }
     }
 }

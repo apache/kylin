@@ -51,6 +51,7 @@ public abstract class StreamBuilder implements Runnable {
 
     private static final int BATCH_BUILD_INTERVAL_THRESHOLD = 5 * 60 * 1000;
     private final int sliceSize;
+    private StreamParser streamParser = StringStreamParser.instance;
 
     private BlockingQueue<Stream> streamQueue;
     private long lastBuildTime = System.currentTimeMillis();
@@ -107,5 +108,13 @@ public abstract class StreamBuilder implements Runnable {
             logger.error("build stream error, stop building", e);
             throw new RuntimeException("build stream error, stop building", e);
         }
+    }
+
+    public final StreamParser getStreamParser() {
+        return streamParser;
+    }
+
+    public final void setStreamParser(StreamParser streamParser) {
+        this.streamParser = streamParser;
     }
 }

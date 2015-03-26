@@ -20,8 +20,6 @@ package org.apache.kylin.metadata.model;
 
 import java.util.List;
 
-import org.apache.kylin.metadata.model.DataModelDesc;
-
 /**
  * Created by Hongbin Ma(Binmahone) on 12/30/14.
  */
