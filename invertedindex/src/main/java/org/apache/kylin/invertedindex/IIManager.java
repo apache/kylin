@@ -240,19 +240,18 @@ public class IIManager implements IRealizationProvider {
     }
 
     private String generateStorageLocation() {
-        String namePrefix = IRealizationConstants.IIHbaseStorageLocationPrefix;
-        String tableName = "";
-        do {
-            StringBuffer sb = new StringBuffer();
-            sb.append(namePrefix);
+        while (true) {
+            StringBuilder sb = new StringBuilder(IRealizationConstants.IIHbaseStorageLocationPrefix);
             for (int i = 0; i < HBASE_TABLE_LENGTH; i++) {
                 int idx = (int) (Math.random() * ALPHA_NUM.length());
                 sb.append(ALPHA_NUM.charAt(idx));
             }
-            tableName = sb.toString();
-        } while (this.usedStorageLocation.contains(tableName));
-
-        return tableName;
+            if (usedStorageLocation.contains(sb.toString())) {
+                continue;
+            } else {
+                return sb.toString();
+            }
+        }
     }
 
     private void loadAllIIInstance() throws IOException {
