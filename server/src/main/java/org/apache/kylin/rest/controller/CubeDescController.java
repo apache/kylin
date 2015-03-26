@@ -54,6 +54,9 @@ public class CubeDescController {
     @ResponseBody
     public CubeDesc[] getCube(@PathVariable String cubeName) {
         CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
+        if (cubeInstance == null){
+            return null;
+        }
         CubeDesc cSchema = cubeInstance.getDescriptor();
         if (cSchema != null) {
             return new CubeDesc[] { cSchema };
