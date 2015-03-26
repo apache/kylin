@@ -76,10 +76,8 @@ public class KafkaConfig extends RootPersistentEntity {
     @JsonProperty("bufferSize")
     private int bufferSize;
 
-    @JsonProperty("iiDesc")
-    private String iiDesc;
-
-    private int partitionId;
+    @JsonProperty("iiName")
+    private String iiName;
 
     public int getTimeout() {
         return timeout;
@@ -121,14 +119,6 @@ public class KafkaConfig extends RootPersistentEntity {
         this.topic = topic;
     }
 
-    public int getPartitionId() {
-        return partitionId;
-    }
-
-    public void setPartitionId(int partitionId) {
-        this.partitionId = partitionId;
-    }
-
     public void setBrokerConfigs(List<BrokerConfig> brokerConfigs) {
         this.brokerConfigs = brokerConfigs;
     }
@@ -141,6 +131,14 @@ public class KafkaConfig extends RootPersistentEntity {
                 return new Broker(input.getId(), input.getHost(), input.getPort());
             }
         });
+    }
+
+    public String getIiName() {
+        return iiName;
+    }
+
+    public void setIiName(String iiName) {
+        this.iiName = iiName;
     }
 
     public String getName() {
