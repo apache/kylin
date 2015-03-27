@@ -13,7 +13,7 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.MutationSerialization;
 import org.apache.hadoop.hbase.mapreduce.ResultSerialization;
-import org.apache.hadoop.io.ShortWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;
 import org.apache.hadoop.mrunit.types.Pair;
@@ -120,7 +120,7 @@ public class II2CubeTest extends LocalFileMetadataTestCase {
 
     @Test
     public void factDistinctIIColumnsMapperTest() throws IOException {
-        MapDriver<ImmutableBytesWritable, Result, ShortWritable, Text> mapDriver;
+        MapDriver<ImmutableBytesWritable, Result, LongWritable, Text> mapDriver;
         FactDistinctIIColumnsMapper mapper = new FactDistinctIIColumnsMapper();
         mapDriver = MapDriver.newMapDriver(mapper);
 
@@ -135,9 +135,9 @@ public class II2CubeTest extends LocalFileMetadataTestCase {
             }
         })));
 
-        List<Pair<ShortWritable, Text>> result = mapDriver.run();
+        List<Pair<LongWritable, Text>> result = mapDriver.run();
         Set<String> lstgNames = Sets.newHashSet("FP-non GTC","ABIN");
-        for(Pair<ShortWritable, Text> pair : result)
+        for(Pair<LongWritable, Text> pair : result)
         {
             Assert.assertEquals(pair.getFirst().get(),6);
             Assert.assertTrue(lstgNames.contains(pair.getSecond().toString()));
