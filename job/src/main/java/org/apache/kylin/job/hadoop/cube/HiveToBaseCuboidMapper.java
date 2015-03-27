@@ -18,22 +18,32 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import org.apache.hadoop.util.ToolRunner;
+import java.io.IOException;
+
+import org.apache.hadoop.io.Text;
+import org.apache.kylin.job.constant.BatchConstants;
 
 /**
- * @author honma
- * 
+ * @author George Song (ysong1)
  */
+public class HiveToBaseCuboidMapper<KEYIN> extends BaseCuboidMapperBase<KEYIN, Text> {
 
-public class BaseCuboidJob extends CuboidJob {
-    public BaseCuboidJob() {
-        this.setMapperClass(HiveToBaseCuboidMapper.class);
+    @Override
+    public void map(KEYIN key, Text value, Context context) throws IOException, InterruptedException {
+        counter++;
+        if (counter % BatchConstants.COUNTER_MAX == 0) {
+            logger.info("Handled " + counter + " records!");
+        }
+
+        try {
+            //put a record into the shared bytesSplitter
+            bytesSplitter.split(value.getBytes(), value.getLength(), byteRowDelimiter);
+            //take care of the data in bytesSplitter
+            outputKV(context);
+
+        } catch (Exception ex) {
+            handleErrorRecord(bytesSplitter, ex);
+        }
     }
 
-    public static void main(String[] args) throws Exception {
-        CuboidJob job = new BaseCuboidJob();
-        int exitCode = ToolRunner.run(job, args);
-        System.exit(exitCode);
-    }
-    
 }
