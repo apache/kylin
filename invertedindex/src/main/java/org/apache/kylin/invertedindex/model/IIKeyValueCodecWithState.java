@@ -1,14 +1,14 @@
 package org.apache.kylin.invertedindex.model;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.common.util.FIFOIterable;
 import org.apache.kylin.common.util.FIFOIterator;
 import org.apache.kylin.invertedindex.index.Slice;
 import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 /**
@@ -20,8 +20,16 @@ public class IIKeyValueCodecWithState extends IIKeyValueCodec {
         super(digest);
     }
 
+    /**
+     * 
+     * @param kvs kvs must be a {@link org.apache.kylin.common.util.FIFOIterable } to avoid {@link java.util.ConcurrentModificationException}.
+     * @return
+     */
     @Override
     public Iterable<Slice> decodeKeyValue(Iterable<IIRow> kvs) {
+        if (!(kvs instanceof FIFOIterable)) {
+            throw new IllegalArgumentException("kvs must be a {@link org.apache.kylin.common.util.FIFOIterable } to avoid {@link java.util.ConcurrentModificationException}.");
+        }
         return new IIRowDecoderWithState(digest, kvs.iterator());
     }
 

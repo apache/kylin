@@ -22,12 +22,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Queue;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.FIFOIterable;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
@@ -50,7 +52,7 @@ import com.google.common.collect.Lists;
 public class FactDistinctIIColumnsMapper extends FactDistinctColumnsMapperBase<ImmutableBytesWritable, Result> {
 
     private IIJoinedFlatTableDesc intermediateTableDesc;
-    private ArrayList<IIRow> buffer = Lists.newArrayList();
+    private Queue<IIRow> buffer = Lists.newLinkedList();
     private Iterator<Slice> slices;
 
     private String iiName;
@@ -73,7 +75,7 @@ public class FactDistinctIIColumnsMapper extends FactDistinctColumnsMapperBase<I
         intermediateTableDesc = new IIJoinedFlatTableDesc(iiDesc);
         TableRecordInfo info = new TableRecordInfo(iiDesc);
         KeyValueCodec codec = new IIKeyValueCodecWithState(info.getDigest());
-        slices = codec.decodeKeyValue(buffer).iterator();
+        slices = codec.decodeKeyValue(new FIFOIterable<IIRow>(buffer)).iterator();
 
         baseCuboidCol2FlattenTableCol = new int[factDictCols.size()];
         for (int i = 0; i < factDictCols.size(); ++i) {
