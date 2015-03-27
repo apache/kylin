@@ -36,7 +36,7 @@ import org.junit.Test;
  * 
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class BaseCuboidMapperPerformanceTest {
+public class HiveToBaseCuboidMapperPerformanceTest {
 
     String metadataUrl = "hbase:yadesk00:2181:/hbase-unsecure";
     String cubeName = "test_kylin_cube_with_slr";
@@ -46,7 +46,7 @@ public class BaseCuboidMapperPerformanceTest {
     @Test
     public void test() throws IOException, InterruptedException {
         Configuration hconf = new Configuration();
-        BaseCuboidMapper mapper = new BaseCuboidMapper();
+        HiveToBaseCuboidMapper mapper = new HiveToBaseCuboidMapper();
         Context context = MockupMapContext.create(hconf, metadataUrl, cubeName, null);
 
         mapper.setup(context);
