@@ -51,13 +51,8 @@ import com.google.common.collect.Lists;
  */
 public class FactDistinctIIColumnsMapper extends FactDistinctColumnsMapperBase<ImmutableBytesWritable, Result> {
 
-    private IIJoinedFlatTableDesc intermediateTableDesc;
     private Queue<IIRow> buffer = Lists.newLinkedList();
     private Iterator<Slice> slices;
-
-    private String iiName;
-    private IIInstance ii;
-    private IIDesc iiDesc;
 
     private int[] baseCuboidCol2FlattenTableCol;
 
@@ -68,11 +63,11 @@ public class FactDistinctIIColumnsMapper extends FactDistinctColumnsMapperBase<I
         Configuration conf = context.getConfiguration();
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
 
-        iiName = conf.get(BatchConstants.CFG_II_NAME);
-        ii = IIManager.getInstance(config).getII(iiName);
-        iiDesc = ii.getDescriptor();
+        String iiName = conf.get(BatchConstants.CFG_II_NAME);
+        IIInstance ii = IIManager.getInstance(config).getII(iiName);
+        IIDesc iiDesc = ii.getDescriptor();
 
-        intermediateTableDesc = new IIJoinedFlatTableDesc(iiDesc);
+        IIJoinedFlatTableDesc intermediateTableDesc = new IIJoinedFlatTableDesc(iiDesc);
         TableRecordInfo info = new TableRecordInfo(iiDesc);
         KeyValueCodec codec = new IIKeyValueCodecWithState(info.getDigest());
         slices = codec.decodeKeyValue(new FIFOIterable<IIRow>(buffer)).iterator();
@@ -116,7 +111,7 @@ public class FactDistinctIIColumnsMapper extends FactDistinctColumnsMapperBase<I
                         vBytesBuffer = new byte[dictionary.getSizeOfValue() * 2];
                     }
 
-                    int vid = record.getValueID(baseCuboidIndex);
+                    int vid = record.getValueID(indexInRecord);
                     if (vid == dictionary.nullId()) {
                         continue;
                     }

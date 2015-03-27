@@ -1,5 +1,6 @@
-package org.apache.kylin.streaming.invertedindex;
+package org.apache.kylin.job.hadoop.invertedindex;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -8,6 +9,15 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Sets;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.mapreduce.MutationSerialization;
+import org.apache.hadoop.hbase.mapreduce.ResultSerialization;
+import org.apache.hadoop.io.ShortWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mrunit.mapreduce.MapDriver;
+import org.apache.hadoop.mrunit.types.Pair;
 import org.apache.kylin.common.util.FIFOIterable;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.invertedindex.IIInstance;
@@ -19,6 +29,8 @@ import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodecWithState;
 import org.apache.kylin.invertedindex.model.IIRow;
 import org.apache.kylin.invertedindex.model.KeyValueCodec;
+import org.apache.kylin.job.constant.BatchConstants;
+import org.apache.kylin.job.hadoop.cube.FactDistinctIIColumnsMapper;
 import org.apache.kylin.streaming.Stream;
 import org.junit.After;
 import org.junit.Assert;
@@ -32,11 +44,14 @@ import com.google.common.collect.Lists;
 /**
  * Created by Hongbin Ma(Binmahone) on 3/26/15.
  */
-public class IIKeyValueCodecWithStateTest extends LocalFileMetadataTestCase {
+public class II2CubeTest extends LocalFileMetadataTestCase {
 
+    String iiName = "test_kylin_ii_inner_join";
     IIInstance ii;
     IIDesc iiDesc;
-    List<IIRow> iiRowList = Lists.newArrayList();
+    String cubeName = "test_kylin_cube_with_slr_empty";
+
+    List<IIRow> iiRows;
 
     final String[] inputs = new String[] { //
     "FP-non GTC,0,15,145970,0,28,Toys,2008-10-08 07:18:40,USER_Y,Toys & Hobbies,Models & Kits,Automotive,0,Ebay,USER_S,15,Professional-Other,2012-08-16,2012-08-11,0,2012-08-16,145970,10000329,26.8551,0", //
@@ -46,7 +61,7 @@ public class IIKeyValueCodecWithStateTest extends LocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
-        this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii_inner_join");
+        this.ii = IIManager.getInstance(getTestConfig()).getII(iiName);
         this.iiDesc = ii.getDescriptor();
 
         Collection<?> streams = Collections2.transform(Arrays.asList(inputs), new Function<String, Stream>() {
@@ -60,10 +75,12 @@ public class IIKeyValueCodecWithStateTest extends LocalFileMetadataTestCase {
         q.addAll(streams);
         q.put(new Stream(-1, null));//a stop sign for builder
 
-        ToyIIStreamBuilder builder = new ToyIIStreamBuilder(q, iiDesc, 0, iiRowList);
+        iiRows = Lists.newArrayList();
+        ToyIIStreamBuilder builder = new ToyIIStreamBuilder(q, iiDesc, 0, iiRows);
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Future<?> future = executorService.submit(builder);
         future.get();
+
     }
 
     @After
@@ -85,10 +102,10 @@ public class IIKeyValueCodecWithStateTest extends LocalFileMetadataTestCase {
         Iterator<Slice> slices = codec.decodeKeyValue(bufferIterable).iterator();
 
         Assert.assertTrue(!slices.hasNext());
-        Assert.assertEquals(iiRowList.size(), digest.getColumnCount());
+        Assert.assertEquals(iiRows.size(), digest.getColumnCount());
 
         for (int i = 0; i < digest.getColumnCount(); ++i) {
-            buffer.add(iiRowList.get(i));
+            buffer.add(iiRows.get(i));
 
             if (i != digest.getColumnCount() - 1) {
                 Assert.assertTrue(!slices.hasNext());
@@ -99,5 +116,31 @@ public class IIKeyValueCodecWithStateTest extends LocalFileMetadataTestCase {
 
         Slice newSlice = slices.next();
         Assert.assertEquals(newSlice.getLocalDictionaries().get(0).getSize(), 2);
+    }
+
+    @Test
+    public void factDistinctIIColumnsMapperTest() throws IOException {
+        MapDriver<ImmutableBytesWritable, Result, ShortWritable, Text> mapDriver;
+        FactDistinctIIColumnsMapper mapper = new FactDistinctIIColumnsMapper();
+        mapDriver = MapDriver.newMapDriver(mapper);
+
+        mapDriver.getConfiguration().set(BatchConstants.CFG_II_NAME, iiName);
+        mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
+        mapDriver.getConfiguration().setStrings("io.serializations", mapDriver.getConfiguration().get("io.serializations"), MutationSerialization.class.getName(), ResultSerialization.class.getName());
+        mapDriver.addAll(Lists.newArrayList(Collections2.transform(iiRows, new Function<IIRow, Pair<ImmutableBytesWritable, Result>>() {
+            @Nullable
+            @Override
+            public Pair<ImmutableBytesWritable, Result> apply(@Nullable IIRow input) {
+                return new Pair<ImmutableBytesWritable, Result>(new ImmutableBytesWritable(new byte[] { 1 }), Result.create(input.makeCells()));
+            }
+        })));
+
+        List<Pair<ShortWritable, Text>> result = mapDriver.run();
+        Set<String> lstgNames = Sets.newHashSet("FP-non GTC","ABIN");
+        for(Pair<ShortWritable, Text> pair : result)
+        {
+            Assert.assertEquals(pair.getFirst().get(),6);
+            Assert.assertTrue(lstgNames.contains(pair.getSecond().toString()));
+        }
     }
 }
