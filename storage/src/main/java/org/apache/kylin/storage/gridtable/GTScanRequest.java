@@ -12,8 +12,7 @@ public class GTScanRequest {
 
     // basic
     private GTInfo info;
-    private GTRecord pkStart; // inclusive
-    private GTRecord pkEnd; // inclusive
+    private GTScanRange range;
     private BitSet columns;
 
     // optional filtering
@@ -25,23 +24,21 @@ public class GTScanRequest {
     private String[] aggrMetricsFuncs;
     
     public GTScanRequest(GTInfo info) {
-        this(info, null, null, null, null);
+        this(info, null, null, null);
     }
 
-    public GTScanRequest(GTInfo info, GTRecord pkStart, GTRecord pkEnd, BitSet columns, TupleFilter filterPushDown) {
+    public GTScanRequest(GTInfo info, GTScanRange range, BitSet columns, TupleFilter filterPushDown) {
         this.info = info;
-        this.pkStart = pkStart;
-        this.pkEnd = pkEnd;
+        this.range = range;
         this.columns = columns;
         this.filterPushDown = filterPushDown;
         validate();
     }
     
-    public GTScanRequest(GTInfo info, GTRecord pkStart, GTRecord pkEnd, BitSet aggrGroupBy, BitSet aggrMetrics, //
+    public GTScanRequest(GTInfo info, GTScanRange range, BitSet aggrGroupBy, BitSet aggrMetrics, //
             String[] aggrMetricsFuncs, TupleFilter filterPushDown) {
         this.info = info;
-        this.pkStart = pkStart;
-        this.pkEnd = pkEnd;
+        this.range = range;
         this.columns = new BitSet();
         this.filterPushDown = filterPushDown;
         
@@ -53,6 +50,9 @@ public class GTScanRequest {
     }
     
     private void validate() {
+        if (range == null)
+            range = new GTScanRange(null, null);
+        
         if (columns == null)
             columns = (BitSet) info.colAll.clone();
         
@@ -111,11 +111,11 @@ public class GTScanRequest {
     }
 
     public GTRecord getPkStart() {
-        return pkStart;
+        return range.pkStart;
     }
 
     public GTRecord getPkEnd() {
-        return pkEnd;
+        return range.pkEnd;
     }
 
     public BitSet getColumns() {
