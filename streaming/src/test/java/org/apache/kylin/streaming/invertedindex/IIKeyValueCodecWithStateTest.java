@@ -71,6 +71,10 @@ public class IIKeyValueCodecWithStateTest extends LocalFileMetadataTestCase {
         cleanupTestMetadata();
     }
 
+    /**
+     * simulate stream building into slices, and encode the slice into IIRows.
+     * Then reconstruct the IIRows to slice.
+     */
     @Test
     public void basicTest() {
         Queue<IIRow> buffer = Lists.newLinkedList();
