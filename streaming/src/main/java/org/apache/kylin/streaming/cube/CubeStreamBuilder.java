@@ -403,7 +403,7 @@ public class CubeStreamBuilder extends StreamBuilder {
     }
 
     private List<String> parseStream(Stream stream, CubeDesc desc) {
-        return getStreamParser().parse(stream, Lists.newArrayList(desc.listAllColumns()));
+        return getStreamParser().parse(stream);
     }
 
 }
