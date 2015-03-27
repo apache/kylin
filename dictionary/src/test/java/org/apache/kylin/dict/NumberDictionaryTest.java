@@ -122,7 +122,7 @@ public class NumberDictionaryTest {
         }
 
         // test rounding
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < n * 50; i++) {
             String randStr = randNumber();
             BigDecimal rand = new BigDecimal(randStr);
             int binarySearch = Collections.binarySearch(sorted, rand);

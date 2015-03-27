@@ -185,9 +185,9 @@ public class TrieDictionary<T> extends Dictionary<T> {
      * @param inpEnd
      *            -- end of input
      * @param roundingFlag
-     *            -- =0: return -1 if not found -- <0: return closest smaller if
-     *            not found, might be -1 -- >0: return closest bigger if not
-     *            found, might be nValues
+     *            -- =0: return -1 if not found
+     *            -- <0: return closest smaller if not found, return -1
+     *            -- >0: return closest bigger if not found, return nValues
      */
     private int lookupSeqNoFromValue(int n, byte[] inp, int o, int inpEnd, int roundingFlag) {
         if (inp.length == 0) // special 'empty' value
@@ -199,11 +199,8 @@ public class TrieDictionary<T> extends Dictionary<T> {
             // match the current node, note [0] of node's value has been matched
             // when this node is selected by its parent
             int p = n + firstByteOffset; // start of node's value
-            int end = p + BytesUtil.readUnsigned(trieBytes, p - 1, 1); // end of
-                                                                       // node's
-                                                                       // value
-            for (p++; p < end && o < inpEnd; p++, o++) { // note matching start
-                                                         // from [1]
+            int end = p + BytesUtil.readUnsigned(trieBytes, p - 1, 1); // end of node's value
+            for (p++; p < end && o < inpEnd; p++, o++) { // note matching start from [1]
                 if (trieBytes[p] != inp[o]) {
                     int comp = BytesUtil.compareByteUnsigned(trieBytes[p], inp[o]);
                     if (comp < 0) {
@@ -216,9 +213,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
             // node completely matched, is input all consumed?
             boolean isEndOfValue = checkFlag(n, BIT_IS_END_OF_VALUE);
             if (o == inpEnd) {
-                return p == end && isEndOfValue ? seq : roundSeqNo(roundingFlag, seq - 1, -1, seq); // input
-                                                                                                    // all
-                                                                                                    // matched
+                return p == end && isEndOfValue ? seq : roundSeqNo(roundingFlag, seq - 1, -1, seq); // input all matched
             }
             if (isEndOfValue)
                 seq++;
@@ -226,9 +221,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
             // find a child to continue
             int c = headSize + (BytesUtil.readUnsigned(trieBytes, n, sizeChildOffset) & childOffsetMask);
             if (c == headSize) // has no children
-                return roundSeqNo(roundingFlag, seq - 1, -1, seq); // input only
-                                                                   // partially
-                                                                   // matched
+                return roundSeqNo(roundingFlag, seq - 1, -1, seq); // input only partially matched
             byte inpByte = inp[o];
             int comp;
             while (true) {
@@ -242,26 +235,10 @@ public class TrieDictionary<T> extends Dictionary<T> {
                 } else if (comp < 0) { // try next child
                     seq += BytesUtil.readUnsigned(trieBytes, c + sizeChildOffset, sizeNoValuesBeneath);
                     if (checkFlag(c, BIT_IS_LAST_CHILD))
-                        return roundSeqNo(roundingFlag, seq - 1, -1, seq); // no
-                                                                           // child
-                                                                           // can
-                                                                           // match
-                                                                           // the
-                                                                           // next
-                                                                           // byte
-                                                                           // of
-                                                                           // input
+                        return roundSeqNo(roundingFlag, seq - 1, -1, seq); // no child can match the next byte of input
                     c = p + BytesUtil.readUnsigned(trieBytes, p - 1, 1);
                 } else { // children are ordered by their first value byte
-                    return roundSeqNo(roundingFlag, seq - 1, -1, seq); // no
-                                                                       // child
-                                                                       // can
-                                                                       // match
-                                                                       // the
-                                                                       // next
-                                                                       // byte
-                                                                       // of
-                                                                       // input
+                    return roundSeqNo(roundingFlag, seq - 1, -1, seq); // no child can match the next byte of input
                 }
             }
         }
@@ -279,9 +256,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
     @Override
     final protected T getValueFromIdImpl(int id) {
         if (enableCache) {
-            Object[] cache = idToValueCache.get(); // SoftReference to skip
-                                                   // cache gracefully when
-                                                   // short of memory
+            Object[] cache = idToValueCache.get(); // SoftReference to skip cache gracefully when short of memory
             if (cache != null) {
                 int seq = calcSeqNoFromId(id);
                 if (seq < 0 || seq >= nValues)
@@ -347,8 +322,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
             int nValuesBeneath;
             while (true) {
                 nValuesBeneath = BytesUtil.readUnsigned(trieBytes, c + sizeChildOffset, sizeNoValuesBeneath);
-                if (seq - nValuesBeneath < 0) { // value is under this child,
-                                                // reset n and loop again
+                if (seq - nValuesBeneath < 0) { // value is under this child, reset n and loop again
                     n = c;
                     break;
                 } else { // go to next child
