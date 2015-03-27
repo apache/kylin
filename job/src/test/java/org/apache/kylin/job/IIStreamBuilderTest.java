@@ -98,11 +98,11 @@ public class IIStreamBuilderTest extends HBaseMetadataTestCase {
 
     @Test
     public void test() throws Exception {
-//        final StreamingBootstrap bootstrap = StreamingBootstrap.getInstance(kylinConfig);
-//        bootstrap.start("eagle", 0);
-//        Thread.sleep(30 * 60 * 1000);
-//        logger.info("time is up, stop streaming");
-//        bootstrap.stop();
-//        Thread.sleep(5 * 1000);
+        final StreamingBootstrap bootstrap = StreamingBootstrap.getInstance(kylinConfig);
+        bootstrap.start("eagle", 0);
+        Thread.sleep(30 * 60 * 1000);
+        logger.info("time is up, stop streaming");
+        bootstrap.stop();
+        Thread.sleep(5 * 1000);
     }
 }
