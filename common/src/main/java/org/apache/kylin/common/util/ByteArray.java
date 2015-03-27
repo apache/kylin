@@ -30,7 +30,7 @@ public class ByteArray implements Comparable<ByteArray> {
     public static ByteArray allocate(int length) {
         return new ByteArray(new byte[length]);
     }
-    
+
     public static ByteArray copyOf(byte[] array, int offset, int length) {
         byte[] space = new byte[length];
         System.arraycopy(array, offset, space, 0, length);
@@ -88,7 +88,7 @@ public class ByteArray implements Comparable<ByteArray> {
     public void setLength(int length) {
         this.length = length;
     }
-    
+
     public ByteArray copy() {
         ByteArray copy = new ByteArray(length);
         copy.copyFrom(this);
@@ -111,7 +111,10 @@ public class ByteArray implements Comparable<ByteArray> {
 
     @Override
     public int hashCode() {
-        return Bytes.hashCode(data, offset, length);
+        if (data == null)
+            return 0;
+        else
+            return Bytes.hashCode(data, offset, length);
     }
 
     @Override
@@ -123,12 +126,24 @@ public class ByteArray implements Comparable<ByteArray> {
         if (getClass() != obj.getClass())
             return false;
         ByteArray o = (ByteArray) obj;
-        return Bytes.equals(this.data, this.offset, this.length, o.data, o.offset, o.length);
+        if (this.data == null && o.data == null)
+            return true;
+        else if (this.data == null || o.data == null)
+            return false;
+        else
+            return Bytes.equals(this.data, this.offset, this.length, o.data, o.offset, o.length);
     }
 
     @Override
     public int compareTo(ByteArray o) {
-        return Bytes.compareTo(this.data, this.offset, this.length, o.data, o.offset, o.length);
+        if (this.data == null && o.data == null)
+            return 0;
+        else if (this.data == null)
+            return -1;
+        else if (o.data == null)
+            return 1;
+        else
+            return Bytes.compareTo(this.data, this.offset, this.length, o.data, o.offset, o.length);
     }
 
     @Override

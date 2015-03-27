@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.BitSet;
 
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 
 public class GTRecord implements Comparable<GTRecord> {
 
@@ -128,11 +129,13 @@ public class GTRecord implements Comparable<GTRecord> {
 
     @Override
     public int compareTo(GTRecord o) {
+        assert this.info == o.info;
         assert this.maskForEqualHashComp == o.maskForEqualHashComp; // reference equal for performance
+        IFilterCodeSystem<ByteArray> cs = info.codeSystem.getFilterCodeSystem();
         
         int comp = 0;
         for (int i = maskForEqualHashComp.nextSetBit(0); i >= 0; i = maskForEqualHashComp.nextSetBit(i + 1)) {
-            comp = this.cols[i].compareTo(o.cols[i]);
+            comp = cs.compare(cols[i], o.cols[i]);
             if (comp != 0)
                 return comp;
         }
