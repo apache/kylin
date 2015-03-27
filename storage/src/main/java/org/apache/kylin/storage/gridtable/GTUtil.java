@@ -19,18 +19,10 @@ import com.google.common.collect.Sets;
 
 public class GTUtil {
 
-    static final TableDesc MOCKUP_TABLE = new TableDesc();
-    static {
-        MOCKUP_TABLE.setName("GT_MOCKUP_TABLE");
-    }
+    static final TableDesc MOCKUP_TABLE = TableDesc.mockup("GT_MOCKUP_TABLE");
 
     static TblColRef tblColRef(int col, String datatype) {
-        ColumnDesc desc = new ColumnDesc();
-        String id = "" + (col + 1);
-        desc.setId(id);
-        desc.setName(id);
-        desc.setDatatype(datatype);
-        desc.init(MOCKUP_TABLE);
+        ColumnDesc desc = ColumnDesc.mockup(MOCKUP_TABLE, col + 1, "" + col, datatype);
         return new TblColRef(desc);
     }
 

@@ -21,7 +21,9 @@ import org.apache.kylin.metadata.filter.ExtractTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataType;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.gridtable.GTInfo.Builder;
 import org.apache.kylin.storage.gridtable.memstore.GTSimpleMemStore;
@@ -37,6 +39,7 @@ public class DictGridTableTest {
         verifyFirstRow(table);
         verifyScanWithUnevaluatableFilter(table);
         verifyScanWithEvaluatableFilter(table);
+        verifyConvertFilterConstants(table);
     }
 
     private void verifyFirstRow(GridTable table) throws IOException {
@@ -51,8 +54,9 @@ public class DictGridTableTest {
         LogicalTupleFilter filter = and(fcomp, funevaluatable);
 
         GTScanRequest req = new GTScanRequest(info, null, setOf(0), setOf(3), new String[] { "sum" }, filter);
+
         // note the unEvaluatable column 1 in filter is added to group by
-        assertEquals("GTScanRequest [range=null-null, columns={0, 1, 3}, filterPushDown=AND [NULL.GT_MOCKUP_TABLE.1 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], [null]], aggrGroupBy={0, 1}, aggrMetrics={3}, aggrMetricsFuncs=[sum]]", req.toString());
+        assertEquals("GTScanRequest [range=null-null, columns={0, 1, 3}, filterPushDown=AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], [null]], aggrGroupBy={0, 1}, aggrMetrics={3}, aggrMetricsFuncs=[sum]]", req.toString());
         
         doScanAndVerify(table, req, "[1421280000000, 20, null, 20, null]");
     }
@@ -65,10 +69,30 @@ public class DictGridTableTest {
         LogicalTupleFilter filter = and(fcomp1, fcomp2);
 
         GTScanRequest req = new GTScanRequest(info, null, setOf(0), setOf(3), new String[] { "sum" }, filter);
+        
         // note the evaluatable column 1 in filter is added to returned columns but not in group by
-        assertEquals("GTScanRequest [range=null-null, columns={0, 1, 3}, filterPushDown=AND [NULL.GT_MOCKUP_TABLE.1 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], NULL.GT_MOCKUP_TABLE.2 GT [\\x00]], aggrGroupBy={0}, aggrMetrics={3}, aggrMetricsFuncs=[sum]]", req.toString());
+        assertEquals("GTScanRequest [range=null-null, columns={0, 1, 3}, filterPushDown=AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], NULL.GT_MOCKUP_TABLE.1 GT [\\x00]], aggrGroupBy={0}, aggrMetrics={3}, aggrMetricsFuncs=[sum]]", req.toString());
         
         doScanAndVerify(table, req, "[1421280000000, 30, null, 30, null]", "[1421366400000, 20, null, 40, null]");
+    }
+
+    private void verifyConvertFilterConstants(GridTable table) {
+        GTInfo info = table.getInfo();
+        
+        TableDesc extTable = TableDesc.mockup("ext");
+        TblColRef extColA = new TblColRef(ColumnDesc.mockup(extTable, 1, "A", "timestamp"));
+        TblColRef extColB = new TblColRef(ColumnDesc.mockup(extTable, 2, "B", "integer"));
+
+        CompareTupleFilter fcomp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
+        CompareTupleFilter fcomp2 = compare(extColB, FilterOperatorEnum.EQ, "10");
+        LogicalTupleFilter filter = and(fcomp1, fcomp2);
+        
+        Map<TblColRef, Integer> colMapping = Maps.newHashMap();
+        colMapping.put(extColA, 0);
+        colMapping.put(extColB, 1);
+        
+        TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
+        assertEquals("AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], NULL.GT_MOCKUP_TABLE.1 EQ [\\x00]]", newFilter.toString());
     }
 
     private void doScanAndVerify(GridTable table, GTScanRequest req, String... verifyRows) throws IOException {

@@ -162,4 +162,11 @@ public class TableDesc extends RootPersistentEntity {
     public String toString() {
         return "TableDesc [database=" + getDatabase() + " name=" + name + "]";
     }
+    
+    /** create a mockup table for unit test */
+    public static TableDesc mockup(String tableName) {
+        TableDesc mockup = new TableDesc();
+        mockup.setName(tableName);
+        return mockup;
+    }
 }
