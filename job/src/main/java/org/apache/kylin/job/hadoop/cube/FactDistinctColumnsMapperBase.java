@@ -1,11 +1,7 @@
 package org.apache.kylin.job.hadoop.cube;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.ShortWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.kylin.common.KylinConfig;
@@ -20,10 +16,14 @@ import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.metadata.model.TblColRef;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by Hongbin Ma(Binmahone) on 3/26/15.
  */
-public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VALUEIN, ShortWritable, Text> {
+public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VALUEIN, LongWritable, Text> {
 
     protected String cubeName;
     protected CubeInstance cube;
@@ -32,9 +32,9 @@ public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
     protected List<TblColRef> columns;
     protected ArrayList<Integer> factDictCols;
 
-    protected ShortWritable outputKey = new ShortWritable();
+    protected LongWritable outputKey = new LongWritable();
     protected Text outputValue = new Text();
-    protected int errorRecordCounter =0;
+    protected int errorRecordCounter = 0;
 
     @Override
     protected void setup(Context context) throws IOException {
