@@ -89,7 +89,9 @@ public class DateStrDictionary extends Dictionary<String> {
     }
 
     public static long stringToMillis(String str) {
-        if (str.length() == 10) {
+        if (isAllDigits(str)) {
+            return Long.parseLong(str);
+        } else if (str.length() == 10) {
             return stringToDate(str, DEFAULT_DATE_PATTERN).getTime();
         } else if (str.length() == 19) {
             return stringToDate(str, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS).getTime();
@@ -98,6 +100,14 @@ public class DateStrDictionary extends Dictionary<String> {
         } else {
             throw new IllegalArgumentException("there is no valid date pattern for:" + str);
         }
+    }
+    
+    private static boolean isAllDigits(String str) {
+        for (int i = 0, n = str.length(); i < n; i++) {
+            if (Character.isDigit(str.charAt(i)) == false)
+                return false;
+        }
+        return true;
     }
 
     // ============================================================================
