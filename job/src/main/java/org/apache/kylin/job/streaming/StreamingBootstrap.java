@@ -35,6 +35,7 @@
 package org.apache.kylin.job.streaming;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import kafka.api.OffsetRequest;
 import kafka.cluster.Broker;
 import kafka.javaapi.PartitionMetadata;
@@ -50,8 +51,8 @@ import org.apache.kylin.streaming.*;
 import org.apache.kylin.streaming.invertedindex.IIStreamBuilder;
 
 import java.nio.ByteBuffer;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.Map;
+import java.util.concurrent.*;
 
 /**
  * Created by qianzhou on 3/26/15.
@@ -62,8 +63,17 @@ public class StreamingBootstrap {
     private StreamManager streamManager;
     private IIManager iiManager;
 
+    private Map<String, KafkaConsumer> kafkaConsumers = Maps.newConcurrentMap();
+
     public static StreamingBootstrap getInstance(KylinConfig kylinConfig) {
-        return new StreamingBootstrap(kylinConfig);
+        final StreamingBootstrap bootstrap = new StreamingBootstrap(kylinConfig);
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+            @Override
+            public void run() {
+                bootstrap.stop();
+            }
+        }));
+        return bootstrap;
     }
 
     private StreamingBootstrap(KylinConfig kylinConfig) {
@@ -81,9 +91,15 @@ public class StreamingBootstrap {
         }
     }
 
-    public void startStreaming(String streamingConf, int partitionId) throws Exception {
-        final KafkaConfig kafkaConfig = streamManager.getKafkaConfig(streamingConf);
-        Preconditions.checkArgument(kafkaConfig != null, "cannot find kafka config:" + streamingConf);
+    public void stop() {
+        for (KafkaConsumer consumer : kafkaConsumers.values()) {
+            consumer.stop();
+        }
+    }
+
+    public void start(String streaming, int partitionId) throws Exception {
+        final KafkaConfig kafkaConfig = streamManager.getKafkaConfig(streaming);
+        Preconditions.checkArgument(kafkaConfig != null, "cannot find kafka config:" + streaming);
         final IIInstance ii = iiManager.getII(kafkaConfig.getIiName());
         Preconditions.checkNotNull(ii);
         Preconditions.checkArgument(ii.getSegments().size() > 0);
@@ -96,7 +112,8 @@ public class StreamingBootstrap {
         if (streamOffset < earliestOffset) {
             streamOffset = earliestOffset;
         }
-
+        String[] args = new String[]{"-iiname", kafkaConfig.getIiName(), "-htablename", iiSegment.getStorageLocationIdentifier()};
+        ToolRunner.run(new IICreateHTableJob(), args);
 
         KafkaConsumer consumer = new KafkaConsumer(kafkaConfig.getTopic(), 0, streamOffset, kafkaConfig.getBrokers(), kafkaConfig) {
             @Override
@@ -106,12 +123,16 @@ public class StreamingBootstrap {
                 getStreamQueue().put(new Stream(offset, bytes));
             }
         };
-        final IIDesc desc = ii.getDescriptor();
+        kafkaConsumers.put(getKey(streaming, partitionId), consumer);
+
+        final IIStreamBuilder task = new IIStreamBuilder(consumer.getStreamQueue(), iiSegment.getStorageLocationIdentifier(), iiSegment.getIIInstance(), partitionId);
+        task.setStreamParser(new JsonStreamParser(ii.getDescriptor().listAllColumns()));
 
         Executors.newSingleThreadExecutor().submit(consumer);
-        final IIStreamBuilder task = new IIStreamBuilder(consumer.getStreamQueue(), iiSegment.getStorageLocationIdentifier(), desc, partitionId);
-        task.setStreamParser(JsonStreamParser.instance);
-        final Future<?> future = Executors.newSingleThreadExecutor().submit(task);
-        future.get();
+        Executors.newSingleThreadExecutor().submit(task).get();
+    }
+
+    private String getKey(String streaming, int partitionId) {
+        return streaming + "_" + partitionId;
     }
 }

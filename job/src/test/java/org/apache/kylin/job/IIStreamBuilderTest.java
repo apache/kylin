@@ -34,22 +34,26 @@
 
 package org.apache.kylin.job;
 
+import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.job.hadoop.cube.StorageCleanupJob;
 import org.apache.kylin.job.streaming.StreamingBootstrap;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Created by qianzhou on 3/6/15.
  */
 public class IIStreamBuilderTest extends HBaseMetadataTestCase {
+
+    private static final Logger logger = LoggerFactory.getLogger(IIStreamBuilderTest.class);
 
     private KylinConfig kylinConfig;
 
@@ -57,6 +61,30 @@ public class IIStreamBuilderTest extends HBaseMetadataTestCase {
     public static void beforeClass() throws Exception {
         ClassUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         System.setProperty("hdp.version", "2.2.0.0-2041"); // mapred-site.xml ref this
+    }
+
+    @AfterClass
+    public static void afterClass() throws Exception {
+//        backup();
+    }
+
+    private static void backup() throws Exception {
+        int exitCode = cleanupOldStorage();
+        if (exitCode == 0) {
+            exportHBaseData();
+        }
+    }
+
+    private static int cleanupOldStorage() throws Exception {
+        String[] args = {"--delete", "true"};
+
+        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
+        return exitCode;
+    }
+
+    private static void exportHBaseData() throws IOException {
+        ExportHBaseData export = new ExportHBaseData();
+        export.exportTables();
     }
 
     @Before
@@ -68,13 +96,13 @@ public class IIStreamBuilderTest extends HBaseMetadataTestCase {
         DeployUtil.overrideJobJarLocations();
     }
 
-    @After
-    public void after() {
-        this.cleanupTestMetadata();
-    }
-
     @Test
     public void test() throws Exception {
-        StreamingBootstrap.getInstance(kylinConfig).startStreaming("eagle", 0);
+        final StreamingBootstrap bootstrap = StreamingBootstrap.getInstance(kylinConfig);
+        bootstrap.start("eagle", 0);
+        Thread.sleep(30 * 60 * 1000);
+        logger.info("time is up, stop streaming");
+        bootstrap.stop();
+        Thread.sleep(5 * 1000);
     }
 }

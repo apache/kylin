@@ -18,6 +18,7 @@
 
 package org.apache.kylin.invertedindex.index;
 
+import com.google.common.base.Preconditions;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
@@ -99,6 +100,7 @@ public class RawTableRecord implements Cloneable {
     public void getValueBytes(int col, ImmutableBytesWritable bytes) {
         bytes.set(buf, digest.offset(col), digest.length(col));
     }
+
 
     @Override
     public Object clone() {

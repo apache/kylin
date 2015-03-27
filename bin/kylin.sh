@@ -76,6 +76,32 @@ then
     fi
     rm ${KYLIN_HOME}/pid
     exit 0
+elif [ $1 == "streaming" ]
+then
+    useSandbox=`cat ${KYLIN_HOME}/conf/kylin.properties | grep 'kylin.sandbox' | awk -F '=' '{print $2}'`
+    spring_profile="default"
+    if [ "$useSandbox" = "true" ]
+        then spring_profile="sandbox"
+    fi
+
+    #retrive $hive_dependency
+    source ${dir}/find-hive-dependency.sh
+    #retrive $KYLIN_EXTRA_START_OPTS
+    if [ -f "${dir}/setenv.sh" ]
+        then source ${dir}/setenv.sh
+    fi
+
+    export HBASE_CLASSPATH=$hive_dependency:${HBASE_CLASSPATH}
+    export JAVA_OPTS="-Xms2048M -Xmx2048M"
+
+    hbase ${KYLIN_EXTRA_START_OPTS} \
+    -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
+    -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true \
+    -Dkylin.hive.dependency=${hive_dependency} \
+    -Dspring.profiles.active=${spring_profile} \
+    org.apache.hadoop.util.RunJar ${KYLIN_HOME}/lib/kylin-job-*.jar org.apache.kylin.job.streaming.StreamingCLI start $2 > ${KYLIN_HOME}/logs/kylin.log 2>&1 & echo $! > ${KYLIN_HOME}$2 &
+    echo "streaming started $2"
+    exit 0
 else
     echo "usage: kylin.sh start or kylin.sh stop"
     exit 1

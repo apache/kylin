@@ -18,8 +18,12 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hive.hcatalog.data.HCatRecord;
@@ -27,17 +31,13 @@ import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
-import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.dict.lookup.HiveTableReader;
 import org.apache.kylin.job.constant.BatchConstants;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * @author yangli9

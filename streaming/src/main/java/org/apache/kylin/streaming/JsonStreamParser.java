@@ -50,15 +50,17 @@ import java.util.Map;
  */
 public final class JsonStreamParser implements StreamParser {
 
-    public static final JsonStreamParser instance = new JsonStreamParser();
+    private final List<TblColRef> allColumns;
 
-    private final JsonParser jsonParser = new JsonParser();
+    private static final JsonParser JSON_PARSER = new JsonParser();
 
-    private JsonStreamParser(){}
+    public JsonStreamParser(List<TblColRef> allColumns){
+        this.allColumns = allColumns;
+    }
 
     @Override
-    public List<String> parse(Stream stream, List<TblColRef> allColumns) {
-        final JsonObject root = jsonParser.parse(new String(stream.getRawData())).getAsJsonObject();
+    public List<String> parse(Stream stream) {
+        final JsonObject root = JSON_PARSER.parse(new String(stream.getRawData())).getAsJsonObject();
         ArrayList<String> result = Lists.newArrayList();
 
         for (TblColRef column : allColumns) {
