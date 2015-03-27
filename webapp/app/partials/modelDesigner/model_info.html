@@ -19,49 +19,52 @@
 <div class="row">
     <div class="col-xs-8">
         <!--Project-->
-        <div class="form-group">
-            <div class="row">
-                <label class="col-xs-12 col-sm-3 control-label no-padding-right">
-                    <a ng-if="state.mode=='edit'" href="projects">
-                        <b>Project</b>
-                    </a>
-                    <b ng-if="state.mode=='view'" class="font-color-default">Project</b>
-                </label>
-                <div class="col-xs-12 col-sm-6">
-                    <input ng-if="state.mode=='edit'" name="project_name" type="text" class="form-control"
-                           ng-model="model.project"/>
-                    <span ng-if="state.mode=='view'">
-                        {{model.project}}
-                    </span>
-                </div>
-            </div>
-        </div>
+        <ng-form name="model_info_form" novalidate>
+            <div class="form-group">
+                <div class="row">
+                    <label class="col-xs-3 control-label no-padding-right">
+                        <a ng-if="state.mode=='edit'" href="projects">
+                            <b>Project</b>
+                        </a>
+                        <b ng-if="state.mode=='view'" class="font-color-default">Project</b>
+                    </label>
+                    <div class="col-xs-6" ng-class="model_info_form.project_name.$invalid?'has-error':model_info_form.project_name.$dirty?'has-success':''">
+                         <!--edit-->
+                        <input ng-if="state.mode=='edit'" required name="project_name" type="text" class="form-control"
+                               ng-model="model.project"/>
+                        <small class="help-block" ng-show="model_info_form.project_name.$error.required">The project is required</small>
 
-        <!--Model Name-->
-        <div class="form-group">
-            <div class="row">
-                <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-                    <b>Model Name</b>
-                </label>
-
-                <div class="col-xs-12 col-sm-6">
-                    <input ng-if="state.mode=='edit'" name="model_name" type="text" class="form-control"
-                           ng-model="model.name" required
-                           placeholder="You can use letters, numbers, and '_'"
-                           ng-maxlength=100 ng-pattern="/^\w+$/" />
-                    <span ng-if="state.mode=='view'">{{model.name}}</span>
-                </div>
-                <div class="col-xs-12 col-sm-3">
-                    <div class="text-warning" ng-if="design_form.model_name.$error.required  && design_form.model_name.$dirty">
-                        Model name is required.
-                    </div>
-                    <div class="text-warning" ng-if="design_form.model_name.$invalid && design_form.model_name.$dirty && !design_form.model_name.$error.required">
-                        Model name is invalid.
+                        <!--view-->
+                        <span ng-if="state.mode=='view'">
+                            {{model.project}}
+                        </span>
                     </div>
                 </div>
             </div>
-        </div>
 
+            <!--Model Name-->
+            <div class="form-group">
+                <div class="row">
+                    <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
+                        <b>Model Name</b>
+                    </label>
+
+                    <div class="col-xs-12 col-sm-6" ng-class="model_info_form.model_name.$invalid?'has-error':model_info_form.model_name.$dirty?'has-success':''">
+
+                        <!-- edit -->
+                        <input ng-if="state.mode=='edit'" name="model_name" type="text" class="form-control"
+                               ng-model="model.name" required
+                               placeholder="You can use letters, numbers, and '_'"
+                               ng-maxlength=100 ng-pattern="/^\w+$/" />
+                        <small class="help-block" ng-show="model_info_form.model_name.$error.required  && model_info_form.model_name.$dirty">Model name is required.</small>
+                        <small class="help-block" ng-show="model_info_form.model_name.$invalid && model_info_form.model_name.$dirty && !model_info_form.model_name.$error.required"> Model name is invalid.</small>
+
+
+                        <span ng-if="state.mode=='view'">{{model.name}}</span>
+                    </div>
+                </div>
+            </div>
+        </ng-form>
     </div>
 
     <!--Tips-->
@@ -81,5 +84,22 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+<div class="row" ng-hide="true">
+    <div class="col-xs-8">
+    <div class="box box-danger">
+        <div class="box-header with-border">
+            <i class="fa fa-warning"></i>
+            <h3 class="box-title">Warning!</h3>
+        </div>
+        <div class="box-body callout callout-warning">
+            <ol>
+                <li>Project can't be empty</li>
+                <li>Model Name can't be empty</li>
+            </ol>
+        </div><!-- /.box-body -->
+    </div>
     </div>
 </div>

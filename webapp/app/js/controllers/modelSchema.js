@@ -28,12 +28,14 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
 
 
     $scope.wizardSteps = [
-        {title: 'Model Info', src: 'partials/modelDesigner/model_info.html', isComplete: false},
-        {title: 'Data Model', src: 'partials/modelDesigner/data_model.html', isComplete: false},
-        {title: 'Dimensions', src: 'partials/modelDesigner/model_dimensions.html', isComplete: false},
-        {title: 'Measures', src: 'partials/modelDesigner/model_measures.html', isComplete: false},
-        {title: 'Settings', src: 'partials/modelDesigner/conditions_settings.html', isComplete: false}
+        {title: 'Model Info', src: 'partials/modelDesigner/model_info.html', isComplete: false,form:'model_info_form'},
+        {title: 'Data Model', src: 'partials/modelDesigner/data_model.html', isComplete: false,form:null},
+        {title: 'Dimensions', src: 'partials/modelDesigner/model_dimensions.html', isComplete: false,form:null},
+        {title: 'Measures', src: 'partials/modelDesigner/model_measures.html', isComplete: false,form:null},
+        {title: 'Settings', src: 'partials/modelDesigner/conditions_settings.html', isComplete: false,form:null}
     ];
+
+    $scope.formStepMap =[{}]
 
     $scope.curStep = $scope.wizardSteps[0];
 
@@ -93,7 +95,11 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
         }
     };
 
-    $scope.goToStep = function(stepIndex){
+    $scope.goToStep = function(stepIndex,form){
+        if(form){
+            console.log($scope[form]);
+            console.log(document.querySelector("form"));
+        }
         for(var i=0;i<$scope.wizardSteps.length;i++){
             if(i<=stepIndex){
                 $scope.wizardSteps[i].isComplete = true;
