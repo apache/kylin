@@ -34,36 +34,27 @@
 
 package org.apache.kylin.streaming.invertedindex;
 
-import com.google.common.base.Function;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.dict.DictionaryGenerator;
-import org.apache.kylin.invertedindex.index.BatchSliceBuilder;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.invertedindex.IIInstance;
+import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.index.Slice;
-import org.apache.kylin.invertedindex.index.TableRecord;
-import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.invertedindex.model.IIRow;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.streaming.Stream;
 import org.apache.kylin.streaming.StreamBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -75,84 +66,36 @@ public class IIStreamBuilder extends StreamBuilder {
     private static Logger logger = LoggerFactory.getLogger(IIStreamBuilder.class);
 
     private final IIDesc desc;
+    private final IIInstance ii;
     private final HTableInterface hTable;
-    private final BatchSliceBuilder sliceBuilder;
+    private final SliceBuilder sliceBuilder;
+    private final int partitionId;
 
-    public IIStreamBuilder(BlockingQueue<Stream> queue, String hTableName, IIDesc desc, int partitionId) {
-        super(queue, desc.getSliceSize());
-        this.desc = desc;
+    public IIStreamBuilder(BlockingQueue<Stream> queue, String hTableName, IIInstance iiInstance, int partitionId) {
+        super(queue, iiInstance.getDescriptor().getSliceSize());
+        this.ii = iiInstance;
+        this.desc = iiInstance.getDescriptor();
+        this.partitionId = partitionId;
         try {
             this.hTable = HConnectionManager.createConnection(HBaseConfiguration.create()).getTable(hTableName);
         } catch (IOException e) {
             logger.error("cannot open htable name:" + hTableName, e);
             throw new RuntimeException("cannot open htable name:" + hTableName, e);
         }
-        sliceBuilder = new BatchSliceBuilder(desc, (short) partitionId);
+        sliceBuilder = new SliceBuilder(desc, (short) partitionId);
     }
 
     @Override
     protected void build(List<Stream> streamsToBuild) throws IOException {
         logger.info("stream build start, size:" + streamsToBuild.size());
         Stopwatch stopwatch = new Stopwatch().start();
-        List<List<String>> table = Lists.transform(streamsToBuild, new Function<Stream, List<String>>() {
-            @Nullable
-            @Override
-            public List<String> apply(@Nullable Stream input) {
-                return parseStream(input, desc);
-            }
-        });
-        final Map<Integer, Dictionary<?>> dictionaryMap = buildDictionary(table, desc);
-        TableRecordInfo tableRecordInfo = new TableRecordInfo(desc, dictionaryMap);
-        final Slice slice = buildSlice(table, sliceBuilder, tableRecordInfo, dictionaryMap);
+        final Slice slice = sliceBuilder.buildSlice(streamsToBuild, getStreamParser());
         logger.info("slice info, shard:" + slice.getShard() + " timestamp:" + slice.getTimestamp() + " record count:" + slice.getRecordCount());
-        loadToHBase(hTable, slice, new IIKeyValueCodec(tableRecordInfo.getDigest()));
-        submitOffset();
+
+        loadToHBase(hTable, slice, new IIKeyValueCodec(slice.getInfo()));
+        submitOffset(0);
         stopwatch.stop();
-        logger.info("stream build finished, size:" + streamsToBuild.size() + " elapsed time:" + stopwatch.elapsedTime(TimeUnit.MILLISECONDS) + TimeUnit.MILLISECONDS);
-    }
-
-    private Map<Integer, Dictionary<?>> buildDictionary(List<List<String>> table, IIDesc desc) {
-        HashMultimap<TblColRef, String> valueMap = HashMultimap.create();
-        final List<TblColRef> allColumns = desc.listAllColumns();
-        for (List<String> row : table) {
-            for (int i = 0; i < row.size(); i++) {
-                String cell = row.get(i);
-                if (!desc.isMetricsCol(i)) {
-                    valueMap.put(allColumns.get(i), cell);
-                }
-            }
-        }
-        Map<Integer, Dictionary<?>> result = Maps.newHashMap();
-        for (TblColRef tblColRef : valueMap.keySet()) {
-            result.put(desc.findColumn(tblColRef), DictionaryGenerator.buildDictionaryFromValueList(tblColRef.getType(), Collections2.transform(valueMap.get(tblColRef), new Function<String, byte[]>() {
-                @Nullable
-                @Override
-                public byte[] apply(String input) {
-                    return input.getBytes();
-                }
-            })));
-        }
-        return result;
-    }
-
-    private List<String> parseStream(Stream stream, IIDesc desc) {
-        return getStreamParser().parse(stream, desc.listAllColumns());
-    }
-
-    private Slice buildSlice(List<List<String>> table, BatchSliceBuilder sliceBuilder, final TableRecordInfo tableRecordInfo, Map<Integer, Dictionary<?>> localDictionary) {
-        final Slice slice = sliceBuilder.build(tableRecordInfo.getDigest(), Lists.transform(table, new Function<List<String>, TableRecord>() {
-            @Nullable
-            @Override
-            public TableRecord apply(@Nullable List<String> input) {
-                TableRecord result = tableRecordInfo.createTableRecord();
-                for (int i = 0; i < input.size(); i++) {
-                    result.setValueString(i, input.get(i));
-                }
-                return result;
-            }
-        }));
-        slice.setLocalDictionaries(localDictionary);
-        return slice;
+        logger.info("stream build finished, size:" + streamsToBuild.size() + " elapsed time:" + stopwatch.elapsedTime(TimeUnit.MILLISECONDS) + " " + TimeUnit.MILLISECONDS);
     }
 
     private void loadToHBase(HTableInterface hTable, Slice slice, IIKeyValueCodec codec) throws IOException {
@@ -178,9 +121,17 @@ public class IIStreamBuilder extends StreamBuilder {
         }
     }
 
-
-    private void submitOffset() {
-
+    private void submitOffset(long offset) {
+        final IIManager iiManager = IIManager.getInstance(KylinConfig.getInstanceFromEnv());
+        final IIInstance instance = iiManager.getII(ii.getName());
+        instance.getStreamOffsets().set(partitionId, offset);
+        try {
+            iiManager.updateII(instance);
+            logger.info("submit offset");
+        } catch (IOException e) {
+            logger.error("error submit offset: + " + offset, e);
+            throw new RuntimeException(e);
+        }
     }
 
 }

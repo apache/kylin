@@ -51,15 +51,12 @@ import static org.junit.Assert.assertEquals;
 
 public class BuildCubeWithEngineTest {
 
-    private JobEngineConfig jobEngineConfig;
-
-    private CubeManager cubeManager;
-
-    private DefaultScheduler scheduler;
-
-    protected ExecutableManager jobService;
-
     private static final Log logger = LogFactory.getLog(BuildCubeWithEngineTest.class);
+
+    private JobEngineConfig jobEngineConfig;
+    private CubeManager cubeManager;
+    private DefaultScheduler scheduler;
+    protected ExecutableManager jobService;
 
     protected void waitForJob(String jobId) {
         while (true) {
@@ -107,7 +104,6 @@ public class BuildCubeWithEngineTest {
                 jobService.deleteJob(jobId);
             }
         }
-
     }
 
     @After

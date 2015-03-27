@@ -40,7 +40,6 @@ import org.apache.kylin.streaming.JsonStreamParser;
 import org.apache.kylin.streaming.Stream;
 import org.apache.kylin.streaming.StreamBuilder;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
@@ -53,14 +52,14 @@ public class PrintOutStreamBuilder extends StreamBuilder {
 
     public PrintOutStreamBuilder(BlockingQueue<Stream> streamQueue, int sliceSize, List<TblColRef> allColumns) {
         super(streamQueue, sliceSize);
-        setStreamParser(JsonStreamParser.instance);
+        setStreamParser(new JsonStreamParser(allColumns));
         this.allColumns = allColumns;
     }
 
     @Override
     protected void build(List<Stream> streamsToBuild) throws Exception {
         for (Stream stream : streamsToBuild) {
-            final List<String> row = getStreamParser().parse(stream, allColumns);
+            final List<String> row = getStreamParser().parse(stream);
             System.out.println("offset:" + stream.getOffset() + " " + StringUtils.join(row, ","));
         }
     }

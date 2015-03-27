@@ -34,8 +34,6 @@
 
 package org.apache.kylin.streaming;
 
-import org.apache.kylin.metadata.model.TblColRef;
-
 import java.util.List;
 
 /**
@@ -43,5 +41,5 @@ import java.util.List;
  */
 public interface StreamParser {
 
-    List<String> parse(Stream stream, List<TblColRef> allColumns);
+    List<String> parse(Stream stream);
 }
