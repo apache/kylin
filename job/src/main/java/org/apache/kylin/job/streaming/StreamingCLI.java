@@ -59,6 +59,8 @@ public class StreamingCLI {
                 printArgsError(args);
             }
         } catch (Exception e) {
+            logger.error("error start streaming", e);
+            System.exit(-1);
         }
     }
 

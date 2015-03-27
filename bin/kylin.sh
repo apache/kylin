@@ -99,7 +99,7 @@ then
     -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true \
     -Dkylin.hive.dependency=${hive_dependency} \
     -Dspring.profiles.active=${spring_profile} \
-    org.apache.hadoop.util.RunJar ${KYLIN_HOME}/lib/kylin-job-*.jar org.apache.kylin.job.streaming.StreamingCLI start $2 > ${tomcat_root}/logs/kylin.log 2>&1 & echo $! > ${KYLIN_HOME}/$2 &
+    org.apache.hadoop.util.RunJar ${KYLIN_HOME}/lib/kylin-job-*.jar org.apache.kylin.job.streaming.StreamingCLI start $2 > ${KYLIN_HOME}/logs/kylin.log 2>&1 & echo $! > ${KYLIN_HOME}$2 &
     echo "streaming started $2"
     exit 0
 else
