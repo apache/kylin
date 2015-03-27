@@ -45,7 +45,7 @@ import org.apache.kylin.metadata.model.MeasureDesc;
  * @author George Song (ysong1)
  * 
  */
-public class BaseCuboidMapperTest extends LocalFileMetadataTestCase {
+public class HiveToBaseCuboidMapperTest extends LocalFileMetadataTestCase {
 
     MapDriver<Text, Text, Text, Text> mapDriver;
     String localTempDir = System.getProperty("java.io.tmpdir") + File.separator;
@@ -58,7 +58,7 @@ public class BaseCuboidMapperTest extends LocalFileMetadataTestCase {
         FileUtils.deleteDirectory(new File("../job/meta"));
         FileUtils.copyDirectory(new File(getTestConfig().getMetadataUrl()), new File("../job/meta"));
 
-        BaseCuboidMapper<Text> mapper = new BaseCuboidMapper<Text>();
+        HiveToBaseCuboidMapper<Text> mapper = new HiveToBaseCuboidMapper<Text>();
         mapDriver = MapDriver.newMapDriver(mapper);
     }
 
