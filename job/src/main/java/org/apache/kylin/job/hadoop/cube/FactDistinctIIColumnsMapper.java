@@ -20,6 +20,7 @@ package org.apache.kylin.job.hadoop.cube;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
@@ -50,7 +51,7 @@ public class FactDistinctIIColumnsMapper extends FactDistinctColumnsMapperBase<I
 
     private IIJoinedFlatTableDesc intermediateTableDesc;
     private ArrayList<IIRow> buffer = Lists.newArrayList();
-    private Iterable<Slice> slices;
+    private Iterator<Slice> slices;
 
     private String iiName;
     private IIInstance ii;
@@ -72,7 +73,7 @@ public class FactDistinctIIColumnsMapper extends FactDistinctColumnsMapperBase<I
         intermediateTableDesc = new IIJoinedFlatTableDesc(iiDesc);
         TableRecordInfo info = new TableRecordInfo(iiDesc);
         KeyValueCodec codec = new IIKeyValueCodecWithState(info.getDigest());
-        slices = codec.decodeKeyValue(buffer);
+        slices = codec.decodeKeyValue(buffer).iterator();
 
         baseCuboidCol2FlattenTableCol = new int[factDictCols.size()];
         for (int i = 0; i < factDictCols.size(); ++i) {
@@ -98,9 +99,9 @@ public class FactDistinctIIColumnsMapper extends FactDistinctColumnsMapperBase<I
         }
         buffer.add(iiRow);
 
-        if (slices.iterator().hasNext()) {
+        if (slices.hasNext()) {
             byte[] vBytesBuffer = null;
-            Slice slice = slices.iterator().next();
+            Slice slice = slices.next();
 
             for (RawTableRecord record : slice) {
                 for (int i = 0; i < factDictCols.size(); ++i) {
