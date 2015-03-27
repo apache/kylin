@@ -122,7 +122,7 @@ public class GTUtil {
                     Set newValues = Sets.newHashSet();
                     for (Object value : constValues) {
                         code = translate(col, value, 0);
-                        if (!isDictNull(code))
+                        if (code != null)
                             newValues.add(code);
                     }
                     if (newValues.isEmpty()) {
@@ -134,7 +134,7 @@ public class GTUtil {
                     break;
                 case NEQ:
                     code = translate(col, firstValue, 0);
-                    if (isDictNull(code)) {
+                    if (code == null) {
                         result = ConstantTupleFilter.TRUE;
                     } else {
                         newCompareFilter.addChild(new ConstantTupleFilter(code));
@@ -143,7 +143,7 @@ public class GTUtil {
                     break;
                 case LT:
                     code = translate(col, firstValue, 1);
-                    if (isDictNull(code)) {
+                    if (code == null) {
                         result = ConstantTupleFilter.TRUE;
                     } else {
                         newCompareFilter.addChild(new ConstantTupleFilter(code));
@@ -152,7 +152,7 @@ public class GTUtil {
                     break;
                 case LTE:
                     code = translate(col, firstValue, -1);
-                    if (isDictNull(code)) {
+                    if (code == null) {
                         result = ConstantTupleFilter.FALSE;
                     } else {
                         newCompareFilter.addChild(new ConstantTupleFilter(code));
@@ -161,7 +161,7 @@ public class GTUtil {
                     break;
                 case GT:
                     code = translate(col, firstValue, -1);
-                    if (isDictNull(code)) {
+                    if (code == null) {
                         result = ConstantTupleFilter.TRUE;
                     } else {
                         newCompareFilter.addChild(new ConstantTupleFilter(code));
@@ -170,7 +170,7 @@ public class GTUtil {
                     break;
                 case GTE:
                     code = translate(col, firstValue, 1);
-                    if (isDictNull(code)) {
+                    if (code == null) {
                         result = ConstantTupleFilter.FALSE;
                     } else {
                         newCompareFilter.addChild(new ConstantTupleFilter(code));
@@ -183,16 +183,16 @@ public class GTUtil {
                 return result;
             }
 
-            private boolean isDictNull(ByteArray code) {
-                return info.codeSystem.getFilterCodeSystem().isNull(code);
-            }
-
             transient ByteBuffer buf = ByteBuffer.allocate(info.maxRecordLength);
 
             private ByteArray translate(int col, Object value, int roundingFlag) {
-                buf.clear();
-                info.codeSystem.encodeColumnValue(col, value, roundingFlag, buf);
-                return ByteArray.copyOf(buf.array(), 0, buf.position());
+                try {
+                    buf.clear();
+                    info.codeSystem.encodeColumnValue(col, value, roundingFlag, buf);
+                    return ByteArray.copyOf(buf.array(), 0, buf.position());
+                } catch (IllegalArgumentException ex) {
+                    return null;
+                }
             }
         }, info.codeSystem.getFilterCodeSystem());
 
