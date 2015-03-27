@@ -1,4 +1,4 @@
-package org.apache.kylin.streaming.invertedindex;
+package org.apache.kylin.job.hadoop.invertedindex;
 
 import java.io.IOException;
 import java.util.List;
@@ -10,6 +10,7 @@ import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.invertedindex.model.IIRow;
 import org.apache.kylin.streaming.Stream;
+import org.apache.kylin.streaming.invertedindex.IIStreamBuilder;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 3/26/15.

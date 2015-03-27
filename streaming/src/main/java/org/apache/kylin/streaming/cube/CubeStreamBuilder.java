@@ -156,7 +156,6 @@ public class CubeStreamBuilder extends StreamBuilder {
         logger.info("Totally " + generatedCuboids.size() + " cuboids be calculated, takes " + (System.currentTimeMillis() - startTime) / 1000.0 + " seconds");
     }
 
-
     private void calculateCuboid(GridTable parentCuboid, long parentCuboidId, long cuboidId, Map<Long, GridTable> result) throws IOException {
 
         GridTable thisCuboid;
@@ -220,7 +219,6 @@ public class CubeStreamBuilder extends StreamBuilder {
         return gridTable;
     }
 
-
     private GridTable aggregateCuboid(GridTable parentCuboid, long parentCuboidId, long cuboidId) throws IOException {
         //logger.info("Calculating cuboid " + cuboidId + " from parent " + parentCuboidId);
         Pair<BitSet, BitSet> columnBitSets = getDimensionAndMetricColumBitSet(parentCuboidId);
@@ -281,14 +279,12 @@ public class CubeStreamBuilder extends StreamBuilder {
     }
 
     private Pair<BitSet, BitSet> getDimensionAndMetricColumBitSet(long cuboidId) {
-        BitSet bitSet = BitSet.valueOf(new long[]{cuboidId});
+        BitSet bitSet = BitSet.valueOf(new long[] { cuboidId });
         BitSet dimension = new BitSet();
         dimension.set(0, bitSet.cardinality());
         BitSet metrics = new BitSet();
         metrics.set(bitSet.cardinality(), bitSet.cardinality() + this.measureNumber);
-        return new Pair<BitSet, BitSet>(
-                dimension, metrics
-        );
+        return new Pair<BitSet, BitSet>(dimension, metrics);
     }
 
     private Object[] buildKey(List<String> row, DataTypeSerializer[] serializers) {
@@ -301,7 +297,6 @@ public class CubeStreamBuilder extends StreamBuilder {
 
         return key;
     }
-
 
     private Object[] buildValue(List<String> row) {
 
@@ -340,11 +335,10 @@ public class CubeStreamBuilder extends StreamBuilder {
         return values;
     }
 
-
     private GTInfo newGTInfo(long cuboidID) {
         Pair<BitSet, BitSet> dimensionMetricsBitSet = getDimensionAndMetricColumBitSet(cuboidID);
         GTInfo.Builder builder = infoBuilder(cuboidID);
-        builder.enableColumnBlock(new BitSet[]{dimensionMetricsBitSet.getFirst(), dimensionMetricsBitSet.getSecond()});
+        builder.enableColumnBlock(new BitSet[] { dimensionMetricsBitSet.getFirst(), dimensionMetricsBitSet.getSecond() });
         builder.setPrimaryKey(dimensionMetricsBitSet.getFirst());
         GTInfo info = builder.build();
         return info;
@@ -374,7 +368,6 @@ public class CubeStreamBuilder extends StreamBuilder {
         return builder;
     }
 
-
     private void buildDictionary(List<List<String>> table, CubeDesc desc, Map<TblColRef, Dictionary> dictionaryMap) {
         SetMultimap<TblColRef, String> valueMap = HashMultimap.create();
 
@@ -399,9 +392,9 @@ public class CubeStreamBuilder extends StreamBuilder {
                     }));
 
                     logger.info("Building dictionary for " + col);
-//                    DictionaryInfo dictInfo = new DictionaryInfo(col.getTable(), col.getName(), 0, col.getDatatype(), null, "");
-//                    dictInfo.setDictionaryObject(dict);
-//                    dictInfo.setDictionaryClass(dict.getClass().getName());
+                    //                    DictionaryInfo dictInfo = new DictionaryInfo(col.getTable(), col.getName(), 0, col.getDatatype(), null, "");
+                    //                    dictInfo.setDictionaryObject(dict);
+                    //                    dictInfo.setDictionaryClass(dict.getClass().getName());
                     dictionaryMap.put(col, dict);
                 }
             }
@@ -412,6 +405,5 @@ public class CubeStreamBuilder extends StreamBuilder {
     private List<String> parseStream(Stream stream, CubeDesc desc) {
         return getStreamParser().parse(stream, Lists.newArrayList(desc.listAllColumns()));
     }
-
 
 }
