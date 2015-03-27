@@ -67,7 +67,7 @@ public class LogicalTupleFilter extends TupleFilter {
 
     @Override
     public String toString() {
-        return "LogicalFilter [operator=" + operator + ", children=" + children + "]";
+        return operator + " " + children;
     }
 
     @Override

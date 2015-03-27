@@ -2,10 +2,13 @@ package org.apache.kylin.storage.gridtable;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.serializer.DataTypeSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -15,13 +18,15 @@ import java.util.Map;
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class GTDictionaryCodeSystem implements IGTCodeSystem {
+    private static final Logger logger = LoggerFactory.getLogger(CubeManager.class);
+
     private GTInfo info;
-    private Map<Integer, Dictionary> dictionaryMaps = null; // key: column index; value: dictionary for this column;
+    private Map<Integer, Dictionary> dictionaryMap = null; // key: column index; value: dictionary for this column;
     private IFilterCodeSystem<ByteArray> filterCS;
     private DataTypeSerializer[] serializers;
 
-    public GTDictionaryCodeSystem(Map<Integer, Dictionary> dictionaryMaps) {
-        this.dictionaryMaps = dictionaryMaps;
+    public GTDictionaryCodeSystem(Map<Integer, Dictionary> dictionaryMap) {
+        this.dictionaryMap = dictionaryMap;
     }
 
     @Override
@@ -30,8 +35,8 @@ public class GTDictionaryCodeSystem implements IGTCodeSystem {
 
         serializers = new DataTypeSerializer[info.nColumns];
         for (int i = 0; i < info.nColumns; i++) {
-            if (dictionaryMaps.get(i) != null) {
-                serializers[i] = new DictionarySerializer(dictionaryMaps.get(i));
+            if (dictionaryMap.get(i) != null) {
+                serializers[i] = new DictionarySerializer(dictionaryMap.get(i));
             } else {
                 serializers[i] = DataTypeSerializer.create(info.colTypes[i]);
             }
@@ -56,7 +61,10 @@ public class GTDictionaryCodeSystem implements IGTCodeSystem {
 
             @Override
             public void serialize(ByteArray code, ByteBuffer buffer) {
-                BytesUtil.writeByteArray(code.array(), code.offset(), code.length(), buffer);
+                if (code == null)
+                    BytesUtil.writeByteArray(null, 0, 0, buffer);
+                else
+                    BytesUtil.writeByteArray(code.array(), code.offset(), code.length(), buffer);
             }
 
             @Override
@@ -78,16 +86,33 @@ public class GTDictionaryCodeSystem implements IGTCodeSystem {
 
     @Override
     public void encodeColumnValue(int col, Object value, ByteBuffer buf) {
-        serializers[col].serialize(value, buf);
+        encodeColumnValue(col, value, 0, buf);
     }
 
     @Override
     public void encodeColumnValue(int col, Object value, int roundingFlag, ByteBuffer buf) {
+        // this is a bit too complicated, but encoding only happens once at build time, so it is OK
         DataTypeSerializer serializer = serializers[col];
-        if (serializer instanceof DictionarySerializer) {
-            ((DictionarySerializer) serializer).serializeWithRounding(value,  roundingFlag, buf);
-        } else {
-            serializer.serialize(value,  buf);
+        try {
+            if (serializer instanceof DictionarySerializer) {
+                ((DictionarySerializer) serializer).serializeWithRounding(value, roundingFlag, buf);
+            } else {
+                serializer.serialize(value, buf);
+            }
+        } catch (ClassCastException ex) {
+            // try convert string into a correct object type
+            try {
+                if (value instanceof String) {
+                    Object converted = serializer.valueOf((String) value);
+                    if ((converted instanceof String) == false) {
+                        encodeColumnValue(col, converted, roundingFlag, buf);
+                        return;
+                    }
+                }
+            } catch (Throwable e) {
+                logger.error("Fail to encode value '" + value + "'", e);
+            }
+            throw ex;
         }
     }
 

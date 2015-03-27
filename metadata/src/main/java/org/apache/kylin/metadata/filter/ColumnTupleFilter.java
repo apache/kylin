@@ -63,7 +63,7 @@ public class ColumnTupleFilter extends TupleFilter {
 
     @Override
     public String toString() {
-        return "ColumnFilter [column=" + columnRef + "]";
+        return "" + columnRef;
     }
 
     @Override
@@ -79,7 +79,7 @@ public class ColumnTupleFilter extends TupleFilter {
 
     @Override
     public Collection<?> getValues() {
-        this.values.set(0, (String) this.tupleValue);
+        this.values.set(0, this.tupleValue);
         return this.values;
     }
 
@@ -114,7 +114,7 @@ public class ColumnTupleFilter extends TupleFilter {
             table = new TableDesc();
             table.setName(tableName);
         }
-        
+
         column.setId(BytesUtil.readUTFString(buffer));
         column.setName(BytesUtil.readUTFString(buffer));
         column.setDatatype(BytesUtil.readUTFString(buffer));

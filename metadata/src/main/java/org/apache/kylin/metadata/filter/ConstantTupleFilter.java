@@ -34,7 +34,7 @@ import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 public class ConstantTupleFilter extends TupleFilter {
 
     public static final ConstantTupleFilter FALSE = new ConstantTupleFilter();
-    public static final ConstantTupleFilter TRUE = new ConstantTupleFilter("TRUE");
+    public static final ConstantTupleFilter TRUE = new ConstantTupleFilter((Object) null); // not sure of underlying code system, null is the only value that applies to all types
 
     private Collection<Object> constantValues;
 
@@ -60,7 +60,7 @@ public class ConstantTupleFilter extends TupleFilter {
 
     @Override
     public String toString() {
-        return "ConstantFilter [constant=" + constantValues + "]";
+        return "" + constantValues;
     }
 
     @Override

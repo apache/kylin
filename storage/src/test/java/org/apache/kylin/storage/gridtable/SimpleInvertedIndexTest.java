@@ -21,16 +21,16 @@ import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
-public class GTInvertedIndexTest {
+public class SimpleInvertedIndexTest {
 
     GTInfo info;
     GTInvertedIndex index;
     ArrayList<CompareTupleFilter> basicFilters = Lists.newArrayList();
     ArrayList<ConciseSet> basicResults = Lists.newArrayList();
 
-    public GTInvertedIndexTest() {
+    public SimpleInvertedIndexTest() {
         
-        info = GridTableTest.advancedInfo();
+        info = SimpleGridTableTest.advancedInfo();
         TblColRef colA = info.colRef(0);
         
         // block i contains value "i", the last is NULL

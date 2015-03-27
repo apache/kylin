@@ -126,7 +126,7 @@ public class CompareTupleFilter extends TupleFilter {
 
     @Override
     public String toString() {
-        return "CompareFilter [" + column + " " + operator + " " + conditionValues + ", children=" + children + "]";
+        return column + " " + operator + " " + conditionValues;
     }
 
     // TODO requires generalize, currently only evaluates COLUMN {op} CONST

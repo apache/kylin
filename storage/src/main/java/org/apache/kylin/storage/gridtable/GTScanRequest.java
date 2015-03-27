@@ -1,5 +1,6 @@
 package org.apache.kylin.storage.gridtable;
 
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Set;
 
@@ -87,7 +88,7 @@ public class GTScanRequest {
         // un-evaluatable filter must be removed
         if (TupleFilter.isEvaluableRecursively(filterPushDown) == false) {
             Set<TblColRef> unevaluableColumns = Sets.newHashSet();
-            filterPushDown = GTUtil.convertFilterUnevaluatable(filterPushDown, unevaluableColumns);
+            filterPushDown = GTUtil.convertFilterUnevaluatable(filterPushDown, info, unevaluableColumns);
 
             // columns in un-evaluatable filter must be returned without loss so upper layer can do final evaluation
             if (hasAggregation()) {
@@ -136,6 +137,11 @@ public class GTScanRequest {
 
     public String[] getAggrMetricsFuncs() {
         return aggrMetricsFuncs;
+    }
+
+    @Override
+    public String toString() {
+        return "GTScanRequest [range=" + range + ", columns=" + columns + ", filterPushDown=" + filterPushDown + ", aggrGroupBy=" + aggrGroupBy + ", aggrMetrics=" + aggrMetrics + ", aggrMetricsFuncs=" + Arrays.toString(aggrMetricsFuncs) + "]";
     }
 
 }

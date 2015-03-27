@@ -14,12 +14,9 @@ public class GTScanRange {
     }
 
     public GTScanRange(GTRecord pkStart, GTRecord pkEnd, List<GTRecord> hbaseFuzzyKeys) {
-        assert pkStart.info == pkEnd.info;
-        assert pkStart.maskForEqualHashComp() == pkStart.info.primaryKey;
-        assert pkEnd.maskForEqualHashComp() == pkEnd.info.primaryKey;
         this.pkStart = pkStart;
         this.pkEnd = pkEnd;
-        this.hbaseFuzzyKeys = hbaseFuzzyKeys == null ? Collections.<GTRecord>emptyList() : hbaseFuzzyKeys;
+        this.hbaseFuzzyKeys = hbaseFuzzyKeys == null ? Collections.<GTRecord> emptyList() : hbaseFuzzyKeys;
     }
 
     @Override
@@ -57,5 +54,11 @@ public class GTScanRange {
         } else if (!pkStart.equals(other.pkStart))
             return false;
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return (pkStart == null ? "null" : pkStart.toString(pkStart.info.primaryKey)) //
+                + "-" + (pkEnd == null ? "null" : pkEnd.toString(pkEnd.info.primaryKey));
     }
 }

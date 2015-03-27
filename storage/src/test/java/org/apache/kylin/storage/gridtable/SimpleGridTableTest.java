@@ -12,7 +12,7 @@ import org.apache.kylin.storage.gridtable.GTInfo.Builder;
 import org.apache.kylin.storage.gridtable.memstore.GTSimpleMemStore;
 import org.junit.Test;
 
-public class GridTableTest {
+public class SimpleGridTableTest {
 
     @Test
     public void testBasics() throws IOException {
