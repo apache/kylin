@@ -114,7 +114,7 @@ public class GridTableTest {
         return scanner;
     }
 
-    private GTBuilder rebuild(GridTable table) throws IOException {
+    static GTBuilder rebuild(GridTable table) throws IOException {
         GTRecord r = new GTRecord(table.getInfo());
         GTBuilder builder = table.rebuild();
 
@@ -135,7 +135,7 @@ public class GridTableTest {
         return builder;
     }
 
-    private void rebuildViaAppend(GridTable table) throws IOException {
+    static void rebuildViaAppend(GridTable table) throws IOException {
         GTRecord r = new GTRecord(table.getInfo());
         GTBuilder builder;
 
@@ -170,13 +170,13 @@ public class GridTableTest {
         System.out.println("Written Row Count: " + builder.getWrittenRowCount());
     }
 
-    public static GTInfo basicInfo() {
+    static GTInfo basicInfo() {
         Builder builder = infoBuilder();
         GTInfo info = builder.build();
         return info;
     }
 
-    public static GTInfo advancedInfo() {
+    static GTInfo advancedInfo() {
         Builder builder = infoBuilder();
         builder.enableColumnBlock(new BitSet[] { setOf(0, 1, 2), setOf(3, 4) });
         builder.enableRowBlock(4);

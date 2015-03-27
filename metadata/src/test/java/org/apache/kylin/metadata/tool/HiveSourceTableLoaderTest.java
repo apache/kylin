@@ -26,9 +26,9 @@ import java.util.Set;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.metadata.util.HiveSourceTableLoader;
 
 public class HiveSourceTableLoaderTest extends HBaseMetadataTestCase {
 
