@@ -59,53 +59,65 @@ public final class KafkaRequester {
     private static final Logger logger = LoggerFactory.getLogger(KafkaRequester.class);
 
     public static TopicMeta getKafkaTopicMeta(KafkaConfig kafkaConfig) {
-        SimpleConsumer consumer;
+        SimpleConsumer consumer = null;
         for (Broker broker : kafkaConfig.getBrokers()) {
-            consumer = new SimpleConsumer(broker.host(), broker.port(), kafkaConfig.getTimeout(), kafkaConfig.getBufferSize(), "topic_meta_lookup");
-            List<String> topics = Collections.singletonList(kafkaConfig.getTopic());
-            TopicMetadataRequest req = new TopicMetadataRequest(topics);
-            TopicMetadataResponse resp = consumer.send(req);
-            final List<TopicMetadata> topicMetadatas = resp.topicsMetadata();
-            if (topicMetadatas.size() != 1) {
-                break;
-            }
-            final TopicMetadata topicMetadata = topicMetadatas.get(0);
-            if (topicMetadata.errorCode() != 0) {
-                break;
-            }
-            List<Integer> partitionIds = Lists.transform(topicMetadata.partitionsMetadata(), new Function<PartitionMetadata, Integer>() {
-                @Nullable
-                @Override
-                public Integer apply(PartitionMetadata partitionMetadata) {
-                    return partitionMetadata.partitionId();
+            try {
+                consumer = new SimpleConsumer(broker.host(), broker.port(), kafkaConfig.getTimeout(), kafkaConfig.getBufferSize(), "topic_meta_lookup");
+                List<String> topics = Collections.singletonList(kafkaConfig.getTopic());
+                TopicMetadataRequest req = new TopicMetadataRequest(topics);
+                TopicMetadataResponse resp = consumer.send(req);
+                final List<TopicMetadata> topicMetadatas = resp.topicsMetadata();
+                if (topicMetadatas.size() != 1) {
+                    break;
                 }
-            });
-            return new TopicMeta(kafkaConfig.getTopic(), partitionIds);
+                final TopicMetadata topicMetadata = topicMetadatas.get(0);
+                if (topicMetadata.errorCode() != 0) {
+                    break;
+                }
+                List<Integer> partitionIds = Lists.transform(topicMetadata.partitionsMetadata(), new Function<PartitionMetadata, Integer>() {
+                    @Nullable
+                    @Override
+                    public Integer apply(PartitionMetadata partitionMetadata) {
+                        return partitionMetadata.partitionId();
+                    }
+                });
+                return new TopicMeta(kafkaConfig.getTopic(), partitionIds);
+            } finally {
+                if (consumer != null) {
+                    consumer.close();
+                }
+            }
         }
         logger.debug("cannot find topic:" + kafkaConfig.getTopic());
         return null;
     }
 
     public static PartitionMetadata getPartitionMetadata(String topic, int partitionId, List<Broker> brokers, KafkaConfig kafkaConfig) {
-        SimpleConsumer consumer;
+        SimpleConsumer consumer = null;
         for (Broker broker : brokers) {
-            consumer = new SimpleConsumer(broker.host(), broker.port(), kafkaConfig.getTimeout(), kafkaConfig.getBufferSize(), "topic_meta_lookup");
-            List<String> topics = Collections.singletonList(topic);
-            TopicMetadataRequest req = new TopicMetadataRequest(topics);
-            TopicMetadataResponse resp = consumer.send(req);
-            final List<TopicMetadata> topicMetadatas = resp.topicsMetadata();
-            if (topicMetadatas.size() != 1) {
-                logger.warn("invalid topicMetadata size:" + topicMetadatas.size());
-                break;
-            }
-            final TopicMetadata topicMetadata = topicMetadatas.get(0);
-            if (topicMetadata.errorCode() != 0) {
-                logger.warn("fetching topicMetadata with errorCode:" + topicMetadata.errorCode());
-                break;
-            }
-            for (PartitionMetadata partitionMetadata : topicMetadata.partitionsMetadata()) {
-                if (partitionMetadata.partitionId() == partitionId) {
-                    return partitionMetadata;
+            try {
+                consumer = new SimpleConsumer(broker.host(), broker.port(), kafkaConfig.getTimeout(), kafkaConfig.getBufferSize(), "topic_meta_lookup");
+                List<String> topics = Collections.singletonList(topic);
+                TopicMetadataRequest req = new TopicMetadataRequest(topics);
+                TopicMetadataResponse resp = consumer.send(req);
+                final List<TopicMetadata> topicMetadatas = resp.topicsMetadata();
+                if (topicMetadatas.size() != 1) {
+                    logger.warn("invalid topicMetadata size:" + topicMetadatas.size());
+                    break;
+                }
+                final TopicMetadata topicMetadata = topicMetadatas.get(0);
+                if (topicMetadata.errorCode() != 0) {
+                    logger.warn("fetching topicMetadata with errorCode:" + topicMetadata.errorCode());
+                    break;
+                }
+                for (PartitionMetadata partitionMetadata : topicMetadata.partitionsMetadata()) {
+                    if (partitionMetadata.partitionId() == partitionId) {
+                        return partitionMetadata;
+                    }
+                }
+            } finally {
+                if (consumer != null) {
+                    consumer.close();
                 }
             }
         }
@@ -116,30 +128,38 @@ public final class KafkaRequester {
     public static FetchResponse fetchResponse(String topic, int partitionId, long offset, Broker broker, KafkaConfig kafkaConfig) {
         final String clientName = "client_" + topic + "_" + partitionId;
         SimpleConsumer consumer = new SimpleConsumer(broker.host(), broker.port(), kafkaConfig.getTimeout(), kafkaConfig.getBufferSize(), clientName);
-        kafka.api.FetchRequest req = new FetchRequestBuilder()
-                .clientId(clientName)
-                .addFetch(topic, partitionId, offset, kafkaConfig.getMaxReadCount()) // Note: this fetchSize of 100000 might need to be increased if large batches are written to Kafka
-                .build();
-        return consumer.fetch(req);
+        try {
+            kafka.api.FetchRequest req = new FetchRequestBuilder()
+                    .clientId(clientName)
+                    .addFetch(topic, partitionId, offset, kafkaConfig.getMaxReadCount()) // Note: this fetchSize of 100000 might need to be increased if large batches are written to Kafka
+                    .build();
+            return consumer.fetch(req);
+        } finally {
+            consumer.close();
+        }
     }
 
     public static long getLastOffset(String topic, int partitionId,
                                      long whichTime, Broker broker, KafkaConfig kafkaConfig) {
         String clientName = "client_" + topic + "_" + partitionId;
         SimpleConsumer consumer = new SimpleConsumer(broker.host(), broker.port(), kafkaConfig.getTimeout(), kafkaConfig.getBufferSize(), clientName);
-        TopicAndPartition topicAndPartition = new TopicAndPartition(topic, partitionId);
-        Map<TopicAndPartition, PartitionOffsetRequestInfo> requestInfo = new HashMap<TopicAndPartition, PartitionOffsetRequestInfo>();
-        requestInfo.put(topicAndPartition, new PartitionOffsetRequestInfo(whichTime, 1));
-        kafka.javaapi.OffsetRequest request = new kafka.javaapi.OffsetRequest(
-                requestInfo, kafka.api.OffsetRequest.CurrentVersion(), clientName);
-        OffsetResponse response = consumer.getOffsetsBefore(request);
+        try {
+            TopicAndPartition topicAndPartition = new TopicAndPartition(topic, partitionId);
+            Map<TopicAndPartition, PartitionOffsetRequestInfo> requestInfo = new HashMap<TopicAndPartition, PartitionOffsetRequestInfo>();
+            requestInfo.put(topicAndPartition, new PartitionOffsetRequestInfo(whichTime, 1));
+            kafka.javaapi.OffsetRequest request = new kafka.javaapi.OffsetRequest(
+                    requestInfo, kafka.api.OffsetRequest.CurrentVersion(), clientName);
+            OffsetResponse response = consumer.getOffsetsBefore(request);
 
-        if (response.hasError()) {
-            System.out.println("Error fetching data Offset Data the Broker. Reason: " + response.errorCode(topic, partitionId));
-            return 0;
+            if (response.hasError()) {
+                System.out.println("Error fetching data Offset Data the Broker. Reason: " + response.errorCode(topic, partitionId));
+                return 0;
+            }
+            long[] offsets = response.offsets(topic, partitionId);
+            return offsets[0];
+        } finally {
+            consumer.close();
         }
-        long[] offsets = response.offsets(topic, partitionId);
-        return offsets[0];
     }
 
 
