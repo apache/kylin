@@ -178,7 +178,7 @@ public class CubeStreamBuilder extends StreamBuilder {
     }
 
     private void outputGT(GridTable gridTable) throws IOException {
-        GTScanRequest req = new GTScanRequest(gridTable.getInfo(), null, null, null, null);
+        GTScanRequest req = new GTScanRequest(gridTable.getInfo(), null, null, null);
         IGTScanner scanner = gridTable.scan(req);
         for (GTRecord record : scanner) {
             logger.debug(record.toString());
@@ -248,7 +248,7 @@ public class CubeStreamBuilder extends StreamBuilder {
     }
 
     private GridTable scanAndAggregateGridTable(GridTable gridTable, long cuboidId, BitSet aggregationColumns, BitSet measureColumns) throws IOException {
-        GTScanRequest req = new GTScanRequest(gridTable.getInfo(), null, null, aggregationColumns, measureColumns, metricsAggrFuncs, null);
+        GTScanRequest req = new GTScanRequest(gridTable.getInfo(), null, aggregationColumns, measureColumns, metricsAggrFuncs, null);
         IGTScanner scanner = gridTable.scan(req);
         GridTable newGridTable = newGridTableByCuboidID(cuboidId);
         GTBuilder builder = newGridTable.rebuild();
