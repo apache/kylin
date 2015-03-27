@@ -42,6 +42,8 @@ public class Stream {
     private long offset;
     private byte[] rawData;
 
+    public static final Stream EOF = new Stream(-1, new byte[0]);
+
     public Stream(long offset, byte[] rawData) {
         this.offset = offset;
         this.rawData = rawData;
