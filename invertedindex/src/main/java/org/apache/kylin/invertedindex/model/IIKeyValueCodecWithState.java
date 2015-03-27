@@ -2,8 +2,10 @@ package org.apache.kylin.invertedindex.model;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 import com.google.common.base.Preconditions;
+import org.apache.kylin.common.util.FIFOIterator;
 import org.apache.kylin.invertedindex.index.Slice;
 import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 
@@ -25,12 +27,12 @@ public class IIKeyValueCodecWithState extends IIKeyValueCodec {
 
     protected static class IIRowDecoderWithState extends IIRowDecoder {
 
-        final ArrayList<IIRow> buffer = Lists.newArrayList();
+        final LinkedList<IIRow> buffer = Lists.newLinkedList();
         private Iterator<Slice> superIterator = null;
 
         private IIRowDecoderWithState(TableRecordInfoDigest digest, Iterator<IIRow> iiRowIterator) {
             super(digest, iiRowIterator);
-            this.feedingIterator = buffer.iterator();
+            this.feedingIterator = new FIFOIterator<>(buffer);
         }
 
         private Iterator<Slice> getSuperIterator() {

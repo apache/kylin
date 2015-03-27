@@ -22,9 +22,10 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.util.*;
 import java.util.concurrent.*;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.configuration.ConfigurationException;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -75,7 +76,7 @@ public class BasicTest {
 
         a.setTimeInMillis(current);
         b.set(a.get(Calendar.YEAR), a.get(Calendar.MONTH), a.get(Calendar.DAY_OF_MONTH), a.get(Calendar.HOUR_OF_DAY), a.get(Calendar.MINUTE));
-        c.set(a.get(Calendar.YEAR), a.get(Calendar.MONTH), a.get(Calendar.DAY_OF_MONTH), a.get(Calendar.HOUR_OF_DAY),0);
+        c.set(a.get(Calendar.YEAR), a.get(Calendar.MONTH), a.get(Calendar.DAY_OF_MONTH), a.get(Calendar.HOUR_OF_DAY), 0);
 
         System.out.println(time(b.getTimeInMillis()));
         System.out.println(time(c.getTimeInMillis()));
@@ -85,6 +86,13 @@ public class BasicTest {
     @Test
     @Ignore("fix it later")
     public void test2() throws IOException, ConfigurationException {
+        Queue<String> a = new LinkedList<>();
+        Iterator<String> i = new FIFOIterator<String>(a);
+        System.out.println(i.hasNext());
+        a.add("1");
+        System.out.println(i.hasNext());
+        System.out.println(i.next());
+
     }
 
     private static String time(long t) {
