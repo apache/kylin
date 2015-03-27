@@ -32,7 +32,7 @@
  * /
  */
 
-package org.apache.kylin.streaming;
+package org.apache.kylin.job.streaming;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;

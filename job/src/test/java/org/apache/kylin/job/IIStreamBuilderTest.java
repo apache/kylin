@@ -38,7 +38,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
-import org.apache.kylin.streaming.StreamingBootstrap;
+import org.apache.kylin.job.streaming.StreamingBootstrap;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;

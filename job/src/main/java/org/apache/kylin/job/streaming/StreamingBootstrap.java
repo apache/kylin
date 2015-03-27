@@ -32,16 +32,21 @@
  * /
  */
 
-package org.apache.kylin.streaming;
+package org.apache.kylin.job.streaming;
 
 import com.google.common.base.Preconditions;
 import kafka.api.OffsetRequest;
 import kafka.cluster.Broker;
 import kafka.javaapi.PartitionMetadata;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
+import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.model.IIDesc;
+import org.apache.kylin.job.hadoop.invertedindex.IICreateHTableJob;
+import org.apache.kylin.streaming.*;
 import org.apache.kylin.streaming.invertedindex.IIStreamBuilder;
 
 import java.nio.ByteBuffer;
@@ -81,6 +86,8 @@ public class StreamingBootstrap {
         Preconditions.checkArgument(kafkaConfig != null, "cannot find kafka config:" + streamingConf);
         final IIInstance ii = iiManager.getII(kafkaConfig.getIiName());
         Preconditions.checkNotNull(ii);
+        Preconditions.checkArgument(ii.getSegments().size() > 0);
+        final IISegment iiSegment = ii.getSegments().get(0);
 
         final Broker leadBroker = getLeadBroker(kafkaConfig, partitionId);
         Preconditions.checkState(leadBroker != null, "cannot find lead broker");
@@ -100,8 +107,9 @@ public class StreamingBootstrap {
             }
         };
         final IIDesc desc = ii.getDescriptor();
+
         Executors.newSingleThreadExecutor().submit(consumer);
-        final IIStreamBuilder task = new IIStreamBuilder(consumer.getStreamQueue(), ii.getSegments().get(0).getStorageLocationIdentifier(), desc, partitionId);
+        final IIStreamBuilder task = new IIStreamBuilder(consumer.getStreamQueue(), iiSegment.getStorageLocationIdentifier(), desc, partitionId);
         task.setStreamParser(JsonStreamParser.instance);
         final Future<?> future = Executors.newSingleThreadExecutor().submit(task);
         future.get();
