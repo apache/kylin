@@ -186,7 +186,7 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
             BytesUtil.writeVInt(size, out);
             for (int i = 0; i < m; i++) {
                 if (registers[i] > 0) {
-                    BytesUtil.writeUnsigned(i, indexLen, out);
+                    writeUnsigned(i, indexLen, out);
                     out.put(registers[i]);
                 }
             }
@@ -207,7 +207,7 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
                 throw new IllegalArgumentException("register size (" + size + ") cannot be larger than m (" + m + ")");
             int indexLen = getRegisterIndexSize();
             for (int i = 0; i < size; i++) {
-                int key = BytesUtil.readUnsigned(in, indexLen);
+                int key = readUnsigned(in, indexLen);
                 registers[key] = in.get();
             }
         } else { // array scheme
@@ -305,5 +305,30 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
             long size = Math.round(Math.pow(2, p));
             System.out.println("HLLC" + p + ",\t" + size + " bytes,\t68% err<" + er + "%" + ",\t95% err<" + er2 + "%" + ",\t99.7% err<" + er3 + "%");
         }
+    }
+
+    /**
+     *
+     * @param num
+     * @param size
+     * @param out
+     */
+    public static void writeUnsigned(int num, int size, ByteBuffer out) {
+        for (int i = 0; i < size; i++) {
+            out.put((byte) num);
+            num >>>= 8;
+        }
+    }
+
+    public static int readUnsigned(ByteBuffer in, int size) {
+        int integer = 0;
+        int mask = 0xff;
+        int shift = 0;
+        for (int i = 0; i < size; i++) {
+            integer |= (in.get() << shift) & mask;
+            mask = mask << 8;
+            shift += 8;
+        }
+        return integer;
     }
 }

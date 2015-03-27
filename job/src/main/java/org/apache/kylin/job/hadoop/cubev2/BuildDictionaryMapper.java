@@ -71,7 +71,7 @@ public class BuildDictionaryMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord,
 
         Configuration conf = context.getConfiguration();
 
-        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
+        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
         cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
         cube = CubeManager.getInstance(config).getCube(cubeName);
         String segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME).toUpperCase();

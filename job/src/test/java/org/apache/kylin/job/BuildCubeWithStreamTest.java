@@ -120,9 +120,9 @@ public class BuildCubeWithStreamTest {
         LinkedBlockingDeque<Stream> queue = new LinkedBlockingDeque<Stream>();
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
-        Map<TblColRef, DictionaryInfo> dictionaryMap = Maps.newHashMap();
+        Map<TblColRef, Dictionary> dictionaryMap = Maps.newHashMap();
         Map<Long, GridTable> cuboidsMap = Maps.newHashMap();
-        final CubeStreamBuilder streamBuilder = new CubeStreamBuilder(queue, 10000, cube, dictionaryMap, cuboidsMap);
+        final CubeStreamBuilder streamBuilder = new CubeStreamBuilder(queue, 10000, cube, true, dictionaryMap, cuboidsMap);
         while (reader.next()) {
             queue.put(parse(reader.getRow()));
         }

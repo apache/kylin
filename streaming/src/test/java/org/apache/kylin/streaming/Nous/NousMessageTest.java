@@ -6,6 +6,8 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * Created by Hongbin Ma(Binmahone) on 3/16/15.
  */
@@ -15,7 +17,7 @@ public class NousMessageTest {
         NousMessage a = new NousMessage(1, 2, "a", "b", "c", "d", "e", 100, 200.0, 300);
         String x = JsonUtil.writeValueAsIndentString(a);
         NousMessage b = JsonUtil.readValue(x, NousMessage.class);
-        System.out.print(b.getClick());
+        assertEquals(100, b.getClick());
     }
 
     @Ignore("disable this producer since it will make number of messages in a topic agnostic ")

@@ -32,10 +32,24 @@
  * /
  */
 
-package org.apache.kylin.streaming.invertedindex;
+package org.apache.kylin.streaming;
+
+import com.google.common.collect.Lists;
+import org.apache.kylin.metadata.model.TblColRef;
+
+import java.util.Collection;
+import java.util.List;
 
 /**
- * Created by qianzhou on 3/6/15.
+ * Created by qianzhou on 3/25/15.
  */
-public class IIStreamBuilderTest {
+public final class StringStreamParser implements StreamParser {
+
+    public static final StringStreamParser instance = new StringStreamParser();
+
+    private StringStreamParser(){}
+    @Override
+    public List<String> parse(Stream stream, List<TblColRef> allColumns) {
+        return Lists.newArrayList(new String(stream.getRawData()).split(","));
+    }
 }

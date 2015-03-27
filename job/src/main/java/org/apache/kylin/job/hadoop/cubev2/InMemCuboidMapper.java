@@ -14,23 +14,31 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.mr.KylinMapper;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.kv.RowConstants;
+import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.dict.DictionaryInfo;
-import org.apache.kylin.dict.DictionaryInfoSerializer;
+import org.apache.kylin.cube.model.DimensionDesc;
+import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.lookup.HiveTableReader;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
+import org.apache.kylin.metadata.measure.MeasureCodec;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.storage.gridtable.GTRecord;
+import org.apache.kylin.storage.gridtable.GTScanRequest;
 import org.apache.kylin.storage.gridtable.GridTable;
+import org.apache.kylin.storage.gridtable.IGTScanner;
 import org.apache.kylin.streaming.Stream;
 import org.apache.kylin.streaming.cube.CubeStreamBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +56,7 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Tex
     private String cubeName;
     private CubeInstance cube;
     private CubeDesc cubeDesc;
+    private CubeSegment cubeSegment;
 
     private HCatSchema schema = null;
 
@@ -55,14 +64,16 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Tex
     private Text outputValue = new Text();
     private final LinkedBlockingDeque<Stream> queue = new LinkedBlockingDeque<Stream>();
     private CubeStreamBuilder streamBuilder = null;
-    private Map<TblColRef, DictionaryInfo> dictionaryMap = null;
-    private Map<Long, GridTable> cuboidsMap = null;
-    private byte[] keyBuf = new byte[4096];
-    private static byte[] ZERO_BYTES = Bytes.toBytes(0l);
+    private Map<TblColRef, Dictionary> dictionaryMap = null;
+    private Map<Long, GridTable> cuboidsMap = null; // key: cuboid id; value: grid table;
     private Future<?> future;
     private Cuboid baseCuboid;
-    private int nReducders;
     private int mapperTaskId;
+    private int counter;
+
+    private ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
+    private Object[] measures;
+    private MeasureCodec measureCodec;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -70,15 +81,30 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Tex
 
         Configuration conf = context.getConfiguration();
 
-        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
+        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
         cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
         cube = CubeManager.getInstance(config).getCube(cubeName);
         cubeDesc = cube.getDescriptor();
-
+        String segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME);
+        cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
         dictionaryMap = Maps.newHashMap();
         cuboidsMap = Maps.newHashMap();
 
-        streamBuilder = new CubeStreamBuilder(queue, Integer.MAX_VALUE, cube, dictionaryMap, cuboidsMap);
+        for (DimensionDesc dim : cubeDesc.getDimensions()) {
+            // dictionary
+            for (TblColRef col : dim.getColumnRefs()) {
+                if (cubeDesc.getRowkey().isUseDictionary(col)) {
+                    Dictionary dict = cubeSegment.getDictionary(col);
+                    if (dict == null) {
+                        throw new IllegalArgumentException("Dictionary for " + col + " was not found.");
+                    }
+
+                    dictionaryMap.put(col, cubeSegment.getDictionary(col));
+                }
+            }
+        }
+
+        streamBuilder = new CubeStreamBuilder(queue, Integer.MAX_VALUE, cube, false, dictionaryMap, cuboidsMap);
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         future = executorService.submit(streamBuilder);
@@ -87,18 +113,26 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Tex
         long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
         mapperTaskId = context.getTaskAttemptID().getTaskID().getId();
-        nReducders = context.getNumReduceTasks();
+
+        measures = new Object[cubeDesc.getMeasures().size()];
+        measureCodec = new MeasureCodec(cubeDesc.getMeasures());
     }
 
     @Override
     public void map(KEYIN key, HCatRecord record, Context context) throws IOException, InterruptedException {
         // put each row to the queue
         queue.put(parse(record));
+
+        counter++;
+        if (counter % BatchConstants.COUNTER_MAX == 0) {
+            logger.info("Handled " + counter + " records!");
+        }
     }
 
     protected void cleanup(Mapper.Context context) throws IOException, InterruptedException {
 
         // end to trigger cubing calculation
+        logger.info("Totally read " + counter + " rows in memory, trigger cube build now.");
         queue.put(new Stream(-1, null));
         try {
             future.get();
@@ -106,67 +140,64 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Tex
             logger.error("cube build failed", e);
             throw new IOException(e);
         }
-
-        assert dictionaryMap.size() > 0;
-        assert cuboidsMap.size() > 0;
-
-        // output dictionary to reducer
-        DictionaryInfoSerializer dictionaryInfoSerializer = new DictionaryInfoSerializer();
-        int keyLength = 0;
-        for (TblColRef col : dictionaryMap.keySet()) {
-            //serialize the dictionary to bytes;
-            ByteArrayOutputStream buf = new ByteArrayOutputStream();
-            DataOutputStream dout = new DataOutputStream(buf);
-            dictionaryInfoSerializer.serialize(dictionaryMap.get(col), dout);
-            dout.close();
-            buf.close();
-            byte[] dictionaryBytes = buf.toByteArray();
-            outputValue.set(dictionaryBytes, 0, dictionaryBytes.length);
-            // to all reducers
-            for (int i = 0; i < nReducders; i++) {
-                keyLength = buildDictionaryKey(col, i);
-                outputKey.set(keyBuf, 0, keyLength);
-                context.write(outputKey, outputValue);
-            }
-        }
-
-
+        logger.info("Cube build success");
+        logger.info("Cube segment calculation in mapper " + mapperTaskId + " finished; cuboid number: " + cuboidsMap.size());
         List<Long> allCuboids = Lists.newArrayList();
         allCuboids.addAll(cuboidsMap.keySet());
         Collections.sort(allCuboids);
 
-        for (Long cuboid : allCuboids) {
+
+        for (Long cuboidId : allCuboids) {
+            int bytesLength = RowConstants.ROWKEY_CUBOIDID_LEN;
+            Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidId);
+            RowKeyColumnIO colIO = new RowKeyColumnIO(this.cubeSegment);
+            for (TblColRef column : cuboid.getColumns()) {
+                bytesLength += colIO.getColumnLength(column);
+            }
+
+            logger.info("The keyBuf length is " + bytesLength);
+            byte[] keyBuf = new byte[bytesLength];
             // output cuboids;
+            int dimensions = BitSet.valueOf(new long[]{cuboidId}).cardinality();
+            logger.info("Output cuboid " + cuboidId + " to reducer, dimension number is " + dimensions);
+            long cuboidRowCount = 0;
+            System.arraycopy(Bytes.toBytes(cuboidId), 0, keyBuf, 0, Bytes.toBytes(cuboidId).length);
+
+            GridTable gt = cuboidsMap.get(cuboidId);
+            GTScanRequest req = new GTScanRequest(gt.getInfo(), null, null, null, null);
+            IGTScanner scanner = gt.scan(req);
+            int offSet = 0;
+            for (GTRecord record : scanner) {
+                cuboidRowCount++;
+                offSet = RowConstants.ROWKEY_CUBOIDID_LEN;
+                for (int x = 0; x < dimensions; x++) {
+                    logger.info("Copy key with offSet: " + offSet + ", length " + record.get(x).length());
+                    System.arraycopy(record.get(x).array(), record.get(x).offset(), keyBuf, offSet, record.get(x).length());
+                    offSet += record.get(x).length();
+                }
+
+                /*
+                for (int i = 0; i < measures.length; i++) {
+                    valueBuf.put(record.get(dimensions + i).array());
+                }
+
+                */
+                Object[] values = record.getValues();
+                for (int i = 0; i < measures.length; i++) {
+                    measures[i] = values[dimensions + i];
+                }
+
+                valueBuf.clear();
+                measureCodec.encode(measures, valueBuf);
+
+                outputKey.set(keyBuf, 0, offSet); // key is cuboid-id + rowkey bytes
+                outputValue.set(valueBuf.array(), 0, valueBuf.position());
+                context.write(outputKey, outputValue);
+            }
+            logger.info("Cuboid " + cuboid + " has " + cuboidRowCount + " rows on mapper " + this.mapperTaskId);
         }
 
-       // outputValue.set(bytes, 0, bytes.length);
-        //context.write(outputKey, outputValue);
 
-
-    }
-
-    private int buildDictionaryKey(TblColRef col, int reducer) {
-        // the key format is: [0l][col-index][mapper-number][reducer-number]
-        int offset = 0;
-
-        // cuboid id, use 0 cuboid id for dictionary
-        System.arraycopy(ZERO_BYTES, 0, keyBuf, offset, ZERO_BYTES.length);
-        offset += ZERO_BYTES.length;
-
-        // column index
-        int indexOfCol = baseCuboid.getColumns().indexOf(col);
-        System.arraycopy(Bytes.toBytes(indexOfCol), 0, keyBuf, offset, Bytes.toBytes(indexOfCol).length);
-        offset += Bytes.toBytes(indexOfCol).length;
-
-        // mapper task Id
-        System.arraycopy(Bytes.toBytes(mapperTaskId), 0, keyBuf, offset, Bytes.toBytes(mapperTaskId).length);
-        offset += Bytes.toBytes(mapperTaskId).length;
-
-        // to which reducer
-        System.arraycopy(Bytes.toBytes(reducer), 0, keyBuf, offset, Bytes.toBytes(reducer).length);
-        offset += Bytes.toBytes(reducer).length;
-
-        return offset;
     }
 
     private Stream parse(HCatRecord record) {

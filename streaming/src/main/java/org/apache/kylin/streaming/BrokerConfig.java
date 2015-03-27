@@ -34,22 +34,45 @@
 
 package org.apache.kylin.streaming;
 
-import org.junit.BeforeClass;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Created by qianzhou on 2/16/15.
+ * Created by qianzhou on 3/25/15.
  */
-public abstract class KafkaBaseTest {
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
+public class BrokerConfig {
 
-    protected static final Logger logger = LoggerFactory.getLogger("kafka test");
+    @JsonProperty("id")
+    private int id;
 
-    @BeforeClass
-    public static void beforeClass() throws IOException {
+    @JsonProperty("host")
+    private String host;
+
+    @JsonProperty("port")
+    private int port;
+
+    public int getId() {
+        return id;
     }
 
+    public void setId(int id) {
+        this.id = id;
+    }
 
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
 }

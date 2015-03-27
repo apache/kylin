@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
@@ -78,6 +79,9 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
     @JsonManagedReference
     @JsonProperty("segments")
     private List<IISegment> segments = new ArrayList<IISegment>();
+
+    @JsonProperty("stream_offset")
+    private List<Long> streamOffsets = Lists.newArrayList();
 
     @JsonProperty("create_time_utc")
     private long createTimeUTC;
@@ -356,5 +360,13 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
 
     public void setCost(int cost) {
         this.cost = cost;
+    }
+
+    public List<Long> getStreamOffsets() {
+        return streamOffsets;
+    }
+
+    public void setStreamOffsets(List<Long> streamOffsets) {
+        this.streamOffsets = streamOffsets;
     }
 }

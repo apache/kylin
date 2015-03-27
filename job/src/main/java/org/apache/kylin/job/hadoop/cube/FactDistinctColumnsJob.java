@@ -22,8 +22,8 @@ import java.io.IOException;
 
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -54,12 +54,16 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             options.addOption(OPTION_CUBE_NAME);
             options.addOption(OPTION_OUTPUT_PATH);
             options.addOption(OPTION_TABLE_NAME);
+            options.addOption(OPTION_STATISTICS_ENABLED);
+            options.addOption(OPTION_STATISTICS_OUTPUT);
             parseOptions(options, args);
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
             String cubeName = getOptionValue(OPTION_CUBE_NAME);
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
             String intermediateTable = getOptionValue(OPTION_TABLE_NAME);
+            String statistics_enabled = getOptionValue(OPTION_STATISTICS_ENABLED);
+            String statistics_output = getOptionValue(OPTION_STATISTICS_OUTPUT);
 
             // ----------------------------------------------------------------------------
             // add metadata to distributed cache
@@ -67,7 +71,9 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             CubeInstance cubeInstance = cubeMgr.getCube(cubeName);
 
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
-            System.out.println("Starting: " + job.getJobName());
+            job.getConfiguration().set(BatchConstants.CFG_STATISTICS_ENABLED, statistics_enabled);
+            job.getConfiguration().set(BatchConstants.CFG_STATISTICS_OUTPUT, statistics_output);
+            log.info("Starting: " + job.getJobName());
 
             setJobClasspath(job);
             
@@ -95,9 +101,9 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
                 dbTableNames[1]);
         
         job.setInputFormatClass(HCatInputFormat.class);
-        job.setMapperClass(FactDistinctColumnsMapper.class);
+        job.setMapperClass(FactDistinctHiveColumnsMapper.class);
         job.setCombinerClass(FactDistinctColumnsCombiner.class);
-        job.setMapOutputKeyClass(ShortWritable.class);
+        job.setMapOutputKeyClass(LongWritable.class);
         job.setMapOutputValueClass(Text.class);
     }
 
