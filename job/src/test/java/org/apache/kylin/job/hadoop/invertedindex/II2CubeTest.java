@@ -22,6 +22,7 @@ import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 import org.apache.kylin.invertedindex.model.*;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.cube.FactDistinctIIColumnsMapper;
+import org.apache.kylin.job.hadoop.cube.IIToBaseCuboidMapper;
 import org.apache.kylin.streaming.Stream;
 import org.apache.kylin.streaming.StringStreamParser;
 import org.apache.kylin.streaming.invertedindex.SliceBuilder;
@@ -133,4 +134,5 @@ public class II2CubeTest extends LocalFileMetadataTestCase {
             Assert.assertTrue(lstgNames.contains(pair.getSecond().toString()));
         }
     }
+
 }

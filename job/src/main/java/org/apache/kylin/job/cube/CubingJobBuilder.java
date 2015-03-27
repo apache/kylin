@@ -170,9 +170,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
 
         final AbstractExecutable intermediateHiveTableStep = createIntermediateHiveTableStep(intermediateTableDesc, jobId);
         result.addTask(intermediateHiveTableStep);
-
         result.addTask(createFactDistinctColumnsStep(seg, intermediateHiveTableName, jobId));
-
         result.addTask(createBuildDictionaryStep(seg, factDistinctColumnsPath));
         MapReduceExecutable baseCuboidStep = null;
         if(!useImMemCubing) {
