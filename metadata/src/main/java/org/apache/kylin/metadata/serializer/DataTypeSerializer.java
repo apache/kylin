@@ -70,9 +70,10 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
     /** peek into buffer and return the length of serialization */
     abstract public int peekLength(ByteBuffer in);
     
-    /** convert from String to obj */
+    /** convert from String to obj (string often come as byte[] in mapred) */
     abstract public T valueOf(byte[] value);
     
+    /** convert from String to obj */
     public T valueOf(String value) {
         try {
             return valueOf(value.getBytes("UTF-8"));

@@ -34,18 +34,18 @@ public class GTUtil {
         return new TblColRef(desc);
     }
 
-    public static TupleFilter convertFilterUnevaluatable(TupleFilter rootFilter, //
-            final Set<TblColRef> unevaluatableColumnCollector) {
-        return convertFilter(rootFilter, null, null, false, unevaluatableColumnCollector);
+    public static TupleFilter convertFilterUnevaluatable(TupleFilter rootFilter, GTInfo info, //
+            Set<TblColRef> unevaluatableColumnCollector) {
+        return convertFilter(rootFilter, info, null, false, unevaluatableColumnCollector);
     }
 
-    public static TupleFilter convertFilterConstants(TupleFilter rootFilter, final GTInfo info) {
+    public static TupleFilter convertFilterConstants(TupleFilter rootFilter, GTInfo info) {
         return convertFilter(rootFilter, info, null, true, null);
     }
 
-    public static TupleFilter convertFilterColumnsAndConstants(TupleFilter rootFilter, final GTInfo info, //
-            final Map<TblColRef, Integer> colMapping, //
-            final Set<TblColRef> unevaluatableColumnCollector) {
+    public static TupleFilter convertFilterColumnsAndConstants(TupleFilter rootFilter, GTInfo info, //
+            Map<TblColRef, Integer> colMapping, //
+            Set<TblColRef> unevaluatableColumnCollector) {
         return convertFilter(rootFilter, info, colMapping, true, unevaluatableColumnCollector);
     }
 
@@ -68,6 +68,12 @@ public class GTUtil {
                     return ConstantTupleFilter.TRUE;
                 }
 
+                // shortcut for unEvaluatable filter
+                if (filter.isEvaluable() == false) {
+                    TupleFilter.collectColumns(filter, unevaluatableColumnCollector);
+                    return ConstantTupleFilter.TRUE;
+                }
+
                 // map to column onto grid table
                 if (colMapping != null && filter instanceof ColumnTupleFilter) {
                     ColumnTupleFilter colFilter = (ColumnTupleFilter) filter;
@@ -75,18 +81,9 @@ public class GTUtil {
                     return new ColumnTupleFilter(info.colRef(gtColIdx));
                 }
 
-                // below consider compare filter only
-                if (filter instanceof CompareTupleFilter) {
-
-                    // shortcut for unEvaluatable compare filter
-                    if (TupleFilter.isEvaluableRecursively(filter) == false) {
-                        TupleFilter.collectColumns(filter, unevaluatableColumnCollector);
-                        return ConstantTupleFilter.TRUE;
-                    }
-
-                    if (encodeConstants) {
-                        return encodeConstants((CompareTupleFilter) filter);
-                    }
+                // encode constants
+                if (encodeConstants && filter instanceof CompareTupleFilter) {
+                    return encodeConstants((CompareTupleFilter) filter);
                 }
 
                 return filter;

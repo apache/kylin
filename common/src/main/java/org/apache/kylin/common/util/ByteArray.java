@@ -30,7 +30,7 @@ public class ByteArray implements Comparable<ByteArray> {
     public static ByteArray allocate(int length) {
         return new ByteArray(new byte[length]);
     }
-    
+
     public static ByteArray copyOf(byte[] array, int offset, int length) {
         byte[] space = new byte[length];
         System.arraycopy(array, offset, space, 0, length);
@@ -52,7 +52,7 @@ public class ByteArray implements Comparable<ByteArray> {
     }
 
     public ByteArray(byte[] data) {
-        set(data, 0, data.length);
+        set(data, 0, data == null ? 0 : data.length);
     }
 
     public ByteArray(byte[] data, int offset, int length) {
@@ -148,7 +148,10 @@ public class ByteArray implements Comparable<ByteArray> {
 
     @Override
     public String toString() {
-        return Bytes.toString(data, offset, length);
+        if (data == null)
+            return null;
+        else
+            return Bytes.toStringBinary(data, offset, length);
     }
 
 }

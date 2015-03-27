@@ -54,7 +54,10 @@ public class GTSampleCodeSystem implements IGTCodeSystem {
 
             @Override
             public void serialize(ByteArray code, ByteBuffer buffer) {
-                BytesUtil.writeByteArray(code.array(), code.offset(), code.length(), buffer);
+                if (code == null)
+                    BytesUtil.writeByteArray(null, 0, 0, buffer);
+                else
+                    BytesUtil.writeByteArray(code.array(), code.offset(), code.length(), buffer);
             }
 
             @Override

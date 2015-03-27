@@ -21,7 +21,7 @@ public class GTRecord implements Comparable<GTRecord> {
             this.cols[i] = new ByteArray();
         this.maskForEqualHashComp = info.colAll;
     }
-    
+
     public ByteArray get(int i) {
         return cols[i];
     }
@@ -51,16 +51,17 @@ public class GTRecord implements Comparable<GTRecord> {
 
     /** decode and return the values of this record */
     public Object[] getValues() {
-        return getValues(new Object[info.nColumns]);
+        return getValues(info.colAll, new Object[info.nColumns]);
     }
 
     /** decode and return the values of this record */
-    public Object[] getValues(Object[] result) {
-        for (int i = 0; i < info.nColumns; i++) {
-            if (cols[i].array() == null)
+    public Object[] getValues(BitSet selectedColumns, Object[] result) {
+        assert selectedColumns.cardinality() <= result.length;
+        for (int i = 0, c = selectedColumns.nextSetBit(0); c >= 0; i++, c = selectedColumns.nextSetBit(c + 1)) {
+            if (cols[c].array() == null)
                 result[i] = null;
             else
-                result[i] = info.codeSystem.decodeColumnValue(i, cols[i].asBuffer());
+                result[i] = info.codeSystem.decodeColumnValue(c, cols[c].asBuffer());
         }
         return result;
     }
@@ -92,11 +93,11 @@ public class GTRecord implements Comparable<GTRecord> {
     public BitSet maskForEqualHashComp() {
         return maskForEqualHashComp;
     }
-    
+
     public void maskForEqualHashComp(BitSet set) {
         this.maskForEqualHashComp = set;
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -132,7 +133,7 @@ public class GTRecord implements Comparable<GTRecord> {
         assert this.info == o.info;
         assert this.maskForEqualHashComp == o.maskForEqualHashComp; // reference equal for performance
         IFilterCodeSystem<ByteArray> cs = info.codeSystem.getFilterCodeSystem();
-        
+
         int comp = 0;
         for (int i = maskForEqualHashComp.nextSetBit(0); i >= 0; i = maskForEqualHashComp.nextSetBit(i + 1)) {
             comp = cs.compare(cols[i], o.cols[i]);
@@ -141,10 +142,16 @@ public class GTRecord implements Comparable<GTRecord> {
         }
         return comp;
     }
-    
+
     @Override
     public String toString() {
-        return Arrays.toString(getValues());
+        return toString(info.colAll);
+    }
+    
+    public String toString(BitSet selectedColumns) {
+        Object[] values = new Object[selectedColumns.cardinality()];
+        getValues(selectedColumns, values);
+        return Arrays.toString(values);
     }
 
     // ============================================================================
