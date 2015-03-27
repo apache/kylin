@@ -13,6 +13,7 @@ import java.util.Map;
 /**
  * Created by shaoshi on 3/23/15.
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class GTDictionaryCodeSystem implements IGTCodeSystem {
     private GTInfo info;
     private Map<Integer, Dictionary> dictionaryMaps = null; // key: column index; value: dictionary for this column;
@@ -87,7 +88,7 @@ public class GTDictionaryCodeSystem implements IGTCodeSystem {
 
     @Override
     public Object decodeColumnValue(int col, ByteBuffer buf) {
-       return serializers[col].deserialize(buf);
+        return serializers[col].deserialize(buf);
     }
 
     @Override
