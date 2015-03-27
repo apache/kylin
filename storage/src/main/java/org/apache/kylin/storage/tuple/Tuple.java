@@ -26,10 +26,10 @@ import org.apache.kylin.common.util.Array;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
-import org.apache.kylin.dict.DateStrDictionary;
 import org.apache.kylin.dict.lookup.LookupStringTable;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
+import org.apache.kylin.metadata.util.DateFormat;
 
 /**
  * @author xjiang
@@ -133,7 +133,7 @@ public class Tuple implements ITuple {
         // TODO use data type enum instead of string comparison
         if ("date".equals(dataType)) {
             // convert epoch time
-            Date dateValue = DateStrDictionary.stringToDate(strValue); // NOTE: forces GMT timezone
+            Date dateValue = DateFormat.stringToDate(strValue); // NOTE: forces GMT timezone
             long millis = dateValue.getTime();
             long days = millis / (1000 * 3600 * 24);
             return Integer.valueOf((int) days); // Optiq expects Integer instead of Long. by honma
@@ -150,7 +150,7 @@ public class Tuple implements ITuple {
         } else if ("decimal".equals(dataType)) {
             return new BigDecimal(strValue);
         } else if ("timestamp".equals(dataType)) {
-            return Long.valueOf(DateStrDictionary.stringToMillis(strValue));
+            return Long.valueOf(DateFormat.stringToMillis(strValue));
         } else {
             return strValue;
         }

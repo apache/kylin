@@ -42,7 +42,9 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
         implementations.put("integer", LongSerializer.class);
         implementations.put("int", LongSerializer.class);
         implementations.put("smallint", LongSerializer.class);
-        implementations.put("date", StringSerializer.class);
+        implementations.put("date", DateTimeSerializer.class);
+        implementations.put("datetime", DateTimeSerializer.class);
+        implementations.put("timestamp", DateTimeSerializer.class);
     }
 
     public static DataTypeSerializer<?> create(String dataType) {

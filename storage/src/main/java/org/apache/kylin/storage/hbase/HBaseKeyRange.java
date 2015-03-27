@@ -26,9 +26,6 @@ import java.util.Set;
 
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -37,8 +34,11 @@ import org.apache.kylin.cube.kv.FuzzyKeyEncoder;
 import org.apache.kylin.cube.kv.FuzzyMaskEncoder;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.dict.DateStrDictionary;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.util.DateFormat;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * 
@@ -135,10 +135,10 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
 
     private void initPartitionRange(ColumnValueRange dimRange) {
         if (null != dimRange.getBeginValue()) {
-            this.partitionColumnStartDate = DateStrDictionary.stringToDate(dimRange.getBeginValue()).getTime();
+            this.partitionColumnStartDate = DateFormat.stringToDate(dimRange.getBeginValue()).getTime();
         }
         if (null != dimRange.getEndValue()) {
-            this.partitionColumnEndDate = DateStrDictionary.stringToDate(dimRange.getEndValue()).getTime();
+            this.partitionColumnEndDate = DateFormat.stringToDate(dimRange.getEndValue()).getTime();
         }
     }
 

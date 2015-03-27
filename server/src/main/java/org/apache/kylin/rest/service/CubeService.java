@@ -44,7 +44,7 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
-import org.apache.kylin.metadata.tool.HiveSourceTableLoader;
+import org.apache.kylin.metadata.util.HiveSourceTableLoader;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.controller.QueryController;
 import org.apache.kylin.rest.exception.InternalErrorException;
