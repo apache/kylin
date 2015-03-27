@@ -18,14 +18,11 @@
 
 package org.apache.kylin.invertedindex.index;
 
-import com.google.common.collect.Lists;
-import org.apache.kylin.dict.DateStrDictionary;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.kylin.dict.DateStrDictionary;
 import org.apache.kylin.dict.Dictionary;
-
-import java.util.List;
 
 /**
  * @author yangli9, honma

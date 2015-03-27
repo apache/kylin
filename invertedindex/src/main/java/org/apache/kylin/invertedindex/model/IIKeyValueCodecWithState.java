@@ -26,6 +26,7 @@ public class IIKeyValueCodecWithState extends IIKeyValueCodec {
     protected static class IIRowDecoderWithState extends IIRowDecoder {
 
         final ArrayList<IIRow> buffer = Lists.newArrayList();
+        private Iterator<Slice> superIterator = null;
 
         private IIRowDecoderWithState(TableRecordInfoDigest digest, Iterator<IIRow> iiRowIterator) {
             super(digest, iiRowIterator);
@@ -33,7 +34,10 @@ public class IIKeyValueCodecWithState extends IIKeyValueCodec {
         }
 
         private Iterator<Slice> getSuperIterator() {
-            return super.iterator();
+            if (superIterator == null) {
+                superIterator = super.iterator();
+            }
+            return superIterator;
         }
 
         @Override
